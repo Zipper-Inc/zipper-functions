@@ -1,0 +1,58 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model App {
+  id        String    @id @default(uuid())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @default(now())
+  name      String    @db.VarChar
+  datastore Json?
+
+  functions Function[]
+  secrets   Secret[]
+}
+
+model Secret {
+  id             String    @id @default(uuid())
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime? @default(now())
+  name           String    @db.VarChar
+  encryptedValue String    @db.VarChar
+
+  appId String
+  app   App    @relation(fields: [appId], references: [id])
+}
+
+model Function {
+  id          String    @id @default(uuid())
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime? @default(now())
+  name        String?   @db.VarChar
+  order       Int?      @default(0)
+  appId       String    @db.VarChar
+  input       Json?
+  outputShape Json?
+
+  app App @relation(fields: [appId], references: [id])
+}
+
+model ResourceInstance {
+  id        String    @id @default(uuid())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @default(now())
+}
+
+model User {
+  id        String    @id @default(uuid())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @default(now())
+}
