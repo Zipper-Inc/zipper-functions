@@ -53,7 +53,7 @@ const IndexPage: NextPageWithLayout = () => {
             <Heading as="h3" size="md">
               {app.name}
             </Heading>
-            <NextLink href={`/platformOrganization/${app.id}`}>
+            <NextLink href={`/app/${app.id}`}>
               <Link textColor="brandPurple">View more</Link>
             </NextLink>
           </Box>

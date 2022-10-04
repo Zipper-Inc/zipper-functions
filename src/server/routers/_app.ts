@@ -4,6 +4,7 @@
 import { createRouter } from '../createRouter';
 import superjson from 'superjson';
 import { appRouter } from './app.router';
+import { scriptRouter } from './scripts.router';
 
 /**
  * Create your application's root router
@@ -30,6 +31,7 @@ export const trpcRouter = createRouter()
       return 'yay!';
     },
   })
-  .merge('app.', appRouter);
+  .merge('app.', appRouter)
+  .merge('script.', scriptRouter);
 
 export type AppRouter = typeof trpcRouter;
