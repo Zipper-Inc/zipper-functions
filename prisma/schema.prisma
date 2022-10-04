@@ -14,7 +14,8 @@ model App {
   id        String    @id @default(uuid())
   createdAt DateTime  @default(now())
   updatedAt DateTime? @default(now())
-  name      String    @db.VarChar
+  name      String
+  description      String?
   datastore Json?
 
   scripts Script[]
@@ -27,8 +28,8 @@ model Secret {
   id             String    @id @default(uuid())
   createdAt      DateTime  @default(now())
   updatedAt      DateTime? @default(now())
-  name           String    @db.VarChar
-  encryptedValue String    @db.VarChar
+  name      String
+  encryptedValue String
 
   appId String
   app   App    @relation(fields: [appId], references: [id])
@@ -38,13 +39,14 @@ model Secret {
 
 model Script {
   hash         String    @id
+  parentHash   String?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime? @default(now())
-  name         String    @db.VarChar
-  description  String?   @db.VarChar
-  code         String    @db.VarChar
+  name         String
+  description  String?
+  code         String
   order        Int?      @default(0)
-  appId        String    @db.VarChar
+  appId        String
   inputSchema  Json?
   outputSchema Json?
 

@@ -7,7 +7,6 @@ import {
   FormErrorMessage,
   FormLabel,
   Heading,
-  HStack,
   Input,
   Text,
   VStack,
@@ -21,11 +20,18 @@ import { trpc } from '~/utils/trpc';
 
 const AppPage: NextPageWithLayout = () => {
   const utils = trpc.useContext();
+  const router = useRouter();
   const id = useRouter().query.id as string;
   const appQuery = trpc.useQuery(['app.byId', { id }]);
   const scriptsQuery = trpc.useQuery(['script.byAppId', { appId: id }]);
 
   const { register, handleSubmit, reset } = useForm();
+
+  const forkApp = trpc.useMutation('app.fork', {
+    async onSuccess(data) {
+      router.push(`/app/${data.id}`);
+    },
+  });
 
   const addScript = trpc.useMutation('script.add', {
     async onSuccess() {
@@ -50,81 +56,99 @@ const AppPage: NextPageWithLayout = () => {
   const { data } = appQuery;
   return (
     <>
-      <Box marginX="8">
-        <h1>{data.name}</h1>
-        <em>Created {data.createdAt.toLocaleDateString('en-us')}</em>
+      <Box margin="8">
+        <VStack spacing={4} align={'start'}>
+          <Heading as="h1" size="xl" noOfLines={1}>
+            {data.name}
+          </Heading>
 
-        <h2>Raw data:</h2>
-        <pre>{JSON.stringify(data, null, 4)}</pre>
+          <Text fontSize="lg">{data.description}</Text>
 
-        <Heading size="lg" marginBottom={4}>
-          Functions
-          {scriptsQuery.status === 'loading' && '(loading)'}
-        </Heading>
+          <Heading size="lg" marginBottom={4}>
+            Functions
+            {scriptsQuery.status === 'loading' && '(loading)'}
+          </Heading>
 
-        {scriptsQuery.data?.map((script) => (
-          <Box as="article" key={script.hash} marginY="4">
-            <Heading as="h3" size="md">
-              {script.name}
-            </Heading>
+          {scriptsQuery.data?.map((script) => (
+            <Box as="article" key={script.hash} marginY="4">
+              <Heading as="h3" size="md">
+                {script.name}
+              </Heading>
 
-            <Text size="md">{script.description}</Text>
+              <Text size="md">{script.description}</Text>
 
-            <Code size="md">{script.code}</Code>
-          </Box>
-        ))}
+              <Code size="md">{script.code}</Code>
+            </Box>
+          ))}
 
-        <hr />
+          <Button
+            type="button"
+            paddingX={6}
+            bgColor="purple.800"
+            textColor="gray.100"
+            onClick={() => {
+              forkApp.mutateAsync({ id });
+            }}
+          >
+            Explore this App
+          </Button>
 
-        <form
-          onSubmit={handleSubmit(({ name, description, code }) => {
-            addScript.mutateAsync({ name, description, code, appId: id });
-          })}
-        >
-          <Flex marginTop="4">
-            {addScript.error && (
-              <FormErrorMessage>{addScript.error.message}</FormErrorMessage>
-            )}
-            <VStack>
-              <FormControl as={React.Fragment}>
-                <FormLabel>Name:</FormLabel>
-                <Input
-                  size="md"
-                  type="text"
+          <hr />
+
+          <Heading size="lg" marginBottom={4}>
+            Create an App
+          </Heading>
+
+          <form
+            onSubmit={handleSubmit(({ name, description, code }) => {
+              addScript.mutateAsync({ name, description, code, appId: id });
+            })}
+          >
+            <Flex marginTop="4">
+              {addScript.error && (
+                <FormErrorMessage>{addScript.error.message}</FormErrorMessage>
+              )}
+              <VStack align={'start'}>
+                <FormControl as={React.Fragment}>
+                  <FormLabel>Name:</FormLabel>
+                  <Input
+                    size="md"
+                    type="text"
+                    disabled={addScript.isLoading}
+                    {...register('name')}
+                  />
+                </FormControl>
+                <FormControl as={React.Fragment}>
+                  <FormLabel>Description:</FormLabel>
+                  <Input
+                    size="md"
+                    type="text"
+                    disabled={addScript.isLoading}
+                    {...register('description')}
+                  />
+                </FormControl>
+                <FormControl as={React.Fragment}>
+                  <FormLabel>Code:</FormLabel>
+                  <Input
+                    size="md"
+                    type="text"
+                    disabled={addScript.isLoading}
+                    {...register('code')}
+                  />
+                </FormControl>
+                <Button
+                  type="submit"
+                  paddingX={6}
                   disabled={addScript.isLoading}
-                  {...register('name')}
-                />
-              </FormControl>
-              <FormControl as={React.Fragment}>
-                <FormLabel>Description:</FormLabel>
-                <Input
-                  size="md"
-                  type="text"
-                  disabled={addScript.isLoading}
-                  {...register('description')}
-                />
-              </FormControl>
-              <FormControl as={React.Fragment}>
-                <FormLabel>Code:</FormLabel>
-                <Input
-                  size="md"
-                  type="text"
-                  disabled={addScript.isLoading}
-                  {...register('code')}
-                />
-              </FormControl>
-              <Button
-                type="submit"
-                paddingX={6}
-                disabled={addScript.isLoading}
-                bgColor="purple.800"
-                textColor="gray.100"
-              >
-                Submit
-              </Button>
-            </VStack>
-          </Flex>
-        </form>
+                  bgColor="purple.800"
+                  textColor="gray.100"
+                >
+                  Submit
+                </Button>
+              </VStack>
+            </Flex>
+          </form>
+        </VStack>
       </Box>
     </>
   );

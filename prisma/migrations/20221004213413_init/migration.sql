@@ -3,7 +3,8 @@ CREATE TABLE "apps" (
     "id" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
-    "name" VARCHAR NOT NULL,
+    "name" TEXT NOT NULL,
+    "description" TEXT,
     "datastore" JSONB,
 
     CONSTRAINT "apps_pkey" PRIMARY KEY ("id")
@@ -14,8 +15,8 @@ CREATE TABLE "secrets" (
     "id" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
-    "name" VARCHAR NOT NULL,
-    "encryptedValue" VARCHAR NOT NULL,
+    "name" TEXT NOT NULL,
+    "encryptedValue" TEXT NOT NULL,
     "appId" TEXT NOT NULL,
 
     CONSTRAINT "secrets_pkey" PRIMARY KEY ("id")
@@ -24,13 +25,14 @@ CREATE TABLE "secrets" (
 -- CreateTable
 CREATE TABLE "scripts" (
     "hash" TEXT NOT NULL,
+    "parentHash" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
-    "name" VARCHAR NOT NULL,
-    "description" VARCHAR,
-    "code" VARCHAR NOT NULL,
+    "name" TEXT NOT NULL,
+    "description" TEXT,
+    "code" TEXT NOT NULL,
     "order" INTEGER DEFAULT 0,
-    "appId" VARCHAR NOT NULL,
+    "appId" TEXT NOT NULL,
     "inputSchema" JSONB,
     "outputSchema" JSONB,
 

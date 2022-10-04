@@ -2,10 +2,12 @@ import { Prisma } from '@prisma/client';
 import { z } from 'zod';
 import { prisma } from '~/server/prisma';
 import { createRouter } from '../createRouter';
+import { createScriptHash } from '../utils/scripts.utils';
 
 const defaultSelect = Prisma.validator<Prisma.AppSelect>()({
   id: true,
   name: true,
+  description: true,
   createdAt: true,
 });
 
@@ -46,6 +48,43 @@ export const appRouter = createRouter()
         },
         select: defaultSelect,
       });
+    },
+  })
+  // update
+  .mutation('fork', {
+    input: z.object({
+      id: z.string().uuid(),
+    }),
+    async resolve({ input }) {
+      const { id } = input;
+
+      const app = await prisma.app.findFirstOrThrow({
+        where: { id },
+        include: { scripts: true },
+      });
+
+      const fork = await prisma.app.create({
+        data: {
+          name: app.name,
+          description: app.description,
+        },
+        select: defaultSelect,
+      });
+
+      app.scripts.map(async (script) => {
+        await prisma.script.create({
+          data: {
+            ...script,
+            inputSchema: JSON.stringify(script.inputSchema),
+            outputSchema: JSON.stringify(script.outputSchema),
+            hash: await createScriptHash({ ...script, appId: fork.id }),
+            parentHash: script.hash,
+            appId: fork.id,
+          },
+        });
+      });
+
+      return fork;
     },
   })
   // update

@@ -9,13 +9,25 @@ const prisma = new PrismaClient();
 
 async function main() {
   const id = '5c03994c-fc16-47e0-bd02-d218a370a078';
+
   await prisma.app.upsert({
     where: {
       id,
     },
     create: {
       id,
-      name: 'Zipper',
+      name: 'Post meeting notes to Slack in multiple languages',
+      description:
+        'Post meeting notes to Slack in multiple languages using Google Cloud Functions',
+      scripts: {
+        create: {
+          name: 'Join the current meeting',
+          description:
+            'Looks at a users meetings and joins the current or upcoming one',
+          code: '{}',
+          hash: '1234567890',
+        },
+      },
     },
     update: {},
   });

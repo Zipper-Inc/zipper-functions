@@ -1,17 +1,17 @@
 version: '3.6'
 services:
-  nextjs:
-    depends_on:
-      - postgres
-    build: ./
-    volumes:
-      - ./:/usr/app
-      - /usr/app/node_modules
-    ports:
-      - '3000:3000'
-    environment:
-      NODE_ENV: ${NODE_ENV}
-    command: yarn start
+  # nextjs:
+  #   depends_on:
+  #     - postgres
+  #   build: ./
+  #   volumes:
+  #     - ./:/usr/app
+  #     - /usr/app/node_modules
+  #   ports:
+  #     - '3000:3000'
+  #   environment:
+  #     NODE_ENV: ${NODE_ENV}
+  #   command: yarn start
   postgres:
     container_name: zipper_function_postgres
     image: postgres:13
