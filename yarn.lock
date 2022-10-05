@@ -1617,6 +1617,11 @@
   resolved "https://registry.yarnpkg.com/@prisma/engines/-/engines-4.3.1.tgz#fb0ad69eded13827fb4cd81995a351c234e8327f"
   integrity sha512-4JF/uMaEDAPdcdZNOrnzE3BvrbGpjgV0FcPT3EVoi6I86fWkloqqxBt+KcK/+fIRR0Pxj66uGR9wVH8U1Y13JA==
 
+"@prisma/text-editors@^0.0.19":
+  version "0.0.19"
+  resolved "https://registry.yarnpkg.com/@prisma/text-editors/-/text-editors-0.0.19.tgz#c6ddfdbe844c830b786fc166c51492fa32eb3aa0"
+  integrity sha512-WJ6CBoz+Q7usnEe9NiZnh8d3+cBrJ7kz4k4DtkdvFVeeaX4jfwJ7qFN1F9VJBYS5GOuWg4aqr8P3V+IsJb8H/w==
+
 "@rushstack/eslint-patch@^1.1.3":
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/@rushstack/eslint-patch/-/eslint-patch-1.2.0.tgz#8be36a1f66f3265389e90b5f9c9962146758f728"
