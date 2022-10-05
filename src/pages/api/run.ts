@@ -22,7 +22,7 @@ export default function handler(
 
   const functionInSandbox = vm.run(
     // 'module.exports = function(who) { return("hello "+ who); }',
-    `${req.body.code}`,
+    `module.exports = ${req.body.code}`,
   );
 
   const output = functionInSandbox();

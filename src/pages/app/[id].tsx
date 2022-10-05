@@ -13,10 +13,21 @@ import {
 } from '@chakra-ui/react';
 import NextError from 'next/error';
 import { useRouter } from 'next/router';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { NextPageWithLayout } from '~/pages/_app';
 import { trpc } from '~/utils/trpc';
+
+const CODE_EXAMPLE = `function main() {
+  // this is an example
+  return {
+    "hello": "world",
+    "datetime": new Date().toString(),
+  }
+}
+`;
+
+let Editor;
 
 const AppPage: NextPageWithLayout = () => {
   const utils = trpc.useContext();
@@ -29,21 +40,30 @@ const AppPage: NextPageWithLayout = () => {
 
   const { register, handleSubmit, reset } = useForm();
 
-  const runApp = async () => {
-    const allFunctions = scriptsQuery.data?.reduce((prev, curr) => {
-      return `
+  const savedCode = scriptsQuery.data?.reduce((prev, curr) => {
+    return `
     ${prev}
     ${curr.code}
     `;
-    }, '');
+  }, '');
 
+  const [shouldRenderEditor, setShouldRenderEditor] = useState(false);
+  useEffect(() => {
+    import('@prisma/text-editors').then((module) => {
+      Editor = module.Editor;
+      if (Editor) setShouldRenderEditor(true);
+    });
+  }, []);
+  const [code, setCode] = useState(savedCode || CODE_EXAMPLE);
+
+  const runApp = async () => {
     const raw = await fetch('/api/run', {
       method: 'POST',
       headers: {
         Accept: 'application/json',
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ code: allFunctions }),
+      body: JSON.stringify({ code }),
     });
 
     const res = await raw.json();
@@ -85,14 +105,11 @@ const AppPage: NextPageWithLayout = () => {
           <Heading as="h1" size="xl" noOfLines={1}>
             {data.name}
           </Heading>
-
           <Text fontSize="lg">{data.description}</Text>
-
           <Heading size="lg" marginBottom={4}>
             Functions
             {scriptsQuery.status === 'loading' && '(loading)'}
           </Heading>
-
           {scriptsQuery.data?.map((script) => (
             <Box as="article" key={script.hash} marginY="4">
               <Heading as="h3" size="md">
@@ -104,7 +121,6 @@ const AppPage: NextPageWithLayout = () => {
               <Code size="md">{script.code}</Code>
             </Box>
           ))}
-
           <Button
             type="button"
             paddingX={6}
@@ -116,7 +132,6 @@ const AppPage: NextPageWithLayout = () => {
           >
             Explore this App
           </Button>
-
           <Button
             type="button"
             paddingX={6}
@@ -128,63 +143,74 @@ const AppPage: NextPageWithLayout = () => {
           >
             Run
           </Button>
-
-          <Code>{outputValue}</Code>
-
+          {outputValue && Editor && (
+            <>
+              <Heading size="md">Output</Heading>
+              <Editor
+                readonly
+                lang="json"
+                value={JSON.stringify(outputValue, null, 2)}
+              />
+            </>
+          )}
           <hr />
-
           <Heading size="lg" marginBottom={4}>
             Create an App
           </Heading>
-
           <form
             onSubmit={handleSubmit(({ name, description, code }) => {
               addScript.mutateAsync({ name, description, code, appId: id });
             })}
+            style={{ display: 'block', width: '100%' }}
           >
-            <Flex marginTop="4">
-              {addScript.error && (
-                <FormErrorMessage>{addScript.error.message}</FormErrorMessage>
-              )}
-              <VStack align={'start'}>
-                <FormControl as={React.Fragment}>
-                  <FormLabel>Name:</FormLabel>
-                  <Input
-                    size="md"
-                    type="text"
-                    disabled={addScript.isLoading}
-                    {...register('name')}
-                  />
-                </FormControl>
-                <FormControl as={React.Fragment}>
-                  <FormLabel>Description:</FormLabel>
-                  <Input
-                    size="md"
-                    type="text"
-                    disabled={addScript.isLoading}
-                    {...register('description')}
-                  />
-                </FormControl>
+            {addScript.error && (
+              <FormErrorMessage>{addScript.error.message}</FormErrorMessage>
+            )}
+            <VStack align={'start'}>
+              <FormControl as={React.Fragment}>
+                <FormLabel>Name:</FormLabel>
+                <Input
+                  size="md"
+                  type="text"
+                  disabled={addScript.isLoading}
+                  {...register('name')}
+                />
+              </FormControl>
+              <FormControl as={React.Fragment}>
+                <FormLabel>Description:</FormLabel>
+                <Input
+                  size="md"
+                  type="text"
+                  disabled={addScript.isLoading}
+                  {...register('description')}
+                />
+              </FormControl>
+              {Editor && (
                 <FormControl as={React.Fragment}>
                   <FormLabel>Code:</FormLabel>
-                  <Input
-                    size="md"
-                    type="text"
-                    disabled={addScript.isLoading}
-                    {...register('code')}
+                  <Editor
+                    lang="ts"
+                    theme="dark"
+                    value={code}
+                    onChange={setCode}
+                    // faking some types
+                    types={{
+                      '/index.d.ts':
+                        'export type Zipper = { store: (k, v) => void }',
+                    }}
                   />
                 </FormControl>
-                <Button
-                  type="submit"
-                  paddingX={6}
-                  disabled={addScript.isLoading}
-                  bgColor="purple.800"
-                  textColor="gray.100"
-                >
-                  Submit
-                </Button>
-              </VStack>
-            </Flex>
+              )}
+              <Button
+                type="submit"
+                paddingX={6}
+                disabled={addScript.isLoading}
+                bgColor="purple.800"
+                textColor="gray.100"
+              >
+                Submit
+              </Button>
+            </VStack>
           </form>
         </VStack>
       </Box>
