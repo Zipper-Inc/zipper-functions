@@ -25,7 +25,31 @@ const AppPage: NextPageWithLayout = () => {
   const appQuery = trpc.useQuery(['app.byId', { id }]);
   const scriptsQuery = trpc.useQuery(['script.byAppId', { appId: id }]);
 
+  const [outputValue, setOutputValue] = React.useState('');
+
   const { register, handleSubmit, reset } = useForm();
+
+  const runApp = async () => {
+    const allFunctions = scriptsQuery.data?.reduce((prev, curr) => {
+      return `
+    ${prev}
+    ${curr.code}
+    `;
+    }, '');
+
+    const raw = await fetch('/api/run', {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ code: allFunctions }),
+    });
+
+    const res = await raw.json();
+
+    setOutputValue(res.output);
+  };
 
   const forkApp = trpc.useMutation('app.fork', {
     async onSuccess(data) {
@@ -92,6 +116,20 @@ const AppPage: NextPageWithLayout = () => {
           >
             Explore this App
           </Button>
+
+          <Button
+            type="button"
+            paddingX={6}
+            bgColor="purple.800"
+            textColor="gray.100"
+            onClick={() => {
+              runApp();
+            }}
+          >
+            Run
+          </Button>
+
+          <Code>{outputValue}</Code>
 
           <hr />
 
