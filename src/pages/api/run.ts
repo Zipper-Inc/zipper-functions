@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { NodeVM } from 'vm2';
+import appDecorator from '~/server/appDecorator';
 
 type ResponseData = {
   message: string;
@@ -21,8 +22,14 @@ export default function handler(
   });
 
   const functionInSandbox = vm.run(
-    // 'module.exports = function(who) { return("hello "+ who); }',
-    `module.exports = ${req.body.code}`,
+    `
+    this.zipper = { storage: {} };
+    this.zipper.storage.get = (key) => {
+      return "hello " + key;
+    };
+
+    return ${req.body.code}
+    `,
   );
 
   const output = functionInSandbox();
