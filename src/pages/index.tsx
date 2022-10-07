@@ -9,10 +9,13 @@ import {
   FormControl,
   FormErrorMessage,
   FormLabel,
+  Grid,
+  GridItem,
   Heading,
   HStack,
   Input,
   Link,
+  VStack,
 } from '@chakra-ui/react';
 import { useForm } from 'react-hook-form';
 import React from 'react';
@@ -37,62 +40,87 @@ const IndexPage: NextPageWithLayout = () => {
 
   return (
     <>
-      <Header />
-      <Box marginX="8">
-        <Heading as="h1" size="2xl" marginBottom={4}>
-          Welcome to Zipper Functions!
-        </Heading>
+      <HStack alignItems="start">
+        <VStack alignItems="start" spacing={2} w={280}>
+          <Link href="#">Popular Apps</Link>
+          <Link href="#">AI Magic</Link>
+          <Link href="#">Note Taking</Link>
+        </VStack>
+        <Grid templateColumns="repeat(3, 280px)" gridGap={10}>
+          {appQuery.data?.map((app, index) => {
+            if (index === 0) {
+              return (
+                <GridItem
+                  colSpan={3}
+                  key={app.id}
+                  background="gray.100"
+                  borderRadius={10}
+                  p={4}
+                  height="240"
+                >
+                  <Heading as="h3" size="md">
+                    {app.name}
+                  </Heading>
+                  <NextLink href={`/app/${app.id}`}>
+                    <Link textColor="brandPurple">View more</Link>
+                  </NextLink>
+                </GridItem>
+              );
+            }
 
-        <Heading size="lg" marginBottom={4}>
-          Apps
-          {appQuery.status === 'loading' && '(loading)'}
-        </Heading>
-
-        {appQuery.data?.map((app) => (
-          <Box as="article" key={app.id} marginY="4">
-            <Heading as="h3" size="md">
-              {app.name}
-            </Heading>
-            <NextLink href={`/app/${app.id}`}>
-              <Link textColor="brandPurple">View more</Link>
-            </NextLink>
-          </Box>
-        ))}
-
-        <hr />
-
-        <form
-          onSubmit={handleSubmit(({ name }) => {
-            addApp.mutateAsync({ name });
-          })}
-        >
-          <Flex marginTop="4">
-            {addApp.error && (
-              <FormErrorMessage>{addApp.error.message}</FormErrorMessage>
-            )}
-            <HStack>
-              <FormControl as={React.Fragment}>
-                <FormLabel>Name:</FormLabel>
-                <Input
-                  size="md"
-                  type="text"
-                  disabled={addApp.isLoading}
-                  {...register('name')}
-                />
-              </FormControl>
-              <Button
-                type="submit"
-                paddingX={6}
-                disabled={addApp.isLoading}
-                bgColor="purple.800"
-                textColor="gray.100"
+            return (
+              <GridItem
+                key={app.id}
+                height={240}
+                background="gray.100"
+                borderRadius={10}
+                p={4}
               >
-                Submit
-              </Button>
-            </HStack>
-          </Flex>
-        </form>
-      </Box>
+                <Heading as="h3" size="md">
+                  {app.name}
+                </Heading>
+                <NextLink href={`/app/${app.id}`}>
+                  <Link textColor="brandPurple">View more</Link>
+                </NextLink>
+              </GridItem>
+            );
+          })}
+          <GridItem>
+            <form
+              onSubmit={handleSubmit(({ name }) => {
+                addApp.mutateAsync({ name });
+              })}
+            >
+              <Flex marginTop="4" direction="column">
+                {addApp.error && (
+                  <FormErrorMessage>{addApp.error.message}</FormErrorMessage>
+                )}
+                <VStack alignItems="start">
+                  <Heading size="md">Create App</Heading>
+                  <FormControl as={React.Fragment}>
+                    <FormLabel>Name:</FormLabel>
+                    <Input
+                      size="md"
+                      type="text"
+                      disabled={addApp.isLoading}
+                      {...register('name')}
+                    />
+                  </FormControl>
+                  <Button
+                    type="submit"
+                    paddingX={6}
+                    disabled={addApp.isLoading}
+                    bgColor="purple.800"
+                    textColor="gray.100"
+                  >
+                    Submit
+                  </Button>
+                </VStack>
+              </Flex>
+            </form>
+          </GridItem>
+        </Grid>
+      </HStack>
     </>
   );
 };

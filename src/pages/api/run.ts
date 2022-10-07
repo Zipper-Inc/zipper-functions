@@ -1,6 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { NodeVM } from 'vm2';
-import appDecorator from '~/server/appDecorator';
 
 type ResponseData = {
   message: string;
