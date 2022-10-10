@@ -36,7 +36,6 @@ const AppPage: NextPageWithLayout = () => {
   const utils = trpc.useContext();
   const id = useRouter().query.id as string;
   const appQuery = trpc.useQuery(['app.byId', { id }]);
-  const scriptsQuery = trpc.useQuery(['script.byAppId', { appId: id }]);
 
   const [allFunctions, setAllFunctions] = useState<Record<
     string,
@@ -47,13 +46,6 @@ const AppPage: NextPageWithLayout = () => {
 
   const { register, handleSubmit, reset } = useForm();
 
-  const savedCode = scriptsQuery.data?.reduce((prev, curr) => {
-    return `
-    ${prev}
-    ${curr.code}
-    `;
-  }, '');
-
   const [, setShouldRenderEditor] = useState(false);
   useEffect(() => {
     import('@prisma/text-editors').then((module) => {
@@ -61,12 +53,19 @@ const AppPage: NextPageWithLayout = () => {
       if (Editor) setShouldRenderEditor(true);
     });
   }, []);
-  const [code, setCode] = useState(savedCode || CODE_EXAMPLE);
+  const [currentScript, setCurrentScript] = useState<string>('main');
+  const [currentEditorCode, setCurrentEditorCode] = useState(
+    appQuery.data?.code || CODE_EXAMPLE,
+  );
 
   useEffect(() => {
     setAllFunctions(appQuery.data?.allCode);
-    setCode(allFunctions?.main || CODE_EXAMPLE);
+    setCurrentEditorCode(allFunctions?.main || CODE_EXAMPLE);
   }, [appQuery.isSuccess]);
+
+  useEffect(() => {
+    setCurrentEditorCode(allFunctions?.[currentScript] || CODE_EXAMPLE);
+  }, [currentScript]);
 
   const runApp = async () => {
     const raw = await fetch('/api/run', {
@@ -75,7 +74,7 @@ const AppPage: NextPageWithLayout = () => {
         Accept: 'application/json',
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ code }),
+      body: JSON.stringify({ code: currentEditorCode }),
     });
 
     const res = await raw.json();
@@ -137,12 +136,27 @@ const AppPage: NextPageWithLayout = () => {
           {data.name}
         </Heading>
         <VStack alignItems="start" gap={2}>
-          <Link background="purple.200" borderRadius={2} px={2}>
+          <Link
+            background="purple.200"
+            borderRadius={2}
+            px={2}
+            onClick={() => {
+              setCurrentScript('main');
+            }}
+          >
             <b>Main</b>
           </Link>
           <Text>Other Functions:</Text>
-          {scriptsQuery.data?.map((script) => (
-            <Link size="sm" background="purple.200" borderRadius={2} px={2}>
+          {appQuery.data?.scripts.map((script) => (
+            <Link
+              size="sm"
+              background="purple.200"
+              borderRadius={2}
+              px={2}
+              onClick={() => {
+                setCurrentScript(script.name);
+              }}
+            >
               <b>{script.name}</b>
             </Link>
           ))}
@@ -201,8 +215,13 @@ const AppPage: NextPageWithLayout = () => {
                 theme="dark"
                 height="500px"
                 width="100%"
-                value={code}
-                onChange={setCode}
+                value={currentEditorCode}
+                onChange={() => {
+                  setAllFunctions({
+                    ...allFunctions,
+                    [currentScript]: currentEditorCode,
+                  });
+                }}
                 // faking some types
                 types={{
                   '/index.d.ts':
