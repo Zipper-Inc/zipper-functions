@@ -65,7 +65,7 @@ const AppPage: NextPageWithLayout = () => {
 
   useEffect(() => {
     setAllFunctions(appQuery.data?.allCode);
-    setCode(allFunctions?.main);
+    setCode(allFunctions?.main || CODE_EXAMPLE);
   }, [appQuery.isSuccess]);
 
   const runApp = async () => {
