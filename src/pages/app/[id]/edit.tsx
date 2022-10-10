@@ -1,7 +1,7 @@
 import {
   Box,
   Button,
-  Code,
+  Divider,
   FormControl,
   FormErrorMessage,
   FormLabel,
@@ -38,6 +38,11 @@ const AppPage: NextPageWithLayout = () => {
   const appQuery = trpc.useQuery(['app.byId', { id }]);
   const scriptsQuery = trpc.useQuery(['script.byAppId', { appId: id }]);
 
+  const [allFunctions, setAllFunctions] = useState<Record<
+    string,
+    string | null
+  > | null>();
+
   const [outputValue, setOutputValue] = React.useState('');
 
   const { register, handleSubmit, reset } = useForm();
@@ -57,6 +62,11 @@ const AppPage: NextPageWithLayout = () => {
     });
   }, []);
   const [code, setCode] = useState(savedCode || CODE_EXAMPLE);
+
+  useEffect(() => {
+    setAllFunctions(appQuery.data?.allCode);
+    setCode(allFunctions?.main);
+  }, [appQuery.isSuccess]);
 
   const runApp = async () => {
     const raw = await fetch('/api/run', {
@@ -93,6 +103,7 @@ const AppPage: NextPageWithLayout = () => {
   if (appQuery.status !== 'success') {
     return <>Loading...</>;
   }
+
   const { data } = appQuery;
   return (
     <Grid templateColumns="280px 1fr 1fr 350px" gap={6}>
@@ -122,26 +133,23 @@ const AppPage: NextPageWithLayout = () => {
       </GridItem>
       <GridItem></GridItem>
       <GridItem>
-        <Heading as="h1" size="xl" noOfLines={1}>
+        <Heading as="h1" size="md" pb={5}>
           {data.name}
         </Heading>
-        <Heading size="lg" marginBottom={4}>
-          Functions
-          {scriptsQuery.status === 'loading' && '(loading)'}
-        </Heading>
-        {scriptsQuery.data?.map((script) => (
-          <Box as="article" key={script.hash} marginY="4">
-            <Heading as="h3" size="md">
-              {script.name}
-            </Heading>
+        <VStack alignItems="start" gap={2}>
+          <Link background="purple.200" borderRadius={2} px={2}>
+            <b>Main</b>
+          </Link>
+          <Text>Other Functions:</Text>
+          {scriptsQuery.data?.map((script) => (
+            <Link size="sm" background="purple.200" borderRadius={2} px={2}>
+              <b>{script.name}</b>
+            </Link>
+          ))}
+        </VStack>
+        <Divider my={5} />
 
-            <Text size="md">{script.description}</Text>
-
-            <Code size="md">{script.code}</Code>
-          </Box>
-        ))}
-
-        <Heading size="lg" marginBottom={4}>
+        <Heading size="md" marginBottom={4}>
           Create a function
         </Heading>
         <form
@@ -188,7 +196,6 @@ const AppPage: NextPageWithLayout = () => {
         <Box maxH="1000px" flex="1">
           {Editor && (
             <FormControl as={React.Fragment}>
-              <FormLabel>Code:</FormLabel>
               <Editor
                 lang="ts"
                 theme="dark"

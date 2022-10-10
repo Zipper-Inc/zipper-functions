@@ -8,6 +8,7 @@ const defaultSelect = Prisma.validator<Prisma.AppSelect>()({
   id: true,
   name: true,
   description: true,
+  code: true,
   createdAt: true,
 });
 
@@ -42,12 +43,22 @@ export const appRouter = createRouter()
       id: z.string(),
     }),
     async resolve({ input }) {
-      return prisma.app.findFirstOrThrow({
+      const appWithScripts = await prisma.app.findFirstOrThrow({
         where: {
           id: input.id,
         },
-        select: defaultSelect,
+        select: { ...defaultSelect, scripts: true },
       });
+
+      const allCode: Record<string, string | null> = {
+        main: appWithScripts.code,
+      };
+
+      appWithScripts.scripts.forEach((s) => {
+        allCode[s.name] = s.code;
+      });
+
+      return { ...appWithScripts, allCode };
     },
   })
   // update

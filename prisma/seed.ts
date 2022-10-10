@@ -19,12 +19,14 @@ async function main() {
       name: 'Post meeting notes to Slack in multiple languages',
       description:
         'Post meeting notes to Slack in multiple languages using Google Cloud Functions',
+      code: "import joinMeeting from './joinMeeting';",
       scripts: {
         create: {
           name: 'Join the current meeting',
+          filename: 'join-meeting.js',
           description:
             'Looks at a users meetings and joins the current or upcoming one',
-          code: '{}',
+          code: 'module.exports = { console.log("Hello world"); }',
           hash: '1234567890',
         },
       },
