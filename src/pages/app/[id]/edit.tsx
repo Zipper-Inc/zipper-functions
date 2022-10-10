@@ -216,11 +216,13 @@ const AppPage: NextPageWithLayout = () => {
                 height="500px"
                 width="100%"
                 value={currentEditorCode}
-                onChange={() => {
+                onChange={(val: string) => {
                   setAllFunctions({
                     ...allFunctions,
-                    [currentScript]: currentEditorCode,
+                    [currentScript]: val,
                   });
+
+                  setCurrentEditorCode(val);
                 }}
                 // faking some types
                 types={{
@@ -230,6 +232,7 @@ const AppPage: NextPageWithLayout = () => {
               />
             </FormControl>
           )}
+          <p>What the editor should be: {currentEditorCode}</p>
         </Box>
       </GridItem>
       <GridItem>
