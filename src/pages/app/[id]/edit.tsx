@@ -49,10 +49,12 @@ const AppPage: NextPageWithLayout = () => {
 
   const { register, handleSubmit, reset } = useForm();
 
-  const [currentScript, setCurrentScript] = useState<string>('main');
+  const [currentScriptIndex, setCurrentScriptIndex] = useState<number>(-1);
   const [currentEditorCode, setCurrentEditorCode] = useState(
     appQuery.data?.code || CODE_EXAMPLE,
   );
+
+  const scripts = appQuery.data?.scripts || [];
 
   useEffect(() => {
     setAllFunctions(appQuery.data?.allCode);
@@ -60,8 +62,15 @@ const AppPage: NextPageWithLayout = () => {
   }, [appQuery.isSuccess]);
 
   useEffect(() => {
-    setCurrentEditorCode(allFunctions?.[currentScript] || CODE_EXAMPLE);
-  }, [currentScript]);
+    setCurrentEditorCode(
+      allFunctions?.[currentScriptIndex] ||
+        // this is a hack just to see the code change
+        CODE_EXAMPLE.replace(
+          'main()',
+          `${scripts[currentScriptIndex]?.name || 'main'}()`,
+        ),
+    );
+  }, [currentScriptIndex]);
 
   const runApp = async () => {
     const raw = await fetch('/api/run', {
@@ -100,6 +109,7 @@ const AppPage: NextPageWithLayout = () => {
   }
 
   const { data } = appQuery;
+
   return (
     <Grid templateColumns="280px 1fr 1fr 350px" gap={6}>
       <GridItem colSpan={2}>
@@ -137,20 +147,20 @@ const AppPage: NextPageWithLayout = () => {
             borderRadius={2}
             px={2}
             onClick={() => {
-              setCurrentScript('main');
+              setCurrentScriptIndex(-1);
             }}
           >
             <b>Main</b>
           </Link>
           <Text>Other Functions:</Text>
-          {appQuery.data?.scripts.map((script) => (
+          {appQuery.data?.scripts.map((script, i) => (
             <Link
               size="sm"
               background="purple.200"
               borderRadius={2}
               px={2}
               onClick={() => {
-                setCurrentScript(script.name);
+                setCurrentScriptIndex(i);
               }}
             >
               <b>{script.name}</b>
@@ -167,7 +177,8 @@ const AppPage: NextPageWithLayout = () => {
             addScript.mutateAsync({
               name,
               description,
-              code: code || CODE_EXAMPLE,
+              // hack to make the code a lil different
+              code: code || CODE_EXAMPLE.replace('main()', `${name}()`),
               appId: id,
             });
           })}
@@ -212,10 +223,15 @@ const AppPage: NextPageWithLayout = () => {
           <VStack>
             <Box maxH="1000px" flex="1">
               <FormControl as={React.Fragment}>
+                <Heading as="h2" size="lg">
+                  {currentScriptIndex === -1
+                    ? 'main'
+                    : scripts[currentScriptIndex]?.name}
+                </Heading>
                 <Editor
                   height="80vh"
                   defaultLanguage="typescript"
-                  defaultValue={currentEditorCode}
+                  value={currentEditorCode}
                   theme="vs-dark"
                   options={{
                     minimap: { enabled: false },
