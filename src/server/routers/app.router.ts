@@ -38,6 +38,7 @@ export const appRouter = createRouter()
               name: 'main',
               filename: 'main.ts',
               appId: app.id,
+              order: 0,
               hash: await createScriptHash({
                 code: defaultCode,
                 name: 'main',
@@ -102,7 +103,7 @@ export const appRouter = createRouter()
         select: defaultSelect,
       });
 
-      app.scripts.map(async (script) => {
+      app.scripts.map(async (script, i) => {
         const forkScript = await prisma.script.create({
           data: {
             ...script,
@@ -111,6 +112,7 @@ export const appRouter = createRouter()
             hash: await createScriptHash({ ...script, appId: fork.id }),
             parentHash: script.hash,
             appId: fork.id,
+            order: i,
           },
         });
 
@@ -161,10 +163,9 @@ export const appRouter = createRouter()
         select: defaultSelect,
       });
 
-      console.log('------', scripts);
-      if (data.scripts) {
+      if (scripts) {
         await Promise.all(
-          data.scripts.map(async (script) => {
+          scripts.map(async (script, i) => {
             const { originalHash, data } = script;
             const newHash = await createScriptHash({
               code: data.code,
@@ -174,7 +175,6 @@ export const appRouter = createRouter()
             });
 
             if (newHash !== originalHash) {
-              console.log('Creating new script');
               const newScript = await prisma.script.create({
                 data: {
                   ...data,
@@ -184,6 +184,7 @@ export const appRouter = createRouter()
                     .replace(/[^a-z0-9]/gi, '_')
                     .toLowerCase()}.ts`,
                   appId: id,
+                  order: i,
                 },
               });
 

@@ -205,6 +205,7 @@ const AppPage: NextPageWithLayout = () => {
               // hack to make the code a lil different
               code: code || CODE_EXAMPLE.replace('main()', `${name}()`),
               appId: id,
+              order: allScripts.length,
             });
           })}
           style={{ display: 'block', width: '100%' }}

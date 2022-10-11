@@ -31,6 +31,7 @@ async function main() {
               description: 'entry point for the app',
               code: `import { joinMeeting } from './joinMeeting';`,
               hash: mainHash,
+              order: 0,
             },
             {
               name: 'Join the current meeting',
@@ -39,6 +40,7 @@ async function main() {
                 'Looks at a users meetings and joins the current or upcoming one',
               code: 'module.exports = { console.log("Hello world"); }',
               hash,
+              order: 1,
             },
           ],
         },

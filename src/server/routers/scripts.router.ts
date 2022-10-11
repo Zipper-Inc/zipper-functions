@@ -21,6 +21,7 @@ export const scriptRouter = createRouter()
       description: z.string().optional(),
       appId: z.string().uuid(),
       code: z.string(),
+      order: z.number(),
     }),
     async resolve({ input }) {
       const { appId, ...data } = input;
@@ -60,6 +61,7 @@ export const scriptRouter = createRouter()
           appId: input.appId,
           childHash: null,
         },
+        orderBy: { order: 'asc' },
         select: defaultSelect,
       });
     },
