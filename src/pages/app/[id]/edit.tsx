@@ -20,6 +20,11 @@ import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { NextPageWithLayout } from '~/pages/_app';
 import { trpc } from '~/utils/trpc';
+import dynamic from 'next/dynamic';
+
+const Editor = dynamic(() => import('@monaco-editor/react'), {
+  ssr: false,
+});
 
 const CODE_EXAMPLE = `function main() {
   // this is an example
@@ -29,8 +34,6 @@ const CODE_EXAMPLE = `function main() {
   }
 }
 `;
-
-let Editor: any;
 
 const AppPage: NextPageWithLayout = () => {
   const utils = trpc.useContext();
@@ -46,13 +49,6 @@ const AppPage: NextPageWithLayout = () => {
 
   const { register, handleSubmit, reset } = useForm();
 
-  const [, setShouldRenderEditor] = useState(false);
-  useEffect(() => {
-    import('@prisma/text-editors').then((module) => {
-      Editor = module.Editor;
-      if (Editor) setShouldRenderEditor(true);
-    });
-  }, []);
   const [currentScript, setCurrentScript] = useState<string>('main');
   const [currentEditorCode, setCurrentEditorCode] = useState(
     appQuery.data?.code || CODE_EXAMPLE,
@@ -168,7 +164,12 @@ const AppPage: NextPageWithLayout = () => {
         </Heading>
         <form
           onSubmit={handleSubmit(({ name, description, code }) => {
-            addScript.mutateAsync({ name, description, code, appId: id });
+            addScript.mutateAsync({
+              name,
+              description,
+              code,
+              appId: id,
+            });
           })}
           style={{ display: 'block', width: '100%' }}
         >
@@ -207,42 +208,35 @@ const AppPage: NextPageWithLayout = () => {
         </form>
       </GridItem>
       <GridItem colSpan={2}>
-        <Box maxH="1000px" flex="1">
-          {Editor && (
-            <FormControl as={React.Fragment}>
-              <Editor
-                lang="ts"
-                theme="dark"
-                height="500px"
-                width="100%"
-                value={currentEditorCode}
-                onChange={(val: string) => {
-                  setAllFunctions({
-                    ...allFunctions,
-                    [currentScript]: val,
-                  });
-
-                  setCurrentEditorCode(val);
-                }}
-                // faking some types
-                types={{
-                  '/index.d.ts':
-                    'export type Zipper = { store: (k, v) => void }',
-                }}
-              />
-            </FormControl>
-          )}
-          <p>What the editor should be: {currentEditorCode}</p>
-        </Box>
+        {Editor && (
+          <VStack>
+            <Box maxH="1000px" flex="1">
+              <FormControl as={React.Fragment}>
+                <Editor
+                  height="80vh"
+                  defaultLanguage="typescript"
+                  defaultValue={currentEditorCode}
+                  theme="vs-dark"
+                  options={{
+                    minimap: { enabled: false },
+                  }}
+                />
+              </FormControl>
+              <p>What the editor should be: {currentEditorCode}</p>
+            </Box>
+          </VStack>
+        )}
       </GridItem>
       <GridItem>
         {outputValue && Editor && (
           <>
             <Heading size="md">Output</Heading>
             <Editor
-              readonly
-              lang="json"
-              value={JSON.stringify(outputValue, null, 2)}
+              defaultLanguage="json"
+              defaultValue={JSON.stringify(outputValue, null, 2)}
+              options={{
+                minimap: { enabled: false, readOnly: true },
+              }}
             />
           </>
         )}
