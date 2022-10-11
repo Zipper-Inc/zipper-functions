@@ -153,16 +153,15 @@ export const appRouter = createRouter()
     }),
     async resolve({ input }) {
       const { id, data } = input;
-
-      const appData = data;
-      delete appData.scripts;
+      const { scripts, ...rest } = data;
 
       const app = await prisma.app.update({
         where: { id },
-        data: appData,
+        data: rest,
         select: defaultSelect,
       });
 
+      console.log('------', scripts);
       if (data.scripts) {
         await Promise.all(
           data.scripts.map(async (script) => {
@@ -175,6 +174,7 @@ export const appRouter = createRouter()
             });
 
             if (newHash !== originalHash) {
+              console.log('Creating new script');
               const newScript = await prisma.script.create({
                 data: {
                   ...data,
@@ -206,6 +206,11 @@ export const appRouter = createRouter()
           }),
         );
       }
+
+      return prisma.app.findUniqueOrThrow({
+        where: { id },
+        select: defaultSelect,
+      });
     },
   })
   // delete

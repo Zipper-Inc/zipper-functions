@@ -40,6 +40,12 @@ const AppPage: NextPageWithLayout = () => {
   const utils = trpc.useContext();
   const id = useRouter().query.id as string;
   const appQuery = trpc.useQuery(['app.byId', { id }]);
+  const editAppMutation = trpc.useMutation('app.edit', {
+    async onSuccess() {
+      await utils.invalidateQueries(['app.byId', { id }]);
+      reset();
+    },
+  });
 
   const [allScripts, setAllScripts] = useState<Script[]>([]);
 
@@ -125,6 +131,27 @@ const AppPage: NextPageWithLayout = () => {
       <GridItem display="flex" justifyContent="end">
         <HStack>
           <Button>Share</Button>
+          <Button
+            onClick={() => {
+              editAppMutation.mutateAsync({
+                id,
+                data: {
+                  scripts: allScripts.map((script) => {
+                    return {
+                      originalHash: script.hash,
+                      data: {
+                        name: script.name,
+                        description: script.description || '',
+                        code: script.code,
+                      },
+                    };
+                  }),
+                },
+              });
+            }}
+          >
+            Save
+          </Button>
           <Button
             type="button"
             paddingX={6}
@@ -233,6 +260,16 @@ const AppPage: NextPageWithLayout = () => {
                   theme="vs-dark"
                   options={{
                     minimap: { enabled: false },
+                  }}
+                  onChange={(value) => {
+                    setAllScripts(
+                      allScripts.map((script, i) => {
+                        if (i === currentScriptIndex) {
+                          return { ...script, code: value || '' };
+                        }
+                        return script;
+                      }),
+                    );
                   }}
                 />
               </FormControl>
