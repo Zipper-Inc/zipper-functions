@@ -20,6 +20,11 @@ import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { NextPageWithLayout } from '~/pages/_app';
 import { trpc } from '~/utils/trpc';
+import dynamic from 'next/dynamic';
+
+const Editor = dynamic(() => import('@monaco-editor/react'), {
+  ssr: false,
+});
 
 const CODE_EXAMPLE = `function main() {
   // this is an example
@@ -29,8 +34,6 @@ const CODE_EXAMPLE = `function main() {
   }
 }
 `;
-
-let Editor: any;
 
 const AppPage: NextPageWithLayout = () => {
   const utils = trpc.useContext();
@@ -46,17 +49,12 @@ const AppPage: NextPageWithLayout = () => {
 
   const { register, handleSubmit, reset } = useForm();
 
-  const [, setShouldRenderEditor] = useState(false);
-  useEffect(() => {
-    import('@prisma/text-editors').then((module) => {
-      Editor = module.Editor;
-      if (Editor) setShouldRenderEditor(true);
-    });
-  }, []);
-  const [currentScript, setCurrentScript] = useState<string>('main');
+  const [currentScriptIndex, setCurrentScriptIndex] = useState<number>(-1);
   const [currentEditorCode, setCurrentEditorCode] = useState(
     appQuery.data?.code || CODE_EXAMPLE,
   );
+
+  const scripts = appQuery.data?.scripts || [];
 
   useEffect(() => {
     setAllFunctions(appQuery.data?.allCode);
@@ -64,8 +62,15 @@ const AppPage: NextPageWithLayout = () => {
   }, [appQuery.isSuccess]);
 
   useEffect(() => {
-    setCurrentEditorCode(allFunctions?.[currentScript] || CODE_EXAMPLE);
-  }, [currentScript]);
+    setCurrentEditorCode(
+      allFunctions?.[currentScriptIndex] ||
+        // this is a hack just to see the code change
+        CODE_EXAMPLE.replace(
+          'main()',
+          `${scripts[currentScriptIndex]?.name || 'main'}()`,
+        ),
+    );
+  }, [currentScriptIndex]);
 
   const runApp = async () => {
     const raw = await fetch('/api/run', {
@@ -104,6 +109,7 @@ const AppPage: NextPageWithLayout = () => {
   }
 
   const { data } = appQuery;
+
   return (
     <Grid templateColumns="280px 1fr 1fr 350px" gap={6}>
       <GridItem colSpan={2}>
@@ -141,20 +147,20 @@ const AppPage: NextPageWithLayout = () => {
             borderRadius={2}
             px={2}
             onClick={() => {
-              setCurrentScript('main');
+              setCurrentScriptIndex(-1);
             }}
           >
             <b>Main</b>
           </Link>
           <Text>Other Functions:</Text>
-          {appQuery.data?.scripts.map((script) => (
+          {appQuery.data?.scripts.map((script, i) => (
             <Link
               size="sm"
               background="purple.200"
               borderRadius={2}
               px={2}
               onClick={() => {
-                setCurrentScript(script.name);
+                setCurrentScriptIndex(i);
               }}
             >
               <b>{script.name}</b>
@@ -168,7 +174,13 @@ const AppPage: NextPageWithLayout = () => {
         </Heading>
         <form
           onSubmit={handleSubmit(({ name, description, code }) => {
-            addScript.mutateAsync({ name, description, code, appId: id });
+            addScript.mutateAsync({
+              name,
+              description,
+              // hack to make the code a lil different
+              code: code || CODE_EXAMPLE.replace('main()', `${name}()`),
+              appId: id,
+            });
           })}
           style={{ display: 'block', width: '100%' }}
         >
@@ -207,42 +219,40 @@ const AppPage: NextPageWithLayout = () => {
         </form>
       </GridItem>
       <GridItem colSpan={2}>
-        <Box maxH="1000px" flex="1">
-          {Editor && (
-            <FormControl as={React.Fragment}>
-              <Editor
-                lang="ts"
-                theme="dark"
-                height="500px"
-                width="100%"
-                value={currentEditorCode}
-                onChange={(val: string) => {
-                  setAllFunctions({
-                    ...allFunctions,
-                    [currentScript]: val,
-                  });
-
-                  setCurrentEditorCode(val);
-                }}
-                // faking some types
-                types={{
-                  '/index.d.ts':
-                    'export type Zipper = { store: (k, v) => void }',
-                }}
-              />
-            </FormControl>
-          )}
-          <p>What the editor should be: {currentEditorCode}</p>
-        </Box>
+        {Editor && (
+          <VStack>
+            <Box maxH="1000px" flex="1">
+              <FormControl as={React.Fragment}>
+                <Heading as="h2" size="lg">
+                  {currentScriptIndex === -1
+                    ? 'main'
+                    : scripts[currentScriptIndex]?.name}
+                </Heading>
+                <Editor
+                  height="80vh"
+                  defaultLanguage="typescript"
+                  value={currentEditorCode}
+                  theme="vs-dark"
+                  options={{
+                    minimap: { enabled: false },
+                  }}
+                />
+              </FormControl>
+              <p>What the editor should be: {currentEditorCode}</p>
+            </Box>
+          </VStack>
+        )}
       </GridItem>
       <GridItem>
         {outputValue && Editor && (
           <>
             <Heading size="md">Output</Heading>
             <Editor
-              readonly
-              lang="json"
-              value={JSON.stringify(outputValue, null, 2)}
+              defaultLanguage="json"
+              defaultValue={JSON.stringify(outputValue, null, 2)}
+              options={{
+                minimap: { enabled: false, readOnly: true },
+              }}
             />
           </>
         )}
