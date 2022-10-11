@@ -21,6 +21,7 @@ import { useForm } from 'react-hook-form';
 import { NextPageWithLayout } from '~/pages/_app';
 import { trpc } from '~/utils/trpc';
 import dynamic from 'next/dynamic';
+import { Script } from '@prisma/client';
 
 const Editor = dynamic(() => import('@monaco-editor/react'), {
   ssr: false,
@@ -40,34 +41,35 @@ const AppPage: NextPageWithLayout = () => {
   const id = useRouter().query.id as string;
   const appQuery = trpc.useQuery(['app.byId', { id }]);
 
-  const [allFunctions, setAllFunctions] = useState<Record<
-    string,
-    string | null
-  > | null>();
+  const [allScripts, setAllScripts] = useState<Script[]>([]);
 
   const [outputValue, setOutputValue] = React.useState('');
 
   const { register, handleSubmit, reset } = useForm();
 
-  const [currentScriptIndex, setCurrentScriptIndex] = useState<number>(-1);
-  const [currentEditorCode, setCurrentEditorCode] = useState(
-    appQuery.data?.code || CODE_EXAMPLE,
-  );
+  const getMainCode = () => {
+    return (
+      appQuery.data?.scripts?.find(
+        (script) => script.hash === appQuery.data?.scriptMain?.scriptHash,
+      )?.code || CODE_EXAMPLE
+    );
+  };
 
-  const scripts = appQuery.data?.scripts || [];
+  const [currentScriptIndex, setCurrentScriptIndex] = useState<number>(-1);
+  const [currentEditorCode, setCurrentEditorCode] = useState(getMainCode());
 
   useEffect(() => {
-    setAllFunctions(appQuery.data?.allCode);
-    setCurrentEditorCode(allFunctions?.main || CODE_EXAMPLE);
+    setAllScripts(appQuery.data?.scripts || []);
+    setCurrentEditorCode(getMainCode());
   }, [appQuery.isSuccess]);
 
   useEffect(() => {
     setCurrentEditorCode(
-      allFunctions?.[currentScriptIndex] ||
+      allScripts[currentScriptIndex]?.code ||
         // this is a hack just to see the code change
         CODE_EXAMPLE.replace(
           'main()',
-          `${scripts[currentScriptIndex]?.name || 'main'}()`,
+          `${allScripts[currentScriptIndex]?.code || 'main'}()`,
         ),
     );
   }, [currentScriptIndex]);
@@ -142,29 +144,25 @@ const AppPage: NextPageWithLayout = () => {
           {data.name}
         </Heading>
         <VStack alignItems="start" gap={2}>
-          <Link
-            background="purple.200"
-            borderRadius={2}
-            px={2}
-            onClick={() => {
-              setCurrentScriptIndex(-1);
-            }}
-          >
-            <b>Main</b>
-          </Link>
-          <Text>Other Functions:</Text>
           {appQuery.data?.scripts.map((script, i) => (
-            <Link
-              size="sm"
-              background="purple.200"
-              borderRadius={2}
-              px={2}
-              onClick={() => {
-                setCurrentScriptIndex(i);
-              }}
-            >
-              <b>{script.name}</b>
-            </Link>
+            <>
+              <Link
+                size="sm"
+                background="purple.200"
+                borderRadius={2}
+                px={2}
+                onClick={() => {
+                  setCurrentScriptIndex(i);
+                }}
+              >
+                <b>{script.name}</b>
+              </Link>
+              {i === 0 && (
+                <Text size="sm" color="gray.500">
+                  Other functions
+                </Text>
+              )}
+            </>
           ))}
         </VStack>
         <Divider my={5} />
@@ -226,7 +224,7 @@ const AppPage: NextPageWithLayout = () => {
                 <Heading as="h2" size="lg">
                   {currentScriptIndex === -1
                     ? 'main'
-                    : scripts[currentScriptIndex]?.name}
+                    : allScripts[currentScriptIndex]?.name}
                 </Heading>
                 <Editor
                   height="80vh"

@@ -1,4 +1,5 @@
 import { Prisma } from '@prisma/client';
+import { select } from 'airplane/internal/prompt';
 import { z } from 'zod';
 import { prisma } from '~/server/prisma';
 import { createRouter } from '../createRouter';
@@ -8,8 +9,8 @@ const defaultSelect = Prisma.validator<Prisma.AppSelect>()({
   id: true,
   name: true,
   description: true,
-  code: true,
   createdAt: true,
+  scriptMain: true,
 });
 
 export const appRouter = createRouter()
@@ -19,10 +20,36 @@ export const appRouter = createRouter()
       name: z.string().min(3).max(255),
     }),
     async resolve({ input }) {
-      return prisma.app.create({
-        data: { ...input },
+      const app = await prisma.app.create({
+        data: {
+          ...input,
+        },
         select: defaultSelect,
       });
+
+      const defaultCode = '{}';
+
+      const scriptMain = await prisma.scriptMain.create({
+        data: {
+          app: { connect: { id: app.id } },
+          script: {
+            create: {
+              code: defaultCode,
+              name: 'main',
+              filename: 'main.ts',
+              appId: app.id,
+              hash: await createScriptHash({
+                code: defaultCode,
+                name: 'main',
+                appId: app.id,
+                description: `Entry point for ${app.name}`,
+              }),
+            },
+          },
+        },
+      });
+
+      return { ...app, scriptMain };
     },
   })
   // read
@@ -43,22 +70,15 @@ export const appRouter = createRouter()
       id: z.string(),
     }),
     async resolve({ input }) {
-      const appWithScripts = await prisma.app.findFirstOrThrow({
+      return prisma.app.findFirstOrThrow({
         where: {
           id: input.id,
         },
-        select: { ...defaultSelect, scripts: true },
+        select: {
+          ...defaultSelect,
+          scripts: { where: { childHash: null } },
+        },
       });
-
-      const allCode: Record<string, string | null> = {
-        main: appWithScripts.code,
-      };
-
-      appWithScripts.scripts.forEach((s) => {
-        allCode[s.name] = s.code;
-      });
-
-      return { ...appWithScripts, allCode };
     },
   })
   // update
@@ -71,7 +91,7 @@ export const appRouter = createRouter()
 
       const app = await prisma.app.findFirstOrThrow({
         where: { id },
-        include: { scripts: true },
+        include: { scripts: { where: { childHash: null } }, scriptMain: true },
       });
 
       const fork = await prisma.app.create({
@@ -83,7 +103,7 @@ export const appRouter = createRouter()
       });
 
       app.scripts.map(async (script) => {
-        await prisma.script.create({
+        const forkScript = await prisma.script.create({
           data: {
             ...script,
             inputSchema: JSON.stringify(script.inputSchema),
@@ -93,9 +113,21 @@ export const appRouter = createRouter()
             appId: fork.id,
           },
         });
+
+        if (script.hash === app.scriptMain?.scriptHash) {
+          await prisma.scriptMain.create({
+            data: {
+              app: { connect: { id: fork.id } },
+              script: { connect: { hash: forkScript.hash } },
+            },
+          });
+        }
       });
 
-      return fork;
+      return prisma.app.findUniqueOrThrow({
+        where: { id: fork.id },
+        select: defaultSelect,
+      });
     },
   })
   // update
@@ -103,17 +135,77 @@ export const appRouter = createRouter()
     input: z.object({
       id: z.string().uuid(),
       data: z.object({
-        name: z.string().min(3).max(255),
+        name: z.string().min(3).max(255).optional(),
+        description: z.string().optional(),
+        scripts: z
+          .array(
+            z.object({
+              originalHash: z.string(),
+              data: z.object({
+                name: z.string().min(3).max(255),
+                description: z.string(),
+                code: z.string(),
+              }),
+            }),
+          )
+          .optional(),
       }),
     }),
     async resolve({ input }) {
       const { id, data } = input;
 
-      return prisma.app.update({
+      const appData = data;
+      delete appData.scripts;
+
+      const app = await prisma.app.update({
         where: { id },
-        data,
+        data: appData,
         select: defaultSelect,
       });
+
+      if (data.scripts) {
+        await Promise.all(
+          data.scripts.map(async (script) => {
+            const { originalHash, data } = script;
+            const newHash = await createScriptHash({
+              code: data.code,
+              appId: id,
+              name: data.name,
+              description: data.description,
+            });
+
+            if (newHash !== originalHash) {
+              const newScript = await prisma.script.create({
+                data: {
+                  ...data,
+                  hash: newHash,
+                  parentHash: originalHash,
+                  filename: `${data.name
+                    .replace(/[^a-z0-9]/gi, '_')
+                    .toLowerCase()}.ts`,
+                  appId: id,
+                },
+              });
+
+              await prisma.script.update({
+                where: { hash: originalHash },
+                data: { childHash: newHash },
+              });
+
+              if (originalHash === app.scriptMain?.scriptHash) {
+                await prisma.scriptMain.update({
+                  where: {
+                    appId: app.id,
+                  },
+                  data: {
+                    script: { connect: { hash: newScript.hash } },
+                  },
+                });
+              }
+            }
+          }),
+        );
+      }
     },
   })
   // delete

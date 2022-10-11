@@ -4,11 +4,14 @@
  * @link https://www.prisma.io/docs/guides/database/seed-database
  */
 import { PrismaClient } from '@prisma/client';
+import { createHash } from 'crypto';
 
 const prisma = new PrismaClient();
 
 async function main() {
   const id = '5c03994c-fc16-47e0-bd02-d218a370a078';
+  const hash = createHash('sha256').update('hello world').digest('hex');
+  const mainHash = createHash('sha256').update('main hash').digest('hex');
 
   await prisma.app.upsert({
     where: {
@@ -19,16 +22,29 @@ async function main() {
       name: 'Post meeting notes to Slack in multiple languages',
       description:
         'Post meeting notes to Slack in multiple languages using Google Cloud Functions',
-      code: "import joinMeeting from './joinMeeting';",
       scripts: {
-        create: {
-          name: 'Join the current meeting',
-          filename: 'join-meeting.js',
-          description:
-            'Looks at a users meetings and joins the current or upcoming one',
-          code: 'module.exports = { console.log("Hello world"); }',
-          hash: '1234567890',
+        createMany: {
+          data: [
+            {
+              name: 'main',
+              filename: 'main.ts',
+              description: 'entry point for the app',
+              code: `import { joinMeeting } from './joinMeeting';`,
+              hash: mainHash,
+            },
+            {
+              name: 'Join the current meeting',
+              filename: 'join-meeting.js',
+              description:
+                'Looks at a users meetings and joins the current or upcoming one',
+              code: 'module.exports = { console.log("Hello world"); }',
+              hash,
+            },
+          ],
         },
+      },
+      scriptMain: {
+        create: { script: { connect: { hash: mainHash } } },
       },
     },
     update: {},

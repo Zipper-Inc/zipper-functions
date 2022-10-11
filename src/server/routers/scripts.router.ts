@@ -58,6 +58,7 @@ export const scriptRouter = createRouter()
       return prisma.script.findMany({
         where: {
           appId: input.appId,
+          childHash: null,
         },
         select: defaultSelect,
       });
