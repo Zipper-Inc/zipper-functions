@@ -34,7 +34,7 @@ async function main() {
             },
             {
               name: 'Join the current meeting',
-              filename: 'join-meeting.js',
+              filename: 'join_the_current_meeting.ts',
               description:
                 'Looks at a users meetings and joins the current or upcoming one',
               code: 'module.exports = { console.log("Hello world"); }',
