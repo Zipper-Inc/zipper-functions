@@ -23,10 +23,15 @@ export const scriptRouter = createRouter()
       code: z.string(),
     }),
     async resolve({ input }) {
+      const { appId, ...data } = input;
       return prisma.script.create({
         data: {
-          ...input,
+          ...data,
           hash: await createScriptHash(input),
+          app: {
+            connect: { id: appId },
+          },
+          filename: data.name,
         },
         select: defaultSelect,
       });

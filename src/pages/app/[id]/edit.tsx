@@ -167,7 +167,7 @@ const AppPage: NextPageWithLayout = () => {
             addScript.mutateAsync({
               name,
               description,
-              code,
+              code: code || CODE_EXAMPLE,
               appId: id,
             });
           })}
