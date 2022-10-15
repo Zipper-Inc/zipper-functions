@@ -125,9 +125,9 @@ export const baseColors = {
 };
 
 export const fonts = {
-  body: 'Inter, sans-serif',
-  heading: 'Inter, sans-serif',
-  mono: 'Monaco, monospace',
+  body: 'Inter, "Inter", sans-serif',
+  heading: 'Inter, "Inter", sans-serif',
+  mono: 'Monaco, "Monaco", monospace',
 };
 
 export const theme = extendTheme({
