@@ -1,11 +1,10 @@
 import '@fontsource/inter';
-import { Box, ChakraProvider, Grid, Flex, VStack } from '@chakra-ui/react';
+import { ChakraProvider } from '@chakra-ui/react';
 import Head from 'next/head';
 import { ReactNode } from 'react';
 import { ReactQueryDevtools } from 'react-query/devtools';
 import Header from './header';
 import { theme } from '~/theme';
-import DefaultGrid from './default-grid';
 
 type DefaultLayoutProps = { children: ReactNode; protected?: boolean };
 
