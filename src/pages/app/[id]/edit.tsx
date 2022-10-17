@@ -22,6 +22,7 @@ import { NextPageWithLayout } from '~/pages/_app';
 import { trpc } from '~/utils/trpc';
 import dynamic from 'next/dynamic';
 import { Script } from '@prisma/client';
+import DefaultGrid from '~/components/default-grid';
 
 const Editor = dynamic(() => import('@monaco-editor/react'), {
   ssr: false,
@@ -119,8 +120,8 @@ const AppPage: NextPageWithLayout = () => {
   const { data } = appQuery;
 
   return (
-    <Grid templateColumns="280px 1fr 1fr 350px" gap={6}>
-      <GridItem colSpan={2}>
+    <DefaultGrid>
+      <GridItem colSpan={7}>
         <HStack>
           <Link>Apps</Link>
           <Link>Runs</Link>
@@ -128,7 +129,7 @@ const AppPage: NextPageWithLayout = () => {
           <Link>Secrets</Link>
         </HStack>
       </GridItem>
-      <GridItem display="flex" justifyContent="end">
+      <GridItem colSpan={2} justifyContent="end">
         <HStack>
           <Button>Share</Button>
           <Button
@@ -165,8 +166,8 @@ const AppPage: NextPageWithLayout = () => {
           </Button>
         </HStack>
       </GridItem>
-      <GridItem></GridItem>
-      <GridItem>
+      <GridItem colSpan={3} />
+      <GridItem colSpan={3}>
         <Heading as="h1" size="md" pb={5}>
           {data.name}
         </Heading>
@@ -244,10 +245,10 @@ const AppPage: NextPageWithLayout = () => {
           </VStack>
         </form>
       </GridItem>
-      <GridItem colSpan={2}>
+      <GridItem colSpan={6}>
         {Editor && (
           <VStack>
-            <Box maxH="1000px" flex="1">
+            <Box width="100%">
               <FormControl as={React.Fragment}>
                 <Heading as="h2" size="lg">
                   {currentScriptIndex === -1
@@ -255,8 +256,8 @@ const AppPage: NextPageWithLayout = () => {
                     : allScripts[currentScriptIndex]?.name}
                 </Heading>
                 <Editor
-                  height="80vh"
                   defaultLanguage="typescript"
+                  height="100vh"
                   value={currentEditorCode}
                   theme="vs-dark"
                   options={{
@@ -274,12 +275,12 @@ const AppPage: NextPageWithLayout = () => {
                   }}
                 />
               </FormControl>
-              <p>What the editor should be: {currentEditorCode}</p>
             </Box>
           </VStack>
         )}
       </GridItem>
-      <GridItem>
+      <GridItem colSpan={3}>
+        <p>What the editor should be: {currentEditorCode}</p>
         {outputValue && Editor && (
           <>
             <Heading size="md">Output</Heading>
@@ -293,7 +294,7 @@ const AppPage: NextPageWithLayout = () => {
           </>
         )}
       </GridItem>
-    </Grid>
+    </DefaultGrid>
   );
 };
 
