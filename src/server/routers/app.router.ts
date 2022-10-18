@@ -1,5 +1,4 @@
 import { Prisma } from '@prisma/client';
-import { select } from 'airplane/internal/prompt';
 import { z } from 'zod';
 import { prisma } from '~/server/prisma';
 import slugify from '~/utils/slugify';

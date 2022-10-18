@@ -6,24 +6,14 @@ import {
   HStack,
   IconButton,
   Link,
-  Text,
   useBreakpointValue,
-  useColorModeValue,
 } from '@chakra-ui/react';
-import * as React from 'react';
-import {
-  FiHelpCircle,
-  FiMenu,
-  FiSearch,
-  FiBell,
-  FiChevronRight,
-} from 'react-icons/fi';
+import { FiHelpCircle, FiMenu, FiSearch, FiBell } from 'react-icons/fi';
 import DefaultGrid from './default-grid';
 import { ZipperLogo } from './svg/zipper-logo';
 
 export default function Header() {
   const isDesktop = useBreakpointValue({ base: false, lg: true });
-  const shadowValue = useColorModeValue('sm', 'sm-dark');
   return (
     <DefaultGrid as="header" paddingY={12}>
       <GridItem colSpan={3}>

@@ -5,7 +5,6 @@ import {
   FormControl,
   FormErrorMessage,
   FormLabel,
-  Grid,
   GridItem,
   Heading,
   HStack,
@@ -24,24 +23,16 @@ import { trpc } from '~/utils/trpc';
 import dynamic from 'next/dynamic';
 import { Script } from '@prisma/client';
 import DefaultGrid from '~/components/default-grid';
-import slugify from '~/utils/slugify';
 
 const Editor = dynamic(() => import('@monaco-editor/react'), {
   ssr: false,
 });
 
-const CODE_EXAMPLE = `function main() {
-  // this is an example
-  return {
-    "hello": "world",
-    "datetime": new Date().toString(),
-  }
-}
-`;
-
 const AppPage: NextPageWithLayout = () => {
   const utils = trpc.useContext();
-  const { id, filename } = useRouter().query as Record<string, string>;
+  const { query } = useRouter();
+  const id = query.id as string;
+  const filename = query.id as string;
 
   const appQuery = trpc.useQuery(['app.byId', { id }]);
 
@@ -60,13 +51,9 @@ const AppPage: NextPageWithLayout = () => {
 
   const currentScript =
     appQuery.data?.scripts?.find((script) => script.filename === filename) ||
-    appQuery.data?.scriptMain;
-
-  const getMainCode = () => {
-    return appQuery.data?.scripts?.find(
+    appQuery.data?.scripts?.find(
       (script) => script.hash === appQuery.data?.scriptMain?.scriptHash,
-    )?.code;
-  };
+    );
 
   useEffect(() => {
     setAllScripts(appQuery.data?.scripts || []);
@@ -79,7 +66,7 @@ const AppPage: NextPageWithLayout = () => {
         Accept: 'application/json',
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ code: currentScript.code }),
+      body: JSON.stringify({ code: currentScript?.code || '' }),
     });
 
     const res = await raw.json();
@@ -235,20 +222,20 @@ const AppPage: NextPageWithLayout = () => {
             <Box width="100%">
               <FormControl as={React.Fragment}>
                 <Heading as="h2" size="lg">
-                  {currentScript.name}
+                  {currentScript?.name || 'Untitled'}
                 </Heading>
                 <Editor
                   defaultLanguage="typescript"
                   height="100vh"
-                  value={currentScript.code}
+                  value={currentScript?.code || ''}
                   theme="vs-dark"
                   options={{
                     minimap: { enabled: false },
                   }}
                   onChange={(value) => {
                     setAllScripts(
-                      allScripts.map((script, i) => {
-                        if (i === currentScriptIndex) {
+                      allScripts.map((script) => {
+                        if (script.filename === currentScript?.filename) {
                           return { ...script, code: value || '' };
                         }
                         return script;
