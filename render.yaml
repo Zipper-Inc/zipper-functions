@@ -13,7 +13,7 @@ services:
     ## 👇 Preview Environment Initialization script:
     # initialDeployHook: yarn db-seed
     buildCommand: yarn install; yarn build
-    startCommand: yarn start:production
+    startCommand: PORT=443 yarn start:production
     envVars:
       - key: DATABASE_URL
         fromDatabase:
