@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import jwt, { JwtPayload } from 'jsonwebtoken';
+import * as jose from 'jose';
 
 type DeploymentIdType =
   | 'd-ephemeral'
@@ -31,7 +31,7 @@ export default async function handler(
   const args = Object.fromEntries(url.searchParams.entries());
   if (!args.deployment_id) throw new Error('Missing deployment_id');
   // Validate JWT
-  const payload = decodeAuthHeader(req) as JwtPayload;
+  const payload = await decodeAuthHeader(req);
   // Sanity check JWT deploymentId matches the one provided via args
   if (payload.deployment_id !== args.deployment_id) {
     throw new Error(
@@ -51,7 +51,7 @@ export default async function handler(
   return new Response(`¯\\_(ツ)_/¯`, { status: 500 });
 }
 
-function decodeAuthHeader(req: NextApiRequest) {
+async function decodeAuthHeader(req: NextApiRequest) {
   const authHeader = req.headers?.authorization;
   console.log(req.headers);
   if (!authHeader) {
@@ -67,13 +67,9 @@ function decodeAuthHeader(req: NextApiRequest) {
   }
 
   const encoder = new TextEncoder();
-  const secretKey = encoder.encode(process.env.SHARED_SECRET).toString();
-
-  try {
-    return jwt.verify(token, secretKey);
-  } catch (error) {
-    throw new Error("Couldn't decode JWT");
-  }
+  const secretKey = encoder.encode(process.env.SHARED_SECRET);
+  const verified = await jose.jwtVerify(token, secretKey);
+  return verified.payload;
 }
 
 async function originBoot(deploymentId: string, res: NextApiResponse) {
