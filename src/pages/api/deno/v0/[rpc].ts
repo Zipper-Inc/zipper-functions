@@ -21,7 +21,12 @@ export default async function handler(
   console.log(req.method, req.url);
   if (!req.url) return new Response('No URL', { status: 400 });
 
-  const url = new URL(req.url);
+  const url = new URL(
+    req.url,
+    `${process.env.NODE_ENV === 'development' ? 'http' : 'https'}://${
+      req.headers.host
+    }`,
+  );
   // Take RPC args from query string
   const args = Object.fromEntries(url.searchParams.entries());
   if (!args.deployment_id) throw new Error('Missing deployment_id');
