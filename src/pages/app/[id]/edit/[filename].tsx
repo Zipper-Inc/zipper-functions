@@ -15,6 +15,7 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import NextError from 'next/error';
+import NextLink from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -23,6 +24,7 @@ import { trpc } from '~/utils/trpc';
 import dynamic from 'next/dynamic';
 import { Script } from '@prisma/client';
 import DefaultGrid from '~/components/default-grid';
+import slugify from '~/utils/slugify';
 
 const Editor = dynamic(() => import('@monaco-editor/react'), {
   ssr: false,
@@ -39,8 +41,10 @@ const CODE_EXAMPLE = `function main() {
 
 const AppPage: NextPageWithLayout = () => {
   const utils = trpc.useContext();
-  const id = useRouter().query.id as string;
+  const { id, filename } = useRouter().query as Record<string, string>;
+
   const appQuery = trpc.useQuery(['app.byId', { id }]);
+
   const editAppMutation = trpc.useMutation('app.edit', {
     async onSuccess() {
       await utils.invalidateQueries(['app.byId', { id }]);
@@ -54,32 +58,19 @@ const AppPage: NextPageWithLayout = () => {
 
   const { register, handleSubmit, reset } = useForm();
 
-  const getMainCode = () => {
-    return (
-      appQuery.data?.scripts?.find(
-        (script) => script.hash === appQuery.data?.scriptMain?.scriptHash,
-      )?.code || CODE_EXAMPLE
-    );
-  };
+  const currentScript =
+    appQuery.data?.scripts?.find((script) => script.filename === filename) ||
+    appQuery.data?.scriptMain;
 
-  const [currentScriptIndex, setCurrentScriptIndex] = useState<number>(-1);
-  const [currentEditorCode, setCurrentEditorCode] = useState(getMainCode());
+  const getMainCode = () => {
+    return appQuery.data?.scripts?.find(
+      (script) => script.hash === appQuery.data?.scriptMain?.scriptHash,
+    )?.code;
+  };
 
   useEffect(() => {
     setAllScripts(appQuery.data?.scripts || []);
-    setCurrentEditorCode(getMainCode());
   }, [appQuery.isSuccess]);
-
-  useEffect(() => {
-    setCurrentEditorCode(
-      allScripts[currentScriptIndex]?.code ||
-        // this is a hack just to see the code change
-        CODE_EXAMPLE.replace(
-          'main()',
-          `${allScripts[currentScriptIndex]?.code || 'main'}()`,
-        ),
-    );
-  }, [currentScriptIndex]);
 
   const runApp = async () => {
     const raw = await fetch('/api/run', {
@@ -88,7 +79,7 @@ const AppPage: NextPageWithLayout = () => {
         Accept: 'application/json',
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ code: currentEditorCode }),
+      body: JSON.stringify({ code: currentScript.code }),
     });
 
     const res = await raw.json();
@@ -174,17 +165,11 @@ const AppPage: NextPageWithLayout = () => {
         <VStack alignItems="start" gap={2}>
           {appQuery.data?.scripts.map((script, i) => (
             <>
-              <Link
-                size="sm"
-                background="purple.200"
-                borderRadius={2}
-                px={2}
-                onClick={() => {
-                  setCurrentScriptIndex(i);
-                }}
-              >
-                <b>{script.name}</b>
-              </Link>
+              <NextLink href={`/app/${id}/edit/${script.filename}`} passHref>
+                <Link size="sm" background="purple.200" borderRadius={2} px={2}>
+                  <b>{script.name}</b>
+                </Link>
+              </NextLink>
               {i === 0 && (
                 <Text size="sm" color="gray.500">
                   Other functions
@@ -203,8 +188,7 @@ const AppPage: NextPageWithLayout = () => {
             addScript.mutateAsync({
               name,
               description,
-              // hack to make the code a lil different
-              code: code || CODE_EXAMPLE.replace('main()', `${name}()`),
+              code: code,
               appId: id,
               order: allScripts.length,
             });
@@ -251,14 +235,12 @@ const AppPage: NextPageWithLayout = () => {
             <Box width="100%">
               <FormControl as={React.Fragment}>
                 <Heading as="h2" size="lg">
-                  {currentScriptIndex === -1
-                    ? 'main'
-                    : allScripts[currentScriptIndex]?.name}
+                  {currentScript.name}
                 </Heading>
                 <Editor
                   defaultLanguage="typescript"
                   height="100vh"
-                  value={currentEditorCode}
+                  value={currentScript.code}
                   theme="vs-dark"
                   options={{
                     minimap: { enabled: false },
@@ -280,7 +262,6 @@ const AppPage: NextPageWithLayout = () => {
         )}
       </GridItem>
       <GridItem colSpan={3}>
-        <p>What the editor should be: {currentEditorCode}</p>
         {outputValue && Editor && (
           <>
             <Heading size="md">Output</Heading>
