@@ -1,14 +1,15 @@
 import {
   Button,
+  GridItem,
   Heading,
   HStack,
-  SimpleGrid,
   Text,
   VStack,
 } from '@chakra-ui/react';
 import NextError from 'next/error';
 import { useRouter } from 'next/router';
 import React from 'react';
+import DefaultGrid from '~/components/default-grid';
 import { NextPageWithLayout } from '~/pages/_app';
 import { trpc } from '~/utils/trpc';
 
@@ -37,10 +38,10 @@ const AppPage: NextPageWithLayout = () => {
   }
   const { data } = appQuery;
   return (
-    <HStack pl="100px" pt="100px">
-      <SimpleGrid columns={3}>
+    <DefaultGrid>
+      <GridItem colSpan={5}>
         <VStack gap={4} alignItems="start" w={560}>
-          <Heading as="h1" size="xl" overflowWrap={'normal'}>
+          <Heading as="h1" size="2xl" fontWeight="bold" overflowWrap="normal">
             {data.name}
           </Heading>
 
@@ -76,8 +77,8 @@ const AppPage: NextPageWithLayout = () => {
             </HStack>
           </VStack>
         </VStack>
-      </SimpleGrid>
-    </HStack>
+      </GridItem>
+    </DefaultGrid>
   );
 };
 

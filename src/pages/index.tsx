@@ -1,24 +1,22 @@
 import { trpc } from '../utils/trpc';
 import { NextPageWithLayout } from './_app';
 import NextLink from 'next/link';
-import Header from '../components/header';
 import {
-  Box,
   Button,
   Flex,
   FormControl,
   FormErrorMessage,
   FormLabel,
-  Grid,
+  Grid as InnerGrid,
   GridItem,
   Heading,
-  HStack,
   Input,
   Link,
   VStack,
 } from '@chakra-ui/react';
 import { useForm } from 'react-hook-form';
 import React from 'react';
+import DefaultGrid from '~/components/default-grid';
 
 const IndexPage: NextPageWithLayout = () => {
   const utils = trpc.useContext();
@@ -39,14 +37,20 @@ const IndexPage: NextPageWithLayout = () => {
   // }, [postsQuery.data, utils]);
 
   return (
-    <>
-      <HStack alignItems="start">
+    <DefaultGrid>
+      <GridItem colSpan={3}>
         <VStack alignItems="start" spacing={2} w={280}>
           <Link href="#">Popular Apps</Link>
           <Link href="#">AI Magic</Link>
           <Link href="#">Note Taking</Link>
         </VStack>
-        <Grid templateColumns="repeat(3, 280px)" gridGap={10}>
+      </GridItem>
+      <GridItem colSpan={9}>
+        <InnerGrid
+          templateColumns="repeat(3, 280px)"
+          gridGap={10}
+          marginLeft={-4}
+        >
           {appQuery.data?.map((app, index) => {
             if (index === 0) {
               return (
@@ -119,9 +123,9 @@ const IndexPage: NextPageWithLayout = () => {
               </Flex>
             </form>
           </GridItem>
-        </Grid>
-      </HStack>
-    </>
+        </InnerGrid>
+      </GridItem>
+    </DefaultGrid>
   );
 };
 

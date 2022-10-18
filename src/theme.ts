@@ -124,6 +124,12 @@ export const baseColors = {
   },
 };
 
+export const fonts = {
+  body: 'Inter, "Inter", sans-serif',
+  heading: 'Inter, "Inter", sans-serif',
+  mono: 'Monaco, "Monaco", monospace',
+};
+
 export const theme = extendTheme({
   colors: {
     brandNeutral: baseColors.neutral[100],
@@ -134,6 +140,7 @@ export const theme = extendTheme({
     default: baseColors.gray[600],
     ...baseColors,
   },
+  fonts,
 });
 
 export default theme;
