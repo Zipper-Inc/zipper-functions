@@ -41,11 +41,11 @@ export default async function handler(
   // Dispatch RPCs
   console.log(url.pathname);
   switch (url.pathname) {
-    case '/v0/boot':
+    case '/api/deno/v0/boot':
       return await originBoot(args.deployment_id, res);
-    case '/v0/read_blob':
+    case '/api/deno/v0/read_blob':
       return originReadBlob(args.deployment_id, args.hash);
-    case '/v0/read_tree':
+    case 'api/deno/v0/read_tree':
       return originReadTree(args.deployment_id);
   }
   return new Response(`¯\\_(ツ)_/¯`, { status: 500 });
