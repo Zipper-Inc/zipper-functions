@@ -12,9 +12,8 @@ services:
     # previewPlan: starter
     ## 👇 Preview Environment Initialization script:
     # initialDeployHook: yarn db-seed
-    buildCommand: pnpm install && pnpm build
-    startCommand: pnpm start
-    healthCheckPath: /api/trpc/healthz
+    buildCommand: yarn install; yarn build
+    startCommand: yarn start:production
     envVars:
       - key: DATABASE_URL
         fromDatabase:
