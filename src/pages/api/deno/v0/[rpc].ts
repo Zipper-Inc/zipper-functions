@@ -41,8 +41,18 @@ export default async function handler(
   // Dispatch RPCs
   console.log(url.pathname);
   switch (url.pathname) {
-    case '/api/deno/v0/boot':
-      return await originBoot(args.deployment_id, res);
+    case '/api/deno/v0/boot': {
+      const { body, headers, status } = await originBoot(
+        args.deployment_id,
+        res,
+      );
+      if (headers) {
+        Object.keys(headers).forEach((key) => {
+          res.setHeader(key, headers[key] || '');
+        });
+      }
+      res.status(status || 200).send(body);
+    }
     case '/api/deno/v0/read_blob':
       return originReadBlob(args.deployment_id, args.hash);
     case 'api/deno/v0/read_tree':
@@ -68,11 +78,16 @@ async function decodeAuthHeader(req: NextApiRequest) {
 
   const encoder = new TextEncoder();
   const secretKey = encoder.encode(process.env.SHARED_SECRET);
-  const verified = await jose.jwtVerify(token, secretKey);
-  return verified.payload;
+  try {
+    const verified = await jose.jwtVerify(token, secretKey);
+    return verified.payload;
+  } catch (error: any) {
+    throw new Error(error.message);
+  }
 }
 
 async function originBoot(deploymentId: string, res: NextApiResponse) {
+  console.log('boot', deploymentId);
   const PAYLOADS = {
     'd-ephemeral':
       'https://gist.github.com/AaronO/0610daef96940d4491b8234a08b73e24/raw/b8e2259764545f56bb29baf5457a0ee5cd70a4d4/ephemeral.js',
@@ -95,13 +110,16 @@ async function originBoot(deploymentId: string, res: NextApiResponse) {
   };
   const payloadUrl = PAYLOADS[deploymentId as DeploymentIdType];
   if (!payloadUrl) {
-    return new Response(`No boot payload for ${deploymentId}`, { status: 404 });
+    return { body: `No boot payload for ${deploymentId}`, status: 404 };
   }
 
   // TODO(@AaronO): inject header to disambiguate between JS bundles and eszips
   const payloadResp = await fetch(payloadUrl);
   if (!payloadResp.ok) {
-    res.status(500).send(`Failed to fetch upstream payload: ${deploymentId}`);
+    return {
+      body: `Failed to fetch upstream payload: ${deploymentId}`,
+      status: 500,
+    };
   }
 
   let netPermissions;
@@ -136,7 +154,7 @@ async function originBoot(deploymentId: string, res: NextApiResponse) {
     [X_DENO_CONFIG]: JSON.stringify(isolateConfig),
   });
 
-  return new Response(payloadResp.body, { headers });
+  return { body: payloadResp.body, headers, status: 200 };
 }
 
 function originReadBlob(_deploymentId: string, hash?: string) {
