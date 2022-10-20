@@ -42,10 +42,7 @@ export default async function handler(
   console.log(url.pathname);
   switch (url.pathname) {
     case '/api/deno/v0/boot': {
-      const { body, headers, status } = await originBoot(
-        args.deployment_id,
-        res,
-      );
+      const { body, headers, status } = await originBoot(args.deployment_id);
       if (headers) {
         Object.keys(headers).forEach((key) => {
           res.setHeader(key, headers[key] || '');
@@ -86,7 +83,7 @@ async function decodeAuthHeader(req: NextApiRequest) {
   }
 }
 
-async function originBoot(deploymentId: string, res: NextApiResponse) {
+async function originBoot(deploymentId: string) {
   console.log('boot', deploymentId);
   const PAYLOADS = {
     'd-ephemeral':
