@@ -25,6 +25,8 @@ export const scriptRouter = createRouter()
     }),
     async resolve({ input }) {
       const { appId, ...data } = input;
+
+      /** @todo somehow invalidate previous scripts with same filename */
       return prisma.script.create({
         data: {
           ...data,

@@ -1,16 +1,8 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import * as jose from 'jose';
-
-type DeploymentIdType =
-  | 'd-ephemeral'
-  | 'd-subhosted'
-  | 'd-url'
-  | 'd-envs'
-  | 'd-meta'
-  | 'd-files'
-  | 'd-headers'
-  | 'd-net-allowed'
-  | 'd-net-blocked';
+import { prisma } from '~/server/prisma';
+import { trpcRouter } from '~/server/routers/_app';
+import { createContext } from '~/server/context';
 
 const X_DENO_CONFIG = 'x-deno-config';
 
@@ -29,11 +21,11 @@ export default async function handler(
   );
   // Take RPC args from query string
   const args = Object.fromEntries(url.searchParams.entries());
-  if (!args.deployment_id) throw new Error('Missing deployment_id');
+  // if (!args.deployment_id) throw new Error('Missing deployment_id');
   // Validate JWT
   const payload = await decodeAuthHeader(req);
   // Sanity check JWT deploymentId matches the one provided via args
-  if (payload.deployment_id !== args.deployment_id) {
+  if (args.deployment_id && payload.deployment_id !== args.deployment_id) {
     throw new Error(
       `DeploymentID mismatch (JWT != QS): '${payload.deployment_id}' != ${args.deployment_id}`,
     );
@@ -42,7 +34,11 @@ export default async function handler(
   console.log(url.pathname);
   switch (url.pathname) {
     case '/api/deno/v0/boot': {
-      const { body, headers, status } = await originBoot(args.deployment_id);
+      const { body, headers, status } = await originBoot({
+        req,
+        res,
+        id: args.deployment_id,
+      });
       if (headers) {
         Object.keys(headers).forEach((key) => {
           res.setHeader(key, headers[key] || '');
@@ -83,50 +79,35 @@ async function decodeAuthHeader(req: NextApiRequest) {
   }
 }
 
-async function originBoot(deploymentId: string) {
-  console.log('boot', deploymentId);
-  const PAYLOADS = {
-    'd-ephemeral':
-      'https://gist.github.com/AaronO/0610daef96940d4491b8234a08b73e24/raw/b8e2259764545f56bb29baf5457a0ee5cd70a4d4/ephemeral.js',
-    'd-subhosted':
-      'https://gist.github.com/AaronO/0610daef96940d4491b8234a08b73e24/raw/b8e2259764545f56bb29baf5457a0ee5cd70a4d4/subhosted.js',
-    'd-url':
-      'https://gist.github.com/AaronO/0610daef96940d4491b8234a08b73e24/raw/b8e2259764545f56bb29baf5457a0ee5cd70a4d4/url.js',
-    'd-envs':
-      'https://gist.githubusercontent.com/AaronO/0610daef96940d4491b8234a08b73e24/raw/c56d8ae3cb136e832dca8519f523637fa8637c05/envs.js',
-    'd-meta':
-      'https://gist.githubusercontent.com/AaronO/0610daef96940d4491b8234a08b73e24/raw/cfd6a077932522b5be2f9c7f998677586d163240/meta_url.js',
-    'd-files':
-      'https://gist.githubusercontent.com/AaronO/0610daef96940d4491b8234a08b73e24/raw/6559c3e6c65e0dcbdd0468ae1136084c4e9493ee/files.js',
-    'd-headers':
-      'https://gist.githubusercontent.com/AaronO/0610daef96940d4491b8234a08b73e24/raw/3e83dff11c08da8b028bb15defd5aa628edd0cfe/headers.js',
-    'd-net-allowed':
-      'https://gist.githubusercontent.com/AaronO/0610daef96940d4491b8234a08b73e24/raw/db0cdee189f4695660c302b8658fde25015f75e3/ipify.js',
-    'd-net-blocked':
-      'https://gist.githubusercontent.com/AaronO/0610daef96940d4491b8234a08b73e24/raw/db0cdee189f4695660c302b8658fde25015f75e3/ipify.js',
-  };
-  const payloadUrl = PAYLOADS[deploymentId as DeploymentIdType];
-  if (!payloadUrl) {
-    return { body: `No boot payload for ${deploymentId}`, status: 404 };
+/** @todo use a real deployment id instead of an app id. deployment id should be app id and version or something */
+async function originBoot({
+  req,
+  res,
+  id,
+}: {
+  req: NextApiRequest;
+  res: NextApiResponse;
+  id: string;
+}) {
+  console.log('booting', id);
+
+  const caller = trpcRouter.createCaller(createContext({ req, res }));
+  const app = await caller.query('app.byId', {
+    id,
+  });
+
+  if (!app) {
+    return { body: `App with ${id} does not exist`, status: 404 };
   }
+
+  // Get the main script
+  const mainScript = app.scripts.find(
+    ({ hash }) => app.scriptMain.scriptHash === hash,
+  );
+  const body = mainScript?.code;
 
   // TODO(@AaronO): inject header to disambiguate between JS bundles and eszips
-  const payloadResp = await fetch(payloadUrl);
-  if (!payloadResp.ok) {
-    return {
-      body: `Failed to fetch upstream payload: ${deploymentId}`,
-      status: 500,
-    };
-  }
-
-  let netPermissions;
-  if (deploymentId === 'd-net-allowed') {
-    netPermissions = ['api.ipify.org'];
-  } else if (deploymentId === 'd-net-blocked') {
-    netPermissions = false;
-  } else {
-    netPermissions = true;
-  }
+  // @ibu: this part used to fetch the code from github gists
 
   // Boot metadata
   const isolateConfig = {
@@ -142,16 +123,16 @@ async function originBoot(deploymentId: string) {
     // Permissions can be used to lockdown network access via an allowlist, etc...
     permissions: {
       // net: true/false/["foo.com", "bar.com"]
-      net: netPermissions,
+      net: true,
     },
   };
   // Inject isolateConfig into headers
-  const payloadHeaders = Object.fromEntries(payloadResp.headers.entries());
-  const headers = Object.assign(payloadHeaders, {
+  // const payloadHeaders = Object.fromEntries(payloadResp.headers.entries());
+  const headers = {
     [X_DENO_CONFIG]: JSON.stringify(isolateConfig),
-  });
+  };
 
-  return { body: payloadResp.body, headers, status: 200 };
+  return { body, headers, status: 200 };
 }
 
 function originReadBlob(_deploymentId: string, hash?: string) {
