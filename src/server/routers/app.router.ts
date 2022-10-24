@@ -77,7 +77,7 @@ export const appRouter = createRouter()
         },
         select: {
           ...defaultSelect,
-          scripts: { where: { childHash: null } },
+          scripts: true,
         },
       });
     },
@@ -92,7 +92,7 @@ export const appRouter = createRouter()
 
       const app = await prisma.app.findFirstOrThrow({
         where: { id },
-        include: { scripts: { where: { childHash: null } }, scriptMain: true },
+        include: { scripts: true, scriptMain: true },
       });
 
       const fork = await prisma.app.create({
@@ -109,18 +109,16 @@ export const appRouter = createRouter()
             ...script,
             inputSchema: JSON.stringify(script.inputSchema),
             outputSchema: JSON.stringify(script.outputSchema),
-            hash: await createScriptHash({ ...script, appId: fork.id }),
-            parentHash: script.hash,
             appId: fork.id,
             order: i,
           },
         });
 
-        if (script.hash === app.scriptMain?.scriptHash) {
+        if (script.id === app.scriptMain?.scriptId) {
           await prisma.scriptMain.create({
             data: {
               app: { connect: { id: fork.id } },
-              script: { connect: { hash: forkScript.hash } },
+              script: { connect: { id: forkScript.id } },
             },
           });
         }
@@ -142,7 +140,7 @@ export const appRouter = createRouter()
         scripts: z
           .array(
             z.object({
-              originalHash: z.string(),
+              id: z.string().uuid(),
               data: z.object({
                 name: z.string().min(3).max(255),
                 description: z.string(),
@@ -159,49 +157,15 @@ export const appRouter = createRouter()
 
       const app = await prisma.app.update({
         where: { id },
-        data: rest,
+        data: { updatedAt: new Date(), ...rest },
         select: defaultSelect,
       });
 
       if (scripts) {
         await Promise.all(
           scripts.map(async (script, i) => {
-            const { originalHash, data } = script;
-            const newHash = await createScriptHash({
-              code: data.code,
-              appId: id,
-              name: data.name,
-              description: data.description,
-            });
-
-            if (newHash !== originalHash) {
-              const newScript = await prisma.script.create({
-                data: {
-                  ...data,
-                  hash: newHash,
-                  parentHash: originalHash,
-                  filename: `${slugify(data.name)}.ts`,
-                  appId: id,
-                  order: i,
-                },
-              });
-
-              await prisma.script.update({
-                where: { hash: originalHash },
-                data: { childHash: newHash },
-              });
-
-              if (originalHash === app.scriptMain?.scriptHash) {
-                await prisma.scriptMain.update({
-                  where: {
-                    appId: app.id,
-                  },
-                  data: {
-                    script: { connect: { hash: newScript.hash } },
-                  },
-                });
-              }
-            }
+            const { id, data } = script;
+            await prisma.script.update({ where: { id }, data });
           }),
         );
       }

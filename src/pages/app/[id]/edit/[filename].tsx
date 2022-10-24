@@ -16,7 +16,7 @@ import {
 import NextError from 'next/error';
 import NextLink from 'next/link';
 import { useRouter } from 'next/router';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { NextPageWithLayout } from '~/pages/_app';
 import { trpc } from '~/utils/trpc';
@@ -32,7 +32,7 @@ const AppPage: NextPageWithLayout = () => {
   const utils = trpc.useContext();
   const { query } = useRouter();
   const id = query.id as string;
-  const filename = query.id as string;
+  const filename = query.filename as string;
 
   const appQuery = trpc.useQuery(['app.byId', { id }]);
 
@@ -43,20 +43,21 @@ const AppPage: NextPageWithLayout = () => {
     },
   });
 
-  const [allScripts, setAllScripts] = useState<Script[]>([]);
+  const [scripts, setScripts] = useState<Script[]>([]);
 
   const [outputValue, setOutputValue] = React.useState('');
 
   const { register, handleSubmit, reset } = useForm();
 
+  const mainScript = scripts?.find(
+    (script) => script.id === appQuery.data?.scriptMain?.scriptId,
+  );
+
   const currentScript =
-    appQuery.data?.scripts?.find((script) => script.filename === filename) ||
-    appQuery.data?.scripts?.find(
-      (script) => script.hash === appQuery.data?.scriptMain?.scriptHash,
-    );
+    scripts?.find((script) => script.filename === filename) || mainScript;
 
   useEffect(() => {
-    setAllScripts(appQuery.data?.scripts || []);
+    setScripts(appQuery.data?.scripts || []);
   }, [appQuery.isSuccess]);
 
   const runApp = async () => {
@@ -97,6 +98,8 @@ const AppPage: NextPageWithLayout = () => {
 
   const { data } = appQuery;
 
+  console.log('ibu', { data, scripts, currentScript });
+
   return (
     <DefaultGrid>
       <GridItem colSpan={7}>
@@ -115,9 +118,9 @@ const AppPage: NextPageWithLayout = () => {
               editAppMutation.mutateAsync({
                 id,
                 data: {
-                  scripts: allScripts.map((script) => {
+                  scripts: scripts.map((script) => {
                     return {
-                      originalHash: script.hash,
+                      id: script.id,
                       data: {
                         name: script.name,
                         description: script.description || '',
@@ -150,20 +153,37 @@ const AppPage: NextPageWithLayout = () => {
           {data.name}
         </Heading>
         <VStack alignItems="start" gap={2}>
-          {appQuery.data?.scripts.map((script, i) => (
-            <>
-              <NextLink href={`/app/${id}/edit/${script.filename}`} passHref>
-                <Link size="sm" background="purple.200" borderRadius={2} px={2}>
-                  <b>{script.name}</b>
-                </Link>
-              </NextLink>
-              {i === 0 && (
-                <Text size="sm" color="gray.500">
-                  Other functions
-                </Text>
-              )}
-            </>
-          ))}
+          {scripts
+            .sort((a, b) => {
+              let orderA;
+              let orderB;
+
+              // always make sure `main` is on top, respect order after
+              if (a.id === mainScript?.id) orderA = -Infinity;
+              else orderA = a.order === null ? Infinity : a.order;
+              if (b.id === mainScript?.id) orderB = -Infinity;
+              else orderB = b.order === null ? Infinity : b.order;
+              return orderA > orderB ? 1 : -1;
+            })
+            .map((script, i) => (
+              <>
+                <NextLink href={`/app/${id}/edit/${script.filename}`} passHref>
+                  <Link
+                    size="sm"
+                    background="purple.200"
+                    borderRadius={2}
+                    px={2}
+                  >
+                    <b>{script.name}</b>
+                  </Link>
+                </NextLink>
+                {i === 0 && (
+                  <Text size="sm" color="gray.500">
+                    Other functions
+                  </Text>
+                )}
+              </>
+            ))}
         </VStack>
         <Divider my={5} />
 
@@ -171,15 +191,17 @@ const AppPage: NextPageWithLayout = () => {
           Create a function
         </Heading>
         <form
-          onSubmit={handleSubmit(({ name, description, code }) => {
-            addScript.mutateAsync({
-              name,
-              description,
-              code: code,
-              appId: id,
-              order: allScripts.length,
-            });
-          })}
+          onSubmit={handleSubmit(
+            ({ name, description, code = '// Here we go!' }) => {
+              addScript.mutateAsync({
+                name,
+                description,
+                code: code,
+                appId: id,
+                order: scripts.length,
+              });
+            },
+          )}
           style={{ display: 'block', width: '100%' }}
         >
           {addScript.error && (
@@ -224,25 +246,34 @@ const AppPage: NextPageWithLayout = () => {
                 <Heading as="h2" size="lg">
                   {currentScript?.name || 'Untitled'}
                 </Heading>
-                <Editor
-                  defaultLanguage="typescript"
-                  height="100vh"
-                  value={currentScript?.code || ''}
-                  theme="vs-dark"
-                  options={{
-                    minimap: { enabled: false },
+                <Box
+                  style={{
+                    backgroundColor: '#1e1e1e',
+                    height: '100vh',
+                    color: '#1e1e1e',
                   }}
-                  onChange={(value) => {
-                    setAllScripts(
-                      allScripts.map((script) => {
-                        if (script.filename === currentScript?.filename) {
-                          return { ...script, code: value || '' };
-                        }
-                        return script;
-                      }),
-                    );
-                  }}
-                />
+                >
+                  <Editor
+                    key={currentScript?.filename}
+                    defaultLanguage="typescript"
+                    height="100vh"
+                    value={currentScript?.code || ''}
+                    theme="vs-dark"
+                    options={{
+                      minimap: { enabled: false },
+                    }}
+                    onChange={(value) => {
+                      setScripts(
+                        scripts.map((script) => {
+                          if (script.filename === currentScript?.filename) {
+                            return { ...script, code: value || '' };
+                          }
+                          return script;
+                        }),
+                      );
+                    }}
+                  />
+                </Box>
               </FormControl>
             </Box>
           </VStack>

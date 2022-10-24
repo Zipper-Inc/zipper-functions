@@ -63,13 +63,14 @@ const AppPage: NextPageWithLayout = () => {
               >
                 Fork
               </Button>
+
               <Button
                 type="button"
                 paddingX={6}
                 bgColor="purple.800"
                 textColor="gray.100"
                 onClick={() => {
-                  router.push(`/app/${id}/edit`);
+                  router.push(`/app/${id}/edit/main.ts`);
                 }}
               >
                 Edit

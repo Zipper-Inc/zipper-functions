@@ -1,16 +1,17 @@
 import { Prisma } from '@prisma/client';
 import { z } from 'zod';
 import { prisma } from '~/server/prisma';
+import slugify from '~/utils/slugify';
 import { createRouter } from '../createRouter';
-import { createScriptHash } from '../utils/scripts.utils';
 
 const defaultSelect = Prisma.validator<Prisma.ScriptSelect>()({
-  hash: true,
+  id: true,
   name: true,
   description: true,
   appId: true,
   code: true,
   createdAt: true,
+  updatedAt: true,
 });
 
 export const scriptRouter = createRouter()
@@ -26,15 +27,13 @@ export const scriptRouter = createRouter()
     async resolve({ input }) {
       const { appId, ...data } = input;
 
-      /** @todo somehow invalidate previous scripts with same filename */
       return prisma.script.create({
         data: {
           ...data,
-          hash: await createScriptHash(input),
           app: {
             connect: { id: appId },
           },
-          filename: data.name,
+          filename: `${slugify(data.name)}.ts`,
         },
         select: defaultSelect,
       });
@@ -61,21 +60,20 @@ export const scriptRouter = createRouter()
       return prisma.script.findMany({
         where: {
           appId: input.appId,
-          childHash: null,
         },
         orderBy: { order: 'asc' },
         select: defaultSelect,
       });
     },
   })
-  .query('byHash', {
+  .query('byId', {
     input: z.object({
-      hash: z.string(),
+      id: z.string(),
     }),
     async resolve({ input }) {
       return prisma.script.findFirstOrThrow({
         where: {
-          hash: input.hash,
+          id: input.id,
         },
         select: defaultSelect,
       });
@@ -84,17 +82,17 @@ export const scriptRouter = createRouter()
   // delete
   .mutation('delete', {
     input: z.object({
-      hash: z.string(),
+      id: z.string(),
     }),
     async resolve({ input }) {
       await prisma.script.deleteMany({
         where: {
-          hash: input.hash,
+          id: input.id,
         },
       });
 
       return {
-        hash: input.hash,
+        id: input.id,
       };
     },
   });
