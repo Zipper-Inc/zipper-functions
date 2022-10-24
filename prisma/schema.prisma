@@ -11,14 +11,14 @@ generator client {
 }
 
 model App {
-  id        String    @id @default(uuid())
-  createdAt DateTime  @default(now())
-  updatedAt DateTime? @default(now())
-  name      String
-  description   String?
-  datastore     Json?
+  id          String    @id @default(uuid())
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime? @default(now())
+  name        String
+  description String?
+  datastore   Json?
 
-  scriptMain  ScriptMain?
+  scriptMain ScriptMain?
 
   scripts Script[]
   secrets Secret[]
@@ -30,19 +30,17 @@ model Secret {
   id             String    @id @default(uuid())
   createdAt      DateTime  @default(now())
   updatedAt      DateTime? @default(now())
-  name      String
+  name           String
   encryptedValue String
 
   appId String
-  app   App?    @relation(fields: [appId], references: [id])
+  app   App?   @relation(fields: [appId], references: [id])
 
   @@map("secrets")
 }
 
 model Script {
-  hash         String    @id
-  parentHash   String?
-  childHash    String?
+  id           String    @id @default(uuid())
   createdAt    DateTime  @default(now())
   updatedAt    DateTime? @default(now())
   name         String
@@ -54,18 +52,18 @@ model Script {
   inputSchema  Json?
   outputSchema Json?
 
-  app          App         @relation(fields: [appId], references: [id])
-  scriptMain   ScriptMain?
+  app        App         @relation(fields: [appId], references: [id])
+  scriptMain ScriptMain?
 
   @@map("scripts")
 }
 
 model ScriptMain {
-  appId     String    @id
-  scriptHash  String  @unique
+  appId    String @id
+  scriptId String @unique
 
-  app       App       @relation(fields: [appId], references: [id])
-  script    Script    @relation(fields: [scriptHash], references: [hash])
+  app    App    @relation(fields: [appId], references: [id])
+  script Script @relation(fields: [scriptId], references: [id])
 
   @@map("script_main")
 }
