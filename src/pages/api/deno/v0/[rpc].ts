@@ -83,27 +83,30 @@ async function decodeAuthHeader(req: NextApiRequest) {
 async function originBoot({
   req,
   res,
-  id,
+  id: deploymentId,
 }: {
   req: NextApiRequest;
   res: NextApiResponse;
   id: string;
 }) {
-  console.log('booting', id);
+  console.log('booting deplyomentId', deploymentId);
+
+  const [appId, _] = deploymentId.split('---');
 
   const caller = trpcRouter.createCaller(createContext({ req, res }));
   const app = await caller.query('app.byId', {
-    id,
+    id: appId,
   });
 
   if (!app) {
-    return { body: `App with ${id} does not exist`, status: 404 };
+    return { body: `App with ${appId} does not exist`, status: 404 };
   }
 
   // Get the main script
   const mainScript = app.scripts.find(
-    ({ hash }) => app.scriptMain.scriptHash === hash,
+    ({ id }) => app.scriptMain?.scriptId === id,
   );
+
   const body = mainScript?.code;
 
   // TODO(@AaronO): inject header to disambiguate between JS bundles and eszips

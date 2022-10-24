@@ -1,6 +1,7 @@
 import {
   Box,
   Button,
+  Code,
   Divider,
   FormControl,
   FormErrorMessage,
@@ -61,18 +62,20 @@ const AppPage: NextPageWithLayout = () => {
   }, [appQuery.isSuccess]);
 
   const runApp = async () => {
-    const raw = await fetch('/api/run', {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ code: currentScript?.code || '' }),
+    const suffix = new Date(appQuery?.data?.updatedAt || Date.now()).toString();
+    const runUrl = `${
+      process.env.RELAY_URL || 'https://ibu-zipper-run.deno.dev'
+    }/${id}---${suffix}`;
+
+    /**
+    const raw = await fetch(runUrl, {
+      mode: 'no-cors',
     });
+    const res = await raw.text();
+    setOutputValue(res);
+    */
 
-    const res = await raw.json();
-
-    setOutputValue(res.output);
+    window.open(runUrl, '_blank');
   };
 
   const addScript = trpc.useMutation('script.add', {
@@ -97,8 +100,6 @@ const AppPage: NextPageWithLayout = () => {
   }
 
   const { data } = appQuery;
-
-  console.log('ibu', { data, scripts, currentScript });
 
   return (
     <DefaultGrid>
@@ -280,16 +281,10 @@ const AppPage: NextPageWithLayout = () => {
         )}
       </GridItem>
       <GridItem colSpan={3}>
-        {outputValue && Editor && (
+        {outputValue && (
           <>
             <Heading size="md">Output</Heading>
-            <Editor
-              defaultLanguage="json"
-              defaultValue={JSON.stringify(outputValue, null, 2)}
-              options={{
-                minimap: { enabled: false, readOnly: true },
-              }}
-            />
+            <Code maxW="100%">{outputValue}</Code>
           </>
         )}
       </GridItem>

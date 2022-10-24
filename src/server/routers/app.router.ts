@@ -10,6 +10,7 @@ const defaultSelect = Prisma.validator<Prisma.AppSelect>()({
   name: true,
   description: true,
   createdAt: true,
+  updatedAt: true,
   scriptMain: true,
 });
 
