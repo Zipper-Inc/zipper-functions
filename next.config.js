@@ -26,4 +26,13 @@ module.exports = getConfig({
   publicRuntimeConfig: {
     NODE_ENV: env.NODE_ENV,
   },
+
+  async rewrites() {
+    return [
+      {
+        source: '/run/:path*',
+        destination: `${process.env.RELAY_URL}/:path*`,
+      },
+    ];
+  },
 });
