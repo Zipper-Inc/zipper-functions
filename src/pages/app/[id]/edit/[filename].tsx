@@ -44,6 +44,8 @@ const AppPage: NextPageWithLayout = () => {
     },
   });
 
+  const input = {};
+
   const [scripts, setScripts] = useState<Script[]>([]);
 
   const [outputValue, setOutputValue] = React.useState('');
@@ -61,21 +63,41 @@ const AppPage: NextPageWithLayout = () => {
     setScripts(appQuery.data?.scripts || []);
   }, [appQuery.isSuccess]);
 
-  const runApp = async () => {
-    const suffix = new Date(appQuery?.data?.updatedAt || Date.now()).toString();
-    const runUrl = `${
-      process.env.RELAY_URL || 'https://ibu-zipper-run.deno.dev'
-    }/${id}---${suffix}`;
 
-    /**
-    const raw = await fetch(runUrl, {
-      mode: 'no-cors',
+  
+  const saveApp = async () => {
+    editAppMutation.mutateAsync({
+      id,
+      data: {
+        scripts: scripts.map((script) => {
+          return {
+            id: script.id,
+            data: {
+              name: script.name,
+              description: script.description || '',
+              code: script.code,
+            },
+          };
+        }),
+      },
     });
-    const res = await raw.text();
-    setOutputValue(res);
-    */
+  };
 
-    window.open(runUrl, '_blank');
+  const runApp = async () => {
+    await saveApp();
+
+    const version = new Date(appQuery?.data?.updatedAt || Date.now())
+      .getTime()
+      .toString();
+    const runUrl = `/run/${id}@${version}`;
+
+    const raw = await fetch(runUrl, {
+      method: 'POST',
+      body: JSON.stringify(input),
+    });
+
+    const res = await raw.json();
+    setOutputValue(JSON.stringify(res.data, null, 2));
   };
 
   const addScript = trpc.useMutation('script.add', {
@@ -114,35 +136,13 @@ const AppPage: NextPageWithLayout = () => {
       <GridItem colSpan={2} justifyContent="end">
         <HStack>
           <Button>Share</Button>
-          <Button
-            onClick={() => {
-              editAppMutation.mutateAsync({
-                id,
-                data: {
-                  scripts: scripts.map((script) => {
-                    return {
-                      id: script.id,
-                      data: {
-                        name: script.name,
-                        description: script.description || '',
-                        code: script.code,
-                      },
-                    };
-                  }),
-                },
-              });
-            }}
-          >
-            Save
-          </Button>
+          <Button onClick={saveApp}>Save</Button>
           <Button
             type="button"
             paddingX={6}
             bgColor="purple.800"
             textColor="gray.100"
-            onClick={() => {
-              runApp();
-            }}
+            onClick={runApp}
           >
             Run
           </Button>

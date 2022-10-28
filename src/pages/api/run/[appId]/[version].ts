@@ -1,4 +1,9 @@
-/** @todo figure out why this doesn't place nicely with TLS */
+/**
+ * @note This API endpoint doesnt' work
+ * I think its a TLS certificate thing but I don't know
+ * Use /run/ which proxies to https://zipper-run.deno.dev/
+ *
+ */
 /** Use zipper-run.deno.dev on deno in the meantime */
 
 import type { NextApiRequest, NextApiResponse } from 'next';
@@ -48,7 +53,7 @@ export default async function handler(
 ) {
   const { query, method, body } = req;
   const reqUrl = new URL(`${absoluteUrl(req).origin}${req.url}`);
-  const deploymentId = `${query.appId}---${query.version}`;
+  const deploymentId = `${query.appId}@${query.version}`;
   const denoUrl = makeDenoUrl(reqUrl, deploymentId);
 
   // Patch Headers

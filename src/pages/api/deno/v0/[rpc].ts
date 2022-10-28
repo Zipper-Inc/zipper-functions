@@ -6,6 +6,91 @@ import { createContext } from '~/server/context';
 
 const X_DENO_CONFIG = 'x-deno-config';
 
+/**
+ * Assuming the user has defined a function called `main`
+ * This wrapper injects some code that:
+ *  - gets inputs from the request
+ *  - calls the user's main function
+ *  - handles standardizing output and errors
+ */
+const wrapMainFunction = ({
+  code,
+  name,
+  appId,
+  version = Date.now().toString(),
+}: {
+  code: string;
+  name: string;
+  appId: string;
+  version: string;
+}) => `${code}
+
+/*****************************************************************/
+
+const fn = typeof main === 'undefined' ? () => {
+  throw new Error('You must define a main function.')
+}: main;
+
+const parseInput = async (req) => {
+  if (req.method === "GET") {
+    const url = new URL(req.url);
+    return Object.fromEntries(url.searchParams.entries());
+  } else if (req.body) {
+    return req.json();
+  } else {
+    return {};
+  }
+};
+
+addEventListener('fetch', async (event) => {
+  const headers = {
+    'Content-Type': 'application/json',
+    'X-Zipper-Deployment': '${appId}}.${version}',
+  };
+
+  const input = await parseInput(event.request);
+
+  const __meta = {
+    name: '${name}',
+    appId: '${appId}',
+    version: '${version}',
+    url: event.request.url,
+    method: event.request.method,
+    input,
+  };
+
+  try {
+    const output = await fn(input);
+    const response = {
+      ok: true,
+      data: output,
+      __meta,
+    };
+    
+    event.respondWith(
+      new Response(JSON.stringify(response), {
+        status: 200,
+        headers,
+      }),
+    );
+
+  } catch(error) {
+    const response = {
+      ok: false,
+      error,
+      __meta,
+    };
+
+    event.respondWith(
+      new Response(JSON.stringify(response), {
+        status: 500,
+        headers,
+      }),
+    );
+  }
+});
+`;
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
@@ -91,7 +176,7 @@ async function originBoot({
 }) {
   console.log('booting deplyomentId', deploymentId);
 
-  const [appId, _] = deploymentId.split('---');
+  const [appId, version] = deploymentId.split('@');
 
   const caller = trpcRouter.createCaller(createContext({ req, res }));
   const app = await caller.query('app.byId', {
@@ -107,7 +192,12 @@ async function originBoot({
     ({ id }) => app.scriptMain?.scriptId === id,
   );
 
-  const body = mainScript?.code;
+  const body = wrapMainFunction({
+    code: mainScript?.code,
+    name: app.name,
+    appId,
+    version,
+  });
 
   // TODO(@AaronO): inject header to disambiguate between JS bundles and eszips
   // @ibu: this part used to fetch the code from github gists
