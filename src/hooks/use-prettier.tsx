@@ -18,13 +18,20 @@ function usePrettier() {
   }, []);
 
   return (source: string, cursorOffset = 0) => {
+    let result = { formatted: source, cursorOffset };
+
     if (prettierRef.current && prettierParserBabel.current) {
-      return prettierRef.current.formatWithCursor(source, {
-        parser: 'babel',
-        plugins: [prettierParserBabel.current],
-      });
+      try {
+        result = prettierRef.current.formatWithCursor(source, {
+          parser: 'babel',
+          plugins: [prettierParserBabel.current],
+        });
+      } catch (e) {
+        console.error('Prettier error', e);
+      }
     }
-    return { formatted: source, cursorOffset };
+
+    return result;
   };
 }
 export default usePrettier;

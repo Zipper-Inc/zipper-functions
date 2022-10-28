@@ -67,17 +67,18 @@ const AppPage: NextPageWithLayout = () => {
   const format = usePrettier();
 
   const saveApp = async () => {
-    const formattedScripts = scripts.map((script) => ({
-      ...script,
-      code: format(script.code).formatted || '',
-    }));
+    const formatted = scripts.map((script) => {
+      if (script.filename !== currentScript?.filename) return script;
+      const code = format(script.code).formatted;
+      return { ...script, code };
+    });
 
-    setScripts(formattedScripts);
+    setScripts(formatted);
 
     editAppMutation.mutateAsync({
       id,
       data: {
-        scripts: formattedScripts.map((script) => {
+        scripts: formatted.map((script) => {
           return {
             id: script.id,
             data: {
