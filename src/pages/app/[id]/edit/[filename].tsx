@@ -12,6 +12,7 @@ import {
   Input,
   Link,
   Text,
+  Textarea,
   VStack,
 } from '@chakra-ui/react';
 import NextError from 'next/error';
@@ -45,10 +46,9 @@ const AppPage: NextPageWithLayout = () => {
     },
   });
 
-  const input = {};
-
   const [scripts, setScripts] = useState<Script[]>([]);
 
+  const [inputValue, setInputValue] = React.useState('{}');
   const [outputValue, setOutputValue] = React.useState('');
 
   const { register, handleSubmit, reset } = useForm();
@@ -92,21 +92,28 @@ const AppPage: NextPageWithLayout = () => {
     });
   };
 
-  const runApp = async () => {
-    await saveApp();
-
+  const getRunUrl = () => {
     const version = new Date(appQuery?.data?.updatedAt || Date.now())
       .getTime()
       .toString();
-    const runUrl = `/run/${id}@${version}`;
+    return `/run/${id}@${version}`;
+  };
 
-    const raw = await fetch(runUrl, {
+  const runApp = async () => {
+    await saveApp();
+
+    const raw = await fetch(getRunUrl(), {
       method: 'POST',
-      body: JSON.stringify(input),
+      body: inputValue,
     });
 
     const res = await raw.json();
     setOutputValue(JSON.stringify(res.data, null, 2));
+  };
+
+  const shareApp = async () => {
+    await saveApp();
+    navigator.clipboard.writeText(getRunUrl());
   };
 
   const addScript = trpc.useMutation('script.add', {
@@ -144,7 +151,7 @@ const AppPage: NextPageWithLayout = () => {
       </GridItem>
       <GridItem colSpan={2} justifyContent="end">
         <HStack>
-          <Button>Share</Button>
+          <Button onClick={shareApp}>Share</Button>
           <Button onClick={saveApp}>Save</Button>
           <Button
             type="button"
@@ -290,6 +297,11 @@ const AppPage: NextPageWithLayout = () => {
         )}
       </GridItem>
       <GridItem colSpan={3}>
+        <Heading size="md">Input</Heading>
+        <Textarea
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+        />
         {outputValue && (
           <>
             <Heading size="md">Output</Heading>
