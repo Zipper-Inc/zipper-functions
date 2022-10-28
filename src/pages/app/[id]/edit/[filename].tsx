@@ -17,13 +17,14 @@ import {
 import NextError from 'next/error';
 import NextLink from 'next/link';
 import { useRouter } from 'next/router';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { NextPageWithLayout } from '~/pages/_app';
 import { trpc } from '~/utils/trpc';
 import dynamic from 'next/dynamic';
 import { Script } from '@prisma/client';
 import DefaultGrid from '~/components/default-grid';
+import usePrettier from '~/hooks/use-prettier';
 
 const Editor = dynamic(() => import('@monaco-editor/react'), {
   ssr: false,
@@ -63,13 +64,20 @@ const AppPage: NextPageWithLayout = () => {
     setScripts(appQuery.data?.scripts || []);
   }, [appQuery.isSuccess]);
 
+  const format = usePrettier();
 
-  
   const saveApp = async () => {
+    const formattedScripts = scripts.map((script) => ({
+      ...script,
+      code: format(script.code).formatted || '',
+    }));
+
+    setScripts(formattedScripts);
+
     editAppMutation.mutateAsync({
       id,
       data: {
-        scripts: scripts.map((script) => {
+        scripts: formattedScripts.map((script) => {
           return {
             id: script.id,
             data: {
