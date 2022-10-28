@@ -299,13 +299,16 @@ const AppPage: NextPageWithLayout = () => {
       <GridItem colSpan={3}>
         <Heading size="md">Input</Heading>
         <Textarea
+          fontFamily={'Monaco; monospace'}
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
         />
         {outputValue && (
           <>
             <Heading size="md">Output</Heading>
-            <Code maxW="100%">{outputValue}</Code>
+            <Code fontFamily={'Monaco; monospace'} maxW="100%">
+              {outputValue}
+            </Code>
           </>
         )}
       </GridItem>
