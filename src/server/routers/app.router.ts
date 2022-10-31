@@ -1,7 +1,6 @@
 import { Prisma } from '@prisma/client';
 import { z } from 'zod';
 import { prisma } from '~/server/prisma';
-import slugify from '~/utils/slugify';
 import { createRouter } from '../createRouter';
 import { createScriptHash } from '../utils/scripts.utils';
 
@@ -28,6 +27,8 @@ export const appRouter = createRouter()
         select: defaultSelect,
       });
 
+      if (!app) return;
+
       const defaultCode = '{}';
 
       const scriptMain = await prisma.scriptMain.create({
@@ -40,12 +41,6 @@ export const appRouter = createRouter()
               filename: 'main.ts',
               appId: app.id,
               order: 0,
-              hash: await createScriptHash({
-                code: defaultCode,
-                name: 'main',
-                appId: app.id,
-                description: `Entry point for ${app.name}`,
-              }),
             },
           },
         },

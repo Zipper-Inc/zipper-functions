@@ -6,6 +6,11 @@ import { createContext } from '~/server/context';
 
 const X_DENO_CONFIG = 'x-deno-config';
 
+const missingCodeError = `
+function main() {
+  throw new Error("There is no code. Please inspect __meta__ of response."); 
+}`;
+
 /**
  * Assuming the user has defined a function called `main`
  * This wrapper injects some code that:
@@ -23,7 +28,10 @@ const wrapMainFunction = ({
   name: string;
   appId: string;
   version: string;
-}) => `${code}
+}) => `
+/*****************************************************************/
+
+${code}
 
 /*****************************************************************/
 
@@ -95,7 +103,6 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
-  console.log(req.method, req.url);
   if (!req.url) return new Response('No URL', { status: 400 });
 
   const url = new URL(
@@ -106,7 +113,9 @@ export default async function handler(
   );
   // Take RPC args from query string
   const args = Object.fromEntries(url.searchParams.entries());
-  // if (!args.deployment_id) throw new Error('Missing deployment_id');
+
+  if (!args.deployment_id) throw new Error('Missing deployment_id');
+
   // Validate JWT
   const payload = await decodeAuthHeader(req);
   // Sanity check JWT deploymentId matches the one provided via args
@@ -116,16 +125,15 @@ export default async function handler(
     );
   }
   // Dispatch RPCs
-  console.log(url.pathname);
   switch (url.pathname) {
     case '/api/deno/v0/boot': {
-      const { body, headers, status } = await originBoot({
+      const { body, headers, status }: any = await originBoot({
         req,
         res,
-        id: args.deployment_id,
+        id: args.deployment_id || '',
       });
       if (headers) {
-        Object.keys(headers).forEach((key) => {
+        Object.keys(headers as any).forEach((key) => {
           res.setHeader(key, headers[key] || '');
         });
       }
@@ -174,9 +182,14 @@ async function originBoot({
   res: NextApiResponse;
   id: string;
 }) {
-  console.log('booting deplyomentId', deploymentId);
-
   const [appId, version] = deploymentId.split('@');
+
+  if (!appId || !version) {
+    console.error('Missing appId and version');
+    return;
+  }
+
+  console.log('booting deplyomentId', deploymentId);
 
   const caller = trpcRouter.createCaller(createContext({ req, res }));
   const app = await caller.query('app.byId', {
@@ -193,7 +206,7 @@ async function originBoot({
   );
 
   const body = wrapMainFunction({
-    code: mainScript?.code,
+    code: mainScript?.code || missingCodeError,
     name: app.name,
     appId,
     version,

@@ -298,11 +298,25 @@ const AppPage: NextPageWithLayout = () => {
       </GridItem>
       <GridItem colSpan={3}>
         <Heading size="md">Input</Heading>
-        <Textarea
-          fontFamily={'Monaco; monospace'}
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-        />
+        {Editor && (
+          <Editor
+            key={currentScript?.filename}
+            defaultLanguage="json"
+            height="10vh"
+            defaultValue={inputValue}
+            options={{
+              minimap: { enabled: false },
+              find: { enabled: false },
+              lineNumbers: 'off',
+              glyphMargin: true,
+              lineDecorationsWidth: 0,
+              lineNumbersMinChars: 0,
+            }}
+            onChange={(value: any) => {
+              setInputValue(value);
+            }}
+          />
+        )}
         {outputValue && (
           <>
             <Heading size="md">Output</Heading>
