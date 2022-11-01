@@ -1,14 +1,15 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import * as jose from 'jose';
-import { prisma } from '~/server/prisma';
+import { build } from '@deno/eszip';
 import { trpcRouter } from '~/server/routers/_app';
 import { createContext } from '~/server/context';
+import { gunzip } from 'zlib';
 
 const X_DENO_CONFIG = 'x-deno-config';
 
 const missingCodeError = `
 function main() {
-  throw new Error("There is no code. Please inspect __meta__ of response."); 
+  throw new Error("There is no code. Please inspect __meta__ of response.");
 }`;
 
 /**
@@ -74,7 +75,7 @@ addEventListener('fetch', async (event) => {
       data: output,
       __meta,
     };
-    
+
     event.respondWith(
       new Response(JSON.stringify(response), {
         status: 200,
@@ -114,8 +115,6 @@ export default async function handler(
   // Take RPC args from query string
   const args = Object.fromEntries(url.searchParams.entries());
 
-  if (!args.deployment_id) throw new Error('Missing deployment_id');
-
   // Validate JWT
   const payload = await decodeAuthHeader(req);
   // Sanity check JWT deploymentId matches the one provided via args
@@ -125,8 +124,10 @@ export default async function handler(
     );
   }
   // Dispatch RPCs
+  console.log('Handling RPC: ', url.pathname);
   switch (url.pathname) {
     case '/api/deno/v0/boot': {
+      if (!args.deployment_id) throw new Error('Missing deployment_id');
       const { body, headers, status }: any = await originBoot({
         req,
         res,
@@ -139,17 +140,33 @@ export default async function handler(
       }
       res.status(status || 200).send(body);
     }
-    case '/api/deno/v0/read_blob':
+    case '/api/deno/v0/layer': {
+      await originLayer({
+        req,
+        res,
+        layerId: args.layer_id || '',
+      });
+      break;
+    }
+    case '/api/deno/v0/events': {
+      // TODO: figure out how to handle gzipped requests with Next.js
+      res.status(200).send('OK');
+      break;
+    }
+    case '/api/deno/v0/read_blob': {
+      if (!args.deployment_id) throw new Error('Missing deployment_id');
       return originReadBlob(args.deployment_id, args.hash);
-    case 'api/deno/v0/read_tree':
+    }
+    case 'api/deno/v0/read_tree': {
+      if (!args.deployment_id) throw new Error('Missing deployment_id');
       return originReadTree(args.deployment_id);
+    }
   }
   return new Response(`¯\\_(ツ)_/¯`, { status: 500 });
 }
 
 async function decodeAuthHeader(req: NextApiRequest) {
   const authHeader = req.headers?.authorization;
-  console.log(req.headers);
   if (!authHeader) {
     throw new Error('Missing authorization header');
   }
@@ -170,6 +187,74 @@ async function decodeAuthHeader(req: NextApiRequest) {
   } catch (error: any) {
     throw new Error(error.message);
   }
+}
+
+async function originLayer({
+  req,
+  res,
+  layerId,
+}: {
+  req: NextApiRequest;
+  res: NextApiResponse;
+  layerId: string;
+}) {
+  const proto = req.headers['x-forwarded-proto'] || 'http';
+  const [appId, version] = layerId.split('@');
+
+  if (!appId || !version) {
+    console.error('Missing appId and version');
+    return;
+  }
+
+  console.log('loading layerId', layerId);
+
+  const caller = trpcRouter.createCaller(createContext({ req, res }));
+  const app = await caller.query('app.byId', {
+    id: appId,
+  });
+
+  if (!app) {
+    return { body: `App with ${appId} does not exist`, status: 404 };
+  }
+
+  const mainScript = app.scripts.find(
+    ({ id }) => app.scriptMain?.scriptId === id,
+  );
+
+  const eszip = await build(
+    [
+      `${proto}://${req.headers.host}/api/source/${appId}/${version}/${mainScript?.filename}`,
+    ],
+    async (specifier: string) => {
+      console.log("ESZIP: '", specifier);
+
+      if (
+        specifier.startsWith(
+          `${proto}://${req.headers.host}/api/source/${appId}/${version}/`,
+        )
+      ) {
+        const response = await fetch(specifier);
+        const content = await response.text();
+
+        return {
+          specifier,
+          headers: {
+            'content-type': 'text/typescript',
+          },
+          content,
+          kind: 'module',
+        };
+      }
+
+      return {
+        specifier,
+        kind: 'external',
+      };
+    },
+  );
+
+  res.setHeader('Content-Type', 'application/vnd.denoland.eszip');
+  res.send({ body: eszip, status: 200 });
 }
 
 /** @todo use a real deployment id instead of an app id. deployment id should be app id and version or something */
@@ -225,6 +310,13 @@ async function originBoot({
 
     // Source URL that will be used for import.meta.url of the entrypoint.
     entrypoint: 'file:///src/main.js', // or "https://example.com/main.js"
+
+    layers: [
+      {
+        kind: 'eszip',
+        id: `${appId}@${version}`,
+      },
+    ],
 
     // Permissions can be used to lockdown network access via an allowlist, etc...
     permissions: {
