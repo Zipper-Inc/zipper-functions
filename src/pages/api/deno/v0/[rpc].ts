@@ -3,14 +3,11 @@ import * as jose from 'jose';
 import { build } from '@deno/eszip';
 import { trpcRouter } from '~/server/routers/_app';
 import { createContext } from '~/server/context';
-import { gunzip } from 'zlib';
+import pako from 'pako';
+import fs from 'fs';
+import { PassThrough } from 'stream';
 
 const X_DENO_CONFIG = 'x-deno-config';
-
-const missingCodeError = `
-function main() {
-  throw new Error("There is no code. Please inspect __meta__ of response.");
-}`;
 
 /**
  * Assuming the user has defined a function called `main`
@@ -19,7 +16,7 @@ function main() {
  *  - calls the user's main function
  *  - handles standardizing output and errors
  */
-const wrapMainFunction = ({
+export const wrapMainFunction = ({
   code,
   name,
   appId,
@@ -128,7 +125,7 @@ export default async function handler(
   switch (url.pathname) {
     case '/api/deno/v0/boot': {
       if (!args.deployment_id) throw new Error('Missing deployment_id');
-      const { body, headers, status }: any = await originBoot({
+      const { body, headers }: any = await originBoot({
         req,
         res,
         id: args.deployment_id || '',
@@ -138,7 +135,10 @@ export default async function handler(
           res.setHeader(key, headers[key] || '');
         });
       }
-      res.status(status || 200).send(body);
+      const readStream = new PassThrough();
+      readStream.end(body);
+      readStream.pipe(res);
+      break;
     }
     case '/api/deno/v0/layer': {
       await originLayer({
@@ -150,6 +150,10 @@ export default async function handler(
     }
     case '/api/deno/v0/events': {
       // TODO: figure out how to handle gzipped requests with Next.js
+      req.on('data', (data) => {
+        const message = pako.ungzip(data, { to: 'string' });
+        console.log(message);
+      });
       res.status(200).send('OK');
       break;
     }
@@ -189,6 +193,40 @@ async function decodeAuthHeader(req: NextApiRequest) {
   }
 }
 
+const createEsZip = async ({ app, baseUrl }: { app: any; baseUrl: string }) => {
+  const mainScript = app.scripts.find(
+    ({ id }: any) => app.scriptMain?.scriptId === id,
+  );
+  return build(
+    [`${baseUrl}/${mainScript?.filename}`],
+    async (specifier: string) => {
+      console.log("ESZIP: '", specifier);
+
+      if (specifier.startsWith(baseUrl)) {
+        const response = await fetch(specifier);
+        const content = await response.text();
+
+        console.log('ESZIP: content', content);
+
+        return {
+          specifier,
+          headers: {
+            'content-type': 'text/typescript',
+          },
+          content,
+          kind: 'module',
+          version: '1.0.0',
+        };
+      }
+
+      return {
+        specifier,
+        kind: 'external',
+      };
+    },
+  );
+};
+
 async function originLayer({
   req,
   res,
@@ -199,10 +237,10 @@ async function originLayer({
   layerId: string;
 }) {
   const proto = req.headers['x-forwarded-proto'] || 'http';
-  const [appId, version] = layerId.split('@');
+  const [appId, version, filename, rand] = layerId.split('@');
 
-  if (!appId || !version) {
-    console.error('Missing appId and version');
+  if (!appId || !version || !filename) {
+    console.error('OriginLayer: Missing appId and version: ', layerId);
     return;
   }
 
@@ -217,44 +255,17 @@ async function originLayer({
     return { body: `App with ${appId} does not exist`, status: 404 };
   }
 
-  const mainScript = app.scripts.find(
-    ({ id }) => app.scriptMain?.scriptId === id,
-  );
+  const eszip = await createEsZip({
+    app,
+    baseUrl: `${proto}://${req.headers.host}/api/source/${appId}/${version}`,
+  });
 
-  const eszip = await build(
-    [
-      `${proto}://${req.headers.host}/api/source/${appId}/${version}/${mainScript?.filename}`,
-    ],
-    async (specifier: string) => {
-      console.log("ESZIP: '", specifier);
-
-      if (
-        specifier.startsWith(
-          `${proto}://${req.headers.host}/api/source/${appId}/${version}/`,
-        )
-      ) {
-        const response = await fetch(specifier);
-        const content = await response.text();
-
-        return {
-          specifier,
-          headers: {
-            'content-type': 'text/typescript',
-          },
-          content,
-          kind: 'module',
-        };
-      }
-
-      return {
-        specifier,
-        kind: 'external',
-      };
-    },
-  );
+  // await fs.writeFile(`/tmp/${layerId}.eszip`, eszip, () => {
+  //   console.log('done');
+  // });
 
   res.setHeader('Content-Type', 'application/vnd.denoland.eszip');
-  res.send({ body: eszip, status: 200 });
+  res.send(eszip);
 }
 
 /** @todo use a real deployment id instead of an app id. deployment id should be app id and version or something */
@@ -274,8 +285,6 @@ async function originBoot({
     return;
   }
 
-  console.log('booting deplyomentId', deploymentId);
-
   const caller = trpcRouter.createCaller(createContext({ req, res }));
   const app = await caller.query('app.byId', {
     id: appId,
@@ -285,52 +294,44 @@ async function originBoot({
     return { body: `App with ${appId} does not exist`, status: 404 };
   }
 
-  // Get the main script
-  const mainScript = app.scripts.find(
-    ({ id }) => app.scriptMain?.scriptId === id,
-  );
+  const proto = req.headers['x-forwarded-proto'] || 'http';
 
-  const body = wrapMainFunction({
-    code: mainScript?.code || missingCodeError,
-    name: app.name,
-    appId,
-    version,
+  const eszip = await createEsZip({
+    app,
+    baseUrl: `${proto}://${req.headers.host}/api/source/${appId}/${version}`,
   });
 
-  // TODO(@AaronO): inject header to disambiguate between JS bundles and eszips
-  // @ibu: this part used to fetch the code from github gists
+  await fs.writeFile(`/tmp/${deploymentId}.eszip`, eszip, () => {
+    console.log('done');
+  });
+
+  console.log('booting deplyomentId', deploymentId);
+
+  const layerId = `${deploymentId}@${Math.random() * 1000000}`;
 
   // Boot metadata
   const isolateConfig = {
-    // Optional envs, accessible in isolates via Deno.env.get(...) or Deno.env.toObject()
-    envs: {
-      // API_TOKEN: ...,
-      HELLO: 'H3110',
-    },
-
     // Source URL that will be used for import.meta.url of the entrypoint.
-    entrypoint: 'file:///src/main.js', // or "https://example.com/main.js"
+    entrypoint: `https://${req.headers.host}/api/source/${appId}/${version}/main.ts`,
 
     layers: [
       {
         kind: 'eszip',
-        id: `${appId}@${version}`,
+        id: layerId,
       },
     ],
+    inline_layer: layerId,
 
-    // Permissions can be used to lockdown network access via an allowlist, etc...
     permissions: {
-      // net: true/false/["foo.com", "bar.com"]
       net: true,
     },
   };
-  // Inject isolateConfig into headers
-  // const payloadHeaders = Object.fromEntries(payloadResp.headers.entries());
+
   const headers = {
     [X_DENO_CONFIG]: JSON.stringify(isolateConfig),
   };
 
-  return { body, headers, status: 200 };
+  return { body: eszip, headers, status: 200 };
 }
 
 function originReadBlob(_deploymentId: string, hash?: string) {
@@ -368,3 +369,9 @@ function originReadTree(_deploymentId: string) {
     },
   });
 }
+
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
