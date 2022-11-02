@@ -18,7 +18,7 @@ import {
 import NextError from 'next/error';
 import NextLink from 'next/link';
 import { useRouter } from 'next/router';
-import React, { useEffect, useState } from 'react';
+import React, { useMemo, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { NextPageWithLayout } from '~/pages/_app';
 import { trpc } from '~/utils/trpc';
@@ -27,6 +27,7 @@ import { Script } from '@prisma/client';
 import DefaultGrid from '~/components/default-grid';
 import usePrettier from '~/hooks/use-prettier';
 import useInterval from '~/hooks/use-interval';
+import debounce from 'lodash.debounce';
 
 const Editor = dynamic(() => import('@monaco-editor/react'), {
   ssr: false,
@@ -49,7 +50,7 @@ const AppPage: NextPageWithLayout = () => {
 
   const [scripts, setScripts] = useState<Script[]>([]);
 
-  const [inputValue, setInputValue] = React.useState('{}');
+  const [inputValue, setInputValue] = useState('{}');
   const [outputValue, setOutputValue] = React.useState('');
   const [appEvents, setAppEvents] = React.useState([]);
   const [lastRunVersion, setLastRunVersion] = React.useState<string>();
@@ -138,6 +139,29 @@ const AppPage: NextPageWithLayout = () => {
       reset();
     },
   });
+
+  const onCodeChange = async (value?: string) => {
+    setScripts(
+      scripts.map((script) => {
+        if (script.filename === currentScript?.filename) {
+          return { ...script, code: value || '' };
+        }
+        return script;
+      }),
+    );
+
+    const res = await fetch('/api/__/parse-input', {
+      method: 'POST',
+      body: currentScript?.code,
+    }).then((r) => r.json());
+
+    console.log('response', res);
+  };
+
+  const debouncedOnCodeChange = useMemo(
+    () => debounce(onCodeChange, 500),
+    [currentScript, scripts, setScripts],
+  );
 
   if (appQuery.error) {
     return (
@@ -294,16 +318,7 @@ const AppPage: NextPageWithLayout = () => {
                     options={{
                       minimap: { enabled: false },
                     }}
-                    onChange={(value) => {
-                      setScripts(
-                        scripts.map((script) => {
-                          if (script.filename === currentScript?.filename) {
-                            return { ...script, code: value || '' };
-                          }
-                          return script;
-                        }),
-                      );
-                    }}
+                    onChange={debouncedOnCodeChange}
                   />
                 </Box>
               </FormControl>
