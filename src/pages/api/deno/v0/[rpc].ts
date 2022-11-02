@@ -206,8 +206,6 @@ const createEsZip = async ({ app, baseUrl }: { app: any; baseUrl: string }) => {
         const response = await fetch(specifier);
         const content = await response.text();
 
-        console.log('ESZIP: content', content);
-
         return {
           specifier,
           headers: {
@@ -219,9 +217,23 @@ const createEsZip = async ({ app, baseUrl }: { app: any; baseUrl: string }) => {
         };
       }
 
+      const response = await fetch(specifier, { redirect: 'follow' });
+      if (response.status !== 200) {
+        // ensure the body is read as to not leak resources
+        await response.arrayBuffer();
+        return undefined;
+      }
+      const content = await response.text();
+      const headers: Record<string, string> = {};
+      response.headers.forEach((value, key) => {
+        headers[key.toLowerCase()] = value;
+      });
+
       return {
-        specifier,
-        kind: 'external',
+        kind: 'module',
+        specifier: response.url,
+        headers,
+        content,
       };
     },
   );
@@ -260,10 +272,6 @@ async function originLayer({
     baseUrl: `${proto}://${req.headers.host}/api/source/${appId}/${version}`,
   });
 
-  // await fs.writeFile(`/tmp/${layerId}.eszip`, eszip, () => {
-  //   console.log('done');
-  // });
-
   res.setHeader('Content-Type', 'application/vnd.denoland.eszip');
   res.send(eszip);
 }
@@ -301,9 +309,9 @@ async function originBoot({
     baseUrl: `${proto}://${req.headers.host}/api/source/${appId}/${version}`,
   });
 
-  await fs.writeFile(`/tmp/${deploymentId}.eszip`, eszip, () => {
-    console.log('done');
-  });
+  // await fs.writeFile(`/tmp/${deploymentId}.eszip`, eszip, () => {
+  //   console.log('done');
+  // });
 
   console.log('booting deplyomentId', deploymentId);
 
