@@ -128,11 +128,12 @@ export default async function handler(
   switch (url.pathname) {
     case '/api/deno/v0/boot': {
       if (!args.deployment_id) throw new Error('Missing deployment_id');
-      const { body, headers }: any = await originBoot({
-        req,
-        caller,
-        id: args.deployment_id || '',
-      });
+      const { body, headers }: any =
+        (await originBoot({
+          req,
+          caller,
+          id: args.deployment_id || '',
+        })) || {};
       if (headers) {
         Object.keys(headers as any).forEach((key) => {
           res.setHeader(key, headers[key] || '');
