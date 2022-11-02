@@ -26,8 +26,15 @@ import dynamic from 'next/dynamic';
 import { Script } from '@prisma/client';
 import DefaultGrid from '~/components/default-grid';
 import usePrettier from '~/hooks/use-prettier';
+import {
+  InputType,
+  InputParam,
+  ParseInputResponse,
+  ParseInputError,
+} from '~/types/input-params';
 import useInterval from '~/hooks/use-interval';
 import debounce from 'lodash.debounce';
+import InputParamsForm from '~/components/input-params-form';
 
 const Editor = dynamic(() => import('@monaco-editor/react'), {
   ssr: false,
@@ -51,6 +58,7 @@ const AppPage: NextPageWithLayout = () => {
   const [scripts, setScripts] = useState<Script[]>([]);
 
   const [inputValue, setInputValue] = useState('{}');
+  const [inputParams, setInputParams] = useState<InputParam[]>([]);
   const [outputValue, setOutputValue] = React.useState('');
   const [appEvents, setAppEvents] = React.useState([]);
   const [lastRunVersion, setLastRunVersion] = React.useState<string>();
@@ -150,16 +158,16 @@ const AppPage: NextPageWithLayout = () => {
       }),
     );
 
-    const res = await fetch('/api/__/parse-input', {
+    const res: ParseInputResponse = await fetch('/api/__/parse-input', {
       method: 'POST',
       body: currentScript?.code,
     }).then((r) => r.json());
 
-    console.log('response', res);
+    setInputParams(res.params);
   };
 
   const debouncedOnCodeChange = useMemo(
-    () => debounce(onCodeChange, 500),
+    () => debounce(onCodeChange, 300),
     [currentScript, scripts, setScripts],
   );
 
@@ -328,25 +336,12 @@ const AppPage: NextPageWithLayout = () => {
       </GridItem>
       <GridItem colSpan={3}>
         <Heading size="md">Input</Heading>
-        {Editor && (
-          <Editor
-            key={currentScript?.filename}
-            defaultLanguage="json"
-            height="10vh"
-            defaultValue={inputValue}
-            options={{
-              minimap: { enabled: false },
-              find: { enabled: false },
-              lineNumbers: 'off',
-              glyphMargin: true,
-              lineDecorationsWidth: 0,
-              lineNumbersMinChars: 0,
-            }}
-            onChange={(value: any) => {
-              setInputValue(value);
-            }}
-          />
-        )}
+        <InputParamsForm
+          params={inputParams}
+          Editor={Editor}
+          onChange={console.log}
+          defaultValues={{}}
+        />
         {outputValue && (
           <>
             <Heading size="md">Output</Heading>
