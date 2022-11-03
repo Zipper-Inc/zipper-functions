@@ -4,8 +4,9 @@ import { build } from '@deno/eszip';
 import { trpcRouter } from '~/server/routers/_app';
 import { createContext } from '~/server/context';
 import pako from 'pako';
-import fs from 'fs';
 import { PassThrough } from 'stream';
+import ndjson from 'ndjson';
+import intoStream from 'into-stream';
 
 const X_DENO_CONFIG = 'x-deno-config';
 
@@ -122,12 +123,14 @@ export default async function handler(
   }
   // Dispatch RPCs
   console.log('Handling RPC: ', url.pathname);
+  const caller = trpcRouter.createCaller(createContext({ req, res }));
+
   switch (url.pathname) {
     case '/api/deno/v0/boot': {
       if (!args.deployment_id) throw new Error('Missing deployment_id');
       const { body, headers }: any = await originBoot({
         req,
-        res,
+        caller,
         id: args.deployment_id || '',
       });
       if (headers) {
@@ -140,21 +143,28 @@ export default async function handler(
       readStream.pipe(res);
       break;
     }
-    case '/api/deno/v0/layer': {
-      await originLayer({
-        req,
-        res,
-        layerId: args.layer_id || '',
-      });
-      break;
-    }
     case '/api/deno/v0/events': {
-      // TODO: figure out how to handle gzipped requests with Next.js
-      req.on('data', (data) => {
-        const message = pako.ungzip(data, { to: 'string' });
-        console.log(message);
-      });
       res.status(200).send('OK');
+      let bufferChunks: any[] = [];
+      req.on('data', async (data) => {
+        bufferChunks.push(data);
+      });
+      req.on('end', async () => {
+        const buffer = Buffer.concat(bufferChunks);
+        bufferChunks = [];
+        const message = pako.ungzip(buffer, { to: 'string' });
+        intoStream(message)
+          .pipe(ndjson.parse())
+          .on('data', async (event) => {
+            await caller.mutation('appEvent.add', {
+              deploymentId: event.deployment_id,
+              eventPayload: event.event,
+              eventType: event.event_type,
+              timestamp: event.timestamp,
+            });
+          });
+      });
+
       break;
     }
     case '/api/deno/v0/read_blob': {
@@ -239,51 +249,14 @@ const createEsZip = async ({ app, baseUrl }: { app: any; baseUrl: string }) => {
   );
 };
 
-async function originLayer({
-  req,
-  res,
-  layerId,
-}: {
-  req: NextApiRequest;
-  res: NextApiResponse;
-  layerId: string;
-}) {
-  const proto = req.headers['x-forwarded-proto'] || 'http';
-  const [appId, version, filename, rand] = layerId.split('@');
-
-  if (!appId || !version || !filename) {
-    console.error('OriginLayer: Missing appId and version: ', layerId);
-    return;
-  }
-
-  console.log('loading layerId', layerId);
-
-  const caller = trpcRouter.createCaller(createContext({ req, res }));
-  const app = await caller.query('app.byId', {
-    id: appId,
-  });
-
-  if (!app) {
-    return { body: `App with ${appId} does not exist`, status: 404 };
-  }
-
-  const eszip = await createEsZip({
-    app,
-    baseUrl: `${proto}://${req.headers.host}/api/source/${appId}/${version}`,
-  });
-
-  res.setHeader('Content-Type', 'application/vnd.denoland.eszip');
-  res.send(eszip);
-}
-
 /** @todo use a real deployment id instead of an app id. deployment id should be app id and version or something */
 async function originBoot({
   req,
-  res,
+  caller,
   id: deploymentId,
 }: {
   req: NextApiRequest;
-  res: NextApiResponse;
+  caller: any;
   id: string;
 }) {
   const [appId, version] = deploymentId.split('@');
@@ -293,7 +266,6 @@ async function originBoot({
     return;
   }
 
-  const caller = trpcRouter.createCaller(createContext({ req, res }));
   const app = await caller.query('app.byId', {
     id: appId,
   });
@@ -306,7 +278,7 @@ async function originBoot({
 
   const eszip = await createEsZip({
     app,
-    baseUrl: `${proto}://${req.headers.host}/api/source/${appId}/${version}`,
+    baseUrl: `${proto}://${req.headers.host}/api/app/${appId}/${version}`,
   });
 
   // await fs.writeFile(`/tmp/${deploymentId}.eszip`, eszip, () => {
@@ -320,7 +292,7 @@ async function originBoot({
   // Boot metadata
   const isolateConfig = {
     // Source URL that will be used for import.meta.url of the entrypoint.
-    entrypoint: `https://${req.headers.host}/api/source/${appId}/${version}/main.ts`,
+    entrypoint: `https://${req.headers.host}/api/app/${appId}/${version}/main.ts`,
 
     layers: [
       {

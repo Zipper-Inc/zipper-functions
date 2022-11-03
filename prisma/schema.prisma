@@ -26,6 +26,16 @@ model App {
   @@map("apps")
 }
 
+model AppEvent {
+  id           String    @id @default(uuid())
+  timestamp    String
+  deploymentId String
+  eventType    String
+  eventPayload Json
+
+  @@map("apps_events")
+}
+
 model Secret {
   id             String    @id @default(uuid())
   createdAt      DateTime  @default(now())

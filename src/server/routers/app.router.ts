@@ -2,7 +2,6 @@ import { Prisma } from '@prisma/client';
 import { z } from 'zod';
 import { prisma } from '~/server/prisma';
 import { createRouter } from '../createRouter';
-import { createScriptHash } from '../utils/scripts.utils';
 
 const defaultSelect = Prisma.validator<Prisma.AppSelect>()({
   id: true,

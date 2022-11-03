@@ -5,6 +5,7 @@ import { createRouter } from '../createRouter';
 import superjson from 'superjson';
 import { appRouter } from './app.router';
 import { scriptRouter } from './scripts.router';
+import { appEventRouter } from './appEvent.router';
 
 /**
  * Create your application's root router
@@ -32,6 +33,7 @@ export const trpcRouter = createRouter()
     },
   })
   .merge('app.', appRouter)
+  .merge('appEvent.', appEventRouter)
   .merge('script.', scriptRouter);
 
 export type AppRouter = typeof trpcRouter;

@@ -26,6 +26,7 @@ import dynamic from 'next/dynamic';
 import { Script } from '@prisma/client';
 import DefaultGrid from '~/components/default-grid';
 import usePrettier from '~/hooks/use-prettier';
+import useInterval from '~/hooks/use-interval';
 
 const Editor = dynamic(() => import('@monaco-editor/react'), {
   ssr: false,
@@ -50,8 +51,15 @@ const AppPage: NextPageWithLayout = () => {
 
   const [inputValue, setInputValue] = React.useState('{}');
   const [outputValue, setOutputValue] = React.useState('');
+  const [appEvents, setAppEvents] = React.useState([]);
+  const [lastRunVersion, setLastRunVersion] = React.useState<string>();
 
   const { register, handleSubmit, reset } = useForm();
+
+  const appEventsQuery = trpc.useQuery([
+    'appEvent.all',
+    { deploymentId: `${id}@${lastRunVersion}` },
+  ]);
 
   const mainScript = scripts?.find(
     (script) => script.id === appQuery.data?.scriptMain?.scriptId,
@@ -63,6 +71,12 @@ const AppPage: NextPageWithLayout = () => {
   useEffect(() => {
     setScripts(appQuery.data?.scripts || []);
   }, [appQuery.isSuccess]);
+
+  useInterval(async () => {
+    if (lastRunVersion) {
+      appEventsQuery.refetch();
+    }
+  }, 10000);
 
   const format = usePrettier();
 
@@ -96,6 +110,7 @@ const AppPage: NextPageWithLayout = () => {
     const version = new Date(appQuery?.data?.updatedAt || Date.now())
       .getTime()
       .toString();
+    setLastRunVersion(version);
     return `/run/${id}@${version}`;
   };
 
@@ -322,6 +337,16 @@ const AppPage: NextPageWithLayout = () => {
             <Heading size="md">Output</Heading>
             <Code fontFamily={'Monaco; monospace'} maxW="100%">
               {outputValue}
+            </Code>
+          </>
+        )}
+        {appEventsQuery.data && (
+          <>
+            <Heading size="md">Logs</Heading>
+            <Code fontFamily={'Monaco; monospace'} maxW="100%">
+              {appEventsQuery.data.map(
+                (event) => `${JSON.stringify(event.eventPayload)}`,
+              )}
             </Code>
           </>
         )}
