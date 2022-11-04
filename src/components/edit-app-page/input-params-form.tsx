@@ -34,7 +34,14 @@ function JSONEditor({ inputKey, type }: { inputKey: string; type: string }) {
   });
   if (!Editor) return null;
   return (
-    <Box ml={-4} width="100%" height="80px">
+    <Box
+      width="100%"
+      height="90px"
+      border="1px"
+      borderColor="gray.200"
+      borderRadius="md"
+      py="1"
+    >
       <Editor
         defaultLanguage="json"
         height="80px"
@@ -43,9 +50,10 @@ function JSONEditor({ inputKey, type }: { inputKey: string; type: string }) {
           minimap: { enabled: false },
           find: { enabled: false },
           lineNumbers: 'off',
-          glyphMargin: true,
+          glyphMargin: false,
           lineDecorationsWidth: 0,
           lineNumbersMinChars: 0,
+          renderLineHighlight: false,
         }}
         {...field}
       />
