@@ -11,7 +11,7 @@ import {
   HStack,
   StackDivider,
 } from '@chakra-ui/react';
-import { useForm, useFormContext } from 'react-hook-form';
+import { useController, useFormContext } from 'react-hook-form';
 import dynamic from 'next/dynamic';
 import { InputType, InputParam } from '~/types/input-params';
 
@@ -25,24 +25,27 @@ interface Props {
   onChange: (values: Record<string, any>) => any;
 }
 
-function JSONEditor(props: any) {
-  const { defaultValue } = props;
-  console.log('json props', props);
+function JSONEditor({ inputKey, type }: { inputKey: string; type: string }) {
+  const { control } = useFormContext();
+  const { field } = useController({ name: `${inputKey}:${type}`, control });
   if (!Editor) return null;
   return (
-    <Editor
-      defaultLanguage="json"
-      height="10vh"
-      defaultValue={defaultValue || '{}'}
-      options={{
-        minimap: { enabled: false },
-        find: { enabled: false },
-        lineNumbers: 'off',
-        glyphMargin: true,
-        lineDecorationsWidth: 0,
-        lineNumbersMinChars: 0,
-      }}
-    />
+    <Box ml={-4} width="100%" height="80px">
+      <Editor
+        defaultLanguage="json"
+        height="80px"
+        defaultValue={type === InputType.array ? '[]' : '{}'}
+        options={{
+          minimap: { enabled: false },
+          find: { enabled: false },
+          lineNumbers: 'off',
+          glyphMargin: false,
+          lineDecorationsWidth: 0,
+          lineNumbersMinChars: 0,
+        }}
+        {...field}
+      />
+    </Box>
   );
 }
 function InputParamsInput({
@@ -92,9 +95,7 @@ function InputParamsInput({
     case InputType.object:
     case InputType.any:
     default: {
-      return (
-        <JSONEditor defaultValue={type === InputType.array ? '[]' : '{}'} />
-      );
+      return <JSONEditor inputKey={inputKey} type={type} />;
     }
   }
 }
@@ -133,7 +134,7 @@ export default function InputParamsForm({ params = [], defaultValues }: Props) {
           {inputs}
         </VStack>
       ) : (
-        <JSONEditor />
+        <JSONEditor inputKey="params" type="any" />
       )}
     </Box>
   );
