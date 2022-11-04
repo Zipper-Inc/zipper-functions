@@ -4,41 +4,69 @@ import {
   Code,
   Divider,
   FormControl,
-  FormErrorMessage,
-  FormLabel,
   GridItem,
   Heading,
   HStack,
-  Input,
   Link,
   Text,
-  Textarea,
   VStack,
 } from '@chakra-ui/react';
 import NextError from 'next/error';
 import NextLink from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useMemo, useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, FormProvider } from 'react-hook-form';
 import { NextPageWithLayout } from '~/pages/_app';
 import { trpc } from '~/utils/trpc';
 import dynamic from 'next/dynamic';
 import { Script } from '@prisma/client';
 import DefaultGrid from '~/components/default-grid';
 import usePrettier from '~/hooks/use-prettier';
-import {
-  InputType,
-  InputParam,
-  ParseInputResponse,
-  ParseInputError,
-} from '~/types/input-params';
+import { InputParam, ParseInputResponse } from '~/types/input-params';
 import useInterval from '~/hooks/use-interval';
 import debounce from 'lodash.debounce';
-import InputParamsForm from '~/components/input-params-form';
+import InputParamsForm from '~/components/edit-app-page/input-params-form';
+import AddScriptForm from '~/components/edit-app-page/add-script-form';
 
 const Editor = dynamic(() => import('@monaco-editor/react'), {
   ssr: false,
 });
+
+async function parseInput(code?: string): Promise<InputParam[]> {
+  const res: ParseInputResponse = await fetch('/api/__/parse-input', {
+    method: 'POST',
+    body: code || '',
+  }).then((r) => r.json());
+  return res.params || [];
+}
+
+async function changeHandler({
+  value,
+  scripts,
+  currentScript,
+  setScripts,
+  setInputParams,
+}: {
+  value?: string;
+  scripts: Script[];
+  currentScript?: Script;
+  setScripts: any;
+  setInputParams: any;
+}) {
+  setScripts(
+    scripts.map((script) => {
+      if (script.filename === currentScript?.filename) {
+        return { ...script, code: value || '' };
+      }
+      return script;
+    }),
+  );
+
+  const params = await parseInput(value);
+  setInputParams(params);
+}
+
+const onCodeChange = debounce(changeHandler, 500);
 
 const AppPage: NextPageWithLayout = () => {
   const utils = trpc.useContext();
@@ -51,19 +79,17 @@ const AppPage: NextPageWithLayout = () => {
   const editAppMutation = trpc.useMutation('app.edit', {
     async onSuccess() {
       await utils.invalidateQueries(['app.byId', { id }]);
-      reset();
     },
   });
 
   const [scripts, setScripts] = useState<Script[]>([]);
 
-  const [inputValue, setInputValue] = useState('{}');
   const [inputParams, setInputParams] = useState<InputParam[]>([]);
   const [outputValue, setOutputValue] = React.useState('');
   const [appEvents, setAppEvents] = React.useState([]);
   const [lastRunVersion, setLastRunVersion] = React.useState<string>();
 
-  const { register, handleSubmit, reset } = useForm();
+  const inputParamsFormMethods = useForm();
 
   const appEventsQuery = trpc.useQuery([
     'appEvent.all',
@@ -80,6 +106,10 @@ const AppPage: NextPageWithLayout = () => {
   useEffect(() => {
     setScripts(appQuery.data?.scripts || []);
   }, [appQuery.isSuccess]);
+
+  useEffect(() => {
+    parseInput(currentScript?.code).then(setInputParams);
+  }, [currentScript]);
 
   useInterval(async () => {
     if (lastRunVersion) {
@@ -126,9 +156,16 @@ const AppPage: NextPageWithLayout = () => {
   const runApp = async () => {
     await saveApp();
 
+    const formValues = inputParamsFormMethods.getValues();
+    const inputValues: Record<string, any> = {};
+    Object.keys(formValues).forEach((k) => {
+      const inputKey = k.split(':')[0] as string;
+      inputValues[inputKey] = formValues[k];
+    });
+
     const raw = await fetch(getRunUrl(), {
       method: 'POST',
-      body: inputValue,
+      body: JSON.stringify(inputValues),
     });
 
     const res = await raw.json();
@@ -139,37 +176,6 @@ const AppPage: NextPageWithLayout = () => {
     await saveApp();
     navigator.clipboard.writeText(getRunUrl());
   };
-
-  const addScript = trpc.useMutation('script.add', {
-    async onSuccess() {
-      // refetches posts after a post is added
-      await utils.invalidateQueries(['script.byAppId', { appId: id }]);
-      reset();
-    },
-  });
-
-  const onCodeChange = async (value?: string) => {
-    setScripts(
-      scripts.map((script) => {
-        if (script.filename === currentScript?.filename) {
-          return { ...script, code: value || '' };
-        }
-        return script;
-      }),
-    );
-
-    const res: ParseInputResponse = await fetch('/api/__/parse-input', {
-      method: 'POST',
-      body: currentScript?.code,
-    }).then((r) => r.json());
-
-    setInputParams(res.params);
-  };
-
-  const debouncedOnCodeChange = useMemo(
-    () => debounce(onCodeChange, 300),
-    [currentScript, scripts, setScripts],
-  );
 
   if (appQuery.error) {
     return (
@@ -250,57 +256,7 @@ const AppPage: NextPageWithLayout = () => {
             ))}
         </VStack>
         <Divider my={5} />
-
-        <Heading size="md" marginBottom={4}>
-          Create a function
-        </Heading>
-        <form
-          onSubmit={handleSubmit(
-            ({ name, description, code = '// Here we go!' }) => {
-              addScript.mutateAsync({
-                name,
-                description,
-                code: code,
-                appId: id,
-                order: scripts.length,
-              });
-            },
-          )}
-          style={{ display: 'block', width: '100%' }}
-        >
-          {addScript.error && (
-            <FormErrorMessage>{addScript.error.message}</FormErrorMessage>
-          )}
-          <VStack align={'start'}>
-            <FormControl as={React.Fragment}>
-              <FormLabel>Name:</FormLabel>
-              <Input
-                size="md"
-                type="text"
-                disabled={addScript.isLoading}
-                {...register('name')}
-              />
-            </FormControl>
-            <FormControl as={React.Fragment}>
-              <FormLabel>Description:</FormLabel>
-              <Input
-                size="md"
-                type="text"
-                disabled={addScript.isLoading}
-                {...register('description')}
-              />
-            </FormControl>
-            <Button
-              type="submit"
-              paddingX={6}
-              disabled={addScript.isLoading}
-              bgColor="purple.800"
-              textColor="gray.100"
-            >
-              Submit
-            </Button>
-          </VStack>
-        </form>
+        <AddScriptForm scripts={scripts} appId={id} />
       </GridItem>
       <GridItem colSpan={6}>
         {Editor && (
@@ -326,7 +282,15 @@ const AppPage: NextPageWithLayout = () => {
                     options={{
                       minimap: { enabled: false },
                     }}
-                    onChange={debouncedOnCodeChange}
+                    onChange={(value) =>
+                      onCodeChange({
+                        value,
+                        scripts,
+                        setScripts,
+                        currentScript,
+                        setInputParams,
+                      })
+                    }
                   />
                 </Box>
               </FormControl>
@@ -335,13 +299,12 @@ const AppPage: NextPageWithLayout = () => {
         )}
       </GridItem>
       <GridItem colSpan={3}>
-        <Heading size="md">Input</Heading>
-        <InputParamsForm
-          params={inputParams}
-          Editor={Editor}
-          onChange={console.log}
-          defaultValues={{}}
-        />
+        <Heading size="md" mb="4">
+          Input
+        </Heading>
+        <FormProvider {...inputParamsFormMethods}>
+          <InputParamsForm params={inputParams} defaultValues={{}} />
+        </FormProvider>
         {outputValue && (
           <>
             <Heading size="md">Output</Heading>
@@ -355,7 +318,7 @@ const AppPage: NextPageWithLayout = () => {
             <Heading size="md">Logs</Heading>
             <Code fontFamily={'Monaco; monospace'} maxW="100%">
               {appEventsQuery.data.map(
-                (event) => `${JSON.stringify(event.eventPayload)}`,
+                (event: any) => `${JSON.stringify(event.eventPayload)}`,
               )}
             </Code>
           </>
