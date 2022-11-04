@@ -25,3 +25,9 @@ export interface ParseInputError {
   code: string;
   error: any;
 }
+
+export const JSONEditorInputTypes = [
+  InputType.array,
+  InputType.object,
+  InputType.any,
+];

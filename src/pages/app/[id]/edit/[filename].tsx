@@ -22,11 +22,17 @@ import dynamic from 'next/dynamic';
 import { Script } from '@prisma/client';
 import DefaultGrid from '~/components/default-grid';
 import usePrettier from '~/hooks/use-prettier';
-import { InputParam, ParseInputResponse } from '~/types/input-params';
+import {
+  InputParam,
+  ParseInputResponse,
+  JSONEditorInputTypes,
+  InputType,
+} from '~/types/input-params';
 import useInterval from '~/hooks/use-interval';
 import debounce from 'lodash.debounce';
 import InputParamsForm from '~/components/edit-app-page/input-params-form';
 import AddScriptForm from '~/components/edit-app-page/add-script-form';
+import { safeJSONParse } from '~/utils/safe-json';
 
 const Editor = dynamic(() => import('@monaco-editor/react'), {
   ssr: false,
@@ -158,10 +164,26 @@ const AppPage: NextPageWithLayout = () => {
 
     const formValues = inputParamsFormMethods.getValues();
     const inputValues: Record<string, any> = {};
-    Object.keys(formValues).forEach((k) => {
-      const inputKey = k.split(':')[0] as string;
-      inputValues[inputKey] = formValues[k];
-    });
+
+    // We need to filter the form values since `useForm` hook keeps these around
+    const formKeys = inputParams.map(({ key, type }) => `${key}:${type}`);
+
+    Object.keys(formValues)
+      .filter((k) => formKeys.includes(k))
+      .forEach((k) => {
+        const [inputKey, type] = k.split(':');
+
+        if (inputKey === 'obj')
+          console.log(JSONEditorInputTypes.includes(type as InputType));
+        const value = JSONEditorInputTypes.includes(type as InputType)
+          ? safeJSONParse(
+              formValues[k],
+              undefined,
+              type === InputType.array ? [] : {},
+            )
+          : formValues[k];
+        inputValues[inputKey as string] = value;
+      });
 
     const raw = await fetch(getRunUrl(), {
       method: 'POST',

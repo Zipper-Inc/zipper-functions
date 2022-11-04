@@ -27,7 +27,11 @@ interface Props {
 
 function JSONEditor({ inputKey, type }: { inputKey: string; type: string }) {
   const { control } = useFormContext();
-  const { field } = useController({ name: `${inputKey}:${type}`, control });
+  const { field } = useController({
+    name: `${inputKey}:${type}`,
+    control,
+    defaultValue: type === InputType.array ? '[]' : '{}',
+  });
   if (!Editor) return null;
   return (
     <Box ml={-4} width="100%" height="80px">
@@ -39,7 +43,7 @@ function JSONEditor({ inputKey, type }: { inputKey: string; type: string }) {
           minimap: { enabled: false },
           find: { enabled: false },
           lineNumbers: 'off',
-          glyphMargin: false,
+          glyphMargin: true,
           lineDecorationsWidth: 0,
           lineNumbersMinChars: 0,
         }}
@@ -60,7 +64,7 @@ function InputParamsInput({
   value: any;
 }) {
   const { register } = useFormContext();
-  const formProps = register(`${inputKey}:${type},`, {
+  const formProps = register(`${inputKey}:${type}`, {
     required: !optional,
     valueAsNumber: type === InputType.number,
     valueAsDate: type === InputType.date,
