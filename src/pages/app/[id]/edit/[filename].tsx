@@ -38,6 +38,16 @@ const Editor = dynamic(() => import('@monaco-editor/react'), {
   ssr: false,
 });
 
+const JSONViewer = dynamic(
+  async () => {
+    const component = await import('~/components/json-editor');
+    return component.JSONViewer;
+  },
+  {
+    ssr: false,
+  },
+);
+
 async function parseInput(code?: string): Promise<InputParam[]> {
   const res: ParseInputResponse = await fetch('/api/__/parse-input', {
     method: 'POST',
@@ -321,29 +331,36 @@ const AppPage: NextPageWithLayout = () => {
         )}
       </GridItem>
       <GridItem colSpan={3}>
-        <Heading size="md" mb="4">
-          Input
-        </Heading>
-        <FormProvider {...inputParamsFormMethods}>
-          <InputParamsForm params={inputParams} defaultValues={{}} />
-        </FormProvider>
+        <Box mb="4">
+          <Heading size="md" mb="4">
+            Inputs
+          </Heading>
+          <Box borderRadius="xl" backgroundColor="gray.100">
+            <FormProvider {...inputParamsFormMethods}>
+              <InputParamsForm params={inputParams} defaultValues={{}} />
+            </FormProvider>
+          </Box>
+        </Box>
         {outputValue && (
-          <>
-            <Heading size="md">Output</Heading>
-            <Code fontFamily={'Monaco; monospace'} maxW="100%">
-              {outputValue}
-            </Code>
-          </>
+          <Box mb="4">
+            <Heading size="md" mb="4">
+              Output
+            </Heading>
+            <JSONViewer height="100px" value={outputValue} />
+          </Box>
         )}
         {appEventsQuery.data && (
-          <>
-            <Heading size="md">Logs</Heading>
-            <Code fontFamily={'Monaco; monospace'} maxW="100%">
-              {appEventsQuery.data.map(
-                (event: any) => `${JSON.stringify(event.eventPayload)}`,
+          <Box mb="4">
+            <Heading size="md" mb="4">
+              Logs
+            </Heading>
+            <JSONViewer
+              height="100px"
+              value={JSON.stringify(
+                appEventsQuery.data.map((event: any) => event.eventPayload),
               )}
-            </Code>
-          </>
+            />
+          </Box>
         )}
       </GridItem>
     </DefaultGrid>

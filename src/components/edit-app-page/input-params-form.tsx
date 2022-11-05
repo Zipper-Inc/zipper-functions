@@ -9,31 +9,32 @@ import {
   Badge,
   VStack,
   HStack,
+  Text,
   StackDivider,
 } from '@chakra-ui/react';
 import { useController, useFormContext } from 'react-hook-form';
 import dynamic from 'next/dynamic';
 import { InputType, InputParam } from '~/types/input-params';
 
-const Editor = dynamic(() => import('@monaco-editor/react'), {
+const JSONEditor = dynamic(() => import('~/components/json-editor'), {
   ssr: false,
 });
 
 interface Props {
   params: InputParam[];
-  defaultValues: any;
-  onChange: (values: Record<string, any>) => any;
+  defaultValues?: any;
 }
 
-function JSONEditor({ inputKey, type }: { inputKey: string; type: string }) {
+function JSONInput({ inputKey, type }: { inputKey: string; type: string }) {
   const { control } = useFormContext();
-  const { field } = useController({
+  const {
+    field: { onChange },
+  } = useController({
     name: `${inputKey}:${type}`,
     control,
     defaultValue: type === InputType.array ? '[]' : '{}',
   });
-  if (!Editor) return null;
-  return (
+  return JSONEditor ? (
     <Box
       width="100%"
       height="90px"
@@ -41,25 +42,17 @@ function JSONEditor({ inputKey, type }: { inputKey: string; type: string }) {
       borderColor="gray.200"
       borderRadius="md"
       py="1"
+      backgroundColor="white"
     >
-      <Editor
-        defaultLanguage="json"
+      <JSONEditor
+        onChange={onChange}
         height="80px"
         defaultValue={type === InputType.array ? '[]' : '{}'}
-        options={{
-          minimap: { enabled: false },
-          find: { enabled: false },
-          lineNumbers: 'off',
-          glyphMargin: false,
-          lineDecorationsWidth: 0,
-          lineNumbersMinChars: 0,
-          renderLineHighlight: false,
-        }}
-        {...field}
       />
     </Box>
-  );
+  ) : null;
 }
+
 function InputParamsInput({
   inputKey,
   type,
@@ -71,8 +64,9 @@ function InputParamsInput({
   optional: boolean;
   value: any;
 }) {
-  const { register } = useFormContext();
-  const formProps = register(`${inputKey}:${type}`, {
+  const { register, getValues } = useFormContext();
+  const name = `${inputKey}:${type}`;
+  const formProps = register(name, {
     required: !optional,
     valueAsNumber: type === InputType.number,
     valueAsDate: type === InputType.date,
@@ -80,17 +74,23 @@ function InputParamsInput({
 
   switch (type) {
     case InputType.boolean: {
-      return <Switch {...formProps} />;
+      return <Switch colorScheme="purple" {...formProps} />;
     }
     case InputType.string: {
       return (
-        <Textarea fontFamily="monospace" fontSize="smaller" {...formProps} />
+        <Textarea
+          backgroundColor="white"
+          fontFamily="monospace"
+          fontSize="smaller"
+          {...formProps}
+        />
       );
     }
 
     case InputType.number: {
       return (
         <Input
+          backgroundColor="white"
           fontFamily="monospace"
           type="number"
           fontSize="smaller"
@@ -100,14 +100,14 @@ function InputParamsInput({
     }
 
     case InputType.date: {
-      return <Input type="date" {...formProps} />;
+      return <Input backgroundColor="white" type="date" {...formProps} />;
     }
 
     case InputType.array:
     case InputType.object:
     case InputType.any:
     default: {
-      return <JSONEditor inputKey={inputKey} type={type} />;
+      return <JSONInput inputKey={inputKey} type={type} />;
     }
   }
 }
@@ -146,7 +146,7 @@ export default function InputParamsForm({ params = [], defaultValues }: Props) {
           {inputs}
         </VStack>
       ) : (
-        <JSONEditor inputKey="params" type="any" />
+        <JSONInput inputKey="params" type="any" />
       )}
     </Box>
   );
