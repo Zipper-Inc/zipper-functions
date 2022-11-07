@@ -9,7 +9,6 @@ import {
   Badge,
   VStack,
   HStack,
-  Text,
   StackDivider,
 } from '@chakra-ui/react';
 import { useController, useFormContext } from 'react-hook-form';
@@ -82,6 +81,7 @@ function InputParamsInput({
           backgroundColor="white"
           fontFamily="monospace"
           fontSize="smaller"
+          minHeight={14}
           {...formProps}
         />
       );
@@ -114,17 +114,29 @@ function InputParamsInput({
 
 export default function InputParamsForm({ params = [], defaultValues }: Props) {
   const inputs = params.map(({ key, type, optional }) => (
-    <FormLabel width="100%" p="4">
-      <VStack justify="start" align="start" spacing={2}>
-        <Heading size="sm">{key}</Heading>
-        <HStack spacing={2} align="start" justify="start">
-          <Badge variant="outline" colorScheme="purple" fontSize=".6rem">
-            {type}
-          </Badge>
-          {!optional && (
-            <Badge variant="subtle" fontSize=".6rem">
-              Required
+    <FormLabel width="100%" my="2">
+      <VStack justify="start" align="start" spacing={1.5}>
+        <HStack spacing={2} align="center">
+          <Heading
+            size="sm"
+            fontWeight="bold"
+            ml={0.5}
+            mr={2}
+            alignSelf="center"
+          >
+            {key}
+          </Heading>
+          <Box mt={1}>
+            <Badge variant="outline" colorScheme="purple" fontSize=".6rem">
+              {type}
             </Badge>
+          </Box>
+          {optional && (
+            <Box mt={1}>
+              <Badge variant="subtle" color="gray.400" fontSize=".6rem">
+                Optional
+              </Badge>
+            </Box>
           )}
         </HStack>
         <Flex width="100%">

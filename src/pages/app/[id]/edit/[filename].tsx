@@ -10,6 +10,11 @@ import {
   Link,
   Text,
   VStack,
+  Tabs,
+  TabList,
+  Tab,
+  TabPanels,
+  TabPanel,
 } from '@chakra-ui/react';
 import NextError from 'next/error';
 import NextLink from 'next/link';
@@ -84,6 +89,43 @@ async function changeHandler({
 
 const onCodeChange = debounce(changeHandler, 500);
 
+function Sidebar({
+  inputParamsFormMethods,
+  inputParams,
+  outputValue,
+  appEventsQuery,
+}: any) {
+  const logs =
+    JSON.stringify(
+      appEventsQuery.data?.map((event: any) => event.eventPayload),
+      null,
+      2,
+    ) || '';
+
+  return (
+    <Tabs as="aside">
+      <TabList>
+        <Tab>Inputs</Tab>
+        <Tab isDisabled={!outputValue}>Results</Tab>
+        <Tab isDisabled={!logs}>Logs</Tab>
+      </TabList>
+      <TabPanels>
+        <TabPanel backgroundColor="gray.100">
+          <FormProvider {...inputParamsFormMethods}>
+            <InputParamsForm params={inputParams} defaultValues={{}} />
+          </FormProvider>
+        </TabPanel>
+        <TabPanel>
+          <JSONViewer height="100px" value={outputValue} />
+        </TabPanel>
+        <TabPanel>
+          <JSONViewer height="100px" value={logs} />
+        </TabPanel>
+      </TabPanels>
+    </Tabs>
+  );
+}
+
 const AppPage: NextPageWithLayout = () => {
   const utils = trpc.useContext();
   const { query } = useRouter();
@@ -142,6 +184,7 @@ const AppPage: NextPageWithLayout = () => {
       return { ...script, code };
     });
 
+    console.log(formatted);
     setScripts(formatted);
 
     editAppMutation.mutateAsync({
@@ -166,12 +209,13 @@ const AppPage: NextPageWithLayout = () => {
       .getTime()
       .toString();
     setLastRunVersion(version);
+    console.log('here?');
+    debugger;
     return `/run/${id}@${version}`;
   };
 
   const runApp = async () => {
     await saveApp();
-
     const formValues = inputParamsFormMethods.getValues();
     const inputValues: Record<string, any> = {};
 
@@ -183,8 +227,6 @@ const AppPage: NextPageWithLayout = () => {
       .forEach((k) => {
         const [inputKey, type] = k.split(':');
 
-        if (inputKey === 'obj')
-          console.log(JSONEditorInputTypes.includes(type as InputType));
         const value = JSONEditorInputTypes.includes(type as InputType)
           ? safeJSONParse(
               formValues[k],
@@ -331,37 +373,12 @@ const AppPage: NextPageWithLayout = () => {
         )}
       </GridItem>
       <GridItem colSpan={3}>
-        <Box mb="4">
-          <Heading size="md" mb="4">
-            Inputs
-          </Heading>
-          <Box borderRadius="xl" backgroundColor="gray.100">
-            <FormProvider {...inputParamsFormMethods}>
-              <InputParamsForm params={inputParams} defaultValues={{}} />
-            </FormProvider>
-          </Box>
-        </Box>
-        {outputValue && (
-          <Box mb="4">
-            <Heading size="md" mb="4">
-              Output
-            </Heading>
-            <JSONViewer height="100px" value={outputValue} />
-          </Box>
-        )}
-        {appEventsQuery.data && (
-          <Box mb="4">
-            <Heading size="md" mb="4">
-              Logs
-            </Heading>
-            <JSONViewer
-              height="100px"
-              value={JSON.stringify(
-                appEventsQuery.data.map((event: any) => event.eventPayload),
-              )}
-            />
-          </Box>
-        )}
+        <Sidebar
+          inputParamsFormMethods={inputParamsFormMethods}
+          inputParams={inputParams}
+          outputValue={outputValue}
+          appEventsQuery={appEventsQuery}
+        />
       </GridItem>
     </DefaultGrid>
   );
