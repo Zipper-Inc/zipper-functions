@@ -95,6 +95,17 @@ function Sidebar({
   outputValue,
   appEventsQuery,
 }: any) {
+  const [tabIndex, setTabIndex] = useState(0);
+
+  // switch to the output tab anytime the output value changes
+  useEffect(() => {
+    if (outputValue) setTabIndex(1);
+  }, [outputValue]);
+
+  const handleTabsChange = (index: number) => {
+    setTabIndex(index);
+  };
+
   const logs =
     JSON.stringify(
       appEventsQuery.data?.map((event: any) => event.eventPayload),
@@ -103,7 +114,7 @@ function Sidebar({
     ) || '';
 
   return (
-    <Tabs as="aside">
+    <Tabs as="aside" index={tabIndex} onChange={handleTabsChange}>
       <TabList>
         <Tab>Inputs</Tab>
         <Tab isDisabled={!outputValue}>Results</Tab>
