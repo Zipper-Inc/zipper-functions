@@ -7,6 +7,7 @@ import pako from 'pako';
 import { PassThrough } from 'stream';
 import ndjson from 'ndjson';
 import intoStream from 'into-stream';
+import { decryptFromBase64 } from '~/server/utils/crypto.utils';
 
 const X_DENO_CONFIG = 'x-deno-config';
 
@@ -123,17 +124,15 @@ export default async function handler(
   }
   // Dispatch RPCs
   console.log('Handling RPC: ', url.pathname);
-  const caller = trpcRouter.createCaller(createContext({ req, res }));
 
   switch (url.pathname) {
     case '/api/deno/v0/boot': {
       if (!args.deployment_id) throw new Error('Missing deployment_id');
-      const { body, headers }: any =
-        (await originBoot({
-          req,
-          caller,
-          id: args.deployment_id || '',
-        })) || {};
+      const { body, headers }: any = await originBoot({
+        req,
+        res,
+        id: args.deployment_id || '',
+      });
       if (headers) {
         Object.keys(headers as any).forEach((key) => {
           res.setHeader(key, headers[key] || '');
@@ -145,6 +144,7 @@ export default async function handler(
       break;
     }
     case '/api/deno/v0/events': {
+      const caller = trpcRouter.createCaller(createContext({ req, res }));
       res.status(200).send('OK');
       let bufferChunks: any[] = [];
       req.on('data', async (data) => {
@@ -253,13 +253,14 @@ const createEsZip = async ({ app, baseUrl }: { app: any; baseUrl: string }) => {
 /** @todo use a real deployment id instead of an app id. deployment id should be app id and version or something */
 async function originBoot({
   req,
-  caller,
+  res,
   id: deploymentId,
 }: {
   req: NextApiRequest;
-  caller: any;
+  res: NextApiResponse;
   id: string;
 }) {
+  const caller = trpcRouter.createCaller(createContext({ req, res }));
   const [appId, version] = deploymentId.split('@');
 
   if (!appId || !version) {
@@ -269,6 +270,10 @@ async function originBoot({
 
   const app = await caller.query('app.byId', {
     id: appId,
+  });
+
+  const secrets = await caller.query('secret.all', {
+    appId,
   });
 
   if (!app) {
@@ -290,10 +295,21 @@ async function originBoot({
 
   const layerId = `${deploymentId}@${Math.random() * 1000000}`;
 
+  const secretsMap: Record<string, string> = {};
+
+  secrets.forEach((secret: { key: string; encryptedValue: string }) => {
+    secretsMap[secret.key] = decryptFromBase64(
+      secret.encryptedValue,
+      process.env.ENCRYPTION_KEY,
+    );
+  });
+
   // Boot metadata
   const isolateConfig = {
     // Source URL that will be used for import.meta.url of the entrypoint.
     entrypoint: `https://${req.headers.host}/api/app/${appId}/${version}/main.ts`,
+
+    envs: secretsMap,
 
     layers: [
       {

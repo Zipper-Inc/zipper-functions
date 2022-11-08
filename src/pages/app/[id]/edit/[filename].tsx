@@ -1,43 +1,45 @@
 import {
   Box,
   Button,
-  Code,
   Divider,
   FormControl,
   GridItem,
-  Heading,
   HStack,
+  Heading,
   Link,
+  Tab,
+  TabList,
+  TabPanel,
+  TabPanels,
+  Tabs,
   Text,
   VStack,
-  Tabs,
-  TabList,
-  Tab,
-  TabPanels,
-  TabPanel,
+  useDisclosure,
 } from '@chakra-ui/react';
 import NextError from 'next/error';
 import NextLink from 'next/link';
 import { useRouter } from 'next/router';
-import React, { useMemo, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
-import { NextPageWithLayout } from '~/pages/_app';
-import { trpc } from '~/utils/trpc';
+import debounce from 'lodash.debounce';
 import dynamic from 'next/dynamic';
 import { Script } from '@prisma/client';
+
+import AddScriptForm from '~/components/edit-app-page/add-script-form';
 import DefaultGrid from '~/components/default-grid';
+import InputParamsForm from '~/components/edit-app-page/input-params-form';
+import SecretsModal from '~/components/app/secretsModal';
+import useInterval from '~/hooks/use-interval';
 import usePrettier from '~/hooks/use-prettier';
+import { NextPageWithLayout } from '~/pages/_app';
 import {
   InputParam,
-  ParseInputResponse,
-  JSONEditorInputTypes,
   InputType,
+  JSONEditorInputTypes,
+  ParseInputResponse,
 } from '~/types/input-params';
-import useInterval from '~/hooks/use-interval';
-import debounce from 'lodash.debounce';
-import InputParamsForm from '~/components/edit-app-page/input-params-form';
-import AddScriptForm from '~/components/edit-app-page/add-script-form';
 import { safeJSONParse } from '~/utils/safe-json';
+import { trpc } from '~/utils/trpc';
 
 const Editor = dynamic(() => import('@monaco-editor/react'), {
   ssr: false,
@@ -142,6 +144,7 @@ const AppPage: NextPageWithLayout = () => {
   const { query } = useRouter();
   const id = query.id as string;
   const filename = query.filename as string;
+  const { isOpen, onOpen, onClose } = useDisclosure();
 
   const appQuery = trpc.useQuery(['app.byId', { id }]);
 
@@ -155,7 +158,6 @@ const AppPage: NextPageWithLayout = () => {
 
   const [inputParams, setInputParams] = useState<InputParam[]>([]);
   const [outputValue, setOutputValue] = React.useState('');
-  const [appEvents, setAppEvents] = React.useState([]);
   const [lastRunVersion, setLastRunVersion] = React.useState<string>();
 
   const inputParamsFormMethods = useForm();
@@ -278,120 +280,126 @@ const AppPage: NextPageWithLayout = () => {
   const { data } = appQuery;
 
   return (
-    <DefaultGrid>
-      <GridItem colSpan={7}>
-        <HStack>
-          <Link>Apps</Link>
-          <Link>Runs</Link>
-          <Link>Schedules</Link>
-          <Link>Secrets</Link>
-        </HStack>
-      </GridItem>
-      <GridItem colSpan={2} justifyContent="end">
-        <HStack>
-          <Button onClick={shareApp}>Share</Button>
-          <Button onClick={saveApp}>Save</Button>
-          <Button
-            type="button"
-            paddingX={6}
-            bgColor="purple.800"
-            textColor="gray.100"
-            onClick={runApp}
-          >
-            Run
-          </Button>
-        </HStack>
-      </GridItem>
-      <GridItem colSpan={3} />
-      <GridItem colSpan={3}>
-        <Heading as="h1" size="md" pb={5}>
-          {data.name}
-        </Heading>
-        <VStack alignItems="start" gap={2}>
-          {scripts
-            .sort((a, b) => {
-              let orderA;
-              let orderB;
+    <>
+      <DefaultGrid>
+        <GridItem colSpan={7}>
+          <HStack>
+            <Link>Apps</Link>
+            <Link>Runs</Link>
+            <Link>Schedules</Link>
+            <Link onClick={onOpen}>Secrets</Link>
+          </HStack>
+        </GridItem>
+        <GridItem colSpan={2} justifyContent="end">
+          <HStack>
+            <Button onClick={shareApp}>Share</Button>
+            <Button onClick={saveApp}>Save</Button>
+            <Button
+              type="button"
+              paddingX={6}
+              bgColor="purple.800"
+              textColor="gray.100"
+              onClick={runApp}
+            >
+              Run
+            </Button>
+          </HStack>
+        </GridItem>
+        <GridItem colSpan={3} />
+        <GridItem colSpan={3}>
+          <Heading as="h1" size="md" pb={5}>
+            {data.name}
+          </Heading>
+          <VStack alignItems="start" gap={2}>
+            {scripts
+              .sort((a, b) => {
+                let orderA;
+                let orderB;
 
-              // always make sure `main` is on top, respect order after
-              if (a.id === mainScript?.id) orderA = -Infinity;
-              else orderA = a.order === null ? Infinity : a.order;
-              if (b.id === mainScript?.id) orderB = -Infinity;
-              else orderB = b.order === null ? Infinity : b.order;
-              return orderA > orderB ? 1 : -1;
-            })
-            .map((script, i) => (
-              <>
-                <NextLink href={`/app/${id}/edit/${script.filename}`} passHref>
-                  <Link
-                    size="sm"
-                    background="purple.200"
-                    borderRadius={2}
-                    px={2}
+                // always make sure `main` is on top, respect order after
+                if (a.id === mainScript?.id) orderA = -Infinity;
+                else orderA = a.order === null ? Infinity : a.order;
+                if (b.id === mainScript?.id) orderB = -Infinity;
+                else orderB = b.order === null ? Infinity : b.order;
+                return orderA > orderB ? 1 : -1;
+              })
+              .map((script, i) => (
+                <>
+                  <NextLink
+                    href={`/app/${id}/edit/${script.filename}`}
+                    passHref
                   >
-                    <b>{script.name}</b>
-                  </Link>
-                </NextLink>
-                {i === 0 && (
-                  <Text size="sm" color="gray.500">
-                    Other functions
-                  </Text>
-                )}
-              </>
-            ))}
-        </VStack>
-        <Divider my={5} />
-        <AddScriptForm scripts={scripts} appId={id} />
-      </GridItem>
-      <GridItem colSpan={6}>
-        {Editor && (
-          <VStack>
-            <Box width="100%">
-              <FormControl as={React.Fragment}>
-                <Heading as="h2" size="lg">
-                  {currentScript?.name || 'Untitled'}
-                </Heading>
-                <Box
-                  style={{
-                    backgroundColor: '#1e1e1e',
-                    height: '100vh',
-                    color: '#1e1e1e',
-                  }}
-                >
-                  <Editor
-                    key={currentScript?.filename}
-                    defaultLanguage="typescript"
-                    height="100vh"
-                    value={currentScript?.code || ''}
-                    theme="vs-dark"
-                    options={{
-                      minimap: { enabled: false },
-                    }}
-                    onChange={(value) =>
-                      onCodeChange({
-                        value,
-                        scripts,
-                        setScripts,
-                        currentScript,
-                        setInputParams,
-                      })
-                    }
-                  />
-                </Box>
-              </FormControl>
-            </Box>
+                    <Link
+                      size="sm"
+                      background="purple.200"
+                      borderRadius={2}
+                      px={2}
+                    >
+                      <b>{script.name}</b>
+                    </Link>
+                  </NextLink>
+                  {i === 0 && (
+                    <Text size="sm" color="gray.500">
+                      Other functions
+                    </Text>
+                  )}
+                </>
+              ))}
           </VStack>
-        )}
-      </GridItem>
-      <GridItem colSpan={3}>
-        <Sidebar
-          inputParamsFormMethods={inputParamsFormMethods}
-          inputParams={inputParams}
-          outputValue={outputValue}
-          appEventsQuery={appEventsQuery}
-        />
-      </GridItem>
-    </DefaultGrid>
+          <Divider my={5} />
+          <AddScriptForm scripts={scripts} appId={id} />
+        </GridItem>
+        <GridItem colSpan={6}>
+          {Editor && (
+            <VStack>
+              <Box width="100%">
+                <FormControl as={React.Fragment}>
+                  <Heading as="h2" size="lg">
+                    {currentScript?.name || 'Untitled'}
+                  </Heading>
+                  <Box
+                    style={{
+                      backgroundColor: '#1e1e1e',
+                      height: '100vh',
+                      color: '#1e1e1e',
+                    }}
+                  >
+                    <Editor
+                      key={currentScript?.filename}
+                      defaultLanguage="typescript"
+                      height="100vh"
+                      value={currentScript?.code || ''}
+                      theme="vs-dark"
+                      options={{
+                        minimap: { enabled: false },
+                      }}
+                      onChange={(value) =>
+                        onCodeChange({
+                          value,
+                          scripts,
+                          setScripts,
+                          currentScript,
+                          setInputParams,
+                        })
+                      }
+                    />
+                  </Box>
+                </FormControl>
+              </Box>
+            </VStack>
+          )}
+        </GridItem>
+        <GridItem colSpan={3}>
+          <Sidebar
+            inputParamsFormMethods={inputParamsFormMethods}
+            inputParams={inputParams}
+            outputValue={outputValue}
+            appEventsQuery={appEventsQuery}
+          />
+        </GridItem>
+      </DefaultGrid>
+      <SecretsModal isOpen={isOpen} onClose={onClose} appId={id} />
+    </>
   );
 };
 
