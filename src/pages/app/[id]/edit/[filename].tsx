@@ -222,8 +222,6 @@ const AppPage: NextPageWithLayout = () => {
       .getTime()
       .toString();
     setLastRunVersion(version);
-    console.log('here?');
-    debugger;
     return `/run/${id}@${version}`;
   };
 
