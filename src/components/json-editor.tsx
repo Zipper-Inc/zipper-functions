@@ -1,4 +1,3 @@
-import { Box } from '@chakra-ui/react';
 import Editor, { EditorProps } from '@monaco-editor/react';
 
 export function JSONEditor(props: EditorProps) {
@@ -25,11 +24,7 @@ export function JSONViewer(props: EditorProps) {
   const lines = (value.match(/\n/g) || '').length + 1;
   const height = `${(lines + 1) * 18}px`;
   return (
-    <JSONEditor
-      {...props}
-      height={height}
-      options={{ ...props.options, readOnly: true }}
-    />
+    <JSONEditor {...props} height={height} options={{ ...props.options }} />
   );
 }
 

@@ -322,7 +322,7 @@ const AppPage: NextPageWithLayout = () => {
                 return orderA > orderB ? 1 : -1;
               })
               .map((script, i) => (
-                <>
+                <div key={script.id}>
                   <NextLink
                     href={`/app/${id}/edit/${script.filename}`}
                     passHref
@@ -341,7 +341,7 @@ const AppPage: NextPageWithLayout = () => {
                       Other functions
                     </Text>
                   )}
-                </>
+                </div>
               ))}
           </VStack>
           <Divider my={5} />
@@ -351,7 +351,7 @@ const AppPage: NextPageWithLayout = () => {
           {Editor && (
             <VStack>
               <Box width="100%">
-                <FormControl as={React.Fragment}>
+                <FormControl>
                   <Heading as="h2" size="lg">
                     {currentScript?.name || 'Untitled'}
                   </Heading>

@@ -52,7 +52,7 @@ export default function AddScriptForm({
           <FormErrorMessage>{addScript.error.message}</FormErrorMessage>
         )}
         <VStack align={'start'}>
-          <FormControl as={Fragment}>
+          <FormControl>
             <FormLabel>Name:</FormLabel>
             <Input
               size="md"
@@ -61,7 +61,7 @@ export default function AddScriptForm({
               {...register('name')}
             />
           </FormControl>
-          <FormControl as={Fragment}>
+          <FormControl>
             <FormLabel>Description:</FormLabel>
             <Input
               size="md"

@@ -113,8 +113,8 @@ function InputParamsInput({
 }
 
 export default function InputParamsForm({ params = [], defaultValues }: Props) {
-  const inputs = params.map(({ key, type, optional }) => (
-    <FormLabel width="100%" my="2">
+  const inputs = params.map(({ key, type, optional }, i) => (
+    <FormLabel width="100%" my="2" key={`${key}-${i}`}>
       <VStack justify="start" align="start" spacing={1.5}>
         <HStack spacing={2} align="center">
           <Heading
