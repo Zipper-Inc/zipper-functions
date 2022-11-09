@@ -6,10 +6,13 @@ const LINUX = 'Linux';
 const IOS = 'iOS';
 const ANDROID = 'Android';
 
-let parser: Bowser.Parser.Parser;
+let parser: Bowser.Parser.Parser | undefined;
 
 export const getParser = () => {
-  parser = parser || Bowser.getParser(window?.navigator.userAgent);
+  parser =
+    parser || typeof window !== 'undefined'
+      ? Bowser.getParser(window.navigator.userAgent)
+      : undefined;
   return parser;
 };
 

@@ -13,7 +13,7 @@ export const useCmdOrCtrl = (
     shortcut,
     callback,
     {
-      // enableOnTags: ['INPUT', 'SELECT', 'TEXTAREA'],
+      enableOnTags: ['INPUT', 'SELECT', 'TEXTAREA'],
       enableOnContentEditable: true,
     },
     deps,

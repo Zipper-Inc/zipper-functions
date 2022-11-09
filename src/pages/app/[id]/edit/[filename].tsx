@@ -36,6 +36,8 @@ import {
 import { safeJSONParse } from '~/utils/safe-json';
 import { AppEditSidebar } from './app-edit-sidebar';
 import { trpc } from '~/utils/trpc';
+import { useCmdOrCtrl } from '~/hooks/use-cmd-or-ctrl';
+import { useHotkeys } from 'react-hotkeys-hook';
 
 const Editor = dynamic(() => import('@monaco-editor/react'), {
   ssr: false,
@@ -202,6 +204,15 @@ const AppPage: NextPageWithLayout = () => {
     await saveApp();
     navigator.clipboard.writeText(getRunUrl());
   };
+
+  useCmdOrCtrl(
+    'S',
+    (e: Event) => {
+      e.preventDefault();
+      saveApp();
+    },
+    [scripts],
+  );
 
   if (appQuery.error) {
     return (
