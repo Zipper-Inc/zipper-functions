@@ -135,7 +135,6 @@ const AppPage: NextPageWithLayout = () => {
       return { ...script, code };
     });
 
-    console.log(formatted);
     setScripts(formatted);
 
     editAppMutation.mutateAsync({
@@ -159,6 +158,7 @@ const AppPage: NextPageWithLayout = () => {
     const version = new Date(appQuery?.data?.updatedAt || Date.now())
       .getTime()
       .toString();
+
     setLastRunVersion(version);
     return `/run/${id}@${version}`;
   };
@@ -193,6 +193,9 @@ const AppPage: NextPageWithLayout = () => {
 
     const res = await raw.json();
     setOutputValue(JSON.stringify(res.data, null, 2));
+
+    // refetch logs
+    appEventsQuery.refetch();
   };
 
   const shareApp = async () => {
