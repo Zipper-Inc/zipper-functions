@@ -216,7 +216,7 @@ const SecretsModal: React.FC<Props> = ({ isOpen, onClose, appId }) => {
                   </Text>
                   <Text display={'inline'} fontWeight="bold">
                     {' '}
-                    Deno.env{' '}
+                    Zipper.env{' '}
                   </Text>
                   <Text display={'inline'}>API.</Text>
                 </Box>

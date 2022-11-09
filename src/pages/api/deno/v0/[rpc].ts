@@ -33,6 +33,8 @@ ${code}
 
 /*****************************************************************/
 
+const Zipper = { env: Deno.env };
+
 const fn = typeof main === 'undefined' ? () => {
   throw new Error('You must define a main function')
 }: main;

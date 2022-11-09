@@ -219,120 +219,126 @@ const AppPage: NextPageWithLayout = () => {
   const { data } = appQuery;
 
   return (
-    <DefaultGrid>
-      <GridItem colSpan={7}>
-        <HStack>
-          <Link>Apps</Link>
-          <Link>Runs</Link>
-          <Link>Schedules</Link>
-          <Link onClick={onOpen}>Secrets</Link>
-        </HStack>
-      </GridItem>
-      <GridItem colSpan={2} justifyContent="end">
-        <HStack>
-          <Button onClick={shareApp}>Share</Button>
-          <Button onClick={saveApp}>Save</Button>
-          <Button
-            type="button"
-            paddingX={6}
-            bgColor="purple.800"
-            textColor="gray.100"
-            onClick={runApp}
-          >
-            Run
-          </Button>
-        </HStack>
-      </GridItem>
-      <GridItem colSpan={3} />
-      <GridItem colSpan={3}>
-        <Heading as="h1" size="md" pb={5}>
-          {data.name}
-        </Heading>
-        <VStack alignItems="start" gap={2}>
-          {scripts
-            .sort((a, b) => {
-              let orderA;
-              let orderB;
+    <>
+      <DefaultGrid>
+        <GridItem colSpan={7}>
+          <HStack>
+            <Link>Apps</Link>
+            <Link>Runs</Link>
+            <Link>Schedules</Link>
+            <Link onClick={onOpen}>Secrets</Link>
+          </HStack>
+        </GridItem>
+        <GridItem colSpan={2} justifyContent="end">
+          <HStack>
+            <Button onClick={shareApp}>Share</Button>
+            <Button onClick={saveApp}>Save</Button>
+            <Button
+              type="button"
+              paddingX={6}
+              bgColor="purple.800"
+              textColor="gray.100"
+              onClick={runApp}
+            >
+              Run
+            </Button>
+          </HStack>
+        </GridItem>
+        <GridItem colSpan={3} />
+        <GridItem colSpan={3}>
+          <Heading as="h1" size="md" pb={5}>
+            {data.name}
+          </Heading>
+          <VStack alignItems="start" gap={2}>
+            {scripts
+              .sort((a, b) => {
+                let orderA;
+                let orderB;
 
-              // always make sure `main` is on top, respect order after
-              if (a.id === mainScript?.id) orderA = -Infinity;
-              else orderA = a.order === null ? Infinity : a.order;
-              if (b.id === mainScript?.id) orderB = -Infinity;
-              else orderB = b.order === null ? Infinity : b.order;
-              return orderA > orderB ? 1 : -1;
-            })
-            .map((script, i) => (
-              <Fragment key={script.id}>
-                <NextLink href={`/app/${id}/edit/${script.filename}`} passHref>
-                  <Link
-                    size="sm"
-                    background="purple.200"
-                    borderRadius={2}
-                    px={2}
+                // always make sure `main` is on top, respect order after
+                if (a.id === mainScript?.id) orderA = -Infinity;
+                else orderA = a.order === null ? Infinity : a.order;
+                if (b.id === mainScript?.id) orderB = -Infinity;
+                else orderB = b.order === null ? Infinity : b.order;
+                return orderA > orderB ? 1 : -1;
+              })
+              .map((script, i) => (
+                <Fragment key={script.id}>
+                  <NextLink
+                    href={`/app/${id}/edit/${script.filename}`}
+                    passHref
                   >
-                    <b>{script.name}</b>
-                  </Link>
-                </NextLink>
-                {i === 0 && (
-                  <Text size="sm" color="gray.500">
-                    Other functions
-                  </Text>
-                )}
-              </Fragment>
-            ))}
-        </VStack>
-        <Divider my={5} />
-        <AddScriptForm scripts={scripts} appId={id} />
-      </GridItem>
-      <GridItem colSpan={6}>
-        {Editor && (
-          <VStack>
-            <Box width="100%">
-              <FormControl as={React.Fragment}>
-                <Heading as="h2" size="lg">
-                  {currentScript?.name || 'Untitled'}
-                </Heading>
-                <Box
-                  style={{
-                    backgroundColor: '#1e1e1e',
-                    height: '100vh',
-                    color: '#1e1e1e',
-                  }}
-                >
-                  <Editor
-                    key={currentScript?.filename}
-                    defaultLanguage="typescript"
-                    height="100vh"
-                    value={currentScript?.code || ''}
-                    theme="vs-dark"
-                    options={{
-                      minimap: { enabled: false },
-                    }}
-                    onChange={(value) =>
-                      onCodeChange({
-                        value,
-                        scripts,
-                        setScripts,
-                        currentScript,
-                        setInputParams,
-                      })
-                    }
-                  />
-                </Box>
-              </FormControl>
-            </Box>
+                    <Link
+                      size="sm"
+                      background="purple.200"
+                      borderRadius={2}
+                      px={2}
+                    >
+                      <b>{script.name}</b>
+                    </Link>
+                  </NextLink>
+                  {i === 0 && (
+                    <Text size="sm" color="gray.500">
+                      Other functions
+                    </Text>
+                  )}
+                </Fragment>
+              ))}
           </VStack>
-        )}
-      </GridItem>
-      <GridItem colSpan={3}>
-        <AppEditSidebar
-          inputParamsFormMethods={inputParamsFormMethods}
-          inputParams={inputParams}
-          outputValue={outputValue}
-          appEventsQuery={appEventsQuery}
-        />
-      </GridItem>
-    </DefaultGrid>
+          <Divider my={5} />
+          <AddScriptForm scripts={scripts} appId={id} />
+        </GridItem>
+        <GridItem colSpan={6}>
+          {Editor && (
+            <VStack>
+              <Box width="100%">
+                <FormControl as={React.Fragment}>
+                  <Heading as="h2" size="lg">
+                    {currentScript?.name || 'Untitled'}
+                  </Heading>
+                  <Box
+                    style={{
+                      backgroundColor: '#1e1e1e',
+                      height: '100vh',
+                      color: '#1e1e1e',
+                    }}
+                  >
+                    <Editor
+                      key={currentScript?.filename}
+                      defaultLanguage="typescript"
+                      height="100vh"
+                      value={currentScript?.code || ''}
+                      theme="vs-dark"
+                      options={{
+                        minimap: { enabled: false },
+                      }}
+                      onChange={(value) =>
+                        onCodeChange({
+                          value,
+                          scripts,
+                          setScripts,
+                          currentScript,
+                          setInputParams,
+                        })
+                      }
+                    />
+                  </Box>
+                </FormControl>
+              </Box>
+            </VStack>
+          )}
+        </GridItem>
+        <GridItem colSpan={3}>
+          <AppEditSidebar
+            inputParamsFormMethods={inputParamsFormMethods}
+            inputParams={inputParams}
+            outputValue={outputValue}
+            appEventsQuery={appEventsQuery}
+          />
+        </GridItem>
+      </DefaultGrid>
+      <SecretsModal isOpen={isOpen} onClose={onClose} appId={id} />
+    </>
   );
 };
 
