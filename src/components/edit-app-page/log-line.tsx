@@ -76,7 +76,7 @@ export function LogLine({ log }: { log: any }) {
   return (
     <Flex {...LOG_COLORS[level]} px={2} py={1} width="100%">
       <Icon mt={'3px'} mr="2" />
-      <Text>{msg}</Text>
+      <Text maxW="90%">{msg}</Text>
     </Flex>
   );
 }

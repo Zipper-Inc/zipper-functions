@@ -29,17 +29,15 @@ export const wrapMainFunction = ({
   appId: string;
   version: string;
 }) => `
-/*****************************************************************/
-
 ${code}
 
 /*****************************************************************/
 
 const fn = typeof main === 'undefined' ? () => {
-  throw new Error('You must define a main function.')
+  throw new Error('You must define a main function')
 }: main;
 
-const parseInput = async (req) => {
+const getInputFromBody = async (req) => {
   if (req.method === "GET") {
     const url = new URL(req.url);
     return Object.fromEntries(url.searchParams.entries());
@@ -56,7 +54,7 @@ addEventListener('fetch', async (event) => {
     'X-Zipper-Deployment': '${appId}}.${version}',
   };
 
-  const input = await parseInput(event.request);
+  const input = await getInputFromBody(event.request);
 
   const __meta = {
     name: '${name}',
@@ -88,6 +86,8 @@ addEventListener('fetch', async (event) => {
       error,
       __meta,
     };
+
+    console.error(error);
 
     event.respondWith(
       new Response(JSON.stringify(response), {
