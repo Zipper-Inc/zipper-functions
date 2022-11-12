@@ -9,7 +9,14 @@ const { z } = require('zod');
 /*eslint sort-keys: "error"*/
 const envSchema = z.object({
   DATABASE_URL: z.string().url(),
+  ENCRYPTION_KEY: z.string(),
   NODE_ENV: z.enum(['development', 'test', 'production']),
+  PARSE_INPUT_URL: z.string().url(),
+  REDIS_HOST: z.string(),
+  REDIS_PASSWORD: z.string(),
+  REDIS_PORT: z.string(),
+  RELAY_URL: z.string().url(),
+  SHARED_SECRET: z.string(),
 });
 
 const env = envSchema.safeParse(process.env);

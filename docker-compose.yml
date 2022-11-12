@@ -24,5 +24,16 @@ services:
       POSTGRES_USER: zipper_user
       POSTGRES_PASSWORD: zipper_password
       POSTGRES_DB: zipper_functions_dev
+  redis:
+    container_name: zipper_function_redis
+    image: redis:7.0-alpine
+    ports:
+      - '36379:6379'
+    restart: always
+    volumes:
+      - redis_data:/data
+    command: redis-server --save 20 1 --loglevel warning --requirepass zipper_password
 volumes:
   db_data:
+  redis_data:
+    driver: local

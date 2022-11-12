@@ -20,8 +20,9 @@ model App {
 
   scriptMain ScriptMain?
 
-  scripts Script[]
-  secrets Secret[]
+  scripts   Script[]
+  secrets   Secret[]
+  schedules Schedule[]
 
   @@map("apps")
 }
@@ -47,6 +48,18 @@ model Secret {
   app   App?   @relation(fields: [appId], references: [id])
 
   @@map("secrets")
+}
+
+model Schedule {
+  id             String    @id @default(uuid())
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime? @default(now())
+  crontab        String
+
+  appId String
+  app   App?   @relation(fields: [appId], references: [id])
+
+  @@map("schedules")
 }
 
 model Script {

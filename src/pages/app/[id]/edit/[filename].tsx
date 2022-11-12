@@ -40,6 +40,7 @@ import {
 } from '~/types/input-params';
 import { safeJSONParse } from '~/utils/safe-json';
 import { trpc } from '~/utils/trpc';
+import ScheduleModal from '~/components/app/scheduleModal';
 
 const Editor = dynamic(() => import('@monaco-editor/react'), {
   ssr: false,
@@ -144,7 +145,17 @@ const AppPage: NextPageWithLayout = () => {
   const { query } = useRouter();
   const id = query.id as string;
   const filename = query.filename as string;
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const {
+    isOpen: isOpenSecrets,
+    onOpen: onOpenSecrets,
+    onClose: onCloseSecrets,
+  } = useDisclosure();
+
+  const {
+    isOpen: isOpenSchedule,
+    onOpen: onOpenSchedule,
+    onClose: onCloseSchedule,
+  } = useDisclosure();
 
   const appQuery = trpc.useQuery(['app.byId', { id }]);
 
@@ -284,8 +295,8 @@ const AppPage: NextPageWithLayout = () => {
           <HStack>
             <Link>Apps</Link>
             <Link>Runs</Link>
-            <Link>Schedules</Link>
-            <Link onClick={onOpen}>Secrets</Link>
+            <Link onClick={onOpenSchedule}>Schedules</Link>
+            <Link onClick={onOpenSecrets}>Secrets</Link>
           </HStack>
         </GridItem>
         <GridItem colSpan={2} justifyContent="end">
@@ -396,7 +407,17 @@ const AppPage: NextPageWithLayout = () => {
           />
         </GridItem>
       </DefaultGrid>
-      <SecretsModal isOpen={isOpen} onClose={onClose} appId={id} />
+      <SecretsModal
+        isOpen={isOpenSecrets}
+        onClose={onCloseSecrets}
+        appId={id}
+      />
+
+      <ScheduleModal
+        isOpen={isOpenSchedule}
+        onClose={onCloseSchedule}
+        appId={id}
+      />
     </>
   );
 };
