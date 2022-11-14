@@ -17,6 +17,7 @@ const envSchema = z.object({
   REDIS_PORT: z.string(),
   RELAY_URL: z.string().url(),
   SHARED_SECRET: z.string(),
+  ZIPPER_URL: z.string().url(),
 });
 
 const env = envSchema.safeParse(process.env);
