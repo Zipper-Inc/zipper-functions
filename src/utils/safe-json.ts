@@ -28,3 +28,10 @@ export function safeJSONStringify(
   }
   return stringified;
 }
+
+export const prettyJSON: typeof safeJSONStringify = (
+  value,
+  replacer,
+  spacer = 2,
+  fallback,
+) => safeJSONStringify(value, replacer, spacer, fallback);
