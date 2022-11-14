@@ -346,7 +346,7 @@ const AppPage: NextPageWithLayout = () => {
           {Editor && (
             <VStack>
               <Box width="100%">
-                <FormControl as={React.Fragment}>
+                <FormControl>
                   <Heading as="h2" size="lg">
                     {currentScript?.name || 'Untitled'}
                   </Heading>
