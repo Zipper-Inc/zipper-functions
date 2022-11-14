@@ -18,26 +18,37 @@ import {
   HStack,
   IconButton,
   Text,
+  Divider,
 } from '@chakra-ui/react';
-import { useForm } from 'react-hook-form';
+import { FormProvider, useForm } from 'react-hook-form';
 import cronstrue from 'cronstrue';
 import { useEffect, useState } from 'react';
 import { AddIcon } from '@chakra-ui/icons';
 import { trpc } from '~/utils/trpc';
 import { FiClock, FiTrash, FiX } from 'react-icons/fi';
+import { InputParam } from '~/types/input-params';
+import InputParamsForm from '../edit-app-page/input-params-form';
 
 type Props = {
   isOpen: boolean;
   onClose: () => void;
   appId: string;
+  inputParams: InputParam[];
 };
 
-const ScheduleModal: React.FC<Props> = ({ isOpen, onClose, appId }) => {
+const ScheduleModal: React.FC<Props> = ({
+  isOpen,
+  onClose,
+  appId,
+  inputParams,
+}) => {
   const utils = trpc.useContext();
-  const { register, handleSubmit, reset } = useForm();
-  const [cronTab, setCronTab] = useState<string>('0 * *  * *');
+  const { handleSubmit, reset } = useForm();
+  const [currentCrontab, setCurrentCrontab] = useState<string>('0 * *  * *');
   const [cronString, setCronString] = useState<string>();
-  const [newSchedules, setNewSchedules] = useState<string[]>([]);
+  const [newSchedules, setNewSchedules] = useState<
+    { crontab: string; inputs: Record<string, any> }[]
+  >([]);
   const [allSchedules, setAllSchedules] = useState<
     { id?: string; crontab: string; appId?: string }[]
   >([]);
@@ -47,7 +58,9 @@ const ScheduleModal: React.FC<Props> = ({ isOpen, onClose, appId }) => {
   const addSchedule = trpc.useMutation('schedule.add', {
     async onSuccess({ crontab }) {
       // refetches posts after a post is added
-      const remainingNewSchedules = newSchedules.filter((s) => s !== crontab);
+      const remainingNewSchedules = newSchedules.filter(
+        (s) => s.crontab !== crontab,
+      );
       setNewSchedules(remainingNewSchedules);
       await utils.invalidateQueries(['secret.all', { appId }]);
     },
@@ -74,8 +87,8 @@ const ScheduleModal: React.FC<Props> = ({ isOpen, onClose, appId }) => {
 
   useEffect(() => {
     try {
-      if (cronTab) {
-        const string = cronstrue.toString(cronTab, {
+      if (currentCrontab) {
+        const string = cronstrue.toString(currentCrontab, {
           use24HourTimeFormat: true,
         });
         setCronString(string);
@@ -84,7 +97,7 @@ const ScheduleModal: React.FC<Props> = ({ isOpen, onClose, appId }) => {
       console.log(error);
       setCronString(error || 'Invalid cron expression');
     }
-  }, [cronTab]);
+  }, [currentCrontab]);
 
   useEffect(() => {
     setAllSchedules([
@@ -92,7 +105,7 @@ const ScheduleModal: React.FC<Props> = ({ isOpen, onClose, appId }) => {
       ...newSchedules.map((s) => ({
         id: undefined,
         appId,
-        crontab: s,
+        crontab: s.crontab,
       })),
     ]);
   }, [existingSchedules.data, newSchedules]);
@@ -104,49 +117,64 @@ const ScheduleModal: React.FC<Props> = ({ isOpen, onClose, appId }) => {
     onClose: VoidFunction;
     isOpen: boolean;
   }) => {
+    const addModalForm = useForm();
+
     return (
       <Modal isOpen={isOpen} onClose={onClose}>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Add a schedule</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            <VStack align={'start'}>
-              <FormControl>
-                <FormLabel>Cron expression:</FormLabel>
-                <Input
-                  size="md"
-                  type="text"
-                  {...register('cronTab')}
-                  defaultValue="* 1 * * *"
-                  onChange={(e) => setCronTab(e.target.value)}
-                />
-                <FormHelperText>{cronString}</FormHelperText>
-              </FormControl>
-            </VStack>
-          </ModalBody>
+        <FormProvider {...addModalForm}>
+          <ModalOverlay />
+          <ModalContent>
+            <ModalHeader>Add a schedule</ModalHeader>
+            <ModalCloseButton />
+            <ModalBody>
+              <VStack align={'start'}>
+                <FormControl>
+                  <FormLabel>Cron expression:</FormLabel>
+                  <Input
+                    size="md"
+                    type="text"
+                    {...addModalForm.register('crontab')}
+                    defaultValue="* 1 * * *"
+                    onChange={(e) => setCurrentCrontab(e.target.value)}
+                  />
+                  <FormHelperText>{cronString}</FormHelperText>
+                  <Divider mt="4" />
+                  <Text size="sm" mt="4" mb="2">
+                    Inputs for this scheduled run:
+                  </Text>
+                  <Box background="gray.200" p="4" borderRadius="4">
+                    <InputParamsForm params={inputParams} />
+                  </Box>
+                </FormControl>
+              </VStack>
+            </ModalBody>
 
-          <ModalFooter>
-            <Button variant="ghost" onClick={onClose} mr="3">
-              Discard
-            </Button>
-            <Button
-              colorScheme="blue"
-              type="submit"
-              onClick={handleSubmit((data) => {
-                const allNewSchedules = [...newSchedules, data.cronTab];
-                setNewSchedules(
-                  allNewSchedules.filter(
-                    (s, i) => allNewSchedules.indexOf(s) === i,
-                  ),
-                );
-                onClose();
-              })}
-            >
-              Create
-            </Button>
-          </ModalFooter>
-        </ModalContent>
+            <ModalFooter>
+              <Button variant="ghost" onClick={onClose} mr="3">
+                Discard
+              </Button>
+              <Button
+                colorScheme="blue"
+                type="submit"
+                onClick={addModalForm.handleSubmit((data) => {
+                  const { crontab, ...inputValues } = data;
+                  const allNewSchedules = [
+                    ...newSchedules,
+                    { crontab, inputs: inputValues },
+                  ];
+                  setNewSchedules(
+                    allNewSchedules.filter(
+                      (s, i) => allNewSchedules.indexOf(s) === i,
+                    ),
+                  );
+                  onClose();
+                })}
+              >
+                Create
+              </Button>
+            </ModalFooter>
+          </ModalContent>
+        </FormProvider>
       </Modal>
     );
   };
@@ -167,7 +195,8 @@ const ScheduleModal: React.FC<Props> = ({ isOpen, onClose, appId }) => {
               newSchedules.forEach((s) => {
                 addSchedule.mutate({
                   appId,
-                  crontab: s,
+                  crontab: s.crontab,
+                  inputs: s.inputs,
                 });
               });
               reset();
@@ -225,7 +254,7 @@ const ScheduleModal: React.FC<Props> = ({ isOpen, onClose, appId }) => {
                                 } else {
                                   setNewSchedules(
                                     newSchedules.filter(
-                                      (ns) => ns !== s.crontab,
+                                      (ns) => ns.crontab !== s.crontab,
                                     ),
                                   );
                                 }

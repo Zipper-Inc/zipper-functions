@@ -4,7 +4,6 @@ import next from 'next';
 import { loadEnvConfig } from '@next/env';
 
 loadEnvConfig('./', process.env.NODE_ENV !== 'production');
-import { initializeQueuesAndWorkers } from './server/queue';
 
 const port = parseInt(process.env.PORT || '3000', 10);
 const dev = process.env.NODE_ENV !== 'production';
@@ -27,5 +26,7 @@ app.prepare().then(() => {
     }`,
   );
 
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { initializeQueuesAndWorkers } = require('./server/queue');
   initializeQueuesAndWorkers();
 });

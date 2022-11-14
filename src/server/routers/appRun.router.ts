@@ -1,55 +1,42 @@
 import { Prisma } from '@prisma/client';
-import parser from 'cron-parser';
 import { z } from 'zod';
 import { prisma } from '~/server/prisma';
 import { createRouter } from '../createRouter';
-import { queues } from '../queue';
 
-const defaultSelect = Prisma.validator<Prisma.ScheduleSelect>()({
+const defaultSelect = Prisma.validator<Prisma.AppRunSelect>()({
   id: true,
   appId: true,
-  crontab: true,
+  success: true,
+  deploymentId: true,
+  result: true,
+  inputs: true,
+  scheduled: true,
+  createdAt: true,
 });
 
-export const scheduleRouter = createRouter()
+export const appRunRouter = createRouter()
   // create
   .mutation('add', {
     input: z.object({
       appId: z.string(),
-      crontab: z.string(),
-      inputs: z.record(z.any()).optional(),
+      success: z.boolean(),
+      result: z.string(),
+      deploymentId: z.string(),
+      inputs: z.string(),
+      scheduled: z.boolean(),
     }),
     async resolve({ input }) {
-      const { appId, crontab, inputs } = input;
-
-      try {
-        parser.parseExpression(crontab);
-      } catch (error) {
-        throw new Error('Invalid crontab');
-      }
-
-      const schedule = await prisma.schedule.create({
-        data: {
-          appId,
-          crontab,
-          inputs,
-        },
+      return prisma.appRun.create({
+        data: { ...input },
         select: defaultSelect,
       });
-
-      queues.schedule.add(
-        schedule.id,
-        { scheduleId: schedule.id },
-        { repeat: { pattern: schedule.crontab } },
-      );
-
-      return schedule;
     },
   })
   // read
   .query('all', {
     input: z.object({
       appId: z.string(),
+      limit: z.number().optional(),
     }),
     async resolve({ input }) {
       /**
@@ -57,10 +44,11 @@ export const scheduleRouter = createRouter()
        * @link https://trpc.io/docs/useInfiniteQuery
        */
 
-      return prisma.schedule.findMany({
+      return prisma.appRun.findMany({
         where: {
           appId: input.appId,
         },
+        take: input.limit,
         select: defaultSelect,
       });
     },
@@ -72,14 +60,12 @@ export const scheduleRouter = createRouter()
       appId: z.string(),
     }),
     async resolve({ input }) {
-      await prisma.schedule.deleteMany({
+      await prisma.appRun.deleteMany({
         where: {
           id: input.id,
           appId: input.appId,
         },
       });
-
-      queues.schedule.removeRepeatableByKey(input.id);
 
       return {
         id: input.id,

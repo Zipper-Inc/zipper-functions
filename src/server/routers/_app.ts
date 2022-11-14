@@ -8,6 +8,7 @@ import { scriptRouter } from './scripts.router';
 import { appEventRouter } from './appEvent.router';
 import { secretRouter } from './secret.router';
 import { scheduleRouter } from './schedule.router';
+import { appRunRouter } from './appRun.router';
 
 /**
  * Create your application's root router
@@ -36,6 +37,7 @@ export const trpcRouter = createRouter()
   })
   .merge('app.', appRouter)
   .merge('appEvent.', appEventRouter)
+  .merge('appRun.', appRunRouter)
   .merge('secret.', secretRouter)
   .merge('script.', scriptRouter)
   .merge('schedule.', scheduleRouter);

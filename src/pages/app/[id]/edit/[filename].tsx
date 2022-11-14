@@ -41,6 +41,7 @@ import {
 import { safeJSONParse } from '~/utils/safe-json';
 import { trpc } from '~/utils/trpc';
 import ScheduleModal from '~/components/app/scheduleModal';
+import AppRunModal from '~/components/app/appRunModal';
 
 const Editor = dynamic(() => import('@monaco-editor/react'), {
   ssr: false,
@@ -157,11 +158,23 @@ const AppPage: NextPageWithLayout = () => {
     onClose: onCloseSchedule,
   } = useDisclosure();
 
+  const {
+    isOpen: isOpenAppRun,
+    onOpen: onOpenAppRun,
+    onClose: onCloseAppRun,
+  } = useDisclosure();
+
   const appQuery = trpc.useQuery(['app.byId', { id }]);
 
   const editAppMutation = trpc.useMutation('app.edit', {
     async onSuccess() {
       await utils.invalidateQueries(['app.byId', { id }]);
+    },
+  });
+
+  const addAppRunMutation = trpc.useMutation('appRun.add', {
+    async onSuccess() {
+      await utils.invalidateQueries(['appRun.all']);
     },
   });
 
@@ -228,10 +241,14 @@ const AppPage: NextPageWithLayout = () => {
     });
   };
 
-  const getRunUrl = () => {
-    const version = new Date(appQuery?.data?.updatedAt || Date.now())
+  const getAppDataVersion = () => {
+    return new Date(appQuery?.data?.updatedAt || Date.now())
       .getTime()
       .toString();
+  };
+
+  const getRunUrl = () => {
+    const version = getAppDataVersion();
     setLastRunVersion(version);
     return `/run/${id}@${version}`;
   };
@@ -265,7 +282,17 @@ const AppPage: NextPageWithLayout = () => {
     });
 
     const res = await raw.json();
-    setOutputValue(JSON.stringify(res.data, null, 2));
+    const result = JSON.stringify(res.data, null, 2);
+    setOutputValue(result);
+
+    addAppRunMutation.mutateAsync({
+      appId: id,
+      deploymentId: `${id}@${getAppDataVersion()}`,
+      inputs: JSON.stringify(inputValues),
+      success: res.ok,
+      scheduled: false,
+      result,
+    });
   };
 
   const shareApp = async () => {
@@ -292,9 +319,16 @@ const AppPage: NextPageWithLayout = () => {
     <>
       <DefaultGrid>
         <GridItem colSpan={7}>
-          <HStack>
-            <Link>Apps</Link>
-            <Link>Runs</Link>
+          <HStack gap={2}>
+            <Text
+              fontWeight={600}
+              borderBottom="1px solid"
+              borderBottomColor={'purple.600'}
+            >
+              Code
+            </Text>
+            <Text>|</Text>
+            <Link onClick={onOpenAppRun}>Runs</Link>
             <Link onClick={onOpenSchedule}>Schedules</Link>
             <Link onClick={onOpenSecrets}>Secrets</Link>
           </HStack>
@@ -416,8 +450,11 @@ const AppPage: NextPageWithLayout = () => {
       <ScheduleModal
         isOpen={isOpenSchedule}
         onClose={onCloseSchedule}
+        inputParams={inputParams}
         appId={id}
       />
+
+      <AppRunModal isOpen={isOpenAppRun} onClose={onCloseAppRun} appId={id} />
     </>
   );
 };
