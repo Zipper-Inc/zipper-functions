@@ -23,6 +23,7 @@ import debounce from 'lodash.debounce';
 import AddScriptForm from '~/components/edit-app-page/add-script-form';
 import DefaultGrid from '~/components/default-grid';
 import SecretsModal from '~/components/app/secretsModal';
+import { useCmdOrCtrl } from '~/hooks/use-cmd-or-ctrl';
 import useInterval from '~/hooks/use-interval';
 import usePrettier from '~/hooks/use-prettier';
 import { NextPageWithLayout } from '~/pages/_app';
@@ -36,8 +37,8 @@ import {
 import { safeJSONParse } from '~/utils/safe-json';
 import { AppEditSidebar } from './app-edit-sidebar';
 import { trpc } from '~/utils/trpc';
-import { useCmdOrCtrl } from '~/hooks/use-cmd-or-ctrl';
-import { useHotkeys } from 'react-hotkeys-hook';
+import ScheduleModal from '~/components/app/scheduleModal';
+import AppRunModal from '~/components/app/appRunModal';
 
 const Editor = dynamic(() => import('@monaco-editor/react'), {
   ssr: false,
@@ -84,13 +85,35 @@ const AppPage: NextPageWithLayout = () => {
   const { query } = useRouter();
   const id = query.id as string;
   const filename = query.filename as string;
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const {
+    isOpen: isOpenSecrets,
+    onOpen: onOpenSecrets,
+    onClose: onCloseSecrets,
+  } = useDisclosure();
+
+  const {
+    isOpen: isOpenSchedule,
+    onOpen: onOpenSchedule,
+    onClose: onCloseSchedule,
+  } = useDisclosure();
+
+  const {
+    isOpen: isOpenAppRun,
+    onOpen: onOpenAppRun,
+    onClose: onCloseAppRun,
+  } = useDisclosure();
 
   const appQuery = trpc.useQuery(['app.byId', { id }]);
 
   const editAppMutation = trpc.useMutation('app.edit', {
     async onSuccess() {
       await utils.invalidateQueries(['app.byId', { id }]);
+    },
+  });
+
+  const addAppRunMutation = trpc.useMutation('appRun.add', {
+    async onSuccess() {
+      await utils.invalidateQueries(['appRun.all']);
     },
   });
 
@@ -156,11 +179,14 @@ const AppPage: NextPageWithLayout = () => {
     });
   };
 
-  const getRunUrl = () => {
-    const version = new Date(appQuery?.data?.updatedAt || Date.now())
+  const getAppDataVersion = () => {
+    return new Date(appQuery?.data?.updatedAt || Date.now())
       .getTime()
       .toString();
+  };
 
+  const getRunUrl = () => {
+    const version = getAppDataVersion();
     setLastRunVersion(version);
     return `/run/${id}@${version}`;
   };
@@ -194,10 +220,20 @@ const AppPage: NextPageWithLayout = () => {
     });
 
     const res = await raw.json();
-    setOutputValue(JSON.stringify(res.data, null, 2));
+    const result = JSON.stringify(res.data, null, 2);
+    setOutputValue(result);
 
     // refetch logs
     appEventsQuery.refetch();
+
+    addAppRunMutation.mutateAsync({
+      appId: id,
+      deploymentId: `${id}@${getAppDataVersion()}`,
+      inputs: JSON.stringify(inputValues),
+      success: res.ok,
+      scheduled: false,
+      result,
+    });
   };
 
   const shareApp = async () => {
@@ -233,11 +269,18 @@ const AppPage: NextPageWithLayout = () => {
     <>
       <DefaultGrid>
         <GridItem colSpan={7}>
-          <HStack>
-            <Link>Apps</Link>
-            <Link>Runs</Link>
-            <Link>Schedules</Link>
-            <Link onClick={onOpen}>Secrets</Link>
+          <HStack gap={2}>
+            <Text
+              fontWeight={600}
+              borderBottom="1px solid"
+              borderBottomColor={'purple.600'}
+            >
+              Code
+            </Text>
+            <Text>|</Text>
+            <Link onClick={onOpenAppRun}>Runs</Link>
+            <Link onClick={onOpenSchedule}>Schedules</Link>
+            <Link onClick={onOpenSecrets}>Secrets</Link>
           </HStack>
         </GridItem>
         <GridItem colSpan={2} justifyContent="end">
@@ -348,7 +391,20 @@ const AppPage: NextPageWithLayout = () => {
           />
         </GridItem>
       </DefaultGrid>
-      <SecretsModal isOpen={isOpen} onClose={onClose} appId={id} />
+      <SecretsModal
+        isOpen={isOpenSecrets}
+        onClose={onCloseSecrets}
+        appId={id}
+      />
+
+      <ScheduleModal
+        isOpen={isOpenSchedule}
+        onClose={onCloseSchedule}
+        inputParams={inputParams}
+        appId={id}
+      />
+
+      <AppRunModal isOpen={isOpenAppRun} onClose={onCloseAppRun} appId={id} />
     </>
   );
 };

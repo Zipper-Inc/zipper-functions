@@ -20,8 +20,10 @@ model App {
 
   scriptMain ScriptMain?
 
-  scripts Script[]
-  secrets Secret[]
+  scripts   Script[]
+  secrets   Secret[]
+  schedules Schedule[]
+  runs      AppRun[]
 
   @@map("apps")
 }
@@ -36,6 +38,22 @@ model AppEvent {
   @@map("apps_events")
 }
 
+model AppRun {
+  id            String    @id @default(uuid())
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime? @default(now())
+  success       Boolean
+  deploymentId  String
+  scheduled     Boolean   @default(false)
+  result        Json?
+  inputs        Json?
+
+  appId         String
+  app           App?   @relation(fields: [appId], references: [id])
+
+  @@map("apps_runs")
+}
+
 model Secret {
   id             String    @id @default(uuid())
   createdAt      DateTime  @default(now())
@@ -47,6 +65,19 @@ model Secret {
   app   App?   @relation(fields: [appId], references: [id])
 
   @@map("secrets")
+}
+
+model Schedule {
+  id             String    @id @default(uuid())
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime? @default(now())
+  crontab        String
+  inputs         Json?
+
+  appId String
+  app   App?   @relation(fields: [appId], references: [id])
+
+  @@map("schedules")
 }
 
 model Script {

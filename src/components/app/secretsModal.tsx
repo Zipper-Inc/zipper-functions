@@ -19,13 +19,11 @@ import {
   VStack,
   useDisclosure,
   Text,
-  Highlight,
-  Divider,
   Box,
 } from '@chakra-ui/react';
 import { AddIcon, CloseIcon, LockIcon } from '@chakra-ui/icons';
 import { useFieldArray, useForm, UseFormRegister } from 'react-hook-form';
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 
 import { trpc } from '~/utils/trpc';
 import { FiTrash } from 'react-icons/fi';
@@ -63,6 +61,12 @@ const SecretsModal: React.FC<Props> = ({ isOpen, onClose, appId }) => {
       await utils.invalidateQueries(['secret.all', { appId }]);
     },
   });
+
+  useEffect(() => {
+    if (isOpen) {
+      existingSecrets.refetch();
+    }
+  }, [isOpen]);
 
   const Edit = ({
     register,

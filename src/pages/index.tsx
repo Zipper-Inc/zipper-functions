@@ -101,7 +101,7 @@ const IndexPage: NextPageWithLayout = () => {
                 )}
                 <VStack alignItems="start">
                   <Heading size="md">Create App</Heading>
-                  <FormControl as={React.Fragment}>
+                  <FormControl>
                     <FormLabel>Name:</FormLabel>
                     <Input
                       size="md"
