@@ -39,6 +39,7 @@ import { AppEditSidebar } from './app-edit-sidebar';
 import { trpc } from '~/utils/trpc';
 import ScheduleModal from '~/components/app/scheduleModal';
 import AppRunModal from '~/components/app/appRunModal';
+import { SessionAuth } from 'supertokens-auth-react/recipe/session';
 
 const Editor = dynamic(() => import('@monaco-editor/react'), {
   ssr: false,
@@ -266,7 +267,7 @@ const AppPage: NextPageWithLayout = () => {
   const { data } = appQuery;
 
   return (
-    <>
+    <SessionAuth>
       <DefaultGrid>
         <GridItem colSpan={7}>
           <HStack gap={2}>
@@ -405,7 +406,7 @@ const AppPage: NextPageWithLayout = () => {
       />
 
       <AppRunModal isOpen={isOpenAppRun} onClose={onCloseAppRun} appId={id} />
-    </>
+    </SessionAuth>
   );
 };
 

@@ -6,7 +6,9 @@ import { AppProps } from 'next/app';
 import { AppType } from 'next/dist/shared/lib/utils';
 import { ReactElement, ReactNode } from 'react';
 import superjson from 'superjson';
+import SuperTokensReact, { SuperTokensWrapper } from 'supertokens-auth-react';
 
+import { frontendConfig } from '../config/frontendConfig';
 import { DefaultLayout } from '~/components/default-layout';
 import { AppRouter } from '~/server/routers/_app';
 import { SSRContext } from '~/utils/trpc';
@@ -26,7 +28,11 @@ const MyApp = (({ Component, pageProps }: AppPropsWithLayout) => {
   const getLayout =
     Component.getLayout ?? ((page) => <DefaultLayout>{page}</DefaultLayout>);
 
-  return getLayout(<Component {...pageProps} />);
+  return getLayout(
+    <SuperTokensWrapper>
+      <Component {...pageProps} />
+    </SuperTokensWrapper>,
+  );
 }) as AppType;
 
 export function getBaseUrl() {
@@ -45,6 +51,11 @@ export function getBaseUrl() {
 
   // assume localhost
   return `http://localhost:${process.env.PORT ?? 3000}`;
+}
+
+if (typeof window !== 'undefined') {
+  // we only want to call this init function on the frontend, so we check typeof window !== 'undefined'
+  SuperTokensReact.init(frontendConfig());
 }
 
 export default withTRPC<AppRouter>({
