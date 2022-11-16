@@ -18,6 +18,7 @@ const envSchema = z.object({
   REDIS_PORT: z.string(),
   RELAY_URL: z.string().url(),
   SHARED_SECRET: z.string(),
+  SUPERTOKENS_API_KEY: z.string(),
 });
 
 const env = envSchema.safeParse(process.env);

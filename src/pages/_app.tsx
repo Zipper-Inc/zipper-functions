@@ -65,16 +65,16 @@ const MyApp = (({ Component, pageProps }: AppPropsWithLayout) => {
     return null;
   }
 
-  return getLayout(
-    <SuperTokensWrapper>
-      {Component.skipAuth ? (
-        <Component {...pageProps} />
-      ) : (
-        <SessionAuth>
-          <Component {...pageProps} />
-        </SessionAuth>
-      )}
-    </SuperTokensWrapper>,
+  return (
+    <>
+      <SuperTokensWrapper>
+        {Component.skipAuth ? (
+          getLayout(<Component {...pageProps} />)
+        ) : (
+          <SessionAuth>{getLayout(<Component {...pageProps} />)}</SessionAuth>
+        )}
+      </SuperTokensWrapper>
+    </>
   );
 }) as AppType;
 

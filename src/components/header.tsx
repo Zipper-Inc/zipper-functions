@@ -10,6 +10,9 @@ import {
 } from '@chakra-ui/react';
 import { useRouter } from 'next/router';
 import { FiHelpCircle, FiMenu, FiSearch, FiBell } from 'react-icons/fi';
+import { SessionContextUpdate } from 'supertokens-auth-react/lib/build/recipe/session/types';
+import { useSessionContext } from 'supertokens-auth-react/recipe/session';
+import { trpc } from '~/utils/trpc';
 import DefaultGrid from './default-grid';
 import { ZipperLogo } from './svg/zipper-logo';
 
@@ -20,6 +23,17 @@ type HeaderProps = {
 const Header: React.FC<HeaderProps> = ({ showNav = true }) => {
   const router = useRouter();
   const isDesktop = useBreakpointValue({ base: false, lg: true });
+  const session = useSessionContext() as SessionContextUpdate & {
+    loading: boolean;
+  };
+
+  const userQuery = trpc.useQuery(
+    ['user.bySuperTokenId', { superTokenId: session.userId }],
+    {
+      enabled: !session.loading,
+    },
+  );
+
   return (
     <DefaultGrid as="header" paddingY={12}>
       <GridItem
@@ -75,11 +89,13 @@ const Header: React.FC<HeaderProps> = ({ showNav = true }) => {
                     aria-label="Help Center"
                   />
                 </ButtonGroup>
-                <Avatar
-                  boxSize="10"
-                  name="Yan Y Khan"
-                  src="https://avatars.githubusercontent.com/u/88688590?s=64"
-                />
+                {session.doesSessionExist && !session.loading && (
+                  <Avatar
+                    boxSize="10"
+                    name={session.accessTokenPayload?.name}
+                    src={userQuery.data?.picture || ''}
+                  />
+                )}
               </HStack>
             ) : (
               <IconButton

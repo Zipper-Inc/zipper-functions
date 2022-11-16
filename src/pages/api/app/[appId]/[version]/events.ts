@@ -25,7 +25,7 @@ export default async function handler(
 
   if (!version) throw new Error("No version so I can't get your app events");
 
-  const caller = trpcRouter.createCaller(createContext({ req, res }));
+  const caller = trpcRouter.createCaller(await createContext({ req, res }));
   const appEvents = await caller.query('appEvent.all', {
     deploymentId: `${appId}@${query.version}`,
   });

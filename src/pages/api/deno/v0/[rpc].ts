@@ -146,7 +146,7 @@ export default async function handler(
       break;
     }
     case '/api/deno/v0/events': {
-      const caller = trpcRouter.createCaller(createContext({ req, res }));
+      const caller = trpcRouter.createCaller(await createContext({ req, res }));
       res.status(200).send('OK');
       let bufferChunks: any[] = [];
       req.on('data', async (data) => {
@@ -262,7 +262,7 @@ async function originBoot({
   res: NextApiResponse;
   id: string;
 }) {
-  const caller = trpcRouter.createCaller(createContext({ req, res }));
+  const caller = trpcRouter.createCaller(await createContext({ req, res }));
   const [appId, version] = deploymentId.split('@');
 
   if (!appId || !version) {

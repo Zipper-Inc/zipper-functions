@@ -23,6 +23,17 @@ export const frontendConfig = () => {
           }
           return undefined;
         },
+        onHandleEvent: async (context) => {
+          if (context.action !== 'SESSION_ALREADY_EXISTS') {
+            if (context.action === 'SUCCESS') {
+              if (context.isNewUser) {
+                console.log('create new user here');
+              } else {
+                console.log('update last sign in');
+              }
+            }
+          }
+        },
       }),
       Session.init(),
     ],

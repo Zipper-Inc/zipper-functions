@@ -1,7 +1,7 @@
 import supertokensNode from 'supertokens-node';
 import { backendConfig } from '~/config/backendConfig';
 import Session from 'supertokens-node/recipe/session';
-import { NextApiRequest, NextApiResponse } from 'next';
+import { getUserById } from 'supertokens-node/recipe/thirdpartyemailpassword';
 
 export const verifyAuthServerSide = async (req: any, res: any) => {
   // this runs on the backend, so we must call init on supertokens-node SDK
@@ -9,6 +9,8 @@ export const verifyAuthServerSide = async (req: any, res: any) => {
   let session;
   try {
     session = await Session.getSession(req, res);
+    const user = await getUserById(session.getUserId());
+    console.log(user);
   } catch (err: any) {
     if (err.type === Session.Error.TRY_REFRESH_TOKEN) {
       return { props: { fromSupertokens: 'needs-refresh' } };

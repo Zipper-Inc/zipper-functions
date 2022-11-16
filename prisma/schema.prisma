@@ -116,3 +116,34 @@ model ResourceInstance {
 
   @@map("resoure_instances")
 }
+
+model ThirdPartyAccount {
+  id         String    @id @default(uuid())
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime? @default(now())
+  userId     String
+  provider   String
+  providerAccountId String  @unique
+  scope             String?
+  id_token          String? @db.Text
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        DateTime?
+  user       User      @relation(fields: [userId], references: [id])
+
+  @@map("third_party_accounts")
+}
+
+model User {
+  id            String    @id @default(uuid())
+  superTokenId String @unique
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime? @default(now())
+  name          String?
+  email         String    @unique
+  picture       String?
+
+  thirdPartyAccounts      ThirdPartyAccount[]
+
+  @@map("users")
+}

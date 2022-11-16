@@ -56,14 +56,13 @@ function InputParamsInput({
   inputKey,
   type,
   optional,
-  value,
 }: {
   inputKey: string;
   type: string;
   optional: boolean;
   value: any;
 }) {
-  const { register, getValues } = useFormContext();
+  const { register } = useFormContext();
   const name = `${inputKey}:${type}`;
   const formProps = register(name, {
     required: !optional,
@@ -112,7 +111,7 @@ function InputParamsInput({
   }
 }
 
-export default function InputParamsForm({ params = [], defaultValues }: Props) {
+export default function InputParamsForm({ params = [] }: Props) {
   const inputs = params.map(({ key, type, optional }, i) => (
     <FormLabel width="100%" my="2" key={`${key}-${i}`}>
       <VStack justify="start" align="start" spacing={1.5}>
