@@ -99,9 +99,10 @@ export async function serveRelay(req: Request) {
 }
 
 if (import.meta.main) {
-  const port = location
-    ? parseInt(location.port)
-    : parseInt(Deno.args?.[0] ?? 0);
+  const port =
+    typeof location !== 'undefined'
+      ? parseInt(location.port)
+      : parseInt(Deno.args?.[0] ?? 0);
   const hostname = '0.0.0.0';
   serve((req) => serveRelay(req).catch(serveInternalError), { port, hostname });
   console.log(`Listening on http://${hostname}:${port}`);

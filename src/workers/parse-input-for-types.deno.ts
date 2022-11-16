@@ -4,8 +4,6 @@
 import { parse } from 'https://deno.land/x/swc@0.2.1/mod.ts';
 import { Application, Context } from 'https://deno.land/x/oak/mod.ts';
 
-const DEFAULT_PORT = 3000;
-
 const app = new Application();
 
 enum InputType {
@@ -183,4 +181,10 @@ app.use(async (ctx: Context) => {
   }
 });
 
-await app.listen({ port: parseInt(location.port, 10) || DEFAULT_PORT });
+const port = typeof location !== 'undefined' && parseInt(location.port, 10);
+
+if (port) {
+  await app.listen({ port });
+} else {
+  await app.listen();
+}

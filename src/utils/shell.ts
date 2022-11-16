@@ -1,28 +1,34 @@
-import { spawn, exec as nativeExec } from 'child_process';
+import { spawn, exec as nativeExec, SpawnOptions } from 'child_process';
 
 /**
  * Async run a shell script with `spawn` and pipe the output
  */
-export default async function shell(command: string, options?: string[]) {
+export default async function shell(
+  command: string,
+  options: string[],
+  spawnOptions?: SpawnOptions,
+) {
   return new Promise((resolve, reject) => {
     let stdout = '';
     let stderr = '';
 
-    const cmd = spawn(command, options);
+    const proc = !spawnOptions
+      ? spawn(command, options)
+      : spawn(command, options, spawnOptions);
 
-    cmd.stdout.on('data', (out) => {
+    proc.stdout?.on('data', (out) => {
       stdout += out.toString();
       console.log(out.toString());
     });
 
-    cmd.stderr.on('data', (err) => {
+    proc.stderr?.on('data', (err) => {
       stderr += err.toString();
       console.error(err.toString());
     });
 
-    cmd.on('error', reject);
+    proc.on('error', reject);
 
-    cmd.on('close', (code) => resolve({ code, stdout, stderr }));
+    proc.on('close', (code) => resolve({ code, stdout, stderr }));
   });
 }
 
