@@ -4,33 +4,76 @@ import { withTRPC } from '@trpc/next';
 import { NextPage } from 'next';
 import { AppProps } from 'next/app';
 import { AppType } from 'next/dist/shared/lib/utils';
-import { ReactElement, ReactNode } from 'react';
+import { ReactElement, ReactNode, useEffect } from 'react';
 import superjson from 'superjson';
-import SuperTokensReact, { SuperTokensWrapper } from 'supertokens-auth-react';
+import SuperTokensReact, {
+  SuperTokensWrapper,
+  redirectToAuth,
+} from 'supertokens-auth-react';
+import Session from 'supertokens-auth-react/recipe/session';
 
 import { frontendConfig } from '../config/frontendConfig';
 import { DefaultLayout } from '~/components/default-layout';
 import { AppRouter } from '~/server/routers/_app';
 import { SSRContext } from '~/utils/trpc';
+import { SessionAuth } from 'supertokens-auth-react/recipe/session';
 
 export type NextPageWithLayout<P = Record<string, unknown>, IP = P> = NextPage<
   P,
   IP
 > & {
   getLayout?: (page: ReactElement) => ReactNode;
+  skipAuth?: boolean;
+  fromSupertokens?: string;
 };
 
 type AppPropsWithLayout = AppProps & {
   Component: NextPageWithLayout;
+  pageProps: Record<string, unknown>;
 };
 
 const MyApp = (({ Component, pageProps }: AppPropsWithLayout) => {
   const getLayout =
     Component.getLayout ?? ((page) => <DefaultLayout>{page}</DefaultLayout>);
 
+  useEffect(() => {
+    async function doRefresh() {
+      // pageProps.fromSupertokens === 'needs-refresh' will be true
+      // when in getServerSideProps, getSession throws a TRY_REFRESH_TOKEN
+      // error.
+
+      if (pageProps.fromSupertokens === 'needs-refresh') {
+        if (await Session.attemptRefreshingSession()) {
+          // post session refreshing, we reload the page. This will
+          // send the new access token to the server, and then
+          // getServerSideProps will succeed
+          location.reload();
+        } else {
+          // the user's session has expired. So we redirect
+          // them to the login page
+          redirectToAuth();
+        }
+      }
+    }
+    doRefresh();
+  }, [pageProps.fromSupertokens]);
+
+  if (pageProps.fromSupertokens === 'needs-refresh') {
+    // in case the frontend needs to refresh, we show nothing.
+    // Alternatively, you can show a spinner.
+
+    return null;
+  }
+
   return getLayout(
     <SuperTokensWrapper>
-      <Component {...pageProps} />
+      {Component.skipAuth ? (
+        <Component {...pageProps} />
+      ) : (
+        <SessionAuth>
+          <Component {...pageProps} />
+        </SessionAuth>
+      )}
     </SuperTokensWrapper>,
   );
 }) as AppType;
@@ -51,11 +94,6 @@ export function getBaseUrl() {
 
   // assume localhost
   return `http://localhost:${process.env.PORT ?? 3000}`;
-}
-
-if (typeof window !== 'undefined') {
-  // we only want to call this init function on the frontend, so we check typeof window !== 'undefined'
-  SuperTokensReact.init(frontendConfig());
 }
 
 export default withTRPC<AppRouter>({
@@ -124,3 +162,8 @@ export default withTRPC<AppRouter>({
     return {};
   },
 })(MyApp);
+
+if (typeof window !== 'undefined') {
+  // we only want to call this init function on the frontend, so we check typeof window !== 'undefined'
+  SuperTokensReact.init(frontendConfig());
+}

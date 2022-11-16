@@ -216,7 +216,7 @@ const createEsZip = async ({ app, baseUrl }: { app: any; baseUrl: string }) => {
       console.log("ESZIP: '", specifier);
 
       if (specifier.startsWith(baseUrl)) {
-        const response = await fetch(specifier);
+        const response = await fetch(specifier, { credentials: 'same-origin' });
         const content = await response.text();
 
         return {

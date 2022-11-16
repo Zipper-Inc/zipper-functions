@@ -1,20 +1,31 @@
 import React, { useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import SuperTokens from 'supertokens-auth-react';
-import { redirectToAuth } from 'supertokens-auth-react';
+import { NextPageWithLayout } from '../_app';
+import { BlankLayout } from '~/components/blank-layout';
 
 const SuperTokensComponentNoSSR = dynamic(
   new Promise((res) => res(SuperTokens.getRoutingComponent)) as any,
   { ssr: false },
 );
 
-export default function Auth() {
-  // if the user visits a page that is not handled by us (like /auth/random), then we redirect them back to the auth page.
+const Auth: NextPageWithLayout = () => {
   useEffect(() => {
     if (SuperTokens.canHandleRoute() === false) {
-      redirectToAuth();
+      SuperTokens.redirectToAuth();
     }
   }, []);
 
-  return <SuperTokensComponentNoSSR />;
-}
+  return (
+    <div>
+      <main>
+        <SuperTokensComponentNoSSR />
+      </main>
+    </div>
+  );
+};
+
+Auth.getLayout = (page) => <BlankLayout>{page}</BlankLayout>;
+Auth.skipAuth = true;
+
+export default Auth;

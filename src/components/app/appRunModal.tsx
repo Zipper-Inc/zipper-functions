@@ -1,4 +1,3 @@
-import { CheckIcon, CloseIcon } from '@chakra-ui/icons';
 import {
   Button,
   Modal,
@@ -10,9 +9,7 @@ import {
   ModalOverlay,
   VStack,
   Box,
-  List,
   Text,
-  ListItem,
   TableContainer,
   Table,
   Thead,
@@ -20,7 +17,6 @@ import {
   Th,
   Tbody,
   Td,
-  Tfoot,
   Divider,
 } from '@chakra-ui/react';
 import { useEffect } from 'react';

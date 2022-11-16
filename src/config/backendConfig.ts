@@ -1,6 +1,5 @@
-import ThirdPartyPasswordlessNode from 'supertokens-node/recipe/thirdpartypasswordless';
 import ThirdPartyEmailPassword from 'supertokens-node/recipe/thirdpartyemailpassword';
-import SessionNode from 'supertokens-node/recipe/session';
+import Session from 'supertokens-node/recipe/session';
 import { appInfo } from './appInfo';
 import { TypeInput } from 'supertokens-node/types';
 
@@ -27,11 +26,7 @@ export const backendConfig = (): TypeInput => {
           }),
         ],
       }),
-      ThirdPartyPasswordlessNode.init({
-        flowType: 'MAGIC_LINK',
-        contactMethod: 'EMAIL',
-      }),
-      SessionNode.init(),
+      Session.init(),
     ],
     isInServerlessEnv: true,
   };

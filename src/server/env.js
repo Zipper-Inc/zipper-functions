@@ -10,6 +10,7 @@ const { z } = require('zod');
 const envSchema = z.object({
   DATABASE_URL: z.string().url(),
   ENCRYPTION_KEY: z.string(),
+  NEXT_PUBLIC_URL: z.string().url(),
   NODE_ENV: z.enum(['development', 'test', 'production']),
   PARSE_INPUT_URL: z.string().url(),
   REDIS_HOST: z.string(),
@@ -17,7 +18,6 @@ const envSchema = z.object({
   REDIS_PORT: z.string(),
   RELAY_URL: z.string().url(),
   SHARED_SECRET: z.string(),
-  ZIPPER_URL: z.string().url(),
 });
 
 const env = envSchema.safeParse(process.env);

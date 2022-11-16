@@ -1,9 +1,7 @@
-import ThirdPartyPasswordlessReact from 'supertokens-auth-react/recipe/thirdpartypasswordless';
-import SessionReact from 'supertokens-auth-react/recipe/session';
 import ThirdPartyEmailPassword, {
   Google,
 } from 'supertokens-auth-react/recipe/thirdpartyemailpassword';
-
+import Session from 'supertokens-auth-react/recipe/session';
 import { appInfo } from './appInfo';
 
 export const frontendConfig = () => {
@@ -14,11 +12,19 @@ export const frontendConfig = () => {
         signInAndUpFeature: {
           providers: [Google.init()],
         },
+        useShadowDom: false,
+        getRedirectionURL: async (context) => {
+          if (context.action === 'SUCCESS') {
+            if (context.redirectToPath !== undefined) {
+              // we are navigating back to where the user was before they authenticated
+              return context.redirectToPath;
+            }
+            return '/';
+          }
+          return undefined;
+        },
       }),
-      ThirdPartyPasswordlessReact.init({
-        contactMethod: 'EMAIL',
-      }),
-      SessionReact.init(),
+      Session.init(),
     ],
   };
 };

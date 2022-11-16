@@ -1,14 +1,34 @@
+import { Box, Container, Heading, Stack, Text } from '@chakra-ui/react';
 import React from 'react';
+import { BlankLayout } from '~/components/blank-layout';
+import { NextPageWithLayout } from './_app';
 
-const NotFound = () => {
+const NotFound: NextPageWithLayout = () => {
   return (
-    <div>
-      <div>
-        <h2>404</h2>
-        <p>Where is my page? Where is my paaaage</p>
-      </div>
-    </div>
+    <Container maxW={'3xl'}>
+      <Stack
+        as={Box}
+        textAlign={'center'}
+        spacing={{ base: 8, md: 14 }}
+        py={{ base: 20, md: 36 }}
+      >
+        <Heading
+          fontWeight={600}
+          fontSize={{ base: '3xl', sm: '4xl', md: '6xl' }}
+          lineHeight={'110%'}
+        >
+          Whoop there it isn't.
+        </Heading>
+        <Text color={'gray.500'} maxW={'3xl'}>
+          Looks like the page you're looking for doesn't exist or isn't
+          accessible to you.
+        </Text>
+      </Stack>
+    </Container>
   );
 };
+
+NotFound.getLayout = (page) => <BlankLayout>{page}</BlankLayout>;
+NotFound.skipAuth = true;
 
 export default NotFound;

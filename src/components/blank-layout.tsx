@@ -3,13 +3,12 @@ import { ChakraProvider } from '@chakra-ui/react';
 import Head from 'next/head';
 import { ReactNode } from 'react';
 import { ReactQueryDevtools } from 'react-query/devtools';
-
-import Header from './header';
 import { theme } from '~/theme';
+import Header from './header';
 
 type DefaultLayoutProps = { children: ReactNode; protected?: boolean };
 
-export const DefaultLayout = ({ children }: DefaultLayoutProps) => {
+export const BlankLayout = ({ children }: DefaultLayoutProps) => {
   return (
     <>
       <Head>
@@ -18,7 +17,7 @@ export const DefaultLayout = ({ children }: DefaultLayoutProps) => {
       </Head>
 
       <ChakraProvider theme={theme}>
-        <Header />
+        <Header showNav={false} />
         <main>{children}</main>
       </ChakraProvider>
 

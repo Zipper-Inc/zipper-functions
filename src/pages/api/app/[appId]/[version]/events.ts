@@ -1,11 +1,18 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { trpcRouter } from '~/server/routers/_app';
 import { createContext } from '~/server/context';
+import { verifyAPIAuth } from '~/utils/verifyAuth';
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
+  try {
+    await verifyAPIAuth(req, res);
+  } catch (error) {
+    res.status(401).send({ error: 'Unauthorized' });
+  }
+
   const { query } = req;
 
   const appId = Array.isArray(query.appId) ? query.appId[0] : query.appId;

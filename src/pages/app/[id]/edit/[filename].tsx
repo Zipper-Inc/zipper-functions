@@ -40,10 +40,15 @@ import { trpc } from '~/utils/trpc';
 import ScheduleModal from '~/components/app/scheduleModal';
 import AppRunModal from '~/components/app/appRunModal';
 import { SessionAuth } from 'supertokens-auth-react/recipe/session';
+import { verifyAuthServerSide } from '~/utils/verifyAuth';
 
 const Editor = dynamic(() => import('@monaco-editor/react'), {
   ssr: false,
 });
+
+export async function getServerSideProps(context: any) {
+  return verifyAuthServerSide(context.req, context.res);
+}
 
 async function parseInput(code?: string): Promise<InputParam[]> {
   const res: ParseInputResponse = await fetch('/api/__/parse-input', {
@@ -261,7 +266,7 @@ const AppPage: NextPageWithLayout = () => {
   }
 
   if (appQuery.status !== 'success') {
-    return <>Loading...</>;
+    return <></>;
   }
 
   const { data } = appQuery;
