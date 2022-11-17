@@ -34,7 +34,7 @@ const AppPage: NextPageWithLayout = () => {
   }
 
   if (appQuery.status !== 'success') {
-    return <>Loading...</>;
+    return <></>;
   }
   const { data } = appQuery;
   return (
@@ -82,5 +82,7 @@ const AppPage: NextPageWithLayout = () => {
     </DefaultGrid>
   );
 };
+
+AppPage.skipAuth = true;
 
 export default AppPage;

@@ -49,6 +49,7 @@ export const appRunRouter = createRouter()
           appId: input.appId,
         },
         take: input.limit,
+        orderBy: { createdAt: 'desc' },
         select: defaultSelect,
       });
     },

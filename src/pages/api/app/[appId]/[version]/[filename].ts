@@ -22,7 +22,7 @@ export default async function handler(
   if (!filename)
     throw new Error("No filename so I can't look up the source code for you");
 
-  const caller = trpcRouter.createCaller(createContext({ req, res }));
+  const caller = trpcRouter.createCaller(await createContext({ req, res }));
   const app = await caller.query('app.byId', {
     id: appId,
   });

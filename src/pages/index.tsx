@@ -129,6 +129,8 @@ const IndexPage: NextPageWithLayout = () => {
   );
 };
 
+IndexPage.skipAuth = true;
+
 export default IndexPage;
 
 /**

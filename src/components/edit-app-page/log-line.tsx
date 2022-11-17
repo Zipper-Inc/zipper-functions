@@ -1,4 +1,4 @@
-import { Box, Flex, Text, Tag, Icon } from '@chakra-ui/react';
+import { Flex, Text } from '@chakra-ui/react';
 import {
   InfoOutlineIcon,
   WarningIcon,

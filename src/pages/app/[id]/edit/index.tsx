@@ -1,6 +1,7 @@
 import { GetServerSideProps } from 'next';
+import { NextPageWithLayout } from '~/pages/_app';
 
-const EditPage = () => null;
+const EditPage: NextPageWithLayout = () => null;
 
 export const getServerSideProps: GetServerSideProps = async (
   context,

@@ -150,7 +150,7 @@ export const appRouter = createRouter()
       const { id, data } = input;
       const { scripts, ...rest } = data;
 
-      const app = await prisma.app.update({
+      await prisma.app.update({
         where: { id },
         data: { updatedAt: new Date(), ...rest },
         select: defaultSelect,
@@ -158,7 +158,7 @@ export const appRouter = createRouter()
 
       if (scripts) {
         await Promise.all(
-          scripts.map(async (script, i) => {
+          scripts.map(async (script) => {
             const { id, data } = script;
             await prisma.script.update({ where: { id }, data });
           }),

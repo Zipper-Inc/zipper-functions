@@ -146,7 +146,7 @@ export default async function handler(
       break;
     }
     case '/api/deno/v0/events': {
-      const caller = trpcRouter.createCaller(createContext({ req, res }));
+      const caller = trpcRouter.createCaller(await createContext({ req, res }));
       res.status(200).send('OK');
       let bufferChunks: any[] = [];
       req.on('data', async (data) => {
@@ -216,7 +216,7 @@ const createEsZip = async ({ app, baseUrl }: { app: any; baseUrl: string }) => {
       console.log("ESZIP: '", specifier);
 
       if (specifier.startsWith(baseUrl)) {
-        const response = await fetch(specifier);
+        const response = await fetch(specifier, { credentials: 'same-origin' });
         const content = await response.text();
 
         return {
@@ -262,7 +262,7 @@ async function originBoot({
   res: NextApiResponse;
   id: string;
 }) {
-  const caller = trpcRouter.createCaller(createContext({ req, res }));
+  const caller = trpcRouter.createCaller(await createContext({ req, res }));
   const [appId, version] = deploymentId.split('@');
 
   if (!appId || !version) {
