@@ -21,6 +21,7 @@ async function main() {
       name: 'Post meeting notes to Slack in multiple languages',
       description:
         'Post meeting notes to Slack in multiple languages using Google Cloud Functions',
+      isPrivate: false,
       scripts: {
         createMany: {
           data: [
@@ -29,7 +30,13 @@ async function main() {
               name: 'main',
               filename: 'main.ts',
               description: 'entry point for the app',
-              code: `import { joinMeeting } from './joinMeeting';`,
+              code: `import { joinMeeting } from './join-the-current-meeting.ts';
+              export default async function main() {
+                if (joinMeeting()) {
+                  return 'Joined the meeting';
+                }
+              }
+              `,
               order: 0,
             },
             {
@@ -38,7 +45,10 @@ async function main() {
               filename: 'join-the-current-meeting.ts',
               description:
                 'Looks at a users meetings and joins the current or upcoming one',
-              code: 'module.exports = { console.log("Hello world"); }',
+              code: `export const joinMeeting = () => {
+                console.log("Joining the meeting");
+                return true;
+              };`,
               order: 1,
             },
           ],

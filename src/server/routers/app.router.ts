@@ -57,6 +57,7 @@ export const appRouter = createRouter()
        */
 
       return prisma.app.findMany({
+        where: { isPrivate: false },
         select: defaultSelect,
       });
     },
@@ -73,6 +74,7 @@ export const appRouter = createRouter()
         select: {
           ...defaultSelect,
           scripts: true,
+          scriptMain: { include: { script: true } },
         },
       });
     },
@@ -94,6 +96,7 @@ export const appRouter = createRouter()
         data: {
           name: app.name,
           description: app.description,
+          parentId: app.id,
         },
         select: defaultSelect,
       });
@@ -102,6 +105,7 @@ export const appRouter = createRouter()
         const forkScript = await prisma.script.create({
           data: {
             ...script,
+            id: undefined,
             inputSchema: JSON.stringify(script.inputSchema),
             outputSchema: JSON.stringify(script.outputSchema),
             appId: fork.id,
@@ -132,6 +136,7 @@ export const appRouter = createRouter()
       data: z.object({
         name: z.string().min(3).max(255).optional(),
         description: z.string().optional(),
+        isPrivate: z.boolean().optional(),
         scripts: z
           .array(
             z.object({
