@@ -9,8 +9,7 @@ export const verifyAuthServerSide = async (req: any, res: any) => {
   let session;
   try {
     session = await Session.getSession(req, res);
-    const user = await getUserById(session.getUserId());
-    console.log(user);
+    await getUserById(session.getUserId());
   } catch (err: any) {
     if (err.type === Session.Error.TRY_REFRESH_TOKEN) {
       return { props: { fromSupertokens: 'needs-refresh' } };

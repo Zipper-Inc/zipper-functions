@@ -1,11 +1,17 @@
+import { ChevronDownIcon } from '@chakra-ui/icons';
 import {
   Avatar,
   Box,
+  Button,
   ButtonGroup,
   GridItem,
   HStack,
   IconButton,
   Link,
+  Menu,
+  MenuButton,
+  MenuItem,
+  MenuList,
   useBreakpointValue,
 } from '@chakra-ui/react';
 import { useRouter } from 'next/router';
@@ -15,6 +21,7 @@ import { useSessionContext } from 'supertokens-auth-react/recipe/session';
 import { trpc } from '~/utils/trpc';
 import DefaultGrid from './default-grid';
 import { ZipperLogo } from './svg/zipper-logo';
+import { signOut } from 'supertokens-auth-react/recipe/thirdpartyemailpassword';
 
 type HeaderProps = {
   showNav?: boolean;
@@ -26,6 +33,11 @@ const Header: React.FC<HeaderProps> = ({ showNav = true }) => {
   const session = useSessionContext() as SessionContextUpdate & {
     loading: boolean;
   };
+
+  async function onLogout() {
+    await signOut();
+    router.push('/');
+  }
 
   const userQuery = trpc.useQuery(
     ['user.bySuperTokenId', { superTokenId: session.userId }],
@@ -89,12 +101,32 @@ const Header: React.FC<HeaderProps> = ({ showNav = true }) => {
                     aria-label="Help Center"
                   />
                 </ButtonGroup>
-                {session.doesSessionExist && !session.loading && (
-                  <Avatar
-                    boxSize="10"
-                    name={session.accessTokenPayload?.name}
-                    src={userQuery.data?.picture || ''}
-                  />
+                {session.doesSessionExist && !session.loading ? (
+                  <Menu>
+                    <MenuButton as={Link}>
+                      <HStack>
+                        <Avatar
+                          boxSize="8"
+                          name={
+                            userQuery.data?.name || userQuery.data?.email || ''
+                          }
+                          src={userQuery.data?.picture || ''}
+                        />
+                        <ChevronDownIcon />
+                      </HStack>
+                    </MenuButton>
+                    <MenuList>
+                      <MenuItem onClick={onLogout}>Logout</MenuItem>
+                    </MenuList>
+                  </Menu>
+                ) : (
+                  <Button
+                    variant={'outline'}
+                    colorScheme={'purple'}
+                    onClick={() => router.push('/auth')}
+                  >
+                    Sign in
+                  </Button>
                 )}
               </HStack>
             ) : (

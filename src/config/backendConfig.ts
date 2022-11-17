@@ -6,14 +6,11 @@ import { OAuth2Client } from 'google-auth-library';
 import { prisma } from '~/server/prisma';
 import { Prisma } from '@prisma/client';
 
-const { Google } = ThirdPartyEmailPassword;
-
-const CLIENT_ID =
-  '741243925686-9sqa2dt96nb7qgirb7f4pu2m8giq14gk.apps.googleusercontent.com';
+const { Google, Github } = ThirdPartyEmailPassword;
 
 const accountUpdateArgs = (response: any) => {
   return {
-    provider: response.user.thirdParty?.id || 'google',
+    provider: response.user.thirdParty?.id || '',
     providerAccountId: response.user.thirdParty?.userId || '',
     access_token: response.authCodeResponse.access_token,
     id_token: response.authCodeResponse.id_token,
@@ -43,15 +40,36 @@ export const backendConfig = (): TypeInput => {
           // We have provided you with development keys which you can use for testing.
           // IMPORTANT: Please replace them with your own OAuth keys for production use.
           Google({
-            clientId: CLIENT_ID,
-            clientSecret: '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',
+            clientId: process.env.GOOGLE_CLIENT_ID || '',
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
+          }),
+          Github({
+            clientId: process.env.GITHUB_CLIENT_ID || '',
+            clientSecret: process.env.GITHUB_CLIENT_SECRET || '',
           }),
         ],
         override: {
           apis: (ogImplementation) => {
-            console.log(ogImplementation);
             return {
               ...ogImplementation,
+              emailPasswordSignUpPOST: async (input) => {
+                if (ogImplementation.emailPasswordSignUpPOST === undefined) {
+                  throw Error('Should never come here');
+                }
+                const response = await ogImplementation.emailPasswordSignUpPOST(
+                  input,
+                );
+                if (response.status === 'OK') {
+                  const { id, email } = response.user;
+                  await prisma.user.create({
+                    data: {
+                      superTokenId: id,
+                      email,
+                    },
+                  });
+                }
+                return response;
+              },
               thirdPartySignInUpPOST: async (input) => {
                 if (ogImplementation.thirdPartySignInUpPOST === undefined) {
                   throw Error('Should never come here');
@@ -64,10 +82,7 @@ export const backendConfig = (): TypeInput => {
 
                 // Post sign up response, we check if it was successful
                 if (response.status === 'OK') {
-                  console.log(
-                    'ST sign up successful',
-                    response.authCodeResponse,
-                  );
+                  console.log('ST sign up successful', response);
 
                   const newUser = await prisma.user.upsert({
                     where: {
@@ -94,12 +109,14 @@ export const backendConfig = (): TypeInput => {
                     select: { id: true },
                   });
 
-                  if (input.provider.id === 'google') {
-                    try {
-                      const client = new OAuth2Client(CLIENT_ID);
+                  try {
+                    if (input.provider.id === 'google') {
+                      const client = new OAuth2Client(
+                        process.env.GOOGLE_CLIENT_ID,
+                      );
                       const ticket = await client.verifyIdToken({
                         idToken: response.authCodeResponse.id_token,
-                        audience: CLIENT_ID, // Specify the CLIENT_ID of the app that accesses the backend
+                        audience: process.env.GOOGLE_CLIENT_ID, // Specify the CLIENT_ID of the app that accesses the backend
                         // Or, if multiple clients access the backend:
                         //[CLIENT_ID_1, CLIENT_ID_2, CLIENT_ID_3]
                       });
@@ -114,12 +131,35 @@ export const backendConfig = (): TypeInput => {
                           picture: payload?.picture,
                         },
                       });
-                    } catch (error) {
-                      console.log(
-                        'Something went wrong in thirdPartySignInUpPOST: ',
-                        error,
-                      );
                     }
+
+                    if (input.provider.id === 'github') {
+                      const raw = await fetch('https://api.github.com/user', {
+                        headers: {
+                          Authorization: `token ${response.authCodeResponse.access_token}`,
+                        },
+                      });
+                      const res = await raw.json();
+
+                      await prisma.user.update({
+                        where: { id: newUser.id },
+                        data: {
+                          picture:
+                            res.avatar ||
+                            `https://avatars.githubusercontent.com/u/${response.user.thirdParty?.userId}?v=4`,
+                          name: res.name,
+                        },
+                      });
+                    }
+                  } catch (error) {
+                    console.log(
+                      'Something went wrong in thirdPartySignInUpPOST: ',
+                      error,
+                    );
+                    return {
+                      ...response,
+                      ok: false,
+                    };
                   }
                 }
                 return response;

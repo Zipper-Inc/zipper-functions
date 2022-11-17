@@ -7,16 +7,18 @@ import { AppType } from 'next/dist/shared/lib/utils';
 import { ReactElement, ReactNode, useEffect } from 'react';
 import superjson from 'superjson';
 import SuperTokensReact, {
-  SuperTokensWrapper,
   redirectToAuth,
+  SuperTokensWrapper,
 } from 'supertokens-auth-react';
-import Session from 'supertokens-auth-react/recipe/session';
 
 import { frontendConfig } from '../config/frontendConfig';
 import { DefaultLayout } from '~/components/default-layout';
 import { AppRouter } from '~/server/routers/_app';
 import { SSRContext } from '~/utils/trpc';
-import { SessionAuth } from 'supertokens-auth-react/recipe/session';
+import {
+  SessionAuth,
+  attemptRefreshingSession,
+} from 'supertokens-auth-react/recipe/session';
 
 export type NextPageWithLayout<P = Record<string, unknown>, IP = P> = NextPage<
   P,
@@ -43,7 +45,7 @@ const MyApp = (({ Component, pageProps }: AppPropsWithLayout) => {
       // error.
 
       if (pageProps.fromSupertokens === 'needs-refresh') {
-        if (await Session.attemptRefreshingSession()) {
+        if (await attemptRefreshingSession()) {
           // post session refreshing, we reload the page. This will
           // send the new access token to the server, and then
           // getServerSideProps will succeed

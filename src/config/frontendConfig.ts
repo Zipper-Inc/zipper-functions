@@ -1,5 +1,6 @@
 import ThirdPartyEmailPassword, {
   Google,
+  Github,
 } from 'supertokens-auth-react/recipe/thirdpartyemailpassword';
 import Session from 'supertokens-auth-react/recipe/session';
 import { appInfo } from './appInfo';
@@ -10,7 +11,7 @@ export const frontendConfig = () => {
     recipeList: [
       ThirdPartyEmailPassword.init({
         signInAndUpFeature: {
-          providers: [Google.init()],
+          providers: [Google.init(), Github.init()],
         },
         useShadowDom: false,
         getRedirectionURL: async (context) => {
@@ -22,17 +23,6 @@ export const frontendConfig = () => {
             return '/';
           }
           return undefined;
-        },
-        onHandleEvent: async (context) => {
-          if (context.action !== 'SESSION_ALREADY_EXISTS') {
-            if (context.action === 'SUCCESS') {
-              if (context.isNewUser) {
-                console.log('create new user here');
-              } else {
-                console.log('update last sign in');
-              }
-            }
-          }
         },
       }),
       Session.init(),

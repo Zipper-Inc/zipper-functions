@@ -6,6 +6,7 @@ import { createRouter } from '../createRouter';
 const defaultSelect = Prisma.validator<Prisma.UserSelect>()({
   id: true,
   email: true,
+  name: true,
   picture: true,
 });
 
