@@ -15,6 +15,7 @@ const envSchema = z.object({
   GITHUB_CLIENT_SECRET: z.string(),
   GOOGLE_CLIENT_ID: z.string(),
   GOOGLE_CLIENT_SECRET: z.string(),
+  LIVEBLOCKS_PUBLIC_KEY: z.string(),
   NEXT_PUBLIC_URL: z.string().url(),
   NODE_ENV: z.enum(['development', 'test', 'production']),
   PARSE_INPUT_URL: z.string().url(),
