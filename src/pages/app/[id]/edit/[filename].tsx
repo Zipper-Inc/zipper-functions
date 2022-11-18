@@ -162,7 +162,7 @@ const AppPage: NextPageWithLayout = () => {
         (editor) => editor.user.superTokenId === session.userId,
       ) || false,
     );
-  }, [appQuery.isSuccess]);
+  }, [appQuery.isSuccess, session.loading]);
 
   useEffect(() => {
     parseInput(currentScript?.code).then(setInputParams);
@@ -362,7 +362,7 @@ const AppPage: NextPageWithLayout = () => {
                 Run
               </Button>
             )}
-            {!isUserAnAppEditor && (
+            {!isUserAnAppEditor && !session.loading && (
               <Button
                 type="button"
                 paddingX={6}

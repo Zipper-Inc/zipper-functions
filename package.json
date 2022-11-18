@@ -82,7 +82,6 @@
     "superjson": "^1.7.4",
     "supertokens-auth-react": "^0.27.1",
     "supertokens-node": "^12.0.5",
-    "ts-stream": "^3.0.0",
     "typescript": "4.8.3",
     "vm2": "^3.9.11",
     "zod": "^3.0.0"

@@ -5,7 +5,7 @@ import ThirdPartyEmailPassword, {
 import Session from 'supertokens-auth-react/recipe/session';
 import { appInfo } from './appInfo';
 import ProviderButton from '~/components/auth/providerButton';
-import OctocatIcon from '~/components/auth/octocatIcon';
+import OctocatIcon from '~/components/svg/octocatIcon';
 
 export const frontendConfig = () => {
   return {
