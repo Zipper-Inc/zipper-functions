@@ -11,6 +11,7 @@ import {
   VStack,
   useDisclosure,
 } from '@chakra-ui/react';
+import { LockIcon, UnlockIcon } from '@chakra-ui/icons';
 import NextError from 'next/error';
 import NextLink from 'next/link';
 import { useRouter } from 'next/router';
@@ -19,10 +20,23 @@ import { useForm } from 'react-hook-form';
 import dynamic from 'next/dynamic';
 import { Script } from '@prisma/client';
 import debounce from 'lodash.debounce';
+import {
+  SessionAuth,
+  useSessionContext,
+} from 'supertokens-auth-react/recipe/session';
+import { SessionContextUpdate } from 'supertokens-auth-react/lib/build/recipe/session/types';
+import { ClientSideSuspense } from '@liveblocks/react';
+import { LiveObject } from '@liveblocks/client';
 
 import AddScriptForm from '~/components/edit-app-page/add-script-form';
 import DefaultGrid from '~/components/default-grid';
 import SecretsModal from '~/components/app/secretsModal';
+import ScheduleModal from '~/components/app/scheduleModal';
+import AppRunModal from '~/components/app/appRunModal';
+import ShareModal from '~/components/app/shareModal';
+import ForkIcon from '~/components/svg/forkIcon';
+import { AppEditSidebar } from './app-edit-sidebar';
+
 import { useCmdOrCtrl } from '~/hooks/use-cmd-or-ctrl';
 import useInterval from '~/hooks/use-interval';
 import usePrettier from '~/hooks/use-prettier';
@@ -35,18 +49,9 @@ import {
 } from '~/types/input-params';
 
 import { safeJSONParse } from '~/utils/safe-json';
-import { AppEditSidebar } from './app-edit-sidebar';
 import { trpc } from '~/utils/trpc';
-import ScheduleModal from '~/components/app/scheduleModal';
-import AppRunModal from '~/components/app/appRunModal';
+
 import { RoomProvider, useMutation, useStorage } from '~/liveblocks.config';
-import { ClientSideSuspense } from '@liveblocks/react';
-import { LiveObject } from '@liveblocks/client';
-import ShareModal from '~/components/app/shareModal';
-import { useSessionContext } from 'supertokens-auth-react/recipe/session';
-import { LockIcon, UnlockIcon } from '@chakra-ui/icons';
-import { SessionContextUpdate } from 'supertokens-auth-react/lib/build/recipe/session/types';
-import ForkIcon from '~/components/svg/forkIcon';
 
 const Editor = dynamic(() => import('@monaco-editor/react'), {
   ssr: false,
@@ -471,19 +476,20 @@ const AppPage: NextPageWithLayout = () => {
                             passHref
                           >
                             <Link
-                              size="sm"
-                              background="purple.200"
-                              borderRadius={2}
+                              fontSize="sm"
+                              fontWeight="light"
+                              w="100%"
                               px={2}
+                              background={
+                                currentScript?.id === script.id
+                                  ? 'purple.100'
+                                  : 'transparent'
+                              }
+                              borderRadius={2}
                             >
-                              <b>{script.name}</b>
+                              <b>{script.filename}</b>
                             </Link>
                           </NextLink>
-                          {i === 0 && (
-                            <Text size="sm" color="gray.500">
-                              Other functions
-                            </Text>
-                          )}
                         </Fragment>
                       ))}
                   </VStack>
@@ -509,7 +515,7 @@ const AppPage: NextPageWithLayout = () => {
                           >
                             <CollaborativeEditor
                               currentScript={currentScript}
-                              onChange={(value) =>
+                              onChange={(value: string | undefined) =>
                                 onCodeChange({
                                   value,
                                   scripts,
