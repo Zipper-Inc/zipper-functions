@@ -41,6 +41,9 @@ import ScheduleModal from '~/components/app/scheduleModal';
 import AppRunModal from '~/components/app/appRunModal';
 import { SessionAuth } from 'supertokens-auth-react/recipe/session';
 import { verifyAuthServerSide } from '~/utils/verifyAuth';
+import { RoomProvider, useMutation, useStorage } from '~/liveblocks.config';
+import { ClientSideSuspense } from '@liveblocks/react';
+import { LiveObject } from '@liveblocks/client';
 
 const Editor = dynamic(() => import('@monaco-editor/react'), {
   ssr: false,
@@ -48,6 +51,40 @@ const Editor = dynamic(() => import('@monaco-editor/react'), {
 
 export async function getServerSideProps(context: any) {
   return verifyAuthServerSide(context.req, context.res);
+}
+
+function CollaborativeEditor({ currentScript, onChange }: any) {
+  const currentScriptLive: any = useStorage(
+    (root) => root[`script-${currentScript?.id}`],
+  );
+
+  const code = currentScriptLive ? currentScriptLive.code : currentScript?.code;
+
+  const mutate = useMutation(
+    ({ storage }, newCode: string) => {
+      storage.get(`script-${currentScript?.id}`)?.set('code', newCode);
+    },
+    [currentScript],
+  );
+
+  console.log(code);
+
+  return (
+    <Editor
+      key={currentScript?.id}
+      defaultLanguage="typescript"
+      height="100vh"
+      value={code || ''}
+      theme="vs-dark"
+      options={{
+        minimap: { enabled: false },
+      }}
+      onChange={(v) => {
+        mutate(v);
+        onChange(v);
+      }}
+    />
+  );
 }
 
 async function parseInput(code?: string): Promise<InputParam[]> {
@@ -271,146 +308,168 @@ const AppPage: NextPageWithLayout = () => {
 
   const { data } = appQuery;
 
+  const initialStorage: any = {
+    app: new LiveObject({
+      name: data.name,
+      description: data.description,
+    }),
+  };
+
+  data.scripts.forEach((s) => {
+    initialStorage[`script-${s.id}`] = new LiveObject({
+      code: s.code,
+    });
+  });
+
   return (
     <SessionAuth>
-      <DefaultGrid>
-        <GridItem colSpan={7}>
-          <HStack gap={2}>
-            <Text
-              fontWeight={600}
-              borderBottom="1px solid"
-              borderBottomColor={'purple.600'}
-            >
-              Code
-            </Text>
-            <Text>|</Text>
-            <Link onClick={onOpenAppRun}>Runs</Link>
-            <Link onClick={onOpenSchedule}>Schedules</Link>
-            <Link onClick={onOpenSecrets}>Secrets</Link>
-          </HStack>
-        </GridItem>
-        <GridItem colSpan={2} justifyContent="end">
-          <HStack>
-            <Button onClick={shareApp}>Share</Button>
-            <Button onClick={saveApp}>Save</Button>
-            <Button
-              type="button"
-              paddingX={6}
-              bgColor="purple.800"
-              textColor="gray.100"
-              onClick={runApp}
-            >
-              Run
-            </Button>
-          </HStack>
-        </GridItem>
-        <GridItem colSpan={3} />
-        <GridItem colSpan={3}>
-          <Heading as="h1" size="md" pb={5}>
-            {data.name}
-          </Heading>
-          <VStack alignItems="start" gap={2}>
-            {scripts
-              .sort((a, b) => {
-                let orderA;
-                let orderB;
-
-                // always make sure `main` is on top, respect order after
-                if (a.id === mainScript?.id) orderA = -Infinity;
-                else orderA = a.order === null ? Infinity : a.order;
-                if (b.id === mainScript?.id) orderB = -Infinity;
-                else orderB = b.order === null ? Infinity : b.order;
-                return orderA > orderB ? 1 : -1;
-              })
-              .map((script, i) => (
-                <Fragment key={script.id}>
-                  <NextLink
-                    href={`/app/${id}/edit/${script.filename}`}
-                    passHref
-                  >
-                    <Link
-                      size="sm"
-                      background="purple.200"
-                      borderRadius={2}
-                      px={2}
+      <RoomProvider
+        id={id}
+        initialPresence={{}}
+        initialStorage={initialStorage}
+      >
+        <ClientSideSuspense fallback={<div>Loading...</div>}>
+          {() => (
+            <>
+              <DefaultGrid>
+                <GridItem colSpan={7}>
+                  <HStack gap={2}>
+                    <Text
+                      fontWeight={600}
+                      borderBottom="1px solid"
+                      borderBottomColor={'purple.600'}
                     >
-                      <b>{script.name}</b>
-                    </Link>
-                  </NextLink>
-                  {i === 0 && (
-                    <Text size="sm" color="gray.500">
-                      Other functions
+                      Code
                     </Text>
-                  )}
-                </Fragment>
-              ))}
-          </VStack>
-          <Divider my={5} />
-          <AddScriptForm scripts={scripts} appId={id} />
-        </GridItem>
-        <GridItem colSpan={6}>
-          {Editor && (
-            <VStack>
-              <Box width="100%">
-                <FormControl>
-                  <Heading as="h2" size="lg">
-                    {currentScript?.name || 'Untitled'}
+                    <Text>|</Text>
+                    <Link onClick={onOpenAppRun}>Runs</Link>
+                    <Link onClick={onOpenSchedule}>Schedules</Link>
+                    <Link onClick={onOpenSecrets}>Secrets</Link>
+                  </HStack>
+                </GridItem>
+                <GridItem colSpan={2} justifyContent="end">
+                  <HStack>
+                    <Button onClick={shareApp}>Share</Button>
+                    <Button onClick={saveApp}>Save</Button>
+                    <Button
+                      type="button"
+                      paddingX={6}
+                      bgColor="purple.800"
+                      textColor="gray.100"
+                      onClick={runApp}
+                    >
+                      Run
+                    </Button>
+                  </HStack>
+                </GridItem>
+                <GridItem colSpan={3} />
+                <GridItem colSpan={3}>
+                  <Heading as="h1" size="md" pb={5}>
+                    {data.name}
                   </Heading>
-                  <Box
-                    style={{
-                      backgroundColor: '#1e1e1e',
-                      height: '100vh',
-                      color: '#1e1e1e',
-                    }}
-                  >
-                    <Editor
-                      key={currentScript?.filename}
-                      defaultLanguage="typescript"
-                      height="100vh"
-                      value={currentScript?.code || ''}
-                      theme="vs-dark"
-                      options={{
-                        minimap: { enabled: false },
-                      }}
-                      onChange={(value) =>
-                        onCodeChange({
-                          value,
-                          scripts,
-                          setScripts,
-                          currentScript,
-                          setInputParams,
-                        })
-                      }
-                    />
-                  </Box>
-                </FormControl>
-              </Box>
-            </VStack>
+                  <VStack alignItems="start" gap={2}>
+                    {scripts
+                      .sort((a, b) => {
+                        let orderA;
+                        let orderB;
+
+                        // always make sure `main` is on top, respect order after
+                        if (a.id === mainScript?.id) orderA = -Infinity;
+                        else orderA = a.order === null ? Infinity : a.order;
+                        if (b.id === mainScript?.id) orderB = -Infinity;
+                        else orderB = b.order === null ? Infinity : b.order;
+                        return orderA > orderB ? 1 : -1;
+                      })
+                      .map((script, i) => (
+                        <Fragment key={script.id}>
+                          <NextLink
+                            href={`/app/${id}/edit/${script.filename}`}
+                            passHref
+                          >
+                            <Link
+                              size="sm"
+                              background="purple.200"
+                              borderRadius={2}
+                              px={2}
+                            >
+                              <b>{script.name}</b>
+                            </Link>
+                          </NextLink>
+                          {i === 0 && (
+                            <Text size="sm" color="gray.500">
+                              Other functions
+                            </Text>
+                          )}
+                        </Fragment>
+                      ))}
+                  </VStack>
+                  <Divider my={5} />
+                  <AddScriptForm scripts={scripts} appId={id} />
+                </GridItem>
+                <GridItem colSpan={6}>
+                  {Editor && (
+                    <VStack>
+                      <Box width="100%">
+                        <FormControl>
+                          <Heading as="h2" size="lg">
+                            {currentScript?.name || 'Untitled'}
+                          </Heading>
+                          <Box
+                            style={{
+                              backgroundColor: '#1e1e1e',
+                              height: '100vh',
+                              color: '#1e1e1e',
+                            }}
+                          >
+                            <CollaborativeEditor
+                              currentScript={currentScript}
+                              onChange={(value) =>
+                                onCodeChange({
+                                  value,
+                                  scripts,
+                                  setInputParams,
+                                  setScripts,
+                                  currentScript,
+                                })
+                              }
+                            />
+                          </Box>
+                        </FormControl>
+                      </Box>
+                    </VStack>
+                  )}
+                </GridItem>
+                <GridItem colSpan={3}>
+                  <AppEditSidebar
+                    inputParamsFormMethods={inputParamsFormMethods}
+                    inputParams={inputParams}
+                    outputValue={outputValue}
+                    appEventsQuery={appEventsQuery}
+                  />
+                </GridItem>
+              </DefaultGrid>
+              <SecretsModal
+                isOpen={isOpenSecrets}
+                onClose={onCloseSecrets}
+                appId={id}
+              />
+
+              <ScheduleModal
+                isOpen={isOpenSchedule}
+                onClose={onCloseSchedule}
+                inputParams={inputParams}
+                appId={id}
+              />
+
+              <AppRunModal
+                isOpen={isOpenAppRun}
+                onClose={onCloseAppRun}
+                appId={id}
+              />
+            </>
           )}
-        </GridItem>
-        <GridItem colSpan={3}>
-          <AppEditSidebar
-            inputParamsFormMethods={inputParamsFormMethods}
-            inputParams={inputParams}
-            outputValue={outputValue}
-            appEventsQuery={appEventsQuery}
-          />
-        </GridItem>
-      </DefaultGrid>
-      <SecretsModal
-        isOpen={isOpenSecrets}
-        onClose={onCloseSecrets}
-        appId={id}
-      />
-
-      <ScheduleModal
-        isOpen={isOpenSchedule}
-        onClose={onCloseSchedule}
-        inputParams={inputParams}
-        appId={id}
-      />
-
-      <AppRunModal isOpen={isOpenAppRun} onClose={onCloseAppRun} appId={id} />
+        </ClientSideSuspense>
+      </RoomProvider>
     </SessionAuth>
   );
 };
