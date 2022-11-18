@@ -12,28 +12,6 @@ const defaultSelect = Prisma.validator<Prisma.AppEventSelect>()({
 });
 
 export const appEventRouter = createRouter()
-  // create
-  .mutation('add', {
-    input: z.object({
-      timestamp: z.string(),
-      deploymentId: z.string(),
-      eventType: z.string(),
-      eventPayload: z.object({
-        msg: z.string().optional(),
-        level: z.string().optional(),
-        boot_time: z.number().optional(),
-        exception: z.string().optional(),
-      }),
-    }),
-    async resolve({ input }) {
-      return prisma.appEvent.create({
-        data: {
-          ...input,
-        },
-        select: defaultSelect,
-      });
-    },
-  })
   // read
   .query('all', {
     input: z.object({

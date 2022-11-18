@@ -8,6 +8,7 @@ import { PassThrough } from 'stream';
 import ndjson from 'ndjson';
 import intoStream from 'into-stream';
 import { decryptFromBase64 } from '~/server/utils/crypto.utils';
+import { prisma } from '~/server/prisma';
 
 const X_DENO_CONFIG = 'x-deno-config';
 
@@ -132,7 +133,6 @@ export default async function handler(
       if (!args.deployment_id) throw new Error('Missing deployment_id');
       const { body, headers }: any = await originBoot({
         req,
-        res,
         id: args.deployment_id || '',
       });
       if (headers) {
@@ -146,7 +146,6 @@ export default async function handler(
       break;
     }
     case '/api/deno/v0/events': {
-      const caller = trpcRouter.createCaller(await createContext({ req, res }));
       res.status(200).send('OK');
       let bufferChunks: any[] = [];
       req.on('data', async (data) => {
@@ -159,11 +158,13 @@ export default async function handler(
         intoStream(message)
           .pipe(ndjson.parse())
           .on('data', async (event) => {
-            await caller.mutation('appEvent.add', {
-              deploymentId: event.deployment_id,
-              eventPayload: event.event,
-              eventType: event.event_type,
-              timestamp: event.timestamp,
+            await prisma.appEvent.create({
+              data: {
+                deploymentId: event.deployment_id,
+                eventPayload: event.event,
+                eventType: event.event_type,
+                timestamp: event.timestamp,
+              },
             });
           });
       });
@@ -255,14 +256,11 @@ const createEsZip = async ({ app, baseUrl }: { app: any; baseUrl: string }) => {
 /** @todo use a real deployment id instead of an app id. deployment id should be app id and version or something */
 async function originBoot({
   req,
-  res,
   id: deploymentId,
 }: {
   req: NextApiRequest;
-  res: NextApiResponse;
   id: string;
 }) {
-  const caller = trpcRouter.createCaller(await createContext({ req, res }));
   const [appId, version] = deploymentId.split('@');
 
   if (!appId || !version) {
@@ -270,12 +268,15 @@ async function originBoot({
     return;
   }
 
-  const app = await caller.query('app.byId', {
-    id: appId,
-  });
-
-  const secrets = await caller.query('secret.all', {
-    appId,
+  const app = await prisma.app.findFirst({
+    where: {
+      id: appId,
+    },
+    include: {
+      scripts: true,
+      scriptMain: true,
+      secrets: true,
+    },
   });
 
   if (!app) {
@@ -299,7 +300,7 @@ async function originBoot({
 
   const secretsMap: Record<string, string> = {};
 
-  secrets.forEach((secret: { key: string; encryptedValue: string }) => {
+  app.secrets.forEach((secret: { key: string; encryptedValue: string }) => {
     secretsMap[secret.key] = decryptFromBase64(
       secret.encryptedValue,
       process.env.ENCRYPTION_KEY,

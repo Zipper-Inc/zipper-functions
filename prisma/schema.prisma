@@ -42,9 +42,10 @@ model AppEditor {
   isOwner       Boolean
 
   app           App        @relation(fields: [appId], references: [id])
+  user          User       @relation(fields: [userId], references: [id])
 
   @@map("app_editors")
-  @@unique([userId, appId])
+  @@id([userId, appId])
 }
 
 model AppEvent {
@@ -155,14 +156,16 @@ model ThirdPartyAccount {
 
 model User {
   id           String    @id @default(uuid())
-  superTokenId String    @unique
+  superTokenId String?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime? @default(now())
   name         String?
   email        String    @unique
   picture      String?
+  registered   Boolean
 
   thirdPartyAccounts ThirdPartyAccount[]
+  editorOf           AppEditor[]
 
   @@map("users")
 }

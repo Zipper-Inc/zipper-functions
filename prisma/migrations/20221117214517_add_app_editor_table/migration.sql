@@ -10,3 +10,6 @@ CREATE UNIQUE INDEX "app_editors_userId_appId_key" ON "app_editors"("userId", "a
 
 -- AddForeignKey
 ALTER TABLE "app_editors" ADD CONSTRAINT "app_editors_appId_fkey" FOREIGN KEY ("appId") REFERENCES "apps"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "app_editors" ADD CONSTRAINT "app_editors_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

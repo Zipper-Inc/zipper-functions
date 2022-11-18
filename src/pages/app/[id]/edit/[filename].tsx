@@ -39,8 +39,14 @@ import { AppEditSidebar } from './app-edit-sidebar';
 import { trpc } from '~/utils/trpc';
 import ScheduleModal from '~/components/app/scheduleModal';
 import AppRunModal from '~/components/app/appRunModal';
-import { SessionAuth } from 'supertokens-auth-react/recipe/session';
+import {
+  SessionAuth,
+  useSessionContext,
+} from 'supertokens-auth-react/recipe/session';
 import { verifyAuthServerSide } from '~/utils/verifyAuth';
+import { LockIcon, UnlockIcon } from '@chakra-ui/icons';
+import ShareModal from '~/components/app/shareModal';
+import { SessionContextUpdate } from 'supertokens-auth-react/lib/build/recipe/session/types';
 
 const Editor = dynamic(() => import('@monaco-editor/react'), {
   ssr: false,
@@ -88,7 +94,10 @@ const onCodeChange = debounce(changeHandler, 500);
 
 const AppPage: NextPageWithLayout = () => {
   const utils = trpc.useContext();
-  const { query } = useRouter();
+  const { query, push } = useRouter();
+  const session = useSessionContext() as SessionContextUpdate & {
+    loading: boolean;
+  };
   const id = query.id as string;
   const filename = query.filename as string;
   const {
@@ -107,6 +116,12 @@ const AppPage: NextPageWithLayout = () => {
     isOpen: isOpenAppRun,
     onOpen: onOpenAppRun,
     onClose: onCloseAppRun,
+  } = useDisclosure();
+
+  const {
+    isOpen: isOpenShare,
+    onOpen: onOpenShare,
+    onClose: onCloseShare,
   } = useDisclosure();
 
   const appQuery = trpc.useQuery(['app.byId', { id }]);
@@ -128,6 +143,7 @@ const AppPage: NextPageWithLayout = () => {
   const [inputParams, setInputParams] = useState<InputParam[]>([]);
   const [outputValue, setOutputValue] = React.useState('');
   const [lastRunVersion, setLastRunVersion] = React.useState<string>();
+  const [isUserAnAppEditor, setIsUserAnAppEditor] = React.useState(false);
 
   const inputParamsFormMethods = useForm();
 
@@ -145,6 +161,11 @@ const AppPage: NextPageWithLayout = () => {
 
   useEffect(() => {
     setScripts(appQuery.data?.scripts || []);
+    setIsUserAnAppEditor(
+      !!appQuery.data?.editors.find(
+        (editor) => editor.user.superTokenId === session.userId,
+      ) || false,
+    );
   }, [appQuery.isSuccess]);
 
   useEffect(() => {
@@ -159,6 +180,12 @@ const AppPage: NextPageWithLayout = () => {
 
   const format = usePrettier();
 
+  const forkApp = trpc.useMutation('app.fork', {
+    async onSuccess(data) {
+      push(`/app/${data.id}/edit`);
+    },
+  });
+
   const saveApp = async () => {
     const formatted = scripts.map((script) => {
       if (script.filename !== currentScript?.filename) return script;
@@ -168,21 +195,23 @@ const AppPage: NextPageWithLayout = () => {
 
     setScripts(formatted);
 
-    editAppMutation.mutateAsync({
-      id,
-      data: {
-        scripts: formatted.map((script) => {
-          return {
-            id: script.id,
-            data: {
-              name: script.name,
-              description: script.description || '',
-              code: script.code,
-            },
-          };
-        }),
-      },
-    });
+    if (isUserAnAppEditor) {
+      editAppMutation.mutateAsync({
+        id,
+        data: {
+          scripts: formatted.map((script) => {
+            return {
+              id: script.id,
+              data: {
+                name: script.name,
+                description: script.description || '',
+                code: script.code,
+              },
+            };
+          }),
+        },
+      });
+    }
   };
 
   const getAppDataVersion = () => {
@@ -242,11 +271,6 @@ const AppPage: NextPageWithLayout = () => {
     });
   };
 
-  const shareApp = async () => {
-    await saveApp();
-    navigator.clipboard.writeText(getRunUrl());
-  };
-
   useCmdOrCtrl(
     'S',
     (e: Event) => {
@@ -274,7 +298,19 @@ const AppPage: NextPageWithLayout = () => {
   return (
     <SessionAuth>
       <DefaultGrid>
-        <GridItem colSpan={7}>
+        <GridItem colSpan={10} mb="5">
+          <Heading as="h1" size="md" pb={5}>
+            <HStack>
+              <Box>
+                {data.isPrivate ? (
+                  <LockIcon fill={'gray.300'} />
+                ) : (
+                  <UnlockIcon color={'gray.500'} boxSize={4} />
+                )}
+              </Box>
+              <Box>{data.name}</Box>
+            </HStack>
+          </Heading>
           <HStack gap={2}>
             <Text
               fontWeight={600}
@@ -283,19 +319,42 @@ const AppPage: NextPageWithLayout = () => {
             >
               Code
             </Text>
-            <Text>|</Text>
-            <Link onClick={onOpenAppRun}>Runs</Link>
-            <Link onClick={onOpenSchedule}>Schedules</Link>
-            <Link onClick={onOpenSecrets}>Secrets</Link>
+            {isUserAnAppEditor && (
+              <>
+                <Text>|</Text>
+                <Link onClick={onOpenAppRun}>Runs</Link>
+                <Link onClick={onOpenSchedule}>Schedules</Link>
+                <Link onClick={onOpenSecrets}>Secrets</Link>
+              </>
+            )}
           </HStack>
         </GridItem>
         <GridItem colSpan={2} justifyContent="end">
           <HStack>
-            <Button onClick={shareApp}>Share</Button>
-            <Button onClick={saveApp}>Save</Button>
+            {isUserAnAppEditor && (
+              <Button variant={'outline'} onClick={onOpenShare}>
+                Share
+              </Button>
+            )}
+            {isUserAnAppEditor && (
+              <Button variant={'outline'} onClick={saveApp}>
+                Save
+              </Button>
+            )}
+            {!isUserAnAppEditor && (
+              <Button
+                variant={'outline'}
+                onClick={() => {
+                  forkApp.mutateAsync({ id });
+                }}
+              >
+                Fork
+              </Button>
+            )}
             <Button
               type="button"
               paddingX={6}
+              variant="solid"
               bgColor="purple.800"
               textColor="gray.100"
               onClick={runApp}
@@ -304,12 +363,11 @@ const AppPage: NextPageWithLayout = () => {
             </Button>
           </HStack>
         </GridItem>
-        <GridItem colSpan={3} />
         <GridItem colSpan={3}>
-          <Heading as="h1" size="md" pb={5}>
-            {data.name}
-          </Heading>
           <VStack alignItems="start" gap={2}>
+            <Text size="sm" color="gray.500">
+              Functions
+            </Text>
             {scripts
               .sort((a, b) => {
                 let orderA;
@@ -329,19 +387,20 @@ const AppPage: NextPageWithLayout = () => {
                     passHref
                   >
                     <Link
-                      size="sm"
-                      background="purple.200"
-                      borderRadius={2}
+                      fontSize="sm"
+                      fontWeight="light"
+                      w="100%"
                       px={2}
+                      background={
+                        currentScript?.id === script.id
+                          ? 'purple.100'
+                          : 'transparent'
+                      }
+                      borderRadius={2}
                     >
-                      <b>{script.name}</b>
+                      <b>{script.filename}</b>
                     </Link>
                   </NextLink>
-                  {i === 0 && (
-                    <Text size="sm" color="gray.500">
-                      Other functions
-                    </Text>
-                  )}
                 </Fragment>
               ))}
           </VStack>
@@ -353,9 +412,6 @@ const AppPage: NextPageWithLayout = () => {
             <VStack>
               <Box width="100%">
                 <FormControl>
-                  <Heading as="h2" size="lg">
-                    {currentScript?.name || 'Untitled'}
-                  </Heading>
                   <Box
                     style={{
                       backgroundColor: '#1e1e1e',
@@ -411,6 +467,11 @@ const AppPage: NextPageWithLayout = () => {
       />
 
       <AppRunModal isOpen={isOpenAppRun} onClose={onCloseAppRun} appId={id} />
+      <ShareModal
+        isOpen={isOpenShare}
+        onClose={onCloseShare}
+        appId={appQuery.data.id}
+      />
     </SessionAuth>
   );
 };
