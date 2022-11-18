@@ -63,8 +63,9 @@ export const backendConfig = (): TypeInput => {
                   const { id, email } = response.user;
                   await prisma.user.create({
                     data: {
-                      superTokenId: id,
                       email,
+                      registered: true,
+                      superTokenId: id,
                     },
                   });
                 }
@@ -86,11 +87,12 @@ export const backendConfig = (): TypeInput => {
 
                   const newUser = await prisma.user.upsert({
                     where: {
-                      superTokenId: response.user.id,
+                      email: response.user.email,
                     },
                     create: {
-                      superTokenId: response.user.id,
                       email: response.user.email,
+                      superTokenId: response.user.id,
+                      registered: true,
                       thirdPartyAccounts: {
                         create: accountUpdateArgs(response),
                       },

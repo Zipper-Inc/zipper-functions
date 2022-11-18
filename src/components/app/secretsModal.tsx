@@ -32,9 +32,15 @@ type Props = {
   isOpen: boolean;
   onClose: () => void;
   appId: string;
+  editable: boolean;
 };
 
-const SecretsModal: React.FC<Props> = ({ isOpen, onClose, appId }) => {
+const SecretsModal: React.FC<Props> = ({
+  isOpen,
+  onClose,
+  appId,
+  editable,
+}) => {
   const utils = trpc.useContext();
   const { register, handleSubmit, reset, control } = useForm({
     defaultValues: {
@@ -96,15 +102,11 @@ const SecretsModal: React.FC<Props> = ({ isOpen, onClose, appId }) => {
             <LockIcon />
             <Input
               placeholder="Key"
-              {...register(`secrets.${index}.key`, {
-                required: true,
-              })}
+              {...register(`secrets.${index}.key`, {})}
             />
             <Input
               placeholder="Value"
-              {...register(`secrets.${index}.value`, {
-                required: true,
-              })}
+              {...register(`secrets.${index}.value`, {})}
             />
 
             <IconButton
@@ -129,17 +131,19 @@ const SecretsModal: React.FC<Props> = ({ isOpen, onClose, appId }) => {
               type={'password'}
               value="we're not showing you this"
             />
-            <IconButton
-              variant="ghost"
-              colorScheme="red"
-              aria-label="delete"
-              onClick={() => {
-                setSecretToDelete(existingSecret);
-                onOpen();
-              }}
-            >
-              <FiTrash />
-            </IconButton>
+            {editable && (
+              <IconButton
+                variant="ghost"
+                colorScheme="red"
+                aria-label="delete"
+                onClick={() => {
+                  setSecretToDelete(existingSecret);
+                  onOpen();
+                }}
+              >
+                <FiTrash />
+              </IconButton>
+            )}
           </>
         )}
         <AlertDialog
@@ -196,12 +200,15 @@ const SecretsModal: React.FC<Props> = ({ isOpen, onClose, appId }) => {
       <ModalContent>
         <form
           onSubmit={handleSubmit((data) => {
+            console.log(data);
             data.secrets.map((secret: Record<'key' | 'value', string>) => {
-              addSecret.mutate({
-                key: secret.key,
-                value: secret.value,
-                appId,
-              });
+              if (secret.key && secret.value) {
+                addSecret.mutate({
+                  key: secret.key,
+                  value: secret.value,
+                  appId,
+                });
+              }
             });
 
             reset();
@@ -231,6 +238,7 @@ const SecretsModal: React.FC<Props> = ({ isOpen, onClose, appId }) => {
                     </HStack>
                   ))}
                 {register &&
+                  editable &&
                   fields.map((field, index) => (
                     <HStack key={field.id}>
                       <Edit register={register} index={index} />
@@ -241,27 +249,29 @@ const SecretsModal: React.FC<Props> = ({ isOpen, onClose, appId }) => {
           </ModalBody>
 
           <ModalFooter mt={4}>
-            <Button
-              variant="outline"
-              mr={3}
-              onClick={() => {
-                append({
-                  key: '',
-                  value: '',
-                });
-              }}
-            >
-              <AddIcon mr={2} boxSize={3} />
-              Add Variable
-            </Button>
+            {editable && (
+              <Button
+                variant="outline"
+                mr={3}
+                onClick={() => {
+                  append({
+                    key: '',
+                    value: '',
+                  });
+                }}
+              >
+                <AddIcon mr={2} boxSize={3} />
+                Add Variable
+              </Button>
+            )}
             <Button
               type="submit"
               colorScheme="blue"
-              onClick={() => {
-                onClose();
-              }}
+              // onClick={() => {
+              //   onClose();
+              // }}
             >
-              Save
+              {editable ? 'Save' : 'Close'}
             </Button>
           </ModalFooter>
         </form>

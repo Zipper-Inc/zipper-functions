@@ -11,12 +11,16 @@ generator client {
 }
 
 model App {
-  id          String    @id @default(uuid())
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime? @default(now())
-  name        String
-  description String?
-  datastore   Json?
+  id              String    @id @default(uuid())
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime? @default(now())
+  name            String
+  description     String?
+  datastore       Json?
+  isPrivate       Boolean   @default(true)
+  submissionState Int       @default(0)
+  categories      String[]
+  parentId        String?
 
   scriptMain ScriptMain?
 
@@ -24,12 +28,28 @@ model App {
   secrets   Secret[]
   schedules Schedule[]
   runs      AppRun[]
+  editors   AppEditor[]
+
+  parent  App?  @relation("AppForks", fields: [parentId], references: [id])
+  forks   App[] @relation("AppForks")
 
   @@map("apps")
 }
 
+model AppEditor {
+  userId        String
+  appId         String
+  isOwner       Boolean
+
+  app           App        @relation(fields: [appId], references: [id])
+  user          User       @relation(fields: [userId], references: [id])
+
+  @@map("app_editors")
+  @@id([userId, appId])
+}
+
 model AppEvent {
-  id           String    @id @default(uuid())
+  id           String @id @default(uuid())
   timestamp    String
   deploymentId String
   eventType    String
@@ -39,17 +59,17 @@ model AppEvent {
 }
 
 model AppRun {
-  id            String    @id @default(uuid())
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime? @default(now())
-  success       Boolean
-  deploymentId  String
-  scheduled     Boolean   @default(false)
-  result        Json?
-  inputs        Json?
+  id           String    @id @default(uuid())
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime? @default(now())
+  success      Boolean
+  deploymentId String
+  scheduled    Boolean   @default(false)
+  result       Json?
+  inputs       Json?
 
-  appId         String
-  app           App?   @relation(fields: [appId], references: [id])
+  appId String
+  app   App?   @relation(fields: [appId], references: [id])
 
   @@map("apps_runs")
 }
@@ -68,11 +88,11 @@ model Secret {
 }
 
 model Schedule {
-  id             String    @id @default(uuid())
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime? @default(now())
-  crontab        String
-  inputs         Json?
+  id        String    @id @default(uuid())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @default(now())
+  crontab   String
+  inputs    Json?
 
   appId String
   app   App?   @relation(fields: [appId], references: [id])
@@ -118,32 +138,34 @@ model ResourceInstance {
 }
 
 model ThirdPartyAccount {
-  id         String    @id @default(uuid())
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime? @default(now())
-  userId     String
-  provider   String
-  providerAccountId String  @unique
+  id                String    @id @default(uuid())
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime? @default(now())
+  userId            String
+  provider          String
+  providerAccountId String    @unique
   scope             String?
-  id_token          String? @db.Text
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
+  id_token          String?   @db.Text
+  refresh_token     String?   @db.Text
+  access_token      String?   @db.Text
   expires_at        DateTime?
-  user       User      @relation(fields: [userId], references: [id])
+  user              User      @relation(fields: [userId], references: [id])
 
   @@map("third_party_accounts")
 }
 
 model User {
-  id            String    @id @default(uuid())
-  superTokenId String @unique
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime? @default(now())
-  name          String?
-  email         String    @unique
-  picture       String?
+  id           String    @id @default(uuid())
+  superTokenId String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime? @default(now())
+  name         String?
+  email        String    @unique
+  picture      String?
+  registered   Boolean
 
-  thirdPartyAccounts      ThirdPartyAccount[]
+  thirdPartyAccounts ThirdPartyAccount[]
+  editorOf           AppEditor[]
 
   @@map("users")
 }

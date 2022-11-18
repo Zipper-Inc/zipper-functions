@@ -2,6 +2,7 @@ import { Prisma } from '@prisma/client';
 import { z } from 'zod';
 import { prisma } from '~/server/prisma';
 import { createRouter } from '../createRouter';
+import { hasAppReadPermission } from '../utils/authz.utils';
 
 const defaultSelect = Prisma.validator<Prisma.AppRunSelect>()({
   id: true,
@@ -38,7 +39,11 @@ export const appRunRouter = createRouter()
       appId: z.string(),
       limit: z.number().optional(),
     }),
-    async resolve({ input }) {
+    async resolve({ ctx, input }) {
+      await hasAppReadPermission({
+        superTokenId: ctx.superTokenId,
+        appId: input.appId,
+      });
       /**
        * For pagination you can have a look at this docs site
        * @link https://trpc.io/docs/useInfiniteQuery
@@ -52,24 +57,5 @@ export const appRunRouter = createRouter()
         orderBy: { createdAt: 'desc' },
         select: defaultSelect,
       });
-    },
-  })
-  // delete
-  .mutation('delete', {
-    input: z.object({
-      id: z.string(),
-      appId: z.string(),
-    }),
-    async resolve({ input }) {
-      await prisma.appRun.deleteMany({
-        where: {
-          id: input.id,
-          appId: input.appId,
-        },
-      });
-
-      return {
-        id: input.id,
-      };
     },
   });

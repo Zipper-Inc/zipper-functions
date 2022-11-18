@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { prisma } from '~/server/prisma';
 import slugify from '~/utils/slugify';
 import { createRouter } from '../createRouter';
+import { hasAppEditPermission } from '../utils/authz.utils';
 
 const defaultSelect = Prisma.validator<Prisma.ScriptSelect>()({
   id: true,
@@ -24,8 +25,9 @@ export const scriptRouter = createRouter()
       code: z.string(),
       order: z.number(),
     }),
-    async resolve({ input }) {
+    async resolve({ ctx, input }) {
       const { appId, ...data } = input;
+      await hasAppEditPermission({ superTokenId: ctx.superTokenId, appId });
 
       return prisma.script.create({
         data: {
@@ -35,19 +37,6 @@ export const scriptRouter = createRouter()
           },
           filename: `${slugify(data.name)}.ts`,
         },
-        select: defaultSelect,
-      });
-    },
-  })
-  // read
-  .query('all', {
-    async resolve() {
-      /**
-       * For pagination you can have a look at this docs site
-       * @link https://trpc.io/docs/useInfiniteQuery
-       */
-
-      return prisma.script.findMany({
         select: defaultSelect,
       });
     },
@@ -82,9 +71,15 @@ export const scriptRouter = createRouter()
   // delete
   .mutation('delete', {
     input: z.object({
-      id: z.string(),
+      id: z.string().uuid(),
+      appId: z.string().uuid(),
     }),
-    async resolve({ input }) {
+    async resolve({ ctx, input }) {
+      await hasAppEditPermission({
+        superTokenId: ctx.superTokenId,
+        appId: input.appId,
+      });
+
       await prisma.script.deleteMany({
         where: {
           id: input.id,

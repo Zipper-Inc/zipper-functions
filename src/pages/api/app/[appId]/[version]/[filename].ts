@@ -1,7 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { trpcRouter } from '~/server/routers/_app';
-import { createContext } from '~/server/context';
 import { wrapMainFunction } from '~/pages/api/deno/v0/[rpc]';
+import { prisma } from '~/server/prisma';
 
 export default async function handler(
   req: NextApiRequest,
@@ -22,9 +21,9 @@ export default async function handler(
   if (!filename)
     throw new Error("No filename so I can't look up the source code for you");
 
-  const caller = trpcRouter.createCaller(await createContext({ req, res }));
-  const app = await caller.query('app.byId', {
-    id: appId,
+  const app = await prisma.app.findFirst({
+    where: { id: appId },
+    include: { scripts: true },
   });
 
   if (!app) throw new Error('No app found. Maybe your gave me a bad app id?');

@@ -76,7 +76,7 @@
     "react-dom": "^18.2.0",
     "react-hook-form": "^7.36.0",
     "react-hotkeys-hook": "3.4.7",
-    "react-icons": "^4.4.0",
+    "react-icons": "^4.6.0",
     "react-query": "^3.39.2",
     "signale": "^1.4.0",
     "slugify": "^1.6.5",
@@ -84,7 +84,6 @@
     "superjson": "^1.7.4",
     "supertokens-auth-react": "^0.27.1",
     "supertokens-node": "^12.0.5",
-    "ts-stream": "^3.0.0",
     "typescript": "4.8.3",
     "vm2": "^3.9.11",
     "zod": "^3.0.0"

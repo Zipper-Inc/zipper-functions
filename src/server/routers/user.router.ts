@@ -14,15 +14,16 @@ export const userRouter = createRouter()
   // read
   .query('bySuperTokenId', {
     input: z.object({
-      superTokenId: z.string(),
+      superTokenId: z.string().optional(),
     }),
     async resolve({ input }) {
+      if (!input.superTokenId) return;
       /**
        * For pagination you can have a look at this docs site
        * @link https://trpc.io/docs/useInfiniteQuery
        */
 
-      return prisma.user.findUnique({
+      return prisma.user.findFirst({
         where: {
           superTokenId: input.superTokenId,
         },

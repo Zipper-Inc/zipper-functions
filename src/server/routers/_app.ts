@@ -4,12 +4,14 @@
 import { createRouter } from '../createRouter';
 import superjson from 'superjson';
 import { appRouter } from './app.router';
-import { scriptRouter } from './scripts.router';
+import { scriptRouter } from './script.router';
 import { appEventRouter } from './appEvent.router';
 import { secretRouter } from './secret.router';
 import { scheduleRouter } from './schedule.router';
 import { appRunRouter } from './appRun.router';
 import { userRouter } from './user.router';
+import { appEditorRouter } from './appEditor.router';
+import { TRPCError } from '@trpc/server';
 
 /**
  * Create your application's root router
@@ -37,6 +39,7 @@ export const trpcRouter = createRouter()
     },
   })
   .merge('app.', appRouter)
+  .merge('appEditor.', appEditorRouter)
   .merge('appEvent.', appEventRouter)
   .merge('appRun.', appRunRouter)
   .merge('secret.', secretRouter)

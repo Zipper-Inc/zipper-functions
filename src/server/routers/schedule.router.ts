@@ -1,9 +1,14 @@
 import { Prisma } from '@prisma/client';
+import { TRPCError } from '@trpc/server';
 import parser from 'cron-parser';
 import { z } from 'zod';
 import { prisma } from '~/server/prisma';
 import { createRouter } from '../createRouter';
 import { queues } from '../queue';
+import {
+  hasAppEditPermission,
+  hasAppReadPermission,
+} from '../utils/authz.utils';
 
 const defaultSelect = Prisma.validator<Prisma.ScheduleSelect>()({
   id: true,
@@ -19,7 +24,12 @@ export const scheduleRouter = createRouter()
       crontab: z.string(),
       inputs: z.record(z.any()).optional(),
     }),
-    async resolve({ input }) {
+    async resolve({ ctx, input }) {
+      await hasAppEditPermission({
+        superTokenId: ctx.superTokenId,
+        appId: input.appId,
+      });
+
       const { appId, crontab, inputs } = input;
 
       try {
@@ -51,7 +61,11 @@ export const scheduleRouter = createRouter()
     input: z.object({
       appId: z.string(),
     }),
-    async resolve({ input }) {
+    async resolve({ ctx, input }) {
+      await hasAppReadPermission({
+        superTokenId: ctx.superTokenId,
+        appId: input.appId,
+      });
       /**
        * For pagination you can have a look at this docs site
        * @link https://trpc.io/docs/useInfiniteQuery
@@ -71,7 +85,12 @@ export const scheduleRouter = createRouter()
       id: z.string(),
       appId: z.string(),
     }),
-    async resolve({ input }) {
+    async resolve({ ctx, input }) {
+      await hasAppEditPermission({
+        superTokenId: ctx.superTokenId,
+        appId: input.appId,
+      });
+
       await prisma.schedule.deleteMany({
         where: {
           id: input.id,

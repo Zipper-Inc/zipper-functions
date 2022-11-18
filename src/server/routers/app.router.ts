@@ -2,6 +2,7 @@ import { Prisma } from '@prisma/client';
 import { z } from 'zod';
 import { prisma } from '~/server/prisma';
 import { createRouter } from '../createRouter';
+import { hasAppEditPermission } from '../utils/authz.utils';
 
 const defaultSelect = Prisma.validator<Prisma.AppSelect>()({
   id: true,
@@ -10,6 +11,8 @@ const defaultSelect = Prisma.validator<Prisma.AppSelect>()({
   createdAt: true,
   updatedAt: true,
   scriptMain: true,
+  isPrivate: true,
+  parent: true,
 });
 
 export const appRouter = createRouter()
@@ -18,10 +21,16 @@ export const appRouter = createRouter()
     input: z.object({
       name: z.string().min(3).max(255),
     }),
-    async resolve({ input }) {
+    async resolve({ input, ctx }) {
       const app = await prisma.app.create({
         data: {
           ...input,
+          editors: {
+            create: {
+              userId: ctx.superTokenId || '',
+              isOwner: true,
+            },
+          },
         },
         select: defaultSelect,
       });
@@ -57,6 +66,7 @@ export const appRouter = createRouter()
        */
 
       return prisma.app.findMany({
+        where: { isPrivate: false },
         select: defaultSelect,
       });
     },
@@ -65,14 +75,26 @@ export const appRouter = createRouter()
     input: z.object({
       id: z.string(),
     }),
-    async resolve({ input }) {
+    async resolve({ ctx, input }) {
       return prisma.app.findFirstOrThrow({
         where: {
           id: input.id,
+          OR: [
+            { isPrivate: false },
+            {
+              editors: {
+                some: { user: { superTokenId: ctx.superTokenId } },
+              },
+            },
+          ],
         },
         select: {
           ...defaultSelect,
           scripts: true,
+          scriptMain: { include: { script: true } },
+          editors: {
+            include: { user: { select: { superTokenId: true } } },
+          },
         },
       });
     },
@@ -82,7 +104,7 @@ export const appRouter = createRouter()
     input: z.object({
       id: z.string().uuid(),
     }),
-    async resolve({ input }) {
+    async resolve({ input, ctx }) {
       const { id } = input;
 
       const app = await prisma.app.findFirstOrThrow({
@@ -90,10 +112,21 @@ export const appRouter = createRouter()
         include: { scripts: true, scriptMain: true },
       });
 
+      const user = await prisma.user.findFirstOrThrow({
+        where: { superTokenId: ctx.superTokenId },
+      });
+
       const fork = await prisma.app.create({
         data: {
           name: app.name,
           description: app.description,
+          parentId: app.id,
+          editors: {
+            create: {
+              userId: user.id,
+              isOwner: true,
+            },
+          },
         },
         select: defaultSelect,
       });
@@ -102,6 +135,7 @@ export const appRouter = createRouter()
         const forkScript = await prisma.script.create({
           data: {
             ...script,
+            id: undefined,
             inputSchema: JSON.stringify(script.inputSchema),
             outputSchema: JSON.stringify(script.outputSchema),
             appId: fork.id,
@@ -132,6 +166,7 @@ export const appRouter = createRouter()
       data: z.object({
         name: z.string().min(3).max(255).optional(),
         description: z.string().optional(),
+        isPrivate: z.boolean().optional(),
         scripts: z
           .array(
             z.object({
@@ -146,7 +181,12 @@ export const appRouter = createRouter()
           .optional(),
       }),
     }),
-    async resolve({ input }) {
+    async resolve({ input, ctx }) {
+      await hasAppEditPermission({
+        superTokenId: ctx.superTokenId,
+        appId: input.id,
+      });
+
       const { id, data } = input;
       const { scripts, ...rest } = data;
 
@@ -176,10 +216,11 @@ export const appRouter = createRouter()
     input: z.object({
       id: z.string(),
     }),
-    async resolve({ input }) {
+    async resolve({ ctx, input }) {
       await prisma.app.deleteMany({
         where: {
           id: input.id,
+          editors: { some: { userId: ctx.superTokenId } },
         },
       });
 

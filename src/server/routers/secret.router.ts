@@ -2,6 +2,10 @@ import { Prisma } from '@prisma/client';
 import { z } from 'zod';
 import { prisma } from '~/server/prisma';
 import { createRouter } from '../createRouter';
+import {
+  hasAppEditPermission,
+  hasAppReadPermission,
+} from '../utils/authz.utils';
 import { encryptToBase64 } from '../utils/crypto.utils';
 
 const defaultSelect = Prisma.validator<Prisma.SecretSelect>()({
@@ -19,7 +23,11 @@ export const secretRouter = createRouter()
       key: z.string(),
       value: z.string(),
     }),
-    async resolve({ input }) {
+    async resolve({ ctx, input }) {
+      await hasAppEditPermission({
+        superTokenId: ctx.superTokenId,
+        appId: input.appId,
+      });
       if (!process.env.ENCRYPTION_KEY) {
         throw new Error('ENCRYPTION_KEY not set');
       }
@@ -43,7 +51,11 @@ export const secretRouter = createRouter()
     input: z.object({
       appId: z.string(),
     }),
-    async resolve({ input }) {
+    async resolve({ ctx, input }) {
+      await hasAppReadPermission({
+        superTokenId: ctx.superTokenId,
+        appId: input.appId,
+      });
       /**
        * For pagination you can have a look at this docs site
        * @link https://trpc.io/docs/useInfiniteQuery
@@ -63,7 +75,11 @@ export const secretRouter = createRouter()
       id: z.string(),
       appId: z.string(),
     }),
-    async resolve({ input }) {
+    async resolve({ ctx, input }) {
+      await hasAppEditPermission({
+        superTokenId: ctx.superTokenId,
+        appId: input.appId,
+      });
       await prisma.secret.deleteMany({
         where: {
           id: input.id,

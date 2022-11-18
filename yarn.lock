@@ -6293,7 +6293,7 @@ react-hotkeys-hook@3.4.7:
   dependencies:
     hotkeys-js "3.9.4"
 
-react-icons@^4.4.0:
+react-icons@^4.6.0:
   version "4.6.0"
   resolved "https://registry.yarnpkg.com/react-icons/-/react-icons-4.6.0.tgz#f83eda179af5d02c047449a20b702c858653d397"
   integrity sha512-rR/L9m9340yO8yv1QT1QurxWQvWpbNHqVX0fzMln2HEb9TEIrQRGsqiNFQfiv9/JEUbyHmHPlNTB2LWm2Ttz0g==
@@ -7312,13 +7312,6 @@ ts-node@^10.9.1:
     make-error "^1.1.1"
     v8-compile-cache-lib "^3.0.1"
     yn "3.1.1"
-
-ts-stream@^3.0.0:
-  version "3.0.0"
-  resolved "https://registry.yarnpkg.com/ts-stream/-/ts-stream-3.0.0.tgz#7f3c1749a8345695cb43ca10cf64c96908f909dd"
-  integrity sha512-inSYkFNWYRDKu+fEriDeTV8KP6BLx/CujUb047sIuMH1YUZcUdjYpwiGsXVyWIEREOFb02e0z6b/cK8lG1i4cw==
-  dependencies:
-    "@types/node" "*"
 
 tsconfig-paths@^3.14.1:
   version "3.14.1"
