@@ -71,6 +71,16 @@ export const appRouter = createRouter()
       });
     },
   })
+  .query('byAuthedUser', {
+    async resolve({ ctx }) {
+      return prisma.app.findMany({
+        where: {
+          editors: { some: { user: { superTokenId: ctx.superTokenId } } },
+        },
+        select: defaultSelect,
+      });
+    },
+  })
   .query('byId', {
     input: z.object({
       id: z.string(),

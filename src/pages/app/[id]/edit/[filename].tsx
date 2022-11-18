@@ -84,8 +84,10 @@ function CollaborativeEditor({ currentScript, onChange }: any) {
         minimap: { enabled: false },
       }}
       onChange={(v) => {
-        mutate(v);
-        onChange(v);
+        if (v) {
+          mutate(v);
+          onChange(v);
+        }
       }}
     />
   );

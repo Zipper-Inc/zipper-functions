@@ -10,6 +10,7 @@ import {
   Grid as InnerGrid,
   GridItem,
   Heading,
+  HStack,
   Input,
   Link,
   VStack,
@@ -17,9 +18,17 @@ import {
 import { useForm } from 'react-hook-form';
 import React from 'react';
 import DefaultGrid from '~/components/default-grid';
+import { useSessionContext } from 'supertokens-auth-react/recipe/session';
+import { HiSparkles } from 'react-icons/hi';
+import { useRouter } from 'next/router';
 
 const IndexPage: NextPageWithLayout = () => {
   const utils = trpc.useContext();
+  const router = useRouter();
+  const session = useSessionContext() as {
+    userId: string;
+    loading: boolean;
+  };
   const appQuery = trpc.useQuery(['app.all']);
   const addApp = trpc.useMutation('app.add', {
     async onSuccess() {
@@ -40,6 +49,14 @@ const IndexPage: NextPageWithLayout = () => {
     <DefaultGrid>
       <GridItem colSpan={3}>
         <VStack alignItems="start" spacing={2} w={280}>
+          {session.userId && (
+            <HStack>
+              <HiSparkles />
+              <Link fontWeight={600} onClick={() => router.push('/mine')}>
+                My apps
+              </Link>
+            </HStack>
+          )}
           <Link href="#">Popular Apps</Link>
           <Link href="#">AI Magic</Link>
           <Link href="#">Note Taking</Link>
