@@ -1,3 +1,4 @@
+import { CopyIcon } from '@chakra-ui/icons';
 import {
   Button,
   Modal,
@@ -15,10 +16,11 @@ import {
   Input,
   Link,
   Switch,
-  FormControl,
+  Avatar,
 } from '@chakra-ui/react';
 import { FieldValues, FormProvider, useForm } from 'react-hook-form';
 import { trpc } from '~/utils/trpc';
+import { HiGlobe } from 'react-icons/hi';
 
 type Props = {
   isOpen: boolean;
@@ -35,6 +37,12 @@ const ShareModal: React.FC<Props> = ({ isOpen, onClose, appId }) => {
     async onSuccess() {
       // refetches posts after a post is added
       editorQuery.refetch();
+    },
+  });
+
+  const setAppVisibility = trpc.useMutation('app.edit', {
+    onSuccess() {
+      appQuery.refetch();
     },
   });
 
@@ -80,18 +88,52 @@ const ShareModal: React.FC<Props> = ({ isOpen, onClose, appId }) => {
                           <Button type="submit">Send invite</Button>
                         </HStack>
                       </form>
-                      <Box>
+                      <Box w="full">
                         <VStack align="start">
-                          <HStack>
-                            <Text>Anyone with the link</Text>
+                          <HStack pt={4} w="full">
+                            <Box mr="auto">
+                              <HStack>
+                                <HiGlobe />
+                                <Text>
+                                  Anyone with the link can view the app
+                                </Text>
+                              </HStack>
+                            </Box>
                             {appQuery.data && (
-                              <Switch isChecked={!appQuery.data.isPrivate} />
+                              <Switch
+                                isChecked={!appQuery.data.isPrivate}
+                                onChange={async () => {
+                                  await setAppVisibility.mutateAsync({
+                                    id: appId,
+                                    data: {
+                                      isPrivate: !appQuery.data.isPrivate,
+                                    },
+                                  });
+                                }}
+                                ml="auto"
+                              />
                             )}
                           </HStack>
-                          {editorQuery.data &&
-                            editorQuery.data.map((editor) => (
-                              <Text>{editor.user.email}</Text>
-                            ))}
+                          <Text color="gray.500" fontSize="sm" pt="4">
+                            Existing editors
+                          </Text>
+                          <Box p="2">
+                            {editorQuery.data &&
+                              editorQuery.data.map((editor) => (
+                                <Box fontSize="sm" key={editor.user.id}>
+                                  <HStack>
+                                    <Avatar
+                                      size="xs"
+                                      src={editor.user.picture || undefined}
+                                      name={
+                                        editor.user.name || editor.user.email
+                                      }
+                                    />
+                                    <Text>{editor.user.email}</Text>
+                                  </HStack>
+                                </Box>
+                              ))}
+                          </Box>
                         </VStack>
                       </Box>
                     </VStack>
@@ -101,7 +143,8 @@ const ShareModal: React.FC<Props> = ({ isOpen, onClose, appId }) => {
             </ModalBody>
 
             <ModalFooter mt={4}>
-              <Link href="#" mr="auto">
+              <Link href="#" mr="auto" color={'blue.700'}>
+                <CopyIcon mr={1} mb={1} />
                 Copy link
               </Link>
               <Button

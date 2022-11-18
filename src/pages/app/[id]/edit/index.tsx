@@ -12,7 +12,7 @@ const EditPage: NextPageWithLayout = () => {
 
   useEffect(() => {
     if (appQuery.data) {
-      router.push(
+      router.replace(
         `/app/${appQuery.data.id}/edit/${appQuery.data.scriptMain?.script.filename}`,
       );
     }
@@ -20,5 +20,7 @@ const EditPage: NextPageWithLayout = () => {
 
   return <></>;
 };
+
+EditPage.skipAuth = true;
 
 export default EditPage;

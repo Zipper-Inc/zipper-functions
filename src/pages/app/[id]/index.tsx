@@ -8,7 +8,9 @@ import {
 } from '@chakra-ui/react';
 import NextError from 'next/error';
 import { useRouter } from 'next/router';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { SessionContextUpdate } from 'supertokens-auth-react/lib/build/recipe/session/types';
+import { useSessionContext } from 'supertokens-auth-react/recipe/session';
 import DefaultGrid from '~/components/default-grid';
 import { NextPageWithLayout } from '~/pages/_app';
 import { trpc } from '~/utils/trpc';
@@ -17,6 +19,20 @@ const AppPage: NextPageWithLayout = () => {
   const router = useRouter();
   const id = useRouter().query.id as string;
   const appQuery = trpc.useQuery(['app.byId', { id }]);
+
+  const session = useSessionContext() as SessionContextUpdate & {
+    loading: boolean;
+  };
+
+  const [isUserAnAppEditor, setIsUserAnAppEditor] = useState(false);
+
+  useEffect(() => {
+    setIsUserAnAppEditor(
+      !!appQuery.data?.editors.find(
+        (editor) => editor.user.superTokenId === session.userId,
+      ) || false,
+    );
+  }, [appQuery.isSuccess]);
 
   const forkApp = trpc.useMutation('app.fork', {
     async onSuccess(data) {
@@ -36,6 +52,13 @@ const AppPage: NextPageWithLayout = () => {
   if (appQuery.status !== 'success') {
     return <></>;
   }
+
+  if (appQuery.data.isPrivate) {
+    if (!isUserAnAppEditor) {
+      return <NextError statusCode={404} />;
+    }
+  }
+
   const { data } = appQuery;
   return (
     <DefaultGrid>
@@ -58,7 +81,13 @@ const AppPage: NextPageWithLayout = () => {
                 bgColor="purple.800"
                 textColor="gray.100"
                 onClick={() => {
-                  forkApp.mutateAsync({ id });
+                  if (session?.userId) {
+                    forkApp.mutateAsync({ id });
+                  } else {
+                    router.push(
+                      `/auth?redirectToPath=${window.location.pathname}`,
+                    );
+                  }
                 }}
               >
                 Fork
@@ -73,7 +102,7 @@ const AppPage: NextPageWithLayout = () => {
                   router.push(`/app/${id}/edit/main.ts`);
                 }}
               >
-                Edit
+                View
               </Button>
             </HStack>
           </VStack>

@@ -43,18 +43,14 @@ import {
   SessionAuth,
   useSessionContext,
 } from 'supertokens-auth-react/recipe/session';
-import { verifyAuthServerSide } from '~/utils/verifyAuth';
 import { LockIcon, UnlockIcon } from '@chakra-ui/icons';
 import ShareModal from '~/components/app/shareModal';
 import { SessionContextUpdate } from 'supertokens-auth-react/lib/build/recipe/session/types';
+import ForkIcon from '~/components/svg/forkIcon';
 
 const Editor = dynamic(() => import('@monaco-editor/react'), {
   ssr: false,
 });
-
-export async function getServerSideProps(context: any) {
-  return verifyAuthServerSide(context.req, context.res);
-}
 
 async function parseInput(code?: string): Promise<InputParam[]> {
   const res: ParseInputResponse = await fetch('/api/__/parse-input', {
@@ -295,19 +291,32 @@ const AppPage: NextPageWithLayout = () => {
 
   const { data } = appQuery;
 
-  return (
-    <SessionAuth>
+  const playground = () => (
+    <>
       <DefaultGrid>
         <GridItem colSpan={10} mb="5">
           <Heading as="h1" size="md" pb={5}>
             <HStack>
               <Box>
                 {data.isPrivate ? (
-                  <LockIcon fill={'gray.300'} />
+                  <LockIcon fill={'gray.500'} boxSize={4} mb={1} />
                 ) : (
-                  <UnlockIcon color={'gray.500'} boxSize={4} />
+                  <UnlockIcon color={'gray.500'} boxSize={4} mb={1} />
                 )}
               </Box>
+              {data.parent && (
+                <Box>
+                  <Link
+                    onClick={() => {
+                      if (data.parent) {
+                        push(`/app/${data.parent.id}/edit`);
+                      }
+                    }}
+                  >
+                    <ForkIcon fill={'gray.300'} size={16} />
+                  </Link>
+                </Box>
+              )}
               <Box>{data.name}</Box>
             </HStack>
           </Heading>
@@ -319,48 +328,58 @@ const AppPage: NextPageWithLayout = () => {
             >
               Code
             </Text>
+            <Text>|</Text>
             {isUserAnAppEditor && (
               <>
-                <Text>|</Text>
                 <Link onClick={onOpenAppRun}>Runs</Link>
                 <Link onClick={onOpenSchedule}>Schedules</Link>
-                <Link onClick={onOpenSecrets}>Secrets</Link>
               </>
             )}
+            <Link onClick={onOpenSecrets}>Secrets</Link>
           </HStack>
         </GridItem>
         <GridItem colSpan={2} justifyContent="end">
-          <HStack>
+          <HStack justifyContent="end">
             {isUserAnAppEditor && (
-              <Button variant={'outline'} onClick={onOpenShare}>
+              <Button variant={'outline'} paddingX={8} onClick={onOpenShare}>
                 Share
               </Button>
             )}
             {isUserAnAppEditor && (
-              <Button variant={'outline'} onClick={saveApp}>
+              <Button variant={'outline'} paddingX={8} onClick={saveApp}>
                 Save
+              </Button>
+            )}
+            {isUserAnAppEditor && (
+              <Button
+                type="button"
+                paddingX={8}
+                variant="solid"
+                bgColor="purple.800"
+                textColor="gray.100"
+                onClick={runApp}
+              >
+                Run
               </Button>
             )}
             {!isUserAnAppEditor && (
               <Button
-                variant={'outline'}
+                type="button"
+                paddingX={6}
+                variant="outline"
+                borderColor="purple.800"
+                textColor="purple.800"
                 onClick={() => {
-                  forkApp.mutateAsync({ id });
+                  if (session?.userId) {
+                    forkApp.mutateAsync({ id });
+                  } else {
+                    push(`/auth?redirectToPath=${window.location.pathname}`);
+                  }
                 }}
               >
                 Fork
               </Button>
             )}
-            <Button
-              type="button"
-              paddingX={6}
-              variant="solid"
-              bgColor="purple.800"
-              textColor="gray.100"
-              onClick={runApp}
-            >
-              Run
-            </Button>
           </HStack>
         </GridItem>
         <GridItem colSpan={3}>
@@ -405,7 +424,7 @@ const AppPage: NextPageWithLayout = () => {
               ))}
           </VStack>
           <Divider my={5} />
-          <AddScriptForm scripts={scripts} appId={id} />
+          {isUserAnAppEditor && <AddScriptForm scripts={scripts} appId={id} />}
         </GridItem>
         <GridItem colSpan={6}>
           {Editor && (
@@ -457,6 +476,7 @@ const AppPage: NextPageWithLayout = () => {
         isOpen={isOpenSecrets}
         onClose={onCloseSecrets}
         appId={id}
+        editable={isUserAnAppEditor}
       />
 
       <ScheduleModal
@@ -472,8 +492,21 @@ const AppPage: NextPageWithLayout = () => {
         onClose={onCloseShare}
         appId={appQuery.data.id}
       />
-    </SessionAuth>
+    </>
+  );
+
+  return (
+    <>
+      {appQuery.data &&
+        (appQuery.data.isPrivate ? (
+          <SessionAuth>{playground()}</SessionAuth>
+        ) : (
+          playground()
+        ))}
+    </>
   );
 };
+
+AppPage.skipAuth = true;
 
 export default AppPage;

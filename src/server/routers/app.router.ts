@@ -12,6 +12,7 @@ const defaultSelect = Prisma.validator<Prisma.AppSelect>()({
   updatedAt: true,
   scriptMain: true,
   isPrivate: true,
+  parent: true,
 });
 
 export const appRouter = createRouter()
