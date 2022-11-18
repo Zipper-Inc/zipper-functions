@@ -26,8 +26,8 @@ const MyAppsPage: NextPageWithLayout = () => {
     <DefaultGrid>
       <GridItem colSpan={12}>
         <VStack align="start" w="full">
-          <Heading size="lg" mb={5}>
-            Your Apps
+          <Heading size="md" mb={5}>
+            My Apps
           </Heading>
           <TableContainer w="full">
             <Table size={'sm'}>
@@ -35,6 +35,7 @@ const MyAppsPage: NextPageWithLayout = () => {
                 <Tr>
                   <Th>App Name</Th>
                   <Th>Last Updated</Th>
+                  <Th>Created at</Th>
                 </Tr>
               </Thead>
               <Tbody>
@@ -61,6 +62,11 @@ const MyAppsPage: NextPageWithLayout = () => {
                           {new Intl.DateTimeFormat('en-GB', {
                             dateStyle: 'short',
                           }).format(app.updatedAt || app.createdAt)}
+                        </Td>
+                        <Td>
+                          {new Intl.DateTimeFormat('en-GB', {
+                            dateStyle: 'short',
+                          }).format(app.createdAt)}
                         </Td>
                       </Tr>
                     );

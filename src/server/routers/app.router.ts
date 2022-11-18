@@ -77,6 +77,7 @@ export const appRouter = createRouter()
         where: {
           editors: { some: { user: { superTokenId: ctx.superTokenId } } },
         },
+        orderBy: { updatedAt: 'desc' },
         select: defaultSelect,
       });
     },
