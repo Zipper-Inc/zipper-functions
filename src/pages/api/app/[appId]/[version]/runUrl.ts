@@ -21,7 +21,7 @@ export default async function handler(
 
   const urlInfo = {
     timestamp: timestamp,
-    hmac: createHmac('sha256', env.RELAY_HMAC_SIGING_SECRET)
+    hmac: createHmac('sha256', env.RELAY_HMAC_SIGNING_SECRET)
       .update(`GET/${timestamp.toString()}/${appId}/${version}`)
       .digest('hex'),
     url: `/run/${appId}@${version}`,

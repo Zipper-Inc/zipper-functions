@@ -20,7 +20,7 @@ const {
   SHARED_SECRET, // e.g: 256 bit secret
   DEPLOY_KID, // e.g: "acme"
   RPC_HOST, // e.g: http://zipper.works
-  RELAY_HMAC_SIGING_SECRET,
+  RELAY_HMAC_SIGNING_SECRET,
 } = Deno.env.toObject();
 const DENO_ORIGIN = new URL(`https://subhosting-v1.deno-aws.net`);
 const RPC_PATH = `/api/deno/v0/`;
@@ -107,9 +107,9 @@ function verifyHmac(req: Request, appId: string, version: string) {
     return false;
   }
 
-  const secret = RELAY_HMAC_SIGING_SECRET;
+  const secret = RELAY_HMAC_SIGNING_SECRET;
 
-  if (!secret) throw new Error('RELAY_HMAC_SIGING_SECRET not set');
+  if (!secret) throw new Error('RELAY_HMAC_SIGNING_SECRET not set');
 
   return (
     sig ===
