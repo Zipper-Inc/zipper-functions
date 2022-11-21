@@ -257,10 +257,13 @@ const AppPage: NextPageWithLayout = () => {
       .toString();
   };
 
-  const getRunUrl = () => {
+  const getRunUrlInfo = async () => {
     const version = getAppDataVersion();
     setLastRunVersion(version);
-    return `/run/${id}@${version}`;
+    const raw = await fetch(`/api/app/${id}/${version}/runUrl`, {
+      credentials: 'same-origin',
+    });
+    return raw.json();
   };
 
   const runApp = async () => {
@@ -286,9 +289,16 @@ const AppPage: NextPageWithLayout = () => {
         inputValues[inputKey as string] = value;
       });
 
-    const raw = await fetch(getRunUrl(), {
+    const runUrlInfo = await getRunUrlInfo();
+
+    const raw = await fetch(runUrlInfo.url, {
       method: 'POST',
       body: JSON.stringify(inputValues),
+      headers: {
+        'Content-Type': 'application/json',
+        'x-zipper-hmac': runUrlInfo.hmac,
+        'x-timestamp': runUrlInfo.timestamp,
+      },
     });
 
     const res = await raw.json();

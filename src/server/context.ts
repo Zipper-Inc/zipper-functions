@@ -30,7 +30,6 @@ export async function createContext(opts: trpcNext.CreateNextContextOptions) {
       const session = await Session.refreshSession(opts.req, opts.res);
       return createContextInner(session?.getUserId());
     } catch (error) {
-      console.log('another error?: ', error, 'headers: ', opts.req.headers);
       console.log(error);
       return createContextInner();
     }

@@ -1,8 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import * as jose from 'jose';
 import { build } from '@deno/eszip';
-import { trpcRouter } from '~/server/routers/_app';
-import { createContext } from '~/server/context';
 import pako from 'pako';
 import { PassThrough } from 'stream';
 import ndjson from 'ndjson';
