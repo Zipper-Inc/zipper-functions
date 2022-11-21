@@ -18,8 +18,10 @@ import {
 import React from 'react';
 import DefaultGrid from '~/components/default-grid';
 import { LockIcon, UnlockIcon } from '@chakra-ui/icons';
+import { useRouter } from 'next/router';
 
 const MyAppsPage: NextPageWithLayout = () => {
+  const router = useRouter();
   const appQuery = trpc.useQuery(['app.byAuthedUser']);
 
   return (
@@ -50,7 +52,9 @@ const MyAppsPage: NextPageWithLayout = () => {
                               <Link
                                 fontSize={'md'}
                                 fontWeight={600}
-                                href={`/app/${app.id}/edit`}
+                                onClick={() =>
+                                  router.push(`/app/${app.id}/edit`)
+                                }
                               >
                                 {app.name}
                               </Link>

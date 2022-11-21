@@ -3,12 +3,19 @@ import {
   GridItem,
   Heading,
   HStack,
+  Link,
+  Table,
+  TableContainer,
+  Tbody,
+  Td,
+  Tr,
   Text,
   VStack,
 } from '@chakra-ui/react';
 import NextError from 'next/error';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
+import { HiArrowRight } from 'react-icons/hi';
 import { SessionContextUpdate } from 'supertokens-auth-react/lib/build/recipe/session/types';
 import { useSessionContext } from 'supertokens-auth-react/recipe/session';
 import DefaultGrid from '~/components/default-grid';
@@ -19,6 +26,7 @@ const AppPage: NextPageWithLayout = () => {
   const router = useRouter();
   const id = useRouter().query.id as string;
   const appQuery = trpc.useQuery(['app.byId', { id }]);
+  const forksQuery = trpc.useQuery(['app.byAuthedUser', { parentId: id }]);
 
   const session = useSessionContext() as SessionContextUpdate & {
     loading: boolean;
@@ -68,12 +76,46 @@ const AppPage: NextPageWithLayout = () => {
             {data.name}
           </Heading>
 
-          <Text fontWeight={500} fontSize="lg">
+          <Text fontWeight={500} color="gray.500">
             About this app
           </Text>
 
           <VStack spacing={4} align={'start'}>
             <Text fontSize="lg">{data.description}</Text>
+            {forksQuery.data && forksQuery.data.length > 0 && (
+              <>
+                <Text fontWeight={500} color="gray.500">
+                  Your forks
+                </Text>
+                <TableContainer
+                  border="1px solid"
+                  borderRadius={10}
+                  borderColor="gray.100"
+                >
+                  <Table>
+                    <Tbody>
+                      {forksQuery.data.map((fork) => (
+                        <Tr key={fork.id}>
+                          <Td>
+                            <HStack>
+                              <HiArrowRight />
+                              <Link
+                                onClick={() =>
+                                  router.push(`/app/${fork.id}/edit`)
+                                }
+                              >
+                                {fork.name}
+                              </Link>
+                            </HStack>
+                          </Td>
+                        </Tr>
+                      ))}
+                    </Tbody>
+                  </Table>
+                </TableContainer>
+              </>
+            )}
+
             <HStack pt={10}>
               <Button
                 type="button"

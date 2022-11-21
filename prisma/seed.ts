@@ -22,6 +22,7 @@ async function main() {
       description:
         'Post meeting notes to Slack in multiple languages using Google Cloud Functions',
       isPrivate: false,
+      submissionState: 2,
       scripts: {
         createMany: {
           data: [

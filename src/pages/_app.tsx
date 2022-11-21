@@ -73,7 +73,13 @@ const MyApp = (({ Component, pageProps }: AppPropsWithLayout) => {
         {Component.skipAuth ? (
           getLayout(<Component {...pageProps} />)
         ) : (
-          <SessionAuth>{getLayout(<Component {...pageProps} />)}</SessionAuth>
+          <SessionAuth
+            onSessionExpired={() => {
+              redirectToAuth();
+            }}
+          >
+            {getLayout(<Component {...pageProps} />)}
+          </SessionAuth>
         )}
       </SuperTokensWrapper>
     </>

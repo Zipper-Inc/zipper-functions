@@ -12,6 +12,7 @@ const defaultSelect = Prisma.validator<Prisma.AppSelect>()({
   updatedAt: true,
   scriptMain: true,
   isPrivate: true,
+  submissionState: true,
   parent: true,
 });
 
@@ -59,22 +60,36 @@ export const appRouter = createRouter()
   })
   // read
   .query('all', {
-    async resolve() {
+    input: z
+      .object({
+        submissionState: z.number().optional(),
+      })
+      .optional(),
+    async resolve({ input }) {
       /**
        * For pagination you can have a look at this docs site
        * @link https://trpc.io/docs/useInfiniteQuery
        */
 
       return prisma.app.findMany({
-        where: { isPrivate: false },
+        where: {
+          isPrivate: false,
+          submissionState: input?.submissionState,
+        },
         select: defaultSelect,
       });
     },
   })
   .query('byAuthedUser', {
-    async resolve({ ctx }) {
+    input: z
+      .object({
+        parentId: z.string().optional(),
+      })
+      .optional(),
+    async resolve({ ctx, input }) {
       return prisma.app.findMany({
         where: {
+          parentId: input?.parentId,
           editors: { some: { user: { superTokenId: ctx.superTokenId } } },
         },
         orderBy: { updatedAt: 'desc' },

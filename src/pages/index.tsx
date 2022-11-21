@@ -21,6 +21,7 @@ import DefaultGrid from '~/components/default-grid';
 import { useSessionContext } from 'supertokens-auth-react/recipe/session';
 import { HiSparkles } from 'react-icons/hi';
 import { useRouter } from 'next/router';
+import { appSubmissionState } from '~/types/appSubmissionState';
 
 const IndexPage: NextPageWithLayout = () => {
   const utils = trpc.useContext();
@@ -29,7 +30,10 @@ const IndexPage: NextPageWithLayout = () => {
     userId: string;
     loading: boolean;
   };
-  const appQuery = trpc.useQuery(['app.all']);
+  const appQuery = trpc.useQuery([
+    'app.all',
+    { submissionState: appSubmissionState.approved },
+  ]);
   const addApp = trpc.useMutation('app.add', {
     async onSuccess() {
       // refetches posts after a post is added
