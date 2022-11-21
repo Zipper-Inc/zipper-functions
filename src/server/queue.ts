@@ -3,7 +3,6 @@ import { env } from './env';
 import IORedis from 'ioredis';
 import { prisma } from './prisma';
 const connection = new IORedis(+env.REDIS_PORT, env.REDIS_HOST, {
-  password: env.REDIS_PASSWORD,
   maxRetriesPerRequest: null,
 });
 

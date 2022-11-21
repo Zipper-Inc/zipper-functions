@@ -32,7 +32,7 @@ services:
     restart: always
     volumes:
       - redis_data:/data
-    command: redis-server --save 20 1 --loglevel warning --requirepass zipper_password
+    command: redis-server --save 20 1 --loglevel warning
 volumes:
   db_data:
   redis_data:

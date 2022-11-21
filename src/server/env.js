@@ -20,7 +20,6 @@ const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']),
   PARSE_INPUT_URL: z.string().url(),
   REDIS_HOST: z.string(),
-  REDIS_PASSWORD: z.string(),
   REDIS_PORT: z.string(),
   RELAY_HMAC_SIGNING_SECRET: z.string(),
   RELAY_URL: z.string().url(),
