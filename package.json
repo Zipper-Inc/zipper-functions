@@ -3,7 +3,7 @@
   "version": "9.27.2",
   "private": true,
   "scripts": {
-    "build:2-build": "prisma generate && prisma migrate deploy && next build",
+    "build:2-build": "prisma generate && prisma migrate deploy && next build && tsc --project tsconfig.server.json",
     "build": "run-s build:*",
     "db-seed": "prisma db seed",
     "db-migrate-dev": "yarn prisma migrate dev",
