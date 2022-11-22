@@ -3,7 +3,7 @@
   "version": "9.27.2",
   "private": true,
   "scripts": {
-    "build:2-build": "next build",
+    "build:2-build": "prisma generate && prisma migrate deploy && next build",
     "build": "run-s build:*",
     "db-seed": "prisma db seed",
     "db-migrate-dev": "yarn prisma migrate dev",
@@ -21,7 +21,8 @@
     "test:unit": "jest",
     "ts-node": "ts-node -T",
     "deno:dev": "yarn dotenv -c .env.local ts-node --compiler-options \"{\\\"module\\\":\\\"commonjs\\\"}\" ./bin/deno-dev.ts",
-    "deno:deploy": "yarn dotenv -c .env.local ts-node --compiler-options \"{\\\"module\\\":\\\"commonjs\\\"}\" ./bin/deno-deploy.ts"
+    "deno:deploy": "yarn dotenv -c .env.local ts-node --compiler-options \"{\\\"module\\\":\\\"commonjs\\\"}\" ./bin/deno-deploy.ts",
+    "postinstall": "yarn prisma generate"
   },
   "prisma": {
     "seed": "yarn ts-node prisma/seed.ts"
