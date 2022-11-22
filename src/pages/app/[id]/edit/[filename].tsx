@@ -26,7 +26,7 @@ import {
 } from 'supertokens-auth-react/recipe/session';
 import { SessionContextUpdate } from 'supertokens-auth-react/lib/build/recipe/session/types';
 import { ClientSideSuspense } from '@liveblocks/react';
-import { LiveObject } from '@liveblocks/client';
+import { LiveObject, LsonObject } from '@liveblocks/client';
 
 import AddScriptForm from '~/components/edit-app-page/add-script-form';
 import DefaultGrid from '~/components/default-grid';
@@ -35,7 +35,7 @@ import ScheduleModal from '~/components/app/scheduleModal';
 import AppRunModal from '~/components/app/appRunModal';
 import ShareModal from '~/components/app/shareModal';
 import ForkIcon from '~/components/svg/forkIcon';
-import { AppEditSidebar } from './app-edit-sidebar';
+import { AppEditSidebar } from '../../../../components/app/app-edit-sidebar';
 
 import { useCmdOrCtrl } from '~/hooks/use-cmd-or-ctrl';
 import useInterval from '~/hooks/use-interval';
@@ -66,7 +66,12 @@ function CollaborativeEditor({ currentScript, onChange }: any) {
 
   const mutate = useMutation(
     ({ storage }, newCode: string) => {
-      storage.get(`script-${currentScript?.id}`)?.set('code', newCode);
+      const s = storage.get(
+        `script-${currentScript?.id}`,
+      ) as LiveObject<LsonObject>;
+      if (s) {
+        s.set('code', newCode);
+      }
     },
     [currentScript],
   );

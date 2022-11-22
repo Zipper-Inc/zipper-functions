@@ -21,8 +21,7 @@
     "test:unit": "jest",
     "ts-node": "ts-node -T",
     "deno:dev": "yarn dotenv -c .env.local ts-node --compiler-options \"{\\\"module\\\":\\\"commonjs\\\"}\" ./bin/deno-dev.ts",
-    "deno:deploy": "yarn dotenv -c .env.local ts-node --compiler-options \"{\\\"module\\\":\\\"commonjs\\\"}\" ./bin/deno-deploy.ts",
-    "postinstall": "prisma generate"
+    "deno:deploy": "yarn dotenv -c .env.local ts-node --compiler-options \"{\\\"module\\\":\\\"commonjs\\\"}\" ./bin/deno-deploy.ts"
   },
   "prisma": {
     "seed": "yarn ts-node prisma/seed.ts"
