@@ -3,7 +3,7 @@ import { getPort } from 'get-port-please';
 import shell, { exec } from '../src/utils/shell';
 import noop from '../src/utils/noop';
 
-const PORT_ARG = '--port=';
+const PORT_ARG = 'port=';
 const getFileFromArgs = () =>
   process.argv.find((_, i) => process.argv[i - 1]?.includes('/deno-dev.ts'));
 const getPortFromArgs = () =>
