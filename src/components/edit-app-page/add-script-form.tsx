@@ -30,9 +30,6 @@ export default function AddScriptForm({
 
   return (
     <>
-      <Heading size="md" marginBottom={4}>
-        Create a function
-      </Heading>
       <form
         onSubmit={handleSubmit(
           ({ name, description, code = '// Here we go!' }) => {

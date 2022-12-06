@@ -5,10 +5,10 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
-  const name = req.query['appId'] as string;
-  const app = await prisma.app.findUnique({ where: { id: name } });
+  const slug = req.query['slug'] as string;
+  const app = await prisma.app.findUnique({ where: { slug } });
   if (!app) {
-    res.status(400);
+    res.status(400).send('App not found');
     return;
   }
 

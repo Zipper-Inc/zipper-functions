@@ -6,37 +6,30 @@ import {
   TabPanel,
   VStack,
   Divider,
+  Box,
+  Input,
+  HStack,
+  IconButton,
+  Link,
 } from '@chakra-ui/react';
-import dynamic from 'next/dynamic';
-import { useEffect, useState } from 'react';
+import { IframeHTMLAttributes, useEffect, useRef, useState } from 'react';
 import { FormProvider } from 'react-hook-form';
+import { HiOutlineDocumentDuplicate, HiRefresh } from 'react-icons/hi';
 import InputParamsForm from '~/components/edit-app-page/input-params-form';
 import { LogLine } from '~/components/edit-app-page/log-line';
-
-const JSONViewer = dynamic(
-  async () => {
-    const component = await import('~/components/json-editor');
-    return component.JSONViewer;
-  },
-  {
-    ssr: false,
-  },
-);
 
 export function AppEditSidebar({
   inputParamsFormMethods,
   inputParams,
-  outputValue,
+  inputValues,
   appEventsQuery,
+  appInfo,
 }: any) {
   const [tabIndex, setTabIndex] = useState(0);
+  const [urlSearchParams, setUrlSearchParams] = useState('');
+  const [iframeUrl, setIframeUrl] = useState('');
 
-  useEffect(() => {
-    // if there's a new output value, switch to the output tab
-    if (outputValue) setTabIndex(1);
-    // if there's no output and new logs, switch to logs
-    if (!outputValue && appEventsQuery.data?.length) setTabIndex(2);
-  }, [outputValue, appEventsQuery]);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   const handleTabsChange = (index: number) => {
     setTabIndex(index);
@@ -44,11 +37,23 @@ export function AppEditSidebar({
 
   const logs = appEventsQuery.data?.map((event: any) => event.eventPayload);
 
+  useEffect(() => {
+    setUrlSearchParams(new URLSearchParams(inputValues).toString());
+  }, [inputValues]);
+
+  useEffect(() => {
+    setIframeUrl(
+      `${process.env.NODE_ENV === 'production' ? 'https' : 'http'}://${
+        appInfo.slug
+      }.zipper.localhost:4001/?${urlSearchParams}`,
+    );
+  }, [appInfo, urlSearchParams]);
+
   return (
     <Tabs as="aside" index={tabIndex} onChange={handleTabsChange}>
       <TabList>
         <Tab>Inputs</Tab>
-        <Tab isDisabled={!outputValue}>Results</Tab>
+        <Tab>Results</Tab>
         <Tab isDisabled={!logs?.length}>Logs</Tab>
       </TabList>
       <TabPanels>
@@ -57,8 +62,39 @@ export function AppEditSidebar({
             <InputParamsForm params={inputParams} defaultValues={{}} />
           </FormProvider>
         </TabPanel>
-        <TabPanel>
-          <JSONViewer height="100px" value={outputValue || ''} />
+        <TabPanel p="0">
+          <VStack align="start">
+            <Box w="full" p="2" backgroundColor="gray.100">
+              <HStack>
+                <Input
+                  w="full"
+                  size="sm"
+                  borderRadius="0"
+                  backgroundColor="white"
+                  disabled
+                  value={iframeUrl}
+                />
+                <Link
+                  onClick={() => {
+                    iframeRef.current?.setAttribute('src', iframeUrl);
+                  }}
+                >
+                  <HiRefresh />
+                </Link>
+
+                <Link href={iframeUrl} target="_blank">
+                  <HiOutlineDocumentDuplicate />
+                </Link>
+              </HStack>
+            </Box>
+            <iframe
+              key={appInfo.version}
+              src={iframeUrl}
+              ref={iframeRef}
+              width="100%"
+              height="100%"
+            />
+          </VStack>
         </TabPanel>
         <TabPanel>
           <VStack

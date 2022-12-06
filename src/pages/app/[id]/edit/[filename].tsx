@@ -9,6 +9,7 @@ import { withLiveBlocks } from '~/hocs/withLiveBlocks';
 
 import { Playground } from '~/components/edit-app-page/playground';
 import { LiveObject } from '@liveblocks/client';
+import { NoHeaderLayout } from '~/components/no-header-layout';
 
 const AppPage: NextPageWithLayout = () => {
   const { query } = useRouter();
@@ -69,5 +70,6 @@ const AppPage: NextPageWithLayout = () => {
 };
 
 AppPage.skipAuth = true;
+AppPage.getLayout = (page) => <NoHeaderLayout>{page}</NoHeaderLayout>;
 
 export default AppPage;

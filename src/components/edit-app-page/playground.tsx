@@ -1,7 +1,6 @@
 import {
   Box,
   Button,
-  Divider,
   FormControl,
   GridItem,
   HStack,
@@ -10,15 +9,22 @@ import {
   Text,
   VStack,
   useDisclosure,
+  Grid,
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+  PopoverArrow,
+  PopoverCloseButton,
+  PopoverHeader,
+  PopoverBody,
 } from '@chakra-ui/react';
 import debounce from 'lodash.debounce';
-import { LockIcon, UnlockIcon } from '@chakra-ui/icons';
+import { AddIcon, LockIcon, UnlockIcon } from '@chakra-ui/icons';
 import { useRouter } from 'next/router';
 import NextLink from 'next/link';
 import React, { Fragment, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import AddScriptForm from '~/components/edit-app-page/add-script-form';
-import DefaultGrid from '~/components/default-grid';
 import SecretsModal from '~/components/app/secretsModal';
 import ScheduleModal from '~/components/app/scheduleModal';
 import AppRunModal from '~/components/app/appRunModal';
@@ -44,6 +50,7 @@ import {
 } from '~/liveblocks.config';
 import { LiveObject, LsonObject } from '@liveblocks/client';
 import dynamic from 'next/dynamic';
+import { ZipperLogo } from '../svg/zipper-logo';
 
 export const Editor = dynamic(() => import('@monaco-editor/react'), {
   ssr: false,
@@ -115,16 +122,12 @@ export function Playground({
     },
   });
 
-  const addAppRunMutation = trpc.useMutation('appRun.add', {
-    async onSuccess() {
-      await utils.invalidateQueries(['appRun.all']);
-    },
-  });
-
   const [inputParams, setInputParams] = useState<InputParam[]>([]);
-  const [outputValue, setOutputValue] = React.useState('');
   const [lastRunVersion, setLastRunVersion] = React.useState<string>();
   const [isUserAnAppEditor, setIsUserAnAppEditor] = React.useState(false);
+  const [inputValues, setInputValues] = React.useState<Record<string, string>>(
+    {},
+  );
 
   const inputParamsFormMethods = useForm();
 
@@ -221,20 +224,11 @@ export function Playground({
     return new Date(app.updatedAt || Date.now()).getTime().toString();
   };
 
-  const getRunUrl = async () => {
-    const version = getAppDataVersion();
-    setLastRunVersion(version);
-    editAppMutation.mutateAsync({
-      id,
-      data: { lastDeploymentVersion: version },
-    });
-    return `/run/${id}@${version}`;
-  };
-
   const runApp = async () => {
     await saveApp();
+
     const formValues = inputParamsFormMethods.getValues();
-    const inputValues: Record<string, any> = {};
+    const inputs: Record<string, any> = {};
 
     // We need to filter the form values since `useForm` hook keeps these around
     const formKeys = inputParams.map(({ key, type }) => `${key}:${type}`);
@@ -251,32 +245,21 @@ export function Playground({
               type === InputType.array ? [] : {},
             )
           : formValues[k];
-        inputValues[inputKey as string] = value;
+        inputs[inputKey as string] = value;
       });
 
-    const raw = await fetch(await getRunUrl(), {
-      method: 'POST',
-      body: JSON.stringify(inputValues),
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+    console.log(inputs);
+    setInputValues(inputs);
 
-    const res = await raw.json();
-    const result = JSON.stringify(res.data, null, 2);
-    setOutputValue(result);
+    const version = getAppDataVersion();
+    setLastRunVersion(version);
+    editAppMutation.mutateAsync({
+      id,
+      data: { lastDeploymentVersion: version },
+    });
 
     // refetch logs
     appEventsQuery.refetch();
-
-    addAppRunMutation.mutateAsync({
-      appId: id,
-      deploymentId: `${id}@${getAppDataVersion()}`,
-      inputs: JSON.stringify(inputValues),
-      success: res.ok,
-      scheduled: false,
-      result,
-    });
   };
 
   useCmdOrCtrl(
@@ -290,10 +273,21 @@ export function Playground({
 
   return (
     <>
-      <DefaultGrid>
+      <Grid
+        templateColumns="repeat(12, 1fr)"
+        gap={4}
+        margin="auto"
+        w="full"
+        paddingX={10}
+      >
         <GridItem colSpan={10} mb="5">
           <Heading as="h1" size="md" pb={5}>
             <HStack>
+              <Box mr={5} height={4}>
+                <Link href="/">
+                  <ZipperLogo style={{ maxHeight: '100%' }} />
+                </Link>
+              </Box>
               <Box>
                 {app.isPrivate ? (
                   <LockIcon fill={'gray.500'} boxSize={4} mb={1} />
@@ -381,11 +375,30 @@ export function Playground({
             )}
           </HStack>
         </GridItem>
-        <GridItem colSpan={3}>
+        <GridItem colSpan={2}>
           <VStack alignItems="start" gap={2}>
-            <Text size="sm" color="gray.500">
-              Functions
-            </Text>
+            <HStack w="full">
+              <Text size="sm" color="gray.500" flexGrow={1}>
+                Functions
+              </Text>
+              {isUserAnAppEditor && (
+                <Popover>
+                  <PopoverTrigger>
+                    <Button variant="link">
+                      <AddIcon color="gray.500" height={3} />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent>
+                    <PopoverArrow />
+                    <PopoverCloseButton />
+                    <PopoverHeader>Add a function</PopoverHeader>
+                    <PopoverBody>
+                      <AddScriptForm scripts={app.scripts} appId={app.id} />
+                    </PopoverBody>
+                  </PopoverContent>
+                </Popover>
+              )}
+            </HStack>
             {app.scripts
               .sort((a: any, b: any) => {
                 let orderA;
@@ -422,18 +435,11 @@ export function Playground({
                 </Fragment>
               ))}
           </VStack>
-          <Divider my={5} />
-          {isUserAnAppEditor && (
-            <AddScriptForm scripts={app.scripts} appId={app.id} />
-          )}
         </GridItem>
         <GridItem colSpan={6}>
           <VStack>
             <Box width="100%">
               <FormControl>
-                <Heading as="h2" size="lg">
-                  {currentScript?.name || 'Untitled'}
-                </Heading>
                 <Box
                   style={{
                     backgroundColor: '#1e1e1e',
@@ -466,15 +472,19 @@ export function Playground({
             </Box>
           </VStack>
         </GridItem>
-        <GridItem colSpan={3}>
+        <GridItem colSpan={4}>
           <AppEditSidebar
             inputParamsFormMethods={inputParamsFormMethods}
             inputParams={inputParams}
-            outputValue={outputValue}
+            inputValues={inputValues}
             appEventsQuery={appEventsQuery}
+            appInfo={{
+              slug: app.slug,
+              version: lastRunVersion,
+            }}
           />
         </GridItem>
-      </DefaultGrid>
+      </Grid>
       <SecretsModal
         isOpen={isOpenSecrets}
         onClose={onCloseSecrets}
