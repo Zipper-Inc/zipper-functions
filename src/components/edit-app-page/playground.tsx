@@ -17,7 +17,6 @@ import { useRouter } from 'next/router';
 import NextLink from 'next/link';
 import React, { Fragment, useEffect, useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
-import { App, Script } from '@prisma/client';
 import AddScriptForm from '~/components/edit-app-page/add-script-form';
 import DefaultGrid from '~/components/default-grid';
 import SecretsModal from '~/components/app/secretsModal';
@@ -36,7 +35,6 @@ import {
 } from '~/types/input-params';
 import { safeJSONParse } from '~/utils/safe-json';
 import { trpc } from '~/utils/trpc';
-import { LazyEditor } from './collabrative-editor';
 import { useSessionContext } from 'supertokens-auth-react/recipe/session';
 import { SessionContextUpdate } from 'supertokens-auth-react/lib/build/recipe/session/types';
 import {
@@ -51,7 +49,7 @@ export const Editor = dynamic(() => import('@monaco-editor/react'), {
 });
 
 export async function parseInput(code?: string): Promise<InputParam[]> {
-  const res: ParseInputResponse = await fetch('/api/__/parse-input', {
+  const res = await fetch('/api/__/parse-input', {
     method: 'POST',
     body: code || '',
   }).then((r) => r.json());
@@ -75,7 +73,7 @@ export function Playground({
   app,
   filename = 'main.ts',
 }: {
-  app: App;
+  app: any;
   filename: string;
 }) {
   const router = useRouter();
@@ -137,11 +135,12 @@ export function Playground({
   ]);
 
   const mainScript = app.scripts.find(
-    (script) => script.id === app.scriptMain?.scriptId,
+    (script: any) => script.id === app.scriptMain?.scriptId,
   );
 
   const currentScript =
-    app.scripts.find((script) => script.filename === filename) || mainScript;
+    app.scripts.find((script: any) => script.filename === filename) ||
+    mainScript;
 
   const mutateLive = useLiveMutation(
     ({ storage }, newCode: string) => {
@@ -163,7 +162,7 @@ export function Playground({
   useEffect(() => {
     setIsUserAnAppEditor(
       !!app.editors.find(
-        (editor) => editor.user.superTokenId === session.userId,
+        (editor: any) => editor.user.superTokenId === session.userId,
       ) || false,
     );
   }, [app, session.loading]);
@@ -189,8 +188,6 @@ export function Playground({
   const saveApp = async () => {
     const formatted = format(currentScriptLive.code).formatted;
     mutateLive(formatted);
-
-    console.log(currentScriptLive, app.scripts);
 
     if (isUserAnAppEditor) {
       editAppMutation.mutateAsync({
@@ -390,7 +387,7 @@ export function Playground({
               Functions
             </Text>
             {app.scripts
-              .sort((a, b) => {
+              .sort((a: any, b: any) => {
                 let orderA;
                 let orderB;
 
@@ -401,7 +398,7 @@ export function Playground({
                 else orderB = b.order === null ? Infinity : b.order;
                 return orderA > orderB ? 1 : -1;
               })
-              .map((script, i) => (
+              .map((script: any, i: number) => (
                 <Fragment key={script.id}>
                   <NextLink
                     href={`/app/${id}/edit/${script.filename}`}
@@ -456,7 +453,7 @@ export function Playground({
                       options={{
                         minimap: { enabled: false },
                       }}
-                      onChange={(value: string) => {
+                      onChange={(value = '') => {
                         mutateLive(value);
                         onParamsChange({ value, setInputParams });
                       }}
