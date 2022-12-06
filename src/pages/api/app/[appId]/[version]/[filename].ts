@@ -29,6 +29,7 @@ export default async function handler(
   if (!app) throw new Error('No app found. Maybe your gave me a bad app id?');
 
   const loweredQueryFilename = filename.toLowerCase();
+  console.log(loweredQueryFilename);
 
   const script = app.scripts.find((script) => {
     const loweredScriptFilename = script.filename.toLowerCase();
@@ -48,7 +49,7 @@ export default async function handler(
   if (loweredQueryFilename === 'main.ts' || loweredQueryFilename === 'main') {
     code = wrapMainFunction({
       code: script.code,
-      name: app.name,
+      slug: app.slug,
       appId: app.id,
       version: script.updatedAt?.toString() || script.createdAt.toString(),
     });

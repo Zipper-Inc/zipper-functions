@@ -19,12 +19,12 @@ const X_DENO_CONFIG = 'x-deno-config';
  */
 export const wrapMainFunction = ({
   code,
-  name,
+  slug,
   appId,
   version = Date.now().toString(),
 }: {
   code: string;
-  name: string;
+  slug: string;
   appId: string;
   version: string;
 }) => `
@@ -58,7 +58,7 @@ addEventListener('fetch', async (event) => {
   const input = await getInputFromBody(event.request);
 
   const __meta = {
-    name: '${name}',
+    slug: '${slug}',
     appId: '${appId}',
     version: '${version}',
     url: event.request.url,

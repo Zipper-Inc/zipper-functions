@@ -56,7 +56,7 @@ const MyAppsPage: NextPageWithLayout = () => {
                                   router.push(`/app/${app.id}/edit`)
                                 }
                               >
-                                {app.name}
+                                {app.name || app.slug}
                               </Link>
                             </HStack>
                             <Text>{app.description}</Text>
