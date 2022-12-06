@@ -44,7 +44,7 @@ import {
 import { LiveObject, LsonObject } from '@liveblocks/client';
 import dynamic from 'next/dynamic';
 
-export const Editor = dynamic(() => import('@monaco-editor/react'), {
+const PlaygroundEditor = dynamic(() => import('./playground-editor'), {
   ssr: false,
 });
 
@@ -441,24 +441,13 @@ export function Playground({
                     color: '#1e1e1e',
                   }}
                 >
-                  {Editor && (
-                    <Editor
-                      key={currentScript?.id}
-                      defaultLanguage="typescript"
-                      height="100vh"
-                      value={
-                        currentScriptLive?.code || currentScript?.code || ''
-                      }
-                      theme="vs-dark"
-                      options={{
-                        minimap: { enabled: false },
-                      }}
-                      onChange={(value = '') => {
-                        mutateLive(value);
-                        onParamsChange({ value, setInputParams });
-                      }}
-                    />
-                  )}
+                  <PlaygroundEditor
+                    value={currentScriptLive?.code || currentScript?.code || ''}
+                    onChange={(value = '') => {
+                      mutateLive(value);
+                      onParamsChange({ value, setInputParams });
+                    }}
+                  />
                 </Box>
               </FormControl>
             </Box>
