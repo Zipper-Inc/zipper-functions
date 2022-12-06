@@ -52,6 +52,7 @@ import { safeJSONParse } from '~/utils/safe-json';
 import { trpc } from '~/utils/trpc';
 
 import { RoomProvider, useMutation, useStorage } from '~/liveblocks.config';
+import { appEditorRouter } from '~/server/routers/appEditor.router';
 
 const Editor = dynamic(() => import('@monaco-editor/react'), {
   ssr: false,
@@ -203,6 +204,7 @@ const AppPage: NextPageWithLayout = () => {
 
   useEffect(() => {
     setScripts(appQuery.data?.scripts || []);
+    setLastRunVersion(appQuery.data?.lastDeploymentVersion || undefined);
     setIsUserAnAppEditor(
       !!appQuery.data?.editors.find(
         (editor) => editor.user.superTokenId === session.userId,
@@ -262,13 +264,17 @@ const AppPage: NextPageWithLayout = () => {
       .toString();
   };
 
-  const getRunUrlInfo = async () => {
+  const getRunUrl = async () => {
     const version = getAppDataVersion();
-    setLastRunVersion(version);
-    const raw = await fetch(`/api/app/${id}/${version}/runUrl`, {
-      credentials: 'same-origin',
+    await editAppMutation.mutateAsync({
+      id,
+      data: {
+        lastDeploymentVersion: version,
+      },
     });
-    return raw.json();
+
+    setLastRunVersion(version);
+    return `/run/${id}@${version}`;
   };
 
   const runApp = async () => {
@@ -294,15 +300,11 @@ const AppPage: NextPageWithLayout = () => {
         inputValues[inputKey as string] = value;
       });
 
-    const runUrlInfo = await getRunUrlInfo();
-
-    const raw = await fetch(runUrlInfo.url, {
+    const raw = await fetch(await getRunUrl(), {
       method: 'POST',
       body: JSON.stringify(inputValues),
       headers: {
         'Content-Type': 'application/json',
-        'x-zipper-hmac': runUrlInfo.hmac,
-        'x-timestamp': runUrlInfo.timestamp,
       },
     });
 

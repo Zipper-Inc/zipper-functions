@@ -1,5 +1,6 @@
 import { Prisma } from '@prisma/client';
 import { z } from 'zod';
+import generate from 'project-name-generator';
 import { prisma } from '~/server/prisma';
 import { createRouter } from '../createRouter';
 import { hasAppEditPermission } from '../utils/authz.utils';
@@ -7,6 +8,7 @@ import { hasAppEditPermission } from '../utils/authz.utils';
 const defaultSelect = Prisma.validator<Prisma.AppSelect>()({
   id: true,
   name: true,
+  slug: true,
   description: true,
   createdAt: true,
   updatedAt: true,
@@ -14,13 +16,14 @@ const defaultSelect = Prisma.validator<Prisma.AppSelect>()({
   isPrivate: true,
   submissionState: true,
   parent: true,
+  lastDeploymentVersion: true,
 });
 
 export const appRouter = createRouter()
   // create
   .mutation('add', {
     input: z.object({
-      name: z.string().min(3).max(255),
+      slug: z.string().min(5).max(60),
     }),
     async resolve({ input, ctx }) {
       const app = await prisma.app.create({
@@ -87,6 +90,7 @@ export const appRouter = createRouter()
       })
       .optional(),
     async resolve({ ctx, input }) {
+      if (!ctx.superTokenId) return [];
       return prisma.app.findMany({
         where: {
           parentId: input?.parentId,
@@ -144,7 +148,7 @@ export const appRouter = createRouter()
 
       const fork = await prisma.app.create({
         data: {
-          name: app.name,
+          slug: generate().dashed,
           description: app.description,
           parentId: app.id,
           editors: {
@@ -193,6 +197,7 @@ export const appRouter = createRouter()
         name: z.string().min(3).max(255).optional(),
         description: z.string().optional(),
         isPrivate: z.boolean().optional(),
+        lastDeploymentVersion: z.string().optional(),
         scripts: z
           .array(
             z.object({

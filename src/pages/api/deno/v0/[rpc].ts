@@ -68,19 +68,31 @@ addEventListener('fetch', async (event) => {
 
   try {
     const output = await fn(input);
-    const response = {
-      ok: true,
-      data: output,
-      __meta,
-    };
+    if (output instanceof Response) {
+      Object.keys(__meta).forEach((key) => {
+        if(key === 'input') {
+          output.headers.set("X-Zipper-input", JSON.stringify(__meta.input));
+        } else {
+          output.headers.set("X-Zipper-"+key, JSON.stringify(__meta[key]));
+        }
+      });
 
-    event.respondWith(
-      new Response(JSON.stringify(response), {
-        status: 200,
-        headers,
-      }),
-    );
+      output.headers.set('X-Zipper-Deployment', '${appId}}.${version}');
+      event.respondWith(output);
+    } else {
+      const response = {
+        ok: true,
+        data: output,
+        __meta,
+      };
 
+      event.respondWith(
+        new Response(JSON.stringify(response), {
+          status: 200,
+          headers,
+        }),
+      );
+    }
   } catch(error) {
     const response = {
       ok: false,

@@ -11,7 +11,7 @@
  * After relaying a request you can expect RPC calls back to your origin.
  */
 
-import { hmac } from 'https://deno.land/x/hmac@v2.0.1/mod.ts';
+// import { hmac } from 'https://deno.land/x/hmac@v2.0.1/mod.ts';
 import { serve } from 'https://deno.land/std@0.118.0/http/mod.ts';
 import * as jose from 'https://deno.land/x/jose@v4.3.7/index.ts';
 
@@ -20,7 +20,7 @@ const {
   SHARED_SECRET, // e.g: 256 bit secret
   DEPLOY_KID, // e.g: "acme"
   RPC_HOST, // e.g: http://zipper.works
-  RELAY_HMAC_SIGNING_SECRET,
+  // RELAY_HMAC_SIGNING_SECRET,
 } = Deno.env.toObject();
 const DENO_ORIGIN = new URL(`https://subhosting-v1.deno-aws.net`);
 const RPC_PATH = `/api/deno/v0/`;
@@ -93,43 +93,43 @@ function serveInternalError(err: Error) {
   return new Response(`${err.stack}`, { status: 500 });
 }
 
-function verifyHmac(req: Request, appId: string, version: string) {
-  const sig = req.headers.get('x-zipper-hmac');
-  if (!hmac) {
-    return false;
-  }
-  const timestamp = req.headers.get('x-timestamp');
-  if (!timestamp) {
-    return false;
-  }
+// function verifyHmac(req: Request, appId: string, version: string) {
+//   const sig = req.headers.get('x-zipper-hmac');
+//   if (!hmac) {
+//     return false;
+//   }
+//   const timestamp = req.headers.get('x-timestamp');
+//   if (!timestamp) {
+//     return false;
+//   }
 
-  if (Math.abs(Date.now() - Number(timestamp)) > 1000 * 30) {
-    return false;
-  }
+//   if (Math.abs(Date.now() - Number(timestamp)) > 1000 * 30) {
+//     return false;
+//   }
 
-  const secret = RELAY_HMAC_SIGNING_SECRET;
+//   const secret = RELAY_HMAC_SIGNING_SECRET;
 
-  if (!secret) throw new Error('RELAY_HMAC_SIGNING_SECRET not set');
+//   if (!secret) throw new Error('RELAY_HMAC_SIGNING_SECRET not set');
 
-  return (
-    sig ===
-    hmac(
-      'sha256',
-      secret,
-      `GET/${timestamp}/${appId}/${version}`,
-      'utf8',
-      'hex',
-    )
-  );
-}
+//   return (
+//     sig ===
+//     hmac(
+//       'sha256',
+//       secret,
+//       `GET/${timestamp}/${appId}/${version}`,
+//       'utf8',
+//       'hex',
+//     )
+//   );
+// }
 
 export async function serveRelay(req: Request) {
   const url = new URL(req.url);
   const deploymentId = url.pathname.replace(/^\/+/, '');
   const [appId, version] = deploymentId.split('@');
-  if (!verifyHmac(req, appId, version)) {
-    throw new Error('Invalid HMAC');
-  }
+  // if (!verifyHmac(req, appId, version)) {
+  //   throw new Error('Invalid HMAC');
+  // }
   console.log('booting app', appId, 'version', version);
   return await relayTo(req, deploymentId);
 }

@@ -84,7 +84,7 @@ const IndexPage: NextPageWithLayout = () => {
                   height="240"
                 >
                   <Heading as="h3" size="md">
-                    {app.name}
+                    {app.name || app.slug}
                   </Heading>
                   <NextLink href={`/app/${app.id}`}>
                     <Link textColor="brandPurple">View more</Link>
@@ -102,7 +102,7 @@ const IndexPage: NextPageWithLayout = () => {
                 p={4}
               >
                 <Heading as="h3" size="md">
-                  {app.name}
+                  {app.name || app.slug}
                 </Heading>
                 <NextLink href={`/app/${app.id}`}>
                   <Link textColor="brandPurple">View more</Link>
@@ -112,8 +112,8 @@ const IndexPage: NextPageWithLayout = () => {
           })}
           <GridItem>
             <form
-              onSubmit={handleSubmit(({ name }) => {
-                addApp.mutateAsync({ name });
+              onSubmit={handleSubmit(({ slug }) => {
+                addApp.mutateAsync({ slug });
               })}
             >
               <Flex marginTop="4" direction="column">
@@ -128,7 +128,7 @@ const IndexPage: NextPageWithLayout = () => {
                       size="md"
                       type="text"
                       disabled={addApp.isLoading}
-                      {...register('name')}
+                      {...register('slug')}
                     />
                   </FormControl>
                   <Button

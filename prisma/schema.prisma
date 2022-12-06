@@ -14,13 +14,15 @@ model App {
   id              String    @id @default(uuid())
   createdAt       DateTime  @default(now())
   updatedAt       DateTime? @default(now())
-  name            String
+  slug            String    @db.VarChar(60) @unique
+  name            String?
   description     String?
   datastore       Json?
   isPrivate       Boolean   @default(true)
   submissionState Int       @default(0)
   categories      String[]
   parentId        String?
+  lastDeploymentVersion String?
 
   scriptMain ScriptMain?
 

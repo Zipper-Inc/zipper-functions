@@ -18,7 +18,7 @@ async function main() {
     },
     create: {
       id,
-      name: 'Post meeting notes to Slack in multiple languages',
+      slug: 'zoom-meeting-notes',
       description:
         'Post meeting notes to Slack in multiple languages using Google Cloud Functions',
       isPrivate: false,

@@ -73,7 +73,7 @@ const AppPage: NextPageWithLayout = () => {
       <GridItem colSpan={5}>
         <VStack gap={4} alignItems="start" w={560}>
           <Heading as="h1" size="2xl" fontWeight="bold" overflowWrap="normal">
-            {data.name}
+            {data.name || data.slug}
           </Heading>
 
           <Text fontWeight={500} color="gray.500">
@@ -104,7 +104,7 @@ const AppPage: NextPageWithLayout = () => {
                                   router.push(`/app/${fork.id}/edit`)
                                 }
                               >
-                                {fork.name}
+                                {fork.name || fork.slug}
                               </Link>
                             </HStack>
                           </Td>
