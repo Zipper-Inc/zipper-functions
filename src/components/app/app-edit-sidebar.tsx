@@ -9,10 +9,9 @@ import {
   Box,
   Input,
   HStack,
-  IconButton,
   Link,
 } from '@chakra-ui/react';
-import { IframeHTMLAttributes, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { FormProvider } from 'react-hook-form';
 import { HiOutlineDocumentDuplicate, HiRefresh } from 'react-icons/hi';
 import InputParamsForm from '~/components/edit-app-page/input-params-form';

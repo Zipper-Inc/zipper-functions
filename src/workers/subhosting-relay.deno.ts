@@ -93,7 +93,7 @@ function serveInternalError(err: Error) {
 
 export async function serveRelay(req: Request) {
   const url = new URL(req.url);
-  const deploymentId = url.pathname.replace(/^\/+/, '');
+  const deploymentId = url.pathname.replace(/^\/|\/$/g, '');
   const [appId, version] = deploymentId.split('@');
   console.log('booting app', appId, 'version', version);
   return await relayTo(req, deploymentId);

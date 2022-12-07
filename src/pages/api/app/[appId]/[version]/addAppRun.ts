@@ -29,7 +29,6 @@ export default async function handler(
 
         res.status(200).send('OK');
       } catch (error) {
-        console.log(error);
         res.status(500).send(error);
       }
     })

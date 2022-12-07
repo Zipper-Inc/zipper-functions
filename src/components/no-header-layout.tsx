@@ -17,7 +17,7 @@ export const NoHeaderLayout = ({ children }: DefaultLayoutProps) => {
       </Head>
 
       <ChakraProvider theme={theme}>
-        <main style={{ marginTop: '20px' }}>{children}</main>
+        <main style={{ paddingTop: '20px' }}>{children}</main>
       </ChakraProvider>
 
       {process.env.NODE_ENV !== 'production' && (
