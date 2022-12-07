@@ -209,7 +209,7 @@ export const appRouter = createRouter()
               data: z.object({
                 name: z.string().min(3).max(255).optional(),
                 description: z.string().optional().nullable(),
-                code: z.string().optional().nullable(),
+                code: z.string().optional(),
               }),
             }),
           )
