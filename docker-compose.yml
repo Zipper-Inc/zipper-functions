@@ -12,6 +12,14 @@ services:
   #   environment:
   #     NODE_ENV: ${NODE_ENV}
   #   command: yarn start
+  output_server:
+    container_name: zipper_output_server
+    image: zipperworks/zipper-output-server
+    ports:
+      - '4001:4001'
+    environment:
+      ZIPPER_URL: http://host.docker.internal:3000
+      RELAY_URL: http://host.docker.internal:3001
   postgres:
     container_name: zipper_function_postgres
     image: postgres:13

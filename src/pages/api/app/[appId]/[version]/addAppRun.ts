@@ -11,28 +11,29 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
-  const { appId, deploymentId, inputs, success, scheduled, result } = req.body;
-  limiter
-    .check(res, 5, appId)
-    .then(async () => {
-      try {
-        await prisma.appRun.create({
-          data: {
-            appId,
-            deploymentId,
-            inputs,
-            success,
-            scheduled,
-            result,
-          },
-        });
+  // const { appId, deploymentId, inputs, success, scheduled, result } = req.body;
+  res.send(200);
+  // limiter
+  //   .check(res, 5, appId)
+  //   .then(async () => {
+  //     try {
+  //       await prisma.appRun.create({
+  //         data: {
+  //           appId,
+  //           deploymentId,
+  //           inputs,
+  //           success,
+  //           scheduled,
+  //           result,
+  //         },
+  //       });
 
-        res.status(200).send('OK');
-      } catch (error) {
-        res.status(500).send(error);
-      }
-    })
-    .catch(() => {
-      res.status(429).send('Too many requests');
-    });
+  //       res.status(200).send('OK');
+  //     } catch (error) {
+  //       res.status(500).send(error);
+  //     }
+  //   })
+  //   .catch(() => {
+  //     res.status(429).send('Too many requests');
+  //   });
 }
