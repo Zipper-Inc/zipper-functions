@@ -10,6 +10,7 @@ const { Google, Github } = ThirdPartyEmailPassword;
 
 const accountUpdateArgs = (response: any) => {
   return {
+    id: response.user.id,
     provider: response.user.thirdParty?.id || '',
     providerAccountId: response.user.thirdParty?.userId || '',
     access_token: response.authCodeResponse.access_token,

@@ -26,12 +26,18 @@ export const appRouter = createRouter()
       slug: z.string().min(5).max(60),
     }),
     async resolve({ input, ctx }) {
+      const thirdPartyAccount = await prisma.thirdPartyAccount.findUnique({
+        where: { id: ctx.superTokenId },
+      });
+
+      console.log(ctx.superTokenId);
+
       const app = await prisma.app.create({
         data: {
           ...input,
           editors: {
             create: {
-              userId: ctx.superTokenId || '',
+              userId: thirdPartyAccount?.userId || '',
               isOwner: true,
             },
           },
