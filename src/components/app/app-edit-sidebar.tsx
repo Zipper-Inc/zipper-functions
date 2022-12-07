@@ -16,6 +16,7 @@ import { FormProvider } from 'react-hook-form';
 import { HiOutlineDocumentDuplicate, HiRefresh } from 'react-icons/hi';
 import InputParamsForm from '~/components/edit-app-page/input-params-form';
 import { LogLine } from '~/components/edit-app-page/log-line';
+import { env } from '~/server/env';
 
 export function AppEditSidebar({
   inputParamsFormMethods,
@@ -44,7 +45,7 @@ export function AppEditSidebar({
     setIframeUrl(
       `${process.env.NODE_ENV === 'production' ? 'https' : 'http'}://${
         appInfo.slug
-      }.zipper.localhost:4001/?${urlSearchParams}`,
+      }.${process.env.NEXT_PUBLIC_OUTPUT_SERVER_HOSTNAME}/?${urlSearchParams}`,
     );
   }, [appInfo, urlSearchParams]);
 
