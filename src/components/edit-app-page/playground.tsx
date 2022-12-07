@@ -52,12 +52,12 @@ import { LiveObject, LsonObject } from '@liveblocks/client';
 import dynamic from 'next/dynamic';
 import { ZipperLogo } from '../svg/zipper-logo';
 
-export const Editor = dynamic(() => import('@monaco-editor/react'), {
+const PlaygroundEditor = dynamic(() => import('./playground-editor'), {
   ssr: false,
 });
 
 export async function parseInput(code?: string): Promise<InputParam[]> {
-  const res: ParseInputResponse = await fetch('/api/__/parse-input', {
+  const res = await fetch('/api/__/parse-input', {
     method: 'POST',
     body: code || '',
   }).then((r) => r.json());
@@ -192,8 +192,6 @@ export function Playground({
   const saveApp = async () => {
     const formatted = format(currentScriptLive.code).formatted;
     mutateLive(formatted);
-
-    console.log(currentScriptLive, app.scripts);
 
     if (isUserAnAppEditor) {
       editAppMutation.mutateAsync({
@@ -411,7 +409,7 @@ export function Playground({
                 else orderB = b.order === null ? Infinity : b.order;
                 return orderA > orderB ? 1 : -1;
               })
-              .map((script: any) => (
+              .map((script: any, i: number) => (
                 <Fragment key={script.id}>
                   <NextLink
                     href={`/app/${id}/edit/${script.filename}`}
@@ -447,26 +445,13 @@ export function Playground({
                     color: '#1e1e1e',
                   }}
                 >
-                  {Editor && (
-                    <Editor
-                      key={currentScript?.id}
-                      defaultLanguage="typescript"
-                      height="100vh"
-                      value={
-                        currentScriptLive?.code || currentScript?.code || ''
-                      }
-                      theme="vs-dark"
-                      options={{
-                        minimap: { enabled: false },
-                      }}
-                      onChange={(value: string | undefined) => {
-                        if (value) {
-                          mutateLive(value);
-                          onParamsChange({ value, setInputParams });
-                        }
-                      }}
-                    />
-                  )}
+                  <PlaygroundEditor
+                    value={currentScriptLive?.code || currentScript?.code || ''}
+                    onChange={(value = '') => {
+                      mutateLive(value);
+                      onParamsChange({ value, setInputParams });
+                    }}
+                  />
                 </Box>
               </FormControl>
             </Box>
