@@ -30,8 +30,6 @@ export const appRouter = createRouter()
         where: { id: ctx.superTokenId },
       });
 
-      console.log(ctx.superTokenId);
-
       const app = await prisma.app.create({
         data: {
           ...input,
@@ -201,7 +199,7 @@ export const appRouter = createRouter()
       id: z.string().uuid(),
       data: z.object({
         name: z.string().min(3).max(255).optional(),
-        description: z.string().optional(),
+        description: z.string().optional().nullable(),
         isPrivate: z.boolean().optional(),
         lastDeploymentVersion: z.string().optional(),
         scripts: z
@@ -209,9 +207,9 @@ export const appRouter = createRouter()
             z.object({
               id: z.string().uuid(),
               data: z.object({
-                name: z.string().min(3).max(255),
-                description: z.string(),
-                code: z.string(),
+                name: z.string().min(3).max(255).optional(),
+                description: z.string().optional().nullable(),
+                code: z.string().optional().nullable(),
               }),
             }),
           )

@@ -21,7 +21,7 @@ export const wrapMainFunction = ({
   code,
   slug,
   appId,
-  version = Date.now().toString(),
+  version = new Date(Date.now()).getTime().toString(),
 }: {
   code: string;
   slug: string;
