@@ -7,7 +7,7 @@ services:
   - type: web
     name: zipper-functions
     env: node
-    plan: free
+    plan: starter
     ## 👇 Specify the plan for the PR deployment:
     # previewPlan: starter
     ## 👇 Preview Environment Initialization script:
@@ -22,4 +22,4 @@ services:
 
 databases:
   - name: zipper-functions-db
-    plan: free
+    plan: starter
