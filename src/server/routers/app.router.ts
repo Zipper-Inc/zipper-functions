@@ -45,7 +45,11 @@ export const appRouter = createRouter()
 
       if (!app) return;
 
-      const defaultCode = '{}';
+      const defaultCode = [
+        'async function main() {',
+        "  // Let's go!",
+        '}',
+      ].join('\n');
 
       const scriptMain = await prisma.scriptMain.create({
         data: {

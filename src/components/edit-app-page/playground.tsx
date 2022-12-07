@@ -38,7 +38,6 @@ import {
   InputParam,
   InputType,
   JSONEditorInputTypes,
-  ParseInputResponse,
 } from '~/types/input-params';
 import { safeJSONParse } from '~/utils/safe-json';
 import { trpc } from '~/utils/trpc';
@@ -409,7 +408,7 @@ export function Playground({
                 else orderB = b.order === null ? Infinity : b.order;
                 return orderA > orderB ? 1 : -1;
               })
-              .map((script: any, i: number) => (
+              .map((script: any) => (
                 <Fragment key={script.id}>
                   <NextLink
                     href={`/app/${id}/edit/${script.filename}`}
