@@ -446,6 +446,7 @@ export function Playground({
                   }}
                 >
                   <PlaygroundEditor
+                    key={currentScript?.id}
                     value={currentScriptLive?.code || currentScript?.code || ''}
                     onChange={(value = '') => {
                       mutateLive(value);
