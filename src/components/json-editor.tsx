@@ -5,6 +5,7 @@ export function JSONEditor(props: EditorProps) {
     <Editor
       {...props}
       defaultLanguage="json"
+      theme="vs-light"
       options={{
         minimap: { enabled: false },
         find: { enabled: false },

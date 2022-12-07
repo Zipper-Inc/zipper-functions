@@ -23,12 +23,23 @@ export default function PlaygroundEditor(props: EditorProps) {
     monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions(
       diagnosticOptions,
     );
+    monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
+      isolatedModules: true,
+    });
 
     // Add deno type declarations
-    Object.keys(denoDeclarations).forEach((uri) => {
-      const src: string = (denoDeclarations as any)[uri];
-      monaco.languages.typescript.javascriptDefaults.addExtraLib(src, uri);
-      monaco.editor.createModel(src, 'typescript', monaco.Uri.parse(uri));
+    Object.keys(denoDeclarations).forEach((filename) => {
+      const prefixedFilename = `ts:${filename}`;
+      const uri = monaco.Uri.parse(prefixedFilename);
+
+      if (monaco.editor.getModel(uri)) return;
+
+      const src: string = (denoDeclarations as any)[filename];
+      monaco.languages.typescript.javascriptDefaults.addExtraLib(
+        src,
+        prefixedFilename,
+      );
+      monaco.editor.createModel(src, 'typescript', uri);
     });
   };
 
@@ -36,7 +47,7 @@ export default function PlaygroundEditor(props: EditorProps) {
     <Editor
       defaultLanguage="typescript"
       height="100vh"
-      theme="vs-dark"
+      theme="vs-light"
       options={{
         minimap: { enabled: false },
       }}

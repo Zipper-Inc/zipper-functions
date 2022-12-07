@@ -437,13 +437,7 @@ export function Playground({
           <VStack>
             <Box width="100%">
               <FormControl>
-                <Box
-                  style={{
-                    backgroundColor: '#1e1e1e',
-                    height: '100vh',
-                    color: '#1e1e1e',
-                  }}
-                >
+                <Box style={{ height: '100vh' }}>
                   <PlaygroundEditor
                     key={currentScript?.id}
                     value={currentScriptLive?.code || currentScript?.code || ''}
