@@ -11,8 +11,6 @@ export const withLiveBlocks = (
     initialPresence={initialPresence}
     initialStorage={initialStorage}
   >
-    <ClientSideSuspense fallback={<div>Loading...</div>}>
-      {children}
-    </ClientSideSuspense>
+    <ClientSideSuspense fallback={<></>}>{children}</ClientSideSuspense>
   </RoomProvider>
 );

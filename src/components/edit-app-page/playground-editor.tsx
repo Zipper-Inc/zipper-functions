@@ -1,3 +1,4 @@
+import { Box } from '@chakra-ui/react';
 import Editor, { EditorProps, Monaco } from '@monaco-editor/react';
 import denoDeclarations from '~/types/deno/d.json';
 
@@ -46,10 +47,11 @@ export default function PlaygroundEditor(props: EditorProps) {
   return (
     <Editor
       defaultLanguage="typescript"
-      height="100vh"
       theme="vs-light"
+      height="calc(100vh - 126px)"
       options={{
         minimap: { enabled: false },
+        automaticLayout: true,
       }}
       beforeMount={beforeMount}
       {...props}

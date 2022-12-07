@@ -437,15 +437,19 @@ export function Playground({
           <VStack>
             <Box width="100%">
               <FormControl>
-                <Box style={{ height: '100vh' }}>
-                  <PlaygroundEditor
-                    key={currentScript?.id}
-                    value={currentScriptLive?.code || currentScript?.code || ''}
-                    onChange={(value = '') => {
-                      mutateLive(value);
-                      onParamsChange({ value, setInputParams });
-                    }}
-                  />
+                <Box style={{ color: 'transparent' }}>
+                  {PlaygroundEditor && (
+                    <PlaygroundEditor
+                      key={currentScript?.id}
+                      value={
+                        currentScriptLive?.code || currentScript?.code || ''
+                      }
+                      onChange={(value = '') => {
+                        mutateLive(value);
+                        onParamsChange({ value, setInputParams });
+                      }}
+                    />
+                  )}
                 </Box>
               </FormControl>
             </Box>
