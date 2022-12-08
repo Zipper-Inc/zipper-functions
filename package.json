@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "build:1-prisma": "prisma generate && prisma migrate deploy",
-    "build:2-build": "next build",
-    "build:3-build": "tsc --project tsconfig.server.json",
+    "build:2-next": "next build",
+    "build:3-tsc": "tsc --project tsconfig.server.json",
     "build": "run-s build:*",
     "db-seed": "prisma db seed",
     "db-migrate-dev": "yarn prisma migrate dev",
@@ -93,7 +93,6 @@
     "supertokens-node": "^12.0.5",
     "ts-morph": "^17.0.1",
     "typescript": "4.8.3",
-    "vm2": "^3.9.11",
     "zod": "^3.0.0"
   },
   "devDependencies": {
