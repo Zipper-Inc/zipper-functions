@@ -1,4 +1,3 @@
-import { Box } from '@chakra-ui/react';
 import Editor, { EditorProps, Monaco } from '@monaco-editor/react';
 import denoDeclarations from '~/types/deno/d.json';
 

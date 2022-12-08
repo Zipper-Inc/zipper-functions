@@ -16,7 +16,6 @@ import { FormProvider } from 'react-hook-form';
 import { HiOutlineDocumentDuplicate, HiRefresh } from 'react-icons/hi';
 import InputParamsForm from '~/components/edit-app-page/input-params-form';
 import { LogLine } from '~/components/edit-app-page/log-line';
-import { env } from '~/server/env';
 
 export function AppEditSidebar({
   inputParamsFormMethods,
@@ -59,7 +58,9 @@ export function AppEditSidebar({
       <TabPanels>
         <TabPanel backgroundColor="gray.100">
           <FormProvider {...inputParamsFormMethods}>
-            <InputParamsForm params={inputParams} defaultValues={{}} />
+            {inputParams.length ? (
+              <InputParamsForm params={inputParams} defaultValues={{}} />
+            ) : null}
           </FormProvider>
         </TabPanel>
         <TabPanel p="0">

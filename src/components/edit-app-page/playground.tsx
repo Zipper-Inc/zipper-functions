@@ -50,31 +50,16 @@ import {
 import { LiveObject, LsonObject } from '@liveblocks/client';
 import dynamic from 'next/dynamic';
 import { ZipperLogo } from '../svg/zipper-logo';
+import { parseInputForTypes } from './parse-input-for-types';
 
 const PlaygroundEditor = dynamic(() => import('./playground-editor'), {
   ssr: false,
 });
 
-export async function parseInput(code?: string): Promise<InputParam[]> {
-  const res = await fetch('/api/__/parse-input', {
-    method: 'POST',
-    body: code || '',
-  }).then((r) => r.json());
-  return res.params || [];
-}
-
-async function paramsChangeHandler({
-  value,
-  setInputParams,
-}: {
-  value?: string;
-  setInputParams: any;
-}) {
-  const params = await parseInput(value);
-  setInputParams(params);
-}
-
-export const onParamsChange = debounce(paramsChangeHandler, 500);
+const debouncedParseInputForTypes = debounce(
+  (code, setInputParams) => setInputParams(parseInputForTypes(code)),
+  500,
+);
 
 export function Playground({
   app,
@@ -154,6 +139,8 @@ export function Playground({
       if (storedScript) {
         storedScript.set('code', newCode);
       }
+
+      debouncedParseInputForTypes(newCode, setInputParams);
     },
     [currentScript],
   );
@@ -163,16 +150,19 @@ export function Playground({
   );
 
   useEffect(() => {
+    console.log('once effect', currentScript.code, currentScriptLive?.code);
+    setInputParams(
+      parseInputForTypes(currentScript?.code || currentScriptLive?.code),
+    );
+  }, []);
+
+  useEffect(() => {
     setIsUserAnAppEditor(
       !!app.editors.find(
         (editor: any) => editor.user.superTokenId === session.userId,
       ) || false,
     );
   }, [app, session.loading]);
-
-  useEffect(() => {
-    parseInput(currentScriptLive?.code).then(setInputParams);
-  }, [currentScriptLive]);
 
   useInterval(async () => {
     if (lastRunVersion) {
@@ -245,7 +235,6 @@ export function Playground({
         inputs[inputKey as string] = value;
       });
 
-    console.log(inputs);
     setInputValues(inputs);
 
     const version = getAppDataVersion();
@@ -446,7 +435,6 @@ export function Playground({
                       }
                       onChange={(value = '') => {
                         mutateLive(value);
-                        onParamsChange({ value, setInputParams });
                       }}
                     />
                   )}
