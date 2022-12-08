@@ -1,5 +1,7 @@
 {
   "typescript.tsdk": "node_modules/typescript/lib",
   "deno.enable": true,
-  "deno.enablePaths": ["./src/workers"]
+  "deno.enablePaths": [
+    "./src/workers"
+  ]
 }
