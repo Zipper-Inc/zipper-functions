@@ -17,6 +17,7 @@ import {
   Link,
   Switch,
   Avatar,
+  useClipboard,
 } from '@chakra-ui/react';
 import { FieldValues, FormProvider, useForm } from 'react-hook-form';
 import { trpc } from '~/utils/trpc';
@@ -33,6 +34,10 @@ const ShareModal: React.FC<Props> = ({ isOpen, onClose, appId }) => {
   const editorQuery = trpc.useQuery(['appEditor.all', { appId }]);
   const invitationForm = useForm();
 
+  const { onCopy, hasCopied } = useClipboard(
+    `${window.location.origin}/app/${appId}`,
+  );
+
   const inviteEditor = trpc.useMutation('appEditor.invite', {
     async onSuccess() {
       // refetches posts after a post is added
@@ -47,7 +52,6 @@ const ShareModal: React.FC<Props> = ({ isOpen, onClose, appId }) => {
   });
 
   const onSubmit = async (data: FieldValues) => {
-    console.log('HERE');
     await inviteEditor.mutateAsync({
       appId,
       email: data.email,
@@ -81,11 +85,14 @@ const ShareModal: React.FC<Props> = ({ isOpen, onClose, appId }) => {
                       >
                         <HStack w="full">
                           <Input
+                            fontSize="sm"
                             {...invitationForm.register('email')}
                             type="email"
                             placeholder="Email"
                           />
-                          <Button type="submit">Send invite</Button>
+                          <Button px={6} type="submit" fontSize="sm">
+                            Send invite
+                          </Button>
                         </HStack>
                       </form>
                       <Box w="full">
@@ -143,9 +150,9 @@ const ShareModal: React.FC<Props> = ({ isOpen, onClose, appId }) => {
             </ModalBody>
 
             <ModalFooter mt={4}>
-              <Link href="#" mr="auto" color={'blue.700'}>
+              <Link href="#" mr="auto" color={'blue.700'} onClick={onCopy}>
                 <CopyIcon mr={1} mb={1} />
-                Copy link
+                {hasCopied ? 'Copied!' : 'Copy link'}
               </Link>
               <Button
                 type="submit"

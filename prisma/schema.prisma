@@ -34,8 +34,24 @@ model App {
 
   parent  App?  @relation("AppForks", fields: [parentId], references: [id])
   forks   App[] @relation("AppForks")
+  settings AppSetting[]
 
   @@map("apps")
+}
+
+model AppSetting {
+  settingName  String    @db.VarChar
+  settingValue String    @db.VarChar
+  createdAt    DateTime  @default(now()) @db.Timestamp(6)
+  deletedAt    DateTime? @db.Timestamp(6)
+  updatedAt    DateTime  @default(now()) @updatedAt @db.Timestamp(6)
+  appId        String
+
+  app          App       @relation(fields: [appId], references: [id])
+
+  @@id([settingName, appId])
+  @@unique([appId, settingName])
+  @@map("app_settings")
 }
 
 model AppEditor {

@@ -51,6 +51,8 @@ import { LiveObject, LsonObject } from '@liveblocks/client';
 import dynamic from 'next/dynamic';
 import { ZipperLogo } from '../svg/zipper-logo';
 import { parseInputForTypes } from './parse-input-for-types';
+import SettingsModal from '../app/settingsModal';
+import { HiLightningBolt, HiOutlineCog, HiOutlineShare } from 'react-icons/hi';
 
 const PlaygroundEditor = dynamic(() => import('./playground-editor'), {
   ssr: false,
@@ -96,6 +98,12 @@ export function Playground({
     isOpen: isOpenShare,
     onOpen: onOpenShare,
     onClose: onCloseShare,
+  } = useDisclosure();
+
+  const {
+    isOpen: isOpenSettings,
+    onOpen: onOpenSettings,
+    onClose: onCloseSettings,
   } = useDisclosure();
 
   const utils = trpc.useContext();
@@ -281,12 +289,12 @@ export function Playground({
                   <UnlockIcon color={'gray.500'} boxSize={4} mb={1} />
                 )}
               </Box>
-              {app.parent && (
+              {app.parentId && (
                 <Box>
                   <Link
                     onClick={() => {
-                      if (app.parent) {
-                        router.push(`/app/${app.parent.id}/edit`);
+                      if (app.parentId) {
+                        router.push(`/app/${app.parentId}/edit`);
                       }
                     }}
                   >
@@ -294,7 +302,7 @@ export function Playground({
                   </Link>
                 </Box>
               )}
-              <Box>{app.name || app.slug}</Box>
+              <Box>{app.slug}</Box>
             </HStack>
           </Heading>
           <HStack gap={2}>
@@ -318,25 +326,26 @@ export function Playground({
         <GridItem colSpan={2} justifyContent="end">
           <HStack justifyContent="end">
             {isUserAnAppEditor && (
-              <Button variant={'outline'} paddingX={8} onClick={onOpenShare}>
-                Share
+              <Button variant={'outline'} onClick={onOpenSettings}>
+                <HiOutlineCog />
               </Button>
             )}
             {isUserAnAppEditor && (
-              <Button variant={'outline'} paddingX={8} onClick={saveApp}>
-                Save
+              <Button variant={'outline'} onClick={onOpenShare}>
+                <HiOutlineShare />
               </Button>
             )}
             {isUserAnAppEditor && (
               <Button
                 type="button"
-                paddingX={8}
+                paddingX={4}
                 variant="solid"
                 bgColor="purple.800"
                 textColor="gray.100"
                 onClick={runApp}
               >
-                Run
+                <HiLightningBolt />
+                <Text ml="2">Run</Text>
               </Button>
             )}
             {!isUserAnAppEditor && !session.loading && (
@@ -472,6 +481,11 @@ export function Playground({
 
       <AppRunModal isOpen={isOpenAppRun} onClose={onCloseAppRun} appId={id} />
       <ShareModal isOpen={isOpenShare} onClose={onCloseShare} appId={id} />
+      <SettingsModal
+        isOpen={isOpenSettings}
+        onClose={onCloseSettings}
+        appId={id}
+      />
     </>
   );
 }

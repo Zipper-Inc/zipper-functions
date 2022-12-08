@@ -4,19 +4,19 @@ import generate from 'project-name-generator';
 import { prisma } from '~/server/prisma';
 import { createRouter } from '../createRouter';
 import { hasAppEditPermission } from '../utils/authz.utils';
+import slugify from '~/utils/slugify';
 
 const defaultSelect = Prisma.validator<Prisma.AppSelect>()({
   id: true,
   name: true,
   slug: true,
   description: true,
+  isPrivate: true,
+  lastDeploymentVersion: true,
+  parentId: true,
+  submissionState: true,
   createdAt: true,
   updatedAt: true,
-  scriptMain: true,
-  isPrivate: true,
-  submissionState: true,
-  parent: true,
-  lastDeploymentVersion: true,
 });
 
 export const appRouter = createRouter()
@@ -46,8 +46,8 @@ export const appRouter = createRouter()
       if (!app) return;
 
       const defaultCode = [
-        'async function main() {',
-        "  // Let's go!",
+        'async function main({worldString}: {worldString: string}) {',
+        '  return `Hello ${worldString}`;',
         '}',
       ].join('\n');
 
@@ -133,6 +133,7 @@ export const appRouter = createRouter()
           editors: {
             include: { user: { select: { superTokenId: true } } },
           },
+          settings: true,
         },
       });
     },
@@ -156,7 +157,7 @@ export const appRouter = createRouter()
 
       const fork = await prisma.app.create({
         data: {
-          slug: generate().dashed,
+          slug: generate({ words: 3 }).dashed,
           description: app.description,
           parentId: app.id,
           editors: {
@@ -203,6 +204,12 @@ export const appRouter = createRouter()
       id: z.string().uuid(),
       data: z.object({
         name: z.string().min(3).max(255).optional(),
+        slug: z
+          .string()
+          .min(5)
+          .max(60)
+          .transform((arg) => slugify(arg))
+          .optional(),
         description: z.string().optional().nullable(),
         isPrivate: z.boolean().optional(),
         lastDeploymentVersion: z.string().optional(),
