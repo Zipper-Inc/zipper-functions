@@ -44,6 +44,11 @@ async function patchedReq(
   url.host = DENO_ORIGIN.host;
   url.port = DENO_ORIGIN.port;
   url.protocol = DENO_ORIGIN.protocol;
+  const [, , ...remainingParts] = url.pathname.split('/');
+  const path = remainingParts.join('/');
+
+  url.pathname = path;
+
   if (url.searchParams.has(ZIPPER_RPC_ROOT)) {
     rpcRoot = url.searchParams.get(ZIPPER_RPC_ROOT) as string;
     url.searchParams.delete(ZIPPER_RPC_ROOT);
@@ -93,7 +98,7 @@ function serveInternalError(err: Error) {
 
 export async function serveRelay(req: Request) {
   const url = new URL(req.url);
-  const deploymentId = url.pathname.replace(/^\/|\/$/g, '');
+  const deploymentId = url.pathname.split('/')[1];
   const [appId, version] = deploymentId.split('@');
   console.log('booting app', appId, 'version', version);
   return await relayTo(req, deploymentId);
