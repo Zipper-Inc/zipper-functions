@@ -6,5 +6,5 @@ const client = createClient({
     'pk_dev_WaQ9OrYRc8p-PmBFJeYpLguPZfhANQWyjsLuYYnxKIQxXD8gnJ0VlUYSCW4I3Vwa',
 });
 
-export const { useStorage, RoomProvider, useMutation } =
+export const { useStorage, RoomProvider, useMutation, useOthers, useSelf } =
   createRoomContext(client);
