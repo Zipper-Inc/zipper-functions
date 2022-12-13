@@ -18,7 +18,6 @@ import NextLink from 'next/link';
 import React, { Fragment } from 'react';
 import AddScriptForm from '~/components/edit-app-page/add-script-form';
 import { Script } from '@prisma/client';
-import { useOthers, useSelf } from '~/liveblocks.config';
 
 export function PlaygroundSidebar({
   app,
@@ -31,10 +30,18 @@ export function PlaygroundSidebar({
   currentScript: Script;
   mainScript: Script;
 }) {
-  const others = useOthers();
-  const self = useSelf();
+  const sortScripts = (a: any, b: any) => {
+    let orderA;
+    let orderB;
 
-  console.log({ others, self });
+    // always make sure `main` is on top, respect order after
+    if (a.id === mainScript?.id) orderA = -Infinity;
+    else orderA = a.order === null ? Infinity : a.order;
+    if (b.id === mainScript?.id) orderB = -Infinity;
+    else orderB = b.order === null ? Infinity : b.order;
+    return orderA > orderB ? 1 : -1;
+  };
+
   return (
     <VStack alignItems="start" gap={2}>
       <HStack w="full">
@@ -61,17 +68,7 @@ export function PlaygroundSidebar({
         )}
       </HStack>
       {app.scripts
-        .sort((a: any, b: any) => {
-          let orderA;
-          let orderB;
-
-          // always make sure `main` is on top, respect order after
-          if (a.id === mainScript?.id) orderA = -Infinity;
-          else orderA = a.order === null ? Infinity : a.order;
-          if (b.id === mainScript?.id) orderB = -Infinity;
-          else orderB = b.order === null ? Infinity : b.order;
-          return orderA > orderB ? 1 : -1;
-        })
+        .sort(sortScripts)
         .filter((s: Script) => !s.connectorId)
         .map((script: any) => (
           <Fragment key={script.id}>

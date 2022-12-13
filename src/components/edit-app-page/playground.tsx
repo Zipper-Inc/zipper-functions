@@ -4,7 +4,6 @@ import {
   FormControl,
   GridItem,
   HStack,
-  Heading,
   Link,
   Text,
   VStack,
@@ -13,7 +12,6 @@ import {
   Code,
 } from '@chakra-ui/react';
 import debounce from 'lodash.debounce';
-import { LockIcon, UnlockIcon } from '@chakra-ui/icons';
 import { VscTypeHierarchy } from 'react-icons/vsc';
 import { useRouter } from 'next/router';
 import NextLink from 'next/link';
@@ -23,7 +21,6 @@ import SecretsModal from '~/components/app/secretsModal';
 import ScheduleModal from '~/components/app/scheduleModal';
 import AppRunModal from '~/components/app/appRunModal';
 import ShareModal from '~/components/app/shareModal';
-import ForkIcon from '~/components/svg/forkIcon';
 import { AppEditSidebar } from '~/components/app/app-edit-sidebar';
 import { useCmdOrCtrl } from '~/hooks/use-cmd-or-ctrl';
 import useInterval from '~/hooks/use-interval';
@@ -43,7 +40,6 @@ import {
 } from '~/liveblocks.config';
 import { LiveObject, LsonObject } from '@liveblocks/client';
 import dynamic from 'next/dynamic';
-import { ZipperLogo } from '../svg/zipper-logo';
 import { parseInputForTypes } from './parse-input-for-types';
 import SettingsModal from '../app/settingsModal';
 import { HiLightningBolt, HiOutlineCog, HiOutlineShare } from 'react-icons/hi';
@@ -51,6 +47,7 @@ import { connectors } from '~/config/connectors';
 import { ConnectorForm } from './connector-form';
 import { Script } from '@prisma/client';
 import { PlaygroundSidebar } from './playground-sidebar';
+import { PlaygroundHeader } from './playground-header';
 
 const PlaygroundEditor = dynamic(() => import('./playground-editor'), {
   ssr: false,
@@ -301,53 +298,13 @@ export function Playground({
         paddingX={10}
       >
         <GridItem colSpan={10} mb="5">
-          <Heading as="h1" size="md" pb={5}>
-            <HStack>
-              <Box mr={5} height={4}>
-                <Link href="/">
-                  <ZipperLogo style={{ maxHeight: '100%' }} />
-                </Link>
-              </Box>
-              <Box>
-                {app.isPrivate ? (
-                  <LockIcon fill={'gray.500'} boxSize={4} mb={1} />
-                ) : (
-                  <UnlockIcon color={'gray.500'} boxSize={4} mb={1} />
-                )}
-              </Box>
-              {app.parentId && (
-                <Box>
-                  <Link
-                    onClick={() => {
-                      if (app.parentId) {
-                        router.push(`/app/${app.parentId}/edit`);
-                      }
-                    }}
-                  >
-                    <ForkIcon fill={'gray.300'} size={16} />
-                  </Link>
-                </Box>
-              )}
-              <Box>{app.slug}</Box>
-            </HStack>
-          </Heading>
-          <HStack gap={2}>
-            <Text
-              fontWeight={600}
-              borderBottom="1px solid"
-              borderBottomColor={'purple.600'}
-            >
-              Code
-            </Text>
-            <Text>|</Text>
-            {isUserAnAppEditor && (
-              <>
-                <Link onClick={onOpenAppRun}>Runs</Link>
-                <Link onClick={onOpenSchedule}>Schedules</Link>
-              </>
-            )}
-            <Link onClick={onOpenSecrets}>Secrets</Link>
-          </HStack>
+          <PlaygroundHeader
+            app={app}
+            isUserAnAppEditor={isUserAnAppEditor}
+            onOpenAppRun={onOpenAppRun}
+            onOpenSchedule={onOpenSchedule}
+            onOpenSecrets={onOpenSecrets}
+          />
         </GridItem>
         <GridItem colSpan={2} justifyContent="end">
           <HStack justifyContent="end">
@@ -398,7 +355,6 @@ export function Playground({
         </GridItem>
         <GridItem colSpan={2}>
           <PlaygroundSidebar
-            id={id}
             app={app}
             isUserAnAppEditor={isUserAnAppEditor}
             currentScript={currentScript}

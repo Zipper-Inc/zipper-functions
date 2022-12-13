@@ -98,7 +98,7 @@ const Header: React.FC<HeaderProps> = ({ showNav = true }) => {
                   <Menu>
                     <MenuButton as={Link}>
                       <HStack>
-                        <AvatarForCurrentUser />
+                        <AvatarForCurrentUser size="sm" />
                         <ChevronDownIcon />
                       </HStack>
                     </MenuButton>
