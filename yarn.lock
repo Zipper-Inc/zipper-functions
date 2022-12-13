@@ -1530,6 +1530,13 @@
   resolved "https://registry.yarnpkg.com/@liveblocks/core/-/core-0.19.1.tgz#0827dd6e7d82caf51a9425b3c5af0b99db732841"
   integrity sha512-IJOxJIn4hMokn8eawP8yoNt0GCKnpCR2TUhqMfLtNcnxzOwYeVZyX2XHqx28VinPGDNltxkMUUnoWImRA0ez9Q==
 
+"@liveblocks/node@^0.19.2":
+  version "0.19.2"
+  resolved "https://registry.yarnpkg.com/@liveblocks/node/-/node-0.19.2.tgz#e83d5d24447e6730145536cf5f7e3c96e86cde7e"
+  integrity sha512-LNXWX98C16/ceHiEaXspJJXL8zidB1RpoKUErcyDJrnPi+yPym6BYA9oua7vx5UIOxPKAWybaqxw5O7TLU64oA==
+  dependencies:
+    node-fetch "^2.6.1"
+
 "@liveblocks/react@^0.19.1":
   version "0.19.1"
   resolved "https://registry.yarnpkg.com/@liveblocks/react/-/react-0.19.1.tgz#0d951507e54182517d3fed2c51b9ad039a8903be"
@@ -5716,7 +5723,7 @@ nice-try@^1.0.4:
   resolved "https://registry.yarnpkg.com/nice-try/-/nice-try-1.0.5.tgz#a3378a7696ce7d223e88fc9b764bd7ef1089e366"
   integrity sha512-1nh45deeb5olNY7eX82BkPO7SSxR5SSYJiPTrTdFUVYwAl8CKMA5N9PjTYkHiRjisVcxcQ1HXdLhx2qxxJzLNQ==
 
-node-fetch@^2.6.7:
+node-fetch@^2.6.1, node-fetch@^2.6.7:
   version "2.6.7"
   resolved "https://registry.yarnpkg.com/node-fetch/-/node-fetch-2.6.7.tgz#24de9fba827e3b4ae44dc8b20256a379160052ad"
   integrity sha512-ZjMPFEfVx5j+y2yF35Kzx5sF7kDzxuDj6ziH4FFbOp87zKDZNx8yExJIb05OGF4Nlt9IHFIMBkRl41VdvcNdbQ==
