@@ -14,6 +14,7 @@ import ForkIcon from '~/components/svg/forkIcon';
 import { ZipperLogo } from '~/components/svg/zipper-logo';
 import { useSelf, useOthers } from '~/liveblocks.config';
 import { Avatar } from '../avatar';
+import { PlaygroundTab } from '~/types/playground';
 
 const isEditorOnline = (onlineEditorIds: string[], id: string) =>
   onlineEditorIds.includes(id);
@@ -74,18 +75,24 @@ function PlaygroundAvatars({
   );
 }
 
+function getCurrentTabProps(tabName: PlaygroundTab, currentTab: PlaygroundTab) {
+  if (tabName === currentTab)
+    return {
+      borderBottom: '1px solid',
+      borderBottomColor: 'purple.600',
+    };
+}
+
 export function PlaygroundHeader({
   app,
   isUserAnAppEditor,
-  onOpenAppRun,
-  onOpenSchedule,
-  onOpenSecrets,
+  currentTab,
+  setCurrentTab,
 }: {
   app: any;
   isUserAnAppEditor: boolean;
-  onOpenAppRun: () => void;
-  onOpenSchedule: () => void;
-  onOpenSecrets: () => void;
+  currentTab: PlaygroundTab;
+  setCurrentTab: (tab: PlaygroundTab) => void;
 }) {
   const self = useSelf();
   const others = useOthers();
@@ -138,21 +145,36 @@ export function PlaygroundHeader({
         </HStack>
       </Box>
       <HStack gap={2}>
-        <Text
+        <Link
           fontWeight={600}
-          borderBottom="1px solid"
-          borderBottomColor={'purple.600'}
+          onClick={() => setCurrentTab(PlaygroundTab.Code)}
+          {...getCurrentTabProps(PlaygroundTab.Code, currentTab)}
         >
           Code
-        </Text>
+        </Link>
         <Text>|</Text>
         {isUserAnAppEditor && (
           <>
-            <Link onClick={onOpenAppRun}>Runs</Link>
-            <Link onClick={onOpenSchedule}>Schedules</Link>
+            <Link
+              onClick={() => setCurrentTab(PlaygroundTab.Runs)}
+              {...getCurrentTabProps(PlaygroundTab.Runs, currentTab)}
+            >
+              Runs
+            </Link>
+            <Link
+              onClick={() => setCurrentTab(PlaygroundTab.Schedules)}
+              {...getCurrentTabProps(PlaygroundTab.Schedules, currentTab)}
+            >
+              Schedules
+            </Link>
           </>
         )}
-        <Link onClick={onOpenSecrets}>Secrets</Link>
+        <Link
+          onClick={() => setCurrentTab(PlaygroundTab.Secrets)}
+          {...getCurrentTabProps(PlaygroundTab.Secrets, currentTab)}
+        >
+          Secrets
+        </Link>
       </HStack>
     </>
   );

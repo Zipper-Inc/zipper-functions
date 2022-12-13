@@ -48,6 +48,7 @@ import { ConnectorForm } from './connector-form';
 import { Script } from '@prisma/client';
 import { PlaygroundSidebar } from './playground-sidebar';
 import { PlaygroundHeader } from './playground-header';
+import { PlaygroundTab } from '~/types/playground';
 
 const PlaygroundEditor = dynamic(() => import('./playground-editor'), {
   ssr: false,
@@ -79,41 +80,15 @@ export function Playground({
   app: any;
   filename: string;
 }) {
+  const [currentTab, setCurrentTab] = useState<PlaygroundTab>(
+    PlaygroundTab.Code,
+  );
+
   const router = useRouter();
 
   const session = useSessionContext() as SessionContextUpdate & {
     loading: boolean;
   };
-
-  const {
-    isOpen: isOpenSecrets,
-    onOpen: onOpenSecrets,
-    onClose: onCloseSecrets,
-  } = useDisclosure();
-
-  const {
-    isOpen: isOpenSchedule,
-    onOpen: onOpenSchedule,
-    onClose: onCloseSchedule,
-  } = useDisclosure();
-
-  const {
-    isOpen: isOpenAppRun,
-    onOpen: onOpenAppRun,
-    onClose: onCloseAppRun,
-  } = useDisclosure();
-
-  const {
-    isOpen: isOpenShare,
-    onOpen: onOpenShare,
-    onClose: onCloseShare,
-  } = useDisclosure();
-
-  const {
-    isOpen: isOpenSettings,
-    onOpen: onOpenSettings,
-    onClose: onCloseSettings,
-  } = useDisclosure();
 
   const utils = trpc.useContext();
 
@@ -301,20 +276,25 @@ export function Playground({
           <PlaygroundHeader
             app={app}
             isUserAnAppEditor={isUserAnAppEditor}
-            onOpenAppRun={onOpenAppRun}
-            onOpenSchedule={onOpenSchedule}
-            onOpenSecrets={onOpenSecrets}
+            currentTab={currentTab}
+            setCurrentTab={setCurrentTab}
           />
         </GridItem>
         <GridItem colSpan={2} justifyContent="end">
           <HStack justifyContent="end">
             {isUserAnAppEditor && (
-              <Button variant={'outline'} onClick={onOpenSettings}>
+              <Button
+                variant={'outline'}
+                onClick={() => setCurrentTab(PlaygroundTab.Settings)}
+              >
                 <HiOutlineCog />
               </Button>
             )}
             {isUserAnAppEditor && (
-              <Button variant={'outline'} onClick={onOpenShare}>
+              <Button
+                variant={'outline'}
+                onClick={() => setCurrentTab(PlaygroundTab.Share)}
+              >
                 <HiOutlineShare />
               </Button>
             )}
@@ -473,24 +453,32 @@ export function Playground({
         </GridItem>
       </Grid>
       <SecretsModal
-        isOpen={isOpenSecrets}
-        onClose={onCloseSecrets}
+        isOpen={currentTab === PlaygroundTab.Secrets}
+        onClose={() => setCurrentTab(PlaygroundTab.Code)}
         editable={isUserAnAppEditor}
         appId={id}
       />
 
       <ScheduleModal
-        isOpen={isOpenSchedule}
-        onClose={onCloseSchedule}
+        isOpen={currentTab === PlaygroundTab.Schedules}
+        onClose={() => setCurrentTab(PlaygroundTab.Code)}
         inputParams={inputParams}
         appId={id}
       />
 
-      <AppRunModal isOpen={isOpenAppRun} onClose={onCloseAppRun} appId={id} />
-      <ShareModal isOpen={isOpenShare} onClose={onCloseShare} appId={id} />
+      <AppRunModal
+        isOpen={currentTab === PlaygroundTab.Runs}
+        onClose={() => setCurrentTab(PlaygroundTab.Code)}
+        appId={id}
+      />
+      <ShareModal
+        isOpen={currentTab === PlaygroundTab.Share}
+        onClose={() => setCurrentTab(PlaygroundTab.Code)}
+        appId={id}
+      />
       <SettingsModal
-        isOpen={isOpenSettings}
-        onClose={onCloseSettings}
+        isOpen={currentTab === PlaygroundTab.Settings}
+        onClose={() => setCurrentTab(PlaygroundTab.Code)}
         appId={id}
       />
     </>
