@@ -134,6 +134,7 @@ export const appRouter = createRouter()
             include: { user: { select: { superTokenId: true } } },
           },
           settings: true,
+          connectors: true,
         },
       });
     },

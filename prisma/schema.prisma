@@ -35,6 +35,7 @@ model App {
   parent  App?  @relation("AppForks", fields: [parentId], references: [id])
   forks   App[] @relation("AppForks")
   settings AppSetting[]
+  connectors AppConnector[]
 
   @@map("apps")
 }
@@ -92,6 +93,20 @@ model AppRun {
   @@map("apps_runs")
 }
 
+model AppConnector {
+  id        String    @id @default(uuid())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @default(now())
+  deletedAt DateTime? @db.Timestamp(6)
+  type      String
+  appId     String
+
+  app       App      @relation(fields: [appId], references: [id])
+
+  @@unique([appId, type])
+  @@map("app_connectors")
+}
+
 model Secret {
   id             String    @id @default(uuid())
   createdAt      DateTime  @default(now())
@@ -119,17 +134,18 @@ model Schedule {
 }
 
 model Script {
-  id           String    @id @default(uuid())
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime? @default(now())
-  name         String
-  filename     String
-  description  String?
-  code         String
-  order        Int?      @default(0)
-  appId        String
-  inputSchema  Json?
-  outputSchema Json?
+  id            String    @id @default(uuid())
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime? @default(now())
+  name          String
+  filename      String
+  description   String?
+  code          String
+  order         Int?      @default(0)
+  appId         String
+  inputSchema   Json?
+  outputSchema  Json?
+  connectorId   String?
 
   app        App         @relation(fields: [appId], references: [id])
   scriptMain ScriptMain?

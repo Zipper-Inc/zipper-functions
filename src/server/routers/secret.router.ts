@@ -72,7 +72,8 @@ export const secretRouter = createRouter()
   // delete
   .mutation('delete', {
     input: z.object({
-      id: z.string(),
+      id: z.string().optional(),
+      key: z.string().optional(),
       appId: z.string(),
     }),
     async resolve({ ctx, input }) {
@@ -80,15 +81,30 @@ export const secretRouter = createRouter()
         superTokenId: ctx.superTokenId,
         appId: input.appId,
       });
-      await prisma.secret.deleteMany({
-        where: {
-          id: input.id,
-          appId: input.appId,
-        },
-      });
+      if (input.id) {
+        await prisma.secret.deleteMany({
+          where: {
+            id: input.id,
+            appId: input.appId,
+          },
+        });
 
-      return {
-        id: input.id,
-      };
+        return {
+          id: input.id,
+        };
+      }
+
+      if (input.key) {
+        await prisma.secret.deleteMany({
+          where: {
+            key: input.key,
+            appId: input.appId,
+          },
+        });
+
+        return {
+          key: input.key,
+        };
+      }
     },
   });

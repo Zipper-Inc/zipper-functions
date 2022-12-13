@@ -10,20 +10,33 @@ import {
   Input,
   HStack,
   Link,
+  Text,
+  Code,
 } from '@chakra-ui/react';
 import { useEffect, useRef, useState } from 'react';
-import { FormProvider } from 'react-hook-form';
+import { FieldValues, FormProvider, UseFormReturn } from 'react-hook-form';
 import { HiOutlineDocumentDuplicate, HiRefresh } from 'react-icons/hi';
 import InputParamsForm from '~/components/edit-app-page/input-params-form';
 import { LogLine } from '~/components/edit-app-page/log-line';
+import { InputParam } from '~/types/input-params';
 
 export function AppEditSidebar({
+  showInputForm = true,
   inputParamsFormMethods,
   inputParams,
   inputValues,
   appEventsQuery,
   appInfo,
-}: any) {
+  tips,
+}: {
+  showInputForm: boolean;
+  inputParamsFormMethods: UseFormReturn<FieldValues, any>;
+  inputParams: InputParam[];
+  inputValues: Record<string, string>;
+  appEventsQuery: any;
+  appInfo: { slug: string; version: string | undefined };
+  tips?: JSX.Element;
+}) {
   const [tabIndex, setTabIndex] = useState(0);
   const [urlSearchParams, setUrlSearchParams] = useState('');
   const [iframeUrl, setIframeUrl] = useState('');
@@ -51,18 +64,37 @@ export function AppEditSidebar({
   return (
     <Tabs as="aside" index={tabIndex} onChange={handleTabsChange}>
       <TabList>
-        <Tab>Inputs</Tab>
+        {showInputForm && <Tab>Inputs</Tab>}
+        {tips && <Tab>Tips</Tab>}
         <Tab>Results</Tab>
         <Tab isDisabled={!logs?.length}>Logs</Tab>
       </TabList>
       <TabPanels>
-        <TabPanel backgroundColor="gray.100">
-          <FormProvider {...inputParamsFormMethods}>
-            {inputParams.length ? (
-              <InputParamsForm params={inputParams} defaultValues={{}} />
-            ) : null}
-          </FormProvider>
-        </TabPanel>
+        {showInputForm && (
+          <TabPanel backgroundColor="gray.100">
+            <FormProvider {...inputParamsFormMethods}>
+              {inputParams && inputParams.length ? (
+                <InputParamsForm
+                  params={inputParams || []}
+                  defaultValues={{}}
+                />
+              ) : (
+                <>
+                  <Text>
+                    Add parameters to your main function and they'll show up
+                    here. Here's an example:
+                  </Text>
+                  <Code my="5">
+                    {`async function main({greeting}: {greeting: string}) {
+                      ...
+                    }`}
+                  </Code>
+                </>
+              )}
+            </FormProvider>
+          </TabPanel>
+        )}
+        {tips && <TabPanel>{tips}</TabPanel>}
         <TabPanel p="0">
           <VStack align="start">
             <Box w="full" p="2" backgroundColor="gray.100">

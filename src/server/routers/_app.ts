@@ -11,7 +11,7 @@ import { scheduleRouter } from './schedule.router';
 import { appRunRouter } from './appRun.router';
 import { userRouter } from './user.router';
 import { appEditorRouter } from './appEditor.router';
-import { TRPCError } from '@trpc/server';
+import { appConnectorRouter } from './appConnector.router';
 
 /**
  * Create your application's root router
@@ -39,6 +39,7 @@ export const trpcRouter = createRouter()
     },
   })
   .merge('app.', appRouter)
+  .merge('appConnector.', appConnectorRouter)
   .merge('appEditor.', appEditorRouter)
   .merge('appEvent.', appEventRouter)
   .merge('appRun.', appRunRouter)

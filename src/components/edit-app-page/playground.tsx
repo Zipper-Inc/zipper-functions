@@ -17,9 +17,11 @@ import {
   PopoverCloseButton,
   PopoverHeader,
   PopoverBody,
+  Code,
 } from '@chakra-ui/react';
 import debounce from 'lodash.debounce';
 import { AddIcon, LockIcon, UnlockIcon } from '@chakra-ui/icons';
+import { VscCode, VscTypeHierarchy } from 'react-icons/vsc';
 import { useRouter } from 'next/router';
 import NextLink from 'next/link';
 import React, { Fragment, useEffect, useState } from 'react';
@@ -53,6 +55,9 @@ import { ZipperLogo } from '../svg/zipper-logo';
 import { parseInputForTypes } from './parse-input-for-types';
 import SettingsModal from '../app/settingsModal';
 import { HiLightningBolt, HiOutlineCog, HiOutlineShare } from 'react-icons/hi';
+import { connectors } from '~/config/connectors';
+import { ConnectorForm } from './connector-form';
+import { Script } from '@prisma/client';
 
 const PlaygroundEditor = dynamic(() => import('./playground-editor'), {
   ssr: false,
@@ -62,6 +67,20 @@ const debouncedParseInputForTypes = debounce(
   (code, setInputParams) => setInputParams(parseInputForTypes(code)),
   500,
 );
+
+const ConnectorSidebarTips = (connectorId?: string) => {
+  if (!connectorId) return undefined;
+  return (
+    <>
+      <Text>
+        Import and use the configured client in other files by doing the
+        following:
+      </Text>
+      <Code my="5">import client from './{connectorId}-connector' </Code>
+      <Text>Available methods:</Text>
+    </>
+  );
+};
 
 export function Playground({
   app,
@@ -110,6 +129,20 @@ export function Playground({
 
   const editAppMutation = trpc.useMutation('app.edit', {
     async onSuccess() {
+      await utils.invalidateQueries(['app.byId', { id }]);
+    },
+  });
+
+  const addScript = trpc.useMutation('script.add', {
+    async onSuccess() {
+      // refetches posts after a post is added
+      await utils.invalidateQueries(['script.byAppId', { appId: id }]);
+    },
+  });
+
+  const addAppConnector = trpc.useMutation('appConnector.add', {
+    async onSuccess() {
+      // refetches posts after a post is added
       await utils.invalidateQueries(['app.byId', { id }]);
     },
   });
@@ -373,6 +406,7 @@ export function Playground({
         <GridItem colSpan={2}>
           <VStack alignItems="start" gap={2}>
             <HStack w="full">
+              <VscCode />
               <Text size="sm" color="gray.500" flexGrow={1}>
                 Functions
               </Text>
@@ -406,6 +440,7 @@ export function Playground({
                 else orderB = b.order === null ? Infinity : b.order;
                 return orderA > orderB ? 1 : -1;
               })
+              .filter((s: Script) => !s.connectorId)
               .map((script: any) => (
                 <Fragment key={script.id}>
                   <NextLink
@@ -430,30 +465,106 @@ export function Playground({
                 </Fragment>
               ))}
           </VStack>
+          <VStack align="start" gap="2" mt="10">
+            <HStack w="full">
+              <VscTypeHierarchy />
+              <Text size="sm" color="gray.500" flexGrow={1}>
+                Connectors
+              </Text>
+            </HStack>
+
+            {isUserAnAppEditor &&
+              connectors.map((connector) => {
+                if (!app.connectors.find((c: any) => c.type === connector.id)) {
+                  return (
+                    <Link
+                      key={connector.id}
+                      fontSize="sm"
+                      onClick={() => {
+                        addAppConnector.mutateAsync({
+                          appId: app.id,
+                          type: connector.id,
+                        });
+
+                        addScript.mutateAsync({
+                          name: `${connector.id}-connector`,
+                          code: connector.code,
+                          appId: app.id,
+                          order: app.scripts.length + 1,
+                          connectorId: connector.id,
+                        });
+                      }}
+                    >
+                      + Add {connector.name}
+                    </Link>
+                  );
+                }
+              })}
+
+            {app.scripts
+              .filter((s: Script) => s.connectorId)
+              .map((script: any) => (
+                <Fragment key={script.id}>
+                  <NextLink
+                    href={`/app/${id}/edit/${script.filename}`}
+                    passHref
+                  >
+                    <Link
+                      fontSize="sm"
+                      fontWeight="light"
+                      w="100%"
+                      px={2}
+                      background={
+                        currentScript?.id === script.id
+                          ? 'purple.100'
+                          : 'transparent'
+                      }
+                      borderRadius={2}
+                    >
+                      <b>
+                        Configure{' '}
+                        {
+                          connectors.find((c) => c.id === script.connectorId)
+                            ?.name
+                        }
+                      </b>
+                    </Link>
+                  </NextLink>
+                </Fragment>
+              ))}
+          </VStack>
         </GridItem>
         <GridItem colSpan={6}>
           <VStack>
             <Box width="100%">
-              <FormControl>
-                <Box style={{ color: 'transparent' }}>
-                  {PlaygroundEditor && (
-                    <PlaygroundEditor
-                      key={currentScript?.id}
-                      value={
-                        currentScriptLive?.code || currentScript?.code || ''
-                      }
-                      onChange={(value = '') => {
-                        mutateLive(value);
-                      }}
-                    />
-                  )}
-                </Box>
-              </FormControl>
+              {currentScript.connectorId ? (
+                <ConnectorForm
+                  type={currentScript.connectorId}
+                  appId={app.id}
+                />
+              ) : (
+                <FormControl>
+                  <Box style={{ color: 'transparent' }}>
+                    {PlaygroundEditor && (
+                      <PlaygroundEditor
+                        key={currentScript?.id}
+                        value={
+                          currentScriptLive?.code || currentScript?.code || ''
+                        }
+                        onChange={(value = '') => {
+                          mutateLive(value);
+                        }}
+                      />
+                    )}
+                  </Box>
+                </FormControl>
+              )}
             </Box>
           </VStack>
         </GridItem>
         <GridItem colSpan={4}>
           <AppEditSidebar
+            showInputForm={!currentScript.connectorId}
             inputParamsFormMethods={inputParamsFormMethods}
             inputParams={inputParams}
             inputValues={inputValues}
@@ -462,6 +573,7 @@ export function Playground({
               slug: app.slug,
               version: lastRunVersion,
             }}
+            tips={ConnectorSidebarTips(currentScript.connectorId)}
           />
         </GridItem>
       </Grid>

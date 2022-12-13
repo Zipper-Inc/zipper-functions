@@ -19,8 +19,7 @@ import {
   Textarea,
   VStack,
 } from '@chakra-ui/react';
-import { useEffect } from 'react';
-import { FieldValues, FormProvider, useForm } from 'react-hook-form';
+import { FormProvider, useForm } from 'react-hook-form';
 import { HiOutlineBeaker } from 'react-icons/hi';
 import { trpc } from '~/utils/trpc';
 

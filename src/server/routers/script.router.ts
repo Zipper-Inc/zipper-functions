@@ -13,6 +13,7 @@ const defaultSelect = Prisma.validator<Prisma.ScriptSelect>()({
   code: true,
   createdAt: true,
   updatedAt: true,
+  connectorId: true,
 });
 
 export const scriptRouter = createRouter()
@@ -24,6 +25,7 @@ export const scriptRouter = createRouter()
       appId: z.string().uuid(),
       code: z.string(),
       order: z.number(),
+      connectorId: z.enum(['github', 'slack']).optional(),
     }),
     async resolve({ ctx, input }) {
       const { appId, ...data } = input;
