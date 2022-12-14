@@ -3,6 +3,4 @@ export enum PlaygroundTab {
   Runs,
   Schedules,
   Secrets,
-  Settings,
-  Share,
 }

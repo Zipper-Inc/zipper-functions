@@ -7,7 +7,7 @@ import { trpc } from '~/utils/trpc';
 
 import { withLiveBlocks } from '~/hocs/withLiveBlocks';
 
-import { Playground } from '~/components/edit-app-page/playground';
+import { Playground } from '~/components/app/playground';
 import { LiveObject } from '@liveblocks/client';
 import { NoHeaderLayout } from '~/components/no-header-layout';
 

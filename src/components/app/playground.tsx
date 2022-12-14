@@ -4,23 +4,19 @@ import {
   FormControl,
   GridItem,
   HStack,
-  Link,
   Text,
-  VStack,
-  useDisclosure,
   Grid,
   Code,
 } from '@chakra-ui/react';
 import debounce from 'lodash.debounce';
-import { VscTypeHierarchy } from 'react-icons/vsc';
+
 import { useRouter } from 'next/router';
-import NextLink from 'next/link';
-import React, { Fragment, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import SecretsModal from '~/components/app/secretsModal';
-import ScheduleModal from '~/components/app/scheduleModal';
-import AppRunModal from '~/components/app/appRunModal';
-import ShareModal from '~/components/app/shareModal';
+import PlaygroundSecrets from '~/components/app/playground-secrets';
+import PlaygroundSchedule from '~/components/app/playground-schedule';
+import PlaygroundRuns from '~/components/app/playground-runs';
+import ShareModal from '~/components/app/share-modal';
 import { AppEditSidebar } from '~/components/app/app-edit-sidebar';
 import { useCmdOrCtrl } from '~/hooks/use-cmd-or-ctrl';
 import useInterval from '~/hooks/use-interval';
@@ -41,11 +37,10 @@ import {
 import { LiveObject, LsonObject } from '@liveblocks/client';
 import dynamic from 'next/dynamic';
 import { parseInputForTypes } from './parse-input-for-types';
-import SettingsModal from '../app/settingsModal';
+import SettingsModal from '../app/settings-modal';
 import { HiLightningBolt, HiOutlineCog, HiOutlineShare } from 'react-icons/hi';
-import { connectors } from '~/config/connectors';
+
 import { ConnectorForm } from './connector-form';
-import { Script } from '@prisma/client';
 import { PlaygroundSidebar } from './playground-sidebar';
 import { PlaygroundHeader } from './playground-header';
 import { PlaygroundTab } from '~/types/playground';
@@ -98,20 +93,6 @@ export function Playground({
     },
   });
 
-  const addScript = trpc.useMutation('script.add', {
-    async onSuccess() {
-      // refetches posts after a post is added
-      await utils.invalidateQueries(['script.byAppId', { appId: id }]);
-    },
-  });
-
-  const addAppConnector = trpc.useMutation('appConnector.add', {
-    async onSuccess() {
-      // refetches posts after a post is added
-      await utils.invalidateQueries(['app.byId', { id }]);
-    },
-  });
-
   const [inputParams, setInputParams] = useState<InputParam[]>([]);
   const [lastRunVersion, setLastRunVersion] = React.useState<string>();
   const [isUserAnAppEditor, setIsUserAnAppEditor] = React.useState(false);
@@ -120,6 +101,9 @@ export function Playground({
   );
 
   const inputParamsFormMethods = useForm();
+
+  const [isSettingsModalOpen, setSettingModalOpen] = useState(false);
+  const [isShareModalOpen, setShareModalOpen] = useState(false);
 
   const { id } = app;
 
@@ -263,6 +247,39 @@ export function Playground({
     [],
   );
 
+  const tabBody = () => {
+    switch (currentTab) {
+      case PlaygroundTab.Secrets:
+        return <PlaygroundSecrets editable={isUserAnAppEditor} appId={id} />;
+
+      case PlaygroundTab.Schedules:
+        return <PlaygroundSchedule inputParams={inputParams} appId={id} />;
+
+      case PlaygroundTab.Runs:
+        return <PlaygroundRuns appId={id} />;
+
+      default:
+      case PlaygroundTab.Code:
+        return currentScript.connectorId ? (
+          <ConnectorForm type={currentScript.connectorId} appId={app.id} />
+        ) : (
+          <FormControl>
+            <Box style={{ color: 'transparent' }}>
+              {PlaygroundEditor && (
+                <PlaygroundEditor
+                  key={currentScript?.id}
+                  value={currentScriptLive?.code || currentScript?.code || ''}
+                  onChange={(value = '') => {
+                    mutateLive(value);
+                  }}
+                />
+              )}
+            </Box>
+          </FormControl>
+        );
+    }
+  };
+
   return (
     <>
       <Grid
@@ -285,7 +302,7 @@ export function Playground({
             {isUserAnAppEditor && (
               <Button
                 variant={'outline'}
-                onClick={() => setCurrentTab(PlaygroundTab.Settings)}
+                onClick={() => setSettingModalOpen(true)}
               >
                 <HiOutlineCog />
               </Button>
@@ -293,7 +310,7 @@ export function Playground({
             {isUserAnAppEditor && (
               <Button
                 variant={'outline'}
-                onClick={() => setCurrentTab(PlaygroundTab.Share)}
+                onClick={() => setShareModalOpen(true)}
               >
                 <HiOutlineShare />
               </Button>
@@ -340,102 +357,9 @@ export function Playground({
             currentScript={currentScript}
             mainScript={mainScript}
           />
-          <VStack align="start" gap="2" mt="10">
-            <HStack w="full">
-              <VscTypeHierarchy />
-              <Text size="sm" color="gray.500" flexGrow={1}>
-                Connectors
-              </Text>
-            </HStack>
-
-            {isUserAnAppEditor &&
-              connectors.map((connector) => {
-                if (!app.connectors.find((c: any) => c.type === connector.id)) {
-                  return (
-                    <Link
-                      key={connector.id}
-                      fontSize="sm"
-                      onClick={() => {
-                        addAppConnector.mutateAsync({
-                          appId: app.id,
-                          type: connector.id,
-                        });
-
-                        addScript.mutateAsync({
-                          name: `${connector.id}-connector`,
-                          code: connector.code,
-                          appId: app.id,
-                          order: app.scripts.length + 1,
-                          connectorId: connector.id,
-                        });
-                      }}
-                    >
-                      + Add {connector.name}
-                    </Link>
-                  );
-                }
-              })}
-
-            {app.scripts
-              .filter((s: Script) => s.connectorId)
-              .map((script: any) => (
-                <Fragment key={script.id}>
-                  <NextLink
-                    href={`/app/${id}/edit/${script.filename}`}
-                    passHref
-                  >
-                    <Link
-                      fontSize="sm"
-                      fontWeight="light"
-                      w="100%"
-                      px={2}
-                      background={
-                        currentScript?.id === script.id
-                          ? 'purple.100'
-                          : 'transparent'
-                      }
-                      borderRadius={2}
-                    >
-                      <b>
-                        Configure{' '}
-                        {
-                          connectors.find((c) => c.id === script.connectorId)
-                            ?.name
-                        }
-                      </b>
-                    </Link>
-                  </NextLink>
-                </Fragment>
-              ))}
-          </VStack>
         </GridItem>
         <GridItem colSpan={6}>
-          <VStack>
-            <Box width="100%">
-              {currentScript.connectorId ? (
-                <ConnectorForm
-                  type={currentScript.connectorId}
-                  appId={app.id}
-                />
-              ) : (
-                <FormControl>
-                  <Box style={{ color: 'transparent' }}>
-                    {PlaygroundEditor && (
-                      <PlaygroundEditor
-                        key={currentScript?.id}
-                        value={
-                          currentScriptLive?.code || currentScript?.code || ''
-                        }
-                        onChange={(value = '') => {
-                          mutateLive(value);
-                        }}
-                      />
-                    )}
-                  </Box>
-                </FormControl>
-              )}
-            </Box>
-          </VStack>
+          <Box width="100%">{tabBody()}</Box>
         </GridItem>
         <GridItem colSpan={4}>
           <AppEditSidebar
@@ -452,33 +376,14 @@ export function Playground({
           />
         </GridItem>
       </Grid>
-      <SecretsModal
-        isOpen={currentTab === PlaygroundTab.Secrets}
-        onClose={() => setCurrentTab(PlaygroundTab.Code)}
-        editable={isUserAnAppEditor}
-        appId={id}
-      />
-
-      <ScheduleModal
-        isOpen={currentTab === PlaygroundTab.Schedules}
-        onClose={() => setCurrentTab(PlaygroundTab.Code)}
-        inputParams={inputParams}
-        appId={id}
-      />
-
-      <AppRunModal
-        isOpen={currentTab === PlaygroundTab.Runs}
-        onClose={() => setCurrentTab(PlaygroundTab.Code)}
-        appId={id}
-      />
       <ShareModal
-        isOpen={currentTab === PlaygroundTab.Share}
-        onClose={() => setCurrentTab(PlaygroundTab.Code)}
+        isOpen={isShareModalOpen}
+        onClose={() => setShareModalOpen(false)}
         appId={id}
       />
       <SettingsModal
-        isOpen={currentTab === PlaygroundTab.Settings}
-        onClose={() => setCurrentTab(PlaygroundTab.Code)}
+        isOpen={isSettingsModalOpen}
+        onClose={() => setSettingModalOpen(false)}
         appId={id}
       />
     </>

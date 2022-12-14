@@ -9,13 +9,7 @@ import {
   HStack,
   IconButton,
   Input,
-  Modal,
-  ModalBody,
-  ModalCloseButton,
-  ModalContent,
-  ModalFooter,
-  ModalHeader,
-  ModalOverlay,
+  Heading,
   VStack,
   useDisclosure,
   Text,
@@ -23,24 +17,17 @@ import {
 } from '@chakra-ui/react';
 import { AddIcon, CloseIcon, LockIcon } from '@chakra-ui/icons';
 import { useFieldArray, useForm, UseFormRegister } from 'react-hook-form';
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState } from 'react';
 
 import { trpc } from '~/utils/trpc';
 import { FiTrash } from 'react-icons/fi';
 
 type Props = {
-  isOpen: boolean;
-  onClose: () => void;
   appId: string;
   editable: boolean;
 };
 
-const SecretsModal: React.FC<Props> = ({
-  isOpen,
-  onClose,
-  appId,
-  editable,
-}) => {
+const PlaygroundSecrets: React.FC<Props> = ({ appId, editable }) => {
   const utils = trpc.useContext();
   const { register, handleSubmit, reset, control } = useForm({
     defaultValues: {
@@ -67,12 +54,6 @@ const SecretsModal: React.FC<Props> = ({
       await utils.invalidateQueries(['secret.all', { appId }]);
     },
   });
-
-  useEffect(() => {
-    if (isOpen) {
-      existingSecrets.refetch();
-    }
-  }, [isOpen]);
 
   const Edit = ({
     register,
@@ -190,94 +171,85 @@ const SecretsModal: React.FC<Props> = ({
   };
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={() => {
-        onClose();
-      }}
-    >
-      <ModalOverlay />
-      <ModalContent>
-        <form
-          onSubmit={handleSubmit((data) => {
-            console.log(data);
-            data.secrets.map((secret: Record<'key' | 'value', string>) => {
-              if (secret.key && secret.value) {
-                addSecret.mutate({
-                  key: secret.key,
-                  value: secret.value,
-                  appId,
-                });
-              }
-            });
+    <Box px="2">
+      <form
+        onSubmit={handleSubmit((data) => {
+          console.log(data);
+          data.secrets.map((secret: Record<'key' | 'value', string>) => {
+            if (secret.key && secret.value) {
+              addSecret.mutate({
+                key: secret.key,
+                value: secret.value,
+                appId,
+              });
+            }
+          });
 
-            reset();
-          })}
-        >
-          <ModalHeader>Secrets</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            <VStack align={'start'}>
-              <>
-                <Box mb={4}>
-                  <Text>
-                    Use environment variables to provide secrets and environment
-                    information to your deployments. You can access them from
-                    your code by using the
-                  </Text>
-                  <Text display={'inline'} fontWeight="bold">
-                    {' '}
-                    Zipper.env{' '}
-                  </Text>
-                  <Text display={'inline'}>API.</Text>
-                </Box>
-                {existingSecrets.data &&
-                  existingSecrets.data.map((secret) => (
-                    <HStack key={secret.id}>
-                      <Edit existingSecret={secret} />
-                    </HStack>
-                  ))}
-                {register &&
-                  editable &&
-                  fields.map((field, index) => (
-                    <HStack key={field.id}>
-                      <Edit register={register} index={index} />
-                    </HStack>
-                  ))}
-              </>
-            </VStack>
-          </ModalBody>
+          reset();
+        })}
+      >
+        <Heading as="h6" pb="4" fontWeight={400}>
+          Secrets
+        </Heading>
+        <VStack align={'start'}>
+          <>
+            <Box mb={4}>
+              <Text>
+                Use environment variables to provide secrets and environment
+                information to your deployments. You can access them from your
+                code by using the
+              </Text>
+              <Text display={'inline'} fontWeight="bold">
+                {' '}
+                Zipper.env{' '}
+              </Text>
+              <Text display={'inline'}>API.</Text>
+            </Box>
+            {existingSecrets.data &&
+              existingSecrets.data.map((secret) => (
+                <HStack key={secret.id}>
+                  <Edit existingSecret={secret} />
+                </HStack>
+              ))}
+            {register &&
+              editable &&
+              fields.map((field, index) => (
+                <HStack key={field.id}>
+                  <Edit register={register} index={index} />
+                </HStack>
+              ))}
+          </>
+        </VStack>
 
-          <ModalFooter mt={4}>
-            {editable && (
-              <Button
-                variant="outline"
-                mr={3}
-                onClick={() => {
-                  append({
-                    key: '',
-                    value: '',
-                  });
-                }}
-              >
-                <AddIcon mr={2} boxSize={3} />
-                Add Variable
-              </Button>
-            )}
+        <Box mt={4} textAlign="right">
+          {editable && (
             <Button
-              type="submit"
-              colorScheme="blue"
-              // onClick={() => {
-              //   onClose();
-              // }}
+              variant="outline"
+              mr={3}
+              onClick={() => {
+                append({
+                  key: '',
+                  value: '',
+                });
+              }}
             >
-              {editable ? 'Save' : 'Close'}
+              <AddIcon mr={2} boxSize={3} />
+              Add Variable
             </Button>
-          </ModalFooter>
-        </form>
-      </ModalContent>
-    </Modal>
+          )}
+          <Button
+            type="submit"
+            colorScheme="blue"
+            // onClick={() => {
+            //   onClose();
+            // }}
+          >
+            {editable ? 'Save' : 'Close'}
+          </Button>
+        </Box>
+      </form>
+    </Box>
   );
 };
 
-export default SecretsModal;
+export default PlaygroundSecrets;

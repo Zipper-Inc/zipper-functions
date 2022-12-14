@@ -16,8 +16,8 @@ import {
 import { useEffect, useRef, useState } from 'react';
 import { FieldValues, FormProvider, UseFormReturn } from 'react-hook-form';
 import { HiOutlineDocumentDuplicate, HiRefresh } from 'react-icons/hi';
-import InputParamsForm from '~/components/edit-app-page/input-params-form';
-import { LogLine } from '~/components/edit-app-page/log-line';
+import InputParamsForm from '~/components/app/input-params-form';
+import { LogLine } from '~/components/app/log-line';
 import { InputParam } from '~/types/input-params';
 
 export function AppEditSidebar({
