@@ -44,6 +44,7 @@
     "@emotion/styled": "^11.10.4",
     "@fontsource/inter": "^4.5.13",
     "@liveblocks/client": "^0.19.1",
+    "@liveblocks/node": "^0.19.2",
     "@liveblocks/react": "^0.19.1",
     "@monaco-editor/react": "^4.4.6",
     "@prisma/client": "^4.3.1",

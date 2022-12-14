@@ -125,8 +125,8 @@ export const baseColors = {
 };
 
 export const fonts = {
-  body: 'Inter, "Inter", sans-serif',
-  heading: 'Inter, "Inter", sans-serif',
+  body: '"InterVariable", sans-serif',
+  heading: '"InterVariable", sans-serif',
   mono: 'Monaco, "Monaco", monospace',
 };
 

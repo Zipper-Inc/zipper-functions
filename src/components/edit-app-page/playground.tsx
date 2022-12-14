@@ -4,34 +4,23 @@ import {
   FormControl,
   GridItem,
   HStack,
-  Heading,
   Link,
   Text,
   VStack,
   useDisclosure,
   Grid,
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
-  PopoverArrow,
-  PopoverCloseButton,
-  PopoverHeader,
-  PopoverBody,
   Code,
 } from '@chakra-ui/react';
 import debounce from 'lodash.debounce';
-import { AddIcon, LockIcon, UnlockIcon } from '@chakra-ui/icons';
-import { VscCode, VscTypeHierarchy } from 'react-icons/vsc';
+import { VscTypeHierarchy } from 'react-icons/vsc';
 import { useRouter } from 'next/router';
 import NextLink from 'next/link';
 import React, { Fragment, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import AddScriptForm from '~/components/edit-app-page/add-script-form';
 import SecretsModal from '~/components/app/secretsModal';
 import ScheduleModal from '~/components/app/scheduleModal';
 import AppRunModal from '~/components/app/appRunModal';
 import ShareModal from '~/components/app/shareModal';
-import ForkIcon from '~/components/svg/forkIcon';
 import { AppEditSidebar } from '~/components/app/app-edit-sidebar';
 import { useCmdOrCtrl } from '~/hooks/use-cmd-or-ctrl';
 import useInterval from '~/hooks/use-interval';
@@ -51,13 +40,15 @@ import {
 } from '~/liveblocks.config';
 import { LiveObject, LsonObject } from '@liveblocks/client';
 import dynamic from 'next/dynamic';
-import { ZipperLogo } from '../svg/zipper-logo';
 import { parseInputForTypes } from './parse-input-for-types';
 import SettingsModal from '../app/settingsModal';
 import { HiLightningBolt, HiOutlineCog, HiOutlineShare } from 'react-icons/hi';
 import { connectors } from '~/config/connectors';
 import { ConnectorForm } from './connector-form';
 import { Script } from '@prisma/client';
+import { PlaygroundSidebar } from './playground-sidebar';
+import { PlaygroundHeader } from './playground-header';
+import { PlaygroundTab } from '~/types/playground';
 
 const PlaygroundEditor = dynamic(() => import('./playground-editor'), {
   ssr: false,
@@ -89,41 +80,15 @@ export function Playground({
   app: any;
   filename: string;
 }) {
+  const [currentTab, setCurrentTab] = useState<PlaygroundTab>(
+    PlaygroundTab.Code,
+  );
+
   const router = useRouter();
 
   const session = useSessionContext() as SessionContextUpdate & {
     loading: boolean;
   };
-
-  const {
-    isOpen: isOpenSecrets,
-    onOpen: onOpenSecrets,
-    onClose: onCloseSecrets,
-  } = useDisclosure();
-
-  const {
-    isOpen: isOpenSchedule,
-    onOpen: onOpenSchedule,
-    onClose: onCloseSchedule,
-  } = useDisclosure();
-
-  const {
-    isOpen: isOpenAppRun,
-    onOpen: onOpenAppRun,
-    onClose: onCloseAppRun,
-  } = useDisclosure();
-
-  const {
-    isOpen: isOpenShare,
-    onOpen: onOpenShare,
-    onClose: onCloseShare,
-  } = useDisclosure();
-
-  const {
-    isOpen: isOpenSettings,
-    onOpen: onOpenSettings,
-    onClose: onCloseSettings,
-  } = useDisclosure();
 
   const utils = trpc.useContext();
 
@@ -308,63 +273,28 @@ export function Playground({
         paddingX={10}
       >
         <GridItem colSpan={10} mb="5">
-          <Heading as="h1" size="md" pb={5}>
-            <HStack>
-              <Box mr={5} height={4}>
-                <Link href="/">
-                  <ZipperLogo style={{ maxHeight: '100%' }} />
-                </Link>
-              </Box>
-              <Box>
-                {app.isPrivate ? (
-                  <LockIcon fill={'gray.500'} boxSize={4} mb={1} />
-                ) : (
-                  <UnlockIcon color={'gray.500'} boxSize={4} mb={1} />
-                )}
-              </Box>
-              {app.parentId && (
-                <Box>
-                  <Link
-                    onClick={() => {
-                      if (app.parentId) {
-                        router.push(`/app/${app.parentId}/edit`);
-                      }
-                    }}
-                  >
-                    <ForkIcon fill={'gray.300'} size={16} />
-                  </Link>
-                </Box>
-              )}
-              <Box>{app.slug}</Box>
-            </HStack>
-          </Heading>
-          <HStack gap={2}>
-            <Text
-              fontWeight={600}
-              borderBottom="1px solid"
-              borderBottomColor={'purple.600'}
-            >
-              Code
-            </Text>
-            <Text>|</Text>
-            {isUserAnAppEditor && (
-              <>
-                <Link onClick={onOpenAppRun}>Runs</Link>
-                <Link onClick={onOpenSchedule}>Schedules</Link>
-              </>
-            )}
-            <Link onClick={onOpenSecrets}>Secrets</Link>
-          </HStack>
+          <PlaygroundHeader
+            app={app}
+            isUserAnAppEditor={isUserAnAppEditor}
+            currentTab={currentTab}
+            setCurrentTab={setCurrentTab}
+          />
         </GridItem>
         <GridItem colSpan={2} justifyContent="end">
           <HStack justifyContent="end">
             {isUserAnAppEditor && (
-              <Button variant={'outline'} onClick={onOpenSettings}>
+              <Button
+                variant={'outline'}
+                onClick={() => setCurrentTab(PlaygroundTab.Settings)}
+              >
                 <HiOutlineCog />
               </Button>
             )}
             {isUserAnAppEditor && (
-              <Button variant={'outline'} onClick={onOpenShare}>
+              <Button
+                variant={'outline'}
+                onClick={() => setCurrentTab(PlaygroundTab.Share)}
+              >
                 <HiOutlineShare />
               </Button>
             )}
@@ -404,67 +334,12 @@ export function Playground({
           </HStack>
         </GridItem>
         <GridItem colSpan={2}>
-          <VStack alignItems="start" gap={2}>
-            <HStack w="full">
-              <VscCode />
-              <Text size="sm" color="gray.500" flexGrow={1}>
-                Functions
-              </Text>
-              {isUserAnAppEditor && (
-                <Popover>
-                  <PopoverTrigger>
-                    <Button variant="link">
-                      <AddIcon color="gray.500" height={3} />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent>
-                    <PopoverArrow />
-                    <PopoverCloseButton />
-                    <PopoverHeader>Add a function</PopoverHeader>
-                    <PopoverBody>
-                      <AddScriptForm scripts={app.scripts} appId={app.id} />
-                    </PopoverBody>
-                  </PopoverContent>
-                </Popover>
-              )}
-            </HStack>
-            {app.scripts
-              .sort((a: any, b: any) => {
-                let orderA;
-                let orderB;
-
-                // always make sure `main` is on top, respect order after
-                if (a.id === mainScript?.id) orderA = -Infinity;
-                else orderA = a.order === null ? Infinity : a.order;
-                if (b.id === mainScript?.id) orderB = -Infinity;
-                else orderB = b.order === null ? Infinity : b.order;
-                return orderA > orderB ? 1 : -1;
-              })
-              .filter((s: Script) => !s.connectorId)
-              .map((script: any) => (
-                <Fragment key={script.id}>
-                  <NextLink
-                    href={`/app/${id}/edit/${script.filename}`}
-                    passHref
-                  >
-                    <Link
-                      fontSize="sm"
-                      fontWeight="light"
-                      w="100%"
-                      px={2}
-                      background={
-                        currentScript?.id === script.id
-                          ? 'purple.100'
-                          : 'transparent'
-                      }
-                      borderRadius={2}
-                    >
-                      <b>{script.filename}</b>
-                    </Link>
-                  </NextLink>
-                </Fragment>
-              ))}
-          </VStack>
+          <PlaygroundSidebar
+            app={app}
+            isUserAnAppEditor={isUserAnAppEditor}
+            currentScript={currentScript}
+            mainScript={mainScript}
+          />
           <VStack align="start" gap="2" mt="10">
             <HStack w="full">
               <VscTypeHierarchy />
@@ -578,24 +453,32 @@ export function Playground({
         </GridItem>
       </Grid>
       <SecretsModal
-        isOpen={isOpenSecrets}
-        onClose={onCloseSecrets}
+        isOpen={currentTab === PlaygroundTab.Secrets}
+        onClose={() => setCurrentTab(PlaygroundTab.Code)}
         editable={isUserAnAppEditor}
         appId={id}
       />
 
       <ScheduleModal
-        isOpen={isOpenSchedule}
-        onClose={onCloseSchedule}
+        isOpen={currentTab === PlaygroundTab.Schedules}
+        onClose={() => setCurrentTab(PlaygroundTab.Code)}
         inputParams={inputParams}
         appId={id}
       />
 
-      <AppRunModal isOpen={isOpenAppRun} onClose={onCloseAppRun} appId={id} />
-      <ShareModal isOpen={isOpenShare} onClose={onCloseShare} appId={id} />
+      <AppRunModal
+        isOpen={currentTab === PlaygroundTab.Runs}
+        onClose={() => setCurrentTab(PlaygroundTab.Code)}
+        appId={id}
+      />
+      <ShareModal
+        isOpen={currentTab === PlaygroundTab.Share}
+        onClose={() => setCurrentTab(PlaygroundTab.Code)}
+        appId={id}
+      />
       <SettingsModal
-        isOpen={isOpenSettings}
-        onClose={onCloseSettings}
+        isOpen={currentTab === PlaygroundTab.Settings}
+        onClose={() => setCurrentTab(PlaygroundTab.Code)}
         appId={id}
       />
     </>

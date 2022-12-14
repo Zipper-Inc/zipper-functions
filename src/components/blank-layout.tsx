@@ -1,4 +1,5 @@
-import '@fontsource/inter';
+import '@fontsource/inter/variable-full.css';
+
 import { ChakraProvider } from '@chakra-ui/react';
 import Head from 'next/head';
 import { ReactNode } from 'react';

@@ -12,6 +12,19 @@ const defaultSelect = Prisma.validator<Prisma.UserSelect>()({
 
 export const userRouter = createRouter()
   // read
+  .query('byId', {
+    input: z.object({
+      id: z.string(),
+    }),
+    async resolve({ input }) {
+      if (!input.id) return;
+      return prisma.user.findFirst({
+        where: {
+          id: input.id,
+        },
+      });
+    },
+  })
   .query('bySuperTokenId', {
     input: z.object({
       superTokenId: z.string().optional(),
