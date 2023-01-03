@@ -19,6 +19,7 @@ import {
   SessionAuth,
   attemptRefreshingSession,
 } from 'supertokens-auth-react/recipe/session';
+import '@fontsource/inter/variable.css';
 
 export type NextPageWithLayout<P = Record<string, unknown>, IP = P> = NextPage<
   P,
