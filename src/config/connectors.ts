@@ -25,23 +25,6 @@ export type Connector = {
   code: string;
 };
 
-// const githubConnectorCode = `
-//     import { githubClient } from "https://zipper-apiclient-server.onrender.com/github/index.ts";
-
-//     const client = new githubClient({
-//       TOKEN: Zipper.env.get("GITHUB_TOKEN"),
-//       HEADERS: {
-//         "keep-alive": "true",
-//       },
-//     });
-
-//     const githubGlobal = window as typeof window & {
-//       githubClient?: any;
-//     };
-
-//     export const githubClient = githubGlobal.githubClient || client;
-// `;
-
 export const connectors: Connector[] = [
   {
     id: 'github',
@@ -71,19 +54,5 @@ clientGlobal.gitHubClient = client;
 
 export default client;
     `,
-  },
-  {
-    id: 'slack',
-    name: 'Slack',
-    schema: {
-      clientId: { type: 'string', name: 'Slack Client ID' },
-      clientSecret: {
-        type: 'secret',
-        envVar: 'SLACK_CLIENT_SECRET',
-        name: 'Slack Client Secret',
-      },
-      scopes: { type: 'string', default: 'chat:write', name: 'OAuth scopes' },
-    },
-    code: ``,
   },
 ];

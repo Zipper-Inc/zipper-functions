@@ -1,6 +1,7 @@
 import {
   Box,
   Button,
+  Code,
   Divider,
   Flex,
   FormControl,
@@ -11,6 +12,7 @@ import {
   Input,
   Spacer,
   Text,
+  Textarea,
   VStack,
 } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
@@ -138,13 +140,27 @@ export function ConnectorForm({
               <Flex w="full">
                 <Spacer />
                 <Box>
-                  <Button type="submit" ml="auto">
+                  <Button colorScheme={'purple'} type="submit" ml="auto">
                     Submit
                   </Button>
                 </Box>
               </Flex>
             </VStack>
           </form>
+          <Divider my={4} />
+          Connector code:
+          <Text
+            w="full"
+            whiteSpace={'pre'}
+            borderRadius="10"
+            mt={4}
+            p={4}
+            fontFamily="mono"
+            fontSize="sm"
+            backgroundColor="gray.100"
+          >
+            {connector.code}
+          </Text>
         </FormProvider>
       )}
     </Box>

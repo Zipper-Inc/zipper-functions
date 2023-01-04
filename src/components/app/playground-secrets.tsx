@@ -239,7 +239,7 @@ const PlaygroundSecrets: React.FC<Props> = ({ appId, editable }) => {
           )}
           <Button
             type="submit"
-            colorScheme="blue"
+            colorScheme="purple"
             // onClick={() => {
             //   onClose();
             // }}

@@ -321,6 +321,7 @@ export function Playground({
                 paddingX={4}
                 variant="solid"
                 bgColor="purple.800"
+                _hover={{ bgColor: 'purple.700' }}
                 textColor="gray.100"
                 onClick={runApp}
               >

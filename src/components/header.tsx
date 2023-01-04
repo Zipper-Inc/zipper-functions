@@ -47,9 +47,10 @@ const Header: React.FC<HeaderProps> = ({ showNav = true }) => {
         ml={showNav ? 'unset' : 'auto'}
         mr={showNav ? 'unset' : 'auto'}
       >
-        <Link
+        <Button
+          type="button"
           onClick={() => router.push('/')}
-          style={{ textDecoration: 'none' }}
+          variant="unstyled"
         >
           <HStack spacing={3} height="100%">
             <Box height="4">
@@ -59,7 +60,7 @@ const Header: React.FC<HeaderProps> = ({ showNav = true }) => {
               Functions
             </Box>
           </HStack>
-        </Link>
+        </Button>
       </GridItem>
 
       {showNav && (

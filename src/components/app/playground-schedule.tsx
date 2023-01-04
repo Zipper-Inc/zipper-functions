@@ -141,7 +141,7 @@ const PlaygroundSchedule: React.FC<Props> = ({ appId, inputParams }) => {
                 Discard
               </Button>
               <Button
-                colorScheme="blue"
+                colorScheme="purple"
                 type="submit"
                 onClick={addModalForm.handleSubmit((data) => {
                   const { crontab, ...inputValues } = data;
@@ -268,7 +268,7 @@ const PlaygroundSchedule: React.FC<Props> = ({ appId, inputParams }) => {
             <AddIcon mr={2} boxSize={3} />
             Add
           </Button>
-          <Button type="submit" colorScheme="blue">
+          <Button type="submit" colorScheme="purple">
             Save {newSchedules.length > 0 && `(${newSchedules.length} new)`}
           </Button>
         </Box>
