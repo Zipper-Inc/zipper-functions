@@ -63,11 +63,13 @@ const clientGlobal = window as typeof window & {
   gitHubClient?: any;
 };
 
-export default const client = clientGlobal.gitHubClient || new Octokit({
+export const client = clientGlobal.gitHubClient || new Octokit({
   auth: Deno.env.get("GITHUB_TOKEN"),
 }).rest;
 
 clientGlobal.gitHubClient = client;
+
+export default client;
     `,
   },
   {

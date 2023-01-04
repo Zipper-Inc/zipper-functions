@@ -17,9 +17,10 @@ import * as jose from 'https://deno.land/x/jose@v4.3.7/index.ts';
 // Subhoster credentials
 const {
   SHARED_SECRET, // e.g: 256 bit secret
-  DEPLOY_KID, // e.g: "acme"
   RPC_HOST, // e.g: http://zipper.works
 } = Deno.env.toObject();
+
+const DEPLOY_KID = 'zipper';
 const DENO_ORIGIN = new URL(`https://subhosting-v1.deno-aws.net`);
 const RPC_PATH = `/api/deno/v0/`;
 
