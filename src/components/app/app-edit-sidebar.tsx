@@ -40,6 +40,7 @@ export function AppEditSidebar({
   const [tabIndex, setTabIndex] = useState(0);
   const [urlSearchParams, setUrlSearchParams] = useState('');
   const [iframeUrl, setIframeUrl] = useState('');
+  const [iframeLoadCount, setIframeLoadCount] = useState(0);
 
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
@@ -52,6 +53,12 @@ export function AppEditSidebar({
   useEffect(() => {
     setUrlSearchParams(new URLSearchParams(inputValues).toString());
   }, [inputValues]);
+
+  useEffect(() => {
+    if (iframeLoadCount > 1) {
+      setTabIndex(1);
+    }
+  }, [iframeLoadCount]);
 
   useEffect(() => {
     setIframeUrl(
@@ -126,6 +133,9 @@ export function AppEditSidebar({
               ref={iframeRef}
               width="100%"
               height="100%"
+              onLoad={() => {
+                setIframeLoadCount(iframeLoadCount + 1);
+              }}
             />
           </VStack>
         </TabPanel>
@@ -142,8 +152,8 @@ export function AppEditSidebar({
             mr={-4}
             divider={<Divider />}
           >
-            {logs?.map((log: any) => (
-              <LogLine log={log} />
+            {logs?.map((log: any, i: number) => (
+              <LogLine log={log} key={i} />
             ))}
           </VStack>
         </TabPanel>
