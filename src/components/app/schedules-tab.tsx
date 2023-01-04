@@ -35,7 +35,7 @@ type Props = {
   inputParams: InputParam[];
 };
 
-const PlaygroundSchedule: React.FC<Props> = ({ appId, inputParams }) => {
+const SchedulesTab: React.FC<Props> = ({ appId, inputParams }) => {
   const utils = trpc.useContext();
   const { handleSubmit, reset } = useForm();
   const [currentCrontab, setCurrentCrontab] = useState<string>('0 * *  * *');
@@ -167,7 +167,7 @@ const PlaygroundSchedule: React.FC<Props> = ({ appId, inputParams }) => {
   };
 
   return (
-    <Box px="2">
+    <>
       <form
         onSubmit={handleSubmit(() => {
           newSchedules.forEach((s) => {
@@ -190,7 +190,7 @@ const PlaygroundSchedule: React.FC<Props> = ({ appId, inputParams }) => {
                 Apps can be run on an automatic schedule. You can add scheduled
                 runs using cron syntax.
               </Text>
-              <List>
+              <List maxWidth="container.sm">
                 {allSchedules.length > 0 ? (
                   allSchedules.map((s, i) => (
                     <HStack mb="4" key={i}>
@@ -263,7 +263,7 @@ const PlaygroundSchedule: React.FC<Props> = ({ appId, inputParams }) => {
           </>
         </VStack>
 
-        <Box mt={4} textAlign="right">
+        <Box>
           <Button variant="outline" mr={3} onClick={onOpenAdd}>
             <AddIcon mr={2} boxSize={3} />
             Add
@@ -274,8 +274,8 @@ const PlaygroundSchedule: React.FC<Props> = ({ appId, inputParams }) => {
         </Box>
       </form>
       {addModal({ onClose: onCloseAdd, isOpen: isOpenAdd })}
-    </Box>
+    </>
   );
 };
 
-export default PlaygroundSchedule;
+export default SchedulesTab;

@@ -1,4 +1,5 @@
 import {
+  Button,
   AvatarGroup,
   Box,
   HStack,
@@ -7,6 +8,7 @@ import {
   Text,
   AvatarBadge,
   Tooltip,
+  GridItem,
 } from '@chakra-ui/react';
 import { LockIcon, UnlockIcon } from '@chakra-ui/icons';
 import React from 'react';
@@ -14,7 +16,9 @@ import ForkIcon from '~/components/svg/forkIcon';
 import { ZipperLogo } from '~/components/svg/zipper-logo';
 import { useSelf, useOthers } from '~/liveblocks.config';
 import { Avatar } from '../avatar';
-import { PlaygroundTab } from '~/types/playground';
+import { useSessionContext } from 'supertokens-auth-react/recipe/session';
+import { SessionContextUpdate } from 'supertokens-auth-react/lib/build/recipe/session/types';
+import { HiLightningBolt, HiOutlineCog, HiOutlineShare } from 'react-icons/hi';
 
 const isEditorOnline = (onlineEditorIds: string[], id: string) =>
   onlineEditorIds.includes(id);
@@ -75,25 +79,25 @@ function PlaygroundAvatars({
   );
 }
 
-function getCurrentTabProps(tabName: PlaygroundTab, currentTab: PlaygroundTab) {
-  if (tabName === currentTab)
-    return {
-      borderBottom: '1px solid',
-      borderBottomColor: 'purple.600',
-    };
-}
-
 export function PlaygroundHeader({
   app,
   isUserAnAppEditor,
-  currentTab,
-  setCurrentTab,
+  onClickSettings,
+  onClickShare,
+  onClickRun,
+  onClickFork,
 }: {
   app: any;
   isUserAnAppEditor: boolean;
-  currentTab: PlaygroundTab;
-  setCurrentTab: (tab: PlaygroundTab) => void;
+  onClickSettings: (e: React.MouseEvent<HTMLElement>) => any;
+  onClickShare: (e: React.MouseEvent<HTMLElement>) => any;
+  onClickRun: (e: React.MouseEvent<HTMLElement>) => any;
+  onClickFork: (e: React.MouseEvent<HTMLElement>) => any;
 }) {
+  const session = useSessionContext() as SessionContextUpdate & {
+    loading: boolean;
+  };
+
   const self = useSelf();
   const others = useOthers();
 
@@ -113,69 +117,79 @@ export function PlaygroundHeader({
 
   return (
     <>
-      <Box pb={5}>
-        <HStack>
-          <Box mr={5} height={4}>
-            <Link href="/">
-              <ZipperLogo style={{ maxHeight: '100%' }} />
-            </Link>
-          </Box>
-          <Box>
-            {app.isPrivate ? (
-              <LockIcon fill={'gray.500'} boxSize={4} mb={1} />
-            ) : (
-              <UnlockIcon color={'gray.500'} boxSize={4} mb={1} />
-            )}
-          </Box>
-          {app.parentId && (
-            <Box>
-              <Link href={`/app/${app.parentId}/edit`} target="_blank">
-                <ForkIcon fill={'gray.300'} size={16} />
+      <GridItem colSpan={10}>
+        <Box pb={5}>
+          <HStack>
+            <Box mr={5} height={4}>
+              <Link href="/">
+                <ZipperLogo style={{ maxHeight: '100%' }} />
               </Link>
             </Box>
+            <Box>
+              {app.isPrivate ? (
+                <LockIcon fill={'gray.500'} boxSize={4} mb={1} />
+              ) : (
+                <UnlockIcon color={'gray.500'} boxSize={4} mb={1} />
+              )}
+            </Box>
+            {app.parentId && (
+              <Box>
+                <Link href={`/app/${app.parentId}/edit`} target="_blank">
+                  <ForkIcon fill={'gray.300'} size={16} />
+                </Link>
+              </Box>
+            )}
+            <Heading as="h1" size="md">
+              {app.slug}
+            </Heading>
+            <PlaygroundAvatars
+              editorIds={editorIds}
+              onlineEditorIds={onlineEditorIds}
+              selfId={self?.id}
+            />
+          </HStack>
+        </Box>
+      </GridItem>
+      <GridItem colSpan={2} justifyContent="end">
+        <HStack justifyContent="end">
+          {isUserAnAppEditor && (
+            <Button variant={'outline'} onClick={onClickSettings}>
+              <HiOutlineCog />
+            </Button>
           )}
-          <Heading as="h1" size="md">
-            {app.slug}
-          </Heading>
-          <PlaygroundAvatars
-            editorIds={editorIds}
-            onlineEditorIds={onlineEditorIds}
-            selfId={self?.id}
-          />
+          {isUserAnAppEditor && (
+            <Button variant={'outline'} onClick={onClickShare}>
+              <HiOutlineShare />
+            </Button>
+          )}
+          {isUserAnAppEditor && (
+            <Button
+              type="button"
+              paddingX={4}
+              variant="solid"
+              bgColor="purple.800"
+              _hover={{ bgColor: 'purple.700' }}
+              textColor="gray.100"
+              onClick={onClickRun}
+            >
+              <HiLightningBolt />
+              <Text ml="2">Run</Text>
+            </Button>
+          )}
+          {!isUserAnAppEditor && !session.loading && (
+            <Button
+              type="button"
+              paddingX={6}
+              variant="outline"
+              borderColor="purple.800"
+              textColor="purple.800"
+              onClick={onClickFork}
+            >
+              Fork
+            </Button>
+          )}
         </HStack>
-      </Box>
-      <HStack gap={2}>
-        <Link
-          fontWeight={600}
-          onClick={() => setCurrentTab(PlaygroundTab.Code)}
-          {...getCurrentTabProps(PlaygroundTab.Code, currentTab)}
-        >
-          Code
-        </Link>
-        <Text>|</Text>
-        {isUserAnAppEditor && (
-          <>
-            <Link
-              onClick={() => setCurrentTab(PlaygroundTab.Runs)}
-              {...getCurrentTabProps(PlaygroundTab.Runs, currentTab)}
-            >
-              Runs
-            </Link>
-            <Link
-              onClick={() => setCurrentTab(PlaygroundTab.Schedules)}
-              {...getCurrentTabProps(PlaygroundTab.Schedules, currentTab)}
-            >
-              Schedules
-            </Link>
-          </>
-        )}
-        <Link
-          onClick={() => setCurrentTab(PlaygroundTab.Secrets)}
-          {...getCurrentTabProps(PlaygroundTab.Secrets, currentTab)}
-        >
-          Secrets
-        </Link>
-      </HStack>
+      </GridItem>
     </>
   );
 }

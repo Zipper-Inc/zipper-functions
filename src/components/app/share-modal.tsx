@@ -29,7 +29,7 @@ type Props = {
   appId: string;
 };
 
-const ShareModal: React.FC<Props> = ({ isOpen, onClose, appId }) => {
+const ShareTab: React.FC<Props> = ({ isOpen, onClose, appId }) => {
   const appQuery = trpc.useQuery(['app.byId', { id: appId }]);
   const editorQuery = trpc.useQuery(['appEditor.all', { appId }]);
   const invitationForm = useForm();
@@ -171,4 +171,4 @@ const ShareModal: React.FC<Props> = ({ isOpen, onClose, appId }) => {
   );
 };
 
-export default ShareModal;
+export default ShareTab;

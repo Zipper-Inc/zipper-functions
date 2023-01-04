@@ -29,7 +29,7 @@ type Props = {
   appId: string;
 };
 
-const SettingsModal: React.FC<Props> = ({ isOpen, onClose, appId }) => {
+const SettingsTab: React.FC<Props> = ({ isOpen, onClose, appId }) => {
   const appQuery = trpc.useQuery(['app.byId', { id: appId }]);
   const appEditMutation = trpc.useMutation('app.edit', {
     onSuccess() {
@@ -146,4 +146,4 @@ const SettingsModal: React.FC<Props> = ({ isOpen, onClose, appId }) => {
   );
 };
 
-export default SettingsModal;
+export default SettingsTab;

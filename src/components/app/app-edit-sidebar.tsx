@@ -28,6 +28,7 @@ export function AppEditSidebar({
   appEventsQuery,
   appInfo,
   tips,
+  maxHeight,
 }: {
   showInputForm: boolean;
   inputParamsFormMethods: UseFormReturn<FieldValues, any>;
@@ -36,6 +37,7 @@ export function AppEditSidebar({
   appEventsQuery: any;
   appInfo: { slug: string; version: string | undefined };
   tips?: JSX.Element;
+  maxHeight: string;
 }) {
   const [tabIndex, setTabIndex] = useState(0);
   const [urlSearchParams, setUrlSearchParams] = useState('');
@@ -69,64 +71,80 @@ export function AppEditSidebar({
   }, [appInfo, urlSearchParams]);
 
   return (
-    <Tabs as="aside" index={tabIndex} onChange={handleTabsChange}>
+    <Tabs
+      as={VStack}
+      index={tabIndex}
+      onChange={handleTabsChange}
+      height="full"
+    >
       <TabList>
         {showInputForm && <Tab>Inputs</Tab>}
         {tips && <Tab>Tips</Tab>}
         <Tab>Results</Tab>
         <Tab isDisabled={!logs?.length}>Logs</Tab>
       </TabList>
-      <TabPanels>
+      <TabPanels height="full">
+        {/* INPUT */}
         {showInputForm && (
-          <TabPanel backgroundColor="gray.100">
-            <FormProvider {...inputParamsFormMethods}>
-              {inputParams && inputParams.length ? (
-                <InputParamsForm
-                  params={inputParams || []}
-                  defaultValues={{}}
-                />
-              ) : (
-                <>
-                  <Text>
-                    Add parameters to your main function and they'll show up
-                    here. Here's an example:
-                  </Text>
-                  <Code my="5">
-                    {`async function main({greeting}: {greeting: string}) {
+          <TabPanel backgroundColor="gray.100" p={0}>
+            {/** @todo make this height thing less jank */}
+            <Box
+              p={4}
+              height={`calc(${maxHeight} - 50px)`}
+              overflowX="visible"
+              overflowY="scroll"
+            >
+              <FormProvider {...inputParamsFormMethods}>
+                {inputParams && inputParams.length ? (
+                  <InputParamsForm
+                    params={inputParams || []}
+                    defaultValues={{}}
+                  />
+                ) : (
+                  <>
+                    <Text>
+                      Add parameters to your main function and they'll show up
+                      here. Here's an example:
+                    </Text>
+                    <Code my="5">
+                      {`async function main({greeting}: {greeting: string}) {
                       ...
                     }`}
-                  </Code>
-                </>
-              )}
-            </FormProvider>
+                    </Code>
+                  </>
+                )}
+              </FormProvider>
+            </Box>
           </TabPanel>
         )}
-        {tips && <TabPanel>{tips}</TabPanel>}
-        <TabPanel p="0">
-          <VStack align="start">
-            <Box w="full" p="2" backgroundColor="gray.100">
-              <HStack>
-                <Input
-                  w="full"
-                  size="sm"
-                  borderRadius="0"
-                  backgroundColor="white"
-                  disabled
-                  value={iframeUrl}
-                />
-                <Link
-                  onClick={() => {
-                    iframeRef.current?.setAttribute('src', iframeUrl);
-                  }}
-                >
-                  <HiRefresh />
-                </Link>
 
-                <Link href={iframeUrl} target="_blank">
-                  <HiOutlineDocumentDuplicate />
-                </Link>
-              </HStack>
-            </Box>
+        {/* TIPS */}
+        {tips && <TabPanel>{tips}</TabPanel>}
+
+        {/* RESULTS */}
+        <TabPanel p="0" height="full">
+          <VStack align="start" height="full">
+            <HStack w="full" p="2" backgroundColor="gray.100">
+              <Input
+                w="full"
+                size="sm"
+                borderRadius="0"
+                backgroundColor="white"
+                disabled
+                value={iframeUrl}
+              />
+              <Link
+                onClick={() => {
+                  iframeRef.current?.setAttribute('src', iframeUrl);
+                }}
+              >
+                <HiRefresh />
+              </Link>
+
+              <Link href={iframeUrl} target="_blank">
+                <HiOutlineDocumentDuplicate />
+              </Link>
+            </HStack>
             <iframe
               key={appInfo.version}
               src={iframeUrl}
@@ -136,9 +154,12 @@ export function AppEditSidebar({
               onLoad={() => {
                 setIframeLoadCount(iframeLoadCount + 1);
               }}
+              style={{ flexGrow: 1 }}
             />
           </VStack>
         </TabPanel>
+
+        {/* LOGS */}
         <TabPanel>
           <VStack
             spacing={0}

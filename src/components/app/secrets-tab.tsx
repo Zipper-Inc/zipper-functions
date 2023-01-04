@@ -27,7 +27,7 @@ type Props = {
   editable: boolean;
 };
 
-const PlaygroundSecrets: React.FC<Props> = ({ appId, editable }) => {
+const SecretsTab: React.FC<Props> = ({ appId, editable }) => {
   const utils = trpc.useContext();
   const { register, handleSubmit, reset, control } = useForm({
     defaultValues: {
@@ -171,7 +171,7 @@ const PlaygroundSecrets: React.FC<Props> = ({ appId, editable }) => {
   };
 
   return (
-    <Box px="2">
+    <>
       <form
         onSubmit={handleSubmit((data) => {
           console.log(data);
@@ -221,7 +221,7 @@ const PlaygroundSecrets: React.FC<Props> = ({ appId, editable }) => {
           </>
         </VStack>
 
-        <Box mt={4} textAlign="right">
+        <Box mt={4}>
           {editable && (
             <Button
               variant="outline"
@@ -234,22 +234,16 @@ const PlaygroundSecrets: React.FC<Props> = ({ appId, editable }) => {
               }}
             >
               <AddIcon mr={2} boxSize={3} />
-              Add Variable
+              Add Secret
             </Button>
           )}
-          <Button
-            type="submit"
-            colorScheme="purple"
-            // onClick={() => {
-            //   onClose();
-            // }}
-          >
+          <Button type="submit" colorScheme="purple">
             {editable ? 'Save' : 'Close'}
           </Button>
         </Box>
       </form>
-    </Box>
+    </>
   );
 };
 
-export default PlaygroundSecrets;
+export default SecretsTab;

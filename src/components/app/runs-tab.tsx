@@ -19,11 +19,11 @@ type Props = {
   appId: string;
 };
 
-const PlaygroundRuns: React.FC<Props> = ({ appId }) => {
+const RunsTab: React.FC<Props> = ({ appId }) => {
   const appRunsQuery = trpc.useQuery(['appRun.all', { appId, limit: 10 }]);
 
   return (
-    <Box px="2">
+    <>
       <Heading as="h6" pb="4" fontWeight={400}>
         Recent Runs
       </Heading>
@@ -70,8 +70,8 @@ const PlaygroundRuns: React.FC<Props> = ({ appId }) => {
           </Box>
         </>
       </VStack>
-    </Box>
+    </>
   );
 };
 
-export default PlaygroundRuns;
+export default RunsTab;

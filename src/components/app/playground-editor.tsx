@@ -47,7 +47,6 @@ export default function PlaygroundEditor(props: EditorProps) {
     <Editor
       defaultLanguage="typescript"
       theme="vs-light"
-      height="calc(100vh - 126px)"
       options={{
         minimap: { enabled: false },
         automaticLayout: true,

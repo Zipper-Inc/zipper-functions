@@ -1,24 +1,22 @@
 import {
-  Box,
-  Button,
-  FormControl,
   GridItem,
   HStack,
-  Text,
-  Grid,
-  Code,
+  Tabs,
+  TabList,
+  Tab,
+  TabPanels,
+  TabPanel,
+  Divider,
 } from '@chakra-ui/react';
 import debounce from 'lodash.debounce';
 
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import PlaygroundSecrets from '~/components/app/playground-secrets';
-import PlaygroundSchedule from '~/components/app/playground-schedule';
-import PlaygroundRuns from '~/components/app/playground-runs';
+import SecretsTab from '~/components/app/secrets-tab';
+import SchedulesTab from '~/components/app/schedules-tab';
+import RunsTab from '~/components/app/runs-tab';
 import ShareModal from '~/components/app/share-modal';
-import { AppEditSidebar } from '~/components/app/app-edit-sidebar';
-import { useCmdOrCtrl } from '~/hooks/use-cmd-or-ctrl';
 import useInterval from '~/hooks/use-interval';
 import usePrettier from '~/hooks/use-prettier';
 import {
@@ -35,38 +33,18 @@ import {
   useStorage as useLiveStorage,
 } from '~/liveblocks.config';
 import { LiveObject, LsonObject } from '@liveblocks/client';
-import dynamic from 'next/dynamic';
+
 import { parseInputForTypes } from './parse-input-for-types';
-import SettingsModal from '../app/settings-modal';
-import { HiLightningBolt, HiOutlineCog, HiOutlineShare } from 'react-icons/hi';
+import SettingsModal from './settings-modal';
 
-import { ConnectorForm } from './connector-form';
-import { PlaygroundSidebar } from './playground-sidebar';
+import DefaultGrid from '../default-grid';
 import { PlaygroundHeader } from './playground-header';
-import { PlaygroundTab } from '~/types/playground';
-
-const PlaygroundEditor = dynamic(() => import('./playground-editor'), {
-  ssr: false,
-});
+import { CodeTab } from './code-tab';
 
 const debouncedParseInputForTypes = debounce(
   (code, setInputParams) => setInputParams(parseInputForTypes(code)),
   500,
 );
-
-const ConnectorSidebarTips = (connectorId?: string) => {
-  if (!connectorId) return undefined;
-  return (
-    <>
-      <Text>
-        Import and use the configured client in other files by doing the
-        following:
-      </Text>
-      <Code my="5">import client from './{connectorId}-connector' </Code>
-      <Text>Available methods:</Text>
-    </>
-  );
-};
 
 export function Playground({
   app,
@@ -75,10 +53,6 @@ export function Playground({
   app: any;
   filename: string;
 }) {
-  const [currentTab, setCurrentTab] = useState<PlaygroundTab>(
-    PlaygroundTab.Code,
-  );
-
   const router = useRouter();
 
   const session = useSessionContext() as SessionContextUpdate & {
@@ -238,155 +212,92 @@ export function Playground({
     appEventsQuery.refetch();
   };
 
-  useCmdOrCtrl(
-    'S',
-    (e: Event) => {
-      e.preventDefault();
-      saveApp();
-    },
-    [],
-  );
-
-  const tabBody = () => {
-    switch (currentTab) {
-      case PlaygroundTab.Secrets:
-        return <PlaygroundSecrets editable={isUserAnAppEditor} appId={id} />;
-
-      case PlaygroundTab.Schedules:
-        return <PlaygroundSchedule inputParams={inputParams} appId={id} />;
-
-      case PlaygroundTab.Runs:
-        return <PlaygroundRuns appId={id} />;
-
-      default:
-      case PlaygroundTab.Code:
-        return currentScript.connectorId ? (
-          <ConnectorForm type={currentScript.connectorId} appId={app.id} />
-        ) : (
-          <FormControl>
-            <Box style={{ color: 'transparent' }}>
-              {PlaygroundEditor && (
-                <PlaygroundEditor
-                  key={currentScript?.id}
-                  value={currentScriptLive?.code || currentScript?.code || ''}
-                  onChange={(value = '') => {
-                    mutateLive(value);
-                  }}
-                />
-              )}
-            </Box>
-          </FormControl>
-        );
-    }
-  };
-
   return (
-    <>
-      <Grid
-        templateColumns="repeat(12, 1fr)"
-        gap={4}
-        margin="auto"
-        w="full"
-        paddingX={10}
-      >
-        <GridItem colSpan={10} mb="5">
-          <PlaygroundHeader
-            app={app}
-            isUserAnAppEditor={isUserAnAppEditor}
-            currentTab={currentTab}
-            setCurrentTab={setCurrentTab}
-          />
+    <Tabs as={React.Fragment}>
+      <DefaultGrid as="header" maxW="full">
+        <PlaygroundHeader
+          app={app}
+          isUserAnAppEditor={isUserAnAppEditor}
+          onClickSettings={() => setSettingModalOpen(true)}
+          onClickShare={() => setShareModalOpen(true)}
+          onClickRun={runApp}
+          onClickFork={() => {
+            if (isUserAnAppEditor) return;
+            if (session?.userId) {
+              forkApp.mutateAsync({ id: app.id });
+            } else {
+              router.push(`/auth?redirectToPath=${window.location.pathname}`);
+            }
+          }}
+        />
+
+        {/* TABS */}
+        <GridItem mt={-5} colSpan={12}>
+          <TabList as={HStack} gap={2}>
+            {/* CODE */}
+            <Tab>Code</Tab>
+
+            <Divider mx={2} width={0.5} height={4} bgColor="gray.500" />
+
+            {/* RUNS */}
+            {isUserAnAppEditor && <Tab>Runs</Tab>}
+
+            {/* SCHEDULES */}
+            {isUserAnAppEditor && <Tab>Schedules</Tab>}
+
+            {/* SECRETS */}
+            <Tab>Secrets</Tab>
+          </TabList>
         </GridItem>
-        <GridItem colSpan={2} justifyContent="end">
-          <HStack justifyContent="end">
-            {isUserAnAppEditor && (
-              <Button
-                variant={'outline'}
-                onClick={() => setSettingModalOpen(true)}
-              >
-                <HiOutlineCog />
-              </Button>
-            )}
-            {isUserAnAppEditor && (
-              <Button
-                variant={'outline'}
-                onClick={() => setShareModalOpen(true)}
-              >
-                <HiOutlineShare />
-              </Button>
-            )}
-            {isUserAnAppEditor && (
-              <Button
-                type="button"
-                paddingX={4}
-                variant="solid"
-                bgColor="purple.800"
-                _hover={{ bgColor: 'purple.700' }}
-                textColor="gray.100"
-                onClick={runApp}
-              >
-                <HiLightningBolt />
-                <Text ml="2">Run</Text>
-              </Button>
-            )}
-            {!isUserAnAppEditor && !session.loading && (
-              <Button
-                type="button"
-                paddingX={6}
-                variant="outline"
-                borderColor="purple.800"
-                textColor="purple.800"
-                onClick={() => {
-                  if (session?.userId) {
-                    forkApp.mutateAsync({ id: app.id });
-                  } else {
-                    router.push(
-                      `/auth?redirectToPath=${window.location.pathname}`,
-                    );
-                  }
-                }}
-              >
-                Fork
-              </Button>
-            )}
-          </HStack>
-        </GridItem>
-        <GridItem colSpan={2}>
-          <PlaygroundSidebar
+      </DefaultGrid>
+
+      {/* TAB PANELS */}
+      <TabPanels as={DefaultGrid} maxW="full">
+        {/* CODE */}
+        <TabPanel as={GridItem} colSpan={12} px={0} pb={0}>
+          <CodeTab
             app={app}
+            saveApp={saveApp}
             isUserAnAppEditor={isUserAnAppEditor}
             currentScript={currentScript}
             mainScript={mainScript}
-          />
-        </GridItem>
-        <GridItem colSpan={6}>
-          <Box width="100%">{tabBody()}</Box>
-        </GridItem>
-        <GridItem colSpan={4}>
-          <AppEditSidebar
-            showInputForm={!currentScript.connectorId}
+            currentScriptLive={currentScriptLive}
+            mutateLive={mutateLive}
             inputParamsFormMethods={inputParamsFormMethods}
             inputParams={inputParams}
             inputValues={inputValues}
             appEventsQuery={appEventsQuery}
-            appInfo={{
-              slug: app.slug,
-              version: lastRunVersion,
-            }}
-            tips={ConnectorSidebarTips(currentScript.connectorId)}
+            lastRunVersion={lastRunVersion}
           />
-        </GridItem>
-      </Grid>
+        </TabPanel>
+
+        {/* RUNS */}
+        <TabPanel as={GridItem} colSpan={12}>
+          <RunsTab appId={id} />
+        </TabPanel>
+
+        {/* SCHEDULES */}
+        <TabPanel as={GridItem} colSpan={12}>
+          <SchedulesTab inputParams={inputParams} appId={id} />
+        </TabPanel>
+
+        {/* SECRETS */}
+        <TabPanel as={GridItem} colSpan={12}>
+          <SecretsTab editable={isUserAnAppEditor} appId={id} />
+        </TabPanel>
+      </TabPanels>
+
       <ShareModal
         isOpen={isShareModalOpen}
         onClose={() => setShareModalOpen(false)}
         appId={id}
       />
+
       <SettingsModal
         isOpen={isSettingsModalOpen}
         onClose={() => setSettingModalOpen(false)}
         appId={id}
       />
-    </>
+    </Tabs>
   );
 }
