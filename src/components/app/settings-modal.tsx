@@ -82,7 +82,7 @@ const SettingsTab: React.FC<Props> = ({ isOpen, onClose, appId }) => {
                   <Button
                     ml="auto"
                     display="block"
-                    colorScheme="blue"
+                    colorScheme="purple"
                     type="submit"
                     onClick={settingsForm.handleSubmit(async (data) => {
                       appEditMutation.mutateAsync(
@@ -133,7 +133,7 @@ const SettingsTab: React.FC<Props> = ({ isOpen, onClose, appId }) => {
                         </VStack>
                       </HStack>
                     </Box>
-                    <Switch isChecked ml="auto" />
+                    <Switch isChecked ml="auto" colorScheme="purple" />
                   </HStack>
                 </VStack>
               </VStack>

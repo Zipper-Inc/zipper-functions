@@ -110,7 +110,8 @@ const ShareTab: React.FC<Props> = ({ isOpen, onClose, appId }) => {
                               <Switch
                                 isChecked={!appQuery.data.isPrivate}
                                 onChange={async () => {
-                                  await setAppVisibility.mutateAsync({
+                                  onClose();
+                                  setAppVisibility.mutateAsync({
                                     id: appId,
                                     data: {
                                       isPrivate: !appQuery.data.isPrivate,
@@ -156,7 +157,7 @@ const ShareTab: React.FC<Props> = ({ isOpen, onClose, appId }) => {
               </Link>
               <Button
                 type="submit"
-                colorScheme="blue"
+                colorScheme="purple"
                 onClick={() => {
                   onClose();
                 }}

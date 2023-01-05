@@ -72,6 +72,7 @@ export function AppEditSidebar({
 
   return (
     <Tabs
+      colorScheme="purple"
       as={VStack}
       index={tabIndex}
       onChange={handleTabsChange}

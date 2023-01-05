@@ -1,4 +1,5 @@
 import {
+  Box,
   GridItem,
   HStack,
   Tabs,
@@ -6,7 +7,6 @@ import {
   Tab,
   TabPanels,
   TabPanel,
-  Divider,
 } from '@chakra-ui/react';
 import debounce from 'lodash.debounce';
 
@@ -73,6 +73,7 @@ export function Playground({
   const [inputValues, setInputValues] = React.useState<Record<string, string>>(
     {},
   );
+  const [tabIndex, setTabIndex] = useState(0);
 
   const inputParamsFormMethods = useForm();
 
@@ -213,7 +214,11 @@ export function Playground({
   };
 
   return (
-    <Tabs as={React.Fragment}>
+    <Tabs
+      colorScheme="purple"
+      as={React.Fragment}
+      onChange={(index) => setTabIndex(index)}
+    >
       <DefaultGrid as="header" maxW="full">
         <PlaygroundHeader
           app={app}
@@ -233,11 +238,24 @@ export function Playground({
 
         {/* TABS */}
         <GridItem mt={-5} colSpan={12}>
-          <TabList as={HStack} gap={2}>
+          <TabList
+            as={HStack}
+            gap={2}
+            borderColor={tabIndex === 0 ? 'purple.100' : 'inherit'}
+          >
             {/* CODE */}
-            <Tab>Code</Tab>
-
-            <Divider mx={2} width={0.5} height={4} bgColor="gray.500" />
+            <Tab
+              backgroundColor="gray.200"
+              borderTopRadius="md"
+              _selected={{
+                borderColor: 'purple.500',
+                backgroundColor: 'purple.500',
+                fontWeight: 'bold',
+                textColor: 'white',
+              }}
+            >
+              <Box px="2">Code</Box>
+            </Tab>
 
             {/* RUNS */}
             {isUserAnAppEditor && <Tab>Runs</Tab>}

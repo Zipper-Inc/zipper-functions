@@ -43,7 +43,7 @@ export default function AddScriptForm({
   });
 
   return (
-    <Tabs>
+    <Tabs colorScheme="purple">
       <TabList>
         <Tab>Custom</Tab>
         <Tab>Connectors</Tab>

@@ -167,8 +167,7 @@ export function PlaygroundHeader({
               type="button"
               paddingX={4}
               variant="solid"
-              bgColor="purple.800"
-              _hover={{ bgColor: 'purple.700' }}
+              colorScheme="purple"
               textColor="gray.100"
               onClick={onClickRun}
             >
