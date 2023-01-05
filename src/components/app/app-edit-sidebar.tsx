@@ -90,7 +90,7 @@ export function AppEditSidebar({
             {/** @todo make this height thing less jank */}
             <Box
               p={4}
-              height={`calc(${maxHeight} - 50px)`}
+              maxHeight={`calc(${maxHeight} - 50px)`}
               overflowX="visible"
               overflowY="scroll"
             >
