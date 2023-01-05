@@ -70,6 +70,42 @@ export const scriptRouter = createRouter()
       });
     },
   })
+  // edit
+  .mutation('edit', {
+    input: z.object({
+      id: z.string().uuid(),
+      data: z.object({
+        name: z.string().min(3).max(255).optional(),
+        description: z.string().optional().nullable(),
+      }),
+    }),
+    async resolve({ ctx, input }) {
+      const { id, data } = input;
+
+      const script = await prisma.script.findFirstOrThrow({
+        where: { id },
+        select: { appId: true },
+      });
+
+      await hasAppEditPermission({
+        superTokenId: ctx.superTokenId,
+        appId: script.appId,
+      });
+
+      const filename = data.name ? `${slugify(data.name)}.ts` : undefined;
+
+      return prisma.script.update({
+        data: {
+          ...data,
+          filename,
+        },
+        where: {
+          id,
+        },
+        select: defaultSelect,
+      });
+    },
+  })
   // delete
   .mutation('delete', {
     input: z.object({

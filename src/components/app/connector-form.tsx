@@ -154,9 +154,9 @@ export function ConnectorForm({
             whiteSpace={'pre'}
             borderRadius="10"
             mt={4}
-            p={4}
+            px={4}
             fontFamily="mono"
-            fontSize="sm"
+            fontSize="xs"
             backgroundColor="gray.100"
           >
             {connector.code}

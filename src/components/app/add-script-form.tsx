@@ -21,9 +21,7 @@ import { AppConnector, Script } from '@prisma/client';
 import { HiPaperAirplane } from 'react-icons/hi2';
 import slugify from 'slugify';
 import { connectors as defaultConnectors } from '~/config/connectors';
-import { MutableRefObject, useEffect } from 'react';
 import { VscGithub } from 'react-icons/vsc';
-import { FiGithub } from 'react-icons/fi';
 
 export default function AddScriptForm({
   appId,
