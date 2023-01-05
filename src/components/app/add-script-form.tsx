@@ -42,12 +42,6 @@ export default function AddScriptForm({
     },
   });
 
-  const addAppConnector = trpc.useMutation('appConnector.add', {
-    async onSuccess() {
-      await utils.invalidateQueries(['app.byId', { id: appId }]);
-    },
-  });
-
   return (
     <Tabs>
       <TabList>
@@ -123,11 +117,6 @@ export default function AddScriptForm({
                     <Link
                       key={connector.id}
                       onClick={() => {
-                        addAppConnector.mutateAsync({
-                          appId,
-                          type: connector.id,
-                        });
-
                         addScript.mutateAsync({
                           name: `${connector.id}-connector`,
                           code: connector.code,

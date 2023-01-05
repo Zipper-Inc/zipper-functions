@@ -31,7 +31,7 @@ export const scriptRouter = createRouter()
       const { appId, ...data } = input;
       await hasAppEditPermission({ superTokenId: ctx.superTokenId, appId });
 
-      return prisma.script.create({
+      const script = await prisma.script.create({
         data: {
           ...data,
           app: {
@@ -41,6 +41,17 @@ export const scriptRouter = createRouter()
         },
         select: defaultSelect,
       });
+
+      if (input.connectorId) {
+        await prisma.appConnector.create({
+          data: {
+            appId: input.appId,
+            type: input.connectorId,
+          },
+        });
+      }
+
+      return script;
     },
   })
   .query('byAppId', {
@@ -118,11 +129,22 @@ export const scriptRouter = createRouter()
         appId: input.appId,
       });
 
-      await prisma.script.deleteMany({
+      const script = await prisma.script.delete({
         where: {
           id: input.id,
         },
       });
+
+      if (script.connectorId) {
+        await prisma.appConnector.delete({
+          where: {
+            appId_type: {
+              appId: input.appId,
+              type: script.connectorId,
+            },
+          },
+        });
+      }
 
       return {
         id: input.id,
