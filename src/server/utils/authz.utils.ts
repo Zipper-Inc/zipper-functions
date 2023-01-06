@@ -36,10 +36,6 @@ export const hasAppReadPermission = async ({
   userId?: string;
   appId: string;
 }) => {
-  if (!userId) {
-    throw new TRPCError({ code: 'UNAUTHORIZED' });
-  }
-
   try {
     await prisma.app.findFirstOrThrow({
       where: {

@@ -1,7 +1,7 @@
 import { Prisma } from '@prisma/client';
 import { z } from 'zod';
 import { prisma } from '~/server/prisma';
-import { createProtectedRouter } from '../createRouter';
+import { createRouter } from '../createRouter';
 import {
   hasAppEditPermission,
   hasAppReadPermission,
@@ -15,7 +15,7 @@ const defaultSelect = Prisma.validator<Prisma.SecretSelect>()({
   encryptedValue: true,
 });
 
-export const secretRouter = createProtectedRouter()
+export const secretRouter = createRouter()
   // create
   .mutation('add', {
     input: z.object({
