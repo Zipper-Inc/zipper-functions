@@ -5,6 +5,7 @@ import { prisma } from '~/server/prisma';
 import { createRouter } from '../createRouter';
 import { hasAppEditPermission } from '../utils/authz.utils';
 import slugify from '~/utils/slugify';
+import { TRPCError } from '@trpc/server';
 
 const defaultSelect = Prisma.validator<Prisma.AppSelect>()({
   id: true,
@@ -26,16 +27,16 @@ export const appRouter = createRouter()
       slug: z.string().min(5).max(60),
     }),
     async resolve({ input, ctx }) {
-      const thirdPartyAccount = await prisma.thirdPartyAccount.findUnique({
-        where: { id: ctx.superTokenId },
-      });
+      if (!ctx.user) {
+        throw new TRPCError({ code: 'UNAUTHORIZED' });
+      }
 
       const app = await prisma.app.create({
         data: {
           ...input,
           editors: {
             create: {
-              userId: thirdPartyAccount?.userId || '',
+              userId: ctx.user.id,
               isOwner: true,
             },
           },
@@ -98,11 +99,11 @@ export const appRouter = createRouter()
       })
       .optional(),
     async resolve({ ctx, input }) {
-      if (!ctx.superTokenId) return [];
+      if (!ctx.user) return [];
       return prisma.app.findMany({
         where: {
           parentId: input?.parentId,
-          editors: { some: { user: { superTokenId: ctx.superTokenId } } },
+          editors: { some: { userId: ctx.user.id } },
         },
         orderBy: { updatedAt: 'desc' },
         select: defaultSelect,
@@ -121,7 +122,7 @@ export const appRouter = createRouter()
             { isPrivate: false },
             {
               editors: {
-                some: { user: { superTokenId: ctx.superTokenId } },
+                some: { userId: ctx.user?.id },
               },
             },
           ],
@@ -130,9 +131,7 @@ export const appRouter = createRouter()
           ...defaultSelect,
           scripts: true,
           scriptMain: { include: { script: true } },
-          editors: {
-            include: { user: { select: { superTokenId: true } } },
-          },
+          editors: true,
           settings: true,
           connectors: true,
         },
@@ -145,15 +144,15 @@ export const appRouter = createRouter()
       id: z.string().uuid(),
     }),
     async resolve({ input, ctx }) {
+      if (!ctx.user) {
+        throw new TRPCError({ code: 'UNAUTHORIZED' });
+      }
+
       const { id } = input;
 
       const app = await prisma.app.findFirstOrThrow({
         where: { id },
         include: { scripts: true, scriptMain: true },
-      });
-
-      const user = await prisma.user.findFirstOrThrow({
-        where: { superTokenId: ctx.superTokenId },
       });
 
       const fork = await prisma.app.create({
@@ -163,7 +162,7 @@ export const appRouter = createRouter()
           parentId: app.id,
           editors: {
             create: {
-              userId: user.id,
+              userId: ctx.user.id,
               isOwner: true,
             },
           },
@@ -230,7 +229,7 @@ export const appRouter = createRouter()
     }),
     async resolve({ input, ctx }) {
       await hasAppEditPermission({
-        superTokenId: ctx.superTokenId,
+        userId: ctx.user?.id,
         appId: input.id,
       });
 
@@ -264,10 +263,14 @@ export const appRouter = createRouter()
       id: z.string(),
     }),
     async resolve({ ctx, input }) {
+      if (!ctx.user) {
+        throw new TRPCError({ code: 'UNAUTHORIZED' });
+      }
+
       await prisma.app.deleteMany({
         where: {
           id: input.id,
-          editors: { some: { userId: ctx.superTokenId } },
+          editors: { some: { userId: ctx.user.id } },
         },
       });
 

@@ -41,7 +41,7 @@ export const appRunRouter = createRouter()
     }),
     async resolve({ ctx, input }) {
       await hasAppReadPermission({
-        superTokenId: ctx.superTokenId,
+        userId: ctx.user?.id,
         appId: input.appId,
       });
       /**

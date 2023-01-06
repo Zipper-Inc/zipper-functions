@@ -1,7 +1,6 @@
 import { NextPageWithLayout } from '~/pages/_app';
 import NextError from 'next/error';
 import { useRouter } from 'next/router';
-import { SessionAuth } from 'supertokens-auth-react/recipe/session';
 
 import { trpc } from '~/utils/trpc';
 
@@ -10,6 +9,7 @@ import { withLiveBlocks } from '~/hocs/withLiveBlocks';
 import { Playground } from '~/components/app/playground';
 import { LiveObject } from '@liveblocks/client';
 import { NoHeaderLayout } from '~/components/no-header-layout';
+import { SignedIn } from '@clerk/nextjs';
 
 const AppPage: NextPageWithLayout = () => {
   const { query } = useRouter();
@@ -61,7 +61,7 @@ const AppPage: NextPageWithLayout = () => {
     <>
       {appQuery.data &&
         (appQuery.data.isPrivate ? (
-          <SessionAuth>{playground}</SessionAuth>
+          <SignedIn>{playground}</SignedIn>
         ) : (
           playground
         ))}

@@ -112,7 +112,7 @@ export default function AddScriptForm({
             {defaultConnectors.map((connector) => {
               if (!connectors.find((c: any) => c.type === connector.id)) {
                 return (
-                  <HStack>
+                  <HStack key={connector.id}>
                     <VscGithub />
                     <Link
                       key={connector.id}

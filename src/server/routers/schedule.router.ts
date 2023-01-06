@@ -26,7 +26,7 @@ export const scheduleRouter = createRouter()
     }),
     async resolve({ ctx, input }) {
       await hasAppEditPermission({
-        superTokenId: ctx.superTokenId,
+        userId: ctx.user?.id,
         appId: input.appId,
       });
 
@@ -63,7 +63,7 @@ export const scheduleRouter = createRouter()
     }),
     async resolve({ ctx, input }) {
       await hasAppReadPermission({
-        superTokenId: ctx.superTokenId,
+        userId: ctx.user?.id,
         appId: input.appId,
       });
       /**
@@ -87,7 +87,7 @@ export const scheduleRouter = createRouter()
     }),
     async resolve({ ctx, input }) {
       await hasAppEditPermission({
-        superTokenId: ctx.superTokenId,
+        userId: ctx.user?.id,
         appId: input.appId,
       });
 

@@ -1,7 +1,7 @@
 import { Prisma } from '@prisma/client';
 import { z } from 'zod';
 import { prisma } from '~/server/prisma';
-import { createRouter } from '../createRouter';
+import { createProtectedRouter } from '../createRouter';
 import {
   hasAppEditPermission,
   hasAppReadPermission,
@@ -15,7 +15,7 @@ const defaultSelect = Prisma.validator<Prisma.SecretSelect>()({
   encryptedValue: true,
 });
 
-export const secretRouter = createRouter()
+export const secretRouter = createProtectedRouter()
   // create
   .mutation('add', {
     input: z.object({
@@ -25,7 +25,7 @@ export const secretRouter = createRouter()
     }),
     async resolve({ ctx, input }) {
       await hasAppEditPermission({
-        superTokenId: ctx.superTokenId,
+        userId: ctx.user?.id,
         appId: input.appId,
       });
       if (!process.env.ENCRYPTION_KEY) {
@@ -53,7 +53,7 @@ export const secretRouter = createRouter()
     }),
     async resolve({ ctx, input }) {
       await hasAppReadPermission({
-        superTokenId: ctx.superTokenId,
+        userId: ctx.user?.id,
         appId: input.appId,
       });
       /**
@@ -78,7 +78,7 @@ export const secretRouter = createRouter()
     }),
     async resolve({ ctx, input }) {
       await hasAppEditPermission({
-        superTokenId: ctx.superTokenId,
+        userId: ctx.user?.id,
         appId: input.appId,
       });
       if (input.id) {

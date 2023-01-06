@@ -1,4 +1,3 @@
-import { ChevronDownIcon } from '@chakra-ui/icons';
 import {
   Box,
   Button,
@@ -7,21 +6,14 @@ import {
   HStack,
   IconButton,
   Link,
-  Menu,
-  MenuButton,
-  MenuItem,
-  MenuList,
   useBreakpointValue,
 } from '@chakra-ui/react';
 import { useRouter } from 'next/router';
 import { FiHelpCircle, FiMenu, FiSearch, FiBell } from 'react-icons/fi';
-import { SessionContextUpdate } from 'supertokens-auth-react/lib/build/recipe/session/types';
-import { useSessionContext } from 'supertokens-auth-react/recipe/session';
 
 import DefaultGrid from './default-grid';
 import { ZipperLogo } from './svg/zipper-logo';
-import { signOut } from 'supertokens-auth-react/recipe/thirdpartyemailpassword';
-import { AvatarForCurrentUser } from './avatar';
+import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/nextjs';
 
 type HeaderProps = {
   showNav?: boolean;
@@ -30,14 +22,6 @@ type HeaderProps = {
 const Header: React.FC<HeaderProps> = ({ showNav = true }) => {
   const router = useRouter();
   const isDesktop = useBreakpointValue({ base: false, lg: true });
-  const session = useSessionContext() as SessionContextUpdate & {
-    loading: boolean;
-  };
-
-  async function onLogout() {
-    await signOut();
-    router.push('/');
-  }
 
   return (
     <DefaultGrid as="header" paddingY={12}>
@@ -95,27 +79,14 @@ const Header: React.FC<HeaderProps> = ({ showNav = true }) => {
                     aria-label="Help Center"
                   />
                 </ButtonGroup>
-                {session.doesSessionExist && !session.loading ? (
-                  <Menu>
-                    <MenuButton as={Link}>
-                      <HStack>
-                        <AvatarForCurrentUser size="sm" />
-                        <ChevronDownIcon />
-                      </HStack>
-                    </MenuButton>
-                    <MenuList>
-                      <MenuItem onClick={onLogout}>Logout</MenuItem>
-                    </MenuList>
-                  </Menu>
-                ) : (
-                  <Button
-                    variant={'outline'}
-                    colorScheme={'purple'}
-                    onClick={() => router.push('/auth')}
-                  >
-                    Sign in
-                  </Button>
-                )}
+                <SignedIn>
+                  {/* Mount the UserButton component */}
+                  <UserButton />
+                </SignedIn>
+                <SignedOut>
+                  {/* Signed out users get sign in button */}
+                  <SignInButton />
+                </SignedOut>
               </HStack>
             ) : (
               <IconButton

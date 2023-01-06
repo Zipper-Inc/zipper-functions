@@ -28,8 +28,6 @@ import {
 } from '~/types/input-params';
 import { safeJSONParse } from '~/utils/safe-json';
 import { trpc } from '~/utils/trpc';
-import { useSessionContext } from 'supertokens-auth-react/recipe/session';
-import { SessionContextUpdate } from 'supertokens-auth-react/lib/build/recipe/session/types';
 import {
   useMutation as useLiveMutation,
   useStorage as useLiveStorage,
@@ -44,6 +42,7 @@ import { ConnectorForm } from './connector-form';
 import { PlaygroundSidebar } from './playground-sidebar';
 import { PlaygroundHeader } from './playground-header';
 import { PlaygroundTab } from '~/types/playground';
+import { useUser } from '@clerk/nextjs';
 
 const PlaygroundEditor = dynamic(() => import('./playground-editor'), {
   ssr: false,
@@ -80,10 +79,6 @@ export function Playground({
   );
 
   const router = useRouter();
-
-  const session = useSessionContext() as SessionContextUpdate & {
-    loading: boolean;
-  };
 
   const utils = trpc.useContext();
 
@@ -146,13 +141,13 @@ export function Playground({
     );
   }, []);
 
+  const { isLoaded, user } = useUser();
+
   useEffect(() => {
     setIsUserAnAppEditor(
-      !!app.editors.find(
-        (editor: any) => editor.user.superTokenId === session.userId,
-      ) || false,
+      !!app.editors.find((editor: any) => editor.userId === user?.id) || false,
     );
-  }, [app, session.loading]);
+  }, [app, isLoaded]);
 
   useInterval(async () => {
     if (lastRunVersion) {
@@ -329,7 +324,7 @@ export function Playground({
                 <Text ml="2">Run</Text>
               </Button>
             )}
-            {!isUserAnAppEditor && !session.loading && (
+            {!isUserAnAppEditor && (
               <Button
                 type="button"
                 paddingX={6}
@@ -337,11 +332,11 @@ export function Playground({
                 borderColor="purple.800"
                 textColor="purple.800"
                 onClick={() => {
-                  if (session?.userId) {
+                  if (user) {
                     forkApp.mutateAsync({ id: app.id });
                   } else {
                     router.push(
-                      `/auth?redirectToPath=${window.location.pathname}`,
+                      `/sign-in?redirect=${window.location.pathname}`,
                     );
                   }
                 }}

@@ -56,7 +56,8 @@ function PlaygroundAvatars({
 
         return (
           <Avatar
-            superTokenId={id}
+            key={id}
+            userId={id}
             size="xs"
             filter={`grayscale(${grayscale}%)`}
           >

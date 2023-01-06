@@ -1,46 +1,43 @@
-import { Prisma } from '@prisma/client';
 import { z } from 'zod';
-import { prisma } from '~/server/prisma';
-import { createRouter } from '../createRouter';
+import clerk from '@clerk/clerk-sdk-node';
+import { createProtectedRouter } from '../createRouter';
 
-const defaultSelect = Prisma.validator<Prisma.UserSelect>()({
-  id: true,
-  email: true,
-  name: true,
-  picture: true,
-});
-
-export const userRouter = createRouter()
-  // read
-  .query('byId', {
+export const userRouter = createProtectedRouter()
+  .query('profilesForUserIds', {
+    input: z.object({
+      ids: z.array(z.string()),
+    }),
+    async resolve({ input }) {
+      const users = await clerk.users.getUserList({ userId: input.ids });
+      return users.map((user) => ({
+        id: user.id,
+        fullName:
+          user.firstName && user.lastName
+            ? `${user.firstName} ${user.lastName}`
+            : null,
+        primaryEmailAddress: user.emailAddresses.find(
+          (clerkEmail) => clerkEmail.id === user.primaryEmailAddressId,
+        )?.emailAddress,
+        profileImageUrl: user.profileImageUrl,
+      }));
+    },
+  })
+  .query('profileForUserId', {
     input: z.object({
       id: z.string(),
     }),
     async resolve({ input }) {
-      if (!input.id) return;
-      return prisma.user.findFirst({
-        where: {
-          id: input.id,
-        },
-      });
-    },
-  })
-  .query('bySuperTokenId', {
-    input: z.object({
-      superTokenId: z.string().optional(),
-    }),
-    async resolve({ input }) {
-      if (!input.superTokenId) return;
-      /**
-       * For pagination you can have a look at this docs site
-       * @link https://trpc.io/docs/useInfiniteQuery
-       */
-
-      return prisma.user.findFirst({
-        where: {
-          superTokenId: input.superTokenId,
-        },
-        select: defaultSelect,
-      });
+      const user = await clerk.users.getUser(input.id);
+      return {
+        id: user.id,
+        fullName:
+          user.firstName && user.lastName
+            ? `${user.firstName} ${user.lastName}`
+            : null,
+        primaryEmailAddress: user.emailAddresses.find(
+          (clerkEmail) => clerkEmail.id === user.primaryEmailAddressId,
+        )?.emailAddress,
+        profileImageUrl: user.profileImageUrl,
+      };
     },
   });

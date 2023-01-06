@@ -1,15 +1,14 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { trpcRouter } from '~/server/routers/_app';
 import { createContext } from '~/server/context';
-import { verifyAPIAuth } from '~/utils/verifyAuth';
+import { getAuth } from '@clerk/nextjs/server';
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
-  try {
-    await verifyAPIAuth(req, res);
-  } catch (error) {
+  const { userId } = getAuth(req);
+  if (!userId) {
     res.status(401).send({ error: 'Unauthorized' });
   }
 

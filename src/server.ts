@@ -7,7 +7,7 @@ loadEnvConfig('./', process.env.NODE_ENV !== 'production');
 
 const port = parseInt(process.env.PORT || '3000', 10);
 const dev = process.env.NODE_ENV !== 'production';
-const app = next({ dev });
+const app = next({ dev, hostname: process.env.NEXT_PUBLIC_HOST, port });
 const handle = app.getRequestHandler();
 
 // Load environment variables from .env, .env.local, etc. This explicit call

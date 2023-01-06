@@ -61,7 +61,6 @@ model AppEditor {
   isOwner       Boolean
 
   app           App        @relation(fields: [appId], references: [id])
-  user          User       @relation(fields: [userId], references: [id])
 
   @@map("app_editors")
   @@id([userId, appId])
@@ -169,37 +168,4 @@ model ResourceInstance {
   updatedAt DateTime? @default(now())
 
   @@map("resoure_instances")
-}
-
-model ThirdPartyAccount {
-  id                String    @id
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime? @default(now())
-  userId            String
-  provider          String
-  providerAccountId String    @unique
-  scope             String?
-  id_token          String?   @db.Text
-  refresh_token     String?   @db.Text
-  access_token      String?   @db.Text
-  expires_at        DateTime?
-  user              User      @relation(fields: [userId], references: [id])
-
-  @@map("third_party_accounts")
-}
-
-model User {
-  id           String    @id @default(uuid())
-  superTokenId String?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime? @default(now())
-  name         String?
-  email        String    @unique
-  picture      String?
-  registered   Boolean
-
-  thirdPartyAccounts ThirdPartyAccount[]
-  editorOf           AppEditor[]
-
-  @@map("users")
 }
