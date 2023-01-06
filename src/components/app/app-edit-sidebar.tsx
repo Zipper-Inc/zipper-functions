@@ -12,6 +12,8 @@ import {
   Link,
   Text,
   Code,
+  Button,
+  Progress,
 } from '@chakra-ui/react';
 import { useEffect, useRef, useState } from 'react';
 import { FieldValues, FormProvider, UseFormReturn } from 'react-hook-form';
@@ -42,7 +44,7 @@ export function AppEditSidebar({
   const [tabIndex, setTabIndex] = useState(0);
   const [urlSearchParams, setUrlSearchParams] = useState('');
   const [iframeUrl, setIframeUrl] = useState('');
-  const [iframeLoadCount, setIframeLoadCount] = useState(0);
+  const [iframeLoading, setIframeLoading] = useState(true);
 
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
@@ -57,10 +59,10 @@ export function AppEditSidebar({
   }, [inputValues]);
 
   useEffect(() => {
-    if (iframeLoadCount > 1) {
-      setTabIndex(1);
-    }
-  }, [iframeLoadCount]);
+    setIframeLoading(true);
+    // don't switch over on the intial load
+    if (iframeUrl && appInfo.version) setTabIndex(1);
+  }, [iframeUrl, appInfo.version]);
 
   useEffect(() => {
     setIframeUrl(
@@ -69,6 +71,10 @@ export function AppEditSidebar({
       }.${process.env.NEXT_PUBLIC_OUTPUT_SERVER_HOSTNAME}/?${urlSearchParams}`,
     );
   }, [appInfo, urlSearchParams]);
+
+  useEffect(() => {
+    console.log('iframe loading', iframeLoading);
+  }, [iframeLoading]);
 
   return (
     <Tabs
@@ -125,37 +131,62 @@ export function AppEditSidebar({
         {/* RESULTS */}
         <TabPanel p="0" height="full">
           <VStack align="start" height="full">
-            <HStack w="full" p="2" backgroundColor="gray.100">
-              <Input
-                w="full"
-                size="sm"
-                borderRadius="0"
-                backgroundColor="white"
-                disabled
-                value={iframeUrl}
-              />
-              <Link
-                onClick={() => {
-                  iframeRef.current?.setAttribute('src', iframeUrl);
-                }}
-              >
-                <HiRefresh />
-              </Link>
+            <Box as="nav" position="relative" width="full">
+              <HStack w="full" p="2" backgroundColor="gray.100">
+                <Input
+                  w="full"
+                  size="sm"
+                  borderRadius="0"
+                  backgroundColor="white"
+                  disabled
+                  value={iframeUrl}
+                />
+                <Button
+                  size="sm"
+                  disabled={iframeLoading}
+                  onClick={() => {
+                    setIframeLoading(true);
+                    iframeRef.current?.setAttribute('src', iframeUrl);
+                  }}
+                  color={iframeLoading ? 'purple' : 'inherit'}
+                >
+                  <HiRefresh />
+                </Button>
 
-              <Link href={iframeUrl} target="_blank">
-                <HiOutlineDocumentDuplicate />
-              </Link>
-            </HStack>
+                <Button size="sm">
+                  <Link href={iframeUrl} target="_blank">
+                    <HiOutlineDocumentDuplicate />
+                  </Link>
+                </Button>
+              </HStack>
+              {iframeLoading && (
+                <Progress
+                  colorScheme="purple"
+                  size="xs"
+                  isIndeterminate
+                  width="full"
+                  position="absolute"
+                  left={0}
+                  right={0}
+                  bottom={0}
+                />
+              )}
+            </Box>
             <iframe
-              key={appInfo.version}
+              key={`${appInfo.version}-${iframeUrl}`}
               src={iframeUrl}
               ref={iframeRef}
               width="100%"
               height="100%"
               onLoad={() => {
-                setIframeLoadCount(iframeLoadCount + 1);
+                setIframeLoading(false);
               }}
-              style={{ flexGrow: 1 }}
+              style={{
+                margin: 0,
+                flexGrow: 1,
+                opacity: iframeLoading ? 0.5 : 1,
+                transition: 'opacity 250ms ease-out',
+              }}
             />
           </VStack>
         </TabPanel>

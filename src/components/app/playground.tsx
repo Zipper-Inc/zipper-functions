@@ -209,6 +209,9 @@ export function Playground({
       data: { lastDeploymentVersion: version },
     });
 
+    // Go directly to code page
+    setTabIndex(0);
+
     // refetch logs
     appEventsQuery.refetch();
   };
@@ -217,6 +220,7 @@ export function Playground({
     <Tabs
       colorScheme="purple"
       as={React.Fragment}
+      index={tabIndex}
       onChange={(index) => setTabIndex(index)}
     >
       <DefaultGrid as="header" maxW="full">
