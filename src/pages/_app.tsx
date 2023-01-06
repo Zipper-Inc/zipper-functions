@@ -24,7 +24,6 @@ export type NextPageWithLayout<P = Record<string, unknown>, IP = P> = NextPage<
 > & {
   getLayout?: (page: ReactElement) => ReactNode;
   skipAuth?: boolean;
-  fromSupertokens?: string;
 };
 
 type AppPropsWithLayout = AppProps & {
@@ -38,7 +37,16 @@ const MyApp = (({ Component, pageProps }: AppPropsWithLayout) => {
 
   return (
     <>
-      <ClerkProvider {...pageProps}>
+      <ClerkProvider
+        {...pageProps}
+        appearance={{
+          variables: {
+            borderRadius: '0.175',
+            fontFamily: 'Inter',
+            colorPrimary: '#9B2FB4',
+          },
+        }}
+      >
         {Component.skipAuth ? (
           getLayout(<Component {...pageProps} />)
         ) : (
