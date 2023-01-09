@@ -39,6 +39,8 @@
   "dependencies": {
     "@chakra-ui/icons": "^2.0.11",
     "@chakra-ui/react": "^2.3.4",
+    "@clerk/clerk-sdk-node": "^4.5.14",
+    "@clerk/nextjs": "^4.6.15",
     "@deno/eszip": "^0.29.0",
     "@emotion/react": "^11.10.4",
     "@emotion/styled": "^11.10.4",
@@ -90,8 +92,6 @@
     "slugify": "^1.6.5",
     "start-server-and-test": "^1.12.0",
     "superjson": "^1.7.4",
-    "supertokens-auth-react": "^0.27.1",
-    "supertokens-node": "^12.0.5",
     "ts-morph": "^17.0.1",
     "typescript": "4.8.3",
     "zod": "^3.0.0"

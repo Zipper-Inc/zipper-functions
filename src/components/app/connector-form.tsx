@@ -1,7 +1,6 @@
 import {
   Box,
   Button,
-  Code,
   Divider,
   Flex,
   FormControl,
@@ -12,7 +11,6 @@ import {
   Input,
   Spacer,
   Text,
-  Textarea,
   VStack,
 } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';

@@ -8,6 +8,8 @@ const { z } = require('zod');
 
 /*eslint sort-keys: "error"*/
 const envSchema = z.object({
+  CLERK_API_KEY: z.string(),
+  CLERK_JWT_KEY: z.string(),
   DATABASE_URL: z.string().url(),
   DENO_DEPLOY_TOKEN: z.string(),
   ENCRYPTION_KEY: z.string(),
@@ -16,15 +18,15 @@ const envSchema = z.object({
   GOOGLE_CLIENT_ID: z.string(),
   GOOGLE_CLIENT_SECRET: z.string(),
   LIVEBLOCKS_PUBLIC_KEY: z.string(),
+  NEXT_PUBLIC_CLERK_FRONTEND_API: z.string(),
+  NEXT_PUBLIC_HOST: z.string(),
   NEXT_PUBLIC_OUTPUT_SERVER_HOSTNAME: z.string(),
-  NEXT_PUBLIC_URL: z.string().url(),
   NODE_ENV: z.enum(['development', 'test', 'production']),
   PARSE_INPUT_URL: z.string().url(),
   REDIS_HOST: z.string(),
   REDIS_PORT: z.string(),
   RELAY_URL: z.string().url(),
   SHARED_SECRET: z.string(),
-  SUPERTOKENS_API_KEY: z.string(),
 });
 
 const env = envSchema.safeParse(process.env);

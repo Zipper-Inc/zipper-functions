@@ -1,6 +1,6 @@
+import { getAuth } from '@clerk/nextjs/server';
 import { authorize } from '@liveblocks/node';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { verifyAPIAuth } from '~/utils/verifyAuth';
 
 const { LIVEBLOCKS_SECRET_KEY } = process.env;
 
@@ -11,17 +11,7 @@ export default async function auth(req: NextApiRequest, res: NextApiResponse) {
     });
   }
 
-  let userId;
-
-  try {
-    userId = await verifyAPIAuth(req, res);
-  } catch (e) {
-    // Handle anonymous public users
-    /**
-     * @todo check if app is pif (app?.isPublic) userId = `anon-${randomUUID()}`;
-     */
-    userId = null;
-  }
+  const { userId } = getAuth(req);
 
   if (!userId) {
     return res.status(401).send({ error: 'Unauthorized' });

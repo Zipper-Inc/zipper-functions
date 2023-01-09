@@ -26,8 +26,6 @@ import {
 } from '~/types/input-params';
 import { safeJSONParse } from '~/utils/safe-json';
 import { trpc } from '~/utils/trpc';
-import { useSessionContext } from 'supertokens-auth-react/recipe/session';
-import { SessionContextUpdate } from 'supertokens-auth-react/lib/build/recipe/session/types';
 import {
   useMutation as useLiveMutation,
   useStorage as useLiveStorage,
@@ -40,6 +38,7 @@ import SettingsModal from './settings-modal';
 import DefaultGrid from '../default-grid';
 import { PlaygroundHeader } from './playground-header';
 import { CodeTab } from './code-tab';
+import { useUser } from '@clerk/nextjs';
 
 const debouncedParseInputForTypes = debounce(
   (code, setInputParams) => setInputParams(parseInputForTypes(code)),
@@ -53,11 +52,8 @@ export function Playground({
   app: any;
   filename: string;
 }) {
+  const { user, isLoaded } = useUser();
   const router = useRouter();
-
-  const session = useSessionContext() as SessionContextUpdate & {
-    loading: boolean;
-  };
 
   const utils = trpc.useContext();
 
@@ -123,11 +119,9 @@ export function Playground({
 
   useEffect(() => {
     setIsUserAnAppEditor(
-      !!app.editors.find(
-        (editor: any) => editor.user.superTokenId === session.userId,
-      ) || false,
+      !!app.editors.find((editor: any) => editor.user.id === user?.id) || false,
     );
-  }, [app, session.loading]);
+  }, [app, isLoaded]);
 
   useInterval(async () => {
     if (lastRunVersion) {
@@ -232,10 +226,10 @@ export function Playground({
           onClickRun={runApp}
           onClickFork={() => {
             if (isUserAnAppEditor) return;
-            if (session?.userId) {
+            if (user) {
               forkApp.mutateAsync({ id: app.id });
             } else {
-              router.push(`/auth?redirectToPath=${window.location.pathname}`);
+              router.push(`/sign-in?redirect=${window.location.pathname}`);
             }
           }}
         />

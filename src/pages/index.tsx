@@ -18,18 +18,14 @@ import {
 import { useForm } from 'react-hook-form';
 import React from 'react';
 import DefaultGrid from '~/components/default-grid';
-import { useSessionContext } from 'supertokens-auth-react/recipe/session';
 import { HiSparkles } from 'react-icons/hi';
 import { useRouter } from 'next/router';
 import { appSubmissionState } from '~/types/appSubmissionState';
+import { SignedIn, useOrganization } from '@clerk/nextjs';
 
 const IndexPage: NextPageWithLayout = () => {
   const utils = trpc.useContext();
   const router = useRouter();
-  const session = useSessionContext() as {
-    userId: string;
-    loading: boolean;
-  };
   const appQuery = trpc.useQuery([
     'app.all',
     { submissionState: appSubmissionState.approved },
@@ -41,7 +37,7 @@ const IndexPage: NextPageWithLayout = () => {
     },
   });
   const { register, handleSubmit } = useForm();
-
+  const { organization } = useOrganization();
   // prefetch all posts for instant navigation
   // useEffect(() => {
   //   for (const { id } of postsQuery.data ?? []) {
@@ -53,14 +49,14 @@ const IndexPage: NextPageWithLayout = () => {
     <DefaultGrid>
       <GridItem colSpan={3}>
         <VStack alignItems="start" spacing={2} w={280}>
-          {session.userId && (
+          <SignedIn>
             <HStack>
               <HiSparkles />
               <Link fontWeight={600} onClick={() => router.push('/mine')}>
                 My apps
               </Link>
             </HStack>
-          )}
+          </SignedIn>
           <Link href="#">Popular Apps</Link>
           <Link href="#">AI Magic</Link>
           <Link href="#">Note Taking</Link>

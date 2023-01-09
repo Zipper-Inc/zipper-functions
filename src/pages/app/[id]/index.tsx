@@ -12,12 +12,11 @@ import {
   Text,
   VStack,
 } from '@chakra-ui/react';
+import { useUser } from '@clerk/nextjs';
 import NextError from 'next/error';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
 import { HiArrowRight } from 'react-icons/hi';
-import { SessionContextUpdate } from 'supertokens-auth-react/lib/build/recipe/session/types';
-import { useSessionContext } from 'supertokens-auth-react/recipe/session';
 import DefaultGrid from '~/components/default-grid';
 import { NextPageWithLayout } from '~/pages/_app';
 import { trpc } from '~/utils/trpc';
@@ -28,17 +27,14 @@ const AppPage: NextPageWithLayout = () => {
   const appQuery = trpc.useQuery(['app.byId', { id }]);
   const forksQuery = trpc.useQuery(['app.byAuthedUser', { parentId: id }]);
 
-  const session = useSessionContext() as SessionContextUpdate & {
-    loading: boolean;
-  };
-
   const [isUserAnAppEditor, setIsUserAnAppEditor] = useState(false);
+
+  const { user } = useUser();
 
   useEffect(() => {
     setIsUserAnAppEditor(
-      !!appQuery.data?.editors.find(
-        (editor) => editor.user.superTokenId === session.userId,
-      ) || false,
+      !!appQuery.data?.editors.find((editor) => editor.userId === user?.id) ||
+        false,
     );
   }, [appQuery.isSuccess]);
 
@@ -123,11 +119,11 @@ const AppPage: NextPageWithLayout = () => {
                 bgColor="purple.800"
                 textColor="gray.100"
                 onClick={() => {
-                  if (session?.userId) {
+                  if (user) {
                     forkApp.mutateAsync({ id });
                   } else {
                     router.push(
-                      `/auth?redirectToPath=${window.location.pathname}`,
+                      `/sign-in?redirect=${window.location.pathname}`,
                     );
                   }
                 }}

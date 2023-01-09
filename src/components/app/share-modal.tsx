@@ -18,6 +18,7 @@ import {
   Switch,
   Avatar,
   useClipboard,
+  Tooltip,
 } from '@chakra-ui/react';
 import { FieldValues, FormProvider, useForm } from 'react-hook-form';
 import { trpc } from '~/utils/trpc';
@@ -31,7 +32,11 @@ type Props = {
 
 const ShareTab: React.FC<Props> = ({ isOpen, onClose, appId }) => {
   const appQuery = trpc.useQuery(['app.byId', { id: appId }]);
-  const editorQuery = trpc.useQuery(['appEditor.all', { appId }]);
+  const editorQuery = trpc.useQuery([
+    'appEditor.all',
+    { appId, includeUsers: true },
+  ]);
+
   const invitationForm = useForm();
 
   const { onCopy, hasCopied } = useClipboard(
@@ -127,17 +132,28 @@ const ShareTab: React.FC<Props> = ({ isOpen, onClose, appId }) => {
                           </Text>
                           <Box p="2">
                             {editorQuery.data &&
-                              editorQuery.data.map((editor) => (
-                                <Box fontSize="sm" key={editor.user.id}>
+                              editorQuery.data.map((editor, i) => (
+                                <Box fontSize="sm" key={editor.user?.id || i}>
                                   <HStack>
                                     <Avatar
                                       size="xs"
-                                      src={editor.user.picture || undefined}
+                                      src={
+                                        editor.user?.profileImageUrl ||
+                                        undefined
+                                      }
                                       name={
-                                        editor.user.name || editor.user.email
+                                        editor.user?.fullName ||
+                                        editor.user?.primaryEmailAddress
                                       }
                                     />
-                                    <Text>{editor.user.email}</Text>
+                                    <Tooltip
+                                      label={editor.user?.primaryEmailAddress}
+                                    >
+                                      <Text>
+                                        {editor.user?.fullName ||
+                                          editor.user?.primaryEmailAddress}
+                                      </Text>
+                                    </Tooltip>
                                   </HStack>
                                 </Box>
                               ))}

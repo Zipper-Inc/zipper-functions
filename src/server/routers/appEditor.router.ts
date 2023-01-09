@@ -1,3 +1,4 @@
+import clerk, { User } from '@clerk/clerk-sdk-node';
 import { Prisma } from '@prisma/client';
 import { z } from 'zod';
 import { prisma } from '~/server/prisma';
@@ -6,7 +7,7 @@ import { hasAppEditPermission } from '../utils/authz.utils';
 
 const defaultSelect = Prisma.validator<Prisma.AppEditorSelect>()({
   app: true,
-  user: true,
+  userId: true,
 });
 
 export const appEditorRouter = createRouter()
@@ -19,7 +20,7 @@ export const appEditorRouter = createRouter()
     }),
     async resolve({ ctx, input }) {
       await hasAppEditPermission({
-        superTokenId: ctx.superTokenId,
+        userId: ctx.user?.id,
         appId: input.appId,
       });
 
@@ -39,9 +40,11 @@ export const appEditorRouter = createRouter()
     }),
     async resolve({ ctx, input }) {
       await hasAppEditPermission({
-        superTokenId: ctx.superTokenId,
+        userId: ctx.user?.id,
         appId: input.appId,
       });
+
+      if (!ctx.user) return;
 
       return prisma.appEditor.create({
         data: {
@@ -49,17 +52,7 @@ export const appEditorRouter = createRouter()
             connect: { id: input.appId },
           },
           isOwner: input.isOwner,
-          user: {
-            connectOrCreate: {
-              where: {
-                email: input.email,
-              },
-              create: {
-                email: input.email,
-                registered: false,
-              },
-            },
-          },
+          userId: ctx.user.id,
         },
         select: defaultSelect,
       });
@@ -69,6 +62,7 @@ export const appEditorRouter = createRouter()
   .query('all', {
     input: z.object({
       appId: z.string(),
+      includeUsers: z.boolean().optional().default(false),
     }),
     async resolve({ input }) {
       /**
@@ -76,11 +70,43 @@ export const appEditorRouter = createRouter()
        * @link https://trpc.io/docs/useInfiniteQuery
        */
 
-      return prisma.appEditor.findMany({
+      const appEditors = await prisma.appEditor.findMany({
         where: {
           appId: input.appId,
         },
         select: defaultSelect,
+      });
+
+      let users: {
+        id: string;
+        fullName: string | null;
+        primaryEmailAddress: string | undefined;
+        profileImageUrl: string;
+      }[] = [];
+      if (input.includeUsers) {
+        const clerkUsers = await clerk.users.getUserList({
+          userId: appEditors.map((appEditor) => appEditor.userId),
+        });
+
+        users = clerkUsers.map((clerkUser) => ({
+          id: clerkUser.id,
+          fullName:
+            clerkUser.firstName && clerkUser.lastName
+              ? `${clerkUser.firstName} ${clerkUser.lastName}`
+              : null,
+          primaryEmailAddress: clerkUser.emailAddresses.find(
+            (clerkEmail) => clerkEmail.id === clerkUser.primaryEmailAddressId,
+          )?.emailAddress,
+          profileImageUrl: clerkUser.profileImageUrl,
+        }));
+      }
+
+      return appEditors.map((appEditor) => {
+        const user = users.find((user) => user.id === appEditor.userId);
+        return {
+          ...appEditor,
+          user,
+        };
       });
     },
   })
@@ -92,7 +118,7 @@ export const appEditorRouter = createRouter()
     }),
     async resolve({ ctx, input }) {
       await hasAppEditPermission({
-        superTokenId: ctx.superTokenId,
+        userId: ctx.user?.id,
         appId: input.appId,
       });
 

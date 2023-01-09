@@ -2,13 +2,13 @@ import { TRPCError } from '@trpc/server';
 import { prisma } from '../prisma';
 
 export const hasAppEditPermission = async ({
-  superTokenId,
+  userId,
   appId,
 }: {
-  superTokenId?: string;
+  userId?: string;
   appId: string;
 }) => {
-  if (!superTokenId) {
+  if (!userId) {
     throw new TRPCError({ code: 'UNAUTHORIZED' });
   }
 
@@ -16,9 +16,7 @@ export const hasAppEditPermission = async ({
     await prisma.appEditor.findFirstOrThrow({
       where: {
         appId,
-        user: {
-          superTokenId,
-        },
+        userId,
       },
     });
 
@@ -32,16 +30,12 @@ export const hasAppEditPermission = async ({
 };
 
 export const hasAppReadPermission = async ({
-  superTokenId,
+  userId,
   appId,
 }: {
-  superTokenId?: string;
+  userId?: string;
   appId: string;
 }) => {
-  if (!superTokenId) {
-    throw new TRPCError({ code: 'UNAUTHORIZED' });
-  }
-
   try {
     await prisma.app.findFirstOrThrow({
       where: {
@@ -51,7 +45,7 @@ export const hasAppReadPermission = async ({
           {
             isPrivate: true,
             editors: {
-              some: { user: { superTokenId } },
+              some: { userId },
             },
           },
         ],

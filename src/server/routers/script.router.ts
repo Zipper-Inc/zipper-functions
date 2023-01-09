@@ -29,7 +29,7 @@ export const scriptRouter = createRouter()
     }),
     async resolve({ ctx, input }) {
       const { appId, ...data } = input;
-      await hasAppEditPermission({ superTokenId: ctx.superTokenId, appId });
+      await hasAppEditPermission({ userId: ctx.user?.id, appId });
 
       const script = await prisma.script.create({
         data: {
@@ -99,7 +99,7 @@ export const scriptRouter = createRouter()
       });
 
       await hasAppEditPermission({
-        superTokenId: ctx.superTokenId,
+        userId: ctx.user?.id,
         appId: script.appId,
       });
 
@@ -125,7 +125,7 @@ export const scriptRouter = createRouter()
     }),
     async resolve({ ctx, input }) {
       await hasAppEditPermission({
-        superTokenId: ctx.superTokenId,
+        userId: ctx.user?.id,
         appId: input.appId,
       });
 
