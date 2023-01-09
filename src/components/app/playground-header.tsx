@@ -16,9 +16,8 @@ import ForkIcon from '~/components/svg/forkIcon';
 import { ZipperLogo } from '~/components/svg/zipper-logo';
 import { useSelf, useOthers } from '~/liveblocks.config';
 import { Avatar } from '../avatar';
-import { useSessionContext } from 'supertokens-auth-react/recipe/session';
-import { SessionContextUpdate } from 'supertokens-auth-react/lib/build/recipe/session/types';
 import { HiLightningBolt, HiOutlineCog, HiOutlineShare } from 'react-icons/hi';
+import { useUser } from '@clerk/nextjs';
 
 const isEditorOnline = (onlineEditorIds: string[], id: string) =>
   onlineEditorIds.includes(id);
@@ -95,10 +94,7 @@ export function PlaygroundHeader({
   onClickRun: (e: React.MouseEvent<HTMLElement>) => any;
   onClickFork: (e: React.MouseEvent<HTMLElement>) => any;
 }) {
-  const session = useSessionContext() as SessionContextUpdate & {
-    loading: boolean;
-  };
-
+  const { isLoaded } = useUser();
   const self = useSelf();
   const others = useOthers();
 
@@ -176,7 +172,7 @@ export function PlaygroundHeader({
               <Text ml="2">Run</Text>
             </Button>
           )}
-          {!isUserAnAppEditor && !session.loading && (
+          {!isUserAnAppEditor && isLoaded && (
             <Button
               type="button"
               paddingX={6}
