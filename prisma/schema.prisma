@@ -23,6 +23,7 @@ model App {
   categories      String[]
   parentId        String?
   lastDeploymentVersion String?
+  organizationId  String?
 
   scriptMain ScriptMain?
 

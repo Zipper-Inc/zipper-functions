@@ -45,6 +45,10 @@ const MyApp = (({ Component, pageProps }: AppPropsWithLayout) => {
             fontFamily: 'Inter',
             colorPrimary: '#9B2FB4',
           },
+          elements: {
+            userPreviewAvatarBox: { display: 'none' },
+            organizationSwitcherTrigger: { minHeight: '36px' },
+          },
         }}
       >
         {Component.skipAuth ? (

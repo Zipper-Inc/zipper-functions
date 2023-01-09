@@ -21,7 +21,7 @@ import DefaultGrid from '~/components/default-grid';
 import { HiSparkles } from 'react-icons/hi';
 import { useRouter } from 'next/router';
 import { appSubmissionState } from '~/types/appSubmissionState';
-import { SignedIn } from '@clerk/nextjs';
+import { SignedIn, useOrganization } from '@clerk/nextjs';
 
 const IndexPage: NextPageWithLayout = () => {
   const utils = trpc.useContext();
@@ -37,7 +37,7 @@ const IndexPage: NextPageWithLayout = () => {
     },
   });
   const { register, handleSubmit } = useForm();
-
+  const { organization } = useOrganization();
   // prefetch all posts for instant navigation
   // useEffect(() => {
   //   for (const { id } of postsQuery.data ?? []) {

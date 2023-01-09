@@ -34,6 +34,7 @@ export const appRouter = createRouter()
       const app = await prisma.app.create({
         data: {
           ...input,
+          organizationId: ctx.orgId,
           editors: {
             create: {
               userId: ctx.user.id,
@@ -103,6 +104,7 @@ export const appRouter = createRouter()
       return prisma.app.findMany({
         where: {
           parentId: input?.parentId,
+          organizationId: ctx.orgId,
           editors: { some: { userId: ctx.user.id } },
         },
         orderBy: { updatedAt: 'desc' },
@@ -160,6 +162,7 @@ export const appRouter = createRouter()
           slug: generate({ words: 3 }).dashed,
           description: app.description,
           parentId: app.id,
+          organizationId: ctx.orgId,
           editors: {
             create: {
               userId: ctx.user.id,

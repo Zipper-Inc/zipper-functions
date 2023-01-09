@@ -13,7 +13,14 @@ import { FiHelpCircle, FiMenu, FiSearch, FiBell } from 'react-icons/fi';
 
 import DefaultGrid from './default-grid';
 import { ZipperLogo } from './svg/zipper-logo';
-import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/nextjs';
+import {
+  OrganizationSwitcher,
+  SignedIn,
+  SignedOut,
+  SignInButton,
+  UserButton,
+} from '@clerk/nextjs';
+import { useEffect } from 'react';
 
 type HeaderProps = {
   showNav?: boolean;
@@ -22,6 +29,14 @@ type HeaderProps = {
 const Header: React.FC<HeaderProps> = ({ showNav = true }) => {
   const router = useRouter();
   const isDesktop = useBreakpointValue({ base: false, lg: true });
+
+  const { reload } = router.query;
+
+  useEffect(() => {
+    if (reload) {
+      window.location.href = window.location.href.replace('?reload=true', '');
+    }
+  }, [reload]);
 
   return (
     <DefaultGrid as="header" paddingY={12}>
@@ -80,7 +95,9 @@ const Header: React.FC<HeaderProps> = ({ showNav = true }) => {
                   />
                 </ButtonGroup>
                 <SignedIn>
-                  {/* Mount the UserButton component */}
+                  <OrganizationSwitcher
+                    afterSwitchOrganizationUrl={`${window.location.pathname}?reload=true`}
+                  />
                   <UserButton />
                 </SignedIn>
                 <SignedOut>
