@@ -119,7 +119,7 @@ export function Playground({
 
   useEffect(() => {
     setIsUserAnAppEditor(
-      !!app.editors.find((editor: any) => editor.user.id === user?.id) || false,
+      !!app.editors.find((editor: any) => editor.userId === user?.id) || false,
     );
   }, [app, isLoaded]);
 
