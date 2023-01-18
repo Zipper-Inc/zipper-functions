@@ -8,12 +8,10 @@ export function JSONEditor(props: EditorProps) {
       theme="vs-light"
       options={{
         minimap: { enabled: false },
-        find: { enabled: false },
         lineNumbers: 'off',
         glyphMargin: false,
         lineDecorationsWidth: 0,
         lineNumbersMinChars: 0,
-        renderLineHighlight: false,
         ...props.options,
       }}
     />
