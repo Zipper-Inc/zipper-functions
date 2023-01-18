@@ -1,6 +1,7 @@
 // @ts-check
 /* eslint-disable @typescript-eslint/no-var-requires */
 const { env } = require('./src/server/env');
+const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin');
 
 /**
  * Don't be scared of the generics here.
@@ -27,6 +28,16 @@ module.exports = getConfig({
     NODE_ENV: env.NODE_ENV,
   },
   transpilePackages: ['monaco-languageclient'],
+
+  webpack: (config) => {
+    config.plugins.push(
+      new MonacoWebpackPlugin({
+        languages: ['typescript'],
+        filename: 'static/[name].worker.js',
+      }),
+    );
+    return config;
+  },
 
   async rewrites() {
     return [
