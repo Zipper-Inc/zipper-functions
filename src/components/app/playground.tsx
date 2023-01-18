@@ -213,7 +213,6 @@ export function Playground({
   return (
     <Tabs
       colorScheme="purple"
-      as={React.Fragment}
       index={tabIndex}
       onChange={(index) => setTabIndex(index)}
     >
