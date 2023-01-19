@@ -12,7 +12,7 @@ const withChakraProvider =
       </ChakraProvider>
     );
 
-export default withChakraProvider;
-
 export const withDefaultTheme = (InnerComponent: (props: any) => JSX.Element) =>
   withChakraProvider({ theme })(InnerComponent);
+
+export default withChakraProvider;

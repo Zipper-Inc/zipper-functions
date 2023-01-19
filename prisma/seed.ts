@@ -31,13 +31,16 @@ async function main() {
               name: 'main',
               filename: 'main.ts',
               description: 'entry point for the app',
-              code: `import { joinMeeting } from './join-the-current-meeting.ts';
-              export default async function main() {
-                if (joinMeeting()) {
-                  return 'Joined the meeting';
-                }
-              }
-              `,
+              code: `
+
+import { joinMeeting } from './join-the-current-meeting.ts';
+export default async function main() {
+  if (joinMeeting()) {
+    return 'Joined the meeting';
+  }
+}
+
+`.trim(),
               order: 0,
             },
             {
@@ -46,10 +49,14 @@ async function main() {
               filename: 'join-the-current-meeting.ts',
               description:
                 'Looks at a users meetings and joins the current or upcoming one',
-              code: `export const joinMeeting = () => {
-                console.log("Joining the meeting");
-                return true;
-              };`,
+              code: `
+
+export const joinMeeting = () => {
+  console.log("Joining the meeting");
+  return true;
+};
+
+`.trim(),
               order: 1,
             },
           ],
