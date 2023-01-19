@@ -3,35 +3,14 @@ import { Box } from '@chakra-ui/react';
 import { PageProps, Handlers } from '$fresh/server.ts';
 import { withDefaultTheme } from '../hocs/with-chakra-provider.tsx';
 import { config } from 'dotenv';
-
-type App = {
-  id: string;
-  name: string;
-  description: string;
-  slug: string;
-  lastDeploymentVersion: string;
-};
-
-type Inputs = any[];
-
-interface AppInfo {
-  app: App;
-  inputs: Inputs;
-}
-
-type AppInfoResult =
-  | {
-      ok: true;
-      data: AppInfo;
-    }
-  | {
-      ok: false;
-      error: string;
-    };
+import {
+  AppInfoAndInputParams,
+  AppInfoResult,
+} from '../../src/types/app-info.ts';
 
 const { NEXT_API_URL } = config({ path: '../.env' });
 
-export const handler: Handlers<AppInfo> = {
+export const handler: Handlers<AppInfoAndInputParams> = {
   async GET(_req, ctx) {
     const [slug] = ctx.params.name.split('@');
     const result = (await fetch(`${NEXT_API_URL}/app/info/${slug}`).then((r) =>
@@ -44,7 +23,7 @@ export const handler: Handlers<AppInfo> = {
   },
 };
 
-function AppInstanceRunner(props: PageProps<AppInfo>) {
+function AppInstanceRunner(props: PageProps<AppInfoAndInputParams>) {
   const { app, inputs } = props.data;
   const [slug, versionFromUrl] = props.params.name.split('@');
   const version =
@@ -53,10 +32,19 @@ function AppInstanceRunner(props: PageProps<AppInfo>) {
   return (
     <>
       <Head>
-        <title>{app.name}</title>
-        <meta name="description" content={app.description} />
+        <title>{app.name || app.slug}</title>
+        {app.description && (
+          <meta name="description" content={app.description} />
+        )}
       </Head>
-      <Box color="purple">
+      <Box backgroundColor="gray.100" p={16}>
+        {inputs.map((i) => (
+          <p>
+            <code>{JSON.stringify(i)}</code>
+          </p>
+        ))}
+      </Box>
+      <Box color="purple" p={16}>
         This is app {slug} at version {version}
       </Box>
     </>

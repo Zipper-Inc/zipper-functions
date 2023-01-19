@@ -32,7 +32,7 @@ import {
 } from '~/liveblocks.config';
 import { LiveObject, LsonObject } from '@liveblocks/client';
 
-import { parseInputForTypes } from './parse-input-for-types';
+import { parseInputForTypes } from '../../utils/parse-input-for-types';
 import SettingsModal from './settings-modal';
 
 import DefaultGrid from '../default-grid';
