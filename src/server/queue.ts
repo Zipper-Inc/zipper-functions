@@ -2,6 +2,8 @@ import { Queue, Worker } from 'bullmq';
 import { env } from './env';
 import IORedis from 'ioredis';
 import { prisma } from './prisma';
+import fetch from 'node-fetch';
+
 const connection = new IORedis(+env.REDIS_PORT, env.REDIS_HOST, {
   maxRetriesPerRequest: null,
 });
@@ -35,7 +37,7 @@ const initializeWorkers = () => {
             },
           );
 
-          const res = await raw.json();
+          const res = (await raw.json()) as any;
 
           await prisma.appRun.create({
             data: {
