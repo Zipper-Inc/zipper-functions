@@ -21,7 +21,7 @@ const envSchema = z.object({
   NEXT_PUBLIC_CLERK_FRONTEND_API: z.string(),
   NEXT_PUBLIC_HOST: z.string(),
   NEXT_PUBLIC_LSP_HOST: z.string(),
-  NEXT_PUBLIC_LSP_PORT: z.string(),
+  NEXT_PUBLIC_LSP_PORT: z.string().optional(),
   NEXT_PUBLIC_OUTPUT_SERVER_HOSTNAME: z.string(),
   NODE_ENV: z.enum(['development', 'test', 'production']),
   PARSE_INPUT_URL: z.string().url(),

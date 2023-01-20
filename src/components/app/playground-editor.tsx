@@ -34,11 +34,12 @@ buildWorkerDefinition(
 
 export function createUrl(
   hostname: string,
-  port: string,
+  port: string | undefined,
   path: string,
 ): string {
   const protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  return normalizeUrl(`${protocol}://${hostname}:${port}${path}`);
+  const hostAndPort = port ? `${hostname}:${port}` : hostname;
+  return normalizeUrl(`${protocol}://${hostAndPort}${path}`);
 }
 
 function createWebSocket(url: string) {
@@ -140,7 +141,7 @@ export default function PlaygroundEditor(
     () =>
       createUrl(
         process.env.NEXT_PUBLIC_LSP_HOST || '',
-        process.env.NEXT_PUBLIC_LSP_PORT || '',
+        process.env.NEXT_PUBLIC_LSP_PORT || undefined,
         path,
       ),
     [process.env.NEXT_PUBLIC_LSP_HOST, process.env.NEXT_PUBLIC_LSP_PORT, path],
