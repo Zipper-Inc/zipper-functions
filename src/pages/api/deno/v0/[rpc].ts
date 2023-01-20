@@ -77,7 +77,7 @@ addEventListener('fetch', async (event) => {
         }
       });
 
-      output.headers.set('X-Zipper-Deployment', '${appId}}.${version}');
+      output.headers.set('X-Zipper-Deployment', '${appId}}@${version}');
       event.respondWith(output);
     } else {
       const response = {
@@ -263,7 +263,6 @@ const createEsZip = async ({ app, baseUrl }: { app: any; baseUrl: string }) => {
   );
 };
 
-/** @todo use a real deployment id instead of an app id. deployment id should be app id and version or something */
 async function originBoot({
   req,
   id: deploymentId,

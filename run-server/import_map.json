@@ -7,6 +7,7 @@
     "@preact/signals": "https://esm.sh/*@preact/signals@1.0.3",
     "preact-render-to-string": "https://esm.sh/*preact-render-to-string@5.2.4",
     "preact": "https://esm.sh/preact@10.11.0",
-    "preact/": "https://esm.sh/preact@10.11.0/"
+    "preact/": "https://esm.sh/preact@10.11.0/",
+    "react-hook-form": "https://esm.sh/react-hook-form@7.39.4?alias=react:preact/compat,react-dom:preact/compat,@types/react:preact/compat&deps=preact@10.11.0"
   }
 }
