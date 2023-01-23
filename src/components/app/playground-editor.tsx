@@ -13,7 +13,6 @@ import {
   MonacoServices,
 } from 'monaco-languageclient';
 
-import normalizeUrl from 'normalize-url';
 import {
   toSocket,
   WebSocketMessageReader,
