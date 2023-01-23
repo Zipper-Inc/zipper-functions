@@ -32,16 +32,6 @@ buildWorkerDefinition(
   false,
 );
 
-export function createUrl(
-  hostname: string,
-  port: string | undefined,
-  path: string,
-): string {
-  const protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  const hostAndPort = port ? `${hostname}:${port}` : hostname;
-  return normalizeUrl(`${protocol}://${hostAndPort}${path}`);
-}
-
 function createWebSocket(url: string) {
   console.log('creating websocket');
   const webSocket = new WebSocket(url);
@@ -135,16 +125,10 @@ function createLanguageClient(
 export default function PlaygroundEditor(
   props: EditorProps & { filename: string },
 ) {
-  const path = '/server';
   const monacoEditor = useMonaco();
   const url = useMemo(
-    () =>
-      createUrl(
-        process.env.NEXT_PUBLIC_LSP_HOST || '',
-        process.env.NEXT_PUBLIC_LSP_PORT || undefined,
-        path,
-      ),
-    [process.env.NEXT_PUBLIC_LSP_HOST, process.env.NEXT_PUBLIC_LSP_PORT, path],
+    () => process.env.NEXT_PUBLIC_LSP,
+    [process.env.NEXT_PUBLIC_LSP],
   );
 
   useEffect(() => {
