@@ -9,6 +9,7 @@ import {
   AvatarBadge,
   Tooltip,
   GridItem,
+  Icon,
 } from '@chakra-ui/react';
 import { LockIcon, UnlockIcon } from '@chakra-ui/icons';
 import React from 'react';
@@ -168,7 +169,7 @@ export function PlaygroundHeader({
               textColor="gray.100"
               onClick={onClickRun}
             >
-              <HiLightningBolt />
+              <Icon as={HiLightningBolt} />
               <Text ml="2">Run</Text>
             </Button>
           )}

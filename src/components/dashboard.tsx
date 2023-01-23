@@ -13,23 +13,54 @@ import {
   Tr,
   VStack,
   Heading,
+  Button,
+  Flex,
+  Icon,
 } from '@chakra-ui/react';
 import React from 'react';
 import DefaultGrid from '~/components/default-grid';
 import { LockIcon, UnlockIcon } from '@chakra-ui/icons';
 import { useRouter } from 'next/router';
+import { FiPlus } from 'react-icons/fi';
 
 export function Dashboard() {
   const router = useRouter();
   const appQuery = trpc.useQuery(['app.byAuthedUser']);
 
+  const utils = trpc.useContext();
+  const addApp = trpc.useMutation('app.add', {
+    async onSuccess() {
+      // refetches posts after a post is added
+      await utils.invalidateQueries(['app.byAuthedUser']);
+    },
+  });
+
   return (
     <DefaultGrid>
       <GridItem colSpan={12}>
         <VStack align="start" w="full">
-          <Heading size="md" mb={5}>
-            My Apps
-          </Heading>
+          <Flex w="full" align="center" h="20" px="4">
+            <Heading size="md" flexGrow={1}>
+              Your Apps
+            </Heading>
+            <Button
+              type="button"
+              paddingX={4}
+              variant="solid"
+              colorScheme="purple"
+              textColor="gray.100"
+              fontSize="sm"
+              onClick={async () => {
+                const app = await addApp.mutateAsync();
+                if (app) {
+                  router.push(`/app/${app.id}/edit/main.ts`);
+                }
+              }}
+            >
+              <Icon as={FiPlus} mr="2"></Icon>
+              Create new app
+            </Button>
+          </Flex>
           <TableContainer w="full">
             <Table size={'sm'}>
               <Thead>
@@ -52,7 +83,7 @@ export function Dashboard() {
                                 fontSize={'md'}
                                 fontWeight={600}
                                 onClick={() =>
-                                  router.push(`/app/${app.id}/edit`)
+                                  router.push(`/app/${app.id}/edit/main.ts`)
                                 }
                               >
                                 {app.name || app.slug}
@@ -77,7 +108,8 @@ export function Dashboard() {
                 {!appQuery.isLoading && !appQuery.data && (
                   <Tr>
                     <Td>
-                      You're all out of apps. Probably a good time to create one
+                      You're all out of apps. Probably a good time to create
+                      one.
                     </Td>
                     <Td />
                   </Tr>

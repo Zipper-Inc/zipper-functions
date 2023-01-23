@@ -23,17 +23,14 @@ const defaultSelect = Prisma.validator<Prisma.AppSelect>()({
 export const appRouter = createRouter()
   // create
   .mutation('add', {
-    input: z.object({
-      slug: z.string().min(5).max(60),
-    }),
-    async resolve({ input, ctx }) {
+    async resolve({ ctx }) {
       if (!ctx.user) {
         throw new TRPCError({ code: 'UNAUTHORIZED' });
       }
 
       const app = await prisma.app.create({
         data: {
-          ...input,
+          slug: generate({ words: 3 }).dashed,
           organizationId: ctx.orgId,
           editors: {
             create: {

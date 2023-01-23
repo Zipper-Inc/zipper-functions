@@ -9,6 +9,7 @@ import {
   useBreakpointValue,
 } from '@chakra-ui/react';
 import { useRouter } from 'next/router';
+import NextLink from 'next/link';
 import { FiHelpCircle, FiMenu, FiSearch, FiBell } from 'react-icons/fi';
 
 import DefaultGrid from './default-grid';
@@ -72,7 +73,7 @@ const Header: React.FC<HeaderProps> = ({ showNav = true }) => {
               color="purple"
               textDecoration="none"
             >
-              <Link>Gallery</Link>
+              <NextLink href="/gallery">Gallery</NextLink>
               <Link>Learn</Link>
               <Link>Build</Link>
             </HStack>

@@ -98,40 +98,6 @@ export function Gallery() {
               </GridItem>
             );
           })}
-          <GridItem>
-            <form
-              onSubmit={handleSubmit(({ slug }) => {
-                addApp.mutateAsync({ slug });
-              })}
-            >
-              <Flex marginTop="4" direction="column">
-                {addApp.error && (
-                  <FormErrorMessage>{addApp.error.message}</FormErrorMessage>
-                )}
-                <VStack alignItems="start">
-                  <Heading size="md">Create App</Heading>
-                  <FormControl>
-                    <FormLabel>Name:</FormLabel>
-                    <Input
-                      size="md"
-                      type="text"
-                      disabled={addApp.isLoading}
-                      {...register('slug')}
-                    />
-                  </FormControl>
-                  <Button
-                    type="submit"
-                    paddingX={6}
-                    disabled={addApp.isLoading}
-                    bgColor="purple.800"
-                    textColor="gray.100"
-                  >
-                    Submit
-                  </Button>
-                </VStack>
-              </Flex>
-            </form>
-          </GridItem>
         </InnerGrid>
       </GridItem>
     </DefaultGrid>
