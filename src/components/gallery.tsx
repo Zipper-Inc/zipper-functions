@@ -1,41 +1,25 @@
 import { trpc } from '../utils/trpc';
 import NextLink from 'next/link';
 import {
-  Button,
-  Flex,
-  FormControl,
-  FormErrorMessage,
-  FormLabel,
   Grid as InnerGrid,
   GridItem,
   Heading,
   HStack,
-  Input,
   Link,
+  Text,
   VStack,
 } from '@chakra-ui/react';
-import { useForm } from 'react-hook-form';
 import React from 'react';
 import DefaultGrid from '~/components/default-grid';
 import { HiSparkles } from 'react-icons/hi';
-import { useRouter } from 'next/router';
 import { appSubmissionState } from '~/types/appSubmissionState';
 import { SignedIn } from '@clerk/nextjs';
 
 export function Gallery() {
-  const utils = trpc.useContext();
-  const router = useRouter();
   const appQuery = trpc.useQuery([
     'app.all',
     { submissionState: appSubmissionState.approved },
   ]);
-  const addApp = trpc.useMutation('app.add', {
-    async onSuccess() {
-      // refetches posts after a post is added
-      await utils.invalidateQueries(['app.all']);
-    },
-  });
-  const { register, handleSubmit } = useForm();
 
   return (
     <DefaultGrid>
@@ -44,9 +28,9 @@ export function Gallery() {
           <SignedIn>
             <HStack>
               <HiSparkles />
-              <Link fontWeight={600} onClick={() => router.push('/mine')}>
-                My apps
-              </Link>
+              <NextLink href="/dashboard">
+                <Text fontWeight={600}>My Apps</Text>
+              </NextLink>
             </HStack>
           </SignedIn>
           <Link href="#">Popular Apps</Link>
