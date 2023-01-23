@@ -163,7 +163,9 @@ export default function PlaygroundEditor(
         isolatedModules: true,
       });
 
-      createWebSocket(url);
+      if (url) {
+        createWebSocket(url);
+      }
     }
   }, [monacoEditor]);
 
