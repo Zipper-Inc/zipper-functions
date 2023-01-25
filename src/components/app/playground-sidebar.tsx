@@ -21,10 +21,10 @@ import {
   AlertDialogFooter,
   Button,
   Input,
+  Link,
 } from '@chakra-ui/react';
 import { AddIcon } from '@chakra-ui/icons';
 import { VscCode, VscKebabVertical } from 'react-icons/vsc';
-import NextLink from 'next/link';
 import React, { Fragment, useEffect, useRef } from 'react';
 import AddScriptForm from '~/components/app/add-script-form';
 
@@ -35,13 +35,15 @@ import { useForm } from 'react-hook-form';
 export function PlaygroundSidebar({
   app,
   isUserAnAppEditor,
-  currentScript,
+  currentScriptId,
   mainScript,
+  setCurrentScriptId,
 }: {
   app: any;
   isUserAnAppEditor: boolean;
-  currentScript: Script;
+  currentScriptId: string;
   mainScript: Script;
+  setCurrentScriptId: React.Dispatch<React.SetStateAction<string>>;
 }) {
   const sortScripts = (a: any, b: any) => {
     let orderA;
@@ -73,7 +75,7 @@ export function PlaygroundSidebar({
 
   useEffect(() => {
     setIsRenamingId(null);
-  }, [currentScript]);
+  }, [currentScriptId]);
 
   const utils = trpc.useContext();
   const deleteScript = trpc.useMutation('script.delete', {
@@ -133,11 +135,11 @@ export function PlaygroundSidebar({
                 px={2}
                 py={isRenamingId && isRenamingId === script.id ? 0 : 1}
                 background={
-                  currentScript?.id === script.id ? 'purple.100' : 'transparent'
+                  currentScriptId === script.id ? 'purple.100' : 'transparent'
                 }
                 _hover={{
                   background:
-                    currentScript?.id === script.id ? 'purple.100' : 'gray.100',
+                    currentScriptId === script.id ? 'purple.100' : 'gray.100',
                 }}
                 onMouseEnter={() => setCurrentHoverId(script.id)}
                 onMouseLeave={() => setCurrentHoverId(null)}
@@ -175,17 +177,18 @@ export function PlaygroundSidebar({
                     </form>
                   </Flex>
                 ) : (
-                  <NextLink
-                    href={`/app/${app.id}/edit/${script.filename}`}
-                    passHref
+                  <Link
                     style={{ width: '100%' }}
+                    onClick={() => {
+                      setCurrentScriptId(script.id);
+                    }}
                   >
                     <Flex grow={1} cursor="pointer">
                       <Text fontWeight="medium" fontSize="xs" fontFamily="mono">
                         {script.filename}
                       </Text>
                     </Flex>
-                  </NextLink>
+                  </Link>
                 )}
                 <Menu>
                   <MenuButton as={Text}>
@@ -194,7 +197,7 @@ export function PlaygroundSidebar({
                       stroke="0"
                       visibility={
                         currentHoverId === script.id ||
-                        currentScript?.id === script.id
+                        currentScriptId === script.id
                           ? 'visible'
                           : 'hidden'
                       }

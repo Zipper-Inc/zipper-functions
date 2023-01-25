@@ -18,7 +18,7 @@ import {
   WebSocketMessageReader,
   WebSocketMessageWriter,
 } from 'vscode-ws-jsonrpc';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Uri } from 'vscode';
 
 loader.config({ monaco });
@@ -121,19 +121,36 @@ function createLanguageClient(
     },
   });
 }
+type MonacoEditor = monaco.editor.IStandaloneCodeEditor;
+type Monaco = typeof monaco;
 
 export default function PlaygroundEditor(
   props: EditorProps & {
-    currentScriptFilename: string;
+    currentScriptId: string;
     appName: string;
     scripts: any[];
   },
 ) {
+  const editorRef = useRef<MonacoEditor>();
+  const monacoRef = useRef<Monaco>();
+  const [isEditorReady, setIsEditorReady] = useState(false);
   const monacoEditor = useMonaco();
   const url = useMemo(
     () => process.env.NEXT_PUBLIC_LSP,
     [process.env.NEXT_PUBLIC_LSP],
   );
+
+  function handleEditorDidMount(editor: MonacoEditor, _monaco: Monaco) {
+    // here is another way to get monaco instance
+    // you can also store it in `useRef` for further usage
+    editorRef.current = editor;
+    // clear existing models
+    monacoRef.current?.editor.getModels().forEach((model) => model.dispose());
+    monacoRef.current?.languages.typescript.javascriptDefaults.setEagerModelSync(
+      true,
+    );
+    setIsEditorReady(true);
+  }
 
   useEffect(() => {
     if (monacoEditor) {
@@ -173,7 +190,10 @@ export default function PlaygroundEditor(
       }
 
       props.scripts.forEach((script) => {
-        if (script.filename !== props.currentScriptFilename) {
+        const model = monacoEditor.editor.getModel(
+          Uri.parse(`file://${props.appName}/${script.filename}`),
+        );
+        if (!model) {
           //create model for each script file
           monacoEditor.editor.createModel(
             script.code,
@@ -185,6 +205,23 @@ export default function PlaygroundEditor(
     }
   }, [monacoEditor]);
 
+  useEffect(() => {
+    if (monacoEditor && editorRef.current && isEditorReady) {
+      const currentScript = props.scripts.find(
+        (s) => s.id === props.currentScriptId,
+      );
+
+      const model = monacoEditor.editor.getModel(
+        Uri.parse(`file://${props.appName}/${currentScript.filename}`),
+      );
+      if (model) {
+        editorRef.current.setModel(model);
+      } else {
+        console.error('model not found', currentScript.filename);
+      }
+    }
+  }, [props.currentScriptId, editorRef.current, isEditorReady]);
+
   return (
     <Editor
       defaultLanguage="typescript"
@@ -193,7 +230,7 @@ export default function PlaygroundEditor(
         minimap: { enabled: false },
         automaticLayout: true,
       }}
-      path={`file://${props.appName}/${props.currentScriptFilename}`}
+      onMount={handleEditorDidMount}
       {...props}
     />
   );

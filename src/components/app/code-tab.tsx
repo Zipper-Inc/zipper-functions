@@ -1,5 +1,5 @@
 import { Box, FormControl, GridItem, Text, Code } from '@chakra-ui/react';
-import React from 'react';
+import React, { useState } from 'react';
 import { AppEditSidebar } from '~/components/app/app-edit-sidebar';
 import { useCmdOrCtrl } from '~/hooks/use-cmd-or-ctrl';
 import { InputParam } from '~/types/input-params';
@@ -69,6 +69,9 @@ export function CodeTab({
     },
     [],
   );
+  const [currentScriptId, setCurrentScriptId] = useState(
+    currentScriptLive?.id || currentScript.id,
+  );
 
   return (
     <DefaultGrid
@@ -81,8 +84,9 @@ export function CodeTab({
         <PlaygroundSidebar
           app={app}
           isUserAnAppEditor={isUserAnAppEditor}
-          currentScript={currentScript}
+          currentScriptId={currentScriptId}
           mainScript={mainScript}
+          setCurrentScriptId={setCurrentScriptId}
         />
       </GridItem>
       <GridItem colSpan={6}>
@@ -96,13 +100,10 @@ export function CodeTab({
                   <PlaygroundEditor
                     height={MAX_CODE_TAB_HEIGHT}
                     key={currentScript?.id}
-                    value={currentScriptLive?.code || currentScript?.code || ''}
                     onChange={(value = '') => {
                       mutateLive(value);
                     }}
-                    currentScriptFilename={
-                      currentScriptLive?.filename || currentScript.filename
-                    }
+                    currentScriptId={currentScriptId}
                     scripts={app.scripts}
                     appName={app.slug}
                   />

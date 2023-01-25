@@ -14,6 +14,7 @@ import {
   Tab,
   TabPanel,
   TabPanels,
+  Icon,
 } from '@chakra-ui/react';
 import { useForm } from 'react-hook-form';
 import { trpc } from '~/utils/trpc';
@@ -89,7 +90,7 @@ export default function AddScriptForm({
                     bgColor="purple.800"
                     textColor="gray.100"
                   >
-                    <HiPaperAirplane />
+                    <Icon as={HiPaperAirplane} />
                   </Button>
                 </HStack>
                 {watch('name') && (
