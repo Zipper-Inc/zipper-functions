@@ -147,18 +147,6 @@ export function ConnectorForm({
           </form>
           <Divider my={4} />
           Connector code:
-          <Text
-            w="full"
-            whiteSpace={'pre'}
-            borderRadius="10"
-            mt={4}
-            px={4}
-            fontFamily="mono"
-            fontSize="xs"
-            backgroundColor="gray.100"
-          >
-            {connector.code}
-          </Text>
         </FormProvider>
       )}
     </Box>

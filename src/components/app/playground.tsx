@@ -11,7 +11,7 @@ import {
 import debounce from 'lodash.debounce';
 
 import { useRouter } from 'next/router';
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import SecretsTab from '~/components/app/secrets-tab';
 import SchedulesTab from '~/components/app/schedules-tab';
@@ -39,6 +39,7 @@ import DefaultGrid from '../default-grid';
 import { PlaygroundHeader } from './playground-header';
 import { CodeTab } from './code-tab';
 import { useUser } from '@clerk/nextjs';
+import { EditorContext } from '../context/editorContext';
 
 const debouncedParseInputForTypes = debounce(
   (code, setInputParams) => setInputParams(parseInputForTypes(code)),
@@ -65,7 +66,6 @@ export function Playground({
 
   const [inputParams, setInputParams] = useState<InputParam[]>([]);
   const [lastRunVersion, setLastRunVersion] = React.useState<string>();
-  const [isUserAnAppEditor, setIsUserAnAppEditor] = React.useState(false);
   const [inputValues, setInputValues] = React.useState<Record<string, string>>(
     {},
   );
@@ -78,6 +78,16 @@ export function Playground({
 
   const { id } = app;
 
+  const {
+    setScripts,
+    setCurrentScript,
+    currentScript,
+    save,
+    isUserAnAppEditor,
+    setIsUserAnAppEditor,
+  } = useContext(EditorContext);
+  setScripts(app.scripts);
+
   const appEventsQuery = trpc.useQuery([
     'appEvent.all',
     { deploymentId: `${id}@${lastRunVersion}` },
@@ -87,9 +97,12 @@ export function Playground({
     (script: any) => script.id === app.scriptMain?.scriptId,
   );
 
-  const currentScript =
-    app.scripts.find((script: any) => script.filename === filename) ||
-    mainScript;
+  useEffect(() => {
+    setCurrentScript(
+      app.scripts.find((script: any) => script.filename === filename) ||
+        mainScript,
+    );
+  }, []);
 
   const mutateLive = useLiveMutation(
     ({ storage }, newCode: string) => {
@@ -111,11 +124,10 @@ export function Playground({
   );
 
   useEffect(() => {
-    console.log('once effect', currentScript.code, currentScriptLive?.code);
     setInputParams(
       parseInputForTypes(currentScript?.code || currentScriptLive?.code),
     );
-  }, []);
+  }, [currentScript]);
 
   useEffect(() => {
     setIsUserAnAppEditor(
@@ -140,30 +152,7 @@ export function Playground({
   const saveApp = async () => {
     const formatted = format(currentScriptLive.code).formatted;
     mutateLive(formatted);
-
-    if (isUserAnAppEditor) {
-      editAppMutation.mutateAsync({
-        id,
-        data: {
-          scripts: app.scripts.map((script: any) => ({
-            id: script.id,
-            data:
-              script.id === currentScript.id
-                ? {
-                    name: currentScriptLive.name || script.name,
-                    description:
-                      currentScriptLive.description || script.description,
-                    code: currentScriptLive.code || script.code,
-                  }
-                : {
-                    name: script.name,
-                    description: script.description || '',
-                    code: script.code,
-                  },
-          })),
-        },
-      });
-    }
+    save();
   };
 
   const getAppDataVersion = () => {
@@ -219,7 +208,6 @@ export function Playground({
       <DefaultGrid as="header" maxW="full">
         <PlaygroundHeader
           app={app}
-          isUserAnAppEditor={isUserAnAppEditor}
           onClickSettings={() => setSettingModalOpen(true)}
           onClickShare={() => setShareModalOpen(true)}
           onClickRun={runApp}
@@ -272,11 +260,7 @@ export function Playground({
         <TabPanel as={GridItem} colSpan={12} px={0} pb={0}>
           <CodeTab
             app={app}
-            saveApp={saveApp}
-            isUserAnAppEditor={isUserAnAppEditor}
-            currentScript={currentScript}
             mainScript={mainScript}
-            currentScriptLive={currentScriptLive}
             mutateLive={mutateLive}
             inputParamsFormMethods={inputParamsFormMethods}
             inputParams={inputParams}

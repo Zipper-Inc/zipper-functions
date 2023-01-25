@@ -1,5 +1,5 @@
 import { Box, FormControl, GridItem, Text, Code } from '@chakra-ui/react';
-import React, { useState } from 'react';
+import React, { useContext } from 'react';
 import { AppEditSidebar } from '~/components/app/app-edit-sidebar';
 import { useCmdOrCtrl } from '~/hooks/use-cmd-or-ctrl';
 import { InputParam } from '~/types/input-params';
@@ -7,12 +7,13 @@ import DefaultGrid from '../default-grid';
 import { ConnectorForm } from './connector-form';
 import { PlaygroundSidebar } from './playground-sidebar';
 import dynamic from 'next/dynamic';
+import { EditorContext } from '../context/editorContext';
 
 export const PlaygroundEditor = dynamic(() => import('./playground-editor'), {
   ssr: false,
 });
 
-const ConnectorSidebarTips = (connectorId?: string) => {
+const ConnectorSidebarTips = (connectorId?: string | null) => {
   if (!connectorId) return undefined;
   return (
     <>
@@ -36,11 +37,7 @@ const MAX_CODE_TAB_HEIGHT = `calc(100vh - ${APPROXIMATE_HEADER_HEIGHT_PX})`;
 
 export function CodeTab({
   app,
-  saveApp,
-  isUserAnAppEditor,
-  currentScript,
   mainScript,
-  currentScriptLive,
   mutateLive,
   inputParamsFormMethods,
   inputParams,
@@ -49,11 +46,7 @@ export function CodeTab({
   lastRunVersion,
 }: {
   app: any;
-  saveApp: () => void;
-  isUserAnAppEditor: boolean;
-  currentScript: any;
   mainScript: any;
-  currentScriptLive: any;
   mutateLive: (newCode: string) => void;
   inputParamsFormMethods: any;
   inputParams: InputParam[];
@@ -61,16 +54,14 @@ export function CodeTab({
   appEventsQuery: any;
   lastRunVersion: string | undefined;
 }) {
+  const { currentScript, save } = useContext(EditorContext);
   useCmdOrCtrl(
     'S',
     (e: Event) => {
       e.preventDefault();
-      saveApp();
+      save();
     },
     [],
-  );
-  const [currentScriptId, setCurrentScriptId] = useState(
-    currentScriptLive?.id || currentScript.id,
   );
 
   return (
@@ -81,41 +72,32 @@ export function CodeTab({
       maxHeight={MAX_CODE_TAB_HEIGHT}
     >
       <GridItem colSpan={2}>
-        <PlaygroundSidebar
-          app={app}
-          isUserAnAppEditor={isUserAnAppEditor}
-          currentScriptId={currentScriptId}
-          mainScript={mainScript}
-          setCurrentScriptId={setCurrentScriptId}
-        />
+        <PlaygroundSidebar app={app} mainScript={mainScript} />
       </GridItem>
       <GridItem colSpan={6}>
         <Box width="100%">
-          {currentScript.connectorId ? (
+          {currentScript?.connectorId && (
             <ConnectorForm type={currentScript.connectorId} appId={app.id} />
-          ) : (
-            <FormControl>
-              <Box style={{ color: 'transparent' }}>
-                {PlaygroundEditor && (
-                  <PlaygroundEditor
-                    height={MAX_CODE_TAB_HEIGHT}
-                    key={currentScript?.id}
-                    onChange={(value = '') => {
-                      mutateLive(value);
-                    }}
-                    currentScriptId={currentScriptId}
-                    scripts={app.scripts}
-                    appName={app.slug}
-                  />
-                )}
-              </Box>
-            </FormControl>
           )}
+          <FormControl>
+            <Box style={{ color: 'transparent' }}>
+              {PlaygroundEditor && (
+                <PlaygroundEditor
+                  height={MAX_CODE_TAB_HEIGHT}
+                  key={app.id}
+                  onChange={(value = '') => {
+                    mutateLive(value);
+                  }}
+                  appName={app.slug}
+                />
+              )}
+            </Box>
+          </FormControl>
         </Box>
       </GridItem>
       <GridItem colSpan={4}>
         <AppEditSidebar
-          showInputForm={!currentScript.connectorId}
+          showInputForm={!currentScript?.connectorId}
           inputParamsFormMethods={inputParamsFormMethods}
           inputParams={inputParams}
           inputValues={inputValues}
@@ -124,7 +106,7 @@ export function CodeTab({
             slug: app.slug,
             version: lastRunVersion,
           }}
-          tips={ConnectorSidebarTips(currentScript.connectorId)}
+          tips={ConnectorSidebarTips(currentScript?.connectorId)}
           maxHeight={MAX_CODE_TAB_HEIGHT}
         />
       </GridItem>

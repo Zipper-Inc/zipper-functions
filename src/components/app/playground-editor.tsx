@@ -18,8 +18,12 @@ import {
   WebSocketMessageReader,
   WebSocketMessageWriter,
 } from 'vscode-ws-jsonrpc';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { Uri } from 'vscode';
+import { EditorContext } from '../context/editorContext';
+
+type MonacoEditor = monaco.editor.IStandaloneCodeEditor;
+type Monaco = typeof monaco;
 
 loader.config({ monaco });
 
@@ -121,16 +125,13 @@ function createLanguageClient(
     },
   });
 }
-type MonacoEditor = monaco.editor.IStandaloneCodeEditor;
-type Monaco = typeof monaco;
 
 export default function PlaygroundEditor(
   props: EditorProps & {
-    currentScriptId: string;
     appName: string;
-    scripts: any[];
   },
 ) {
+  const { currentScript, scripts, setEditor } = useContext(EditorContext);
   const editorRef = useRef<MonacoEditor>();
   const monacoRef = useRef<Monaco>();
   const [isEditorReady, setIsEditorReady] = useState(false);
@@ -141,6 +142,7 @@ export default function PlaygroundEditor(
   );
 
   function handleEditorDidMount(editor: MonacoEditor, _monaco: Monaco) {
+    console.log('editor mounted');
     // here is another way to get monaco instance
     // you can also store it in `useRef` for further usage
     editorRef.current = editor;
@@ -189,7 +191,7 @@ export default function PlaygroundEditor(
         createWebSocket(url);
       }
 
-      props.scripts.forEach((script) => {
+      scripts.forEach((script) => {
         const model = monacoEditor.editor.getModel(
           Uri.parse(`file://${props.appName}/${script.filename}`),
         );
@@ -202,25 +204,29 @@ export default function PlaygroundEditor(
           );
         }
       });
+
+      setEditor(monaco.editor);
     }
   }, [monacoEditor]);
 
   useEffect(() => {
-    if (monacoEditor && editorRef.current && isEditorReady) {
-      const currentScript = props.scripts.find(
-        (s) => s.id === props.currentScriptId,
-      );
-
+    if (monacoEditor && editorRef.current && isEditorReady && currentScript) {
       const model = monacoEditor.editor.getModel(
         Uri.parse(`file://${props.appName}/${currentScript.filename}`),
       );
       if (model) {
         editorRef.current.setModel(model);
-      } else {
-        console.error('model not found', currentScript.filename);
+      }
+      if (!model && currentScript) {
+        const newModel = monacoEditor.editor.createModel(
+          currentScript.code,
+          'typescript',
+          Uri.parse(`file://${props.appName}/${currentScript.filename}`),
+        );
+        editorRef.current.setModel(newModel);
       }
     }
-  }, [props.currentScriptId, editorRef.current, isEditorReady]);
+  }, [currentScript, editorRef.current, isEditorReady]);
 
   return (
     <Editor

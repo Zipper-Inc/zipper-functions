@@ -10,6 +10,7 @@ import { Playground } from '~/components/app/playground';
 import { LiveObject } from '@liveblocks/client';
 import { NoHeaderLayout } from '~/components/no-header-layout';
 import { SignedIn } from '@clerk/nextjs';
+import EditorContextProvider from '~/components/context/editorContext';
 
 const AppPage: NextPageWithLayout = () => {
   const { query } = useRouter();
@@ -49,7 +50,11 @@ const AppPage: NextPageWithLayout = () => {
   });
 
   const playground = withLiveBlocks(
-    () => <Playground app={appQuery.data} filename={filename} />,
+    () => (
+      <EditorContextProvider appId={appQuery.data?.id}>
+        <Playground app={appQuery.data} filename={filename} />
+      </EditorContextProvider>
+    ),
     {
       id,
       initialStorage,

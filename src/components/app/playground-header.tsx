@@ -12,13 +12,14 @@ import {
   Icon,
 } from '@chakra-ui/react';
 import { LockIcon, UnlockIcon } from '@chakra-ui/icons';
-import React from 'react';
+import React, { useContext } from 'react';
 import ForkIcon from '~/components/svg/forkIcon';
 import { ZipperLogo } from '~/components/svg/zipper-logo';
 import { useSelf, useOthers } from '~/liveblocks.config';
 import { Avatar } from '../avatar';
 import { HiLightningBolt, HiOutlineCog, HiOutlineShare } from 'react-icons/hi';
 import { useUser } from '@clerk/nextjs';
+import { EditorContext } from '../context/editorContext';
 
 const isEditorOnline = (onlineEditorIds: string[], id: string) =>
   onlineEditorIds.includes(id);
@@ -82,14 +83,12 @@ function PlaygroundAvatars({
 
 export function PlaygroundHeader({
   app,
-  isUserAnAppEditor,
   onClickSettings,
   onClickShare,
   onClickRun,
   onClickFork,
 }: {
   app: any;
-  isUserAnAppEditor: boolean;
   onClickSettings: (e: React.MouseEvent<HTMLElement>) => any;
   onClickShare: (e: React.MouseEvent<HTMLElement>) => any;
   onClickRun: (e: React.MouseEvent<HTMLElement>) => any;
@@ -98,6 +97,8 @@ export function PlaygroundHeader({
   const { isLoaded } = useUser();
   const self = useSelf();
   const others = useOthers();
+
+  const { isUserAnAppEditor } = useContext(EditorContext);
 
   // Get a list of active people in this app
   const onlineEditorIds = others.map(({ id }) => id as string);
