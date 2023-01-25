@@ -19,6 +19,7 @@ import {
   WebSocketMessageWriter,
 } from 'vscode-ws-jsonrpc';
 import { useEffect, useMemo } from 'react';
+import { Uri } from 'vscode';
 
 loader.config({ monaco });
 
@@ -122,7 +123,11 @@ function createLanguageClient(
 }
 
 export default function PlaygroundEditor(
-  props: EditorProps & { filename: string },
+  props: EditorProps & {
+    currentScriptFilename: string;
+    appName: string;
+    scripts: any[];
+  },
 ) {
   const monacoEditor = useMonaco();
   const url = useMemo(
@@ -166,6 +171,17 @@ export default function PlaygroundEditor(
       if (url) {
         createWebSocket(url);
       }
+
+      props.scripts.forEach((script) => {
+        if (script.filename !== props.currentScriptFilename) {
+          //create model for each script file
+          monacoEditor.editor.createModel(
+            script.code,
+            'typescript',
+            Uri.parse(`file://${props.appName}/${script.filename}`),
+          );
+        }
+      });
     }
   }, [monacoEditor]);
 
@@ -177,7 +193,7 @@ export default function PlaygroundEditor(
         minimap: { enabled: false },
         automaticLayout: true,
       }}
-      path={`file://${props.filename}.ts`}
+      path={`file://${props.appName}/${props.currentScriptFilename}`}
       {...props}
     />
   );

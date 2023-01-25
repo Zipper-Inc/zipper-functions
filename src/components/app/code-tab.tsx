@@ -100,7 +100,11 @@ export function CodeTab({
                     onChange={(value = '') => {
                       mutateLive(value);
                     }}
-                    filename={currentScript?.id}
+                    currentScriptFilename={
+                      currentScriptLive?.filename || currentScript.filename
+                    }
+                    scripts={app.scripts}
+                    appName={app.slug}
                   />
                 )}
               </Box>

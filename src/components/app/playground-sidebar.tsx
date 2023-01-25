@@ -178,6 +178,7 @@ export function PlaygroundSidebar({
                   <NextLink
                     href={`/app/${app.id}/edit/${script.filename}`}
                     passHref
+                    style={{ width: '100%' }}
                   >
                     <Flex grow={1} cursor="pointer">
                       <Text fontWeight="medium" fontSize="xs" fontFamily="mono">
