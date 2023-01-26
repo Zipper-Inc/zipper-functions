@@ -1,20 +1,12 @@
 import { Script } from '@prisma/client';
 import * as monaco from 'monaco-editor';
-import { createContext, useState } from 'react';
+import { createContext, useEffect, useState } from 'react';
 import noop from '~/utils/noop';
-import { LiveObject, LsonObject } from '@liveblocks/client';
-import debounce from 'lodash.debounce';
 
-import { InputParam } from '~/types/input-params';
+import { useStorage as useLiveStorage } from '~/liveblocks.config';
 
-import {
-  useMutation as useLiveMutation,
-  useStorage as useLiveStorage,
-} from '~/liveblocks.config';
-
-import usePrettier from '~/hooks/use-prettier';
-import { parseInputForTypes } from '../app/parse-input-for-types';
 import { trpc } from '~/utils/trpc';
+import { useRouter } from 'next/router';
 
 export type EditorContextType = {
   currentScript: Script | undefined;
@@ -26,8 +18,6 @@ export type EditorContextType = {
   editor: typeof monaco.editor | undefined;
   setEditor: (editor: typeof monaco.editor) => void;
   save: () => void;
-  removeEditorModel: (model: monaco.editor.ITextModel) => void;
-  renameEditorModel: (uri: monaco.Uri, newUri: monaco.Uri) => void;
 };
 
 export const EditorContext = createContext<EditorContextType>({
@@ -40,8 +30,6 @@ export const EditorContext = createContext<EditorContextType>({
   editor: undefined,
   setEditor: noop,
   save: noop,
-  removeEditorModel: noop,
-  renameEditorModel: noop,
 });
 
 const EditorContextProvider = ({
@@ -63,6 +51,43 @@ const EditorContextProvider = ({
   const currentScriptLive: any = useLiveStorage(
     (root) => root[`script-${currentScript?.id}`],
   );
+
+  useEffect(() => {
+    const models = editor?.getModels();
+    if (models) {
+      const fileModels = models.filter((model) => model.uri.scheme === 'file');
+
+      // if there are more models than scripts, it means we models to dispose of
+      fileModels.forEach((model) => {
+        // if the model is not in the scripts, dispose of it
+        if (
+          !scripts.find((script) => `/${script.filename}` === model.uri.path)
+        ) {
+          // if the model is the script that has been deleted, set the current script to the first script
+          if (`/${currentScript?.filename}` === model.uri.path) {
+            setCurrentScript(scripts[0]);
+          }
+          model.dispose();
+        }
+      });
+    }
+  }, [scripts]);
+
+  const router = useRouter();
+  useEffect(() => {
+    if (currentScript) {
+      if (router.query.filename !== currentScript.filename) {
+        router.push(
+          {
+            pathname: '/app/[id]/edit/[filename]',
+            query: { id: appId, filename: currentScript?.filename },
+          },
+          undefined,
+          { shallow: true },
+        );
+      }
+    }
+  }, [currentScript]);
 
   const utils = trpc.useContext();
 
@@ -92,9 +117,9 @@ const EditorContextProvider = ({
             data:
               script.id === currentScript.id
                 ? {
-                    name: currentScriptLive.name || script.name,
+                    name: currentScriptLive?.name || script.name,
                     description:
-                      currentScriptLive.description || script.description,
+                      currentScriptLive?.description || script.description,
                     code: fileValues[`/${script.filename}`],
                   }
                 : {
@@ -120,8 +145,6 @@ const EditorContextProvider = ({
         editor,
         setEditor,
         save: saveOpenModels,
-        removeEditorModel: () => {},
-        renameEditorModel: () => {},
       }}
     >
       {children}

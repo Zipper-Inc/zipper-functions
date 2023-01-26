@@ -150,8 +150,10 @@ export function Playground({
   });
 
   const saveApp = async () => {
-    const formatted = format(currentScriptLive.code).formatted;
-    mutateLive(formatted);
+    if (currentScriptLive) {
+      const formatted = format(currentScriptLive.code).formatted;
+      mutateLive(formatted);
+    }
     save();
   };
 

@@ -40,7 +40,7 @@ export function PlaygroundSidebar({
   app: any;
   mainScript: Script;
 }) {
-  const { currentScript, setCurrentScript, isUserAnAppEditor } =
+  const { currentScript, setCurrentScript, isUserAnAppEditor, scripts } =
     useContext(EditorContext);
   const sortScripts = (a: any, b: any) => {
     let orderA;
@@ -83,6 +83,7 @@ export function PlaygroundSidebar({
 
   const editScript = trpc.useMutation('script.edit', {
     async onSuccess() {
+      console.log(isRenamingId);
       await utils.invalidateQueries(['app.byId', { id: app.id }]);
     },
   });
@@ -114,11 +115,7 @@ export function PlaygroundSidebar({
               <PopoverContent>
                 <PopoverArrow />
                 <PopoverBody>
-                  <AddScriptForm
-                    connectors={app.connectors}
-                    scripts={app.scripts}
-                    appId={app.id}
-                  />
+                  <AddScriptForm connectors={app.connectors} appId={app.id} />
                 </PopoverBody>
               </PopoverContent>
             </Popover>
@@ -249,7 +246,7 @@ export function PlaygroundSidebar({
         <AlertDialogOverlay>
           <AlertDialogContent>
             <AlertDialogHeader fontSize="lg" fontWeight="bold">
-              Delete Customer
+              Delete File
             </AlertDialogHeader>
 
             <AlertDialogBody>

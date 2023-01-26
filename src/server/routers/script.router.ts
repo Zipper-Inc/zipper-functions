@@ -8,6 +8,7 @@ import { hasAppEditPermission } from '../utils/authz.utils';
 const defaultSelect = Prisma.validator<Prisma.ScriptSelect>()({
   id: true,
   name: true,
+  filename: true,
   description: true,
   appId: true,
   code: true,

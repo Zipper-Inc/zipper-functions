@@ -23,22 +23,24 @@ import { HiPaperAirplane } from 'react-icons/hi2';
 import slugify from 'slugify';
 import { connectors as defaultConnectors } from '~/config/connectors';
 import { VscGithub } from 'react-icons/vsc';
+import { useContext } from 'react';
+import { EditorContext } from '../context/editorContext';
 
 export default function AddScriptForm({
   appId,
-  scripts,
   connectors,
 }: {
   appId: string;
-  scripts: Script[];
   connectors: AppConnector[];
 }) {
   const { register, handleSubmit, reset, watch } = useForm();
+  const { setCurrentScript, scripts } = useContext(EditorContext);
   const utils = trpc.useContext();
   const addScript = trpc.useMutation('script.add', {
-    async onSuccess() {
+    async onSuccess(script) {
       // refetches posts after a post is added
       await utils.invalidateQueries(['app.byId', { id: appId }]);
+      setCurrentScript(script as Script);
       reset();
     },
   });
