@@ -135,11 +135,9 @@ export default function AddScriptForm({
                 );
               } else {
                 return (
-                  <HStack>
+                  <HStack key={connector.id}>
                     <VscGithub />
-                    <Text key={connector.id}>
-                      {connector.name} already added
-                    </Text>
+                    <Text>{connector.name} already added</Text>
                   </HStack>
                 );
               }

@@ -35,14 +35,16 @@ export const EditorContext = createContext<EditorContextType>({
 const EditorContextProvider = ({
   children,
   appId,
+  initialScripts,
 }: {
   children: any;
   appId: string | undefined;
+  initialScripts: Script[];
 }) => {
   const [currentScript, setCurrentScript] = useState<Script | undefined>(
     undefined,
   );
-  const [scripts, setScripts] = useState<Script[]>([]);
+  const [scripts, setScripts] = useState<Script[]>(initialScripts);
 
   const [isUserAnAppEditor, setIsUserAnAppEditor] = useState(false);
 
@@ -55,10 +57,8 @@ const EditorContextProvider = ({
   useEffect(() => {
     const models = editor?.getModels();
     if (models) {
-      const fileModels = models.filter((model) => model.uri.scheme === 'file');
-
       // if there are more models than scripts, it means we models to dispose of
-      fileModels.forEach((model) => {
+      models.forEach((model) => {
         // if the model is not in the scripts, dispose of it
         if (
           !scripts.find((script) => `/${script.filename}` === model.uri.path)

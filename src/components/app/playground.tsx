@@ -79,14 +79,12 @@ export function Playground({
   const { id } = app;
 
   const {
-    setScripts,
     setCurrentScript,
     currentScript,
     save,
     isUserAnAppEditor,
     setIsUserAnAppEditor,
   } = useContext(EditorContext);
-  setScripts(app.scripts);
 
   const appEventsQuery = trpc.useQuery([
     'appEvent.all',

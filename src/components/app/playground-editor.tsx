@@ -7,10 +7,13 @@ import { buildWorkerDefinition } from 'monaco-editor-workers';
 
 import {
   CloseAction,
+  DocumentUri,
   ErrorAction,
   MessageTransports,
   MonacoLanguageClient,
   MonacoServices,
+  RequestType,
+  TextDocumentIdentifier,
 } from 'monaco-languageclient';
 
 import {
@@ -21,6 +24,11 @@ import {
 import { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { Uri } from 'vscode';
 import { EditorContext } from '../context/editorContext';
+
+export interface CacheParams {
+  referrer: TextDocumentIdentifier;
+  uris: TextDocumentIdentifier[];
+}
 
 type MonacoEditor = monaco.editor.IStandaloneCodeEditor;
 type Monaco = typeof monaco;
@@ -35,32 +43,6 @@ buildWorkerDefinition(
   new URL('', window.location.href).href,
   false,
 );
-
-function createWebSocket(url: string) {
-  console.log('creating websocket');
-  const webSocket = new WebSocket(url);
-  webSocket.onopen = () => {
-    console.log('websocket opened');
-    const socket = toSocket(webSocket);
-    const reader = new WebSocketMessageReader(socket);
-    const writer = new WebSocketMessageWriter(socket);
-    const languageClient = createLanguageClient({
-      reader,
-      writer,
-    });
-    languageClient.start();
-    // commands.registerCommand('deno.cache', (uris: DocumentUri[] = []) => {
-    //   languageClient.sendRequest(
-    //     new RequestType<CacheParams, boolean, void>('deno/cache'),
-    //     {
-    //       referrer: { uri: monaco.Uri.parse('file://model.ts').toString() },
-    //       uris: uris.map((uri) => ({ uri })),
-    //     },
-    //   );
-    // });
-    reader.onClose(() => languageClient.stop());
-  };
-}
 
 function createLanguageClient(
   transports: MessageTransports,
@@ -140,6 +122,38 @@ export default function PlaygroundEditor(
     () => process.env.NEXT_PUBLIC_LSP,
     [process.env.NEXT_PUBLIC_LSP],
   );
+
+  function createWebSocket(url: string) {
+    console.log('creating websocket');
+    const webSocket = new WebSocket(url);
+    webSocket.onopen = () => {
+      console.log('websocket opened');
+      const socket = toSocket(webSocket);
+      const reader = new WebSocketMessageReader(socket);
+      const writer = new WebSocketMessageWriter(socket);
+      const languageClient = createLanguageClient({
+        reader,
+        writer,
+      });
+      languageClient.start();
+
+      monaco.editor.registerCommand(
+        'deno.cache',
+        (_accessor, uris: DocumentUri[] = []) => {
+          languageClient?.sendRequest(
+            new RequestType<CacheParams, boolean, void>('deno/cache'),
+            {
+              referrer: {
+                uri: editorRef.current?.getModel()?.uri.toString(),
+              },
+              uris: uris.map((uri) => ({ uri })),
+            },
+          );
+        },
+      );
+      reader.onClose(() => languageClient?.stop());
+    };
+  }
 
   function handleEditorDidMount(editor: MonacoEditor, _monaco: Monaco) {
     console.log('editor mounted');

@@ -51,7 +51,10 @@ const AppPage: NextPageWithLayout = () => {
 
   const playground = withLiveBlocks(
     () => (
-      <EditorContextProvider appId={appQuery.data?.id}>
+      <EditorContextProvider
+        appId={appQuery.data?.id}
+        initialScripts={appQuery.data?.scripts || []}
+      >
         <Playground app={appQuery.data} filename={filename} />
       </EditorContextProvider>
     ),
