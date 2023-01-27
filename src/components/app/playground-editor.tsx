@@ -197,8 +197,18 @@ export default function PlaygroundEditor(
       monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions(
         diagnosticOptions,
       );
+      monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
+        isolatedModules: true,
+        target: monaco.languages.typescript.ScriptTarget.ES2016,
+        allowNonTsExtensions: true,
+        lib: ['esnext', 'dom', 'deno.ns'],
+      });
+
       monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
         isolatedModules: true,
+        target: monaco.languages.typescript.ScriptTarget.ES2016,
+        allowNonTsExtensions: true,
+        lib: ['esnext', 'dom', 'deno.ns'],
       });
 
       if (url) {

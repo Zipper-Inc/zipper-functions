@@ -57,8 +57,9 @@ const EditorContextProvider = ({
   useEffect(() => {
     const models = editor?.getModels();
     if (models) {
+      const fileModels = models.filter((model) => model.uri.scheme === 'file');
       // if there are more models than scripts, it means we models to dispose of
-      models.forEach((model) => {
+      fileModels.forEach((model) => {
         // if the model is not in the scripts, dispose of it
         if (
           !scripts.find((script) => `/${script.filename}` === model.uri.path)
