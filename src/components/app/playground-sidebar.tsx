@@ -40,7 +40,7 @@ export function PlaygroundSidebar({
   app: any;
   mainScript: Script;
 }) {
-  const { currentScript, setCurrentScript, isUserAnAppEditor, scripts } =
+  const { currentScript, setCurrentScript, isUserAnAppEditor, modelsIsDirty } =
     useContext(EditorContext);
   const sortScripts = (a: any, b: any) => {
     let orderA;
@@ -178,7 +178,15 @@ export function PlaygroundSidebar({
                     }}
                   >
                     <Flex grow={1} cursor="pointer">
-                      <Text fontWeight="medium" fontSize="xs" fontFamily="mono">
+                      <Text
+                        fontWeight={
+                          modelsIsDirty[`/${script.filename}`]
+                            ? 'bold'
+                            : 'medium'
+                        }
+                        fontSize="xs"
+                        fontFamily="mono"
+                      >
                         {script.filename}
                       </Text>
                     </Flex>

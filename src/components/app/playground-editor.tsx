@@ -113,10 +113,12 @@ export default function PlaygroundEditor(
     appName: string;
   },
 ) {
-  const { currentScript, scripts, setEditor } = useContext(EditorContext);
+  const { currentScript, scripts, setEditor, setModelsIsDirty, modelsIsDirty } =
+    useContext(EditorContext);
   const editorRef = useRef<MonacoEditor>();
   const monacoRef = useRef<Monaco>();
   const [isEditorReady, setIsEditorReady] = useState(false);
+  const [hasWebsocket, setHasWebsocket] = useState(false);
   const monacoEditor = useMonaco();
   const url = useMemo(
     () => process.env.NEXT_PUBLIC_LSP,
@@ -127,6 +129,7 @@ export default function PlaygroundEditor(
     console.log('creating websocket');
     const webSocket = new WebSocket(url);
     webSocket.onopen = () => {
+      setHasWebsocket(true);
       console.log('websocket opened');
       const socket = toSocket(webSocket);
       const reader = new WebSocketMessageReader(socket);
@@ -151,7 +154,13 @@ export default function PlaygroundEditor(
           );
         },
       );
-      reader.onClose(() => languageClient?.stop());
+      reader.onClose(() => {
+        setHasWebsocket(false);
+        languageClient?.stop();
+      });
+    };
+    webSocket.onclose = () => {
+      setHasWebsocket(false);
     };
   }
 
@@ -211,7 +220,7 @@ export default function PlaygroundEditor(
         lib: ['esnext', 'dom', 'deno.ns'],
       });
 
-      if (url) {
+      if (url && !hasWebsocket) {
         createWebSocket(url);
       }
 
@@ -229,7 +238,15 @@ export default function PlaygroundEditor(
         }
       });
 
-      setEditor(monaco.editor);
+      const modelState: Record<string, boolean> = {};
+      monacoEditor.editor.getModels().forEach((model) => {
+        model.onDidChangeContent(() => {
+          modelState[model.uri.path.toString()] = true;
+          setModelsIsDirty(modelState);
+        });
+        modelState[model.uri.path.toString()] = false;
+      }),
+        setEditor(monaco.editor);
     }
   }, [monacoEditor]);
 
@@ -247,6 +264,16 @@ export default function PlaygroundEditor(
           'typescript',
           Uri.parse(`file://${props.appName}/${currentScript.filename}`),
         );
+        setModelsIsDirty({
+          [newModel.uri.path.toString()]: false,
+          ...modelsIsDirty,
+        });
+        newModel.onDidChangeContent(() => {
+          setModelsIsDirty({
+            [newModel.uri.path.toString()]: true,
+            ...modelsIsDirty,
+          });
+        });
         editorRef.current.setModel(newModel);
       }
     }

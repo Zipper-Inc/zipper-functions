@@ -17,6 +17,8 @@ export type EditorContextType = {
   setIsUserAnAppEditor: (isUserAnAppEditor: boolean) => void;
   editor: typeof monaco.editor | undefined;
   setEditor: (editor: typeof monaco.editor) => void;
+  modelsIsDirty: Record<string, boolean>;
+  setModelsIsDirty: (modelsDirtyState: Record<string, boolean>) => void;
   save: () => void;
 };
 
@@ -29,6 +31,8 @@ export const EditorContext = createContext<EditorContextType>({
   setIsUserAnAppEditor: noop,
   editor: undefined,
   setEditor: noop,
+  modelsIsDirty: {},
+  setModelsIsDirty: noop,
   save: noop,
 });
 
@@ -49,6 +53,10 @@ const EditorContextProvider = ({
   const [isUserAnAppEditor, setIsUserAnAppEditor] = useState(false);
 
   const [editor, setEditor] = useState<typeof monaco.editor | undefined>();
+
+  const [modelsDirtyState, setModelsDirtyState] = useState<
+    Record<string, boolean>
+  >({});
 
   const currentScriptLive: any = useLiveStorage(
     (root) => root[`script-${currentScript?.id}`],
@@ -131,6 +139,15 @@ const EditorContextProvider = ({
           })),
         },
       });
+
+      setModelsDirtyState(
+        (Object.keys(modelsDirtyState) as string[]).reduce((acc, elem) => {
+          return {
+            ...acc,
+            [elem]: false,
+          };
+        }, {} as Record<string, boolean>),
+      );
     }
   };
 
@@ -145,6 +162,8 @@ const EditorContextProvider = ({
         setIsUserAnAppEditor,
         editor,
         setEditor,
+        modelsIsDirty: modelsDirtyState,
+        setModelsIsDirty: setModelsDirtyState,
         save: saveOpenModels,
       }}
     >
