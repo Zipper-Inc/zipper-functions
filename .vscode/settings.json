@@ -3,5 +3,6 @@
   "deno.enable": true,
   "deno.enablePaths": [
     "./src/workers"
-  ]
+  ],
+  "git.ignoreLimitWarning": true
 }
