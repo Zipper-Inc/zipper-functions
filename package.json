@@ -19,7 +19,6 @@
   "dependencies": {},
   "devDependencies": {
     "dotenv": "^16.0.3",
-    "eslint-config-custom": "*",
     "get-port-please": "^3.0.1",
     "prettier": "latest",
     "signale": "^1.4.0",
