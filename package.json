@@ -16,9 +16,13 @@
     "deno:dev": "yarn dotenv -c .env.local ts-node --compiler-options \"{\\\"module\\\":\\\"commonjs\\\"}\" ./bin/deno-dev.ts",
     "deno:deploy": "yarn dotenv -c .env.local ts-node --compiler-options \"{\\\"module\\\":\\\"commonjs\\\"}\" ./bin/deno-deploy.ts"
   },
+  "dependencies": {},
   "devDependencies": {
+    "dotenv": "^16.0.3",
     "eslint-config-custom": "*",
+    "get-port-please": "^3.0.1",
     "prettier": "latest",
+    "signale": "^1.4.0",
     "turbo": "latest"
   },
   "prettier": {
@@ -26,9 +30,5 @@
     "trailingComma": "all",
     "singleQuote": true
   },
-  "engines": {
-    "node": ">=14.0.0"
-  },
-  "dependencies": {},
   "packageManager": "yarn@1.22.19"
 }

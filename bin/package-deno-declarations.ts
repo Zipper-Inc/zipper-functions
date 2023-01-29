@@ -16,7 +16,7 @@ function main() {
     );
   });
 
-  fs.writeFileSync('./src/types/deno/d.json', JSON.stringify(map));
+  fs.writeFileSync('./apps/zipper.works/src/types/deno/d.json', JSON.stringify(map));
 }
 
 main();

@@ -1,0 +1,8 @@
+{
+  "name": "subhosting-relay",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "dev": "yarn --cwd=\"../..\" deno:dev ./apps/subhosting-relay/subhosting-relay.deno.ts port=3001"
+  }
+}

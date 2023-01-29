@@ -1,7 +1,7 @@
 import signale from 'signale';
 import { getPort } from 'get-port-please';
-import shell, { exec } from '../src/utils/shell';
-import noop from '../src/utils/noop';
+import shell, { exec } from './utils/shell';
+import noop from './utils/noop';
 
 const PORT_ARG = 'port=';
 const getFileFromArgs = () =>
