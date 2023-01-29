@@ -16,16 +16,17 @@ import {
   NumberIncrementStepper,
   NumberDecrementStepper,
 } from '@chakra-ui/react';
+import { useEffect } from 'preact/hooks';
 import {
   useController,
   useFormContext,
   useForm,
   FormProvider,
 } from 'react-hook-form';
-import { InputType, InputParam } from '../../src/types/app-info.ts';
+import { InputType } from '../../src/types/app-info.ts';
 
 interface Props {
-  params: InputParam[];
+  params: any;
   defaultValues?: any;
 }
 
@@ -64,6 +65,9 @@ function InputParamsInput({
   optional: boolean;
   value: any;
 }) {
+  useEffect(() => {
+    alert('effect!');
+  });
   const { register } = useFormContext();
   const name = `${inputKey}:${type}`;
   const formProps = register(name, {

@@ -1,6 +1,6 @@
 import { JSX } from 'preact';
 import { ChakraProvider, ChakraProviderProps } from '@chakra-ui/react';
-import theme from './../../src/theme.ts';
+import theme from '../../src/theme.ts';
 
 const withChakraProvider =
   (providerProps: ChakraProviderProps) =>

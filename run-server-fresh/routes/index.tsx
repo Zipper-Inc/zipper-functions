@@ -71,6 +71,9 @@ function RunPage({ data }: PageProps<AppPageProps>) {
         {app.description && (
           <meta name="description" content={app.description} />
         )}
+        <script type="text/javascript">
+          window.Deno = {JSON.stringify(Deno)}
+        </script>
       </Head>
       <InputParamsForm params={inputs} />
       <Box color="purple" p={16}>
