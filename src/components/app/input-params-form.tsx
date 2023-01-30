@@ -43,11 +43,15 @@ function JSONInput({ inputKey, type }: { inputKey: string; type: string }) {
       py="1"
       backgroundColor="white"
     >
-      <JSONEditor
+      <Textarea
+        onChange={onChange}
+        defaultValue={type === InputType.array ? '[]' : '{}'}
+      ></Textarea>
+      {/* <JSONEditor
         onChange={onChange}
         height="80px"
         defaultValue={type === InputType.array ? '[]' : '{}'}
-      />
+      /> */}
     </Box>
   ) : null;
 }
