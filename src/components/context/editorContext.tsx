@@ -17,8 +17,9 @@ export type EditorContextType = {
   setIsUserAnAppEditor: (isUserAnAppEditor: boolean) => void;
   editor: typeof monaco.editor | undefined;
   setEditor: (editor: typeof monaco.editor) => void;
-  modelsIsDirty: Record<string, boolean>;
-  setModelsIsDirty: (modelsDirtyState: Record<string, boolean>) => void;
+  isModelDirty: (path: string) => boolean;
+  setModelIsDirty: (path: string, isDirty: boolean) => void;
+  isEditorDirty: () => boolean;
   save: () => void;
 };
 
@@ -31,8 +32,9 @@ export const EditorContext = createContext<EditorContextType>({
   setIsUserAnAppEditor: noop,
   editor: undefined,
   setEditor: noop,
-  modelsIsDirty: {},
-  setModelsIsDirty: noop,
+  isModelDirty: () => false,
+  setModelIsDirty: noop,
+  isEditorDirty: () => false,
   save: noop,
 });
 
@@ -151,6 +153,20 @@ const EditorContextProvider = ({
     }
   };
 
+  const isModelDirty = (path: string) => {
+    return modelsDirtyState[path] || false;
+  };
+
+  const setModelIsDirty = (path: string, isDirty: boolean) => {
+    const newModelState = { ...modelsDirtyState };
+    newModelState[path] = isDirty;
+    setModelsDirtyState(newModelState);
+  };
+
+  const isEditorDirty = () => {
+    return !!Object.values(modelsDirtyState).find((state) => state);
+  };
+
   return (
     <EditorContext.Provider
       value={{
@@ -162,8 +178,9 @@ const EditorContextProvider = ({
         setIsUserAnAppEditor,
         editor,
         setEditor,
-        modelsIsDirty: modelsDirtyState,
-        setModelsIsDirty: setModelsDirtyState,
+        isModelDirty,
+        setModelIsDirty,
+        isEditorDirty,
         save: saveOpenModels,
       }}
     >

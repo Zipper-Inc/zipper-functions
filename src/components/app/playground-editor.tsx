@@ -24,6 +24,7 @@ import {
 import { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { Uri } from 'vscode';
 import { EditorContext } from '../context/editorContext';
+import { useExitConfirmation } from '~/hooks/use-exit-confirmation';
 
 export interface CacheParams {
   referrer: TextDocumentIdentifier;
@@ -113,8 +114,14 @@ export default function PlaygroundEditor(
     appName: string;
   },
 ) {
-  const { currentScript, scripts, setEditor, setModelsIsDirty, modelsIsDirty } =
-    useContext(EditorContext);
+  const {
+    currentScript,
+    scripts,
+    setEditor,
+    setModelIsDirty,
+    isModelDirty,
+    isEditorDirty,
+  } = useContext(EditorContext);
   const editorRef = useRef<MonacoEditor>();
   const monacoRef = useRef<Monaco>();
   const [isEditorReady, setIsEditorReady] = useState(false);
@@ -124,6 +131,8 @@ export default function PlaygroundEditor(
     () => process.env.NEXT_PUBLIC_LSP,
     [process.env.NEXT_PUBLIC_LSP],
   );
+
+  useExitConfirmation({ enable: isEditorDirty(), ignorePaths: ['/edit/'] });
 
   function createWebSocket(url: string) {
     console.log('creating websocket');
@@ -238,13 +247,11 @@ export default function PlaygroundEditor(
         }
       });
 
-      const modelState: Record<string, boolean> = {};
       monacoEditor.editor.getModels().forEach((model) => {
         model.onDidChangeContent(() => {
-          modelState[model.uri.path.toString()] = true;
-          setModelsIsDirty(modelState);
+          setModelIsDirty(model.uri.path.toString(), true);
         });
-        modelState[model.uri.path.toString()] = false;
+        setModelIsDirty(model.uri.path.toString(), false);
       }),
         setEditor(monaco.editor);
     }
@@ -264,15 +271,9 @@ export default function PlaygroundEditor(
           'typescript',
           Uri.parse(`file://${props.appName}/${currentScript.filename}`),
         );
-        setModelsIsDirty({
-          [newModel.uri.path.toString()]: false,
-          ...modelsIsDirty,
-        });
+        setModelIsDirty(newModel.uri.path.toString(), false);
         newModel.onDidChangeContent(() => {
-          setModelsIsDirty({
-            [newModel.uri.path.toString()]: true,
-            ...modelsIsDirty,
-          });
+          setModelIsDirty(newModel.uri.path.toString(), true);
         });
         editorRef.current.setModel(newModel);
       }
