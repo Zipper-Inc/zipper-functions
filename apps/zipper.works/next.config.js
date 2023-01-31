@@ -34,10 +34,6 @@ module.exports = getConfig({
         source: '/run/:path*',
         destination: `${process.env.RELAY_URL}/:path*`,
       },
-      {
-        source: '/api/__/parse-input',
-        destination: `${process.env.PARSE_INPUT_URL}`,
-      },
     ];
   },
 });

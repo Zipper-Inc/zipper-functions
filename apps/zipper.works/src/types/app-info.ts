@@ -8,7 +8,9 @@ export type AppInfo = {
   lastDeploymentVersion: string | null;
 };
 
-export type AppInfoAndInputParams = { app: AppInfo; inputs: InputParam[] };
+export type InputParams = InputParam[];
+
+export type AppInfoAndInputParams = { app: AppInfo; inputs: InputParams };
 
 export type AppInfoResult =
   | {
