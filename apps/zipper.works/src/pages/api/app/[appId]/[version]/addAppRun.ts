@@ -11,7 +11,7 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
-  const { appId, deploymentId, inputs, success, scheduled, result } = req.body;
+  const { appId, deploymentId, inputs, success, result } = req.body;
   limiter
     .check(res, 5, appId)
     .then(async () => {
@@ -22,7 +22,6 @@ export default async function handler(
             deploymentId,
             inputs,
             success,
-            scheduled,
             result,
           },
         });
