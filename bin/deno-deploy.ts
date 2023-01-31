@@ -1,6 +1,6 @@
 import signale from 'signale';
-import shell, { exec } from '../src/utils/shell';
-import noop from '../src/utils/noop';
+import shell, { exec } from './utils/shell';
+import noop from './utils/noop';
 import { dirname, basename } from 'path';
 
 const getFileFromArgs = () =>
