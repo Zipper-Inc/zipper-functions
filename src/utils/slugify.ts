@@ -2,6 +2,7 @@ import ogSlugify from 'slugify';
 
 const DEFAULT_OPTIONS = {
   lower: true,
+  remove: /[*+~.()'"!:@]/g,
 };
 
 const slugify = (

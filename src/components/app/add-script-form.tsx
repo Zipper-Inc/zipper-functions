@@ -20,11 +20,11 @@ import { useForm } from 'react-hook-form';
 import { trpc } from '~/utils/trpc';
 import { AppConnector, Script } from '@prisma/client';
 import { HiPaperAirplane } from 'react-icons/hi2';
-import slugify from 'slugify';
 import { connectors as defaultConnectors } from '~/config/connectors';
 import { VscGithub } from 'react-icons/vsc';
 import { useContext } from 'react';
 import { EditorContext } from '../context/editorContext';
+import slugify from '~/utils/slugify';
 
 export default function AddScriptForm({
   appId,

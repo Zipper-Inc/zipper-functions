@@ -213,7 +213,7 @@ export function PlaygroundSidebar({
                         );
 
                         addScript.mutateAsync({
-                          name: `${toDupe.name} (copy)`,
+                          name: `${toDupe.name}-copy`,
                           appId: app.id,
                           code: toDupe.code,
                           order: app.scripts.length + 1,
