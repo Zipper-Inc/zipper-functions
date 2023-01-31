@@ -9,6 +9,7 @@ import {
   ModalOverlay,
   VStack,
   Box,
+  Icon,
   Input,
   FormHelperText,
   FormControl,
@@ -29,6 +30,9 @@ import { trpc } from '~/utils/trpc';
 import { FiClock, FiTrash, FiX } from 'react-icons/fi';
 import { InputParam } from '~/types/input-params';
 import InputParamsForm from './input-params-form';
+import { AppRun } from '@prisma/client';
+import { HiCheck } from 'react-icons/hi2';
+import { HiX } from 'react-icons/hi';
 
 type Props = {
   appId: string;
@@ -44,10 +48,11 @@ const SchedulesTab: React.FC<Props> = ({ appId, inputParams }) => {
     { crontab: string; inputs: Record<string, any> }[]
   >([]);
   const [allSchedules, setAllSchedules] = useState<
-    { id?: string; crontab: string; appId?: string }[]
+    { id?: string; crontab: string; appId?: string; appRuns?: AppRun[] }[]
   >([]);
 
   const existingSchedules = trpc.useQuery(['schedule.all', { appId }]);
+  console.log(existingSchedules.data);
 
   const addSchedule = trpc.useMutation('schedule.add', {
     async onSuccess({ crontab }) {
@@ -208,12 +213,37 @@ const SchedulesTab: React.FC<Props> = ({ appId, inputParams }) => {
                             <Text color={s.id ? 'gray.600' : 'gray.900'}>
                               {s.crontab}
                             </Text>
-                            <Text
-                              color={s.id ? 'gray.600' : 'gray.900'}
-                              fontSize="xs"
-                            >
-                              {cronstrue.toString(s.crontab)}
-                            </Text>
+                            <HStack>
+                              <Text
+                                color={s.id ? 'gray.600' : 'gray.900'}
+                                fontSize="xs"
+                              >
+                                {cronstrue.toString(s.crontab)}
+                              </Text>
+                              {s.appRuns && (
+                                <>
+                                  <Text color="gray.400">|</Text>
+                                  <Text color="gray.600" fontSize="xs">
+                                    {`
+                                    Last run at ${new Intl.DateTimeFormat(
+                                      'en-GB',
+                                      { dateStyle: 'short', timeStyle: 'long' },
+                                    ).format(s.appRuns[0]?.createdAt)} was ${
+                                      s.appRuns[0]?.success
+                                        ? 'successful'
+                                        : 'not successful.'
+                                    }
+                                    `}
+                                  </Text>
+                                  <Icon
+                                    as={s.appRuns[0]?.success ? HiCheck : HiX}
+                                    color={
+                                      s.appRuns[0]?.success ? 'green' : 'red'
+                                    }
+                                  ></Icon>
+                                </>
+                              )}
+                            </HStack>
                           </VStack>
                         </HStack>
                       </Box>

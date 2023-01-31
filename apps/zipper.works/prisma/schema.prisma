@@ -83,12 +83,13 @@ model AppRun {
   updatedAt    DateTime? @default(now())
   success      Boolean
   deploymentId String
-  scheduled    Boolean   @default(false)
+  scheduleId   String?
   result       Json?
   inputs       Json?
 
-  appId String
-  app   App?   @relation(fields: [appId], references: [id])
+  appId     String
+  app       App?          @relation(fields: [appId], references: [id])
+  schedule  Schedule?     @relation(fields: [scheduleId], references: [id])
 
   @@map("apps_runs")
 }
@@ -127,8 +128,9 @@ model Schedule {
   crontab   String
   inputs    Json?
 
-  appId String
-  app   App?   @relation(fields: [appId], references: [id])
+  appId     String
+  app       App?      @relation(fields: [appId], references: [id])
+  appRuns   AppRun[]
 
   @@map("schedules")
 }

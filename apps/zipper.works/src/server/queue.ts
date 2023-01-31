@@ -54,7 +54,7 @@ const initializeWorkers = () => {
                 success: true,
                 result: JSON.stringify(res, null, 2),
                 inputs: JSON.stringify(schedule.inputs, null, 2),
-                scheduled: true,
+                schedule: { connect: { id: schedule.id } },
                 deploymentId: `${
                   schedule.appId
                 }@${schedule.app.updatedAt?.getTime()}`,
@@ -69,7 +69,7 @@ const initializeWorkers = () => {
                 success: false,
                 result: {},
                 inputs: JSON.stringify(schedule.inputs, null, 2),
-                scheduled: true,
+                schedule: { connect: { id: schedule.id } },
                 deploymentId: `${
                   schedule.appId
                 }@${schedule.app.updatedAt?.getTime()}`,

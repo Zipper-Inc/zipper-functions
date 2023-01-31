@@ -15,7 +15,6 @@ import React, { useContext, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import SecretsTab from '~/components/app/secrets-tab';
 import SchedulesTab from '~/components/app/schedules-tab';
-import RunsTab from '~/components/app/runs-tab';
 import ShareModal from '~/components/app/share-modal';
 import useInterval from '~/hooks/use-interval';
 import usePrettier from '~/hooks/use-prettier';
@@ -242,9 +241,6 @@ export function Playground({
               <Box px="2">Code</Box>
             </Tab>
 
-            {/* RUNS */}
-            {isUserAnAppEditor && <Tab>Runs</Tab>}
-
             {/* SCHEDULES */}
             {isUserAnAppEditor && <Tab>Schedules</Tab>}
 
@@ -268,11 +264,6 @@ export function Playground({
             appEventsQuery={appEventsQuery}
             lastRunVersion={lastRunVersion}
           />
-        </TabPanel>
-
-        {/* RUNS */}
-        <TabPanel as={GridItem} colSpan={12}>
-          <RunsTab appId={id} />
         </TabPanel>
 
         {/* SCHEDULES */}

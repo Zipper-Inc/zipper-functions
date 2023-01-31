@@ -75,7 +75,9 @@ export const scheduleRouter = createRouter()
         where: {
           appId: input.appId,
         },
-        select: defaultSelect,
+        include: {
+          appRuns: { orderBy: { createdAt: 'desc' }, take: 1 },
+        },
       });
     },
   })
