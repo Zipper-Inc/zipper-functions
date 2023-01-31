@@ -13,9 +13,10 @@ const queueWorkersGlobal = global as typeof global & {
   queues?: Record<'schedule', Queue>;
 };
 
-const getRunUrl = (appId: string, updatedAt?: Date | null) => {
-  const version = new Date(updatedAt || Date.now()).getTime().toString();
-  return `${process.env.ZIPPER_URL}/run/${appId}@${version}`;
+const getRunUrl = (slug: string) => {
+  return `${
+    process.env.NODE_ENV === 'production' ? 'https' : 'http'
+  }://${slug}.${process.env.NEXT_PUBLIC_OUTPUT_SERVER_HOSTNAME}/call`;
 };
 
 const initializeWorkers = () => {
@@ -29,28 +30,67 @@ const initializeWorkers = () => {
           include: { app: true },
         });
         if (schedule?.app) {
-          const raw = await fetch(
-            getRunUrl(schedule.appId, schedule.app.updatedAt),
-            {
-              method: 'POST',
-              body: JSON.stringify(schedule.inputs),
-            },
-          );
+          const inputs = JSON.parse(JSON.stringify(schedule.inputs));
 
-          const res = (await raw.json()) as any;
+          const inputsWithoutAnnotations: Record<string, string> = {};
+          Object.keys(inputs).forEach((inputKey) => {
+            const splitKey = inputKey.split(':');
+            splitKey.pop();
 
-          await prisma.appRun.create({
-            data: {
-              app: { connect: { id: schedule.appId } },
-              success: res.ok,
-              result: JSON.stringify(res.data, null, 2),
-              inputs: JSON.stringify(schedule.inputs, null, 2),
-              scheduled: true,
-              deploymentId: `${
-                schedule.appId
-              }@${schedule.app.updatedAt?.getTime()}`,
-            },
+            inputsWithoutAnnotations[splitKey.join(':')] = inputs[inputKey];
           });
+
+          const searchParams = new URLSearchParams(
+            inputsWithoutAnnotations,
+          ).toString();
+
+          try {
+            // TODO: go back to POST request once it has been implemented on the run server
+            // The GET request generates duplicate app run events
+
+            // const raw = await fetch(getRunUrl(schedule.app.slug), {
+            //   method: 'POST',
+            //   body: JSON.stringify(inputsWithoutAnnotations),
+            // });
+
+            const raw = await fetch(
+              `${getRunUrl(schedule.app.slug)}/?${searchParams}`,
+            );
+
+            const contentType = raw.headers.get('content-type');
+            const res =
+              contentType && contentType.indexOf('application/json') !== -1
+                ? raw.json()
+                : raw.text();
+
+            await prisma.appRun.create({
+              data: {
+                app: { connect: { id: schedule.appId } },
+                success: true,
+                result: JSON.stringify(res, null, 2),
+                inputs: JSON.stringify(schedule.inputs, null, 2),
+                scheduled: true,
+                deploymentId: `${
+                  schedule.appId
+                }@${schedule.app.updatedAt?.getTime()}`,
+              },
+            });
+          } catch (error) {
+            console.log(`[Job Queue] Error with job ID ${job.id}`);
+            console.log(error);
+            await prisma.appRun.create({
+              data: {
+                app: { connect: { id: schedule.appId } },
+                success: false,
+                result: {},
+                inputs: JSON.stringify(schedule.inputs, null, 2),
+                scheduled: true,
+                deploymentId: `${
+                  schedule.appId
+                }@${schedule.app.updatedAt?.getTime()}`,
+              },
+            });
+          }
         }
       },
       { connection },

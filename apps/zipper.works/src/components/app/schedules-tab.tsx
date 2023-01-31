@@ -51,12 +51,11 @@ const SchedulesTab: React.FC<Props> = ({ appId, inputParams }) => {
 
   const addSchedule = trpc.useMutation('schedule.add', {
     async onSuccess({ crontab }) {
-      // refetches posts after a post is added
+      await utils.invalidateQueries(['schedule.all', { appId }]);
       const remainingNewSchedules = newSchedules.filter(
         (s) => s.crontab !== crontab,
       );
       setNewSchedules(remainingNewSchedules);
-      await utils.invalidateQueries(['secret.all', { appId }]);
     },
   });
 
@@ -121,7 +120,7 @@ const SchedulesTab: React.FC<Props> = ({ appId, inputParams }) => {
                     size="md"
                     type="text"
                     {...addModalForm.register('crontab')}
-                    defaultValue="* 1 * * *"
+                    defaultValue="0 * * * *"
                     onChange={(e) => setCurrentCrontab(e.target.value)}
                   />
                   <FormHelperText>{cronString}</FormHelperText>
@@ -268,9 +267,11 @@ const SchedulesTab: React.FC<Props> = ({ appId, inputParams }) => {
             <AddIcon mr={2} boxSize={3} />
             Add
           </Button>
-          <Button type="submit" colorScheme="purple">
-            Save {newSchedules.length > 0 && `(${newSchedules.length} new)`}
-          </Button>
+          {newSchedules.length > 0 && (
+            <Button type="submit" colorScheme="purple">
+              Save {newSchedules.length > 0 && `(${newSchedules.length} new)`}
+            </Button>
+          )}
         </Box>
       </form>
       {addModal({ onClose: onCloseAdd, isOpen: isOpenAdd })}

@@ -98,7 +98,17 @@ export const scheduleRouter = createRouter()
         },
       });
 
-      queues.schedule.removeRepeatableByKey(input.id);
+      const repeatableJobs = await queues.schedule.getRepeatableJobs();
+      const job = repeatableJobs.find((job) => job.name === input.id);
+      console.log('deleting job: ', job);
+      if (job) {
+        const success = await queues.schedule.removeRepeatableByKey(job.key);
+        if (!success)
+          throw new TRPCError({
+            message: 'something went wrong deleting the scheduled job',
+            code: 'INTERNAL_SERVER_ERROR',
+          });
+      }
 
       return {
         id: input.id,
