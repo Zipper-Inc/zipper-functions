@@ -40,28 +40,13 @@ const initializeWorkers = () => {
             inputsWithoutAnnotations[splitKey.join(':')] = inputs[inputKey];
           });
 
-          const searchParams = new URLSearchParams(
-            inputsWithoutAnnotations,
-          ).toString();
-
           try {
-            // TODO: go back to POST request once it has been implemented on the run server
-            // The GET request generates duplicate app run events
+            const raw = await fetch(getRunUrl(schedule.app.slug), {
+              method: 'POST',
+              body: JSON.stringify(inputsWithoutAnnotations),
+            });
 
-            // const raw = await fetch(getRunUrl(schedule.app.slug), {
-            //   method: 'POST',
-            //   body: JSON.stringify(inputsWithoutAnnotations),
-            // });
-
-            const raw = await fetch(
-              `${getRunUrl(schedule.app.slug)}/?${searchParams}`,
-            );
-
-            const contentType = raw.headers.get('content-type');
-            const res =
-              contentType && contentType.indexOf('application/json') !== -1
-                ? raw.json()
-                : raw.text();
+            const res = (await raw.json()) as any;
 
             await prisma.appRun.create({
               data: {
