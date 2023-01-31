@@ -52,7 +52,7 @@ const RunsTab: React.FC<Props> = ({ appId }) => {
                               timeStyle: 'long',
                             }).format(appRun.createdAt)}
                           </Td>
-                          <Td>{appRun.scheduled ? 'Yes' : 'No'}</Td>
+                          <Td>{appRun.scheduleId ? 'Yes' : 'No'}</Td>
                           <Td>{appRun.success ? 'Yes' : 'No'}</Td>
                         </Tr>
                       );

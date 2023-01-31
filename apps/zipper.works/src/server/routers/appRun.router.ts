@@ -11,7 +11,7 @@ const defaultSelect = Prisma.validator<Prisma.AppRunSelect>()({
   deploymentId: true,
   result: true,
   inputs: true,
-  scheduled: true,
+  scheduleId: true,
   createdAt: true,
 });
 
@@ -24,7 +24,7 @@ export const appRunRouter = createRouter()
       result: z.string(),
       deploymentId: z.string(),
       inputs: z.string(),
-      scheduled: z.boolean(),
+      scheduleId: z.string().optional(),
     }),
     async resolve({ input }) {
       return prisma.appRun.create({
