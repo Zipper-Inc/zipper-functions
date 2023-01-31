@@ -13,7 +13,7 @@ export const createContextInner = async ({
   orgId,
 }: {
   user: User | null;
-  orgId: string | null;
+  orgId: string | undefined | null;
 }) => {
   return { user, orgId };
 };
