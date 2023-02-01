@@ -47,3 +47,6 @@ playwright/test-results
 
 # turbo
 .turbo
+
+# citx
+index.gen.ts.bak

@@ -1,10 +1,13 @@
 import { GetServerSideProps } from 'next';
+import { withDefaultTheme } from '@zipper/ui';
 import { AppInfo, InputParams } from '@zipper/types';
 import getAppInfo from '~/utils/get-app-info';
 import getValidSubdomain from '~/utils/get-valid-subdomain';
 import { VERSION_DELIMETER } from '~/utils/get-version-from-url';
+import { Heading } from '@chakra-ui/react';
+import Head from 'next/head';
 
-export default function AppPage({
+export function AppPage({
   app,
   inputs,
 }: {
@@ -12,12 +15,19 @@ export default function AppPage({
   inputs: InputParams;
   version?: string;
 }) {
+  const appTitle = app.name || app.slug;
   return (
-    <div>
-      <h1>{app.name || app.slug}</h1>
-      {app.description && <p>{app.description}</p>}
-      <code>{JSON.stringify(inputs, null, 2)}</code>
-    </div>
+    <>
+      <Head>
+        <title>{appTitle}</title>
+      </Head>
+      <main>
+        <Heading as="h2">{appTitle}</Heading>
+        <h1></h1>
+        {app.description && <p>{app.description}</p>}
+        <code>{JSON.stringify(inputs, null, 2)}</code>
+      </main>
+    </>
   );
 }
 
@@ -42,3 +52,5 @@ export const getServerSideProps: GetServerSideProps = async ({
 
   return { props: result.data };
 };
+
+export default withDefaultTheme(AppPage);

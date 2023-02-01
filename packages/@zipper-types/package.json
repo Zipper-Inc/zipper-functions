@@ -1,10 +1,11 @@
 {
   "name": "@zipper/types",
   "version": "0.0.0",
-  "main": "./index.gen.ts",
-  "types": "./index.gen.ts",
+  "main": "./src/index.gen.ts",
+  "types": "./src/index.gen.ts",
   "scripts": {
-    "build": "yarn ctix single"
+    "build": "yarn ctix single",
+    "dev": "yarn build"
   },
   "devDependencies": {
     "ctix": "^1.8.2"

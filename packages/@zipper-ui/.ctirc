@@ -31,7 +31,7 @@
 
   // only single command configuration
   // Output directory. It works only single mode.
-  "output": "./",
+  "output": "./src",
 
   // Use rootDir or rootDirs configuration in tsconfig.json.
   "useRootDir": false,
@@ -39,6 +39,5 @@
   // only remove command configuration
   // remove with backup file
   "includeBackup": false,
-
-  "startAt": "./"
+  "startAt": "./src"
 }

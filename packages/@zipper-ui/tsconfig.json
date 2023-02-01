@@ -30,7 +30,11 @@
     ],
     "incremental": true,
     "baseUrl": ".",
-    "paths": {}
+    "paths": {
+      "~/*": [
+        "src/*"
+      ]
+    }
   },
   "include": [
     "**/*.ts",
