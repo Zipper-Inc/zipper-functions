@@ -18,11 +18,7 @@ import SchedulesTab from '~/components/app/schedules-tab';
 import ShareModal from '~/components/app/share-modal';
 import useInterval from '~/hooks/use-interval';
 import usePrettier from '~/hooks/use-prettier';
-import {
-  InputParam,
-  InputType,
-  JSONEditorInputTypes,
-} from '~/types/input-params';
+import { InputParam, InputType, JSONEditorInputTypes } from '@zipper/types';
 import { safeJSONParse } from '~/utils/safe-json';
 import { trpc } from '~/utils/trpc';
 import {

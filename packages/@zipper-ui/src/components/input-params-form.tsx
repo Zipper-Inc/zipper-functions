@@ -11,21 +11,25 @@ import {
   HStack,
   StackDivider,
 } from '@chakra-ui/react';
-import { useController, useFormContext } from 'react-hook-form';
-import dynamic from 'next/dynamic';
-import { InputType, InputParam } from '~/types/input-params';
-
-const JSONEditor = dynamic(() => import('~/components/json-editor'), {
-  ssr: false,
-});
+import { FieldValues, useController, UseFormReturn } from 'react-hook-form';
+import { InputType, InputParam } from '@zipper/types';
 
 interface Props {
   params: InputParam[];
   defaultValues?: any;
+  formContext: UseFormReturn<FieldValues, any>;
 }
 
-function JSONInput({ inputKey, type }: { inputKey: string; type: string }) {
-  const { control } = useFormContext();
+function JSONInput({
+  inputKey,
+  type,
+  formContext,
+}: {
+  inputKey: string;
+  type: string;
+  formContext: Props['formContext'];
+}) {
+  const { control } = formContext;
   const {
     field: { onChange },
   } = useController({
@@ -33,7 +37,7 @@ function JSONInput({ inputKey, type }: { inputKey: string; type: string }) {
     control,
     defaultValue: type === InputType.array ? '[]' : '{}',
   });
-  return JSONEditor ? (
+  return (
     <Box
       width="100%"
       height="90px"
@@ -46,27 +50,24 @@ function JSONInput({ inputKey, type }: { inputKey: string; type: string }) {
       <Textarea
         onChange={onChange}
         defaultValue={type === InputType.array ? '[]' : '{}'}
-      ></Textarea>
-      {/* <JSONEditor
-        onChange={onChange}
-        height="80px"
-        defaultValue={type === InputType.array ? '[]' : '{}'}
-      /> */}
+      />
     </Box>
-  ) : null;
+  );
 }
 
 function InputParamsInput({
   inputKey,
   type,
   optional,
+  formContext,
 }: {
   inputKey: string;
   type: string;
   optional: boolean;
   value: any;
+  formContext: Props['formContext'];
 }) {
-  const { register } = useFormContext();
+  const { register } = formContext;
   const name = `${inputKey}:${type}`;
   const formProps = register(name, {
     required: !optional,
@@ -110,12 +111,14 @@ function InputParamsInput({
     case InputType.object:
     case InputType.any:
     default: {
-      return <JSONInput inputKey={inputKey} type={type} />;
+      return (
+        <JSONInput inputKey={inputKey} type={type} formContext={formContext} />
+      );
     }
   }
 }
 
-export default function InputParamsForm({ params = [] }: Props) {
+export function InputParamsForm({ params = [], formContext }: Props) {
   const inputs = params.map(({ key, type, optional }, i) => (
     <FormLabel width="100%" my="2" key={`${key}-${i}`}>
       <VStack justify="start" align="start" spacing={1.5}>
@@ -148,6 +151,7 @@ export default function InputParamsForm({ params = [] }: Props) {
             type={type}
             value={null}
             optional={optional}
+            formContext={formContext}
           />
         </Flex>
       </VStack>
@@ -161,7 +165,7 @@ export default function InputParamsForm({ params = [] }: Props) {
           {inputs}
         </VStack>
       ) : (
-        <JSONInput inputKey="params" type="any" />
+        <JSONInput inputKey="params" type="any" formContext={formContext} />
       )}
     </Box>
   );

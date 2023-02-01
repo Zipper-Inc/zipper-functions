@@ -16,11 +16,11 @@ import {
   Progress,
 } from '@chakra-ui/react';
 import { useEffect, useRef, useState } from 'react';
-import { FieldValues, FormProvider, UseFormReturn } from 'react-hook-form';
+import { FieldValues, UseFormReturn } from 'react-hook-form';
 import { HiOutlineDocumentDuplicate, HiRefresh } from 'react-icons/hi';
-import InputParamsForm from '~/components/app/input-params-form';
+import { InputParamsForm } from '@zipper/ui';
 import { LogLine } from '~/components/app/log-line';
-import { InputParam } from '~/types/input-params';
+import { InputParam } from '@zipper/types';
 
 export function AppEditSidebar({
   showInputForm = true,
@@ -101,26 +101,25 @@ export function AppEditSidebar({
               overflowX="visible"
               overflowY="scroll"
             >
-              <FormProvider {...inputParamsFormMethods}>
-                {inputParams && inputParams.length ? (
-                  <InputParamsForm
-                    params={inputParams || []}
-                    defaultValues={{}}
-                  />
-                ) : (
-                  <>
-                    <Text>
-                      Add parameters to your main function and they'll show up
-                      here. Here's an example:
-                    </Text>
-                    <Code my="5">
-                      {`async function main({greeting}: {greeting: string}) {
+              {inputParams && inputParams.length ? (
+                <InputParamsForm
+                  params={inputParams || []}
+                  defaultValues={{}}
+                  formContext={inputParamsFormMethods}
+                />
+              ) : (
+                <>
+                  <Text>
+                    Add parameters to your main function and they'll show up
+                    here. Here's an example:
+                  </Text>
+                  <Code my="5">
+                    {`async function main({greeting}: {greeting: string}) {
                       ...
                     }`}
-                    </Code>
-                  </>
-                )}
-              </FormProvider>
+                  </Code>
+                </>
+              )}
             </Box>
           </TabPanel>
         )}

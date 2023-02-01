@@ -1,4 +1,4 @@
-import { InputParam, InputType } from '~/types/input-params';
+import { InputParam, InputType } from '@zipper/types';
 
 import {
   ParameterDeclaration,

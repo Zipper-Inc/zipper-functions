@@ -28,8 +28,8 @@ import { useEffect, useState } from 'react';
 import { AddIcon } from '@chakra-ui/icons';
 import { trpc } from '~/utils/trpc';
 import { FiClock, FiTrash, FiX } from 'react-icons/fi';
-import { InputParam } from '~/types/input-params';
-import InputParamsForm from './input-params-form';
+import { InputParam } from '@zipper/types';
+import { InputParamsForm } from '@zipper/ui';
 import { AppRun } from '@prisma/client';
 import { HiCheck } from 'react-icons/hi2';
 import { HiX } from 'react-icons/hi';
@@ -133,7 +133,10 @@ const SchedulesTab: React.FC<Props> = ({ appId, inputParams }) => {
                     Inputs for this scheduled run:
                   </Text>
                   <Box background="gray.200" p="4" borderRadius="4">
-                    <InputParamsForm params={inputParams} />
+                    <InputParamsForm
+                      params={inputParams}
+                      formContext={addModalForm}
+                    />
                   </Box>
                 </FormControl>
               </VStack>

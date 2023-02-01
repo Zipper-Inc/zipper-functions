@@ -12,7 +12,7 @@ import {
 import React from 'react';
 import DefaultGrid from '~/components/default-grid';
 import { HiSparkles } from 'react-icons/hi';
-import { appSubmissionState } from '~/types/appSubmissionState';
+import { appSubmissionState } from '@zipper/types';
 import { SignedIn } from '@clerk/nextjs';
 
 export function Gallery() {
