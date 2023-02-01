@@ -52,7 +52,6 @@ const SchedulesTab: React.FC<Props> = ({ appId, inputParams }) => {
   >([]);
 
   const existingSchedules = trpc.useQuery(['schedule.all', { appId }]);
-  console.log(existingSchedules.data);
 
   const addSchedule = trpc.useMutation('schedule.add', {
     async onSuccess({ crontab }) {
