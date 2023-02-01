@@ -26,7 +26,7 @@ module.exports = getConfig({
   publicRuntimeConfig: {
     NODE_ENV: env.NODE_ENV,
   },
-  transpilePackages: ['monaco-languageclient'],
+  transpilePackages: ['@zipper/types', '@zipper/ui', 'monaco-languageclient'],
 
   async rewrites() {
     return [
