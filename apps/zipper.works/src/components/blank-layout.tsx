@@ -4,7 +4,7 @@ import { ChakraProvider } from '@chakra-ui/react';
 import Head from 'next/head';
 import { ReactNode } from 'react';
 import { ReactQueryDevtools } from 'react-query/devtools';
-import { theme } from '~/theme';
+import { theme } from '@zipper/ui';
 import Header from './header';
 
 type DefaultLayoutProps = { children: ReactNode; protected?: boolean };
