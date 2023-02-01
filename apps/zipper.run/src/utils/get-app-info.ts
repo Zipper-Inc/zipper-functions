@@ -1,4 +1,4 @@
-import { AppInfoResult } from '../../../zipper.works/src/types/app-info';
+import { AppInfoResult } from '@zipper/types';
 
 /**
  * App info endpoint url

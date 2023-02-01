@@ -1,8 +1,8 @@
 import { GetServerSideProps } from 'next';
+import { AppInfo, InputParams } from '@zipper/types';
 import getAppInfo from '~/utils/get-app-info';
 import getValidSubdomain from '~/utils/get-valid-subdomain';
 import { VERSION_DELIMETER } from '~/utils/get-version-from-url';
-import { AppInfo, InputParams } from '../../../zipper.works/src/types/app-info';
 
 export default function AppPage({
   app,

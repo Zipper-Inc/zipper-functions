@@ -1,0 +1,12 @@
+{
+  "name": "@zipper/ui",
+  "version": "0.0.0",
+  "main": "./index.gen.ts",
+  "types": "./index.gen.ts",
+  "devDependencies": {
+    "ctix": "^1.8.2"
+  },
+  "dependencies": {
+    "typescript": "^4.9.5"
+  }
+}

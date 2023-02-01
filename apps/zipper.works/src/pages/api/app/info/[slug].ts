@@ -1,7 +1,7 @@
 import { App, Script, ScriptMain } from '@prisma/client';
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '~/server/prisma';
-import { AppInfoResult } from '~/types/app-info';
+import { AppInfoResult } from '@zipper/types';
 import { parseInputForTypes } from '~/utils/parse-input-for-types';
 
 /**
