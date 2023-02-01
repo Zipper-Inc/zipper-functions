@@ -22,7 +22,7 @@ import {
   Divider,
   Heading,
 } from '@chakra-ui/react';
-import { FormProvider, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import cronstrue from 'cronstrue';
 import { useEffect, useState } from 'react';
 import { AddIcon } from '@chakra-ui/icons';
@@ -111,63 +111,61 @@ const SchedulesTab: React.FC<Props> = ({ appId, inputParams }) => {
 
     return (
       <Modal isOpen={isOpen} onClose={onClose}>
-        <FormProvider {...addModalForm}>
-          <ModalOverlay />
-          <ModalContent>
-            <ModalHeader>Add a schedule</ModalHeader>
-            <ModalCloseButton />
-            <ModalBody>
-              <VStack align={'start'}>
-                <FormControl>
-                  <FormLabel>Cron expression:</FormLabel>
-                  <Input
-                    size="md"
-                    type="text"
-                    {...addModalForm.register('crontab')}
-                    defaultValue="0 * * * *"
-                    onChange={(e) => setCurrentCrontab(e.target.value)}
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Add a schedule</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <VStack align={'start'}>
+              <FormControl>
+                <FormLabel>Cron expression:</FormLabel>
+                <Input
+                  size="md"
+                  type="text"
+                  {...addModalForm.register('crontab')}
+                  defaultValue="* 1 * * *"
+                  onChange={(e) => setCurrentCrontab(e.target.value)}
+                />
+                <FormHelperText>{cronString}</FormHelperText>
+                <Divider mt="4" />
+                <Text size="sm" mt="4" mb="2">
+                  Inputs for this scheduled run:
+                </Text>
+                <Box background="gray.200" p="4" borderRadius="4">
+                  <InputParamsForm
+                    params={inputParams}
+                    formContext={addModalForm}
                   />
-                  <FormHelperText>{cronString}</FormHelperText>
-                  <Divider mt="4" />
-                  <Text size="sm" mt="4" mb="2">
-                    Inputs for this scheduled run:
-                  </Text>
-                  <Box background="gray.200" p="4" borderRadius="4">
-                    <InputParamsForm
-                      params={inputParams}
-                      formContext={addModalForm}
-                    />
-                  </Box>
-                </FormControl>
-              </VStack>
-            </ModalBody>
+                </Box>
+              </FormControl>
+            </VStack>
+          </ModalBody>
 
-            <ModalFooter>
-              <Button variant="ghost" onClick={onClose} mr="3">
-                Discard
-              </Button>
-              <Button
-                colorScheme="purple"
-                type="submit"
-                onClick={addModalForm.handleSubmit((data) => {
-                  const { crontab, ...inputValues } = data;
-                  const allNewSchedules = [
-                    ...newSchedules,
-                    { crontab, inputs: inputValues },
-                  ];
-                  setNewSchedules(
-                    allNewSchedules.filter(
-                      (s, i) => allNewSchedules.indexOf(s) === i,
-                    ),
-                  );
-                  onClose();
-                })}
-              >
-                Create
-              </Button>
-            </ModalFooter>
-          </ModalContent>
-        </FormProvider>
+          <ModalFooter>
+            <Button variant="ghost" onClick={onClose} mr="3">
+              Discard
+            </Button>
+            <Button
+              colorScheme="purple"
+              type="submit"
+              onClick={addModalForm.handleSubmit((data) => {
+                const { crontab, ...inputValues } = data;
+                const allNewSchedules = [
+                  ...newSchedules,
+                  { crontab, inputs: inputValues },
+                ];
+                setNewSchedules(
+                  allNewSchedules.filter(
+                    (s, i) => allNewSchedules.indexOf(s) === i,
+                  ),
+                );
+                onClose();
+              })}
+            >
+              Create
+            </Button>
+          </ModalFooter>
+        </ModalContent>
       </Modal>
     );
   };

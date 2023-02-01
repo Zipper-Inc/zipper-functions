@@ -1,11 +1,12 @@
 import { GetServerSideProps } from 'next';
-import { withDefaultTheme } from '@zipper/ui';
+import { InputParamsForm, withDefaultTheme } from '@zipper/ui';
 import { AppInfo, InputParams } from '@zipper/types';
 import getAppInfo from '~/utils/get-app-info';
 import getValidSubdomain from '~/utils/get-valid-subdomain';
 import { VERSION_DELIMETER } from '~/utils/get-version-from-url';
-import { Heading } from '@chakra-ui/react';
+import { Box, Heading } from '@chakra-ui/react';
 import Head from 'next/head';
+import { useForm } from 'react-hook-form';
 
 export function AppPage({
   app,
@@ -16,16 +17,20 @@ export function AppPage({
   version?: string;
 }) {
   const appTitle = app.name || app.slug;
+  const formContext = useForm();
   return (
     <>
       <Head>
         <title>{appTitle}</title>
       </Head>
       <main>
-        <Heading as="h2">{appTitle}</Heading>
-        <h1></h1>
+        <Heading as="h2" m={4}>
+          {appTitle}
+        </Heading>
         {app.description && <p>{app.description}</p>}
-        <code>{JSON.stringify(inputs, null, 2)}</code>
+        <Box bg="gray.100" p={4}>
+          <InputParamsForm params={inputs} formContext={formContext} />
+        </Box>
       </main>
     </>
   );

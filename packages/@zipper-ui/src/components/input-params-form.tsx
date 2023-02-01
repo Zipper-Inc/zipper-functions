@@ -11,48 +11,13 @@ import {
   HStack,
   StackDivider,
 } from '@chakra-ui/react';
-import { FieldValues, useController, UseFormReturn } from 'react-hook-form';
+import { FieldValues, UseFormReturn, RegisterOptions } from 'react-hook-form';
 import { InputType, InputParam } from '@zipper/types';
 
 interface Props {
   params: InputParam[];
   defaultValues?: any;
   formContext: UseFormReturn<FieldValues, any>;
-}
-
-function JSONInput({
-  inputKey,
-  type,
-  formContext,
-}: {
-  inputKey: string;
-  type: string;
-  formContext: Props['formContext'];
-}) {
-  const { control } = formContext;
-  const {
-    field: { onChange },
-  } = useController({
-    name: `${inputKey}:${type}`,
-    control,
-    defaultValue: type === InputType.array ? '[]' : '{}',
-  });
-  return (
-    <Box
-      width="100%"
-      height="90px"
-      border="1px"
-      borderColor="gray.200"
-      borderRadius="md"
-      py="1"
-      backgroundColor="white"
-    >
-      <Textarea
-        onChange={onChange}
-        defaultValue={type === InputType.array ? '[]' : '{}'}
-      />
-    </Box>
-  );
 }
 
 function InputParamsInput({
@@ -69,11 +34,18 @@ function InputParamsInput({
 }) {
   const { register } = formContext;
   const name = `${inputKey}:${type}`;
-  const formProps = register(name, {
+
+  const formFieldOptions: RegisterOptions<FieldValues, string> = {
     required: !optional,
-    valueAsNumber: type === InputType.number,
-    valueAsDate: type === InputType.date,
-  });
+  };
+
+  if (type === InputType.number) {
+    formFieldOptions.valueAsNumber = true;
+  } else if (type === InputType.date) {
+    formFieldOptions.valueAsDate = true;
+  }
+
+  const formProps = register(name, formFieldOptions);
 
   switch (type) {
     case InputType.boolean: {
@@ -112,7 +84,14 @@ function InputParamsInput({
     case InputType.any:
     default: {
       return (
-        <JSONInput inputKey={inputKey} type={type} formContext={formContext} />
+        <Textarea
+          backgroundColor="white"
+          fontFamily="monospace"
+          fontSize="smaller"
+          minHeight={90}
+          defaultValue={type === InputType.array ? '[]' : '{}'}
+          {...formProps}
+        />
       );
     }
   }
@@ -165,7 +144,14 @@ export function InputParamsForm({ params = [], formContext }: Props) {
           {inputs}
         </VStack>
       ) : (
-        <JSONInput inputKey="params" type="any" formContext={formContext} />
+        <Textarea
+          backgroundColor="white"
+          fontFamily="monospace"
+          fontSize="smaller"
+          minHeight={90}
+          defaultValue="{}"
+          {...formContext.register('params')}
+        />
       )}
     </Box>
   );
