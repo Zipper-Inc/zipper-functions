@@ -78,20 +78,6 @@ const Header: React.FC<HeaderProps> = ({ showNav = true }) => {
           <GridItem colSpan={6} as="nav">
             {isDesktop ? (
               <HStack spacing="4" justifyContent="end">
-                <ButtonGroup variant="ghost" spacing="1">
-                  <IconButton
-                    icon={<FiSearch fontSize="1.25rem" />}
-                    aria-label="Search"
-                  />
-                  <IconButton
-                    icon={<FiBell fontSize="1.25rem" />}
-                    aria-label="Notifications"
-                  />
-                  <IconButton
-                    icon={<FiHelpCircle fontSize="1.25rem" />}
-                    aria-label="Help Center"
-                  />
-                </ButtonGroup>
                 <SignedIn>
                   <OrganizationSwitcher
                     afterSwitchOrganizationUrl={`${window.location.pathname}?reload=true`}
