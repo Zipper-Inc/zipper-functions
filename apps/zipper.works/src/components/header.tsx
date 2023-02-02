@@ -40,7 +40,7 @@ const Header: React.FC<HeaderProps> = ({ showNav = true }) => {
   }, [reload]);
 
   return (
-    <DefaultGrid as="header" paddingY={12}>
+    <DefaultGrid as="header" paddingTop="12px" maxW="full">
       <GridItem
         as={Box}
         colSpan={showNav ? 3 : 12}
@@ -55,9 +55,6 @@ const Header: React.FC<HeaderProps> = ({ showNav = true }) => {
           <HStack spacing={3} height="100%">
             <Box height="4">
               <ZipperLogo style={{ maxHeight: '100%' }} />
-            </Box>
-            <Box fontWeight="bold" fontSize="xl">
-              Functions
             </Box>
           </HStack>
         </Button>
