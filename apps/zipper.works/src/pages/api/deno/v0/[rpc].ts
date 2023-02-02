@@ -10,6 +10,8 @@ import { prisma } from '~/server/prisma';
 
 const X_DENO_CONFIG = 'x-deno-config';
 
+const DEFAULT_CONTENT_TYPE = 'application/octet-stream';
+
 /**
  * Assuming the user has defined a function called `main`
  * This wrapper injects some code that:
@@ -50,46 +52,38 @@ const getInputFromBody = async (req) => {
 };
 
 addEventListener('fetch', async (event) => {
-  const headers = {
-    'Content-Type': 'application/json',
-    'X-Zipper-Deployment': '${appId}}@${version}',
-  };
-
   const input = await getInputFromBody(event.request);
 
-  const __meta = {
-    slug: '${slug}',
-    appId: '${appId}',
-    version: '${version}',
-    url: event.request.url,
-    method: event.request.method,
-    input,
+  const xZipperHeaders = {
+    'X-Zipper-Deployment-Id': '${appId}@${version}',
+    'X-Zipper-App-Slug': '${slug}',
+    'X-Zipper-Req-Url': event.request.url,
+    'X-Zipper-Req-Method': event.request.method,
+    'X-Zipper-App-Run-Input': JSON.stringify(input),
   };
 
   try {
     const output = await fn(input);
+
     if (output instanceof Response) {
-      Object.keys(__meta).forEach((key) => {
-        if(key === 'input') {
-          output.headers.set("X-Zipper-input", JSON.stringify(__meta.input));
-        } else {
-          output.headers.set("X-Zipper-"+key, JSON.stringify(__meta[key]));
-        }
+      if (!output.headers.get('Content-Type'))
+        output.headers.set('Content-Type', '${DEFAULT_CONTENT_TYPE}')
+      Object.keys(xZipperHeaders).forEach((h) => {
+        output.headers.set(h, xZipperHeaders[h]);
       });
-
-      output.headers.set('X-Zipper-Deployment', '${appId}@${version}');
       event.respondWith(output);
+    } else if (typeof output === 'function') {
+      throw new Error('Function output cannot be a function.');
     } else {
-      const response = {
-        ok: true,
-        data: output,
-        __meta,
-      };
-
+      const isObject = typeof output === 'object';
       event.respondWith(
-        new Response(JSON.stringify(response), {
+        new Response(isObject ? JSON.stringify(output) : output, {
           status: 200,
-          headers,
+          headers: {
+            ...xZipperHeaders,
+            ${/** @todo maybe better inference here, yolo */ ''}
+            'Content-Type': isObject ? 'application/json' : 'text/plain',
+          },
         }),
       );
     }
@@ -97,7 +91,6 @@ addEventListener('fetch', async (event) => {
     const response = {
       ok: false,
       error,
-      __meta,
     };
 
     console.error(error);
