@@ -1,0 +1,37 @@
+import { Prisma } from '@prisma/client';
+import { z } from 'zod';
+import { prisma } from '~/server/prisma';
+import { createRouter } from '../createRouter';
+
+const defaultSelect = Prisma.validator<Prisma.OrganizationSlugSelect>()({
+  slug: true,
+});
+
+export const organizationSlugRouter = createRouter()
+  // create
+  .mutation('add', {
+    input: z.object({
+      slug: z.string().min(3).max(50),
+      organizationId: z.string(),
+    }),
+    async resolve({ input }) {
+      return prisma.organizationSlug.create({
+        data: { ...input },
+        select: defaultSelect,
+      });
+    },
+  })
+  // read
+  .query('find', {
+    input: z.object({
+      slug: z.string().min(3),
+    }),
+    async resolve({ input }) {
+      return prisma.organizationSlug.findFirst({
+        where: {
+          slug: input.slug,
+        },
+        select: defaultSelect,
+      });
+    },
+  });

@@ -23,50 +23,89 @@ import {
   Input,
   FormLabel,
   FormHelperText,
+  InputGroup,
+  InputRightElement,
 } from '@chakra-ui/react';
 import { useRouter } from 'next/router';
-import {
-  HiBuildingStorefront,
-  HiOutlineChevronUpDown,
-  HiPlus,
-} from 'react-icons/hi2';
-import { HiSwitchHorizontal, HiCog } from 'react-icons/hi';
-import { FormEventHandler, useState } from 'react';
+import { HiOutlineChevronUpDown, HiPlus } from 'react-icons/hi2';
+import { HiSwitchHorizontal, HiCog, HiX } from 'react-icons/hi';
+import { FormEventHandler, useEffect, useState } from 'react';
 import slugify from '~/utils/slugify';
 
+import { trpc } from '~/utils/trpc';
+import { CheckIcon } from '@chakra-ui/icons';
+import { useDebounce } from 'use-debounce';
+
+const MIN_SLUG_LENGTH = 3;
+
 export const OrganizationSwitcher = () => {
+  // get the authed user's organizations from Clerk
   const { setActive, organizationList, isLoaded } = useOrganizationList();
+  if (!isLoaded) return <></>;
+
   const { organization, membership } = useOrganization();
+  const { createOrganization } = useOrganizationList();
+
   const router = useRouter();
+
   const {
     isOpen: isOpenCreateOrg,
     onOpen: onOpenCreateOrg,
     onClose: onCloseCreateOrg,
   } = useDisclosure();
 
+  const [organizationName, setOrganizationName] = useState('');
   const [hoverOrg, setHoverOrg] = useState<string | undefined | null>(
     undefined,
   );
+  const [slugExists, setSlugExists] = useState<boolean | undefined>();
+  const [slug, setSlug] = useState<string>('');
+  const [debouncedSlug] = useDebounce(slug, 200);
 
-  const { createOrganization } = useOrganizationList();
-  const [organizationName, setOrganizationName] = useState('');
+  const organizationSlugQuery = trpc.useQuery(
+    ['organizationSlug.find', { slug: debouncedSlug }],
+    { enabled: !!(debouncedSlug.length > 2) },
+  );
 
-  if (!isLoaded) return <></>;
+  const createOrganizationSlug = trpc.useMutation('organizationSlug.add');
 
-  const allOrganizations = [
+  const allWorkspaces = [
     { organization: { id: null, name: 'Personal Workspace' } },
     ...(organizationList || []),
   ];
 
-  const otherOrganizations = allOrganizations.filter((o) => {
+  const workspacesExcludingCurrent = allWorkspaces.filter((o) => {
     return o.organization.id !== (organization?.id || null);
   });
 
-  const handleCreateOrgSubmit: FormEventHandler<HTMLFormElement> = (e) => {
+  useEffect(() => {
+    setSlugExists(!!organizationSlugQuery.data);
+  }, [organizationSlugQuery.data]);
+
+  useEffect(() => {
+    const s = slugify(organizationName);
+    setSlug(s);
+  }, [organizationName]);
+
+  const handleCreateOrgSubmit: FormEventHandler<HTMLFormElement> = async (
+    e,
+  ) => {
     e.preventDefault();
     if (!createOrganization) return;
-    createOrganization({ name: organizationName });
-    setOrganizationName('');
+    const newOrg = await createOrganization({ name: organizationName, slug });
+    await createOrganizationSlug.mutateAsync(
+      {
+        slug,
+        organizationId: newOrg.id,
+      },
+      {
+        onError: (e) => {
+          console.error(e);
+        },
+      },
+    );
+    setActive && setActive({ organization: newOrg.id });
+    router.push(`${router.pathname}?reload=true`);
   };
 
   return (
@@ -95,7 +134,7 @@ export const OrganizationSwitcher = () => {
               </IconButton>
             )}
           </HStack>
-          {otherOrganizations.length > 0 && (
+          {workspacesExcludingCurrent.length > 0 && (
             <Box
               w="full"
               backgroundColor={'gray.100'}
@@ -106,7 +145,7 @@ export const OrganizationSwitcher = () => {
               <Text>Switch workspace:</Text>
             </Box>
           )}
-          {otherOrganizations.map((org) => {
+          {workspacesExcludingCurrent.map((org) => {
             return (
               <MenuItem
                 key={org.organization.id}
@@ -165,33 +204,54 @@ export const OrganizationSwitcher = () => {
             <ModalBody>
               <FormControl>
                 <FormLabel fontSize="sm">Organization account name</FormLabel>
-                <Input
-                  type="text"
-                  name="organizationName"
-                  value={organizationName}
-                  onChange={(e) => setOrganizationName(e.currentTarget.value)}
-                />
-                {organizationName.length > 0 &&
-                  slugify(organizationName).length > 2 && (
-                    <>
-                      <FormHelperText>
-                        This will be your account name on Zipper.
-                      </FormHelperText>
-                      <FormHelperText>{`The url for your organization will be: ${
-                        process.env.NEXT_PUBLIC_HOST
-                      }/${slugify(organizationName)}`}</FormHelperText>
-                    </>
+                <InputGroup>
+                  <Input
+                    type="text"
+                    name="organizationName"
+                    value={organizationName}
+                    onChange={(e) => setOrganizationName(e.currentTarget.value)}
+                  />
+                  {slug && slug.length >= MIN_SLUG_LENGTH && (
+                    <InputRightElement
+                      children={
+                        slugExists ? (
+                          <Icon as={HiX} color="red.500" />
+                        ) : (
+                          <CheckIcon color="green.500" />
+                        )
+                      }
+                    />
                   )}
+                </InputGroup>
 
-                {organizationName.length > 0 &&
-                  slugify(organizationName).length < 3 && (
-                    <>
-                      <FormHelperText>
-                        The name must contain at least 3 alphanumeric
-                        characters.
-                      </FormHelperText>
-                    </>
-                  )}
+                {slugExists ? (
+                  <>
+                    <FormHelperText>
+                      {`The name ${slug} is already taken.`}
+                    </FormHelperText>
+                  </>
+                ) : (
+                  <>
+                    {organizationName.length > 0 && slug && slug.length > 2 && (
+                      <>
+                        <FormHelperText>
+                          This will be your account name on Zipper.
+                        </FormHelperText>
+                        <FormHelperText>{`The url for your organization will be: ${process.env.NEXT_PUBLIC_HOST}/${slug}`}</FormHelperText>
+                      </>
+                    )}
+
+                    {organizationName.length > 0 &&
+                      (!slug || slug.length < MIN_SLUG_LENGTH) && (
+                        <>
+                          <FormHelperText>
+                            {`The name must contain at least ${MIN_SLUG_LENGTH} alphanumeric
+                        characters.`}
+                          </FormHelperText>
+                        </>
+                      )}
+                  </>
+                )}
               </FormControl>
             </ModalBody>
 
@@ -199,7 +259,11 @@ export const OrganizationSwitcher = () => {
               <Button variant="ghost" mr={3} onClick={onCloseCreateOrg}>
                 Close
               </Button>
-              <Button colorScheme="purple" type="submit">
+              <Button
+                colorScheme="purple"
+                type="submit"
+                isDisabled={slugExists || slug.length < MIN_SLUG_LENGTH}
+              >
                 Create
               </Button>
             </ModalFooter>

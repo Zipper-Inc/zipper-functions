@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import {
   Box,
   Button,
@@ -14,14 +15,8 @@ import { FiHelpCircle, FiMenu, FiSearch, FiBell } from 'react-icons/fi';
 
 import DefaultGrid from './default-grid';
 import { ZipperLogo } from '@zipper/ui';
-import {
-  OrganizationSwitcher,
-  SignedIn,
-  SignedOut,
-  SignInButton,
-  UserButton,
-} from '@clerk/nextjs';
-import { useEffect } from 'react';
+import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/nextjs';
+import OrganizationSwitcher from './auth/organizationSwitcher';
 
 type HeaderProps = {
   showNav?: boolean;
@@ -96,9 +91,7 @@ const Header: React.FC<HeaderProps> = ({ showNav = true }) => {
                   />
                 </ButtonGroup>
                 <SignedIn>
-                  <OrganizationSwitcher
-                    afterSwitchOrganizationUrl={`${window.location.pathname}?reload=true`}
-                  />
+                  <OrganizationSwitcher />
                   <UserButton />
                 </SignedIn>
                 <SignedOut>
