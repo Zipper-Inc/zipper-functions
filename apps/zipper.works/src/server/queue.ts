@@ -43,6 +43,9 @@ const initializeWorkers = () => {
           try {
             const raw = await fetch(getRunUrl(schedule.app.slug), {
               method: 'POST',
+              headers: {
+                'X-Zipper-Schedule-Id': schedule.id,
+              },
               body: JSON.stringify(inputsWithoutAnnotations),
             });
 

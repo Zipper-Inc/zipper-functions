@@ -1,3 +1,4 @@
+import { AddAppRun } from '@zipper/types';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '~/server/prisma';
 import rateLimit from '~/utils/ratelimit';
@@ -11,7 +12,9 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
-  const { appId, deploymentId, inputs, success, result } = req.body;
+  const { appId, deploymentId, scheduleId, inputs, success, result } =
+    req.body as AddAppRun;
+
   limiter
     .check(res, 5, appId)
     .then(async () => {
@@ -20,6 +23,7 @@ export default async function handler(
           data: {
             appId,
             deploymentId,
+            scheduleId,
             inputs,
             success,
             result,

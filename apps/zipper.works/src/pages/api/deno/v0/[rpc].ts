@@ -52,7 +52,7 @@ const getInputFromBody = async (req) => {
 addEventListener('fetch', async (event) => {
   const headers = {
     'Content-Type': 'application/json',
-    'X-Zipper-Deployment': '${appId}}.${version}',
+    'X-Zipper-Deployment': '${appId}}@${version}',
   };
 
   const input = await getInputFromBody(event.request);
@@ -77,7 +77,7 @@ addEventListener('fetch', async (event) => {
         }
       });
 
-      output.headers.set('X-Zipper-Deployment', '${appId}}.${version}');
+      output.headers.set('X-Zipper-Deployment', '${appId}@${version}');
       event.respondWith(output);
     } else {
       const response = {
