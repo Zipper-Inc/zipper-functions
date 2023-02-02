@@ -68,7 +68,9 @@ export function AppEditSidebar({
     setIframeUrl(
       `${process.env.NODE_ENV === 'production' ? 'https' : 'http'}://${
         appInfo.slug
-      }.${process.env.NEXT_PUBLIC_OUTPUT_SERVER_HOSTNAME}/?${urlSearchParams}`,
+      }.${
+        process.env.NEXT_PUBLIC_OUTPUT_SERVER_HOSTNAME
+      }/call?${urlSearchParams}`,
     );
   }, [appInfo, urlSearchParams]);
 
