@@ -14,7 +14,7 @@ import {
 import { LockIcon, UnlockIcon } from '@chakra-ui/icons';
 import React, { useContext } from 'react';
 import ForkIcon from '~/components/svg/forkIcon';
-import { ZipperLogo } from '~/components/svg/zipper-logo';
+import { ZipperLogo } from '@zipper/ui';
 import { useSelf, useOthers } from '~/liveblocks.config';
 import { Avatar } from '../avatar';
 import { HiLightningBolt, HiOutlineCog, HiOutlineShare } from 'react-icons/hi';

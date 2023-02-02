@@ -34,7 +34,6 @@ function InputParamsInput({
 }) {
   const { register } = formContext;
   const name = `${inputKey}:${type}`;
-
   const formFieldOptions: RegisterOptions<FieldValues, string> = {
     required: !optional,
   };

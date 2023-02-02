@@ -1,16 +1,27 @@
+import { useState } from 'react';
 import { GetServerSideProps } from 'next';
-import { InputParamsForm, withDefaultTheme } from '@zipper/ui';
+import { InputParamsForm, withDefaultTheme, ZipperLogo } from '@zipper/ui';
 import { AppInfo, InputParams } from '@zipper/types';
 import getAppInfo from '~/utils/get-app-info';
 import getValidSubdomain from '~/utils/get-valid-subdomain';
 import { VERSION_DELIMETER } from '~/utils/get-version-from-url';
-import { Box, Heading } from '@chakra-ui/react';
+import {
+  Box,
+  Heading,
+  Flex,
+  Text,
+  ButtonGroup,
+  Button,
+  Divider,
+  Code,
+} from '@chakra-ui/react';
 import Head from 'next/head';
 import { useForm } from 'react-hook-form';
 
 export function AppPage({
   app,
   inputs,
+  version = app.lastDeploymentVersion,
 }: {
   app: AppInfo;
   inputs: InputParams;
@@ -18,20 +29,79 @@ export function AppPage({
 }) {
   const appTitle = app.name || app.slug;
   const formContext = useForm();
+  const [result, setResult] = useState('');
   return (
     <>
       <Head>
         <title>{appTitle}</title>
       </Head>
-      <main>
-        <Heading as="h2" m={4}>
-          {appTitle}
-        </Heading>
+      <Box as="main">
+        <Flex as="header" mx={8} my={4} alignItems="center" color="gray.600">
+          <Heading as="h2" color="black">
+            {appTitle}
+          </Heading>
+          <Text
+            fontWeight="100"
+            ml={1}
+            fontSize="3xl"
+            height="full"
+            color="gray.400"
+          >
+            @{version}
+          </Text>
+          <Text fontSize="sm" ml="auto">
+            Powered by
+          </Text>
+          <ZipperLogo
+            fill="currentColor"
+            style={{ marginLeft: '8px', height: '13px' }}
+          />
+        </Flex>
         {app.description && <p>{app.description}</p>}
-        <Box bg="gray.100" p={4}>
+        <Box bg="gray.100" px={8} py={4}>
           <InputParamsForm params={inputs} formContext={formContext} />
+          <Divider orientation="horizontal" my={4} />
+          <Flex>
+            <ButtonGroup>
+              <Button
+                colorScheme="purple"
+                onClick={async () => {
+                  const rawValues = formContext.getValues();
+                  const values: Record<string, any> = {};
+                  Object.keys(rawValues).forEach((k) => {
+                    const parts = k.split(':');
+                    parts.unshift();
+                    const key = parts.join(':');
+                    values[key] = rawValues[k];
+                  });
+
+                  const result = await fetch('/call', {
+                    method: 'POST',
+                    body: JSON.stringify(values),
+                  }).then((r) => r.text());
+
+                  if (result) setResult(result);
+                }}
+              >
+                Run
+              </Button>
+              <Button
+                onClick={() => {
+                  setResult('');
+                  formContext.reset();
+                }}
+              >
+                Reset
+              </Button>
+            </ButtonGroup>
+          </Flex>
         </Box>
-      </main>
+      </Box>
+      {result && (
+        <Code bgColor="black" color="white" py={4} px={8}>
+          {result}
+        </Code>
+      )}
     </>
   );
 }

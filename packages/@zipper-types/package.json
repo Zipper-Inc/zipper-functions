@@ -4,7 +4,7 @@
   "main": "./src/index.gen.ts",
   "types": "./src/index.gen.ts",
   "scripts": {
-    "build": "yarn ctix single",
+    "build": "yarn ctix remove; yarn ctix single",
     "dev": "yarn build"
   },
   "devDependencies": {

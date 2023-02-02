@@ -13,7 +13,7 @@ import NextLink from 'next/link';
 import { FiHelpCircle, FiMenu, FiSearch, FiBell } from 'react-icons/fi';
 
 import DefaultGrid from './default-grid';
-import { ZipperLogo } from './svg/zipper-logo';
+import { ZipperLogo } from '@zipper/ui';
 import {
   OrganizationSwitcher,
   SignedIn,
