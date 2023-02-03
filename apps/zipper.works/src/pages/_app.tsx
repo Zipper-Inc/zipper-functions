@@ -4,7 +4,7 @@ import { withTRPC } from '@trpc/next';
 import { NextPage } from 'next';
 import { AppProps } from 'next/app';
 import { AppType } from 'next/dist/shared/lib/utils';
-import { ReactElement, ReactNode, useEffect } from 'react';
+import { ReactElement, ReactNode } from 'react';
 import superjson from 'superjson';
 import {
   ClerkProvider,
@@ -44,10 +44,6 @@ const MyApp = (({ Component, pageProps }: AppPropsWithLayout) => {
             borderRadius: '0.175',
             fontFamily: 'Inter',
             colorPrimary: '#9B2FB4',
-          },
-          elements: {
-            userPreviewAvatarBox: { display: 'none' },
-            organizationSwitcherTrigger: { minHeight: '36px' },
           },
         }}
       >

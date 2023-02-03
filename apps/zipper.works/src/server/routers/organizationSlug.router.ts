@@ -34,4 +34,17 @@ export const organizationSlugRouter = createRouter()
         select: defaultSelect,
       });
     },
+  })
+  .query('findByOrganizationId', {
+    input: z.object({
+      organizationId: z.string(),
+    }),
+    async resolve({ input }) {
+      return prisma.organizationSlug.findFirst({
+        where: {
+          organizationId: input.organizationId,
+        },
+        select: defaultSelect,
+      });
+    },
   });

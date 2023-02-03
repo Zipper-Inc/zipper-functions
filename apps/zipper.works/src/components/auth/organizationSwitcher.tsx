@@ -59,7 +59,7 @@ export const OrganizationSwitcher = () => {
             {organization?.name || 'Personal Workspace'}
           </Text>
         </MenuButton>
-        <MenuList p={0} fontSize="sm">
+        <MenuList p={0} fontSize="sm" shadow={'xl'}>
           <HStack borderBottom="1px" borderColor="gray.300" p={4} w="full">
             <VStack flexGrow="1" alignItems="start" spacing={0}>
               <Text fontWeight="medium">
