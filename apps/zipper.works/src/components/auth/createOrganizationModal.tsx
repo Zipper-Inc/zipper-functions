@@ -16,7 +16,6 @@ import {
   InputRightElement,
   Button,
 } from '@chakra-ui/react';
-import { HiX } from 'react-icons/hi';
 
 import slugify from '~/utils/slugify';
 
@@ -25,6 +24,7 @@ import { CheckIcon } from '@chakra-ui/icons';
 import { useDebounce } from 'use-debounce';
 import { FormEventHandler, useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
+import { HiExclamationTriangle } from 'react-icons/hi2';
 
 const MIN_SLUG_LENGTH = 3;
 
@@ -102,7 +102,7 @@ export const CreateOrganizationModal = ({
                   <InputRightElement
                     children={
                       slugExists ? (
-                        <Icon as={HiX} color="red.500" />
+                        <Icon as={HiExclamationTriangle} color="red.500" />
                       ) : (
                         <CheckIcon color="green.500" />
                       )
