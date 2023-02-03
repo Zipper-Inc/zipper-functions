@@ -116,7 +116,7 @@ export function PlaygroundHeader({
 
   return (
     <>
-      <GridItem colSpan={10}>
+      <GridItem colSpan={9}>
         <Box>
           <HStack>
             <Box mr={5} height={4}>
@@ -149,7 +149,7 @@ export function PlaygroundHeader({
           </HStack>
         </Box>
       </GridItem>
-      <GridItem colSpan={2} justifyContent="end">
+      <GridItem colSpan={3} justifyContent="end">
         <HStack justifyContent="end">
           {isUserAnAppEditor && (
             <Button variant={'outline'} onClick={onClickSettings}>
