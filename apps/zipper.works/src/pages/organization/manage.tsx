@@ -1,5 +1,4 @@
-// pages/organizations/[id].ts
-import { OrganizationProfile, useOrganization, useUser } from '@clerk/nextjs';
+import { useOrganization, useUser } from '@clerk/nextjs';
 import DefaultGrid from '~/components/default-grid';
 import {
   GridItem,
