@@ -48,7 +48,7 @@ export const OrganizationSwitcher = () => {
   } = useDisclosure();
 
   return (
-    <>
+    <Box>
       <Menu>
         <MenuButton
           as={Button}
@@ -141,7 +141,7 @@ export const OrganizationSwitcher = () => {
         isOpen={isOpenCreateOrg}
         onClose={onCloseCreateOrg}
       />
-    </>
+    </Box>
   );
 };
 
