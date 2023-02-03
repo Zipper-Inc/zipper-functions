@@ -23,6 +23,8 @@ import {
 import { FieldValues, FormProvider, useForm } from 'react-hook-form';
 import { trpc } from '~/utils/trpc';
 import { HiGlobe } from 'react-icons/hi';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/router';
 
 type Props = {
   isOpen: boolean;
@@ -50,11 +52,13 @@ const ShareTab: React.FC<Props> = ({ isOpen, onClose, appId }) => {
     },
   });
 
-  const setAppVisibility = trpc.useMutation('app.edit', {
-    onSuccess() {
-      appQuery.refetch();
-    },
-  });
+  const setAppVisibility = trpc.useMutation('app.edit');
+
+  const [isPrivate, setIsPrivate] = useState(appQuery.data?.isPrivate);
+
+  useEffect(() => {
+    setIsPrivate(appQuery.data?.isPrivate);
+  }, [appQuery.data]);
 
   const onSubmit = async (data: FieldValues) => {
     await inviteEditor.mutateAsync({
@@ -113,15 +117,16 @@ const ShareTab: React.FC<Props> = ({ isOpen, onClose, appId }) => {
                             </Box>
                             {appQuery.data && (
                               <Switch
-                                isChecked={!appQuery.data.isPrivate}
+                                isChecked={!isPrivate}
                                 onChange={async () => {
-                                  onClose();
+                                  console.log(isPrivate);
                                   setAppVisibility.mutateAsync({
                                     id: appId,
                                     data: {
-                                      isPrivate: !appQuery.data.isPrivate,
+                                      isPrivate: !isPrivate,
                                     },
                                   });
+                                  setIsPrivate(!isPrivate);
                                 }}
                                 ml="auto"
                               />

@@ -1,11 +1,10 @@
 import {
   Box,
   Button,
-  Divider,
   FormControl,
   FormErrorMessage,
+  FormHelperText,
   FormLabel,
-  HStack,
   Input,
   Modal,
   ModalBody,
@@ -14,13 +13,12 @@ import {
   ModalFooter,
   ModalHeader,
   ModalOverlay,
-  Switch,
   Text,
   Textarea,
   VStack,
 } from '@chakra-ui/react';
 import { FormProvider, useForm } from 'react-hook-form';
-import { HiOutlineBeaker } from 'react-icons/hi';
+import slugify from '~/utils/slugify';
 import { trpc } from '~/utils/trpc';
 
 type Props = {
@@ -39,6 +37,7 @@ const SettingsTab: React.FC<Props> = ({ isOpen, onClose, appId }) => {
 
   const settingsForm = useForm({
     defaultValues: {
+      name: appQuery.data?.name || '',
       slug: appQuery.data?.slug || '',
       description: appQuery.data?.description || '',
     },
@@ -67,8 +66,27 @@ const SettingsTab: React.FC<Props> = ({ isOpen, onClose, appId }) => {
                     maxLength={60}
                     {...settingsForm.register('slug')}
                   />
+                  {settingsForm.watch('slug') && (
+                    <FormHelperText>
+                      {`Your app will be available at
+                            ${
+                              process.env.NEXT_PUBLIC_OUTPUT_SERVER_HOSTNAME
+                            }/${slugify(settingsForm.watch('slug'))}`}
+                    </FormHelperText>
+                  )}
                   <FormErrorMessage>
                     {settingsForm.formState.errors.slug?.message}
+                  </FormErrorMessage>
+                </FormControl>
+                <FormControl>
+                  <FormLabel>Name</FormLabel>
+                  <Input
+                    backgroundColor="white"
+                    maxLength={60}
+                    {...settingsForm.register('name')}
+                  />
+                  <FormErrorMessage>
+                    {settingsForm.formState.errors.name?.message}
                   </FormErrorMessage>
                 </FormControl>
                 <FormControl>
@@ -108,34 +126,6 @@ const SettingsTab: React.FC<Props> = ({ isOpen, onClose, appId }) => {
                     Save
                   </Button>
                 </Box>
-                <Divider />
-                <Text mb="4" textColor="gray.600">
-                  Advanced configuration
-                </Text>
-                <VStack
-                  backgroundColor="gray.100"
-                  p={2}
-                  borderRadius={4}
-                  w="full"
-                >
-                  <HStack w="full">
-                    <Box mr="auto">
-                      <HStack>
-                        <Box p={2}>
-                          <HiOutlineBeaker />
-                        </Box>
-                        <VStack align="start" spacing={1}>
-                          <Text>Render output of `main` automatically</Text>
-                          <Text textColor="gray.500" fontSize="sm">
-                            Inject code that renders the output of your `main`
-                            function
-                          </Text>
-                        </VStack>
-                      </HStack>
-                    </Box>
-                    <Switch isChecked ml="auto" colorScheme="purple" />
-                  </HStack>
-                </VStack>
               </VStack>
             </ModalBody>
             <ModalFooter />

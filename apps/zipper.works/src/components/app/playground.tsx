@@ -204,7 +204,9 @@ export function Playground({
         <PlaygroundHeader
           app={app}
           onClickSettings={() => setSettingModalOpen(true)}
-          onClickShare={() => setShareModalOpen(true)}
+          onClickShare={() => {
+            setShareModalOpen(true);
+          }}
           onClickRun={runApp}
           onClickFork={() => {
             if (isUserAnAppEditor) return;
