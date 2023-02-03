@@ -1,7 +1,6 @@
 import {
   Box,
   Button,
-  ButtonGroup,
   GridItem,
   HStack,
   IconButton,
@@ -10,26 +9,28 @@ import {
 } from '@chakra-ui/react';
 import { useRouter } from 'next/router';
 import NextLink from 'next/link';
-import { FiHelpCircle, FiMenu, FiSearch, FiBell } from 'react-icons/fi';
+import { FiMenu } from 'react-icons/fi';
 
 import DefaultGrid from './default-grid';
 import { ZipperLogo } from '@zipper/ui';
-import {
-  OrganizationSwitcher,
-  SignedIn,
-  SignedOut,
-  SignInButton,
-  UserButton,
-} from '@clerk/nextjs';
+import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/nextjs';
 import { useEffect } from 'react';
+import OrganizationSwitcher from './auth/organizationSwitcher';
 
 type HeaderProps = {
   showNav?: boolean;
 };
 
+const navRoutes = [
+  { href: '/gallery', text: 'Gallery' },
+  { href: '#', text: 'Learn' },
+  { href: '#', text: 'Build' },
+];
+
 const Header: React.FC<HeaderProps> = ({ showNav = true }) => {
   const router = useRouter();
   const isDesktop = useBreakpointValue({ base: false, lg: true });
+  const baseRoute = router.pathname.split('/')[1];
 
   const { reload } = router.query;
 
@@ -56,6 +57,13 @@ const Header: React.FC<HeaderProps> = ({ showNav = true }) => {
             <Box height="4">
               <ZipperLogo style={{ maxHeight: '100%' }} />
             </Box>
+            {showNav && (
+              <Box>
+                <SignedIn>
+                  <OrganizationSwitcher />
+                </SignedIn>
+              </Box>
+            )}
           </HStack>
         </Button>
       </GridItem>
@@ -70,18 +78,28 @@ const Header: React.FC<HeaderProps> = ({ showNav = true }) => {
               color="purple"
               textDecoration="none"
             >
-              <NextLink href="/gallery">Gallery</NextLink>
-              <Link>Learn</Link>
-              <Link>Build</Link>
+              {navRoutes.map((r) => {
+                const isActive = r.href === `/${baseRoute}`;
+                const textDecoration = isActive ? 'underline' : 'none';
+
+                return (
+                  <Link
+                    as={NextLink}
+                    href={r.href}
+                    key={r.text}
+                    textUnderlineOffset={12}
+                    textDecoration={textDecoration}
+                  >
+                    {r.text}
+                  </Link>
+                );
+              })}
             </HStack>
           </GridItem>
           <GridItem colSpan={6} as="nav">
             {isDesktop ? (
               <HStack spacing="4" justifyContent="end">
                 <SignedIn>
-                  <OrganizationSwitcher
-                    afterSwitchOrganizationUrl={`${window.location.pathname}?reload=true`}
-                  />
                   <UserButton />
                 </SignedIn>
                 <SignedOut>
