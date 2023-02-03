@@ -94,7 +94,6 @@ export const OrganizationSwitcher = () => {
                 key={org.organization.id}
                 onClick={() => {
                   setActive && setActive({ organization: org.organization.id });
-                  router.push(`${router.pathname}?reload=true`);
                 }}
                 backgroundColor="gray.100"
                 px="4"

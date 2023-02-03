@@ -17,15 +17,21 @@ import {
   Flex,
   Icon,
 } from '@chakra-ui/react';
-import React from 'react';
+import React, { useEffect } from 'react';
 import DefaultGrid from '~/components/default-grid';
 import { LockIcon, UnlockIcon } from '@chakra-ui/icons';
 import { useRouter } from 'next/router';
 import { FiPlus } from 'react-icons/fi';
+import { useOrganization } from '@clerk/nextjs';
 
 export function Dashboard() {
   const router = useRouter();
+  const { organization } = useOrganization();
   const appQuery = trpc.useQuery(['app.byAuthedUser']);
+
+  useEffect(() => {
+    appQuery.refetch();
+  }, [organization]);
 
   const utils = trpc.useContext();
   const addApp = trpc.useMutation('app.add', {
