@@ -1,17 +1,15 @@
 import {
   Box,
-  Button,
-  GridItem,
   HStack,
   IconButton,
   Link,
+  Flex,
   useBreakpointValue,
 } from '@chakra-ui/react';
 import { useRouter } from 'next/router';
 import NextLink from 'next/link';
 import { FiMenu } from 'react-icons/fi';
 
-import DefaultGrid from './default-grid';
 import { ZipperLogo } from '@zipper/ui';
 import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/nextjs';
 import { useEffect } from 'react';
@@ -29,7 +27,7 @@ const navRoutes = [
 
 const Header: React.FC<HeaderProps> = ({ showNav = true }) => {
   const router = useRouter();
-  const isDesktop = useBreakpointValue({ base: false, lg: true });
+  const isTablet = useBreakpointValue({ base: false, md: true });
   const baseRoute = router.pathname.split('/')[1];
 
   const { reload } = router.query;
@@ -41,83 +39,75 @@ const Header: React.FC<HeaderProps> = ({ showNav = true }) => {
   }, [reload]);
 
   return (
-    <DefaultGrid as="header" paddingTop="12px" maxW="full">
-      <GridItem
-        as={Box}
-        colSpan={showNav ? 3 : 12}
-        ml={showNav ? 'unset' : 'auto'}
-        mr={showNav ? 'unset' : 'auto'}
-      >
-        <Button
-          type="button"
-          onClick={() => router.push('/')}
-          variant="unstyled"
-        >
-          <HStack spacing={3} height="100%">
-            <Box height="4">
-              <ZipperLogo style={{ maxHeight: '100%' }} />
-            </Box>
-            {showNav && (
-              <Box>
-                <SignedIn>
-                  <OrganizationSwitcher />
-                </SignedIn>
-              </Box>
-            )}
-          </HStack>
-        </Button>
-      </GridItem>
-
+    <Flex
+      as="header"
+      maxW="full"
+      gap={4}
+      margin="auto"
+      mt="12px"
+      maxW="full"
+      paddingX={10}
+    >
+      <HStack spacing={3} alignItems="start">
+        <Box mt="12px" height={4}>
+          <Link href="/">
+            <ZipperLogo style={{ maxHeight: '100%' }} />
+          </Link>
+        </Box>
+        {showNav && (
+          <Box>
+            <SignedIn>
+              <OrganizationSwitcher />
+            </SignedIn>
+          </Box>
+        )}
+      </HStack>
       {showNav && (
-        <>
-          <GridItem colSpan={3} as="nav">
-            <HStack
-              height="100%"
-              spacing={4}
-              fontSize="lg"
-              color="purple"
-              textDecoration="none"
-            >
-              {navRoutes.map((r) => {
-                const isActive = r.href === `/${baseRoute}`;
-                const textDecoration = isActive ? 'underline' : 'none';
+        <Flex flex={1} justifyContent="space-between">
+          <HStack
+            height="100%"
+            spacing={4}
+            fontSize="lg"
+            color="purple"
+            textDecoration="none"
+          >
+            {navRoutes.map((r) => {
+              const isActive = r.href === `/${baseRoute}`;
+              const textDecoration = isActive ? 'underline' : 'none';
 
-                return (
-                  <Link
-                    as={NextLink}
-                    href={r.href}
-                    key={r.text}
-                    textUnderlineOffset={12}
-                    textDecoration={textDecoration}
-                  >
-                    {r.text}
-                  </Link>
-                );
-              })}
+              return (
+                <Link
+                  as={NextLink}
+                  href={r.href}
+                  key={r.text}
+                  textUnderlineOffset={12}
+                  textDecoration={textDecoration}
+                >
+                  {r.text}
+                </Link>
+              );
+            })}
+          </HStack>
+          {isTablet ? (
+            <HStack spacing="4" justifyContent="end">
+              <SignedIn>
+                <UserButton />
+              </SignedIn>
+              <SignedOut>
+                {/* Signed out users get sign in button */}
+                <SignInButton />
+              </SignedOut>
             </HStack>
-          </GridItem>
-          <GridItem colSpan={6} as="nav">
-            {isDesktop ? (
-              <HStack spacing="4" justifyContent="end">
-                <SignedIn>
-                  <UserButton />
-                </SignedIn>
-                <SignedOut>
-                  {/* Signed out users get sign in button */}
-                  <SignInButton />
-                </SignedOut>
-              </HStack>
-            ) : (
-              <IconButton
-                variant="ghost"
-                icon={<FiMenu fontSize="1.25rem" />}
-                aria-label="Open Menu"
-              />
-            )}
-          </GridItem>
-        </>
+          ) : (
+            <IconButton
+              variant="ghost"
+              icon={<FiMenu fontSize="1.25rem" />}
+              aria-label="Open Menu"
+            />
+          )}
+        </Flex>
       )}
-    </DefaultGrid>
+    </Flex>
   );
 };
 
