@@ -108,6 +108,13 @@ model AppConnector {
   @@map("app_connectors")
 }
 
+model OrganizationSlug {
+  slug            String    @id @unique()
+  organizationId  String?
+
+  @@map("organization_slugs")
+}
+
 model Secret {
   id             String    @id @default(uuid())
   createdAt      DateTime  @default(now())

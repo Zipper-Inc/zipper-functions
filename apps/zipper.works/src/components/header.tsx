@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import {
   Box,
   HStack,
@@ -12,7 +13,6 @@ import { FiMenu } from 'react-icons/fi';
 
 import { ZipperLogo } from '@zipper/ui';
 import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/nextjs';
-import { useEffect } from 'react';
 import OrganizationSwitcher from './auth/organizationSwitcher';
 
 type HeaderProps = {
