@@ -39,15 +39,7 @@ const Header: React.FC<HeaderProps> = ({ showNav = true }) => {
   }, [reload]);
 
   return (
-    <Flex
-      as="header"
-      maxW="full"
-      gap={4}
-      margin="auto"
-      mt="12px"
-      maxW="full"
-      paddingX={10}
-    >
+    <Flex as="header" gap={4} margin="auto" mt="12px" maxW="full" paddingX={10}>
       <HStack spacing={3} alignItems="start">
         <Box mt="12px" height={4}>
           <Link href="/">
