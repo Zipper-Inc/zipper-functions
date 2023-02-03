@@ -1,5 +1,5 @@
 // pages/organizations/[id].ts
-import { useOrganization, useUser } from '@clerk/nextjs';
+import { OrganizationProfile, useOrganization, useUser } from '@clerk/nextjs';
 import DefaultGrid from '~/components/default-grid';
 import {
   GridItem,
@@ -39,11 +39,12 @@ import {
   AlertDialogFooter,
   useDisclosure,
   FormHelperText,
-  Container,
+  AvatarBadge,
+  Avatar,
 } from '@chakra-ui/react';
 import { HiTrash, HiUserGroup } from 'react-icons/hi2';
 import { HiCog, HiUserAdd } from 'react-icons/hi';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { OrganizationMembershipRole } from '@clerk/clerk-sdk-node';
 import { MembershipRole } from '@clerk/types';
 import { trpc } from '~/utils/trpc';
@@ -53,6 +54,9 @@ import { useRouter } from 'next/router';
 // pending invitations.
 // Invite new members.
 export default function Organization() {
+  const [menuHover, setMenuHover] = useState<
+    'members' | 'settings' | undefined
+  >();
   const [currentPage, setCurrentPage] = useState<'members' | 'settings'>(
     'members',
   );
@@ -68,8 +72,19 @@ export default function Organization() {
   return (
     <Tabs colorScheme="purple">
       <DefaultGrid w="full" px="none" overflow="hidden">
-        <GridItem colSpan={2} p={4} color="gray.500" fontSize="sm">
-          <VStack alignItems="start" gap={1}>
+        <GridItem colSpan={2} px={4} color="gray.500">
+          <VStack alignItems="start" spacing={0}>
+            <HStack
+              mb="4"
+              borderBottom="1px"
+              borderColor="gray.200"
+              w="full"
+              pb="4"
+              color="black"
+            >
+              <Avatar name={organization?.name} size="xs" />
+              <Text>{organization?.name}</Text>
+            </HStack>
             <HStack
               w="full"
               p="1"
@@ -77,6 +92,10 @@ export default function Organization() {
               onClick={() => {
                 setCurrentPage('members');
               }}
+              onMouseEnter={() => setMenuHover('members')}
+              onMouseLeave={() => setMenuHover(undefined)}
+              backgroundColor={menuHover === 'members' ? 'gray.100' : 'none'}
+              py="2"
             >
               <Icon as={HiUserGroup} />
               <Text
@@ -96,6 +115,9 @@ export default function Organization() {
               onClick={() => {
                 setCurrentPage('settings');
               }}
+              backgroundColor={menuHover === 'settings' ? 'gray.100' : 'none'}
+              onMouseEnter={() => setMenuHover('settings')}
+              onMouseLeave={() => setMenuHover(undefined)}
             >
               <Icon as={HiCog} />
               <Text
@@ -172,6 +194,10 @@ function Settings() {
     { enabled: !!organization },
   );
 
+  useEffect(() => {
+    setOrgName(organization?.name || '');
+  }, [organization?.name]);
+
   const handleOrgNameSubmit = async (e: any) => {
     e.preventDefault();
     setDisabled(true);
@@ -192,7 +218,7 @@ function Settings() {
           <FormControl>
             <FormLabel>Organization Name</FormLabel>
             <Input
-              defaultValue={orgName}
+              value={orgName}
               onChange={(e) => setOrgName(e.target.value)}
             ></Input>
             <FormHelperText>
@@ -248,7 +274,11 @@ function MemberList() {
                       {m.publicUserData.firstName} {m.publicUserData.lastName}
                     </Text>
                     {m.id === membership?.id && (
-                      <Badge variant="subtle" colorScheme="purple">
+                      <Badge
+                        variant="subtle"
+                        colorScheme="purple"
+                        fontSize={'2xs'}
+                      >
                         you
                       </Badge>
                     )}
