@@ -1,17 +1,21 @@
 // middleware.ts
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import relay from './utils/relay-middleware';
+import serveRelay from './utils/relay-middleware';
 import getVersionFromUrl, {
   VERSION_DELIMETER,
 } from './utils/get-version-from-url';
+import jsonHandler from './api-handlers/json.handler';
+import yamlHandler from './api-handlers/yaml.handler';
 
 export default async function middleware(request: NextRequest) {
   const version = getVersionFromUrl(request.url);
   const versionPath = version ? `/${VERSION_DELIMETER}${version}` : '';
-  const rootPath = request.nextUrl.pathname.replace(versionPath, '') || '/';
 
-  switch (rootPath) {
+  /** Path after app-slug.zipper.run/@version */
+  const appRoute = request.nextUrl.pathname.replace(versionPath, '') || '/';
+
+  switch (appRoute) {
     case '/':
       if (request.method === 'GET') {
         const url = new URL('/app', request.url);
@@ -23,8 +27,15 @@ export default async function middleware(request: NextRequest) {
       }
       break;
 
+    case '/api':
+    case '/api/json':
+      return jsonHandler(request);
+
+    case '/api/yaml':
+      return yamlHandler(request);
+
     case '/call':
-      return relay(request);
+      return serveRelay(request);
 
     default:
       return NextResponse.next();

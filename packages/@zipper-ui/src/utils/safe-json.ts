@@ -1,5 +1,5 @@
 export function safeJSONParse(
-  json: string,
+  json = '',
   reviver?: (key: string, value: any) => any,
   fallback?: any,
 ): any {

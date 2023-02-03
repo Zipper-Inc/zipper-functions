@@ -16,7 +16,7 @@ import {
   Progress,
 } from '@chakra-ui/react';
 import { useEffect, useRef, useState } from 'react';
-import { FieldValues, FormProvider, UseFormReturn } from 'react-hook-form';
+import { FieldValues, UseFormReturn } from 'react-hook-form';
 import { HiOutlineDocumentDuplicate, HiRefresh } from 'react-icons/hi';
 import { InputParamsForm } from '@zipper/ui';
 import { LogLine } from '~/components/app/log-line';

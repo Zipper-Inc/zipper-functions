@@ -4,3 +4,4 @@ export * from './components/input-params-form';
 export * from './components/zipper-logo';
 export * from './hocs/with-chakra-provider';
 export * from './theme';
+export * from './utils/safe-json';
