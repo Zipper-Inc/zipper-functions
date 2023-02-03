@@ -217,7 +217,7 @@ export function Playground({
         />
 
         {/* TABS */}
-        <GridItem mt={-5} colSpan={12}>
+        <GridItem mt={-4} colSpan={12}>
           <TabList
             as={HStack}
             gap={2}

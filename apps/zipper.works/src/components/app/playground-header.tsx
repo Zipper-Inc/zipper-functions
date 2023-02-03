@@ -117,7 +117,7 @@ export function PlaygroundHeader({
   return (
     <>
       <GridItem colSpan={10}>
-        <Box pb={5}>
+        <Box>
           <HStack>
             <Box mr={5} height={4}>
               <Link href="/">
