@@ -1,7 +1,9 @@
 import { Prisma } from '@prisma/client';
+import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { prisma } from '~/server/prisma';
 import { createRouter } from '../createRouter';
+import denyList from '../utils/slugDenyList';
 
 const defaultSelect = Prisma.validator<Prisma.OrganizationSlugSelect>()({
   slug: true,
@@ -15,6 +17,12 @@ export const organizationSlugRouter = createRouter()
       organizationId: z.string(),
     }),
     async resolve({ input }) {
+      const deniedSlug = denyList.find((d) => d === input.slug);
+      if (deniedSlug)
+        return new TRPCError({
+          message: 'Invalid slug',
+          code: 'INTERNAL_SERVER_ERROR',
+        });
       return prisma.organizationSlug.create({
         data: { ...input },
         select: defaultSelect,
@@ -27,6 +35,8 @@ export const organizationSlugRouter = createRouter()
       slug: z.string().min(3),
     }),
     async resolve({ input }) {
+      const deniedSlug = denyList.find((d) => d === input.slug);
+      if (deniedSlug) return deniedSlug;
       return prisma.organizationSlug.findFirst({
         where: {
           slug: input.slug,

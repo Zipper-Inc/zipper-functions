@@ -1,3 +1,4 @@
+import { CheckIcon } from '@chakra-ui/icons';
 import {
   Box,
   Button,
@@ -6,6 +7,8 @@ import {
   FormHelperText,
   FormLabel,
   Input,
+  InputGroup,
+  InputRightElement,
   Modal,
   ModalBody,
   ModalCloseButton,
@@ -13,13 +16,18 @@ import {
   ModalFooter,
   ModalHeader,
   ModalOverlay,
-  Text,
+  Icon,
   Textarea,
   VStack,
 } from '@chakra-ui/react';
+import { useEffect, useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
+import { HiExclamationTriangle } from 'react-icons/hi2';
+import { useDebounce } from 'use-debounce';
 import slugify from '~/utils/slugify';
 import { trpc } from '~/utils/trpc';
+
+const MIN_SLUG_LENGTH = 5;
 
 type Props = {
   isOpen: boolean;
@@ -35,6 +43,15 @@ const SettingsTab: React.FC<Props> = ({ isOpen, onClose, appId }) => {
     },
   });
 
+  const [slugExists, setSlugExists] = useState<boolean | undefined>();
+  const [slug, setSlug] = useState<string>('');
+  const [debouncedSlug] = useDebounce(slug, 200);
+
+  const appSlugQuery = trpc.useQuery(
+    ['app.validateSlug', { slug: debouncedSlug }],
+    { enabled: !!(debouncedSlug.length >= MIN_SLUG_LENGTH) },
+  );
+
   const settingsForm = useForm({
     defaultValues: {
       name: appQuery.data?.name || '',
@@ -42,6 +59,14 @@ const SettingsTab: React.FC<Props> = ({ isOpen, onClose, appId }) => {
       description: appQuery.data?.description || '',
     },
   });
+
+  useEffect(() => {
+    if (slug === appQuery.data?.slug) {
+      setSlugExists(false);
+    } else {
+      setSlugExists(!appSlugQuery.data);
+    }
+  }, [appSlugQuery.data]);
 
   return (
     <>
@@ -61,17 +86,33 @@ const SettingsTab: React.FC<Props> = ({ isOpen, onClose, appId }) => {
               <VStack align={'start'} gap={2}>
                 <FormControl isRequired>
                   <FormLabel>Slug</FormLabel>
-                  <Input
-                    backgroundColor="white"
-                    maxLength={60}
-                    {...settingsForm.register('slug')}
-                  />
+                  <InputGroup>
+                    <Input
+                      backgroundColor="white"
+                      maxLength={60}
+                      {...settingsForm.register('slug')}
+                      onChange={(e) => {
+                        setSlug(slugify(e.target.value));
+                      }}
+                    />
+                    {slug && slug.length >= MIN_SLUG_LENGTH && (
+                      <InputRightElement
+                        children={
+                          slugExists ? (
+                            <Icon as={HiExclamationTriangle} color="red.500" />
+                          ) : (
+                            <CheckIcon color="green.500" />
+                          )
+                        }
+                      />
+                    )}
+                  </InputGroup>
                   {settingsForm.watch('slug') && (
                     <FormHelperText>
                       {`Your app will be available at
-                            ${
-                              process.env.NEXT_PUBLIC_OUTPUT_SERVER_HOSTNAME
-                            }/${slugify(settingsForm.watch('slug'))}`}
+                            ${slugify(slug)}.${
+                        process.env.NEXT_PUBLIC_OUTPUT_SERVER_HOSTNAME
+                      }`}
                     </FormHelperText>
                   )}
                   <FormErrorMessage>
@@ -102,6 +143,7 @@ const SettingsTab: React.FC<Props> = ({ isOpen, onClose, appId }) => {
                     display="block"
                     colorScheme="purple"
                     type="submit"
+                    isDisabled={slugExists || slug.length < MIN_SLUG_LENGTH}
                     onClick={settingsForm.handleSubmit(async (data) => {
                       appEditMutation.mutateAsync(
                         {
