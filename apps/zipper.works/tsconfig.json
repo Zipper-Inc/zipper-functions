@@ -41,8 +41,7 @@
     "**/*.ts",
     "**/*.tsx",
     "./*.js",
-    "./src/**/*.js",
-    "src/pages/organization/profile"
+    "./src/**/*.js" 
   ],
   "exclude": [
     "node_modules",

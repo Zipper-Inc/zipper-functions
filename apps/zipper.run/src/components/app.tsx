@@ -21,7 +21,7 @@ import { useForm } from 'react-hook-form';
 export function AppPage({
   app,
   inputs,
-  version = app.lastDeploymentVersion,
+  version = app.lastDeploymentVersion || Date.now().toString(),
 }: {
   app: AppInfo;
   inputs: InputParams;

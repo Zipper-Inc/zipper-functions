@@ -16,7 +16,7 @@ import {
   Progress,
 } from '@chakra-ui/react';
 import { useEffect, useRef, useState } from 'react';
-import { FieldValues, FormProvider, UseFormReturn } from 'react-hook-form';
+import { FieldValues, UseFormReturn } from 'react-hook-form';
 import { HiOutlineDocumentDuplicate, HiRefresh } from 'react-icons/hi';
 import { InputParamsForm } from '@zipper/ui';
 import { LogLine } from '~/components/app/log-line';
@@ -68,7 +68,9 @@ export function AppEditSidebar({
     setIframeUrl(
       `${process.env.NODE_ENV === 'production' ? 'https' : 'http'}://${
         appInfo.slug
-      }.${process.env.NEXT_PUBLIC_OUTPUT_SERVER_HOSTNAME}/?${urlSearchParams}`,
+      }.${
+        process.env.NEXT_PUBLIC_OUTPUT_SERVER_HOSTNAME
+      }/call?${urlSearchParams}`,
     );
   }, [appInfo, urlSearchParams]);
 

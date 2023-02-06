@@ -22,7 +22,7 @@
     "get-port-please": "^3.0.1",
     "prettier": "latest",
     "signale": "^1.4.0",
-    "turbo": "latest"
+    "turbo": "^1.7.3"
   },
   "prettier": {
     "printWidth": 80,

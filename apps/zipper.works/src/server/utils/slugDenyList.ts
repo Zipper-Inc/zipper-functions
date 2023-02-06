@@ -1,0 +1,26 @@
+const denyList = [
+  '404',
+  '500',
+  'about',
+  'account',
+  'admin',
+  'api',
+  'app',
+  'auth',
+  'blog',
+  'dashboard',
+  'gallery',
+  'help',
+  'index',
+  'learn',
+  'org',
+  'organization',
+  'sign-in',
+  'sign-out',
+  'sign-up',
+  'www',
+  'cname',
+  'txt',
+];
+
+export default denyList;

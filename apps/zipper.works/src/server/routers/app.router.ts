@@ -6,6 +6,7 @@ import { createRouter } from '../createRouter';
 import { hasAppEditPermission } from '../utils/authz.utils';
 import slugify from '~/utils/slugify';
 import { TRPCError } from '@trpc/server';
+import denyList from '../utils/slugDenyList';
 
 const defaultSelect = Prisma.validator<Prisma.AppSelect>()({
   id: true,
@@ -137,6 +138,30 @@ export const appRouter = createRouter()
       });
     },
   })
+  .query('validateSlug', {
+    input: z.object({
+      slug: z
+        .string()
+        .min(3)
+        .max(50)
+        .transform((s) => slugify(s)),
+    }),
+    async resolve({ ctx, input }) {
+      if (!ctx.user) {
+        throw new TRPCError({ code: 'UNAUTHORIZED' });
+      }
+      const deniedSlug = denyList.find((d) => d === input.slug);
+      if (deniedSlug) return false;
+
+      const existingSlug = prisma.app.findFirst({
+        where: {
+          slug: input.slug,
+        },
+      });
+
+      return !!existingSlug;
+    },
+  })
   // update
   .mutation('fork', {
     input: z.object({
@@ -235,6 +260,23 @@ export const appRouter = createRouter()
 
       const { id, data } = input;
       const { scripts, ...rest } = data;
+
+      if (data.slug) {
+        const deniedSlug = denyList.find((d) => d === data.slug);
+        if (deniedSlug)
+          throw new TRPCError({
+            message: 'Invalid slug',
+            code: 'INTERNAL_SERVER_ERROR',
+          });
+        const existingAppWithSlug = await prisma.app.findFirst({
+          where: { slug: data.slug },
+        });
+        if (existingAppWithSlug)
+          throw new TRPCError({
+            message: 'Invalid slug',
+            code: 'INTERNAL_SERVER_ERROR',
+          });
+      }
 
       await prisma.app.update({
         where: { id },

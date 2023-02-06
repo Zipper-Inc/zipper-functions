@@ -46,7 +46,7 @@ export const CreateOrganizationModal = ({
 
   const organizationSlugQuery = trpc.useQuery(
     ['organizationSlug.find', { slug: debouncedSlug }],
-    { enabled: !!(debouncedSlug.length > 2) },
+    { enabled: !!(debouncedSlug.length >= MIN_SLUG_LENGTH) },
   );
 
   const createOrganizationSlug = trpc.useMutation('organizationSlug.add');

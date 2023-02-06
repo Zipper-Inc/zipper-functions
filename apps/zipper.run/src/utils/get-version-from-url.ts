@@ -1,8 +1,8 @@
-export const VERSION_DELIMETER = '*@';
+export const VERSION_DELIMETER = '@';
 
 /**
  * Matches the first part of the URL path to see if we've passed a version
- * @example https://my-app-name.zipper.run/*@fooversion => fooversion
+ * @example https://my-app-name.zipper.run/@fooversion => fooversion
  */
 export default function getVersionFromUrl(url: string): string | void {
   // new URL will throw if it doesn't look like a valid URL

@@ -1,0 +1,19 @@
+import { AddAppRun } from '@zipper/types';
+
+/**
+ * Add app run via API endpoint
+ * @see /apps/zipper.works/pages/api/app/[id]/[version]/addAppRun
+ */
+export default async function addAppRun(params: AddAppRun): Promise<Response> {
+  const id = params.appId;
+  const version = params.deploymentId.split('@').pop();
+  const url = `${process.env.ZIPPER_API_URL}/app/${id}/${version}/addAppRun`;
+  return fetch(url, {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(params),
+  });
+}

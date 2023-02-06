@@ -42,7 +42,7 @@ type Props = {
 const SchedulesTab: React.FC<Props> = ({ appId, inputParams }) => {
   const utils = trpc.useContext();
   const { handleSubmit, reset } = useForm();
-  const [currentCrontab, setCurrentCrontab] = useState<string>('0 * *  * *');
+  const [currentCrontab, setCurrentCrontab] = useState<string>('0 * * * *');
   const [cronString, setCronString] = useState<string>();
   const [newSchedules, setNewSchedules] = useState<
     { crontab: string; inputs: Record<string, any> }[]
@@ -123,7 +123,7 @@ const SchedulesTab: React.FC<Props> = ({ appId, inputParams }) => {
                   size="md"
                   type="text"
                   {...addModalForm.register('crontab')}
-                  defaultValue="* 1 * * *"
+                  defaultValue="0 * * * *"
                   onChange={(e) => setCurrentCrontab(e.target.value)}
                 />
                 <FormHelperText>{cronString}</FormHelperText>
@@ -220,7 +220,7 @@ const SchedulesTab: React.FC<Props> = ({ appId, inputParams }) => {
                               >
                                 {cronstrue.toString(s.crontab)}
                               </Text>
-                              {s.appRuns && (
+                              {s.appRuns && s.appRuns.length > 0 && (
                                 <>
                                   <Text color="gray.400">|</Text>
                                   <Text color="gray.600" fontSize="xs">
