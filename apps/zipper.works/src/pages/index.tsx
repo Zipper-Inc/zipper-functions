@@ -1,13 +1,14 @@
 import { useUser } from '@clerk/nextjs';
-import { Dashboard } from '~/components/dashboard';
 import { Gallery } from '~/components/gallery';
 import { NextPageWithLayout } from './_app';
+import { useRouter } from 'next/router';
 
 const IndexPage: NextPageWithLayout = () => {
   const { user, isLoaded } = useUser();
+  const router = useRouter();
 
   if (user) {
-    return <Dashboard />;
+    router.push('/dashboard');
   }
 
   if (isLoaded && !user) {
