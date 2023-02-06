@@ -7,6 +7,7 @@ import { ZipperLogo } from '@zipper/ui';
 import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/nextjs';
 import OrganizationSwitcher from './auth/organizationSwitcher';
 import { MobileMenu } from './header-mobile-menu';
+import { ZipperSymbol } from './svg/zipperSymbol';
 
 type HeaderProps = {
   showNav?: boolean;
@@ -38,14 +39,19 @@ const Header: React.FC<HeaderProps> = ({ showNav = true }) => {
       margin="auto"
       mt="20px"
       maxW="full"
-      minW="lg"
+      minW="md"
       paddingX={10}
       justifyContent="center"
     >
       <HStack spacing={3} alignItems="start">
         <Box my={3} height={4}>
           <Link href="/">
-            <ZipperLogo style={{ maxHeight: '100%' }} />
+            <SignedIn>
+              <ZipperSymbol style={{ maxHeight: '100%' }} />
+            </SignedIn>
+            <SignedOut>
+              <ZipperLogo style={{ maxHeight: '100%' }} />
+            </SignedOut>
           </Link>
         </Box>
         {showNav && (
