@@ -19,6 +19,7 @@
     "@emotion/styled": "^11.10.5",
     "@zipper/types": "*",
     "@zipper/ui": "*",
+    "chrono-node": "^2.5.0",
     "framer-motion": "^9.0.0",
     "json-to-pretty-yaml": "^1.2.2",
     "next": "^13.1.1",

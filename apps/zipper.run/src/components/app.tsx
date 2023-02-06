@@ -17,19 +17,23 @@ import {
 } from '@chakra-ui/react';
 import Head from 'next/head';
 import { useForm } from 'react-hook-form';
+import { getInputValuesFromUrl } from '../utils/get-input-values-from-url';
 
 export function AppPage({
   app,
   inputs,
   version = app.lastDeploymentVersion || Date.now().toString(),
+  defaultValues,
 }: {
   app: AppInfo;
   inputs: InputParams;
   version?: string;
+  defaultValues?: Record<string, any>;
 }) {
   const appTitle = app.name || app.slug;
-  const formContext = useForm();
+  const formContext = useForm({ defaultValues });
   const [result, setResult] = useState('');
+
   return (
     <>
       <Head>
@@ -125,7 +129,21 @@ export const getServerSideProps: GetServerSideProps = async ({
   const result = await getAppInfo(subdomain);
   if (!result.ok) return { notFound: true };
 
-  return { props: result.data };
+  const { app, inputs } = result.data;
+  const version =
+    versionFromUrl ||
+    app.lastDeploymentVersion?.toString() ||
+    Date.now().toString();
+  const defaultValues = getInputValuesFromUrl(inputs, req.url);
+
+  return {
+    props: {
+      app,
+      inputs,
+      version,
+      defaultValues,
+    },
+  };
 };
 
 export default withDefaultTheme(AppPage);

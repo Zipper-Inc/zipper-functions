@@ -10,6 +10,11 @@ import {
   VStack,
   HStack,
   StackDivider,
+  NumberInput,
+  NumberInputField,
+  NumberInputStepper,
+  NumberIncrementStepper,
+  NumberDecrementStepper,
 } from '@chakra-ui/react';
 import { FieldValues, UseFormReturn, RegisterOptions } from 'react-hook-form';
 import { InputType, InputParam } from '@zipper/types';
@@ -64,13 +69,18 @@ function InputParamsInput({
 
     case InputType.number: {
       return (
-        <Input
-          backgroundColor="white"
-          fontFamily="monospace"
-          type="number"
-          fontSize="smaller"
-          {...formProps}
-        />
+        <NumberInput width="full">
+          <NumberInputField
+            backgroundColor="white"
+            fontFamily="monospace"
+            fontSize="smaller"
+            {...formProps}
+          />
+          <NumberInputStepper>
+            <NumberIncrementStepper />
+            <NumberDecrementStepper />
+          </NumberInputStepper>
+        </NumberInput>
       );
     }
 
