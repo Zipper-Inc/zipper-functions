@@ -73,7 +73,6 @@ export function Dashboard() {
                 <Tr>
                   <Th>App Name</Th>
                   <Th>Last Updated</Th>
-                  <Th>Created at</Th>
                 </Tr>
               </Thead>
               <Tbody>
@@ -102,11 +101,6 @@ export function Dashboard() {
                           {new Intl.DateTimeFormat('en-GB', {
                             dateStyle: 'short',
                           }).format(app.updatedAt || app.createdAt)}
-                        </Td>
-                        <Td>
-                          {new Intl.DateTimeFormat('en-GB', {
-                            dateStyle: 'short',
-                          }).format(app.createdAt)}
                         </Td>
                       </Tr>
                     );
