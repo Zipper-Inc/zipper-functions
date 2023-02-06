@@ -51,7 +51,7 @@ export async function relayRequest(request: NextRequest) {
     deploymentId,
     success: response.status === 200,
     scheduleId: request.headers.get('X-Zipper-Schedule-Id') || undefined,
-    inputs: await getInputFromRequest(request),
+    inputs: await getInputFromRequest(request, relayBody),
     result,
   });
 

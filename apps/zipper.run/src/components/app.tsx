@@ -74,7 +74,7 @@ export function AppPage({
                   const values: Record<string, any> = {};
                   Object.keys(rawValues).forEach((k) => {
                     const parts = k.split(':');
-                    parts.unshift();
+                    parts.pop();
                     const key = parts.join(':');
                     values[key] = rawValues[k];
                   });
