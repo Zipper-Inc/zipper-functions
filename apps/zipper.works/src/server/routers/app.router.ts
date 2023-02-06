@@ -269,7 +269,7 @@ export const appRouter = createRouter()
             code: 'INTERNAL_SERVER_ERROR',
           });
         const existingAppWithSlug = await prisma.app.findFirst({
-          where: { slug: data.slug },
+          where: { slug: data.slug, id: { not: input.id } },
         });
         if (existingAppWithSlug)
           throw new TRPCError({

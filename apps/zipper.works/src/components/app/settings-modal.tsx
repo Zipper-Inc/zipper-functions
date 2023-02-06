@@ -43,8 +43,8 @@ const SettingsTab: React.FC<Props> = ({ isOpen, onClose, appId }) => {
     },
   });
 
-  const [slugExists, setSlugExists] = useState<boolean | undefined>();
-  const [slug, setSlug] = useState<string>('');
+  const [slugExists, setSlugExists] = useState<boolean | undefined>(false);
+  const [slug, setSlug] = useState<string>(appQuery.data?.slug || '');
   const [debouncedSlug] = useDebounce(slug, 200);
 
   const appSlugQuery = trpc.useQuery(
@@ -73,6 +73,7 @@ const SettingsTab: React.FC<Props> = ({ isOpen, onClose, appId }) => {
       <Modal
         isOpen={isOpen}
         onClose={() => {
+          settingsForm.reset();
           onClose();
         }}
         size="xl"
