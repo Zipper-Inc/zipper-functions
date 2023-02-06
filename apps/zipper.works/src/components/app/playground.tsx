@@ -236,11 +236,14 @@ export function Playground({
           <Box px="2">Code</Box>
         </Tab>
 
-        {/* SCHEDULES */}
-        {isUserAnAppEditor && <Tab>Schedules</Tab>}
-
-        {/* SECRETS */}
-        <Tab>Secrets</Tab>
+        {isUserAnAppEditor && (
+          <>
+            {/* SCHEDULES */}
+            <Tab>Schedules</Tab>
+            {/* SECRETS */}
+            <Tab>Secrets</Tab>
+          </>
+        )}
       </TabList>
       {/* TAB PANELS */}
       <TabPanels as={DefaultGrid} maxW="full">
