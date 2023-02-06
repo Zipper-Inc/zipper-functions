@@ -36,13 +36,14 @@ const Header: React.FC<HeaderProps> = ({ showNav = true }) => {
       as="header"
       gap={4}
       margin="auto"
-      mt="12px"
+      mt="20px"
       maxW="full"
+      minW="lg"
       paddingX={10}
       justifyContent="center"
     >
       <HStack spacing={3} alignItems="start">
-        <Box my="12px" height={4}>
+        <Box my={3} height={4}>
           <Link href="/">
             <ZipperLogo style={{ maxHeight: '100%' }} />
           </Link>

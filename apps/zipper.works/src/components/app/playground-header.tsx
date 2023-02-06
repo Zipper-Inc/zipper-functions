@@ -8,8 +8,9 @@ import {
   Text,
   AvatarBadge,
   Tooltip,
-  GridItem,
   Icon,
+  useBreakpointValue,
+  Flex,
 } from '@chakra-ui/react';
 import { LockIcon, UnlockIcon } from '@chakra-ui/icons';
 import React, { useContext } from 'react';
@@ -97,6 +98,7 @@ export function PlaygroundHeader({
   const { isLoaded } = useUser();
   const self = useSelf();
   const others = useOthers();
+  const isMobile = useBreakpointValue({ base: true, md: false });
 
   const { isUserAnAppEditor } = useContext(EditorContext);
 
@@ -115,79 +117,82 @@ export function PlaygroundHeader({
   });
 
   return (
-    <>
-      <GridItem colSpan={9}>
-        <Box>
-          <HStack>
-            <Box mr={5} height={4}>
-              <Link href="/">
-                <ZipperLogo style={{ maxHeight: '100%' }} />
-              </Link>
-            </Box>
-            <Box>
-              {app.isPrivate ? (
-                <LockIcon fill={'gray.500'} boxSize={4} mb={1} />
-              ) : (
-                <UnlockIcon color={'gray.500'} boxSize={4} mb={1} />
-              )}
-            </Box>
-            {app.parentId && (
-              <Box>
-                <Link href={`/app/${app.parentId}/edit`} target="_blank">
-                  <ForkIcon fill={'gray.300'} size={16} />
-                </Link>
-              </Box>
-            )}
-            <Heading as="h1" size="md">
-              {app.slug}
-            </Heading>
-            <PlaygroundAvatars
-              editorIds={editorIds}
-              onlineEditorIds={onlineEditorIds}
-              selfId={self?.id}
-            />
-          </HStack>
+    <Flex
+      as="header"
+      gap={4}
+      margin="auto"
+      maxW="full"
+      minW="lg"
+      justifyContent="center"
+    >
+      <HStack spacing={3} alignItems="center" flex={1} minW={0}>
+        <Box height={4}>
+          <Link href="/">
+            <ZipperLogo style={{ maxHeight: '100%' }} />
+          </Link>
         </Box>
-      </GridItem>
-      <GridItem colSpan={3} justifyContent="end">
-        <HStack justifyContent="end">
-          {isUserAnAppEditor && (
-            <Button variant={'outline'} onClick={onClickSettings}>
-              <HiOutlineCog />
-            </Button>
+        <Box>
+          {app.isPrivate ? (
+            <LockIcon fill={'gray.500'} boxSize={4} mb={1} />
+          ) : (
+            <UnlockIcon color={'gray.500'} boxSize={4} mb={1} />
           )}
-          {isUserAnAppEditor && (
-            <Button variant={'outline'} onClick={onClickShare}>
-              <HiOutlineShare />
-            </Button>
-          )}
-          {isUserAnAppEditor && (
-            <Button
-              type="button"
-              paddingX={4}
-              variant="solid"
-              colorScheme="purple"
-              textColor="gray.100"
-              onClick={onClickRun}
-            >
-              <Icon as={HiLightningBolt} />
-              <Text ml="2">Run</Text>
-            </Button>
-          )}
-          {!isUserAnAppEditor && isLoaded && (
-            <Button
-              type="button"
-              paddingX={6}
-              variant="outline"
-              borderColor="purple.800"
-              textColor="purple.800"
-              onClick={onClickFork}
-            >
-              Fork
-            </Button>
-          )}
-        </HStack>
-      </GridItem>
-    </>
+        </Box>
+        {app.parentId && (
+          <Box>
+            <Link href={`/app/${app.parentId}/edit`} target="_blank">
+              <ForkIcon fill={'gray.300'} size={16} />
+            </Link>
+          </Box>
+        )}
+        <Heading as="h1" size="md" overflow="auto" whiteSpace="nowrap">
+          {app.slug}
+        </Heading>
+        {!isMobile && (
+          <PlaygroundAvatars
+            editorIds={editorIds}
+            onlineEditorIds={onlineEditorIds}
+            selfId={self?.id}
+          />
+        )}
+      </HStack>
+      <HStack justifyContent="end">
+        {isUserAnAppEditor && (
+          <Button variant={'outline'} onClick={onClickSettings}>
+            <HiOutlineCog />
+          </Button>
+        )}
+        {isUserAnAppEditor && (
+          <Button variant={'outline'} onClick={onClickShare}>
+            <HiOutlineShare />
+          </Button>
+        )}
+        {isUserAnAppEditor && (
+          <Button
+            type="button"
+            paddingX={4}
+            variant="solid"
+            colorScheme="purple"
+            textColor="gray.100"
+            onClick={onClickRun}
+          >
+            <Icon as={HiLightningBolt} />
+            <Text ml="2">Run</Text>
+          </Button>
+        )}
+        {!isUserAnAppEditor && isLoaded && (
+          <Button
+            type="button"
+            paddingX={6}
+            variant="outline"
+            borderColor="purple.800"
+            textColor="purple.800"
+            onClick={onClickFork}
+          >
+            Fork
+          </Button>
+        )}
+      </HStack>
+    </Flex>
   );
 }
