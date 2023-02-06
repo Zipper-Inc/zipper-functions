@@ -199,55 +199,52 @@ export function Playground({
       colorScheme="purple"
       index={tabIndex}
       onChange={(index) => setTabIndex(index)}
+      paddingX={10}
     >
-      <DefaultGrid as="header" maxW="full">
-        <PlaygroundHeader
-          app={app}
-          onClickSettings={() => setSettingModalOpen(true)}
-          onClickShare={() => {
-            setShareModalOpen(true);
-          }}
-          onClickRun={runApp}
-          onClickFork={() => {
-            if (isUserAnAppEditor) return;
-            if (user) {
-              forkApp.mutateAsync({ id: app.id });
-            } else {
-              router.push(`/sign-in?redirect=${window.location.pathname}`);
-            }
-          }}
-        />
+      <PlaygroundHeader
+        app={app}
+        onClickSettings={() => setSettingModalOpen(true)}
+        onClickShare={() => setShareModalOpen(true)}
+        onClickRun={runApp}
+        onClickFork={() => {
+          if (isUserAnAppEditor) return;
+          if (user) {
+            forkApp.mutateAsync({ id: app.id });
+          } else {
+            router.push(`/sign-in?redirect=${window.location.pathname}`);
+          }
+        }}
+      />
 
-        {/* TABS */}
-        <GridItem mt={-5} colSpan={12}>
-          <TabList
-            as={HStack}
-            gap={2}
-            borderColor={tabIndex === 0 ? 'purple.100' : 'inherit'}
-          >
-            {/* CODE */}
-            <Tab
-              backgroundColor="gray.200"
-              borderTopRadius="md"
-              _selected={{
-                borderColor: 'purple.500',
-                backgroundColor: 'purple.500',
-                fontWeight: 'bold',
-                textColor: 'white',
-              }}
-            >
-              <Box px="2">Code</Box>
-            </Tab>
+      <TabList
+        as={HStack}
+        gap={2}
+        borderColor={tabIndex === 0 ? 'purple.100' : 'inherit'}
+        mt={3}
+      >
+        {/* CODE */}
+        <Tab
+          backgroundColor="gray.200"
+          borderTopRadius="md"
+          _selected={{
+            borderColor: 'purple.500',
+            backgroundColor: 'purple.500',
+            fontWeight: 'bold',
+            textColor: 'white',
+          }}
+        >
+          <Box px="2">Code</Box>
+        </Tab>
 
+        {isUserAnAppEditor && (
+          <>
             {/* SCHEDULES */}
-            {isUserAnAppEditor && <Tab>Schedules</Tab>}
-
+            <Tab>Schedules</Tab>
             {/* SECRETS */}
             <Tab>Secrets</Tab>
-          </TabList>
-        </GridItem>
-      </DefaultGrid>
-
+          </>
+        )}
+      </TabList>
       {/* TAB PANELS */}
       <TabPanels as={DefaultGrid} maxW="full">
         {/* CODE */}

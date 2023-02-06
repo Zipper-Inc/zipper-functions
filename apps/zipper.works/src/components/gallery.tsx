@@ -22,7 +22,7 @@ export function Gallery() {
   ]);
 
   return (
-    <DefaultGrid>
+    <DefaultGrid mt={4}>
       <GridItem colSpan={3}>
         <VStack alignItems="start" spacing={2} w={280}>
           <SignedIn>

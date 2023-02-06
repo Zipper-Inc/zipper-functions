@@ -1,30 +1,28 @@
 import { useEffect } from 'react';
-import {
-  Box,
-  Button,
-  ButtonGroup,
-  GridItem,
-  HStack,
-  IconButton,
-  Link,
-  useBreakpointValue,
-} from '@chakra-ui/react';
+import { Box, HStack, Link, Flex, useBreakpointValue } from '@chakra-ui/react';
 import { useRouter } from 'next/router';
 import NextLink from 'next/link';
-import { FiHelpCircle, FiMenu, FiSearch, FiBell } from 'react-icons/fi';
 
-import DefaultGrid from './default-grid';
 import { ZipperLogo } from '@zipper/ui';
 import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/nextjs';
 import OrganizationSwitcher from './auth/organizationSwitcher';
+import { MobileMenu } from './header-mobile-menu';
+import { ZipperSymbol } from './svg/zipperSymbol';
 
 type HeaderProps = {
   showNav?: boolean;
 };
 
+const navRoutes = [
+  { href: '/gallery', text: 'Gallery' },
+  { href: '#', text: 'Learn' },
+  { href: '#', text: 'Build' },
+];
+
 const Header: React.FC<HeaderProps> = ({ showNav = true }) => {
   const router = useRouter();
-  const isDesktop = useBreakpointValue({ base: false, lg: true });
+  const isTablet = useBreakpointValue({ base: false, md: true });
+  const baseRoute = router.pathname.split('/')[1];
 
   const { reload } = router.query;
 
@@ -35,32 +33,42 @@ const Header: React.FC<HeaderProps> = ({ showNav = true }) => {
   }, [reload]);
 
   return (
-    <DefaultGrid as="header" paddingY={12}>
-      <GridItem
-        as={Box}
-        colSpan={showNav ? 3 : 12}
-        ml={showNav ? 'unset' : 'auto'}
-        mr={showNav ? 'unset' : 'auto'}
-      >
-        <Button
-          type="button"
-          onClick={() => router.push('/')}
-          variant="unstyled"
-        >
-          <HStack spacing={3} height="100%">
-            <Box height="4">
+    <Flex
+      as="header"
+      gap={4}
+      margin="auto"
+      mt="20px"
+      maxW="full"
+      minW="md"
+      paddingX={10}
+      justifyContent="center"
+    >
+      <HStack spacing={3} alignItems="start">
+        <Box my={3} height={4}>
+          <Link href="/">
+            <SignedIn>
+              <ZipperSymbol style={{ maxHeight: '100%' }} />
+            </SignedIn>
+            <SignedOut>
               <ZipperLogo style={{ maxHeight: '100%' }} />
-            </Box>
-            <Box fontWeight="bold" fontSize="xl">
-              Functions
-            </Box>
-          </HStack>
-        </Button>
-      </GridItem>
-
+            </SignedOut>
+          </Link>
+        </Box>
+        {showNav && (
+          <Box>
+            <SignedIn>
+              <OrganizationSwitcher />
+            </SignedIn>
+          </Box>
+        )}
+      </HStack>
       {showNav && (
-        <>
-          <GridItem colSpan={3} as="nav">
+        <Flex
+          flex={1}
+          justifyContent={isTablet ? 'space-between' : 'end'}
+          gap={4}
+        >
+          {isTablet && (
             <HStack
               height="100%"
               spacing={4}
@@ -68,48 +76,37 @@ const Header: React.FC<HeaderProps> = ({ showNav = true }) => {
               color="purple"
               textDecoration="none"
             >
-              <NextLink href="/gallery">Gallery</NextLink>
-              <Link>Learn</Link>
-              <Link>Build</Link>
+              {navRoutes.map((r) => {
+                const isActive = r.href === `/${baseRoute}`;
+                const textDecoration = isActive ? 'underline' : 'none';
+
+                return (
+                  <Link
+                    as={NextLink}
+                    href={r.href}
+                    key={r.text}
+                    textUnderlineOffset={12}
+                    textDecoration={textDecoration}
+                  >
+                    {r.text}
+                  </Link>
+                );
+              })}
             </HStack>
-          </GridItem>
-          <GridItem colSpan={6} as="nav">
-            {isDesktop ? (
-              <HStack spacing="4" justifyContent="end">
-                <ButtonGroup variant="ghost" spacing="1">
-                  <IconButton
-                    icon={<FiSearch fontSize="1.25rem" />}
-                    aria-label="Search"
-                  />
-                  <IconButton
-                    icon={<FiBell fontSize="1.25rem" />}
-                    aria-label="Notifications"
-                  />
-                  <IconButton
-                    icon={<FiHelpCircle fontSize="1.25rem" />}
-                    aria-label="Help Center"
-                  />
-                </ButtonGroup>
-                <SignedIn>
-                  <OrganizationSwitcher />
-                  <UserButton />
-                </SignedIn>
-                <SignedOut>
-                  {/* Signed out users get sign in button */}
-                  <SignInButton />
-                </SignedOut>
-              </HStack>
-            ) : (
-              <IconButton
-                variant="ghost"
-                icon={<FiMenu fontSize="1.25rem" />}
-                aria-label="Open Menu"
-              />
-            )}
-          </GridItem>
-        </>
+          )}
+          <HStack spacing="4" justifyContent="end">
+            <SignedIn>
+              <UserButton />
+            </SignedIn>
+            <SignedOut>
+              {/* Signed out users get sign in button */}
+              <SignInButton />
+            </SignedOut>
+          </HStack>
+          {!isTablet && <MobileMenu navRoutes={navRoutes} />}
+        </Flex>
       )}
-    </DefaultGrid>
+    </Flex>
   );
 };
 
