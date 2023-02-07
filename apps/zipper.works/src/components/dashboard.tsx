@@ -57,10 +57,7 @@ export function Dashboard() {
               textColor="gray.100"
               fontSize="sm"
               onClick={async () => {
-                const app = await addApp.mutateAsync();
-                if (app) {
-                  router.push(`/app/${app.id}/edit/main.ts`);
-                }
+                await addApp.mutateAsync();
               }}
             >
               <Icon as={FiPlus} mr="2"></Icon>
