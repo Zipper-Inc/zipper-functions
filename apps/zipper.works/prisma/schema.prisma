@@ -108,11 +108,15 @@ model AppConnector {
   @@map("app_connectors")
 }
 
-model OrganizationSlug {
-  slug            String    @id @unique()
-  organizationId  String?
+model ResourceOwnerSlug {
+  slug                String    @id @unique()
+  resourceOwnerType   Int
+  resourceOwnerId     String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime? @default(now())
+  deletedAt           DateTime? @db.Timestamp(6)
 
-  @@map("organization_slugs")
+  @@map("resource_owner_slugs")
 }
 
 model Secret {
@@ -170,12 +174,4 @@ model ScriptMain {
   script Script @relation(fields: [scriptId], references: [id])
 
   @@map("script_main")
-}
-
-model ResourceInstance {
-  id        String    @id @default(uuid())
-  createdAt DateTime  @default(now())
-  updatedAt DateTime? @default(now())
-
-  @@map("resoure_instances")
 }
