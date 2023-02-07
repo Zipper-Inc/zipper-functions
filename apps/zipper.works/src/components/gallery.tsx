@@ -59,7 +59,7 @@ export function Gallery() {
                     {app.name || app.slug}
                   </Heading>
                   <NextLink href={`/app/${app.id}`}>
-                    <Link textColor="brandPurple">View more</Link>
+                    <Text textColor="brandPurple">View more</Text>
                   </NextLink>
                 </GridItem>
               );
@@ -77,7 +77,7 @@ export function Gallery() {
                   {app.name || app.slug}
                 </Heading>
                 <NextLink href={`/app/${app.id}`}>
-                  <Link textColor="brandPurple">View more</Link>
+                  <Text textColor="brandPurple">View more</Text>
                 </NextLink>
               </GridItem>
             );

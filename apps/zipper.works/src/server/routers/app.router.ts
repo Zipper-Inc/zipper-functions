@@ -166,7 +166,6 @@ export const appRouter = createRouter()
       .optional(),
     async resolve({ ctx, input }) {
       if (!ctx.userId) return [];
-      console.log(ctx.orgId);
       const where: Prisma.AppWhereInput = {
         parentId: input?.parentId,
       };
