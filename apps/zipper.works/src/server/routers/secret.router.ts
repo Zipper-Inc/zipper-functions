@@ -25,7 +25,7 @@ export const secretRouter = createRouter()
     }),
     async resolve({ ctx, input }) {
       await hasAppEditPermission({
-        userId: ctx.user?.id,
+        ctx,
         appId: input.appId,
       });
       if (!process.env.ENCRYPTION_KEY) {
@@ -53,7 +53,7 @@ export const secretRouter = createRouter()
     }),
     async resolve({ ctx, input }) {
       await hasAppReadPermission({
-        userId: ctx.user?.id,
+        ctx,
         appId: input.appId,
       });
       /**
@@ -78,7 +78,7 @@ export const secretRouter = createRouter()
     }),
     async resolve({ ctx, input }) {
       await hasAppEditPermission({
-        userId: ctx.user?.id,
+        ctx,
         appId: input.appId,
       });
       if (input.id) {

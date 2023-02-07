@@ -65,7 +65,9 @@ export const OrganizationSwitcher = () => {
               <Text fontWeight="medium">
                 {organization?.name || 'Personal Workspace'}
               </Text>
-              {membership && <Text>{membership.role}</Text>}
+              {membership && (
+                <Text>{membership.role === 'admin' ? 'Admin' : 'Member'}</Text>
+              )}
             </VStack>
             {organization && (
               <IconButton

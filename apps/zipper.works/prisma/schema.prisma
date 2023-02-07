@@ -24,6 +24,7 @@ model App {
   parentId        String?
   lastDeploymentVersion String?
   organizationId  String?
+  createdById     String?
 
   scriptMain ScriptMain?
 
