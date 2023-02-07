@@ -106,7 +106,7 @@ export const appRouter = createRouter()
           editors: { some: { userId: ctx.user.id } },
         },
         orderBy: { updatedAt: 'desc' },
-        select: defaultSelect,
+        select: { organizationId: true, editors: true, ...defaultSelect },
       });
     },
   })
