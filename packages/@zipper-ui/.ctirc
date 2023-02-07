@@ -11,7 +11,7 @@
   "useSemicolon": true,
 
   // timestamp write on ctix comment right-side, only works in useComment option set true
-  "useTimestamp": true,
+  "useTimestamp": false,
   
   // add ctix comment at first line of creted index.ts file, that remark created from ctix
   "useComment": true,
@@ -31,7 +31,7 @@
 
   // only single command configuration
   // Output directory. It works only single mode.
-  "output": "./src",
+  "output": "./generated",
 
   // Use rootDir or rootDirs configuration in tsconfig.json.
   "useRootDir": false,
