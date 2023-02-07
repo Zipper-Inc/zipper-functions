@@ -1,5 +1,6 @@
-// created from ctix 2023-02-03 16:59:37
+// created from ctix 2023-02-07 14:37:17
 
+export * from './components/function-result';
 export * from './components/input-params-form';
 export * from './components/zipper-logo';
 export * from './hocs/with-chakra-provider';

@@ -1,6 +1,11 @@
 import { useState } from 'react';
 import { GetServerSideProps } from 'next';
-import { InputParamsForm, withDefaultTheme, ZipperLogo } from '@zipper/ui';
+import {
+  InputParamsForm,
+  withDefaultTheme,
+  ZipperLogo,
+  FunctionResult,
+} from '@zipper/ui';
 import { AppInfo, InputParams } from '@zipper/types';
 import getAppInfo from '~/utils/get-app-info';
 import getValidSubdomain from '~/utils/get-valid-subdomain';
@@ -13,7 +18,6 @@ import {
   ButtonGroup,
   Button,
   Divider,
-  Code,
 } from '@chakra-ui/react';
 import Head from 'next/head';
 import { useForm } from 'react-hook-form';
@@ -101,11 +105,7 @@ export function AppPage({
           </Flex>
         </Box>
       </Box>
-      {result && (
-        <Code bgColor="black" color="white" py={4} px={8}>
-          {result}
-        </Code>
-      )}
+      {result && <FunctionResult result={result} />}
     </>
   );
 }
