@@ -1,4 +1,4 @@
-import { getSearchParams, safeJSONParse } from '@zipper/ui';
+import { getSearchParams, safeJSONParse } from '@zipper/utils';
 import { InputParam, InputType } from '@zipper/types';
 import { parseDate } from 'chrono-node';
 

@@ -1,4 +1,4 @@
-import { safeJSONParse } from '@zipper/ui';
+import { safeJSONParse } from '@zipper/utils';
 import YAML from 'json-to-pretty-yaml';
 import { NextRequest, NextResponse } from 'next/server';
 import { relayRequest } from '../utils/relay-middleware';
