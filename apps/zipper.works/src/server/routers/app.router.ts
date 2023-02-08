@@ -1,5 +1,5 @@
-import { Prisma } from '@prisma/client';
-import { z } from 'zod';
+import { App, AppEditor, Prisma, ResourceOwnerSlug } from '@prisma/client';
+import { TypeOf, z } from 'zod';
 import generate from 'project-name-generator';
 import { prisma } from '~/server/prisma';
 import { createRouter } from '../createRouter';
@@ -8,7 +8,7 @@ import slugify from '~/utils/slugify';
 import { TRPCError } from '@trpc/server';
 import denyList from '../utils/slugDenyList';
 import { ResourceOwnerType } from '@zipper/types';
-import { clerkClient } from '@clerk/nextjs/server';
+import { Context } from '../context';
 
 const defaultSelect = Prisma.validator<Prisma.AppSelect>()({
   id: true,
@@ -24,6 +24,31 @@ const defaultSelect = Prisma.validator<Prisma.AppSelect>()({
   organizationId: true,
   createdById: true,
 });
+
+const canUserEdit = async (
+  app: Pick<
+    App & { editors: AppEditor[] },
+    'editors' | 'organizationId' | 'isPrivate'
+  > &
+    Partial<App & { editors: AppEditor[] }>,
+  ctx: Context,
+) => {
+  let canUserEdit = !!app.editors.find((e) => e.userId === ctx.userId);
+  canUserEdit =
+    canUserEdit ||
+    !!(
+      app.organizationId &&
+      ctx.organizations &&
+      !Object.keys(ctx.organizations).includes(app.organizationId)
+    );
+
+  // if the app is private, check if the authed user has access via the editors relation or organization id
+  if (app.isPrivate && (!ctx.userId || !canUserEdit)) {
+    throw new TRPCError({ code: 'UNAUTHORIZED' });
+  }
+
+  return canUserEdit;
+};
 
 export const appRouter = createRouter()
   // create
@@ -182,23 +207,34 @@ export const appRouter = createRouter()
           { organizationId: null, editors: { some: { userId: ctx.userId } } },
         ];
       }
+
       const apps = await prisma.app.findMany({
         where,
         orderBy: { updatedAt: 'desc' },
         select: defaultSelect,
       });
 
-      // const resourceOwners = await prisma.resourceOwnerSlug.findMany({
-      //   where: {
-      //     resourceOwnerId: {
-      //       in: apps
-      //         .map((a) => a.organizationId || a.createdById)
-      //         .filter((i) => !!i) as string[],
-      //     },
-      //   },
-      // });
+      const resourceOwners = await prisma.resourceOwnerSlug.findMany({
+        where: {
+          resourceOwnerId: {
+            in: apps
+              .map((a) => a.organizationId || a.createdById)
+              .filter((i) => !!i) as string[],
+          },
+        },
+      });
 
-      return apps;
+      return apps.reduce((arr, app) => {
+        const resourceOwner = resourceOwners.find(
+          (r) => r.resourceOwnerId === (app.organizationId || app.createdById),
+        );
+
+        if (resourceOwner) {
+          arr.push({ ...app, resourceOwner });
+        }
+        return arr;
+        // eslint-disable-next-line prettier/prettier
+      }, [] as (typeof apps[0] & { resourceOwner: ResourceOwnerSlug })[]);
     },
   })
   .query('byId', {
@@ -206,7 +242,7 @@ export const appRouter = createRouter()
       id: z.string(),
     }),
     async resolve({ ctx, input }) {
-      return prisma.app.findFirstOrThrow({
+      const app = await prisma.app.findFirstOrThrow({
         where: {
           id: input.id,
           OR: [
@@ -232,6 +268,8 @@ export const appRouter = createRouter()
           connectors: true,
         },
       });
+
+      return { ...app, canUserEdit: canUserEdit(app, ctx) };
     },
   })
   .query('byResourceOwnerAndAppSlugs', {
@@ -274,33 +312,8 @@ export const appRouter = createRouter()
         },
       });
 
-      // if the app is private, check if the authed user has access via the editors relation or organization id
-      if (app.isPrivate) {
-        if (!ctx.userId) throw new TRPCError({ code: 'UNAUTHORIZED' });
-
-        let orgIds: string[] = [];
-        if (
-          resourceOwner.resourceOwnerType === ResourceOwnerType.Organization
-        ) {
-          const userOrgMembershipList =
-            await clerkClient.users.getOrganizationMembershipList({
-              userId: ctx.userId,
-            });
-          orgIds = userOrgMembershipList.map((m) => {
-            return m.organization.id;
-          });
-        }
-
-        if (
-          (app.organizationId && orgIds.includes(app.organizationId)) ||
-          app.editors.find((e) => e.userId === ctx.userId)
-        ) {
-          return app;
-        }
-        throw new TRPCError({ code: 'UNAUTHORIZED' });
-      }
-      // return the public app
-      return app;
+      // return the app
+      return { ...app, canUserEdit: canUserEdit(app, ctx) };
     },
   })
   .query('validateSlug', {

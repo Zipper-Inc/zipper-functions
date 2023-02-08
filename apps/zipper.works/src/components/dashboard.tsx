@@ -86,7 +86,9 @@ export function Dashboard() {
                                 fontSize={'md'}
                                 fontWeight={600}
                                 onClick={() =>
-                                  router.push(`/app/${app.id}/edit/main.ts`)
+                                  router.push(
+                                    `/${app.resourceOwner.slug}/${app.slug}/edit/main.ts`,
+                                  )
                                 }
                               >
                                 {app.name || app.slug}
