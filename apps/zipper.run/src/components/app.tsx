@@ -23,6 +23,8 @@ import Head from 'next/head';
 import { useForm } from 'react-hook-form';
 import { getInputValuesFromUrl } from '../utils/get-input-values-from-url';
 
+const { __DEBUG__ } = process.env;
+
 export function AppPage({
   app,
   inputs,
@@ -118,15 +120,18 @@ export const getServerSideProps: GetServerSideProps = async ({
 
   // validate subdomain
   const subdomain = getValidSubdomain(host);
+  if (__DEBUG__) console.log('getValidSubdomain', { subdomain, host });
   if (!subdomain) return { notFound: true };
 
   // validate version if it exists
   const versionFromUrl = query.version as string;
+  if (__DEBUG__) console.log({ versionFromUrl });
   if (versionFromUrl && !versionFromUrl.startsWith(VERSION_DELIMETER))
     return { notFound: true };
 
   // grab the app if it exists
   const result = await getAppInfo(subdomain);
+
   if (!result.ok) return { notFound: true };
 
   const { app, inputs } = result.data;
@@ -135,6 +140,8 @@ export const getServerSideProps: GetServerSideProps = async ({
     app.lastDeploymentVersion?.toString() ||
     Date.now().toString();
   const defaultValues = getInputValuesFromUrl(inputs, req.url);
+
+  if (__DEBUG__) console.log({ defaultValues });
 
   return {
     props: {
