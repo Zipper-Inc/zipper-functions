@@ -246,7 +246,7 @@ export function Playground({
         )}
       </TabList>
       {/* TAB PANELS */}
-      <TabPanels as={DefaultGrid} maxW="full">
+      <TabPanels as={DefaultGrid} maxW="full" p={0}>
         {/* CODE */}
         <TabPanel as={GridItem} colSpan={12} px={0} pb={0}>
           <CodeTab
