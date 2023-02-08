@@ -51,7 +51,11 @@ export default async function handler(
       code: script.code,
       slug: app.slug,
       appId: app.id,
-      version: script.updatedAt?.toString() || script.createdAt.toString(),
+      version:
+        app.lastDeploymentVersion ||
+        new Date(script.updatedAt || script.createdAt || Date.now())
+          .getTime()
+          .toString(),
     });
   }
 
