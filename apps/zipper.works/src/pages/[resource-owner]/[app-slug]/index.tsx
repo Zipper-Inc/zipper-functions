@@ -12,12 +12,10 @@ import {
   Text,
   VStack,
 } from '@chakra-ui/react';
-import { useOrganizationList, useSession, useUser } from '@clerk/nextjs';
+import { useUser } from '@clerk/nextjs';
 import NextError from 'next/error';
 import { useRouter } from 'next/router';
-import React, { useContext, useEffect, useState } from 'react';
 import { HiArrowRight } from 'react-icons/hi';
-import { EditorContext } from '~/components/context/editorContext';
 import DefaultGrid from '~/components/default-grid';
 import { NextPageWithLayout } from '~/pages/_app';
 import { trpc } from '~/utils/trpc';
@@ -27,7 +25,6 @@ const AppPage: NextPageWithLayout = () => {
 
   const resourceOwnerSlug = router.query['resource-owner'] as string;
   const appSlug = router.query['app-slug'] as string;
-  const { isUserAnAppEditor } = useContext(EditorContext);
   const { user } = useUser();
 
   const appQuery = trpc.useQuery([
@@ -50,20 +47,13 @@ const AppPage: NextPageWithLayout = () => {
     return (
       <NextError
         title={appQuery.error.message}
-        statusCode={appQuery.error.data?.httpStatus ?? 500}
+        statusCode={appQuery.error.data?.httpStatus ?? 404}
       />
     );
   }
 
-  if (appQuery.status !== 'success') {
+  if (appQuery.isLoading || !appQuery.data) {
     return <></>;
-  }
-
-  if (appQuery.data.isPrivate && appQuery.isFetched) {
-    console.log(true);
-    if (!isUserAnAppEditor(appQuery.data)) {
-      return <NextError statusCode={404} />;
-    }
   }
 
   const { data } = appQuery;
@@ -101,7 +91,7 @@ const AppPage: NextPageWithLayout = () => {
                               <Link
                                 onClick={() =>
                                   router.push(
-                                    `/${user?.publicMetadata.username}/${fork.slug}/edit`,
+                                    `/${fork.resourceOwner?.slug}/${fork.slug}/edit`,
                                   )
                                 }
                               >

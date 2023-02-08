@@ -15,9 +15,9 @@ export const createContextInner = async ({
 }: {
   userId?: string;
   orgId?: string;
-  organizations?: Record<string, string>;
+  organizations?: Record<string, string>[];
 }) => {
-  return { userId, orgId };
+  return { userId, orgId, organizations };
 };
 
 /**
@@ -30,7 +30,7 @@ export async function createContext(opts: trpcNext.CreateNextContextOptions) {
   return await createContextInner({
     userId: userId || undefined,
     orgId: orgId || undefined,
-    organizations: sessionClaims?.organizations as Record<string, string>,
+    organizations: sessionClaims?.organizations as Record<string, string>[],
   });
 }
 
