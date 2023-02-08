@@ -68,8 +68,8 @@ export const appRouter = createRouter()
       // we create 3 possible slugs and check if any of them are already taken
       let possibleSlugs = [
         slug,
-        `${slug}-${Math.random() * 100}`,
-        `${slug}-${Math.random() * 100}`,
+        `${slug}-${Math.floor(Math.random() * 100)}`,
+        `${slug}-${Math.floor(Math.random() * 100)}`,
       ];
 
       // find existing apps with any of the slugs in possibleSlugs
