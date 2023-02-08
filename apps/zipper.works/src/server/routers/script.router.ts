@@ -118,6 +118,32 @@ export const scriptRouter = createRouter()
       });
     },
   })
+  .query('validateFilename', {
+    input: z.object({
+      appId: z.string().uuid(),
+      newFilename: z.string(),
+    }),
+    async resolve({ ctx, input }) {
+      const { appId, newFilename } = input;
+
+      await hasAppEditPermission({
+        ctx,
+        appId,
+      });
+
+      const scripts = await prisma.script.findMany({
+        where: {
+          appId,
+          filename: `${newFilename}.ts`,
+        },
+        select: {
+          filename: true,
+        },
+      });
+
+      return scripts.length === 0;
+    },
+  })
   // delete
   .mutation('delete', {
     input: z.object({
