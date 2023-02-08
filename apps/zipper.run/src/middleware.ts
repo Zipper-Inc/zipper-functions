@@ -8,12 +8,16 @@ import getVersionFromUrl, {
 import jsonHandler from './api-handlers/json.handler';
 import yamlHandler from './api-handlers/yaml.handler';
 
+const { __DEBUG__ } = process.env;
+
 export default async function middleware(request: NextRequest) {
   const version = getVersionFromUrl(request.url);
   const versionPath = version ? `/${VERSION_DELIMETER}${version}` : '';
 
   /** Path after app-slug.zipper.run/@version */
   const appRoute = request.nextUrl.pathname.replace(versionPath, '') || '/';
+
+  if (__DEBUG__) console.log('middleware', { appRoute });
 
   switch (appRoute) {
     case '/':

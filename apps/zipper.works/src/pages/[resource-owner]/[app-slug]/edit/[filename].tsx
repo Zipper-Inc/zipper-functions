@@ -12,19 +12,23 @@ import { NoHeaderLayout } from '~/components/no-header-layout';
 import { SignedIn } from '@clerk/nextjs';
 import EditorContextProvider from '~/components/context/editorContext';
 
-const AppPage: NextPageWithLayout = () => {
+const PlaygroundPage: NextPageWithLayout = () => {
   const { query } = useRouter();
 
-  const id = query.id as string;
+  const resourceOwnerSlug = query['resource-owner'] as string;
+  const appSlug = query['app-slug'] as string;
   const filename = query.filename as string;
 
-  const appQuery = trpc.useQuery(['app.byId', { id }]);
+  const appQuery = trpc.useQuery([
+    'app.byResourceOwnerAndAppSlugs',
+    { resourceOwnerSlug, appSlug },
+  ]);
 
   if (appQuery.error) {
     return (
       <NextError
         title={appQuery.error.message}
-        statusCode={appQuery.error.data?.httpStatus ?? 500}
+        statusCode={appQuery.error.data?.httpStatus ?? 404}
       />
     );
   }
@@ -59,7 +63,7 @@ const AppPage: NextPageWithLayout = () => {
       </EditorContextProvider>
     ),
     {
-      id,
+      id: `${resourceOwnerSlug}/${appSlug}}`,
       initialStorage,
       initialPresence: {},
     },
@@ -77,7 +81,7 @@ const AppPage: NextPageWithLayout = () => {
   );
 };
 
-AppPage.skipAuth = true;
-AppPage.getLayout = (page) => <NoHeaderLayout>{page}</NoHeaderLayout>;
+PlaygroundPage.skipAuth = true;
+PlaygroundPage.getLayout = (page) => <NoHeaderLayout>{page}</NoHeaderLayout>;
 
-export default AppPage;
+export default PlaygroundPage;

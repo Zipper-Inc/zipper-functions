@@ -15,7 +15,6 @@ import {
 import { useUser } from '@clerk/nextjs';
 import NextError from 'next/error';
 import { useRouter } from 'next/router';
-import React, { useEffect, useState } from 'react';
 import { HiArrowRight } from 'react-icons/hi';
 import DefaultGrid from '~/components/default-grid';
 import { NextPageWithLayout } from '~/pages/_app';
@@ -23,24 +22,24 @@ import { trpc } from '~/utils/trpc';
 
 const AppPage: NextPageWithLayout = () => {
   const router = useRouter();
-  const id = useRouter().query.id as string;
-  const appQuery = trpc.useQuery(['app.byId', { id }]);
-  const forksQuery = trpc.useQuery(['app.byAuthedUser', { parentId: id }]);
 
-  const [isUserAnAppEditor, setIsUserAnAppEditor] = useState(false);
-
+  const resourceOwnerSlug = router.query['resource-owner'] as string;
+  const appSlug = router.query['app-slug'] as string;
   const { user } = useUser();
 
-  useEffect(() => {
-    setIsUserAnAppEditor(
-      !!appQuery.data?.editors.find((editor) => editor.userId === user?.id) ||
-        false,
-    );
-  }, [appQuery.isSuccess]);
+  const appQuery = trpc.useQuery([
+    'app.byResourceOwnerAndAppSlugs',
+    { resourceOwnerSlug, appSlug },
+  ]);
+
+  const forksQuery = trpc.useQuery(
+    ['app.byAuthedUser', { parentId: appQuery.data?.id }],
+    { enabled: !!appQuery.data },
+  );
 
   const forkApp = trpc.useMutation('app.fork', {
     async onSuccess(data) {
-      router.push(`/app/${data.id}/edit`);
+      router.push(`/${user?.publicMetadata.username}/${data.slug}/edit`);
     },
   });
 
@@ -48,19 +47,13 @@ const AppPage: NextPageWithLayout = () => {
     return (
       <NextError
         title={appQuery.error.message}
-        statusCode={appQuery.error.data?.httpStatus ?? 500}
+        statusCode={appQuery.error.data?.httpStatus ?? 404}
       />
     );
   }
 
-  if (appQuery.status !== 'success') {
+  if (appQuery.isLoading || !appQuery.data) {
     return <></>;
-  }
-
-  if (appQuery.data.isPrivate) {
-    if (!isUserAnAppEditor) {
-      return <NextError statusCode={404} />;
-    }
   }
 
   const { data } = appQuery;
@@ -97,7 +90,9 @@ const AppPage: NextPageWithLayout = () => {
                               <HiArrowRight />
                               <Link
                                 onClick={() =>
-                                  router.push(`/app/${fork.id}/edit`)
+                                  router.push(
+                                    `/${fork.resourceOwner?.slug}/${fork.slug}/edit`,
+                                  )
                                 }
                               >
                                 {fork.name || fork.slug}
@@ -120,7 +115,7 @@ const AppPage: NextPageWithLayout = () => {
                 textColor="gray.100"
                 onClick={() => {
                   if (user) {
-                    forkApp.mutateAsync({ id });
+                    forkApp.mutateAsync({ id: appQuery.data.id });
                   } else {
                     router.push(
                       `/sign-in?redirect=${window.location.pathname}`,
@@ -137,7 +132,11 @@ const AppPage: NextPageWithLayout = () => {
                 bgColor="purple.800"
                 textColor="gray.100"
                 onClick={() => {
-                  router.push(`/app/${id}/edit/main.ts`);
+                  router.push(
+                    `/${resourceOwnerSlug}/${appSlug}/edit/${
+                      appQuery.data.scriptMain?.script.filename || 'main.ts'
+                    }`,
+                  );
                 }}
               >
                 View

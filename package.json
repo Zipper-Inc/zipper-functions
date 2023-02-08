@@ -6,6 +6,9 @@
     "apps/*",
     "packages/*"
   ],
+  "prisma": {
+    "seed": "yarn dotenv -c .env.local ts-node apps/zipper.works/prisma/seed.ts"
+  },
   "scripts": {
     "build": "yarn link-env && turbo run build",
     "dev": "yarn link-env && turbo run dev --parallel",

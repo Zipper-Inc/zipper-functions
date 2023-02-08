@@ -10,14 +10,13 @@ export function createRouter() {
 
 export function createProtectedRouter() {
   return trpc.router<Context>().middleware(({ ctx, next }) => {
-    if (!ctx.user) {
+    if (!ctx.userId) {
       throw new trpc.TRPCError({ code: 'UNAUTHORIZED' });
     }
     return next({
       ctx: {
         ...ctx,
-        // infers that `user` is non-nullable to downstream procedures
-        user: ctx.user,
+        user: ctx.userId,
       },
     });
   });

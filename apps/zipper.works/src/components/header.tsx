@@ -4,10 +4,11 @@ import { useRouter } from 'next/router';
 import NextLink from 'next/link';
 
 import { ZipperLogo } from '@zipper/ui';
-import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/nextjs';
+import { SignedIn, SignedOut, UserButton } from '@clerk/nextjs';
 import OrganizationSwitcher from './auth/organizationSwitcher';
 import { MobileMenu } from './header-mobile-menu';
 import { ZipperSymbol } from './svg/zipperSymbol';
+import SignInButton from './auth/signInButton';
 
 type HeaderProps = {
   showNav?: boolean;
@@ -47,7 +48,11 @@ const Header: React.FC<HeaderProps> = ({ showNav = true }) => {
         <Box my={3} height={4}>
           <Link href="/">
             <SignedIn>
-              <ZipperSymbol style={{ maxHeight: '100%' }} />
+              {showNav ? (
+                <ZipperSymbol style={{ maxHeight: '100%' }} />
+              ) : (
+                <ZipperLogo style={{ maxHeight: '100%' }} />
+              )}
             </SignedIn>
             <SignedOut>
               <ZipperLogo style={{ maxHeight: '100%' }} />
@@ -96,10 +101,9 @@ const Header: React.FC<HeaderProps> = ({ showNav = true }) => {
           )}
           <HStack spacing="4" justifyContent="end">
             <SignedIn>
-              <UserButton />
+              <UserButton afterSignOutUrl="/" />
             </SignedIn>
             <SignedOut>
-              {/* Signed out users get sign in button */}
               <SignInButton />
             </SignedOut>
           </HStack>

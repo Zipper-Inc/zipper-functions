@@ -1,7 +1,8 @@
 import { safeJSONParse } from '@zipper/utils';
-import YAML from 'json-to-pretty-yaml';
+import YAML from 'yaml';
 import { NextRequest, NextResponse } from 'next/server';
 import { relayRequest } from '../utils/relay-middleware';
+import { getMetaFromHeaders } from '../utils/get-meta-from-headers';
 
 export default async function handler(request: NextRequest) {
   try {
@@ -11,7 +12,7 @@ export default async function handler(request: NextRequest) {
       YAML.stringify({
         ok: true,
         data: safeJSONParse(result, undefined, result),
-        originalHeaders: headers,
+        __meta: getMetaFromHeaders(headers),
       }),
       {
         status,

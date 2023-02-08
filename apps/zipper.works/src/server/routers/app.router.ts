@@ -1,4 +1,4 @@
-import { Prisma } from '@prisma/client';
+import { App, AppEditor, Prisma, ResourceOwnerSlug } from '@prisma/client';
 import { z } from 'zod';
 import { prisma } from '~/server/prisma';
 import { createRouter } from '../createRouter';
@@ -7,6 +7,8 @@ import slugify from '~/utils/slugify';
 import { generateDefaultSlug } from '~/utils/generate-default';
 import { TRPCError } from '@trpc/server';
 import denyList from '../utils/slugDenyList';
+import { ResourceOwnerType } from '@zipper/types';
+import { Context } from '../context';
 
 const defaultSelect = Prisma.validator<Prisma.AppSelect>()({
   id: true,
@@ -19,7 +21,34 @@ const defaultSelect = Prisma.validator<Prisma.AppSelect>()({
   submissionState: true,
   createdAt: true,
   updatedAt: true,
+  organizationId: true,
+  createdById: true,
 });
+
+const canUserEdit = async (
+  app: Pick<
+    App & { editors: AppEditor[] },
+    'editors' | 'organizationId' | 'isPrivate'
+  > &
+    Partial<App & { editors: AppEditor[] }>,
+  ctx: Context,
+) => {
+  let canUserEdit = !!app.editors.find((e) => e.userId === ctx.userId);
+  canUserEdit =
+    canUserEdit ||
+    !!(
+      app.organizationId &&
+      ctx.organizations &&
+      !Object.keys(ctx.organizations).includes(app.organizationId)
+    );
+
+  // if the app is private, check if the authed user has access via the editors relation or organization id
+  if (app.isPrivate && (!ctx.userId || !canUserEdit)) {
+    throw new TRPCError({ code: 'UNAUTHORIZED' });
+  }
+
+  return canUserEdit;
+};
 
 export const appRouter = createRouter()
   // create
@@ -39,7 +68,7 @@ export const appRouter = createRouter()
       input = { name: undefined, slug: undefined, description: undefined },
       ctx,
     }) {
-      if (!ctx.user) {
+      if (!ctx.userId) {
         throw new TRPCError({ code: 'UNAUTHORIZED' });
       }
 
@@ -65,8 +94,8 @@ export const appRouter = createRouter()
       // we create 3 possible slugs and check if any of them are already taken
       let possibleSlugs = [
         slug,
-        `${slug}-${Math.random() * 100}`,
-        `${slug}-${Math.random() * 100}`,
+        `${slug}-${Math.floor(Math.random() * 100)}`,
+        `${slug}-${Math.floor(Math.random() * 100)}`,
       ];
 
       // find existing apps with any of the slugs in possibleSlugs
@@ -96,9 +125,10 @@ export const appRouter = createRouter()
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           slug: possibleSlugs[0]!,
           organizationId: ctx.orgId,
+          createdById: ctx.userId,
           editors: {
             create: {
-              userId: ctx.user.id,
+              userId: ctx.userId,
               isOwner: true,
             },
           },
@@ -161,16 +191,50 @@ export const appRouter = createRouter()
       })
       .optional(),
     async resolve({ ctx, input }) {
-      if (!ctx.user) return [];
-      return prisma.app.findMany({
-        where: {
-          parentId: input?.parentId,
-          organizationId: ctx.orgId,
-          editors: { some: { userId: ctx.user.id } },
-        },
+      if (!ctx.userId) throw new TRPCError({ code: 'UNAUTHORIZED' });
+      const where: Prisma.AppWhereInput = {
+        parentId: input?.parentId,
+      };
+
+      if (ctx.orgId) {
+        // return apps that belong to the organization workspace you're currently in
+        where.organizationId = ctx.orgId;
+      } else {
+        // if you're in your personal workspace, return apps that you created outside the context of an org
+        // TODO: figure out how to show apps you were invited to
+        where.OR = [
+          { organizationId: null, createdById: ctx.userId },
+          { organizationId: null, editors: { some: { userId: ctx.userId } } },
+        ];
+      }
+
+      const apps = await prisma.app.findMany({
+        where,
         orderBy: { updatedAt: 'desc' },
         select: { organizationId: true, editors: true, ...defaultSelect },
       });
+
+      const resourceOwners = await prisma.resourceOwnerSlug.findMany({
+        where: {
+          resourceOwnerId: {
+            in: apps
+              .map((a) => a.organizationId || a.createdById)
+              .filter((i) => !!i) as string[],
+          },
+        },
+      });
+
+      return apps.reduce((arr, app) => {
+        const resourceOwner = resourceOwners.find(
+          (r) => r.resourceOwnerId === (app.organizationId || app.createdById),
+        );
+
+        if (resourceOwner) {
+          arr.push({ ...app, resourceOwner });
+        }
+        return arr;
+        // eslint-disable-next-line prettier/prettier
+      }, [] as ((typeof apps)[0] & { resourceOwner: ResourceOwnerSlug })[]);
     },
   })
   .query('byId', {
@@ -178,15 +242,20 @@ export const appRouter = createRouter()
       id: z.string(),
     }),
     async resolve({ ctx, input }) {
-      return prisma.app.findFirstOrThrow({
+      const app = await prisma.app.findFirstOrThrow({
         where: {
           id: input.id,
           OR: [
             { isPrivate: false },
             {
-              editors: {
-                some: { userId: ctx.user?.id },
-              },
+              OR: [
+                {
+                  editors: {
+                    some: { userId: ctx.userId },
+                  },
+                },
+                { organizationId: ctx.orgId },
+              ],
             },
           ],
         },
@@ -199,6 +268,52 @@ export const appRouter = createRouter()
           connectors: true,
         },
       });
+
+      return { ...app, canUserEdit: canUserEdit(app, ctx) };
+    },
+  })
+  .query('byResourceOwnerAndAppSlugs', {
+    input: z.object({
+      resourceOwnerSlug: z.string(),
+      appSlug: z.string(),
+    }),
+    async resolve({ ctx, input }) {
+      //find resouce owner (org or user) based on slug
+      const resourceOwner = await prisma.resourceOwnerSlug.findFirstOrThrow({
+        where: {
+          slug: input.resourceOwnerSlug,
+        },
+      });
+
+      // start building the where clause for the app query
+      const where: Prisma.AppWhereInput = {
+        slug: input.appSlug,
+      };
+
+      // if the resource owner we found above is an organization, add the organization id to the where clause
+      if (resourceOwner.resourceOwnerType === ResourceOwnerType.Organization) {
+        where.organizationId = resourceOwner.resourceOwnerId;
+      }
+
+      // if the resource owner we found above is a user, add the user id to the where clause
+      if (resourceOwner.resourceOwnerType === ResourceOwnerType.User) {
+        where.createdById = resourceOwner.resourceOwnerId;
+      }
+
+      const app = await prisma.app.findFirstOrThrow({
+        where,
+        select: {
+          ...defaultSelect,
+          scripts: true,
+          scriptMain: { include: { script: true } },
+          editors: true,
+          settings: true,
+          connectors: true,
+        },
+      });
+
+      // return the app
+      return { ...app, canUserEdit: canUserEdit(app, ctx) };
     },
   })
   .query('validateSlug', {
@@ -210,7 +325,7 @@ export const appRouter = createRouter()
         .transform((s) => slugify(s)),
     }),
     async resolve({ ctx, input }) {
-      if (!ctx.user) {
+      if (!ctx.userId) {
         throw new TRPCError({ code: 'UNAUTHORIZED' });
       }
       const deniedSlug = denyList.find((d) => d === input.slug);
@@ -231,7 +346,7 @@ export const appRouter = createRouter()
       id: z.string().uuid(),
     }),
     async resolve({ input, ctx }) {
-      if (!ctx.user) {
+      if (!ctx.userId) {
         throw new TRPCError({ code: 'UNAUTHORIZED' });
       }
 
@@ -250,7 +365,7 @@ export const appRouter = createRouter()
           organizationId: ctx.orgId,
           editors: {
             create: {
-              userId: ctx.user.id,
+              userId: ctx.userId,
               isOwner: true,
             },
           },
@@ -317,7 +432,7 @@ export const appRouter = createRouter()
     }),
     async resolve({ input, ctx }) {
       await hasAppEditPermission({
-        userId: ctx.user?.id,
+        ctx,
         appId: input.id,
       });
 
@@ -368,14 +483,14 @@ export const appRouter = createRouter()
       id: z.string(),
     }),
     async resolve({ ctx, input }) {
-      if (!ctx.user) {
+      if (!ctx.userId) {
         throw new TRPCError({ code: 'UNAUTHORIZED' });
       }
 
       await prisma.app.deleteMany({
         where: {
           id: input.id,
-          editors: { some: { userId: ctx.user.id } },
+          editors: { some: { userId: ctx.userId } },
         },
       });
 

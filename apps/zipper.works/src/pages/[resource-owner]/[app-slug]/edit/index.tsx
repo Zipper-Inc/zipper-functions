@@ -5,15 +5,19 @@ import { trpc } from '~/utils/trpc';
 
 const EditPage: NextPageWithLayout = () => {
   const router = useRouter();
+
+  const resourceOwnerSlug = router.query['resource-owner'] as string;
+  const appSlug = router.query['app-slug'] as string;
+
   const appQuery = trpc.useQuery([
-    'app.byId',
-    { id: router.query.id as string },
+    'app.byResourceOwnerAndAppSlugs',
+    { resourceOwnerSlug, appSlug },
   ]);
 
   useEffect(() => {
     if (appQuery.data) {
       router.replace(
-        `/app/${appQuery.data.id}/edit/${appQuery.data.scriptMain?.script.filename}`,
+        `/${resourceOwnerSlug}/${appSlug}/edit/${appQuery.data.scriptMain?.script.filename}`,
       );
     }
   }, [appQuery.data]);

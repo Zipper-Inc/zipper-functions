@@ -187,7 +187,7 @@ function Settings() {
   const [orgName, setOrgName] = useState(organization?.name || '');
   const organizationSlugQuery = trpc.useQuery(
     [
-      'organizationSlug.findByOrganizationId',
+      'resourceOwnerSlug.findByOrganizationId',
       { organizationId: organization?.id || '' },
     ],
     { enabled: !!organization },

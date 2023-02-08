@@ -1,5 +1,6 @@
 import { safeJSONParse } from '@zipper/utils';
 import { NextRequest, NextResponse } from 'next/server';
+import { getMetaFromHeaders } from '~/utils/get-meta-from-headers';
 import { relayRequest } from '../utils/relay-middleware';
 
 export default async function handler(request: NextRequest) {
@@ -11,7 +12,7 @@ export default async function handler(request: NextRequest) {
         {
           ok: true,
           data: safeJSONParse(result, undefined, result),
-          originalHeaders: headers,
+          __meta: getMetaFromHeaders(headers),
         },
         null,
         2,

@@ -20,7 +20,7 @@ export const appEditorRouter = createRouter()
     }),
     async resolve({ ctx, input }) {
       await hasAppEditPermission({
-        userId: ctx.user?.id,
+        ctx,
         appId: input.appId,
       });
 
@@ -40,11 +40,11 @@ export const appEditorRouter = createRouter()
     }),
     async resolve({ ctx, input }) {
       await hasAppEditPermission({
-        userId: ctx.user?.id,
+        ctx,
         appId: input.appId,
       });
 
-      if (!ctx.user) return;
+      if (!ctx.userId) return;
 
       return prisma.appEditor.create({
         data: {
@@ -52,7 +52,7 @@ export const appEditorRouter = createRouter()
             connect: { id: input.appId },
           },
           isOwner: input.isOwner,
-          userId: ctx.user.id,
+          userId: ctx.userId,
         },
         select: defaultSelect,
       });
@@ -118,7 +118,7 @@ export const appEditorRouter = createRouter()
     }),
     async resolve({ ctx, input }) {
       await hasAppEditPermission({
-        userId: ctx.user?.id,
+        ctx,
         appId: input.appId,
       });
 

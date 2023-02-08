@@ -25,6 +25,7 @@ import { useDebounce } from 'use-debounce';
 import { FormEventHandler, useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { HiExclamationTriangle } from 'react-icons/hi2';
+import { ResourceOwnerType } from '@zipper/types';
 
 const MIN_SLUG_LENGTH = 3;
 
@@ -44,16 +45,16 @@ export const CreateOrganizationModal = ({
   const [slug, setSlug] = useState<string>('');
   const [debouncedSlug] = useDebounce(slug, 200);
 
-  const organizationSlugQuery = trpc.useQuery(
-    ['organizationSlug.find', { slug: debouncedSlug }],
+  const resourceOwnerSlugQuery = trpc.useQuery(
+    ['resourceOwnerSlug.find', { slug: debouncedSlug }],
     { enabled: !!(debouncedSlug.length >= MIN_SLUG_LENGTH) },
   );
 
-  const createOrganizationSlug = trpc.useMutation('organizationSlug.add');
+  const createOrganizationSlug = trpc.useMutation('resourceOwnerSlug.add');
 
   useEffect(() => {
-    setSlugExists(!!organizationSlugQuery.data);
-  }, [organizationSlugQuery.data]);
+    setSlugExists(!!resourceOwnerSlugQuery.data);
+  }, [resourceOwnerSlugQuery.data]);
 
   useEffect(() => {
     const s = slugify(organizationName);
@@ -69,7 +70,8 @@ export const CreateOrganizationModal = ({
     await createOrganizationSlug.mutateAsync(
       {
         slug,
-        organizationId: newOrg.id,
+        resourceOwnerId: newOrg.id,
+        resourceOwnerType: ResourceOwnerType.Organization,
       },
       {
         onError: (e) => {

@@ -3,7 +3,10 @@
  *
  * @link https://www.prisma.io/docs/guides/database/seed-database
  */
-import { PrismaClient } from '@prisma/client';
+import clerkClient from '@clerk/clerk-sdk-node';
+import { Prisma, PrismaClient } from '@prisma/client';
+import { ResourceOwnerType } from '@zipper/types';
+import slugify from 'slugify';
 
 const prisma = new PrismaClient();
 
@@ -60,6 +63,36 @@ async function main() {
       },
     },
     update: {},
+  });
+
+  const clerkUsers = await clerkClient.users.getUserList();
+  const clerkOrgs = await clerkClient.organizations.getOrganizationList();
+
+  const userSlugData: Prisma.ResourceOwnerSlugCreateInput[] = clerkUsers.map(
+    (user) => ({
+      resourceOwnerId: user.id,
+      resourceOwnerType: ResourceOwnerType.User,
+      slug:
+        (user.publicMetadata.username as string) ||
+        user.username ||
+        `${user.firstName}-${user.lastName}-${Math.floor(Math.random() * 100)}`,
+    }),
+  );
+
+  const orgSlugData: Prisma.ResourceOwnerSlugCreateInput[] = clerkOrgs.map(
+    (org) => ({
+      resourceOwnerId: org.id,
+      resourceOwnerType: ResourceOwnerType.Organization,
+      slug: slugify(org.name, {
+        lower: true,
+        remove: /[*+~.()'"!:@]/g,
+      }),
+    }),
+  );
+
+  await prisma.resourceOwnerSlug.createMany({
+    data: [...userSlugData, ...orgSlugData],
+    skipDuplicates: true,
   });
 }
 

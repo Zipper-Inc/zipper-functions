@@ -7,7 +7,7 @@ import getInputFromRequest from './get-input-from-request';
 import getValidSubdomain from './get-valid-subdomain';
 import getVersionFromUrl from './get-version-from-url';
 
-const { SHARED_SECRET: DENO_SHARED_SECRET, RPC_HOST } = process.env;
+const { __DEBUG__, SHARED_SECRET: DENO_SHARED_SECRET, RPC_HOST } = process.env;
 
 const DEPLOY_KID = 'zipper';
 const DENO_ORIGIN = new URL(`https://subhosting-v1.deno-aws.net`);
@@ -69,10 +69,12 @@ export async function relayRequest(request: NextRequest) {
 
   const host = request.headers.get('host') || '';
   const subdomain = getValidSubdomain(host);
+  if (__DEBUG__) console.log('getValidSubdomain', { host, subdomain });
   if (!subdomain) return { status: 404 };
 
   // Get app info from Zipper API
   const appInfoResult = await getAppInfo(subdomain);
+  if (__DEBUG__) console.log('getAppInfo', { result: appInfoResult });
   if (!appInfoResult.ok) return { status: 404 };
 
   // Get a version from URL or use the latest
