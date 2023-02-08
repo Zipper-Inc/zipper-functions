@@ -22,6 +22,7 @@ const defaultSelect = Prisma.validator<Prisma.AppSelect>()({
   createdAt: true,
   updatedAt: true,
   organizationId: true,
+  createdById: true,
 });
 
 export const appRouter = createRouter()
@@ -165,7 +166,7 @@ export const appRouter = createRouter()
       })
       .optional(),
     async resolve({ ctx, input }) {
-      if (!ctx.userId) return [];
+      if (!ctx.userId) throw new TRPCError({ code: 'UNAUTHORIZED' });
       const where: Prisma.AppWhereInput = {
         parentId: input?.parentId,
       };
@@ -181,11 +182,23 @@ export const appRouter = createRouter()
           { organizationId: null, editors: { some: { userId: ctx.userId } } },
         ];
       }
-      return prisma.app.findMany({
+      const apps = await prisma.app.findMany({
         where,
         orderBy: { updatedAt: 'desc' },
         select: defaultSelect,
       });
+
+      // const resourceOwners = await prisma.resourceOwnerSlug.findMany({
+      //   where: {
+      //     resourceOwnerId: {
+      //       in: apps
+      //         .map((a) => a.organizationId || a.createdById)
+      //         .filter((i) => !!i) as string[],
+      //     },
+      //   },
+      // });
+
+      return apps;
     },
   })
   .query('byId', {

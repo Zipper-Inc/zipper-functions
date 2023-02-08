@@ -11,9 +11,11 @@ import * as trpcNext from '@trpc/server/adapters/next';
 export const createContextInner = async ({
   userId,
   orgId,
+  organizations,
 }: {
   userId?: string;
   orgId?: string;
+  organizations?: Record<string, string>;
 }) => {
   return { userId, orgId };
 };
@@ -23,11 +25,12 @@ export const createContextInner = async ({
  * @link https://trpc.io/docs/context
  */
 export async function createContext(opts: trpcNext.CreateNextContextOptions) {
-  const { userId, orgId } = getAuth(opts.req);
+  const { userId, orgId, sessionClaims } = getAuth(opts.req);
 
   return await createContextInner({
     userId: userId || undefined,
     orgId: orgId || undefined,
+    organizations: sessionClaims?.organizations as Record<string, string>,
   });
 }
 
