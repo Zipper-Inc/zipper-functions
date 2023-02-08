@@ -13,6 +13,7 @@ import {
   Button,
   Flex,
   Icon,
+  Input,
 } from '@chakra-ui/react';
 import React, { useEffect, useState } from 'react';
 import DefaultGrid from '~/components/default-grid';
@@ -59,6 +60,8 @@ export function Dashboard() {
   const { organization } = useOrganization();
   const appQuery = trpc.useQuery(['app.byAuthedUser']);
   const organizations = useAppOrganizations(appQuery.data);
+  const [appSearchTerm, setAppSearchTerm] = useState('');
+  const [displayedApps, setDisplayedApps] = useState(appQuery.data);
 
   useEffect(() => {
     appQuery.refetch();
@@ -71,6 +74,24 @@ export function Dashboard() {
       await utils.invalidateQueries(['app.byAuthedUser']);
     },
   });
+
+  useEffect(() => {
+    const search = appSearchTerm.trim();
+    if (search) {
+      const filteredApps = appQuery.data?.filter(
+        ({ name, slug, description }) => {
+          const searchPattern = RegExp(search, 'gi');
+          return (
+            searchPattern.test(name ?? slug) ||
+            searchPattern.test(description ?? '')
+          );
+        },
+      );
+      setDisplayedApps(filteredApps);
+    } else if (displayedApps != appQuery.data) {
+      setDisplayedApps(appQuery.data);
+    }
+  }, [appSearchTerm, appQuery.data]);
 
   return (
     <DefaultGrid>
@@ -95,6 +116,11 @@ export function Dashboard() {
               Create new app
             </Button>
           </Flex>
+          <Input
+            placeholder="Search app (name, slug or description)"
+            value={appSearchTerm}
+            onChange={(e) => setAppSearchTerm(e.target.value)}
+          />
           <TableContainer w="full">
             <Table size={'sm'}>
               <Thead>
@@ -105,9 +131,9 @@ export function Dashboard() {
                 </Tr>
               </Thead>
               <Tbody>
-                {appQuery.data && (
+                {displayedApps && (
                   <DashboardAppTableRows
-                    apps={appQuery.data}
+                    apps={displayedApps}
                     organizations={organizations}
                   />
                 )}
