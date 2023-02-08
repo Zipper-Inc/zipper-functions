@@ -24,14 +24,77 @@ const defaultSelect = Prisma.validator<Prisma.AppSelect>()({
 export const appRouter = createRouter()
   // create
   .mutation('add', {
-    async resolve({ ctx }) {
+    input: z
+      .object({
+        name: z.string().min(3).optional(),
+        slug: z
+          .string()
+          .min(3)
+          .transform((s) => slugify(s))
+          .optional(),
+        description: z.string().optional(),
+      })
+      .optional(),
+    async resolve({
+      input = { name: undefined, slug: undefined, description: undefined },
+      ctx,
+    }) {
       if (!ctx.user) {
         throw new TRPCError({ code: 'UNAUTHORIZED' });
       }
 
+      const { name, description } = input;
+      let { slug } = input;
+
+      // if there's a name but no slug, use the name to generate a slug
+      if (name && !slug) {
+        slug = slugify(name);
+      }
+
+      // if the provided slug or slugified name is in the deny list, set slug to undefined so that it gets replaced
+      if (denyList.find((d) => d === input.slug)) {
+        slug = undefined;
+      }
+
+      // fallback to generating a random slug if there's no name or slug provided or the name or slug is on the deny list
+      if (!slug) {
+        slug = generate({ words: 3 }).dashed;
+      }
+
+      // increase our chances of getting a unique slug by adding a random number to the end
+      // we create 3 possible slugs and check if any of them are already taken
+      let possibleSlugs = [
+        slug,
+        `${slug}-${Math.random() * 100}`,
+        `${slug}-${Math.random() * 100}`,
+      ];
+
+      // find existing apps with any of the slugs in possibleSlugs
+      const appsWithSameSlug = await prisma.app.findMany({
+        where: { slug: { in: possibleSlugs } },
+      });
+
+      // if there are existing apps with the same slug, remove the slug from possibleSlugs
+      if (appsWithSameSlug.length > 0) {
+        const existingSlugs = appsWithSameSlug.map((a) => a.slug);
+        possibleSlugs = possibleSlugs.filter((s) => {
+          return !existingSlugs.includes(s);
+        });
+      }
+
+      if (possibleSlugs.length === 0) {
+        throw new TRPCError({
+          message: 'No possible slugs',
+          code: 'INTERNAL_SERVER_ERROR',
+        });
+      }
+
       const app = await prisma.app.create({
         data: {
-          slug: generate({ words: 3 }).dashed,
+          name,
+          description,
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          slug: possibleSlugs[0]!,
           organizationId: ctx.orgId,
           editors: {
             create: {

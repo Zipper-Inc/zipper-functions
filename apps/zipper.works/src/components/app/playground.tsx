@@ -19,7 +19,7 @@ import ShareModal from '~/components/app/share-modal';
 import useInterval from '~/hooks/use-interval';
 import usePrettier from '~/hooks/use-prettier';
 import { InputParam, InputType, JSONEditorInputTypes } from '@zipper/types';
-import { safeJSONParse } from '@zipper/ui';
+import { safeJSONParse } from '@zipper/utils';
 import { trpc } from '~/utils/trpc';
 import {
   useMutation as useLiveMutation,

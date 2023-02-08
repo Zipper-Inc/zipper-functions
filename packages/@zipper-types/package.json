@@ -1,16 +1,24 @@
 {
   "name": "@zipper/types",
   "version": "0.0.0",
-  "main": "./src/index.gen.ts",
-  "types": "./src/index.gen.ts",
+  "main": "./generated/index.gen.ts",
+  "types": "./generated/index.gen.ts",
   "scripts": {
-    "build": "yarn ctix remove; yarn ctix single",
-    "dev": "yarn build"
+    "build": "yarn ctix single",
+    "dev": "yarn nodemon"
   },
   "devDependencies": {
-    "ctix": "^1.8.2"
+    "ctix": "^1.8.2",
+    "nodemon": "^2.0.20"
   },
   "dependencies": {
     "typescript": "^4.9.5"
+  },
+  "nodemonConfig": {
+    "watch": [
+      "src"
+    ],
+    "exec": "yarn build",
+    "ext": "ts, tsx"
   }
 }
