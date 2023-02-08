@@ -1,10 +1,10 @@
 import { App, AppEditor, Prisma, ResourceOwnerSlug } from '@prisma/client';
-import { TypeOf, z } from 'zod';
-import generate from 'project-name-generator';
+import { z } from 'zod';
 import { prisma } from '~/server/prisma';
 import { createRouter } from '../createRouter';
 import { hasAppEditPermission } from '../utils/authz.utils';
 import slugify from '~/utils/slugify';
+import { generateDefaultSlug } from '~/utils/generate-default';
 import { TRPCError } from '@trpc/server';
 import denyList from '../utils/slugDenyList';
 import { ResourceOwnerType } from '@zipper/types';
@@ -87,7 +87,7 @@ export const appRouter = createRouter()
 
       // fallback to generating a random slug if there's no name or slug provided or the name or slug is on the deny list
       if (!slug) {
-        slug = generate({ words: 3 }).dashed;
+        slug = generateDefaultSlug();
       }
 
       // increase our chances of getting a unique slug by adding a random number to the end
@@ -234,7 +234,7 @@ export const appRouter = createRouter()
         }
         return arr;
         // eslint-disable-next-line prettier/prettier
-      }, [] as (typeof apps[0] & { resourceOwner: ResourceOwnerSlug })[]);
+      }, [] as ((typeof apps)[0] & { resourceOwner: ResourceOwnerSlug })[]);
     },
   })
   .query('byId', {
@@ -331,7 +331,7 @@ export const appRouter = createRouter()
       const deniedSlug = denyList.find((d) => d === input.slug);
       if (deniedSlug) return false;
 
-      const existingSlug = prisma.app.findFirst({
+      const existingSlug = await prisma.app.findFirst({
         where: {
           slug: input.slug,
         },
@@ -359,7 +359,7 @@ export const appRouter = createRouter()
 
       const fork = await prisma.app.create({
         data: {
-          slug: generate({ words: 3 }).dashed,
+          slug: generateDefaultSlug(),
           description: app.description,
           parentId: app.id,
           organizationId: ctx.orgId,
