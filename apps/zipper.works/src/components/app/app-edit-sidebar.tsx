@@ -18,7 +18,7 @@ import {
 import { useEffect, useRef, useState } from 'react';
 import { FieldValues, UseFormReturn } from 'react-hook-form';
 import { HiOutlineDocumentDuplicate, HiRefresh } from 'react-icons/hi';
-import { InputParamsForm } from '@zipper/ui';
+import { FunctionInputs } from '@zipper/ui';
 import { LogLine } from '~/components/app/log-line';
 import { InputParam } from '@zipper/types';
 
@@ -104,7 +104,7 @@ export function AppEditSidebar({
               overflowY="scroll"
             >
               {inputParams && inputParams.length ? (
-                <InputParamsForm
+                <FunctionInputs
                   params={inputParams || []}
                   defaultValues={{}}
                   formContext={inputParamsFormMethods}
