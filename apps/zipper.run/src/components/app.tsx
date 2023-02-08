@@ -131,7 +131,7 @@ export const getServerSideProps: GetServerSideProps = async ({
 
   // grab the app if it exists
   const result = await getAppInfo(subdomain);
-
+  if (__DEBUG__) console.log('getAppInfo', { result });
   if (!result.ok) return { notFound: true };
 
   const { app, inputs } = result.data;
@@ -139,8 +139,8 @@ export const getServerSideProps: GetServerSideProps = async ({
     versionFromUrl ||
     app.lastDeploymentVersion?.toString() ||
     Date.now().toString();
-  const defaultValues = getInputValuesFromUrl(inputs, req.url);
 
+  const defaultValues = getInputValuesFromUrl(inputs, req.url);
   if (__DEBUG__) console.log({ defaultValues });
 
   return {
