@@ -1,10 +1,10 @@
 import { Prisma } from '@prisma/client';
 import { z } from 'zod';
-import generate from 'project-name-generator';
 import { prisma } from '~/server/prisma';
 import { createRouter } from '../createRouter';
 import { hasAppEditPermission } from '../utils/authz.utils';
 import slugify from '~/utils/slugify';
+import { generateDefaultSlug } from '~/utils/generate-default';
 import { TRPCError } from '@trpc/server';
 import denyList from '../utils/slugDenyList';
 
@@ -58,7 +58,7 @@ export const appRouter = createRouter()
 
       // fallback to generating a random slug if there's no name or slug provided or the name or slug is on the deny list
       if (!slug) {
-        slug = generate({ words: 3 }).dashed;
+        slug = generateDefaultSlug();
       }
 
       // increase our chances of getting a unique slug by adding a random number to the end
@@ -216,7 +216,7 @@ export const appRouter = createRouter()
       const deniedSlug = denyList.find((d) => d === input.slug);
       if (deniedSlug) return false;
 
-      const existingSlug = prisma.app.findFirst({
+      const existingSlug = await prisma.app.findFirst({
         where: {
           slug: input.slug,
         },
@@ -244,7 +244,7 @@ export const appRouter = createRouter()
 
       const fork = await prisma.app.create({
         data: {
-          slug: generate({ words: 3 }).dashed,
+          slug: generateDefaultSlug(),
           description: app.description,
           parentId: app.id,
           organizationId: ctx.orgId,
