@@ -1,12 +1,9 @@
-import { trpc } from '../utils/trpc';
+import { inferQueryOutput, trpc } from '~/utils/trpc';
 import {
   GridItem,
-  HStack,
-  Link,
   Table,
   TableContainer,
   Tbody,
-  Text,
   Td,
   Th,
   Thead,
@@ -17,17 +14,51 @@ import {
   Flex,
   Icon,
 } from '@chakra-ui/react';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import DefaultGrid from '~/components/default-grid';
-import { LockIcon, UnlockIcon } from '@chakra-ui/icons';
-import { useRouter } from 'next/router';
 import { FiPlus } from 'react-icons/fi';
-import { useOrganization } from '@clerk/nextjs';
+import { useOrganization, useOrganizations } from '@clerk/nextjs';
+import { OrganizationResource } from '@clerk/types';
+import { DashboardAppTableRows } from './app-table-rows';
+
+const useAppOrganizations = (
+  apps: inferQueryOutput<'app.byAuthedUser'> | undefined,
+) => {
+  const { getOrganization } = useOrganizations();
+  const [organizations, setOrganizations] = useState<
+    Record<string, OrganizationResource>
+  >({});
+
+  useEffect(() => {
+    if (typeof getOrganization === 'function') {
+      const orgIds = (apps ?? []).reduce((ids, { organizationId }) => {
+        if (organizationId && !ids.includes(organizationId)) {
+          return ids.concat(organizationId);
+        }
+        return ids;
+      }, [] as string[]);
+
+      Promise.all(orgIds.map(async (id) => getOrganization(id))).then(
+        (data) => {
+          const orgs = data.reduce((orgs, cur) => {
+            if (cur) {
+              return { ...orgs, [cur.id]: cur };
+            }
+            return orgs;
+          }, {} as typeof organizations);
+          setOrganizations(orgs);
+        },
+      );
+    }
+  }, [getOrganization, apps]);
+
+  return organizations;
+};
 
 export function Dashboard() {
-  const router = useRouter();
   const { organization } = useOrganization();
   const appQuery = trpc.useQuery(['app.byAuthedUser']);
+  const organizations = useAppOrganizations(appQuery.data);
 
   useEffect(() => {
     appQuery.refetch();
@@ -70,38 +101,16 @@ export function Dashboard() {
                 <Tr>
                   <Th>App Name</Th>
                   <Th>Last Updated</Th>
+                  <Th>Owner</Th>
                 </Tr>
               </Thead>
               <Tbody>
-                {appQuery.data &&
-                  appQuery.data.map((app) => {
-                    return (
-                      <Tr key={app.id}>
-                        <Td>
-                          <VStack align={'start'} py="2">
-                            <HStack>
-                              {app.isPrivate ? <LockIcon /> : <UnlockIcon />}
-                              <Link
-                                fontSize={'md'}
-                                fontWeight={600}
-                                onClick={() =>
-                                  router.push(`/app/${app.id}/edit/main.ts`)
-                                }
-                              >
-                                {app.name || app.slug}
-                              </Link>
-                            </HStack>
-                            <Text>{app.description}</Text>
-                          </VStack>
-                        </Td>
-                        <Td>
-                          {new Intl.DateTimeFormat('en-GB', {
-                            dateStyle: 'short',
-                          }).format(app.updatedAt || app.createdAt)}
-                        </Td>
-                      </Tr>
-                    );
-                  })}
+                {appQuery.data && (
+                  <DashboardAppTableRows
+                    apps={appQuery.data}
+                    organizations={organizations}
+                  />
+                )}
                 {!appQuery.isLoading && !appQuery.data && (
                   <Tr>
                     <Td>
