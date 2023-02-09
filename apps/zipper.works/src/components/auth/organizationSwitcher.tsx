@@ -54,13 +54,21 @@ export const OrganizationSwitcher = () => {
           as={Button}
           rightIcon={<HiOutlineChevronUpDown />}
           backgroundColor="transparent"
+          border="1px"
+          borderColor="gray.100"
         >
           <Text fontSize="sm" fontWeight="medium">
             {organization?.name || 'Personal Workspace'}
           </Text>
         </MenuButton>
-        <MenuList p={0} fontSize="sm" shadow={'xl'}>
-          <HStack borderBottom="1px" borderColor="gray.300" p={4} w="full">
+        <MenuList p={0} fontSize="sm" shadow={'lg'}>
+          <HStack
+            borderBottom="1px"
+            borderColor="gray.300"
+            px={4}
+            py={6}
+            w="full"
+          >
             <VStack flexGrow="1" alignItems="start" spacing={0}>
               <Text fontWeight="medium">
                 {organization?.name || 'Personal Workspace'}
@@ -82,9 +90,10 @@ export const OrganizationSwitcher = () => {
           {workspacesExcludingCurrent.length > 0 && (
             <Box
               w="full"
-              backgroundColor={'gray.100'}
+              backgroundColor={'gray.50'}
+              backdropFilter="blur(10px)"
               pl="4"
-              pt="4"
+              pt="6"
               fontSize="xs"
             >
               <Text>Switch workspace:</Text>
@@ -97,7 +106,7 @@ export const OrganizationSwitcher = () => {
                 onClick={() => {
                   setActive && setActive({ organization: org.organization.id });
                 }}
-                backgroundColor="gray.100"
+                backgroundColor="gray.50"
                 px="4"
                 pt="2"
               >
@@ -125,10 +134,12 @@ export const OrganizationSwitcher = () => {
             );
           })}
           <MenuItem
-            backgroundColor="gray.100"
+            backgroundColor="gray.50"
             color="gray.600"
-            pt={2}
-            pb={4}
+            borderEndRadius={8}
+            borderBottomLeftRadius={8}
+            pt={4}
+            pb={6}
             px={4}
             onClick={onOpenCreateOrg}
           >

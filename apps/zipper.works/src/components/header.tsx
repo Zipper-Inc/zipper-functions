@@ -1,5 +1,14 @@
 import { useEffect } from 'react';
-import { Box, HStack, Link, Flex, useBreakpointValue } from '@chakra-ui/react';
+import {
+  Box,
+  HStack,
+  Link,
+  Flex,
+  useBreakpointValue,
+  Icon,
+  Center,
+} from '@chakra-ui/react';
+import { RxSlash } from 'react-icons/rx';
 import { useRouter } from 'next/router';
 import NextLink from 'next/link';
 
@@ -44,7 +53,7 @@ const Header: React.FC<HeaderProps> = ({ showNav = true }) => {
       paddingX={10}
       justifyContent="center"
     >
-      <HStack spacing={3} alignItems="start">
+      <HStack spacing={3} alignItems="start" alignContent={'center'}>
         <Box my={3} height={4}>
           <Link href="/">
             <SignedIn>
@@ -59,12 +68,15 @@ const Header: React.FC<HeaderProps> = ({ showNav = true }) => {
             </SignedOut>
           </Link>
         </Box>
+
         {showNav && (
-          <Box>
-            <SignedIn>
-              <OrganizationSwitcher />
-            </SignedIn>
-          </Box>
+          <>
+            <Box>
+              <SignedIn>
+                <OrganizationSwitcher />
+              </SignedIn>
+            </Box>
+          </>
         )}
       </HStack>
       {showNav && (
@@ -92,6 +104,7 @@ const Header: React.FC<HeaderProps> = ({ showNav = true }) => {
                     key={r.text}
                     textUnderlineOffset={12}
                     textDecoration={textDecoration}
+                    fontSize="md"
                   >
                     {r.text}
                   </Link>

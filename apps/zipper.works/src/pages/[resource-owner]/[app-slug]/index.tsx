@@ -39,7 +39,7 @@ const AppPage: NextPageWithLayout = () => {
 
   const forkApp = trpc.useMutation('app.fork', {
     async onSuccess(data) {
-      router.push(`/${user?.publicMetadata.username}/${data.slug}/edit`);
+      router.push(`/${data.resourceOwner.slug}/${data.slug}/edit`);
     },
   });
 
