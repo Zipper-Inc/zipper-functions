@@ -1,4 +1,4 @@
-import { inferQueryOutput, trpc } from '~/utils/trpc';
+import { trpc } from '~/utils/trpc';
 import {
   GridItem,
   Table,
@@ -17,45 +17,10 @@ import {
 } from '@chakra-ui/react';
 import React, { useEffect, useState } from 'react';
 import DefaultGrid from '~/components/default-grid';
-import { FiPlus } from 'react-icons/fi';
-import { useOrganization, useOrganizations } from '@clerk/nextjs';
-import { OrganizationResource } from '@clerk/types';
+import { useOrganization } from '@clerk/nextjs';
 import { DashboardAppTableRows } from './app-table-rows';
 import { CreateAppModal } from './create-app-modal';
-
-const useAppOrganizations = (
-  apps: inferQueryOutput<'app.byAuthedUser'> | undefined,
-) => {
-  const { getOrganization } = useOrganizations();
-  const [organizations, setOrganizations] = useState<
-    Record<string, OrganizationResource>
-  >({});
-
-  useEffect(() => {
-    if (typeof getOrganization === 'function') {
-      const orgIds = (apps ?? []).reduce((ids, { organizationId }) => {
-        if (organizationId && !ids.includes(organizationId)) {
-          return ids.concat(organizationId);
-        }
-        return ids;
-      }, [] as string[]);
-
-      Promise.all(orgIds.map(async (id) => getOrganization(id))).then(
-        (data) => {
-          const orgs = data.reduce((orgs, cur) => {
-            if (cur) {
-              return { ...orgs, [cur.id]: cur };
-            }
-            return orgs;
-          }, {} as typeof organizations);
-          setOrganizations(orgs);
-        },
-      );
-    }
-  }, [getOrganization, apps]);
-
-  return organizations;
-};
+import { useAppOrganizations } from './use-app-organizations';
 
 export function Dashboard() {
   const { organization } = useOrganization();
