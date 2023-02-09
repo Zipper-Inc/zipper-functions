@@ -1,4 +1,4 @@
-import { trpc } from '~/utils/trpc';
+import { inferQueryOutput, trpc } from '~/utils/trpc';
 import {
   GridItem,
   Table,
@@ -17,19 +17,33 @@ import {
 } from '@chakra-ui/react';
 import React, { useEffect, useState } from 'react';
 import DefaultGrid from '~/components/default-grid';
-import { useOrganization } from '@clerk/nextjs';
+import { useOrganization, useOrganizationList, useUser } from '@clerk/nextjs';
 import { DashboardAppTableRows } from './app-table-rows';
 import { CreateAppModal } from './create-app-modal';
-import { useAppOrganizations } from './use-app-organizations';
+
 import { FiPlus } from 'react-icons/fi';
 
 export function Dashboard() {
+  const { user } = useUser();
   const { organization } = useOrganization();
   const appQuery = trpc.useQuery(['app.byAuthedUser']);
-  const organizations = useAppOrganizations(appQuery.data);
   const [appSearchTerm, setAppSearchTerm] = useState('');
   const [displayedApps, setDisplayedApps] = useState(appQuery.data);
   const [isCreateAppModalOpen, setCreateAppModalOpen] = useState(false);
+  const { organizationList } = useOrganizationList();
+
+  const getAppOwner = (app: Unpack<inferQueryOutput<'app.byAuthedUser'>>) => {
+    if (
+      app.resourceOwner.resourceOwnerId === user?.id ||
+      app.createdById === user?.id
+    ) {
+      return 'You';
+    }
+    return organizationList?.find(
+      ({ organization }) =>
+        organization.id === app.resourceOwner.resourceOwnerId,
+    )?.organization.name;
+  };
 
   useEffect(() => {
     appQuery.refetch();
@@ -95,7 +109,7 @@ export function Dashboard() {
                   {displayedApps && (
                     <DashboardAppTableRows
                       apps={displayedApps}
-                      organizations={organizations}
+                      getAppOwner={getAppOwner}
                     />
                   )}
                   {!appQuery.isLoading && !appQuery.data && (

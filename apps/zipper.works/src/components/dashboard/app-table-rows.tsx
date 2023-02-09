@@ -1,29 +1,23 @@
 import { LockIcon, UnlockIcon } from '@chakra-ui/icons';
 import { Link, Tr, Td, Text, VStack, HStack } from '@chakra-ui/react';
-import { useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/router';
-import { OrganizationResource } from '@clerk/types';
 import { inferQueryOutput } from '~/utils/trpc';
 
 type DashboardAppTableRowsProps = {
   apps: inferQueryOutput<'app.byAuthedUser'>;
-  organizations: Record<string, OrganizationResource>;
+  getAppOwner: (app: Unpack<inferQueryOutput<'app.byAuthedUser'>>) => string;
 };
 
 export const DashboardAppTableRows = ({
   apps,
-  organizations,
+  getAppOwner,
 }: DashboardAppTableRowsProps) => {
   const router = useRouter();
-  const { user } = useUser();
 
   return (
     <>
       {apps?.map((app) => {
-        const isOwner = app.createdById === user?.id;
-        const owner = isOwner
-          ? 'You'
-          : organizations[app.organizationId ?? '']?.name;
+        const owner = getAppOwner(app);
         const lastUpdatedAt = new Intl.DateTimeFormat('en-GB', {
           dateStyle: 'short',
         }).format(app.updatedAt || app.createdAt);
