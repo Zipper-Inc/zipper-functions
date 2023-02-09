@@ -32,15 +32,16 @@ import { Script } from '@prisma/client';
 import { trpc } from '~/utils/trpc';
 import { useForm } from 'react-hook-form';
 import { EditorContext } from '../context/editorContext';
+import { AppQueryOutput } from './playground';
 
 export function PlaygroundSidebar({
   app,
   mainScript,
 }: {
-  app: any;
+  app: AppQueryOutput;
   mainScript: Script;
 }) {
-  const { currentScript, setCurrentScript, isUserAnAppEditor, isModelDirty } =
+  const { currentScript, setCurrentScript, isModelDirty } =
     useContext(EditorContext);
   const sortScripts = (a: any, b: any) => {
     let orderA;
@@ -105,7 +106,7 @@ export function PlaygroundSidebar({
           <Text size="sm" color="gray.600" flexGrow={1}>
             Functions
           </Text>
-          {isUserAnAppEditor && (
+          {app.canUserEdit && (
             <Popover>
               <PopoverTrigger>
                 <Flex pr={2}>
@@ -212,6 +213,8 @@ export function PlaygroundSidebar({
                           (script: Script) => script.id === lastHoverId,
                         );
 
+                        if (!toDupe) return;
+
                         addScript.mutateAsync({
                           name: `${toDupe.name}-copy`,
                           appId: app.id,
@@ -230,7 +233,7 @@ export function PlaygroundSidebar({
                             reset({
                               name: app.scripts.find(
                                 (script: Script) => script.id === lastHoverId,
-                              ).name,
+                              )?.name,
                             });
                           }}
                         >
