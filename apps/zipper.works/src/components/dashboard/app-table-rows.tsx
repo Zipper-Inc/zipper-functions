@@ -20,17 +20,13 @@ export const DashboardAppTableRows = ({
   return (
     <>
       {apps?.map((app) => {
-        const isOwner = Boolean(
-          app.editors.find(
-            (editor) => editor.userId === user?.id && editor.isOwner,
-          ),
-        );
-        const lastUpdatedAt = new Intl.DateTimeFormat('en-GB', {
-          dateStyle: 'short',
-        }).format(app.updatedAt || app.createdAt);
+        const isOwner = app.createdById === user?.id;
         const owner = isOwner
           ? 'You'
           : organizations[app.organizationId ?? '']?.name;
+        const lastUpdatedAt = new Intl.DateTimeFormat('en-GB', {
+          dateStyle: 'short',
+        }).format(app.updatedAt || app.createdAt);
 
         return (
           <Tr key={app.id}>
@@ -41,7 +37,11 @@ export const DashboardAppTableRows = ({
                   <Link
                     fontSize={'md'}
                     fontWeight={600}
-                    onClick={() => router.push(`/app/${app.id}/edit/main.ts`)}
+                    onClick={() =>
+                      router.push(
+                        `/${app.resourceOwner.slug}/${app.slug}/edit/main.ts`,
+                      )
+                    }
                   >
                     {app.name || app.slug}
                   </Link>

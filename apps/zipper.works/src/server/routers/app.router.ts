@@ -199,7 +199,7 @@ export const appRouter = createRouter()
         }
         return arr;
         // eslint-disable-next-line prettier/prettier
-      }, [] as (typeof apps[0] & { resourceOwner: ResourceOwnerSlug })[]);
+      }, [] as ((typeof apps)[0] & { resourceOwner: ResourceOwnerSlug })[]);
     },
   })
   .query('byAuthedUser', {
@@ -229,7 +229,7 @@ export const appRouter = createRouter()
       const apps = await prisma.app.findMany({
         where,
         orderBy: { updatedAt: 'desc' },
-        select: { organizationId: true, editors: true, ...defaultSelect },
+        select: defaultSelect,
       });
 
       const resourceOwners = await prisma.resourceOwnerSlug.findMany({
@@ -252,7 +252,7 @@ export const appRouter = createRouter()
         }
         return arr;
         // eslint-disable-next-line prettier/prettier
-      }, [] as (typeof apps[0] & { resourceOwner: ResourceOwnerSlug })[]);
+      }, [] as ((typeof apps)[0] & { resourceOwner: ResourceOwnerSlug })[]);
     },
   })
   .query('byId', {
