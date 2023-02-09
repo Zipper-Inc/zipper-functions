@@ -49,8 +49,7 @@ export const CreateAppModal: React.FC<Props> = ({ isOpen, onClose }) => {
     },
   });
 
-  const [slugExists, setSlugExists] = useState<boolean | undefined>(false);
-  const [slug, setSlug] = useState<string>(() => generateDefaultName());
+  const [slug, setSlug] = useState<string>('');
   const [debouncedSlug] = useDebounce(slug, 200);
 
   const appSlugQuery = trpc.useQuery(
@@ -63,14 +62,19 @@ export const CreateAppModal: React.FC<Props> = ({ isOpen, onClose }) => {
   });
 
   useEffect(() => {
-    setSlugExists(appSlugQuery.data);
-  }, [appSlugQuery.data]);
+    setSlug(slugify(createAppForm.getValues('name')));
+  }, []);
 
   const resetForm = () => {
     const defaultValue = getDefaultCreateAppFormValues();
     createAppForm.reset(defaultValue);
     setSlug(slugify(defaultValue.name));
   };
+
+  const slugExists = appSlugQuery.data;
+  const isSlugValid =
+    appSlugQuery.isFetched && slug && slug.length >= MIN_SLUG_LENGTH;
+  const isDisabled = slugExists || slug.length < MIN_SLUG_LENGTH;
 
   return (
     <>
@@ -100,29 +104,22 @@ export const CreateAppModal: React.FC<Props> = ({ isOpen, onClose }) => {
                         setSlug(slugify(e.target.value));
                       }}
                     />
-                    {appSlugQuery.isFetched &&
-                      slug &&
-                      slug.length >= MIN_SLUG_LENGTH && (
-                        <InputRightElement
-                          children={
-                            slugExists ? (
-                              <Icon
-                                as={HiExclamationTriangle}
-                                color="red.500"
-                              />
-                            ) : (
-                              <CheckIcon color="green.500" />
-                            )
-                          }
-                        />
-                      )}
+                    {isSlugValid && (
+                      <InputRightElement
+                        children={
+                          slugExists ? (
+                            <Icon as={HiExclamationTriangle} color="red.500" />
+                          ) : (
+                            <CheckIcon color="green.500" />
+                          )
+                        }
+                      />
+                    )}
                   </InputGroup>
                   {createAppForm.watch('name') && (
                     <FormHelperText>
                       {`Your app will be available at
-                            ${slugify(slug)}.${
-                        process.env.NEXT_PUBLIC_OUTPUT_SERVER_HOSTNAME
-                      }`}
+                            ${slug}.${process.env.NEXT_PUBLIC_OUTPUT_SERVER_HOSTNAME}`}
                     </FormHelperText>
                   )}
                   <FormErrorMessage>
@@ -142,7 +139,7 @@ export const CreateAppModal: React.FC<Props> = ({ isOpen, onClose }) => {
                     display="block"
                     colorScheme="purple"
                     type="submit"
-                    isDisabled={slugExists || slug.length < MIN_SLUG_LENGTH}
+                    isDisabled={isDisabled}
                     onClick={createAppForm.handleSubmit(async (data) => {
                       await addApp.mutateAsync(data, {
                         onSuccess: () => {
