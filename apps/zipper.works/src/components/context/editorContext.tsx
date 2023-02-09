@@ -13,8 +13,6 @@ export type EditorContextType = {
   setCurrentScript: (script: Script) => void;
   scripts: Script[];
   setScripts: (scripts: Script[]) => void;
-  isUserAnAppEditor: boolean;
-  setIsUserAnAppEditor: (isUserAnAppEditor: boolean) => void;
   editor: typeof monaco.editor | undefined;
   setEditor: (editor: typeof monaco.editor) => void;
   isModelDirty: (path: string) => boolean;
@@ -28,8 +26,6 @@ export const EditorContext = createContext<EditorContextType>({
   setCurrentScript: noop,
   scripts: [],
   setScripts: noop,
-  isUserAnAppEditor: false,
-  setIsUserAnAppEditor: noop,
   editor: undefined,
   setEditor: noop,
   isModelDirty: () => false,
@@ -51,8 +47,6 @@ const EditorContextProvider = ({
     undefined,
   );
   const [scripts, setScripts] = useState<Script[]>(initialScripts);
-
-  const [isUserAnAppEditor, setIsUserAnAppEditor] = useState(false);
 
   const [editor, setEditor] = useState<typeof monaco.editor | undefined>();
 
@@ -111,7 +105,7 @@ const EditorContextProvider = ({
   });
 
   const saveOpenModels = () => {
-    if (isUserAnAppEditor && appId && currentScript) {
+    if (appId && currentScript) {
       const fileValues: Record<string, string> = {};
 
       editor?.getModels().map((model) => {
@@ -174,8 +168,6 @@ const EditorContextProvider = ({
         setCurrentScript,
         scripts,
         setScripts,
-        isUserAnAppEditor,
-        setIsUserAnAppEditor,
         editor,
         setEditor,
         isModelDirty,

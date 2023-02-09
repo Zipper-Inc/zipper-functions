@@ -12,14 +12,10 @@ import {
 import React from 'react';
 import DefaultGrid from '~/components/default-grid';
 import { HiSparkles } from 'react-icons/hi';
-import { appSubmissionState } from '@zipper/types';
 import { SignedIn } from '@clerk/nextjs';
 
 export function Gallery() {
-  const appQuery = trpc.useQuery([
-    'app.all',
-    { submissionState: appSubmissionState.approved },
-  ]);
+  const appQuery = trpc.useQuery(['app.allApproved']);
 
   return (
     <DefaultGrid mt={4}>
@@ -58,7 +54,7 @@ export function Gallery() {
                   <Heading as="h3" size="md">
                     {app.name || app.slug}
                   </Heading>
-                  <NextLink href={`/app/${app.id}`}>
+                  <NextLink href={`/${app.resourceOwner.slug}/${app.slug}`}>
                     <Text textColor="brandPurple">View more</Text>
                   </NextLink>
                 </GridItem>

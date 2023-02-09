@@ -22,9 +22,10 @@ import { AppConnector, Script } from '@prisma/client';
 import { HiPaperAirplane } from 'react-icons/hi2';
 import { connectors as defaultConnectors } from '~/config/connectors';
 import { VscGithub } from 'react-icons/vsc';
-import { useContext } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { EditorContext } from '../context/editorContext';
 import slugify from '~/utils/slugify';
+import { useDebounce } from 'use-debounce';
 
 export default function AddScriptForm({
   appId,
@@ -33,6 +34,9 @@ export default function AddScriptForm({
   appId: string;
   connectors: AppConnector[];
 }) {
+  const [duplicateFilename, setDuplicateFilename] = useState<
+    string | undefined
+  >();
   const { register, handleSubmit, reset, watch } = useForm();
   const { setCurrentScript, scripts } = useContext(EditorContext);
   const utils = trpc.useContext();
@@ -44,6 +48,24 @@ export default function AddScriptForm({
       reset();
     },
   });
+
+  const [debouncedName] = useDebounce(watch('name'), 500);
+
+  const validateFilenameQuery = trpc.useQuery(
+    [
+      'script.validateFilename',
+      { appId, newFilename: slugify((debouncedName as string) || '') },
+    ],
+    { enabled: !!debouncedName },
+  );
+
+  useEffect(() => {
+    if (validateFilenameQuery.data) {
+      setDuplicateFilename(undefined);
+    } else {
+      setDuplicateFilename(debouncedName);
+    }
+  }, [validateFilenameQuery.data]);
 
   return (
     <Tabs colorScheme="purple">
@@ -80,6 +102,7 @@ export default function AddScriptForm({
                       type="text"
                       placeholder="Script name"
                       disabled={addScript.isLoading}
+                      isInvalid={!!duplicateFilename}
                       autoComplete="off"
                       data-form-type="other"
                       {...register('name')}
@@ -88,14 +111,14 @@ export default function AddScriptForm({
                   <Button
                     type="submit"
                     paddingX={2}
-                    disabled={addScript.isLoading}
+                    isDisabled={addScript.isLoading || !!duplicateFilename}
                     bgColor="purple.800"
                     textColor="gray.100"
                   >
                     <Icon as={HiPaperAirplane} />
                   </Button>
                 </HStack>
-                {watch('name') && (
+                {watch('name') && !duplicateFilename && (
                   <Flex>
                     <Text fontSize="sm" mt="2" color={'gray.600'}>
                       A file called{' '}
@@ -103,6 +126,13 @@ export default function AddScriptForm({
                         {slugify(watch('name'))}.ts
                       </Text>{' '}
                       will be created
+                    </Text>
+                  </Flex>
+                )}
+                {watch('name') === duplicateFilename && (
+                  <Flex>
+                    <Text fontSize="sm" mt="2" color={'red.500'}>
+                      A file with that name already exists.
                     </Text>
                   </Flex>
                 )}

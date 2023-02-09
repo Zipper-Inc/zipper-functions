@@ -22,6 +22,7 @@ import { Avatar } from '../avatar';
 import { HiLightningBolt, HiOutlineCog, HiOutlineShare } from 'react-icons/hi';
 import { useUser, SignedIn, SignedOut } from '@clerk/nextjs';
 import { EditorContext } from '../context/editorContext';
+import { AppQueryOutput } from './playground';
 
 const isEditorOnline = (onlineEditorIds: string[], id: string) =>
   onlineEditorIds.includes(id);
@@ -90,7 +91,7 @@ export function PlaygroundHeader({
   onClickRun,
   onClickFork,
 }: {
-  app: any;
+  app: AppQueryOutput;
   onClickSettings: (e: React.MouseEvent<HTMLElement>) => any;
   onClickShare: (e: React.MouseEvent<HTMLElement>) => any;
   onClickRun: (e: React.MouseEvent<HTMLElement>) => any;
@@ -100,8 +101,6 @@ export function PlaygroundHeader({
   const self = useSelf();
   const others = useOthers();
   const isMobile = useBreakpointValue({ base: true, md: false });
-
-  const { isUserAnAppEditor } = useContext(EditorContext);
 
   // Get a list of active people in this app
   const onlineEditorIds = others.map(({ id }) => id as string);
@@ -163,17 +162,17 @@ export function PlaygroundHeader({
         )}
       </HStack>
       <HStack justifyContent="end">
-        {isUserAnAppEditor && (
+        {app.canUserEdit && (
           <Button variant={'outline'} onClick={onClickSettings}>
             <HiOutlineCog />
           </Button>
         )}
-        {isUserAnAppEditor && (
+        {app.canUserEdit && (
           <Button variant={'outline'} onClick={onClickShare}>
             <HiOutlineShare />
           </Button>
         )}
-        {isUserAnAppEditor && (
+        {app.canUserEdit && (
           <Button
             type="button"
             paddingX={4}
@@ -186,7 +185,7 @@ export function PlaygroundHeader({
             <Text ml="2">Run</Text>
           </Button>
         )}
-        {!isUserAnAppEditor && isLoaded && (
+        {!app.canUserEdit && isLoaded && (
           <Button
             type="button"
             paddingX={6}

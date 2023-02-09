@@ -26,6 +26,9 @@
   "prisma": {
     "seed": "yarn ts-node prisma/seed.ts"
   },
+  "engines": {
+    "node": ">=18.14.0"
+  },
   "prettier": {
     "printWidth": 80,
     "trailingComma": "all",
