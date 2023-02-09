@@ -7,7 +7,7 @@ import slugify from '~/utils/slugify';
 import { generateDefaultSlug } from '~/utils/generate-default';
 import { TRPCError } from '@trpc/server';
 import denyList from '../utils/slugDenyList';
-import { ResourceOwnerType } from '@zipper/types';
+import { appSubmissionState, ResourceOwnerType } from '@zipper/types';
 import { Context } from '../context';
 
 const defaultSelect = Prisma.validator<Prisma.AppSelect>()({
@@ -25,7 +25,7 @@ const defaultSelect = Prisma.validator<Prisma.AppSelect>()({
   createdById: true,
 });
 
-const canUserEdit = async (
+const canUserEdit = (
   app: Pick<
     App & { editors: AppEditor[] },
     'editors' | 'organizationId' | 'isPrivate'
@@ -33,21 +33,20 @@ const canUserEdit = async (
     Partial<App & { editors: AppEditor[] }>,
   ctx: Context,
 ) => {
-  let canUserEdit = !!app.editors.find((e) => e.userId === ctx.userId);
-  canUserEdit =
-    canUserEdit ||
-    !!(
-      app.organizationId &&
-      ctx.organizations &&
-      !Object.keys(ctx.organizations).includes(app.organizationId)
-    );
+  // if there's no authed user bail out and return false
+  if (!ctx.userId) return false;
 
-  // if the app is private, check if the authed user has access via the editors relation or organization id
-  if (app.isPrivate && (!ctx.userId || !canUserEdit)) {
-    throw new TRPCError({ code: 'UNAUTHORIZED' });
+  // if the authed user is an editor of the app, return true
+  if (!!app.editors.find((e) => e.userId === ctx.userId)) return true;
+
+  // if the app is owned by an organization and the authed user is a member of that organization, return true
+  if (app.organizationId && ctx.organizations) {
+    if (Object.keys(ctx.organizations).includes(app.organizationId))
+      return true;
   }
 
-  return canUserEdit;
+  // if the authed user is neither an editor nor a member of the resource owner organization, return false
+  return false;
 };
 
 export const appRouter = createRouter()
@@ -163,25 +162,44 @@ export const appRouter = createRouter()
     },
   })
   // read
-  .query('all', {
-    input: z
-      .object({
-        submissionState: z.number().optional(),
-      })
-      .optional(),
-    async resolve({ input }) {
+  .query('allApproved', {
+    async resolve() {
       /**
        * For pagination you can have a look at this docs site
        * @link https://trpc.io/docs/useInfiniteQuery
        */
 
-      return prisma.app.findMany({
+      const apps = await prisma.app.findMany({
         where: {
           isPrivate: false,
-          submissionState: input?.submissionState,
+          submissionState: appSubmissionState.approved,
         },
         select: defaultSelect,
       });
+
+      const resourceOwners = await prisma.resourceOwnerSlug.findMany({
+        where: {
+          resourceOwnerId: {
+            in: apps
+              .map((a) => a.organizationId || a.createdById)
+              .filter((i) => !!i) as string[],
+          },
+        },
+      });
+
+      console.log(apps, resourceOwners);
+
+      return apps.reduce((arr, app) => {
+        const resourceOwner = resourceOwners.find(
+          (r) => r.resourceOwnerId === (app.organizationId || app.createdById),
+        );
+
+        if (resourceOwner) {
+          arr.push({ ...app, resourceOwner });
+        }
+        return arr;
+        // eslint-disable-next-line prettier/prettier
+      }, [] as (typeof apps[0] & { resourceOwner: ResourceOwnerSlug })[]);
     },
   })
   .query('byAuthedUser', {
@@ -234,7 +252,7 @@ export const appRouter = createRouter()
         }
         return arr;
         // eslint-disable-next-line prettier/prettier
-      }, [] as ((typeof apps)[0] & { resourceOwner: ResourceOwnerSlug })[]);
+      }, [] as (typeof apps[0] & { resourceOwner: ResourceOwnerSlug })[]);
     },
   })
   .query('byId', {

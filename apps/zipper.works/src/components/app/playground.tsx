@@ -20,7 +20,7 @@ import useInterval from '~/hooks/use-interval';
 import usePrettier from '~/hooks/use-prettier';
 import { InputParam, InputType, JSONEditorInputTypes } from '@zipper/types';
 import { safeJSONParse } from '@zipper/utils';
-import { trpc } from '~/utils/trpc';
+import { inferQueryOutput, trpc } from '~/utils/trpc';
 import {
   useMutation as useLiveMutation,
   useStorage as useLiveStorage,
@@ -35,20 +35,22 @@ import { PlaygroundHeader } from './playground-header';
 import { CodeTab } from './code-tab';
 import { useUser } from '@clerk/nextjs';
 import { EditorContext } from '../context/editorContext';
+import { Script } from '@prisma/client';
 
 const debouncedParseInputForTypes = debounce(
   (code, setInputParams) => setInputParams(parseInputForTypes(code)),
   500,
 );
+export type AppQueryOutput = inferQueryOutput<'app.byResourceOwnerAndAppSlugs'>;
 
 export function Playground({
   app,
   filename = 'main.ts',
 }: {
-  app: any;
+  app: AppQueryOutput;
   filename: string;
 }) {
-  const { user, isLoaded } = useUser();
+  const { user } = useUser();
   const router = useRouter();
 
   const utils = trpc.useContext();
@@ -73,13 +75,7 @@ export function Playground({
 
   const { id } = app;
 
-  const {
-    setCurrentScript,
-    currentScript,
-    save,
-    isUserAnAppEditor,
-    setIsUserAnAppEditor,
-  } = useContext(EditorContext);
+  const { setCurrentScript, currentScript, save } = useContext(EditorContext);
 
   const appEventsQuery = trpc.useQuery([
     'appEvent.all',
@@ -91,10 +87,11 @@ export function Playground({
   );
 
   useEffect(() => {
-    setCurrentScript(
-      app.scripts.find((script: any) => script.filename === filename) ||
-        mainScript,
-    );
+    const initialScript =
+      app.scripts.find((script: Script) => script.filename === filename) ||
+      mainScript;
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    setCurrentScript(initialScript!);
   }, []);
 
   const mutateLive = useLiveMutation(
@@ -121,12 +118,6 @@ export function Playground({
       parseInputForTypes(currentScript?.code || currentScriptLive?.code),
     );
   }, [currentScript]);
-
-  useEffect(() => {
-    setIsUserAnAppEditor(
-      !!app.editors.find((editor: any) => editor.userId === user?.id) || false,
-    );
-  }, [app, isLoaded]);
 
   useInterval(async () => {
     if (lastRunVersion) {
@@ -207,7 +198,7 @@ export function Playground({
         onClickShare={() => setShareModalOpen(true)}
         onClickRun={runApp}
         onClickFork={() => {
-          if (isUserAnAppEditor) return;
+          if (app.canUserEdit) return;
           if (user) {
             forkApp.mutateAsync({ id: app.id });
           } else {
@@ -236,7 +227,7 @@ export function Playground({
           <Box px="2">Code</Box>
         </Tab>
 
-        {isUserAnAppEditor && (
+        {app.canUserEdit && (
           <>
             {/* SCHEDULES */}
             <Tab>Schedules</Tab>
@@ -268,7 +259,7 @@ export function Playground({
 
         {/* SECRETS */}
         <TabPanel as={GridItem} colSpan={12}>
-          <SecretsTab editable={isUserAnAppEditor} appId={id} />
+          <SecretsTab editable={app.canUserEdit} appId={id} />
         </TabPanel>
       </TabPanels>
 

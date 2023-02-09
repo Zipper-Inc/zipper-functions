@@ -6,6 +6,7 @@
 import clerkClient from '@clerk/clerk-sdk-node';
 import { Prisma, PrismaClient } from '@prisma/client';
 import { ResourceOwnerType } from '@zipper/types';
+import generate from 'project-name-generator';
 import slugify from 'slugify';
 
 const prisma = new PrismaClient();
@@ -14,6 +15,15 @@ async function main() {
   const id = '5c03994c-fc16-47e0-bd02-d218a370a078';
   const mainScriptId = '1b39a70c-c37c-4167-9429-9d9196a710fd';
   const otherScriptId = '66b731b0-04e8-454c-8988-b2385d9d3a64';
+  const resourceOwnerId = '587056a8-90f0-4b0f-ab35-99a071a4d6f5';
+
+  await prisma.resourceOwnerSlug.create({
+    data: {
+      slug: generate({ words: 2 }).dashed.toLowerCase(),
+      resourceOwnerId,
+      resourceOwnerType: 0,
+    },
+  });
 
   await prisma.app.upsert({
     where: {
@@ -25,7 +35,8 @@ async function main() {
       description:
         'Post meeting notes to Slack in multiple languages using Google Cloud Functions',
       isPrivate: false,
-      submissionState: 2,
+      organizationId: resourceOwnerId,
+      submissionState: 3,
       scripts: {
         createMany: {
           data: [
