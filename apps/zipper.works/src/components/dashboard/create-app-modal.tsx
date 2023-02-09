@@ -81,7 +81,6 @@ export const CreateAppModal: React.FC<Props> = ({ isOpen, onClose }) => {
       <Modal
         isOpen={isOpen}
         onClose={() => {
-          resetForm();
           onClose();
         }}
         size="xl"

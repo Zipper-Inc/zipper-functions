@@ -21,6 +21,7 @@ import { useOrganization } from '@clerk/nextjs';
 import { DashboardAppTableRows } from './app-table-rows';
 import { CreateAppModal } from './create-app-modal';
 import { useAppOrganizations } from './use-app-organizations';
+import { FiPlus } from 'react-icons/fi';
 
 export function Dashboard() {
   const { organization } = useOrganization();
