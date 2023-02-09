@@ -1,12 +1,4 @@
-export enum InputType {
-  string = 'string',
-  number = 'number',
-  boolean = 'boolean',
-  date = 'date',
-  array = 'array',
-  object = 'object',
-  any = 'any',
-}
+import { InputType } from './input-type';
 
 export interface InputParam {
   key: string;
@@ -25,9 +17,3 @@ export interface ParseInputError {
   code: string;
   error: any;
 }
-
-export const JSONEditorInputTypes = [
-  InputType.array,
-  InputType.object,
-  InputType.any,
-];
