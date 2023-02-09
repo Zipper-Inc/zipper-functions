@@ -3,4 +3,5 @@ export enum OutputType {
   Object = 'object',
   Array = 'array',
   Collection = 'collection',
+  Html = 'html',
 }
