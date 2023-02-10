@@ -93,6 +93,59 @@ export const resourceOwnerSlugRouter = createRouter()
       });
     },
   })
+  .query('lookupOnClerk', {
+    input: z.object({
+      slug: z.string(),
+    }),
+    async resolve({ input }) {
+      const resourceOwner = await prisma.resourceOwnerSlug.findFirst({
+        where: { slug: input.slug },
+      });
+
+      if (!resourceOwner || !resourceOwner.resourceOwnerId) return;
+
+      if (resourceOwner.resourceOwnerType === ResourceOwnerType.User) {
+        const clerkUser = await clerkClient.users.getUser(
+          resourceOwner.resourceOwnerId,
+        );
+
+        if (clerkUser) {
+          const name =
+            clerkUser.firstName && clerkUser.lastName
+              ? `${clerkUser.firstName} ${clerkUser.lastName}`
+              : clerkUser.publicMetadata.identifier || clerkUser.username;
+
+          return { name };
+        }
+      }
+
+      if (resourceOwner.resourceOwnerType === ResourceOwnerType.Organization) {
+        const clerkOrg = await clerkClient.organizations.getOrganization({
+          organizationId: resourceOwner.resourceOwnerId,
+        });
+
+        if (clerkOrg) {
+          return { name: clerkOrg.name };
+        }
+      }
+
+      return;
+    },
+  })
+  .query('lookupUserOnClerk', {
+    input: z.object({
+      slug: z.string(),
+    }),
+    async resolve({ input }) {
+      const resourceOwner = await prisma.resourceOwnerSlug.findFirst({
+        where: { slug: input.slug },
+      });
+
+      if (!resourceOwner || !resourceOwner.resourceOwnerId) return;
+
+      return clerkClient.users.getUser(resourceOwner.resourceOwnerId);
+    },
+  })
   .mutation('createGeneratedUserSlug', {
     input: z.object({
       id: z.string(),

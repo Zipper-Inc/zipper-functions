@@ -4,7 +4,7 @@ import { GetServerSideProps } from 'next';
 import { Dashboard } from '~/components/dashboard';
 import { Gallery } from '~/components/gallery';
 import { createContext } from '~/server/context';
-import getValidSubdomain from '~/utils/get-valid-subdomain';
+import { getValidSubdomain, removeSubdomains } from '~/utils/subdomains';
 import { NextPageWithLayout } from './_app';
 import { trpcRouter } from '~/server/routers/_app';
 import { inferQueryOutput, trpc } from '~/utils/trpc';
@@ -95,11 +95,6 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
   await ssg.fetchQuery('app.allApproved');
 
   return { props: { trpcState: ssg.dehydrate() } };
-};
-
-const removeSubdomains = (host: string) => {
-  const parts = host.split('.');
-  return parts.slice(parts.length - 2).join('.');
 };
 
 IndexPage.header = (props) => {

@@ -24,7 +24,6 @@ import { FieldValues, FormProvider, useForm } from 'react-hook-form';
 import { trpc } from '~/utils/trpc';
 import { HiGlobe } from 'react-icons/hi';
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/router';
 
 type Props = {
   isOpen: boolean;

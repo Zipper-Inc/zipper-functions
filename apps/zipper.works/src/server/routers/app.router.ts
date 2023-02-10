@@ -362,9 +362,12 @@ export const appRouter = createRouter()
         isPrivate: false,
       };
 
-      resourceOwner.resourceOwnerType === ResourceOwnerType.Organization
-        ? (where.organizationId = resourceOwner.resourceOwnerId)
-        : (where.createdById = resourceOwner.resourceOwnerId);
+      if (resourceOwner.resourceOwnerType === ResourceOwnerType.Organization) {
+        where.organizationId = resourceOwner.resourceOwnerId;
+      } else {
+        where.createdById = resourceOwner.resourceOwnerId;
+        where.organizationId = null;
+      }
 
       const apps = await prisma.app.findMany({
         where,
