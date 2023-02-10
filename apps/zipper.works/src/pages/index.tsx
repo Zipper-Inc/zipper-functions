@@ -70,6 +70,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
             process.env.NODE_ENV === 'production' ? 'https' : 'http'
           }://${removeSubdomains(host!)}`,
         },
+        props: {},
       };
     }
 
