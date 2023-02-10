@@ -12,6 +12,8 @@ import {
   useBreakpointValue,
   Flex,
 } from '@chakra-ui/react';
+
+import NextLink from 'next/link';
 import { LockIcon, UnlockIcon } from '@chakra-ui/icons';
 import React from 'react';
 import ForkIcon from '~/components/svg/forkIcon';
@@ -126,14 +128,14 @@ export function PlaygroundHeader({
     >
       <HStack spacing={3} alignItems="center" flex={1} minW={0}>
         <Box height={4}>
-          <Link href="/">
+          <NextLink href="/">
             <SignedIn>
               <ZipperSymbol style={{ maxHeight: '100%' }} />
             </SignedIn>
             <SignedOut>
               <ZipperLogo style={{ maxHeight: '100%' }} />
             </SignedOut>
-          </Link>
+          </NextLink>
         </Box>
         <HStack spacing={2} alignItems="center" minW={0}>
           <Box>
