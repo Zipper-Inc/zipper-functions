@@ -9,6 +9,7 @@ import { trpcRouter } from '~/server/routers/_app';
 import { inferQueryOutput, trpc } from '~/utils/trpc';
 import SuperJSON from 'superjson';
 import { getAuth } from '@clerk/nextjs/server';
+import { useRouter } from 'next/router';
 import Header from '~/components/header';
 
 export type GalleryAppQueryOutput = inferQueryOutput<
@@ -16,6 +17,7 @@ export type GalleryAppQueryOutput = inferQueryOutput<
 >;
 
 const IndexPage: NextPageWithLayout = (props) => {
+  const router = useRouter();
   const { user, isLoaded } = useUser();
 
   const appsByResourceOwnerQuery = trpc.useQuery(
