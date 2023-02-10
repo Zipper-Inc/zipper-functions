@@ -112,8 +112,11 @@ export async function relayRequest(request: NextRequest) {
 
 export default async function serveRelay(request: NextRequest) {
   const { result, status, headers } = await relayRequest(request);
+  if (request.method !== 'GET')
+    headers?.append('Access-Control-Allow-Origin', '*');
+
   if (status === 404) {
-    return NextResponse.redirect('/404');
+    return NextResponse.rewrite(new URL('/404', request.url));
   }
 
   if (status >= 500) {

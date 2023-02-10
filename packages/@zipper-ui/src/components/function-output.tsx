@@ -267,7 +267,7 @@ function SmartFunctionOutput({ result, level = 0 }: Props) {
     case OutputType.Html:
       return (
         <Box>
-          <iframe srcDoc={data} />
+          <iframe width="100%" height="400px" srcDoc={data} />
         </Box>
       );
 
