@@ -16,7 +16,7 @@ import { GalleryAppQueryOutput } from '~/pages';
 
 export function Gallery({ apps }: { apps: GalleryAppQueryOutput }) {
   return (
-    <DefaultGrid mt={4}>
+    <DefaultGrid mt={14}>
       <GridItem colSpan={3}>
         <VStack alignItems="start" spacing={2} w={280}>
           <SignedIn>
