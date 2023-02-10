@@ -1,49 +1,115 @@
+import { createSSGHelpers } from '@trpc/react/ssg';
 import { useUser } from '@clerk/nextjs';
+import { GetServerSideProps } from 'next';
 import { Gallery } from '~/components/gallery';
+import { createContext } from '~/server/context';
+import getValidSubdomain from '~/utils/get-valid-subdomain';
 import { NextPageWithLayout } from './_app';
+import { trpcRouter } from '~/server/routers/_app';
+import { inferQueryOutput, trpc } from '~/utils/trpc';
+import SuperJSON from 'superjson';
+import { getAuth } from '@clerk/nextjs/server';
 import { useRouter } from 'next/router';
+import Header from '~/components/header';
 
-const IndexPage: NextPageWithLayout = () => {
-  const { user, isLoaded } = useUser();
+export type GalleryAppQueryOutput = inferQueryOutput<
+  'app.allApproved' | 'app.byResourceOwner'
+>;
+
+const IndexPage: NextPageWithLayout = (props) => {
   const router = useRouter();
+  if (props.redirectTo) {
+    router.push(props.redirectTo);
+  }
+
+  const { user, isLoaded } = useUser();
+
+  const appsByResourceOwnerQuery = trpc.useQuery(
+    ['app.byResourceOwner', { resourceOwnerSlug: props.subdomain as string }],
+    {
+      enabled: !!props.subdomain,
+    },
+  );
+
+  const galleryAppsQuery = trpc.useQuery(['app.allApproved'], {
+    enabled: !props.subdomain && !user,
+  });
+
+  if (props.subdomain && appsByResourceOwnerQuery.isSuccess) {
+    return <Gallery apps={appsByResourceOwnerQuery.data} />;
+  }
+
+  if (isLoaded && !user && galleryAppsQuery.isSuccess) {
+    return <Gallery apps={galleryAppsQuery.data} />;
+  }
 
   if (user) {
     router.push('/dashboard');
   }
+  return <div></div>;
+};
 
-  if (isLoaded && !user) {
-    return <Gallery />;
+export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
+  const { host } = req.headers;
+
+  // validate subdomain
+  const subdomain = getValidSubdomain(host);
+  const { userId } = getAuth(req);
+
+  const ssg = createSSGHelpers({
+    router: trpcRouter,
+    transformer: SuperJSON,
+    ctx: await createContext({ req, res }),
+  });
+
+  if (subdomain) {
+    try {
+      await ssg.fetchQuery('app.byResourceOwner', {
+        resourceOwnerSlug: subdomain,
+      });
+    } catch (e) {
+      return {
+        props: {
+          redirectTo: `${
+            process.env.NODE_ENV === 'production' ? 'https' : 'http'
+          }://${removeSubdomains(host!)}`,
+        },
+      };
+    }
+
+    return {
+      props: {
+        trpcState: ssg.dehydrate(),
+        subdomain,
+      },
+    };
   }
 
-  return <div></div>;
+  if (userId) {
+    await ssg.fetchQuery('app.byAuthedUser');
+
+    return {
+      props: {
+        trpcState: ssg.dehydrate(),
+      },
+    };
+  }
+
+  await ssg.fetchQuery('app.allApproved');
+
+  return { props: { trpcState: ssg.dehydrate() } };
+};
+
+const removeSubdomains = (host: string) => {
+  const parts = host.split('.');
+  return parts.slice(parts.length - 2).join('.');
+};
+
+IndexPage.header = (props) => {
+  if (props.subdomain) return <Header showNav={false}></Header>;
+  return <Header></Header>;
 };
 
 IndexPage.skipAuth = true;
 
 export default IndexPage;
-
-/**
- * If you want to statically render this page
- * - Export `appRouter` & `createContext` from [trpc].ts
- * - Make the `opts` object optional on `createContext()`
- *
- * @link https://trpc.io/docs/ssg
- */
-// export const getStaticProps = async (
-//   context: GetStaticPropsContext<{ filter: string }>,
-// ) => {
-//   const ssg = createSSGHelpers({
-//     router: appRouter,
-//     ctx: await createContext(),
-//   });
-//
-//   await ssg.fetchQuery('post.all');
-//
-//   return {
-//     props: {
-//       trpcState: ssg.dehydrate(),
-//       filter: context.params?.filter ?? 'all',
-//     },
-//     revalidate: 1,
-//   };
-// };

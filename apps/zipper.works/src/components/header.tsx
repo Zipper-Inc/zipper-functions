@@ -44,9 +44,9 @@ const Header: React.FC<HeaderProps> = ({ showNav = true }) => {
       paddingX={10}
       justifyContent="center"
     >
-      <HStack spacing={3} alignItems="start">
+      <HStack spacing={3} alignItems="start" alignContent={'center'}>
         <Box my={3} height={4}>
-          <Link href="/">
+          <NextLink href="/">
             <SignedIn>
               {showNav ? (
                 <ZipperSymbol style={{ maxHeight: '100%' }} />
@@ -57,14 +57,17 @@ const Header: React.FC<HeaderProps> = ({ showNav = true }) => {
             <SignedOut>
               <ZipperLogo style={{ maxHeight: '100%' }} />
             </SignedOut>
-          </Link>
+          </NextLink>
         </Box>
+
         {showNav && (
-          <Box>
-            <SignedIn>
-              <OrganizationSwitcher />
-            </SignedIn>
-          </Box>
+          <>
+            <Box>
+              <SignedIn>
+                <OrganizationSwitcher />
+              </SignedIn>
+            </Box>
+          </>
         )}
       </HStack>
       {showNav && (
@@ -92,6 +95,7 @@ const Header: React.FC<HeaderProps> = ({ showNav = true }) => {
                     key={r.text}
                     textUnderlineOffset={12}
                     textDecoration={textDecoration}
+                    fontSize="md"
                   >
                     {r.text}
                   </Link>

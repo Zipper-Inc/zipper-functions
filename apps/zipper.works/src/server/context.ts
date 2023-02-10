@@ -1,14 +1,16 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { User } from '@clerk/nextjs/dist/api';
-import { buildClerkProps, clerkClient, getAuth } from '@clerk/nextjs/server';
+import { RequestLike } from '@clerk/nextjs/dist/server/types';
+import { getAuth } from '@clerk/nextjs/server';
 import * as trpc from '@trpc/server';
 import * as trpcNext from '@trpc/server/adapters/next';
+import { ServerResponse } from 'http';
+import { NextApiResponse } from 'next';
 
 /**
  * Inner function for `createContext` where we create the context.
  * This is useful for testing when we don't want to mock Next.js' request/response
  */
-export const createContextInner = async ({
+export const createContextInner = ({
   userId,
   orgId,
   organizations,
@@ -24,10 +26,13 @@ export const createContextInner = async ({
  * Creates context for an incoming request
  * @link https://trpc.io/docs/context
  */
-export async function createContext(opts: trpcNext.CreateNextContextOptions) {
+export async function createContext(opts: {
+  req: RequestLike;
+  res: NextApiResponse | ServerResponse;
+}) {
   const { userId, orgId, sessionClaims } = getAuth(opts.req);
 
-  return await createContextInner({
+  return createContextInner({
     userId: userId || undefined,
     orgId: orgId || undefined,
     organizations: sessionClaims?.organizations as Record<string, string>[],

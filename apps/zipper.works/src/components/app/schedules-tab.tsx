@@ -29,7 +29,7 @@ import { AddIcon } from '@chakra-ui/icons';
 import { trpc } from '~/utils/trpc';
 import { FiClock, FiTrash, FiX } from 'react-icons/fi';
 import { InputParam } from '@zipper/types';
-import { InputParamsForm } from '@zipper/ui';
+import { FunctionInputs } from '@zipper/ui';
 import { AppRun } from '@prisma/client';
 import { HiCheck } from 'react-icons/hi2';
 import { HiX } from 'react-icons/hi';
@@ -132,7 +132,7 @@ const SchedulesTab: React.FC<Props> = ({ appId, inputParams }) => {
                   Inputs for this scheduled run:
                 </Text>
                 <Box background="gray.200" p="4" borderRadius="4">
-                  <InputParamsForm
+                  <FunctionInputs
                     params={inputParams}
                     formContext={addModalForm}
                   />

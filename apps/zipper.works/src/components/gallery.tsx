@@ -1,4 +1,3 @@
-import { trpc } from '../utils/trpc';
 import NextLink from 'next/link';
 import {
   Grid as InnerGrid,
@@ -13,10 +12,9 @@ import React from 'react';
 import DefaultGrid from '~/components/default-grid';
 import { HiSparkles } from 'react-icons/hi';
 import { SignedIn } from '@clerk/nextjs';
+import { GalleryAppQueryOutput } from '~/pages';
 
-export function Gallery() {
-  const appQuery = trpc.useQuery(['app.allApproved']);
-
+export function Gallery({ apps }: { apps: GalleryAppQueryOutput }) {
   return (
     <DefaultGrid mt={4}>
       <GridItem colSpan={3}>
@@ -40,7 +38,7 @@ export function Gallery() {
           gridGap={10}
           marginLeft={-4}
         >
-          {appQuery.data?.map((app, index) => {
+          {apps.map((app, index) => {
             if (index === 0) {
               return (
                 <GridItem

@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { GetServerSideProps } from 'next';
 import {
-  InputParamsForm,
+  FunctionInputs,
   withDefaultTheme,
   ZipperLogo,
-  FunctionResult,
+  FunctionOutput,
 } from '@zipper/ui';
 import { AppInfo, InputParams } from '@zipper/types';
 import getAppInfo from '~/utils/get-app-info';
@@ -69,7 +69,7 @@ export function AppPage({
         </Flex>
         {app.description && <p>{app.description}</p>}
         <Box bg="gray.100" px={8} py={4}>
-          <InputParamsForm params={inputs} formContext={formContext} />
+          <FunctionInputs params={inputs} formContext={formContext} />
           <Divider orientation="horizontal" my={4} />
           <Flex>
             <ButtonGroup>
@@ -107,7 +107,7 @@ export function AppPage({
           </Flex>
         </Box>
       </Box>
-      {result && <FunctionResult result={result} />}
+      {result && <FunctionOutput result={result} />}
     </>
   );
 }

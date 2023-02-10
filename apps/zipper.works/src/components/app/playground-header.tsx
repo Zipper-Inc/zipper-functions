@@ -12,8 +12,10 @@ import {
   useBreakpointValue,
   Flex,
 } from '@chakra-ui/react';
+
+import NextLink from 'next/link';
 import { LockIcon, UnlockIcon } from '@chakra-ui/icons';
-import React, { useContext } from 'react';
+import React from 'react';
 import ForkIcon from '~/components/svg/forkIcon';
 import { ZipperSymbol } from '~/components/svg/zipperSymbol';
 import { ZipperLogo } from '@zipper/ui';
@@ -21,7 +23,6 @@ import { useSelf, useOthers } from '~/liveblocks.config';
 import { Avatar } from '../avatar';
 import { HiLightningBolt, HiOutlineCog, HiOutlineShare } from 'react-icons/hi';
 import { useUser, SignedIn, SignedOut } from '@clerk/nextjs';
-import { EditorContext } from '../context/editorContext';
 import { AppQueryOutput } from './playground';
 
 const isEditorOnline = (onlineEditorIds: string[], id: string) =>
@@ -127,32 +128,57 @@ export function PlaygroundHeader({
     >
       <HStack spacing={3} alignItems="center" flex={1} minW={0}>
         <Box height={4}>
-          <Link href="/">
+          <NextLink href="/">
             <SignedIn>
               <ZipperSymbol style={{ maxHeight: '100%' }} />
             </SignedIn>
             <SignedOut>
               <ZipperLogo style={{ maxHeight: '100%' }} />
             </SignedOut>
-          </Link>
+          </NextLink>
         </Box>
-        <Box>
-          {app.isPrivate ? (
-            <LockIcon fill={'gray.500'} boxSize={4} mb={1} />
-          ) : (
-            <UnlockIcon color={'gray.500'} boxSize={4} mb={1} />
-          )}
-        </Box>
-        {app.parentId && (
+        <HStack spacing={2} alignItems="center" minW={0}>
           <Box>
-            <Link href={`/app/${app.parentId}/edit`} target="_blank">
-              <ForkIcon fill={'gray.300'} size={16} />
-            </Link>
+            {app.isPrivate ? (
+              <Icon as={LockIcon} color={'gray.500'} boxSize={4} mb={1} />
+            ) : (
+              <Icon as={UnlockIcon} color={'gray.400'} boxSize={4} mb={1} />
+            )}
           </Box>
-        )}
-        <Heading as="h1" size="md" overflow="auto" whiteSpace="nowrap">
-          {app.slug}
-        </Heading>
+          {app.parentId && (
+            <Box>
+              <Link href={`/app/${app.parentId}/edit`} target="_blank">
+                <Icon as={ForkIcon} color={'gray.400'} size={16} />
+              </Link>
+            </Box>
+          )}
+        </HStack>
+        <HStack>
+          <Heading
+            as="h1"
+            size="md"
+            overflow="auto"
+            whiteSpace="nowrap"
+            fontWeight="medium"
+            color="gray.600"
+          >
+            {app.resourceOwner.slug}
+          </Heading>
+
+          <Heading
+            as="h1"
+            size="md"
+            overflow="auto"
+            whiteSpace="nowrap"
+            fontWeight="medium"
+            color="gray.400"
+          >
+            /
+          </Heading>
+          <Heading as="h1" size="md" overflow="auto" whiteSpace="nowrap">
+            {app.slug}
+          </Heading>
+        </HStack>
         {!isMobile && (
           <PlaygroundAvatars
             editorIds={editorIds}

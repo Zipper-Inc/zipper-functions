@@ -17,11 +17,13 @@ import { DefaultLayout } from '~/components/default-layout';
 import { AppRouter } from '~/server/routers/_app';
 import { SSRContext } from '~/utils/trpc';
 import '@fontsource/inter/variable.css';
+import Header from '~/components/header';
 
 export type NextPageWithLayout<P = Record<string, unknown>, IP = P> = NextPage<
   P,
   IP
 > & {
+  header?: (props: Record<string, unknown>) => ReactNode;
   getLayout?: (page: ReactElement) => ReactNode;
   skipAuth?: boolean;
 };
@@ -33,7 +35,16 @@ type AppPropsWithLayout = AppProps & {
 
 const MyApp = (({ Component, pageProps }: AppPropsWithLayout) => {
   const getLayout =
-    Component.getLayout ?? ((page) => <DefaultLayout>{page}</DefaultLayout>);
+    Component.getLayout ??
+    ((page) => (
+      <DefaultLayout
+        header={
+          Component.header ? Component.header({ ...pageProps }) : <Header />
+        }
+      >
+        {page}
+      </DefaultLayout>
+    ));
 
   return (
     <>

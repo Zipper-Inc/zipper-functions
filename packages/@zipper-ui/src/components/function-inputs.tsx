@@ -25,7 +25,7 @@ interface Props {
   formContext: UseFormReturn<FieldValues, any>;
 }
 
-function InputParamsInput({
+function FunctionParamInput({
   inputKey,
   type,
   optional,
@@ -106,7 +106,7 @@ function InputParamsInput({
   }
 }
 
-export function InputParamsForm({ params = [], formContext }: Props) {
+export function FunctionInputs({ params = [], formContext }: Props) {
   const inputs = params.map(({ key, type, optional }, i) => (
     <FormLabel width="100%" my="2" key={`${key}-${i}`}>
       <VStack justify="start" align="start" spacing={1.5}>
@@ -134,7 +134,7 @@ export function InputParamsForm({ params = [], formContext }: Props) {
           )}
         </HStack>
         <Flex width="100%">
-          <InputParamsInput
+          <FunctionParamInput
             inputKey={key}
             type={type}
             value={null}

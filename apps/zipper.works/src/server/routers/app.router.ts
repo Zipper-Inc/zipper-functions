@@ -187,8 +187,6 @@ export const appRouter = createRouter()
         },
       });
 
-      console.log(apps, resourceOwners);
-
       return apps.reduce((arr, app) => {
         const resourceOwner = resourceOwners.find(
           (r) => r.resourceOwnerId === (app.organizationId || app.createdById),
@@ -287,7 +285,13 @@ export const appRouter = createRouter()
         },
       });
 
-      return { ...app, canUserEdit: canUserEdit(app, ctx) };
+      const resourceOwner = await prisma.resourceOwnerSlug.findFirstOrThrow({
+        where: {
+          resourceOwnerId: app.organizationId || app.createdById,
+        },
+      });
+
+      return { ...app, resourceOwner, canUserEdit: canUserEdit(app, ctx) };
     },
   })
   .query('byResourceOwnerAndAppSlugs', {
@@ -331,7 +335,42 @@ export const appRouter = createRouter()
       });
 
       // return the app
-      return { ...app, canUserEdit: canUserEdit(app, ctx) };
+      return { ...app, resourceOwner, canUserEdit: canUserEdit(app, ctx) };
+    },
+  })
+  .query('byResourceOwner', {
+    input: z.object({
+      resourceOwnerSlug: z.string(),
+    }),
+    async resolve({ input }) {
+      //find resouce owner (org or user) based on slug
+      const resourceOwner = await prisma.resourceOwnerSlug.findFirstOrThrow({
+        where: {
+          slug: input.resourceOwnerSlug,
+        },
+      });
+
+      const where: Prisma.AppWhereInput = {
+        isPrivate: false,
+      };
+
+      resourceOwner.resourceOwnerType === ResourceOwnerType.Organization
+        ? (where.organizationId = resourceOwner.resourceOwnerId)
+        : (where.createdById = resourceOwner.resourceOwnerId);
+
+      const apps = await prisma.app.findMany({
+        where,
+        select: {
+          ...defaultSelect,
+          scripts: true,
+          scriptMain: { include: { script: true } },
+          editors: true,
+          settings: true,
+          connectors: true,
+        },
+      });
+
+      return apps.map((app) => ({ ...app, resourceOwner }));
     },
   })
   .query('validateSlug', {
@@ -413,10 +452,18 @@ export const appRouter = createRouter()
         }
       });
 
-      return prisma.app.findUniqueOrThrow({
+      const resourceOwner = await prisma.resourceOwnerSlug.findFirstOrThrow({
+        where: {
+          resourceOwnerId: fork.organizationId || fork.createdById,
+        },
+      });
+
+      const appWithScripts = await prisma.app.findUniqueOrThrow({
         where: { id: fork.id },
         select: defaultSelect,
       });
+
+      return { ...appWithScripts, resourceOwner, canUserEdit: true };
     },
   })
   // update
