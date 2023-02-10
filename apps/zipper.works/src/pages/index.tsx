@@ -10,7 +10,6 @@ import { trpcRouter } from '~/server/routers/_app';
 import { inferQueryOutput, trpc } from '~/utils/trpc';
 import SuperJSON from 'superjson';
 import { getAuth } from '@clerk/nextjs/server';
-import { useRouter } from 'next/router';
 import Header from '~/components/header';
 
 export type GalleryAppQueryOutput = inferQueryOutput<
@@ -18,11 +17,6 @@ export type GalleryAppQueryOutput = inferQueryOutput<
 >;
 
 const IndexPage: NextPageWithLayout = (props) => {
-  const router = useRouter();
-  if (props.redirectTo) {
-    router.push(props.redirectTo);
-  }
-
   const { user, isLoaded } = useUser();
 
   const appsByResourceOwnerQuery = trpc.useQuery(
@@ -71,8 +65,8 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
       });
     } catch (e) {
       return {
-        props: {
-          redirectTo: `${
+        redirect: {
+          destination: `${
             process.env.NODE_ENV === 'production' ? 'https' : 'http'
           }://${removeSubdomains(host!)}`,
         },
