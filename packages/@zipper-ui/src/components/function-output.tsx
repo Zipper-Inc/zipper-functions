@@ -242,7 +242,6 @@ function RawFunctionOutput({ result }: Props) {
     ? JSON.stringify(parsed, null, 2)
     : result.toString();
 
-  console.log({ rawOutput });
   return (
     <Code as="pre" backgroundColor="gray.100" width="full">
       {rawOutput}
