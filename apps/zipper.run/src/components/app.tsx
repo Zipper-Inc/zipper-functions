@@ -18,6 +18,7 @@ import {
   ButtonGroup,
   Button,
   Divider,
+  Progress,
 } from '@chakra-ui/react';
 import Head from 'next/head';
 import { useForm } from 'react-hook-form';
@@ -39,6 +40,7 @@ export function AppPage({
   const appTitle = app.name || app.slug;
   const formContext = useForm({ defaultValues });
   const [result, setResult] = useState('');
+  const [loading, setLoading] = useState(false);
 
   return (
     <>
@@ -76,6 +78,7 @@ export function AppPage({
               <Button
                 colorScheme="purple"
                 onClick={async () => {
+                  setLoading(true);
                   const rawValues = formContext.getValues();
                   const values: Record<string, any> = {};
                   Object.keys(rawValues).forEach((k) => {
@@ -91,6 +94,7 @@ export function AppPage({
                   }).then((r) => r.text());
 
                   if (result) setResult(result);
+                  setLoading(false);
                 }}
               >
                 Run
@@ -107,6 +111,15 @@ export function AppPage({
           </Flex>
         </Box>
       </Box>
+      {loading && (
+        <Progress
+          colorScheme="purple"
+          size="xs"
+          isIndeterminate
+          width="full"
+          position="absolute"
+        />
+      )}
       {result && <FunctionOutput result={result} />}
     </>
   );
