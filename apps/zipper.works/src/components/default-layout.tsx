@@ -13,15 +13,11 @@ type DefaultLayoutProps = {
   title?: string;
 };
 
-export const DefaultLayout = ({
-  children,
-  header,
-  title = 'Zipper Functions',
-}: DefaultLayoutProps) => {
+export const DefaultLayout = ({ children, header }: DefaultLayoutProps) => {
   return (
     <>
       <Head>
-        <title>{title}</title>
+        <title>Zipper</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
 

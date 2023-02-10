@@ -24,7 +24,6 @@ export type NextPageWithLayout<P = Record<string, unknown>, IP = P> = NextPage<
   IP
 > & {
   header?: (props: Record<string, unknown>) => ReactNode;
-  title?: string;
   getLayout?: (page: ReactElement) => ReactNode;
   skipAuth?: boolean;
 };
@@ -42,7 +41,6 @@ const MyApp = (({ Component, pageProps }: AppPropsWithLayout) => {
         header={
           Component.header ? Component.header({ ...pageProps }) : <Header />
         }
-        title={Component.title}
       >
         {page}
       </DefaultLayout>

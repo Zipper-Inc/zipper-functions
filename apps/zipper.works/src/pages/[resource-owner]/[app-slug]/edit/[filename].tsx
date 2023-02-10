@@ -10,6 +10,8 @@ import { Playground } from '~/components/app/playground';
 import { LiveObject } from '@liveblocks/client';
 import { SignedIn } from '@clerk/nextjs';
 import EditorContextProvider from '~/components/context/editorContext';
+import { Box } from '@chakra-ui/react';
+import Head from 'next/head';
 
 const PlaygroundPage: NextPageWithLayout = () => {
   const { query } = useRouter();
@@ -37,6 +39,8 @@ const PlaygroundPage: NextPageWithLayout = () => {
   }
 
   const { data } = appQuery;
+
+  const pageTitle = `${data.resourceOwner.slug} / ${data.name || data.slug}`;
 
   const initialStorage: any = {
     app: new LiveObject({
@@ -70,6 +74,9 @@ const PlaygroundPage: NextPageWithLayout = () => {
 
   return (
     <>
+      <Head>
+        <title>{pageTitle}</title>
+      </Head>
       {appQuery.data &&
         (appQuery.data.isPrivate ? (
           <SignedIn>{playground}</SignedIn>
@@ -81,6 +88,6 @@ const PlaygroundPage: NextPageWithLayout = () => {
 };
 
 PlaygroundPage.skipAuth = true;
-PlaygroundPage.header = () => <></>;
+PlaygroundPage.header = () => <Box mt={4}></Box>;
 
 export default PlaygroundPage;
