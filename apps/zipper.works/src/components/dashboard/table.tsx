@@ -6,41 +6,35 @@ import {
   flexRender,
   getCoreRowModel,
   ColumnDef,
-  SortingState,
   getSortedRowModel,
   getFilteredRowModel,
+  TableState,
+  FiltersOptions,
+  SortingOptions,
 } from '@tanstack/react-table';
 
 export type DataTableProps<Data extends object> = {
   data: Data[];
   columns: ColumnDef<Data, any>[];
   isEmpty?: boolean;
-  globalFilter: string;
   setGlobalFilter: React.Dispatch<React.SetStateAction<string>>;
-};
+  state: Partial<TableState>;
+} & FiltersOptions<Data> &
+  SortingOptions<Data>;
 
 export function DataTable<Data extends object>({
   data,
   columns,
   isEmpty,
-  globalFilter,
-  setGlobalFilter,
+  state,
+  ...rest
 }: DataTableProps<Data>) {
-  const [sorting, setSorting] = React.useState<SortingState>([]);
-
   const table = useReactTable({
     columns,
     data,
     getCoreRowModel: getCoreRowModel(),
-    onSortingChange: setSorting,
-    getSortedRowModel: getSortedRowModel(),
-    onGlobalFilterChange: setGlobalFilter,
-    getFilteredRowModel: getFilteredRowModel(),
-    globalFilterFn: 'includesString',
-    state: {
-      sorting,
-      globalFilter,
-    },
+    state,
+    ...rest,
   });
 
   console.log('DataTable -> data:', data);

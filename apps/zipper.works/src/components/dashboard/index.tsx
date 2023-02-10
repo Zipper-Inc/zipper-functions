@@ -19,7 +19,13 @@ import { CreateAppModal } from './create-app-modal';
 
 import { FiPlus } from 'react-icons/fi';
 import { DataTable } from './table';
-import { createColumnHelper } from '@tanstack/react-table';
+import {
+  DeepKeys,
+  SortingState,
+  createColumnHelper,
+  getFilteredRowModel,
+  getSortedRowModel,
+} from '@tanstack/react-table';
 import { LockIcon, UnlockIcon } from '@chakra-ui/icons';
 import router from 'next/router';
 
@@ -92,7 +98,6 @@ const columns = [
   columnHelper.accessor('description', {
     cell: (info) => info.getValue(),
     header: 'Description',
-    enableHiding: true,
   }),
 ];
 
@@ -105,6 +110,10 @@ export function Dashboard() {
   const [appSearchTerm, setAppSearchTerm] = useState('');
   const [isCreateAppModalOpen, setCreateAppModalOpen] = useState(false);
   const { organizationList } = useOrganizationList();
+  const [columnVisibility] = useState<Partial<Record<DeepKeys<App>, boolean>>>({
+    description: false,
+  });
+  const [sorting, setSorting] = React.useState<SortingState>([]);
 
   const getAppOwner = (app: _App): AppOwner => {
     if (
@@ -165,8 +174,17 @@ export function Dashboard() {
                 columns={columns}
                 data={apps}
                 isEmpty={!appQuery.isLoading && !appQuery.data}
-                globalFilter={appSearchTerm}
                 setGlobalFilter={setAppSearchTerm}
+                onSortingChange={setSorting}
+                onGlobalFilterChange={setAppSearchTerm}
+                globalFilterFn="includesString"
+                getSortedRowModel={getSortedRowModel()}
+                getFilteredRowModel={getFilteredRowModel()}
+                state={{
+                  globalFilter: appSearchTerm,
+                  columnVisibility,
+                  sorting,
+                }}
               />
             </TableContainer>
           </VStack>
