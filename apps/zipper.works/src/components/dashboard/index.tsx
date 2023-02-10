@@ -12,7 +12,7 @@ import {
   HStack,
   Link,
 } from '@chakra-ui/react';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import DefaultGrid from '~/components/default-grid';
 import { useOrganization, useOrganizationList, useUser } from '@clerk/nextjs';
 import { CreateAppModal } from './create-app-modal';
@@ -82,10 +82,17 @@ const columns = [
         dateStyle: 'short',
       }).format(info.getValue()),
     header: 'Last Updated',
+    enableGlobalFilter: false,
   }),
   columnHelper.accessor('owner.name', {
     cell: (info) => info.getValue(),
     header: 'Owner',
+    enableGlobalFilter: false,
+  }),
+  columnHelper.accessor('description', {
+    cell: (info) => info.getValue(),
+    header: 'Description',
+    enableHiding: true,
   }),
 ];
 
@@ -96,7 +103,6 @@ export function Dashboard() {
   const { organization } = useOrganization();
   const appQuery = trpc.useQuery(['app.byAuthedUser']);
   const [appSearchTerm, setAppSearchTerm] = useState('');
-  const [displayedApps, setDisplayedApps] = useState(appQuery.data);
   const [isCreateAppModalOpen, setCreateAppModalOpen] = useState(false);
   const { organizationList } = useOrganizationList();
 
@@ -115,29 +121,15 @@ export function Dashboard() {
     return { name: orgName, type: 'org' };
   };
 
+  const apps = useMemo(
+    () =>
+      appQuery.data ? prepareAppsData(appQuery.data, getAppOwner) : emptyApps,
+    [appQuery.data],
+  );
+
   useEffect(() => {
     appQuery.refetch();
   }, [organization]);
-
-  useEffect(() => {
-    const search = appSearchTerm.trim();
-    if (search) {
-      const filteredApps = appQuery.data?.filter(
-        ({ name, slug, description }) => {
-          const searchPattern = RegExp(search, 'gi');
-          return (
-            searchPattern.test(name ?? slug) ||
-            searchPattern.test(description ?? '')
-          );
-        },
-      );
-      setDisplayedApps(filteredApps);
-    } else if (displayedApps != appQuery.data) {
-      setDisplayedApps(appQuery.data);
-    }
-  }, [appSearchTerm, appQuery.data]);
-
-  const data = prepareAppsData(displayedApps ?? emptyApps, getAppOwner);
 
   return (
     <>
@@ -171,8 +163,10 @@ export function Dashboard() {
             <TableContainer w="full">
               <DataTable
                 columns={columns}
-                data={data}
+                data={apps}
                 isEmpty={!appQuery.isLoading && !appQuery.data}
+                globalFilter={appSearchTerm}
+                setGlobalFilter={setAppSearchTerm}
               />
             </TableContainer>
           </VStack>
