@@ -56,7 +56,7 @@ function parseResult(result: any): { type: OutputType; data: any } {
   return { type, data };
 }
 
-export function TableArray(props: { data: Array<any> }) {
+function TableArray(props: { data: Array<any> }) {
   const columns = useMemo(
     () =>
       [
@@ -127,7 +127,7 @@ export function TableArray(props: { data: Array<any> }) {
   );
 }
 
-export function TableCollection(props: { data: Array<any> }) {
+function TableCollection(props: { data: Array<any> }) {
   const columns = useMemo(() => {
     const keys: Array<string> = [];
     props.data.forEach((record) => {
@@ -185,7 +185,7 @@ export function TableCollection(props: { data: Array<any> }) {
   );
 }
 
-export function ObjectExplorerRow({
+function ObjectExplorerRow({
   heading,
   data,
   level,
@@ -220,7 +220,7 @@ export function ObjectExplorerRow({
   );
 }
 
-export function ObjectExplorer({
+function ObjectExplorer({
   data,
   level,
 }: {
@@ -236,7 +236,7 @@ export function ObjectExplorer({
   );
 }
 
-export function RawFunctionOutput({ result }: Props) {
+function RawFunctionOutput({ result }: Props) {
   const parsed = safeJSONParse(result);
   const rawOutput = parsed
     ? JSON.stringify(parsed, null, 2)
@@ -250,7 +250,7 @@ export function RawFunctionOutput({ result }: Props) {
   );
 }
 
-export function SmartFunctionOutput({ result, level = 0 }: Props) {
+function SmartFunctionOutput({ result, level = 0 }: Props) {
   if (!result) return null;
 
   const { type, data } = parseResult(result);
@@ -284,7 +284,7 @@ export function FunctionOutput({ result, level = 0 }: Props) {
   return (
     <Tabs mx={8} my={4} colorScheme="purple" variant="enclosed">
       <TabList>
-        <Tab>Output</Tab>
+        <Tab>Result</Tab>
         <Tab>Raw Output</Tab>
       </TabList>
       <TabPanels
