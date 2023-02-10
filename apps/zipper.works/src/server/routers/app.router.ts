@@ -291,6 +291,11 @@ export const appRouter = createRouter()
         },
       });
 
+      const canEdit = canUserEdit(app, ctx);
+      if (app.isPrivate && !canEdit) {
+        throw new TRPCError({ code: 'UNAUTHORIZED' });
+      }
+
       return { ...app, resourceOwner, canUserEdit: canUserEdit(app, ctx) };
     },
   })
@@ -334,8 +339,11 @@ export const appRouter = createRouter()
         },
       });
 
+      const canEdit = canUserEdit(app, ctx);
+      if (app.isPrivate && !canEdit)
+        throw new TRPCError({ code: 'UNAUTHORIZED' });
       // return the app
-      return { ...app, resourceOwner, canUserEdit: canUserEdit(app, ctx) };
+      return { ...app, resourceOwner, canUserEdit: canEdit };
     },
   })
   .query('byResourceOwner', {
