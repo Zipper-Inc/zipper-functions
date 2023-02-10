@@ -4,22 +4,32 @@ import Head from 'next/head';
 import { ReactNode } from 'react';
 import { ReactQueryDevtools } from 'react-query/devtools';
 
-import Header from './header';
 import { theme } from '@zipper/ui';
 
-type DefaultLayoutProps = { children: ReactNode; protected?: boolean };
+type DefaultLayoutProps = {
+  children: ReactNode;
+  protected?: boolean;
+  header?: ReactNode;
+  title?: string;
+};
 
-export const DefaultLayout = ({ children }: DefaultLayoutProps) => {
+export const DefaultLayout = ({
+  children,
+  header,
+  title = 'Zipper Functions',
+}: DefaultLayoutProps) => {
   return (
     <>
       <Head>
-        <title>Zipper Functions</title>
+        <title>{title}</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
       <ChakraProvider theme={theme}>
-        <Header />
-        <main>{children}</main>
+        <>
+          {header}
+          <main>{children}</main>
+        </>
       </ChakraProvider>
 
       {process.env.NODE_ENV !== 'production' && (

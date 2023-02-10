@@ -3,7 +3,6 @@ import { SignUp } from '@clerk/nextjs';
 import { ZipperLogo } from '@zipper/ui';
 import { useRouter } from 'next/router';
 import { ReactNode } from 'react';
-import { NoHeaderLayout } from '~/components/no-header-layout';
 
 const SignUpPage = () => {
   const router = useRouter();
@@ -27,6 +26,4 @@ const SignUpPage = () => {
 export default SignUpPage;
 
 SignUpPage.skipAuth = true;
-SignUpPage.getLayout = (page: ReactNode) => (
-  <NoHeaderLayout>{page}</NoHeaderLayout>
-);
+SignUpPage.header = () => <></>;

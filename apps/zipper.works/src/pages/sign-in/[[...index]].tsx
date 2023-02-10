@@ -2,7 +2,6 @@ import { Center, VStack } from '@chakra-ui/react';
 import { SignIn } from '@clerk/nextjs';
 import { ZipperLogo } from '@zipper/ui';
 import { useRouter } from 'next/router';
-import { NoHeaderLayout } from '~/components/no-header-layout';
 import { NextPageWithLayout } from '../_app';
 
 const SignInPage: NextPageWithLayout = () => {
@@ -27,4 +26,4 @@ const SignInPage: NextPageWithLayout = () => {
 export default SignInPage;
 
 SignInPage.skipAuth = true;
-SignInPage.getLayout = (page) => <NoHeaderLayout>{page}</NoHeaderLayout>;
+SignInPage.header = () => <></>;

@@ -8,7 +8,6 @@ import { withLiveBlocks } from '~/hocs/withLiveBlocks';
 
 import { Playground } from '~/components/app/playground';
 import { LiveObject } from '@liveblocks/client';
-import { NoHeaderLayout } from '~/components/no-header-layout';
 import { SignedIn } from '@clerk/nextjs';
 import EditorContextProvider from '~/components/context/editorContext';
 
@@ -82,6 +81,6 @@ const PlaygroundPage: NextPageWithLayout = () => {
 };
 
 PlaygroundPage.skipAuth = true;
-PlaygroundPage.getLayout = (page) => <NoHeaderLayout>{page}</NoHeaderLayout>;
+PlaygroundPage.header = () => <></>;
 
 export default PlaygroundPage;

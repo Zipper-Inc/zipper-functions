@@ -3,7 +3,6 @@ import { buildClerkProps, clerkClient, getAuth } from '@clerk/nextjs/server';
 import { GetServerSideProps } from 'next';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
-import { NoHeaderLayout } from '~/components/no-header-layout';
 import { trpc } from '~/utils/trpc';
 import { NextPageWithLayout } from '../_app';
 
@@ -73,4 +72,4 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
 
 export default AuthSuccess;
 
-AuthSuccess.getLayout = (page) => <NoHeaderLayout>{page}</NoHeaderLayout>;
+AuthSuccess.header = () => <></>;

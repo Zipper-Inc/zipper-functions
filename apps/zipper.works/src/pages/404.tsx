@@ -1,6 +1,6 @@
 import { Box, Container, Heading, Stack, Text } from '@chakra-ui/react';
 import React from 'react';
-import { BlankLayout } from '~/components/blank-layout';
+import Header from '~/components/header';
 import { NextPageWithLayout } from './_app';
 
 const NotFound: NextPageWithLayout = () => {
@@ -28,7 +28,7 @@ const NotFound: NextPageWithLayout = () => {
   );
 };
 
-NotFound.getLayout = (page) => <BlankLayout>{page}</BlankLayout>;
+NotFound.header = () => <Header showNav={false}></Header>;
 NotFound.skipAuth = true;
 
 export default NotFound;

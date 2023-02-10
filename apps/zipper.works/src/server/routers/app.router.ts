@@ -338,6 +338,41 @@ export const appRouter = createRouter()
       return { ...app, resourceOwner, canUserEdit: canUserEdit(app, ctx) };
     },
   })
+  .query('byResourceOwner', {
+    input: z.object({
+      resourceOwnerSlug: z.string(),
+    }),
+    async resolve({ input }) {
+      //find resouce owner (org or user) based on slug
+      const resourceOwner = await prisma.resourceOwnerSlug.findFirstOrThrow({
+        where: {
+          slug: input.resourceOwnerSlug,
+        },
+      });
+
+      const where: Prisma.AppWhereInput = {
+        isPrivate: false,
+      };
+
+      resourceOwner.resourceOwnerType === ResourceOwnerType.Organization
+        ? (where.organizationId = resourceOwner.resourceOwnerId)
+        : (where.createdById = resourceOwner.resourceOwnerId);
+
+      const apps = await prisma.app.findMany({
+        where,
+        select: {
+          ...defaultSelect,
+          scripts: true,
+          scriptMain: { include: { script: true } },
+          editors: true,
+          settings: true,
+          connectors: true,
+        },
+      });
+
+      return apps.map((app) => ({ ...app, resourceOwner }));
+    },
+  })
   .query('validateSlug', {
     input: z.object({
       slug: z

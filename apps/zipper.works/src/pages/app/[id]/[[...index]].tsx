@@ -3,7 +3,6 @@ import NextError from 'next/error';
 import { trpc } from '~/utils/trpc';
 import { NextPageWithLayout } from '../../_app';
 import { useEffect } from 'react';
-import { NoHeaderLayout } from '~/components/no-header-layout';
 
 export const AppIdPage: NextPageWithLayout = () => {
   const router = useRouter();
@@ -32,4 +31,4 @@ export const AppIdPage: NextPageWithLayout = () => {
 
 export default AppIdPage;
 
-AppIdPage.getLayout = (page) => <NoHeaderLayout>{page}</NoHeaderLayout>;
+AppIdPage.header = () => <></>;
