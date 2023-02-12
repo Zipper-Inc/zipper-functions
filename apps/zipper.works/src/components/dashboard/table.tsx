@@ -6,8 +6,6 @@ import {
   flexRender,
   getCoreRowModel,
   ColumnDef,
-  getSortedRowModel,
-  getFilteredRowModel,
   TableState,
   FiltersOptions,
   SortingOptions,

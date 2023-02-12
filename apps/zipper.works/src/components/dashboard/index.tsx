@@ -11,6 +11,7 @@ import {
   Input,
   HStack,
   Link,
+  Tooltip,
 } from '@chakra-ui/react';
 import React, { useEffect, useMemo, useState } from 'react';
 import DefaultGrid from '~/components/default-grid';
@@ -28,6 +29,7 @@ import {
 } from '@tanstack/react-table';
 import { LockIcon, UnlockIcon } from '@chakra-ui/icons';
 import router from 'next/router';
+import { HiBuildingOffice, HiUser } from 'react-icons/hi2';
 
 type AppOwner = { name: string; type: 'user' | 'org' };
 type _App = Unpack<inferQueryOutput<'app.byAuthedUser'>>;
@@ -66,7 +68,14 @@ const columns = [
     }) => (
       <VStack align={'start'} py="2">
         <HStack>
-          {isPrivate ? <LockIcon /> : <UnlockIcon />}
+          <Tooltip
+            placement="top"
+            label={isPrivate ? 'Private' : 'Public'}
+            textColor="gray.100"
+            backgroundColor="purple.500"
+          >
+            {isPrivate ? <LockIcon /> : <UnlockIcon />}
+          </Tooltip>
           <Link
             fontSize={'md'}
             fontWeight={600}
@@ -91,7 +100,16 @@ const columns = [
     enableGlobalFilter: false,
   }),
   columnHelper.accessor('owner.name', {
-    cell: (info) => info.getValue(),
+    cell: (info) => (
+      <HStack>
+        {info.row.original.owner.type === 'user' ? (
+          <HiUser />
+        ) : (
+          <HiBuildingOffice />
+        )}
+        <Text>{info.getValue()}</Text>
+      </HStack>
+    ),
     header: 'Owner',
     enableGlobalFilter: false,
   }),
