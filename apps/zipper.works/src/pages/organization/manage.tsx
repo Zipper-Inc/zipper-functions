@@ -38,7 +38,6 @@ import {
   AlertDialogFooter,
   useDisclosure,
   FormHelperText,
-  AvatarBadge,
   Avatar,
 } from '@chakra-ui/react';
 import { HiTrash, HiUserGroup } from 'react-icons/hi2';
@@ -69,7 +68,7 @@ export default function Organization() {
   const [showInviteForm, setShowInviteForm] = useState(false);
 
   return (
-    <Tabs colorScheme="purple">
+    <Tabs colorScheme="purple" mt="14">
       <DefaultGrid w="full" px="none" overflow="hidden">
         <GridItem colSpan={2} px={4} color="gray.500">
           <VStack alignItems="start" spacing={0}>
@@ -270,7 +269,19 @@ function MemberList() {
                 <VStack alignItems="start" spacing={0}>
                   <HStack>
                     <Text>
-                      {m.publicUserData.firstName} {m.publicUserData.lastName}
+                      {m.publicUserData.firstName ||
+                      m.publicUserData.lastName ? (
+                        <>
+                          {`${m.publicUserData.firstName} ${m.publicUserData.lastName}`}
+                        </>
+                      ) : (
+                        <>
+                          {`${
+                            m.publicMetadata.username ||
+                            m.publicUserData.identifier
+                          }}`}
+                        </>
+                      )}
                     </Text>
                     {m.id === membership?.id && (
                       <Badge

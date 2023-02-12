@@ -58,7 +58,7 @@ const AppPage: NextPageWithLayout = () => {
 
   const { data } = appQuery;
   return (
-    <DefaultGrid>
+    <DefaultGrid mt="14">
       <GridItem colSpan={5}>
         <VStack gap={4} alignItems="start" w={560}>
           <Heading as="h1" size="2xl" fontWeight="bold" overflowWrap="normal">
