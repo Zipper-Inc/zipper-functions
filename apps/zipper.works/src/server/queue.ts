@@ -3,7 +3,7 @@ import { env } from './env';
 import IORedis from 'ioredis';
 import { prisma } from './prisma';
 import fetch from 'node-fetch';
-import { getRunUrl } from '../utils/get-run-url';
+import getRunUrl from '../utils/get-run-url';
 
 const connection = new IORedis(+env.REDIS_PORT, env.REDIS_HOST, {
   maxRetriesPerRequest: null,
