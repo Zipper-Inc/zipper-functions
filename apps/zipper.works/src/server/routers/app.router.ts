@@ -61,7 +61,7 @@ export const appRouter = createRouter()
           .transform((s) => slugify(s))
           .optional(),
         description: z.string().optional(),
-        organizationId: z.string().optional(),
+        organizationId: z.string().nullable().optional(),
         isPrivate: z.boolean().optional().default(true),
       })
       .optional(),
@@ -73,7 +73,7 @@ export const appRouter = createRouter()
         throw new TRPCError({ code: 'UNAUTHORIZED' });
       }
 
-      const { name, description, organizationId, isPrivate } = input;
+      const { name, description, organizationId: orgId, isPrivate } = input;
       let { slug } = input;
 
       // if there's a name but no slug, use the name to generate a slug
@@ -119,13 +119,15 @@ export const appRouter = createRouter()
         });
       }
 
+      const organizationId = orgId === null ? null : orgId || ctx.orgId;
+
       const app = await prisma.app.create({
         data: {
           name,
           description,
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           slug: possibleSlugs[0]!,
-          organizationId: organizationId || ctx.orgId,
+          organizationId,
           createdById: ctx.userId,
           isPrivate,
           editors: {
