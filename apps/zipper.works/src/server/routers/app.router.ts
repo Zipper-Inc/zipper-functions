@@ -61,6 +61,8 @@ export const appRouter = createRouter()
           .transform((s) => slugify(s))
           .optional(),
         description: z.string().optional(),
+        organizationId: z.string().optional(),
+        isPrivate: z.boolean().optional().default(true),
       })
       .optional(),
     async resolve({
@@ -71,7 +73,7 @@ export const appRouter = createRouter()
         throw new TRPCError({ code: 'UNAUTHORIZED' });
       }
 
-      const { name, description } = input;
+      const { name, description, organizationId, isPrivate } = input;
       let { slug } = input;
 
       // if there's a name but no slug, use the name to generate a slug
@@ -123,8 +125,9 @@ export const appRouter = createRouter()
           description,
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           slug: possibleSlugs[0]!,
-          organizationId: ctx.orgId,
+          organizationId: organizationId || ctx.orgId,
           createdById: ctx.userId,
+          isPrivate,
           editors: {
             create: {
               userId: ctx.userId,
