@@ -10,6 +10,7 @@ import {
 } from '@chakra-ui/react';
 import debounce from 'lodash.debounce';
 
+import { InputParam } from '@zipper/types';
 import { useRouter } from 'next/router';
 import React, { useState, useEffect } from 'react';
 import SecretsTab from '~/components/app/secrets-tab';
