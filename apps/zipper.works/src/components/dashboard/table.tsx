@@ -35,8 +35,6 @@ export function DataTable<Data extends object>({
     ...rest,
   });
 
-  console.log('DataTable -> data:', data);
-
   return (
     <Table>
       <Thead>
@@ -75,7 +73,6 @@ export function DataTable<Data extends object>({
         {table.getRowModel().rows.map((row) => (
           <Tr key={row.id}>
             {row.getVisibleCells().map((cell) => {
-              console.log('cell.getContext():', cell.getContext());
               // see https://tanstack.com/table/v8/docs/api/core/column-def#meta to type this correctly
               const meta: any = cell.column.columnDef.meta;
               return (

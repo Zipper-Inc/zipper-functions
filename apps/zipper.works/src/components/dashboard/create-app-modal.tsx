@@ -17,8 +17,11 @@ import {
   ModalHeader,
   ModalOverlay,
   Icon,
+  Text,
   Textarea,
   VStack,
+  HStack,
+  Switch,
 } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
@@ -27,6 +30,7 @@ import { useDebounce } from 'use-debounce';
 import slugify from '~/utils/slugify';
 import { trpc } from '~/utils/trpc';
 import { generateDefaultName } from '~/utils/generate-default';
+import { HiGlobe } from 'react-icons/hi';
 
 const MIN_SLUG_LENGTH = 5;
 
@@ -38,6 +42,8 @@ type Props = {
 const getDefaultCreateAppFormValues = () => ({
   name: generateDefaultName(),
   description: '',
+  isPublic: false,
+  organizationId: '',
 });
 
 export const CreateAppModal: React.FC<Props> = ({ isOpen, onClose }) => {
@@ -131,6 +137,18 @@ export const CreateAppModal: React.FC<Props> = ({ isOpen, onClose }) => {
                     backgroundColor="white"
                     {...createAppForm.register('description')}
                   />
+                </FormControl>
+                {/* workspace, and choose public/private */}
+                <FormControl>
+                  <HStack pt={4} w="full">
+                    <Box mr="auto">
+                      <HStack>
+                        <HiGlobe />
+                        <Text>Anyone with the link can view the app</Text>
+                      </HStack>
+                    </Box>
+                    <Switch {...createAppForm.register('isPublic')} ml="auto" />
+                  </HStack>
                 </FormControl>
                 <Box w="full">
                   <Button
