@@ -31,6 +31,8 @@ import slugify from '~/utils/slugify';
 import { trpc } from '~/utils/trpc';
 import { generateDefaultName } from '~/utils/generate-default';
 import { HiGlobe } from 'react-icons/hi';
+import { useOrganization, useOrganizationList } from '@clerk/nextjs';
+import { OrganizationSelector } from './organization-selector';
 
 const MIN_SLUG_LENGTH = 5;
 
@@ -43,10 +45,11 @@ const getDefaultCreateAppFormValues = () => ({
   name: generateDefaultName(),
   description: '',
   isPublic: false,
-  organizationId: '',
 });
 
 export const CreateAppModal: React.FC<Props> = ({ isOpen, onClose }) => {
+  const { organization } = useOrganization();
+  const { setActive } = useOrganizationList();
   const utils = trpc.useContext();
   const addApp = trpc.useMutation('app.add', {
     async onSuccess() {
@@ -54,6 +57,9 @@ export const CreateAppModal: React.FC<Props> = ({ isOpen, onClose }) => {
       await utils.invalidateQueries(['app.byAuthedUser']);
     },
   });
+  const [selectedOrganizationId, setSelectedOrganizationId] = useState<
+    string | null | undefined
+  >(organization?.id);
 
   const [slug, setSlug] = useState<string>('');
   const [debouncedSlug] = useDebounce(slug, 200);
@@ -71,10 +77,15 @@ export const CreateAppModal: React.FC<Props> = ({ isOpen, onClose }) => {
     setSlug(slugify(createAppForm.getValues('name')));
   }, []);
 
+  useEffect(() => {
+    setSelectedOrganizationId(organization?.id);
+  }, [organization?.id]);
+
   const resetForm = () => {
     const defaultValue = getDefaultCreateAppFormValues();
     createAppForm.reset(defaultValue);
     setSlug(slugify(defaultValue.name));
+    setSelectedOrganizationId(organization?.id);
   };
 
   const slugExists = appSlugQuery.data;
@@ -100,27 +111,37 @@ export const CreateAppModal: React.FC<Props> = ({ isOpen, onClose }) => {
               <VStack align={'start'} gap={2}>
                 <FormControl isRequired>
                   <FormLabel>Name</FormLabel>
-                  <InputGroup>
-                    <Input
-                      backgroundColor="white"
-                      maxLength={60}
-                      {...createAppForm.register('name')}
-                      onChange={(e) => {
-                        setSlug(slugify(e.target.value));
-                      }}
+                  <HStack spacing={1}>
+                    <OrganizationSelector
+                      setSelectedOrganizationId={setSelectedOrganizationId}
+                      selectedOrganizationId={selectedOrganizationId}
                     />
-                    {isSlugValid && (
-                      <InputRightElement
-                        children={
-                          slugExists ? (
-                            <Icon as={HiExclamationTriangle} color="red.500" />
-                          ) : (
-                            <CheckIcon color="green.500" />
-                          )
-                        }
+                    <Text>/</Text>
+                    <InputGroup>
+                      <Input
+                        backgroundColor="white"
+                        maxLength={60}
+                        {...createAppForm.register('name')}
+                        onChange={(e) => {
+                          setSlug(slugify(e.target.value));
+                        }}
                       />
-                    )}
-                  </InputGroup>
+                      {isSlugValid && (
+                        <InputRightElement
+                          children={
+                            slugExists ? (
+                              <Icon
+                                as={HiExclamationTriangle}
+                                color="red.500"
+                              />
+                            ) : (
+                              <CheckIcon color="green.500" />
+                            )
+                          }
+                        />
+                      )}
+                    </InputGroup>
+                  </HStack>
                   {createAppForm.watch('name') && (
                     <FormHelperText>
                       {`Your app will be available at
@@ -138,7 +159,6 @@ export const CreateAppModal: React.FC<Props> = ({ isOpen, onClose }) => {
                     {...createAppForm.register('description')}
                   />
                 </FormControl>
-                {/* workspace, and choose public/private */}
                 <FormControl>
                   <HStack pt={4} w="full">
                     <Box mr="auto">
@@ -157,14 +177,33 @@ export const CreateAppModal: React.FC<Props> = ({ isOpen, onClose }) => {
                     colorScheme="purple"
                     type="submit"
                     isDisabled={isDisabled}
-                    onClick={createAppForm.handleSubmit(async (data) => {
-                      await addApp.mutateAsync(data, {
-                        onSuccess: () => {
-                          resetForm();
-                          onClose();
-                        },
-                      });
-                    })}
+                    onClick={createAppForm.handleSubmit(
+                      async ({ description, isPublic, name }) => {
+                        await addApp.mutateAsync(
+                          {
+                            description,
+                            name,
+                            isPrivate: !isPublic,
+                            organizationId: selectedOrganizationId,
+                          },
+                          {
+                            onSuccess: () => {
+                              resetForm();
+                              onClose();
+                              if (
+                                (selectedOrganizationId ?? null) !==
+                                  (organization?.id ?? null) &&
+                                setActive
+                              ) {
+                                setActive({
+                                  organization: selectedOrganizationId,
+                                });
+                              }
+                            },
+                          },
+                        );
+                      },
+                    )}
                   >
                     Create
                   </Button>
