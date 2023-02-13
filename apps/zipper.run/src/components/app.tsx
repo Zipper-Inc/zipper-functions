@@ -120,7 +120,11 @@ export function AppPage({
           position="absolute"
         />
       )}
-      {result && <FunctionOutput result={result} />}
+      {result && (
+        <Box py={4} px={8}>
+          <FunctionOutput result={result} />
+        </Box>
+      )}
     </>
   );
 }

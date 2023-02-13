@@ -23,7 +23,8 @@ import { useSelf, useOthers } from '~/liveblocks.config';
 import { Avatar } from '../avatar';
 import { HiLightningBolt, HiOutlineCog, HiOutlineShare } from 'react-icons/hi';
 import { useUser, SignedIn, SignedOut } from '@clerk/nextjs';
-import { AppQueryOutput } from './playground';
+import { AppQueryOutput } from '~/types/trpc';
+import { useRunAppContext } from '../context/run-app-context';
 
 const isEditorOnline = (onlineEditorIds: string[], id: string) =>
   onlineEditorIds.includes(id);
@@ -65,7 +66,7 @@ function PlaygroundAvatars({
 
         return (
           <Avatar
-            key={id}
+            key={`${id}-${index}`}
             userId={id}
             size="xs"
             filter={`grayscale(${grayscale}%)`}
@@ -89,19 +90,18 @@ export function PlaygroundHeader({
   app,
   onClickSettings,
   onClickShare,
-  onClickRun,
   onClickFork,
 }: {
   app: AppQueryOutput;
   onClickSettings: (e: React.MouseEvent<HTMLElement>) => any;
   onClickShare: (e: React.MouseEvent<HTMLElement>) => any;
-  onClickRun: (e: React.MouseEvent<HTMLElement>) => any;
   onClickFork: (e: React.MouseEvent<HTMLElement>) => any;
 }) {
   const { isLoaded } = useUser();
   const self = useSelf();
   const others = useOthers();
   const isMobile = useBreakpointValue({ base: true, md: false });
+  const { run: onClickRun, isRunning } = useRunAppContext();
 
   // Get a list of active people in this app
   const onlineEditorIds = others.map(({ id }) => id as string);
@@ -206,6 +206,7 @@ export function PlaygroundHeader({
             colorScheme="purple"
             textColor="gray.100"
             onClick={onClickRun}
+            disabled={isRunning}
           >
             <Icon as={HiLightningBolt} />
             <Text ml="2">Run</Text>

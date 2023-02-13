@@ -9,7 +9,7 @@ import { withLiveBlocks } from '~/hocs/withLiveBlocks';
 import { Playground } from '~/components/app/playground';
 import { LiveObject } from '@liveblocks/client';
 import { SignedIn } from '@clerk/nextjs';
-import EditorContextProvider from '~/components/context/editorContext';
+import EditorContextProvider from '~/components/context/editor-context';
 import { Box } from '@chakra-ui/react';
 import Head from 'next/head';
 

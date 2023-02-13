@@ -6,7 +6,9 @@ import {
   QuestionIcon,
   CheckIcon,
 } from '@chakra-ui/icons';
+import { brandColors, baseColors } from '@zipper/ui';
 import { useEffect } from 'react';
+import { useRunAppContext } from '../context/run-app-context';
 
 enum LogLevel {
   Info = 'info',
@@ -61,12 +63,15 @@ export function LogLine({ log }: { log: any }) {
     log.exception ||
     JSON.stringify(log);
 
+  const { appInfo } = useRunAppContext();
+
   useEffect(() => {
     if (!level || !msg) console.log('?', log);
     console.log(
-      '%c[ZIPPER-FUNCTIONS]',
-      'color: purple; background: gray; ',
-      `[${level}]`,
+      '%c Z ' + `%c  ${appInfo.slug}  ` + `%c ${level} `,
+      `fontWeight: 800; color: white; background: ${brandColors.brandPurple};`,
+      `fontWeight: 500; color: ${baseColors.gray[600]}; background: ${baseColors.gray[50]};`,
+      `fontWeight: 200; font-size: smaller; height: 100%; color: ${brandColors.brandDarkPurple}; text-transform: uppercase;`,
       msg,
     );
   }, []);

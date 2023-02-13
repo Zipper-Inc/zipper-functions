@@ -281,7 +281,7 @@ function SmartFunctionOutput({ result, level = 0 }: Props) {
 
 export function FunctionOutput({ result, level = 0 }: Props) {
   return (
-    <Tabs mx={8} my={4} colorScheme="purple" variant="enclosed">
+    <Tabs colorScheme="purple" variant="enclosed">
       <TabList>
         <Tab>Result</Tab>
         <Tab>Raw Output</Tab>

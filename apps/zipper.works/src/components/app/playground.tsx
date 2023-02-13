@@ -11,20 +11,17 @@ import {
 import debounce from 'lodash.debounce';
 
 import { useRouter } from 'next/router';
-import React, { useContext, useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import React, { useState, useEffect } from 'react';
 import SecretsTab from '~/components/app/secrets-tab';
 import SchedulesTab from '~/components/app/schedules-tab';
 import ShareModal from '~/components/app/share-modal';
-import useInterval from '~/hooks/use-interval';
 import usePrettier from '~/hooks/use-prettier';
-import { InputParam, InputType, JSONEditorInputTypes } from '@zipper/types';
-import { safeJSONParse } from '@zipper/utils';
-import { inferQueryOutput, trpc } from '~/utils/trpc';
+import { trpc } from '~/utils/trpc';
 import {
   useMutation as useLiveMutation,
   useStorage as useLiveStorage,
 } from '~/liveblocks.config';
+
 import { LiveObject, LsonObject } from '@liveblocks/client';
 
 import { parseInputForTypes } from '~/utils/parse-input-for-types';
@@ -34,15 +31,15 @@ import DefaultGrid from '../default-grid';
 import { PlaygroundHeader } from './playground-header';
 import { CodeTab } from './code-tab';
 import { useUser } from '@clerk/nextjs';
-import { EditorContext } from '../context/editorContext';
+import { useEditorContext } from '../context/editor-context';
 import { Script } from '@prisma/client';
+import { AppQueryOutput } from '~/types/trpc';
+import { RunAppProvider } from '../context/run-app-context';
 
 const debouncedParseInputForTypes = debounce(
   (code, setInputParams) => setInputParams(parseInputForTypes(code)),
   500,
 );
-export type AppQueryOutput = inferQueryOutput<'app.byResourceOwnerAndAppSlugs'>;
-
 export function Playground({
   app,
   filename = 'main.ts',
@@ -53,34 +50,15 @@ export function Playground({
   const { user } = useUser();
   const router = useRouter();
 
-  const utils = trpc.useContext();
-
-  const editAppMutation = trpc.useMutation('app.edit', {
-    async onSuccess() {
-      await utils.invalidateQueries(['app.byId', { id }]);
-    },
-  });
-
   const [inputParams, setInputParams] = useState<InputParam[]>([]);
-  const [lastRunVersion, setLastRunVersion] = React.useState<string>();
-  const [inputValues, setInputValues] = React.useState<Record<string, string>>(
-    {},
-  );
   const [tabIndex, setTabIndex] = useState(0);
-
-  const inputParamsFormMethods = useForm();
 
   const [isSettingsModalOpen, setSettingModalOpen] = useState(false);
   const [isShareModalOpen, setShareModalOpen] = useState(false);
 
   const { id } = app;
 
-  const { setCurrentScript, currentScript, save } = useContext(EditorContext);
-
-  const appEventsQuery = trpc.useQuery([
-    'appEvent.all',
-    { deploymentId: `${id}@${lastRunVersion}` },
-  ]);
+  const { setCurrentScript, currentScript, save } = useEditorContext();
 
   const mainScript = app.scripts.find(
     (script: any) => script.id === app.scriptMain?.scriptId,
@@ -119,12 +97,6 @@ export function Playground({
     );
   }, [currentScript]);
 
-  useInterval(async () => {
-    if (lastRunVersion) {
-      appEventsQuery.refetch();
-    }
-  }, 10000);
-
   const format = usePrettier();
 
   const forkApp = trpc.useMutation('app.fork', {
@@ -141,139 +113,98 @@ export function Playground({
     save();
   };
 
-  const getAppDataVersion = () => {
-    return new Date(app.updatedAt || Date.now()).getTime().toString();
-  };
-
-  const runApp = async () => {
-    await saveApp();
-
-    const formValues = inputParamsFormMethods.getValues();
-    const inputs: Record<string, any> = {};
-
-    // We need to filter the form values since `useForm` hook keeps these around
-    const formKeys = inputParams.map(({ key, type }) => `${key}:${type}`);
-
-    Object.keys(formValues)
-      .filter((k) => formKeys.includes(k))
-      .forEach((k) => {
-        const [inputKey, type] = k.split(':');
-
-        const value = JSONEditorInputTypes.includes(type as InputType)
-          ? safeJSONParse(
-              formValues[k],
-              undefined,
-              type === InputType.array ? [] : {},
-            )
-          : formValues[k];
-        inputs[inputKey as string] = value;
-      });
-
-    setInputValues(inputs);
-
-    const version = getAppDataVersion();
-    setLastRunVersion(version);
-    editAppMutation.mutateAsync({
-      id,
-      data: { lastDeploymentVersion: version },
-    });
-
-    // Go directly to code page
-    setTabIndex(0);
-
-    // refetch logs
-    appEventsQuery.refetch();
-  };
+  const switchToCodeTab = () => setTabIndex(0);
 
   return (
-    <Tabs
-      colorScheme="purple"
-      index={tabIndex}
-      onChange={(index) => setTabIndex(index)}
-      paddingX={10}
+    <RunAppProvider
+      app={app}
+      inputParams={inputParams}
+      onBeforeRun={saveApp}
+      onAfterRun={switchToCodeTab}
     >
-      <PlaygroundHeader
-        app={app}
-        onClickSettings={() => setSettingModalOpen(true)}
-        onClickShare={() => setShareModalOpen(true)}
-        onClickRun={runApp}
-        onClickFork={() => {
-          if (app.canUserEdit) return;
-          if (user) {
-            forkApp.mutateAsync({ id: app.id });
-          } else {
-            router.push(`/sign-in?redirect=${window.location.pathname}`);
-          }
-        }}
-      />
-
-      <TabList
-        as={HStack}
-        gap={2}
-        borderColor={tabIndex === 0 ? 'purple.100' : 'inherit'}
-        mt={3}
+      <Tabs
+        colorScheme="purple"
+        index={tabIndex}
+        onChange={(index) => setTabIndex(index)}
+        paddingX={10}
       >
-        {/* CODE */}
-        <Tab
-          backgroundColor="gray.200"
-          borderTopRadius="md"
-          _selected={{
-            borderColor: 'purple.500',
-            backgroundColor: 'purple.500',
-            fontWeight: 'bold',
-            textColor: 'white',
+        <PlaygroundHeader
+          app={app}
+          onClickSettings={() => setSettingModalOpen(true)}
+          onClickShare={() => setShareModalOpen(true)}
+          onClickFork={() => {
+            if (app.canUserEdit) return;
+            if (user) {
+              forkApp.mutateAsync({ id: app.id });
+            } else {
+              router.push(`/sign-in?redirect=${window.location.pathname}`);
+            }
           }}
+        />
+
+        <TabList
+          as={HStack}
+          gap={2}
+          borderColor={tabIndex === 0 ? 'purple.100' : 'inherit'}
+          mt={3}
         >
-          <Box px="2">Code</Box>
-        </Tab>
+          {/* CODE */}
+          <Tab
+            backgroundColor="gray.200"
+            borderTopRadius="md"
+            _selected={{
+              borderColor: 'purple.500',
+              backgroundColor: 'purple.500',
+              fontWeight: 'bold',
+              textColor: 'white',
+            }}
+          >
+            <Box px="2">Code</Box>
+          </Tab>
 
-        {app.canUserEdit && (
-          <>
-            {/* SCHEDULES */}
-            <Tab>Schedules</Tab>
-            {/* SECRETS */}
-            <Tab>Secrets</Tab>
-          </>
-        )}
-      </TabList>
-      {/* TAB PANELS */}
-      <TabPanels as={DefaultGrid} maxW="full" p={0}>
-        {/* CODE */}
-        <TabPanel as={GridItem} colSpan={12} px={0} pb={0}>
-          <CodeTab
-            app={app}
-            mainScript={mainScript}
-            mutateLive={mutateLive}
-            inputParamsFormMethods={inputParamsFormMethods}
-            inputParams={inputParams}
-            inputValues={inputValues}
-            appEventsQuery={appEventsQuery}
-            lastRunVersion={lastRunVersion}
-          />
-        </TabPanel>
+          {app.canUserEdit && (
+            <>
+              {/* SCHEDULES */}
+              <Tab>Schedules</Tab>
+              {/* SECRETS */}
+              <Tab>Secrets</Tab>
+            </>
+          )}
+        </TabList>
+        {/* TAB PANELS */}
+        <TabPanels as={DefaultGrid} maxW="full" p={0}>
+          {/* CODE */}
+          <TabPanel as={GridItem} colSpan={12} px={0} pb={0}>
+            <CodeTab
+              app={app}
+              mainScript={mainScript}
+              mutateLive={mutateLive}
+            />
+          </TabPanel>
 
-        {/* SCHEDULES */}
-        <TabPanel as={GridItem} colSpan={12}>
-          <SchedulesTab inputParams={inputParams} appId={id} />
-        </TabPanel>
+          {/* SCHEDULES */}
+          <TabPanel as={GridItem} colSpan={12}>
+            <SchedulesTab inputParams={inputParams} appId={id} />
+          </TabPanel>
 
-        {/* SECRETS */}
-        <TabPanel as={GridItem} colSpan={12}>
-          <SecretsTab editable={app.canUserEdit} appId={id} />
-        </TabPanel>
-      </TabPanels>
+          {/* SECRETS */}
+          <TabPanel as={GridItem} colSpan={12}>
+            <SecretsTab editable={app.canUserEdit} appId={id} />
+          </TabPanel>
+        </TabPanels>
 
-      <ShareModal
-        isOpen={isShareModalOpen}
-        onClose={() => setShareModalOpen(false)}
-        appId={id}
-      />
+        <ShareModal
+          isOpen={isShareModalOpen}
+          onClose={() => setShareModalOpen(false)}
+          appId={id}
+        />
 
-      <SettingsModal
-        isOpen={isSettingsModalOpen}
-        onClose={() => setSettingModalOpen(false)}
-        appId={id}
-      />
-    </Tabs>
+        <SettingsModal
+          isOpen={isSettingsModalOpen}
+          onClose={() => setSettingModalOpen(false)}
+          appId={id}
+        />
+      </Tabs>
+    </RunAppProvider>
   );
 }

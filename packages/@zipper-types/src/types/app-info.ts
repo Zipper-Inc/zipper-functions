@@ -6,6 +6,7 @@ export type AppInfo = {
   name: string | null;
   description: string | null;
   lastDeploymentVersion: string | null;
+  updatedAt: Date | null;
 };
 
 export type InputParams = InputParam[];

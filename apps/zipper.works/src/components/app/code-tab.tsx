@@ -1,13 +1,12 @@
 import { Box, FormControl, GridItem, Text, Code } from '@chakra-ui/react';
-import React, { useContext } from 'react';
 import { AppEditSidebar } from '~/components/app/app-edit-sidebar';
 import { useCmdOrCtrl } from '~/hooks/use-cmd-or-ctrl';
-import { InputParam } from '@zipper/types';
 import DefaultGrid from '../default-grid';
 import { ConnectorForm } from './connector-form';
 import { PlaygroundSidebar } from './playground-sidebar';
 import dynamic from 'next/dynamic';
-import { EditorContext } from '../context/editorContext';
+import { useEditorContext } from '../context/editor-context';
+import { useRunAppContext } from '../context/run-app-context';
 
 export const PlaygroundEditor = dynamic(() => import('./playground-editor'), {
   ssr: false,
@@ -39,27 +38,28 @@ export function CodeTab({
   app,
   mainScript,
   mutateLive,
-  inputParamsFormMethods,
-  inputParams,
-  inputValues,
-  appEventsQuery,
-  lastRunVersion,
 }: {
   app: any;
   mainScript: any;
   mutateLive: (newCode: string) => void;
-  inputParamsFormMethods: any;
-  inputParams: InputParam[];
-  inputValues: Record<string, string>;
-  appEventsQuery: any;
-  lastRunVersion: string | undefined;
 }) {
-  const { currentScript, save } = useContext(EditorContext);
+  const { currentScript, save } = useEditorContext();
+  const { run } = useRunAppContext();
+
   useCmdOrCtrl(
     'S',
     (e: Event) => {
       e.preventDefault();
       save();
+    },
+    [],
+  );
+
+  useCmdOrCtrl(
+    'Enter',
+    (e: Event) => {
+      e.preventDefault();
+      run();
     },
     [],
   );
@@ -98,14 +98,6 @@ export function CodeTab({
       <GridItem colSpan={4}>
         <AppEditSidebar
           showInputForm={!currentScript?.connectorId}
-          inputParamsFormMethods={inputParamsFormMethods}
-          inputParams={inputParams}
-          inputValues={inputValues}
-          appEventsQuery={appEventsQuery}
-          appInfo={{
-            slug: app.slug,
-            version: lastRunVersion,
-          }}
           tips={ConnectorSidebarTips(currentScript?.connectorId)}
           maxHeight={MAX_CODE_TAB_HEIGHT}
         />
