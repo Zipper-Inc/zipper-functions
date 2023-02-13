@@ -25,6 +25,12 @@ const defaultSelect = Prisma.validator<Prisma.AppSelect>()({
   createdById: true,
 });
 
+export const defaultCode = [
+  'async function main({worldString}: {worldString: string}) {',
+  '  return `Hello ${worldString}`;',
+  '}',
+].join('\n');
+
 const canUserEdit = (
   app: Pick<
     App & { editors: AppEditor[] },
@@ -136,12 +142,6 @@ export const appRouter = createRouter()
       });
 
       if (!app) return;
-
-      const defaultCode = [
-        'async function main({worldString}: {worldString: string}) {',
-        '  return `Hello ${worldString}`;',
-        '}',
-      ].join('\n');
 
       const scriptMain = await prisma.scriptMain.create({
         data: {

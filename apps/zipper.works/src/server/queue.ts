@@ -78,10 +78,10 @@ const initializeWorkers = () => {
       },
       { connection },
     )
-      .on('completed', (job) => {
-        console.log(`[Job Queue] Completed job ID ${job.id}`);
+      ?.on('completed', (job) => {
+        console.log(`[Job Queue] Completed job ID ${job?.id}`);
       })
-      .on('failed', (job, err) => {
+      ?.on('failed', (job, err) => {
         console.log(`[Job Queue] Failed job ID ${job?.id} with error ${err}`);
       }),
   ];
