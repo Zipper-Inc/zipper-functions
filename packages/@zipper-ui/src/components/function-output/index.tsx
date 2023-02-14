@@ -23,38 +23,8 @@ import {
   useDisclosure,
 } from '@chakra-ui/react';
 import { useMemo } from 'react';
-
-interface Props {
-  result: any;
-  level?: number;
-}
-
-const TYPE_PRIMITIVES = ['number', 'string', 'boolean'];
-const isPrimitive = (value: any) => TYPE_PRIMITIVES.includes(typeof value);
-const isString = (value: any) => typeof value === 'string';
-const isHtml = (value: any) => {
-  if (!isString(value)) return false;
-  const doc = new DOMParser().parseFromString(value, 'text/html');
-  return Array.from(doc.body.childNodes).some((node) => node.nodeType === 1);
-};
-
-function parseResult(result: any): { type: OutputType; data: any } {
-  const data = isString(result) ? safeJSONParse(result) : result;
-  if (!data || isPrimitive(data))
-    return {
-      type: isHtml(result) ? OutputType.Html : OutputType.String,
-      data: result,
-    };
-
-  let type = OutputType.Object;
-
-  if (Array.isArray(data)) {
-    if (data.every(isPrimitive)) type = OutputType.Array;
-    else type = OutputType.Collection;
-  }
-
-  return { type, data };
-}
+import { Props } from './types';
+import { isPrimitive, parseResult } from './utils';
 
 function TableArray(props: { data: Array<any> }) {
   const columns = useMemo(
