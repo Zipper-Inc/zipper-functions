@@ -17,7 +17,6 @@ import React, { useState, useEffect } from 'react';
 import SecretsTab from '~/components/app/secrets-tab';
 import SchedulesTab from '~/components/app/schedules-tab';
 import ShareModal from '~/components/app/share-modal';
-import usePrettier from '~/hooks/use-prettier';
 import { trpc } from '~/utils/trpc';
 import {
   useMutation as useLiveMutation,
@@ -100,21 +99,11 @@ export function Playground({
     );
   }, [currentScript]);
 
-  const format = usePrettier();
-
   const forkApp = trpc.useMutation('app.fork', {
     async onSuccess(data: any) {
       router.push(`/app/${data.id}/edit`);
     },
   });
-
-  const saveApp = async () => {
-    if (currentScriptLive) {
-      const formatted = format(currentScriptLive.code).formatted;
-      mutateLive(formatted);
-    }
-    save();
-  };
 
   const switchToCodeTab = () => setTabIndex(0);
 
@@ -122,7 +111,7 @@ export function Playground({
     <RunAppProvider
       app={app}
       inputParams={inputParams}
-      onBeforeRun={saveApp}
+      onBeforeRun={save}
       onAfterRun={switchToCodeTab}
     >
       <Tabs
