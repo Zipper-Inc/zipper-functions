@@ -1,7 +1,6 @@
 import { createSSGHelpers } from '@trpc/react/ssg';
 import { useUser } from '@clerk/nextjs';
 import { GetServerSideProps } from 'next';
-import { Dashboard } from '~/components/dashboard';
 import { Gallery } from '~/components/gallery';
 import { createContext } from '~/server/context';
 import { getValidSubdomain, removeSubdomains } from '~/utils/subdomains';
@@ -10,6 +9,7 @@ import { trpcRouter } from '~/server/routers/_app';
 import { inferQueryOutput, trpc } from '~/utils/trpc';
 import SuperJSON from 'superjson';
 import { getAuth } from '@clerk/nextjs/server';
+import { useRouter } from 'next/router';
 import Header from '~/components/header';
 
 export type GalleryAppQueryOutput = inferQueryOutput<
@@ -17,6 +17,7 @@ export type GalleryAppQueryOutput = inferQueryOutput<
 >;
 
 const IndexPage: NextPageWithLayout = (props) => {
+  const router = useRouter();
   const { user, isLoaded } = useUser();
 
   const appsByResourceOwnerQuery = trpc.useQuery(
@@ -34,14 +35,13 @@ const IndexPage: NextPageWithLayout = (props) => {
     return <Gallery apps={appsByResourceOwnerQuery.data} />;
   }
 
-  if (user) {
-    return <Dashboard />;
-  }
-
   if (isLoaded && !user && galleryAppsQuery.isSuccess) {
     return <Gallery apps={galleryAppsQuery.data} />;
   }
 
+  if (user) {
+    router.push('/dashboard');
+  }
   return <div></div>;
 };
 

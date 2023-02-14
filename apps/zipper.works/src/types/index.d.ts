@@ -6,4 +6,6 @@ declare global {
       cookies: string[];
     }
   }
+
+  type Unpack<T> = T extends (infer U)[] ? U : T;
 }
