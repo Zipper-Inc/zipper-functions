@@ -2,8 +2,6 @@ import { OutputType } from '@zipper/types';
 import { useTable, useSortBy } from 'react-table';
 import {
   Box,
-  Collapse,
-  Button,
   Text,
   Tab,
   Tabs,
@@ -17,13 +15,12 @@ import {
   Th,
   Td,
   TableContainer,
-  Heading,
-  useDisclosure,
 } from '@chakra-ui/react';
 import { useMemo } from 'react';
 import { Props } from './types';
-import { isPrimitive, parseResult } from './utils';
+import { parseResult } from './utils';
 import { RawFunctionOutput } from './raw-function-output';
+import { ObjectExplorer } from './object-explorer';
 
 function TableArray(props: { data: Array<any> }) {
   const columns = useMemo(
@@ -151,57 +148,6 @@ function TableCollection(props: { data: Array<any> }) {
         </Tbody>
       </Table>
     </TableContainer>
-  );
-}
-
-function ObjectExplorerRow({
-  heading,
-  data,
-  level,
-}: {
-  heading: string;
-  data: any;
-  level: number;
-}) {
-  const { isOpen, onToggle } = useDisclosure({ defaultIsOpen: true });
-  const shouldCollapse = !isPrimitive(data);
-
-  return (
-    <Box my={6}>
-      <Heading size="md" mb={1} color="gray.600" fontWeight={300}>
-        {heading}
-        {shouldCollapse && (
-          <Button variant="ghost" size="xs" mx={2} onClick={onToggle}>
-            {!isOpen ? '〉' : '⌃'}
-          </Button>
-        )}
-      </Heading>
-      {shouldCollapse ? (
-        <Collapse in={isOpen}>
-          <Box pl={4}>
-            <SmartFunctionOutput result={data} level={level + 1} />
-          </Box>
-        </Collapse>
-      ) : (
-        <Text size="sm">{data.toString()}</Text>
-      )}
-    </Box>
-  );
-}
-
-function ObjectExplorer({
-  data,
-  level,
-}: {
-  data: Record<string, any>;
-  level: number;
-}) {
-  return (
-    <Box>
-      {Object.keys(data).map((key) => (
-        <ObjectExplorerRow heading={key} data={data[key]} level={level} />
-      ))}
-    </Box>
   );
 }
 
