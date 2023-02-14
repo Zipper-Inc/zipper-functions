@@ -32,6 +32,17 @@ module.exports = getConfig({
     '@zipper/utils',
     'monaco-languageclient',
   ],
+  webpack: (config) => {
+    if (!config.module.noParse)
+      config.module.noParse = [
+        require.resolve('@ts-morph/common/dist/typescript.js'),
+      ];
+    else
+      config.module.noParse.push(
+        require.resolve('@ts-morph/common/dist/typescript.js'),
+      );
+    return config;
+  },
 
   async rewrites() {
     return [
