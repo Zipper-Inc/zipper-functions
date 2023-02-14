@@ -14,7 +14,7 @@
     "singleQuote": true
   },
   "engines": {
-    "node": ">=18.14.0"
+    "node": "^18.14.0"
   },
   "dependencies": {
     "@chakra-ui/react": "^2.4.9",
