@@ -1,11 +1,9 @@
-import { safeJSONParse } from '@zipper/utils';
 import { OutputType } from '@zipper/types';
 import { useTable, useSortBy } from 'react-table';
 import {
   Box,
   Collapse,
   Button,
-  Code,
   Text,
   Tab,
   Tabs,
@@ -25,6 +23,7 @@ import {
 import { useMemo } from 'react';
 import { Props } from './types';
 import { isPrimitive, parseResult } from './utils';
+import { RawFunctionOutput } from './raw-function-output';
 
 function TableArray(props: { data: Array<any> }) {
   const columns = useMemo(
@@ -203,19 +202,6 @@ function ObjectExplorer({
         <ObjectExplorerRow heading={key} data={data[key]} level={level} />
       ))}
     </Box>
-  );
-}
-
-function RawFunctionOutput({ result }: Props) {
-  const parsed = safeJSONParse(result);
-  const rawOutput = parsed
-    ? JSON.stringify(parsed, null, 2)
-    : result.toString();
-
-  return (
-    <Code as="pre" backgroundColor="gray.100" width="full">
-      {rawOutput}
-    </Code>
   );
 }
 
