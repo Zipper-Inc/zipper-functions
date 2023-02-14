@@ -2,3 +2,4 @@
 
 export * from '../src/utils/safe-json';
 export * from '../src/utils/url';
+export * from '../src/get-last-run-version';

@@ -59,6 +59,8 @@ function getSourceFileFromCode(code: string) {
 }
 
 export function parseInputForTypes(code = ''): InputParam[] {
+  if (!code) return [];
+
   try {
     const src = getSourceFileFromCode(code);
     const mainFn = src.getFunction('main');

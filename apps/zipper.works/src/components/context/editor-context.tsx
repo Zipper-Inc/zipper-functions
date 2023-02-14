@@ -1,6 +1,6 @@
 import { Script } from '@prisma/client';
 import * as monaco from 'monaco-editor';
-import { createContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 import noop from '~/utils/noop';
 
 import { useStorage as useLiveStorage } from '~/liveblocks.config';
@@ -180,5 +180,7 @@ const EditorContextProvider = ({
     </EditorContext.Provider>
   );
 };
+
+export const useEditorContext = () => useContext(EditorContext);
 
 export default EditorContextProvider;

@@ -9,9 +9,11 @@ import { withLiveBlocks } from '~/hocs/withLiveBlocks';
 import { Playground } from '~/components/app/playground';
 import { LiveObject } from '@liveblocks/client';
 import { SignedIn } from '@clerk/nextjs';
-import EditorContextProvider from '~/components/context/editorContext';
+import EditorContextProvider from '~/components/context/editor-context';
 import { Box } from '@chakra-ui/react';
 import Head from 'next/head';
+import { GetServerSideProps, GetServerSidePropsContext } from 'next';
+import { getValidSubdomain, removeSubdomains } from '~/utils/subdomains';
 
 const PlaygroundPage: NextPageWithLayout = () => {
   const { query } = useRouter();
@@ -85,6 +87,29 @@ const PlaygroundPage: NextPageWithLayout = () => {
         ))}
     </>
   );
+};
+
+export const getServerSideProps: GetServerSideProps = async ({
+  req,
+  resolvedUrl,
+}: GetServerSidePropsContext) => {
+  const { host } = req.headers;
+
+  // validate subdomain
+  const subdomain = getValidSubdomain(host);
+
+  if (subdomain) {
+    return {
+      redirect: {
+        destination: `${
+          process.env.NODE_ENV === 'production' ? 'https' : 'http'
+        }://${removeSubdomains(host!)}/${resolvedUrl}`,
+      },
+      props: {},
+    };
+  }
+
+  return { props: {} };
 };
 
 PlaygroundPage.skipAuth = true;

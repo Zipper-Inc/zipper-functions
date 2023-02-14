@@ -31,8 +31,8 @@ import AddScriptForm from '~/components/app/add-script-form';
 import { Script } from '@prisma/client';
 import { trpc } from '~/utils/trpc';
 import { useForm } from 'react-hook-form';
-import { EditorContext } from '../context/editorContext';
-import { AppQueryOutput } from './playground';
+import { useEditorContext } from '../context/editor-context';
+import { AppQueryOutput } from '~/types/trpc';
 
 export function PlaygroundSidebar({
   app,
@@ -41,8 +41,7 @@ export function PlaygroundSidebar({
   app: AppQueryOutput;
   mainScript: Script;
 }) {
-  const { currentScript, setCurrentScript, isModelDirty } =
-    useContext(EditorContext);
+  const { currentScript, setCurrentScript, isModelDirty } = useEditorContext();
   const sortScripts = (a: any, b: any) => {
     let orderA;
     let orderB;

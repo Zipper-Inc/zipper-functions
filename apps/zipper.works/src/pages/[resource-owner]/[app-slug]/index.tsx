@@ -13,11 +13,14 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { useUser } from '@clerk/nextjs';
+import { GetServerSideProps } from 'next';
 import NextError from 'next/error';
 import { useRouter } from 'next/router';
 import { HiArrowRight } from 'react-icons/hi';
 import DefaultGrid from '~/components/default-grid';
+import Header from '~/components/header';
 import { NextPageWithLayout } from '~/pages/_app';
+import { getValidSubdomain, removeSubdomains } from '~/utils/subdomains';
 import { trpc } from '~/utils/trpc';
 
 const AppPage: NextPageWithLayout = () => {
@@ -65,12 +68,15 @@ const AppPage: NextPageWithLayout = () => {
             {data.name || data.slug}
           </Heading>
 
-          <Text fontWeight={500} color="gray.500">
-            About this app
-          </Text>
-
           <VStack spacing={4} align={'start'}>
-            <Text fontSize="lg">{data.description}</Text>
+            {data.description && (
+              <>
+                <Text fontWeight={500} color="gray.500">
+                  About this app
+                </Text>
+                <Text fontSize="lg">{data.description}</Text>
+              </>
+            )}
             {forksQuery.data && forksQuery.data.length > 0 && (
               <>
                 <Text fontWeight={500} color="gray.500">
@@ -109,16 +115,17 @@ const AppPage: NextPageWithLayout = () => {
 
             <HStack pt={10}>
               <Button
-                type="button"
+                colorScheme={'purple'}
+                variant={'outline'}
                 paddingX={6}
-                bgColor="purple.800"
-                textColor="gray.100"
                 onClick={() => {
                   if (user) {
                     forkApp.mutateAsync({ id: appQuery.data.id });
                   } else {
                     router.push(
-                      `/sign-in?redirect=${window.location.pathname}`,
+                      `/sign-in?redirect=${removeSubdomains(
+                        window.location.host,
+                      )}/${window.location.pathname}}`,
                     );
                   }
                 }}
@@ -127,10 +134,9 @@ const AppPage: NextPageWithLayout = () => {
               </Button>
 
               <Button
-                type="button"
+                colorScheme={'purple'}
                 paddingX={6}
-                bgColor="purple.800"
-                textColor="gray.100"
+                variant={'outline'}
                 onClick={() => {
                   router.push(
                     `/${resourceOwnerSlug}/${appSlug}/edit/${
@@ -149,6 +155,26 @@ const AppPage: NextPageWithLayout = () => {
   );
 };
 
+export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
+  const { host } = req.headers;
+
+  // validate subdomain
+  const subdomain = getValidSubdomain(host);
+
+  if (subdomain) {
+    return {
+      props: {
+        subdomain,
+      },
+    };
+  }
+
+  return { props: {} };
+};
+
 AppPage.skipAuth = true;
+AppPage.header = (page) => {
+  return <Header showNav={!page.subdomain as boolean} />;
+};
 
 export default AppPage;

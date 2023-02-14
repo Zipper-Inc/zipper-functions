@@ -22,8 +22,8 @@ import { AppConnector, Script } from '@prisma/client';
 import { HiPaperAirplane } from 'react-icons/hi2';
 import { connectors as defaultConnectors } from '~/config/connectors';
 import { VscGithub } from 'react-icons/vsc';
-import { useContext, useEffect, useState } from 'react';
-import { EditorContext } from '../context/editorContext';
+import { useEffect, useState } from 'react';
+import { useEditorContext } from '../context/editor-context';
 import slugify from '~/utils/slugify';
 import { useDebounce } from 'use-debounce';
 
@@ -38,7 +38,7 @@ export default function AddScriptForm({
     string | undefined
   >();
   const { register, handleSubmit, reset, watch } = useForm();
-  const { setCurrentScript, scripts } = useContext(EditorContext);
+  const { setCurrentScript, scripts } = useEditorContext();
   const utils = trpc.useContext();
   const addScript = trpc.useMutation('script.add', {
     async onSuccess(script) {

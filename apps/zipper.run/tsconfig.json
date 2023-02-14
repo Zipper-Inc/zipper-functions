@@ -45,6 +45,7 @@
   ],
   "exclude": [
     "node_modules",
-    "**/*.deno.ts"
+    "**/*.deno.ts",
+    "**/*.test.*"
   ]
 }

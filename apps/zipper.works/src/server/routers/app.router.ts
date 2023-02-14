@@ -25,6 +25,12 @@ const defaultSelect = Prisma.validator<Prisma.AppSelect>()({
   createdById: true,
 });
 
+export const defaultCode = [
+  'async function main({worldString}: {worldString: string}) {',
+  '  return `Hello ${worldString}`;',
+  '}',
+].join('\n');
+
 const canUserEdit = (
   app: Pick<
     App & { editors: AppEditor[] },
@@ -141,12 +147,6 @@ export const appRouter = createRouter()
       });
 
       if (!app) return;
-
-      const defaultCode = [
-        'async function main({worldString}: {worldString: string}) {',
-        '  return `Hello ${worldString}`;',
-        '}',
-      ].join('\n');
 
       const scriptMain = await prisma.scriptMain.create({
         data: {
@@ -367,9 +367,12 @@ export const appRouter = createRouter()
         isPrivate: false,
       };
 
-      resourceOwner.resourceOwnerType === ResourceOwnerType.Organization
-        ? (where.organizationId = resourceOwner.resourceOwnerId)
-        : (where.createdById = resourceOwner.resourceOwnerId);
+      if (resourceOwner.resourceOwnerType === ResourceOwnerType.Organization) {
+        where.organizationId = resourceOwner.resourceOwnerId;
+      } else {
+        where.createdById = resourceOwner.resourceOwnerId;
+        where.organizationId = null;
+      }
 
       const apps = await prisma.app.findMany({
         where,

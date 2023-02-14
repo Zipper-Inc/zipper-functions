@@ -124,6 +124,15 @@ export const baseColors = {
   },
 };
 
+export const brandColors = {
+  brandNeutral: baseColors.neutral[100],
+  brandPurple: baseColors.purple[600],
+  brandDarkPurple: baseColors.purple[800],
+  brandBlue: baseColors.blue[600],
+  brandOrange: baseColors.orange[600],
+  default: baseColors.gray[600],
+};
+
 export const fonts = {
   body: '"InterVariable", sans-serif',
   heading: '"InterVariable", sans-serif',
@@ -132,12 +141,7 @@ export const fonts = {
 
 export const theme = extendTheme({
   colors: {
-    brandNeutral: baseColors.neutral[100],
-    brandPurple: baseColors.purple[600],
-    brandDarkPurple: baseColors.purple[800],
-    brandBlue: baseColors.blue[600],
-    brandOrange: baseColors.orange[600],
-    default: baseColors.gray[600],
+    ...brandColors,
     ...baseColors,
   },
   fonts,

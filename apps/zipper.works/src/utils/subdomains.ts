@@ -7,7 +7,7 @@ const NON_ALLOWED_SUBDOMAINS = ['www', 'app', 'zipper'];
 /**
  * Gets the subdomain if it exists and is valid
  */
-export default function getValidSubdomain(host = ''): string | void {
+export function getValidSubdomain(host = ''): string | void {
   const hostParts = host.split('.');
 
   // check to make sure the host has at least more than two parts
@@ -20,4 +20,9 @@ export default function getValidSubdomain(host = ''): string | void {
   if (!subdomain?.trim() || NON_ALLOWED_SUBDOMAINS.includes(subdomain)) return;
 
   return subdomain;
+}
+
+export function removeSubdomains(host: string) {
+  const parts = host.split('.');
+  return parts.slice(parts.length - 2).join('.');
 }

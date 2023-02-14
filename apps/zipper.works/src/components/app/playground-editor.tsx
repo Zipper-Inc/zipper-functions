@@ -21,9 +21,9 @@ import {
   WebSocketMessageReader,
   WebSocketMessageWriter,
 } from 'vscode-ws-jsonrpc';
-import { useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Uri } from 'vscode';
-import { EditorContext } from '../context/editorContext';
+import { useEditorContext } from '../context/editor-context';
 import { useExitConfirmation } from '~/hooks/use-exit-confirmation';
 
 export interface CacheParams {
@@ -114,14 +114,8 @@ export default function PlaygroundEditor(
     appName: string;
   },
 ) {
-  const {
-    currentScript,
-    scripts,
-    setEditor,
-    setModelIsDirty,
-    isModelDirty,
-    isEditorDirty,
-  } = useContext(EditorContext);
+  const { currentScript, scripts, setEditor, setModelIsDirty, isEditorDirty } =
+    useEditorContext();
   const editorRef = useRef<MonacoEditor>();
   const monacoRef = useRef<Monaco>();
   const [isEditorReady, setIsEditorReady] = useState(false);

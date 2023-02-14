@@ -27,16 +27,14 @@ const config = {
     '**/tests/**/*.+(ts|tsx|js)',
     '**/?(*.)+(spec|test).+(ts|tsx|js)',
   ],
-  testPathIgnorePatterns: ['<rootDir>/.next', '<rootDir>/playwright/'],
   transform: {
     '^.+\\.(js|jsx|ts|tsx)$': ['babel-jest', { presets: ['next/babel'] }],
   },
-  transformIgnorePatterns: [
-    '/node_modules/',
-    '^.+\\.module\\.(css|sass|scss)$',
-  ],
-  testEnvironment: 'jsdom',
+  testEnvironment: 'node',
   moduleNameMapper: makeModuleNameMapperFromTsConfig('<rootDir>'),
+  clearMocks: true,
+  preset: 'ts-jest',
+  setupFilesAfterEnv: ['<rootDir>/jestSetup.ts'],
 };
 
 export default config;

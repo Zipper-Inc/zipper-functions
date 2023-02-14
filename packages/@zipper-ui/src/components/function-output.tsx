@@ -242,7 +242,6 @@ function RawFunctionOutput({ result }: Props) {
     ? JSON.stringify(parsed, null, 2)
     : result.toString();
 
-  console.log({ rawOutput });
   return (
     <Code as="pre" backgroundColor="gray.100" width="full">
       {rawOutput}
@@ -268,7 +267,7 @@ function SmartFunctionOutput({ result, level = 0 }: Props) {
     case OutputType.Html:
       return (
         <Box>
-          <iframe srcDoc={data} />
+          <iframe width="100%" height="400px" srcDoc={data} />
         </Box>
       );
 
@@ -282,7 +281,7 @@ function SmartFunctionOutput({ result, level = 0 }: Props) {
 
 export function FunctionOutput({ result, level = 0 }: Props) {
   return (
-    <Tabs mx={8} my={4} colorScheme="purple" variant="enclosed">
+    <Tabs colorScheme="purple" variant="enclosed">
       <TabList>
         <Tab>Result</Tab>
         <Tab>Raw Output</Tab>

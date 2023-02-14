@@ -3,6 +3,7 @@ import { env } from './env';
 import IORedis from 'ioredis';
 import { prisma } from './prisma';
 import fetch from 'node-fetch';
+import getRunUrl from '../utils/get-run-url';
 
 const connection = new IORedis(+env.REDIS_PORT, env.REDIS_HOST, {
   maxRetriesPerRequest: null,
@@ -11,12 +12,6 @@ const connection = new IORedis(+env.REDIS_PORT, env.REDIS_HOST, {
 const queueWorkersGlobal = global as typeof global & {
   workers?: Worker[];
   queues?: Record<'schedule', Queue>;
-};
-
-const getRunUrl = (slug: string) => {
-  return `${
-    process.env.NODE_ENV === 'production' ? 'https' : 'http'
-  }://${slug}.${process.env.NEXT_PUBLIC_OUTPUT_SERVER_HOSTNAME}/call`;
 };
 
 const initializeWorkers = () => {
@@ -83,10 +78,10 @@ const initializeWorkers = () => {
       },
       { connection },
     )
-      .on('completed', (job) => {
-        console.log(`[Job Queue] Completed job ID ${job.id}`);
+      ?.on('completed', (job) => {
+        console.log(`[Job Queue] Completed job ID ${job?.id}`);
       })
-      .on('failed', (job, err) => {
+      ?.on('failed', (job, err) => {
         console.log(`[Job Queue] Failed job ID ${job?.id} with error ${err}`);
       }),
   ];
