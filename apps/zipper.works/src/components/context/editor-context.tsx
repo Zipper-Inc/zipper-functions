@@ -1,7 +1,7 @@
 import { Script } from '@prisma/client';
 import * as monaco from 'monaco-editor';
 import { createContext, useContext, useEffect, useState } from 'react';
-import noop from '~/utils/noop';
+import noop, { asyncNoop } from '~/utils/noop';
 
 import { useStorage as useLiveStorage } from '~/liveblocks.config';
 
@@ -18,7 +18,9 @@ export type EditorContextType = {
   isModelDirty: (path: string) => boolean;
   setModelIsDirty: (path: string, isDirty: boolean) => void;
   isEditorDirty: () => boolean;
-  save: () => void;
+  isSaving: boolean;
+  setIsSaving: (isSaving: boolean) => void;
+  save: () => Promise<void>;
 };
 
 export const EditorContext = createContext<EditorContextType>({
@@ -31,7 +33,9 @@ export const EditorContext = createContext<EditorContextType>({
   isModelDirty: () => false,
   setModelIsDirty: noop,
   isEditorDirty: () => false,
-  save: noop,
+  isSaving: false,
+  setIsSaving: noop,
+  save: asyncNoop,
 });
 
 const EditorContextProvider = ({
@@ -47,6 +51,7 @@ const EditorContextProvider = ({
     undefined,
   );
   const [scripts, setScripts] = useState<Script[]>(initialScripts);
+  const [isSaving, setIsSaving] = useState(false);
 
   const [editor, setEditor] = useState<typeof monaco.editor | undefined>();
 
@@ -104,8 +109,9 @@ const EditorContextProvider = ({
     },
   });
 
-  const saveOpenModels = () => {
+  const saveOpenModels = async () => {
     if (appId && currentScript) {
+      setIsSaving(true);
       const fileValues: Record<string, string> = {};
 
       editor?.getModels().map((model) => {
@@ -114,7 +120,16 @@ const EditorContextProvider = ({
         }
       });
 
-      editAppMutation.mutateAsync({
+      setModelsDirtyState(
+        (Object.keys(modelsDirtyState) as string[]).reduce((acc, elem) => {
+          return {
+            ...acc,
+            [elem]: false,
+          };
+        }, {} as Record<string, boolean>),
+      );
+
+      await editAppMutation.mutateAsync({
         id: appId,
         data: {
           scripts: scripts.map((script: any) => ({
@@ -136,14 +151,7 @@ const EditorContextProvider = ({
         },
       });
 
-      setModelsDirtyState(
-        (Object.keys(modelsDirtyState) as string[]).reduce((acc, elem) => {
-          return {
-            ...acc,
-            [elem]: false,
-          };
-        }, {} as Record<string, boolean>),
-      );
+      setIsSaving(false);
     }
   };
 
@@ -173,6 +181,8 @@ const EditorContextProvider = ({
         isModelDirty,
         setModelIsDirty,
         isEditorDirty,
+        isSaving,
+        setIsSaving,
         save: saveOpenModels,
       }}
     >

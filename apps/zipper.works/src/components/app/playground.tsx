@@ -7,6 +7,7 @@ import {
   Tab,
   TabPanels,
   TabPanel,
+  Progress,
 } from '@chakra-ui/react';
 import debounce from 'lodash.debounce';
 
@@ -59,7 +60,8 @@ export function Playground({
 
   const { id } = app;
 
-  const { setCurrentScript, currentScript, save } = useEditorContext();
+  const { setCurrentScript, currentScript, save, isSaving } =
+    useEditorContext();
 
   const mainScript = app.scripts.find(
     (script: any) => script.id === app.scriptMain?.scriptId,
@@ -175,7 +177,25 @@ export function Playground({
         {/* TAB PANELS */}
         <TabPanels as={DefaultGrid} maxW="full" p={0}>
           {/* CODE */}
-          <TabPanel as={GridItem} colSpan={12} px={0} pb={0}>
+          <TabPanel
+            as={GridItem}
+            colSpan={12}
+            px={0}
+            pb={0}
+            position="relative"
+          >
+            {isSaving && (
+              <Progress
+                isIndeterminate
+                colorScheme="purple"
+                position="absolute"
+                left={0}
+                right={0}
+                top="-3px"
+                height="2px"
+                background="transparent"
+              />
+            )}
             <CodeTab
               app={app}
               mainScript={mainScript}
