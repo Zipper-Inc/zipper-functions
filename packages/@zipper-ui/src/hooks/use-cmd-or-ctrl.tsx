@@ -1,5 +1,5 @@
 import { useHotkeys } from 'react-hotkeys-hook';
-import { isMac } from '~/utils/user-agent';
+import { isMac } from '@zipper/utils';
 
 export const useCmdOrCtrl = (
   shortcutKey: string,

@@ -1,6 +1,6 @@
 import { Box, FormControl, GridItem, Text, Code } from '@chakra-ui/react';
 import { AppEditSidebar } from '~/components/app/app-edit-sidebar';
-import { useCmdOrCtrl } from '~/hooks/use-cmd-or-ctrl';
+import { useCmdOrCtrl } from '@zipper/ui';
 import DefaultGrid from '../default-grid';
 import { ConnectorForm } from './connector-form';
 import { PlaygroundSidebar } from './playground-sidebar';
