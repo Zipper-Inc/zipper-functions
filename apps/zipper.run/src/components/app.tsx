@@ -5,6 +5,7 @@ import {
   withDefaultTheme,
   ZipperLogo,
   FunctionOutput,
+  useCmdOrCtrl,
 } from '@zipper/ui';
 import { AppInfo, InputParams } from '@zipper/types';
 import getAppInfo from '~/utils/get-app-info';
@@ -42,6 +43,35 @@ export function AppPage({
   const [result, setResult] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const runApp = async () => {
+    setLoading(true);
+    const rawValues = formContext.getValues();
+    const values: Record<string, any> = {};
+    Object.keys(rawValues).forEach((k) => {
+      const parts = k.split(':');
+      parts.pop();
+      const key = parts.join(':');
+      values[key] = rawValues[k];
+    });
+
+    const result = await fetch('/call', {
+      method: 'POST',
+      body: JSON.stringify(values),
+    }).then((r) => r.text());
+
+    if (result) setResult(result);
+    setLoading(false);
+  };
+
+  useCmdOrCtrl(
+    'Enter',
+    (e: Event) => {
+      e.preventDefault();
+      runApp();
+    },
+    [],
+  );
+
   return (
     <>
       <Head>
@@ -75,28 +105,7 @@ export function AppPage({
           <Divider orientation="horizontal" my={4} />
           <Flex>
             <ButtonGroup>
-              <Button
-                colorScheme="purple"
-                onClick={async () => {
-                  setLoading(true);
-                  const rawValues = formContext.getValues();
-                  const values: Record<string, any> = {};
-                  Object.keys(rawValues).forEach((k) => {
-                    const parts = k.split(':');
-                    parts.pop();
-                    const key = parts.join(':');
-                    values[key] = rawValues[k];
-                  });
-
-                  const result = await fetch('/call', {
-                    method: 'POST',
-                    body: JSON.stringify(values),
-                  }).then((r) => r.text());
-
-                  if (result) setResult(result);
-                  setLoading(false);
-                }}
-              >
+              <Button colorScheme="purple" onClick={runApp}>
                 Run
               </Button>
               <Button
@@ -118,6 +127,7 @@ export function AppPage({
           isIndeterminate
           width="full"
           position="absolute"
+          background="transparent"
         />
       )}
       {result && (
