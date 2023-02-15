@@ -11,7 +11,7 @@ import {
   SortingOptions,
 } from '@tanstack/react-table';
 
-export type DataTableProps<Data extends object> = {
+export type DataTableProps<Data extends Record<string, unknown>> = {
   data: Data[];
   columns: ColumnDef<Data, any>[];
   isEmpty?: boolean;
@@ -20,7 +20,7 @@ export type DataTableProps<Data extends object> = {
 } & FiltersOptions<Data> &
   SortingOptions<Data>;
 
-export function DataTable<Data extends object>({
+export function DataTable<Data extends Record<string, unknown>>({
   data,
   columns,
   isEmpty,
