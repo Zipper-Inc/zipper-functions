@@ -8,13 +8,14 @@ const { z } = require('zod');
 
 /*eslint sort-keys: "error"*/
 const envSchema = z.object({
-  CLERK_API_KEY: z.string(),
   CLERK_JWT_KEY: z.string(),
+  CLERK_SECRET_KEY: z.string(),
   DATABASE_URL: z.string().url(),
   DENO_DEPLOY_TOKEN: z.string(),
   ENCRYPTION_KEY: z.string(),
   LIVEBLOCKS_PUBLIC_KEY: z.string(),
   NEXT_PUBLIC_CLERK_FRONTEND_API: z.string(),
+  NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string(),
   NEXT_PUBLIC_HOST: z.string(),
   NEXT_PUBLIC_LSP: z.string(),
   NEXT_PUBLIC_OUTPUT_SERVER_HOSTNAME: z.string(),
