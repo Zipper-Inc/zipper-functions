@@ -34,16 +34,8 @@ const ConnectorSidebarTips = (connectorId?: string | null) => {
 const APPROXIMATE_HEADER_HEIGHT_PX = '120px';
 const MAX_CODE_TAB_HEIGHT = `calc(100vh - ${APPROXIMATE_HEADER_HEIGHT_PX})`;
 
-export function CodeTab({
-  app,
-  mainScript,
-  mutateLive,
-}: {
-  app: any;
-  mainScript: any;
-  mutateLive: (newCode: string) => void;
-}) {
-  const { currentScript, save } = useEditorContext();
+export function CodeTab({ app, mainScript }: { app: any; mainScript: any }) {
+  const { currentScript, save, mutateLive } = useEditorContext();
   const { run } = useRunAppContext();
 
   useCmdOrCtrl(
@@ -85,8 +77,8 @@ export function CodeTab({
                 <PlaygroundEditor
                   height={MAX_CODE_TAB_HEIGHT}
                   key={app.id}
-                  onChange={(value = '') => {
-                    mutateLive(value);
+                  onChange={(value = '', event) => {
+                    mutateLive(value, event.versionId);
                   }}
                   appName={app.slug}
                 />

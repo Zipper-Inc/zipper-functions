@@ -9,7 +9,6 @@ import {
   TabPanel,
   Progress,
 } from '@chakra-ui/react';
-import debounce from 'lodash.debounce';
 
 import { InputParam } from '@zipper/types';
 import { useRouter } from 'next/router';
@@ -18,12 +17,6 @@ import SecretsTab from '~/components/app/secrets-tab';
 import SchedulesTab from '~/components/app/schedules-tab';
 import ShareModal from '~/components/app/share-modal';
 import { trpc } from '~/utils/trpc';
-import {
-  useMutation as useLiveMutation,
-  useStorage as useLiveStorage,
-} from '~/liveblocks.config';
-
-import { LiveObject, LsonObject } from '@liveblocks/client';
 
 import { parseInputForTypes } from '~/utils/parse-input-for-types';
 import SettingsModal from './settings-modal';
@@ -37,10 +30,6 @@ import { Script } from '@prisma/client';
 import { AppQueryOutput } from '~/types/trpc';
 import { RunAppProvider } from '../context/run-app-context';
 
-const debouncedParseInputForTypes = debounce(
-  (code, setInputParams) => setInputParams(parseInputForTypes(code)),
-  500,
-);
 export function Playground({
   app,
   filename = 'main.ts',
@@ -59,7 +48,7 @@ export function Playground({
 
   const { id } = app;
 
-  const { setCurrentScript, currentScript, save, isSaving } =
+  const { setCurrentScript, currentScript, currentScriptLive, save, isSaving } =
     useEditorContext();
 
   const mainScript = app.scripts.find(
@@ -74,30 +63,11 @@ export function Playground({
     setCurrentScript(initialScript!);
   }, []);
 
-  const mutateLive = useLiveMutation(
-    ({ storage }, newCode: string) => {
-      const storedScript = storage.get(
-        `script-${currentScript?.id}`,
-      ) as LiveObject<LsonObject>;
-
-      if (storedScript) {
-        storedScript.set('code', newCode);
-      }
-
-      debouncedParseInputForTypes(newCode, setInputParams);
-    },
-    [currentScript],
-  );
-
-  const currentScriptLive: any = useLiveStorage(
-    (root) => root[`script-${currentScript?.id}`],
-  );
-
   useEffect(() => {
     setInputParams(
-      parseInputForTypes(currentScript?.code || currentScriptLive?.code),
+      parseInputForTypes(currentScriptLive?.code || currentScript?.code),
     );
-  }, [currentScript]);
+  }, [currentScriptLive?.code, currentScript?.code]);
 
   const forkApp = trpc.useMutation('app.fork', {
     async onSuccess(data: any) {
@@ -185,11 +155,7 @@ export function Playground({
                 background="transparent"
               />
             )}
-            <CodeTab
-              app={app}
-              mainScript={mainScript}
-              mutateLive={mutateLive}
-            />
+            <CodeTab app={app} mainScript={mainScript} />
           </TabPanel>
 
           {/* SCHEDULES */}
