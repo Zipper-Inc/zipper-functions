@@ -2,26 +2,21 @@ import {
   Button,
   Heading,
   HStack,
-  Link,
-  Table,
-  TableContainer,
-  Tbody,
-  Td,
-  Tr,
   Text,
+  Link,
   VStack,
   Box,
+  Flex,
 } from '@chakra-ui/react';
-import { useUser } from '@clerk/nextjs';
 import Editor from '@monaco-editor/react';
 import { GetServerSideProps } from 'next';
 import NextError from 'next/error';
+import NextLink from 'next/link';
 import { useRouter } from 'next/router';
-import { HiArrowRight } from 'react-icons/hi';
 import { EditorNav } from '~/components/editor/editor-nav';
 import Header from '~/components/header';
 import { NextPageWithLayout } from '~/pages/_app';
-import { getValidSubdomain, removeSubdomains } from '~/utils/subdomains';
+import { getValidSubdomain } from '~/utils/subdomains';
 import { trpc } from '~/utils/trpc';
 
 const APPROXIMATE_HEADER_HEIGHT_PX = '116px';
@@ -117,37 +112,52 @@ const AppPage: NextPageWithLayout = () => {
           </HStack>
         </HStack>
       </VStack>
-      <HStack
+      <Link
+        as={NextLink}
         flex={3}
-        overflow="hidden"
-        spacing={0}
-        height={CODE_PREVIEW_HEIGHT}
-        alignItems="stretch"
+        href={`/${resourceOwnerSlug}/${appSlug}/edit/${
+          appQuery.data.scriptMain?.script.filename || 'main.ts'
+        }`}
+        _hover={{ textDecoration: 'none' }}
       >
-        <VStack
-          flex={1}
-          background="linear-gradient(326.37deg, #3E1C96 8.28%, rgba(62, 28, 150, 0) 100.06%), #89279B;"
-          borderTopLeftRadius={12}
-          padding={6}
+        <HStack
+          overflow="hidden"
+          spacing={0}
+          height={CODE_PREVIEW_HEIGHT}
           alignItems="stretch"
-          spacing={6}
         >
-          <EditorNav app={data} />
-        </VStack>
-        <Box flex={2}>
-          <Editor
-            defaultLanguage="typescript"
-            defaultValue={data.scriptMain?.script.code}
-            theme="vs-light"
-            options={{
-              minimap: { enabled: false },
-              automaticLayout: true,
-              readOnly: true,
-            }}
-          />
-        </Box>
-      </HStack>
-      <Box position="absolute" top="80vh" left="40%">
+          <VStack
+            flex={1}
+            background="linear-gradient(326.37deg, #3E1C96 8.28%, rgba(62, 28, 150, 0) 100.06%), #89279B;"
+            borderTopLeftRadius={12}
+            padding={6}
+            alignItems="stretch"
+            spacing={6}
+          >
+            <EditorNav app={data} />
+          </VStack>
+          <Flex flex={2} position="relative">
+            <Editor
+              defaultLanguage="typescript"
+              defaultValue={data.scriptMain?.script.code}
+              theme="vs-light"
+              options={{
+                minimap: { enabled: false },
+                automaticLayout: true,
+                readOnly: true,
+              }}
+            />
+            {/* Overlay for disabling editor interactions */}
+            <Box
+              backgroundColor="blackAlpha.50"
+              position="absolute"
+              width="full"
+              height="full"
+            ></Box>
+          </Flex>
+        </HStack>
+      </Link>
+      <Box position="absolute" top="90%" left="40%">
         <Button
           colorScheme="blue"
           paddingX={6}
