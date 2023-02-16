@@ -33,23 +33,11 @@ const AppPage: NextPageWithLayout = () => {
 
   const resourceOwnerSlug = router.query['resource-owner'] as string;
   const appSlug = router.query['app-slug'] as string;
-  const { user } = useUser();
 
   const appQuery = trpc.useQuery([
     'app.byResourceOwnerAndAppSlugs',
     { resourceOwnerSlug, appSlug },
   ]);
-
-  const forksQuery = trpc.useQuery(
-    ['app.byAuthedUser', { parentId: appQuery.data?.id }],
-    { enabled: !!appQuery.data },
-  );
-
-  const forkApp = trpc.useMutation('app.fork', {
-    async onSuccess(data) {
-      router.push(`/${data.resourceOwner.slug}/${data.slug}/edit`);
-    },
-  });
 
   if (appQuery.error) {
     return (
@@ -119,78 +107,6 @@ const AppPage: NextPageWithLayout = () => {
               <Text color="purple.600"> Speech to Text</Text>
             </VStack> */}
           </HStack>
-        </HStack>
-
-        {forksQuery.data && forksQuery.data.length > 0 && (
-          <>
-            <Text fontWeight={500} color="gray.500">
-              Your forks
-            </Text>
-            <TableContainer
-              border="1px solid"
-              borderRadius={10}
-              borderColor="gray.100"
-            >
-              <Table>
-                <Tbody>
-                  {forksQuery.data.map((fork) => (
-                    <Tr key={fork.id}>
-                      <Td>
-                        <HStack>
-                          <HiArrowRight />
-                          <Link
-                            onClick={() =>
-                              router.push(
-                                `/${fork.resourceOwner?.slug}/${fork.slug}/edit`,
-                              )
-                            }
-                          >
-                            {fork.name || fork.slug}
-                          </Link>
-                        </HStack>
-                      </Td>
-                    </Tr>
-                  ))}
-                </Tbody>
-              </Table>
-            </TableContainer>
-          </>
-        )}
-
-        <HStack pt={10}>
-          <Button
-            colorScheme={'purple'}
-            variant={'outline'}
-            paddingX={6}
-            onClick={() => {
-              if (user) {
-                forkApp.mutateAsync({ id: appQuery.data.id });
-              } else {
-                router.push(
-                  `/sign-in?redirect=${removeSubdomains(
-                    window.location.host,
-                  )}/${window.location.pathname}}`,
-                );
-              }
-            }}
-          >
-            Fork
-          </Button>
-
-          <Button
-            colorScheme={'purple'}
-            paddingX={6}
-            variant={'outline'}
-            onClick={() => {
-              router.push(
-                `/${resourceOwnerSlug}/${appSlug}/edit/${
-                  appQuery.data.scriptMain?.script.filename || 'main.ts'
-                }`,
-              );
-            }}
-          >
-            View
-          </Button>
         </HStack>
       </VStack>
       <HStack
