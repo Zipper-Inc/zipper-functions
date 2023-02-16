@@ -168,6 +168,7 @@ const AppPage: NextPageWithLayout = () => {
               }`,
             );
           }}
+          _hover={{ transform: 'scale(1.1)' }}
         >
           Explore This App
         </Button>
