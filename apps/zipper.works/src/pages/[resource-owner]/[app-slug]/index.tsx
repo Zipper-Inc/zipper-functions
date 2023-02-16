@@ -54,7 +54,14 @@ const AppPage: NextPageWithLayout = () => {
 
   const { data } = appQuery;
   return (
-    <HStack gap={4} pl={10} mt="14" mr={0} alignItems="start">
+    <HStack
+      gap={4}
+      pl={10}
+      mt="14"
+      mr={0}
+      alignItems="start"
+      position="relative"
+    >
       <VStack flex={2} gap={4} alignItems="start" w={560}>
         <Heading as="h1" size="2xl" fontWeight="bold" overflowWrap="normal">
           {headline}
@@ -98,6 +105,7 @@ const AppPage: NextPageWithLayout = () => {
             </HStack>
           </VStack>
           <HStack flex={1} alignItems="stretch">
+            {/* TODO get categories from app metadata */}
             {/* <Text color="gray.700" flex={1}>
               Categories
             </Text>
@@ -139,6 +147,21 @@ const AppPage: NextPageWithLayout = () => {
           />
         </Box>
       </HStack>
+      <Box position="absolute" top="80vh" left="40%">
+        <Button
+          colorScheme="blue"
+          paddingX={6}
+          onClick={() => {
+            router.push(
+              `/${resourceOwnerSlug}/${appSlug}/edit/${
+                appQuery.data.scriptMain?.script.filename || 'main.ts'
+              }`,
+            );
+          }}
+        >
+          Explore This App
+        </Button>
+      </Box>
     </HStack>
   );
 };
