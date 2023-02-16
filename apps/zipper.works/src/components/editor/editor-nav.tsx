@@ -13,7 +13,7 @@ export const EditorNav: React.FC<EditorNavProps> = ({ app }) => {
       <Heading as="h2" fontSize="xl" color="white">
         {app.name}
       </Heading>
-      <VStack spacing={1} alignItems="start">
+      <VStack spacing={1} alignItems="stretch">
         {app.scripts.map((script) => (
           <Fragment key={script.id}>
             <Link

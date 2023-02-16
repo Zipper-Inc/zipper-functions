@@ -20,7 +20,7 @@ export const useAppOwner = () => {
       organizationList?.find(
         ({ organization }) =>
           organization.id === app.resourceOwner.resourceOwnerId,
-      )?.organization.name ?? '';
+      )?.organization.name ?? app.resourceOwner.slug;
     return { name: orgName, type: 'org' };
   };
   return { getAppOwner };
