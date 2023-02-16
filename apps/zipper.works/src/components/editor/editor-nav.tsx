@@ -1,13 +1,5 @@
-import {
-  Heading,
-  Tabs,
-  TabList,
-  Tab,
-  TabPanels,
-  TabPanel,
-  VStack,
-  Tag,
-} from '@chakra-ui/react';
+import { Heading, VStack, Tag, Link } from '@chakra-ui/react';
+import NextLink from 'next/link';
 import { Fragment } from 'react';
 import { inferQueryOutput } from '~/utils/trpc';
 
@@ -21,32 +13,28 @@ export const EditorNav: React.FC<EditorNavProps> = ({ app }) => {
       <Heading as="h2" fontSize="xl" color="white">
         {app.name}
       </Heading>
-      <Tabs colorScheme="whiteAlpha">
-        <TabList>
-          <Tab>Main</Tab>
-          <Tab>Start Here</Tab>
-        </TabList>
-        <TabPanels marginTop={6}>
-          <TabPanel padding={0}>
-            <VStack spacing={1} alignItems="stretch">
-              {app.scripts.map((script) => (
-                <Fragment key={script.id}>
-                  <Tag
-                    colorScheme="blackAlpha"
-                    color="white"
-                    fontWeight={600}
-                    w="fit-content"
-                    paddingX={3}
-                    paddingY={2}
-                  >
-                    {script.filename}
-                  </Tag>
-                </Fragment>
-              ))}
-            </VStack>
-          </TabPanel>
-        </TabPanels>
-      </Tabs>
+      <VStack spacing={1} alignItems="start">
+        {app.scripts.map((script) => (
+          <Fragment key={script.id}>
+            <Link
+              as={NextLink}
+              href={`/${app.resourceOwner.slug}/${app.slug}/edit/${script.filename}`}
+              _hover={{ textDecoration: 'none', transform: 'scale(1.05)' }}
+              minWidth={0}
+            >
+              <Tag
+                colorScheme="blackAlpha"
+                color="white"
+                fontWeight={600}
+                paddingX={3}
+                paddingY={2}
+              >
+                {script.filename}
+              </Tag>
+            </Link>
+          </Fragment>
+        ))}
+      </VStack>
     </>
   );
 };
