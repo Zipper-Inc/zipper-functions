@@ -15,7 +15,7 @@ import {
 } from '@chakra-ui/react';
 import React, { useEffect, useMemo, useState } from 'react';
 import DefaultGrid from '~/components/default-grid';
-import { useOrganization, useOrganizationList, useUser } from '@clerk/nextjs';
+import { useOrganization } from '@clerk/nextjs';
 import { CreateAppModal } from './create-app-modal';
 
 import { FiPlus } from 'react-icons/fi';
@@ -30,8 +30,8 @@ import {
 import { LockIcon, UnlockIcon } from '@chakra-ui/icons';
 import router from 'next/router';
 import { HiBuildingOffice, HiUser } from 'react-icons/hi2';
+import { AppOwner, useAppOwner } from '~/hooks/use-app-owner';
 
-type AppOwner = { name: string; type: 'user' | 'org' };
 type _App = Unpack<inferQueryOutput<'app.byAuthedUser'>>;
 type App = _App & {
   owner: AppOwner;
@@ -122,31 +122,15 @@ const columns = [
 const emptyApps: App[] = [];
 
 export function Dashboard() {
-  const { user } = useUser();
   const { organization } = useOrganization();
   const appQuery = trpc.useQuery(['app.byAuthedUser']);
   const [appSearchTerm, setAppSearchTerm] = useState('');
   const [isCreateAppModalOpen, setCreateAppModalOpen] = useState(false);
-  const { organizationList } = useOrganizationList();
   const [columnVisibility] = useState<Partial<Record<DeepKeys<App>, boolean>>>({
     description: false,
   });
   const [sorting, setSorting] = React.useState<SortingState>([]);
-
-  const getAppOwner = (app: _App): AppOwner => {
-    if (
-      app.resourceOwner.resourceOwnerId === user?.id ||
-      app.createdById === user?.id
-    ) {
-      return { name: 'You', type: 'user' };
-    }
-    const orgName =
-      organizationList?.find(
-        ({ organization }) =>
-          organization.id === app.resourceOwner.resourceOwnerId,
-      )?.organization.name ?? '';
-    return { name: orgName, type: 'org' };
-  };
+  const { getAppOwner } = useAppOwner();
 
   const apps = useMemo(
     () =>
