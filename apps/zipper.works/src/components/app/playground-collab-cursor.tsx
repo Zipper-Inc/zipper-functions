@@ -1,71 +1,56 @@
-import { useRef, MutableRefObject, useEffect, use } from 'react';
+import { useRef, MutableRefObject, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import * as monaco from 'monaco-editor';
+import randomColor from 'randomcolor';
 
 import { Avatar } from '../avatar';
 import { useOther } from '~/liveblocks.config';
-import { Box, Divider } from '@chakra-ui/react';
+import { Box, Flex, keyframes } from '@chakra-ui/react';
 
+const blink = keyframes`
+  0% {
+    opacity: 0;
+  }
+
+  100 % {
+    opacity: 100%;
+  }
+`;
 export interface Position {
   lineNumber: number;
   column: number;
 }
 
-enum WidgetType {
-  Avatar = 'avatar',
-  Cursor = 'cursor',
-}
-
-export const selectionToPosition = (
-  selection: monaco.Selection,
-  type: WidgetType,
-): Position => ({
+export const selectionToPosition = (selection: monaco.Selection): Position => ({
   lineNumber: selection.positionLineNumber,
-  column: type === 'cursor' ? selection.positionColumn : 1,
+  column: selection.positionColumn,
 });
 
 export class MonacoCursorWidget {
   private id: string;
-  private type: WidgetType;
   private position: Position = {
     lineNumber: -1,
     column: -1,
   };
   private domNode: HTMLDivElement | undefined;
 
-  constructor({
-    id,
-    selection,
-    type,
-  }: {
-    id: number;
-    selection: monaco.Selection;
-    type: WidgetType;
-  }) {
+  constructor({ id, selection }: { id: number; selection: monaco.Selection }) {
     this.id = id.toString();
-    this.type = type;
-    this.position = selectionToPosition(selection, type);
+    this.position = selectionToPosition(selection);
   }
 
   getId() {
-    return `${this.type}-${this.id}`;
+    return `cursor-${this.id}`;
   }
 
   getDataAttr() {
-    return `data-${this.type}-id`;
-  }
-
-  getType() {
-    return this.type;
+    return `data-cursor-id`;
   }
 
   getPosition() {
     return {
       position: this.position,
-      preference:
-        this.type === WidgetType.Avatar
-          ? [monaco.editor.OverlayWidgetPositionPreference.TOP_CENTER]
-          : [monaco.editor.ContentWidgetPositionPreference.EXACT],
+      preference: [monaco.editor.ContentWidgetPositionPreference.EXACT],
     };
   }
 
@@ -73,14 +58,14 @@ export class MonacoCursorWidget {
     if (!this.domNode) {
       const div = document.createElement('div');
       div.setAttribute(this.getDataAttr(), this.id.toString());
-      div.innerText = this.type === WidgetType.Avatar ? '😭' : '|';
+      div.style.position = 'relative';
       this.domNode = div;
     }
     return this.domNode;
   }
 
   setPosition(selection: monaco.Selection) {
-    this.position = selectionToPosition(selection, this.type);
+    this.position = selectionToPosition(selection);
   }
 }
 
@@ -95,111 +80,96 @@ export function PlaygroundCollabCursor({
     userId: u.id,
     selection: u.presence.selection as unknown as monaco.Selection,
   }));
-  const widgetRefs = useRef<Record<WidgetType, any>>();
+  const cursorWidgetRef = useRef<MonacoCursorWidget>();
+  const timeoutRef = useRef<number>();
 
-  const getWidgets = () => Object.values(widgetRefs.current || {});
+  const [isAvatarShowing, setIsAvatarShowing] = useState(true);
 
-  const createWidgets = () => {
-    console.log('trying create widgets', {
-      w: widgetRefs.current,
-      s: selection,
-      e: editorRef.current,
-    });
-    if (widgetRefs.current || !selection || !editorRef.current) return;
+  const color = randomColor({ seed: `${userId}--${connectionId}` });
 
-    console.log('creating widgets');
-
-    widgetRefs.current = {
-      [WidgetType.Avatar]: new MonacoCursorWidget({
-        id: connectionId,
-        selection,
-        type: WidgetType.Avatar,
-      }) as unknown as monaco.editor.IOverlayWidget,
-      [WidgetType.Cursor]: new MonacoCursorWidget({
-        id: connectionId,
-        selection,
-        type: WidgetType.Cursor,
-      }) as unknown as monaco.editor.IContentWidget,
-    };
-
-    editorRef.current.addOverlayWidget(widgetRefs.current[WidgetType.Avatar]);
-    editorRef.current.addContentWidget(widgetRefs.current[WidgetType.Cursor]);
-  };
-
-  const moveWidgets = () => {
-    console.log('trying move widgets', {
-      w: widgetRefs.current,
-      s: selection,
-      e: editorRef.current,
-    });
-    if (!widgetRefs.current || !selection || !editorRef.current) return;
-
-    console.log('moving widgets');
-
-    widgetRefs.current[WidgetType.Avatar].setPosition(selection);
-    editorRef.current.layoutOverlayWidget(
-      widgetRefs.current[WidgetType.Avatar],
-    );
-
-    widgetRefs.current[WidgetType.Cursor].setPosition(selection);
-    editorRef.current.layoutContentWidget(
-      widgetRefs.current[WidgetType.Cursor],
+  const showAvatar = () => {
+    setIsAvatarShowing(true);
+    window.clearTimeout(timeoutRef.current);
+    timeoutRef.current = window.setTimeout(
+      () => setIsAvatarShowing(false),
+      2000,
     );
   };
 
-  const destroyWidgets = () => {
-    console.log('trying destroy widgets', {
-      w: widgetRefs.current,
-      s: selection,
-      e: editorRef.current,
+  const createWidget = () => {
+    if (cursorWidgetRef.current || !selection || !editorRef.current) return;
+
+    cursorWidgetRef.current = new MonacoCursorWidget({
+      id: connectionId,
+      selection,
     });
-    if (!widgetRefs.current || !editorRef.current) return;
+    editorRef.current.addContentWidget(cursorWidgetRef.current);
+    showAvatar();
+  };
 
-    console.log('destroying widgets');
-    editorRef.current.removeOverlayWidget(
-      widgetRefs.current[WidgetType.Avatar],
-    );
-    editorRef.current.removeContentWidget(
-      widgetRefs.current[WidgetType.Cursor],
-    );
+  const moveWidget = () => {
+    if (!cursorWidgetRef.current || !selection || !editorRef.current) return;
 
-    widgetRefs.current = undefined;
+    cursorWidgetRef.current.setPosition(selection);
+    editorRef.current.layoutContentWidget(cursorWidgetRef.current);
+    showAvatar();
+  };
+
+  const destroyWidget = () => {
+    if (!cursorWidgetRef.current || !editorRef.current) return;
+
+    editorRef.current.removeContentWidget(cursorWidgetRef.current);
+    cursorWidgetRef.current = undefined;
   };
 
   // onUnmount
   useEffect(() => {
-    createWidgets();
+    createWidget();
     // cleanup
-    return () => destroyWidgets();
+    return () => destroyWidget();
   }, []);
 
   useEffect(() => {
     // Create widget for the first time, and add it to editor
-    if (!widgetRefs.current) createWidgets();
-    else moveWidgets();
-  }, [connectionId, editorRef.current, widgetRefs.current, selection]);
+    if (!cursorWidgetRef.current) createWidget();
+    else moveWidget();
+  }, [connectionId, editorRef.current, cursorWidgetRef.current, selection]);
 
-  return widgetRefs.current ? (
+  return cursorWidgetRef.current ? (
     <>
       {createPortal(
-        <Avatar
-          userId={userId}
-          height={4}
-          width={4}
-          key={`${connectionId}-${WidgetType.Avatar}`}
-        />,
-        widgetRefs.current[WidgetType.Avatar].getDomNode(),
-      )}
-      {createPortal(
-        <Divider
-          orientation="vertical"
-          display="block"
-          height={2}
-          width={1}
-          color="red"
-          key={`${connectionId}-${WidgetType.Cursor}`}
-        />,
-        widgetRefs.current[WidgetType.Cursor].getDomNode(),
+        <>
+          <Flex
+            position="absolute"
+            top={-4}
+            left="-10px"
+            height={5}
+            width={5}
+            borderRadius="full"
+            backgroundColor={color}
+            justifyContent="center"
+            alignItems="center"
+            opacity={isAvatarShowing ? '100%' : '0%'}
+            transition="opacity ease 100ms"
+          >
+            <Avatar userId={userId} height={4} width={4} />
+          </Flex>
+
+          <Box
+            fontWeight="medium"
+            position="absolute"
+            top={-1}
+            left={'-1px'}
+            color={color}
+            animation={
+              isAvatarShowing ? undefined : `${blink} 1s steps(2) infinite`
+            }
+            onMouseEnter={showAvatar}
+          >
+            |
+          </Box>
+        </>,
+        cursorWidgetRef.current?.getDomNode(),
       )}
     </>
   ) : null;

@@ -129,7 +129,6 @@ export default function PlaygroundEditor(
   } = useEditorContext();
   const editorRef = useRef<MonacoEditor>();
   const monacoRef = useRef<Monaco>();
-  const cursorsRef = useRef<Record<string, MonacoCursorWidget>>({});
   const [isEditorReady, setIsEditorReady] = useState(false);
   const [hasWebsocket, setHasWebsocket] = useState(false);
   const monacoEditor = useMonaco();
@@ -195,7 +194,6 @@ export default function PlaygroundEditor(
 
     // set up cursor tracking
     editor.onDidChangeCursorSelection(({ selection }) => {
-      console.log('updating my presence');
       updateMyPresence({ selection: { ...selection } });
     });
     setIsEditorReady(true);
