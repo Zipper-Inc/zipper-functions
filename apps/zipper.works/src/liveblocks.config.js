@@ -5,5 +5,13 @@ const client = createClient({
   authEndpoint: '/api/live/auth',
 });
 
-export const { useStorage, RoomProvider, useMutation, useOthers, useSelf } =
-  createRoomContext(client);
+export const {
+  useStorage,
+  RoomProvider,
+  useMutation,
+  useOther,
+  useOthers,
+  useOthersConnectionIds,
+  useSelf,
+  useMyPresence,
+} = createRoomContext(client);
