@@ -80,13 +80,12 @@ const __storage = {
     return res.json();
   },
   delete: async (key: string) => {
-    let path = '/api/app/${appId}/storage';
-    const {hmac, timestamp} = __generateHmac('DELETE', path, {key, value});
+    let path = '/api/app/${appId}/storage?key=' + key;
+    const {hmac, timestamp} = __generateHmac('DELETE', path);
 
     const res = await fetch('${process.env.RPC_HOST}' + path, {
       headers: { 'x-zipper-hmac': hmac, 'x-timestamp': timestamp },
       method: 'DELETE',
-      body: { key },
     });
 
     return res.json();

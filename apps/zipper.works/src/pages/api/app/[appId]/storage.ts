@@ -34,7 +34,7 @@ export default async function handler(
     case 'GET': {
       const k = query.key as string;
       if (k && datastore) {
-        res.send({ key: k, value: datastore[k] });
+        res.send({ key: k, value: datastore[k] || '' });
         break;
       }
       res.send(datastore || {});
@@ -57,8 +57,8 @@ export default async function handler(
       break;
     }
     case 'DELETE': {
-      if (body.key) {
-        delete datastore[body.key];
+      if (query.key) {
+        delete datastore[query.key as string];
         await prisma.app.update({
           where: { id: appId as string },
           data: { datastore: datastore as Prisma.InputJsonValue },
