@@ -114,8 +114,15 @@ export default function PlaygroundEditor(
     appName: string;
   },
 ) {
-  const { currentScript, scripts, setEditor, setModelIsDirty, isEditorDirty } =
-    useEditorContext();
+  const {
+    currentScript,
+    currentScriptLive,
+    scripts,
+    setEditor,
+    setModelIsDirty,
+    isEditorDirty,
+    connectionId,
+  } = useEditorContext();
   const editorRef = useRef<MonacoEditor>();
   const monacoRef = useRef<Monaco>();
   const [isEditorReady, setIsEditorReady] = useState(false);
@@ -273,6 +280,42 @@ export default function PlaygroundEditor(
       }
     }
   }, [currentScript, editorRef.current, isEditorReady]);
+
+  // Execute edits
+  useEffect(() => {
+    if (
+      !editorRef.current ||
+      !editorRef.current.getModel() ||
+      !currentScriptLive
+    )
+      return;
+
+    // don't execute any edits if this is coming from your own connection
+    if (connectionId === currentScriptLive.lastConnectionId) return;
+
+    const range = (
+      editorRef.current.getModel() as monaco.editor.ITextModel
+    ).getFullModelRange();
+
+    const selection = editorRef.current.getSelection();
+
+    editorRef.current.executeEdits(
+      'liveblocks',
+      [
+        {
+          range,
+          text: currentScriptLive?.code,
+          forceMoveMarkers: true,
+        },
+      ],
+      /**
+       * @todo resolve where the new selection might be based on the edited range
+       * just putting it here is way better for now
+       */
+      selection ? [selection] : undefined,
+    );
+    editorRef.current.pushUndoStop();
+  }, [connectionId, currentScriptLive?.code, editorRef.current]);
 
   return (
     <Editor

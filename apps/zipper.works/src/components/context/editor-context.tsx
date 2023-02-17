@@ -3,17 +3,29 @@ import * as monaco from 'monaco-editor';
 import { createContext, useContext, useEffect, useState } from 'react';
 import noop, { asyncNoop } from '~/utils/noop';
 
-import { useStorage as useLiveStorage } from '~/liveblocks.config';
+import {
+  useSelf,
+  useStorage as useLiveStorage,
+  useMutation as useLiveMutation,
+} from '~/liveblocks.config';
 
 import { trpc } from '~/utils/trpc';
 import { useRouter } from 'next/router';
+import { LiveObject, LsonObject } from '@liveblocks/client';
 
 export type EditorContextType = {
-  currentScript: Script | undefined;
+  currentScript?: Script;
   setCurrentScript: (script: Script) => void;
+  currentScriptLive?: {
+    code: string;
+    lastLocalVersion: number;
+    lastConnectionId: number;
+  };
+  mutateLive: (newCode: string, newVersion: number) => void;
+  connectionId?: number;
   scripts: Script[];
   setScripts: (scripts: Script[]) => void;
-  editor: typeof monaco.editor | undefined;
+  editor?: typeof monaco.editor;
   setEditor: (editor: typeof monaco.editor) => void;
   isModelDirty: (path: string) => boolean;
   setModelIsDirty: (path: string, isDirty: boolean) => void;
@@ -26,6 +38,9 @@ export type EditorContextType = {
 export const EditorContext = createContext<EditorContextType>({
   currentScript: undefined,
   setCurrentScript: noop,
+  currentScriptLive: undefined,
+  mutateLive: noop,
+  connectionId: undefined,
   scripts: [],
   setScripts: noop,
   editor: undefined,
@@ -61,6 +76,23 @@ const EditorContextProvider = ({
 
   const currentScriptLive: any = useLiveStorage(
     (root) => root[`script-${currentScript?.id}`],
+  );
+
+  const mutateLive = useLiveMutation(
+    (context, newCode: string, newVersion: number) => {
+      const { storage, self } = context;
+
+      const stored = storage.get(
+        `script-${currentScript?.id}`,
+      ) as LiveObject<LsonObject>;
+
+      if (!stored || stored.get('code') === newCode) return;
+
+      stored.set('code', newCode);
+      stored.set('lastLocalVersion', newVersion);
+      stored.set('lastConnectionId', self.connectionId);
+    },
+    [currentScript],
   );
 
   useEffect(() => {
@@ -108,6 +140,8 @@ const EditorContextProvider = ({
       }
     },
   });
+
+  const self = useSelf();
 
   const saveOpenModels = async () => {
     if (appId && currentScript) {
@@ -181,6 +215,9 @@ const EditorContextProvider = ({
       value={{
         currentScript,
         setCurrentScript,
+        currentScriptLive,
+        mutateLive,
+        connectionId: self?.connectionId,
         scripts,
         setScripts,
         editor,
