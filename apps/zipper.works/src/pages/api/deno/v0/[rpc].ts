@@ -34,7 +34,55 @@ ${code}
 
 /*****************************************************************/
 
-const Zipper = { env: Deno.env };
+import { hmac as __zipper_hmac } from "https://deno.land/x/hmac@v2.0.1/mod.ts";
+
+const __generateHmac = (
+  method: 'GET' | 'POST' | 'DELETE',
+  path: string,
+  body: Record<string, unknown> = {},
+  ) => {
+    const timestamp = Date.now().toString();
+
+    return {
+      hmac: __zipper_hmac(
+        "sha256",
+        "${process.env.HMAC_SIGNING_SECRET}",
+        method + '__' + path + '__' + JSON.stringify(body) + '__' + timestamp,
+        "utf8",
+        "hex"
+      ),
+      timestamp,
+    }
+}
+
+const __storage = {
+  get: async (key?: string) => {
+    let path = '/api/app/${appId}/storage';
+    if (key) path += '?key=' + key;
+    const {hmac, timestamp} = __generateHmac('GET', path);
+
+    const res = await fetch('${
+      process.env.RPC_HOST
+    }' + path, { headers: {'x-zipper-hmac': hmac, 'x-timestamp': timestamp} } );
+
+    return res.json();
+  },
+  set: async (key: string, value: unknown) => {
+    let path = '/api/app/${appId}/storage';
+    const {hmac, timestamp} = __generateHmac('POST', path, {key, value});
+
+    const res = await fetch('${process.env.RPC_HOST}' + path, {
+      headers: { 'x-zipper-hmac': hmac, 'x-timestamp': timestamp },
+      method: 'POST',
+      body: JSON.stringify({ key, value }),
+    });
+
+    return res.json();
+  },
+  delete: async (key: string) => {},
+}
+
+const Zipper = { env: Deno.env, storage: __storage };
 
 const fn = typeof main === 'undefined' ? () => {
   throw new Error('You must define a main function')
