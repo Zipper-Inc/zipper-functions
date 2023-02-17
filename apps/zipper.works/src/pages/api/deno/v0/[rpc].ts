@@ -74,12 +74,23 @@ const __storage = {
     const res = await fetch('${process.env.RPC_HOST}' + path, {
       headers: { 'x-zipper-hmac': hmac, 'x-timestamp': timestamp },
       method: 'POST',
-      body: JSON.stringify({ key, value }),
+      body: { key, value },
     });
 
     return res.json();
   },
-  delete: async (key: string) => {},
+  delete: async (key: string) => {
+    let path = '/api/app/${appId}/storage';
+    const {hmac, timestamp} = __generateHmac('DELETE', path, {key, value});
+
+    const res = await fetch('${process.env.RPC_HOST}' + path, {
+      headers: { 'x-zipper-hmac': hmac, 'x-timestamp': timestamp },
+      method: 'DELETE',
+      body: { key },
+    });
+
+    return res.json();
+  },
 }
 
 const Zipper = { env: Deno.env, storage: __storage };
