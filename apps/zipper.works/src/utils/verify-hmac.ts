@@ -20,9 +20,9 @@ export function verifyHmac(req: NextApiRequest, signingSecret: string) {
 
   const calculatedHmac = createHmac('sha256', signingSecret)
     .update(
-      `${req.method}__${req.url}__${JSON.stringify(
-        req.body || {},
-      )}__${timestamp}`,
+      `${req.method}__${req.url}__${
+        req.body || JSON.stringify({})
+      }__${timestamp}`,
     )
     .digest('hex');
 

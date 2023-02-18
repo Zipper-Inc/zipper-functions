@@ -10,6 +10,8 @@ export default async function handler(
 ) {
   const { body, method, query, headers } = req;
 
+  const jsonBody = body ? JSON.parse(body) : {};
+
   const hmac = headers['x-zipper-hmac'] as string;
   if (!hmac || !process.env.HMAC_SIGNING_SECRET) {
     res.status(401).send({ error: 'Unauthorized' });
@@ -20,6 +22,8 @@ export default async function handler(
     res.status(401).send({ error: 'Unauthorized' });
     return;
   }
+
+  console.log('HMAC verified');
 
   const { appId } = query;
 
@@ -41,16 +45,16 @@ export default async function handler(
       break;
     }
     case 'POST': {
-      if (body.key) {
+      if (jsonBody.key) {
         datastore = datastore || {};
-        datastore[body.key] = body.value;
+        datastore[jsonBody.key] = jsonBody.value;
 
         await prisma.app.update({
           where: { id: appId as string },
           data: { datastore: datastore as Prisma.InputJsonValue },
         });
 
-        res.send({ key: body.key, value: datastore[body.key] });
+        res.send({ key: jsonBody.key, value: datastore[jsonBody.key] });
         break;
       }
       res.status(400).send({ error: 'Missing key' });

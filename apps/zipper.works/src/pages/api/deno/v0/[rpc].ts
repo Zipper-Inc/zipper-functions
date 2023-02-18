@@ -53,7 +53,7 @@ const __generateHmac = (
       ),
       timestamp,
     }
-}
+  }
 
 const __storage = {
   get: async (key?: string) => {
@@ -74,7 +74,7 @@ const __storage = {
     const res = await fetch('${process.env.RPC_HOST}' + path, {
       headers: { 'x-zipper-hmac': hmac, 'x-timestamp': timestamp },
       method: 'POST',
-      body: { key, value },
+      body: JSON.stringify({ key, value }),
     });
 
     return res.json();
