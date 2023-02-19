@@ -118,7 +118,6 @@ const AppPage: NextPageWithLayout = () => {
       </VStack>
       <HStack position="relative" flex={3}>
         <Link
-          as={NextLink}
           href={`/${resourceOwnerSlug}/${appSlug}/edit/${
             appQuery.data.scriptMain?.script.filename || 'main.ts'
           }`}
@@ -131,6 +130,7 @@ const AppPage: NextPageWithLayout = () => {
             height={CODE_PREVIEW_HEIGHT}
             minHeight={MIN_CODE_PREVIEW_HEIGHT}
             alignItems="stretch"
+            justifyContent="center"
           >
             <VStack
               flex={1}
@@ -143,16 +143,19 @@ const AppPage: NextPageWithLayout = () => {
               <EditorNav app={data} />
             </VStack>
             <Flex flex={2} position="relative">
-              <Editor
-                defaultLanguage="typescript"
-                defaultValue={data.scriptMain?.script.code}
-                theme="vs-light"
-                options={{
-                  minimap: { enabled: false },
-                  automaticLayout: true,
-                  readOnly: true,
-                }}
-              />
+              <Box width="full" paddingTop={6}>
+                <Editor
+                  defaultLanguage="typescript"
+                  defaultValue={data.scriptMain?.script.code}
+                  theme="vs-light"
+                  options={{
+                    minimap: { enabled: false },
+                    automaticLayout: true,
+                    readOnly: true,
+                  }}
+                  width="99%"
+                />
+              </Box>
               {/* Overlay for disabling editor interactions */}
               <Box
                 backgroundColor="blackAlpha.50"
@@ -168,11 +171,9 @@ const AppPage: NextPageWithLayout = () => {
             colorScheme="blue"
             paddingX={6}
             onClick={() => {
-              router.push(
-                `/${resourceOwnerSlug}/${appSlug}/edit/${
-                  appQuery.data.scriptMain?.script.filename || 'main.ts'
-                }`,
-              );
+              window.location.href = `/${resourceOwnerSlug}/${appSlug}/edit/${
+                appQuery.data.scriptMain?.script.filename || 'main.ts'
+              }`;
             }}
             _hover={{ transform: 'scale(1.1)' }}
           >
