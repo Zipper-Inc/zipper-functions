@@ -1,3 +1,4 @@
+import { useRef, useState, ReactElement } from 'react';
 import {
   Box,
   Flex,
@@ -15,7 +16,11 @@ import {
   NumberInputStepper,
   NumberIncrementStepper,
   NumberDecrementStepper,
+  Button,
+  Icon,
+  useDisclosure,
 } from '@chakra-ui/react';
+import { VscAdd, VscClose } from 'react-icons/vsc';
 import { FieldValues, UseFormReturn, RegisterOptions } from 'react-hook-form';
 import { InputType, InputParam } from '@zipper/types';
 
@@ -24,6 +29,20 @@ interface Props {
   defaultValues?: any;
   formContext: UseFormReturn<FieldValues, any>;
 }
+
+/*
+const withOptional =
+  (InnerComponent: (props: any) => ReactElement) => (componentProps: any) => {
+    const [isDefined, setIsDefined] = useState(false);
+    return (
+      <Box opacity={!isDefined ? '50%' : '100%'}>
+        {!isDefined && <Button onClick={() => setIsDefined(true)}>+</Button>}
+        <InnerComponent {...componentProps} />
+        isDefined && <Button onClick={() => setIsDefined(true)}>+</Button>}
+      </Box>
+    );
+  };
+*/
 
 function FunctionParamInput({
   inputKey,
@@ -55,6 +74,7 @@ function FunctionParamInput({
     case InputType.boolean: {
       return <Switch colorScheme="purple" {...formProps} />;
     }
+
     case InputType.string: {
       return (
         <Textarea
@@ -106,44 +126,127 @@ function FunctionParamInput({
   }
 }
 
-export function FunctionInputs({ params = [], formContext }: Props) {
-  const inputs = params.map(({ key, type, optional }, i) => (
-    <FormLabel width="100%" my="2" key={`${key}-${i}`}>
-      <VStack justify="start" align="start" spacing={1.5}>
-        <HStack spacing={2} align="center">
-          <Heading
-            size="sm"
-            fontWeight="bold"
-            ml={0.5}
-            mr={2}
-            alignSelf="center"
-          >
-            {key}
-          </Heading>
-          <Box mt={1}>
-            <Badge variant="outline" colorScheme="purple" fontSize=".6rem">
-              {type}
-            </Badge>
-          </Box>
-          {optional && (
-            <Box mt={1}>
-              <Badge variant="subtle" color="gray.400" fontSize=".6rem">
-                Optional
+function SingleInput({
+  name,
+  type,
+  optional,
+  formContext,
+}: {
+  name: string;
+  type: InputType;
+  optional: boolean;
+  formContext: UseFormReturn<FieldValues, any>;
+}): JSX.Element {
+  const formName = `${name}:${type}`;
+  const { isOpen, onOpen, onClose } = useDisclosure({
+    defaultIsOpen: !optional,
+  });
+  const lastValue = useRef<any>(formContext.getValues()[formName]);
+
+  const open = () => {
+    formContext.setValue(formName, lastValue.current);
+    console.log(formContext.getValues());
+    onOpen();
+  };
+
+  const close = () => {
+    lastValue.current = formContext.getValues()[formName];
+    formContext.setValue(formName, undefined);
+    console.log(formContext.getValues());
+    onClose();
+  };
+
+  return (
+    <Box width="100%" position="relative">
+      <FormLabel my="2" mx={0}>
+        <VStack justify="start" align="start" spacing={1.5}>
+          <HStack spacing={2} align="center" width="full" paddingRight={8}>
+            <Heading
+              size="sm"
+              fontWeight="bold"
+              ml={0.5}
+              mr={2}
+              alignSelf="center"
+              opacity={!isOpen ? '50%' : '100%'}
+            >
+              {name}
+            </Heading>
+            <Box mt={1} opacity={!isOpen ? '50%' : '100%'}>
+              <Badge variant="outline" colorScheme="purple" fontSize=".6rem">
+                {type}
               </Badge>
             </Box>
+            {optional && (
+              <>
+                <Box mt={1}>
+                  <Badge variant="subtle" color="gray.400" fontSize=".6rem">
+                    {!isOpen ? 'Optional' : 'Included'}
+                  </Badge>
+                </Box>
+              </>
+            )}
+          </HStack>
+          {isOpen && (
+            <Flex width="100%">
+              <FunctionParamInput
+                inputKey={name}
+                type={type}
+                value={null}
+                optional={optional}
+                formContext={formContext}
+              />
+            </Flex>
           )}
-        </HStack>
-        <Flex width="100%">
-          <FunctionParamInput
-            inputKey={key}
-            type={type}
-            value={null}
-            optional={optional}
-            formContext={formContext}
-          />
+        </VStack>
+      </FormLabel>
+      {optional && (
+        <Flex
+          position="absolute"
+          right={0}
+          left={!isOpen ? 0 : undefined}
+          top={0}
+          height={10}
+          alignItems="center"
+          justifyContent="end"
+        >
+          <Button
+            display="flex"
+            alignItems="center"
+            justifyContent="end"
+            name={!isOpen ? 'Add input' : 'Remove input'}
+            variant="unstyled"
+            _hover={{
+              color: 'purple.500',
+            }}
+            size="xs"
+            mt="2px"
+            p={1}
+            height={6}
+            width={!isOpen ? 'full' : 6}
+            onClick={!isOpen ? open : close}
+          >
+            <Box
+              transition="all 100ms ease-in-out"
+              transform={!isOpen ? 'rotate(0deg)' : 'rotate(45deg)'}
+            >
+              <VscAdd />
+            </Box>
+          </Button>
         </Flex>
-      </VStack>
-    </FormLabel>
+      )}
+    </Box>
+  );
+}
+
+export function FunctionInputs({ params = [], formContext }: Props) {
+  const inputs = params.map(({ key: name, type, optional }, i) => (
+    <SingleInput
+      key={`${name}--${i}`}
+      name={name}
+      type={type}
+      optional={optional}
+      formContext={formContext}
+    />
   ));
 
   return (
