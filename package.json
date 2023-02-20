@@ -14,7 +14,7 @@
   },
   "scripts": {
     "build": "yarn link-env && turbo run build",
-    "dev": "yarn link-env && turbo run dev --parallel",
+    "dev": "NODE_OPTIONS=--max-old-space-size=4096 yarn link-env && turbo run dev --parallel",
     "link-env": "sh ./bin/link-env-files.sh",
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
