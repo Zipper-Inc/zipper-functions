@@ -147,11 +147,13 @@ const EditorContextProvider = ({
     if (appId && currentScript) {
       setIsSaving(true);
 
+      /*
       const promises = editor
         ?.getEditors()
         .map((e) => e.getAction('editor.action.formatDocument')?.run());
 
       if (promises && promises.length) await Promise.all(promises);
+      */
 
       const fileValues: Record<string, string> = {};
 
