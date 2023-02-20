@@ -113,14 +113,19 @@ export function RunAppProvider({
               inputs[inputKey as string] = value;
             });
 
-          const result = await fetch(getRunUrl(slug), {
+          /**
+           * @todo detect if code changes instead of always running a new version
+           * either that, or make version name based on hash of files
+           */
+          const version = getLastRunVersion();
+
+          const result = await fetch(getRunUrl(slug, version), {
             method: 'POST',
             body: JSON.stringify(inputs),
           }).then((r) => r.text());
 
           setResult(result);
 
-          const version = getLastRunVersion(app);
           setLastRunVersion(version);
           editAppMutation.mutateAsync({
             id,
