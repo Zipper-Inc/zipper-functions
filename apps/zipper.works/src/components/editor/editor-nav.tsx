@@ -21,7 +21,8 @@ export const EditorNav: React.FC<EditorNavProps> = ({ app }) => {
             paddingX={3}
             paddingY={2}
             _hover={{ transform: 'scale(1.05)' }}
-            onClick={() => {
+            onClick={(e) => {
+              e.preventDefault();
               window.location.href = `/${app.resourceOwner.slug}/${app.slug}/edit/${script.filename}`;
             }}
           >
