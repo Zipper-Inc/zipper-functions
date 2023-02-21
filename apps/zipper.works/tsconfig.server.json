@@ -12,7 +12,6 @@
   },
   "include": [
     "./src/server.ts",
-    "./src/server/**/*.ts",
-    "../../packages/@zipper-utils/**/*.ts"
+    "./src/server/**/*.ts"
   ]
 }

@@ -81,7 +81,7 @@ export async function relayRequest(request: NextRequest) {
   const version =
     getVersionFromUrl(request.url) ||
     appInfoResult.data.app.lastDeploymentVersion ||
-    Date.now().toString();
+    Date.now().toString(32);
 
   const { app } = appInfoResult.data;
   const deploymentId = `${app.id}@${version}`;
