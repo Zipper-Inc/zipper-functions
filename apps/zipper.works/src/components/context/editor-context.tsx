@@ -56,10 +56,14 @@ export const EditorContext = createContext<EditorContextType>({
 const EditorContextProvider = ({
   children,
   appId,
+  appSlug,
+  resourceOwnerSlug,
   initialScripts,
 }: {
   children: any;
   appId: string | undefined;
+  appSlug: string | undefined;
+  resourceOwnerSlug: string | undefined;
   initialScripts: Script[];
 }) => {
   const [currentScript, setCurrentScript] = useState<Script | undefined>(
@@ -121,8 +125,12 @@ const EditorContextProvider = ({
       if (router.query.filename !== currentScript.filename) {
         router.push(
           {
-            pathname: '/app/[id]/edit/[filename]',
-            query: { id: appId, filename: currentScript?.filename },
+            pathname: '/[resource-owner]/[app-slug]/edit/[filename]',
+            query: {
+              'app-slug': appSlug,
+              'resource-owner': resourceOwnerSlug,
+              filename: currentScript?.filename,
+            },
           },
           undefined,
           { shallow: true },
@@ -147,11 +155,13 @@ const EditorContextProvider = ({
     if (appId && currentScript) {
       setIsSaving(true);
 
+      /*
       const promises = editor
         ?.getEditors()
         .map((e) => e.getAction('editor.action.formatDocument')?.run());
 
       if (promises && promises.length) await Promise.all(promises);
+      */
 
       const fileValues: Record<string, string> = {};
 

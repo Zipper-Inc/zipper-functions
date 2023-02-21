@@ -62,6 +62,8 @@ const PlaygroundPage: NextPageWithLayout = () => {
     () => (
       <EditorContextProvider
         appId={appQuery.data?.id}
+        appSlug={appQuery.data.slug}
+        resourceOwnerSlug={appQuery.data.resourceOwner.slug}
         initialScripts={appQuery.data?.scripts || []}
       >
         <Playground app={appQuery.data} filename={filename} />

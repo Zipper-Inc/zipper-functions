@@ -169,7 +169,8 @@ const AppPage: NextPageWithLayout = () => {
           <Button
             colorScheme="blue"
             paddingX={6}
-            onClick={() => {
+            onClick={(e) => {
+              e.preventDefault();
               window.location.href = `/${resourceOwnerSlug}/${appSlug}/edit/${
                 appQuery.data.scriptMain?.script.filename || 'main.ts'
               }`;
