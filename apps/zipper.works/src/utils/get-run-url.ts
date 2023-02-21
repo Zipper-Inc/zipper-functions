@@ -1,4 +1,6 @@
-export default function getRunUrl(slug: string, version: string) {
+import { getLastRunVersion } from '@zipper/utils';
+
+export default function getRunUrl(slug: string, version = getLastRunVersion()) {
   return `${
     process.env.NODE_ENV === 'production' ? 'https' : 'http'
   }://${slug}.${
