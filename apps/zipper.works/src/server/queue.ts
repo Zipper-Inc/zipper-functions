@@ -4,6 +4,7 @@ import IORedis from 'ioredis';
 import { prisma } from './prisma';
 import fetch from 'node-fetch';
 import getRunUrl from '../utils/get-run-url';
+import { getLastRunVersion } from '@zipper/utils';
 
 const connection = new IORedis(+env.REDIS_PORT, env.REDIS_HOST, {
   maxRetriesPerRequest: null,
@@ -36,7 +37,7 @@ const initializeWorkers = () => {
           });
 
           try {
-            const raw = await fetch(getRunUrl(schedule.app.slug), {
+            const raw = await fetch(getRunUrl(schedule.app.slug, getLastRunVersion(schedule.app)), {
               method: 'POST',
               headers: {
                 'X-Zipper-Schedule-Id': schedule.id,
