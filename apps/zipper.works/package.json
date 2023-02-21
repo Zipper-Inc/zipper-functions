@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "build:1-prisma": "prisma generate && prisma migrate deploy",
+    "build:1-prisma": "prisma generate",
     "build:2-next": "next build",
     "build:3-tsc": "tsc --project tsconfig.server.json",
     "build": "run-s build:*",
