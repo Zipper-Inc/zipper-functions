@@ -7,8 +7,8 @@ import {
   Tab,
   TabPanels,
   TabPanel,
+  Progress,
 } from '@chakra-ui/react';
-import debounce from 'lodash.debounce';
 
 import { InputParam } from '@zipper/types';
 import { useRouter } from 'next/router';
@@ -16,14 +16,7 @@ import React, { useState, useEffect } from 'react';
 import SecretsTab from '~/components/app/secrets-tab';
 import SchedulesTab from '~/components/app/schedules-tab';
 import ShareModal from '~/components/app/share-modal';
-import usePrettier from '~/hooks/use-prettier';
 import { trpc } from '~/utils/trpc';
-import {
-  useMutation as useLiveMutation,
-  useStorage as useLiveStorage,
-} from '~/liveblocks.config';
-
-import { LiveObject, LsonObject } from '@liveblocks/client';
 
 import { parseInputForTypes } from '~/utils/parse-input-for-types';
 import SettingsModal from './settings-modal';
@@ -37,10 +30,6 @@ import { Script } from '@prisma/client';
 import { AppQueryOutput } from '~/types/trpc';
 import { RunAppProvider } from '../context/run-app-context';
 
-const debouncedParseInputForTypes = debounce(
-  (code, setInputParams) => setInputParams(parseInputForTypes(code)),
-  500,
-);
 export function Playground({
   app,
   filename = 'main.ts',
@@ -59,7 +48,8 @@ export function Playground({
 
   const { id } = app;
 
-  const { setCurrentScript, currentScript, save } = useEditorContext();
+  const { setCurrentScript, currentScript, currentScriptLive, save, isSaving } =
+    useEditorContext();
 
   const mainScript = app.scripts.find(
     (script: any) => script.id === app.scriptMain?.scriptId,
@@ -73,32 +63,11 @@ export function Playground({
     setCurrentScript(initialScript!);
   }, []);
 
-  const mutateLive = useLiveMutation(
-    ({ storage }, newCode: string) => {
-      const storedScript = storage.get(
-        `script-${currentScript?.id}`,
-      ) as LiveObject<LsonObject>;
-
-      if (storedScript) {
-        storedScript.set('code', newCode);
-      }
-
-      debouncedParseInputForTypes(newCode, setInputParams);
-    },
-    [currentScript],
-  );
-
-  const currentScriptLive: any = useLiveStorage(
-    (root) => root[`script-${currentScript?.id}`],
-  );
-
   useEffect(() => {
     setInputParams(
-      parseInputForTypes(currentScript?.code || currentScriptLive?.code),
+      parseInputForTypes(currentScriptLive?.code || currentScript?.code),
     );
-  }, [currentScript]);
-
-  const format = usePrettier();
+  }, [currentScriptLive?.code, currentScript?.code]);
 
   const forkApp = trpc.useMutation('app.fork', {
     async onSuccess(data: any) {
@@ -106,21 +75,13 @@ export function Playground({
     },
   });
 
-  const saveApp = async () => {
-    if (currentScriptLive) {
-      const formatted = format(currentScriptLive.code).formatted;
-      mutateLive(formatted);
-    }
-    save();
-  };
-
   const switchToCodeTab = () => setTabIndex(0);
 
   return (
     <RunAppProvider
       app={app}
       inputParams={inputParams}
-      onBeforeRun={saveApp}
+      onBeforeRun={save}
       onAfterRun={switchToCodeTab}
     >
       <Tabs
@@ -175,12 +136,26 @@ export function Playground({
         {/* TAB PANELS */}
         <TabPanels as={DefaultGrid} maxW="full" p={0}>
           {/* CODE */}
-          <TabPanel as={GridItem} colSpan={12} px={0} pb={0}>
-            <CodeTab
-              app={app}
-              mainScript={mainScript}
-              mutateLive={mutateLive}
-            />
+          <TabPanel
+            as={GridItem}
+            colSpan={12}
+            px={0}
+            pb={0}
+            position="relative"
+          >
+            {isSaving && (
+              <Progress
+                isIndeterminate
+                colorScheme="purple"
+                position="absolute"
+                left={0}
+                right={0}
+                top="-3px"
+                height="2px"
+                background="transparent"
+              />
+            )}
+            <CodeTab app={app} mainScript={mainScript} />
           </TabPanel>
 
           {/* SCHEDULES */}

@@ -17,7 +17,7 @@ model App {
   slug            String    @db.VarChar(60) @unique
   name            String?
   description     String?
-  datastore       Json?
+  datastore       Json?     @db.JsonB
   isPrivate       Boolean   @default(true)
   submissionState Int       @default(0)
   categories      String[]

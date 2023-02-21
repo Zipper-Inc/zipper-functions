@@ -4,7 +4,7 @@ import 'vscode';
 import { StandaloneServices } from 'vscode/services';
 import getMessageServiceOverride from 'vscode/service-override/messages';
 import { buildWorkerDefinition } from 'monaco-editor-workers';
-
+import { useMyPresence, useOthersConnectionIds } from '~/liveblocks.config';
 import {
   CloseAction,
   DocumentUri,
@@ -25,6 +25,10 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Uri } from 'vscode';
 import { useEditorContext } from '../context/editor-context';
 import { useExitConfirmation } from '~/hooks/use-exit-confirmation';
+import {
+  MonacoCursorWidget,
+  PlaygroundCollabCursor,
+} from './playground-collab-cursor';
 
 export interface CacheParams {
   referrer: TextDocumentIdentifier;
@@ -114,13 +118,23 @@ export default function PlaygroundEditor(
     appName: string;
   },
 ) {
-  const { currentScript, scripts, setEditor, setModelIsDirty, isEditorDirty } =
-    useEditorContext();
+  const {
+    currentScript,
+    currentScriptLive,
+    scripts,
+    setEditor,
+    setModelIsDirty,
+    isEditorDirty,
+    connectionId,
+  } = useEditorContext();
   const editorRef = useRef<MonacoEditor>();
   const monacoRef = useRef<Monaco>();
   const [isEditorReady, setIsEditorReady] = useState(false);
   const [hasWebsocket, setHasWebsocket] = useState(false);
   const monacoEditor = useMonaco();
+  const [, updateMyPresence] = useMyPresence();
+  const connectionIds = useOthersConnectionIds();
+
   const url = useMemo(
     () => process.env.NEXT_PUBLIC_LSP,
     [process.env.NEXT_PUBLIC_LSP],
@@ -177,6 +191,11 @@ export default function PlaygroundEditor(
     monacoRef.current?.languages.typescript.javascriptDefaults.setEagerModelSync(
       true,
     );
+
+    // set up cursor tracking
+    editor.onDidChangeCursorSelection(({ selection }) => {
+      updateMyPresence({ selection: { ...selection } });
+    });
     setIsEditorReady(true);
   }
 
@@ -274,16 +293,61 @@ export default function PlaygroundEditor(
     }
   }, [currentScript, editorRef.current, isEditorReady]);
 
+  // Execute edits
+  useEffect(() => {
+    if (
+      !editorRef.current ||
+      !editorRef.current.getModel() ||
+      !currentScriptLive
+    )
+      return;
+
+    // don't execute any edits if this is coming from your own connection
+    if (connectionId === currentScriptLive.lastConnectionId) return;
+
+    const range = (
+      editorRef.current.getModel() as monaco.editor.ITextModel
+    ).getFullModelRange();
+
+    const selection = editorRef.current.getSelection();
+
+    editorRef.current.executeEdits(
+      'liveblocks',
+      [
+        {
+          range,
+          text: currentScriptLive?.code,
+          forceMoveMarkers: true,
+        },
+      ],
+      /**
+       * @todo resolve where the new selection might be based on the edited range
+       * just putting it here is way better for now
+       */
+      selection ? [selection] : undefined,
+    );
+    editorRef.current.pushUndoStop();
+  }, [connectionId, currentScriptLive?.code, editorRef.current]);
+
   return (
-    <Editor
-      defaultLanguage="typescript"
-      theme="vs-light"
-      options={{
-        minimap: { enabled: false },
-        automaticLayout: true,
-      }}
-      onMount={handleEditorDidMount}
-      {...props}
-    />
+    <>
+      <Editor
+        defaultLanguage="typescript"
+        theme="vs-light"
+        options={{
+          minimap: { enabled: false },
+          automaticLayout: true,
+        }}
+        onMount={handleEditorDidMount}
+        {...props}
+      />
+      {connectionIds.map((id) => (
+        <PlaygroundCollabCursor
+          connectionId={id}
+          editorRef={editorRef}
+          key={id}
+        />
+      ))}
+    </>
   );
 }

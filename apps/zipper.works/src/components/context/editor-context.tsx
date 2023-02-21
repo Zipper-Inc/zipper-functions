@@ -1,29 +1,46 @@
 import { Script } from '@prisma/client';
 import * as monaco from 'monaco-editor';
 import { createContext, useContext, useEffect, useState } from 'react';
-import noop from '~/utils/noop';
+import noop, { asyncNoop } from '~/utils/noop';
 
-import { useStorage as useLiveStorage } from '~/liveblocks.config';
+import {
+  useSelf,
+  useStorage as useLiveStorage,
+  useMutation as useLiveMutation,
+} from '~/liveblocks.config';
 
 import { trpc } from '~/utils/trpc';
 import { useRouter } from 'next/router';
+import { LiveObject, LsonObject } from '@liveblocks/client';
 
 export type EditorContextType = {
-  currentScript: Script | undefined;
+  currentScript?: Script;
   setCurrentScript: (script: Script) => void;
+  currentScriptLive?: {
+    code: string;
+    lastLocalVersion: number;
+    lastConnectionId: number;
+  };
+  mutateLive: (newCode: string, newVersion: number) => void;
+  connectionId?: number;
   scripts: Script[];
   setScripts: (scripts: Script[]) => void;
-  editor: typeof monaco.editor | undefined;
+  editor?: typeof monaco.editor;
   setEditor: (editor: typeof monaco.editor) => void;
   isModelDirty: (path: string) => boolean;
   setModelIsDirty: (path: string, isDirty: boolean) => void;
   isEditorDirty: () => boolean;
-  save: () => void;
+  isSaving: boolean;
+  setIsSaving: (isSaving: boolean) => void;
+  save: () => Promise<void>;
 };
 
 export const EditorContext = createContext<EditorContextType>({
   currentScript: undefined,
   setCurrentScript: noop,
+  currentScriptLive: undefined,
+  mutateLive: noop,
+  connectionId: undefined,
   scripts: [],
   setScripts: noop,
   editor: undefined,
@@ -31,22 +48,29 @@ export const EditorContext = createContext<EditorContextType>({
   isModelDirty: () => false,
   setModelIsDirty: noop,
   isEditorDirty: () => false,
-  save: noop,
+  isSaving: false,
+  setIsSaving: noop,
+  save: asyncNoop,
 });
 
 const EditorContextProvider = ({
   children,
   appId,
+  appSlug,
+  resourceOwnerSlug,
   initialScripts,
 }: {
   children: any;
   appId: string | undefined;
+  appSlug: string | undefined;
+  resourceOwnerSlug: string | undefined;
   initialScripts: Script[];
 }) => {
   const [currentScript, setCurrentScript] = useState<Script | undefined>(
     undefined,
   );
   const [scripts, setScripts] = useState<Script[]>(initialScripts);
+  const [isSaving, setIsSaving] = useState(false);
 
   const [editor, setEditor] = useState<typeof monaco.editor | undefined>();
 
@@ -56,6 +80,23 @@ const EditorContextProvider = ({
 
   const currentScriptLive: any = useLiveStorage(
     (root) => root[`script-${currentScript?.id}`],
+  );
+
+  const mutateLive = useLiveMutation(
+    (context, newCode: string, newVersion: number) => {
+      const { storage, self } = context;
+
+      const stored = storage.get(
+        `script-${currentScript?.id}`,
+      ) as LiveObject<LsonObject>;
+
+      if (!stored || stored.get('code') === newCode) return;
+
+      stored.set('code', newCode);
+      stored.set('lastLocalVersion', newVersion);
+      stored.set('lastConnectionId', self.connectionId);
+    },
+    [currentScript],
   );
 
   useEffect(() => {
@@ -84,8 +125,12 @@ const EditorContextProvider = ({
       if (router.query.filename !== currentScript.filename) {
         router.push(
           {
-            pathname: '/app/[id]/edit/[filename]',
-            query: { id: appId, filename: currentScript?.filename },
+            pathname: '/[resource-owner]/[app-slug]/edit/[filename]',
+            query: {
+              'app-slug': appSlug,
+              'resource-owner': resourceOwnerSlug,
+              filename: currentScript?.filename,
+            },
           },
           undefined,
           { shallow: true },
@@ -104,8 +149,20 @@ const EditorContextProvider = ({
     },
   });
 
-  const saveOpenModels = () => {
+  const self = useSelf();
+
+  const saveOpenModels = async () => {
     if (appId && currentScript) {
+      setIsSaving(true);
+
+      /*
+      const promises = editor
+        ?.getEditors()
+        .map((e) => e.getAction('editor.action.formatDocument')?.run());
+
+      if (promises && promises.length) await Promise.all(promises);
+      */
+
       const fileValues: Record<string, string> = {};
 
       editor?.getModels().map((model) => {
@@ -114,7 +171,16 @@ const EditorContextProvider = ({
         }
       });
 
-      editAppMutation.mutateAsync({
+      setModelsDirtyState(
+        (Object.keys(modelsDirtyState) as string[]).reduce((acc, elem) => {
+          return {
+            ...acc,
+            [elem]: false,
+          };
+        }, {} as Record<string, boolean>),
+      );
+
+      await editAppMutation.mutateAsync({
         id: appId,
         data: {
           scripts: scripts.map((script: any) => ({
@@ -136,14 +202,7 @@ const EditorContextProvider = ({
         },
       });
 
-      setModelsDirtyState(
-        (Object.keys(modelsDirtyState) as string[]).reduce((acc, elem) => {
-          return {
-            ...acc,
-            [elem]: false,
-          };
-        }, {} as Record<string, boolean>),
-      );
+      setIsSaving(false);
     }
   };
 
@@ -166,6 +225,9 @@ const EditorContextProvider = ({
       value={{
         currentScript,
         setCurrentScript,
+        currentScriptLive,
+        mutateLive,
+        connectionId: self?.connectionId,
         scripts,
         setScripts,
         editor,
@@ -173,6 +235,8 @@ const EditorContextProvider = ({
         isModelDirty,
         setModelIsDirty,
         isEditorDirty,
+        isSaving,
+        setIsSaving,
         save: saveOpenModels,
       }}
     >
