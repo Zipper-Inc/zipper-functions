@@ -1,5 +1,5 @@
 import '@fontsource/inter';
-import { ChakraProvider } from '@chakra-ui/react';
+import { ChakraProvider, Flex } from '@chakra-ui/react';
 import Head from 'next/head';
 import { ReactNode } from 'react';
 import { ReactQueryDevtools } from 'react-query/devtools';
@@ -24,7 +24,15 @@ export const DefaultLayout = ({ children, header }: DefaultLayoutProps) => {
       <ChakraProvider theme={theme}>
         <>
           {header}
-          <main>{children}</main>
+          <Flex
+            as="main"
+            flex={1}
+            flexDirection="column"
+            justifyContent="start"
+            alignItems="stretch"
+          >
+            {children}
+          </Flex>
         </>
       </ChakraProvider>
 

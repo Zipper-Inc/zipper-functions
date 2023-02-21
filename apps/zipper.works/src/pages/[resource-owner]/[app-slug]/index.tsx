@@ -11,7 +11,6 @@ import {
 import Editor from '@monaco-editor/react';
 import { GetServerSideProps } from 'next';
 import NextError from 'next/error';
-import NextLink from 'next/link';
 import { useRouter } from 'next/router';
 import { EditorNav } from '~/components/editor/editor-nav';
 import Header from '~/components/header';
@@ -54,7 +53,7 @@ const AppPage: NextPageWithLayout = () => {
   const appOwner = getAppOwner(data);
 
   return (
-    <HStack gap={4} pl={10} mt="14" mr={0} alignItems="stretch">
+    <HStack gap={4} pl={10} pt="14" mr={0} alignItems="stretch" flex={1}>
       <VStack flex={2} gap={4} alignItems="start">
         <Heading as="h1" size="2xl" fontWeight="bold" overflowWrap="normal">
           {headline}

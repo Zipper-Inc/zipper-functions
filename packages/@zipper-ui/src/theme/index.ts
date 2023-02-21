@@ -140,6 +140,23 @@ export const fonts = {
 };
 
 export const theme = extendTheme({
+  styles: {
+    global: {
+      body: {
+        height: '100vh',
+        padding: 0,
+        margin: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'auto',
+      },
+      '#__next': {
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+      },
+    },
+  },
   colors: {
     ...brandColors,
     ...baseColors,
