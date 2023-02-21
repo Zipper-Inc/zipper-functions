@@ -115,6 +115,6 @@ export const getServerSideProps: GetServerSideProps = async ({
 };
 
 PlaygroundPage.skipAuth = true;
-PlaygroundPage.header = () => <Box mt={4}></Box>;
+PlaygroundPage.header = () => <Box pt="20px"></Box>;
 
 export default PlaygroundPage;

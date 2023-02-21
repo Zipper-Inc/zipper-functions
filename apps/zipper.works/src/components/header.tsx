@@ -37,8 +37,7 @@ const Header: React.FC<HeaderProps> = ({ showNav = true }) => {
     <Flex
       as="header"
       gap={4}
-      margin="auto"
-      mt="20px"
+      pt="20px"
       maxW="full"
       minW="md"
       paddingX={10}
