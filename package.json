@@ -17,6 +17,7 @@
     "dev": "NODE_OPTIONS=--max-old-space-size=4096 yarn link-env && turbo run dev --parallel",
     "link-env": "sh ./bin/link-env-files.sh",
     "lint": "turbo run lint",
+    "test": "turbo run test",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "db-nuke": "docker-compose down --volumes --remove-orphans",
     "ts-node": "ts-node -T",
