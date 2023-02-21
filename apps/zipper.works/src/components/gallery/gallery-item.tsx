@@ -92,7 +92,7 @@ const LargeGalleryItem: React.FC<Omit<GalleryItemProps, 'size'>> = ({
   app,
 }) => {
   return (
-    <GridItem colSpan={3} key={app.id}>
+    <GridItem colSpan={3}>
       <NextLink href={`/${app.resourceOwner.slug}/${app.slug}`}>
         <Card
           width="full"
