@@ -65,7 +65,8 @@ const __storage = {
       process.env.RPC_HOST
     }' + path, { headers: {'x-zipper-hmac': hmac, 'x-timestamp': timestamp} } );
 
-    return res.json();
+    const result = await res.json();
+    return key ? result.value : result; 
   },
   set: async (key: string, value: unknown) => {
     let path = '/api/app/${appId}/storage';
@@ -124,7 +125,7 @@ addEventListener('fetch', async (event) => {
     const output = await fn(input);
 
     if (output instanceof Response) {
-      if (!output.headers.get('Content-Type'))
+      if (!output.headerset('Content-Type'))
         output.headers.set('Content-Type', '${DEFAULT_CONTENT_TYPE}')
       Object.keys(xZipperHeaders).forEach((h) => {
         output.headers.set(h, xZipperHeaders[h]);
