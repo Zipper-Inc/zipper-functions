@@ -35,8 +35,17 @@ const initializeWorkers = () => {
             inputsWithoutAnnotations[splitKey.join(':')] = inputs[inputKey];
           });
 
+          /**
+           * @todo
+           * this should be the version of the app specific to the cron
+           */
+          const url = getRunUrl(
+            schedule.app.slug,
+            schedule.app.lastDeploymentVersion,
+          );
+
           try {
-            const raw = await fetch(getRunUrl(schedule.app.slug), {
+            const raw = await fetch(url, {
               method: 'POST',
               headers: {
                 'X-Zipper-Schedule-Id': schedule.id,
