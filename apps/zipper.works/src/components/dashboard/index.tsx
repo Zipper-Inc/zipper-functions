@@ -144,7 +144,7 @@ export function Dashboard() {
 
   return (
     <>
-      <DefaultGrid>
+      <DefaultGrid flex={1} w="full">
         <GridItem colSpan={12}>
           <VStack align="start" w="full">
             <Flex w="full" align="center" h="20" px="4">

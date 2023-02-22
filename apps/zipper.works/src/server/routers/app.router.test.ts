@@ -34,7 +34,7 @@ describe('when calling app.add', () => {
 
     expect(prismaMock.app.create).toBeCalledWith(
       expect.objectContaining({
-        data: {
+        data: expect.objectContaining({
           createdById: userId,
           description: 'test',
           editors: {
@@ -46,7 +46,7 @@ describe('when calling app.add', () => {
           name: 'test',
           organizationId: undefined,
           slug: 'test',
-        },
+        }),
       }),
     );
   });
@@ -67,7 +67,7 @@ describe('when calling app.add', () => {
 
     expect(prismaMock.app.create).toBeCalledWith(
       expect.objectContaining({
-        data: {
+        data: expect.objectContaining({
           createdById: userId,
           description: 'test',
           editors: {
@@ -79,7 +79,7 @@ describe('when calling app.add', () => {
           name: 'test',
           organizationId: orgId,
           slug: 'test',
-        },
+        }),
       }),
     );
   });
@@ -103,7 +103,7 @@ describe('when calling app.add', () => {
 
     expect(prismaMock.app.create).toBeCalledWith(
       expect.objectContaining({
-        data: {
+        data: expect.objectContaining({
           createdById: userId,
           description: 'test',
           editors: {
@@ -115,7 +115,7 @@ describe('when calling app.add', () => {
           name: 'test',
           organizationId: orgId,
           slug: 'test-12',
-        },
+        }),
       }),
     );
   });

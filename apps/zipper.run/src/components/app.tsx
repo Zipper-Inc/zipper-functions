@@ -30,7 +30,7 @@ const { __DEBUG__ } = process.env;
 export function AppPage({
   app,
   inputs,
-  version = app.lastDeploymentVersion || Date.now().toString(),
+  version = app.lastDeploymentVersion || Date.now().toString(32),
   defaultValues,
 }: {
   app: AppInfo;

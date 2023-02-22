@@ -12,6 +12,7 @@ import SignInButton from './auth/signInButton';
 
 type HeaderProps = {
   showNav?: boolean;
+  showOrgSwitcher?: boolean;
 };
 
 const navRoutes = [
@@ -20,7 +21,7 @@ const navRoutes = [
   { href: '#', text: 'Build' },
 ];
 
-const Header: React.FC<HeaderProps> = ({ showNav = true }) => {
+const Header: React.FC<HeaderProps> = ({ showNav = true, showOrgSwitcher }) => {
   const router = useRouter();
   const isTablet = useBreakpointValue({ base: false, md: true });
   const baseRoute = router.pathname.split('/')[1];
@@ -37,8 +38,7 @@ const Header: React.FC<HeaderProps> = ({ showNav = true }) => {
     <Flex
       as="header"
       gap={4}
-      margin="auto"
-      mt="20px"
+      pt="20px"
       maxW="full"
       minW="md"
       paddingX={10}
@@ -60,7 +60,7 @@ const Header: React.FC<HeaderProps> = ({ showNav = true }) => {
           </NextLink>
         </Box>
 
-        {showNav && (
+        {showOrgSwitcher && (
           <>
             <Box>
               <SignedIn>
