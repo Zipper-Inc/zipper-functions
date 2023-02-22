@@ -312,7 +312,7 @@ export default function PlaygroundEditor(
     const selection = editorRef.current.getSelection();
 
     editorRef.current.executeEdits(
-      'liveblocks',
+      'zipperLiveUpdate',
       [
         {
           range,
