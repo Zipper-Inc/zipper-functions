@@ -5,6 +5,7 @@ import {
   Collapse,
   Box,
   Text,
+  HStack,
 } from '@chakra-ui/react';
 import { SmartFunctionOutput } from './smart-function-output';
 import { isPrimitive } from './utils';
@@ -20,27 +21,42 @@ function ObjectExplorerRow({
 }) {
   const { isOpen, onToggle } = useDisclosure({ defaultIsOpen: true });
   const shouldCollapse = !isPrimitive(data);
-
   return (
-    <Box my={6}>
-      <Heading size="md" mb={1} color="gray.600" fontWeight={300}>
-        {heading}
+    <HStack
+      borderBottom="1px solid"
+      borderColor="gray.200"
+      spacing={4}
+      alignItems="start"
+      _last={{ borderBottom: 'none' }}
+    >
+      <HStack
+        flex={1}
+        minWidth={0}
+        overflow="auto"
+        whiteSpace="nowrap"
+        justifyContent="space-between"
+      >
+        <Heading py={6} size="md" mb={1} color="gray.600" fontWeight={300}>
+          {heading}
+        </Heading>
         {shouldCollapse && (
           <Button variant="ghost" size="xs" mx={2} onClick={onToggle}>
             {!isOpen ? '〉' : '⌃'}
           </Button>
         )}
-      </Heading>
+      </HStack>
       {shouldCollapse ? (
-        <Collapse in={isOpen}>
-          <Box pl={4}>
+        <Box flex={5}>
+          <Collapse in={isOpen}>
             <SmartFunctionOutput result={data} level={level + 1} />
-          </Box>
-        </Collapse>
+          </Collapse>
+        </Box>
       ) : (
-        <Text size="sm">{data.toString()}</Text>
+        <Text py={6} size="sm" flex={5}>
+          {data.toString()}
+        </Text>
       )}
-    </Box>
+    </HStack>
   );
 }
 
@@ -54,7 +70,12 @@ export function ObjectExplorer({
   return (
     <Box>
       {Object.keys(data).map((key) => (
-        <ObjectExplorerRow heading={key} data={data[key]} level={level} />
+        <ObjectExplorerRow
+          key={key}
+          heading={key}
+          data={data[key]}
+          level={level}
+        />
       ))}
     </Box>
   );

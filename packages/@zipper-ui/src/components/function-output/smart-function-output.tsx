@@ -11,12 +11,19 @@ import {
   Text,
 } from '@chakra-ui/react';
 import { OutputType } from '@zipper/types';
+import styled from '@emotion/styled';
 
 import { useTable, useSortBy } from 'react-table';
 import { ObjectExplorer } from './object-explorer';
 import { parseResult } from './utils';
 import { Props } from './types';
 import { RawFunctionOutput } from './raw-function-output';
+
+const StyledTr = styled(Tr)`
+  &:last-of-type td {
+    border-bottom: none;
+  }
+`;
 
 function TableArray(props: { data: Array<any> }) {
   const columns = useMemo(
@@ -44,6 +51,7 @@ function TableArray(props: { data: Array<any> }) {
             const isIndex = column.id === 'index';
             return (
               <Th
+                key={column.id}
                 {...column.getHeaderProps(column.getSortByToggleProps())}
                 width={isIndex ? '20px' : undefined}
               >
@@ -67,7 +75,7 @@ function TableArray(props: { data: Array<any> }) {
           {rows.map((row) => {
             prepareRow(row);
             return (
-              <Tr {...row.getRowProps()}>
+              <StyledTr {...row.getRowProps()}>
                 {row.cells.map((cell) => {
                   const isIndex = cell.column.id === 'index';
                   return (
@@ -80,7 +88,7 @@ function TableArray(props: { data: Array<any> }) {
                     </Td>
                   );
                 })}
-              </Tr>
+              </StyledTr>
             );
           })}
         </Tbody>
@@ -132,13 +140,13 @@ function TableCollection(props: { data: Array<any> }) {
           {rows.map((row) => {
             prepareRow(row);
             return (
-              <Tr {...row.getRowProps()}>
+              <StyledTr {...row.getRowProps()}>
                 {row.cells.map((cell) => {
                   return (
                     <Td {...cell.getCellProps()}>{cell.render('Cell')}</Td>
                   );
                 })}
-              </Tr>
+              </StyledTr>
             );
           })}
         </Tbody>
