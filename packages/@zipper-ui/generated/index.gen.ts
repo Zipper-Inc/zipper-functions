@@ -1,6 +1,6 @@
 // created from ctix
 
-export * from '../src/components/function-output/index';
+export * from '../src/components/function-output/function-output';
 export * from '../src/components/function-output/object-explorer';
 export * from '../src/components/function-output/raw-function-output';
 export * from '../src/components/function-output/smart-function-output';
