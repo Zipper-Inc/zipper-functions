@@ -15,6 +15,7 @@ import { useRouter } from 'next/router';
 import React, { useState, useEffect } from 'react';
 import SecretsTab from '~/components/app/secrets-tab';
 import SchedulesTab from '~/components/app/schedules-tab';
+import SettingsTab from './settings-tab';
 import ShareModal from '~/components/app/share-modal';
 import { trpc } from '~/utils/trpc';
 
@@ -129,6 +130,8 @@ export function Playground({
               <Tab>Secrets</Tab>
             </>
           )}
+          {/* SETTINGS */}
+          <Tab>Settings</Tab>
         </TabList>
         {/* TAB PANELS */}
         <TabPanels as={DefaultGrid} maxW="full" p={0}>
@@ -163,6 +166,11 @@ export function Playground({
           {/* SECRETS */}
           <TabPanel as={GridItem} colSpan={12}>
             <SecretsTab editable={app.canUserEdit} appId={id} />
+          </TabPanel>
+
+          {/* SETTINGS */}
+          <TabPanel as={GridItem} colSpan={12}>
+            <SettingsTab app={app} />
           </TabPanel>
         </TabPanels>
 
