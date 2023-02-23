@@ -125,7 +125,7 @@ addEventListener('fetch', async (event) => {
     const output = await fn(input);
 
     if (output instanceof Response) {
-      if (!output.headerset('Content-Type'))
+      if (!output.headers.get('Content-Type'))
         output.headers.set('Content-Type', '${DEFAULT_CONTENT_TYPE}')
       Object.keys(xZipperHeaders).forEach((h) => {
         output.headers.set(h, xZipperHeaders[h]);
