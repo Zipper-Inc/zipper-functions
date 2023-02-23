@@ -26,15 +26,13 @@ import {
 import { useEffect, useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { HiExclamationTriangle } from 'react-icons/hi2';
-import { useDebounce } from 'use-debounce';
 import slugify from '~/utils/slugify';
 import { trpc } from '~/utils/trpc';
 import { generateDefaultName } from '~/utils/generate-default';
 import { HiGlobe } from 'react-icons/hi';
 import { useOrganization, useOrganizationList } from '@clerk/nextjs';
 import { OrganizationSelector } from './organization-selector';
-
-const MIN_SLUG_LENGTH = 5;
+import { useAppSlug, MIN_SLUG_LENGTH } from '~/hooks/use-app-slug';
 
 type Props = {
   isOpen: boolean;
@@ -62,12 +60,6 @@ export const CreateAppModal: React.FC<Props> = ({ isOpen, onClose }) => {
   >(organization?.id);
 
   const [slug, setSlug] = useState<string>('');
-  const [debouncedSlug] = useDebounce(slug, 200);
-
-  const appSlugQuery = trpc.useQuery(
-    ['app.validateSlug', { slug: debouncedSlug }],
-    { enabled: !!(debouncedSlug.length >= MIN_SLUG_LENGTH) },
-  );
 
   const createAppForm = useForm({
     defaultValues: getDefaultCreateAppFormValues(),
@@ -88,7 +80,7 @@ export const CreateAppModal: React.FC<Props> = ({ isOpen, onClose }) => {
     setSelectedOrganizationId(organization?.id);
   };
 
-  const slugExists = appSlugQuery.data;
+  const { slugExists, appSlugQuery } = useAppSlug(slug);
   const isSlugValid =
     appSlugQuery.isFetched && slug && slug.length >= MIN_SLUG_LENGTH;
   const isDisabled = slugExists || slug.length < MIN_SLUG_LENGTH;
