@@ -99,7 +99,11 @@ export function AppPage({
             style={{ marginLeft: '8px', height: '13px' }}
           />
         </Flex>
-        {app.description && <p>{app.description}</p>}
+        {app.description && (
+          <Text mx={8} my={4} color="gray.600">
+            {app.description}
+          </Text>
+        )}
         <Box bg="gray.100" px={8} py={4}>
           <FunctionInputs params={inputs} formContext={formContext} />
           <Divider orientation="horizontal" my={4} />
