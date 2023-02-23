@@ -7,36 +7,9 @@ import {
   Text,
   HStack,
 } from '@chakra-ui/react';
-import styled from '@emotion/styled';
 import { HiChevronRight } from 'react-icons/hi';
 import { SmartFunctionOutput } from './smart-function-output';
 import { isPrimitive } from './utils';
-
-const StyledButton = styled(Button)`
-  &[data-expanded='false'] svg {
-    animation: 'rotate-expand' 50ms both;
-  }
-  &[data-expanded='true'] svg {
-    animation: 'rotate-collapse' 50ms both;
-  }
-
-  @keyframes rotate-expand {
-    from {
-      transform: rotate(-90deg);
-    }
-    to {
-      transform: rotate(0deg);
-    }
-  }
-  @keyframes rotate-collapse {
-    from {
-      transform: rotate(0deg);
-    }
-    to {
-      transform: rotate(-90deg);
-    }
-  }
-`;
 
 function ObjectExplorerRow({
   heading,
@@ -64,23 +37,27 @@ function ObjectExplorerRow({
         whiteSpace="nowrap"
         justifyContent="space-between"
       >
-        <Heading py={6} size="md" mb={1} color="gray.600" fontWeight={300}>
+        <Heading py={6} size="md" color="gray.600" fontWeight={300}>
           {heading}
         </Heading>
         {shouldCollapse && (
-          <StyledButton
-            variant="ghost"
-            size="xs"
-            mx={2}
-            onClick={onToggle}
-            data-expanded={isOpen}
-          >
-            <HiChevronRight />
-          </StyledButton>
+          <Button variant="ghost" size="xs" onClick={onToggle} minWidth="unset">
+            <Box
+              transitionDuration="100ms"
+              transform={isOpen ? 'rotate(-90deg)' : 'none'}
+            >
+              <HiChevronRight />
+            </Box>
+          </Button>
         )}
       </HStack>
       {shouldCollapse ? (
         <Box flex={5}>
+          {!isOpen && (
+            <Text py={6} color="gray.400">
+              {Object.keys(data).join(', ')}
+            </Text>
+          )}
           <Collapse in={isOpen}>
             <SmartFunctionOutput result={data} level={level + 1} />
           </Collapse>
