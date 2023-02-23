@@ -19,7 +19,6 @@ import ShareModal from '~/components/app/share-modal';
 import { trpc } from '~/utils/trpc';
 
 import { parseInputForTypes } from '~/utils/parse-input-for-types';
-import SettingsModal from './settings-modal';
 
 import DefaultGrid from '../default-grid';
 import { PlaygroundHeader } from './playground-header';
@@ -43,7 +42,6 @@ export function Playground({
   const [inputParams, setInputParams] = useState<InputParam[]>([]);
   const [tabIndex, setTabIndex] = useState(0);
 
-  const [isSettingsModalOpen, setSettingModalOpen] = useState(false);
   const [isShareModalOpen, setShareModalOpen] = useState(false);
 
   const { id } = app;
@@ -92,7 +90,6 @@ export function Playground({
       >
         <PlaygroundHeader
           app={app}
-          onClickSettings={() => setSettingModalOpen(true)}
           onClickShare={() => setShareModalOpen(true)}
           onClickFork={() => {
             if (app.canUserEdit) return;
@@ -172,12 +169,6 @@ export function Playground({
         <ShareModal
           isOpen={isShareModalOpen}
           onClose={() => setShareModalOpen(false)}
-          appId={id}
-        />
-
-        <SettingsModal
-          isOpen={isSettingsModalOpen}
-          onClose={() => setSettingModalOpen(false)}
           appId={id}
         />
       </Tabs>

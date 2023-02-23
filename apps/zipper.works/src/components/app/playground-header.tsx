@@ -21,7 +21,7 @@ import { ZipperSymbol } from '~/components/svg/zipperSymbol';
 import { ZipperLogo } from '@zipper/ui';
 import { useSelf, useOthers } from '~/liveblocks.config';
 import { Avatar } from '../avatar';
-import { HiLightningBolt, HiOutlineCog, HiOutlineShare } from 'react-icons/hi';
+import { HiLightningBolt, HiOutlineShare } from 'react-icons/hi';
 import { useUser, SignedIn, SignedOut } from '@clerk/nextjs';
 import { AppQueryOutput } from '~/types/trpc';
 import { useRunAppContext } from '../context/run-app-context';
@@ -88,12 +88,10 @@ function PlaygroundAvatars({
 
 export function PlaygroundHeader({
   app,
-  onClickSettings,
   onClickShare,
   onClickFork,
 }: {
   app: AppQueryOutput;
-  onClickSettings: (e: React.MouseEvent<HTMLElement>) => any;
   onClickShare: (e: React.MouseEvent<HTMLElement>) => any;
   onClickFork: (e: React.MouseEvent<HTMLElement>) => any;
 }) {
@@ -188,11 +186,6 @@ export function PlaygroundHeader({
         )}
       </HStack>
       <HStack justifyContent="end">
-        {app.canUserEdit && (
-          <Button variant={'outline'} onClick={onClickSettings}>
-            <HiOutlineCog />
-          </Button>
-        )}
         {app.canUserEdit && (
           <Button variant={'outline'} onClick={onClickShare}>
             <HiOutlineShare />
