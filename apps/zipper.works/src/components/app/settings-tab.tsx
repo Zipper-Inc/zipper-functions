@@ -81,7 +81,7 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
         <Heading as="h6" pb="4" fontWeight={400}>
           Settings
         </Heading>
-        <VStack align={'start'} gap={2}>
+        <VStack align={'start'} gap={2} maxW="container.sm">
           <FormControl isRequired>
             <FormLabel>Slug</FormLabel>
             <InputGroup>
