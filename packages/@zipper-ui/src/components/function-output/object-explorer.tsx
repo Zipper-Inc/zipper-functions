@@ -7,8 +7,36 @@ import {
   Text,
   HStack,
 } from '@chakra-ui/react';
+import styled from '@emotion/styled';
+import { HiChevronRight } from 'react-icons/hi';
 import { SmartFunctionOutput } from './smart-function-output';
 import { isPrimitive } from './utils';
+
+const StyledButton = styled(Button)`
+  &[data-expanded='false'] svg {
+    animation: 'rotate-expand' 50ms both;
+  }
+  &[data-expanded='true'] svg {
+    animation: 'rotate-collapse' 50ms both;
+  }
+
+  @keyframes rotate-expand {
+    from {
+      transform: rotate(-90deg);
+    }
+    to {
+      transform: rotate(0deg);
+    }
+  }
+  @keyframes rotate-collapse {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(-90deg);
+    }
+  }
+`;
 
 function ObjectExplorerRow({
   heading,
@@ -40,9 +68,15 @@ function ObjectExplorerRow({
           {heading}
         </Heading>
         {shouldCollapse && (
-          <Button variant="ghost" size="xs" mx={2} onClick={onToggle}>
-            {!isOpen ? '〉' : '⌃'}
-          </Button>
+          <StyledButton
+            variant="ghost"
+            size="xs"
+            mx={2}
+            onClick={onToggle}
+            data-expanded={isOpen}
+          >
+            <HiChevronRight />
+          </StyledButton>
         )}
       </HStack>
       {shouldCollapse ? (

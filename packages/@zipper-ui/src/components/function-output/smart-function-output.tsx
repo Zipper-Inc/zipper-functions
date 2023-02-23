@@ -47,29 +47,31 @@ function TableArray(props: { data: Array<any> }) {
     <TableContainer>
       <Table {...getTableProps()}>
         <Thead>
-          {headers.map((column: any) => {
-            const isIndex = column.id === 'index';
-            return (
-              <Th
-                key={column.id}
-                {...column.getHeaderProps(column.getSortByToggleProps())}
-                width={isIndex ? '20px' : undefined}
-              >
-                {column.render('Header')}
-                {
-                  <Text
-                    as="span"
-                    fontSize="xx-small"
-                    textAlign="center"
-                    height="full"
-                    pl={2}
-                  >
-                    {column.isSorted ? (column.isSortedDesc ? '▼' : '▲') : ''}
-                  </Text>
-                }
-              </Th>
-            );
-          })}
+          <Tr>
+            {headers.map((column: any) => {
+              const isIndex = column.id === 'index';
+              return (
+                <Th
+                  key={column.id}
+                  {...column.getHeaderProps(column.getSortByToggleProps())}
+                  width={isIndex ? '20px' : undefined}
+                >
+                  {column.render('Header')}
+                  {
+                    <Text
+                      as="span"
+                      fontSize="xx-small"
+                      textAlign="center"
+                      height="full"
+                      pl={2}
+                    >
+                      {column.isSorted ? (column.isSortedDesc ? '▼' : '▲') : ''}
+                    </Text>
+                  }
+                </Th>
+              );
+            })}
+          </Tr>
         </Thead>
         <Tbody {...getTableBodyProps()}>
           {rows.map((row) => {
@@ -117,24 +119,26 @@ function TableCollection(props: { data: Array<any> }) {
     <TableContainer>
       <Table {...getTableProps()}>
         <Thead>
-          {headers.map((column: any) => {
-            return (
-              <Th {...column.getHeaderProps(column.getSortByToggleProps())}>
-                {column.render('Header')}
-                {
-                  <Text
-                    as="span"
-                    fontSize="xx-small"
-                    textAlign="center"
-                    height="full"
-                    pl={2}
-                  >
-                    {column.isSorted ? (column.isSortedDesc ? '▼' : '▲') : ''}
-                  </Text>
-                }
-              </Th>
-            );
-          })}
+          <Tr>
+            {headers.map((column: any) => {
+              return (
+                <Th {...column.getHeaderProps(column.getSortByToggleProps())}>
+                  {column.render('Header')}
+                  {
+                    <Text
+                      as="span"
+                      fontSize="xx-small"
+                      textAlign="center"
+                      height="full"
+                      pl={2}
+                    >
+                      {column.isSorted ? (column.isSortedDesc ? '▼' : '▲') : ''}
+                    </Text>
+                  }
+                </Th>
+              );
+            })}
+          </Tr>
         </Thead>
         <Tbody {...getTableBodyProps()}>
           {rows.map((row) => {
