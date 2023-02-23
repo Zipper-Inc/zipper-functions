@@ -65,7 +65,8 @@ const __storage = {
       process.env.RPC_HOST
     }' + path, { headers: {'x-zipper-hmac': hmac, 'x-timestamp': timestamp} } );
 
-    return res.json();
+    const result = await res.json();
+    return key ? result.value : result; 
   },
   set: async (key: string, value: unknown) => {
     let path = '/api/app/${appId}/storage';

@@ -1,6 +1,6 @@
 export default function getRunUrl(
   slug: string,
-  version = Date.now().toString(32),
+  version: string | null | undefined = Date.now().toString(32),
 ) {
   return `${
     process.env.NODE_ENV === 'production' ? 'https' : 'http'

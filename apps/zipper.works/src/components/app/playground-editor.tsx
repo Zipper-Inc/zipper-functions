@@ -22,13 +22,11 @@ import {
   WebSocketMessageWriter,
 } from 'vscode-ws-jsonrpc';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Uri } from 'vscode';
+import { Range, Uri } from 'vscode';
 import { useEditorContext } from '../context/editor-context';
 import { useExitConfirmation } from '~/hooks/use-exit-confirmation';
-import {
-  MonacoCursorWidget,
-  PlaygroundCollabCursor,
-} from './playground-collab-cursor';
+import { PlaygroundCollabCursor } from './playground-collab-cursor';
+import { format } from '~/utils/prettier';
 
 export interface CacheParams {
   referrer: TextDocumentIdentifier;
@@ -63,6 +61,7 @@ function createLanguageClient(
         closed: () => ({ action: CloseAction.DoNotRestart }),
       },
       initializationOptions: {
+        documentFormattingEdits: false,
         certificateStores: null,
         enablePaths: [],
         config: null,
@@ -77,7 +76,7 @@ function createLanguageClient(
         cache: null,
         codeLens: {
           implementations: true,
-          references: true,
+          references: false,
         },
         suggest: {
           autoImports: true,
@@ -93,6 +92,23 @@ function createLanguageClient(
         },
       },
       middleware: {
+        provideDocumentFormattingEdits(document) {
+          const firstLine = 0;
+          const firstCol = 0;
+          const lastLine = document.lineCount - 1;
+          const lastCol = document.lineAt(lastLine).text.length;
+          const range = new Range(firstLine, firstCol, lastLine, lastCol);
+          return [
+            {
+              newText: format(document.getText()),
+              range,
+            },
+          ];
+        },
+        provideDocumentRangeFormattingEdits(document, range) {
+          return [{ newText: format(document.getText(range)), range }];
+        },
+
         workspace: {
           configuration: () => {
             return [
@@ -171,6 +187,7 @@ export default function PlaygroundEditor(
           );
         },
       );
+
       reader.onClose(() => {
         setHasWebsocket(false);
         languageClient?.stop();
@@ -246,6 +263,35 @@ export default function PlaygroundEditor(
         createWebSocket(url);
       }
 
+      // Fallback formatter
+      monaco.languages.registerDocumentFormattingEditProvider('typescript', {
+        provideDocumentFormattingEdits(model) {
+          const formatted = format(model.getValue());
+          return [
+            {
+              range: model.getFullModelRange(),
+              text: formatted,
+            },
+          ];
+        },
+      });
+
+      // Fallback range formatter
+      monaco.languages.registerDocumentRangeFormattingEditProvider(
+        'typescript',
+        {
+          provideDocumentRangeFormattingEdits(model, range) {
+            const formatted = format(model.getValueInRange(range));
+            return [
+              {
+                range: range,
+                text: formatted,
+              },
+            ];
+          },
+        },
+      );
+
       scripts.forEach((script) => {
         const model = monacoEditor.editor.getModel(
           Uri.parse(`file://${props.appName}/${script.filename}`),
@@ -312,7 +358,7 @@ export default function PlaygroundEditor(
     const selection = editorRef.current.getSelection();
 
     editorRef.current.executeEdits(
-      'liveblocks',
+      'zipperLiveUpdate',
       [
         {
           range,
