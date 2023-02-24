@@ -307,12 +307,14 @@ export default function PlaygroundEditor(
       });
 
       monacoEditor.editor.getModels().forEach((model) => {
-        model.onDidChangeContent(() => {
-          setModelIsDirty(model.uri.path.toString(), true);
+        model.onDidChangeContent((e) => {
+          if (e.changes[0]?.text !== model.getValue())
+            setModelIsDirty(model.uri.path.toString(), true);
         });
         setModelIsDirty(model.uri.path.toString(), false);
-      }),
-        setEditor(monaco.editor);
+      });
+
+      setEditor(monaco.editor);
     }
   }, [monacoEditor]);
 
@@ -331,8 +333,9 @@ export default function PlaygroundEditor(
           Uri.parse(`file://${props.appName}/${currentScript.filename}`),
         );
         setModelIsDirty(newModel.uri.path.toString(), false);
-        newModel.onDidChangeContent(() => {
-          setModelIsDirty(newModel.uri.path.toString(), true);
+        newModel.onDidChangeContent((e) => {
+          if (e.changes[0]?.text !== newModel.getValue())
+            setModelIsDirty(newModel.uri.path.toString(), true);
         });
         editorRef.current.setModel(newModel);
       }

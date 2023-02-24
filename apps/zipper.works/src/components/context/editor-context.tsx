@@ -210,9 +210,11 @@ const EditorContextProvider = ({
   };
 
   const setModelIsDirty = (path: string, isDirty: boolean) => {
-    const newModelState = { ...modelsDirtyState };
-    newModelState[path] = isDirty;
-    setModelsDirtyState(newModelState);
+    setModelsDirtyState((previousModelsDirtyState) => {
+      const newModelState = { ...previousModelsDirtyState };
+      newModelState[path] = isDirty;
+      return newModelState;
+    });
   };
 
   const isEditorDirty = () => {

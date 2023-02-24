@@ -22,10 +22,11 @@ import {
   Button,
   Input,
   Link,
+  Icon,
 } from '@chakra-ui/react';
 import { AddIcon } from '@chakra-ui/icons';
-import { VscCode, VscKebabVertical } from 'react-icons/vsc';
-import React, { Fragment, useContext, useEffect, useRef } from 'react';
+import { VscCircleFilled, VscCode, VscKebabVertical } from 'react-icons/vsc';
+import React, { Fragment, useEffect, useRef } from 'react';
 import AddScriptForm from '~/components/app/add-script-form';
 
 import { Script } from '@prisma/client';
@@ -178,17 +179,18 @@ export function PlaygroundSidebar({
                     }}
                   >
                     <Flex grow={1} cursor="pointer">
-                      <Text
-                        fontWeight={
-                          isModelDirty(`/${script.filename}`)
-                            ? 'bold'
-                            : 'medium'
-                        }
-                        fontSize="xs"
-                        fontFamily="mono"
-                      >
-                        {script.filename}
-                      </Text>
+                      <HStack>
+                        <Text
+                          fontWeight="medium"
+                          fontSize="xs"
+                          fontFamily="mono"
+                        >
+                          {script.filename}
+                        </Text>
+                        {isModelDirty(`/${script.filename}`) && (
+                          <Icon as={VscCircleFilled} fill="purple.200" pl={0} />
+                        )}
+                      </HStack>
                     </Flex>
                   </Link>
                 )}
