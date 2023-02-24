@@ -21,6 +21,7 @@ import { inferQueryOutput, trpc } from '~/utils/trpc';
 import { HiExclamationTriangle } from 'react-icons/hi2';
 import slugify from 'slugify';
 import { MIN_SLUG_LENGTH, useAppSlug } from '~/hooks/use-app-slug';
+import { useRouter } from 'next/router';
 
 type Props = {
   app: Pick<
@@ -36,13 +37,13 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
       appQuery.refetch();
     },
   });
-
+  const router = useRouter();
   const [slug, setSlug] = useState<string>(app.slug || '');
   const { slugExists: _slugExists } = useAppSlug(slug);
 
   const settingsForm = useForm({
     defaultValues: {
-      name: app.name,
+      name: app.name ?? '',
       slug: app.slug,
       description: app.description,
     },
@@ -69,13 +70,25 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
     <FormProvider {...settingsForm}>
       <form
         onSubmit={settingsForm.handleSubmit(async (data) => {
-          appEditMutation.mutateAsync({
-            id: app.id,
-            data: {
-              slug: data.slug,
-              description: data.description,
+          const oldSlug = app.slug;
+          appEditMutation.mutateAsync(
+            {
+              id: app.id,
+              data: {
+                slug: data.slug,
+                name: data.name,
+                description: data.description,
+              },
             },
-          });
+            {
+              onSuccess: (app) => {
+                if (app.slug !== oldSlug) {
+                  const url = router.asPath.replace(oldSlug, app.slug);
+                  router.replace(url);
+                }
+              },
+            },
+          );
         })}
       >
         <Heading as="h6" pb="4" fontWeight={400}>
