@@ -12,6 +12,7 @@ import {
   InputGroup,
   InputRightElement,
   Textarea,
+  useToast,
 } from '@chakra-ui/react';
 import { CheckIcon } from '@chakra-ui/icons';
 import { FormProvider, useForm } from 'react-hook-form';
@@ -40,6 +41,7 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
   const router = useRouter();
   const [slug, setSlug] = useState<string>(app.slug || '');
   const { slugExists: _slugExists } = useAppSlug(slug);
+  const toast = useToast();
 
   const settingsForm = useForm({
     defaultValues: {
@@ -62,35 +64,56 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
     );
   };
 
+  const onSubmit = settingsForm.handleSubmit(async (data) => {
+    const oldSlug = app.slug;
+    const duration = 3000;
+    appEditMutation.mutateAsync(
+      {
+        id: app.id,
+        data: {
+          slug: data.slug,
+          name: data.name,
+          description: data.description,
+        },
+      },
+      {
+        onSuccess: (app) => {
+          let description = undefined;
+          if (app.slug !== oldSlug) {
+            const url = router.asPath.replace(oldSlug, app.slug);
+            setTimeout(() => {
+              router.replace(url);
+            }, duration / 2);
+            description = 'Your page will reload';
+          }
+          toast({
+            title: 'App updated.',
+            status: 'success',
+            duration,
+            description,
+            isClosable: true,
+          });
+        },
+        onError: () => {
+          toast({
+            title: 'Error.',
+            status: 'error',
+            description: 'Could not update the app',
+            duration,
+            isClosable: true,
+          });
+        },
+      },
+    );
+  });
+
   const slugExists = slug === appQuery.data?.slug ? false : _slugExists;
   const disableSave =
     slugExists || slug.length < MIN_SLUG_LENGTH || !didModelChange();
 
   return (
     <FormProvider {...settingsForm}>
-      <form
-        onSubmit={settingsForm.handleSubmit(async (data) => {
-          const oldSlug = app.slug;
-          appEditMutation.mutateAsync(
-            {
-              id: app.id,
-              data: {
-                slug: data.slug,
-                name: data.name,
-                description: data.description,
-              },
-            },
-            {
-              onSuccess: (app) => {
-                if (app.slug !== oldSlug) {
-                  const url = router.asPath.replace(oldSlug, app.slug);
-                  router.replace(url);
-                }
-              },
-            },
-          );
-        })}
-      >
+      <form onSubmit={onSubmit}>
         <Heading as="h6" pb="4" fontWeight={400}>
           Settings
         </Heading>
