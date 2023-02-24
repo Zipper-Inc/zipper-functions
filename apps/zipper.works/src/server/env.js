@@ -19,12 +19,14 @@ const envSchema = z.object({
   NEXT_PUBLIC_HOST: z.string(),
   NEXT_PUBLIC_LSP: z.string(),
   NEXT_PUBLIC_OUTPUT_SERVER_HOSTNAME: z.string(),
+  NEXT_PUBLIC_SLACK_CLIENT_ID: z.string(),
   NODE_ENV: z.enum(['development', 'test', 'production']),
   PARSE_INPUT_URL: z.string().url(),
   REDIS_HOST: z.string(),
   REDIS_PORT: z.string(),
   RELAY_URL: z.string().url(),
   SHARED_SECRET: z.string(),
+  SLACK_CLIENT_SECRET: z.string(),
 });
 
 const env = envSchema.safeParse(process.env);

@@ -8,6 +8,7 @@ const denyList = [
   'app',
   'auth',
   'blog',
+  'connectors',
   'dashboard',
   'gallery',
   'help',
