@@ -19,7 +19,7 @@ import { FiTrash } from 'react-icons/fi';
 import { trpc } from '~/utils/trpc';
 import { VscGithub } from 'react-icons/vsc';
 
-const connector = createConnector({
+export const githubConnector = createConnector({
   id: 'github',
   name: 'GitHub',
   icon: <VscGithub />,
@@ -39,7 +39,7 @@ export default client;
 `,
 });
 
-function ConnectorForm(appId: string) {
+function GitHubConnectorForm({ appId }: { appId: string }) {
   const connectorForm = useForm();
 
   const utils = trpc.useContext();
@@ -62,7 +62,7 @@ function ConnectorForm(appId: string) {
   const tokenName = 'GITHUB_TOKEN';
 
   const saveConnector = async (data: any) => {
-    if (connector) {
+    if (githubConnector) {
       if (data.token) {
         await addSecret.mutateAsync({
           appId,
@@ -75,12 +75,12 @@ function ConnectorForm(appId: string) {
 
   return (
     <Box px="10" w="full">
-      {connector && (
+      {githubConnector && (
         <FormProvider {...connectorForm}>
           <form onSubmit={connectorForm.handleSubmit(saveConnector)}>
             <Box mb="5">
-              <Heading size="md">{connector.name}</Heading>
-              <Text>Configure the {connector.name} connector.</Text>
+              <Heading size="md">{githubConnector.name}</Heading>
+              <Text>Configure the {githubConnector.name} connector.</Text>
             </Box>
             <VStack align="start">
               <FormControl
@@ -153,4 +153,4 @@ function ConnectorForm(appId: string) {
   );
 }
 
-export default { ...connector, render: ConnectorForm };
+export default GitHubConnectorForm;

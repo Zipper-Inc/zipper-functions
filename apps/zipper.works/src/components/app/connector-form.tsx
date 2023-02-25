@@ -1,5 +1,6 @@
-import connectors from '~/connectors/connectors';
 import { ConnectorId } from '~/connectors/createConnector';
+import GitHubConnectorForm from '~/connectors/github';
+import SlackConnectorForm from '~/connectors/slack';
 
 export function ConnectorForm({
   connectorId,
@@ -8,5 +9,13 @@ export function ConnectorForm({
   connectorId: ConnectorId;
   appId: string;
 }) {
-  return connectors[connectorId]?.render(appId);
+  if (connectorId === 'slack') {
+    return <SlackConnectorForm appId={appId} />;
+  }
+
+  if (connectorId === 'github') {
+    return <GitHubConnectorForm appId={appId} />;
+  }
+
+  return <></>;
 }

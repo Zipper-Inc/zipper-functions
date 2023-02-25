@@ -60,6 +60,14 @@ export const encryptToBase64 = (messagetext: string, key?: string) => {
   return encrypt(messagetext, key).toString('base64');
 };
 
+export const encryptToHex = (messagetext: string, key?: string) => {
+  if (!key) {
+    throw new Error('Missing ENCRYPTION_KEY');
+  }
+
+  return encrypt(messagetext, key).toString('hex');
+};
+
 export const decrypt = (ciphertext: Buffer, key: string) => {
   const authTag = ciphertext.subarray(-16);
   const iv = ciphertext.subarray(0, 12);
@@ -77,6 +85,16 @@ export const decrypt = (ciphertext: Buffer, key: string) => {
 
 export const decryptFromBase64 = (cipherInBase64: string, key?: string) => {
   const ciphertext = Buffer.from(cipherInBase64, 'base64');
+
+  if (!key) {
+    throw new Error('Missing ENCRYPTION_KEY');
+  }
+
+  return decrypt(ciphertext, key);
+};
+
+export const decryptFromHex = (cipherInHex: string, key?: string) => {
+  const ciphertext = Buffer.from(cipherInHex, 'hex');
 
   if (!key) {
     throw new Error('Missing ENCRYPTION_KEY');

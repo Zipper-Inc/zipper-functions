@@ -1,15 +1,10 @@
-import { ReactElement } from 'react';
 import { Connector, ConnectorId } from './createConnector';
-import GitHubConnector from './github';
-import SlackConnector from './slack';
+import { githubConnector } from './github';
+import { slackConnector } from './slack';
 
-type ConnectorWithComponent = Connector & {
-  render: (appId: string) => ReactElement;
-};
-
-export const connectors: Record<ConnectorId, ConnectorWithComponent> = {
-  github: GitHubConnector,
-  slack: SlackConnector,
+export const connectors: Record<ConnectorId, Connector> = {
+  github: githubConnector,
+  slack: slackConnector,
 };
 
 export default connectors;

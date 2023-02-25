@@ -8,6 +8,8 @@ import dynamic from 'next/dynamic';
 import { useEditorContext } from '../context/editor-context';
 import { useRunAppContext } from '../context/run-app-context';
 import { ConnectorId } from '~/connectors/createConnector';
+import slack from '~/connectors/slack';
+import SlackConnectorForm from '~/connectors/slack';
 
 export const PlaygroundEditor = dynamic(() => import('./playground-editor'), {
   ssr: false,
