@@ -7,11 +7,16 @@ import {
   FormHelperText,
   Box,
   Text,
+  InputRightElement,
+  InputGroup,
+  Icon,
 } from '@chakra-ui/react';
 import { useRouter } from 'next/router';
 import { useForm } from 'react-hook-form';
-import { HiPlus, HiSave } from 'react-icons/hi';
+import { HiCheck, HiPlus, HiSave } from 'react-icons/hi';
+import { HiExclamationTriangle } from 'react-icons/hi2';
 import slugify from 'slugify';
+import { MIN_SLUG_LENGTH, useAppSlug } from '~/hooks/use-app-slug';
 import { AppQueryOutput } from '~/types/trpc';
 import { trpc } from '~/utils/trpc';
 import { useEditorContext } from '../context/editor-context';
@@ -34,6 +39,10 @@ export const EditAppSlugForm: React.FC<EditAppSlugFormProps> = ({
   const toast = useToast();
   const { refetchApp } = useEditorContext();
   const slug = slugify(appSlugForm.watch('slug'));
+  const { slugExists: _slugExists } = useAppSlug(slug);
+  const slugExists = slug === app.slug ? false : _slugExists;
+  const disableSave =
+    slugExists || slug.length < MIN_SLUG_LENGTH || app.slug === slug;
 
   const onSubmit = appSlugForm.handleSubmit((data) => {
     const duration = 3000;
@@ -72,7 +81,20 @@ export const EditAppSlugForm: React.FC<EditAppSlugFormProps> = ({
     <form onSubmit={onSubmit}>
       <FormControl position="relative">
         <HStack>
-          <Input size="md" type="text" {...appSlugForm.register('slug')} />
+          <InputGroup>
+            <Input size="md" type="text" {...appSlugForm.register('slug')} />
+            {slug && slug.length >= MIN_SLUG_LENGTH && (
+              <InputRightElement
+                children={
+                  slugExists ? (
+                    <Icon as={HiExclamationTriangle} color="red.500" />
+                  ) : (
+                    <Icon as={HiCheck} color="green.500" />
+                  )
+                }
+              />
+            )}
+          </InputGroup>
           <HStack spacing={0}>
             <Button
               type="submit"
@@ -81,7 +103,7 @@ export const EditAppSlugForm: React.FC<EditAppSlugFormProps> = ({
               rounded="full"
               size="sm"
               p={0}
-              isDisabled={slug === app.slug}
+              isDisabled={disableSave}
             >
               <Box>
                 <HiSave />
@@ -100,7 +122,7 @@ export const EditAppSlugForm: React.FC<EditAppSlugFormProps> = ({
             </Button>
           </HStack>
         </HStack>
-        {slug && slug !== app.slug && (
+        {!disableSave && (
           <FormHelperText
             position="absolute"
             backgroundColor="white"
