@@ -10,7 +10,7 @@ import {
 } from '@chakra-ui/react';
 import { useRouter } from 'next/router';
 import { useForm } from 'react-hook-form';
-import { VscSave, VscChromeClose } from 'react-icons/vsc';
+import { HiPlus, HiSave } from 'react-icons/hi';
 import slugify from 'slugify';
 import { AppQueryOutput } from '~/types/trpc';
 import { trpc } from '~/utils/trpc';
@@ -78,23 +78,24 @@ export const EditAppSlugForm: React.FC<EditAppSlugFormProps> = ({
               type="submit"
               colorScheme="purple"
               variant="ghost"
-              rounded="3xl"
+              rounded="full"
               size="sm"
               p={0}
+              isDisabled={slug === app.slug}
             >
               <Box>
-                <VscSave />
+                <HiSave />
               </Box>
             </Button>
             <Button
               variant="ghost"
-              rounded="3xl"
+              rounded="full"
               size="sm"
               p={0}
               onClick={onClose}
             >
-              <Box>
-                <VscChromeClose />
+              <Box transform="rotate(45deg)">
+                <HiPlus />
               </Box>
             </Button>
           </HStack>
