@@ -15,16 +15,17 @@ import {
 
 import NextLink from 'next/link';
 import { LockIcon, UnlockIcon } from '@chakra-ui/icons';
-import React from 'react';
+import React, { useState } from 'react';
 import ForkIcon from '~/components/svg/forkIcon';
 import { ZipperSymbol } from '~/components/svg/zipperSymbol';
 import { ZipperLogo } from '@zipper/ui';
 import { useSelf, useOthers } from '~/liveblocks.config';
 import { Avatar } from '../avatar';
-import { HiLightningBolt, HiOutlineShare } from 'react-icons/hi';
+import { HiLightningBolt, HiOutlineShare, HiPencilAlt } from 'react-icons/hi';
 import { useUser, SignedIn, SignedOut } from '@clerk/nextjs';
 import { AppQueryOutput } from '~/types/trpc';
 import { useRunAppContext } from '../context/run-app-context';
+import { EditAppSlugForm } from './edit-app-slug-form';
 
 const isEditorOnline = (onlineEditorIds: string[], id: string) =>
   onlineEditorIds.includes(id);
@@ -100,6 +101,7 @@ export function PlaygroundHeader({
   const others = useOthers();
   const isMobile = useBreakpointValue({ base: true, md: false });
   const { run: onClickRun, isRunning } = useRunAppContext();
+  const [editSlug, setEditSlug] = useState(false);
 
   // Get a list of active people in this app
   const onlineEditorIds = others.map(({ id }) => id as string);
@@ -173,9 +175,29 @@ export function PlaygroundHeader({
           >
             /
           </Heading>
-          <Heading as="h1" size="md" overflow="auto" whiteSpace="nowrap">
-            {app.slug}
-          </Heading>
+          {editSlug ? (
+            <EditAppSlugForm app={app} onClose={() => setEditSlug(false)} />
+          ) : (
+            <>
+              <Heading as="h1" size="md" overflow="auto" whiteSpace="nowrap">
+                {app.slug}
+              </Heading>
+              <Button
+                variant="ghost"
+                rounded="full"
+                size="sm"
+                colorScheme="purple"
+                p={0}
+                onClick={() => {
+                  setEditSlug(true);
+                }}
+              >
+                <Box>
+                  <HiPencilAlt />
+                </Box>
+              </Button>
+            </>
+          )}
         </HStack>
         {!isMobile && (
           <PlaygroundAvatars

@@ -53,6 +53,10 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
   const model = settingsForm.watch();
 
   useEffect(() => {
+    settingsForm.setValue('slug', app.slug);
+  }, [app.slug]);
+
+  useEffect(() => {
     setSlug(slugify(model.slug));
   }, [model.slug]);
 
