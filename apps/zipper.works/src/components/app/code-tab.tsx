@@ -35,7 +35,7 @@ const APPROXIMATE_HEADER_HEIGHT_PX = '120px';
 const MAX_CODE_TAB_HEIGHT = `calc(100vh - ${APPROXIMATE_HEADER_HEIGHT_PX})`;
 
 export function CodeTab({ app, mainScript }: { app: any; mainScript: any }) {
-  const { currentScript, save, mutateLive } = useEditorContext();
+  const { currentScript, save, onChange } = useEditorContext();
   const { run } = useRunAppContext();
 
   useCmdOrCtrl(
@@ -77,9 +77,7 @@ export function CodeTab({ app, mainScript }: { app: any; mainScript: any }) {
                 <PlaygroundEditor
                   height={MAX_CODE_TAB_HEIGHT}
                   key={app.id}
-                  onChange={(value = '', event) => {
-                    mutateLive(value, event.versionId);
-                  }}
+                  onChange={onChange}
                   appName={app.slug}
                 />
               )}

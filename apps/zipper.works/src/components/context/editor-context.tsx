@@ -1,5 +1,6 @@
 import { Script } from '@prisma/client';
 import * as monaco from 'monaco-editor';
+import { EditorProps } from '@monaco-editor/react';
 import { createContext, useContext, useEffect, useState } from 'react';
 import noop, { asyncNoop } from '~/utils/noop';
 
@@ -21,7 +22,7 @@ export type EditorContextType = {
     lastLocalVersion: number;
     lastConnectionId: number;
   };
-  mutateLive: (newCode: string, newVersion: number) => void;
+  onChange: EditorProps['onChange'];
   connectionId?: number;
   scripts: Script[];
   setScripts: (scripts: Script[]) => void;
@@ -39,7 +40,7 @@ export const EditorContext = createContext<EditorContextType>({
   currentScript: undefined,
   setCurrentScript: noop,
   currentScriptLive: undefined,
-  mutateLive: noop,
+  onChange: noop,
   connectionId: undefined,
   scripts: [],
   setScripts: noop,
@@ -98,6 +99,16 @@ const EditorContextProvider = ({
     },
     [currentScript],
   );
+
+  const onChange: EditorProps['onChange'] = (value = '', event) => {
+    try {
+      mutateLive(value, event.versionId);
+    } catch (e) {
+      console.error('Caught error from mutateLive:', e);
+    }
+
+    localStorage.setItem(`script-${currentScript?.id}`, value);
+  };
 
   useEffect(() => {
     const models = editor?.getModels();
@@ -184,19 +195,11 @@ const EditorContextProvider = ({
         data: {
           scripts: scripts.map((script: any) => ({
             id: script.id,
-            data:
-              script.id === currentScript.id
-                ? {
-                    name: currentScriptLive?.name || script.name,
-                    description:
-                      currentScriptLive?.description || script.description,
-                    code: fileValues[`/${script.filename}`],
-                  }
-                : {
-                    name: script.name,
-                    description: script.description || '',
-                    code: fileValues[`/${script.filename}`],
-                  },
+            data: {
+              name: script.name,
+              description: script.description || '',
+              code: fileValues[`/${script.filename}`],
+            },
           })),
         },
       });
@@ -225,7 +228,7 @@ const EditorContextProvider = ({
         currentScript,
         setCurrentScript,
         currentScriptLive,
-        mutateLive,
+        onChange,
         connectionId: self?.connectionId,
         scripts,
         setScripts,
