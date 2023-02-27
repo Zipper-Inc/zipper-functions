@@ -211,8 +211,13 @@ export default function PlaygroundEditor(
 
     // set up cursor tracking
     editor.onDidChangeCursorSelection(({ selection }) => {
-      updateMyPresence({ selection: { ...selection } });
+      try {
+        updateMyPresence({ selection: { ...selection } });
+      } catch (e) {
+        console.error('Caught error in updateMyPresence', e);
+      }
     });
+
     setIsEditorReady(true);
   }
 
@@ -299,7 +304,7 @@ export default function PlaygroundEditor(
         if (!model) {
           //create model for each script file
           monacoEditor.editor.createModel(
-            script.code,
+            localStorage.getItem(`script-${script.id}`) || script.code,
             'typescript',
             Uri.parse(`file://${props.appName}/${script.filename}`),
           );
