@@ -112,7 +112,7 @@ export const EditAppSlugForm: React.FC<EditAppSlugFormProps> = ({
               p={0}
               onClick={onClose}
             >
-              <Box transform="rotate(45deg)">
+              <Box transform="rotate(45deg)" color="gray.600">
                 <HiPlus />
               </Box>
             </Button>
