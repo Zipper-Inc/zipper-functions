@@ -99,6 +99,19 @@ const fn = typeof main === 'undefined' ? () => {
   throw new Error('You must define a main function')
 }: main;
 
+
+/**
+ * Makes sure JSON objects are not too big for headers
+ * Headers should be capped under 8000 bytes
+ */
+const jsonHeader = (json, fallback = "JSON too big") => {
+  try {
+    const str = JSON.stringify(json);
+    if (str.length < 2000) return str; 
+  } catch (e) {}
+  return fallback;
+}
+
 const getInputFromBody = async (req) => {
   if (req.method === "GET") {
     const url = new URL(req.url);
@@ -118,7 +131,7 @@ addEventListener('fetch', async (event) => {
     'X-Zipper-App-Slug': '${slug}',
     'X-Zipper-Req-Url': event.request.url,
     'X-Zipper-Req-Method': event.request.method,
-    'X-Zipper-App-Run-Input': JSON.stringify(input),
+    'X-Zipper-App-Run-Input': jsonHeader(input, "See original request body"),
   };
 
   try {
