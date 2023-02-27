@@ -212,7 +212,7 @@ export default function PlaygroundEditor(
     // set up cursor tracking
     editor.onDidChangeCursorSelection(({ selection }) => {
       try {
-      updateMyPresence({ selection: { ...selection } });
+        updateMyPresence({ selection: { ...selection } });
       } catch (e) {
         console.error('Caught error in updateMyPresence', e);
       }
