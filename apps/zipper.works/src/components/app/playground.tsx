@@ -15,11 +15,11 @@ import { useRouter } from 'next/router';
 import React, { useState, useEffect } from 'react';
 import SecretsTab from '~/components/app/secrets-tab';
 import SchedulesTab from '~/components/app/schedules-tab';
+import SettingsTab from './settings-tab';
 import ShareModal from '~/components/app/share-modal';
 import { trpc } from '~/utils/trpc';
 
 import { parseInputForTypes } from '~/utils/parse-input-for-types';
-import SettingsModal from './settings-modal';
 
 import DefaultGrid from '../default-grid';
 import { PlaygroundHeader } from './playground-header';
@@ -43,7 +43,6 @@ export function Playground({
   const [inputParams, setInputParams] = useState<InputParam[]>([]);
   const [tabIndex, setTabIndex] = useState(0);
 
-  const [isSettingsModalOpen, setSettingModalOpen] = useState(false);
   const [isShareModalOpen, setShareModalOpen] = useState(false);
 
   const { id } = app;
@@ -92,7 +91,6 @@ export function Playground({
       >
         <PlaygroundHeader
           app={app}
-          onClickSettings={() => setSettingModalOpen(true)}
           onClickShare={() => setShareModalOpen(true)}
           onClickFork={() => {
             if (app.canUserEdit) return;
@@ -132,6 +130,8 @@ export function Playground({
               <Tab>Secrets</Tab>
             </>
           )}
+          {/* SETTINGS */}
+          <Tab>Settings</Tab>
         </TabList>
         {/* TAB PANELS */}
         <TabPanels as={DefaultGrid} maxW="full" p={0}>
@@ -167,17 +167,16 @@ export function Playground({
           <TabPanel as={GridItem} colSpan={12}>
             <SecretsTab editable={app.canUserEdit} appId={id} />
           </TabPanel>
+
+          {/* SETTINGS */}
+          <TabPanel as={GridItem} colSpan={12}>
+            <SettingsTab app={app} />
+          </TabPanel>
         </TabPanels>
 
         <ShareModal
           isOpen={isShareModalOpen}
           onClose={() => setShareModalOpen(false)}
-          appId={id}
-        />
-
-        <SettingsModal
-          isOpen={isSettingsModalOpen}
-          onClose={() => setSettingModalOpen(false)}
           appId={id}
         />
       </Tabs>
