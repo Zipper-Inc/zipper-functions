@@ -26,6 +26,7 @@ const PlaygroundPage: NextPageWithLayout = () => {
     'app.byResourceOwnerAndAppSlugs',
     { resourceOwnerSlug, appSlug },
   ]);
+  const utils = trpc.useContext();
 
   if (appQuery.error) {
     return (
@@ -58,6 +59,15 @@ const PlaygroundPage: NextPageWithLayout = () => {
     });
   });
 
+  const refetchApp = () => {
+    console.log('refetching app');
+    utils.invalidateQueries([
+      'app.byResourceOwnerAndAppSlugs',
+      { resourceOwnerSlug, appSlug },
+    ]);
+    utils.invalidateQueries(['app.byId', { id: appQuery.data.id }]);
+  };
+
   const playground = withLiveBlocks(
     () => (
       <EditorContextProvider
@@ -65,6 +75,7 @@ const PlaygroundPage: NextPageWithLayout = () => {
         appSlug={appQuery.data.slug}
         resourceOwnerSlug={appQuery.data.resourceOwner.slug}
         initialScripts={appQuery.data?.scripts || []}
+        refetchApp={refetchApp}
       >
         <Playground app={appQuery.data} filename={filename} />
       </EditorContextProvider>

@@ -33,6 +33,7 @@ export type EditorContextType = {
   isSaving: boolean;
   setIsSaving: (isSaving: boolean) => void;
   save: () => Promise<void>;
+  refetchApp: VoidFunction;
 };
 
 export const EditorContext = createContext<EditorContextType>({
@@ -51,6 +52,7 @@ export const EditorContext = createContext<EditorContextType>({
   isSaving: false,
   setIsSaving: noop,
   save: asyncNoop,
+  refetchApp: noop,
 });
 
 const EditorContextProvider = ({
@@ -59,12 +61,14 @@ const EditorContextProvider = ({
   appSlug,
   resourceOwnerSlug,
   initialScripts,
+  refetchApp,
 }: {
   children: any;
   appId: string | undefined;
   appSlug: string | undefined;
   resourceOwnerSlug: string | undefined;
   initialScripts: Script[];
+  refetchApp: VoidFunction;
 }) => {
   const [currentScript, setCurrentScript] = useState<Script | undefined>(
     undefined,
@@ -237,6 +241,7 @@ const EditorContextProvider = ({
         isSaving,
         setIsSaving,
         save: saveOpenModels,
+        refetchApp,
       }}
     >
       {children}
