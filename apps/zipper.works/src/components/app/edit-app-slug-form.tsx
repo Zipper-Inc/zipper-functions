@@ -13,7 +13,7 @@ import {
 } from '@chakra-ui/react';
 import { useRouter } from 'next/router';
 import { useForm } from 'react-hook-form';
-import { HiCheck, HiPlus, HiSave } from 'react-icons/hi';
+import { HiCheck, HiPlus } from 'react-icons/hi';
 import { HiExclamationTriangle } from 'react-icons/hi2';
 import slugify from 'slugify';
 import { MIN_SLUG_LENGTH, useAppSlug } from '~/hooks/use-app-slug';
@@ -100,14 +100,10 @@ export const EditAppSlugForm: React.FC<EditAppSlugFormProps> = ({
               type="submit"
               colorScheme="purple"
               variant="ghost"
-              rounded="full"
               size="sm"
-              p={0}
               isDisabled={disableSave}
             >
-              <Box>
-                <HiSave />
-              </Box>
+              <Text fontSize="xs">Update</Text>
             </Button>
             <Button
               variant="ghost"
