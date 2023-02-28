@@ -36,7 +36,7 @@ export function PlaygroundSidebar({
   app: AppQueryOutput;
   mainScript: Script;
 }) {
-  const { currentScript } = useEditorContext();
+  const { currentScript, setCurrentScript } = useEditorContext();
   const { refetchApp } = useEditorContext();
   const sortScripts = (a: Script, b: Script) => {
     let orderA;
@@ -184,10 +184,19 @@ export function PlaygroundSidebar({
                     onClose();
                     return;
                   }
-                  await deleteScript.mutateAsync({
-                    id: deletingId,
-                    appId: app.id,
-                  });
+                  await deleteScript.mutateAsync(
+                    {
+                      id: deletingId,
+                      appId: app.id,
+                    },
+                    {
+                      onSuccess: () => {
+                        if (deletingId === currentScript?.id) {
+                          setCurrentScript(mainScript);
+                        }
+                      },
+                    },
+                  );
                   onClose();
                 }}
                 ml={3}
