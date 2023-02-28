@@ -29,6 +29,7 @@ export type ScriptItemProps = {
   renameScript: (id: string, name: string) => void;
   addScript: any;
   onDelete: VoidFunction;
+  onDuplicate: (id: string) => void;
 };
 
 export const ScriptItem: React.FC<ScriptItemProps> = ({
@@ -45,6 +46,7 @@ export const ScriptItem: React.FC<ScriptItemProps> = ({
   setLastHoverId,
   addScript,
   onDelete,
+  onDuplicate,
 }) => {
   const { currentScript, setCurrentScript, isModelDirty } = useEditorContext();
 
@@ -121,24 +123,7 @@ export const ScriptItem: React.FC<ScriptItemProps> = ({
           />
         </MenuButton>
         <MenuList>
-          <MenuItem
-            onClick={() => {
-              const toDupe = app.scripts.find(
-                (script: Script) => script.id === lastHoverId,
-              );
-
-              if (!toDupe) return;
-
-              addScript.mutateAsync({
-                name: `${toDupe.name}-copy`,
-                appId: app.id,
-                code: toDupe.code,
-                order: app.scripts.length + 1,
-              });
-            }}
-          >
-            Duplicate
-          </MenuItem>
+          <MenuItem onClick={() => onDuplicate(script.id)}>Duplicate</MenuItem>
           {isEditable && (
             <>
               <MenuItem

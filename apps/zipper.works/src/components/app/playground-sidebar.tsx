@@ -102,6 +102,19 @@ export function PlaygroundSidebar({
   const { isOpen, onOpen, onClose } = useDisclosure();
   const cancelRef = useRef() as React.MutableRefObject<HTMLButtonElement>;
 
+  const onDuplicate = (scriptId: string) => {
+    const toDupe = app.scripts.find((script: Script) => script.id === scriptId);
+
+    if (!toDupe) return;
+
+    addScript.mutateAsync({
+      name: `${toDupe.name}-copy`,
+      appId: app.id,
+      code: toDupe.code,
+      order: app.scripts.length + 1,
+    });
+  };
+
   return (
     <>
       <VStack alignItems="start" gap={1}>
@@ -143,6 +156,7 @@ export function PlaygroundSidebar({
               setLastHoverId={setLastHoverId}
               addScript={addScript}
               onDelete={onOpen}
+              onDuplicate={onDuplicate}
             />
           ))}
         </VStack>
