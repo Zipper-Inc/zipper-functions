@@ -83,7 +83,7 @@ export const connectorRouter = createRouter()
       await prisma.secret.deleteMany({
         where: {
           appId: input.appId,
-          key: 'SLACK_TOKEN',
+          key: 'SLACK_BOT_TOKEN',
         },
       });
 
@@ -154,7 +154,7 @@ export const connectorRouter = createRouter()
       await prisma.secret.create({
         data: {
           appId,
-          key: 'SLACK_TOKEN',
+          key: 'SLACK_BOT_TOKEN',
           encryptedValue,
         },
       });

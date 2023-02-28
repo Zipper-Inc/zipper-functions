@@ -31,7 +31,7 @@ export const slackConnector = createConnector({
   icon: <FiSlack fill="black" />,
   code: `import { WebClient } from "https://deno.land/x/slack_web_api@6.7.2/mod.js";
 
-const client = new WebClient(Deno.env.get('SLACK_TOKEN'));
+const client = new WebClient(Deno.env.get('SLACK_BOT_TOKEN'));
 
 export default client;
 `,
@@ -97,10 +97,10 @@ function SlackConnectorForm({ appId }: { appId: string }) {
   const utils = trpc.useContext();
   const defaultBotScope = 'channels:read';
   const [botScopes, setBotScopes] = useState([defaultBotScope]);
-  const tokenName = 'SLACK_TOKEN';
+  const botTokenName = 'SLACK_BOT_TOKEN';
   const existingSecrets = trpc.useQuery([
     'secret.get',
-    { appId, key: tokenName },
+    { appId, key: botTokenName },
   ]);
   const connector = trpc.useQuery(['connector.slack.get', { appId }]);
   const slackAuthURL = trpc.useQuery([
@@ -115,7 +115,10 @@ function SlackConnectorForm({ appId }: { appId: string }) {
   const deleteConnectorMutation = trpc.useMutation('connector.slack.delete', {
     async onSuccess() {
       await utils.invalidateQueries(['connector.slack.get', { appId }]);
-      await utils.invalidateQueries(['secret.get', { appId, key: tokenName }]);
+      await utils.invalidateQueries([
+        'secret.get',
+        { appId, key: botTokenName },
+      ]);
     },
   });
 
