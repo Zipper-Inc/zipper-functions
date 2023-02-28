@@ -37,6 +37,7 @@ export function PlaygroundSidebar({
   mainScript: Script;
 }) {
   const { currentScript } = useEditorContext();
+  const { refetchApp } = useEditorContext();
   const sortScripts = (a: Script, b: Script) => {
     let orderA;
     let orderB;
@@ -58,17 +59,16 @@ export function PlaygroundSidebar({
     endRenaming();
   }, [currentScript]);
 
-  const utils = trpc.useContext();
   const deleteScript = trpc.useMutation('script.delete', {
     async onSuccess() {
-      await utils.invalidateQueries(['app.byId', { id: app.id }]);
+      setDeletingId(null);
+      refetchApp();
     },
   });
 
   const editScriptQuery = trpc.useMutation('script.edit', {
     async onSuccess() {
-      console.log(isRenamingId);
-      await utils.invalidateQueries(['app.byId', { id: app.id }]);
+      refetchApp();
     },
   });
 
@@ -84,7 +84,7 @@ export function PlaygroundSidebar({
 
   const addScript = trpc.useMutation('script.add', {
     async onSuccess() {
-      await utils.invalidateQueries(['app.byId', { id: app.id }]);
+      refetchApp();
     },
   });
 
@@ -184,17 +184,10 @@ export function PlaygroundSidebar({
                     onClose();
                     return;
                   }
-                  await deleteScript.mutateAsync(
-                    {
-                      id: deletingId,
-                      appId: app.id,
-                    },
-                    {
-                      onSuccess: () => {
-                        setDeletingId(null);
-                      },
-                    },
-                  );
+                  await deleteScript.mutateAsync({
+                    id: deletingId,
+                    appId: app.id,
+                  });
                   onClose();
                 }}
                 ml={3}
