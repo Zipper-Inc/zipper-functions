@@ -127,17 +127,25 @@ export function PlaygroundSidebar({
           </Text>
           {app.canUserEdit && (
             <Popover>
-              <PopoverTrigger>
-                <Flex pr={2}>
-                  <AddIcon color="gray.500" height={3} />
-                </Flex>
-              </PopoverTrigger>
-              <PopoverContent>
-                <PopoverArrow />
-                <PopoverBody>
-                  <AddScriptForm connectors={app.connectors} appId={app.id} />
-                </PopoverBody>
-              </PopoverContent>
+              {({ onClose }) => (
+                <>
+                  <PopoverTrigger>
+                    <Flex pr={2}>
+                      <AddIcon color="gray.500" height={3} />
+                    </Flex>
+                  </PopoverTrigger>
+                  <PopoverContent>
+                    <PopoverArrow />
+                    <PopoverBody>
+                      <AddScriptForm
+                        connectors={app.connectors}
+                        appId={app.id}
+                        onCreate={onClose}
+                      />
+                    </PopoverBody>
+                  </PopoverContent>
+                </>
+              )}
             </Popover>
           )}
         </HStack>

@@ -29,22 +29,25 @@ import { useDebounce } from 'use-debounce';
 export default function AddScriptForm({
   appId,
   connectors,
+  onCreate,
 }: {
   appId: string;
   connectors: AppConnector[];
+  onCreate: VoidFunction;
 }) {
   const [duplicateFilename, setDuplicateFilename] = useState<
     string | undefined
   >();
   const { register, handleSubmit, reset, watch } = useForm();
-  const { setCurrentScript, scripts } = useEditorContext();
-  const utils = trpc.useContext();
+  const { setCurrentScript, scripts, refetchApp } = useEditorContext();
+
   const addScript = trpc.useMutation('script.add', {
     async onSuccess(script) {
       // refetches posts after a post is added
-      await utils.invalidateQueries(['app.byId', { id: appId }]);
+      refetchApp();
       setCurrentScript(script as Script);
       reset();
+      onCreate();
     },
   });
 
