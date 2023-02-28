@@ -1,3 +1,5 @@
+// code comes from https://github.com/bmartel/chakra-multiselect - the chakra-multiselect package doesn't work with our set up due to ESM issues
+
 import { mode } from '@chakra-ui/theme-tools';
 
 const parts = [

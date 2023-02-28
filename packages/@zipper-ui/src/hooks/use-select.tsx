@@ -1,3 +1,4 @@
+// code comes from https://github.com/bmartel/chakra-multiselect
 import {
   usePopper,
   UsePopperProps,
@@ -249,7 +250,7 @@ const useKeys = (userKeys: {
       ...rest,
       onKeyDown: (e: KeyboardEvent) => {
         const { keyCode, key, shiftKey: shift, metaKey: meta } = e;
-        const handler = userKeys[key] || userKeys[keyCode];
+        const handler = (userKeys as any)[key] || (userKeys as any)[keyCode];
         if (handler) {
           handler(
             {
@@ -613,12 +614,12 @@ export function useSelect({
       if (_multi) {
         (onChangeRef.current as any)(_next, {
           action: ChangeActions.MultiRemove,
-          value: getOption(isIndex ? _value[v] : v),
+          value: getOption(isIndex ? _value[v]! : v),
         });
       } else {
         (onChangeRef.current as any)(_next[0] || '', {
           action: ChangeActions.SingleRemove,
-          value: getOption(isIndex ? _value[v] : v),
+          value: getOption(isIndex ? _value[v]! : v),
         });
       }
     },
@@ -1151,7 +1152,7 @@ export function useMultiSelect(
           break;
         case ChangeActions.MultiCreate:
           const nextValue = next as string[];
-          const created = next[nextValue.length - 1];
+          const created = (next as any)[nextValue.length - 1];
           setValue(nextValue);
           setOptions((o) => {
             const opt = getOption(created as any);
