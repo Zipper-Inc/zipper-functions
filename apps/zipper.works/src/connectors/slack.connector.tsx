@@ -6,7 +6,6 @@ import {
   Code,
   Divider,
   FormControl,
-  FormHelperText,
   FormLabel,
   Heading,
   HStack,
@@ -132,6 +131,10 @@ function SlackConnectorForm({ appId }: { appId: string }) {
   useEffect(() => {
     setBotScopes(value as string[]);
   }, [value]);
+
+  if (existingSecrets.isLoading || connector.isLoading) {
+    return <></>;
+  }
 
   return (
     <Box px="10" w="full">

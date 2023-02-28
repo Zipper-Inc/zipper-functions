@@ -9,6 +9,7 @@ import {
   encryptToBase64,
   encryptToHex,
 } from '../utils/crypto.utils';
+import fetch from 'node-fetch';
 
 export const connectorRouter = createRouter()
   .query('slack.get', {
