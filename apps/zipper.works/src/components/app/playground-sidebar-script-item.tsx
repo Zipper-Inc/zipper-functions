@@ -30,6 +30,7 @@ export type ScriptItemProps = {
   addScript: any;
   onDelete: VoidFunction;
   onDuplicate: (id: string) => void;
+  startRenaming: (id: string) => void;
 };
 
 export const ScriptItem: React.FC<ScriptItemProps> = ({
@@ -47,6 +48,7 @@ export const ScriptItem: React.FC<ScriptItemProps> = ({
   addScript,
   onDelete,
   onDuplicate,
+  startRenaming,
 }) => {
   const { currentScript, setCurrentScript, isModelDirty } = useEditorContext();
 
@@ -126,16 +128,7 @@ export const ScriptItem: React.FC<ScriptItemProps> = ({
           <MenuItem onClick={() => onDuplicate(script.id)}>Duplicate</MenuItem>
           {isEditable && (
             <>
-              <MenuItem
-                onClick={() => {
-                  setIsRenamingId(lastHoverId);
-                  renameForm.reset({
-                    name: app.scripts.find(
-                      (script: Script) => script.id === lastHoverId,
-                    )?.name,
-                  });
-                }}
-              >
+              <MenuItem onClick={() => startRenaming(script.id)}>
                 Rename
               </MenuItem>
               <MenuItem onClick={onDelete}>Delete</MenuItem>

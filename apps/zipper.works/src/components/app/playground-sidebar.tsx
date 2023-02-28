@@ -102,7 +102,7 @@ export function PlaygroundSidebar({
   const { isOpen, onOpen, onClose } = useDisclosure();
   const cancelRef = useRef() as React.MutableRefObject<HTMLButtonElement>;
 
-  const onDuplicate = (scriptId: string) => {
+  const onDuplicate: ScriptItemProps['onDuplicate'] = (scriptId) => {
     const toDupe = app.scripts.find((script: Script) => script.id === scriptId);
 
     if (!toDupe) return;
@@ -112,6 +112,13 @@ export function PlaygroundSidebar({
       appId: app.id,
       code: toDupe.code,
       order: app.scripts.length + 1,
+    });
+  };
+
+  const startRenaming: ScriptItemProps['startRenaming'] = (scriptId) => {
+    setIsRenamingId(scriptId);
+    renameForm.reset({
+      name: app.scripts.find((script: Script) => script.id === scriptId)?.name,
     });
   };
 
@@ -157,6 +164,7 @@ export function PlaygroundSidebar({
               addScript={addScript}
               onDelete={onOpen}
               onDuplicate={onDuplicate}
+              startRenaming={startRenaming}
             />
           ))}
         </VStack>
