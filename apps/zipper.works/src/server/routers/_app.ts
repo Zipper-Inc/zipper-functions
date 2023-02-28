@@ -13,6 +13,7 @@ import { userRouter } from './user.router';
 import { appEditorRouter } from './appEditor.router';
 import { appConnectorRouter } from './appConnector.router';
 import { resourceOwnerSlugRouter } from './resourceOwnerSlug.router';
+import { connectorRouter } from './connector.router';
 
 /**
  * Create your application's root router
@@ -44,6 +45,7 @@ export const trpcRouter = createRouter()
   .merge('appEditor.', appEditorRouter)
   .merge('appEvent.', appEventRouter)
   .merge('appRun.', appRunRouter)
+  .merge('connector.', connectorRouter)
   .merge('resourceOwnerSlug.', resourceOwnerSlugRouter)
   .merge('secret.', secretRouter)
   .merge('script.', scriptRouter)

@@ -1,4 +1,5 @@
 import { extendTheme } from '@chakra-ui/react';
+import multiSelectTheme from './multiSelectTheme';
 
 /**
  * Chakra UI theme
@@ -140,6 +141,9 @@ export const fonts = {
 };
 
 export const theme = extendTheme({
+  components: {
+    MultiSelect: multiSelectTheme,
+  },
   styles: {
     global: {
       body: {

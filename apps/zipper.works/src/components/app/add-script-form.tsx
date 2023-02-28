@@ -20,8 +20,7 @@ import { useForm } from 'react-hook-form';
 import { trpc } from '~/utils/trpc';
 import { AppConnector, Script } from '@prisma/client';
 import { HiPaperAirplane } from 'react-icons/hi2';
-import { connectors as defaultConnectors } from '~/config/connectors';
-import { VscGithub } from 'react-icons/vsc';
+import { connectors as defaultConnectors } from '~/connectors/connectors';
 import { useEffect, useState } from 'react';
 import { useEditorContext } from '../context/editor-context';
 import slugify from '~/utils/slugify';
@@ -142,17 +141,17 @@ export default function AddScriptForm({
         </TabPanel>
         <TabPanel>
           <VStack align="start">
-            {defaultConnectors.map((connector) => {
+            {Object.values(defaultConnectors).map((connector) => {
               if (!connectors.find((c: any) => c.type === connector.id)) {
                 return (
                   <HStack key={connector.id}>
-                    <VscGithub />
+                    {connector.icon}
                     <Link
                       key={connector.id}
                       onClick={() => {
                         addScript.mutateAsync({
                           name: `${connector.id}-connector`,
-                          code: connector.code,
+                          code: connector.code || '// Here we go!',
                           appId,
                           order: scripts.length + connectors.length + 1,
                           connectorId: connector.id,
@@ -166,7 +165,7 @@ export default function AddScriptForm({
               } else {
                 return (
                   <HStack key={connector.id}>
-                    <VscGithub />
+                    {connector.icon}
                     <Text>{connector.name} already added</Text>
                   </HStack>
                 );

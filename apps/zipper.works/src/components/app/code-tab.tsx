@@ -7,6 +7,9 @@ import { PlaygroundSidebar } from './playground-sidebar';
 import dynamic from 'next/dynamic';
 import { useEditorContext } from '../context/editor-context';
 import { useRunAppContext } from '../context/run-app-context';
+import { ConnectorId } from '~/connectors/createConnector';
+import slack from '~/connectors/slack.connector';
+import SlackConnectorForm from '~/connectors/slack.connector';
 
 export const PlaygroundEditor = dynamic(() => import('./playground-editor'), {
   ssr: false,
@@ -68,9 +71,14 @@ export function CodeTab({ app, mainScript }: { app: any; mainScript: any }) {
       </GridItem>
       <GridItem colSpan={6}>
         <Box width="100%">
-          {currentScript?.connectorId && (
-            <ConnectorForm type={currentScript.connectorId} appId={app.id} />
-          )}
+          <>
+            {currentScript?.connectorId && (
+              <ConnectorForm
+                connectorId={currentScript?.connectorId as ConnectorId}
+                appId={app.id}
+              />
+            )}
+          </>
           <FormControl>
             <Box style={{ color: 'transparent' }}>
               {PlaygroundEditor && (
