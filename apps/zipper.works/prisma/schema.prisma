@@ -102,6 +102,7 @@ model AppConnector {
   deletedAt DateTime? @db.Timestamp(6)
   type      String
   appId     String
+  metadata  Json?
 
   app       App      @relation(fields: [appId], references: [id])
 

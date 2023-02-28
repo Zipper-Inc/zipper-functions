@@ -1,6 +1,6 @@
 import { ConnectorId } from '~/connectors/createConnector';
-import GitHubConnectorForm from '~/connectors/github';
-import SlackConnectorForm from '~/connectors/slack';
+import GitHubConnectorForm from '~/connectors/github.connector';
+import SlackConnectorForm from '~/connectors/slack.connector';
 
 export function ConnectorForm({
   connectorId,

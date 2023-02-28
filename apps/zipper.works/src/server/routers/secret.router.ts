@@ -47,6 +47,26 @@ export const secretRouter = createRouter()
     },
   })
   // read
+  .query('get', {
+    input: z.object({
+      appId: z.string(),
+      key: z.string(),
+    }),
+    async resolve({ ctx, input }) {
+      await hasAppEditPermission({
+        ctx,
+        appId: input.appId,
+      });
+
+      return prisma.secret.findFirst({
+        where: {
+          appId: input.appId,
+          key: input.key,
+        },
+        select: defaultSelect,
+      });
+    },
+  })
   .query('all', {
     input: z.object({
       appId: z.string(),
