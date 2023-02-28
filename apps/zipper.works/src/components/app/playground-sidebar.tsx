@@ -19,7 +19,7 @@ import {
 } from '@chakra-ui/react';
 import { AddIcon } from '@chakra-ui/icons';
 import { VscCode } from 'react-icons/vsc';
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import AddScriptForm from '~/components/app/add-script-form';
 
 import { Script } from '@prisma/client';
@@ -36,7 +36,7 @@ export function PlaygroundSidebar({
   app: AppQueryOutput;
   mainScript: Script;
 }) {
-  const { currentScript, setCurrentScript, isModelDirty } = useEditorContext();
+  const { currentScript } = useEditorContext();
   const sortScripts = (a: Script, b: Script) => {
     let orderA;
     let orderB;
@@ -51,22 +51,11 @@ export function PlaygroundSidebar({
 
   const renameForm: ScriptItemProps['renameForm'] = useForm();
 
-  const [currentHoverId, setCurrentHoverId] = React.useState<string | null>(
-    null,
-  );
-
-  const [lastHoverId, setLastHoverId] = React.useState<string | null>(null);
-
   const [isRenamingId, setIsRenamingId] = React.useState<string | null>(null);
+  const endRenaming = () => setIsRenamingId(null);
 
   useEffect(() => {
-    if (currentHoverId) {
-      setLastHoverId(currentHoverId);
-    }
-  }, [currentHoverId]);
-
-  useEffect(() => {
-    setIsRenamingId(null);
+    endRenaming();
   }, [currentScript]);
 
   const utils = trpc.useContext();
@@ -90,7 +79,7 @@ export function PlaygroundSidebar({
         name,
       },
     });
-    setIsRenamingId(null);
+    endRenaming();
   };
 
   const addScript = trpc.useMutation('script.add', {
@@ -100,6 +89,7 @@ export function PlaygroundSidebar({
   });
 
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const cancelRef = useRef() as React.MutableRefObject<HTMLButtonElement>;
 
   const onDuplicate: ScriptItemProps['onDuplicate'] = (scriptId) => {
@@ -115,11 +105,16 @@ export function PlaygroundSidebar({
     });
   };
 
-  const startRenaming: ScriptItemProps['startRenaming'] = (scriptId) => {
+  const startRenaming: ScriptItemProps['onStartRenaming'] = (scriptId) => {
     setIsRenamingId(scriptId);
     renameForm.reset({
       name: app.scripts.find((script: Script) => script.id === scriptId)?.name,
     });
+  };
+
+  const requestDelete: ScriptItemProps['onDelete'] = (scriptId) => {
+    setDeletingId(scriptId);
+    onOpen();
   };
 
   return (
@@ -150,21 +145,15 @@ export function PlaygroundSidebar({
           {app.scripts.sort(sortScripts).map((script, i) => (
             <ScriptItem
               key={script.id}
-              app={app}
               script={script}
               isRenaming={Boolean(isRenamingId) && isRenamingId === script.id}
-              setIsRenamingId={setIsRenamingId}
+              onEndRenaming={endRenaming}
               isEditable={i > 0}
               renameScript={renameScript}
               renameForm={renameForm}
-              currentHoverId={currentHoverId}
-              setCurrentHoverId={setCurrentHoverId}
-              lastHoverId={lastHoverId}
-              setLastHoverId={setLastHoverId}
-              addScript={addScript}
-              onDelete={onOpen}
+              onDelete={requestDelete}
               onDuplicate={onDuplicate}
-              startRenaming={startRenaming}
+              onStartRenaming={startRenaming}
             />
           ))}
         </VStack>
@@ -191,14 +180,21 @@ export function PlaygroundSidebar({
               <Button
                 colorScheme="red"
                 onClick={async () => {
-                  if (!lastHoverId) {
+                  if (!deletingId) {
                     onClose();
                     return;
                   }
-                  await deleteScript.mutateAsync({
-                    id: lastHoverId,
-                    appId: app.id,
-                  });
+                  await deleteScript.mutateAsync(
+                    {
+                      id: deletingId,
+                      appId: app.id,
+                    },
+                    {
+                      onSuccess: () => {
+                        setDeletingId(null);
+                      },
+                    },
+                  );
                   onClose();
                 }}
                 ml={3}
