@@ -8,10 +8,6 @@ import {
   PopoverArrow,
   PopoverBody,
   Flex,
-  Menu,
-  MenuButton,
-  MenuList,
-  MenuItem,
   useDisclosure,
   AlertDialog,
   AlertDialogOverlay,
@@ -20,13 +16,10 @@ import {
   AlertDialogBody,
   AlertDialogFooter,
   Button,
-  Input,
-  Link,
-  Icon,
 } from '@chakra-ui/react';
 import { AddIcon } from '@chakra-ui/icons';
-import { VscCircleFilled, VscCode, VscKebabVertical } from 'react-icons/vsc';
-import React, { Fragment, useEffect, useRef } from 'react';
+import { VscCode } from 'react-icons/vsc';
+import React, { useEffect, useRef } from 'react';
 import AddScriptForm from '~/components/app/add-script-form';
 
 import { Script } from '@prisma/client';
@@ -34,6 +27,7 @@ import { trpc } from '~/utils/trpc';
 import { useForm } from 'react-hook-form';
 import { useEditorContext } from '../context/editor-context';
 import { AppQueryOutput } from '~/types/trpc';
+import { ScriptItem, ScriptItemProps } from './playground-sidebar-script-item';
 
 export function PlaygroundSidebar({
   app,
@@ -43,7 +37,7 @@ export function PlaygroundSidebar({
   mainScript: Script;
 }) {
   const { currentScript, setCurrentScript, isModelDirty } = useEditorContext();
-  const sortScripts = (a: any, b: any) => {
+  const sortScripts = (a: Script, b: Script) => {
     let orderA;
     let orderB;
 
@@ -55,7 +49,7 @@ export function PlaygroundSidebar({
     return orderA > orderB ? 1 : -1;
   };
 
-  const { register, handleSubmit, reset } = useForm();
+  const renameForm: ScriptItemProps['renameForm'] = useForm();
 
   const [currentHoverId, setCurrentHoverId] = React.useState<string | null>(
     null,
@@ -82,12 +76,22 @@ export function PlaygroundSidebar({
     },
   });
 
-  const editScript = trpc.useMutation('script.edit', {
+  const editScriptQuery = trpc.useMutation('script.edit', {
     async onSuccess() {
       console.log(isRenamingId);
       await utils.invalidateQueries(['app.byId', { id: app.id }]);
     },
   });
+
+  const renameScript = (id: string, name: string) => {
+    editScriptQuery.mutateAsync({
+      id: id,
+      data: {
+        name,
+      },
+    });
+    setIsRenamingId(null);
+  };
 
   const addScript = trpc.useMutation('script.add', {
     async onSuccess() {
@@ -123,130 +127,23 @@ export function PlaygroundSidebar({
           )}
         </HStack>
         <VStack spacing={0} w="full">
-          {app.scripts.sort(sortScripts).map((script: any, i: number) => (
-            <Fragment key={script.id}>
-              <HStack
-                w="100%"
-                px={2}
-                py={isRenamingId && isRenamingId === script.id ? 0 : 1}
-                background={
-                  currentScript?.id === script.id ? 'purple.100' : 'transparent'
-                }
-                _hover={{
-                  background:
-                    currentScript?.id === script.id ? 'purple.100' : 'gray.100',
-                }}
-                onMouseEnter={() => setCurrentHoverId(script.id)}
-                onMouseLeave={() => setCurrentHoverId(null)}
-              >
-                {isRenamingId && isRenamingId === script.id ? (
-                  <Flex grow={1}>
-                    <form
-                      onSubmit={handleSubmit(({ name }) => {
-                        if (name.length === 0) {
-                          return;
-                        }
-                        editScript.mutateAsync({
-                          id: isRenamingId,
-                          data: {
-                            name,
-                          },
-                        });
-                        setIsRenamingId(null);
-                      })}
-                    >
-                      <Input
-                        fontSize="xs"
-                        fontFamily="mono"
-                        size="xs"
-                        outline="none"
-                        variant="flushed"
-                        w="full"
-                        backgroundColor="white"
-                        autoFocus
-                        onKeyDown={(e) => {
-                          if (e.key === 'Escape') setIsRenamingId(null);
-                        }}
-                        {...register('name', { value: script.name })}
-                      />
-                    </form>
-                  </Flex>
-                ) : (
-                  <Link
-                    style={{ width: '100%' }}
-                    onClick={() => {
-                      setCurrentScript(script);
-                    }}
-                  >
-                    <Flex grow={1} cursor="pointer">
-                      <HStack>
-                        <Text
-                          fontWeight="medium"
-                          fontSize="xs"
-                          fontFamily="mono"
-                        >
-                          {script.filename}
-                        </Text>
-                        {isModelDirty(`/${script.filename}`) && (
-                          <Icon as={VscCircleFilled} fill="purple.200" pl={0} />
-                        )}
-                      </HStack>
-                    </Flex>
-                  </Link>
-                )}
-                <Menu>
-                  <MenuButton as={Text}>
-                    <VscKebabVertical
-                      fill="black"
-                      stroke="0"
-                      visibility={
-                        currentHoverId === script.id ||
-                        currentScript?.id === script.id
-                          ? 'visible'
-                          : 'hidden'
-                      }
-                    />
-                  </MenuButton>
-                  <MenuList>
-                    <MenuItem
-                      onClick={() => {
-                        const toDupe = app.scripts.find(
-                          (script: Script) => script.id === lastHoverId,
-                        );
-
-                        if (!toDupe) return;
-
-                        addScript.mutateAsync({
-                          name: `${toDupe.name}-copy`,
-                          appId: app.id,
-                          code: toDupe.code,
-                          order: app.scripts.length + 1,
-                        });
-                      }}
-                    >
-                      Duplicate
-                    </MenuItem>
-                    {i > 0 && (
-                      <>
-                        <MenuItem
-                          onClick={() => {
-                            setIsRenamingId(lastHoverId);
-                            reset({
-                              name: app.scripts.find(
-                                (script: Script) => script.id === lastHoverId,
-                              )?.name,
-                            });
-                          }}
-                        >
-                          Rename
-                        </MenuItem>
-                        <MenuItem onClick={onOpen}>Delete</MenuItem>
-                      </>
-                    )}
-                  </MenuList>
-                </Menu>
-              </HStack>
-            </Fragment>
+          {app.scripts.sort(sortScripts).map((script, i) => (
+            <ScriptItem
+              key={script.id}
+              app={app}
+              script={script}
+              isRenaming={Boolean(isRenamingId) && isRenamingId === script.id}
+              setIsRenamingId={setIsRenamingId}
+              isEditable={i > 0}
+              renameScript={renameScript}
+              renameForm={renameForm}
+              currentHoverId={currentHoverId}
+              setCurrentHoverId={setCurrentHoverId}
+              lastHoverId={lastHoverId}
+              setLastHoverId={setLastHoverId}
+              addScript={addScript}
+              onDelete={onOpen}
+            />
           ))}
         </VStack>
       </VStack>
