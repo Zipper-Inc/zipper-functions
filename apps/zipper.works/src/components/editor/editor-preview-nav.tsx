@@ -5,7 +5,7 @@ type EditorNavProps = {
   app: Unpack<inferQueryOutput<'app.byResourceOwnerAndAppSlugs'>>;
 };
 
-export const EditorNav: React.FC<EditorNavProps> = ({ app }) => {
+export const EditorPreviewNav: React.FC<EditorNavProps> = ({ app }) => {
   return (
     <>
       <Heading as="h2" fontSize="xl" color="white">
