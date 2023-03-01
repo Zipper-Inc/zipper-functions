@@ -64,6 +64,7 @@
     "@zipper/ui": "*",
     "@zipper/utils": "*",
     "bullmq": "^3.2.0",
+    "cookies-next": "^2.1.1",
     "cron-parser": "^4.6.0",
     "cronstrue": "^2.14.0",
     "dotenv-cli": "^6.0.0",

@@ -8,8 +8,8 @@ import dynamic from 'next/dynamic';
 import { useEditorContext } from '../context/editor-context';
 import { useRunAppContext } from '../context/run-app-context';
 import { ConnectorId } from '~/connectors/createConnector';
-import slack from '~/connectors/slack.connector';
-import SlackConnectorForm from '~/connectors/slack.connector';
+import { AppQueryOutput } from '~/types/trpc';
+import IsUserAuthedToConnectors from './is-user-authed-to-connectors';
 
 export const PlaygroundEditor = dynamic(() => import('./playground-editor'), {
   ssr: false,
@@ -37,7 +37,13 @@ const ConnectorSidebarTips = (connectorId?: string | null) => {
 const APPROXIMATE_HEADER_HEIGHT_PX = '120px';
 const MAX_CODE_TAB_HEIGHT = `calc(100vh - ${APPROXIMATE_HEADER_HEIGHT_PX})`;
 
-export function CodeTab({ app, mainScript }: { app: any; mainScript: any }) {
+export function CodeTab({
+  app,
+  mainScript,
+}: {
+  app: AppQueryOutput;
+  mainScript: any;
+}) {
   const { currentScript, save, onChange } = useEditorContext();
   const { run } = useRunAppContext();
 
@@ -98,6 +104,7 @@ export function CodeTab({ app, mainScript }: { app: any; mainScript: any }) {
           showInputForm={!currentScript?.connectorId}
           tips={ConnectorSidebarTips(currentScript?.connectorId)}
           maxHeight={MAX_CODE_TAB_HEIGHT}
+          connectors={app.connectors}
         />
       </GridItem>
     </DefaultGrid>

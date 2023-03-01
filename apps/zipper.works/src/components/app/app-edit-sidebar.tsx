@@ -15,15 +15,22 @@ import { useEffect, useState } from 'react';
 import { FunctionInputs, FunctionOutput } from '@zipper/ui';
 import { LogLine } from '~/components/app/log-line';
 import { useRunAppContext } from '../context/run-app-context';
+import IsUserAuthedToConnectors from './is-user-authed-to-connectors';
+import { AppConnector } from '@prisma/client';
 
 export function AppEditSidebar({
   showInputForm = true,
   tips,
   maxHeight,
+  connectors,
 }: {
   showInputForm: boolean;
   tips?: JSX.Element;
   maxHeight: string;
+  connectors: Pick<
+    AppConnector,
+    'appId' | 'type' | 'isUserAuthRequired' | 'userScopes'
+  >[];
 }) {
   const [tabIndex, setTabIndex] = useState(0);
 
@@ -38,6 +45,7 @@ export function AppEditSidebar({
     formMethods,
     isRunning,
     result,
+    appInfo,
   } = useRunAppContext();
 
   const logs = appEventsQuery?.data?.map((event: any) => event.eventPayload);
@@ -71,25 +79,30 @@ export function AppEditSidebar({
             >
               {/** @todo make this height thing less jank */}
               <Box p={4} backgroundColor="gray.100" position="relative">
-                {inputParams && inputParams.length ? (
-                  <FunctionInputs
-                    params={inputParams || []}
-                    defaultValues={{}}
-                    formContext={formMethods}
-                  />
-                ) : (
-                  <>
-                    <Text>
-                      Add parameters to your main function and they'll show up
-                      here. Here's an example:
-                    </Text>
-                    <Code my="5">
-                      {`async function main({greeting}: {greeting: string}) {
+                <IsUserAuthedToConnectors
+                  appId={appInfo.id}
+                  connectors={connectors}
+                >
+                  {inputParams && inputParams.length ? (
+                    <FunctionInputs
+                      params={inputParams || []}
+                      defaultValues={{}}
+                      formContext={formMethods}
+                    />
+                  ) : (
+                    <>
+                      <Text>
+                        Add parameters to your main function and they'll show up
+                        here. Here's an example:
+                      </Text>
+                      <Code my="5">
+                        {`async function main({greeting}: {greeting: string}) {
                       ...
                     }`}
-                    </Code>
-                  </>
-                )}
+                      </Code>
+                    </>
+                  )}
+                </IsUserAuthedToConnectors>
                 {isRunning && (
                   <Progress
                     colorScheme="purple"

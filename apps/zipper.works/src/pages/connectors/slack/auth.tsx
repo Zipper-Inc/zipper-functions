@@ -7,7 +7,7 @@ import { trpc } from '~/utils/trpc';
 
 const SlackAuth: NextPageWithLayout = () => {
   const router = useRouter();
-  const { code, state } = router.query;
+  const { code, state, error, error_description } = router.query;
 
   const exchangeMutation = trpc.useMutation(
     'connector.slack.exchangeCodeForToken',
@@ -16,6 +16,17 @@ const SlackAuth: NextPageWithLayout = () => {
         router.push(data.redirectTo || `/app/${data.appId}/edit/main.ts`),
     },
   );
+
+  if (error) {
+    return (
+      <Center w="100%" h="100vh">
+        <VStack spacing="12">
+          <ZipperLogo />
+          <Text>{error_description}</Text>
+        </VStack>
+      </Center>
+    );
+  }
 
   if (!state) return <>Missing state</>;
   if (!code) return <>Missing code</>;

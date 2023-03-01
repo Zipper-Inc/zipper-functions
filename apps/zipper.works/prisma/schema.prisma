@@ -103,11 +103,29 @@ model AppConnector {
   type      String
   appId     String
   metadata  Json?
+  isUserAuthRequired   Boolean  @default(false)
+  userScopes           String[]
+  workspaceScopes      String[]
 
   app       App      @relation(fields: [appId], references: [id])
+  appConnectorUserAuths AppConnectorUserAuth[]
 
   @@unique([appId, type])
   @@map("app_connectors")
+}
+
+model AppConnectorUserAuth {
+  id          String    @id @default(uuid())
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime? @default(now())
+  deletedAt   DateTime? @db.Timestamp(6)
+  connectorId String
+  userId      String?
+  metadata    Json?
+
+  connector   AppConnector @relation(fields: [connectorId], references: [id], onDelete: Cascade)
+
+  @@map("app_connector_user_auth")
 }
 
 model ResourceOwnerSlug {

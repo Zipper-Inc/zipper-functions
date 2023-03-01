@@ -33,7 +33,10 @@ export const connectorRouter = createRouter()
     input: z.object({
       appId: z.string(),
       userId: z.string().optional(),
-      scopes: z.array(z.string()),
+      scopes: z.object({
+        bot: z.array(z.string()),
+        user: z.array(z.string()),
+      }),
       redirectTo: z.string().optional(),
     }),
     async resolve({ ctx, input }) {
@@ -52,7 +55,8 @@ export const connectorRouter = createRouter()
         'client_id',
         process.env.NEXT_PUBLIC_SLACK_CLIENT_ID!,
       );
-      url.searchParams.set('scope', scopes.join(','));
+      url.searchParams.set('scope', scopes.bot.join(','));
+      url.searchParams.set('user_scope', scopes.user.join(','));
       url.searchParams.set('state', state);
 
       return {

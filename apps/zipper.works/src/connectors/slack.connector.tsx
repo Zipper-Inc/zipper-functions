@@ -11,15 +11,16 @@ import {
   HStack,
   Icon,
   IconButton,
+  Image,
   Spacer,
   StackDivider,
+  Switch,
   Text,
   VStack,
 } from '@chakra-ui/react';
-import { FormProvider, useForm } from 'react-hook-form';
 import { FiSlack } from 'react-icons/fi';
 import { trpc } from '~/utils/trpc';
-import { HiOutlineTrash } from 'react-icons/hi';
+import { HiOutlineTrash, HiQuestionMarkCircle } from 'react-icons/hi';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { MultiSelect, SelectOnChange, useMultiSelect } from '@zipper/ui';
@@ -34,9 +35,62 @@ const client = new WebClient(Deno.env.get('SLACK_BOT_TOKEN'));
 
 export default client;
 `,
-});
-const scopes = {
-  bot: [
+  userScopes: [
+    'bookmarks:read',
+    'bookmarks:write',
+    'calls:read',
+    'calls:write',
+    'channels:history',
+    'channels:read',
+    'channels:write',
+    'chat:write',
+    'dnd:read',
+    'dnd:write',
+    'email',
+    'emoji:read',
+    'files:read',
+    'files:write',
+    'groups:history',
+    'groups:read',
+    'groups:write',
+    'identify',
+    'identity.avatar',
+    'identity.basic',
+    'identity.email',
+    'identity.team',
+    'im:history',
+    'im:read',
+    'im:write',
+    'links.embed:write',
+    'links:read',
+    'links:write',
+    'mpim:history',
+    'mpim:read',
+    'mpim:write',
+    'openid',
+    'pins:read',
+    'pins:write',
+    'profile',
+    'reactions:read',
+    'reactions:write',
+    'reminders:read',
+    'reminders:write',
+    'remote_files:read',
+    'remote_files:share',
+    'search:read',
+    'stars:read',
+    'stars:write',
+    'team.preferences:read',
+    'team:read',
+    'usergroups:read',
+    'usergroups:write',
+    'users.profile:read',
+    'users.profile:write',
+    'users:read',
+    'users:read.email',
+    'users:write',
+  ],
+  workspaceScopes: [
     'app_mentions:read',
     'bookmarks:read',
     'bookmarks:write',
@@ -89,27 +143,71 @@ const scopes = {
     'users:read.email',
     'users:write',
   ],
-};
+});
 
 function SlackConnectorForm({ appId }: { appId: string }) {
-  const connectorForm = useForm();
   const utils = trpc.useContext();
+
+  const __bot_options = slackConnector.workspaceScopes!.map((scope) => ({
+    label: scope,
+    value: scope,
+  }));
+  const __user_options = slackConnector.userScopes!.map((scope) => ({
+    label: scope,
+    value: scope,
+  }));
+
   const defaultBotScope = 'channels:read';
-  const [botScopes, setBotScopes] = useState([defaultBotScope]);
   const botTokenName = 'SLACK_BOT_TOKEN';
-  const existingSecrets = trpc.useQuery([
+
+  const {
+    value: botValue,
+    options: botOptions,
+    onChange: botOnChange,
+    setValue: setBotValue,
+  } = useMultiSelect({
+    options: __bot_options!,
+    value: [defaultBotScope],
+  });
+
+  const {
+    value: userValue,
+    options: userOptions,
+    onChange: userOnChange,
+    setValue: setUserValue,
+  } = useMultiSelect({
+    options: __user_options!,
+    value: [],
+  });
+
+  const connector = trpc.useQuery(['connector.slack.get', { appId }], {
+    onSuccess: (data) => {
+      if (data && setBotValue && setUserValue) {
+        setBotValue(data.workspaceScopes || [defaultBotScope]);
+        setUserValue(data?.userScopes || []);
+      }
+    },
+  });
+
+  const [isUserAuthRequired, setIsUserAuthRequired] = useState(
+    connector.data?.isUserAuthRequired,
+  );
+
+  const existingSecret = trpc.useQuery([
     'secret.get',
     { appId, key: botTokenName },
   ]);
-  const connector = trpc.useQuery(['connector.slack.get', { appId }]);
+
   const slackAuthURL = trpc.useQuery([
     'connector.slack.getAuthUrl',
-    { appId, scopes: botScopes, redirectTo: window.location.href },
+    {
+      appId,
+      scopes: { bot: botValue as string[], user: userValue as string[] },
+      redirectTo: window.location.href,
+    },
   ]);
 
-  useEffect(() => {
-    slackAuthURL.refetch();
-  }, [botScopes]);
+  const updateAppConnectorMutation = trpc.useMutation('appConnector.update');
 
   const deleteConnectorMutation = trpc.useMutation('connector.slack.delete', {
     async onSuccess() {
@@ -121,35 +219,40 @@ function SlackConnectorForm({ appId }: { appId: string }) {
     },
   });
 
-  const __options = scopes.bot.map((scope) => ({ label: scope, value: scope }));
-
-  const { value, options, onChange } = useMultiSelect({
-    options: __options!,
-    value: [defaultBotScope],
-  });
+  useEffect(() => {
+    if (connector.isLoading) return;
+    updateAppConnectorMutation.mutateAsync({
+      appId,
+      type: 'slack',
+      data: { workspaceScopes: botValue as string[] },
+    });
+    slackAuthURL.refetch();
+  }, [botValue]);
 
   useEffect(() => {
-    setBotScopes(value as string[]);
-  }, [value]);
+    if (connector.isLoading) return;
+    updateAppConnectorMutation.mutateAsync({
+      appId,
+      type: 'slack',
+      data: { userScopes: userValue as string[] },
+    });
+    slackAuthURL.refetch();
+  }, [userValue]);
 
-  if (existingSecrets.isLoading || connector.isLoading) {
+  if (existingSecret.isLoading || connector.isLoading) {
     return <></>;
   }
 
   return (
     <Box px="10" w="full">
       {slackConnector && (
-        <FormProvider {...connectorForm}>
+        <>
           <Box mb="5">
             <Heading size="md">{slackConnector.name}</Heading>
             <Text>Configure the {slackConnector.name} connector.</Text>
           </Box>
           <VStack align="start">
-            {!existingSecrets.data && (
-              <FormLabel>Slack Bot Authorization</FormLabel>
-            )}
-
-            {existingSecrets.data && connector.data?.metadata ? (
+            {existingSecret.data && connector.data?.metadata ? (
               <Card w="full">
                 <CardBody color="gray.600">
                   <HStack>
@@ -188,47 +291,95 @@ function SlackConnectorForm({ appId }: { appId: string }) {
                       </Code>
                     </HStack>
                     <HStack>
-                      <Text>Scopes:</Text>
+                      <Text>Bot Scopes:</Text>
                       <Code>{(connector.data?.metadata as any)['scope']}</Code>
+                    </HStack>
+
+                    <HStack>
+                      <Text>User Scopes:</Text>
+                      <Code>
+                        {(connector.data?.metadata as any)['user_scope']}
+                      </Code>
                     </HStack>
                   </VStack>
                 </CardBody>
               </Card>
             ) : (
-              <VStack align="start" w="full">
-                <FormControl>
-                  <FormLabel>Scopes</FormLabel>
-                  <MultiSelect
-                    options={options}
-                    value={value}
-                    onChange={onChange as SelectOnChange}
-                  />
-                </FormControl>
-                {slackAuthURL.data ? (
-                  <Link href={slackAuthURL.data?.url}>
-                    <img
-                      alt="Add to Slack"
-                      height="40"
-                      width="139"
-                      src="https://platform.slack-edge.com/img/add_to_slack.png"
-                      srcSet="https://platform.slack-edge.com/img/add_to_slack.png 1x, https://platform.slack-edge.com/img/add_to_slack@2x.png 2x"
-                    />
-                  </Link>
-                ) : (
-                  <img
-                    alt="Add to Slack"
-                    height="40"
-                    width="139"
-                    src="https://platform.slack-edge.com/img/add_to_slack.png"
-                    srcSet="https://platform.slack-edge.com/img/add_to_slack.png 1x, https://platform.slack-edge.com/img/add_to_slack@2x.png 2x"
-                  />
-                )}
-              </VStack>
+              <Card w="full">
+                <CardBody color="gray.600">
+                  <VStack align="start" w="full">
+                    <FormControl>
+                      <FormLabel>
+                        Bot Scopes
+                        <Icon ml="2" as={HiQuestionMarkCircle} />
+                      </FormLabel>
+                      <MultiSelect
+                        options={botOptions}
+                        value={botValue}
+                        onChange={botOnChange as SelectOnChange}
+                      />
+                    </FormControl>
+
+                    <FormControl pt="2">
+                      <FormLabel>
+                        User Authentication
+                        <Icon ml="2" as={HiQuestionMarkCircle} />
+                      </FormLabel>
+
+                      <MultiSelect
+                        options={userOptions}
+                        value={userValue}
+                        onChange={userOnChange as SelectOnChange}
+                      />
+                      <HStack w="full" pt="2">
+                        <Box mr="auto">
+                          <HStack>
+                            <Text>
+                              Require users to auth to access your app
+                            </Text>
+                          </HStack>
+                        </Box>
+                        <Switch
+                          isChecked={isUserAuthRequired}
+                          ml="auto"
+                          onChange={(e) => {
+                            setIsUserAuthRequired(e.target.checked);
+                            updateAppConnectorMutation.mutateAsync({
+                              appId,
+                              type: 'slack',
+                              data: { isUserAuthRequired: e.target.checked },
+                            });
+                          }}
+                        />
+                      </HStack>
+                    </FormControl>
+
+                    <FormControl pt="4">
+                      <FormLabel>Install the Slack app</FormLabel>
+                    </FormControl>
+                    {slackAuthURL.data ? (
+                      <Link href={slackAuthURL.data?.url}>
+                        <Image
+                          alt="Add to Slack"
+                          src="https://platform.slack-edge.com/img/add_to_slack.png"
+                          srcSet="https://platform.slack-edge.com/img/add_to_slack.png 1x, https://platform.slack-edge.com/img/add_to_slack@2x.png 2x"
+                        />
+                      </Link>
+                    ) : (
+                      <Image
+                        alt="Add to Slack"
+                        src="https://platform.slack-edge.com/img/add_to_slack.png"
+                        srcSet="https://platform.slack-edge.com/img/add_to_slack.png 1x, https://platform.slack-edge.com/img/add_to_slack@2x.png 2x"
+                      />
+                    )}
+                  </VStack>
+                </CardBody>
+              </Card>
             )}
           </VStack>
           <Divider my={4} />
           Connector code:
-        </FormProvider>
+        </>
       )}
     </Box>
   );
