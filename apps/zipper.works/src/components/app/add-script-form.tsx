@@ -24,7 +24,7 @@ import { connectors as defaultConnectors } from '~/connectors/connectors';
 import { useEffect, useState } from 'react';
 import { useEditorContext } from '../context/editor-context';
 import slugify from '~/utils/slugify';
-import { useDebounce } from 'use-debounce';
+import { useScriptFilename } from '~/hooks/use-script-filename';
 
 export default function AddScriptForm({
   appId,
@@ -51,21 +51,17 @@ export default function AddScriptForm({
     },
   });
 
-  const [debouncedName] = useDebounce(watch('name'), 500);
-
-  const validateFilenameQuery = trpc.useQuery(
-    [
-      'script.validateFilename',
-      { appId, newFilename: slugify((debouncedName as string) || '') },
-    ],
-    { enabled: !!debouncedName },
+  const scriptFilename = watch('name');
+  const { debouncedFilename, validateFilenameQuery } = useScriptFilename(
+    scriptFilename,
+    appId,
   );
 
   useEffect(() => {
     if (validateFilenameQuery.data) {
       setDuplicateFilename(undefined);
     } else {
-      setDuplicateFilename(debouncedName);
+      setDuplicateFilename(debouncedFilename);
     }
   }, [validateFilenameQuery.data]);
 
@@ -120,18 +116,18 @@ export default function AddScriptForm({
                     <Icon as={HiPaperAirplane} />
                   </Button>
                 </HStack>
-                {watch('name') && !duplicateFilename && (
+                {scriptFilename && !duplicateFilename && (
                   <Flex>
                     <Text fontSize="sm" mt="2" color={'gray.600'}>
                       A file called{' '}
                       <Text fontFamily="mono" as="span">
-                        {slugify(watch('name'))}.ts
+                        {slugify(scriptFilename)}.ts
                       </Text>{' '}
                       will be created
                     </Text>
                   </Flex>
                 )}
-                {watch('name') === duplicateFilename && (
+                {scriptFilename === duplicateFilename && (
                   <Flex>
                     <Text fontSize="sm" mt="2" color={'red.500'}>
                       A file with that name already exists.
