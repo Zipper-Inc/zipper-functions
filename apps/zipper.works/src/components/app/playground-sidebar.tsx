@@ -8,10 +8,6 @@ import {
   PopoverArrow,
   PopoverBody,
   Flex,
-  Menu,
-  MenuButton,
-  MenuList,
-  MenuItem,
   useDisclosure,
   AlertDialog,
   AlertDialogOverlay,
@@ -20,13 +16,10 @@ import {
   AlertDialogBody,
   AlertDialogFooter,
   Button,
-  Input,
-  Link,
-  Icon,
 } from '@chakra-ui/react';
 import { AddIcon } from '@chakra-ui/icons';
-import { VscCircleFilled, VscCode, VscKebabVertical } from 'react-icons/vsc';
-import React, { Fragment, useEffect, useRef } from 'react';
+import { VscCode } from 'react-icons/vsc';
+import React, { useEffect, useRef, useState } from 'react';
 import AddScriptForm from '~/components/app/add-script-form';
 
 import { Script } from '@prisma/client';
@@ -34,6 +27,7 @@ import { trpc } from '~/utils/trpc';
 import { useForm } from 'react-hook-form';
 import { useEditorContext } from '../context/editor-context';
 import { AppQueryOutput } from '~/types/trpc';
+import { ScriptItem, ScriptItemProps } from './playground-sidebar-script-item';
 
 export function PlaygroundSidebar({
   app,
@@ -42,8 +36,9 @@ export function PlaygroundSidebar({
   app: AppQueryOutput;
   mainScript: Script;
 }) {
-  const { currentScript, setCurrentScript, isModelDirty } = useEditorContext();
-  const sortScripts = (a: any, b: any) => {
+  const { currentScript, setCurrentScript } = useEditorContext();
+  const { refetchApp } = useEditorContext();
+  const sortScripts = (a: Script, b: Script) => {
     let orderA;
     let orderB;
 
@@ -55,48 +50,72 @@ export function PlaygroundSidebar({
     return orderA > orderB ? 1 : -1;
   };
 
-  const { register, handleSubmit, reset } = useForm();
-
-  const [currentHoverId, setCurrentHoverId] = React.useState<string | null>(
-    null,
-  );
-
-  const [lastHoverId, setLastHoverId] = React.useState<string | null>(null);
+  const renameForm: ScriptItemProps['renameForm'] = useForm();
 
   const [isRenamingId, setIsRenamingId] = React.useState<string | null>(null);
+  const endRenaming = () => setIsRenamingId(null);
 
   useEffect(() => {
-    if (currentHoverId) {
-      setLastHoverId(currentHoverId);
-    }
-  }, [currentHoverId]);
-
-  useEffect(() => {
-    setIsRenamingId(null);
+    endRenaming();
   }, [currentScript]);
 
-  const utils = trpc.useContext();
   const deleteScript = trpc.useMutation('script.delete', {
     async onSuccess() {
-      await utils.invalidateQueries(['app.byId', { id: app.id }]);
+      setDeletingId(null);
+      refetchApp();
     },
   });
 
-  const editScript = trpc.useMutation('script.edit', {
+  const editScriptQuery = trpc.useMutation('script.edit', {
     async onSuccess() {
-      console.log(isRenamingId);
-      await utils.invalidateQueries(['app.byId', { id: app.id }]);
+      refetchApp();
     },
   });
+
+  const renameScript = (id: string, name: string) => {
+    editScriptQuery.mutateAsync({
+      id: id,
+      data: {
+        name,
+      },
+    });
+    endRenaming();
+  };
 
   const addScript = trpc.useMutation('script.add', {
     async onSuccess() {
-      await utils.invalidateQueries(['app.byId', { id: app.id }]);
+      refetchApp();
     },
   });
 
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const cancelRef = useRef() as React.MutableRefObject<HTMLButtonElement>;
+
+  const onDuplicate: ScriptItemProps['onDuplicate'] = (scriptId) => {
+    const toDupe = app.scripts.find((script: Script) => script.id === scriptId);
+
+    if (!toDupe) return;
+
+    addScript.mutateAsync({
+      name: `${toDupe.name}-copy`,
+      appId: app.id,
+      code: toDupe.code,
+      order: app.scripts.length + 1,
+    });
+  };
+
+  const startRenaming: ScriptItemProps['onStartRenaming'] = (scriptId) => {
+    setIsRenamingId(scriptId);
+    renameForm.reset({
+      name: app.scripts.find((script: Script) => script.id === scriptId)?.name,
+    });
+  };
+
+  const requestDelete: ScriptItemProps['onDelete'] = (scriptId) => {
+    setDeletingId(scriptId);
+    onOpen();
+  };
 
   return (
     <>
@@ -108,145 +127,42 @@ export function PlaygroundSidebar({
           </Text>
           {app.canUserEdit && (
             <Popover>
-              <PopoverTrigger>
-                <Flex pr={2}>
-                  <AddIcon color="gray.500" height={3} />
-                </Flex>
-              </PopoverTrigger>
-              <PopoverContent>
-                <PopoverArrow />
-                <PopoverBody>
-                  <AddScriptForm connectors={app.connectors} appId={app.id} />
-                </PopoverBody>
-              </PopoverContent>
+              {({ onClose }) => (
+                <>
+                  <PopoverTrigger>
+                    <Flex pr={2}>
+                      <AddIcon color="gray.500" height={3} />
+                    </Flex>
+                  </PopoverTrigger>
+                  <PopoverContent>
+                    <PopoverArrow />
+                    <PopoverBody>
+                      <AddScriptForm
+                        connectors={app.connectors}
+                        appId={app.id}
+                        onCreate={onClose}
+                      />
+                    </PopoverBody>
+                  </PopoverContent>
+                </>
+              )}
             </Popover>
           )}
         </HStack>
         <VStack spacing={0} w="full">
-          {app.scripts.sort(sortScripts).map((script: any, i: number) => (
-            <Fragment key={script.id}>
-              <HStack
-                w="100%"
-                px={2}
-                py={isRenamingId && isRenamingId === script.id ? 0 : 1}
-                background={
-                  currentScript?.id === script.id ? 'purple.100' : 'transparent'
-                }
-                _hover={{
-                  background:
-                    currentScript?.id === script.id ? 'purple.100' : 'gray.100',
-                }}
-                onMouseEnter={() => setCurrentHoverId(script.id)}
-                onMouseLeave={() => setCurrentHoverId(null)}
-              >
-                {isRenamingId && isRenamingId === script.id ? (
-                  <Flex grow={1}>
-                    <form
-                      onSubmit={handleSubmit(({ name }) => {
-                        if (name.length === 0) {
-                          return;
-                        }
-                        editScript.mutateAsync({
-                          id: isRenamingId,
-                          data: {
-                            name,
-                          },
-                        });
-                        setIsRenamingId(null);
-                      })}
-                    >
-                      <Input
-                        fontSize="xs"
-                        fontFamily="mono"
-                        size="xs"
-                        outline="none"
-                        variant="flushed"
-                        w="full"
-                        backgroundColor="white"
-                        autoFocus
-                        onKeyDown={(e) => {
-                          if (e.key === 'Escape') setIsRenamingId(null);
-                        }}
-                        {...register('name', { value: script.name })}
-                      />
-                    </form>
-                  </Flex>
-                ) : (
-                  <Link
-                    style={{ width: '100%' }}
-                    onClick={() => {
-                      setCurrentScript(script);
-                    }}
-                  >
-                    <Flex grow={1} cursor="pointer">
-                      <HStack>
-                        <Text
-                          fontWeight="medium"
-                          fontSize="xs"
-                          fontFamily="mono"
-                        >
-                          {script.filename}
-                        </Text>
-                        {isModelDirty(`/${script.filename}`) && (
-                          <Icon as={VscCircleFilled} fill="purple.200" pl={0} />
-                        )}
-                      </HStack>
-                    </Flex>
-                  </Link>
-                )}
-                <Menu>
-                  <MenuButton as={Text}>
-                    <VscKebabVertical
-                      fill="black"
-                      stroke="0"
-                      visibility={
-                        currentHoverId === script.id ||
-                        currentScript?.id === script.id
-                          ? 'visible'
-                          : 'hidden'
-                      }
-                    />
-                  </MenuButton>
-                  <MenuList>
-                    <MenuItem
-                      onClick={() => {
-                        const toDupe = app.scripts.find(
-                          (script: Script) => script.id === lastHoverId,
-                        );
-
-                        if (!toDupe) return;
-
-                        addScript.mutateAsync({
-                          name: `${toDupe.name}-copy`,
-                          appId: app.id,
-                          code: toDupe.code,
-                          order: app.scripts.length + 1,
-                        });
-                      }}
-                    >
-                      Duplicate
-                    </MenuItem>
-                    {i > 0 && (
-                      <>
-                        <MenuItem
-                          onClick={() => {
-                            setIsRenamingId(lastHoverId);
-                            reset({
-                              name: app.scripts.find(
-                                (script: Script) => script.id === lastHoverId,
-                              )?.name,
-                            });
-                          }}
-                        >
-                          Rename
-                        </MenuItem>
-                        <MenuItem onClick={onOpen}>Delete</MenuItem>
-                      </>
-                    )}
-                  </MenuList>
-                </Menu>
-              </HStack>
-            </Fragment>
+          {app.scripts.sort(sortScripts).map((script, i) => (
+            <ScriptItem
+              key={script.id}
+              script={script}
+              isRenaming={Boolean(isRenamingId) && isRenamingId === script.id}
+              onEndRenaming={endRenaming}
+              isEditable={i > 0}
+              renameScript={renameScript}
+              renameForm={renameForm}
+              onDelete={requestDelete}
+              onDuplicate={onDuplicate}
+              onStartRenaming={startRenaming}
+            />
           ))}
         </VStack>
       </VStack>
@@ -272,14 +188,23 @@ export function PlaygroundSidebar({
               <Button
                 colorScheme="red"
                 onClick={async () => {
-                  if (!lastHoverId) {
+                  if (!deletingId) {
                     onClose();
                     return;
                   }
-                  await deleteScript.mutateAsync({
-                    id: lastHoverId,
-                    appId: app.id,
-                  });
+                  await deleteScript.mutateAsync(
+                    {
+                      id: deletingId,
+                      appId: app.id,
+                    },
+                    {
+                      onSuccess: () => {
+                        if (deletingId === currentScript?.id) {
+                          setCurrentScript(mainScript);
+                        }
+                      },
+                    },
+                  );
                   onClose();
                 }}
                 ml={3}
