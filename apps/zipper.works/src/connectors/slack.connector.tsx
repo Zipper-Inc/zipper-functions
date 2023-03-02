@@ -25,6 +25,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { MultiSelect, SelectOnChange, useMultiSelect } from '@zipper/ui';
 
+// configure the Slack connector
 export const slackConnector = createConnector({
   id: 'slack',
   name: 'Slack',
@@ -148,6 +149,7 @@ export default client;
 function SlackConnectorForm({ appId }: { appId: string }) {
   const utils = trpc.useContext();
 
+  // convert the scopes to options for the multi-select menus
   const __bot_options = slackConnector.workspaceScopes!.map((scope) => ({
     label: scope,
     value: scope,
@@ -160,6 +162,8 @@ function SlackConnectorForm({ appId }: { appId: string }) {
   const defaultBotScope = 'channels:read';
   const botTokenName = 'SLACK_BOT_TOKEN';
 
+  // useMultiSelect hook gives us the value state and the onChange and setValue methods
+  // for the multi-select menus
   const {
     value: botValue,
     options: botOptions,
@@ -180,6 +184,7 @@ function SlackConnectorForm({ appId }: { appId: string }) {
     value: [],
   });
 
+  // get the existing Slack connector data from the database
   const connector = trpc.useQuery(['connector.slack.get', { appId }], {
     onSuccess: (data) => {
       if (data && setBotValue && setUserValue) {
@@ -193,11 +198,14 @@ function SlackConnectorForm({ appId }: { appId: string }) {
     connector.data?.isUserAuthRequired,
   );
 
+  // get the existing Slack bot token from the database
   const existingSecret = trpc.useQuery([
     'secret.get',
     { appId, key: botTokenName },
   ]);
 
+  // get the Slack auth URL from the backend (it includes an encrypted state value that links
+  // the auth request to the app)
   const slackAuthURL = trpc.useQuery([
     'connector.slack.getAuthUrl',
     {
@@ -220,6 +228,11 @@ function SlackConnectorForm({ appId }: { appId: string }) {
   });
 
   useEffect(() => {
+    setIsUserAuthRequired(connector.data?.isUserAuthRequired);
+  }, [connector.data?.isUserAuthRequired]);
+
+  // update the Slack connector data in the database when the bot scopes change
+  useEffect(() => {
     if (connector.isLoading) return;
     updateAppConnectorMutation.mutateAsync({
       appId,
@@ -229,6 +242,7 @@ function SlackConnectorForm({ appId }: { appId: string }) {
     slackAuthURL.refetch();
   }, [botValue]);
 
+  // update the Slack connector data in the database when the user scopes change
   useEffect(() => {
     if (connector.isLoading) return;
     updateAppConnectorMutation.mutateAsync({
@@ -253,57 +267,97 @@ function SlackConnectorForm({ appId }: { appId: string }) {
           </Box>
           <VStack align="start">
             {existingSecret.data && connector.data?.metadata ? (
-              <Card w="full">
-                <CardBody color="gray.600">
-                  <HStack>
+              <>
+                <Card w="full">
+                  <CardBody color="gray.600">
+                    <HStack>
+                      <Heading size="sm" mb="4">
+                        Current installation
+                      </Heading>
+                      <Spacer />
+                      {slackAuthURL.data && (
+                        <IconButton
+                          aria-label="Delete connector"
+                          variant="ghost"
+                          onClick={() => {
+                            deleteConnectorMutation.mutateAsync({
+                              appId,
+                            });
+                          }}
+                          icon={<Icon as={HiOutlineTrash} color="gray.400" />}
+                        />
+                      )}
+                    </HStack>
+                    <VStack
+                      align="start"
+                      divider={<StackDivider />}
+                      fontSize="sm"
+                    >
+                      <HStack>
+                        <Text>Installed to:</Text>
+                        <Code>
+                          {(connector.data?.metadata as any)['team']['name']}
+                        </Code>
+                      </HStack>
+                      <HStack>
+                        <Text>Bot User ID:</Text>
+                        <Code>
+                          {(connector.data?.metadata as any)['bot_user_id']}
+                        </Code>
+                      </HStack>
+                      <HStack>
+                        <Text>Bot Scopes:</Text>
+                        <Box>
+                          {(connector.data?.metadata as any)['scope']
+                            .split(',')
+                            .map((scope: string) => (
+                              <Code>{scope}</Code>
+                            ))}
+                        </Box>
+                      </HStack>
+
+                      <HStack>
+                        <Text>User Scopes:</Text>
+                        <Box>
+                          {(connector.data?.metadata as any)['authed_user'][
+                            'scope'
+                          ]
+                            .split(',')
+                            .map((scope: string) => (
+                              <Code>{scope}</Code>
+                            ))}
+                        </Box>
+                      </HStack>
+                    </VStack>
+                  </CardBody>
+                </Card>
+                <Card w="full">
+                  <CardBody color="gray.600" fontSize="sm">
                     <Heading size="sm" mb="4">
-                      Current installation
+                      Configuration
                     </Heading>
-                    <Spacer />
-                    {slackAuthURL.data && (
-                      <IconButton
-                        aria-label="Delete connector"
-                        variant="ghost"
-                        onClick={() => {
-                          deleteConnectorMutation.mutateAsync({
+                    <HStack w="full" pt="2">
+                      <Box mr="auto">
+                        <HStack>
+                          <Text>Require users to auth to access your app</Text>
+                        </HStack>
+                      </Box>
+                      <Switch
+                        isChecked={isUserAuthRequired}
+                        ml="auto"
+                        onChange={(e) => {
+                          setIsUserAuthRequired(e.target.checked);
+                          updateAppConnectorMutation.mutateAsync({
                             appId,
+                            type: 'slack',
+                            data: { isUserAuthRequired: e.target.checked },
                           });
                         }}
-                        icon={<Icon as={HiOutlineTrash} color="gray.400" />}
                       />
-                    )}
-                  </HStack>
-                  <VStack
-                    align="start"
-                    divider={<StackDivider />}
-                    fontSize="sm"
-                  >
-                    <HStack>
-                      <Text>Installed to:</Text>
-                      <Code>
-                        {(connector.data?.metadata as any)['team']['name']}
-                      </Code>
                     </HStack>
-                    <HStack>
-                      <Text>Bot User ID:</Text>
-                      <Code>
-                        {(connector.data?.metadata as any)['bot_user_id']}
-                      </Code>
-                    </HStack>
-                    <HStack>
-                      <Text>Bot Scopes:</Text>
-                      <Code>{(connector.data?.metadata as any)['scope']}</Code>
-                    </HStack>
-
-                    <HStack>
-                      <Text>User Scopes:</Text>
-                      <Code>
-                        {(connector.data?.metadata as any)['user_scope']}
-                      </Code>
-                    </HStack>
-                  </VStack>
-                </CardBody>
-              </Card>
+                  </CardBody>
+                </Card>
+              </>
             ) : (
               <Card w="full">
                 <CardBody color="gray.600">

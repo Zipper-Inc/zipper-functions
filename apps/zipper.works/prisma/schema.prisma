@@ -115,16 +115,19 @@ model AppConnector {
 }
 
 model AppConnectorUserAuth {
-  id          String    @id @default(uuid())
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime? @default(now())
-  deletedAt   DateTime? @db.Timestamp(6)
-  connectorId String
-  userId      String?
-  metadata    Json?
+  id                String    @id @default(uuid())
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime? @default(now())
+  deletedAt         DateTime? @db.Timestamp(6)
+  encryptedAccessToken String
+  appId             String
+  connectorType     String
+  connectorUserId   String
+  metadata          Json
 
-  connector   AppConnector @relation(fields: [connectorId], references: [id], onDelete: Cascade)
+  connector   AppConnector @relation(fields: [appId, connectorType], references: [appId, type], onDelete: Cascade)
 
+  @@unique([appId, connectorType, connectorUserId])
   @@map("app_connector_user_auth")
 }
 
@@ -149,6 +152,7 @@ model Secret {
   appId String
   app   App?   @relation(fields: [appId], references: [id])
 
+  @@unique([appId, key])
   @@map("secrets")
 }
 

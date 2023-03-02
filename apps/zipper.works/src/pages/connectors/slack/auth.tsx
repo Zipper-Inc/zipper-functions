@@ -1,5 +1,6 @@
 import { Center, Text, VStack } from '@chakra-ui/react';
 import { ZipperLogo } from '@zipper/ui';
+import { setCookie } from 'cookies-next';
 import { useRouter } from 'next/router';
 import { useEffect } from 'react';
 import { NextPageWithLayout } from '~/pages/_app';
@@ -12,8 +13,15 @@ const SlackAuth: NextPageWithLayout = () => {
   const exchangeMutation = trpc.useMutation(
     'connector.slack.exchangeCodeForToken',
     {
-      onSuccess: (data) =>
-        router.push(data.redirectTo || `/app/${data.appId}/edit/main.ts`),
+      onSuccess: (data) => {
+        if (data.appConnectorUserAuth) {
+          setCookie(
+            `${data.appConnectorUserAuth.appId}::${data.appConnectorUserAuth.connectorType}`,
+            data.appConnectorUserAuth.id,
+          );
+        }
+        router.push(data.redirectTo || `/app/${data.appId}/edit/main.ts`);
+      },
     },
   );
 
@@ -32,10 +40,24 @@ const SlackAuth: NextPageWithLayout = () => {
   if (!code) return <>Missing code</>;
 
   useEffect(() => {
-    exchangeMutation.mutateAsync({
-      code: code as string,
-      state: state as string,
-    });
+    if (process.env.NODE_ENV === 'development') {
+      // Slack has to redirect to an https url (usually ngrok)
+      // so we have to redirect to localhost:3000 so that the cookie gets
+      // set properly
+      if (window.location.host !== 'localhost:3000') {
+        router.push(`http://localhost:3000${router.asPath}`);
+      } else {
+        exchangeMutation.mutateAsync({
+          code: code as string,
+          state: state as string,
+        });
+      }
+    } else {
+      exchangeMutation.mutateAsync({
+        code: code as string,
+        state: state as string,
+      });
+    }
   }, []);
 
   //on the backend, exchange code for token and store it in the db for the unencoded state (app id)

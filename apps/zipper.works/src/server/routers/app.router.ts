@@ -342,7 +342,7 @@ export const appRouter = createRouter()
           settings: true,
           connectors: {
             select: {
-              id: true,
+              appId: true,
               type: true,
               isUserAuthRequired: true,
               userScopes: true,
