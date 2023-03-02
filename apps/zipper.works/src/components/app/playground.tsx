@@ -83,7 +83,6 @@ export function Playground({
       <VStack flex={1} paddingX={10} alignItems="stretch" spacing={0}>
         <PlaygroundHeader
           app={app}
-          onClickShare={() => setShareModalOpen(true)}
           onClickFork={() => {
             if (app.canUserEdit) return;
             if (user) {
