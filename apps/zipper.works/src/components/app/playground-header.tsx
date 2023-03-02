@@ -118,14 +118,7 @@ export function PlaygroundHeader({
   });
 
   return (
-    <Flex
-      as="header"
-      gap={4}
-      margin="auto"
-      maxW="full"
-      minW="md"
-      justifyContent="center"
-    >
+    <Flex as="header" gap={4} maxW="full" minW="md" justifyContent="center">
       <HStack spacing={3} alignItems="center" flex={1} minW={0}>
         <Box height={4}>
           <NextLink href="/">
