@@ -336,7 +336,7 @@ async function originBoot({
   req: NextApiRequest;
   id: string;
 }) {
-  const [appId, version] = deploymentId.split('@');
+  const [appId, version, userId] = deploymentId.split('@');
 
   if (!appId || !version) {
     console.error('Missing appId and version');
@@ -351,6 +351,11 @@ async function originBoot({
       scripts: true,
       scriptMain: true,
       secrets: true,
+      connectors: {
+        include: {
+          appConnectorUserAuths: { where: { userIdOrTempId: userId } },
+        },
+      },
     },
   });
 
@@ -380,6 +385,16 @@ async function originBoot({
       secret.encryptedValue,
       process.env.ENCRYPTION_KEY,
     );
+  });
+
+  app.connectors.forEach((connector) => {
+    connector.appConnectorUserAuths.forEach((auth) => {
+      secretsMap[`${auth.connectorType.toUpperCase()}_USER_TOKEN`] =
+        decryptFromBase64(
+          auth.encryptedAccessToken,
+          process.env.ENCRYPTION_KEY,
+        );
+    });
   });
 
   // Boot metadata
