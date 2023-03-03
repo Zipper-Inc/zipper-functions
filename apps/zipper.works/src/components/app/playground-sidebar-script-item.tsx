@@ -12,7 +12,7 @@ import {
 } from '@chakra-ui/react';
 import { Script } from '@prisma/client';
 import { UseFormReturn } from 'react-hook-form';
-import { VscKebabVertical } from 'react-icons/vsc';
+import { HiDotsVertical } from 'react-icons/hi';
 import { useEditorContext } from '../context/editor-context';
 
 export type ScriptItemProps = {
@@ -42,14 +42,14 @@ export const ScriptItem: React.FC<ScriptItemProps> = ({
 
   return (
     <HStack
-      w="100%"
-      px={2}
+      rounded="md"
+      px={3}
       py={isRenaming ? 0 : 1}
       background={
-        currentScript?.id === script.id ? 'purple.100' : 'transparent'
+        currentScript?.id === script.id ? 'blackAlpha.400' : 'transparent'
       }
       _hover={{
-        background: currentScript?.id === script.id ? 'purple.100' : 'gray.100',
+        background: 'blackAlpha.400',
       }}
       role="group"
     >
@@ -102,8 +102,8 @@ export const ScriptItem: React.FC<ScriptItemProps> = ({
       <Menu>
         <MenuButton as={Text}>
           <Icon
-            as={VscKebabVertical}
-            fill="black"
+            as={HiDotsVertical}
+            fontSize="xs"
             stroke="0"
             visibility={currentScript?.id === script.id ? 'visible' : 'hidden'}
             _groupHover={{
@@ -111,7 +111,7 @@ export const ScriptItem: React.FC<ScriptItemProps> = ({
             }}
           />
         </MenuButton>
-        <MenuList>
+        <MenuList color="chakra-body-text">
           <MenuItem onClick={() => onDuplicate(script.id)}>Duplicate</MenuItem>
           {isEditable && (
             <>

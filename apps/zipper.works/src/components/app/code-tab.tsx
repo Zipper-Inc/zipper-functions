@@ -66,7 +66,12 @@ export function CodeTab({ app, mainScript }: { app: any; mainScript: any }) {
       overflow="hidden"
       maxHeight={MAX_CODE_TAB_HEIGHT}
     >
-      <GridItem colSpan={2}>
+      <GridItem
+        colSpan={2}
+        display="flex"
+        flexDirection="column"
+        paddingBottom={3}
+      >
         <PlaygroundSidebar app={app} mainScript={mainScript} />
       </GridItem>
       <GridItem colSpan={6}>
