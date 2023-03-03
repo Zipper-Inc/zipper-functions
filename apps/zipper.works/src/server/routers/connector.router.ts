@@ -5,7 +5,6 @@ import { createRouter } from '../createRouter';
 import { prisma } from '../prisma';
 import { hasAppEditPermission } from '../utils/authz.utils';
 import {
-  decrypt,
   decryptFromBase64,
   decryptFromHex,
   encryptToBase64,
@@ -114,7 +113,7 @@ export const connectorRouter = createRouter()
       code: z.string(),
       state: z.string(),
     }),
-    async resolve({ input }) {
+    async resolve({ ctx, input }) {
       let appId: string | undefined;
       let redirectTo: string | undefined;
       try {
@@ -153,19 +152,22 @@ export const connectorRouter = createRouter()
       );
 
       let appConnectorUserAuth: AppConnectorUserAuth | undefined = undefined;
-      if (appId && json.authed_user.scope) {
+
+      const userIdOrTempId =
+        ctx.userId || (ctx.req?.cookies as any)['__zipper_user_id'];
+      if (appId && json.authed_user.scope && userIdOrTempId) {
         appConnectorUserAuth = await prisma.appConnectorUserAuth.upsert({
           where: {
-            appId_connectorType_connectorUserId: {
+            appId_connectorType_userIdOrTempId: {
               appId,
               connectorType: 'slack',
-              connectorUserId: json.authed_user.id,
+              userIdOrTempId,
             },
           },
           create: {
             appId,
             connectorType: 'slack',
-            connectorUserId: json.authed_user.id,
+            userIdOrTempId,
             metadata: jsonWithoutTokens.authed_user,
             encryptedAccessToken: encryptToBase64(
               json.authed_user.access_token,

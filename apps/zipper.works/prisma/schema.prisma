@@ -122,12 +122,12 @@ model AppConnectorUserAuth {
   encryptedAccessToken String
   appId             String
   connectorType     String
-  connectorUserId   String
+  userIdOrTempId    String
   metadata          Json
 
   connector   AppConnector @relation(fields: [appId, connectorType], references: [appId, type], onDelete: Cascade)
 
-  @@unique([appId, connectorType, connectorUserId])
+  @@unique([appId, connectorType, userIdOrTempId])
   @@map("app_connector_user_auth")
 }
 

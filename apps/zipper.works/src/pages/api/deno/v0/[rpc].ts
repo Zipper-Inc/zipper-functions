@@ -66,7 +66,7 @@ const __storage = {
     }' + path, { headers: {'x-zipper-hmac': hmac, 'x-timestamp': timestamp} } );
 
     const result = await res.json();
-    return key ? result.value : result; 
+    return key ? result.value : result;
   },
   set: async (key: string, value: unknown) => {
     let path = '/api/app/${appId}/storage';
@@ -107,7 +107,7 @@ const fn = typeof main === 'undefined' ? () => {
 const jsonHeader = (json, fallback = "JSON too big") => {
   try {
     const str = JSON.stringify(json);
-    if (str.length < 2000) return str; 
+    if (str.length < 2000) return str;
   } catch (e) {}
   return fallback;
 }

@@ -11,7 +11,11 @@ export type AppInfo = {
 
 export type InputParams = InputParam[];
 
-export type AppInfoAndInputParams = { app: AppInfo; inputs: InputParams };
+export type AppInfoAndInputParams = {
+  app: AppInfo;
+  connectors: { type: string; isUserAuthRequired: boolean }[];
+  inputs: InputParams;
+};
 
 export type AppInfoResult =
   | {
