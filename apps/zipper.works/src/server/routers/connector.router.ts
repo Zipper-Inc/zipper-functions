@@ -108,6 +108,39 @@ export const connectorRouter = createRouter()
       return true;
     },
   })
+  .mutation('slack.deleteUserAuth', {
+    input: z.object({
+      appId: z.string(),
+    }),
+    async resolve({ ctx, input }) {
+      const userIdOrTempId =
+        ctx.userId || (ctx.req?.cookies as any)['__zipper_user_id'];
+
+      const { appId } = input;
+
+      const userAuth = await prisma.appConnectorUserAuth.delete({
+        where: {
+          appId_connectorType_userIdOrTempId: {
+            appId,
+            connectorType: 'slack',
+            userIdOrTempId,
+          },
+        },
+      });
+
+      await fetch('https://slack.com/api/auth.revoke', {
+        method: 'POST',
+        body: new URLSearchParams({
+          token: decryptFromBase64(
+            userAuth.encryptedAccessToken,
+            process.env.ENCRYPTION_KEY!,
+          ),
+        }),
+      });
+
+      return true;
+    },
+  })
   .mutation('slack.exchangeCodeForToken', {
     input: z.object({
       code: z.string(),

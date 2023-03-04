@@ -25,7 +25,8 @@ export const appEventRouter = createRouter()
 
       return prisma.appEvent.findMany({
         where: {
-          deploymentId: input.deploymentId,
+          // allows us to get logs for user specific deployments
+          deploymentId: { startsWith: input.deploymentId },
         },
         select: defaultSelect,
       });

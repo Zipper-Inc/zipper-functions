@@ -9,7 +9,6 @@ import { useEditorContext } from '../context/editor-context';
 import { useRunAppContext } from '../context/run-app-context';
 import { ConnectorId } from '~/connectors/createConnector';
 import { AppQueryOutput } from '~/types/trpc';
-import IsUserAuthedToConnectors from './is-user-authed-to-connectors';
 
 export const PlaygroundEditor = dynamic(() => import('./playground-editor'), {
   ssr: false,
@@ -104,7 +103,6 @@ export function CodeTab({
           showInputForm={!currentScript?.connectorId}
           tips={ConnectorSidebarTips(currentScript?.connectorId)}
           maxHeight={MAX_CODE_TAB_HEIGHT}
-          connectors={app.connectors}
         />
       </GridItem>
     </DefaultGrid>

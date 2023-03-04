@@ -10,27 +10,27 @@ import {
   Text,
   Code,
   Progress,
+  Heading,
 } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
-import { FunctionInputs, FunctionOutput } from '@zipper/ui';
+import {
+  FunctionInputs,
+  FunctionOutput,
+  FunctionUserConnectors,
+} from '@zipper/ui';
 import { LogLine } from '~/components/app/log-line';
 import { useRunAppContext } from '../context/run-app-context';
-import IsUserAuthedToConnectors from './is-user-authed-to-connectors';
-import { AppConnector } from '@prisma/client';
+import { trpc } from '~/utils/trpc';
+import { useRouter } from 'next/router';
 
 export function AppEditSidebar({
   showInputForm = true,
   tips,
   maxHeight,
-  connectors,
 }: {
   showInputForm: boolean;
   tips?: JSX.Element;
   maxHeight: string;
-  connectors: Pick<
-    AppConnector,
-    'appId' | 'type' | 'isUserAuthRequired' | 'userScopes'
-  >[];
 }) {
   const [tabIndex, setTabIndex] = useState(0);
 
@@ -45,8 +45,62 @@ export function AppEditSidebar({
     formMethods,
     isRunning,
     result,
+    userAuthConnectors,
     appInfo,
   } = useRunAppContext();
+
+  const router = useRouter();
+  const context = trpc.useContext();
+  const deleteConnectorUserAuth = trpc.useMutation(
+    'connector.slack.deleteUserAuth',
+    {
+      onSuccess: () => {
+        context.invalidateQueries([
+          'app.byResourceOwnerAndAppSlugs',
+          {
+            appSlug: router.query['app-slug'] as string,
+            resourceOwnerSlug: router.query['resource-owner'] as string,
+          },
+        ]);
+      },
+    },
+  );
+
+  // state to hold whether user needs to authenticate with slack
+  const [slackAuthRequired, setSlackAuthRequired] = useState(false);
+
+  // get the existing Slack connector data from the database
+  const slackConnector = trpc.useQuery(
+    ['connector.slack.get', { appId: appInfo.id }],
+    {
+      enabled: slackAuthRequired,
+    },
+  );
+
+  // get the Slack auth URL -- if required --from the backend
+  // (it includes an encrypted state value that links the auth request to the app)
+  const slackAuthURL = trpc.useQuery(
+    [
+      'connector.slack.getAuthUrl',
+      {
+        appId: appInfo.id,
+        scopes: {
+          bot: slackConnector.data?.workspaceScopes || [],
+          user: slackConnector.data?.userScopes || [],
+        },
+        redirectTo: window.location.href,
+      },
+    ],
+    {
+      enabled: slackConnector.isFetched,
+    },
+  );
+
+  useEffect(() => {
+    if (userAuthConnectors.find((c) => c.type === 'slack')) {
+      setSlackAuthRequired(true);
+    }
+  }, []);
 
   const logs = appEventsQuery?.data?.map((event: any) => event.eventPayload);
 
@@ -78,11 +132,26 @@ export function AppEditSidebar({
               overflowY="scroll"
             >
               {/** @todo make this height thing less jank */}
+              <Box p={4} mb="4" backgroundColor="gray.100" position="relative">
+                {userAuthConnectors.length > 0 && (
+                  <FunctionUserConnectors
+                    userAuthConnectors={userAuthConnectors}
+                    slack={{
+                      authUrl: slackAuthURL.data?.url || '#',
+                      onDelete: () => {
+                        deleteConnectorUserAuth.mutateAsync({
+                          appId: appInfo.id,
+                        });
+                      },
+                    }}
+                  />
+                )}
+              </Box>
               <Box p={4} backgroundColor="gray.100" position="relative">
-                <IsUserAuthedToConnectors
-                  appId={appInfo.id}
-                  connectors={connectors}
-                >
+                <>
+                  <Heading size="sm" mb="4">
+                    Inputs
+                  </Heading>
                   {inputParams && inputParams.length ? (
                     <FunctionInputs
                       params={inputParams || []}
@@ -102,7 +171,7 @@ export function AppEditSidebar({
                       </Code>
                     </>
                   )}
-                </IsUserAuthedToConnectors>
+                </>
                 {isRunning && (
                   <Progress
                     colorScheme="purple"

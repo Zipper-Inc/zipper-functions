@@ -346,6 +346,12 @@ export const appRouter = createRouter()
               type: true,
               isUserAuthRequired: true,
               userScopes: true,
+              appConnectorUserAuths: {
+                where: {
+                  userIdOrTempId:
+                    ctx.userId || (ctx.req?.cookies as any)['__zipper_user_id'],
+                },
+              },
             },
           },
         },
