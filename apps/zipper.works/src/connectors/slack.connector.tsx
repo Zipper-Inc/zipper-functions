@@ -24,6 +24,7 @@ import { HiOutlineTrash, HiQuestionMarkCircle } from 'react-icons/hi';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { MultiSelect, SelectOnChange, useMultiSelect } from '@zipper/ui';
+import { useRouter } from 'next/router';
 
 // configure the Slack connector
 export const slackConnector = createConnector({
@@ -215,7 +216,19 @@ function SlackConnectorForm({ appId }: { appId: string }) {
     },
   ]);
 
-  const updateAppConnectorMutation = trpc.useMutation('appConnector.update');
+  const context = trpc.useContext();
+  const router = useRouter();
+  const updateAppConnectorMutation = trpc.useMutation('appConnector.update', {
+    onSuccess: (data, variables) => {
+      context.invalidateQueries([
+        'app.byResourceOwnerAndAppSlugs',
+        {
+          appSlug: router.query['app-slug'] as string,
+          resourceOwnerSlug: router.query['resource-owner'] as string,
+        },
+      ]);
+    },
+  });
 
   const deleteConnectorMutation = trpc.useMutation('connector.slack.delete', {
     async onSuccess() {
@@ -233,7 +246,7 @@ function SlackConnectorForm({ appId }: { appId: string }) {
 
   // update the Slack connector data in the database when the bot scopes change
   useEffect(() => {
-    if (connector.isLoading) return;
+    if (connector.isLoading || connector.isError) return;
     updateAppConnectorMutation.mutateAsync({
       appId,
       type: 'slack',
@@ -244,7 +257,7 @@ function SlackConnectorForm({ appId }: { appId: string }) {
 
   // update the Slack connector data in the database when the user scopes change
   useEffect(() => {
-    if (connector.isLoading) return;
+    if (connector.isLoading || connector.isError) return;
     updateAppConnectorMutation.mutateAsync({
       appId,
       type: 'slack',
@@ -257,6 +270,8 @@ function SlackConnectorForm({ appId }: { appId: string }) {
     return <></>;
   }
 
+  const existingInstallation = existingSecret.data && connector.data?.metadata;
+
   return (
     <Box px="10" w="full">
       {slackConnector && (
@@ -266,7 +281,7 @@ function SlackConnectorForm({ appId }: { appId: string }) {
             <Text>Configure the {slackConnector.name} connector.</Text>
           </Box>
           <VStack align="start">
-            {existingSecret.data && connector.data?.metadata ? (
+            {existingInstallation ? (
               <>
                 <Card w="full">
                   <CardBody color="gray.600">
@@ -316,18 +331,23 @@ function SlackConnectorForm({ appId }: { appId: string }) {
                         </Box>
                       </HStack>
 
-                      <HStack>
-                        <Text>User Scopes:</Text>
-                        <Box>
-                          {(connector.data?.metadata as any)['authed_user'][
-                            'scope'
-                          ]
-                            .split(',')
-                            .map((scope: string) => (
-                              <Code>{scope}</Code>
-                            ))}
-                        </Box>
-                      </HStack>
+                      {(connector.data?.metadata as any)['authed_user'] &&
+                        (connector.data?.metadata as any)['authed_user'][
+                          'scope'
+                        ] && (
+                          <HStack>
+                            <Text>User Scopes:</Text>
+                            <Box>
+                              {(connector.data?.metadata as any)['authed_user'][
+                                'scope'
+                              ]
+                                .split(',')
+                                .map((scope: string) => (
+                                  <Code>{scope}</Code>
+                                ))}
+                            </Box>
+                          </HStack>
+                        )}
                     </VStack>
                   </CardBody>
                 </Card>

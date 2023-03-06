@@ -189,32 +189,44 @@ export const connectorRouter = createRouter()
       const userIdOrTempId =
         ctx.userId || (ctx.req?.cookies as any)['__zipper_user_id'];
       if (appId && json.authed_user.scope && userIdOrTempId) {
-        appConnectorUserAuth = await prisma.appConnectorUserAuth.upsert({
-          where: {
-            appId_connectorType_userIdOrTempId: {
+        const userInfoRes = await fetch('https://slack.com/api/auth.test', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: new URLSearchParams({
+            token: json.authed_user.access_token,
+          }),
+        });
+        const userInfoJson = await userInfoRes.json();
+        if (userInfoJson.ok) {
+          appConnectorUserAuth = await prisma.appConnectorUserAuth.upsert({
+            where: {
+              appId_connectorType_userIdOrTempId: {
+                appId,
+                connectorType: 'slack',
+                userIdOrTempId,
+              },
+            },
+            create: {
               appId,
               connectorType: 'slack',
               userIdOrTempId,
+              metadata: userInfoJson,
+              encryptedAccessToken: encryptToBase64(
+                json.authed_user.access_token,
+                process.env.ENCRYPTION_KEY!,
+              ),
             },
-          },
-          create: {
-            appId,
-            connectorType: 'slack',
-            userIdOrTempId,
-            metadata: jsonWithoutTokens.authed_user,
-            encryptedAccessToken: encryptToBase64(
-              json.authed_user.access_token,
-              process.env.ENCRYPTION_KEY!,
-            ),
-          },
-          update: {
-            metadata: jsonWithoutTokens.authed_user,
-            encryptedAccessToken: encryptToBase64(
-              json.authed_user.access_token,
-              process.env.ENCRYPTION_KEY!,
-            ),
-          },
-        });
+            update: {
+              metadata: jsonWithoutTokens.authed_user,
+              encryptedAccessToken: encryptToBase64(
+                json.authed_user.access_token,
+                process.env.ENCRYPTION_KEY!,
+              ),
+            },
+          });
+        }
       }
 
       await prisma.appConnector.update({

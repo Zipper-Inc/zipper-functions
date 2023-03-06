@@ -40,7 +40,12 @@ export function FunctionUserConnectors({
 
           return (
             <HStack>
-              <Text flexGrow={1}>Authed to Slack</Text>
+              <HStack flexGrow={1}>
+                <Text>{`Authed to Slack as `}</Text>
+                <Text fontWeight={'medium'}>
+                  {c.appConnectorUserAuths[0].metadata.user}
+                </Text>
+              </HStack>
               <Button variant={'link'} onClick={slack.onDelete}>
                 Remove
               </Button>

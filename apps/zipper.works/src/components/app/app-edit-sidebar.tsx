@@ -132,8 +132,13 @@ export function AppEditSidebar({
               overflowY="scroll"
             >
               {/** @todo make this height thing less jank */}
-              <Box p={4} mb="4" backgroundColor="gray.100" position="relative">
-                {userAuthConnectors.length > 0 && (
+              {userAuthConnectors.length > 0 && (
+                <Box
+                  p={4}
+                  mb="4"
+                  backgroundColor="gray.100"
+                  position="relative"
+                >
                   <FunctionUserConnectors
                     userAuthConnectors={userAuthConnectors}
                     slack={{
@@ -145,8 +150,8 @@ export function AppEditSidebar({
                       },
                     }}
                   />
-                )}
-              </Box>
+                </Box>
+              )}
               <Box p={4} backgroundColor="gray.100" position="relative">
                 <>
                   <Heading size="sm" mb="4">
