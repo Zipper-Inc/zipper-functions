@@ -1,7 +1,6 @@
 import {
   Tabs,
   TabList,
-  Tab,
   TabPanels,
   TabPanel,
   VStack,
@@ -10,11 +9,16 @@ import {
   Text,
   Code,
   Progress,
+  HStack,
+  Button,
 } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
 import { FunctionInputs, FunctionOutput } from '@zipper/ui';
 import { LogLine } from '~/components/app/log-line';
 import { useRunAppContext } from '../context/run-app-context';
+import { TabButton } from './tab-button';
+import { HiOutlinePlay } from 'react-icons/hi2';
+import { HiChevronDown } from 'react-icons/hi';
 
 export function AppEditSidebar({
   showInputForm = true,
@@ -36,6 +40,7 @@ export function AppEditSidebar({
     formMethods,
     isRunning,
     result,
+    run,
   } = useRunAppContext();
 
   const logs = appEventsQuery?.data?.map((event: any) => event.eventPayload);
@@ -56,10 +61,32 @@ export function AppEditSidebar({
       gap={2}
       alignItems="stretch"
     >
-      <TabList>
-        {showInputForm && <Tab>Preview</Tab>}
-        {tips && <Tab>Tips</Tab>}
-        <Tab isDisabled={!logs?.length}>Logs</Tab>
+      <TabList
+        border="none"
+        color="gray.500"
+        gap={4}
+        justifyContent="space-between"
+      >
+        <HStack spacing={2}>
+          {showInputForm && <TabButton title="Preview" />}
+          {tips && <TabButton title="Tips" />}
+          <TabButton title="Logs" isDisabled={!logs?.length} />
+        </HStack>
+        <HStack>
+          <Button
+            colorScheme="purple"
+            variant="solid"
+            onClick={run}
+            display="flex"
+            gap={2}
+            fontWeight="medium"
+            isDisabled={isRunning}
+          >
+            <HiOutlinePlay />
+            <Text>Run</Text>
+            <HiChevronDown />
+          </Button>
+        </HStack>
       </TabList>
       <TabPanels>
         {/* INPUT */}
