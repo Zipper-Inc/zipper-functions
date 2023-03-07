@@ -12,6 +12,7 @@ import { trpc } from '~/utils/trpc';
 import { AppQueryOutput, AppEventUseQueryResult } from '~/types/trpc';
 import useInterval from '~/hooks/use-interval';
 import getRunUrl from '~/utils/get-run-url';
+import { AppConnectorUserAuth } from '@prisma/client';
 
 export type FunctionCallContextType = {
   appInfo: AppInfo;
@@ -20,6 +21,14 @@ export type FunctionCallContextType = {
   isRunning: boolean;
   lastRunVersion: string;
   result: string;
+  userAuthConnectors: {
+    type: string;
+    appId: string;
+    isUserAuthRequired: boolean;
+    userScopes: string[];
+    workspaceScopes: string[];
+    appConnectorUserAuths: AppConnectorUserAuth[];
+  }[];
   appEventsQuery?: AppEventUseQueryResult;
   run: () => void;
 };
@@ -32,6 +41,7 @@ export const RunAppContext = createContext<FunctionCallContextType>({
   lastRunVersion: '',
   result: '',
   appEventsQuery: undefined,
+  userAuthConnectors: [],
   run: noop,
 });
 
@@ -88,6 +98,9 @@ export function RunAppProvider({
         lastRunVersion,
         result,
         appEventsQuery,
+        userAuthConnectors: app.connectors.filter(
+          (c) => c.isUserAuthRequired && c.userScopes.length > 0,
+        ),
         run: async () => {
           setIsRunning(true);
           await onBeforeRun();
@@ -122,6 +135,7 @@ export function RunAppProvider({
           const result = await fetch(getRunUrl(slug, version), {
             method: 'POST',
             body: JSON.stringify(inputs),
+            credentials: 'include',
           }).then((r) => r.text());
 
           setResult(result);

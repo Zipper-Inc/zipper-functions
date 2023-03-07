@@ -19,29 +19,43 @@ export default async function middleware(request: NextRequest) {
 
   if (__DEBUG__) console.log('middleware', { appRoute });
 
+  let res: NextResponse = NextResponse.next();
   switch (appRoute) {
     case '/':
       if (request.method === 'GET') {
         const url = new URL('/app', request.url);
-        return NextResponse.rewrite(url);
+        res = NextResponse.rewrite(url);
       }
       if (request.method === 'POST') {
         const url = new URL('/call', request.url);
-        return NextResponse.rewrite(url);
+        res = NextResponse.rewrite(url);
       }
       break;
 
     case '/api':
-    case '/api/json':
-      return jsonHandler(request);
+    case '/api/json': {
+      res = await jsonHandler(request);
+      break;
+    }
 
-    case '/api/yaml':
-      return yamlHandler(request);
+    case '/api/yaml': {
+      res = await yamlHandler(request);
+      break;
+    }
 
-    case '/call':
-      return serveRelay(request);
+    case '/call': {
+      res = await serveRelay(request);
+      break;
+    }
 
-    default:
-      return NextResponse.next();
+    default: {
+      break;
+    }
   }
+
+  if (!request.cookies.get('__zipper_user_id')) {
+    res.cookies.set('__zipper_user_id', `temp__${crypto.randomUUID()}`);
+  }
+
+  return res;
 }

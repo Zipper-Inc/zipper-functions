@@ -14,12 +14,14 @@ export const createContextInner = ({
   userId,
   orgId,
   organizations,
+  req,
 }: {
   userId?: string;
   orgId?: string;
   organizations?: Record<string, string>[];
+  req?: RequestLike;
 }) => {
-  return { userId, orgId, organizations };
+  return { userId, orgId, organizations, req };
 };
 
 /**
@@ -36,6 +38,7 @@ export async function createContext(opts: {
     userId: userId || undefined,
     orgId: orgId || undefined,
     organizations: sessionClaims?.organizations as Record<string, string>[],
+    req: opts.req,
   });
 }
 

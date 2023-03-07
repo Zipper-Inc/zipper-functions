@@ -7,24 +7,54 @@ import { trpc } from '~/utils/trpc';
 
 const SlackAuth: NextPageWithLayout = () => {
   const router = useRouter();
-  const { code, state } = router.query;
+  const { code, state, error, error_description } = router.query;
 
   const exchangeMutation = trpc.useMutation(
     'connector.slack.exchangeCodeForToken',
     {
-      onSuccess: (data) =>
-        router.push(data.redirectTo || `/app/${data.appId}/edit/main.ts`),
+      onSuccess: (data) => {
+        if (data.redirectTo?.includes('http')) {
+          window.location.replace(data.redirectTo);
+        } else {
+          router.push(data.redirectTo || `/app/${data.appId}/edit/main.ts`);
+        }
+      },
     },
   );
+
+  if (error) {
+    return (
+      <Center w="100%" h="100vh">
+        <VStack spacing="12">
+          <ZipperLogo />
+          <Text>{error_description}</Text>
+        </VStack>
+      </Center>
+    );
+  }
 
   if (!state) return <>Missing state</>;
   if (!code) return <>Missing code</>;
 
   useEffect(() => {
-    exchangeMutation.mutateAsync({
-      code: code as string,
-      state: state as string,
-    });
+    if (process.env.NODE_ENV === 'development') {
+      // Slack has to redirect to an https url (usually ngrok)
+      // so we have to redirect to localhost:3000 so that the cookie gets
+      // set properly
+      if (window.location.host !== 'localhost:3000') {
+        router.push(`http://localhost:3000${router.asPath}`);
+      } else {
+        exchangeMutation.mutateAsync({
+          code: code as string,
+          state: state as string,
+        });
+      }
+    } else {
+      exchangeMutation.mutateAsync({
+        code: code as string,
+        state: state as string,
+      });
+    }
   }, []);
 
   //on the backend, exchange code for token and store it in the db for the unencoded state (app id)
