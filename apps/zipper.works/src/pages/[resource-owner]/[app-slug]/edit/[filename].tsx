@@ -60,7 +60,6 @@ const PlaygroundPage: NextPageWithLayout = () => {
   });
 
   const refetchApp = () => {
-    console.log('refetching app');
     utils.invalidateQueries([
       'app.byResourceOwnerAndAppSlugs',
       { resourceOwnerSlug, appSlug },
