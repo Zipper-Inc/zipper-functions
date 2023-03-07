@@ -11,23 +11,29 @@ import {
   Progress,
   HStack,
   Button,
+  Tooltip,
+  useToast,
 } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
-import { FunctionInputs, FunctionOutput } from '@zipper/ui';
+import { FunctionInputs, FunctionOutput, TabButton } from '@zipper/ui';
 import { LogLine } from '~/components/app/log-line';
 import { useRunAppContext } from '../context/run-app-context';
-import { TabButton } from './tab-button';
-import { HiOutlinePlay } from 'react-icons/hi2';
-import { HiChevronDown } from 'react-icons/hi';
 
-export function AppEditSidebar({
-  showInputForm = true,
-  tips,
-}: {
+import { HiOutlineClipboard, HiOutlinePlay } from 'react-icons/hi2';
+
+type AppEditSidebarProps = {
   showInputForm: boolean;
   tips?: JSX.Element;
-}) {
+  appSlug: string;
+};
+
+export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
+  showInputForm = true,
+  tips,
+  appSlug,
+}) => {
   const [tabIndex, setTabIndex] = useState(0);
+  const toast = useToast();
 
   const handleTabsChange = (index: number) => {
     setTabIndex(index);
@@ -50,6 +56,17 @@ export function AppEditSidebar({
     if (lastRunVersion) setTabIndex(0);
   }, [lastRunVersion]);
 
+  const appLink = `${appSlug}.${process.env.NEXT_PUBLIC_OUTPUT_SERVER_HOSTNAME}`;
+  const copyLink = async () => {
+    await navigator.clipboard.writeText(appLink);
+    toast({
+      title: 'App link copied',
+      status: 'info',
+      duration: 1500,
+      isClosable: true,
+    });
+  };
+
   return (
     <Tabs
       colorScheme="purple"
@@ -58,7 +75,7 @@ export function AppEditSidebar({
       flex={1}
       display="flex"
       flexDirection="column"
-      gap={2}
+      gap={5}
       alignItems="stretch"
     >
       <TabList
@@ -84,10 +101,28 @@ export function AppEditSidebar({
           >
             <HiOutlinePlay />
             <Text>Run</Text>
-            <HiChevronDown />
           </Button>
         </HStack>
       </TabList>
+      <HStack
+        bgColor="neutral.50"
+        color="purple.700"
+        p={4}
+        rounded="lg"
+        justifyContent="space-between"
+      >
+        <Text>{appLink}</Text>
+        <Tooltip label="Copy" bgColor="purple.500" textColor="gray.100">
+          <Button
+            colorScheme="purple"
+            variant="ghost"
+            size="sm"
+            onClick={copyLink}
+          >
+            <HiOutlineClipboard />
+          </Button>
+        </Tooltip>
+      </HStack>
       <TabPanels>
         {/* INPUT */}
         {showInputForm && (
@@ -162,4 +197,4 @@ export function AppEditSidebar({
       </TabPanels>
     </Tabs>
   );
-}
+};
