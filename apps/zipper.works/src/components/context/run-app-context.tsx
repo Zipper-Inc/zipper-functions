@@ -26,6 +26,7 @@ export type FunctionCallContextType = {
     appId: string;
     isUserAuthRequired: boolean;
     userScopes: string[];
+    workspaceScopes: string[];
     appConnectorUserAuths: AppConnectorUserAuth[];
   }[];
   appEventsQuery?: AppEventUseQueryResult;
@@ -97,7 +98,9 @@ export function RunAppProvider({
         lastRunVersion,
         result,
         appEventsQuery,
-        userAuthConnectors: app.connectors.filter((c) => c.isUserAuthRequired),
+        userAuthConnectors: app.connectors.filter(
+          (c) => c.isUserAuthRequired && c.userScopes.length > 0,
+        ),
         run: async () => {
           setIsRunning(true);
           await onBeforeRun();

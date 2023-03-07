@@ -1,6 +1,5 @@
 import { Center, Text, VStack } from '@chakra-ui/react';
 import { ZipperLogo } from '@zipper/ui';
-import { setCookie } from 'cookies-next';
 import { useRouter } from 'next/router';
 import { useEffect } from 'react';
 import { NextPageWithLayout } from '~/pages/_app';
@@ -14,13 +13,11 @@ const SlackAuth: NextPageWithLayout = () => {
     'connector.slack.exchangeCodeForToken',
     {
       onSuccess: (data) => {
-        if (data.appConnectorUserAuth) {
-          setCookie(
-            `${data.appConnectorUserAuth.appId}::${data.appConnectorUserAuth.connectorType}`,
-            data.appConnectorUserAuth.id,
-          );
+        if (data.redirectTo?.includes('http')) {
+          window.location.replace(data.redirectTo);
+        } else {
+          router.push(data.redirectTo || `/app/${data.appId}/edit/main.ts`);
         }
-        router.push(data.redirectTo || `/app/${data.appId}/edit/main.ts`);
       },
     },
   );

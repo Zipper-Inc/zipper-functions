@@ -5,7 +5,7 @@ import pako from 'pako';
 import { PassThrough } from 'stream';
 import ndjson from 'ndjson';
 import intoStream from 'into-stream';
-import { decryptFromBase64 } from '~/server/utils/crypto.utils';
+import { decryptFromBase64 } from '@zipper/utils';
 import { prisma } from '~/server/prisma';
 
 const X_DENO_CONFIG = 'x-deno-config';

@@ -1,12 +1,5 @@
 import { Button, Heading, HStack, Image, Link, Text } from '@chakra-ui/react';
-
-type UserAuthConnector = {
-  type: string;
-  appId: string;
-  isUserAuthRequired: boolean;
-  userScopes: string[];
-  appConnectorUserAuths: any[];
-};
+import { UserAuthConnector } from '@zipper/types';
 
 export function FunctionUserConnectors({
   userAuthConnectors,
@@ -14,8 +7,8 @@ export function FunctionUserConnectors({
 }: {
   userAuthConnectors: UserAuthConnector[];
   slack: {
-    authUrl: string;
     onDelete: () => void;
+    authUrl: string;
   };
 }) {
   return (
@@ -24,9 +17,8 @@ export function FunctionUserConnectors({
         Connectors
       </Heading>
       {userAuthConnectors.map((c) => {
-        const needsAuth = c.appConnectorUserAuths.length === 0;
         if (c.type === 'slack') {
-          if (needsAuth) {
+          if (!c.appConnectorUserAuths[0]) {
             return (
               <Link href={slack.authUrl}>
                 <Image
@@ -43,7 +35,8 @@ export function FunctionUserConnectors({
               <HStack flexGrow={1}>
                 <Text>{`Authed to Slack as `}</Text>
                 <Text fontWeight={'medium'}>
-                  {c.appConnectorUserAuths[0].metadata.user}
+                  {c.appConnectorUserAuths[0].metadata.user ||
+                    c.appConnectorUserAuths[0].metadata.id}
                 </Text>
               </HStack>
               <Button variant={'link'} onClick={slack.onDelete}>

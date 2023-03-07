@@ -346,6 +346,7 @@ export const appRouter = createRouter()
               type: true,
               isUserAuthRequired: true,
               userScopes: true,
+              workspaceScopes: true,
               appConnectorUserAuths: {
                 where: {
                   userIdOrTempId:

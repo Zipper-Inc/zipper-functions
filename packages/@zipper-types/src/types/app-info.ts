@@ -1,4 +1,5 @@
 import { InputParam } from './input-params';
+import { UserAuthConnector } from './user-auth-connector';
 
 export type AppInfo = {
   id: string;
@@ -13,7 +14,7 @@ export type InputParams = InputParam[];
 
 export type AppInfoAndInputParams = {
   app: AppInfo;
-  connectors: { type: string; isUserAuthRequired: boolean }[];
+  userAuthConnectors: UserAuthConnector[];
   inputs: InputParams;
 };
 

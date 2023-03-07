@@ -212,7 +212,7 @@ function SlackConnectorForm({ appId }: { appId: string }) {
     {
       appId,
       scopes: { bot: botValue as string[], user: userValue as string[] },
-      redirectTo: window.location.href,
+      postInstallationRedirect: window.location.href,
     },
   ]);
 
@@ -244,9 +244,12 @@ function SlackConnectorForm({ appId }: { appId: string }) {
     setIsUserAuthRequired(connector.data?.isUserAuthRequired);
   }, [connector.data?.isUserAuthRequired]);
 
+  const existingInstallation = existingSecret.data && connector.data?.metadata;
+
   // update the Slack connector data in the database when the bot scopes change
   useEffect(() => {
     if (connector.isLoading || connector.isError) return;
+    if (existingInstallation) return;
     updateAppConnectorMutation.mutateAsync({
       appId,
       type: 'slack',
@@ -258,6 +261,7 @@ function SlackConnectorForm({ appId }: { appId: string }) {
   // update the Slack connector data in the database when the user scopes change
   useEffect(() => {
     if (connector.isLoading || connector.isError) return;
+    if (existingInstallation) return;
     updateAppConnectorMutation.mutateAsync({
       appId,
       type: 'slack',
@@ -269,8 +273,6 @@ function SlackConnectorForm({ appId }: { appId: string }) {
   if (existingSecret.isLoading || connector.isLoading) {
     return <></>;
   }
-
-  const existingInstallation = existingSecret.data && connector.data?.metadata;
 
   return (
     <Box px="10" w="full">

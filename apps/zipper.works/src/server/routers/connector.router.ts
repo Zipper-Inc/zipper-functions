@@ -3,13 +3,16 @@ import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { createRouter } from '../createRouter';
 import { prisma } from '../prisma';
-import { hasAppEditPermission } from '../utils/authz.utils';
+import {
+  hasAppEditPermission,
+  hasAppReadPermission,
+} from '../utils/authz.utils';
 import {
   decryptFromBase64,
   decryptFromHex,
   encryptToBase64,
   encryptToHex,
-} from '../utils/crypto.utils';
+} from '@zipper/utils';
 import fetch from 'node-fetch';
 import { AppConnectorUserAuth } from '@prisma/client';
 
@@ -38,16 +41,17 @@ export const connectorRouter = createRouter()
         bot: z.array(z.string()),
         user: z.array(z.string()),
       }),
-      redirectTo: z.string().optional(),
+      postInstallationRedirect: z.string().optional(),
+      redirectUri: z.string().optional(),
     }),
     async resolve({ ctx, input }) {
-      if (!hasAppEditPermission({ ctx, appId: input.appId })) {
+      if (!hasAppReadPermission({ ctx, appId: input.appId })) {
         new TRPCError({ code: 'UNAUTHORIZED' });
       }
 
-      const { appId, scopes, redirectTo } = input;
+      const { appId, scopes, postInstallationRedirect, redirectUri } = input;
       const state = encryptToHex(
-        `${appId}::${redirectTo || ''}`,
+        `${appId}::${postInstallationRedirect || ''}`,
         process.env.ENCRYPTION_KEY || '',
       );
 
@@ -59,6 +63,9 @@ export const connectorRouter = createRouter()
       url.searchParams.set('scope', scopes.bot.join(','));
       url.searchParams.set('user_scope', scopes.user.join(','));
       url.searchParams.set('state', state);
+      if (redirectUri) {
+        url.searchParams.set('redirect_uri', redirectUri);
+      }
 
       return {
         url: url.toString(),
@@ -149,12 +156,13 @@ export const connectorRouter = createRouter()
     async resolve({ ctx, input }) {
       let appId: string | undefined;
       let redirectTo: string | undefined;
+      let userId: string | undefined;
       try {
         const decryptedState = decryptFromHex(
           input.state,
           process.env.ENCRYPTION_KEY!,
         );
-        [appId, redirectTo] = decryptedState.split('::');
+        [appId, redirectTo, userId] = decryptedState.split('::');
       } catch (e) {
         throw new TRPCError({ code: 'UNAUTHORIZED' });
       }
@@ -187,7 +195,7 @@ export const connectorRouter = createRouter()
       let appConnectorUserAuth: AppConnectorUserAuth | undefined = undefined;
 
       const userIdOrTempId =
-        ctx.userId || (ctx.req?.cookies as any)['__zipper_user_id'];
+        userId || ctx.userId || (ctx.req?.cookies as any)['__zipper_user_id'];
       if (appId && json.authed_user.scope && userIdOrTempId) {
         const userInfoRes = await fetch('https://slack.com/api/auth.test', {
           method: 'POST',

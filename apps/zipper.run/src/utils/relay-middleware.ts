@@ -81,7 +81,7 @@ export async function relayRequest(request: NextRequest) {
 
   if (!appInfoResult.ok) return { status: 500, result: appInfoResult.error };
 
-  const { app, connectors } = appInfoResult.data;
+  const { app, userAuthConnectors } = appInfoResult.data;
 
   // Get a version from URL or use the latest
   const version =
@@ -90,7 +90,7 @@ export async function relayRequest(request: NextRequest) {
     Date.now().toString(32);
 
   let deploymentId = `${app.id}@${version}`;
-  if (connectors.find((c) => c.isUserAuthRequired)) {
+  if (userAuthConnectors.find((c) => c.isUserAuthRequired)) {
     deploymentId = `${deploymentId}@${zipperUserId}`;
   }
 

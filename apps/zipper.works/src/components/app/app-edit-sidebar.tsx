@@ -88,7 +88,7 @@ export function AppEditSidebar({
           bot: slackConnector.data?.workspaceScopes || [],
           user: slackConnector.data?.userScopes || [],
         },
-        redirectTo: window.location.href,
+        postInstallationRedirect: window.location.href,
       },
     ],
     {
