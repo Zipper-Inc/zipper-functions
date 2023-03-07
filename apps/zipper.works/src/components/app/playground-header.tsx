@@ -4,7 +4,6 @@ import {
   HStack,
   Heading,
   Link,
-  Text,
   Icon,
   Flex,
 } from '@chakra-ui/react';
@@ -15,10 +14,9 @@ import React, { useState } from 'react';
 import ForkIcon from '~/components/svg/forkIcon';
 import { ZipperSymbol } from '~/components/svg/zipperSymbol';
 import { ZipperLogo } from '@zipper/ui';
-import { HiLightningBolt, HiPencilAlt } from 'react-icons/hi';
+import { HiPencilAlt } from 'react-icons/hi';
 import { useUser, SignedIn, SignedOut } from '@clerk/nextjs';
 import { AppQueryOutput } from '~/types/trpc';
-import { useRunAppContext } from '../context/run-app-context';
 import { EditAppSlugForm } from './edit-app-slug-form';
 import { useAppEditors } from '~/hooks/use-app-editors';
 
@@ -30,7 +28,6 @@ export function PlaygroundHeader({
   onClickFork: (e: React.MouseEvent<HTMLElement>) => any;
 }) {
   const { isLoaded } = useUser();
-  const { run: onClickRun, isRunning } = useRunAppContext();
   const [editSlug, setEditSlug] = useState(false);
   const { editorIds, onlineEditorIds } = useAppEditors();
 
@@ -117,20 +114,6 @@ export function PlaygroundHeader({
         </HStack>
       </HStack>
       <HStack justifyContent="end">
-        {app.canUserEdit && (
-          <Button
-            type="button"
-            paddingX={4}
-            variant="solid"
-            colorScheme="purple"
-            textColor="gray.100"
-            onClick={onClickRun}
-            disabled={isRunning}
-          >
-            <Icon as={HiLightningBolt} />
-            <Text ml="2">Run</Text>
-          </Button>
-        )}
         {!app.canUserEdit && isLoaded && (
           <Button
             type="button"
