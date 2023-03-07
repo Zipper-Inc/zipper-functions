@@ -28,7 +28,7 @@ import { RunAppProvider } from '../context/run-app-context';
 import { PlaygroundAvatars } from './playground-avatars';
 import { useAppEditors } from '~/hooks/use-app-editors';
 import { HiOutlineUpload } from 'react-icons/hi';
-import { TabButton } from './tab-button';
+import { TabButton } from '@zipper/ui';
 
 export function Playground({
   app,
