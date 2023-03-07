@@ -31,7 +31,7 @@ export default function AddScriptForm({
   connectors,
 }: {
   appId: string;
-  connectors: AppConnector[];
+  connectors: Pick<AppConnector, 'type'>[];
 }) {
   const [duplicateFilename, setDuplicateFilename] = useState<
     string | undefined
