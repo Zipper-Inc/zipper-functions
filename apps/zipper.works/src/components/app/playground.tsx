@@ -2,13 +2,11 @@ import {
   HStack,
   Tabs,
   TabList,
-  Tab,
   TabPanels,
   TabPanel,
   Progress,
   VStack,
   Text,
-  ChakraProps,
   Button,
 } from '@chakra-ui/react';
 import { InputParam } from '@zipper/types';
@@ -30,23 +28,7 @@ import { RunAppProvider } from '../context/run-app-context';
 import { PlaygroundAvatars } from './playground-avatars';
 import { useAppEditors } from '~/hooks/use-app-editors';
 import { HiOutlineUpload } from 'react-icons/hi';
-
-const tabStyles: ChakraProps = {
-  px: 6,
-  py: 3,
-  rounded: 'md',
-  _selected: {
-    backgroundColor: 'purple.50',
-    fontWeight: 'bold',
-    textColor: 'purple.700',
-    _hover: { transform: 'none' },
-  },
-  _hover: {
-    backgroundColor: 'purple.50',
-    textColor: 'purple.700',
-    transform: 'scale(1.05)',
-  },
-};
+import { TabButton } from './tab-button';
 
 export function Playground({
   app,
@@ -125,25 +107,24 @@ export function Playground({
         >
           <TabList
             border="none"
+            p={1}
             pt={3}
             color="gray.500"
             gap={4}
             justifyContent="space-between"
-            overflow="auto"
+            overflowX="auto"
           >
             <HStack spacing={2}>
               {/* CODE */}
-              <Tab {...tabStyles}>
-                <Text>Code</Text>
-              </Tab>
+              <TabButton title="Code" />
               {app.canUserEdit && (
                 <>
                   {/* SCHEDULES */}
-                  <Tab {...tabStyles}>Schedules</Tab>
+                  <TabButton title="Schedules" />
                   {/* SECRETS */}
-                  <Tab {...tabStyles}>Secrets</Tab>
+                  <TabButton title="Secrets" />
                   {/* SETTINGS */}
-                  <Tab {...tabStyles}>Settings</Tab>
+                  <TabButton title="Settings" />
                 </>
               )}
             </HStack>
@@ -173,7 +154,7 @@ export function Playground({
             {/* CODE */}
             <TabPanel
               p={0}
-              pt={6}
+              pt={5}
               position="relative"
               flex={1}
               display="flex"
