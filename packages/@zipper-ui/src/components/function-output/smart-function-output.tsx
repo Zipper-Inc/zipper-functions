@@ -15,9 +15,10 @@ import styled from '@emotion/styled';
 
 import { useTable, useSortBy } from 'react-table';
 import { ObjectExplorer } from './object-explorer';
-import { parseResult } from './utils';
+import { isPrimitive, parseResult } from './utils';
 import { Props } from './types';
 import { RawFunctionOutput } from './raw-function-output';
+import { HiCheck, HiX } from 'react-icons/hi';
 
 const StyledTr = styled(Tr)`
   &:last-of-type td {
@@ -42,6 +43,10 @@ function TableArray(props: { data: Array<any> }) {
 
   const { getTableProps, getTableBodyProps, headers, rows, prepareRow } =
     useTable({ columns, data }, useSortBy);
+
+  if (data.length === 0) {
+    return <Box>Empty</Box>;
+  }
 
   return (
     <TableContainer>
@@ -146,8 +151,25 @@ function TableCollection(props: { data: Array<any> }) {
             return (
               <StyledTr {...row.getRowProps()}>
                 {row.cells.map((cell) => {
+                  if (isPrimitive(cell.value)) {
+                    if (typeof cell.value === 'boolean') {
+                      return (
+                        <Td {...cell.getCellProps()}>
+                          {cell.value ? <HiCheck /> : <HiX />}
+                        </Td>
+                      );
+                    }
+                    return (
+                      <Td {...cell.getCellProps()}>{cell.render('Cell')}</Td>
+                    );
+                  }
+                  if (cell.value === null) {
+                    <Td {...cell.getCellProps()}></Td>;
+                  }
                   return (
-                    <Td {...cell.getCellProps()}>{cell.render('Cell')}</Td>
+                    <Td {...cell.getCellProps()}>
+                      <SmartFunctionOutput result={cell.value} />
+                    </Td>
                   );
                 })}
               </StyledTr>
