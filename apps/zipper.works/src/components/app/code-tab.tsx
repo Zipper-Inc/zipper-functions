@@ -107,7 +107,7 @@ export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
           )}
         </FormControl>
       </VStack>
-      <VStack flex={2} alignItems="stretch" minW="220px">
+      <VStack flex={2} alignItems="stretch" minW="220px" overflow="auto">
         <AppEditSidebar
           showInputForm={!currentScriptConnectorId}
           tips={ConnectorSidebarTips(currentScriptConnectorId)}

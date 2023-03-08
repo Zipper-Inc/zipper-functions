@@ -83,6 +83,8 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
         color="gray.500"
         gap={4}
         justifyContent="space-between"
+        overflow="auto"
+        p={1}
       >
         <HStack spacing={2}>
           {showInputForm && <TabButton title="Preview" />}
@@ -110,6 +112,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
         p={4}
         rounded="lg"
         justifyContent="space-between"
+        overflow="auto"
       >
         <Text fontWeight="semibold">{appLink}</Text>
         <Tooltip label="Copy" bgColor="purple.500" textColor="gray.100">
@@ -119,64 +122,70 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
             size="sm"
             onClick={copyLink}
           >
-            <HiOutlineClipboard />
+            <Box>
+              <HiOutlineClipboard />
+            </Box>
           </Button>
         </Tooltip>
       </HStack>
-      <TabPanels>
+      <TabPanels as={VStack} alignItems="stretch" flex={1}>
         {/* INPUT */}
         {showInputForm && (
-          <TabPanel p={0}>
-            <Box overflowX="visible" overflowY="scroll">
-              {/** @todo make this height thing less jank */}
-              <Box p={4} backgroundColor="gray.100" position="relative">
-                {inputParams && inputParams.length ? (
-                  <FunctionInputs
-                    params={inputParams || []}
-                    defaultValues={{}}
-                    formContext={formMethods}
-                  />
-                ) : (
-                  <>
-                    <Text>
-                      Add parameters to your main function and they'll show up
-                      here. Here's an example:
-                    </Text>
-                    <Code my="5">
-                      {`async function main({greeting}: {greeting: string}) {
+          <TabPanel
+            p={0}
+            flex={1}
+            display="flex"
+            flexDir="column"
+            alignItems="stretch"
+          >
+            {/** @todo make this height thing less jank */}
+            <Box p={4} backgroundColor="gray.100" position="relative">
+              {inputParams && inputParams.length ? (
+                <FunctionInputs
+                  params={inputParams || []}
+                  defaultValues={{}}
+                  formContext={formMethods}
+                />
+              ) : (
+                <>
+                  <Text>
+                    Add parameters to your main function and they'll show up
+                    here. Here's an example:
+                  </Text>
+                  <Code my="5">
+                    {`async function main({greeting}: {greeting: string}) {
                       ...
                     }`}
-                    </Code>
-                  </>
-                )}
-                {isRunning && (
-                  <Progress
-                    colorScheme="purple"
-                    size="xs"
-                    isIndeterminate
-                    width="full"
-                    position="absolute"
-                    left={0}
-                    right={0}
-                    bottom={0}
-                  />
-                )}
-              </Box>
-
-              {result && (
-                <Box mt={4}>
-                  <FunctionOutput result={result} />
-                </Box>
+                  </Code>
+                </>
+              )}
+              {isRunning && (
+                <Progress
+                  colorScheme="purple"
+                  size="xs"
+                  isIndeterminate
+                  width="full"
+                  position="absolute"
+                  left={0}
+                  right={0}
+                  bottom={0}
+                />
               )}
             </Box>
+
+            {result && (
+              <Box mt={4} flex={1}>
+                <FunctionOutput result={result} />
+              </Box>
+            )}
           </TabPanel>
         )}
 
         {/* TIPS */}
-        {tips && <TabPanel>{tips}</TabPanel>}
+        {tips && <TabPanel flex={1}>{tips}</TabPanel>}
 
         {/* LOGS */}
-        <TabPanel>
+        <TabPanel flex={1}>
           <VStack
             spacing={0}
             align="start"

@@ -16,6 +16,7 @@ const tablistStyles: ChakraProps = {
   gap: 2,
   border: 'none',
   color: 'gray.500',
+  p: 1,
 };
 
 export function FunctionOutput({ result, level = 0 }: Props) {
