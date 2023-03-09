@@ -13,6 +13,7 @@ import {
   Button,
   Tooltip,
   useToast,
+  IconButton,
 } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
 import { FunctionInputs, FunctionOutput, TabButton } from '@zipper/ui';
@@ -114,18 +115,19 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
         justifyContent="space-between"
         overflow="auto"
       >
-        <Text fontWeight="semibold">{appLink}</Text>
+        <Text fontWeight="semibold" fontSize="xs" whiteSpace="nowrap" flex={1}>
+          {appLink}
+        </Text>
         <Tooltip label="Copy" bgColor="purple.500" textColor="gray.100">
-          <Button
+          <IconButton
+            aria-label="copy"
             colorScheme="purple"
             variant="ghost"
-            size="sm"
+            size="xs"
             onClick={copyLink}
           >
-            <Box>
-              <HiOutlineClipboard />
-            </Box>
-          </Button>
+            <HiOutlineClipboard />
+          </IconButton>
         </Tooltip>
       </HStack>
       <TabPanels as={VStack} alignItems="stretch" flex={1}>
