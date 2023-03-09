@@ -114,12 +114,14 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
         justifyContent="space-between"
         overflow="auto"
       >
-        <Text fontWeight="semibold">{appLink}</Text>
+        <Text fontWeight="semibold" fontSize="xs">
+          {appLink}
+        </Text>
         <Tooltip label="Copy" bgColor="purple.500" textColor="gray.100">
           <Button
             colorScheme="purple"
             variant="ghost"
-            size="sm"
+            size="xs"
             onClick={copyLink}
           >
             <Box>

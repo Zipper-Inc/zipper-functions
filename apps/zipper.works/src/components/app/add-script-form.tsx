@@ -1,30 +1,22 @@
 import {
   FormErrorMessage,
   Input,
-  Button,
   FormControl,
   HStack,
   Link,
   VStack,
   Text,
-  Box,
   Flex,
-  Tabs,
-  TabList,
-  Tab,
-  TabPanel,
-  TabPanels,
-  Icon,
+  Divider,
 } from '@chakra-ui/react';
 import { useForm } from 'react-hook-form';
 import { trpc } from '~/utils/trpc';
 import { AppConnector, Script } from '@prisma/client';
-import { HiPaperAirplane } from 'react-icons/hi2';
 import { connectors as defaultConnectors } from '~/connectors/connectors';
-import { useEffect, useState } from 'react';
 import { useEditorContext } from '../context/editor-context';
 import slugify from '~/utils/slugify';
 import { useScriptFilename } from '~/hooks/use-script-filename';
+import { HiCheck } from 'react-icons/hi';
 
 export default function AddScriptForm({
   appId,
@@ -35,9 +27,6 @@ export default function AddScriptForm({
   connectors: AppConnector[];
   onCreate: VoidFunction;
 }) {
-  const [duplicateFilename, setDuplicateFilename] = useState<
-    string | undefined
-  >();
   const { register, handleSubmit, reset, watch } = useForm();
   const { setCurrentScript, scripts, refetchApp } = useEditorContext();
 
@@ -52,31 +41,19 @@ export default function AddScriptForm({
   });
 
   const scriptFilename = watch('name');
-  const { debouncedFilename, validateFilenameQuery } = useScriptFilename(
-    scriptFilename,
-    appId,
-  );
-
-  useEffect(() => {
-    if (validateFilenameQuery.data) {
-      setDuplicateFilename(undefined);
-    } else {
-      setDuplicateFilename(debouncedFilename);
-    }
-  }, [validateFilenameQuery.data]);
+  const { isFilenameValid } = useScriptFilename(scriptFilename, appId);
+  const slugifiedScriptFilename = slugify(scriptFilename ?? '');
 
   return (
-    <Tabs colorScheme="purple">
-      <TabList>
-        <Tab>Custom</Tab>
-        <Tab>Connectors</Tab>
-      </TabList>
-      <TabPanels>
-        <TabPanel px="2">
-          <Text mb="2">Add a new function</Text>
-          <form
-            onSubmit={handleSubmit(
-              ({ name, description, code = '// Here we go!' }) => {
+    <VStack alignItems="stretch" spacing={0} gap={4} minW={0}>
+      <VStack alignItems="stretch">
+        <Text size="sm" color="gray.700" fontWeight="medium">
+          Create a custom function
+        </Text>
+        <form
+          onSubmit={handleSubmit(
+            ({ name, description, code = '// Here we go!' }) => {
+              if (isFilenameValid) {
                 addScript.mutateAsync({
                   name,
                   description,
@@ -84,95 +61,93 @@ export default function AddScriptForm({
                   appId,
                   order: scripts.length + connectors.length + 1,
                 });
-              },
-            )}
-            style={{ display: 'block', width: '100%' }}
-          >
-            {addScript.error && (
-              <FormErrorMessage>{addScript.error.message}</FormErrorMessage>
-            )}
-            <Box>
-              <VStack align="start">
-                <HStack align={'start'}>
-                  <FormControl>
-                    <Input
-                      size="md"
-                      type="text"
-                      placeholder="Script name"
-                      disabled={addScript.isLoading}
-                      isInvalid={!!duplicateFilename}
-                      autoComplete="off"
-                      data-form-type="other"
-                      {...register('name')}
-                    />
-                  </FormControl>
-                  <Button
-                    type="submit"
-                    paddingX={2}
-                    isDisabled={addScript.isLoading || !!duplicateFilename}
-                    bgColor="purple.800"
-                    textColor="gray.100"
-                  >
-                    <Icon as={HiPaperAirplane} />
-                  </Button>
-                </HStack>
-                {scriptFilename && !duplicateFilename && (
-                  <Flex>
-                    <Text fontSize="sm" mt="2" color={'gray.600'}>
-                      A file called{' '}
-                      <Text fontFamily="mono" as="span">
-                        {slugify(scriptFilename)}.ts
-                      </Text>{' '}
-                      will be created
-                    </Text>
-                  </Flex>
-                )}
-                {scriptFilename === duplicateFilename && (
-                  <Flex>
-                    <Text fontSize="sm" mt="2" color={'red.500'}>
-                      A file with that name already exists.
-                    </Text>
-                  </Flex>
-                )}
-              </VStack>
-            </Box>
-          </form>
-        </TabPanel>
-        <TabPanel>
-          <VStack align="start">
-            {Object.values(defaultConnectors).map((connector) => {
-              if (!connectors.find((c: any) => c.type === connector.id)) {
-                return (
-                  <HStack key={connector.id}>
-                    {connector.icon}
-                    <Link
-                      key={connector.id}
-                      onClick={() => {
-                        addScript.mutateAsync({
-                          name: `${connector.id}-connector`,
-                          code: connector.code || '// Here we go!',
-                          appId,
-                          order: scripts.length + connectors.length + 1,
-                          connectorId: connector.id,
-                        });
-                      }}
-                    >
-                      {connector.name}
-                    </Link>
-                  </HStack>
-                );
-              } else {
-                return (
-                  <HStack key={connector.id}>
-                    {connector.icon}
-                    <Text>{connector.name} already added</Text>
-                  </HStack>
-                );
               }
-            })}
+            },
+          )}
+        >
+          {addScript.error && (
+            <FormErrorMessage>{addScript.error.message}</FormErrorMessage>
+          )}
+          <VStack align="stretch">
+            <FormControl>
+              <Input
+                px={4}
+                size="md"
+                type="text"
+                placeholder="Script name"
+                disabled={addScript.isLoading}
+                isInvalid={scriptFilename && !isFilenameValid}
+                autoComplete="off"
+                data-form-type="other"
+                {...register('name')}
+              />
+            </FormControl>
+            {scriptFilename && isFilenameValid && (
+              <Text fontWeight="medium" fontSize="sm" color="gray.700">
+                Press return to add{' '}
+                <Text fontFamily="mono" as="span">
+                  {slugifiedScriptFilename}.ts
+                </Text>
+              </Text>
+            )}
+            {scriptFilename && isFilenameValid === false && (
+              <Flex>
+                <Text fontSize="sm" mt="2" color={'red.500'}>
+                  A file with that name already exists.
+                </Text>
+              </Flex>
+            )}
           </VStack>
-        </TabPanel>
-      </TabPanels>
-    </Tabs>
+        </form>
+      </VStack>
+      <Divider />
+      <VStack alignItems="stretch">
+        <Text size="sm" color="gray.700" fontWeight="medium">
+          Add a pre-built connector
+        </Text>
+        <VStack align="stretch">
+          {Object.values(defaultConnectors).map((connector) => {
+            if (!connectors.find((c: any) => c.type === connector.id)) {
+              return (
+                <HStack key={connector.id}>
+                  {connector.icon}
+                  <Link
+                    key={connector.id}
+                    onClick={() => {
+                      addScript.mutateAsync({
+                        name: `${connector.id}-connector`,
+                        code: connector.code || '// Here we go!',
+                        appId,
+                        order: scripts.length + connectors.length + 1,
+                        connectorId: connector.id,
+                      });
+                    }}
+                  >
+                    {connector.name}
+                  </Link>
+                </HStack>
+              );
+            } else {
+              return (
+                <HStack
+                  key={connector.id}
+                  justifyContent="space-between"
+                  spacing={4}
+                >
+                  <HStack>
+                    {connector.icon}
+                    <Text>{connector.name}</Text>
+                  </HStack>
+                  <HStack color="gray.400" spacing={1}>
+                    <Text>CONNECTED</Text>
+                    <HiCheck />
+                  </HStack>
+                </HStack>
+              );
+            }
+          })}
+        </VStack>
+      </VStack>
+    </VStack>
   );
 }
