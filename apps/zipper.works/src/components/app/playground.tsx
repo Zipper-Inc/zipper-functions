@@ -1,5 +1,4 @@
 import {
-  GridItem,
   HStack,
   Tabs,
   TabList,
@@ -122,14 +121,15 @@ export function Playground({
           flex={1}
           display="flex"
           flexDirection="column"
-          justifyContent="start"
+          justifyContent="stretch"
         >
           <TabList
             border="none"
-            mt={3}
+            pt={3}
             color="gray.500"
             gap={4}
             justifyContent="space-between"
+            overflow="auto"
           >
             <HStack spacing={2}>
               {/* CODE */}
@@ -169,9 +169,16 @@ export function Playground({
             </HStack>
           </TabList>
           {/* TAB PANELS */}
-          <TabPanels as={VStack} alignItems="stretch" flex={1}>
+          <TabPanels as={VStack} alignItems="stretch" flex={1} overflow="auto">
             {/* CODE */}
-            <TabPanel p={0} pt={9} position="relative" flex={1}>
+            <TabPanel
+              p={0}
+              pt={6}
+              position="relative"
+              flex={1}
+              display="flex"
+              flexDirection="column"
+            >
               {isSaving && (
                 <Progress
                   isIndeterminate
@@ -179,7 +186,7 @@ export function Playground({
                   position="absolute"
                   left={0}
                   right={0}
-                  top="-3px"
+                  top="0"
                   height="2px"
                   background="transparent"
                 />
@@ -188,18 +195,18 @@ export function Playground({
             </TabPanel>
 
             {/* SCHEDULES */}
-            <TabPanel as={GridItem} colSpan={12}>
+            <TabPanel flex={1}>
               <SchedulesTab inputParams={inputParams} appId={id} />
             </TabPanel>
 
             {/* SECRETS */}
-            <TabPanel as={GridItem} colSpan={12}>
+            <TabPanel flex={1}>
               <SecretsTab editable={app.canUserEdit} appId={id} />
             </TabPanel>
 
             {/* SETTINGS */}
             {app.canUserEdit && (
-              <TabPanel as={GridItem} colSpan={12}>
+              <TabPanel flex={1}>
                 <SettingsTab app={app} />
               </TabPanel>
             )}

@@ -19,11 +19,9 @@ import { useRunAppContext } from '../context/run-app-context';
 export function AppEditSidebar({
   showInputForm = true,
   tips,
-  maxHeight,
 }: {
   showInputForm: boolean;
   tips?: JSX.Element;
-  maxHeight: string;
 }) {
   const [tabIndex, setTabIndex] = useState(0);
 
@@ -50,25 +48,24 @@ export function AppEditSidebar({
   return (
     <Tabs
       colorScheme="purple"
-      as={VStack}
       index={tabIndex}
       onChange={handleTabsChange}
-      height="full"
+      flex={1}
+      display="flex"
+      flexDirection="column"
+      gap={2}
+      alignItems="stretch"
     >
       <TabList>
         {showInputForm && <Tab>Preview</Tab>}
         {tips && <Tab>Tips</Tab>}
         <Tab isDisabled={!logs?.length}>Logs</Tab>
       </TabList>
-      <TabPanels height="full">
+      <TabPanels>
         {/* INPUT */}
         {showInputForm && (
           <TabPanel p={0}>
-            <Box
-              maxHeight={`calc(${maxHeight} - 50px)`}
-              overflowX="visible"
-              overflowY="scroll"
-            >
+            <Box overflowX="visible" overflowY="scroll">
               {/** @todo make this height thing less jank */}
               <Box p={4} backgroundColor="gray.100" position="relative">
                 {inputParams && inputParams.length ? (

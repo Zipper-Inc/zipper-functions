@@ -194,16 +194,15 @@ const SecretsTab: React.FC<Props> = ({ appId, editable }) => {
         <VStack align={'start'}>
           <>
             <Box mb={4}>
-              <Text>
+              <Text display="inline">
                 Use environment variables to provide secrets and environment
                 information to your deployments. You can access them from your
-                code by using the
+                code by using the{' '}
+                <Text as="span" display="inline" fontWeight="bold">
+                  Zipper.env
+                </Text>{' '}
+                API.
               </Text>
-              <Text display={'inline'} fontWeight="bold">
-                {' '}
-                Zipper.env{' '}
-              </Text>
-              <Text display={'inline'}>API.</Text>
             </Box>
             {existingSecrets.data &&
               existingSecrets.data.map((secret) => (
