@@ -12,7 +12,7 @@ import {
   Progress,
   Heading,
 } from '@chakra-ui/react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   FunctionInputs,
   FunctionOutput,
@@ -109,6 +109,8 @@ export function AppEditSidebar({
     if (lastRunVersion) setTabIndex(0);
   }, [lastRunVersion]);
 
+  const output = useMemo(() => <FunctionOutput result={result} />, [result]);
+
   return (
     <Tabs
       colorScheme="purple"
@@ -191,11 +193,7 @@ export function AppEditSidebar({
                 )}
               </Box>
 
-              {result && (
-                <Box mt={4}>
-                  <FunctionOutput result={result} />
-                </Box>
-              )}
+              {result && <Box mt={4}>{output}</Box>}
             </Box>
           </TabPanel>
         )}
