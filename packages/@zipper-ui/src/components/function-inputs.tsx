@@ -1,4 +1,4 @@
-import { useRef, useState, ReactElement } from 'react';
+import { useRef } from 'react';
 import {
   Box,
   Flex,
@@ -10,17 +10,15 @@ import {
   Badge,
   VStack,
   HStack,
-  StackDivider,
   NumberInput,
   NumberInputField,
   NumberInputStepper,
   NumberIncrementStepper,
   NumberDecrementStepper,
   Button,
-  Icon,
   useDisclosure,
 } from '@chakra-ui/react';
-import { VscAdd, VscClose } from 'react-icons/vsc';
+import { VscAdd } from 'react-icons/vsc';
 import { FieldValues, UseFormReturn, RegisterOptions } from 'react-hook-form';
 import { InputType, InputParam } from '@zipper/types';
 
@@ -163,7 +161,7 @@ function SingleInput({
           <HStack spacing={2} align="center" width="full" paddingRight={8}>
             <Heading
               size="sm"
-              fontWeight="bold"
+              fontWeight="medium"
               ml={0.5}
               mr={2}
               alignSelf="center"
@@ -172,7 +170,15 @@ function SingleInput({
               {name}
             </Heading>
             <Box mt={1} opacity={!isOpen ? '50%' : '100%'}>
-              <Badge variant="outline" colorScheme="purple" fontSize=".6rem">
+              <Badge
+                variant="subtle"
+                colorScheme="purple"
+                fontSize="xs"
+                fontWeight="medium"
+                rounded="full"
+                py="0.5"
+                px={2}
+              >
                 {type}
               </Badge>
             </Box>
@@ -249,22 +255,18 @@ export function FunctionInputs({ params = [], formContext }: Props) {
     />
   ));
 
-  return (
-    <Box>
-      {inputs.length ? (
-        <VStack px={1} spacing={1} divider={<StackDivider color="purple" />}>
-          {inputs}
-        </VStack>
-      ) : (
-        <Textarea
-          backgroundColor="white"
-          fontFamily="monospace"
-          fontSize="smaller"
-          minHeight={90}
-          defaultValue="{}"
-          {...formContext.register('params')}
-        />
-      )}
-    </Box>
+  return inputs.length ? (
+    <VStack px={1} spacing={1}>
+      {inputs}
+    </VStack>
+  ) : (
+    <Textarea
+      backgroundColor="white"
+      fontFamily="monospace"
+      fontSize="smaller"
+      minHeight={90}
+      defaultValue="{}"
+      {...formContext.register('params')}
+    />
   );
 }
