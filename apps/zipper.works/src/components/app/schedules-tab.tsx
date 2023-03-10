@@ -15,7 +15,7 @@ import {
   Thead,
   Tr,
   ChakraProps,
-  Switch,
+  Badge,
 } from '@chakra-ui/react';
 import cronstrue from 'cronstrue';
 import { useState } from 'react';
@@ -32,14 +32,16 @@ const tableHeaderStyles: ChakraProps = {
   fontWeight: 'normal',
   fontSize: 'sm',
   textTransform: 'none',
-  px: 0,
+  pl: 0,
   pt: 2,
   pb: 3,
+  pr: 8,
 };
 
 const tableDataStyles: ChakraProps = {
-  p: 4,
+  py: 4,
   pl: 0,
+  pr: 10,
 };
 
 type SchedulesTabProps = {
@@ -105,37 +107,47 @@ const SchedulesTab: React.FC<SchedulesTabProps> = ({ appId, inputParams }) => {
           using cron syntax.
         </Text>
       </VStack>
-      <VStack flex={3} alignItems="stretch" spacing={0}>
-        <TableContainer>
+      <VStack flex={3} alignItems="stretch" spacing={0} overflow="auto">
+        <TableContainer flex={1}>
           <Table variant="simple">
             <Thead>
               <Tr>
                 <Th {...tableHeaderStyles}>Schedule</Th>
                 <Th {...tableHeaderStyles}>Cron Expression</Th>
-                <Th {...tableHeaderStyles}>Inputs</Th>
-                <Th {...tableHeaderStyles} w={0}></Th>
+                <Th {...tableHeaderStyles}>Last Run</Th>
+                <Th {...tableHeaderStyles} w={0} pr={0}></Th>
               </Tr>
             </Thead>
             <Tbody color="gray.900" fontSize="sm">
               {(existingSchedules.data?.length ?? 0) > 0 ? (
                 existingSchedules.data?.map((s) => {
-                  console.log(s);
+                  const lastRunAt = new Intl.DateTimeFormat('en-GB', {
+                    dateStyle: 'short',
+                    timeStyle: 'long',
+                  }).format(s.appRuns[0]?.createdAt);
+                  const lastRunSuccessful = s.appRuns[0]?.success;
+
                   return (
-                    <Tr>
+                    <Tr key={s.id}>
                       <Td {...tableDataStyles}>
-                        <HStack spacing={0} gap={2}>
-                          <Switch
-                            colorScheme="purple"
-                            // TODO make the isChecked value based on fetched data
-                            isChecked={true}
-                            // ml="auto"
-                          />
-                          <Text>{cronstrue.toString(s.crontab)}</Text>
-                        </HStack>
+                        {cronstrue.toString(s.crontab)}
                       </Td>
                       <Td {...tableDataStyles}>{s.crontab}</Td>
-                      <Td {...tableDataStyles} maxW="20%">
-                        {JSON.stringify(s.inputs)}
+                      <Td {...tableDataStyles}>
+                        {s.appRuns.length > 0 && (
+                          <HStack>
+                            <Text color="gray.600" fontSize="xs">
+                              {lastRunAt}
+                            </Text>
+                            <Badge
+                              variant="subtle"
+                              colorScheme={lastRunSuccessful ? 'green' : 'red'}
+                              fontSize="xs"
+                            >
+                              {lastRunSuccessful ? 'SUCCESSFUL' : 'FAILED'}
+                            </Badge>
+                          </HStack>
+                        )}
                       </Td>
                       <Td {...tableDataStyles} py={0} pr={0}>
                         <HStack spacing={0} justifyContent="end">
@@ -163,7 +175,7 @@ const SchedulesTab: React.FC<SchedulesTabProps> = ({ appId, inputParams }) => {
                 })
               ) : (
                 <Tr {...tableDataStyles}>
-                  <Td colSpan={3}>
+                  <Td colSpan={4}>
                     You don't have any scheduled runs for this app. Create one
                     to get started.
                   </Td>
@@ -172,7 +184,7 @@ const SchedulesTab: React.FC<SchedulesTabProps> = ({ appId, inputParams }) => {
             </Tbody>
             <Tfoot>
               <Tr>
-                <Td {...tableDataStyles} py={3} colSpan={3}>
+                <Td {...tableDataStyles} py={3} colSpan={4}>
                   <Button
                     colorScheme="purple"
                     size="sm"
