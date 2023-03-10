@@ -135,7 +135,7 @@ export function RunAppProvider({
           const result = await fetch(getRunUrl(slug, version), {
             method: 'POST',
             body: JSON.stringify(inputs),
-            credentials: 'include',
+            // credentials: 'include',
           }).then((r) => r.text());
 
           setResult(result);
