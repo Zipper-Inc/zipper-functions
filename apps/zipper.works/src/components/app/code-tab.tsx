@@ -8,6 +8,7 @@ import { useEditorContext } from '../context/editor-context';
 import { useRunAppContext } from '../context/run-app-context';
 import { ConnectorId } from '~/connectors/createConnector';
 import { AppQueryOutput } from '~/types/trpc';
+import { Script } from '@prisma/client';
 
 export const PlaygroundEditor = dynamic(() => import('./playground-editor'), {
   ssr: false,
@@ -35,13 +36,12 @@ const ConnectorSidebarTips = (connectorId?: string | null) => {
 const APPROXIMATE_HEADER_HEIGHT_PX = '120px';
 const MAX_CODE_TAB_HEIGHT = `calc(100vh - ${APPROXIMATE_HEADER_HEIGHT_PX})`;
 
-export function CodeTab({
-  app,
-  mainScript,
-}: {
+type CodeTabProps = {
   app: AppQueryOutput;
-  mainScript: any;
-}) {
+  mainScript: Script;
+};
+
+export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
   const { currentScript, save, onChange } = useEditorContext();
   const { run } = useRunAppContext();
 
@@ -107,12 +107,13 @@ export function CodeTab({
           )}
         </FormControl>
       </VStack>
-      <VStack flex={2} alignItems="stretch" minW="220px">
+      <VStack flex={2} alignItems="stretch" minW="220px" overflow="auto">
         <AppEditSidebar
           showInputForm={!currentScriptConnectorId}
           tips={ConnectorSidebarTips(currentScriptConnectorId)}
+          appSlug={app.slug}
         />
       </VStack>
     </HStack>
   );
-}
+};
