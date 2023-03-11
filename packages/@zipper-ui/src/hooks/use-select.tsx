@@ -285,6 +285,7 @@ export interface UseMultiSelectReturn {
   value?: string | string[];
   options: Option[];
   onChange?: SelectOnChange;
+  setValue?: (value: string | string[]) => void;
 }
 export interface UseSelectProps extends UsePopperProps {
   onChange: SelectOnChange;
@@ -1177,5 +1178,6 @@ export function useMultiSelect(
     value,
     options,
     onChange,
+    setValue,
   };
 }

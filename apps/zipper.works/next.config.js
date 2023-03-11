@@ -47,8 +47,12 @@ module.exports = getConfig({
   async rewrites() {
     return [
       {
-        source: '/run/:path*',
-        destination: `${process.env.RELAY_URL}/:path*`,
+        source: '/run/:slug/:version/:path*',
+        destination: `${
+          process.env.NODE_ENV === 'production' ? 'https' : 'http'
+        }://:slug.${
+          process.env.NEXT_PUBLIC_OUTPUT_SERVER_HOSTNAME
+        }/@:version/call`,
       },
     ];
   },

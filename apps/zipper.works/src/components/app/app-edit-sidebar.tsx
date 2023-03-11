@@ -10,11 +10,18 @@ import {
   Text,
   Code,
   Progress,
+  Heading,
 } from '@chakra-ui/react';
-import { useEffect, useState } from 'react';
-import { FunctionInputs, FunctionOutput } from '@zipper/ui';
+import { useEffect, useMemo, useState } from 'react';
+import {
+  FunctionInputs,
+  FunctionOutput,
+  FunctionUserConnectors,
+} from '@zipper/ui';
 import { LogLine } from '~/components/app/log-line';
 import { useRunAppContext } from '../context/run-app-context';
+import { trpc } from '~/utils/trpc';
+import { useRouter } from 'next/router';
 
 export function AppEditSidebar({
   showInputForm = true,
@@ -36,7 +43,62 @@ export function AppEditSidebar({
     formMethods,
     isRunning,
     result,
+    userAuthConnectors,
+    appInfo,
   } = useRunAppContext();
+
+  const router = useRouter();
+  const context = trpc.useContext();
+  const deleteConnectorUserAuth = trpc.useMutation(
+    'connector.slack.deleteUserAuth',
+    {
+      onSuccess: () => {
+        context.invalidateQueries([
+          'app.byResourceOwnerAndAppSlugs',
+          {
+            appSlug: router.query['app-slug'] as string,
+            resourceOwnerSlug: router.query['resource-owner'] as string,
+          },
+        ]);
+      },
+    },
+  );
+
+  // state to hold whether user needs to authenticate with slack
+  const [slackAuthRequired, setSlackAuthRequired] = useState(false);
+
+  // get the existing Slack connector data from the database
+  const slackConnector = trpc.useQuery(
+    ['connector.slack.get', { appId: appInfo.id }],
+    {
+      enabled: slackAuthRequired,
+    },
+  );
+
+  // get the Slack auth URL -- if required --from the backend
+  // (it includes an encrypted state value that links the auth request to the app)
+  const slackAuthURL = trpc.useQuery(
+    [
+      'connector.slack.getAuthUrl',
+      {
+        appId: appInfo.id,
+        scopes: {
+          bot: slackConnector.data?.workspaceScopes || [],
+          user: slackConnector.data?.userScopes || [],
+        },
+        postInstallationRedirect: window.location.href,
+      },
+    ],
+    {
+      enabled: slackConnector.isFetched,
+    },
+  );
+
+  useEffect(() => {
+    if (userAuthConnectors.find((c) => c.type === 'slack')) {
+      setSlackAuthRequired(true);
+    }
+  }, []);
 
   const logs = appEventsQuery?.data?.map((event: any) => event.eventPayload);
 
@@ -44,6 +106,8 @@ export function AppEditSidebar({
     // don't switch over on the intial load
     if (lastRunVersion) setTabIndex(0);
   }, [lastRunVersion]);
+
+  const output = useMemo(() => <FunctionOutput result={result} />, [result]);
 
   return (
     <Tabs
@@ -67,26 +131,51 @@ export function AppEditSidebar({
           <TabPanel p={0}>
             <Box overflowX="visible" overflowY="scroll">
               {/** @todo make this height thing less jank */}
-              <Box p={4} backgroundColor="gray.100" position="relative">
-                {inputParams && inputParams.length ? (
-                  <FunctionInputs
-                    params={inputParams || []}
-                    defaultValues={{}}
-                    formContext={formMethods}
+              {userAuthConnectors.length > 0 && (
+                <Box
+                  p={4}
+                  mb="4"
+                  backgroundColor="gray.100"
+                  position="relative"
+                >
+                  <FunctionUserConnectors
+                    userAuthConnectors={userAuthConnectors}
+                    slack={{
+                      authUrl: slackAuthURL.data?.url || '#',
+                      onDelete: () => {
+                        deleteConnectorUserAuth.mutateAsync({
+                          appId: appInfo.id,
+                        });
+                      },
+                    }}
                   />
-                ) : (
-                  <>
-                    <Text>
-                      Add parameters to your main function and they'll show up
-                      here. Here's an example:
-                    </Text>
-                    <Code my="5">
-                      {`async function main({greeting}: {greeting: string}) {
+                </Box>
+              )}
+              <Box p={4} backgroundColor="gray.100" position="relative">
+                <>
+                  <Heading size="sm" mb="4">
+                    Inputs
+                  </Heading>
+                  {inputParams && inputParams.length ? (
+                    <FunctionInputs
+                      params={inputParams || []}
+                      defaultValues={{}}
+                      formContext={formMethods}
+                    />
+                  ) : (
+                    <>
+                      <Text>
+                        Add parameters to your main function and they'll show up
+                        here. Here's an example:
+                      </Text>
+                      <Code my="5">
+                        {`async function main({greeting}: {greeting: string}) {
                       ...
                     }`}
-                    </Code>
-                  </>
-                )}
+                      </Code>
+                    </>
+                  )}
+                </>
                 {isRunning && (
                   <Progress
                     colorScheme="purple"
@@ -101,11 +190,7 @@ export function AppEditSidebar({
                 )}
               </Box>
 
-              {result && (
-                <Box mt={4}>
-                  <FunctionOutput result={result} />
-                </Box>
-              )}
+              {result && <Box mt={4}>{output}</Box>}
             </Box>
           </TabPanel>
         )}

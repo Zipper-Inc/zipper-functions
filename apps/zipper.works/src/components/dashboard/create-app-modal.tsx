@@ -28,7 +28,7 @@ import { FormProvider, useForm } from 'react-hook-form';
 import { HiExclamationTriangle } from 'react-icons/hi2';
 import slugify from '~/utils/slugify';
 import { trpc } from '~/utils/trpc';
-import { generateDefaultName } from '~/utils/generate-default';
+import { generateDefaultSlug } from '~/utils/generate-default';
 import { HiGlobe } from 'react-icons/hi';
 import { useOrganization, useOrganizationList } from '@clerk/nextjs';
 import { OrganizationSelector } from './organization-selector';
@@ -40,7 +40,7 @@ type Props = {
 };
 
 const getDefaultCreateAppFormValues = () => ({
-  name: generateDefaultName(),
+  name: generateDefaultSlug(),
   description: '',
   isPublic: false,
 });

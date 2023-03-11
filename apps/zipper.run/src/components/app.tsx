@@ -6,8 +6,9 @@ import {
   ZipperLogo,
   FunctionOutput,
   useCmdOrCtrl,
+  FunctionUserConnectors,
 } from '@zipper/ui';
-import { AppInfo, InputParams } from '@zipper/types';
+import { AppInfo, InputParams, UserAuthConnector } from '@zipper/types';
 import getAppInfo from '~/utils/get-app-info';
 import getValidSubdomain from '~/utils/get-valid-subdomain';
 import { VERSION_DELIMETER } from '~/utils/get-version-from-url';
@@ -24,20 +25,30 @@ import {
 import Head from 'next/head';
 import { useForm } from 'react-hook-form';
 import { getInputValuesFromUrl } from '../utils/get-input-values-from-url';
+import { useRouter } from 'next/router';
+import { encryptToHex } from '@zipper/utils';
+import { deleteCookie } from 'cookies-next';
 
 const { __DEBUG__ } = process.env;
 
 export function AppPage({
   app,
   inputs,
+  userAuthConnectors,
   version = app.lastDeploymentVersion || Date.now().toString(32),
   defaultValues,
+  slackAuthUrl,
+  host,
 }: {
   app: AppInfo;
   inputs: InputParams;
+  userAuthConnectors: UserAuthConnector[];
   version?: string;
   defaultValues?: Record<string, any>;
+  slackAuthUrl?: string;
+  host: string;
 }) {
+  const router = useRouter();
   const appTitle = app.name || app.slug;
   const formContext = useForm({ defaultValues });
   const [result, setResult] = useState('');
@@ -104,9 +115,27 @@ export function AppPage({
             {app.description}
           </Text>
         )}
-        <Box bg="gray.100" px={8} py={4}>
-          <FunctionInputs params={inputs} formContext={formContext} />
-          <Divider orientation="horizontal" my={4} />
+        {userAuthConnectors.length > 0 && (
+          <Box bg="gray.100" px={9} py={4}>
+            <FunctionUserConnectors
+              userAuthConnectors={userAuthConnectors}
+              slack={{
+                authUrl: slackAuthUrl || '#',
+                onDelete: () => {
+                  deleteCookie('__zipper_user_id');
+                  router.reload();
+                },
+              }}
+            />
+          </Box>
+        )}
+        <Box bg="gray.100" px={8} py={4} mt={4}>
+          {inputs.length > 0 && (
+            <>
+              <FunctionInputs params={inputs} formContext={formContext} />
+              <Divider orientation="horizontal" my={4} />
+            </>
+          )}
           <Flex>
             <ButtonGroup>
               <Button colorScheme="purple" onClick={runApp}>
@@ -161,11 +190,11 @@ export const getServerSideProps: GetServerSideProps = async ({
     return { notFound: true };
 
   // grab the app if it exists
-  const result = await getAppInfo(subdomain);
+  const result = await getAppInfo(subdomain, req.cookies['__zipper_user_id']);
   if (__DEBUG__) console.log('getAppInfo', { result });
   if (!result.ok) return { notFound: true };
 
-  const { app, inputs } = result.data;
+  const { app, inputs, userAuthConnectors } = result.data;
   const version =
     versionFromUrl ||
     app.lastDeploymentVersion?.toString() ||
@@ -174,14 +203,46 @@ export const getServerSideProps: GetServerSideProps = async ({
   const defaultValues = getInputValuesFromUrl(inputs, req.url);
   if (__DEBUG__) console.log({ defaultValues });
 
-  return {
+  const propsToReturn = {
     props: {
       app,
       inputs,
       version,
       defaultValues,
+      userAuthConnectors,
+      host,
     },
   };
+
+  const connectorsMissingAuth = userAuthConnectors
+    .filter((c) => c.isUserAuthRequired)
+    .filter((c) => c.appConnectorUserAuths.length === 0)
+    .map((c) => c.type);
+
+  if (connectorsMissingAuth.includes('slack')) {
+    const slackConnector = userAuthConnectors.find((c) => c.type === 'slack');
+    if (slackConnector) {
+      const state = encryptToHex(
+        `${app.id}::${
+          process.env.NODE_ENV === 'development' ? 'http://' : 'https://'
+        }${req.headers.host}::${req.cookies['__zipper_user_id']}`,
+        process.env.ENCRYPTION_KEY || '',
+      );
+
+      const url = new URL('https://slack.com/oauth/v2/authorize');
+      url.searchParams.set(
+        'client_id',
+        process.env.NEXT_PUBLIC_SLACK_CLIENT_ID!,
+      );
+      url.searchParams.set('scope', slackConnector.workspaceScopes.join(','));
+      url.searchParams.set('user_scope', slackConnector.userScopes.join(','));
+      url.searchParams.set('state', state);
+
+      return { props: { ...propsToReturn.props, slackAuthUrl: url.href } };
+    }
+  }
+
+  return propsToReturn;
 };
 
 export default withDefaultTheme(AppPage);

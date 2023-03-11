@@ -5,7 +5,7 @@ import pako from 'pako';
 import { PassThrough } from 'stream';
 import ndjson from 'ndjson';
 import intoStream from 'into-stream';
-import { decryptFromBase64 } from '~/server/utils/crypto.utils';
+import { decryptFromBase64 } from '@zipper/utils';
 import { prisma } from '~/server/prisma';
 
 const X_DENO_CONFIG = 'x-deno-config';
@@ -66,7 +66,7 @@ const __storage = {
     }' + path, { headers: {'x-zipper-hmac': hmac, 'x-timestamp': timestamp} } );
 
     const result = await res.json();
-    return key ? result.value : result; 
+    return key ? result.value : result;
   },
   set: async (key: string, value: unknown) => {
     let path = '/api/app/${appId}/storage';
@@ -107,7 +107,7 @@ const fn = typeof main === 'undefined' ? () => {
 const jsonHeader = (json, fallback = "JSON too big") => {
   try {
     const str = JSON.stringify(json);
-    if (str.length < 2000) return str; 
+    if (str.length < 2000) return str;
   } catch (e) {}
   return fallback;
 }
@@ -336,7 +336,7 @@ async function originBoot({
   req: NextApiRequest;
   id: string;
 }) {
-  const [appId, version] = deploymentId.split('@');
+  const [appId, version, userId] = deploymentId.split('@');
 
   if (!appId || !version) {
     console.error('Missing appId and version');
@@ -351,6 +351,11 @@ async function originBoot({
       scripts: true,
       scriptMain: true,
       secrets: true,
+      connectors: {
+        include: {
+          appConnectorUserAuths: { where: { userIdOrTempId: userId } },
+        },
+      },
     },
   });
 
@@ -380,6 +385,16 @@ async function originBoot({
       secret.encryptedValue,
       process.env.ENCRYPTION_KEY,
     );
+  });
+
+  app.connectors.forEach((connector) => {
+    connector.appConnectorUserAuths.forEach((auth) => {
+      secretsMap[`${auth.connectorType.toUpperCase()}_USER_TOKEN`] =
+        decryptFromBase64(
+          auth.encryptedAccessToken,
+          process.env.ENCRYPTION_KEY,
+        );
+    });
   });
 
   // Boot metadata

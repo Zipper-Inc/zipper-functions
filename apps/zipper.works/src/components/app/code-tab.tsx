@@ -7,6 +7,7 @@ import dynamic from 'next/dynamic';
 import { useEditorContext } from '../context/editor-context';
 import { useRunAppContext } from '../context/run-app-context';
 import { ConnectorId } from '~/connectors/createConnector';
+import { AppQueryOutput } from '~/types/trpc';
 
 export const PlaygroundEditor = dynamic(() => import('./playground-editor'), {
   ssr: false,
@@ -34,7 +35,13 @@ const ConnectorSidebarTips = (connectorId?: string | null) => {
 const APPROXIMATE_HEADER_HEIGHT_PX = '120px';
 const MAX_CODE_TAB_HEIGHT = `calc(100vh - ${APPROXIMATE_HEADER_HEIGHT_PX})`;
 
-export function CodeTab({ app, mainScript }: { app: any; mainScript: any }) {
+export function CodeTab({
+  app,
+  mainScript,
+}: {
+  app: AppQueryOutput;
+  mainScript: any;
+}) {
   const { currentScript, save, onChange } = useEditorContext();
   const { run } = useRunAppContext();
 

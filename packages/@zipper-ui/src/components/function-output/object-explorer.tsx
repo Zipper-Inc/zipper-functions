@@ -32,12 +32,13 @@ function ObjectExplorerRow({
     >
       <HStack
         flex={1}
-        minWidth={0}
+        flexBasis={'auto'}
+        minW="200px"
         overflow="auto"
         whiteSpace="nowrap"
         justifyContent="space-between"
       >
-        <Heading py={6} size="md" color="gray.600" fontWeight={300}>
+        <Heading py={6} size="sm" color="gray.600" fontWeight={300}>
           {heading}
         </Heading>
         {shouldCollapse && (
@@ -63,9 +64,11 @@ function ObjectExplorerRow({
           </Collapse>
         </Box>
       ) : (
-        <Text py={6} size="sm" flex={5}>
-          {data.toString()}
-        </Text>
+        <Box>
+          <Text py={6} size="sm" flex={5} maxW={'xl'} noOfLines={1}>
+            {data.toString()}
+          </Text>
+        </Box>
       )}
     </HStack>
   );
@@ -79,7 +82,7 @@ export function ObjectExplorer({
   level: number;
 }) {
   return (
-    <Box>
+    <Box display="block" overflowX="auto">
       {Object.keys(data).map((key) => (
         <ObjectExplorerRow
           key={key}

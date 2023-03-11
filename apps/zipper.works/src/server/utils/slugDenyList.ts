@@ -16,6 +16,7 @@ const denyList = [
   'learn',
   'org',
   'organization',
+  'run',
   'sign-in',
   'sign-out',
   'sign-up',
