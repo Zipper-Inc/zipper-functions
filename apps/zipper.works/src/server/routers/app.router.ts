@@ -202,7 +202,7 @@ export const appRouter = createRouter()
         }
         return arr;
         // eslint-disable-next-line prettier/prettier
-      }, [] as ((typeof apps)[0] & { resourceOwner: ResourceOwnerSlug })[]);
+      }, [] as (typeof apps[0] & { resourceOwner: ResourceOwnerSlug })[]);
     },
   })
   .query('byAuthedUser', {
@@ -255,7 +255,7 @@ export const appRouter = createRouter()
         }
         return arr;
         // eslint-disable-next-line prettier/prettier
-      }, [] as ((typeof apps)[0] & { resourceOwner: ResourceOwnerSlug })[]);
+      }, [] as (typeof apps[0] & { resourceOwner: ResourceOwnerSlug })[]);
     },
   })
   .query('byId', {
@@ -340,7 +340,21 @@ export const appRouter = createRouter()
           scriptMain: { include: { script: true } },
           editors: true,
           settings: true,
-          connectors: true,
+          connectors: {
+            select: {
+              appId: true,
+              type: true,
+              isUserAuthRequired: true,
+              userScopes: true,
+              workspaceScopes: true,
+              appConnectorUserAuths: {
+                where: {
+                  userIdOrTempId:
+                    ctx.userId || (ctx.req?.cookies as any)['__zipper_user_id'],
+                },
+              },
+            },
+          },
         },
       });
 

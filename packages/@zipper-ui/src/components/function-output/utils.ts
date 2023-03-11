@@ -16,7 +16,7 @@ export function parseResult(result: any): { type: OutputType; data: any } {
   if (!data || isPrimitive(data))
     return {
       type: isHtml(result) ? OutputType.Html : OutputType.String,
-      data: result,
+      data: result.toString(),
     };
 
   let type = OutputType.Object;

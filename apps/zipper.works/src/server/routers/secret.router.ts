@@ -6,7 +6,7 @@ import {
   hasAppEditPermission,
   hasAppReadPermission,
 } from '../utils/authz.utils';
-import { encryptToBase64 } from '../utils/crypto.utils';
+import { encryptToBase64 } from '@zipper/utils';
 
 const defaultSelect = Prisma.validator<Prisma.SecretSelect>()({
   id: true,

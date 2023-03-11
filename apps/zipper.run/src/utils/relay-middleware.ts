@@ -72,19 +72,27 @@ export async function relayRequest(request: NextRequest) {
   if (__DEBUG__) console.log('getValidSubdomain', { host, subdomain });
   if (!subdomain) return { status: 404 };
 
+  const zipperUserId = request.cookies
+    .get('__zipper_user_id')
+    ?.value.toString();
   // Get app info from Zipper API
-  const appInfoResult = await getAppInfo(subdomain);
+  const appInfoResult = await getAppInfo(subdomain, zipperUserId);
   if (__DEBUG__) console.log('getAppInfo', { result: appInfoResult });
-  if (!appInfoResult.ok) return { status: 404 };
+
+  if (!appInfoResult.ok) return { status: 500, result: appInfoResult.error };
+
+  const { app, userAuthConnectors } = appInfoResult.data;
 
   // Get a version from URL or use the latest
   const version =
     getVersionFromUrl(request.url) ||
-    appInfoResult.data.app.lastDeploymentVersion ||
+    app.lastDeploymentVersion ||
     Date.now().toString(32);
 
-  const { app } = appInfoResult.data;
-  const deploymentId = `${app.id}@${version}`;
+  let deploymentId = `${app.id}@${version}`;
+  if (userAuthConnectors.find((c) => c.isUserAuthRequired)) {
+    deploymentId = `${deploymentId}@${zipperUserId}`;
+  }
 
   const relayUrl = getPatchedUrl(request);
   const relayBody = request.method === 'GET' ? undefined : await request.text();
