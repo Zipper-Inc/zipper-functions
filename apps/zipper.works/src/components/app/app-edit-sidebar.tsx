@@ -257,14 +257,9 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
                   bottom={0}
                 />
               )}
-              {result && <Box mt={4}>{output}</Box>}
             </Box>
 
-            {result && (
-              <Box mt={4} flex={1}>
-                <FunctionOutput result={result} />
-              </Box>
-            )}
+            {result && <Box mt={4}>{output}</Box>}
           </TabPanel>
         )}
 

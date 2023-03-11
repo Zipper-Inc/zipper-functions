@@ -4,6 +4,7 @@ import {
   TabPanels,
   TabPanel,
   ChakraProps,
+  Box,
 } from '@chakra-ui/react';
 import { Props } from './types';
 import { RawFunctionOutput } from './raw-function-output';
@@ -52,7 +53,11 @@ export function FunctionOutput({ result, level = 0 }: Props) {
           borderBottomRadius={'md'}
         >
           <TabPanel>
-            <SmartFunctionOutput result={result} level={level} />
+            <Box overflow="auto">
+              <Box width="max-content">
+                <SmartFunctionOutput result={result} level={level} />
+              </Box>
+            </Box>
           </TabPanel>
           <TabPanel backgroundColor="gray.100">
             <RawFunctionOutput result={result} />
