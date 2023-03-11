@@ -6,7 +6,7 @@
 import clerkClient from '@clerk/clerk-sdk-node';
 import { Prisma, PrismaClient } from '@prisma/client';
 import { ResourceOwnerType } from '@zipper/types';
-import generate from 'project-name-generator';
+import { generateSlug } from 'random-word-slugs';
 import slugify from 'slugify';
 
 const prisma = new PrismaClient();
@@ -19,7 +19,7 @@ async function main() {
 
   await prisma.resourceOwnerSlug.create({
     data: {
-      slug: generate({ words: 2 }).dashed.toLowerCase(),
+      slug: generateSlug(2, { format: 'kebab' }).toLowerCase(),
       resourceOwnerId,
       resourceOwnerType: 0,
     },

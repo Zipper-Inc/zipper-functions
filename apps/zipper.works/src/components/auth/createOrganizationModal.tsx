@@ -28,6 +28,7 @@ import { HiExclamationTriangle } from 'react-icons/hi2';
 import { ResourceOwnerType } from '@zipper/types';
 
 const MIN_SLUG_LENGTH = 3;
+const MAX_SLUG_LENGTH = 50;
 
 export const CreateOrganizationModal = ({
   isOpen,
@@ -100,17 +101,19 @@ export const CreateOrganizationModal = ({
                   value={organizationName}
                   onChange={(e) => setOrganizationName(e.currentTarget.value)}
                 />
-                {slug && slug.length >= MIN_SLUG_LENGTH && (
-                  <InputRightElement
-                    children={
-                      slugExists ? (
-                        <Icon as={HiExclamationTriangle} color="red.500" />
-                      ) : (
-                        <CheckIcon color="green.500" />
-                      )
-                    }
-                  />
-                )}
+                {slug &&
+                  slug.length >= MIN_SLUG_LENGTH &&
+                  slug.length <= MAX_SLUG_LENGTH && (
+                    <InputRightElement
+                      children={
+                        slugExists ? (
+                          <Icon as={HiExclamationTriangle} color="red.500" />
+                        ) : (
+                          <CheckIcon color="green.500" />
+                        )
+                      }
+                    />
+                  )}
               </InputGroup>
 
               {slugExists ? (
@@ -121,20 +124,33 @@ export const CreateOrganizationModal = ({
                 </>
               ) : (
                 <>
-                  {organizationName.length > 0 && slug && slug.length > 2 && (
-                    <>
-                      <FormHelperText>
-                        This will be your account name on Zipper.
-                      </FormHelperText>
-                      <FormHelperText>{`The url for your organization will be: ${process.env.NEXT_PUBLIC_HOST}/${slug}`}</FormHelperText>
-                    </>
-                  )}
+                  {organizationName.length > 0 &&
+                    slug &&
+                    slug.length >= MAX_SLUG_LENGTH &&
+                    slug.length <= MAX_SLUG_LENGTH && (
+                      <>
+                        <FormHelperText>
+                          This will be your account name on Zipper.
+                        </FormHelperText>
+                        <FormHelperText>{`The url for your organization will be: ${process.env.NEXT_PUBLIC_HOST}/${slug}`}</FormHelperText>
+                      </>
+                    )}
 
                   {organizationName.length > 0 &&
                     (!slug || slug.length < MIN_SLUG_LENGTH) && (
                       <>
                         <FormHelperText>
                           {`The name must contain at least ${MIN_SLUG_LENGTH} alphanumeric
+                        characters.`}
+                        </FormHelperText>
+                      </>
+                    )}
+
+                  {organizationName.length > 0 &&
+                    slug.length > MAX_SLUG_LENGTH && (
+                      <>
+                        <FormHelperText>
+                          {`The name must be shorter than ${MAX_SLUG_LENGTH} alphanumeric
                         characters.`}
                         </FormHelperText>
                       </>
@@ -151,7 +167,11 @@ export const CreateOrganizationModal = ({
             <Button
               colorScheme="purple"
               type="submit"
-              isDisabled={slugExists || slug.length < MIN_SLUG_LENGTH}
+              isDisabled={
+                slugExists ||
+                slug.length < MIN_SLUG_LENGTH ||
+                slug.length > MAX_SLUG_LENGTH
+              }
             >
               Create
             </Button>

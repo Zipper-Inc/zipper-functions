@@ -1,4 +1,4 @@
-import { useRef, useState, ReactElement } from 'react';
+import { useRef } from 'react';
 import {
   Box,
   Flex,
@@ -17,10 +17,9 @@ import {
   NumberIncrementStepper,
   NumberDecrementStepper,
   Button,
-  Icon,
   useDisclosure,
 } from '@chakra-ui/react';
-import { VscAdd, VscClose } from 'react-icons/vsc';
+import { VscAdd } from 'react-icons/vsc';
 import { FieldValues, UseFormReturn, RegisterOptions } from 'react-hook-form';
 import { InputType, InputParam } from '@zipper/types';
 

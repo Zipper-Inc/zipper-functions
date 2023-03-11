@@ -30,6 +30,30 @@ export const appConnectorRouter = createRouter()
       });
     },
   })
+  .mutation('update', {
+    input: z.object({
+      appId: z.string(),
+      type: z.string(),
+      data: z.object({
+        metadata: z.record(z.any()).optional(),
+        isUserAuthRequired: z.boolean().optional(),
+        userScopes: z.array(z.string()).optional(),
+        workspaceScopes: z.array(z.string()).optional(),
+      }),
+    }),
+    async resolve({ ctx, input }) {
+      const { appId, type, data } = input;
+      await hasAppEditPermission({
+        ctx,
+        appId: input.appId,
+      });
+
+      return prisma.appConnector.update({
+        where: { appId_type: { appId, type } },
+        data,
+      });
+    },
+  })
   // delete
   .mutation('delete', {
     input: z.object({

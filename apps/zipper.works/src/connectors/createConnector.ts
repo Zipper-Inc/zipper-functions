@@ -5,6 +5,8 @@ export type Connector = {
   name: string;
   icon?: ReactElement;
   code?: string;
+  workspaceScopes?: string[];
+  userScopes?: string[];
 };
 
 export type ConnectorId = 'github' | 'slack';
@@ -14,12 +16,16 @@ export const createConnector = ({
   name,
   code,
   icon,
+  workspaceScopes,
+  userScopes,
 }: Connector): Connector => {
   return {
     id,
     name,
     code,
     icon,
+    workspaceScopes,
+    userScopes,
   };
 };
 

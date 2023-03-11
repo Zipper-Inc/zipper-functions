@@ -1,4 +1,5 @@
 import { InputParam } from './input-params';
+import { UserAuthConnector } from './user-auth-connector';
 
 export type AppInfo = {
   id: string;
@@ -11,7 +12,11 @@ export type AppInfo = {
 
 export type InputParams = InputParam[];
 
-export type AppInfoAndInputParams = { app: AppInfo; inputs: InputParams };
+export type AppInfoAndInputParams = {
+  app: AppInfo;
+  userAuthConnectors: UserAuthConnector[];
+  inputs: InputParams;
+};
 
 export type AppInfoResult =
   | {
