@@ -95,11 +95,6 @@ const __storage = {
 
 const Zipper = { env: Deno.env, storage: __storage };
 
-const fn = typeof main === 'undefined' ? () => {
-  throw new Error('You must define a main function')
-}: main;
-
-
 /**
  * Makes sure JSON objects are not too big for headers
  * Headers should be capped under 8000 bytes
@@ -123,58 +118,59 @@ const getInputFromBody = async (req) => {
   }
 };
 
-addEventListener('fetch', async (event) => {
-  const input = await getInputFromBody(event.request);
+if(typeof main === 'function') {
+  addEventListener('fetch', async (event) => {
+    const input = await getInputFromBody(event.request);
 
-  const xZipperHeaders = {
-    'X-Zipper-Deployment-Id': '${appId}@${version}',
-    'X-Zipper-App-Slug': '${slug}',
-    'X-Zipper-Req-Url': event.request.url,
-    'X-Zipper-Req-Method': event.request.method,
-    'X-Zipper-App-Run-Input': jsonHeader(input, "See original request body"),
-  };
+    const xZipperHeaders = {
+      'X-Zipper-Deployment-Id': '${appId}@${version}',
+      'X-Zipper-App-Slug': '${slug}',
+      'X-Zipper-Req-Url': event.request.url,
+      'X-Zipper-Req-Method': event.request.method,
+      'X-Zipper-App-Run-Input': jsonHeader(input, "See original request body"),
+    };
 
-  try {
-    const output = await fn(input);
+    try {
+      const output = await main(input);
 
-    if (output instanceof Response) {
-      if (!output.headers.get('Content-Type'))
-        output.headers.set('Content-Type', '${DEFAULT_CONTENT_TYPE}')
-      Object.keys(xZipperHeaders).forEach((h) => {
-        output.headers.set(h, xZipperHeaders[h]);
-      });
-      event.respondWith(output);
-    } else if (typeof output === 'function') {
-      throw new Error('Function output cannot be a function.');
-    } else {
-      const isObject = typeof output === 'object';
+      if (output instanceof Response) {
+        if (!output.headers.get('Content-Type'))
+          output.headers.set('Content-Type', '${DEFAULT_CONTENT_TYPE}')
+        Object.keys(xZipperHeaders).forEach((h) => {
+          output.headers.set(h, xZipperHeaders[h]);
+        });
+        event.respondWith(output);
+      } else if (typeof output === 'function') {
+        throw new Error('Function output cannot be a function.');
+      } else {
+        const isObject = typeof output === 'object';
+        event.respondWith(
+          new Response(isObject ? JSON.stringify(output) : output, {
+            status: 200,
+            headers: {
+              ...xZipperHeaders,
+              ${/** @todo maybe better inference here, yolo */ ''}
+              'Content-Type': isObject ? 'application/json' : 'text/plain',
+            },
+          }),
+        );
+      }
+    } catch(error) {
+      const response = {
+        ok: false,
+        error,
+      };
+
+      console.error(error);
+
       event.respondWith(
-        new Response(isObject ? JSON.stringify(output) : output, {
-          status: 200,
-          headers: {
-            ...xZipperHeaders,
-            ${/** @todo maybe better inference here, yolo */ ''}
-            'Content-Type': isObject ? 'application/json' : 'text/plain',
-          },
+        new Response(JSON.stringify(response), {
+          status: 500,
         }),
       );
     }
-  } catch(error) {
-    const response = {
-      ok: false,
-      error,
-    };
-
-    console.error(error);
-
-    event.respondWith(
-      new Response(JSON.stringify(response), {
-        status: 500,
-        headers,
-      }),
-    );
-  }
-});
+  });
+};
 `;
 
 export default async function handler(
@@ -233,6 +229,7 @@ export default async function handler(
         intoStream(message)
           .pipe(ndjson.parse())
           .on('data', async (event) => {
+            console.log(event);
             await prisma.appEvent.create({
               data: {
                 deploymentId: event.deployment_id,
@@ -282,50 +279,52 @@ async function decodeAuthHeader(req: NextApiRequest) {
   }
 }
 
-const createEsZip = async ({ app, baseUrl }: { app: any; baseUrl: string }) => {
-  const mainScript = app.scripts.find(
-    ({ id }: any) => app.scriptMain?.scriptId === id,
-  );
-  return build(
-    [`${baseUrl}/${mainScript?.filename}`],
-    async (specifier: string) => {
-      console.log("ESZIP: '", specifier);
+const createEsZip = async ({
+  baseUrl,
+  entrypoint,
+}: {
+  baseUrl: string;
+  entrypoint: string;
+}) => {
+  return build([`${baseUrl}/${entrypoint}`], async (specifier: string) => {
+    console.log("ESZIP: '", specifier);
 
-      if (specifier.startsWith(baseUrl)) {
-        const response = await fetch(specifier, { credentials: 'same-origin' });
-        const content = await response.text();
-
-        return {
-          specifier,
-          headers: {
-            'content-type': 'text/typescript',
-          },
-          content,
-          kind: 'module',
-          version: '1.0.0',
-        };
-      }
-
-      const response = await fetch(specifier, { redirect: 'follow' });
-      if (response.status !== 200) {
-        // ensure the body is read as to not leak resources
-        await response.arrayBuffer();
-        return undefined;
-      }
-      const content = await response.text();
-      const headers: Record<string, string> = {};
-      response.headers.forEach((value, key) => {
-        headers[key.toLowerCase()] = value;
+    if (specifier.startsWith(baseUrl)) {
+      const response = await fetch(specifier, {
+        credentials: 'same-origin',
       });
+      const content = await response.text();
 
       return {
-        kind: 'module',
-        specifier: response.url,
-        headers,
+        specifier,
+        headers: {
+          'content-type': 'text/typescript',
+        },
         content,
+        kind: 'module',
+        version: '1.0.0',
       };
-    },
-  );
+    }
+
+    const response = await fetch(specifier, { redirect: 'follow' });
+    if (response.status !== 200) {
+      // ensure the body is read as to not leak resources
+      await response.arrayBuffer();
+      return undefined;
+    }
+    const content = await response.text();
+    const headers: Record<string, string> = {};
+    response.headers.forEach((value, key) => {
+      headers[key.toLowerCase()] = value;
+    });
+
+    return {
+      kind: 'module',
+      specifier: response.url,
+      headers,
+      content,
+    };
+  });
 };
 
 /** @todo use a real deployment id instead of an app id. deployment id should be app id and version or something */
@@ -336,12 +335,14 @@ async function originBoot({
   req: NextApiRequest;
   id: string;
 }) {
-  const [appId, version, userId] = deploymentId.split('@');
+  const [appIdAndFilename, version, userId] = deploymentId.split('@');
 
-  if (!appId || !version) {
+  if (!appIdAndFilename || !version) {
     console.error('Missing appId and version');
     return;
   }
+
+  const [appId, filename] = appIdAndFilename.split('+');
 
   const app = await prisma.app.findFirst({
     where: {
@@ -366,8 +367,8 @@ async function originBoot({
   const proto = req.headers['x-forwarded-proto'] || 'http';
 
   const eszip = await createEsZip({
-    app,
     baseUrl: `${proto}://${req.headers.host}/api/app/${appId}/${version}`,
+    entrypoint: filename || 'main.ts',
   });
 
   // await fs.writeFile(`/tmp/${deploymentId}.eszip`, eszip, () => {
@@ -400,7 +401,7 @@ async function originBoot({
   // Boot metadata
   const isolateConfig = {
     // Source URL that will be used for import.meta.url of the entrypoint.
-    entrypoint: `https://${req.headers.host}/api/app/${appId}/${version}/main.ts`,
+    entrypoint: `https://${req.headers.host}/api/app/${appId}/${version}/${filename}`,
 
     envs: secretsMap,
 

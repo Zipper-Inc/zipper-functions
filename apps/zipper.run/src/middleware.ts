@@ -2,20 +2,26 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import serveRelay from './utils/relay-middleware';
-import getVersionFromUrl, {
-  VERSION_DELIMETER,
-} from './utils/get-version-from-url';
 import jsonHandler from './api-handlers/json.handler';
 import yamlHandler from './api-handlers/yaml.handler';
+import {
+  FILENAME_DELIMETER,
+  getFilenameFromUrl,
+  getVersionFromUrl,
+  VERSION_DELIMETER,
+} from './utils/get-values-from-url';
 
 const { __DEBUG__ } = process.env;
 
 export default async function middleware(request: NextRequest) {
   const version = getVersionFromUrl(request.url);
+  const filename = getFilenameFromUrl(request.url);
   const versionPath = version ? `/${VERSION_DELIMETER}${version}` : '';
+  const filenamePath = filename ? `/${FILENAME_DELIMETER}${filename}` : '';
 
   /** Path after app-slug.zipper.run/@version */
-  const appRoute = request.nextUrl.pathname.replace(versionPath, '') || '/';
+  let appRoute = request.nextUrl.pathname.replace(versionPath, '') || '/';
+  appRoute = appRoute.replace(filenamePath, '') || '/';
 
   if (__DEBUG__) console.log('middleware', { appRoute });
 

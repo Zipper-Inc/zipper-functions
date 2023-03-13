@@ -5,7 +5,7 @@ import addAppRun from './add-app-run';
 import getAppInfo from './get-app-info';
 import getInputFromRequest from './get-input-from-request';
 import getValidSubdomain from './get-valid-subdomain';
-import getVersionFromUrl from './get-version-from-url';
+import { getFilenameFromUrl, getVersionFromUrl } from './get-values-from-url';
 
 const { __DEBUG__, SHARED_SECRET: DENO_SHARED_SECRET, RPC_HOST } = process.env;
 
@@ -89,7 +89,9 @@ export async function relayRequest(request: NextRequest) {
     app.lastDeploymentVersion ||
     Date.now().toString(32);
 
-  let deploymentId = `${app.id}@${version}`;
+  const filename = getFilenameFromUrl(request.url) || 'main.ts';
+
+  let deploymentId = `${app.id}+${filename}@${version}`;
   if (userAuthConnectors.find((c) => c.isUserAuthRequired)) {
     deploymentId = `${deploymentId}@${zipperUserId}`;
   }

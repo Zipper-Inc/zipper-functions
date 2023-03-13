@@ -11,7 +11,7 @@ import {
 import { AppInfo, InputParams, UserAuthConnector } from '@zipper/types';
 import getAppInfo from '~/utils/get-app-info';
 import getValidSubdomain from '~/utils/get-valid-subdomain';
-import { VERSION_DELIMETER } from '~/utils/get-version-from-url';
+import { VERSION_DELIMETER } from '~/utils/get-values-from-url';
 import {
   Box,
   Heading,
@@ -38,7 +38,6 @@ export function AppPage({
   version = app.lastDeploymentVersion || Date.now().toString(32),
   defaultValues,
   slackAuthUrl,
-  host,
 }: {
   app: AppInfo;
   inputs: InputParams;
@@ -46,7 +45,6 @@ export function AppPage({
   version?: string;
   defaultValues?: Record<string, any>;
   slackAuthUrl?: string;
-  host: string;
 }) {
   const router = useRouter();
   const appTitle = app.name || app.slug;
@@ -210,7 +208,6 @@ export const getServerSideProps: GetServerSideProps = async ({
       version,
       defaultValues,
       userAuthConnectors,
-      host,
     },
   };
 
