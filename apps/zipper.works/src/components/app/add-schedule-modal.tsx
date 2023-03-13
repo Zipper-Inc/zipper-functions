@@ -94,7 +94,7 @@ export const AddScheduleModal: React.FC<AddScheduleModalProps> = ({
             <Text size="sm">Inputs for this scheduled run:</Text>
             <VStack
               flex={1}
-              background="neutral.50"
+              background="gray.100"
               p="4"
               borderRadius="12"
               alignItems="stretch"
