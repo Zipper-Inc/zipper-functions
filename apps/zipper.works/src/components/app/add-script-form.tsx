@@ -24,7 +24,7 @@ export default function AddScriptForm({
   onCreate,
 }: {
   appId: string;
-  connectors: AppConnector[];
+  connectors: Pick<AppConnector, 'type'>[];
   onCreate: VoidFunction;
 }) {
   const { register, handleSubmit, reset, watch } = useForm();

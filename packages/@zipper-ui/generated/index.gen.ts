@@ -8,6 +8,7 @@ export * from '../src/components/function-output/types';
 export * from '../src/components/function-output/utils';
 export * from '../src/components/error-boundary';
 export * from '../src/components/function-inputs';
+export * from '../src/components/function-user-connectors-input';
 export * from '../src/components/MultiSelect';
 export * from '../src/components/tab-button';
 export * from '../src/components/zipper-logo';

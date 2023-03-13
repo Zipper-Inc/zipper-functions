@@ -1,6 +1,26 @@
-# Turborepo starter
+# Zipper 
 
-This is an official Yarn v1 starter turborepo.
+Welcome to the Zipper Functions repo. If you can see this file, you're in our trusted circle. Thank you for helping us build something great.
+
+First off, some terminology: 
+1. **Zipper** is the name of the company and the product
+2. **Zipper Functions** is the name of the repo. We've pivoted the company and already had a repo named Zipper. 
+3. **Apps** are the things people create on Zipper - they have a URL, inputs, and outputs. They are made up of multiple files. Files have functions. 
+4. **Internal tools** refers to software that's written and used within a company to automate processes, share information, or codify some part of their culture.
+
+## Motivation
+We want to empower people to write simple, creative software that makes their work lives better. We're doing this by removing a lot of the cruft around writing and deploying modern software (frontend frameworks, complex integrations, and authz/authn) so that people can focus on the problem they want to solve. 
+
+## Our stack
+- Database: Postgres accessed via Prisma
+- KV store: Redis
+- Frontend/Backend: Next.js
+- Backend APIs: tRPC
+- Monorepo: Turbo
+- Auth: Clerk.dev
+- UI components: Chakra
+- Testing: Jest
+- Code runner: Deno subhosting (SaaS service)
 
 ## What's inside?
 
@@ -8,11 +28,11 @@ This turborepo uses [Yarn](https://classic.yarnpkg.com/) as a package manager. I
 
 ### Apps and Packages
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `ui`: a stub React component library shared by both `web` and `docs` applications
-- `eslint-config-custom`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `tsconfig`: `tsconfig.json`s used throughout the monorepo
+- `zipper.works`: a [Next.js](https://nextjs.org/) app where users can log in, browse apps, create apps, and write code
+- `zipper.run`: a [Next.js](https://nextjs.org/) app that communicates with Deno Subhosting to start an app, gets the results, and provides different ways to view the output. It also handles routing to the public facing URLs for apps (app-slug.zipper.run)
+- `@zipper/ui`: a React component library shared by both `zipper.works` and `zipper.run` applications
+- `@zipper/types`: a library of typescript types that are shared by both `zipper.works` and `zipper.run`
+- `@zipper/utils`: common utilities that are shared across both apps
 
 Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
 
@@ -24,50 +44,23 @@ This turborepo has some additional tools already setup for you:
 - [ESLint](https://eslint.org/) for code linting
 - [Prettier](https://prettier.io) for code formatting
 
-### Build
+### Tests?
 
-To build all apps and packages, run the following command:
+Have we made some money yet? If not, it's probably not worth it unless:
 
-```
-cd my-turborepo
-yarn run build
-```
+- they're being used to validate that something really critical is working (think authz and authn)
+- documenting complex and brittle code that we know is hacky and likely to break
 
-### Develop
+Tests should live in the same folder as the code that's being tested. 
 
-To develop all apps and packages, run the following command:
 
-```
-cd my-turborepo
-yarn run dev
-```
+## Getting started
 
-### Remote Caching
+1. Make sure you have Docker, Node (we're using v18.x LTS), and ngrok installed
+1. Clone this repo (`git clone https://github.com/Zipper-Inc/zipper-functions`)
+1. Start ngrok (`ngrok http 3000 --subdomain [yourname].zipper`) - chat to Sachin or Ibu to get you access to ngrok. 
+1. Copy `.env.example` to `.env.local` (`cp .env.example .env.local`) - you'll be missing some environment variables so ping either Sachin or Ibu for them
+1. Start the databases using Docker Compose (`docker-compose up`)
+1. Run `yarn dev` to start both apps
 
-Turborepo can use a technique known as [Remote Caching](https://turbo.build/repo/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup), then enter the following commands:
-
-```
-cd my-turborepo
-npx turbo login
-```
-
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
-
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your turborepo:
-
-```
-npx turbo link
-```
-
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turbo.build/repo/docs/core-concepts/monorepos/running-tasks)
-- [Caching](https://turbo.build/repo/docs/core-concepts/caching)
-- [Remote Caching](https://turbo.build/repo/docs/core-concepts/remote-caching)
-- [Filtering](https://turbo.build/repo/docs/core-concepts/monorepos/filtering)
-- [Configuration Options](https://turbo.build/repo/docs/reference/configuration)
-- [CLI Usage](https://turbo.build/repo/docs/reference/command-line-reference)
+If you hit any problems, let us know in #engineering 

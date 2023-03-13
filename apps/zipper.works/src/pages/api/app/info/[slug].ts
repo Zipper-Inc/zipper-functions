@@ -1,4 +1,10 @@
-import { App, Script, ScriptMain } from '@prisma/client';
+import {
+  App,
+  AppConnector,
+  AppConnectorUserAuth,
+  Script,
+  ScriptMain,
+} from '@prisma/client';
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '~/server/prisma';
 import { AppInfoResult } from '@zipper/types';
@@ -15,18 +21,33 @@ export default async function handler(
   res: NextApiResponse,
 ) {
   const slugFromUrl = req.query.slug as string;
+  const body = JSON.parse(req.body);
+  const userId: string | undefined = body.userId;
 
   let appFound:
     | (App & {
         scriptMain: ScriptMain | null;
         scripts: Script[];
+        connectors: (AppConnector & {
+          appConnectorUserAuths: AppConnectorUserAuth[];
+        })[];
       })
     | null;
 
   try {
     appFound = await prisma.app.findUnique({
       where: { slug: slugFromUrl },
-      include: { scripts: true, scriptMain: true },
+      include: {
+        scripts: true,
+        scriptMain: true,
+        connectors: {
+          include: {
+            appConnectorUserAuths: {
+              where: { userIdOrTempId: userId || '' },
+            },
+          },
+        },
+      },
     });
   } catch (e: any) {
     return res.status(500).send({ ok: false, error: e.toString() });
@@ -73,6 +94,9 @@ export default async function handler(
         updatedAt,
       },
       inputs: parseInputForTypes(mainScript.code),
+      userAuthConnectors: appFound.connectors.filter(
+        (c) => c.isUserAuthRequired && c.userScopes.length > 0,
+      ),
     },
   };
 
