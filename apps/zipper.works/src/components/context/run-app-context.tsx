@@ -49,12 +49,14 @@ export function RunAppProvider({
   app,
   children,
   inputParams,
+  filename,
   onBeforeRun,
   onAfterRun,
 }: {
   app: AppQueryOutput;
   children: any;
   inputParams: InputParam[];
+  filename?: string;
   onBeforeRun: VoidFunction;
   onAfterRun: VoidFunction;
 }) {
@@ -132,10 +134,13 @@ export function RunAppProvider({
            */
           const version = getLastRunVersion();
 
-          const result = await fetch(getRunUrl(slug, version), {
-            method: 'POST',
-            body: JSON.stringify(inputs),
-          }).then((r) => r.text());
+          const result = await fetch(
+            getRunUrl(slug, version, filename || 'main.ts'),
+            {
+              method: 'POST',
+              body: JSON.stringify(inputs),
+            },
+          ).then((r) => r.text());
 
           setResult(result);
 

@@ -7,5 +7,5 @@ export default function getRunUrl(
     process.env.NODE_ENV === 'production' ? 'https' : 'http'
   }://${slug}.${
     process.env.NEXT_PUBLIC_OUTPUT_SERVER_HOSTNAME
-  }/@${version}/${filename}/call`;
+  }/@${version}/+${filename}/call`;
 }
