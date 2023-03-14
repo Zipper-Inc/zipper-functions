@@ -160,7 +160,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
           <Button
             colorScheme="purple"
             variant="solid"
-            onClick={run}
+            onClick={() => run(true)}
             display="flex"
             gap={2}
             fontWeight="medium"
