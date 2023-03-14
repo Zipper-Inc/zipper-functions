@@ -172,7 +172,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
         </HStack>
       </TabList>
       <HStack
-        bgColor="neutral.50"
+        bgColor="gray.100"
         color="purple.700"
         p={4}
         rounded="lg"

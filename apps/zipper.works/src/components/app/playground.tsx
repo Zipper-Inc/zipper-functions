@@ -150,7 +150,13 @@ export function Playground({
             </HStack>
           </TabList>
           {/* TAB PANELS */}
-          <TabPanels as={VStack} alignItems="stretch" flex={1} overflow="auto">
+          <TabPanels
+            as={VStack}
+            alignItems="stretch"
+            flex={1}
+            overflow="auto"
+            spacing={0}
+          >
             {/* CODE */}
             <TabPanel
               p={0}
@@ -176,7 +182,13 @@ export function Playground({
             </TabPanel>
 
             {/* SCHEDULES */}
-            <TabPanel flex={1}>
+            <TabPanel
+              flex={1}
+              p={0}
+              pt={5}
+              display="flex"
+              flexDirection="column"
+            >
               <SchedulesTab inputParams={inputParams} appId={id} />
             </TabPanel>
 
