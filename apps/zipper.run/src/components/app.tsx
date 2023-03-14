@@ -36,6 +36,7 @@ export function AppPage({
   inputs,
   userAuthConnectors,
   version = app.lastDeploymentVersion || Date.now().toString(32),
+  filename,
   defaultValues,
   slackAuthUrl,
 }: {
@@ -43,6 +44,7 @@ export function AppPage({
   inputs: InputParams;
   userAuthConnectors: UserAuthConnector[];
   version?: string;
+  filename?: string;
   defaultValues?: Record<string, any>;
   slackAuthUrl?: string;
 }) {
@@ -63,7 +65,9 @@ export function AppPage({
       values[key] = rawValues[k];
     });
 
-    const result = await fetch('/call', {
+    const url = filename ? `/+${filename}/call` : '/call';
+
+    const result = await fetch(url, {
       method: 'POST',
       body: JSON.stringify(values),
     }).then((r) => r.text());
@@ -182,17 +186,35 @@ export const getServerSideProps: GetServerSideProps = async ({
   if (!subdomain) return { notFound: true };
 
   // validate version if it exists
-  const versionFromUrl = query.version as string;
-  if (__DEBUG__) console.log({ versionFromUrl });
-  if (versionFromUrl && !versionFromUrl.startsWith(VERSION_DELIMETER))
-    return { notFound: true };
+  const versionAndFilename = (query.versionAndFilename as Array<string>) || [];
+  let filenameFromUrl: string | undefined = undefined;
+  let versionFromUrl: string | undefined = undefined;
+  const len = versionAndFilename.length;
+
+  if (len > 1) {
+    filenameFromUrl = versionAndFilename[len - 1];
+    versionFromUrl = versionAndFilename.slice(0, len - 1).join('');
+  }
+
+  if (len === 1) {
+    versionAndFilename[0]?.includes('.')
+      ? (filenameFromUrl = versionAndFilename[0])
+      : (versionFromUrl = versionAndFilename[0]);
+  }
+  if (__DEBUG__) console.log({ versionFromUrl, filenameFromUrl });
 
   // grab the app if it exists
-  const result = await getAppInfo(subdomain, req.cookies['__zipper_user_id']);
+  const result = await getAppInfo({
+    subdomain,
+    userId: req.cookies['__zipper_user_id'],
+    filename: filenameFromUrl,
+  });
+
   if (__DEBUG__) console.log('getAppInfo', { result });
   if (!result.ok) return { notFound: true };
 
   const { app, inputs, userAuthConnectors } = result.data;
+
   const version =
     versionFromUrl ||
     app.lastDeploymentVersion?.toString() ||
@@ -208,6 +230,7 @@ export const getServerSideProps: GetServerSideProps = async ({
       version,
       defaultValues,
       userAuthConnectors,
+      filename: filenameFromUrl || 'main.ts',
     },
   };
 

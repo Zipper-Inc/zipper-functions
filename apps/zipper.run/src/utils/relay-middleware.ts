@@ -76,7 +76,7 @@ export async function relayRequest(request: NextRequest) {
     .get('__zipper_user_id')
     ?.value.toString();
   // Get app info from Zipper API
-  const appInfoResult = await getAppInfo(subdomain, zipperUserId);
+  const appInfoResult = await getAppInfo({ subdomain, userId: zipperUserId });
   if (__DEBUG__) console.log('getAppInfo', { result: appInfoResult });
 
   if (!appInfoResult.ok) return { status: 500, result: appInfoResult.error };
