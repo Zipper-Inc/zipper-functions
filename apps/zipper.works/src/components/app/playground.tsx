@@ -8,6 +8,7 @@ import {
   VStack,
   Text,
   Button,
+  ChakraProps,
 } from '@chakra-ui/react';
 import { InputParam } from '@zipper/types';
 import { useRouter } from 'next/router';
@@ -29,6 +30,14 @@ import { PlaygroundAvatars } from './playground-avatars';
 import { useAppEditors } from '~/hooks/use-app-editors';
 import { HiOutlineUpload } from 'react-icons/hi';
 import { TabButton } from '@zipper/ui';
+
+const tabPanelStyles: ChakraProps = {
+  flex: 1,
+  p: 0,
+  pt: 5,
+  display: 'flex',
+  flexDirection: 'column',
+};
 
 export function Playground({
   app,
@@ -158,14 +167,7 @@ export function Playground({
             spacing={0}
           >
             {/* CODE */}
-            <TabPanel
-              p={0}
-              pt={5}
-              position="relative"
-              flex={1}
-              display="flex"
-              flexDirection="column"
-            >
+            <TabPanel position="relative" {...tabPanelStyles}>
               {isSaving && (
                 <Progress
                   isIndeterminate
@@ -182,13 +184,7 @@ export function Playground({
             </TabPanel>
 
             {/* SCHEDULES */}
-            <TabPanel
-              flex={1}
-              p={0}
-              pt={5}
-              display="flex"
-              flexDirection="column"
-            >
+            <TabPanel {...tabPanelStyles}>
               <SchedulesTab inputParams={inputParams} appId={id} />
             </TabPanel>
 
@@ -199,7 +195,7 @@ export function Playground({
 
             {/* SETTINGS */}
             {app.canUserEdit && (
-              <TabPanel flex={1}>
+              <TabPanel {...tabPanelStyles}>
                 <SettingsTab app={app} />
               </TabPanel>
             )}
