@@ -3,7 +3,6 @@ import {
   Input,
   Heading,
   VStack,
-  Box,
   FormControl,
   FormErrorMessage,
   FormHelperText,
@@ -13,6 +12,8 @@ import {
   InputRightElement,
   Textarea,
   useToast,
+  HStack,
+  Text,
 } from '@chakra-ui/react';
 import { CheckIcon } from '@chakra-ui/icons';
 import { FormProvider, useForm } from 'react-hook-form';
@@ -114,14 +115,23 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
   const slugExists = slug === appQuery.data?.slug ? false : _slugExists;
   const disableSave =
     slugExists || slug.length < MIN_SLUG_LENGTH || !didModelChange();
+  const appLink = `${slug}.${process.env.NEXT_PUBLIC_OUTPUT_SERVER_HOSTNAME}`;
 
   return (
-    <FormProvider {...settingsForm}>
-      <form onSubmit={onSubmit}>
+    <HStack spacing={0} flex={1} alignItems="start" gap={16}>
+      <VStack flex={1} alignItems="stretch">
         <Heading as="h6" pb="4" fontWeight={400}>
           Settings
         </Heading>
-        <VStack align={'start'} gap={2} maxW="container.sm">
+      </VStack>
+      <FormProvider {...settingsForm}>
+        <VStack
+          as="form"
+          onSubmit={onSubmit}
+          flex={3}
+          align="stretch"
+          spacing={9}
+        >
           <FormControl isRequired>
             <FormLabel>Slug</FormLabel>
             <InputGroup>
@@ -142,12 +152,12 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
                 />
               )}
             </InputGroup>
-            {settingsForm.watch('slug') && (
-              <FormHelperText>
-                {`Your app will be available at
-                            ${slug}.${process.env.NEXT_PUBLIC_OUTPUT_SERVER_HOSTNAME}`}
-              </FormHelperText>
-            )}
+            <FormHelperText display="flex" gap={2} fontSize="sm">
+              <Text fontWeight="semibold">Required</Text>
+              {settingsForm.watch('slug') && (
+                <Text>Your app will be available at {appLink}</Text>
+              )}
+            </FormHelperText>
             <FormErrorMessage>
               {settingsForm.formState.errors.slug?.message}
             </FormErrorMessage>
@@ -170,9 +180,8 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
               {...settingsForm.register('description')}
             />
           </FormControl>
-          <Box w="full">
+          <FormControl>
             <Button
-              ml="auto"
               display="block"
               colorScheme="purple"
               type="submit"
@@ -180,10 +189,10 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
             >
               Save
             </Button>
-          </Box>
+          </FormControl>
         </VStack>
-      </form>
-    </FormProvider>
+      </FormProvider>
+    </HStack>
   );
 };
 
