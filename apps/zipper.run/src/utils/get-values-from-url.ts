@@ -1,28 +1,32 @@
-export function getFilenameAndVersionFromPath(path: string, endings: string[]) {
+export function getFilenameAndVersionFromPath(
+  path: string,
+  endings: string[] = [],
+) {
   let newPath = path;
-  endings.forEach((ending) => {
+  const descEndings = endings.sort((a, b) => b.length - a.length);
+
+  //find longest ending that the path ends with - '/api/json' will match before '/json'
+  descEndings.find((ending) => {
     if (path.endsWith(ending)) {
       newPath = path.replace(ending, '');
+      return true;
     }
   });
 
-  let filenameFromUrl: string | undefined = undefined;
-  let versionFromUrl: string | undefined = undefined;
-  const versionAndFilename = newPath.split('/').filter((s) => s.length !== 0);
-  const len = versionAndFilename.length;
+  let filename: string | undefined = undefined;
+  let version: string | undefined = undefined;
 
-  if (len > 1) {
-    filenameFromUrl = versionAndFilename[len - 1];
-    versionFromUrl = versionAndFilename.slice(0, len - 1).join('');
-  }
+  // split the path without endings on / - remove any empty parts
+  const parts = newPath.split('/').filter((s) => s.length !== 0);
 
-  if (len === 1) {
-    versionAndFilename[0]?.includes('.')
-      ? (filenameFromUrl = versionAndFilename[0])
-      : (versionFromUrl = versionAndFilename[0]);
-  }
+  // for each part, check if it's a version (based on @) otherwise assume it's a filename
+  // if there are multiple parts, the last part is the filename
+  parts.forEach((part) => {
+    if (part[0] === '@') version = part.slice(1);
+    else filename = part;
+  });
 
-  return { filename: filenameFromUrl, version: versionFromUrl };
+  return { filename, version };
 }
 
 export default {
