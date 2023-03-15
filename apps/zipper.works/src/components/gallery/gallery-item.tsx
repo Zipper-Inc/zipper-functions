@@ -8,15 +8,30 @@ import {
   Heading,
   HStack,
   Badge,
-  Image,
   Box,
 } from '@chakra-ui/react';
 import { GalleryAppQueryOutput } from '~/pages';
+import Avatar from 'boring-avatars';
+import { baseColors } from '@zipper/ui';
+import { useState } from 'react';
 
 type GalleryItemProps = {
   app: Unpack<GalleryAppQueryOutput>;
   size?: 'small' | 'large';
 };
+
+const avatarColors = [
+  // brand purple 600: #9B2FB4
+  baseColors.purple['600'],
+  // brand purple 900: #3D1353
+  baseColors.purple['900'],
+  // orange 500: #F74441
+  '#F74441',
+  // brand gray warm 200: #E3E2E1
+  baseColors.neutral['200'],
+  // white: #FFFFFF
+  'white',
+];
 
 // TODO get the badges from api
 const badges: string[] = [];
@@ -31,9 +46,14 @@ export const GalleryItem: React.FC<GalleryItemProps> = ({
   return <SmallGalleryItem app={app} />;
 };
 
+const useRandomTranslateX = () => useState(() => Math.random() * 100 - 50)[0];
+
 const SmallGalleryItem: React.FC<Omit<GalleryItemProps, 'size'>> = ({
   app,
 }) => {
+  const randomTranslateX = useRandomTranslateX();
+  const nameOrSlug = app.name || app.slug;
+
   return (
     <GridItem>
       <NextLink href={`/${app.resourceOwner.slug}/${app.slug}`}>
@@ -49,19 +69,29 @@ const SmallGalleryItem: React.FC<Omit<GalleryItemProps, 'size'>> = ({
             alignItems="start"
             justifyContent="space-between"
             height="full"
-            paddingBottom={6}
+            pb={6}
           >
-            {/* TODO get a generated image */}
-            <Image
-              src="https://images.unsplash.com/photo-1555041469-a586c61ea9bc?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1770&q=80"
-              alt="Green double couch with wooden legs"
-            />
+            <Box
+              flex={1}
+              overflow="hidden"
+              maxH={120}
+              w="full"
+              transform={`translateX(${randomTranslateX}%)`}
+            >
+              <Avatar
+                size="100%"
+                name={nameOrSlug}
+                variant="bauhaus"
+                colors={avatarColors}
+                square
+              />
+            </Box>
             <Stack spacing="1" width="full" paddingX={4}>
               <Heading as="h3" size="sm" color="gray.800" fontWeight="normal">
                 {app.resourceOwner.slug}
               </Heading>
               <Heading as="h2" size="md">
-                {app.name || app.slug}
+                {nameOrSlug}
               </Heading>
               <VStack alignItems="stretch">
                 {badges.length > 0 && (
@@ -91,6 +121,9 @@ const SmallGalleryItem: React.FC<Omit<GalleryItemProps, 'size'>> = ({
 const LargeGalleryItem: React.FC<Omit<GalleryItemProps, 'size'>> = ({
   app,
 }) => {
+  const randomTranslateX = useRandomTranslateX();
+  const nameOrSlug = app.name || app.slug;
+
   return (
     <GridItem colSpan={3}>
       <NextLink href={`/${app.resourceOwner.slug}/${app.slug}`}>
@@ -108,14 +141,17 @@ const LargeGalleryItem: React.FC<Omit<GalleryItemProps, 'size'>> = ({
             justifyContent="stretch"
             height="full"
           >
-            {/* TODO get a generated image */}
-            <Box flex={1} height={48}>
-              <Image
-                src="https://images.unsplash.com/photo-1555041469-a586c61ea9bc?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1770&q=80"
-                alt="Green double couch with wooden legs"
-                width="full"
-                height="full"
-                objectFit="cover"
+            <Box
+              flex={1}
+              height={48}
+              transform={`translateX(${randomTranslateX}%)`}
+            >
+              <Avatar
+                size="full"
+                name={nameOrSlug}
+                variant="bauhaus"
+                square
+                colors={avatarColors}
               />
             </Box>
             <VStack
@@ -130,7 +166,7 @@ const LargeGalleryItem: React.FC<Omit<GalleryItemProps, 'size'>> = ({
                 {app.resourceOwner.slug}
               </Heading>
               <Heading as="h2" size="md">
-                {app.name || app.slug}
+                {nameOrSlug}
               </Heading>
               <VStack alignItems="stretch">
                 {badges.length > 0 && (
