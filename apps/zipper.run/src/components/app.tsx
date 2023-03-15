@@ -65,7 +65,7 @@ export function AppPage({
       values[key] = rawValues[k];
     });
 
-    const url = filename ? `/+${filename}/call` : '/call';
+    const url = filename ? `/${filename}/call` : '/call';
 
     const result = await fetch(url, {
       method: 'POST',

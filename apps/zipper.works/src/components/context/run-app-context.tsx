@@ -123,8 +123,6 @@ export function RunAppProvider({
             formKeys = mainInputParams.map(({ key, type }) => `${key}:${type}`);
           }
 
-          console.log(formKeys);
-
           Object.keys(formValues)
             .filter((k) => formKeys.includes(k))
             .forEach((k) => {

@@ -118,7 +118,11 @@ const getInputFromBody = async (req) => {
   }
 };
 
-if(typeof main === 'function') {
+let fn: Function | undefined = undefined;
+if(typeof main === 'function') fn = main;
+if(!fn && typeof handler === 'function') fn = handler;
+
+if(typeof fn === 'function') {
   addEventListener('fetch', async (event) => {
     const input = await getInputFromBody(event.request);
 
@@ -131,7 +135,7 @@ if(typeof main === 'function') {
     };
 
     try {
-      const output = await main(input);
+      const output = await fn(input);
 
       if (output instanceof Response) {
         if (!output.headers.get('Content-Type'))
