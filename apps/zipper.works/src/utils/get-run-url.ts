@@ -5,7 +5,7 @@ export default function getRunUrl(
 ) {
   return `${
     process.env.NODE_ENV === 'production' ? 'https' : 'http'
-  }://${slug}.${process.env.NEXT_PUBLIC_OUTPUT_SERVER_HOSTNAME}/@${version}/+${
+  }://${slug}.${process.env.NEXT_PUBLIC_OUTPUT_SERVER_HOSTNAME}/${version}/${
     filename || 'main.ts'
   }/call`;
 }

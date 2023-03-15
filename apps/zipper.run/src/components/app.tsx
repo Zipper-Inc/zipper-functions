@@ -11,10 +11,7 @@ import {
 import { AppInfo, InputParams, UserAuthConnector } from '@zipper/types';
 import getAppInfo from '~/utils/get-app-info';
 import getValidSubdomain from '~/utils/get-valid-subdomain';
-import {
-  getFilenameAndVersionWithoutDelimitersFromUrl,
-  VERSION_DELIMETER,
-} from '~/utils/get-values-from-url';
+import { getFilenameAndVersionFromPath } from '~/utils/get-values-from-url';
 import {
   Box,
   Heading,
@@ -188,11 +185,10 @@ export const getServerSideProps: GetServerSideProps = async ({
   if (__DEBUG__) console.log('getValidSubdomain', { subdomain, host });
   if (!subdomain) return { notFound: true };
 
-  const { version: versionFromUrl, filename } =
-    getFilenameAndVersionWithoutDelimitersFromUrl(
-      (query.versionAndFilename as string[]).join('/'),
-      [],
-    );
+  const { version: versionFromUrl, filename } = getFilenameAndVersionFromPath(
+    ((query.versionAndFilename as string[]) || []).join('/'),
+    [],
+  );
   if (__DEBUG__) console.log({ versionFromUrl, filename });
 
   // grab the app if it exists

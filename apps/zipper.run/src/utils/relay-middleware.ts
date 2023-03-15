@@ -5,7 +5,7 @@ import addAppRun from './add-app-run';
 import getAppInfo from './get-app-info';
 import getInputFromRequest from './get-input-from-request';
 import getValidSubdomain from './get-valid-subdomain';
-import { getFilenameFromUrl, getVersionFromUrl } from './get-values-from-url';
+import { getFilenameAndVersionFromPath } from './get-values-from-url';
 
 const { __DEBUG__, SHARED_SECRET: DENO_SHARED_SECRET, RPC_HOST } = process.env;
 
@@ -85,7 +85,7 @@ export async function relayRequest({
     ?.value.toString();
   // Get app info from Zipper API
 
-  const filename = _filename || getFilenameFromUrl(request.url) || 'main.ts';
+  const filename = _filename || 'main.ts';
 
   const appInfoResult = await getAppInfo({
     subdomain,
@@ -100,10 +100,7 @@ export async function relayRequest({
 
   // Get a version from URL or use the latest
   const version =
-    _version ||
-    getVersionFromUrl(request.url) ||
-    app.lastDeploymentVersion ||
-    Date.now().toString(32);
+    _version || app.lastDeploymentVersion || Date.now().toString(32);
 
   let deploymentId = `${app.id}+${filename}@${version}`;
   if (userAuthConnectors.find((c) => c.isUserAuthRequired)) {
@@ -135,7 +132,15 @@ export async function relayRequest({
 }
 
 export default async function serveRelay(request: NextRequest) {
-  const { result, status, headers } = await relayRequest(request);
+  const { version, filename } = getFilenameAndVersionFromPath(
+    request.nextUrl.pathname,
+    ['call'],
+  );
+  const { result, status, headers } = await relayRequest({
+    request,
+    version,
+    filename,
+  });
   if (request.method !== 'GET')
     headers?.append('Access-Control-Allow-Origin', '*');
 
