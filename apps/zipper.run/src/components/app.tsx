@@ -11,7 +11,10 @@ import {
 import { AppInfo, InputParams, UserAuthConnector } from '@zipper/types';
 import getAppInfo from '~/utils/get-app-info';
 import getValidSubdomain from '~/utils/get-valid-subdomain';
-import { VERSION_DELIMETER } from '~/utils/get-values-from-url';
+import {
+  getFilenameAndVersionWithoutDelimitersFromUrl,
+  VERSION_DELIMETER,
+} from '~/utils/get-values-from-url';
 import {
   Box,
   Heading,
@@ -185,29 +188,18 @@ export const getServerSideProps: GetServerSideProps = async ({
   if (__DEBUG__) console.log('getValidSubdomain', { subdomain, host });
   if (!subdomain) return { notFound: true };
 
-  // validate version if it exists
-  const versionAndFilename = (query.versionAndFilename as Array<string>) || [];
-  let filenameFromUrl: string | undefined = undefined;
-  let versionFromUrl: string | undefined = undefined;
-  const len = versionAndFilename.length;
-
-  if (len > 1) {
-    filenameFromUrl = versionAndFilename[len - 1];
-    versionFromUrl = versionAndFilename.slice(0, len - 1).join('');
-  }
-
-  if (len === 1) {
-    versionAndFilename[0]?.includes('.')
-      ? (filenameFromUrl = versionAndFilename[0])
-      : (versionFromUrl = versionAndFilename[0]);
-  }
-  if (__DEBUG__) console.log({ versionFromUrl, filenameFromUrl });
+  const { version: versionFromUrl, filename } =
+    getFilenameAndVersionWithoutDelimitersFromUrl(
+      (query.versionAndFilename as string[]).join('/'),
+      [],
+    );
+  if (__DEBUG__) console.log({ versionFromUrl, filename });
 
   // grab the app if it exists
   const result = await getAppInfo({
     subdomain,
     userId: req.cookies['__zipper_user_id'],
-    filename: filenameFromUrl,
+    filename,
   });
 
   if (__DEBUG__) console.log('getAppInfo', { result });
@@ -230,7 +222,7 @@ export const getServerSideProps: GetServerSideProps = async ({
       version,
       defaultValues,
       userAuthConnectors,
-      filename: filenameFromUrl || 'main.ts',
+      filename: filename || 'main.ts',
     },
   };
 

@@ -26,8 +26,27 @@ export default async function middleware(request: NextRequest) {
   if (__DEBUG__) console.log('middleware', { appRoute });
 
   let res: NextResponse = NextResponse.next();
-  switch (appRoute) {
-    case '/':
+  switch (true) {
+    case /\/api(\/?)$/.test(appRoute):
+    case /\/api\/json(\/?)$/.test(appRoute): {
+      console.log('matching json api route');
+      res = await jsonHandler(request);
+      break;
+    }
+
+    case /\/api\/yaml(\/?)$/.test(appRoute): {
+      console.log('matching yaml api route');
+      res = await yamlHandler(request);
+      break;
+    }
+
+    case /\/call(\/?)$/.test(appRoute): {
+      console.log('matching call route');
+      res = await serveRelay(request);
+      break;
+    }
+
+    case /^\/$/.test(appRoute): {
       if (request.method === 'GET') {
         const url = new URL('/app', request.url);
         res = NextResponse.rewrite(url);
@@ -36,25 +55,6 @@ export default async function middleware(request: NextRequest) {
         const url = new URL('/call', request.url);
         res = NextResponse.rewrite(url);
       }
-      break;
-
-    case '/api':
-    case '/api/json': {
-      res = await jsonHandler(request);
-      break;
-    }
-
-    case '/api/yaml': {
-      res = await yamlHandler(request);
-      break;
-    }
-
-    case '/call': {
-      res = await serveRelay(request);
-      break;
-    }
-
-    default: {
       break;
     }
   }

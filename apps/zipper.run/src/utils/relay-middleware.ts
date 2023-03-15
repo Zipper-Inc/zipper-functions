@@ -60,7 +60,15 @@ function encodeJWT(deploymentId: string) {
   return new jose.SignJWT(claims).setProtectedHeader(header).sign(secretKey);
 }
 
-export async function relayRequest(request: NextRequest) {
+export async function relayRequest({
+  request,
+  version: _version,
+  filename: _filename,
+}: {
+  request: NextRequest;
+  version?: string;
+  filename?: string;
+}) {
   if (!DENO_SHARED_SECRET || !RPC_HOST)
     return {
       status: 500,
@@ -76,7 +84,14 @@ export async function relayRequest(request: NextRequest) {
     .get('__zipper_user_id')
     ?.value.toString();
   // Get app info from Zipper API
-  const appInfoResult = await getAppInfo({ subdomain, userId: zipperUserId });
+
+  const filename = _filename || getFilenameFromUrl(request.url) || 'main.ts';
+
+  const appInfoResult = await getAppInfo({
+    subdomain,
+    userId: zipperUserId,
+    filename,
+  });
   if (__DEBUG__) console.log('getAppInfo', { result: appInfoResult });
 
   if (!appInfoResult.ok) return { status: 500, result: appInfoResult.error };
@@ -85,11 +100,10 @@ export async function relayRequest(request: NextRequest) {
 
   // Get a version from URL or use the latest
   const version =
+    _version ||
     getVersionFromUrl(request.url) ||
     app.lastDeploymentVersion ||
     Date.now().toString(32);
-
-  const filename = getFilenameFromUrl(request.url) || 'main.ts';
 
   let deploymentId = `${app.id}+${filename}@${version}`;
   if (userAuthConnectors.find((c) => c.isUserAuthRequired)) {
