@@ -6,13 +6,18 @@ import { AppInfoResult } from '@zipper/types';
  */
 const APP_INFO_URL = `${process.env.ZIPPER_API_URL}/app/info`;
 
-export default async function getAppInfo(
-  subdomain: string,
-  userId?: string,
-): Promise<AppInfoResult> {
+export default async function getAppInfo({
+  subdomain,
+  userId,
+  filename,
+}: {
+  subdomain: string;
+  userId?: string;
+  filename?: string;
+}): Promise<AppInfoResult> {
   return fetch(`${APP_INFO_URL}/${subdomain}`, {
     method: 'POST',
-    body: JSON.stringify({ userId }),
+    body: JSON.stringify({ userId, filename }),
   })
     .then((r) => r.json())
     .catch((e) => ({ ok: false, error: e.toString() }));

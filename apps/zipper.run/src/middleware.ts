@@ -2,26 +2,37 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import serveRelay from './utils/relay-middleware';
-import getVersionFromUrl, {
-  VERSION_DELIMETER,
-} from './utils/get-version-from-url';
 import jsonHandler from './api-handlers/json.handler';
 import yamlHandler from './api-handlers/yaml.handler';
 
 const { __DEBUG__ } = process.env;
 
 export default async function middleware(request: NextRequest) {
-  const version = getVersionFromUrl(request.url);
-  const versionPath = version ? `/${VERSION_DELIMETER}${version}` : '';
-
-  /** Path after app-slug.zipper.run/@version */
-  const appRoute = request.nextUrl.pathname.replace(versionPath, '') || '/';
-
+  const appRoute = request.nextUrl.pathname;
   if (__DEBUG__) console.log('middleware', { appRoute });
 
   let res: NextResponse = NextResponse.next();
-  switch (appRoute) {
-    case '/':
+  switch (true) {
+    case /\/api(\/?)$/.test(appRoute):
+    case /\/api\/json(\/?)$/.test(appRoute): {
+      console.log('matching json api route');
+      res = await jsonHandler(request);
+      break;
+    }
+
+    case /\/api\/yaml(\/?)$/.test(appRoute): {
+      console.log('matching yaml api route');
+      res = await yamlHandler(request);
+      break;
+    }
+
+    case /\/call(\/?)$/.test(appRoute): {
+      console.log('matching call route');
+      res = await serveRelay(request);
+      break;
+    }
+
+    case /^\/$/.test(appRoute): {
       if (request.method === 'GET') {
         const url = new URL('/app', request.url);
         res = NextResponse.rewrite(url);
@@ -30,25 +41,6 @@ export default async function middleware(request: NextRequest) {
         const url = new URL('/call', request.url);
         res = NextResponse.rewrite(url);
       }
-      break;
-
-    case '/api':
-    case '/api/json': {
-      res = await jsonHandler(request);
-      break;
-    }
-
-    case '/api/yaml': {
-      res = await yamlHandler(request);
-      break;
-    }
-
-    case '/call': {
-      res = await serveRelay(request);
-      break;
-    }
-
-    default: {
       break;
     }
   }

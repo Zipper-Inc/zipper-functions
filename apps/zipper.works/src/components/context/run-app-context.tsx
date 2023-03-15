@@ -13,6 +13,7 @@ import { AppQueryOutput, AppEventUseQueryResult } from '~/types/trpc';
 import useInterval from '~/hooks/use-interval';
 import getRunUrl from '~/utils/get-run-url';
 import { AppConnectorUserAuth } from '@prisma/client';
+import { parseInputForTypes } from '~/utils/parse-input-for-types';
 
 export type FunctionCallContextType = {
   appInfo: AppInfo;
@@ -30,7 +31,7 @@ export type FunctionCallContextType = {
     appConnectorUserAuths: AppConnectorUserAuth[];
   }[];
   appEventsQuery?: AppEventUseQueryResult;
-  run: () => void;
+  run: (isCurrentFileAsEntryPoint?: boolean) => void;
 };
 
 export const RunAppContext = createContext<FunctionCallContextType>({
@@ -49,12 +50,14 @@ export function RunAppProvider({
   app,
   children,
   inputParams,
+  filename,
   onBeforeRun,
   onAfterRun,
 }: {
   app: AppQueryOutput;
   children: any;
   inputParams: InputParam[];
+  filename?: string;
   onBeforeRun: VoidFunction;
   onAfterRun: VoidFunction;
 }) {
@@ -101,15 +104,24 @@ export function RunAppProvider({
         userAuthConnectors: app.connectors.filter(
           (c) => c.isUserAuthRequired && c.userScopes.length > 0,
         ),
-        run: async () => {
+        run: async (isCurrentFileAsEntryPoint?: boolean) => {
           setIsRunning(true);
           await onBeforeRun();
 
           const formValues = formMethods.getValues();
           const inputs: Record<string, any> = {};
+          let formKeys: string[] = [];
 
           // We need to filter the form values since `useForm` hook keeps these around
-          const formKeys = inputParams.map(({ key, type }) => `${key}:${type}`);
+          if (isCurrentFileAsEntryPoint) {
+            formKeys = inputParams.map(({ key, type }) => `${key}:${type}`);
+          } else {
+            const mainScript = app.scripts.find(
+              (s) => s.id === app.scriptMain?.scriptId,
+            );
+            const mainInputParams = parseInputForTypes(mainScript?.code);
+            formKeys = mainInputParams.map(({ key, type }) => `${key}:${type}`);
+          }
 
           Object.keys(formValues)
             .filter((k) => formKeys.includes(k))
@@ -132,10 +144,17 @@ export function RunAppProvider({
            */
           const version = getLastRunVersion();
 
-          const result = await fetch(getRunUrl(slug, version), {
-            method: 'POST',
-            body: JSON.stringify(inputs),
-          }).then((r) => r.text());
+          const result = await fetch(
+            getRunUrl(
+              slug,
+              version,
+              isCurrentFileAsEntryPoint ? filename : 'main.ts',
+            ),
+            {
+              method: 'POST',
+              body: JSON.stringify(inputs),
+            },
+          ).then((r) => r.text());
 
           setResult(result);
 

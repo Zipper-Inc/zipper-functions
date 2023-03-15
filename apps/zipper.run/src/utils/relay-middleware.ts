@@ -5,7 +5,7 @@ import addAppRun from './add-app-run';
 import getAppInfo from './get-app-info';
 import getInputFromRequest from './get-input-from-request';
 import getValidSubdomain from './get-valid-subdomain';
-import getVersionFromUrl from './get-version-from-url';
+import { getFilenameAndVersionFromPath } from './get-values-from-url';
 
 const { __DEBUG__, SHARED_SECRET: DENO_SHARED_SECRET, RPC_HOST } = process.env;
 
@@ -60,7 +60,15 @@ function encodeJWT(deploymentId: string) {
   return new jose.SignJWT(claims).setProtectedHeader(header).sign(secretKey);
 }
 
-export async function relayRequest(request: NextRequest) {
+export async function relayRequest({
+  request,
+  version: _version,
+  filename: _filename,
+}: {
+  request: NextRequest;
+  version?: string;
+  filename?: string;
+}) {
   if (!DENO_SHARED_SECRET || !RPC_HOST)
     return {
       status: 500,
@@ -76,7 +84,14 @@ export async function relayRequest(request: NextRequest) {
     .get('__zipper_user_id')
     ?.value.toString();
   // Get app info from Zipper API
-  const appInfoResult = await getAppInfo(subdomain, zipperUserId);
+
+  const filename = _filename || 'main.ts';
+
+  const appInfoResult = await getAppInfo({
+    subdomain,
+    userId: zipperUserId,
+    filename,
+  });
   if (__DEBUG__) console.log('getAppInfo', { result: appInfoResult });
 
   if (!appInfoResult.ok) return { status: 500, result: appInfoResult.error };
@@ -85,11 +100,9 @@ export async function relayRequest(request: NextRequest) {
 
   // Get a version from URL or use the latest
   const version =
-    getVersionFromUrl(request.url) ||
-    app.lastDeploymentVersion ||
-    Date.now().toString(32);
+    _version || app.lastDeploymentVersion || Date.now().toString(32);
 
-  let deploymentId = `${app.id}@${version}`;
+  let deploymentId = `${app.id}+${filename}@${version}`;
   if (userAuthConnectors.find((c) => c.isUserAuthRequired)) {
     deploymentId = `${deploymentId}@${zipperUserId}`;
   }
@@ -119,7 +132,15 @@ export async function relayRequest(request: NextRequest) {
 }
 
 export default async function serveRelay(request: NextRequest) {
-  const { result, status, headers } = await relayRequest(request);
+  const { version, filename } = getFilenameAndVersionFromPath(
+    request.nextUrl.pathname,
+    ['call'],
+  );
+  const { result, status, headers } = await relayRequest({
+    request,
+    version,
+    filename,
+  });
   if (request.method !== 'GET')
     headers?.append('Access-Control-Allow-Origin', '*');
 

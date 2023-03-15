@@ -89,6 +89,7 @@ export function Playground({
   return (
     <RunAppProvider
       app={app}
+      filename={currentScript?.filename}
       inputParams={inputParams}
       onBeforeRun={save}
       onAfterRun={switchToCodeTab}

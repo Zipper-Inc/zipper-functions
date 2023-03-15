@@ -11,7 +11,7 @@ import {
 import { AppInfo, InputParams, UserAuthConnector } from '@zipper/types';
 import getAppInfo from '~/utils/get-app-info';
 import getValidSubdomain from '~/utils/get-valid-subdomain';
-import { VERSION_DELIMETER } from '~/utils/get-version-from-url';
+import { getFilenameAndVersionFromPath } from '~/utils/get-values-from-url';
 import {
   Box,
   Heading,
@@ -36,17 +36,17 @@ export function AppPage({
   inputs,
   userAuthConnectors,
   version = app.lastDeploymentVersion || Date.now().toString(32),
+  filename,
   defaultValues,
   slackAuthUrl,
-  host,
 }: {
   app: AppInfo;
   inputs: InputParams;
   userAuthConnectors: UserAuthConnector[];
   version?: string;
+  filename?: string;
   defaultValues?: Record<string, any>;
   slackAuthUrl?: string;
-  host: string;
 }) {
   const router = useRouter();
   const appTitle = app.name || app.slug;
@@ -65,7 +65,9 @@ export function AppPage({
       values[key] = rawValues[k];
     });
 
-    const result = await fetch('/call', {
+    const url = filename ? `/${filename}/call` : '/call';
+
+    const result = await fetch(url, {
       method: 'POST',
       body: JSON.stringify(values),
     }).then((r) => r.text());
@@ -183,18 +185,24 @@ export const getServerSideProps: GetServerSideProps = async ({
   if (__DEBUG__) console.log('getValidSubdomain', { subdomain, host });
   if (!subdomain) return { notFound: true };
 
-  // validate version if it exists
-  const versionFromUrl = query.version as string;
-  if (__DEBUG__) console.log({ versionFromUrl });
-  if (versionFromUrl && !versionFromUrl.startsWith(VERSION_DELIMETER))
-    return { notFound: true };
+  const { version: versionFromUrl, filename } = getFilenameAndVersionFromPath(
+    ((query.versionAndFilename as string[]) || []).join('/'),
+    [],
+  );
+  if (__DEBUG__) console.log({ versionFromUrl, filename });
 
   // grab the app if it exists
-  const result = await getAppInfo(subdomain, req.cookies['__zipper_user_id']);
+  const result = await getAppInfo({
+    subdomain,
+    userId: req.cookies['__zipper_user_id'],
+    filename,
+  });
+
   if (__DEBUG__) console.log('getAppInfo', { result });
   if (!result.ok) return { notFound: true };
 
   const { app, inputs, userAuthConnectors } = result.data;
+
   const version =
     versionFromUrl ||
     app.lastDeploymentVersion?.toString() ||
@@ -210,7 +218,7 @@ export const getServerSideProps: GetServerSideProps = async ({
       version,
       defaultValues,
       userAuthConnectors,
-      host,
+      filename: filename || 'main.ts',
     },
   };
 
