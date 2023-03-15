@@ -82,7 +82,7 @@ export function ObjectExplorer({
   level: number;
 }) {
   return (
-    <Box display="block" overflowX="auto">
+    <Box>
       {Object.keys(data).map((key) => (
         <ObjectExplorerRow
           key={key}

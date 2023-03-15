@@ -1,7 +1,6 @@
-import { Box, FormControl, GridItem, Text, Code } from '@chakra-ui/react';
+import { FormControl, Text, Code, HStack, VStack } from '@chakra-ui/react';
 import { AppEditSidebar } from '~/components/app/app-edit-sidebar';
 import { useCmdOrCtrl } from '@zipper/ui';
-import DefaultGrid from '../default-grid';
 import { ConnectorForm } from './connector-form';
 import { PlaygroundSidebar } from './playground-sidebar';
 import dynamic from 'next/dynamic';
@@ -9,6 +8,7 @@ import { useEditorContext } from '../context/editor-context';
 import { useRunAppContext } from '../context/run-app-context';
 import { ConnectorId } from '~/connectors/createConnector';
 import { AppQueryOutput } from '~/types/trpc';
+import { Script } from '@prisma/client';
 
 export const PlaygroundEditor = dynamic(() => import('./playground-editor'), {
   ssr: false,
@@ -36,13 +36,12 @@ const ConnectorSidebarTips = (connectorId?: string | null) => {
 const APPROXIMATE_HEADER_HEIGHT_PX = '120px';
 const MAX_CODE_TAB_HEIGHT = `calc(100vh - ${APPROXIMATE_HEADER_HEIGHT_PX})`;
 
-export function CodeTab({
-  app,
-  mainScript,
-}: {
+type CodeTabProps = {
   app: AppQueryOutput;
-  mainScript: any;
-}) {
+  mainScript: Script;
+};
+
+export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
   const { currentScript, save, onChange } = useEditorContext();
   const { run } = useRunAppContext();
 
@@ -64,47 +63,57 @@ export function CodeTab({
     [],
   );
 
+  const currentScriptConnectorId = currentScript?.connectorId;
+
   return (
-    <DefaultGrid
-      maxW="full"
-      px="none"
-      overflow="hidden"
-      maxHeight={MAX_CODE_TAB_HEIGHT}
+    <HStack
+      flex={1}
+      p="none"
+      spacing={0}
+      alignItems="stretch"
+      pb={3}
+      maxH={MAX_CODE_TAB_HEIGHT}
+      minH="350px"
     >
-      <GridItem colSpan={2}>
+      <VStack flex={1} alignItems="stretch" minWidth="200px">
         <PlaygroundSidebar app={app} mainScript={mainScript} />
-      </GridItem>
-      <GridItem colSpan={6}>
-        <Box width="100%">
-          <>
-            {currentScript?.connectorId && (
-              <ConnectorForm
-                connectorId={currentScript?.connectorId as ConnectorId}
-                appId={app.id}
-              />
-            )}
-          </>
-          <FormControl>
-            <Box style={{ color: 'transparent' }}>
-              {PlaygroundEditor && (
-                <PlaygroundEditor
-                  height={MAX_CODE_TAB_HEIGHT}
-                  key={app.id}
-                  onChange={onChange}
-                  appName={app.slug}
-                />
-              )}
-            </Box>
-          </FormControl>
-        </Box>
-      </GridItem>
-      <GridItem colSpan={4}>
+      </VStack>
+      <VStack
+        flex={3}
+        alignItems="stretch"
+        spacing={0}
+        minW="sm"
+        overflow="auto"
+      >
+        {currentScriptConnectorId && (
+          <ConnectorForm
+            connectorId={currentScriptConnectorId as ConnectorId}
+            appId={app.id}
+          />
+        )}
+        <FormControl
+          flex={1}
+          as={VStack}
+          alignItems="stretch"
+          pt={currentScriptConnectorId ? 4 : 0}
+          minH={currentScriptConnectorId ? '50%' : '100%'}
+        >
+          {PlaygroundEditor && (
+            <PlaygroundEditor
+              key={app.id}
+              onChange={onChange}
+              appName={app.slug}
+            />
+          )}
+        </FormControl>
+      </VStack>
+      <VStack flex={2} alignItems="stretch" minW="220px" overflow="auto">
         <AppEditSidebar
-          showInputForm={!currentScript?.connectorId}
-          tips={ConnectorSidebarTips(currentScript?.connectorId)}
-          maxHeight={MAX_CODE_TAB_HEIGHT}
+          showInputForm={!currentScriptConnectorId}
+          tips={ConnectorSidebarTips(currentScriptConnectorId)}
+          appSlug={app.slug}
         />
-      </GridItem>
-    </DefaultGrid>
+      </VStack>
+    </HStack>
   );
-}
+};

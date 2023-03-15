@@ -17,8 +17,6 @@ import {
   AlertDialogFooter,
   Button,
 } from '@chakra-ui/react';
-import { AddIcon } from '@chakra-ui/icons';
-import { VscCode } from 'react-icons/vsc';
 import React, { useEffect, useRef, useState } from 'react';
 import AddScriptForm from '~/components/app/add-script-form';
 
@@ -28,6 +26,7 @@ import { useForm } from 'react-hook-form';
 import { useEditorContext } from '../context/editor-context';
 import { AppQueryOutput } from '~/types/trpc';
 import { ScriptItem, ScriptItemProps } from './playground-sidebar-script-item';
+import { FiPlusSquare } from 'react-icons/fi';
 
 export function PlaygroundSidebar({
   app,
@@ -119,10 +118,18 @@ export function PlaygroundSidebar({
 
   return (
     <>
-      <VStack alignItems="start" gap={1}>
-        <HStack w="full">
-          <VscCode />
-          <Text size="sm" color="gray.600" flexGrow={1}>
+      <VStack
+        alignItems="stretch"
+        background="linear-gradient(326.37deg, rgba(62, 28, 150, 0.5) 8.28%, rgba(62, 28, 150, 0) 100.06%), #89279B;"
+        color="white"
+        flex={1}
+        rounded="2xl"
+        paddingX={2}
+        paddingY={4}
+        spacing={4}
+      >
+        <HStack px={3}>
+          <Text size="sm" flexGrow={1}>
             Functions
           </Text>
           {app.canUserEdit && (
@@ -130,13 +137,13 @@ export function PlaygroundSidebar({
               {({ onClose }) => (
                 <>
                   <PopoverTrigger>
-                    <Flex pr={2}>
-                      <AddIcon color="gray.500" height={3} />
+                    <Flex>
+                      <FiPlusSquare />
                     </Flex>
                   </PopoverTrigger>
                   <PopoverContent>
                     <PopoverArrow />
-                    <PopoverBody>
+                    <PopoverBody color="chakra-body-text" p={3}>
                       <AddScriptForm
                         connectors={app.connectors}
                         appId={app.id}
@@ -149,7 +156,7 @@ export function PlaygroundSidebar({
             </Popover>
           )}
         </HStack>
-        <VStack spacing={0} w="full">
+        <VStack spacing="2px" alignItems="stretch">
           {app.scripts.sort(sortScripts).map((script, i) => (
             <ScriptItem
               key={script.id}

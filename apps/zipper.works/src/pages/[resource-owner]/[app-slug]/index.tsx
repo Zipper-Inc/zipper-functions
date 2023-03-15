@@ -12,7 +12,7 @@ import Editor from '@monaco-editor/react';
 import { GetServerSideProps } from 'next';
 import NextError from 'next/error';
 import { useRouter } from 'next/router';
-import { EditorNav } from '~/components/editor/editor-nav';
+import { EditorPreviewNav } from '~/components/editor/editor-preview-nav';
 import Header from '~/components/header';
 import { useAppOwner } from '~/hooks/use-app-owner';
 import { NextPageWithLayout } from '~/pages/_app';
@@ -139,7 +139,7 @@ const AppPage: NextPageWithLayout = () => {
               spacing={6}
               alignItems="start"
             >
-              <EditorNav app={data} />
+              <EditorPreviewNav app={data} />
             </VStack>
             <Flex flex={2} position="relative">
               <Box width="full" paddingTop={6}>
