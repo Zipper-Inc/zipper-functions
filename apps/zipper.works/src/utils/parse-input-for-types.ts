@@ -63,7 +63,8 @@ export function parseInputForTypes(code = ''): InputParam[] {
 
   try {
     const src = getSourceFileFromCode(code);
-    const mainFn = src.getFunction('main');
+    let mainFn = src.getFunction('main');
+    if (!mainFn) mainFn = src.getFunction('handler');
 
     if (!mainFn) {
       console.error('You must define a main function');

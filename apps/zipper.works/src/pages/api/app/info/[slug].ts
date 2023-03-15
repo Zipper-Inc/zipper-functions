@@ -71,11 +71,20 @@ export default async function handler(
     scripts,
   } = appFound;
 
-  const mainScript = scripts.find(
-    (script) => script.id === scriptMain?.scriptId,
-  );
+  let entryPoint: Script | undefined = undefined;
 
-  if (!mainScript || !mainScript.code) {
+  if (body.filename) {
+    entryPoint = scripts.find(
+      (s) =>
+        s.filename === body.filename || s.filename === `${body.filename}.ts`,
+    );
+  }
+
+  if (!entryPoint) {
+    entryPoint = scripts.find((s) => s.id === scriptMain?.scriptId);
+  }
+
+  if (!entryPoint || !entryPoint.code) {
     return res.status(500).send({
       ok: false,
       error: `Can't get inputs for app: ${slug} is missing code`,
@@ -93,7 +102,7 @@ export default async function handler(
         lastDeploymentVersion,
         updatedAt,
       },
-      inputs: parseInputForTypes(mainScript.code),
+      inputs: parseInputForTypes(entryPoint.code),
       userAuthConnectors: appFound.connectors.filter(
         (c) => c.isUserAuthRequired && c.userScopes.length > 0,
       ),

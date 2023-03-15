@@ -46,18 +46,18 @@ export default async function handler(
 
   let code = script.code;
 
-  if (loweredQueryFilename === 'main.ts' || loweredQueryFilename === 'main') {
-    code = wrapMainFunction({
-      code: script.code,
-      slug: app.slug,
-      appId: app.id,
-      version:
-        app.lastDeploymentVersion ||
-        new Date(script.updatedAt || script.createdAt || Date.now())
-          .getTime()
-          .toString(),
-    });
-  }
+  // if (loweredQueryFilename === 'main.ts' || loweredQueryFilename === 'main') {
+  code = wrapMainFunction({
+    code: script.code,
+    slug: app.slug,
+    appId: app.id,
+    version:
+      app.lastDeploymentVersion ||
+      new Date(script.updatedAt || script.createdAt || Date.now())
+        .getTime()
+        .toString(),
+  });
+  // }
 
   res.send(code);
 }

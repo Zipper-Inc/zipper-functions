@@ -1,33 +1,35 @@
 import {
-  AlertDialog,
-  AlertDialogBody,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogContent,
-  AlertDialogOverlay,
   Button,
   HStack,
-  IconButton,
-  Input,
   Heading,
   VStack,
-  useDisclosure,
   Text,
   Box,
+  useDisclosure,
+  AlertDialog,
+  AlertDialogBody,
+  AlertDialogContent,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogOverlay,
 } from '@chakra-ui/react';
-import { AddIcon, CloseIcon, LockIcon } from '@chakra-ui/icons';
-import { useFieldArray, useForm, UseFormRegister } from 'react-hook-form';
-import { useRef, useState } from 'react';
+import { AddIcon } from '@chakra-ui/icons';
+import { useFieldArray, useForm } from 'react-hook-form';
 
 import { trpc } from '~/utils/trpc';
-import { FiTrash } from 'react-icons/fi';
+import { EditSecret, SecretToDelete } from './edit-secret';
+import { useRef, useState } from 'react';
 
-type Props = {
+type SecretsTabProps = {
   appId: string;
   editable: boolean;
 };
 
-const SecretsTab: React.FC<Props> = ({ appId, editable }) => {
+const SecretsTab: React.FC<SecretsTabProps> = ({ appId, editable }) => {
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const cancelRef = useRef() as React.MutableRefObject<HTMLButtonElement>;
+
+  const [secretToDelete, setSecretToDelete] = useState<SecretToDelete>();
   const utils = trpc.useContext();
   const { register, handleSubmit, reset, control } = useForm({
     defaultValues: {
@@ -55,170 +57,112 @@ const SecretsTab: React.FC<Props> = ({ appId, editable }) => {
     },
   });
 
-  const Edit = ({
-    register,
-    index,
-    existingSecret,
-  }: {
-    register?: UseFormRegister<any>;
-    index?: number;
-    existingSecret?: {
-      key: string;
-      id: string;
-      appId: string;
-    };
-  }) => {
-    const { isOpen, onOpen, onClose } = useDisclosure();
-    const cancelRef = useRef() as React.MutableRefObject<HTMLButtonElement>;
+  const onSubmit = handleSubmit((data) => {
+    console.log(data);
+    data.secrets.map((secret: Record<'key' | 'value', string>) => {
+      if (secret.key && secret.value) {
+        addSecret.mutate({
+          key: secret.key,
+          value: secret.value,
+          appId,
+        });
+      }
+    });
 
-    const [secretToDelete, setSecretToDelete] = useState<{
-      id: string;
-      appId: string;
-    }>();
-
-    return (
-      <>
-        {!existingSecret && register && (
-          <>
-            <LockIcon />
-            <Input
-              placeholder="Key"
-              {...register(`secrets.${index}.key`, {})}
-            />
-            <Input
-              placeholder="Value"
-              {...register(`secrets.${index}.value`, {})}
-            />
-
-            <IconButton
-              variant="ghost"
-              colorScheme="red"
-              aria-label="delete"
-              onClick={() => {
-                remove(index);
-              }}
-            >
-              <CloseIcon boxSize={3} />
-            </IconButton>
-          </>
-        )}
-        {existingSecret && (
-          <>
-            <LockIcon color={'gray.400'} />
-            <Input placeholder="Key" disabled value={existingSecret.key} />
-            <Input
-              placeholder="Value"
-              disabled
-              type={'password'}
-              value="we're not showing you this"
-            />
-            {editable && (
-              <IconButton
-                variant="ghost"
-                colorScheme="red"
-                aria-label="delete"
-                onClick={() => {
-                  setSecretToDelete(existingSecret);
-                  onOpen();
-                }}
-              >
-                <FiTrash />
-              </IconButton>
-            )}
-          </>
-        )}
-        <AlertDialog
-          isOpen={isOpen}
-          leastDestructiveRef={cancelRef}
-          onClose={onClose}
-        >
-          <AlertDialogOverlay>
-            <AlertDialogContent>
-              <AlertDialogHeader fontSize="lg" fontWeight="bold">
-                Delete Customer
-              </AlertDialogHeader>
-
-              <AlertDialogBody>
-                Are you sure? You can't undo this action afterwards.
-              </AlertDialogBody>
-
-              <AlertDialogFooter>
-                <Button ref={cancelRef} onClick={onClose}>
-                  Cancel
-                </Button>
-                <Button
-                  colorScheme="red"
-                  onClick={() => {
-                    if (secretToDelete) {
-                      deleteSecret.mutate({
-                        appId: secretToDelete.appId,
-                        id: secretToDelete.id,
-                      });
-                    }
-                    setSecretToDelete(undefined);
-                    onClose();
-                  }}
-                  ml={3}
-                >
-                  Delete
-                </Button>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialogOverlay>
-        </AlertDialog>
-      </>
-    );
-  };
+    reset();
+  });
 
   return (
-    <>
-      <form
-        onSubmit={handleSubmit((data) => {
-          console.log(data);
-          data.secrets.map((secret: Record<'key' | 'value', string>) => {
-            if (secret.key && secret.value) {
-              addSecret.mutate({
-                key: secret.key,
-                value: secret.value,
-                appId,
-              });
-            }
-          });
-
-          reset();
-        })}
-      >
-        <Heading as="h6" pb="4" fontWeight={400}>
+    <HStack spacing={0} flex={1} alignItems="start" gap={16}>
+      <VStack flex={1} alignItems="stretch" spacing={0} gap={4}>
+        <Heading as="h6" fontWeight={400} flex={1}>
           Secrets
         </Heading>
-        <VStack align={'start'}>
-          <>
-            <Box mb={4}>
-              <Text>
-                Use environment variables to provide secrets and environment
-                information to your deployments. You can access them from your
-                code by using the
-              </Text>
-              <Text display={'inline'} fontWeight="bold">
-                {' '}
-                Zipper.env{' '}
-              </Text>
-              <Text display={'inline'}>API.</Text>
-            </Box>
-            {existingSecrets.data &&
-              existingSecrets.data.map((secret) => (
-                <HStack key={secret.id}>
-                  <Edit existingSecret={secret} />
-                </HStack>
-              ))}
-            {register &&
-              editable &&
-              fields.map((field, index) => (
-                <HStack key={field.id}>
-                  <Edit register={register} index={index} />
-                </HStack>
-              ))}
-          </>
+        <Text display="inline">
+          Use environment variables to provide secrets and environment
+          information to your deployments. You can access them from your code by
+          using the{' '}
+          <Text as="span" display="inline" fontWeight="bold">
+            Zipper.env
+          </Text>{' '}
+          API.
+        </Text>
+      </VStack>
+      <VStack
+        as="form"
+        alignItems="stretch"
+        onSubmit={onSubmit}
+        flex={3}
+        spacing={4}
+      >
+        <VStack align="stretch" pt={4} spacing={4}>
+          {existingSecrets.data &&
+            existingSecrets.data.map((secret) => (
+              <EditSecret
+                key={secret.id}
+                existingSecret={secret}
+                remove={(toDelete) => {
+                  setSecretToDelete(toDelete);
+                  onOpen();
+                }}
+                editable={editable}
+              />
+            ))}
+          {editable &&
+            fields.map((field, index) => (
+              <EditSecret
+                key={field.id}
+                register={register}
+                index={index}
+                existingSecret={undefined}
+                remove={remove}
+              />
+            ))}
+          <AlertDialog
+            isOpen={isOpen}
+            leastDestructiveRef={cancelRef}
+            onClose={onClose}
+          >
+            <AlertDialogOverlay>
+              <AlertDialogContent>
+                <AlertDialogHeader fontSize="lg" fontWeight="bold">
+                  Delete Customer
+                </AlertDialogHeader>
+
+                <AlertDialogBody>
+                  Are you sure? You can't undo this action afterwards.
+                </AlertDialogBody>
+
+                <AlertDialogFooter>
+                  <Button
+                    ref={cancelRef}
+                    onClick={() => {
+                      setSecretToDelete(undefined);
+                      onClose();
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    colorScheme="red"
+                    onClick={() => {
+                      if (secretToDelete) {
+                        deleteSecret.mutate({
+                          appId: secretToDelete.appId,
+                          id: secretToDelete.id,
+                        });
+                      }
+                      setSecretToDelete(undefined);
+                      onClose();
+                    }}
+                    ml={3}
+                  >
+                    Delete
+                  </Button>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialogOverlay>
+          </AlertDialog>
         </VStack>
 
         <Box mt={4}>
@@ -241,8 +185,8 @@ const SecretsTab: React.FC<Props> = ({ appId, editable }) => {
             {editable ? 'Save' : 'Close'}
           </Button>
         </Box>
-      </form>
-    </>
+      </VStack>
+    </HStack>
   );
 };
 
