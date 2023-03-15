@@ -114,28 +114,6 @@ export function PlaygroundHeader({
         </HStack>
       </HStack>
       <HStack justifyContent="end">
-<<<<<<< HEAD
-=======
-        {app.canUserEdit && (
-          <Button variant={'outline'} onClick={onClickShare}>
-            <HiOutlineShare />
-          </Button>
-        )}
-        {app.canUserEdit && (
-          <Button
-            type="button"
-            paddingX={4}
-            variant="solid"
-            colorScheme="purple"
-            textColor="gray.100"
-            onClick={() => onClickRun()}
-            disabled={isRunning}
-          >
-            <Icon as={HiLightningBolt} />
-            <Text ml="2">Run</Text>
-          </Button>
-        )}
->>>>>>> 5a416e4 (fix build error)
         {!app.canUserEdit && isLoaded && (
           <Button
             type="button"
