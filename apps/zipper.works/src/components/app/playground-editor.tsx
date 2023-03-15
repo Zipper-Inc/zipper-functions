@@ -389,6 +389,7 @@ export default function PlaygroundEditor(
         defaultLanguage="typescript"
         theme="vs-light"
         options={{
+          fontSize: 13,
           minimap: { enabled: false },
           automaticLayout: true,
         }}
