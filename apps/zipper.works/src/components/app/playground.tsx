@@ -189,7 +189,7 @@ export function Playground({
             </TabPanel>
 
             {/* SECRETS */}
-            <TabPanel flex={1}>
+            <TabPanel {...tabPanelStyles}>
               <SecretsTab editable={app.canUserEdit} appId={id} />
             </TabPanel>
 
