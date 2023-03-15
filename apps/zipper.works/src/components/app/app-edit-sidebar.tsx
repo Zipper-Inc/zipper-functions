@@ -29,6 +29,7 @@ import { trpc } from '~/utils/trpc';
 import { useRouter } from 'next/router';
 
 import { HiOutlineClipboard, HiOutlinePlay } from 'react-icons/hi2';
+import { useEditorContext } from '../context/editor-context';
 
 type AppEditSidebarProps = {
   showInputForm: boolean;
@@ -54,11 +55,13 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
     inputParams,
     formMethods,
     isRunning,
-    result,
+    results,
     run,
     userAuthConnectors,
     appInfo,
   } = useRunAppContext();
+
+  const { currentScript } = useEditorContext();
 
   const router = useRouter();
   const context = trpc.useContext();
@@ -130,7 +133,16 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
       isClosable: true,
     });
   };
-  const output = useMemo(() => <FunctionOutput result={result} />, [result]);
+  const output = useMemo(
+    () => (
+      <FunctionOutput result={results[currentScript?.filename || 'main.ts']} />
+    ),
+    [results, currentScript],
+  );
+
+  useEffect(() => {
+    console.log(results);
+  }, [results]);
 
   return (
     <Tabs
@@ -159,7 +171,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
         <HStack>
           <Button
             colorScheme="purple"
-            variant="solid"
+            variant={currentScript?.filename === 'main.ts' ? 'solid' : 'ghost'}
             onClick={() => run(true)}
             display="flex"
             gap={2}
@@ -167,7 +179,9 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
             isDisabled={isRunning}
           >
             <HiOutlinePlay />
-            <Text>Run</Text>
+            <Text>{`Run${
+              currentScript?.filename !== 'main.ts' ? ' this file' : ''
+            }`}</Text>
           </Button>
         </HStack>
       </TabList>
@@ -259,7 +273,9 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
               )}
             </Box>
 
-            {result && <Box mt={4}>{output}</Box>}
+            {currentScript && results[currentScript.filename] && (
+              <Box mt={4}>{output}</Box>
+            )}
           </TabPanel>
         )}
 

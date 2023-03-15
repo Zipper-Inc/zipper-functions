@@ -82,6 +82,7 @@ export const ScriptItem: React.FC<ScriptItemProps> = ({
       ) : (
         <Link
           style={{ width: '100%' }}
+          _hover={{ textDecoration: 'none' }}
           onClick={() => {
             setCurrentScript(script);
           }}
