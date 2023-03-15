@@ -392,6 +392,7 @@ export default function PlaygroundEditor(
           fontSize: 13,
           minimap: { enabled: false },
           automaticLayout: true,
+          scrollbar: { verticalScrollbarSize: 0, horizontalScrollbarSize: 0 },
         }}
         onMount={handleEditorDidMount}
         {...props}

@@ -103,6 +103,7 @@ export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
           alignItems="stretch"
           pt={currentScriptConnectorId ? 4 : 0}
           minH={currentScriptConnectorId ? '50%' : '100%'}
+          pr={2}
         >
           {PlaygroundEditor && (
             <PlaygroundEditor
