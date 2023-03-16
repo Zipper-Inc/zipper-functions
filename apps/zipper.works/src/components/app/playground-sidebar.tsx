@@ -137,7 +137,9 @@ export function PlaygroundSidebar({
               {({ onClose }) => (
                 <>
                   <PopoverTrigger>
-                    <Flex>
+                    <Flex
+                      _hover={{ cursor: 'pointer', transform: 'scale(1.1)' }}
+                    >
                       <FiPlusSquare />
                     </Flex>
                   </PopoverTrigger>
