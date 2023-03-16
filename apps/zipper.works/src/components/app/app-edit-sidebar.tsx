@@ -140,10 +140,6 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
     [results, currentScript],
   );
 
-  useEffect(() => {
-    console.log(results);
-  }, [results]);
-
   return (
     <Tabs
       colorScheme="purple"
