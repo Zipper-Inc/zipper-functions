@@ -75,7 +75,13 @@ export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
       maxH={MAX_CODE_TAB_HEIGHT}
       minH="350px"
     >
-      <VStack flex={1} alignItems="stretch" minWidth="200px">
+      <VStack
+        flex={1}
+        alignItems="stretch"
+        minWidth="250px"
+        maxH="400px"
+        minH="fit-content"
+      >
         <PlaygroundSidebar app={app} mainScript={mainScript} />
       </VStack>
       <VStack
@@ -97,6 +103,7 @@ export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
           alignItems="stretch"
           pt={currentScriptConnectorId ? 4 : 0}
           minH={currentScriptConnectorId ? '50%' : '100%'}
+          pr={2}
         >
           {PlaygroundEditor && (
             <PlaygroundEditor

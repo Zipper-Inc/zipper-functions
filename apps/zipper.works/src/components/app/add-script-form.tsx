@@ -48,7 +48,7 @@ export default function AddScriptForm({
     <VStack alignItems="stretch" spacing={0} gap={4} minW={0}>
       <VStack alignItems="stretch">
         <Text size="sm" color="gray.700" fontWeight="medium">
-          Create a custom function
+          Create a script
         </Text>
         <form
           onSubmit={handleSubmit(
@@ -74,7 +74,7 @@ export default function AddScriptForm({
                 px={4}
                 size="md"
                 type="text"
-                placeholder="Script name"
+                placeholder="File name"
                 disabled={addScript.isLoading}
                 isInvalid={scriptFilename && !isFilenameValid}
                 autoComplete="off"
@@ -138,7 +138,7 @@ export default function AddScriptForm({
                     {connector.icon}
                     <Text>{connector.name}</Text>
                   </HStack>
-                  <HStack color="gray.400" spacing={1}>
+                  <HStack color="gray.400" spacing={1} fontSize="xs">
                     <Text>CONNECTED</Text>
                     <HiCheck />
                   </HStack>

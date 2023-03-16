@@ -21,7 +21,7 @@ export type FunctionCallContextType = {
   inputParams: InputParam[];
   isRunning: boolean;
   lastRunVersion: string;
-  result: string;
+  results: Record<string, string>;
   userAuthConnectors: {
     type: string;
     appId: string;
@@ -40,7 +40,7 @@ export const RunAppContext = createContext<FunctionCallContextType>({
   inputParams: [],
   isRunning: false,
   lastRunVersion: '',
-  result: '',
+  results: {},
   appEventsQuery: undefined,
   userAuthConnectors: [],
   run: noop,
@@ -64,7 +64,7 @@ export function RunAppProvider({
   const { id, name, description, slug, updatedAt, lastDeploymentVersion } = app;
   const formMethods = useForm();
   const [isRunning, setIsRunning] = useState(false);
-  const [result, setResult] = useState('');
+  const [results, setResults] = useState<Record<string, string>>({});
   const [lastRunVersion, setLastRunVersion] = useState(getLastRunVersion(app));
   const appEventsQuery = trpc.useQuery([
     'appEvent.all',
@@ -99,7 +99,7 @@ export function RunAppProvider({
         isRunning,
         inputParams,
         lastRunVersion,
-        result,
+        results,
         appEventsQuery,
         userAuthConnectors: app.connectors.filter(
           (c) => c.isUserAuthRequired && c.userScopes.length > 0,
@@ -156,7 +156,7 @@ export function RunAppProvider({
             },
           ).then((r) => r.text());
 
-          setResult(result);
+          setResults({ ...results, [filename || 'main.ts']: result });
 
           setLastRunVersion(version);
           editAppMutation.mutateAsync({

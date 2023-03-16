@@ -127,10 +127,12 @@ export function PlaygroundSidebar({
         paddingX={2}
         paddingY={4}
         spacing={4}
+        boxShadow="lg"
+        mr={2}
       >
         <HStack px={3}>
           <Text size="sm" flexGrow={1}>
-            Functions
+            Scripts
           </Text>
           {app.canUserEdit && (
             <Popover>
