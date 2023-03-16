@@ -1,4 +1,4 @@
-import createConnector from './createConnector';
+import createConnector from '../createConnector';
 import {
   Box,
   Button,
@@ -18,25 +18,13 @@ import { FormProvider, useForm } from 'react-hook-form';
 import { FiTrash } from 'react-icons/fi';
 import { trpc } from '~/utils/trpc';
 import { VscGithub } from 'react-icons/vsc';
+import { code } from './constants';
 
 export const githubConnector = createConnector({
   id: 'github',
   name: 'GitHub',
   icon: <VscGithub />,
-  code: `import { Octokit, App } from "https://cdn.skypack.dev/octokit?dts";
-
-const clientGlobal = window as typeof window & {
-  gitHubClient?: any;
-};
-
-export const client = clientGlobal.gitHubClient || new Octokit({
-  auth: Deno.env.get("GITHUB_TOKEN"),
-}).rest;
-
-clientGlobal.gitHubClient = client;
-
-export default client;
-`,
+  code,
 });
 
 function GitHubConnectorForm({ appId }: { appId: string }) {

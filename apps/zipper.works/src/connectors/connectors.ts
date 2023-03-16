@@ -1,5 +1,5 @@
 import { Connector, ConnectorId } from './createConnector';
-import { githubConnector } from './github.connector';
+import { githubConnector } from './github';
 import { slackConnector } from './slack';
 
 export const connectors: Record<ConnectorId, Connector> = {
