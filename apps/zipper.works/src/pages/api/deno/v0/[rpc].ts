@@ -206,6 +206,7 @@ export default async function handler(
   switch (url.pathname) {
     case '/api/deno/v0/boot': {
       if (!args.deployment_id) throw new Error('Missing deployment_id');
+
       const { body, headers }: any = await originBoot({
         req,
         id: args.deployment_id || '',
@@ -331,6 +332,26 @@ const createEsZip = async ({
   });
 };
 
+function errorResponse(errorMessage: string) {
+  return {
+    body: `addEventListener("fetch", (e) => e.respondWith(new Response("${errorMessage}")));`,
+    headers: {
+      [X_DENO_CONFIG]: JSON.stringify({
+        entrypoint: 'file:///src/main.js',
+        layers: [
+          {
+            kind: 'bundle',
+            id: '812a2873-7aa8-46a0-9b97-bbace05de91d',
+            specifier: 'file:///src/main.js',
+          },
+        ],
+        inline_layer: '812a2873-7aa8-46a0-9b97-bbace05de91d',
+      }),
+      status: 200,
+    },
+  };
+}
+
 /** @todo use a real deployment id instead of an app id. deployment id should be app id and version or something */
 async function originBoot({
   req,
@@ -365,7 +386,24 @@ async function originBoot({
   });
 
   if (!app) {
-    return { body: `App with ${appId} does not exist`, status: 404 };
+    return errorResponse(`Missing app ID`);
+  }
+
+  const missingUserAuths = app.connectors.filter((connector) => {
+    if (
+      connector.isUserAuthRequired &&
+      connector.appConnectorUserAuths.length === 0
+    ) {
+      return true;
+    }
+  });
+
+  if (missingUserAuths.length > 0) {
+    return errorResponse(
+      `You need to auth the following integrations: ${missingUserAuths
+        .map((c) => c.type)
+        .join(', ')}`,
+    );
   }
 
   const proto = req.headers['x-forwarded-proto'] || 'http';
