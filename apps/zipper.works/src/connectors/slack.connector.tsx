@@ -1,6 +1,12 @@
 import createConnector from './createConnector';
 import {
+  Accordion,
+  AccordionButton,
+  AccordionIcon,
+  AccordionItem,
+  AccordionPanel,
   Box,
+  Button,
   Card,
   CardBody,
   Code,
@@ -199,6 +205,8 @@ function SlackConnectorForm({ appId }: { appId: string }) {
     connector.data?.isUserAuthRequired,
   );
 
+  const [isSaving, setIsSaving] = useState(false);
+
   // get the existing Slack bot token from the database
   const existingSecret = trpc.useQuery([
     'secret.get',
@@ -219,7 +227,7 @@ function SlackConnectorForm({ appId }: { appId: string }) {
   const context = trpc.useContext();
   const router = useRouter();
   const updateAppConnectorMutation = trpc.useMutation('appConnector.update', {
-    onSuccess: (data, variables) => {
+    onSuccess: () => {
       context.invalidateQueries([
         'app.byResourceOwnerAndAppSlugs',
         {
@@ -245,30 +253,6 @@ function SlackConnectorForm({ appId }: { appId: string }) {
   }, [connector.data?.isUserAuthRequired]);
 
   const existingInstallation = existingSecret.data && connector.data?.metadata;
-
-  // update the Slack connector data in the database when the bot scopes change
-  useEffect(() => {
-    if (connector.isLoading || connector.isError) return;
-    if (existingInstallation) return;
-    updateAppConnectorMutation.mutateAsync({
-      appId,
-      type: 'slack',
-      data: { workspaceScopes: botValue as string[] },
-    });
-    slackAuthURL.refetch();
-  }, [botValue]);
-
-  // update the Slack connector data in the database when the user scopes change
-  useEffect(() => {
-    if (connector.isLoading || connector.isError) return;
-    if (existingInstallation) return;
-    updateAppConnectorMutation.mutateAsync({
-      appId,
-      type: 'slack',
-      data: { userScopes: userValue as string[] },
-    });
-    slackAuthURL.refetch();
-  }, [userValue]);
 
   if (existingSecret.isLoading || connector.isLoading) {
     return <></>;
@@ -383,72 +367,126 @@ function SlackConnectorForm({ appId }: { appId: string }) {
             ) : (
               <Card w="full">
                 <CardBody color="gray.600">
-                  <VStack align="start" w="full">
-                    <FormControl>
-                      <FormLabel>
-                        Bot Scopes
-                        <Icon ml="2" as={HiQuestionMarkCircle} />
-                      </FormLabel>
-                      <MultiSelect
-                        options={botOptions}
-                        value={botValue}
-                        onChange={botOnChange as SelectOnChange}
-                      />
-                    </FormControl>
+                  <Accordion allowMultiple={true}>
+                    <AccordionItem border={'none'}>
+                      <h2>
+                        <AccordionButton>
+                          <Box
+                            as="span"
+                            flex="1"
+                            textAlign="left"
+                            fontSize={'md'}
+                            fontWeight="semibold"
+                            color={'gray.600'}
+                          >
+                            Configure scopes
+                          </Box>
+                          <AccordionIcon />
+                        </AccordionButton>
+                      </h2>
+                      <AccordionPanel pb={4}>
+                        <VStack align="start" w="full">
+                          <FormControl>
+                            <FormLabel color={'gray.500'}>
+                              Bot Scopes
+                              <Icon ml="2" as={HiQuestionMarkCircle} />
+                            </FormLabel>
+                            <MultiSelect
+                              options={botOptions}
+                              value={botValue}
+                              onChange={botOnChange as SelectOnChange}
+                            />
+                          </FormControl>
 
-                    <FormControl pt="2">
-                      <FormLabel>
-                        User Authentication
-                        <Icon ml="2" as={HiQuestionMarkCircle} />
-                      </FormLabel>
+                          <FormControl pt="2">
+                            <FormLabel color={'gray.500'}>
+                              User Scopes
+                              <Icon ml="2" as={HiQuestionMarkCircle} />
+                            </FormLabel>
 
-                      <MultiSelect
-                        options={userOptions}
-                        value={userValue}
-                        onChange={userOnChange as SelectOnChange}
-                      />
-                      <HStack w="full" pt="2">
-                        <Box mr="auto">
-                          <HStack>
-                            <Text>
-                              Require users to auth to access your app
-                            </Text>
-                          </HStack>
-                        </Box>
-                        <Switch
-                          isChecked={isUserAuthRequired}
-                          ml="auto"
-                          onChange={(e) => {
-                            setIsUserAuthRequired(e.target.checked);
-                            updateAppConnectorMutation.mutateAsync({
-                              appId,
-                              type: 'slack',
-                              data: { isUserAuthRequired: e.target.checked },
-                            });
-                          }}
-                        />
-                      </HStack>
-                    </FormControl>
+                            <MultiSelect
+                              options={userOptions}
+                              value={userValue}
+                              onChange={userOnChange as SelectOnChange}
+                            />
+                            <HStack w="full" pt="2" pb="4">
+                              <Box mr="auto">
+                                <HStack>
+                                  <Text>
+                                    Require users to auth to access your app
+                                  </Text>
+                                </HStack>
+                              </Box>
+                              <Switch
+                                isChecked={isUserAuthRequired}
+                                ml="auto"
+                                onChange={(e) => {
+                                  setIsUserAuthRequired(e.target.checked);
+                                }}
+                              />
+                            </HStack>
 
-                    <FormControl pt="4">
-                      <FormLabel>Install the Slack app</FormLabel>
-                    </FormControl>
-                    {slackAuthURL.data ? (
-                      <Link href={slackAuthURL.data?.url}>
-                        <Image
-                          alt="Add to Slack"
-                          src="https://platform.slack-edge.com/img/add_to_slack.png"
-                          srcSet="https://platform.slack-edge.com/img/add_to_slack.png 1x, https://platform.slack-edge.com/img/add_to_slack@2x.png 2x"
-                        />
-                      </Link>
-                    ) : (
-                      <Image
-                        alt="Add to Slack"
-                        src="https://platform.slack-edge.com/img/add_to_slack.png"
-                        srcSet="https://platform.slack-edge.com/img/add_to_slack.png 1x, https://platform.slack-edge.com/img/add_to_slack@2x.png 2x"
-                      />
-                    )}
-                  </VStack>
+                            <Button
+                              colorScheme={'purple'}
+                              isDisabled={isSaving}
+                              onClick={async () => {
+                                setIsSaving(true);
+                                await updateAppConnectorMutation.mutateAsync({
+                                  appId,
+                                  type: 'slack',
+                                  data: {
+                                    isUserAuthRequired,
+                                    userScopes: userValue as string[],
+                                    workspaceScopes: botValue as string[],
+                                  },
+                                });
+
+                                setIsSaving(false);
+                              }}
+                            >
+                              Save
+                            </Button>
+                          </FormControl>
+                        </VStack>
+                      </AccordionPanel>
+                    </AccordionItem>
+
+                    <AccordionItem border={'none'}>
+                      <h2>
+                        <AccordionButton>
+                          <Box
+                            as="span"
+                            flex="1"
+                            textAlign="left"
+                            fontWeight="semibold"
+                            color={'gray.600'}
+                          >
+                            Install the app
+                          </Box>
+                          <AccordionIcon />
+                        </AccordionButton>
+                      </h2>
+                      <AccordionPanel pb={4}>
+                        <VStack align="start" w="full">
+                          {slackAuthURL.data ? (
+                            <Link href={slackAuthURL.data?.url}>
+                              <Image
+                                alt="Add to Slack"
+                                src="https://platform.slack-edge.com/img/add_to_slack.png"
+                                srcSet="https://platform.slack-edge.com/img/add_to_slack.png 1x, https://platform.slack-edge.com/img/add_to_slack@2x.png 2x"
+                              />
+                            </Link>
+                          ) : (
+                            <Image
+                              alt="Add to Slack"
+                              src="https://platform.slack-edge.com/img/add_to_slack.png"
+                              srcSet="https://platform.slack-edge.com/img/add_to_slack.png 1x, https://platform.slack-edge.com/img/add_to_slack@2x.png 2x"
+                            />
+                          )}
+                        </VStack>
+                      </AccordionPanel>
+                    </AccordionItem>
+                  </Accordion>
                 </CardBody>
               </Card>
             )}

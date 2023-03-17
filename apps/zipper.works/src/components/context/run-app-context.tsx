@@ -153,6 +153,7 @@ export function RunAppProvider({
             {
               method: 'POST',
               body: JSON.stringify(inputs),
+              credentials: 'include',
             },
           ).then((r) => r.text());
 
