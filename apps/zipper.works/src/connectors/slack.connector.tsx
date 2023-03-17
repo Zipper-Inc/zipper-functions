@@ -31,7 +31,6 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { MultiSelect, SelectOnChange, useMultiSelect } from '@zipper/ui';
 import { useRouter } from 'next/router';
-import Header from '~/components/header';
 
 // configure the Slack connector
 export const slackConnector = createConnector({
