@@ -158,6 +158,7 @@ export const theme = extendTheme({
         flex: 1,
         display: 'flex',
         flexDirection: 'column',
+        minWidth: 'container.md',
       },
     },
   },
