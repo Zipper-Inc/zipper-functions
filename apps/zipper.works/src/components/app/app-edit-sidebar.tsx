@@ -39,6 +39,7 @@ import { useRouter } from 'next/router';
 import { HiOutlineClipboard, HiOutlinePlay } from 'react-icons/hi2';
 import { useEditorContext } from '../context/editor-context';
 import getRunUrl from '~/utils/get-run-url';
+import Link from 'next/link';
 
 type AppEditSidebarProps = {
   showInputForm: boolean;
@@ -242,7 +243,14 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
         overflow="auto"
       >
         <Text fontWeight="semibold" fontSize="xs" whiteSpace="nowrap" flex={1}>
-          {appLink}
+          <Link
+            href={`${
+              process.env.NODE_ENV === 'development' ? 'http' : 'https'
+            }://${appLink}`}
+            target="_blank"
+          >
+            {appLink}
+          </Link>
         </Text>
         <Tooltip label="Copy" bgColor="purple.500" textColor="gray.100">
           <IconButton
