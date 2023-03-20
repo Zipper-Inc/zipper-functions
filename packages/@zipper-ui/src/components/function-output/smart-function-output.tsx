@@ -9,6 +9,7 @@ import {
   Td,
   Box,
   Text,
+  Button,
 } from '@chakra-ui/react';
 import { OutputType } from '@zipper/types';
 import styled from '@emotion/styled';
@@ -16,7 +17,7 @@ import styled from '@emotion/styled';
 import { useTable, useSortBy } from 'react-table';
 import { ObjectExplorer } from './object-explorer';
 import { isPrimitive, parseResult } from './utils';
-import { Props } from './types';
+import { FunctionOutputProps } from './types';
 import { RawFunctionOutput } from './raw-function-output';
 import { HiCheck, HiX } from 'react-icons/hi';
 
@@ -45,7 +46,18 @@ function TableArray(props: { data: Array<any> }) {
     useTable({ columns, data }, useSortBy);
 
   if (data.length === 0) {
-    return <Box>Empty</Box>;
+    return (
+      <Text
+        py={6}
+        size="sm"
+        color={'gray.500'}
+        alignItems={'end'}
+        flex={1}
+        noOfLines={1}
+      >
+        Empty array
+      </Text>
+    );
   }
 
   return (
@@ -104,7 +116,12 @@ function TableArray(props: { data: Array<any> }) {
   );
 }
 
-function TableCollection(props: { data: Array<any> }) {
+function TableCollection(props: {
+  data: Array<any>;
+  setExpandedResult: any;
+  setModalResult: any;
+  setOverallResult: any;
+}) {
   const columns = useMemo(() => {
     const keys: Array<string> = [];
     props.data.forEach((record) => {
@@ -168,7 +185,12 @@ function TableCollection(props: { data: Array<any> }) {
                   }
                   return (
                     <Td {...cell.getCellProps()}>
-                      <SmartFunctionOutput result={cell.value} />
+                      <SmartFunctionOutput
+                        result={cell.value}
+                        setExpandedResult={props.setExpandedResult}
+                        setModalResult={props.setModalResult}
+                        setOverallResult={props.setOverallResult}
+                      />
                     </Td>
                   );
                 })}
@@ -181,10 +203,43 @@ function TableCollection(props: { data: Array<any> }) {
   );
 }
 
-export function SmartFunctionOutput({ result, level = 0 }: Props) {
+export function SmartFunctionOutput({
+  result,
+  level = 0,
+  setExpandedResult,
+  setModalResult,
+  setOverallResult,
+}: FunctionOutputProps) {
   if (!result) return null;
 
   const { type, data } = parseResult(result);
+
+  async function runScript(action: {
+    script: string;
+    showAs: 'modal' | 'expanded' | 'replace_all';
+    inputs: Record<string, any>;
+  }) {
+    console.log(action);
+    const res = await fetch(`/${action.script}/call`, {
+      method: 'POST',
+      body: JSON.stringify(action.inputs),
+    });
+    const text = await res.text();
+    console.log(text);
+    switch (action.showAs) {
+      case 'modal':
+        setModalResult({ heading: data[0], body: text });
+        break;
+      case 'expanded':
+        setExpandedResult(text);
+        break;
+      case 'replace_all':
+        setOverallResult(text);
+        break;
+      default:
+        break;
+    }
+  }
 
   switch (type) {
     case OutputType.String:
@@ -194,7 +249,14 @@ export function SmartFunctionOutput({ result, level = 0 }: Props) {
       return <TableArray data={data} />;
 
     case OutputType.Collection:
-      return <TableCollection data={data} />;
+      return (
+        <TableCollection
+          data={data}
+          setExpandedResult={setExpandedResult}
+          setModalResult={setModalResult}
+          setOverallResult={setOverallResult}
+        />
+      );
 
     case OutputType.Html:
       return (
@@ -204,7 +266,26 @@ export function SmartFunctionOutput({ result, level = 0 }: Props) {
       );
 
     case OutputType.Object:
-      return <ObjectExplorer data={data} level={level} />;
+      return (
+        <ObjectExplorer
+          data={data}
+          level={level}
+          setExpandedResult={setExpandedResult}
+          setModalResult={setModalResult}
+          setOverallResult={setOverallResult}
+        />
+      );
+
+    case OutputType.Action:
+      return (
+        <Button
+          colorScheme={'purple'}
+          variant="outline"
+          onClick={() => runScript(data)}
+        >
+          {data.text || 'missing_text'}
+        </Button>
+      );
 
     default:
       return <RawFunctionOutput result={result} />;

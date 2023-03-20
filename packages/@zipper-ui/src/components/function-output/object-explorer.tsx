@@ -15,10 +15,16 @@ function ObjectExplorerRow({
   heading,
   data,
   level,
+  setExpandedResult,
+  setModalResult,
+  setOverallResult,
 }: {
   heading: string;
   data: any;
   level: number;
+  setExpandedResult: any;
+  setModalResult: any;
+  setOverallResult: any;
 }) {
   const { isOpen, onToggle } = useDisclosure({ defaultIsOpen: true });
   const shouldCollapse = !isPrimitive(data);
@@ -60,7 +66,13 @@ function ObjectExplorerRow({
             </Text>
           )}
           <Collapse in={isOpen}>
-            <SmartFunctionOutput result={data} level={level + 1} />
+            <SmartFunctionOutput
+              result={data}
+              level={level + 1}
+              setExpandedResult={setExpandedResult}
+              setModalResult={setModalResult}
+              setOverallResult={setOverallResult}
+            />
           </Collapse>
         </Box>
       ) : (
@@ -77,9 +89,15 @@ function ObjectExplorerRow({
 export function ObjectExplorer({
   data,
   level,
+  setExpandedResult,
+  setModalResult,
+  setOverallResult,
 }: {
   data: Record<string, any>;
   level: number;
+  setExpandedResult: any;
+  setModalResult: any;
+  setOverallResult: any;
 }) {
   return (
     <Box>
@@ -89,6 +107,9 @@ export function ObjectExplorer({
           heading={key}
           data={data[key]}
           level={level}
+          setExpandedResult={setExpandedResult}
+          setModalResult={setModalResult}
+          setOverallResult={setOverallResult}
         />
       ))}
     </Box>

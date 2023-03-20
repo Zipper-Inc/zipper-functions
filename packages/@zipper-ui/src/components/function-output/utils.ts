@@ -26,5 +26,7 @@ export function parseResult(result: any): { type: OutputType; data: any } {
     else type = OutputType.Collection;
   }
 
+  if (type === OutputType.Object && data?.action_type) type = OutputType.Action;
+
   return { type, data };
 }

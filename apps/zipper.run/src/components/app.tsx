@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { GetServerSideProps } from 'next';
 import {
   FunctionInputs,
@@ -21,6 +21,14 @@ import {
   Button,
   Divider,
   Progress,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalCloseButton,
+  ModalBody,
+  ModalFooter,
+  useDisclosure,
 } from '@chakra-ui/react';
 import Head from 'next/head';
 import { useForm } from 'react-hook-form';
@@ -52,6 +60,8 @@ export function AppPage({
   const appTitle = app.name || app.slug;
   const formContext = useForm({ defaultValues });
   const [result, setResult] = useState('');
+  const [expandedResult, setExpandedResult] = useState('');
+  const [modalResult, setModalResult] = useState({ heading: '', body: '' });
   const [loading, setLoading] = useState(false);
 
   const runApp = async () => {
@@ -84,6 +94,19 @@ export function AppPage({
     },
     [],
   );
+
+  const { isOpen, onOpen, onClose } = useDisclosure();
+
+  useEffect(() => {
+    if (modalResult.body) {
+      onOpen();
+    }
+  }, [modalResult]);
+
+  function closeModal() {
+    setModalResult({ heading: '', body: '' });
+    onClose();
+  }
 
   return (
     <>
@@ -167,9 +190,59 @@ export function AppPage({
       )}
       {result && (
         <Box py={4} px={8}>
-          <FunctionOutput result={result} />
+          <FunctionOutput
+            result={result}
+            setOverallResult={setResult}
+            setModalResult={setModalResult}
+            setExpandedResult={setExpandedResult}
+          />
         </Box>
       )}
+
+      {expandedResult && (
+        <Box py={4} px={8}>
+          <FunctionOutput
+            result={expandedResult}
+            setOverallResult={setResult}
+            setModalResult={setModalResult}
+            setExpandedResult={setExpandedResult}
+          />
+        </Box>
+      )}
+      <Modal isOpen={isOpen} onClose={closeModal} size="5xl">
+        <ModalOverlay />
+        <ModalContent maxH="2xl">
+          <ModalHeader>{modalResult.heading || appTitle} </ModalHeader>
+          <ModalCloseButton />
+          <ModalBody
+            fontSize="sm"
+            color="neutral.700"
+            flex={1}
+            display="flex"
+            flexDirection="column"
+            gap={8}
+            overflow="auto"
+          >
+            <FunctionOutput
+              result={modalResult.body}
+              setOverallResult={setResult}
+              setModalResult={setModalResult}
+              setExpandedResult={setExpandedResult}
+            />
+          </ModalBody>
+          <ModalFooter justifyContent="space-between">
+            <Button
+              variant="outline"
+              onClick={closeModal}
+              mr="3"
+              flex={1}
+              fontWeight="medium"
+            >
+              Close
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </>
   );
 }
