@@ -121,6 +121,7 @@ function TableCollection(props: {
   setExpandedResult: any;
   setModalResult: any;
   setOverallResult: any;
+  getRunUrl: (scriptName: string) => string;
 }) {
   const columns = useMemo(() => {
     const keys: Array<string> = [];
@@ -190,6 +191,7 @@ function TableCollection(props: {
                         setExpandedResult={props.setExpandedResult}
                         setModalResult={props.setModalResult}
                         setOverallResult={props.setOverallResult}
+                        getRunUrl={props.getRunUrl}
                       />
                     </Td>
                   );
@@ -209,6 +211,7 @@ export function SmartFunctionOutput({
   setExpandedResult,
   setModalResult,
   setOverallResult,
+  getRunUrl,
 }: FunctionOutputProps) {
   if (!result) return null;
 
@@ -219,13 +222,12 @@ export function SmartFunctionOutput({
     showAs: 'modal' | 'expanded' | 'replace_all';
     inputs: Record<string, any>;
   }) {
-    console.log(action);
-    const res = await fetch(`/${action.script}/call`, {
+    const res = await fetch(getRunUrl(action.script), {
       method: 'POST',
       body: JSON.stringify(action.inputs),
     });
     const text = await res.text();
-    console.log(text);
+
     switch (action.showAs) {
       case 'modal':
         setModalResult({ heading: data[0], body: text });
@@ -255,6 +257,7 @@ export function SmartFunctionOutput({
           setExpandedResult={setExpandedResult}
           setModalResult={setModalResult}
           setOverallResult={setOverallResult}
+          getRunUrl={getRunUrl}
         />
       );
 
@@ -273,6 +276,7 @@ export function SmartFunctionOutput({
           setExpandedResult={setExpandedResult}
           setModalResult={setModalResult}
           setOverallResult={setOverallResult}
+          getRunUrl={getRunUrl}
         />
       );
 

@@ -15,6 +15,14 @@ import {
   useToast,
   IconButton,
   Heading,
+  Modal,
+  ModalBody,
+  ModalCloseButton,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
+  ModalOverlay,
+  useDisclosure,
 } from '@chakra-ui/react';
 import {
   FunctionInputs,
@@ -30,6 +38,7 @@ import { useRouter } from 'next/router';
 
 import { HiOutlineClipboard, HiOutlinePlay } from 'react-icons/hi2';
 import { useEditorContext } from '../context/editor-context';
+import getRunUrl from '~/utils/get-run-url';
 
 type AppEditSidebarProps = {
   showInputForm: boolean;
@@ -55,6 +64,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
     inputParams,
     formMethods,
     isRunning,
+    setResults,
     results,
     run,
     userAuthConnectors,
@@ -133,12 +143,54 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
       isClosable: true,
     });
   };
+
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [expandedResult, setExpandedResult] = useState('');
+  const [modalResult, setModalResult] = useState({ heading: '', body: '' });
+
+  useEffect(() => {
+    console.log(modalResult.body);
+  }, [modalResult]);
+
   const output = useMemo(
     () => (
-      <FunctionOutput result={results[currentScript?.filename || 'main.ts']} />
+      <FunctionOutput
+        result={results[currentScript?.filename || 'main.ts']}
+        setExpandedResult={setExpandedResult}
+        setModalResult={setModalResult}
+        setOverallResult={setResults}
+        getRunUrl={(scriptName: string) => {
+          return getRunUrl(appSlug, lastRunVersion, scriptName);
+        }}
+      />
     ),
     [results, currentScript],
   );
+
+  useEffect(() => {
+    if (modalResult.body) {
+      onOpen();
+    }
+  }, [modalResult]);
+
+  function closeModal() {
+    setModalResult({ heading: '', body: '' });
+    onClose();
+  }
+
+  const functionOutputComponent = (secondaryResults: any) => {
+    return (
+      <FunctionOutput
+        result={secondaryResults}
+        setOverallResult={setResults}
+        setModalResult={setModalResult}
+        setExpandedResult={setExpandedResult}
+        getRunUrl={(scriptName: string) => {
+          return getRunUrl(appSlug, undefined, scriptName);
+        }}
+      />
+    );
+  };
 
   return (
     <Tabs
@@ -272,6 +324,42 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
             {currentScript && results[currentScript.filename] && (
               <Box mt={4}>{output}</Box>
             )}
+
+            {expandedResult && (
+              <Box py={4} px={8}>
+                {functionOutputComponent(expandedResult)}
+              </Box>
+            )}
+
+            <Modal isOpen={isOpen} onClose={closeModal} size="5xl">
+              <ModalOverlay />
+              <ModalContent maxH="2xl">
+                <ModalHeader>{modalResult.heading || appInfo.name}</ModalHeader>
+                <ModalCloseButton />
+                <ModalBody
+                  fontSize="sm"
+                  color="neutral.700"
+                  flex={1}
+                  display="flex"
+                  flexDirection="column"
+                  gap={8}
+                  overflow="auto"
+                >
+                  {functionOutputComponent(modalResult.body)}
+                </ModalBody>
+                <ModalFooter justifyContent="space-between">
+                  <Button
+                    variant="outline"
+                    onClick={closeModal}
+                    mr="3"
+                    flex={1}
+                    fontWeight="medium"
+                  >
+                    Close
+                  </Button>
+                </ModalFooter>
+              </ModalContent>
+            </Modal>
           </TabPanel>
         )}
 

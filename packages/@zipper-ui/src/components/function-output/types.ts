@@ -4,6 +4,7 @@ export interface FunctionOutputProps {
   setModalResult: (result: any) => void;
   setExpandedResult: (result: any) => void;
   setOverallResult: (result: any) => void;
+  getRunUrl: (scriptName: string) => string;
 }
 
 export interface RawOutputProps {

@@ -108,6 +108,22 @@ export function AppPage({
     onClose();
   }
 
+  function getRunUrl(scriptName: string) {
+    return `/${scriptName}/call`;
+  }
+
+  const secondaryResultComponent = (secondaryResult: any) => {
+    return (
+      <FunctionOutput
+        result={secondaryResult}
+        setOverallResult={setResult}
+        setModalResult={setModalResult}
+        setExpandedResult={setExpandedResult}
+        getRunUrl={getRunUrl}
+      />
+    );
+  };
+
   return (
     <>
       <Head>
@@ -195,18 +211,14 @@ export function AppPage({
             setOverallResult={setResult}
             setModalResult={setModalResult}
             setExpandedResult={setExpandedResult}
+            getRunUrl={getRunUrl}
           />
         </Box>
       )}
 
       {expandedResult && (
         <Box py={4} px={8}>
-          <FunctionOutput
-            result={expandedResult}
-            setOverallResult={setResult}
-            setModalResult={setModalResult}
-            setExpandedResult={setExpandedResult}
-          />
+          {secondaryResultComponent(expandedResult)}
         </Box>
       )}
       <Modal isOpen={isOpen} onClose={closeModal} size="5xl">
@@ -223,12 +235,7 @@ export function AppPage({
             gap={8}
             overflow="auto"
           >
-            <FunctionOutput
-              result={modalResult.body}
-              setOverallResult={setResult}
-              setModalResult={setModalResult}
-              setExpandedResult={setExpandedResult}
-            />
+            {secondaryResultComponent(modalResult.body)}
           </ModalBody>
           <ModalFooter justifyContent="space-between">
             <Button

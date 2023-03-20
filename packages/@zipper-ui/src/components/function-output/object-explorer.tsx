@@ -18,6 +18,7 @@ function ObjectExplorerRow({
   setExpandedResult,
   setModalResult,
   setOverallResult,
+  getRunUrl,
 }: {
   heading: string;
   data: any;
@@ -25,6 +26,7 @@ function ObjectExplorerRow({
   setExpandedResult: any;
   setModalResult: any;
   setOverallResult: any;
+  getRunUrl: (script: string) => string;
 }) {
   const { isOpen, onToggle } = useDisclosure({ defaultIsOpen: true });
   const shouldCollapse = !isPrimitive(data);
@@ -72,6 +74,7 @@ function ObjectExplorerRow({
               setExpandedResult={setExpandedResult}
               setModalResult={setModalResult}
               setOverallResult={setOverallResult}
+              getRunUrl={getRunUrl}
             />
           </Collapse>
         </Box>
@@ -92,12 +95,14 @@ export function ObjectExplorer({
   setExpandedResult,
   setModalResult,
   setOverallResult,
+  getRunUrl,
 }: {
   data: Record<string, any>;
   level: number;
   setExpandedResult: any;
   setModalResult: any;
   setOverallResult: any;
+  getRunUrl: (scriptName: string) => string;
 }) {
   return (
     <Box>
@@ -110,6 +115,7 @@ export function ObjectExplorer({
           setExpandedResult={setExpandedResult}
           setModalResult={setModalResult}
           setOverallResult={setOverallResult}
+          getRunUrl={getRunUrl}
         />
       ))}
     </Box>

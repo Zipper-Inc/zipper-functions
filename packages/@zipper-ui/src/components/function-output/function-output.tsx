@@ -26,6 +26,7 @@ export function FunctionOutput({
   setExpandedResult,
   setModalResult,
   setOverallResult,
+  getRunUrl,
 }: FunctionOutputProps) {
   return (
     <ErrorBoundary
@@ -67,6 +68,7 @@ export function FunctionOutput({
                   setExpandedResult={setExpandedResult}
                   setModalResult={setModalResult}
                   setOverallResult={setOverallResult}
+                  getRunUrl={getRunUrl}
                 />
               </Box>
             </Box>
