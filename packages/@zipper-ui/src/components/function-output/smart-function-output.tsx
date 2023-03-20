@@ -9,7 +9,6 @@ import {
   Td,
   Box,
   Text,
-  Button,
 } from '@chakra-ui/react';
 import { OutputType } from '@zipper/types';
 import styled from '@emotion/styled';
@@ -20,7 +19,6 @@ import { isPrimitive, parseResult } from './utils';
 import { FunctionOutputProps } from './types';
 import { RawFunctionOutput } from './raw-function-output';
 import { HiCheck, HiX } from 'react-icons/hi';
-import { ActionButton } from './action-button';
 import { ActionComponent } from './action-component';
 
 const StyledTr = styled(Tr)`

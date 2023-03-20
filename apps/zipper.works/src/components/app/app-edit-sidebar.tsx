@@ -146,7 +146,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
   };
 
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const [expandedResult, setExpandedResult] = useState('');
+  const [expandedResult, setExpandedResult] = useState<Record<string, any>>({});
   const [modalResult, setModalResult] = useState({ heading: '', body: '' });
 
   useEffect(() => {
@@ -157,9 +157,13 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
     () => (
       <FunctionOutput
         result={results[currentScript?.filename || 'main.ts']}
-        setExpandedResult={setExpandedResult}
+        setExpandedResult={(result) =>
+          setExpandedResult({ [currentScript?.filename || 'main.ts']: result })
+        }
         setModalResult={setModalResult}
-        setOverallResult={setResults}
+        setOverallResult={(result) =>
+          setResults({ [currentScript?.filename || 'main.ts']: result })
+        }
         getRunUrl={(scriptName: string) => {
           return getRunUrl(appSlug, lastRunVersion, scriptName);
         }}
@@ -183,9 +187,13 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
     return (
       <FunctionOutput
         result={secondaryResults}
-        setOverallResult={setResults}
+        setOverallResult={(result) =>
+          setResults({ [currentScript?.filename || 'main.ts']: result })
+        }
         setModalResult={setModalResult}
-        setExpandedResult={setExpandedResult}
+        setExpandedResult={(result) =>
+          setExpandedResult({ [currentScript?.filename || 'main.ts']: result })
+        }
         getRunUrl={(scriptName: string) => {
           return getRunUrl(appSlug, undefined, scriptName);
         }}
@@ -333,9 +341,11 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
               <Box mt={4}>{output}</Box>
             )}
 
-            {expandedResult && (
+            {expandedResult[currentScript?.filename || 'main.ts'] && (
               <Box py={4} px={8}>
-                {functionOutputComponent(expandedResult)}
+                {functionOutputComponent(
+                  expandedResult[currentScript?.filename || 'main.ts'],
+                )}
               </Box>
             )}
 
