@@ -20,6 +20,8 @@ import { isPrimitive, parseResult } from './utils';
 import { FunctionOutputProps } from './types';
 import { RawFunctionOutput } from './raw-function-output';
 import { HiCheck, HiX } from 'react-icons/hi';
+import { ActionButton } from './action-button';
+import { ActionComponent } from './action-component';
 
 const StyledTr = styled(Tr)`
   &:last-of-type td {
@@ -217,32 +219,6 @@ export function SmartFunctionOutput({
 
   const { type, data } = parseResult(result);
 
-  async function runScript(action: {
-    script: string;
-    showAs: 'modal' | 'expanded' | 'replace_all';
-    inputs: Record<string, any>;
-  }) {
-    const res = await fetch(getRunUrl(action.script), {
-      method: 'POST',
-      body: JSON.stringify(action.inputs),
-    });
-    const text = await res.text();
-
-    switch (action.showAs) {
-      case 'modal':
-        setModalResult({ heading: data[0], body: text });
-        break;
-      case 'expanded':
-        setExpandedResult(text);
-        break;
-      case 'replace_all':
-        setOverallResult(text);
-        break;
-      default:
-        break;
-    }
-  }
-
   switch (type) {
     case OutputType.String:
       return <Text fontSize="2xl">{data.toString()}</Text>;
@@ -282,13 +258,13 @@ export function SmartFunctionOutput({
 
     case OutputType.Action:
       return (
-        <Button
-          colorScheme={'purple'}
-          variant="outline"
-          onClick={() => runScript(data)}
-        >
-          {data.text || 'missing_text'}
-        </Button>
+        <ActionComponent
+          action={data}
+          setExpandedResult={setExpandedResult}
+          setModalResult={setModalResult}
+          setOverallResult={setOverallResult}
+          getRunUrl={getRunUrl}
+        />
       );
 
     default:
