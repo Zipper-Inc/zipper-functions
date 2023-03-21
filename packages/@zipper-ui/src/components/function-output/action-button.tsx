@@ -1,4 +1,4 @@
-import { Button, Spinner } from '@chakra-ui/react';
+import { Box, Button, Flex, Spinner } from '@chakra-ui/react';
 import { useState } from 'react';
 import { Action } from './action-component';
 import { FunctionOutputProps } from './types';
@@ -35,19 +35,21 @@ export function ActionButton({
   const [isLoading, setIsLoading] = useState(false);
 
   return (
-    <Button
-      colorScheme={'purple'}
-      variant="outline"
-      isDisabled={isLoading}
-      onClick={async () => {
-        setIsLoading(true);
-        await runScript();
-        setIsLoading(false);
-      }}
-      mr={2}
-    >
-      {isLoading && <Spinner />}
-      {!isLoading && (action.text || `Run ${action.script}`)}
-    </Button>
+    <Flex justifyContent="end" mt="4">
+      <Button
+        colorScheme={'purple'}
+        variant="outline"
+        isDisabled={isLoading}
+        onClick={async () => {
+          setIsLoading(true);
+          await runScript();
+          setIsLoading(false);
+        }}
+        mr={2}
+      >
+        {isLoading && <Spinner />}
+        {!isLoading && (action.text || `Run ${action.script}`)}
+      </Button>
+    </Flex>
   );
 }
