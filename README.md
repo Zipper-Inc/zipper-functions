@@ -1,17 +1,20 @@
-# Zipper 
+# Zipper
 
 Welcome to the Zipper Functions repo. If you can see this file, you're in our trusted circle. Thank you for helping us build something great.
 
-First off, some terminology: 
+First off, some terminology:
+
 1. **Zipper** is the name of the company and the product
-2. **Zipper Functions** is the name of the repo. We've pivoted the company and already had a repo named Zipper. 
-3. **Apps** are the things people create on Zipper - they have a URL, inputs, and outputs. They are made up of multiple files. Files have functions. 
+2. **Zipper Functions** is the name of the repo. We've pivoted the company and already had a repo named Zipper.
+3. **Apps** are the things people create on Zipper - they have a URL, inputs, and outputs. They are made up of multiple files. Files have functions.
 4. **Internal tools** refers to software that's written and used within a company to automate processes, share information, or codify some part of their culture.
 
 ## Motivation
-We want to empower people to write simple, creative software that makes their work lives better. We're doing this by removing a lot of the cruft around writing and deploying modern software (frontend frameworks, complex integrations, and authz/authn) so that people can focus on the problem they want to solve. 
+
+We want to empower people to write simple, creative software that makes their work lives better. We're doing this by removing a lot of the cruft around writing and deploying modern software (frontend frameworks, complex integrations, and authz/authn) so that people can focus on the problem they want to solve.
 
 ## Our stack
+
 - Database: Postgres accessed via Prisma
 - KV store: Redis
 - Frontend/Backend: Next.js
@@ -51,16 +54,17 @@ Have we made some money yet? If not, it's probably not worth it unless:
 - they're being used to validate that something really critical is working (think authz and authn)
 - documenting complex and brittle code that we know is hacky and likely to break
 
-Tests should live in the same folder as the code that's being tested. 
-
+Tests should live in the same folder as the code that's being tested.
 
 ## Getting started
 
 1. Make sure you have Docker, Node (we're using v18.x LTS), and ngrok installed
 1. Clone this repo (`git clone https://github.com/Zipper-Inc/zipper-functions`)
-1. Start ngrok (`ngrok http 3000 --domain [yourname].zipper.ngrok.app`) - chat to Sachin or Ibu to get you access to ngrok. 
+1. Start ngrok (`ngrok http 3000 --domain [yourname].zipper.ngrok.app`) - chat to Sachin or Ibu to get you access to ngrok.
 1. Copy `.env.example` to `.env.local` (`cp .env.example .env.local`) - you'll be missing some environment variables so ping either Sachin or Ibu for them
+1. Create `.env` in the root directory and copy the DATABASE_URL from `.env.local`
 1. Start the databases using Docker Compose (`docker-compose up`)
+1. Get your database migrated and seeded (`yarn workspace zipper.works db-migrate-dev`)
 1. Run `yarn dev` to start both apps
 
-If you hit any problems, let us know in #engineering 
+If you hit any problems, let us know in #engineering

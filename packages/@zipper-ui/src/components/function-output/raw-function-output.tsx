@@ -1,8 +1,8 @@
 import { Code } from '@chakra-ui/react';
 import { safeJSONParse } from '@zipper/utils';
-import { Props } from './types';
+import { RawOutputProps } from './types';
 
-export function RawFunctionOutput({ result }: Props) {
+export function RawFunctionOutput({ result }: RawOutputProps) {
   const parsed = safeJSONParse(result);
   const rawOutput = parsed
     ? JSON.stringify(parsed, null, 2)

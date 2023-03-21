@@ -15,10 +15,18 @@ function ObjectExplorerRow({
   heading,
   data,
   level,
+  setExpandedResult,
+  setModalResult,
+  setOverallResult,
+  getRunUrl,
 }: {
   heading: string;
   data: any;
   level: number;
+  setExpandedResult: any;
+  setModalResult: any;
+  setOverallResult: any;
+  getRunUrl: (script: string) => string;
 }) {
   const { isOpen, onToggle } = useDisclosure({ defaultIsOpen: true });
   const shouldCollapse = !isPrimitive(data);
@@ -60,12 +68,26 @@ function ObjectExplorerRow({
             </Text>
           )}
           <Collapse in={isOpen}>
-            <SmartFunctionOutput result={data} level={level + 1} />
+            <SmartFunctionOutput
+              result={data}
+              level={level + 1}
+              setExpandedResult={setExpandedResult}
+              setModalResult={setModalResult}
+              setOverallResult={setOverallResult}
+              getRunUrl={getRunUrl}
+            />
           </Collapse>
         </Box>
       ) : (
         <Box>
-          <Text py={6} size="sm" flex={5} maxW={'xl'} noOfLines={1}>
+          <Text
+            py={6}
+            size="sm"
+            flex={5}
+            maxW={'md'}
+            whiteSpace="normal"
+            textAlign="right"
+          >
             {data.toString()}
           </Text>
         </Box>
@@ -77,9 +99,17 @@ function ObjectExplorerRow({
 export function ObjectExplorer({
   data,
   level,
+  setExpandedResult,
+  setModalResult,
+  setOverallResult,
+  getRunUrl,
 }: {
   data: Record<string, any>;
   level: number;
+  setExpandedResult: any;
+  setModalResult: any;
+  setOverallResult: any;
+  getRunUrl: (scriptName: string) => string;
 }) {
   return (
     <Box>
@@ -89,6 +119,10 @@ export function ObjectExplorer({
           heading={key}
           data={data[key]}
           level={level}
+          setExpandedResult={setExpandedResult}
+          setModalResult={setModalResult}
+          setOverallResult={setOverallResult}
+          getRunUrl={getRunUrl}
         />
       ))}
     </Box>
