@@ -160,7 +160,7 @@ export function Playground({
 
             {/* SCHEDULES */}
             <TabPanel {...tabPanelStyles}>
-              <SchedulesTab mainScript={mainScript} appId={id} />
+              <SchedulesTab appId={id} />
             </TabPanel>
 
             {/* SECRETS */}

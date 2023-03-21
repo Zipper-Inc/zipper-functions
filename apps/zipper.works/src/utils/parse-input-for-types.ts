@@ -58,8 +58,12 @@ function getSourceFileFromCode(code: string) {
   return project.createSourceFile('main.ts', code);
 }
 
-export function parseInputForTypes(code = ''): InputParam[] {
-  if (!code) return [];
+export function parseInputForTypes(
+  code = '',
+  throwIfNoMain = false,
+): InputParam[] {
+  if (!code && !throwIfNoMain) return [];
+  if (!code && throwIfNoMain) throw new Error('No main function');
 
   try {
     const src = getSourceFileFromCode(code);
@@ -67,6 +71,7 @@ export function parseInputForTypes(code = ''): InputParam[] {
     if (!mainFn) mainFn = src.getFunction('handler');
 
     if (!mainFn) {
+      if (throwIfNoMain) throw new Error('No main function');
       console.error('You must define a main function');
       return [];
     }
@@ -102,6 +107,7 @@ export function parseInputForTypes(code = ''): InputParam[] {
       };
     });
   } catch (e) {
+    if (throwIfNoMain) throw e;
     console.error('caught during parseInputForTypes', e);
   }
   return [];

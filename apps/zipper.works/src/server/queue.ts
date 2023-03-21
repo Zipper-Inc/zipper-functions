@@ -42,6 +42,7 @@ const initializeWorkers = () => {
           const url = getRunUrl(
             schedule.app.slug,
             schedule.app.lastDeploymentVersion,
+            schedule.filename,
           );
 
           try {

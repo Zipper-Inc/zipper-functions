@@ -21,14 +21,11 @@ import cronstrue from 'cronstrue';
 import { useState } from 'react';
 import { trpc } from '~/utils/trpc';
 import { FiPlusSquare, FiTrash } from 'react-icons/fi';
-import { InputParam } from '@zipper/types';
 import {
   AddScheduleModal,
   AddScheduleModalProps,
   NewSchedule,
 } from './add-schedule-modal';
-import { Script } from '@prisma/client';
-import { parseInputForTypes } from '~/utils/parse-input-for-types';
 
 const tableHeaderStyles: ChakraProps = {
   fontWeight: 'normal',
@@ -48,10 +45,9 @@ const tableDataStyles: ChakraProps = {
 
 type SchedulesTabProps = {
   appId: string;
-  mainScript: Script;
 };
 
-const SchedulesTab: React.FC<SchedulesTabProps> = ({ appId, mainScript }) => {
+const SchedulesTab: React.FC<SchedulesTabProps> = ({ appId }) => {
   const utils = trpc.useContext();
   const [newSchedules, setNewSchedules] = useState<NewSchedule[]>([]);
   const existingSchedules = trpc.useQuery(['schedule.all', { appId }]);
@@ -80,12 +76,13 @@ const SchedulesTab: React.FC<SchedulesTabProps> = ({ appId, mainScript }) => {
   } = useDisclosure();
 
   const onCreateSchedule: AddScheduleModalProps['onCreate'] = (
-    { crontab, inputs },
+    { filename, crontab, inputs },
     resetForm,
   ) => {
     addSchedule.mutate(
       {
         appId,
+        filename,
         crontab,
         inputs,
       },
@@ -116,6 +113,7 @@ const SchedulesTab: React.FC<SchedulesTabProps> = ({ appId, mainScript }) => {
               <Tr>
                 <Th {...tableHeaderStyles}>Schedule</Th>
                 <Th {...tableHeaderStyles}>Cron Expression</Th>
+                <Th {...tableHeaderStyles}>Script</Th>
                 <Th {...tableHeaderStyles}>Last Run</Th>
                 <Th {...tableHeaderStyles} w={0} pr={0}></Th>
               </Tr>
@@ -135,6 +133,7 @@ const SchedulesTab: React.FC<SchedulesTabProps> = ({ appId, mainScript }) => {
                         {cronstrue.toString(s.crontab)}
                       </Td>
                       <Td {...tableDataStyles}>{s.crontab}</Td>
+                      <Td {...tableDataStyles}>{s.filename}</Td>
                       <Td {...tableDataStyles}>
                         {s.appRuns.length > 0 && (
                           <HStack>
@@ -207,7 +206,6 @@ const SchedulesTab: React.FC<SchedulesTabProps> = ({ appId, mainScript }) => {
       </VStack>
       <AddScheduleModal
         isOpen={isOpenAdd}
-        inputParams={parseInputForTypes(mainScript.code)}
         onClose={onCloseAdd}
         onCreate={onCreateSchedule}
       />

@@ -12,6 +12,7 @@ import {
 
 const defaultSelect = Prisma.validator<Prisma.ScheduleSelect>()({
   id: true,
+  filename: true,
   appId: true,
   crontab: true,
 });
@@ -22,6 +23,7 @@ export const scheduleRouter = createRouter()
     input: z.object({
       appId: z.string(),
       crontab: z.string(),
+      filename: z.string(),
       inputs: z.record(z.any()).optional(),
     }),
     async resolve({ ctx, input }) {
@@ -30,7 +32,7 @@ export const scheduleRouter = createRouter()
         appId: input.appId,
       });
 
-      const { appId, crontab, inputs } = input;
+      const { appId, crontab, inputs, filename } = input;
 
       try {
         parser.parseExpression(crontab);
@@ -43,6 +45,7 @@ export const scheduleRouter = createRouter()
           appId,
           crontab,
           inputs,
+          filename,
         },
         select: defaultSelect,
       });
