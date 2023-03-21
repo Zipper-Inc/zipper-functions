@@ -27,6 +27,8 @@ import {
   AddScheduleModalProps,
   NewSchedule,
 } from './add-schedule-modal';
+import { Script } from '@prisma/client';
+import { parseInputForTypes } from '~/utils/parse-input-for-types';
 
 const tableHeaderStyles: ChakraProps = {
   fontWeight: 'normal',
@@ -46,10 +48,10 @@ const tableDataStyles: ChakraProps = {
 
 type SchedulesTabProps = {
   appId: string;
-  inputParams: InputParam[];
+  mainScript: Script;
 };
 
-const SchedulesTab: React.FC<SchedulesTabProps> = ({ appId, inputParams }) => {
+const SchedulesTab: React.FC<SchedulesTabProps> = ({ appId, mainScript }) => {
   const utils = trpc.useContext();
   const [newSchedules, setNewSchedules] = useState<NewSchedule[]>([]);
   const existingSchedules = trpc.useQuery(['schedule.all', { appId }]);
@@ -205,7 +207,7 @@ const SchedulesTab: React.FC<SchedulesTabProps> = ({ appId, inputParams }) => {
       </VStack>
       <AddScheduleModal
         isOpen={isOpenAdd}
-        inputParams={inputParams}
+        inputParams={parseInputForTypes(mainScript.code)}
         onClose={onCloseAdd}
         onCreate={onCreateSchedule}
       />

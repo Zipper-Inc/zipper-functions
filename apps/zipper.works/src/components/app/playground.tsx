@@ -11,17 +11,14 @@ import {
   ChakraProps,
 } from '@chakra-ui/react';
 import { InputParam } from '@zipper/types';
-import { useRouter } from 'next/router';
 import React, { useState, useEffect } from 'react';
 import SecretsTab from '~/components/app/secrets-tab';
 import SchedulesTab from '~/components/app/schedules-tab';
 import SettingsTab from './settings-tab';
 import ShareModal from '~/components/app/share-modal';
-import { trpc } from '~/utils/trpc';
 import { parseInputForTypes } from '~/utils/parse-input-for-types';
 import { PlaygroundHeader } from './playground-header';
 import { CodeTab } from './code-tab';
-import { useUser } from '@clerk/nextjs';
 import { useEditorContext } from '../context/editor-context';
 import { Script } from '@prisma/client';
 import { AppQueryOutput } from '~/types/trpc';
@@ -46,8 +43,6 @@ export function Playground({
   app: AppQueryOutput;
   filename: string;
 }) {
-  const { user } = useUser();
-  const router = useRouter();
   const { editorIds, onlineEditorIds, selfId } = useAppEditors();
 
   const [inputParams, setInputParams] = useState<InputParam[]>([]);
@@ -165,7 +160,7 @@ export function Playground({
 
             {/* SCHEDULES */}
             <TabPanel {...tabPanelStyles}>
-              <SchedulesTab inputParams={inputParams} appId={id} />
+              <SchedulesTab mainScript={mainScript} appId={id} />
             </TabPanel>
 
             {/* SECRETS */}
