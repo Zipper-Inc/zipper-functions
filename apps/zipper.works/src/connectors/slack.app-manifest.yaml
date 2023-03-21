@@ -1,0 +1,121 @@
+display_information:
+  name: Zipper (Dev)
+features:
+  bot_user:
+    display_name: Zipper (Dev)
+    always_online: false
+oauth_config:
+  redirect_urls:
+    - https://sachin.zipper.ngrok.io/connectors/slack/auth
+    - https://sachin.zipper.ngrok.io
+  scopes:
+    user:
+      - bookmarks:read
+      - bookmarks:write
+      - calls:read
+      - calls:write
+      - channels:history
+      - channels:write
+      - users:write
+      - users:read.email
+      - users:read
+      - users.profile:write
+      - users.profile:read
+      - usergroups:write
+      - usergroups:read
+      - team:read
+      - team.preferences:read
+      - stars:write
+      - stars:read
+      - search:read
+      - remote_files:share
+      - remote_files:read
+      - reminders:write
+      - reminders:read
+      - reactions:write
+      - reactions:read
+      - profile
+      - pins:write
+      - pins:read
+      - openid
+      - mpim:write
+      - mpim:read
+      - mpim:history
+      - links:write
+      - links:read
+      - links.embed:write
+      - im:write
+      - im:read
+      - im:history
+      - identity.team
+      - identity.email
+      - identity.basic
+      - identity.avatar
+      - identify
+      - groups:write
+      - groups:read
+      - groups:history
+      - files:write
+      - files:read
+      - emoji:read
+      - email
+      - dnd:write
+      - dnd:read
+      - chat:write
+      - channels:read
+    bot:
+      - app_mentions:read
+      - bookmarks:read
+      - bookmarks:write
+      - calls:read
+      - calls:write
+      - channels:history
+      - channels:join
+      - channels:manage
+      - channels:read
+      - chat:write
+      - chat:write.customize
+      - chat:write.public
+      - commands
+      - conversations.connect:manage
+      - conversations.connect:read
+      - conversations.connect:write
+      - dnd:read
+      - emoji:read
+      - files:read
+      - files:write
+      - groups:history
+      - groups:read
+      - groups:write
+      - im:history
+      - im:read
+      - im:write
+      - links.embed:write
+      - links:read
+      - links:write
+      - metadata.message:read
+      - mpim:history
+      - mpim:read
+      - mpim:write
+      - pins:read
+      - pins:write
+      - reactions:read
+      - reactions:write
+      - reminders:read
+      - reminders:write
+      - remote_files:read
+      - remote_files:share
+      - remote_files:write
+      - triggers:read
+      - team:read
+      - triggers:write
+      - usergroups:read
+      - usergroups:write
+      - users.profile:read
+      - users:read
+      - users:read.email
+      - users:write
+settings:
+  org_deploy_enabled: false
+  socket_mode_enabled: false
+  token_rotation_enabled: false
