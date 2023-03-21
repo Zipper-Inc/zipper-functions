@@ -78,12 +78,6 @@ export function Playground({
     );
   }, [currentScriptLive?.code, currentScript?.code]);
 
-  const forkApp = trpc.useMutation('app.fork', {
-    async onSuccess(data: any) {
-      router.push(`/app/${data.id}/edit`);
-    },
-  });
-
   const switchToCodeTab = () => setTabIndex(0);
 
   return (
@@ -95,17 +89,7 @@ export function Playground({
       onAfterRun={switchToCodeTab}
     >
       <VStack flex={1} paddingX={10} alignItems="stretch" spacing={0}>
-        <PlaygroundHeader
-          app={app}
-          onClickFork={() => {
-            if (app.canUserEdit) return;
-            if (user) {
-              forkApp.mutateAsync({ id: app.id });
-            } else {
-              router.push(`/sign-in?redirect=${window.location.pathname}`);
-            }
-          }}
-        />
+        <PlaygroundHeader app={app} />
         <Tabs
           colorScheme="purple"
           index={tabIndex}

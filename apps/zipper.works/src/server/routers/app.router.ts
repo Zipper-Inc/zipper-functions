@@ -431,6 +431,7 @@ export const appRouter = createRouter()
   .mutation('fork', {
     input: z.object({
       id: z.string().uuid(),
+      name: z.string().min(3).max(50).optional(),
     }),
     async resolve({ input, ctx }) {
       if (!ctx.userId) {
@@ -446,10 +447,11 @@ export const appRouter = createRouter()
 
       const fork = await prisma.app.create({
         data: {
-          slug: generateDefaultSlug(),
+          slug: input.name || generateDefaultSlug(),
           description: app.description,
           parentId: app.id,
           organizationId: ctx.orgId,
+          createdById: ctx.userId,
           editors: {
             create: {
               userId: ctx.userId,
