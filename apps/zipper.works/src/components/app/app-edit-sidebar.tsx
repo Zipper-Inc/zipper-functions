@@ -40,6 +40,7 @@ import { HiOutlineClipboard, HiOutlinePlay } from 'react-icons/hi2';
 import { useEditorContext } from '../context/editor-context';
 import getRunUrl from '~/utils/get-run-url';
 import Link from 'next/link';
+import { HiOutlineChevronDown, HiOutlineChevronUp } from 'react-icons/hi';
 
 type AppEditSidebarProps = {
   showInputForm: boolean;
@@ -53,6 +54,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
   appSlug,
 }) => {
   const [tabIndex, setTabIndex] = useState(0);
+  const [isExpandedResultOpen, setIsExpandedResultOpen] = useState(true);
   const toast = useToast();
 
   const handleTabsChange = (index: number) => {
@@ -229,7 +231,10 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
           <Button
             colorScheme="purple"
             variant={currentScript?.filename === 'main.ts' ? 'solid' : 'ghost'}
-            onClick={() => run(true)}
+            onClick={() => {
+              setExpandedResult({});
+              run(true);
+            }}
             display="flex"
             gap={2}
             fontWeight="medium"
@@ -342,9 +347,37 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
             )}
 
             {expandedResult[currentScript?.filename || 'main.ts'] && (
-              <Box py={4} px={8}>
-                {functionOutputComponent(
-                  expandedResult[currentScript?.filename || 'main.ts'],
+              <Box
+                borderLeft={'5px solid'}
+                borderColor={'purple.300'}
+                mt={8}
+                pl={3}
+                mb={4}
+              >
+                <HStack align={'center'} mt={2}>
+                  <Heading flexGrow={1} size="sm" ml={1}>
+                    Additional Results
+                  </Heading>
+                  <IconButton
+                    aria-label="hide"
+                    icon={
+                      isExpandedResultOpen ? (
+                        <HiOutlineChevronUp />
+                      ) : (
+                        <HiOutlineChevronDown />
+                      )
+                    }
+                    onClick={() =>
+                      setIsExpandedResultOpen(!isExpandedResultOpen)
+                    }
+                  />
+                </HStack>
+                {isExpandedResultOpen && (
+                  <Box mt={4}>
+                    {functionOutputComponent(
+                      expandedResult[currentScript?.filename || 'main.ts'],
+                    )}
+                  </Box>
                 )}
               </Box>
             )}
