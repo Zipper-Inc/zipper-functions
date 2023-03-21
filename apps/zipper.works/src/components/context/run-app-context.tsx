@@ -31,6 +31,7 @@ export type FunctionCallContextType = {
     appConnectorUserAuths: AppConnectorUserAuth[];
   }[];
   appEventsQuery?: AppEventUseQueryResult;
+  setResults: (results: Record<string, string>) => void;
   run: (isCurrentFileAsEntryPoint?: boolean) => void;
 };
 
@@ -43,6 +44,7 @@ export const RunAppContext = createContext<FunctionCallContextType>({
   results: {},
   appEventsQuery: undefined,
   userAuthConnectors: [],
+  setResults: noop,
   run: noop,
 });
 
@@ -104,6 +106,7 @@ export function RunAppProvider({
         userAuthConnectors: app.connectors.filter(
           (c) => c.isUserAuthRequired && c.userScopes.length > 0,
         ),
+        setResults,
         run: async (isCurrentFileAsEntryPoint?: boolean) => {
           setIsRunning(true);
           await onBeforeRun();

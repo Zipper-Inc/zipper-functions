@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { GetServerSideProps } from 'next';
 import {
   FunctionInputs,
@@ -21,6 +21,16 @@ import {
   Button,
   Divider,
   Progress,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalCloseButton,
+  ModalBody,
+  ModalFooter,
+  useDisclosure,
+  HStack,
+  IconButton,
 } from '@chakra-ui/react';
 import Head from 'next/head';
 import { useForm } from 'react-hook-form';
@@ -28,6 +38,7 @@ import { getInputValuesFromUrl } from '../utils/get-input-values-from-url';
 import { useRouter } from 'next/router';
 import { encryptToHex } from '@zipper/utils';
 import { deleteCookie } from 'cookies-next';
+import { HiOutlineChevronUp, HiOutlineChevronDown } from 'react-icons/hi';
 
 const { __DEBUG__ } = process.env;
 
@@ -52,7 +63,10 @@ export function AppPage({
   const appTitle = app.name || app.slug;
   const formContext = useForm({ defaultValues });
   const [result, setResult] = useState('');
+  const [expandedResult, setExpandedResult] = useState('');
+  const [modalResult, setModalResult] = useState({ heading: '', body: '' });
   const [loading, setLoading] = useState(false);
+  const [isExpandedResultOpen, setIsExpandedResultOpen] = useState(true);
 
   const runApp = async () => {
     setLoading(true);
@@ -84,6 +98,35 @@ export function AppPage({
     },
     [],
   );
+
+  const { isOpen, onOpen, onClose } = useDisclosure();
+
+  useEffect(() => {
+    if (modalResult.body) {
+      onOpen();
+    }
+  }, [modalResult]);
+
+  function closeModal() {
+    setModalResult({ heading: '', body: '' });
+    onClose();
+  }
+
+  function getRunUrl(scriptName: string) {
+    return `/${scriptName}/call`;
+  }
+
+  const secondaryResultComponent = (secondaryResult: any) => {
+    return (
+      <FunctionOutput
+        result={secondaryResult}
+        setOverallResult={setResult}
+        setModalResult={setModalResult}
+        setExpandedResult={setExpandedResult}
+        getRunUrl={getRunUrl}
+      />
+    );
+  };
 
   return (
     <>
@@ -167,9 +210,75 @@ export function AppPage({
       )}
       {result && (
         <Box py={4} px={8}>
-          <FunctionOutput result={result} />
+          <FunctionOutput
+            result={result}
+            setOverallResult={setResult}
+            setModalResult={setModalResult}
+            setExpandedResult={setExpandedResult}
+            getRunUrl={getRunUrl}
+          />
         </Box>
       )}
+
+      {expandedResult && (
+        <Box
+          borderLeft={'5px solid'}
+          borderColor={'purple.300'}
+          mt={8}
+          pl={3}
+          mb={4}
+          mx={8}
+        >
+          <HStack align={'center'} mt={2}>
+            <Heading flexGrow={1} size="sm" ml={1}>
+              Additional Results
+            </Heading>
+            <IconButton
+              aria-label="hide"
+              icon={
+                isExpandedResultOpen ? (
+                  <HiOutlineChevronUp />
+                ) : (
+                  <HiOutlineChevronDown />
+                )
+              }
+              onClick={() => setIsExpandedResultOpen(!isExpandedResultOpen)}
+            />
+          </HStack>
+          {isExpandedResultOpen && (
+            <Box>{secondaryResultComponent(expandedResult)}</Box>
+          )}
+        </Box>
+      )}
+      <Modal isOpen={isOpen} onClose={closeModal} size="5xl">
+        <ModalOverlay />
+        <ModalContent maxH="2xl">
+          <ModalHeader>{modalResult.heading || appTitle} </ModalHeader>
+          <ModalCloseButton />
+          <ModalBody
+            fontSize="sm"
+            color="neutral.700"
+            flex={1}
+            display="flex"
+            flexDirection="column"
+            gap={8}
+            overflow="auto"
+          >
+            {secondaryResultComponent(modalResult.body)}
+          </ModalBody>
+          <ModalFooter justifyContent="space-between">
+            <Button
+              variant="outline"
+              onClick={closeModal}
+              mr="3"
+              flex={1}
+              fontWeight="medium"
+            >
+              Close
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </>
   );
 }

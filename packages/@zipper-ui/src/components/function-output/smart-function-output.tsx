@@ -16,9 +16,10 @@ import styled from '@emotion/styled';
 import { useTable, useSortBy } from 'react-table';
 import { ObjectExplorer } from './object-explorer';
 import { isPrimitive, parseResult } from './utils';
-import { Props } from './types';
+import { FunctionOutputProps } from './types';
 import { RawFunctionOutput } from './raw-function-output';
 import { HiCheck, HiX } from 'react-icons/hi';
+import { ActionComponent } from './action-component';
 
 const StyledTr = styled(Tr)`
   &:last-of-type td {
@@ -45,7 +46,18 @@ function TableArray(props: { data: Array<any> }) {
     useTable({ columns, data }, useSortBy);
 
   if (data.length === 0) {
-    return <Box>Empty</Box>;
+    return (
+      <Text
+        py={6}
+        size="sm"
+        color={'gray.500'}
+        alignItems={'end'}
+        flex={1}
+        noOfLines={1}
+      >
+        Empty array
+      </Text>
+    );
   }
 
   return (
@@ -104,7 +116,13 @@ function TableArray(props: { data: Array<any> }) {
   );
 }
 
-function TableCollection(props: { data: Array<any> }) {
+function TableCollection(props: {
+  data: Array<any>;
+  setExpandedResult: any;
+  setModalResult: any;
+  setOverallResult: any;
+  getRunUrl: (scriptName: string) => string;
+}) {
   const columns = useMemo(() => {
     const keys: Array<string> = [];
     props.data.forEach((record) => {
@@ -168,7 +186,13 @@ function TableCollection(props: { data: Array<any> }) {
                   }
                   return (
                     <Td {...cell.getCellProps()}>
-                      <SmartFunctionOutput result={cell.value} />
+                      <SmartFunctionOutput
+                        result={cell.value}
+                        setExpandedResult={props.setExpandedResult}
+                        setModalResult={props.setModalResult}
+                        setOverallResult={props.setOverallResult}
+                        getRunUrl={props.getRunUrl}
+                      />
                     </Td>
                   );
                 })}
@@ -181,7 +205,14 @@ function TableCollection(props: { data: Array<any> }) {
   );
 }
 
-export function SmartFunctionOutput({ result, level = 0 }: Props) {
+export function SmartFunctionOutput({
+  result,
+  level = 0,
+  setExpandedResult,
+  setModalResult,
+  setOverallResult,
+  getRunUrl,
+}: FunctionOutputProps) {
   if (!result) return null;
 
   const { type, data } = parseResult(result);
@@ -194,7 +225,15 @@ export function SmartFunctionOutput({ result, level = 0 }: Props) {
       return <TableArray data={data} />;
 
     case OutputType.Collection:
-      return <TableCollection data={data} />;
+      return (
+        <TableCollection
+          data={data}
+          setExpandedResult={setExpandedResult}
+          setModalResult={setModalResult}
+          setOverallResult={setOverallResult}
+          getRunUrl={getRunUrl}
+        />
+      );
 
     case OutputType.Html:
       return (
@@ -204,7 +243,38 @@ export function SmartFunctionOutput({ result, level = 0 }: Props) {
       );
 
     case OutputType.Object:
-      return <ObjectExplorer data={data} level={level} />;
+      return (
+        <ObjectExplorer
+          data={data}
+          level={level}
+          setExpandedResult={setExpandedResult}
+          setModalResult={setModalResult}
+          setOverallResult={setOverallResult}
+          getRunUrl={getRunUrl}
+        />
+      );
+
+    case OutputType.Action:
+      return (
+        <ActionComponent
+          action={data}
+          setExpandedResult={setExpandedResult}
+          setModalResult={setModalResult}
+          setOverallResult={setOverallResult}
+          getRunUrl={getRunUrl}
+        />
+      );
+
+    case OutputType.ActionArray:
+      return data.map((action: any) => (
+        <ActionComponent
+          action={action}
+          setExpandedResult={setExpandedResult}
+          setModalResult={setModalResult}
+          setOverallResult={setOverallResult}
+          getRunUrl={getRunUrl}
+        />
+      ));
 
     default:
       return <RawFunctionOutput result={result} />;
