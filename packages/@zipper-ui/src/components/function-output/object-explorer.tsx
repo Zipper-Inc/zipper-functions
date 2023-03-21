@@ -80,7 +80,14 @@ function ObjectExplorerRow({
         </Box>
       ) : (
         <Box>
-          <Text py={6} size="sm" flex={5} maxW={'xl'} noOfLines={1}>
+          <Text
+            py={6}
+            size="sm"
+            flex={5}
+            maxW={'md'}
+            whiteSpace="normal"
+            textAlign="right"
+          >
             {data.toString()}
           </Text>
         </Box>
