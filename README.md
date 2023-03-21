@@ -64,7 +64,7 @@ Tests should live in the same folder as the code that's being tested.
 4. Copy `.env.example` to `.env.local` (`cp .env.example .env.local`) - you'll be missing some environment variables so ping either Sachin or Ibu for them
 5. Create `.env` in the root directory and copy the DATABASE_URL from `.env.local`
 6. Start the databases using Docker Compose (`docker-compose up`)
-7. From the root folder, run `yarn workspace zipper.works db-migrate-dev` and `yarn workspace zipper.works db-seed`
+7. Get your database migrated and seeded (`yarn workspace zipper.works db-migrate-dev` and `yarn workspace zipper.works db-seed`)
 8. Run `yarn install` to install dependencies
 9. Run `yarn dev` to start both apps
 
