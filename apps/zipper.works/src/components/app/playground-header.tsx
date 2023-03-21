@@ -85,12 +85,12 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
 
   const [slug, setSlug] = useState<string>('');
 
-  const createAppForm = useForm({
+  const forkAppForm = useForm({
     defaultValues: getDefaultCreateAppFormValues(),
   });
 
   useEffect(() => {
-    setSlug(slugify(createAppForm.getValues('name')));
+    setSlug(slugify(forkAppForm.getValues('name')));
   }, []);
 
   useEffect(() => {
@@ -99,7 +99,7 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
 
   const resetForm = () => {
     const defaultValue = getDefaultCreateAppFormValues();
-    createAppForm.reset(defaultValue);
+    forkAppForm.reset(defaultValue);
     setSlug(slugify(defaultValue.name));
     setSelectedOrganizationId(organization?.id);
   };
@@ -232,7 +232,7 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
                     <Input
                       backgroundColor="white"
                       maxLength={60}
-                      {...createAppForm.register('name')}
+                      {...forkAppForm.register('name')}
                       onChange={(e) => {
                         setSlug(slugify(e.target.value));
                       }}
@@ -250,14 +250,14 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
                     )}
                   </InputGroup>
                 </HStack>
-                {createAppForm.watch('name') && (
+                {forkAppForm.watch('name') && (
                   <FormHelperText>
                     {`Your app will be available at
                             ${slug}.${process.env.NEXT_PUBLIC_OUTPUT_SERVER_HOSTNAME}`}
                   </FormHelperText>
                 )}
                 <FormErrorMessage>
-                  {createAppForm.formState.errors.name?.message}
+                  {forkAppForm.formState.errors.name?.message}
                 </FormErrorMessage>
               </FormControl>
               <Box w="full">
@@ -267,7 +267,7 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
                   colorScheme="purple"
                   type="submit"
                   isDisabled={isDisabled}
-                  onClick={createAppForm.handleSubmit(async ({ name }) => {
+                  onClick={forkAppForm.handleSubmit(async ({ name }) => {
                     if (app.canUserEdit) return;
                     if (user) {
                       if (
