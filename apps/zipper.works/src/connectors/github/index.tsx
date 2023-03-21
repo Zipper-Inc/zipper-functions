@@ -19,6 +19,7 @@ import { FiTrash } from 'react-icons/fi';
 import { trpc } from '~/utils/trpc';
 import { VscGithub } from 'react-icons/vsc';
 import { code } from './constants';
+import Link from 'next/link';
 
 export const githubConnector = createConnector({
   id: 'github',
@@ -46,6 +47,17 @@ function GitHubConnectorForm({ appId }: { appId: string }) {
       await utils.invalidateQueries(['secret.all', { appId }]);
     },
   });
+
+  // get the Slack auth URL from the backend (it includes an encrypted state value that links
+  // the auth request to the app)
+  const githubAuthURL = trpc.useQuery([
+    'githubConnector.getAuthUrl',
+    {
+      appId,
+      scopes: ['repo', 'user'],
+      postInstallationRedirect: window.location.href,
+    },
+  ]);
 
   const tokenName = 'GITHUB_TOKEN';
 
@@ -130,6 +142,11 @@ function GitHubConnectorForm({ appId }: { appId: string }) {
                     Submit
                   </Button>
                 </Box>
+                {githubAuthURL.data?.url && (
+                  <Link href={githubAuthURL.data?.url}>
+                    {githubAuthURL.data?.url}
+                  </Link>
+                )}
               </Flex>
             </VStack>
           </form>

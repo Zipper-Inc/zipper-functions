@@ -14,6 +14,7 @@ import { appEditorRouter } from './appEditor.router';
 import { appConnectorRouter } from './appConnector.router';
 import { resourceOwnerSlugRouter } from './resourceOwnerSlug.router';
 import { connectorRouter } from './connector.router';
+import { githubConnectorRouter } from './githubConnector.router';
 
 /**
  * Create your application's root router
@@ -46,6 +47,7 @@ export const trpcRouter = createRouter()
   .merge('appEvent.', appEventRouter)
   .merge('appRun.', appRunRouter)
   .merge('connector.', connectorRouter)
+  .merge('githubConnector.', githubConnectorRouter)
   .merge('resourceOwnerSlug.', resourceOwnerSlugRouter)
   .merge('secret.', secretRouter)
   .merge('script.', scriptRouter)
