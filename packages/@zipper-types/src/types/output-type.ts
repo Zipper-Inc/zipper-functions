@@ -5,4 +5,5 @@ export enum OutputType {
   Collection = 'collection',
   Html = 'html',
   Action = 'action',
+  ActionArray = 'action_array',
 }

@@ -44,6 +44,7 @@ export function ActionButton({
         await runScript();
         setIsLoading(false);
       }}
+      mr={2}
     >
       {isLoading && <Spinner />}
       {!isLoading && (action.text || `Run ${action.script}`)}

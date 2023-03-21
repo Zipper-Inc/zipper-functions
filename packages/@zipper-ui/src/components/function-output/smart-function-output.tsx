@@ -265,6 +265,17 @@ export function SmartFunctionOutput({
         />
       );
 
+    case OutputType.ActionArray:
+      return data.map((action: any) => (
+        <ActionComponent
+          action={action}
+          setExpandedResult={setExpandedResult}
+          setModalResult={setModalResult}
+          setOverallResult={setOverallResult}
+          getRunUrl={getRunUrl}
+        />
+      ));
+
     default:
       return <RawFunctionOutput result={result} />;
   }
