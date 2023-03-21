@@ -27,6 +27,7 @@ import { useEditorContext } from '../context/editor-context';
 import { useExitConfirmation } from '~/hooks/use-exit-confirmation';
 import { PlaygroundCollabCursor } from './playground-collab-cursor';
 import { format } from '~/utils/prettier';
+import { useRunAppContext } from '../context/run-app-context';
 
 export interface CacheParams {
   referrer: TextDocumentIdentifier;
@@ -143,6 +144,7 @@ export default function PlaygroundEditor(
     isEditorDirty,
     connectionId,
   } = useEditorContext();
+  const { appInfo } = useRunAppContext();
   const editorRef = useRef<MonacoEditor>();
   const monacoRef = useRef<Monaco>();
   const [isEditorReady, setIsEditorReady] = useState(false);
@@ -393,6 +395,7 @@ export default function PlaygroundEditor(
           minimap: { enabled: false },
           automaticLayout: true,
           scrollbar: { verticalScrollbarSize: 0, horizontalScrollbarSize: 0 },
+          readOnly: !appInfo.canUserEdit,
         }}
         onMount={handleEditorDidMount}
         {...props}

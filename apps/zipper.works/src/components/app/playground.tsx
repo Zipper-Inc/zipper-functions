@@ -78,12 +78,6 @@ export function Playground({
     );
   }, [currentScriptLive?.code, currentScript?.code]);
 
-  const forkApp = trpc.useMutation('app.fork', {
-    async onSuccess(data: any) {
-      router.push(`/app/${data.id}/edit`);
-    },
-  });
-
   const switchToCodeTab = () => setTabIndex(0);
 
   return (
@@ -95,17 +89,7 @@ export function Playground({
       onAfterRun={switchToCodeTab}
     >
       <VStack flex={1} paddingX={10} alignItems="stretch" spacing={0}>
-        <PlaygroundHeader
-          app={app}
-          onClickFork={() => {
-            if (app.canUserEdit) return;
-            if (user) {
-              forkApp.mutateAsync({ id: app.id });
-            } else {
-              router.push(`/sign-in?redirect=${window.location.pathname}`);
-            }
-          }}
-        />
+        <PlaygroundHeader app={app} />
         <Tabs
           colorScheme="purple"
           index={tabIndex}
@@ -123,35 +107,30 @@ export function Playground({
             gap={4}
             justifyContent="space-between"
             overflowX="auto"
+            hidden={!app.canUserEdit}
           >
             <HStack spacing={2}>
               {/* CODE */}
               <TabButton title="Code" />
-              {app.canUserEdit && (
-                <>
-                  {/* SCHEDULES */}
-                  <TabButton title="Schedules" />
-                  {/* SECRETS */}
-                  <TabButton title="Secrets" />
-                  {/* SETTINGS */}
-                  <TabButton title="Settings" />
-                </>
-              )}
+              {/* SCHEDULES */}
+              <TabButton title="Schedules" />
+              {/* SECRETS */}
+              <TabButton title="Secrets" />
+              {/* SETTINGS */}
+              <TabButton title="Settings" />
             </HStack>
             <HStack justifySelf="start">
-              {app.canUserEdit && (
-                <Button
-                  colorScheme="purple"
-                  variant="ghost"
-                  onClick={() => setShareModalOpen(true)}
-                  display="flex"
-                  gap={2}
-                  fontWeight="medium"
-                >
-                  <HiOutlineUpload />
-                  <Text>Share</Text>
-                </Button>
-              )}
+              <Button
+                colorScheme="purple"
+                variant="ghost"
+                onClick={() => setShareModalOpen(true)}
+                display="flex"
+                gap={2}
+                fontWeight="medium"
+              >
+                <HiOutlineUpload />
+                <Text>Share</Text>
+              </Button>
               <PlaygroundAvatars
                 editorIds={editorIds}
                 onlineEditorIds={onlineEditorIds}
