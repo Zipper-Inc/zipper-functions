@@ -62,11 +62,10 @@ Tests should live in the same folder as the code that's being tested.
 2. Clone this repo (`git clone https://github.com/Zipper-Inc/zipper-functions`)
 3. Start ngrok (`ngrok http 3000 --domain [yourname].zipper.ngrok.app`) - chat to Sachin or Ibu to get you access to ngrok.
 4. Copy `.env.example` to `.env.local` (`cp .env.example .env.local`) - you'll be missing some environment variables so ping either Sachin or Ibu for them
-5. Create a `.env` file and copy the `DATABASE_URL=` entry from `.env.example` to the newly created `.env` file
+5. Create `.env` in the root directory and copy the DATABASE_URL from `.env.local`
 6. Start the databases using Docker Compose (`docker-compose up`)
-7. From `zipper-functions` root folder, run `yarn workspace zipper.works db-migrate-dev`
-8. From `zipper-functions` root folder, run `yarn workspace zipper.works db-seed`
-9. Run `yarn install` to install dependencies
-10. Run `yarn dev` to start both apps
+7. From the root folder, run `yarn workspace zipper.works db-migrate-dev` and `yarn workspace zipper.works db-seed`
+8. Run `yarn install` to install dependencies
+9. Run `yarn dev` to start both apps
 
 If you hit any problems, let us know in #engineering

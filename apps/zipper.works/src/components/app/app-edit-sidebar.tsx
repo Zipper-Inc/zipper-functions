@@ -15,6 +15,14 @@ import {
   useToast,
   IconButton,
   Heading,
+  Modal,
+  ModalBody,
+  ModalCloseButton,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
+  ModalOverlay,
+  useDisclosure,
 } from '@chakra-ui/react';
 import {
   FunctionInputs,
@@ -30,6 +38,9 @@ import { useRouter } from 'next/router';
 
 import { HiOutlineClipboard, HiOutlinePlay } from 'react-icons/hi2';
 import { useEditorContext } from '../context/editor-context';
+import getRunUrl from '~/utils/get-run-url';
+import Link from 'next/link';
+import { HiOutlineChevronDown, HiOutlineChevronUp } from 'react-icons/hi';
 
 type AppEditSidebarProps = {
   showInputForm: boolean;
@@ -43,6 +54,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
   appSlug,
 }) => {
   const [tabIndex, setTabIndex] = useState(0);
+  const [isExpandedResultOpen, setIsExpandedResultOpen] = useState(true);
   const toast = useToast();
 
   const handleTabsChange = (index: number) => {
@@ -55,6 +67,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
     inputParams,
     formMethods,
     isRunning,
+    setResults,
     results,
     run,
     userAuthConnectors,
@@ -133,12 +146,62 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
       isClosable: true,
     });
   };
+
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [expandedResult, setExpandedResult] = useState<Record<string, any>>({});
+  const [modalResult, setModalResult] = useState({ heading: '', body: '' });
+
+  useEffect(() => {
+    console.log(modalResult.body);
+  }, [modalResult]);
+
   const output = useMemo(
     () => (
-      <FunctionOutput result={results[currentScript?.filename || 'main.ts']} />
+      <FunctionOutput
+        result={results[currentScript?.filename || 'main.ts']}
+        setExpandedResult={(result) =>
+          setExpandedResult({ [currentScript?.filename || 'main.ts']: result })
+        }
+        setModalResult={setModalResult}
+        setOverallResult={(result) =>
+          setResults({ [currentScript?.filename || 'main.ts']: result })
+        }
+        getRunUrl={(scriptName: string) => {
+          return getRunUrl(appSlug, lastRunVersion, scriptName);
+        }}
+      />
     ),
     [results, currentScript],
   );
+
+  useEffect(() => {
+    if (modalResult.body) {
+      onOpen();
+    }
+  }, [modalResult]);
+
+  function closeModal() {
+    setModalResult({ heading: '', body: '' });
+    onClose();
+  }
+
+  const functionOutputComponent = (secondaryResults: any) => {
+    return (
+      <FunctionOutput
+        result={secondaryResults}
+        setOverallResult={(result) =>
+          setResults({ [currentScript?.filename || 'main.ts']: result })
+        }
+        setModalResult={setModalResult}
+        setExpandedResult={(result) =>
+          setExpandedResult({ [currentScript?.filename || 'main.ts']: result })
+        }
+        getRunUrl={(scriptName: string) => {
+          return getRunUrl(appSlug, undefined, scriptName);
+        }}
+      />
+    );
+  };
 
   return (
     <Tabs
@@ -168,7 +231,10 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
           <Button
             colorScheme="purple"
             variant={currentScript?.filename === 'main.ts' ? 'solid' : 'ghost'}
-            onClick={() => run(true)}
+            onClick={() => {
+              setExpandedResult({});
+              run(true);
+            }}
             display="flex"
             gap={2}
             fontWeight="medium"
@@ -190,7 +256,14 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
         overflow="auto"
       >
         <Text fontWeight="semibold" fontSize="xs" whiteSpace="nowrap" flex={1}>
-          {appLink}
+          <Link
+            href={`${
+              process.env.NODE_ENV === 'development' ? 'http' : 'https'
+            }://${appLink}`}
+            target="_blank"
+          >
+            {appLink}
+          </Link>
         </Text>
         <Tooltip label="Copy" bgColor="purple.500" textColor="gray.100">
           <IconButton
@@ -272,6 +345,72 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
             {currentScript && results[currentScript.filename] && (
               <Box mt={4}>{output}</Box>
             )}
+
+            {expandedResult[currentScript?.filename || 'main.ts'] && (
+              <Box
+                borderLeft={'5px solid'}
+                borderColor={'purple.300'}
+                mt={8}
+                pl={3}
+                mb={4}
+              >
+                <HStack align={'center'} mt={2}>
+                  <Heading flexGrow={1} size="sm" ml={1}>
+                    Additional Results
+                  </Heading>
+                  <IconButton
+                    aria-label="hide"
+                    icon={
+                      isExpandedResultOpen ? (
+                        <HiOutlineChevronUp />
+                      ) : (
+                        <HiOutlineChevronDown />
+                      )
+                    }
+                    onClick={() =>
+                      setIsExpandedResultOpen(!isExpandedResultOpen)
+                    }
+                  />
+                </HStack>
+                {isExpandedResultOpen && (
+                  <Box mt={4}>
+                    {functionOutputComponent(
+                      expandedResult[currentScript?.filename || 'main.ts'],
+                    )}
+                  </Box>
+                )}
+              </Box>
+            )}
+
+            <Modal isOpen={isOpen} onClose={closeModal} size="5xl">
+              <ModalOverlay />
+              <ModalContent maxH="2xl">
+                <ModalHeader>{modalResult.heading || appInfo.name}</ModalHeader>
+                <ModalCloseButton />
+                <ModalBody
+                  fontSize="sm"
+                  color="neutral.700"
+                  flex={1}
+                  display="flex"
+                  flexDirection="column"
+                  gap={8}
+                  overflow="auto"
+                >
+                  {functionOutputComponent(modalResult.body)}
+                </ModalBody>
+                <ModalFooter justifyContent="space-between">
+                  <Button
+                    variant="outline"
+                    onClick={closeModal}
+                    mr="3"
+                    flex={1}
+                    fontWeight="medium"
+                  >
+                    Close
+                  </Button>
+                </ModalFooter>
+              </ModalContent>
+            </Modal>
           </TabPanel>
         )}
 

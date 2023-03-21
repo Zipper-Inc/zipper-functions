@@ -23,8 +23,12 @@ export function parseResult(result: any): { type: OutputType; data: any } {
 
   if (Array.isArray(data)) {
     if (data.every(isPrimitive)) type = OutputType.Array;
+    else if (data.every((item) => item?.action_type))
+      type = OutputType.ActionArray;
     else type = OutputType.Collection;
   }
+
+  if (type === OutputType.Object && data?.action_type) type = OutputType.Action;
 
   return { type, data };
 }

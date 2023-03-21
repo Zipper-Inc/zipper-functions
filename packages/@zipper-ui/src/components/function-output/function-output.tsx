@@ -6,7 +6,7 @@ import {
   ChakraProps,
   Box,
 } from '@chakra-ui/react';
-import { Props } from './types';
+import { FunctionOutputProps } from './types';
 import { RawFunctionOutput } from './raw-function-output';
 import { SmartFunctionOutput } from './smart-function-output';
 import { ErrorBoundary } from '../error-boundary';
@@ -20,7 +20,14 @@ const tablistStyles: ChakraProps = {
   p: 1,
 };
 
-export function FunctionOutput({ result, level = 0 }: Props) {
+export function FunctionOutput({
+  result,
+  level = 0,
+  setExpandedResult,
+  setModalResult,
+  setOverallResult,
+  getRunUrl,
+}: FunctionOutputProps) {
   return (
     <ErrorBoundary
       // this makes sure we render a new boundary with a new result set
@@ -55,7 +62,14 @@ export function FunctionOutput({ result, level = 0 }: Props) {
           <TabPanel>
             <Box overflow="auto">
               <Box width="max-content">
-                <SmartFunctionOutput result={result} level={level} />
+                <SmartFunctionOutput
+                  result={result}
+                  level={level}
+                  setExpandedResult={setExpandedResult}
+                  setModalResult={setModalResult}
+                  setOverallResult={setOverallResult}
+                  getRunUrl={getRunUrl}
+                />
               </Box>
             </Box>
           </TabPanel>

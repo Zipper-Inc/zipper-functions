@@ -20,6 +20,7 @@
     "@zipper/types": "*",
     "@zipper/utils": "*",
     "framer-motion": "^9.0.0",
+    "react": "^18.2.0",
     "react-hook-form": "^7.43.0",
     "react-hotkeys-hook": "3.4.7",
     "react-icons": "^4.7.1",
