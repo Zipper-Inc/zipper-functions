@@ -238,7 +238,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
             display="flex"
             gap={2}
             fontWeight="medium"
-            isDisabled={isRunning}
+            isDisabled={!appInfo.canUserEdit || isRunning}
           >
             <HiOutlinePlay />
             <Text>{`Run${

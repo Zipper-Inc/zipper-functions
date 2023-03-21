@@ -49,6 +49,7 @@ import { useAppSlug, MIN_SLUG_LENGTH } from '~/hooks/use-app-slug';
 import { trpc } from '~/utils/trpc';
 import { generateDefaultSlug } from '~/utils/generate-default';
 import { useRouter } from 'next/router';
+import SignInButton from '../auth/signInButton';
 
 const getDefaultCreateAppFormValues = () => ({
   name: generateDefaultSlug(),
@@ -173,25 +174,28 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
               <Heading as="h1" size="md" overflow="auto" whiteSpace="nowrap">
                 {app.slug}
               </Heading>
-              <Button
-                variant="ghost"
-                rounded="full"
-                size="sm"
-                colorScheme="purple"
-                p={0}
-                onClick={() => {
-                  setEditSlug(true);
-                }}
-              >
-                <Box>
-                  <HiPencilAlt />
-                </Box>
-              </Button>
+              {app.canUserEdit && (
+                <Button
+                  variant="ghost"
+                  rounded="full"
+                  size="sm"
+                  colorScheme="purple"
+                  p={0}
+                  onClick={() => {
+                    setEditSlug(true);
+                  }}
+                >
+                  <Box>
+                    <HiPencilAlt />
+                  </Box>
+                </Button>
+              )}
             </>
           )}
         </HStack>
       </HStack>
       <HStack justifyContent="end">
+        {!user && <SignInButton />}
         {!app.canUserEdit && isLoaded && (
           <Button
             type="button"

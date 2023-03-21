@@ -107,35 +107,30 @@ export function Playground({
             gap={4}
             justifyContent="space-between"
             overflowX="auto"
+            hidden={!app.canUserEdit}
           >
             <HStack spacing={2}>
               {/* CODE */}
               <TabButton title="Code" />
-              {app.canUserEdit && (
-                <>
-                  {/* SCHEDULES */}
-                  <TabButton title="Schedules" />
-                  {/* SECRETS */}
-                  <TabButton title="Secrets" />
-                  {/* SETTINGS */}
-                  <TabButton title="Settings" />
-                </>
-              )}
+              {/* SCHEDULES */}
+              <TabButton title="Schedules" />
+              {/* SECRETS */}
+              <TabButton title="Secrets" />
+              {/* SETTINGS */}
+              <TabButton title="Settings" />
             </HStack>
             <HStack justifySelf="start">
-              {app.canUserEdit && (
-                <Button
-                  colorScheme="purple"
-                  variant="ghost"
-                  onClick={() => setShareModalOpen(true)}
-                  display="flex"
-                  gap={2}
-                  fontWeight="medium"
-                >
-                  <HiOutlineUpload />
-                  <Text>Share</Text>
-                </Button>
-              )}
+              <Button
+                colorScheme="purple"
+                variant="ghost"
+                onClick={() => setShareModalOpen(true)}
+                display="flex"
+                gap={2}
+                fontWeight="medium"
+              >
+                <HiOutlineUpload />
+                <Text>Share</Text>
+              </Button>
               <PlaygroundAvatars
                 editorIds={editorIds}
                 onlineEditorIds={onlineEditorIds}

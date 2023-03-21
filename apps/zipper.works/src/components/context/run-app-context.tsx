@@ -63,7 +63,15 @@ export function RunAppProvider({
   onBeforeRun: VoidFunction;
   onAfterRun: VoidFunction;
 }) {
-  const { id, name, description, slug, updatedAt, lastDeploymentVersion } = app;
+  const {
+    id,
+    name,
+    description,
+    slug,
+    updatedAt,
+    lastDeploymentVersion,
+    canUserEdit,
+  } = app;
   const formMethods = useForm();
   const [isRunning, setIsRunning] = useState(false);
   const [results, setResults] = useState<Record<string, string>>({});
@@ -96,6 +104,7 @@ export function RunAppProvider({
           slug,
           updatedAt,
           lastDeploymentVersion,
+          canUserEdit,
         },
         formMethods,
         isRunning,
