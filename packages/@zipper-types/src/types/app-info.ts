@@ -14,7 +14,7 @@ export type AppInfo = {
 export type InputParams = InputParam[];
 
 export type AppInfoAndInputParams = {
-  app: AppInfo;
+  app: Omit<AppInfo, 'canUserEdit'>;
   userAuthConnectors: UserAuthConnector[];
   inputs: InputParams;
 };
