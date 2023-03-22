@@ -1,20 +1,6 @@
-import {
-  Badge,
-  Box,
-  Button,
-  Flex,
-  FormLabel,
-  Heading,
-  HStack,
-  Image,
-  Link,
-  Text,
-  useDisclosure,
-  VStack,
-} from '@chakra-ui/react';
+import { Heading } from '@chakra-ui/react';
 import { UserAuthConnector } from '@zipper/types';
-import { VscAdd } from 'react-icons/vsc';
-import SlackUserConnectorInput from './user-connector-inputs/slack-user-connector-input';
+import { SlackUserConnectorInput } from './user-connector-inputs/slack-user-connector-input';
 
 export function FunctionUserConnectors({
   userAuthConnectors,

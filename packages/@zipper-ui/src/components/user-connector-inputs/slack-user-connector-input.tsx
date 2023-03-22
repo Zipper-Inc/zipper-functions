@@ -132,5 +132,3 @@ export function SlackUserConnectorInput({
     </HStack>
   );
 }
-
-export default SlackUserConnectorInput;
