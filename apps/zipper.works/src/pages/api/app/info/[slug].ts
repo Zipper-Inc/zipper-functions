@@ -104,7 +104,7 @@ export default async function handler(
       },
       inputs: parseInputForTypes(entryPoint.code),
       userAuthConnectors: appFound.connectors.filter(
-        (c) => c.isUserAuthRequired && c.userScopes.length > 0,
+        (c) => c.userScopes.length > 0,
       ),
     },
   };
