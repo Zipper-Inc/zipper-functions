@@ -113,7 +113,7 @@ export function RunAppProvider({
         results,
         appEventsQuery,
         userAuthConnectors: app.connectors.filter(
-          (c) => c.isUserAuthRequired && c.userScopes.length > 0,
+          (c) => c.userScopes.length > 0,
         ),
         setResults,
         run: async (isCurrentFileAsEntryPoint?: boolean) => {

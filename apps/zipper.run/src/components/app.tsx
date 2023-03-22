@@ -332,7 +332,6 @@ export const getServerSideProps: GetServerSideProps = async ({
   };
 
   const connectorsMissingAuth = userAuthConnectors
-    .filter((c) => c.isUserAuthRequired)
     .filter((c) => c.appConnectorUserAuths.length === 0)
     .map((c) => c.type);
 
