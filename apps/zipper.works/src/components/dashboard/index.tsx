@@ -12,6 +12,9 @@ import {
   HStack,
   Link,
   Tooltip,
+  Box,
+  useToken,
+  Stack,
 } from '@chakra-ui/react';
 import React, { useEffect, useMemo, useState } from 'react';
 import DefaultGrid from '~/components/default-grid';
@@ -31,6 +34,7 @@ import { LockIcon, UnlockIcon } from '@chakra-ui/icons';
 import router from 'next/router';
 import { HiBuildingOffice, HiUser } from 'react-icons/hi2';
 import { AppOwner, useAppOwner } from '~/hooks/use-app-owner';
+import { EmptySlate } from './empty-slate';
 
 type _App = Unpack<inferQueryOutput<'app.byAuthedUser'>>;
 type App = _App & {
@@ -166,29 +170,38 @@ export function Dashboard() {
                 Create new app
               </Button>
             </Flex>
-            <Input
-              placeholder="Search app (name, slug or description)"
-              value={appSearchTerm}
-              onChange={(e) => setAppSearchTerm(e.target.value)}
-            />
-            <TableContainer w="full">
-              <DataTable
-                columns={columns}
-                data={apps}
-                isEmpty={!appQuery.isLoading && !appQuery.data}
-                setGlobalFilter={setAppSearchTerm}
-                onSortingChange={setSorting}
-                onGlobalFilterChange={setAppSearchTerm}
-                globalFilterFn="includesString"
-                getSortedRowModel={getSortedRowModel()}
-                getFilteredRowModel={getFilteredRowModel()}
-                state={{
-                  globalFilter: appSearchTerm,
-                  columnVisibility,
-                  sorting,
-                }}
+            {apps && apps.length > 0 ? (
+              <>
+                <Input
+                  placeholder="Search app (name, slug or description)"
+                  value={appSearchTerm}
+                  onChange={(e) => setAppSearchTerm(e.target.value)}
+                />
+                <TableContainer w="full">
+                  <DataTable
+                    columns={columns}
+                    data={apps}
+                    isEmpty={!appQuery.isLoading && !appQuery.data}
+                    setGlobalFilter={setAppSearchTerm}
+                    onSortingChange={setSorting}
+                    onGlobalFilterChange={setAppSearchTerm}
+                    globalFilterFn="includesString"
+                    getSortedRowModel={getSortedRowModel()}
+                    getFilteredRowModel={getFilteredRowModel()}
+                    state={{
+                      globalFilter: appSearchTerm,
+                      columnVisibility,
+                      sorting,
+                    }}
+                  />
+                </TableContainer>
+              </>
+            ) : (
+              <EmptySlate
+                organization={organization}
+                onCreateButtonClick={() => setCreateAppModalOpen(true)}
               />
-            </TableContainer>
+            )}
           </VStack>
         </GridItem>
       </DefaultGrid>
