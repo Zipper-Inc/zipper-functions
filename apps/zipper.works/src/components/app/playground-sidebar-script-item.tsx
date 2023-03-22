@@ -71,6 +71,7 @@ export const ScriptItem: React.FC<ScriptItemProps> = ({
               variant="flushed"
               w="full"
               backgroundColor="white"
+              color="purple.900"
               autoFocus
               onKeyDown={(e) => {
                 if (e.key === 'Escape') onEndRenaming();
