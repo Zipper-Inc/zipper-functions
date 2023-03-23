@@ -78,7 +78,7 @@ export function parseInputForTypes(
 
     const inputs = mainFn.getParameters();
 
-    if (inputs.length !== 1) {
+    if (inputs.length !== 1 && inputs.length > 0) {
       console.error('You must have one and only one input object');
       return [];
     }
@@ -111,4 +111,63 @@ export function parseInputForTypes(
     console.error('caught during parseInputForTypes', e);
   }
   return [];
+}
+
+export function addParamToCode(
+  code: string,
+  paramName: string,
+  paramType: string,
+): string {
+  const src = getSourceFileFromCode(code);
+  let mainFn = src.getFunction('main');
+  if (!mainFn) mainFn = src.getFunction('handler');
+
+  if (!mainFn) {
+    console.error('You must define a main function');
+    return code;
+  }
+
+  const inputs = mainFn.getParameters();
+  if (!inputs.length) {
+    // Create a new input object with the desired parameter
+    const newParamString = `input: { ${paramName}${
+      paramType ? `: ${paramType}` : ''
+    } }`;
+    const newMainFnWithParams = mainFn.replaceWithText(
+      mainFn.getText().replace(/\(\)/, `(${newParamString})`),
+    );
+
+    console.log(newMainFnWithParams.getText());
+    return src.getFullText();
+  }
+
+  if (inputs.length !== 1 && inputs.length > 0) {
+    console.log(inputs.length);
+    return code;
+  }
+
+  const params = inputs[0] as ParameterDeclaration;
+  const typeNode = params.getTypeNode();
+
+  if (!typeNode) {
+    console.error('No types, treating input as any');
+    return code;
+  }
+
+  const existingParams = parseInputForTypes(code);
+
+  if (existingParams.some((param) => param.key === paramName)) {
+    console.error('Parameter with the same name already exists');
+    return code;
+  }
+
+  const insertPosition = typeNode.getEnd() - 1;
+  const newParamString = `${paramName}${paramType ? `: ${paramType}` : ''}, `;
+  const newCode = [
+    code.slice(0, insertPosition),
+    newParamString,
+    code.slice(insertPosition),
+  ].join('');
+
+  return newCode;
 }
