@@ -1,4 +1,5 @@
 // middleware.ts
+import { getAuth, withClerkMiddleware } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import serveRelay from './utils/relay-middleware';
@@ -7,28 +8,33 @@ import yamlHandler from './api-handlers/yaml.handler';
 
 const { __DEBUG__ } = process.env;
 
-export default async function middleware(request: NextRequest) {
+export default withClerkMiddleware(async (request: NextRequest) => {
   const appRoute = request.nextUrl.pathname;
   if (__DEBUG__) console.log('middleware', { appRoute });
+
+  const auth = getAuth(request);
+  const token = await auth.getToken();
+
+  console.log(token);
 
   let res: NextResponse = NextResponse.next();
   switch (true) {
     case /\/api(\/?)$/.test(appRoute):
     case /\/api\/json(\/?)$/.test(appRoute): {
       console.log('matching json api route');
-      res = await jsonHandler(request);
+      res = await jsonHandler(request, token);
       break;
     }
 
     case /\/api\/yaml(\/?)$/.test(appRoute): {
       console.log('matching yaml api route');
-      res = await yamlHandler(request);
+      res = await yamlHandler(request, token);
       break;
     }
 
     case /\/call(\/?)$/.test(appRoute): {
       console.log('matching call route');
-      res = await serveRelay(request);
+      res = await serveRelay(request, token);
       break;
     }
 
@@ -46,8 +52,15 @@ export default async function middleware(request: NextRequest) {
   }
 
   if (!request.cookies.get('__zipper_user_id')) {
-    res.cookies.set('__zipper_user_id', `temp__${crypto.randomUUID()}`);
+    res.cookies.set(
+      '__zipper_user_id',
+      auth.userId || `temp__${crypto.randomUUID()}`,
+    );
   }
 
   return res;
-}
+});
+
+export const config = {
+  matcher: '/((?!_next/image|_next/static|favicon.ico).*)',
+};

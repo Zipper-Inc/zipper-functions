@@ -31,6 +31,13 @@ import {
   useDisclosure,
   HStack,
   IconButton,
+  Center,
+  Card,
+  CardHeader,
+  CardBody,
+  CardFooter,
+  VStack,
+  Spacer,
 } from '@chakra-ui/react';
 import Head from 'next/head';
 import { useForm } from 'react-hook-form';
@@ -39,6 +46,14 @@ import { useRouter } from 'next/router';
 import { encryptToHex } from '@zipper/utils';
 import { deleteCookie } from 'cookies-next';
 import { HiOutlineChevronUp, HiOutlineChevronDown } from 'react-icons/hi';
+import { getAuth } from '@clerk/nextjs/server';
+import {
+  SignInButton,
+  SignOutButton,
+  UserButton,
+  UserProfile,
+  useUser,
+} from '@clerk/nextjs';
 
 const { __DEBUG__ } = process.env;
 
@@ -46,10 +61,11 @@ export function AppPage({
   app,
   inputs,
   userAuthConnectors,
-  version = app.lastDeploymentVersion || Date.now().toString(32),
+  version = app?.lastDeploymentVersion || Date.now().toString(32),
   filename,
   defaultValues,
   slackAuthUrl,
+  statusCode,
 }: {
   app: AppInfo;
   inputs: InputParams;
@@ -58,15 +74,54 @@ export function AppPage({
   filename?: string;
   defaultValues?: Record<string, any>;
   slackAuthUrl?: string;
+  statusCode?: number;
 }) {
   const router = useRouter();
-  const appTitle = app.name || app.slug;
+  const appTitle = app?.name || app?.slug || 'Zipper';
   const formContext = useForm({ defaultValues });
   const [result, setResult] = useState('');
   const [expandedResult, setExpandedResult] = useState('');
   const [modalResult, setModalResult] = useState({ heading: '', body: '' });
   const [loading, setLoading] = useState(false);
   const [isExpandedResultOpen, setIsExpandedResultOpen] = useState(true);
+
+  const { user } = useUser();
+
+  if (statusCode === 401) {
+    return (
+      <Box as="main">
+        <Flex as="header" mx={8} my={4} justifyContent="end" color="gray.600">
+          {user && (
+            <VStack
+              align={'start'}
+              spacing="0"
+              background={'gray.100'}
+              p="2"
+              borderRadius={4}
+            >
+              <UserButton showName />
+            </VStack>
+          )}
+        </Flex>
+        <Center h="lg">
+          <VStack spacing="12" w="md">
+            <ZipperLogo />
+            <Text>You don't have access to this app</Text>
+            {!user && (
+              <Button colorScheme={'purple'}>
+                <SignInButton />
+              </Button>
+            )}
+            {user && (
+              <Button colorScheme={'purple'} variant="outline">
+                <SignOutButton />
+              </Button>
+            )}
+          </VStack>
+        </Center>
+      </Box>
+    );
+  }
 
   const runApp = async () => {
     setLoading(true);
@@ -154,6 +209,9 @@ export function AppPage({
             fill="currentColor"
             style={{ marginLeft: '8px', height: '13px' }}
           />
+          <Box pl="2">
+            <UserButton />
+          </Box>
         </Flex>
         {app.description && (
           <Text mx={8} my={4} color="gray.600">
@@ -305,10 +363,14 @@ export const getServerSideProps: GetServerSideProps = async ({
     subdomain,
     userId: req.cookies['__zipper_user_id'],
     filename,
+    token: await getAuth(req).getToken(),
   });
 
   if (__DEBUG__) console.log('getAppInfo', { result });
-  if (!result.ok) return { notFound: true };
+  if (!result.ok) {
+    if (result.error === 'UNAUTHORIZED') return { props: { statusCode: 401 } };
+    return { notFound: true };
+  }
 
   const { app, inputs, userAuthConnectors } = result.data;
 

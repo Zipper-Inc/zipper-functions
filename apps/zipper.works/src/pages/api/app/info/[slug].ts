@@ -9,6 +9,9 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '~/server/prisma';
 import { AppInfoResult } from '@zipper/types';
 import { parseInputForTypes } from '~/utils/parse-input-for-types';
+import { getAuth } from '@clerk/nextjs/server';
+import { hasAppEditPermission } from '~/server/utils/authz.utils';
+import { withAuth } from '@clerk/nextjs/dist/api';
 
 /**
  * @todo
@@ -16,13 +19,12 @@ import { parseInputForTypes } from '~/utils/parse-input-for-types';
  * - restrict endpoint to run server or something
  */
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
+export default withAuth(async (req: NextApiRequest, res: NextApiResponse) => {
   const slugFromUrl = req.query.slug as string;
   const body = JSON.parse(req.body);
   const userId: string | undefined = body.userId;
+
+  const auth = getAuth(req);
 
   let appFound:
     | (App & {
@@ -57,6 +59,27 @@ export default async function handler(
     return res.status(404).send({
       ok: false,
       error: `There are no apps with slug: ${slugFromUrl}`,
+    });
+  }
+
+  const hasPermission = await hasAppEditPermission({
+    ctx: {
+      orgId: auth.orgId || undefined,
+      organizations: auth.sessionClaims?.organizations as Record<
+        string,
+        string
+      >[],
+      userId: auth.userId || undefined,
+      req,
+    },
+    appId: appFound.id,
+    throwError: false,
+  });
+
+  if (!hasPermission) {
+    return res.status(401).send({
+      ok: false,
+      error: 'UNAUTHORIZED',
     });
   }
 
@@ -110,4 +133,4 @@ export default async function handler(
   };
 
   return res.status(200).send(result);
-}
+});

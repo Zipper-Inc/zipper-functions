@@ -64,10 +64,12 @@ export async function relayRequest({
   request,
   version: _version,
   filename: _filename,
+  token,
 }: {
   request: NextRequest;
   version?: string;
   filename?: string;
+  token?: string | null;
 }) {
   if (!DENO_SHARED_SECRET || !RPC_HOST)
     return {
@@ -91,6 +93,7 @@ export async function relayRequest({
     subdomain,
     userId: zipperUserId,
     filename,
+    token,
   });
   if (__DEBUG__) console.log('getAppInfo', { result: appInfoResult });
 
@@ -131,7 +134,10 @@ export async function relayRequest({
   return { result, status, headers };
 }
 
-export default async function serveRelay(request: NextRequest) {
+export default async function serveRelay(
+  request: NextRequest,
+  token: string | null,
+) {
   const { version, filename } = getFilenameAndVersionFromPath(
     request.nextUrl.pathname,
     ['call'],
@@ -140,6 +146,7 @@ export default async function serveRelay(request: NextRequest) {
     request,
     version,
     filename,
+    token,
   });
   if (request.method !== 'GET')
     headers?.append('Access-Control-Allow-Origin', '*');
