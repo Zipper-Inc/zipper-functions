@@ -87,42 +87,6 @@ export function AppPage({
 
   const { user } = useUser();
 
-  if (statusCode === 401) {
-    return (
-      <Box as="main">
-        <Flex as="header" mx={8} my={4} justifyContent="end" color="gray.600">
-          {user && (
-            <VStack
-              align={'start'}
-              spacing="0"
-              background={'gray.100'}
-              p="2"
-              borderRadius={4}
-            >
-              <UserButton showName />
-            </VStack>
-          )}
-        </Flex>
-        <Center h="lg">
-          <VStack spacing="12" w="md">
-            <ZipperLogo />
-            <Text>You don't have access to this app</Text>
-            {!user && (
-              <Button colorScheme={'purple'}>
-                <SignInButton />
-              </Button>
-            )}
-            {user && (
-              <Button colorScheme={'purple'} variant="outline">
-                <SignOutButton />
-              </Button>
-            )}
-          </VStack>
-        </Center>
-      </Box>
-    );
-  }
-
   const runApp = async () => {
     setLoading(true);
     const rawValues = formContext.getValues();
@@ -182,6 +146,42 @@ export function AppPage({
       />
     );
   };
+
+  if (statusCode === 401) {
+    return (
+      <Box as="main">
+        <Flex as="header" mx={8} my={4} justifyContent="end" color="gray.600">
+          {user && (
+            <VStack
+              align={'start'}
+              spacing="0"
+              background={'gray.100'}
+              p="2"
+              borderRadius={4}
+            >
+              <UserButton showName />
+            </VStack>
+          )}
+        </Flex>
+        <Center h="lg">
+          <VStack spacing="12" w="md">
+            <ZipperLogo />
+            <Text>You don't have access to this app</Text>
+            {!user && (
+              <Button colorScheme={'purple'}>
+                <SignInButton />
+              </Button>
+            )}
+            {user && (
+              <Button colorScheme={'purple'} variant="outline">
+                <SignOutButton />
+              </Button>
+            )}
+          </VStack>
+        </Center>
+      </Box>
+    );
+  }
 
   return (
     <>
