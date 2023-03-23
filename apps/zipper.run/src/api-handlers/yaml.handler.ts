@@ -5,10 +5,7 @@ import { relayRequest } from '../utils/relay-middleware';
 import { getMetaFromHeaders } from '../utils/get-meta-from-headers';
 import { getFilenameAndVersionFromPath } from '~/utils/get-values-from-url';
 
-export default async function handler(
-  request: NextRequest,
-  token: string | null,
-) {
+export default async function handler(request: NextRequest) {
   try {
     // request ends in /api/json or /json
     // anything before that should be treated as filename and/or version
@@ -22,7 +19,6 @@ export default async function handler(
       request,
       version,
       filename,
-      token,
     });
     headers?.set('Content-Type', 'text/yaml');
     return new NextResponse(

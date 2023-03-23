@@ -25,6 +25,7 @@ model App {
   lastDeploymentVersion String?
   organizationId  String?
   createdById     String?
+  requiresAuthToRun   Boolean   @default(false)
 
   scriptMain ScriptMain?
 

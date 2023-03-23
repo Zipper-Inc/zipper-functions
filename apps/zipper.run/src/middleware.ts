@@ -10,31 +10,27 @@ const { __DEBUG__ } = process.env;
 
 export default withClerkMiddleware(async (request: NextRequest) => {
   const appRoute = request.nextUrl.pathname;
-  if (__DEBUG__) console.log('middleware', { appRoute });
-
   const auth = getAuth(request);
-  const token = await auth.getToken();
-
-  console.log(token);
+  if (__DEBUG__) console.log('middleware', { appRoute });
 
   let res: NextResponse = NextResponse.next();
   switch (true) {
     case /\/api(\/?)$/.test(appRoute):
     case /\/api\/json(\/?)$/.test(appRoute): {
       console.log('matching json api route');
-      res = await jsonHandler(request, token);
+      res = await jsonHandler(request);
       break;
     }
 
     case /\/api\/yaml(\/?)$/.test(appRoute): {
       console.log('matching yaml api route');
-      res = await yamlHandler(request, token);
+      res = await yamlHandler(request);
       break;
     }
 
     case /\/call(\/?)$/.test(appRoute): {
       console.log('matching call route');
-      res = await serveRelay(request, token);
+      res = await serveRelay(request);
       break;
     }
 

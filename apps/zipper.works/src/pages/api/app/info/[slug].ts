@@ -10,7 +10,6 @@ import { prisma } from '~/server/prisma';
 import { AppInfoResult } from '@zipper/types';
 import { parseInputForTypes } from '~/utils/parse-input-for-types';
 import { getAuth } from '@clerk/nextjs/server';
-import { hasAppEditPermission } from '~/server/utils/authz.utils';
 import { withAuth } from '@clerk/nextjs/dist/api';
 
 /**
@@ -62,21 +61,7 @@ export default withAuth(async (req: NextApiRequest, res: NextApiResponse) => {
     });
   }
 
-  const hasPermission = await hasAppEditPermission({
-    ctx: {
-      orgId: auth.orgId || undefined,
-      organizations: auth.sessionClaims?.organizations as Record<
-        string,
-        string
-      >[],
-      userId: auth.userId || undefined,
-      req,
-    },
-    appId: appFound.id,
-    throwError: false,
-  });
-
-  if (!hasPermission) {
+  if (appFound.requiresAuthToRun && !auth.userId) {
     return res.status(401).send({
       ok: false,
       error: 'UNAUTHORIZED',

@@ -5,22 +5,17 @@ import { prisma } from '../prisma';
 export const hasAppEditPermission = async ({
   ctx,
   appId,
-  throwError = true,
 }: {
   ctx: Context;
   appId: string;
-  throwError?: boolean;
 }) => {
   const { userId, orgId } = ctx;
   if (!userId) {
-    if (throwError) {
-      throw new TRPCError({ code: 'UNAUTHORIZED' });
-    }
-    return false;
+    throw new TRPCError({ code: 'UNAUTHORIZED' });
   }
 
   try {
-    const app = await prisma.app.findFirst({
+    await prisma.app.findFirstOrThrow({
       where: {
         id: appId,
         OR: [
@@ -33,26 +28,13 @@ export const hasAppEditPermission = async ({
         ],
       },
     });
-
-    if (!app) {
-      if (throwError) {
-        throw new TRPCError({
-          code: 'UNAUTHORIZED',
-          message: `You do not have access to edit ${appId}`,
-        });
-      }
-    }
-
-    return !!app;
   } catch (error) {
-    if (throwError) {
-      throw new TRPCError({
-        code: 'UNAUTHORIZED',
-        message: `You do not have access to edit ${appId}`,
-      });
-    }
-    return false;
+    throw new TRPCError({
+      code: 'UNAUTHORIZED',
+      message: `You do not have access to edit ${appId}`,
+    });
   }
+  return true;
 };
 
 export const hasAppReadPermission = async ({

@@ -164,19 +164,21 @@ export function AppPage({
           )}
         </Flex>
         <Center h="lg">
-          <VStack spacing="12" w="md">
+          <VStack spacing="6" w="md">
             <ZipperLogo />
-            <Text>You don't have access to this app</Text>
-            {!user && (
-              <Button colorScheme={'purple'}>
-                <SignInButton />
-              </Button>
-            )}
-            {user && (
-              <Button colorScheme={'purple'} variant="outline">
-                <SignOutButton />
-              </Button>
-            )}
+            <VStack spacing="10" w="md">
+              <Text color="gray.500">You don't have access to this app</Text>
+              {!user && (
+                <Button colorScheme={'purple'}>
+                  <SignInButton />
+                </Button>
+              )}
+              {user && (
+                <Button colorScheme={'purple'} variant="outline">
+                  <SignOutButton />
+                </Button>
+              )}
+            </VStack>
           </VStack>
         </Center>
       </Box>
