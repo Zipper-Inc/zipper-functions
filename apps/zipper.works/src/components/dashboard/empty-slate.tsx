@@ -21,8 +21,8 @@ export function EmptySlate({
         </Box>
         <Stack alignContent="center" gap={2} maxW={500} textAlign="center">
           <Text fontWeight="600" fontSize="2xl">
-            Create {organization ? organization.name : 'your'} first app to get
-            started
+            Create {organization ? organization.name + "'s" : 'your'} first app
+            to get started
           </Text>
           <Text
             color={'neutral.600'}
