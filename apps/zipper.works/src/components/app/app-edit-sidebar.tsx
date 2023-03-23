@@ -303,7 +303,13 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
                 />
               </Box>
             )}
-            <Box p={4} backgroundColor="gray.100" position="relative">
+            <Box
+              p={4}
+              backgroundColor="gray.100"
+              position="relative"
+              rounded="lg"
+              bgColor={'neutral.50'}
+            >
               <>
                 <Heading size="sm" mb="4">
                   Inputs
@@ -316,15 +322,27 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
                   />
                 ) : (
                   <>
-                    <Text>
-                      Add parameters to your main function and they'll show up
-                      here. Here's an example:
+                    <Text color={'neutral.600'} size="lg" fontWeight="600">
+                      Add inputs to your app
                     </Text>
-                    <Code my="5">
-                      {`async function main({greeting}: {greeting: string}) {
-                      ...
-                    }`}
-                    </Code>
+                    <Text>
+                      Inputs can be used to collect user data, preferences, or
+                      feedback, which can then be processed and analyzed by the
+                      app to provide more personalized content or
+                      recommendations.
+                    </Text>
+                    <Button
+                      color={'gray.700'}
+                      bg="white"
+                      mt={6}
+                      variant="outline"
+                      fontWeight="500"
+                      onClick={() => {
+                        return;
+                      }}
+                    >
+                      Add an input
+                    </Button>
                   </>
                 )}{' '}
               </>
