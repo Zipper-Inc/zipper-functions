@@ -91,6 +91,7 @@ export async function relayRequest({
   if (!subdomain) return { status: 404 };
 
   const auth = getAuth(request);
+  const token = await auth.getToken();
 
   const clerkUser = auth.userId
     ? await clerkClient.users.getUser(auth.userId)
@@ -109,6 +110,7 @@ export async function relayRequest({
     subdomain,
     userId,
     filename,
+    token,
   });
   if (__DEBUG__) console.log('getAppInfo', { result: appInfoResult });
 

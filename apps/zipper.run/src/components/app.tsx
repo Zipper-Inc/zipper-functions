@@ -32,12 +32,7 @@ import {
   HStack,
   IconButton,
   Center,
-  Card,
-  CardHeader,
-  CardBody,
-  CardFooter,
   VStack,
-  Spacer,
 } from '@chakra-ui/react';
 import Head from 'next/head';
 import { useForm } from 'react-hook-form';
@@ -51,7 +46,6 @@ import {
   SignInButton,
   SignOutButton,
   UserButton,
-  UserProfile,
   useUser,
 } from '@clerk/nextjs';
 
