@@ -163,8 +163,17 @@ export function AppPage({
             <VStack spacing="10" w="md">
               <Text color="gray.500">You don't have access to this app</Text>
               {!user && (
-                <Button colorScheme={'purple'}>
-                  <SignInButton />
+                <Button
+                  colorScheme="purple"
+                  onClick={() => {
+                    router.push(
+                      `/sign-in?redirect=${encodeURIComponent(
+                        window.location.toString(),
+                      )}`,
+                    );
+                  }}
+                >
+                  Sign In
                 </Button>
               )}
               {user && (
@@ -206,7 +215,7 @@ export function AppPage({
             style={{ marginLeft: '8px', height: '13px' }}
           />
           <Box pl="2">
-            <UserButton />
+            <UserButton afterSignOutUrl="/" />
           </Box>
         </Flex>
         {app.description && (

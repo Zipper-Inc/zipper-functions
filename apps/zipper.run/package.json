@@ -21,6 +21,7 @@
     "@clerk/nextjs": "^4.11.13",
     "@emotion/react": "^11.10.5",
     "@emotion/styled": "^11.10.5",
+    "@fontsource/inter": "^4.5.15",
     "@zipper/types": "*",
     "@zipper/ui": "*",
     "@zipper/utils": "*",
