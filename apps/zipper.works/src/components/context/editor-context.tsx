@@ -74,6 +74,7 @@ const EditorContextProvider = ({
   const [currentScript, setCurrentScript] = useState<Script | undefined>(
     undefined,
   );
+
   const [scripts, setScripts] = useState<Script[]>(initialScripts);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -165,6 +166,26 @@ const EditorContextProvider = ({
   });
 
   const self = useSelf();
+
+  useEffect(() => {
+    if (currentScript) {
+      console.log(currentScript);
+      const models = editor?.getModels();
+      if (models) {
+        const fileModels = models.filter(
+          (model) => model.uri.scheme === 'file',
+        );
+        fileModels.forEach((model) => {
+          if (
+            `/${currentScript.filename}` === model.uri.path &&
+            model.getValue() !== currentScript.code
+          ) {
+            model.setValue(currentScript.code);
+          }
+        });
+      }
+    }
+  }, [currentScript]);
 
   const saveOpenModels = async () => {
     if (appId && currentScript) {

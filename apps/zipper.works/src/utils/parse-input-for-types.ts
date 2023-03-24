@@ -130,19 +130,18 @@ export function addParamToCode(
   const inputs = mainFn.getParameters();
   if (!inputs.length) {
     // Create a new input object with the desired parameter
-    const newParamString = `input: { ${paramName}${
+    const newParamString = `{ ${paramName} } : { ${paramName}${
       paramType ? `: ${paramType}` : ''
     } }`;
-    const newMainFnWithParams = mainFn.replaceWithText(
+
+    mainFn.replaceWithText(
       mainFn.getText().replace(/\(\)/, `(${newParamString})`),
     );
 
-    console.log(newMainFnWithParams.getText());
     return src.getFullText();
   }
 
   if (inputs.length !== 1 && inputs.length > 0) {
-    console.log(inputs.length);
     return code;
   }
 
@@ -153,6 +152,8 @@ export function addParamToCode(
     console.error('No types, treating input as any');
     return code;
   }
+
+  // return code;
 
   const existingParams = parseInputForTypes(code);
 
