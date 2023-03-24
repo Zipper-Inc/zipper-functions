@@ -1,4 +1,7 @@
 {
   "typescript.tsdk": "node_modules/typescript/lib",
-  "git.ignoreLimitWarning": true
+  "git.ignoreLimitWarning": true,
+  "deno.enable": true,
+  "deno.unstable": true,
+  "deno.enablePaths": ["./apps/deno-framework"]
 }
