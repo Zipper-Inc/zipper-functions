@@ -95,8 +95,11 @@ export function Playground({
           justifyContent="stretch"
         >
           <TabList
-            border="none"
+            borderBottom="1px solid"
+            borderColor={'gray.100'}
             p={1}
+            pb={4}
+            mb={2}
             pt={3}
             color="gray.500"
             gap={4}

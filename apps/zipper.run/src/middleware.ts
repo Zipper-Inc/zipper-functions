@@ -1,4 +1,5 @@
 // middleware.ts
+import { getAuth, withClerkMiddleware } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import serveRelay from './utils/relay-middleware';
@@ -7,8 +8,9 @@ import yamlHandler from './api-handlers/yaml.handler';
 
 const { __DEBUG__ } = process.env;
 
-export default async function middleware(request: NextRequest) {
+export default withClerkMiddleware(async (request: NextRequest) => {
   const appRoute = request.nextUrl.pathname;
+  const auth = getAuth(request);
   if (__DEBUG__) console.log('middleware', { appRoute });
 
   let res: NextResponse = NextResponse.next();
@@ -46,8 +48,15 @@ export default async function middleware(request: NextRequest) {
   }
 
   if (!request.cookies.get('__zipper_user_id')) {
-    res.cookies.set('__zipper_user_id', `temp__${crypto.randomUUID()}`);
+    res.cookies.set(
+      '__zipper_user_id',
+      auth.userId || `temp__${crypto.randomUUID()}`,
+    );
   }
 
   return res;
-}
+});
+
+export const config = {
+  matcher: '/((?!_next/image|_next/static|favicon.ico).*)',
+};

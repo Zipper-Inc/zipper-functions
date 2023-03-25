@@ -10,15 +10,20 @@ export default async function getAppInfo({
   subdomain,
   userId,
   filename,
+  token,
 }: {
   subdomain: string;
   userId?: string;
   filename?: string;
+  token?: string | null;
 }): Promise<AppInfoResult> {
   return fetch(`${APP_INFO_URL}/${subdomain}`, {
     method: 'POST',
     body: JSON.stringify({ userId, filename }),
+    headers: {
+      Authorization: `Bearer ${token || ''}`,
+    },
   })
     .then((r) => r.json())
-    .catch((e) => ({ ok: false, error: e.toString() }));
+    .catch((e) => ({ ok: false, error: e.message }));
 }

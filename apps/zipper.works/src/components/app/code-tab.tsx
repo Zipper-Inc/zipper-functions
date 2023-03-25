@@ -69,6 +69,7 @@ export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
     <HStack
       flex={1}
       p="none"
+      pl="1"
       spacing={0}
       alignItems="stretch"
       pb={3}

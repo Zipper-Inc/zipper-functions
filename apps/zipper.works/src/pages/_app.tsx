@@ -15,7 +15,6 @@ import {
 
 import { DefaultLayout } from '~/components/default-layout';
 import { AppRouter } from '~/server/routers/_app';
-import { SSRContext } from '~/utils/trpc';
 import '@fontsource/inter/variable.css';
 import Header from '~/components/header';
 
