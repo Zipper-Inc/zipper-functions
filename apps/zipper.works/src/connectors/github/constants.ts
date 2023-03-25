@@ -6,14 +6,14 @@ const clientGlobal = window as typeof window & {
 
 export const client = clientGlobal.gitHubClient || new Octokit({
   auth: Deno.env.get("GITHUB_TOKEN"),
-}).rest;
+});
 
 clientGlobal.gitHubClient = client;
 
 export default client;
 `;
 
-export const userScopes = [
+export const scopes = [
   // See https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/scopes-for-oauth-apps#available-scopes
   'repo',
   'repo:status',
