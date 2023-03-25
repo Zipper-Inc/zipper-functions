@@ -28,14 +28,13 @@ export const hasAppEditPermission = async ({
         ],
       },
     });
-
-    return true;
   } catch (error) {
     throw new TRPCError({
       code: 'UNAUTHORIZED',
       message: `You do not have access to edit ${appId}`,
     });
   }
+  return true;
 };
 
 export const hasAppReadPermission = async ({

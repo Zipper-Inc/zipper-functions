@@ -14,6 +14,8 @@ import {
   useToast,
   HStack,
   Text,
+  Switch,
+  Code,
 } from '@chakra-ui/react';
 import { CheckIcon } from '@chakra-ui/icons';
 import { FormProvider, useForm } from 'react-hook-form';
@@ -24,11 +26,12 @@ import { HiExclamationTriangle } from 'react-icons/hi2';
 import slugify from 'slugify';
 import { MIN_SLUG_LENGTH, useAppSlug } from '~/hooks/use-app-slug';
 import { useRouter } from 'next/router';
+import { HiLockClosed } from 'react-icons/hi';
 
 type Props = {
   app: Pick<
     Unpack<inferQueryOutput<'app.byId'>>,
-    'id' | 'name' | 'slug' | 'description'
+    'id' | 'name' | 'slug' | 'description' | 'requiresAuthToRun'
   >;
 };
 
@@ -49,6 +52,7 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
       name: app.name ?? '',
       slug: app.slug,
       description: app.description,
+      requiresAuthToRun: app.requiresAuthToRun,
     },
   });
   const model = settingsForm.watch();
@@ -65,7 +69,8 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
     return (
       slug !== appQuery.data?.slug ||
       model.name !== appQuery.data?.name ||
-      model.description !== appQuery.data?.description
+      model.description !== appQuery.data?.description ||
+      model.requiresAuthToRun !== appQuery.data?.requiresAuthToRun
     );
   };
 
@@ -79,6 +84,7 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
           slug: data.slug,
           name: data.name,
           description: data.description,
+          requiresAuthToRun: data.requiresAuthToRun,
         },
       },
       {
@@ -179,6 +185,30 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
               backgroundColor="white"
               {...settingsForm.register('description')}
             />
+          </FormControl>
+          <FormControl>
+            <FormLabel textColor="gray.600">Authentication</FormLabel>
+            <HStack w="full">
+              <VStack mr="auto" align="start">
+                <HStack>
+                  <HiLockClosed />
+                  <Text>
+                    Users have to be signed in to Zipper to run this app
+                  </Text>
+                </HStack>
+                <FormHelperText maxW={'xl'}>
+                  If checked, the authenticated user's email address and
+                  organization membership will be available via{' '}
+                  <Code>Zipper.userInfo</Code> from within your app
+                </FormHelperText>
+              </VStack>
+              {appQuery.data && (
+                <Switch
+                  ml="auto"
+                  {...settingsForm.register('requiresAuthToRun')}
+                />
+              )}
+            </HStack>
           </FormControl>
           <FormControl>
             <Button

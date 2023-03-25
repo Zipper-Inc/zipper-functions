@@ -6,6 +6,7 @@ import getAppInfo from './get-app-info';
 import getInputFromRequest from './get-input-from-request';
 import getValidSubdomain from './get-valid-subdomain';
 import { getFilenameAndVersionFromPath } from './get-values-from-url';
+import { clerkClient, getAuth } from '@clerk/nextjs/server';
 
 const { __DEBUG__, SHARED_SECRET: DENO_SHARED_SECRET, RPC_HOST } = process.env;
 
@@ -15,6 +16,14 @@ const RPC_ROOT = `${RPC_HOST}/api/deno/v0/`;
 
 const X_FORWARDED_HOST = 'x-forwarded-host';
 const X_DENO_SUBHOST = 'x-deno-subhost';
+
+type RelayRequestBody = {
+  inputs: Record<string, any>;
+  userInfo?: {
+    emails: string[];
+    userId?: string;
+  };
+};
 
 function getPatchedUrl(req: NextRequest) {
   // preserve path and querystring)
@@ -36,6 +45,7 @@ async function getPatchedHeaders(
   // remove the original host header
   // if we don't, we'll get a security error from deno
   delete originalHeaders.host;
+  delete originalHeaders['content-length'];
 
   return {
     ...originalHeaders,
@@ -80,17 +90,27 @@ export async function relayRequest({
   if (__DEBUG__) console.log('getValidSubdomain', { host, subdomain });
   if (!subdomain) return { status: 404 };
 
-  const zipperUserId = request.cookies
+  const auth = getAuth(request);
+  const token = await auth.getToken();
+
+  const clerkUser = auth.userId
+    ? await clerkClient.users.getUser(auth.userId)
+    : undefined;
+
+  const cookieUserId = request.cookies
     .get('__zipper_user_id')
     ?.value.toString();
+
+  const userId = auth.userId || cookieUserId;
   // Get app info from Zipper API
 
   const filename = _filename || 'main.ts';
 
   const appInfoResult = await getAppInfo({
     subdomain,
-    userId: zipperUserId,
+    userId,
     filename,
+    token,
   });
   if (__DEBUG__) console.log('getAppInfo', { result: appInfoResult });
 
@@ -103,16 +123,31 @@ export async function relayRequest({
     _version || app.lastDeploymentVersion || Date.now().toString(32);
 
   let deploymentId = `${app.id}+${filename}@${version}`;
+
   if (userAuthConnectors.find((c) => c.isUserAuthRequired)) {
-    deploymentId = `${deploymentId}@${zipperUserId}`;
+    deploymentId = `${deploymentId}@${userId}`;
   }
 
   const relayUrl = getPatchedUrl(request);
-  const relayBody = request.method === 'GET' ? undefined : await request.text();
+  const url = new URL(relayUrl);
+
+  const relayBody: RelayRequestBody =
+    request.method === 'GET'
+      ? {
+          inputs: Object.fromEntries(url.searchParams.entries()),
+        }
+      : { inputs: JSON.parse(await request.text()) };
+
+  if (clerkUser) {
+    relayBody.userInfo = {
+      emails: clerkUser.emailAddresses.map((e) => e.emailAddress) || [],
+      userId,
+    };
+  }
 
   const response = await fetch(relayUrl, {
-    method: request.method,
-    body: relayBody,
+    method: 'POST',
+    body: JSON.stringify(relayBody),
     headers: await getPatchedHeaders(request, deploymentId, relayUrl.hostname),
   });
 
@@ -124,7 +159,7 @@ export async function relayRequest({
     deploymentId,
     success: response.status === 200,
     scheduleId: request.headers.get('X-Zipper-Schedule-Id') || undefined,
-    inputs: await getInputFromRequest(request, relayBody),
+    inputs: await getInputFromRequest(request, JSON.stringify(relayBody)),
     result,
   });
 

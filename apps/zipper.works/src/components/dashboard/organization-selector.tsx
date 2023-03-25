@@ -42,6 +42,7 @@ export const OrganizationSelector: React.FC<{
         border="1px"
         borderColor="gray.100"
         maxW={'33%'}
+        minW="max-content"
       >
         <Text fontSize="sm" fontWeight="medium" overflow="hidden">
           {organization?.organization.name || 'Personal Workspace'}

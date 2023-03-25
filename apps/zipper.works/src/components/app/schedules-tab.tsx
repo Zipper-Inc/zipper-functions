@@ -21,7 +21,6 @@ import cronstrue from 'cronstrue';
 import { useState } from 'react';
 import { trpc } from '~/utils/trpc';
 import { FiPlusSquare, FiTrash } from 'react-icons/fi';
-import { InputParam } from '@zipper/types';
 import {
   AddScheduleModal,
   AddScheduleModalProps,
@@ -46,10 +45,9 @@ const tableDataStyles: ChakraProps = {
 
 type SchedulesTabProps = {
   appId: string;
-  inputParams: InputParam[];
 };
 
-const SchedulesTab: React.FC<SchedulesTabProps> = ({ appId, inputParams }) => {
+const SchedulesTab: React.FC<SchedulesTabProps> = ({ appId }) => {
   const utils = trpc.useContext();
   const [newSchedules, setNewSchedules] = useState<NewSchedule[]>([]);
   const existingSchedules = trpc.useQuery(['schedule.all', { appId }]);
@@ -78,12 +76,13 @@ const SchedulesTab: React.FC<SchedulesTabProps> = ({ appId, inputParams }) => {
   } = useDisclosure();
 
   const onCreateSchedule: AddScheduleModalProps['onCreate'] = (
-    { crontab, inputs },
+    { filename, crontab, inputs },
     resetForm,
   ) => {
     addSchedule.mutate(
       {
         appId,
+        filename,
         crontab,
         inputs,
       },
@@ -114,6 +113,7 @@ const SchedulesTab: React.FC<SchedulesTabProps> = ({ appId, inputParams }) => {
               <Tr>
                 <Th {...tableHeaderStyles}>Schedule</Th>
                 <Th {...tableHeaderStyles}>Cron Expression</Th>
+                <Th {...tableHeaderStyles}>Script</Th>
                 <Th {...tableHeaderStyles}>Last Run</Th>
                 <Th {...tableHeaderStyles} w={0} pr={0}></Th>
               </Tr>
@@ -133,6 +133,7 @@ const SchedulesTab: React.FC<SchedulesTabProps> = ({ appId, inputParams }) => {
                         {cronstrue.toString(s.crontab)}
                       </Td>
                       <Td {...tableDataStyles}>{s.crontab}</Td>
+                      <Td {...tableDataStyles}>{s.filename}</Td>
                       <Td {...tableDataStyles}>
                         {s.appRuns.length > 0 && (
                           <HStack>
@@ -205,7 +206,6 @@ const SchedulesTab: React.FC<SchedulesTabProps> = ({ appId, inputParams }) => {
       </VStack>
       <AddScheduleModal
         isOpen={isOpenAdd}
-        inputParams={inputParams}
         onClose={onCloseAdd}
         onCreate={onCreateSchedule}
       />

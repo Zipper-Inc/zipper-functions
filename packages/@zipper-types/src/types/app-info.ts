@@ -8,12 +8,13 @@ export type AppInfo = {
   description: string | null;
   lastDeploymentVersion: string | null;
   updatedAt: Date | null;
+  canUserEdit: boolean;
 };
 
 export type InputParams = InputParam[];
 
 export type AppInfoAndInputParams = {
-  app: AppInfo;
+  app: Omit<AppInfo, 'canUserEdit'>;
   userAuthConnectors: UserAuthConnector[];
   inputs: InputParams;
 };

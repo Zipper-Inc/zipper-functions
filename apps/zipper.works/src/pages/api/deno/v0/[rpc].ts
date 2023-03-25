@@ -93,8 +93,6 @@ const __storage = {
   },
 }
 
-const Zipper = { env: Deno.env, storage: __storage };
-
 /**
  * Makes sure JSON objects are not too big for headers
  * Headers should be capped under 8000 bytes
@@ -107,16 +105,7 @@ const jsonHeader = (json, fallback = "JSON too big") => {
   return fallback;
 }
 
-const getInputFromBody = async (req) => {
-  if (req.method === "GET") {
-    const url = new URL(req.url);
-    return Object.fromEntries(url.searchParams.entries());
-  } else if (req.body) {
-    return req.json();
-  } else {
-    return {};
-  }
-};
+const Zipper = { env: Deno.env, storage: __storage, userInfo: {} };
 
 let fn: Function | undefined = undefined;
 if(typeof main === 'function') fn = main;
@@ -124,18 +113,19 @@ if(!fn && typeof handler === 'function') fn = handler;
 
 if(typeof fn === 'function') {
   addEventListener('fetch', async (event) => {
-    const input = await getInputFromBody(event.request);
+    const body = event.request.body ? await event.request.json() : {};
+    Zipper.userInfo = body.userInfo;
 
     const xZipperHeaders = {
       'X-Zipper-Deployment-Id': '${appId}@${version}',
       'X-Zipper-App-Slug': '${slug}',
       'X-Zipper-Req-Url': event.request.url,
       'X-Zipper-Req-Method': event.request.method,
-      'X-Zipper-App-Run-Input': jsonHeader(input, "See original request body"),
+      'X-Zipper-App-Run-Input': jsonHeader(body.inputs, "See original request body"),
     };
 
     try {
-      const output = await fn(input);
+      const output = await fn(body.inputs);
 
       if (output instanceof Response) {
         if (!output.headers.get('Content-Type'))
@@ -361,6 +351,8 @@ async function originBoot({
   id: string;
 }) {
   const [appIdAndFilename, version, userId] = deploymentId.split('@');
+
+  console.log(req.body);
 
   if (!appIdAndFilename || !version) {
     console.error('Missing appId and version');

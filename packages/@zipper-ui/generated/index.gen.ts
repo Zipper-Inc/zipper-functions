@@ -8,6 +8,7 @@ export * from '../src/components/function-output/raw-function-output';
 export * from '../src/components/function-output/smart-function-output';
 export * from '../src/components/function-output/types';
 export * from '../src/components/function-output/utils';
+export * from '../src/components/user-connector-inputs/slack-user-connector-input';
 export * from '../src/components/error-boundary';
 export * from '../src/components/function-inputs';
 export * from '../src/components/function-user-connectors-input';

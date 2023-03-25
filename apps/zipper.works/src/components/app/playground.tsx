@@ -11,17 +11,14 @@ import {
   ChakraProps,
 } from '@chakra-ui/react';
 import { InputParam } from '@zipper/types';
-import { useRouter } from 'next/router';
 import React, { useState, useEffect } from 'react';
 import SecretsTab from '~/components/app/secrets-tab';
 import SchedulesTab from '~/components/app/schedules-tab';
 import SettingsTab from './settings-tab';
 import ShareModal from '~/components/app/share-modal';
-import { trpc } from '~/utils/trpc';
 import { parseInputForTypes } from '~/utils/parse-input-for-types';
 import { PlaygroundHeader } from './playground-header';
 import { CodeTab } from './code-tab';
-import { useUser } from '@clerk/nextjs';
 import { useEditorContext } from '../context/editor-context';
 import { Script } from '@prisma/client';
 import { AppQueryOutput } from '~/types/trpc';
@@ -46,8 +43,6 @@ export function Playground({
   app: AppQueryOutput;
   filename: string;
 }) {
-  const { user } = useUser();
-  const router = useRouter();
   const { editorIds, onlineEditorIds, selfId } = useAppEditors();
 
   const [inputParams, setInputParams] = useState<InputParam[]>([]);
@@ -78,12 +73,6 @@ export function Playground({
     );
   }, [currentScriptLive?.code, currentScript?.code]);
 
-  const forkApp = trpc.useMutation('app.fork', {
-    async onSuccess(data: any) {
-      router.push(`/app/${data.id}/edit`);
-    },
-  });
-
   const switchToCodeTab = () => setTabIndex(0);
 
   return (
@@ -95,17 +84,7 @@ export function Playground({
       onAfterRun={switchToCodeTab}
     >
       <VStack flex={1} paddingX={10} alignItems="stretch" spacing={0}>
-        <PlaygroundHeader
-          app={app}
-          onClickFork={() => {
-            if (app.canUserEdit) return;
-            if (user) {
-              forkApp.mutateAsync({ id: app.id });
-            } else {
-              router.push(`/sign-in?redirect=${window.location.pathname}`);
-            }
-          }}
-        />
+        <PlaygroundHeader app={app} />
         <Tabs
           colorScheme="purple"
           index={tabIndex}
@@ -116,42 +95,40 @@ export function Playground({
           justifyContent="stretch"
         >
           <TabList
-            border="none"
+            borderBottom="1px solid"
+            borderColor={'gray.100'}
             p={1}
+            pb={4}
+            mb={2}
             pt={3}
             color="gray.500"
             gap={4}
             justifyContent="space-between"
             overflowX="auto"
+            hidden={!app.canUserEdit}
           >
             <HStack spacing={2}>
               {/* CODE */}
               <TabButton title="Code" />
-              {app.canUserEdit && (
-                <>
-                  {/* SCHEDULES */}
-                  <TabButton title="Schedules" />
-                  {/* SECRETS */}
-                  <TabButton title="Secrets" />
-                  {/* SETTINGS */}
-                  <TabButton title="Settings" />
-                </>
-              )}
+              {/* SCHEDULES */}
+              <TabButton title="Schedules" />
+              {/* SECRETS */}
+              <TabButton title="Secrets" />
+              {/* SETTINGS */}
+              <TabButton title="Settings" />
             </HStack>
             <HStack justifySelf="start">
-              {app.canUserEdit && (
-                <Button
-                  colorScheme="purple"
-                  variant="ghost"
-                  onClick={() => setShareModalOpen(true)}
-                  display="flex"
-                  gap={2}
-                  fontWeight="medium"
-                >
-                  <HiOutlineUpload />
-                  <Text>Share</Text>
-                </Button>
-              )}
+              <Button
+                colorScheme="purple"
+                variant="ghost"
+                onClick={() => setShareModalOpen(true)}
+                display="flex"
+                gap={2}
+                fontWeight="medium"
+              >
+                <HiOutlineUpload />
+                <Text>Share</Text>
+              </Button>
               <PlaygroundAvatars
                 editorIds={editorIds}
                 onlineEditorIds={onlineEditorIds}
@@ -186,7 +163,7 @@ export function Playground({
 
             {/* SCHEDULES */}
             <TabPanel {...tabPanelStyles}>
-              <SchedulesTab inputParams={inputParams} appId={id} />
+              <SchedulesTab appId={id} />
             </TabPanel>
 
             {/* SECRETS */}
