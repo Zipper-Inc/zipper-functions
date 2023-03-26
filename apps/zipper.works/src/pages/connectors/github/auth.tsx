@@ -70,8 +70,6 @@ const GithubAuth: NextPageWithLayout = () => {
         <Text>
           Exchanging one-time code from Github for an API token. Hold tight...
         </Text>
-        <Text>{code}</Text>
-        <Text>{state}</Text>
       </VStack>
     </Center>
   );

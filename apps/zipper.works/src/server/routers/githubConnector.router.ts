@@ -14,53 +14,16 @@ import {
   encryptToHex,
 } from '@zipper/utils';
 import fetch from 'node-fetch';
-import { AppConnectorUserAuth } from '@prisma/client';
+import { AppConnectorUserAuth, Prisma } from '@prisma/client';
+import {
+  GithubAuthTokenResponse,
+  GithubCheckTokenResponse,
+} from '@zipper/types';
 
-type GithubAuthTokenResponse = {
-  access_token: string;
-  token_type: string;
-  scope: string;
-};
-
-type GithubCheckTokenResponse = {
-  id: number;
-  url: string;
-  scopes: string[] | null;
-  token: string;
-  token_last_eight: string;
-  hashed_token: string;
-  app: {
-    url: string;
-    name: string;
-    client_id: string;
-  };
-  note: string;
-  note_url: string;
-  updated_at: string;
-  created_at: string;
-  fingerprint: string;
-  expires_at: string;
-  user: {
-    login: string;
-    id: number;
-    node_id: string;
-    avatar_url: string;
-    gravatar_id: string;
-    url: string;
-    html_url: string;
-    followers_url: string;
-    following_url: string;
-    gists_url: string;
-    starred_url: string;
-    subscriptions_url: string;
-    organizations_url: string;
-    repos_url: string;
-    events_url: string;
-    received_events_url: string;
-    type: string;
-    site_admin: boolean;
-  };
-};
+const getBase64Credentials = () =>
+  Buffer.from(
+    `${process.env.GITHUB_CLIENT_ID}:${process.env.GITHUB_CLIENT_SECRET}`,
+  ).toString('base64');
 
 export const githubConnectorRouter = createRouter()
   .query('get', {
@@ -115,56 +78,34 @@ export const githubConnectorRouter = createRouter()
     input: z.object({
       appId: z.string(),
     }),
-    async resolve({ ctx, input }) {
-      if (!hasAppEditPermission({ ctx, appId: input.appId })) {
+    async resolve({ ctx, input: { appId } }) {
+      if (!hasAppEditPermission({ ctx, appId })) {
         new TRPCError({ code: 'UNAUTHORIZED' });
       }
 
       await prisma.appConnector.update({
         where: {
           appId_type: {
-            appId: input.appId,
+            appId,
             type: 'github',
           },
         },
         data: {
-          metadata: undefined,
+          metadata: Prisma.JsonNull,
         },
       });
 
       const secret = await prisma.secret.delete({
         where: {
           appId_key: {
-            appId: input.appId,
+            appId,
             key: 'GITHUB_TOKEN',
           },
         },
       });
-
-      await fetch('https://slack.com/api/auth.revoke', {
-        method: 'POST',
-        body: new URLSearchParams({
-          token: decryptFromBase64(
-            secret.encryptedValue,
-            process.env.ENCRYPTION_KEY!,
-          ),
-        }),
-      });
-
-      return true;
-    },
-  })
-  .mutation('deleteUserAuth', {
-    input: z.object({
-      appId: z.string(),
-    }),
-    async resolve({ ctx, input }) {
       const userIdOrTempId =
         ctx.userId || (ctx.req?.cookies as any)['__zipper_user_id'];
-
-      const { appId } = input;
-
-      const userAuth = await prisma.appConnectorUserAuth.delete({
+      await prisma.appConnectorUserAuth.delete({
         where: {
           appId_connectorType_userIdOrTempId: {
             appId,
@@ -174,15 +115,25 @@ export const githubConnectorRouter = createRouter()
         },
       });
 
-      await fetch('https://slack.com/api/auth.revoke', {
-        method: 'POST',
-        body: new URLSearchParams({
-          token: decryptFromBase64(
-            userAuth.encryptedAccessToken,
-            process.env.ENCRYPTION_KEY!,
-          ),
-        }),
-      });
+      const token = decryptFromBase64(
+        secret.encryptedValue,
+        process.env.ENCRYPTION_KEY!,
+      );
+
+      const base64Credentials = getBase64Credentials();
+      await fetch(
+        `https://api.github.com/applications/${process.env.GITHUB_CLIENT_ID}/grant`,
+        {
+          headers: {
+            Accept: 'application/json',
+            Authorization: `Basic ${base64Credentials}`,
+          },
+          method: 'DELETE',
+          body: JSON.stringify({
+            access_token: token,
+          }),
+        },
+      );
 
       return true;
     },
@@ -209,7 +160,6 @@ export const githubConnectorRouter = createRouter()
       const res = await fetch('https://github.com/login/oauth/access_token', {
         method: 'POST',
         headers: {
-          // 'Content-Type': 'application/x-www-form-urlencoded',
           Accept: 'application/json',
         },
         body: new URLSearchParams({
@@ -217,7 +167,6 @@ export const githubConnectorRouter = createRouter()
           client_secret: process.env.GITHUB_CLIENT_SECRET!,
           code: input.code,
           state: input.state,
-          accept: 'json',
         }),
       });
 
@@ -230,25 +179,29 @@ export const githubConnectorRouter = createRouter()
       }
 
       let appConnectorUserAuth: AppConnectorUserAuth | undefined = undefined;
+      let metadata: any = json;
 
-      const userIdOrTempId =
+      const userIdOrTempId: string =
         userId || ctx.userId || (ctx.req?.cookies as any)['__zipper_user_id'];
       if (appId && json.scope && userIdOrTempId) {
+        const base64Credentials = getBase64Credentials();
         const userInfoRes = await fetch(
           `https://api.github.com/applications/${process.env.GITHUB_CLIENT_ID}/token`,
           {
             method: 'POST',
             headers: {
               Accept: 'application/json',
+              Authorization: `Basic ${base64Credentials}`,
             },
-            body: new URLSearchParams({
-              access_token: (json as GithubAuthTokenResponse).access_token,
+            body: JSON.stringify({
+              access_token: json.access_token,
             }),
           },
         );
         const userInfoJson =
           (await userInfoRes.json()) as GithubCheckTokenResponse;
         if (userInfoJson.user) {
+          metadata = userInfoJson;
           appConnectorUserAuth = await prisma.appConnectorUserAuth.upsert({
             where: {
               appId_connectorType_userIdOrTempId: {
@@ -261,14 +214,14 @@ export const githubConnectorRouter = createRouter()
               appId,
               connectorType: 'github',
               userIdOrTempId,
-              metadata: userInfoJson,
+              metadata: userInfoJson.user,
               encryptedAccessToken: encryptToBase64(
                 json.access_token,
                 process.env.ENCRYPTION_KEY!,
               ),
             },
             update: {
-              metadata: { id: userInfoJson.user.id, ...json },
+              metadata: userInfoJson.user,
               encryptedAccessToken: encryptToBase64(
                 json.access_token,
                 process.env.ENCRYPTION_KEY!,
@@ -286,7 +239,7 @@ export const githubConnectorRouter = createRouter()
           },
         },
         data: {
-          metadata: json,
+          metadata,
         },
       });
 

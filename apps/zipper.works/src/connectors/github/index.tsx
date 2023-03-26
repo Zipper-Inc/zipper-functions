@@ -10,30 +10,30 @@ import {
   Card,
   CardBody,
   Divider,
-  Flex,
   FormControl,
   FormLabel,
   Heading,
   HStack,
   Icon,
-  IconButton,
-  Input,
-  Spacer,
   Switch,
   Text,
   VStack,
-  Image,
+  useToast,
+  Link,
+  Code,
+  IconButton,
+  Spacer,
+  StackDivider,
 } from '@chakra-ui/react';
 import { FormProvider, useForm } from 'react-hook-form';
-import { FiTrash } from 'react-icons/fi';
 import { trpc } from '~/utils/trpc';
 import { VscGithub } from 'react-icons/vsc';
 import { code, scopes } from './constants';
-import Link from 'next/link';
 import { MultiSelect, SelectOnChange, useMultiSelect } from '@zipper/ui';
-import { HiQuestionMarkCircle } from 'react-icons/hi';
-import { useState } from 'react';
+import { HiOutlineTrash, HiQuestionMarkCircle } from 'react-icons/hi';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
+import { GithubCheckTokenResponse } from '@zipper/types';
 
 export const githubConnector = createConnector({
   id: 'github',
@@ -57,9 +57,12 @@ function GitHubConnectorForm({ appId }: { appId: string }) {
     options: __scope_options,
     value: [],
   });
-  const connectorForm = useForm();
-  // const isUserAuthRequired = connectorForm.watch('isUserAuthRequired');
-  const isUserAuthRequired = false;
+  const connectorForm = useForm({
+    defaultValues: {
+      isUserAuthRequired: false,
+    },
+  });
+  const isUserAuthRequired = connectorForm.watch('isUserAuthRequired');
 
   const utils = trpc.useContext();
 
@@ -93,6 +96,8 @@ function GitHubConnectorForm({ appId }: { appId: string }) {
     { appId, key: tokenName },
   ]);
 
+  const toast = useToast();
+
   const context = trpc.useContext();
   const router = useRouter();
   const updateAppConnectorMutation = trpc.useMutation('appConnector.update', {
@@ -104,8 +109,24 @@ function GitHubConnectorForm({ appId }: { appId: string }) {
           resourceOwnerSlug: router.query['resource-owner'] as string,
         },
       ]);
+      context.invalidateQueries(['githubConnector.get', { appId }]);
+      toast({
+        title: 'Github config updated.',
+        status: 'success',
+        duration: 1500,
+        isClosable: true,
+      });
     },
   });
+
+  const existingInstallation = existingSecret.data && connector.data?.metadata;
+
+  useEffect(() => {
+    connectorForm.setValue(
+      'isUserAuthRequired',
+      connector.data?.isUserAuthRequired || false,
+    );
+  }, [connector.data?.isUserAuthRequired]);
 
   const saveConnector = async (data: any) => {
     setIsSaving(true);
@@ -113,12 +134,20 @@ function GitHubConnectorForm({ appId }: { appId: string }) {
       appId,
       type: 'github',
       data: {
-        isUserAuthRequired,
+        isUserAuthRequired: data.isUserAuthRequired,
         userScopes: scopesValue as string[],
       },
     });
     setIsSaving(false);
   };
+
+  const deleteConnectorMutation = trpc.useMutation('githubConnector.delete', {
+    async onSuccess() {
+      await utils.invalidateQueries(['githubConnector.get', { appId }]);
+      await utils.invalidateQueries(['secret.get', { appId, key: tokenName }]);
+      await utils.invalidateQueries(['secret.all', { appId }]);
+    },
+  });
 
   return (
     <Box px="10" w="full">
@@ -129,132 +158,200 @@ function GitHubConnectorForm({ appId }: { appId: string }) {
             <Text>Configure the {githubConnector.name} connector.</Text>
           </Box>
           <VStack align="start">
-            <Card w="full">
-              <CardBody color="gray.600">
-                <Accordion allowMultiple={true}>
-                  <AccordionItem border={'none'}>
-                    <AccordionButton>
-                      <Box
-                        as="h2"
-                        flex={1}
-                        textAlign="left"
-                        fontSize="md"
-                        fontWeight="semibold"
-                        color="gray.600"
-                      >
-                        Configure scopes
-                      </Box>
-                      <AccordionIcon />
-                    </AccordionButton>
-                    <AccordionPanel pb={4}>
-                      <FormProvider {...connectorForm}>
-                        <form
-                          // onSubmit={connectorForm.handleSubmit(saveConnector)}
-                          onSubmit={(e) => {
-                            e.preventDefault();
-                            console.log('submitting github config');
+            {existingInstallation ? (
+              <>
+                <Card w="full">
+                  <CardBody color="gray.600">
+                    <HStack>
+                      <Heading size="sm" mb="4">
+                        Current installation
+                      </Heading>
+                      <Spacer />
+                      {githubAuthURL.data && (
+                        <IconButton
+                          aria-label="Delete connector"
+                          variant="ghost"
+                          onClick={() => {
+                            deleteConnectorMutation.mutateAsync({
+                              appId,
+                            });
                           }}
-                        >
-                          <VStack align="start" w="full">
-                            <FormControl pt="2">
-                              <FormLabel color={'gray.500'}>
-                                Scopes
-                                <Icon ml="2" as={HiQuestionMarkCircle} />
-                              </FormLabel>
-
-                              <MultiSelect
-                                options={scopesOptions}
-                                value={scopesValue}
-                                onChange={scopesOnChange as SelectOnChange}
-                              />
-                              <HStack w="full" pt="2" pb="4">
-                                <Box mr="auto">
-                                  <HStack>
-                                    <Text>
-                                      Require users to auth to access your app
-                                    </Text>
-                                  </HStack>
-                                </Box>
-                                <Switch
-                                  isChecked={isUserAuthRequired}
-                                  ml="auto"
-                                  onChange={(e) => {
-                                    // setIsUserAuthRequired(e.target.checked);
-                                  }}
-                                />
-                              </HStack>
-
-                              <Button
-                                type="submit"
-                                colorScheme={'purple'}
-                                // isDisabled={isSaving}
-                                onClick={async () => {
-                                  // setIsSaving(true);
-                                  // await updateAppConnectorMutation.mutateAsync({
-                                  //   appId,
-                                  //   type: 'slack',
-                                  //   data: {
-                                  //     isUserAuthRequired,
-                                  //     userScopes: userValue as string[],
-                                  //     workspaceScopes: botValue as string[],
-                                  //   },
-                                  // });
-                                  // setIsSaving(false);
-                                }}
-                              >
-                                Save
-                              </Button>
-                            </FormControl>
-                          </VStack>
-                        </form>
-                      </FormProvider>
-                    </AccordionPanel>
-                  </AccordionItem>
-
-                  <AccordionItem border={'none'}>
-                    <h2>
+                          icon={<Icon as={HiOutlineTrash} color="gray.400" />}
+                        />
+                      )}
+                    </HStack>
+                    <VStack
+                      align="start"
+                      divider={<StackDivider />}
+                      fontSize="sm"
+                    >
+                      <HStack>
+                        <Text>Managed by OAuth App:</Text>
+                        <Code>
+                          {
+                            (
+                              connector.data
+                                ?.metadata as GithubCheckTokenResponse
+                            ).app.name
+                          }
+                        </Code>
+                      </HStack>
+                      <HStack>
+                        <Text>User ID:</Text>
+                        <Code>
+                          {
+                            (
+                              connector.data
+                                ?.metadata as GithubCheckTokenResponse
+                            ).user.id
+                          }
+                        </Code>
+                      </HStack>
+                      <HStack>
+                        <Text>User:</Text>
+                        <Code>
+                          {
+                            (
+                              connector.data
+                                ?.metadata as GithubCheckTokenResponse
+                            ).user.login
+                          }
+                        </Code>
+                      </HStack>
+                      <HStack>
+                        <Text>Scopes:</Text>
+                        <HStack spacing="px">
+                          {(
+                            connector.data?.metadata as GithubCheckTokenResponse
+                          ).scopes?.map((scope: string) => (
+                            <Code>{scope}</Code>
+                          ))}
+                        </HStack>
+                      </HStack>
+                    </VStack>
+                  </CardBody>
+                </Card>
+                <Card w="full">
+                  <CardBody color="gray.600" fontSize="sm">
+                    <Heading size="sm" mb="4">
+                      Configuration
+                    </Heading>
+                    <HStack w="full" pt="2">
+                      <Box mr="auto">
+                        <HStack>
+                          <Text>Require users to auth to access your app</Text>
+                        </HStack>
+                      </Box>
+                      <Switch
+                        isChecked={isUserAuthRequired}
+                        {...connectorForm.register('isUserAuthRequired')}
+                        ml="auto"
+                        onChange={(e) => {
+                          updateAppConnectorMutation.mutateAsync({
+                            appId,
+                            type: 'github',
+                            data: { isUserAuthRequired: e.target.checked },
+                          });
+                        }}
+                      />
+                    </HStack>
+                  </CardBody>
+                </Card>
+              </>
+            ) : (
+              <Card w="full">
+                <CardBody color="gray.600">
+                  <Accordion allowMultiple={true}>
+                    <AccordionItem border={'none'}>
                       <AccordionButton>
                         <Box
-                          as="span"
-                          flex="1"
+                          as="h2"
+                          flex={1}
                           textAlign="left"
+                          fontSize="md"
                           fontWeight="semibold"
-                          color={'gray.600'}
+                          color="gray.600"
                         >
-                          Install the app
+                          Configure scopes
                         </Box>
                         <AccordionIcon />
                       </AccordionButton>
-                    </h2>
-                    <AccordionPanel pb={4}>
-                      <VStack align="start" w="full">
-                        {githubAuthURL.data ? (
-                          <Link href={githubAuthURL.data?.url}>
-                            {/* <Text>Add to Github</Text> */}
-                            Add to Github
-                            {/* <Image
-                                alt="Add to Slack"
-                                src="https://platform.slack-edge.com/img/add_to_slack.png"
-                                srcSet="https://platform.slack-edge.com/img/add_to_slack.png 1x, https://platform.slack-edge.com/img/add_to_slack@2x.png 2x"
-                              /> */}
-                          </Link>
-                        ) : (
-                          <Text>Add to Github</Text>
-                          // <Image
-                          //   alt="Add to Slack"
-                          //   src="https://platform.slack-edge.com/img/add_to_slack.png"
-                          //   srcSet="https://platform.slack-edge.com/img/add_to_slack.png 1x, https://platform.slack-edge.com/img/add_to_slack@2x.png 2x"
-                          // />
-                        )}
-                      </VStack>
-                    </AccordionPanel>
-                  </AccordionItem>
-                </Accordion>
-              </CardBody>
-            </Card>
-            {/* {connector.schema.clientId ?? ()}
-            {connector.schema.clientSecret ?? ()}
-            {connector.schema.scopes ?? ()} */}
+                      <AccordionPanel pb={4}>
+                        <FormProvider {...connectorForm}>
+                          <form
+                            onSubmit={connectorForm.handleSubmit(saveConnector)}
+                          >
+                            <VStack align="start" w="full">
+                              <FormControl pt="2">
+                                <FormLabel color={'gray.500'}>
+                                  Scopes
+                                  <Icon ml="2" as={HiQuestionMarkCircle} />
+                                </FormLabel>
+                                <MultiSelect
+                                  options={scopesOptions}
+                                  value={scopesValue}
+                                  onChange={scopesOnChange as SelectOnChange}
+                                />
+                                <HStack w="full" pt="2" pb="4">
+                                  <Box mr="auto">
+                                    <HStack>
+                                      <Text>
+                                        Require users to auth to access your app
+                                      </Text>
+                                    </HStack>
+                                  </Box>
+                                  <Switch
+                                    ml="auto"
+                                    isChecked={isUserAuthRequired}
+                                    {...connectorForm.register(
+                                      'isUserAuthRequired',
+                                    )}
+                                  />
+                                </HStack>
+                                <Button
+                                  type="submit"
+                                  colorScheme={'purple'}
+                                  isDisabled={isSaving}
+                                >
+                                  Save
+                                </Button>
+                              </FormControl>
+                            </VStack>
+                          </form>
+                        </FormProvider>
+                      </AccordionPanel>
+                    </AccordionItem>
+                    <AccordionItem border={'none'}>
+                      <h2>
+                        <AccordionButton>
+                          <Box
+                            as="span"
+                            flex="1"
+                            textAlign="left"
+                            fontWeight="semibold"
+                            color={'gray.600'}
+                          >
+                            Install the app
+                          </Box>
+                          <AccordionIcon />
+                        </AccordionButton>
+                      </h2>
+                      <AccordionPanel pb={4}>
+                        <VStack align="start" w="full">
+                          {githubAuthURL.data ? (
+                            <Link href={githubAuthURL.data?.url}>
+                              Add to Github
+                            </Link>
+                          ) : (
+                            <Text>Add to Github</Text>
+                          )}
+                        </VStack>
+                      </AccordionPanel>
+                    </AccordionItem>
+                  </Accordion>
+                </CardBody>
+              </Card>
+            )}
           </VStack>
           <Divider my={4} />
           Connector code:
