@@ -1,5 +1,7 @@
+export type ConnectorType = 'github' | 'slack';
+
 export type UserAuthConnector = {
-  type: string;
+  type: ConnectorType;
   appId: string;
   isUserAuthRequired: boolean;
   userScopes: string[];
