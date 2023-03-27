@@ -82,7 +82,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
   const context = trpc.useContext();
 
   const deleteConnectorUserAuth = trpc.useMutation(
-    'connector.slack.deleteUserAuth',
+    'slackConnector.deleteUserAuth',
     {
       onSuccess: () => {
         context.invalidateQueries([
@@ -129,7 +129,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
 
   // get the existing Slack connector data from the database
   const slackConnector = trpc.useQuery(
-    ['connector.slack.get', { appId: appInfo.id }],
+    ['slackConnector.get', { appId: appInfo.id }],
     {
       enabled: slackAuthRequired,
     },
@@ -146,7 +146,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
   // (it includes an encrypted state value that links the auth request to the app)
   const slackAuthURL = trpc.useQuery(
     [
-      'connector.slack.getAuthUrl',
+      'slackConnector.getAuthUrl',
       {
         appId: appInfo.id,
         scopes: {

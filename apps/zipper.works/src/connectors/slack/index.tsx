@@ -82,7 +82,7 @@ function SlackConnectorForm({ appId }: { appId: string }) {
   });
 
   // get the existing Slack connector data from the database
-  const connector = trpc.useQuery(['connector.slack.get', { appId }], {
+  const connector = trpc.useQuery(['slackConnector.get', { appId }], {
     onSuccess: (data) => {
       if (data && setBotValue && setUserValue) {
         setBotValue(data.workspaceScopes || [defaultBotScope]);
@@ -106,7 +106,7 @@ function SlackConnectorForm({ appId }: { appId: string }) {
   // get the Slack auth URL from the backend (it includes an encrypted state value that links
   // the auth request to the app)
   const slackAuthURL = trpc.useQuery([
-    'connector.slack.getAuthUrl',
+    'slackConnector.getAuthUrl',
     {
       appId,
       scopes: { bot: botValue as string[], user: userValue as string[] },
@@ -128,9 +128,9 @@ function SlackConnectorForm({ appId }: { appId: string }) {
     },
   });
 
-  const deleteConnectorMutation = trpc.useMutation('connector.slack.delete', {
+  const deleteConnectorMutation = trpc.useMutation('slackConnector.delete', {
     async onSuccess() {
-      await utils.invalidateQueries(['connector.slack.get', { appId }]);
+      await utils.invalidateQueries(['slackConnector.get', { appId }]);
       await utils.invalidateQueries([
         'secret.get',
         { appId, key: botTokenName },

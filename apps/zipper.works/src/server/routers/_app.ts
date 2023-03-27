@@ -13,7 +13,7 @@ import { userRouter } from './user.router';
 import { appEditorRouter } from './appEditor.router';
 import { appConnectorRouter } from './appConnector.router';
 import { resourceOwnerSlugRouter } from './resourceOwnerSlug.router';
-import { connectorRouter } from './connector.router';
+import { slackConnectorRouter } from './slackConnector.router';
 import { githubConnectorRouter } from './githubConnector.router';
 
 /**
@@ -46,7 +46,7 @@ export const trpcRouter = createRouter()
   .merge('appEditor.', appEditorRouter)
   .merge('appEvent.', appEventRouter)
   .merge('appRun.', appRunRouter)
-  .merge('connector.', connectorRouter)
+  .merge('slackConnector.', slackConnectorRouter)
   .merge('githubConnector.', githubConnectorRouter)
   .merge('resourceOwnerSlug.', resourceOwnerSlugRouter)
   .merge('secret.', secretRouter)
