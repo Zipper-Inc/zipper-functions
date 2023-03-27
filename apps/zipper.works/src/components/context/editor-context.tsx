@@ -169,7 +169,6 @@ const EditorContextProvider = ({
 
   useEffect(() => {
     if (currentScript) {
-      console.log(currentScript);
       const models = editor?.getModels();
       if (models) {
         const fileModels = models.filter(
@@ -181,12 +180,21 @@ const EditorContextProvider = ({
             model.getValue() !== currentScript.code
           ) {
             model.setValue(currentScript.code);
+            // Call mutateLive and localStorage.setItem when the currentScript is updated
+            try {
+              mutateLive(currentScript.code, model.getVersionId());
+            } catch (e) {
+              console.error('Caught error from mutateLive:', e);
+            }
+            localStorage.setItem(
+              `script-${currentScript.id}`,
+              currentScript.code,
+            );
           }
         });
       }
     }
-  }, [currentScript]);
-
+  }, [editor, currentScript]);
   const saveOpenModels = async () => {
     if (appId && currentScript) {
       setIsSaving(true);
