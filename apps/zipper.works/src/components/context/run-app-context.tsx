@@ -2,6 +2,7 @@ import { createContext, useContext, useState } from 'react';
 import noop from '~/utils/noop';
 import {
   AppInfo,
+  ConnectorType,
   InputParam,
   InputType,
   JSONEditorInputTypes,
@@ -15,6 +16,15 @@ import getRunUrl from '~/utils/get-run-url';
 import { AppConnectorUserAuth } from '@prisma/client';
 import { parseInputForTypes } from '~/utils/parse-input-for-types';
 
+type UserAuthConnector = {
+  type: ConnectorType;
+  appId: string;
+  isUserAuthRequired: boolean;
+  userScopes: string[];
+  workspaceScopes: string[];
+  appConnectorUserAuths: AppConnectorUserAuth[];
+};
+
 export type FunctionCallContextType = {
   appInfo: AppInfo;
   formMethods: any;
@@ -22,14 +32,7 @@ export type FunctionCallContextType = {
   isRunning: boolean;
   lastRunVersion: string;
   results: Record<string, string>;
-  userAuthConnectors: {
-    type: string;
-    appId: string;
-    isUserAuthRequired: boolean;
-    userScopes: string[];
-    workspaceScopes: string[];
-    appConnectorUserAuths: AppConnectorUserAuth[];
-  }[];
+  userAuthConnectors: UserAuthConnector[];
   appEventsQuery?: AppEventUseQueryResult;
   setResults: (results: Record<string, string>) => void;
   run: (isCurrentFileAsEntryPoint?: boolean) => void;
@@ -114,7 +117,7 @@ export function RunAppProvider({
         appEventsQuery,
         userAuthConnectors: app.connectors.filter(
           (c) => c.userScopes.length > 0,
-        ),
+        ) as UserAuthConnector[],
         setResults,
         run: async (isCurrentFileAsEntryPoint?: boolean) => {
           setIsRunning(true);

@@ -138,6 +138,43 @@ export const githubConnectorRouter = createRouter()
       return true;
     },
   })
+  .mutation('deleteUserAuth', {
+    input: z.object({
+      appId: z.string(),
+    }),
+    async resolve({ ctx, input }) {
+      const userIdOrTempId =
+        ctx.userId || (ctx.req?.cookies as any)['__zipper_user_id'];
+
+      const { appId } = input;
+
+      const userAuth = await prisma.appConnectorUserAuth.delete({
+        where: {
+          appId_connectorType_userIdOrTempId: {
+            appId,
+            connectorType: 'github',
+            userIdOrTempId,
+          },
+        },
+      });
+
+      await fetch(
+        `https://api.github.com/applications/${process.env.GITHUB_CLIENT_ID}/token`,
+        {
+          method: 'DELETE',
+          headers: { Authorization: `Basic ${getBase64Credentials()}` },
+          body: JSON.stringify({
+            access_token: decryptFromBase64(
+              userAuth.encryptedAccessToken,
+              process.env.ENCRYPTION_KEY!,
+            ),
+          }),
+        },
+      );
+
+      return true;
+    },
+  })
   .mutation('exchangeCodeForToken', {
     input: z.object({
       code: z.string(),
