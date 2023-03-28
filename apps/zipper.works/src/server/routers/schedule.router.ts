@@ -15,6 +15,7 @@ const defaultSelect = Prisma.validator<Prisma.ScheduleSelect>()({
   filename: true,
   appId: true,
   crontab: true,
+  userId: true,
 });
 
 export const scheduleRouter = createRouter()
@@ -35,7 +36,11 @@ export const scheduleRouter = createRouter()
       const { appId, crontab, inputs, filename } = input;
 
       try {
-        parser.parseExpression(crontab);
+        const parsed = parser.parseExpression(crontab);
+        console.log(parsed.fields.second.toString());
+        if (parsed.fields.second && parsed.fields.second.toString() !== '0') {
+          throw new Error('No seconds allowed');
+        }
       } catch (error) {
         throw new Error('Invalid crontab');
       }
@@ -46,6 +51,7 @@ export const scheduleRouter = createRouter()
           crontab,
           inputs,
           filename,
+          userId: ctx.userId!,
         },
         select: defaultSelect,
       });

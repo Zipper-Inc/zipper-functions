@@ -208,6 +208,21 @@ async function getUserInfo(token: string, appSlug: string) {
         appAccessToken.hashedSecret,
       );
 
+      // app access tokens with a schedule ID should be deleted after being used
+      if (appAccessToken.scheduleId) {
+        await prisma.appAccessToken.update({
+          where: {
+            identifier_appId: {
+              identifier: appAccessToken.identifier,
+              appId: appAccessToken.appId,
+            },
+          },
+          data: {
+            deletedAt: new Date(Date.now()),
+          },
+        });
+      }
+
       if (!validSecret) throw new Error();
 
       const user = await clerkClient.users.getUser(appAccessToken.userId);

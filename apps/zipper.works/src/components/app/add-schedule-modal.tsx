@@ -14,14 +14,21 @@ import {
   Button,
   Text,
   Select,
+  CardBody,
+  Card,
+  Divider,
+  HStack,
 } from '@chakra-ui/react';
+import { useUser } from '@clerk/nextjs';
 import { InputParam } from '@zipper/types';
 import { FunctionInputs } from '@zipper/ui';
 import cronstrue from 'cronstrue';
 import { useEffect, useState } from 'react';
 import { FieldValues, useForm } from 'react-hook-form';
 import { parseInputForTypes } from '~/utils/parse-input-for-types';
+import { Avatar } from '../avatar';
 import { useEditorContext } from '../context/editor-context';
+import { useRunAppContext } from '../context/run-app-context';
 
 export type NewSchedule = {
   filename: string;
@@ -67,6 +74,9 @@ export const AddScheduleModal: React.FC<AddScheduleModalProps> = ({
     }
   }, [currentCrontab]);
 
+  const user = useUser();
+  const { appInfo } = useRunAppContext();
+
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
@@ -83,7 +93,7 @@ export const AddScheduleModal: React.FC<AddScheduleModalProps> = ({
           overflow="auto"
         >
           <FormControl flex={1} display="flex" flexDirection="column">
-            <FormLabel>Scripts</FormLabel>
+            <FormLabel>Script to run</FormLabel>
             <Select
               size="md"
               color="gray.900"
@@ -108,7 +118,7 @@ export const AddScheduleModal: React.FC<AddScheduleModalProps> = ({
             </Select>
           </FormControl>
           <FormControl flex={1} display="flex" flexDirection="column">
-            <FormLabel>Cron expression:</FormLabel>
+            <FormLabel>Schedule (as a cron expression)</FormLabel>
             <Input
               size="md"
               type="text"
@@ -119,16 +129,17 @@ export const AddScheduleModal: React.FC<AddScheduleModalProps> = ({
               {cronString}
             </FormHelperText>
           </FormControl>
-          <VStack
-            alignItems="stretch"
-            flex={1}
-            spacing={3}
-            flexShrink={1}
-            overflow="auto"
-          >
-            {inputParams && (
+
+          {inputParams && inputParams.length > 0 && (
+            <VStack
+              alignItems="stretch"
+              flex={1}
+              spacing={3}
+              flexShrink={1}
+              overflow="auto"
+            >
               <>
-                <Text size="sm">Inputs for this scheduled run:</Text>
+                <FormLabel mb="0">Inputs for this scheduled run:</FormLabel>
                 <VStack
                   flex={1}
                   background="gray.100"
@@ -136,6 +147,7 @@ export const AddScheduleModal: React.FC<AddScheduleModalProps> = ({
                   borderRadius="12"
                   alignItems="stretch"
                   overflow="auto"
+                  mt="0"
                 >
                   <FunctionInputs
                     params={inputParams}
@@ -143,13 +155,17 @@ export const AddScheduleModal: React.FC<AddScheduleModalProps> = ({
                   />
                 </VStack>
               </>
-            )}
-          </VStack>
+            </VStack>
+          )}
           {inputParams === undefined && (
             <Text size="sm">
               This script does not have a main or handler function defined
             </Text>
           )}
+          <HStack border="1px solid" borderColor={'gray.100'} p="2">
+            <Text>This job will be run as </Text>
+            <Text fontWeight={'medium'}>{user.user?.fullName || 'You'}</Text>
+          </HStack>
         </ModalBody>
         <ModalFooter justifyContent="space-between">
           <Button

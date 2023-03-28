@@ -4,6 +4,9 @@ import IORedis from 'ioredis';
 import { prisma } from './prisma';
 import fetch from 'node-fetch';
 import getRunUrl from '../utils/get-run-url';
+import clerkClient from '@clerk/clerk-sdk-node';
+import { bcryptHash, encryptToBase64 } from '@zipper/utils';
+import { randomUUID } from 'crypto';
 
 const connection = new IORedis(+env.REDIS_PORT, env.REDIS_HOST, {
   maxRetriesPerRequest: null,
@@ -35,6 +38,27 @@ const initializeWorkers = () => {
             inputsWithoutAnnotations[splitKey.join(':')] = inputs[inputKey];
           });
 
+          let token: undefined | string = undefined;
+          if (schedule.app.requiresAuthToRun) {
+            const secret = randomUUID().replace(/-/g, '').slice(0, 21);
+            const identifier = randomUUID().replace(/-/g, '').slice(0, 21);
+
+            const hashedSecret = await bcryptHash(secret);
+
+            await prisma.appAccessToken.create({
+              data: {
+                identifier,
+                appId: schedule.appId,
+                userId: schedule.userId,
+                hashedSecret,
+                description: `Temporary token for ${schedule.id}`,
+                scheduleId: schedule.id,
+              },
+            });
+
+            token = `zaat.${identifier}.${secret}`;
+          }
+
           /**
            * @todo
            * this should be the version of the app specific to the cron
@@ -49,7 +73,8 @@ const initializeWorkers = () => {
             const raw = await fetch(url, {
               method: 'POST',
               headers: {
-                'X-Zipper-Schedule-Id': schedule.id,
+                'x-zipper-schedule-id': schedule.id,
+                Authorization: `Bearer ${token}`,
               },
               body: JSON.stringify(inputsWithoutAnnotations),
             });

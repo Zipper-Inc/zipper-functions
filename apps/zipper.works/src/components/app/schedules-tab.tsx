@@ -16,6 +16,7 @@ import {
   Tr,
   ChakraProps,
   Badge,
+  useToast,
 } from '@chakra-ui/react';
 import cronstrue from 'cronstrue';
 import { useState } from 'react';
@@ -26,6 +27,7 @@ import {
   AddScheduleModalProps,
   NewSchedule,
 } from './add-schedule-modal';
+import { Avatar } from '../avatar';
 
 const tableHeaderStyles: ChakraProps = {
   fontWeight: 'normal',
@@ -51,14 +53,31 @@ const SchedulesTab: React.FC<SchedulesTabProps> = ({ appId }) => {
   const utils = trpc.useContext();
   const [newSchedules, setNewSchedules] = useState<NewSchedule[]>([]);
   const existingSchedules = trpc.useQuery(['schedule.all', { appId }]);
+  const toast = useToast();
 
   const addSchedule = trpc.useMutation('schedule.add', {
+    onError({}) {
+      toast({
+        title: 'Something went wrong...',
+        description:
+          "Check your cron syntax. We don't run jobs more than once per minute.",
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    },
     async onSuccess({ crontab }) {
       await utils.invalidateQueries(['schedule.all', { appId }]);
       const remainingNewSchedules = newSchedules.filter(
         (s) => s.crontab !== crontab,
       );
       setNewSchedules(remainingNewSchedules);
+      toast({
+        title: 'Scheduled job created',
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
+      });
     },
   });
 
@@ -115,6 +134,7 @@ const SchedulesTab: React.FC<SchedulesTabProps> = ({ appId }) => {
                 <Th {...tableHeaderStyles}>Cron Expression</Th>
                 <Th {...tableHeaderStyles}>Script</Th>
                 <Th {...tableHeaderStyles}>Last Run</Th>
+                <Th {...tableHeaderStyles}>Run As</Th>
                 <Th {...tableHeaderStyles} w={0} pr={0}></Th>
               </Tr>
             </Thead>
@@ -134,6 +154,9 @@ const SchedulesTab: React.FC<SchedulesTabProps> = ({ appId }) => {
                       </Td>
                       <Td {...tableDataStyles}>{s.crontab}</Td>
                       <Td {...tableDataStyles}>{s.filename}</Td>
+                      <Td {...tableDataStyles}>
+                        <Avatar userId={s.userId} size="xs" />
+                      </Td>
                       <Td {...tableDataStyles}>
                         {s.appRuns.length > 0 && (
                           <HStack>
@@ -176,7 +199,7 @@ const SchedulesTab: React.FC<SchedulesTabProps> = ({ appId }) => {
                 })
               ) : (
                 <Tr {...tableDataStyles}>
-                  <Td colSpan={4}>
+                  <Td colSpan={6}>
                     You don't have any scheduled runs for this app. Create one
                     to get started.
                   </Td>
@@ -185,7 +208,7 @@ const SchedulesTab: React.FC<SchedulesTabProps> = ({ appId }) => {
             </Tbody>
             <Tfoot>
               <Tr>
-                <Td {...tableDataStyles} py={3} colSpan={4}>
+                <Td {...tableDataStyles} py={3} colSpan={6}>
                   <Button
                     colorScheme="purple"
                     size="sm"
