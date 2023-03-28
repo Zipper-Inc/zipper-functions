@@ -81,10 +81,13 @@ export const appAccessTokenRouter = createRouter()
       identifier: z.string(),
     }),
     async resolve({ ctx, input }) {
-      await prisma.appAccessToken.deleteMany({
+      await prisma.appAccessToken.updateMany({
         where: {
           identifier: input.identifier,
           userId: ctx.userId,
+        },
+        data: {
+          deletedAt: new Date(Date.now()),
         },
       });
 

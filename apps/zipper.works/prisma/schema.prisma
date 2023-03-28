@@ -54,6 +54,7 @@ model AppAccessToken {
   appId           String
   userId          String
   description     String?
+  scheduleId      String?
 
   app         App       @relation(fields: [appId], references: [id])
 
@@ -182,6 +183,7 @@ model Schedule {
   filename  String    @default("main.ts")
   crontab   String
   inputs    Json?
+  userId    String
 
   appId     String
   app       App?      @relation(fields: [appId], references: [id])

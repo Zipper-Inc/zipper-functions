@@ -149,7 +149,7 @@ export async function relayRequest({
     appId: app.id,
     deploymentId,
     success: response.status === 200,
-    scheduleId: request.headers.get('X-Zipper-Schedule-Id') || undefined,
+    scheduleId: request.headers.get('x-zipper-schedule-id') || undefined,
     inputs: await getInputFromRequest(request, JSON.stringify(relayBody)),
     result,
   });
@@ -166,6 +166,7 @@ export default async function serveRelay(request: NextRequest) {
     request,
     version,
     filename,
+    bearerToken: request.headers.get('Authorization')?.replace('Bearer ', ''),
   });
   if (request.method !== 'GET')
     headers?.append('Access-Control-Allow-Origin', '*');
