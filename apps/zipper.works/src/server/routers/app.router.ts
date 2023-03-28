@@ -351,7 +351,8 @@ export const appRouter = createRouter()
               appConnectorUserAuths: {
                 where: {
                   userIdOrTempId:
-                    ctx.userId || (ctx.req?.cookies as any)['__zipper_user_id'],
+                    ctx.userId ||
+                    (ctx.req?.cookies as any)['__zipper_temp_user_id'],
                 },
               },
             },

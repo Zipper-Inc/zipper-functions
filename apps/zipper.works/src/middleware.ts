@@ -5,11 +5,8 @@ import type { NextRequest } from 'next/server';
 export default withClerkMiddleware((req: NextRequest) => {
   const res = NextResponse.next();
   const { userId } = getAuth(req);
-  if (!req.cookies.get('__zipper_user_id')) {
-    res.cookies.set(
-      '__zipper_user_id',
-      userId || `temp__${crypto.randomUUID()}`,
-    );
+  if (!userId && !req.cookies.get('__zipper_temp_user_id')) {
+    res.cookies.set('__zipper_temp_user_id', `temp__${crypto.randomUUID()}`);
   }
 
   return res;

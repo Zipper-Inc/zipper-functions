@@ -121,7 +121,7 @@ export const connectorRouter = createRouter()
     }),
     async resolve({ ctx, input }) {
       const userIdOrTempId =
-        ctx.userId || (ctx.req?.cookies as any)['__zipper_user_id'];
+        ctx.userId || (ctx.req?.cookies as any)['__zipper_temp_user_id'];
 
       const { appId } = input;
 
@@ -195,7 +195,9 @@ export const connectorRouter = createRouter()
       let appConnectorUserAuth: AppConnectorUserAuth | undefined = undefined;
 
       const userIdOrTempId =
-        userId || ctx.userId || (ctx.req?.cookies as any)['__zipper_user_id'];
+        userId ||
+        ctx.userId ||
+        (ctx.req?.cookies as any)['__zipper_temp_user_id'];
       if (appId && json.authed_user.scope && userIdOrTempId) {
         const userInfoRes = await fetch('https://slack.com/api/auth.test', {
           method: 'POST',

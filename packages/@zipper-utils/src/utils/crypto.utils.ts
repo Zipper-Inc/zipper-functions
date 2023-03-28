@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import { hash, compare } from 'bcryptjs';
 
 const ALGORITHM = {
   // 128 bit auth tag is recommended for GCM
@@ -10,6 +11,8 @@ const ALGORITHM = {
   // to prevent rainbow table attacks
   SALT_BYTE_LEN: 16,
 };
+
+const SALT_ROUNDS = 10;
 
 export const getRandomKey = () => crypto.randomBytes(ALGORITHM.KEY_BYTE_LEN);
 
@@ -101,6 +104,14 @@ export const decryptFromHex = (cipherInHex: string, key?: string) => {
   }
 
   return decrypt(ciphertext, key);
+};
+
+export const bcryptHash = async (password: string) => {
+  return hash(password, SALT_ROUNDS);
+};
+
+export const bcryptCompare = async (password: string, hash: string) => {
+  return compare(password, hash);
 };
 
 export default {

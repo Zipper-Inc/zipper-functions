@@ -39,8 +39,26 @@ model App {
   forks   App[] @relation("AppForks")
   settings AppSetting[]
   connectors AppConnector[]
+  accessTokens AppAccessToken[]
 
   @@map("apps")
+}
+
+// token will be zaat.identier.secret
+model AppAccessToken {
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime? @default(now())
+  deletedAt       DateTime? @db.Timestamp(6)
+  identifier      String    @unique
+  hashedSecret    String    @unique
+  appId           String
+  userId          String
+  description     String?
+
+  app         App       @relation(fields: [appId], references: [id])
+
+  @@id([identifier, appId])
+  @@map("app_access_tokens")
 }
 
 model AppSetting {

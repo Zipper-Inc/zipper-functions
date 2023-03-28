@@ -18,6 +18,7 @@ export default async function handler(request: NextRequest) {
       request,
       version,
       filename,
+      bearerToken: request.headers.get('Authorization')?.replace('Bearer ', ''),
     });
     headers?.set('Content-Type', 'application/json');
     return new NextResponse(
