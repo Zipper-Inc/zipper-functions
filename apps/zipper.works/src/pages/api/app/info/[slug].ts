@@ -10,13 +10,22 @@ import { prisma } from '~/server/prisma';
 import { AppInfoResult } from '@zipper/types';
 import { parseInputForTypes } from '~/utils/parse-input-for-types';
 import { bcryptCompare } from '@zipper/utils';
-import jwt from 'jsonwebtoken';
+import jwt, { JwtPayload } from 'jsonwebtoken';
+import clerkClient from '@clerk/clerk-sdk-node';
 
 /**
  * @todo
  * - security of some sort (control access for users)
  * - restrict endpoint to run server or something
  */
+
+// convert the CLERK_JWT_KEY to a public key
+const splitPem = process.env.CLERK_JWT_KEY?.match(/.{1,64}/g);
+const publicKey =
+  '-----BEGIN PUBLIC KEY-----\n' +
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  splitPem!.join('\n') +
+  '\n-----END PUBLIC KEY-----';
 
 export default async function handler(
   req: NextApiRequest,
@@ -63,53 +72,63 @@ export default async function handler(
     });
   }
 
+  /* There are two types of auth tokens that can be used to run an app:
+      1. A Clerk session token
+      2. A Zipper access token
+
+  First we check if there is a token in the request headers.  If there is,
+  we check if it's a Clerk session token by vefifying it with the Clerk
+  public key.
+
+  If it's not a Clerk token, we check that it's a Zipper access token by
+  looking at the first 4 characters of the token (should be 'zaat').
+
+  If it is, we take the second part of the token (the identifier) and use
+  that to find the hashed secret. We compare the hashed secret with a hash
+  of the third part of the token.
+  */
+
   if (appFound.requiresAuthToRun) {
     try {
-      //convert the CLERK_JWT_KEY to a public key
-      const splitPem = process.env.CLERK_JWT_KEY.match(/.{1,64}/g);
-      const publicKey =
-        '-----BEGIN PUBLIC KEY-----\n' +
-        splitPem!.join('\n') +
-        '\n-----END PUBLIC KEY-----';
-
       // get the token from the request headers. Could be a Clerk session token or a Zipper access token
       const token = req.headers.authorization?.replace('Bearer ', '');
-      let auth: any = undefined;
-
-      try {
-        if (token && !token.startsWith('zaat')) {
-          auth = jwt.verify(token, publicKey);
-        }
-      } catch (error) {}
 
       //if there's no token, there's no authed user
-      if (!token) throw new Error();
-      // if the token doesn't start with 'zaat', then there should be a clerk auth object
-      // if not, then it's not a valid token
-      if (!token.startsWith('zaat') && !auth) throw new Error();
+      if (!token) throw new Error('No token');
 
-      if (auth && !auth.user) {
-        throw new Error();
+      const tokenType = token?.startsWith('zaat') ? 'zipper' : 'clerk';
+
+      if (tokenType === 'clerk') {
+        const auth = jwt.verify(token, publicKey) as JwtPayload;
+
+        // if there's an auth object, but no user, then there's no authed user
+        if (!auth || !auth.sub) {
+          throw new Error('No Clerk user');
+        }
+        const user = await clerkClient.users.getUser(auth.sub);
+        if (!user) throw new Error('No Clerk user');
+      } else {
+        // Validate the Zipper access token
+        // The token should be in the format: zaat.{identifier}.{secret}
+        const [, identifier, secret] = token.split('.');
+        if (!identifier || !secret) throw new Error('Invalid Zipper token');
+
+        const appAccessToken = await prisma.appAccessToken.findFirstOrThrow({
+          where: {
+            identifier,
+            appId: appFound.id,
+            deletedAt: null,
+          },
+        });
+
+        // compare the hashed secret with a hash of the secret portion of the token
+        const validSecret = await bcryptCompare(
+          secret,
+          appAccessToken.hashedSecret,
+        );
+
+        if (!validSecret) throw new Error();
       }
-      if (!token || !token.startsWith('zaat')) throw new Error();
-
-      const [, identifier, secret] = token.split('.');
-      if (!identifier || !secret) throw new Error();
-
-      const appAccessToken = await prisma.appAccessToken.findFirstOrThrow({
-        where: {
-          identifier,
-          appId: appFound.id,
-          deletedAt: null,
-        },
-      });
-
-      const validSecret = await bcryptCompare(
-        secret,
-        appAccessToken.hashedSecret,
-      );
-
-      if (!validSecret) throw new Error();
     } catch (e: any) {
       return res.status(401).send({
         ok: false,
