@@ -7,7 +7,6 @@ import {
   Divider,
   Box,
   Text,
-  Code,
   Progress,
   HStack,
   Button,
