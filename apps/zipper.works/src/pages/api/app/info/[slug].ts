@@ -88,6 +88,9 @@ export default async function handler(
   of the third part of the token.
   */
 
+  let emails: string[] = [];
+  let clerkUserId: string | undefined = undefined;
+
   if (appFound.requiresAuthToRun) {
     try {
       // get the token from the request headers. Could be a Clerk session token or a Zipper access token
@@ -107,6 +110,8 @@ export default async function handler(
         }
         const user = await clerkClient.users.getUser(auth.sub);
         if (!user) throw new Error('No Clerk user');
+        emails = user.emailAddresses.map((e) => e.emailAddress);
+        clerkUserId = user.id;
       } else {
         // Validate the Zipper access token
         // The token should be in the format: zaat.{identifier}.{secret}
@@ -128,6 +133,11 @@ export default async function handler(
         );
 
         if (!validSecret) throw new Error();
+
+        const user = await clerkClient.users.getUser(appAccessToken.userId);
+        if (!user) throw new Error('No Clerk user');
+        emails = user.emailAddresses.map((e) => e.emailAddress);
+        clerkUserId = user.id;
       }
     } catch (e: any) {
       return res.status(401).send({
@@ -183,6 +193,10 @@ export default async function handler(
       userAuthConnectors: appFound.connectors.filter(
         (c) => c.userScopes.length > 0,
       ),
+      userInfo: {
+        emails,
+        userId: clerkUserId,
+      },
     },
   };
 

@@ -92,12 +92,9 @@ export async function relayRequest({
   if (__DEBUG__) console.log('getValidSubdomain', { host, subdomain });
   if (!subdomain) return { status: 404 };
 
+  // Get the user's JWT token from the session if there is one
   const auth = getAuth(request);
   const token = await auth.getToken();
-
-  const clerkUser = auth.userId
-    ? await clerkClient.users.getUser(auth.userId)
-    : undefined;
 
   const cookieUserId = request.cookies
     .get('__zipper_user_id')
@@ -140,12 +137,7 @@ export async function relayRequest({
         }
       : { inputs: JSON.parse(await request.text()) };
 
-  if (clerkUser) {
-    relayBody.userInfo = {
-      emails: clerkUser.emailAddresses.map((e) => e.emailAddress) || [],
-      userId,
-    };
-  }
+  relayBody.userInfo = appInfoResult.data.userInfo;
 
   const response = await fetch(relayUrl, {
     method: 'POST',
