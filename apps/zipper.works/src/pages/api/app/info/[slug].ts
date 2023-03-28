@@ -200,6 +200,9 @@ async function getUserInfo(token: string, appSlug: string) {
           },
           deletedAt: null,
         },
+        include: {
+          app: true,
+        },
       });
 
       // compare the hashed secret with a hash of the secret portion of the token
@@ -211,6 +214,19 @@ async function getUserInfo(token: string, appSlug: string) {
       if (!validSecret) throw new Error();
 
       const user = await clerkClient.users.getUser(appAccessToken.userId);
+      let isOrgMember = false;
+      if (appAccessToken.app.organizationId) {
+        const members =
+          await clerkClient.organizations.getOrganizationMembershipList({
+            organizationId: appAccessToken.app.organizationId,
+          });
+
+        console.log(members);
+
+        const found = members.find((m) => m.publicUserData?.userId === user.id);
+        if (found) isOrgMember = true;
+      }
+      console.log('IS ORG MEMBER: ', isOrgMember);
       if (!user) throw new Error('No Clerk user');
       return {
         emails: user.emailAddresses.map((e) => e.emailAddress),
