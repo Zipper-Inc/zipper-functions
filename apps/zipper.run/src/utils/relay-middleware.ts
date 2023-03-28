@@ -74,10 +74,12 @@ export async function relayRequest({
   request,
   version: _version,
   filename: _filename,
+  bearerToken,
 }: {
   request: NextRequest;
   version?: string;
   filename?: string;
+  bearerToken?: string;
 }) {
   if (!DENO_SHARED_SECRET || !RPC_HOST)
     return {
@@ -110,7 +112,7 @@ export async function relayRequest({
     subdomain,
     userId,
     filename,
-    token,
+    token: token || bearerToken,
   });
   if (__DEBUG__) console.log('getAppInfo', { result: appInfoResult });
 

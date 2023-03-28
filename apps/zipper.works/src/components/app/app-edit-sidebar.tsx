@@ -289,7 +289,13 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
           >
             {/** @todo make this height thing less jank */}
             {userAuthConnectors.length > 0 && (
-              <Box p={4} mb="4" backgroundColor="gray.100" position="relative">
+              <Box
+                p={4}
+                mb="4"
+                backgroundColor="gray.100"
+                rounded="lg"
+                position="relative"
+              >
                 <FunctionUserConnectors
                   userAuthConnectors={userAuthConnectors}
                   slack={{
@@ -303,7 +309,12 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
                 />
               </Box>
             )}
-            <Box p={4} backgroundColor="gray.100" position="relative">
+            <Box
+              p={4}
+              backgroundColor="gray.100"
+              position="relative"
+              rounded="lg"
+            >
               <>
                 <Heading size="sm" mb="4">
                   Inputs

@@ -9,8 +9,8 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '~/server/prisma';
 import { AppInfoResult } from '@zipper/types';
 import { parseInputForTypes } from '~/utils/parse-input-for-types';
-import { getAuth } from '@clerk/nextjs/server';
-import { withAuth } from '@clerk/nextjs/dist/api';
+import { bcryptCompare } from '@zipper/utils';
+import jwt from 'jsonwebtoken';
 
 /**
  * @todo
@@ -18,12 +18,14 @@ import { withAuth } from '@clerk/nextjs/dist/api';
  * - restrict endpoint to run server or something
  */
 
-export default withAuth(async (req: NextApiRequest, res: NextApiResponse) => {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse,
+) {
+  if (!process.env.CLERK_JWT_KEY) throw new Error('Missing Clerk JWT key');
   const slugFromUrl = req.query.slug as string;
   const body = JSON.parse(req.body);
   const userId: string | undefined = body.userId;
-
-  const auth = getAuth(req);
 
   let appFound:
     | (App & {
@@ -61,11 +63,59 @@ export default withAuth(async (req: NextApiRequest, res: NextApiResponse) => {
     });
   }
 
-  if (appFound.requiresAuthToRun && !auth.userId) {
-    return res.status(401).send({
-      ok: false,
-      error: 'UNAUTHORIZED',
-    });
+  if (appFound.requiresAuthToRun) {
+    try {
+      //convert the CLERK_JWT_KEY to a public key
+      const splitPem = process.env.CLERK_JWT_KEY.match(/.{1,64}/g);
+      const publicKey =
+        '-----BEGIN PUBLIC KEY-----\n' +
+        splitPem!.join('\n') +
+        '\n-----END PUBLIC KEY-----';
+
+      // get the token from the request headers. Could be a Clerk session token or a Zipper access token
+      const token = req.headers.authorization?.replace('Bearer ', '');
+      let auth: any = undefined;
+
+      try {
+        if (token && !token.startsWith('zaat')) {
+          auth = jwt.verify(token, publicKey);
+        }
+      } catch (error) {}
+
+      //if there's no token, there's no authed user
+      if (!token) throw new Error();
+      // if the token doesn't start with 'zaat', then there should be a clerk auth object
+      // if not, then it's not a valid token
+      if (!token.startsWith('zaat') && !auth) throw new Error();
+
+      if (auth && !auth.user) {
+        throw new Error();
+      }
+      if (!token || !token.startsWith('zaat')) throw new Error();
+
+      const [, identifier, secret] = token.split('.');
+      if (!identifier || !secret) throw new Error();
+
+      const appAccessToken = await prisma.appAccessToken.findFirstOrThrow({
+        where: {
+          identifier,
+          appId: appFound.id,
+          deletedAt: null,
+        },
+      });
+
+      const validSecret = await bcryptCompare(
+        secret,
+        appAccessToken.hashedSecret,
+      );
+
+      if (!validSecret) throw new Error();
+    } catch (e: any) {
+      return res.status(401).send({
+        ok: false,
+        error: 'UNAUTHORIZED',
+      });
+    }
   }
 
   const {
@@ -118,4 +168,4 @@ export default withAuth(async (req: NextApiRequest, res: NextApiResponse) => {
   };
 
   return res.status(200).send(result);
-});
+}

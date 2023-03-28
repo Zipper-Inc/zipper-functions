@@ -14,6 +14,7 @@ import { appEditorRouter } from './appEditor.router';
 import { appConnectorRouter } from './appConnector.router';
 import { resourceOwnerSlugRouter } from './resourceOwnerSlug.router';
 import { connectorRouter } from './connector.router';
+import { appAccessTokenRouter } from './appAccessToken.router';
 
 /**
  * Create your application's root router
@@ -41,6 +42,7 @@ export const trpcRouter = createRouter()
     },
   })
   .merge('app.', appRouter)
+  .merge('appAccessToken.', appAccessTokenRouter)
   .merge('appConnector.', appConnectorRouter)
   .merge('appEditor.', appEditorRouter)
   .merge('appEvent.', appEventRouter)
