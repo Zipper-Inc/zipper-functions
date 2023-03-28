@@ -34,7 +34,17 @@ export default async function handler(
   if (!process.env.CLERK_JWT_KEY) throw new Error('Missing Clerk JWT key');
   const slugFromUrl = req.query.slug as string;
   const body = JSON.parse(req.body);
-  const userId: string | undefined = body.userId;
+
+  let userInfo: { clerkUserId?: string; emails: string[] } = {
+    emails: [],
+  };
+
+  // get the token from the request headers. Could be a Clerk session token or a Zipper access token
+  const token = req.headers.authorization?.replace('Bearer ', '');
+  if (token) {
+    userInfo = await getUserInfo(token, slugFromUrl);
+  }
+  const tempUserId = req.headers['x-zipper-temp-user-id'] as string | undefined;
 
   let appFound:
     | (App & {
@@ -55,7 +65,9 @@ export default async function handler(
         connectors: {
           include: {
             appConnectorUserAuths: {
-              where: { userIdOrTempId: userId || '' },
+              where: {
+                userIdOrTempId: userInfo.clerkUserId || tempUserId || '',
+              },
             },
           },
         },
@@ -72,74 +84,9 @@ export default async function handler(
     });
   }
 
-  /* There are two types of auth tokens that can be used to run an app:
-      1. A Clerk session token
-      2. A Zipper access token
-
-  First we check if there is a token in the request headers.  If there is,
-  we check if it's a Clerk session token by vefifying it with the Clerk
-  public key.
-
-  If it's not a Clerk token, we check that it's a Zipper access token by
-  looking at the first 4 characters of the token (should be 'zaat').
-
-  If it is, we take the second part of the token (the identifier) and use
-  that to find the hashed secret. We compare the hashed secret with a hash
-  of the third part of the token.
-  */
-
-  let emails: string[] = [];
-  let clerkUserId: string | undefined = undefined;
-
   if (appFound.requiresAuthToRun) {
-    try {
-      // get the token from the request headers. Could be a Clerk session token or a Zipper access token
-      const token = req.headers.authorization?.replace('Bearer ', '');
-
-      //if there's no token, there's no authed user
-      if (!token) throw new Error('No token');
-
-      const tokenType = token?.startsWith('zaat') ? 'zipper' : 'clerk';
-
-      if (tokenType === 'clerk') {
-        const auth = jwt.verify(token, publicKey) as JwtPayload;
-
-        // if there's an auth object, but no user, then there's no authed user
-        if (!auth || !auth.sub) {
-          throw new Error('No Clerk user');
-        }
-        const user = await clerkClient.users.getUser(auth.sub);
-        if (!user) throw new Error('No Clerk user');
-        emails = user.emailAddresses.map((e) => e.emailAddress);
-        clerkUserId = user.id;
-      } else {
-        // Validate the Zipper access token
-        // The token should be in the format: zaat.{identifier}.{secret}
-        const [, identifier, secret] = token.split('.');
-        if (!identifier || !secret) throw new Error('Invalid Zipper token');
-
-        const appAccessToken = await prisma.appAccessToken.findFirstOrThrow({
-          where: {
-            identifier,
-            appId: appFound.id,
-            deletedAt: null,
-          },
-        });
-
-        // compare the hashed secret with a hash of the secret portion of the token
-        const validSecret = await bcryptCompare(
-          secret,
-          appAccessToken.hashedSecret,
-        );
-
-        if (!validSecret) throw new Error();
-
-        const user = await clerkClient.users.getUser(appAccessToken.userId);
-        if (!user) throw new Error('No Clerk user');
-        emails = user.emailAddresses.map((e) => e.emailAddress);
-        clerkUserId = user.id;
-      }
-    } catch (e: any) {
+    // return 401 if there's no token or no user was found by getUserInfo()
+    if (!token || !userInfo.clerkUserId) {
       return res.status(401).send({
         ok: false,
         error: 'UNAUTHORIZED',
@@ -194,11 +141,83 @@ export default async function handler(
         (c) => c.userScopes.length > 0,
       ),
       userInfo: {
-        emails,
-        userId: clerkUserId,
+        emails: appFound.requiresAuthToRun ? userInfo.emails : [],
+        userId: appFound.requiresAuthToRun ? userInfo.clerkUserId : undefined,
       },
     },
   };
 
   return res.status(200).send(result);
+}
+
+/* There are two types of auth tokens that can be used to run an app:
+      1. A Clerk session token
+      2. A Zipper access token
+
+First we check if there is a token in the request headers.  If there is,
+we check if it's a Clerk session token by vefifying it with the Clerk
+public key.
+
+If it's not a Clerk token, we check that it's a Zipper access token by
+looking at the first 4 characters of the token (should be 'zaat').
+
+If it is, we take the second part of the token (the identifier) and use
+that to find the hashed secret. We compare the hashed secret with a hash
+of the third part of the token.
+*/
+
+async function getUserInfo(token: string, appSlug: string) {
+  try {
+    //if there's no token, there's no authed user
+    if (!token) throw new Error('No token');
+
+    const tokenType = token?.startsWith('zaat') ? 'zipper' : 'clerk';
+
+    if (tokenType === 'clerk') {
+      const auth = jwt.verify(token, publicKey) as JwtPayload;
+
+      // if there's an auth object, but no user, then there's no authed user
+      if (!auth || !auth.sub) {
+        throw new Error('No Clerk user');
+      }
+      const user = await clerkClient.users.getUser(auth.sub);
+      if (!user) throw new Error('No Clerk user');
+      return {
+        emails: user.emailAddresses.map((e) => e.emailAddress),
+        clerkUserId: user.id,
+      };
+    } else {
+      // Validate the Zipper access token
+      // The token should be in the format: zaat.{identifier}.{secret}
+      const [, identifier, secret] = token.split('.');
+      if (!identifier || !secret) throw new Error('Invalid Zipper token');
+
+      const appAccessToken = await prisma.appAccessToken.findFirstOrThrow({
+        where: {
+          identifier,
+          app: {
+            slug: appSlug,
+          },
+          deletedAt: null,
+        },
+      });
+
+      // compare the hashed secret with a hash of the secret portion of the token
+      const validSecret = await bcryptCompare(
+        secret,
+        appAccessToken.hashedSecret,
+      );
+
+      if (!validSecret) throw new Error();
+
+      const user = await clerkClient.users.getUser(appAccessToken.userId);
+      if (!user) throw new Error('No Clerk user');
+      return {
+        emails: user.emailAddresses.map((e) => e.emailAddress),
+        clerkUserId: user.id,
+      };
+    }
+  } catch (e) {
+    return { emails: [] };
+  }
 }

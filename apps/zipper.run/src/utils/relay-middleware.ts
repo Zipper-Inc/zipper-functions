@@ -96,18 +96,15 @@ export async function relayRequest({
   const auth = getAuth(request);
   const token = await auth.getToken();
 
-  const cookieUserId = request.cookies
-    .get('__zipper_user_id')
+  const tempUserId = request.cookies
+    .get('__zipper_temp_user_id')
     ?.value.toString();
-
-  const userId = auth.userId || cookieUserId;
-  // Get app info from Zipper API
 
   const filename = _filename || 'main.ts';
 
   const appInfoResult = await getAppInfo({
     subdomain,
-    userId,
+    tempUserId,
     filename,
     token: token || bearerToken,
   });
@@ -124,7 +121,7 @@ export async function relayRequest({
   let deploymentId = `${app.id}+${filename}@${version}`;
 
   if (userAuthConnectors.find((c) => c.isUserAuthRequired)) {
-    deploymentId = `${deploymentId}@${userId}`;
+    deploymentId = `${deploymentId}@${tempUserId || auth.userId}`;
   }
 
   const relayUrl = getPatchedUrl(request);

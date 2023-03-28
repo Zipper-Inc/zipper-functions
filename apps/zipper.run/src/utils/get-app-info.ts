@@ -8,21 +8,25 @@ const APP_INFO_URL = `${process.env.ZIPPER_API_URL}/app/info`;
 
 export default async function getAppInfo({
   subdomain,
-  userId,
+  tempUserId,
   filename,
   token,
 }: {
   subdomain: string;
-  userId?: string;
+  tempUserId?: string;
   filename?: string;
   token?: string | null;
 }): Promise<AppInfoResult> {
+  const headers: Record<string, string> = {
+    Authorization: `Bearer ${token || ''}`,
+  };
+  if (tempUserId) {
+    headers['x-zipper-temp-user-id'] = tempUserId;
+  }
   return fetch(`${APP_INFO_URL}/${subdomain}`, {
     method: 'POST',
-    body: JSON.stringify({ userId, filename }),
-    headers: {
-      Authorization: `Bearer ${token || ''}`,
-    },
+    body: JSON.stringify({ filename }),
+    headers,
   })
     .then((r) => r.json())
     .catch((e) => ({ ok: false, error: e.message }));

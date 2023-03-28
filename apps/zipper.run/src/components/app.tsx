@@ -366,7 +366,7 @@ export const getServerSideProps: GetServerSideProps = async ({
   // grab the app if it exists
   const result = await getAppInfo({
     subdomain,
-    userId: req.cookies['__zipper_user_id'],
+    tempUserId: req.cookies['__zipper_temp_user_id'],
     filename,
     token: await getAuth(req).getToken(),
   });
@@ -408,7 +408,9 @@ export const getServerSideProps: GetServerSideProps = async ({
       const state = encryptToHex(
         `${app.id}::${
           process.env.NODE_ENV === 'development' ? 'http://' : 'https://'
-        }${req.headers.host}::${req.cookies['__zipper_user_id']}`,
+        }${req.headers.host}::${
+          getAuth(req).userId || req.cookies['__zipper_temp_user_id']
+        }`,
         process.env.ENCRYPTION_KEY || '',
       );
 
