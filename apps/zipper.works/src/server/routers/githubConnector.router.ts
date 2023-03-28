@@ -19,6 +19,7 @@ import {
   GithubAuthTokenResponse,
   GithubCheckTokenResponse,
 } from '@zipper/types';
+import { filterTokenFields } from '~/server/utils/json';
 
 const getBase64Credentials = () =>
   Buffer.from(
@@ -103,17 +104,6 @@ export const githubConnectorRouter = createRouter()
           },
         },
       });
-      const userIdOrTempId =
-        ctx.userId || (ctx.req?.cookies as any)['__zipper_user_id'];
-      await prisma.appConnectorUserAuth.delete({
-        where: {
-          appId_connectorType_userIdOrTempId: {
-            appId,
-            connectorType: 'github',
-            userIdOrTempId,
-          },
-        },
-      });
 
       const token = decryptFromBase64(
         secret.encryptedValue,
@@ -158,19 +148,37 @@ export const githubConnectorRouter = createRouter()
         },
       });
 
-      await fetch(
-        `https://api.github.com/applications/${process.env.GITHUB_CLIENT_ID}/token`,
-        {
-          method: 'DELETE',
-          headers: { Authorization: `Basic ${getBase64Credentials()}` },
-          body: JSON.stringify({
-            access_token: decryptFromBase64(
-              userAuth.encryptedAccessToken,
-              process.env.ENCRYPTION_KEY!,
-            ),
-          }),
+      const secret = await prisma.secret.findUnique({
+        where: {
+          appId_key: {
+            appId,
+            key: 'GITHUB_TOKEN',
+          },
         },
+      });
+      const userAuthToken = decryptFromBase64(
+        userAuth.encryptedAccessToken,
+        process.env.ENCRYPTION_KEY!,
       );
+      if (secret) {
+        const secretToken = decryptFromBase64(
+          secret?.encryptedValue,
+          process.env.ENCRYPTION_KEY!,
+        );
+        // Revoke the user token if differs with the secret token
+        if (secretToken !== userAuthToken) {
+          await fetch(
+            `https://api.github.com/applications/${process.env.GITHUB_CLIENT_ID}/token`,
+            {
+              method: 'DELETE',
+              headers: { Authorization: `Basic ${getBase64Credentials()}` },
+              body: JSON.stringify({
+                access_token: userAuthToken,
+              }),
+            },
+          );
+        }
+      }
 
       return true;
     },
@@ -216,7 +224,7 @@ export const githubConnectorRouter = createRouter()
       }
 
       let appConnectorUserAuth: AppConnectorUserAuth | undefined = undefined;
-      let metadata: any = json;
+      let metadata: any = filterTokenFields(json);
 
       const userIdOrTempId: string =
         userId || ctx.userId || (ctx.req?.cookies as any)['__zipper_user_id'];
@@ -238,7 +246,7 @@ export const githubConnectorRouter = createRouter()
         const userInfoJson =
           (await userInfoRes.json()) as GithubCheckTokenResponse;
         if (userInfoJson.user) {
-          metadata = userInfoJson;
+          metadata = filterTokenFields(userInfoJson);
           appConnectorUserAuth = await prisma.appConnectorUserAuth.upsert({
             where: {
               appId_connectorType_userIdOrTempId: {
@@ -251,16 +259,16 @@ export const githubConnectorRouter = createRouter()
               appId,
               connectorType: 'github',
               userIdOrTempId,
-              metadata: userInfoJson.user,
+              metadata: metadata.user,
               encryptedAccessToken: encryptToBase64(
-                json.access_token,
+                userInfoJson.token,
                 process.env.ENCRYPTION_KEY!,
               ),
             },
             update: {
-              metadata: userInfoJson.user,
+              metadata: metadata.user,
               encryptedAccessToken: encryptToBase64(
-                json.access_token,
+                userInfoJson.token,
                 process.env.ENCRYPTION_KEY!,
               ),
             },
@@ -268,39 +276,51 @@ export const githubConnectorRouter = createRouter()
         }
       }
 
-      await prisma.appConnector.update({
+      const connector = await prisma.appConnector.findUnique({
         where: {
           appId_type: {
             appId: appId!,
             type: 'github',
           },
         },
-        data: {
-          metadata,
-        },
       });
+      if (connector) {
+        // Only update connector metadata if previously null and create the GITHUB_TOKEN secret
+        if (connector.metadata === null) {
+          await prisma.appConnector.update({
+            where: {
+              appId_type: {
+                appId: appId!,
+                type: 'github',
+              },
+            },
+            data: {
+              metadata,
+            },
+          });
 
-      const encryptedValue = encryptToBase64(
-        json.access_token,
-        process.env.ENCRYPTION_KEY,
-      );
-
-      await prisma.secret.upsert({
-        where: {
-          appId_key: {
-            appId: appId!,
-            key: 'GITHUB_TOKEN',
-          },
-        },
-        create: {
-          appId,
-          key: 'GITHUB_TOKEN',
-          encryptedValue,
-        },
-        update: {
-          encryptedValue,
-        },
-      });
+          const encryptedValue = encryptToBase64(
+            json.access_token,
+            process.env.ENCRYPTION_KEY,
+          );
+          await prisma.secret.upsert({
+            where: {
+              appId_key: {
+                appId: appId!,
+                key: 'GITHUB_TOKEN',
+              },
+            },
+            create: {
+              appId,
+              key: 'GITHUB_TOKEN',
+              encryptedValue,
+            },
+            update: {
+              encryptedValue,
+            },
+          });
+        }
+      }
 
       const app = await prisma.app.findFirstOrThrow({
         where: { id: appId },

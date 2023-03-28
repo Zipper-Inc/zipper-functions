@@ -15,6 +15,7 @@ import {
 } from '@zipper/utils';
 import fetch from 'node-fetch';
 import { AppConnectorUserAuth } from '@prisma/client';
+import { filterTokenFields } from '~/server/utils/json';
 
 export const slackConnectorRouter = createRouter()
   .query('get', {
@@ -188,9 +189,7 @@ export const slackConnectorRouter = createRouter()
         });
       }
 
-      const jsonWithoutTokens = JSON.parse(
-        JSON.stringify(json, (k, v) => (k.includes('token') ? undefined : v)),
-      );
+      const jsonWithoutTokens = filterTokenFields(json);
 
       let appConnectorUserAuth: AppConnectorUserAuth | undefined = undefined;
 
