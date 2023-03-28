@@ -7,7 +7,7 @@ import {
 } from '@prisma/client';
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '~/server/prisma';
-import { AppInfoResult } from '@zipper/types';
+import { AppInfoResult, UserAuthConnector } from '@zipper/types';
 import { parseInputForTypes } from '~/utils/parse-input-for-types';
 import { getAuth } from '@clerk/nextjs/server';
 import { withAuth } from '@clerk/nextjs/dist/api';
@@ -113,7 +113,7 @@ export default withAuth(async (req: NextApiRequest, res: NextApiResponse) => {
       inputs: parseInputForTypes(entryPoint.code),
       userAuthConnectors: appFound.connectors.filter(
         (c) => c.userScopes.length > 0,
-      ),
+      ) as UserAuthConnector[],
     },
   };
 

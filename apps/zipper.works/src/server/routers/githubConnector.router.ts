@@ -165,6 +165,7 @@ export const githubConnectorRouter = createRouter()
           secret?.encryptedValue,
           process.env.ENCRYPTION_KEY!,
         );
+        // TODO: look at this from a security standpoint
         // Revoke the user token if differs with the secret token
         if (secretToken !== userAuthToken) {
           await fetch(
