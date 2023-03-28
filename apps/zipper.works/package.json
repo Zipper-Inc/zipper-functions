@@ -79,7 +79,6 @@
     "monaco-editor": "^0.34.1",
     "monaco-editor-workers": "^0.34.2",
     "monaco-languageclient": "^4.0.3",
-    "nanoid": "^4.0.2",
     "ndjson": "^2.0.0",
     "next": "^13.2.0",
     "next-absolute-url": "^1.2.2",

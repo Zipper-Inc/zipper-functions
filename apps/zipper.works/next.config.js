@@ -31,7 +31,6 @@ module.exports = getConfig({
     '@zipper/ui',
     '@zipper/utils',
     'monaco-languageclient',
-    'nanoid',
   ],
   webpack: (config) => {
     if (!config.module.noParse)
