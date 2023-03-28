@@ -186,8 +186,6 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
     }
   }, []);
 
-  console.log({ githubAuthRequired, slackAuthRequired });
-
   const logs = appEventsQuery?.data?.map((event: any) => event.eventPayload);
 
   useEffect(() => {

@@ -13,7 +13,6 @@ const GithubAuth: NextPageWithLayout = () => {
     'githubConnector.exchangeCodeForToken',
     {
       onSuccess: (data) => {
-        console.log('githubConnector.exchangeCodeForToken data:', data);
         if (data.redirectTo?.includes('http')) {
           window.location.replace(data.redirectTo);
         } else {
