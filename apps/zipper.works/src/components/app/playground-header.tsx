@@ -28,8 +28,7 @@ import NextLink from 'next/link';
 import { CheckIcon, LockIcon, UnlockIcon } from '@chakra-ui/icons';
 import React, { useEffect, useState } from 'react';
 import ForkIcon from '~/components/svg/forkIcon';
-import { ZipperSymbol } from '~/components/svg/zipperSymbol';
-import { ZipperLogo } from '@zipper/ui';
+import { ZipperLogo, ZipperSymbol } from '@zipper/ui';
 import { HiPencilAlt } from 'react-icons/hi';
 import {
   useUser,
