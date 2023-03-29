@@ -183,7 +183,7 @@ model Schedule {
   filename  String    @default("main.ts")
   crontab   String
   inputs    Json?
-  userId    String
+  userId    String?
 
   appId     String
   app       App?      @relation(fields: [appId], references: [id])
