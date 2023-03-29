@@ -207,11 +207,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
 
   const handleAddInput = () => {
     if (currentScriptLive && currentScript) {
-      const codeWithInputAdded = addParamToCode(
-        currentScriptLive?.code || '',
-        'newInput',
-        'string',
-      );
+      const codeWithInputAdded = addParamToCode(currentScriptLive?.code || '');
 
       setCurrentScript({
         ...currentScript,

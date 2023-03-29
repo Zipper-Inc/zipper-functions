@@ -77,13 +77,22 @@ export function parseInputForTypes(
     }
 
     const inputs = mainFn.getParameters();
-
     if (inputs.length !== 1 && inputs.length > 0) {
       console.error('You must have one and only one input object');
       return [];
     }
     const params = inputs[0] as ParameterDeclaration;
     const typeNode = params.getTypeNode();
+
+    if (typeNode?.isKind(SyntaxKind.AnyKeyword)) {
+      return [
+        {
+          key: params.getName(),
+          type: InputType.any,
+          optional: params.hasQuestionToken(),
+        },
+      ];
+    }
 
     const props: PropertySignature[] = typeNode?.isKind(SyntaxKind.TypeLiteral)
       ? // A type literal, like `params: { foo: string, bar: string }`
@@ -115,8 +124,8 @@ export function parseInputForTypes(
 
 export function addParamToCode(
   code: string,
-  paramName: string,
-  paramType: string,
+  paramName = 'newInput',
+  paramType = 'string',
 ): string {
   const src = getSourceFileFromCode(code);
   let mainFn = src.getFunction('main');
@@ -153,9 +162,11 @@ export function addParamToCode(
     return code;
   }
 
-  // return code;
-
   const existingParams = parseInputForTypes(code);
+  // If there is an existing parameter, use its name instead of the default paramName
+  if (existingParams.length && existingParams[0]) {
+    paramName = existingParams[0].key;
+  }
 
   if (existingParams.some((param) => param.key === paramName)) {
     console.error('Parameter with the same name already exists');
@@ -163,12 +174,28 @@ export function addParamToCode(
   }
 
   const insertPosition = typeNode.getEnd() - 1;
-  const newParamString = `${paramName}${paramType ? `: ${paramType}` : ''}, `;
-  const newCode = [
-    code.slice(0, insertPosition),
-    newParamString,
-    code.slice(insertPosition),
-  ].join('');
+
+  // Check if there's a type literal
+  if (typeNode.isKind(SyntaxKind.TypeLiteral)) {
+    const newParamString = existingParams.length
+      ? `, ${paramName}${paramType ? `: ${paramType}` : ''}`
+      : `${paramName}${paramType ? `: ${paramType}` : ''}`;
+
+    const newCode = [
+      code.slice(0, insertPosition),
+      newParamString,
+      code.slice(insertPosition),
+    ].join('');
+
+    return newCode;
+  }
+
+  // If there's no type literal, create one
+  const newParamString = `{ ${paramName}${paramType ? `: ${paramType}` : ''} }`;
+  const newCode = code.replace(
+    /(\{[\s\S]*\})\s*:/,
+    (_, match) => `${match} : ${newParamString}`,
+  );
 
   return newCode;
 }
