@@ -20,6 +20,13 @@ export default async function handler(request: NextRequest) {
       filename,
       bearerToken: request.headers.get('Authorization')?.replace('Bearer ', ''),
     });
+
+    if (status !== 200) {
+      return new NextResponse(JSON.stringify({ ok: false, error: result }), {
+        status,
+      });
+    }
+
     headers?.set('Content-Type', 'application/json');
     return new NextResponse(
       JSON.stringify(

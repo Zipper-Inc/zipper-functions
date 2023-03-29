@@ -110,7 +110,11 @@ export async function relayRequest({
   });
   if (__DEBUG__) console.log('getAppInfo', { result: appInfoResult });
 
-  if (!appInfoResult.ok) return { status: 500, result: appInfoResult.error };
+  if (!appInfoResult.ok)
+    return {
+      status: appInfoResult.error === 'UNAUTHORIZED' ? 401 : 500,
+      result: appInfoResult.error,
+    };
 
   const { app, userAuthConnectors } = appInfoResult.data;
 
