@@ -23,7 +23,7 @@ const DEFAULT_CONTENT_TYPE = 'application/octet-stream';
  */
 const FRAMEWORK_PATH = path.resolve('../deno-framework');
 const FRAMEWORK_ENTRYPOINT = 'app.ts';
-const HANDLERS_MAP_PATH = 'generated/handlers.gen.ts';
+const HANDLERS_PATH = 'generated/handlers.gen.ts';
 const TYPESCRIPT_CONTENT_HEADERS = {
   'content-type': 'text/typescript',
 };
@@ -352,19 +352,22 @@ const build = async ({
       const filename = specifier.replace(`${baseUrl}/`, '');
 
       console.log('[ESZIP]', '>', `Adding ${filename} from framework`);
+      const isHandlersPath = filename === HANDLERS_PATH;
+      if (isHandlersPath) {
+        console.log('[ESZIP]', '>', '>', 'Generating new routes');
+      }
+
       const content = await fs.readFile(
         path.resolve(FRAMEWORK_PATH, filename),
         'utf8',
       );
 
-      if (filename === HANDLERS_MAP_PATH) {
-        const filenames = app.scripts.map((s) => s.filename);
-        console.log(
-          '[ESZIP]',
-          '>',
-          '>',
-          `Generating routes for ${filenames.join(', ')}`,
-        );
+      if (isHandlersPath) {
+        // Filter out main since it's already included
+        const filenames = app.scripts
+          .map((s) => s.filename)
+          .filter((f) => f !== 'main.ts');
+
         const generatedImports = [
           '/// <generated-imports>',
           ...filenames.map((f, i) => `import * as m${i} from '../src/${f}';`),
