@@ -22,6 +22,8 @@ import {
   VStack,
   HStack,
   Switch,
+  Flex,
+  Spacer,
 } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
@@ -33,6 +35,7 @@ import { HiGlobe } from 'react-icons/hi';
 import { useOrganization, useOrganizationList } from '@clerk/nextjs';
 import { OrganizationSelector } from './organization-selector';
 import { useAppSlug, MIN_SLUG_LENGTH } from '~/hooks/use-app-slug';
+import { VscCode } from 'react-icons/vsc';
 
 type Props = {
   isOpen: boolean;
@@ -43,6 +46,7 @@ const getDefaultCreateAppFormValues = () => ({
   name: generateDefaultSlug(),
   description: '',
   isPublic: false,
+  canAnyoneRun: true,
 });
 
 export const CreateAppModal: React.FC<Props> = ({ isOpen, onClose }) => {
@@ -152,57 +156,95 @@ export const CreateAppModal: React.FC<Props> = ({ isOpen, onClose }) => {
                   />
                 </FormControl>
                 <FormControl>
-                  <HStack pt={4} w="full">
-                    <Box mr="auto">
-                      <HStack>
-                        <HiGlobe />
-                        <Text>Anyone with the link can view the app</Text>
-                      </HStack>
-                    </Box>
-                    <Switch {...createAppForm.register('isPublic')} ml="auto" />
-                  </HStack>
-                </FormControl>
-                <Box w="full">
-                  <Button
-                    ml="auto"
-                    display="block"
-                    colorScheme="purple"
-                    type="submit"
-                    isDisabled={isDisabled}
-                    onClick={createAppForm.handleSubmit(
-                      async ({ description, isPublic, name }) => {
-                        await addApp.mutateAsync(
-                          {
-                            description,
-                            name,
-                            isPrivate: !isPublic,
-                            organizationId: selectedOrganizationId,
-                          },
-                          {
-                            onSuccess: () => {
-                              resetForm();
-                              onClose();
-                              if (
-                                (selectedOrganizationId ?? null) !==
-                                  (organization?.id ?? null) &&
-                                setActive
-                              ) {
-                                setActive({
-                                  organization: selectedOrganizationId,
-                                });
-                              }
-                            },
-                          },
-                        );
-                      },
-                    )}
+                  <FormLabel>Visibility</FormLabel>
+                  <VStack
+                    w="full"
+                    border="1px solid"
+                    borderColor="gray.200"
+                    rounded="md"
+                    align={'stretch'}
+                    spacing="0"
                   >
-                    Create
-                  </Button>
-                </Box>
+                    <HStack
+                      w="full"
+                      p="4"
+                      borderBottom="1px solid"
+                      borderColor={'gray.200'}
+                    >
+                      <Flex flexGrow={'1'}>
+                        <VStack align="start">
+                          <HStack>
+                            <VscCode />
+                            <Text>Is the code public?</Text>
+                          </HStack>
+                        </VStack>
+                      </Flex>
+                      <Switch
+                        {...createAppForm.register('isPublic')}
+                        ml="auto"
+                      />
+                    </HStack>
+
+                    <VStack align="start" w="full" p="4">
+                      <HStack w="full">
+                        <HiGlobe />
+                        <Text>Is the output of the app public?</Text>
+                        <Spacer flexGrow={1} />
+                        <Switch {...createAppForm.register('canAnyoneRun')} />
+                      </HStack>
+                      {!createAppForm.watch('canAnyoneRun') && (
+                        <FormHelperText>
+                          Users will be asked to authenticate against Zipper
+                          before they're able to run your app. You can use the
+                          user's email address to determine if they have access.
+                        </FormHelperText>
+                      )}
+                    </VStack>
+                  </VStack>
+                </FormControl>
               </VStack>
             </ModalBody>
-            <ModalFooter />
+            <ModalFooter>
+              <Box w="full">
+                <Button
+                  ml="auto"
+                  display="block"
+                  colorScheme="purple"
+                  type="submit"
+                  isDisabled={isDisabled}
+                  onClick={createAppForm.handleSubmit(
+                    async ({ description, isPublic, canAnyoneRun, name }) => {
+                      await addApp.mutateAsync(
+                        {
+                          description,
+                          name,
+                          isPrivate: !isPublic,
+                          requiresAuthToRun: !canAnyoneRun,
+                          organizationId: selectedOrganizationId,
+                        },
+                        {
+                          onSuccess: () => {
+                            resetForm();
+                            onClose();
+                            if (
+                              (selectedOrganizationId ?? null) !==
+                                (organization?.id ?? null) &&
+                              setActive
+                            ) {
+                              setActive({
+                                organization: selectedOrganizationId,
+                              });
+                            }
+                          },
+                        },
+                      );
+                    },
+                  )}
+                >
+                  Create
+                </Button>
+              </Box>
+            </ModalFooter>
           </ModalContent>
         </FormProvider>
       </Modal>
