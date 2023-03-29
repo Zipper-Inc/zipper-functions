@@ -21,6 +21,13 @@ export default async function handler(request: NextRequest) {
       filename,
       bearerToken: request.headers.get('Authorization')?.replace('Bearer ', ''),
     });
+
+    if (status !== 200) {
+      return new NextResponse(YAML.stringify({ ok: false, error: result }), {
+        status,
+      });
+    }
+
     headers?.set('Content-Type', 'text/yaml');
     return new NextResponse(
       YAML.stringify({
@@ -35,7 +42,7 @@ export default async function handler(request: NextRequest) {
     );
   } catch (e: any) {
     return new NextResponse(
-      JSON.stringify({ ok: false, error: e.toString() }),
+      YAML.stringify({ ok: false, error: e.toString() }),
       {
         status: 500,
       },
