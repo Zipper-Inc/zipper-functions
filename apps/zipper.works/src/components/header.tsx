@@ -7,7 +7,7 @@ import { ZipperLogo } from '@zipper/ui';
 import { SignedIn, SignedOut, UserButton } from '@clerk/nextjs';
 import OrganizationSwitcher from './auth/organizationSwitcher';
 import { MobileMenu } from './header-mobile-menu';
-import { ZipperSymbol } from './svg/zipperSymbol';
+import { ZipperSymbol } from '@zipper/ui';
 import SignInButton from './auth/signInButton';
 
 type HeaderProps = {

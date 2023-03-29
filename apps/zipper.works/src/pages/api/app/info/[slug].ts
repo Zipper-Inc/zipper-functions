@@ -182,6 +182,7 @@ async function getUserInfo(token: string, appSlug: string) {
       }
       const user = await clerkClient.users.getUser(auth.sub);
       if (!user) throw new Error('No Clerk user');
+
       return {
         emails: user.emailAddresses.map((e) => e.emailAddress),
         clerkUserId: user.id,
@@ -226,7 +227,9 @@ async function getUserInfo(token: string, appSlug: string) {
       if (!validSecret) throw new Error();
 
       const user = await clerkClient.users.getUser(appAccessToken.userId);
+
       if (!user) throw new Error('No Clerk user');
+
       return {
         emails: user.emailAddresses.map((e) => e.emailAddress),
         clerkUserId: user.id,
