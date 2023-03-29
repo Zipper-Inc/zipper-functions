@@ -39,7 +39,7 @@ const initializeWorkers = () => {
           });
 
           let token: undefined | string = undefined;
-          if (schedule.app.requiresAuthToRun) {
+          if (schedule.app.requiresAuthToRun && schedule.userId) {
             const secret = randomUUID().replace(/-/g, '').slice(0, 21);
             const identifier = randomUUID().replace(/-/g, '').slice(0, 21);
 
