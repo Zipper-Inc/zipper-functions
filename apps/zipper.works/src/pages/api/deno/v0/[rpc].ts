@@ -1,17 +1,32 @@
+import fs from 'fs/promises';
 import { NextApiRequest, NextApiResponse } from 'next';
 import * as jose from 'jose';
-import { build } from '@deno/eszip';
+import * as eszip from '@deno/eszip';
 import pako from 'pako';
 import { PassThrough } from 'stream';
 import ndjson from 'ndjson';
 import intoStream from 'into-stream';
 import { decryptFromBase64 } from '@zipper/utils';
 import { prisma } from '~/server/prisma';
+import { App, Script } from '@prisma/client';
+import path from 'path';
 import { getAppLink } from '@zipper/utils';
 
 const X_DENO_CONFIG = 'x-deno-config';
 
 const DEFAULT_CONTENT_TYPE = 'application/octet-stream';
+
+/**
+ * @todo
+ * Bundle this up or put this source somewhere else
+ * Totally possible that the directory structure cannot be guaranteed
+ */
+const FRAMEWORK_PATH = path.resolve('../deno-framework');
+const FRAMEWORK_ENTRYPOINT = 'app.ts';
+const HANDLERS_MAP_PATH = 'generated/handlers.gen.ts';
+const TYPESCRIPT_CONTENT_HEADERS = {
+  'content-type': 'text/typescript',
+};
 
 /**
  * Assuming the user has defined a function called `main`
@@ -20,7 +35,7 @@ const DEFAULT_CONTENT_TYPE = 'application/octet-stream';
  *  - calls the user's main function
  *  - handles standardizing output and errors
  */
-export const wrapMainFunction = ({
+export const _wrapMainFunction = ({
   code,
   slug,
   appId,
@@ -285,32 +300,114 @@ async function decodeAuthHeader(req: NextApiRequest) {
   }
 }
 
-const createEsZip = async ({
+const build = async ({
   baseUrl,
-  entrypoint,
+  app,
+  version,
 }: {
   baseUrl: string;
-  entrypoint: string;
+  app: App & { scripts: Script[] };
+  version: string;
 }) => {
-  return build([`${baseUrl}/${entrypoint}`], async (specifier: string) => {
-    console.log("ESZIP: '", specifier);
+  const startMs = performance.now();
+  const appName = `${app.name}@${version}`;
 
-    if (specifier.startsWith(baseUrl)) {
-      const response = await fetch(specifier, {
-        credentials: 'same-origin',
-      });
-      const content = await response.text();
+  console.log('[ESZIP]', `Building ${appName} for deployment`);
+
+  const appFilesBaseUrl = `${baseUrl}/src`;
+  const frameworkEntrypointUrl = `${baseUrl}/${FRAMEWORK_ENTRYPOINT}`;
+  const appFileUrls = app.scripts.map(
+    ({ filename }) => `${appFilesBaseUrl}/${filename}`,
+  );
+  const fileUrlsToBundle = [frameworkEntrypointUrl, ...appFileUrls];
+
+  const bundle = await eszip.build(fileUrlsToBundle, async (specifier) => {
+    /**
+     * Generate a handler map
+     */
+    // todo
+
+    /**
+     * Handle user's App files
+     */
+    if (specifier.startsWith(appFilesBaseUrl)) {
+      const filename = specifier.replace(`${appFilesBaseUrl}/`, '');
+      const script = app.scripts.find((s) => s.filename === filename);
+
+      console.log('[ESZIP]', `>`, `Adding ${filename} from ${appName}`);
 
       return {
         specifier,
-        headers: {
-          'content-type': 'text/typescript',
-        },
-        content,
+        headers: TYPESCRIPT_CONTENT_HEADERS,
+        content: script?.code || '/* missing code */',
         kind: 'module',
-        version: '1.0.0',
+        version,
       };
     }
+
+    /**
+     * Handle Zipper Framework Files
+     */
+    if (specifier.startsWith(baseUrl)) {
+      const filename = specifier.replace(`${baseUrl}/`, '');
+
+      console.log('[ESZIP]', '>', `Adding ${filename} from framework`);
+      const content = await fs.readFile(
+        path.resolve(FRAMEWORK_PATH, filename),
+        'utf8',
+      );
+
+      if (filename === HANDLERS_MAP_PATH) {
+        const filenames = app.scripts.map((s) => s.filename);
+        console.log(
+          '[ESZIP]',
+          '>',
+          '>',
+          `Generating routes for ${filenames.join(', ')}`,
+        );
+        const generatedImports = [
+          '/// <generated-imports>',
+          ...filenames.map((f, i) => `import * as m${i} from '../src/${f}';`),
+          '/// </generated-imports>',
+        ].join(`\n`);
+
+        const generatedExports = [
+          '/// <generated-exports>',
+          ...filenames.map((f, i) => `'${f}': m${i}.handler as Handler,`),
+          '/// </generated-exports>',
+        ].join('\n');
+
+        const importsRegExp = new RegExp(
+          '/// <generated-imports[\\d\\D]*?/generated-imports>',
+          'g',
+        );
+        const exportsRegExp = new RegExp(
+          '/// <generated-exports[\\d\\D]*?/generated-exports>',
+          'g',
+        );
+
+        return {
+          kind: 'module',
+          specifier,
+          headers: TYPESCRIPT_CONTENT_HEADERS,
+          content: content
+            .replace(importsRegExp, generatedImports)
+            .replace(exportsRegExp, generatedExports),
+        };
+      }
+
+      return {
+        kind: 'module',
+        specifier,
+        headers: TYPESCRIPT_CONTENT_HEADERS,
+        content,
+      };
+    }
+
+    /**
+     * Handle remote imports
+     */
+    console.log('[ESZIP]', `>`, `Adding ${specifier} from remote`);
 
     const response = await fetch(specifier, { redirect: 'follow' });
     if (response.status !== 200) {
@@ -318,6 +415,7 @@ const createEsZip = async ({
       await response.arrayBuffer();
       return undefined;
     }
+
     const content = await response.text();
     const headers: Record<string, string> = {};
     response.headers.forEach((value, key) => {
@@ -331,6 +429,14 @@ const createEsZip = async ({
       content,
     };
   });
+
+  const elapsedMs = performance.now() - startMs;
+  console.log(
+    '[ESZIP]',
+    `Built ${app.name}@${version} in ${Math.round(elapsedMs)}ms`,
+  );
+
+  return bundle;
 };
 
 function errorResponse(errorMessage: string) {
@@ -361,16 +467,12 @@ async function originBoot({
   req: NextApiRequest;
   id: string;
 }) {
-  const [appIdAndFilename, version, userId] = deploymentId.split('@');
+  const [appId, version, userId] = deploymentId.split('@');
 
-  console.log(req.body);
-
-  if (!appIdAndFilename || !version) {
+  if (!appId || !version) {
     console.error('Missing appId and version');
     return;
   }
-
-  const [appId, filename] = appIdAndFilename.split('+');
 
   const app = await prisma.app.findFirst({
     where: {
@@ -410,12 +512,14 @@ async function originBoot({
   }
 
   const proto = req.headers['x-forwarded-proto'] || 'http';
+  const baseUrl = `${proto}://${req.headers.host}/api/app/${appId}/${version}/files`;
 
-  const eszip = await createEsZip({
-    baseUrl: `${proto}://${req.headers.host}/api/app/${appId}/${version}`,
+  const eszip = await build({ baseUrl, app, version });
+
+  /**const old = await createEsZip({
+    baseUrl,
     entrypoint: filename || 'main.ts',
-  });
-
+  });*/
   // await fs.writeFile(`/tmp/${deploymentId}.eszip`, eszip, () => {
   //   console.log('done');
   // });
@@ -446,7 +550,7 @@ async function originBoot({
   // Boot metadata
   const isolateConfig = {
     // Source URL that will be used for import.meta.url of the entrypoint.
-    entrypoint: `https://${req.headers.host}/api/app/${appId}/${version}/${filename}`,
+    entrypoint: `${baseUrl}/${FRAMEWORK_ENTRYPOINT}`,
 
     envs: secretsMap,
 

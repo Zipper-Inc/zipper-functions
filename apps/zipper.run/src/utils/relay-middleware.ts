@@ -23,6 +23,7 @@ type RelayRequestBody = {
     emails: string[];
     userId?: string;
   };
+  path?: string;
 };
 
 function getPatchedUrl(req: NextRequest) {
@@ -122,7 +123,7 @@ export async function relayRequest({
   const version =
     _version || app.lastDeploymentVersion || Date.now().toString(32);
 
-  let deploymentId = `${app.id}+${filename}@${version}`;
+  let deploymentId = `${app.id}@${version}`;
 
   if (userAuthConnectors.find((c) => c.isUserAuthRequired)) {
     deploymentId = `${deploymentId}@${tempUserId || auth.userId}`;
@@ -139,6 +140,8 @@ export async function relayRequest({
       : { inputs: JSON.parse(await request.text()) };
 
   relayBody.userInfo = appInfoResult.data.userInfo;
+
+  relayBody.path = _filename;
 
   const response = await fetch(relayUrl, {
     method: 'POST',

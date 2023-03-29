@@ -1,44 +1,70 @@
 import { Application } from 'https://deno.land/x/oak@v12.1.0/mod.ts';
-import { parseBody } from './utils.ts';
-import { MAIN_PATH } from './constants.ts';
+import { handlers } from './generated/handlers.gen.ts';
+import { ENV_BLOCKLIST, MAIN_PATH } from './constants.ts';
 import { Storage } from './storage.ts';
-
-declare global {
-  interface Window {
-    Zipper: {
-      env: Deno.Env;
-      storage: Storage;
-    };
-  }
-}
+import { RequestBody } from './types.ts';
 
 const app = new Application();
 
 app.use(async ({ request, response }) => {
-  const body = await parseBody(request);
+  let body;
+  let error;
 
-  if (body.error) {
-    response.status = 500;
-    response.body = `500 Zipper Error: ${body.error}`;
+  // Parse the body
+  try {
+    body = (await request.body({ type: 'json' }).value) as RequestBody;
+  } catch (e) {
+    error = e;
+  }
+
+  // Handle parsing errors
+  if (!body || error) {
+    response.status = 400;
+    response.body = `Zipper Error 400: ${
+      error ? error.toString() : 'Missing body'
+    }`;
     return;
   }
 
-  window.Zipper = { env: Deno.env, storage: new Storage() };
+  // Clean up env object
+  const env = Deno.env.toObject();
+  ENV_BLOCKLIST.forEach((key) => {
+    env[key] = '';
+    delete env[key];
+  });
 
-  // Handle main.ts
-  if (!body.path || body.path === MAIN_PATH) {
-    const { main } = await import(`./src/${MAIN_PATH}`);
-    response.body = await main(body.inputs);
-  } else {
-    // Handle all other paths
-    try {
-      const { handler } = await import(`./src/${body.path}`);
-      response.body = await handler(body.inputs);
-    } catch (_e) {
-      response.status = 404;
-      response.body = `404 Zipper Error: Path not found`;
-    }
+  // Attach ZipperGlobal
+  window.Zipper = {
+    env,
+    storage: new Storage(),
+    userInfo: body.userInfo,
+  };
+
+  // Grab the handler
+  const path = body.path || MAIN_PATH;
+  const handler = handlers[path];
+
+  // Handle missing paths
+  if (!handler) {
+    response.status = 404;
+    response.body = `Zipper Error 404: Path not found`;
   }
+
+  // Run the handler
+  try {
+    const output = await handler(body.inputs);
+    response.status = 200;
+    response.body = output;
+  } catch (e) {
+    response.status = 500;
+    response.body = `Zipper Error 500: ${
+      e.toString() || 'Internal server error'
+    }`;
+  }
+
+  // TODO
+  // - Headers
+  // -
 });
 
 await app.listen({ port: 8888 });
