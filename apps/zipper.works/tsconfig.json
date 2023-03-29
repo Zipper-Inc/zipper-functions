@@ -42,7 +42,6 @@
     "**/*.tsx",
     "./*.js",
     "./src/**/*.js",
-    "public/workers/cssWorker-es.js"
   ],
   "exclude": [
     "node_modules",
