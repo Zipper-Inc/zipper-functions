@@ -3,9 +3,9 @@ import { z } from 'zod';
 import { prisma } from '~/server/prisma';
 import { createRouter } from '../createRouter';
 import { hasAppReadPermission } from '../utils/authz.utils';
-import { bcryptHash } from '@zipper/utils';
 import { TRPCError } from '@trpc/server';
 import { randomUUID } from 'crypto';
+import { hash } from 'bcryptjs';
 
 const defaultSelect = Prisma.validator<Prisma.AppAccessTokenSelect>()({
   identifier: true,
@@ -34,7 +34,7 @@ export const appAccessTokenRouter = createRouter()
       const secret = randomUUID().replace(/-/g, '').slice(0, 21);
       const identifier = randomUUID().replace(/-/g, '').slice(0, 21);
 
-      const hashedSecret = await bcryptHash(secret);
+      const hashedSecret = await hash(secret, 10);
 
       const appAccessToken = await prisma.appAccessToken.create({
         data: {

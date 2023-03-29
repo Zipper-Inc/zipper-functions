@@ -9,9 +9,9 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '~/server/prisma';
 import { AppInfoResult } from '@zipper/types';
 import { parseInputForTypes } from '~/utils/parse-input-for-types';
-import { bcryptCompare } from '@zipper/utils';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import clerkClient from '@clerk/clerk-sdk-node';
+import { compare } from 'bcryptjs';
 
 /**
  * @todo
@@ -204,10 +204,7 @@ async function getUserInfo(token: string, appSlug: string) {
       });
 
       // compare the hashed secret with a hash of the secret portion of the token
-      const validSecret = await bcryptCompare(
-        secret,
-        appAccessToken.hashedSecret,
-      );
+      const validSecret = await compare(secret, appAccessToken.hashedSecret);
 
       // app access tokens with a schedule ID should be deleted after being used
       if (appAccessToken.scheduleId) {
