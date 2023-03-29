@@ -1,32 +1,17 @@
-import fs from 'fs/promises';
 import { NextApiRequest, NextApiResponse } from 'next';
 import * as jose from 'jose';
-import * as eszip from '@deno/eszip';
 import pako from 'pako';
 import { PassThrough } from 'stream';
 import ndjson from 'ndjson';
 import intoStream from 'into-stream';
 import { decryptFromBase64 } from '@zipper/utils';
 import { prisma } from '~/server/prisma';
-import { App, Script } from '@prisma/client';
-import path from 'path';
+import { build, FRAMEWORK_ENTRYPOINT } from '~/utils/build-zipper-app';
 import { getAppLink } from '@zipper/utils';
 
 const X_DENO_CONFIG = 'x-deno-config';
 
 const DEFAULT_CONTENT_TYPE = 'application/octet-stream';
-
-/**
- * @todo
- * Bundle this up or put this source somewhere else
- * Totally possible that the directory structure cannot be guaranteed
- */
-const FRAMEWORK_PATH = path.resolve('../deno-framework');
-const FRAMEWORK_ENTRYPOINT = 'app.ts';
-const HANDLERS_PATH = 'generated/handlers.gen.ts';
-const TYPESCRIPT_CONTENT_HEADERS = {
-  'content-type': 'text/typescript',
-};
 
 /**
  * Assuming the user has defined a function called `main`
@@ -300,148 +285,6 @@ async function decodeAuthHeader(req: NextApiRequest) {
   }
 }
 
-const build = async ({
-  baseUrl,
-  app,
-  version,
-}: {
-  baseUrl: string;
-  app: App & { scripts: Script[] };
-  version: string;
-}) => {
-  const startMs = performance.now();
-  const appName = `${app.name}@${version}`;
-
-  console.log('[ESZIP]', `Building ${appName} for deployment`);
-
-  const appFilesBaseUrl = `${baseUrl}/src`;
-  const frameworkEntrypointUrl = `${baseUrl}/${FRAMEWORK_ENTRYPOINT}`;
-  const appFileUrls = app.scripts.map(
-    ({ filename }) => `${appFilesBaseUrl}/${filename}`,
-  );
-  const fileUrlsToBundle = [frameworkEntrypointUrl, ...appFileUrls];
-
-  const bundle = await eszip.build(fileUrlsToBundle, async (specifier) => {
-    /**
-     * Generate a handler map
-     */
-    // todo
-
-    /**
-     * Handle user's App files
-     */
-    if (specifier.startsWith(appFilesBaseUrl)) {
-      const filename = specifier.replace(`${appFilesBaseUrl}/`, '');
-      const script = app.scripts.find((s) => s.filename === filename);
-
-      console.log('[ESZIP]', `>`, `Adding ${filename} from ${appName}`);
-
-      return {
-        specifier,
-        headers: TYPESCRIPT_CONTENT_HEADERS,
-        content: script?.code || '/* missing code */',
-        kind: 'module',
-        version,
-      };
-    }
-
-    /**
-     * Handle Zipper Framework Files
-     */
-    if (specifier.startsWith(baseUrl)) {
-      const filename = specifier.replace(`${baseUrl}/`, '');
-
-      console.log('[ESZIP]', '>', `Adding ${filename} from framework`);
-      const isHandlersPath = filename === HANDLERS_PATH;
-      if (isHandlersPath) {
-        console.log('[ESZIP]', '>', '>', 'Generating new routes');
-      }
-
-      const content = await fs.readFile(
-        path.resolve(FRAMEWORK_PATH, filename),
-        'utf8',
-      );
-
-      if (isHandlersPath) {
-        // Filter out main since it's already included
-        const filenames = app.scripts
-          .map((s) => s.filename)
-          .filter((f) => f !== 'main.ts');
-
-        const generatedImports = [
-          '/// <generated-imports>',
-          ...filenames.map((f, i) => `import * as m${i} from '../src/${f}';`),
-          '/// </generated-imports>',
-        ].join(`\n`);
-
-        const generatedExports = [
-          '/// <generated-exports>',
-          ...filenames.map((f, i) => `'${f}': m${i}.handler as Handler,`),
-          '/// </generated-exports>',
-        ].join('\n');
-
-        const importsRegExp = new RegExp(
-          '/// <generated-imports[\\d\\D]*?/generated-imports>',
-          'g',
-        );
-        const exportsRegExp = new RegExp(
-          '/// <generated-exports[\\d\\D]*?/generated-exports>',
-          'g',
-        );
-
-        return {
-          kind: 'module',
-          specifier,
-          headers: TYPESCRIPT_CONTENT_HEADERS,
-          content: content
-            .replace(importsRegExp, generatedImports)
-            .replace(exportsRegExp, generatedExports),
-        };
-      }
-
-      return {
-        kind: 'module',
-        specifier,
-        headers: TYPESCRIPT_CONTENT_HEADERS,
-        content,
-      };
-    }
-
-    /**
-     * Handle remote imports
-     */
-    console.log('[ESZIP]', `>`, `Adding ${specifier} from remote`);
-
-    const response = await fetch(specifier, { redirect: 'follow' });
-    if (response.status !== 200) {
-      // ensure the body is read as to not leak resources
-      await response.arrayBuffer();
-      return undefined;
-    }
-
-    const content = await response.text();
-    const headers: Record<string, string> = {};
-    response.headers.forEach((value, key) => {
-      headers[key.toLowerCase()] = value;
-    });
-
-    return {
-      kind: 'module',
-      specifier: response.url,
-      headers,
-      content,
-    };
-  });
-
-  const elapsedMs = performance.now() - startMs;
-  console.log(
-    '[ESZIP]',
-    `Built ${app.name}@${version} in ${Math.round(elapsedMs)}ms`,
-  );
-
-  return bundle;
-};
-
 function errorResponse(errorMessage: string) {
   return {
     body: `addEventListener("fetch", (e) => e.respondWith(new Response("${errorMessage}")));`,
@@ -514,8 +357,7 @@ async function originBoot({
     );
   }
 
-  const proto = req.headers['x-forwarded-proto'] || 'http';
-  const baseUrl = `${proto}://${req.headers.host}/api/app/${appId}/${version}/files`;
+  const baseUrl = `file://${app.name}/v${version}`;
 
   const eszip = await build({ baseUrl, app, version });
 
