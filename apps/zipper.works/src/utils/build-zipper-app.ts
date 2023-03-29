@@ -2,6 +2,7 @@ import fs from 'fs/promises';
 import * as eszip from '@deno/eszip';
 import { App, Script } from '@prisma/client';
 import path from 'path';
+import { generateHandlersForFramework } from '@zipper/utils';
 
 /**
  * @todo
@@ -17,41 +18,6 @@ export const TYPESCRIPT_CONTENT_HEADERS = {
 
 function buildLog(msg: string, depth = 0) {
   console.log('[ESZIP]', ...Array(depth).fill('>'), msg);
-}
-
-export function generateHandlers(
-  app: App & { scripts: Script[] },
-  code: string,
-) {
-  // Filter out main since it's hardcoded
-  const filenames = app.scripts
-    .map((s) => s.filename)
-    .filter((f) => f !== 'main.ts');
-
-  const generatedImports = [
-    '/// <generated-imports>',
-    ...filenames.map((f, i) => `import * as m${i} from '../src/${f}';`),
-    '/// </generated-imports>',
-  ].join(`\n`);
-
-  const generatedExports = [
-    '/// <generated-exports>',
-    ...filenames.map((f, i) => `'${f}': m${i}.handler as Handler,`),
-    '/// </generated-exports>',
-  ].join('\n');
-
-  const importsRegExp = new RegExp(
-    '/// <generated-imports[\\d\\D]*?/generated-imports>',
-    'g',
-  );
-  const exportsRegExp = new RegExp(
-    '/// <generated-exports[\\d\\D]*?/generated-exports>',
-    'g',
-  );
-
-  return code
-    .replace(importsRegExp, generatedImports)
-    .replace(exportsRegExp, generatedExports);
 }
 
 export async function build({
@@ -119,7 +85,12 @@ export async function build({
         kind: 'module',
         specifier,
         headers: TYPESCRIPT_CONTENT_HEADERS,
-        content: isHandlersPath ? generateHandlers(app, content) : content,
+        content: isHandlersPath
+          ? generateHandlersForFramework({
+              code: content,
+              filenames: app.scripts.map((s) => s.filename),
+            })
+          : content,
       };
     }
 
