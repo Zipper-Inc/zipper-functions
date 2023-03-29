@@ -4,9 +4,8 @@ import IORedis from 'ioredis';
 import { prisma } from './prisma';
 import fetch from 'node-fetch';
 import getRunUrl from '../utils/get-run-url';
-import clerkClient from '@clerk/clerk-sdk-node';
-import { bcryptHash, encryptToBase64 } from '@zipper/utils';
 import { randomUUID } from 'crypto';
+import { hash } from 'bcryptjs';
 
 const connection = new IORedis(+env.REDIS_PORT, env.REDIS_HOST, {
   maxRetriesPerRequest: null,
@@ -43,7 +42,7 @@ const initializeWorkers = () => {
             const secret = randomUUID().replace(/-/g, '').slice(0, 21);
             const identifier = randomUUID().replace(/-/g, '').slice(0, 21);
 
-            const hashedSecret = await bcryptHash(secret);
+            const hashedSecret = await hash(secret, 10);
 
             await prisma.appAccessToken.create({
               data: {
