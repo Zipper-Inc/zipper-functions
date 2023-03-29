@@ -15,7 +15,6 @@ import {
   HStack,
   Text,
   Switch,
-  Code,
   Divider,
   Box,
   IconButton,
@@ -29,6 +28,8 @@ import {
   ModalOverlay,
   ModalContent,
   Tooltip,
+  Flex,
+  Spacer,
 } from '@chakra-ui/react';
 import { CheckIcon } from '@chakra-ui/icons';
 import { FormProvider, useForm } from 'react-hook-form';
@@ -39,16 +40,13 @@ import { HiExclamationTriangle } from 'react-icons/hi2';
 import slugify from 'slugify';
 import { MIN_SLUG_LENGTH, useAppSlug } from '~/hooks/use-app-slug';
 import { useRouter } from 'next/router';
-import {
-  HiLockClosed,
-  HiOutlineClipboard,
-  HiOutlineTrash,
-} from 'react-icons/hi';
+import { HiGlobe, HiOutlineClipboard, HiOutlineTrash } from 'react-icons/hi';
+import { VscCode } from 'react-icons/vsc';
 
 type Props = {
   app: Pick<
     Unpack<inferQueryOutput<'app.byId'>>,
-    'id' | 'name' | 'slug' | 'description' | 'requiresAuthToRun'
+    'id' | 'name' | 'slug' | 'description' | 'requiresAuthToRun' | 'isPrivate'
   >;
 };
 
@@ -88,7 +86,8 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
       name: app.name ?? '',
       slug: app.slug,
       description: app.description,
-      requiresAuthToRun: app.requiresAuthToRun,
+      canAnyoneRun: !app.requiresAuthToRun,
+      isPublic: !app.isPrivate,
     },
   });
   const model = settingsForm.watch();
@@ -102,11 +101,13 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
   }, [model.slug]);
 
   const didModelChange = () => {
+    if (!appQuery.data) return false;
     return (
-      slug !== appQuery.data?.slug ||
-      model.name !== appQuery.data?.name ||
-      model.description !== appQuery.data?.description ||
-      model.requiresAuthToRun !== appQuery.data?.requiresAuthToRun
+      slug !== appQuery.data.slug ||
+      model.name !== appQuery.data.name ||
+      model.description !== appQuery.data.description ||
+      model.canAnyoneRun !== !appQuery.data.requiresAuthToRun ||
+      model.isPublic !== !appQuery.data.isPrivate
     );
   };
 
@@ -120,7 +121,8 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
           slug: data.slug,
           name: data.name,
           description: data.description,
-          requiresAuthToRun: data.requiresAuthToRun,
+          requiresAuthToRun: !data.canAnyoneRun,
+          isPrivate: !data.isPublic,
         },
       },
       {
@@ -197,7 +199,7 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
           Settings
         </Heading>
       </VStack>
-      <VStack align="stretch" flex={3}>
+      <VStack align="stretch" flex={3} pb="10">
         <Box w="100%">
           <Text fontSize={'xl'}>General</Text>
           <Divider mb="4" mt={2} />
@@ -259,28 +261,54 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
               />
             </FormControl>
             <FormControl>
-              <FormLabel textColor="gray.600">Authentication</FormLabel>
-              <HStack w="full">
-                <VStack mr="auto" align="start">
-                  <HStack>
-                    <HiLockClosed />
-                    <Text>
-                      Users have to be signed in to Zipper to run this app
-                    </Text>
-                  </HStack>
-                  <FormHelperText maxW={'xl'}>
-                    If checked, the authenticated user's email address and
-                    organization membership will be available via{' '}
-                    <Code>Zipper.userInfo</Code> from within your app
-                  </FormHelperText>
+              <FormLabel>Visibility</FormLabel>
+              <VStack
+                w="full"
+                border="1px solid"
+                borderColor="gray.200"
+                rounded="md"
+                align={'stretch'}
+                spacing="0"
+              >
+                <HStack
+                  w="full"
+                  p="4"
+                  borderBottom="1px solid"
+                  borderColor={'gray.200'}
+                >
+                  <Flex flexGrow={'1'}>
+                    <VStack align="start">
+                      <HStack>
+                        <VscCode />
+                        <Text>Is the code public?</Text>
+                      </HStack>
+                      <FormHelperText maxW="xl">{`With this field ${
+                        settingsForm.watch('isPublic')
+                          ? 'checked, anyone on the internet will be able to see the source code.'
+                          : 'unchecked, only organization members and people invited to the app will be able to see the source code.'
+                      }`}</FormHelperText>
+                    </VStack>
+                  </Flex>
+                  <Switch {...settingsForm.register('isPublic')} ml="auto" />
+                </HStack>
+
+                <VStack w="full" p="4" align="start">
+                  <VStack align="start" w="full">
+                    <HStack w="full">
+                      <HiGlobe />
+                      <Text>Is the output public?</Text>
+                      <Spacer flexGrow={1} />
+                      <Switch {...settingsForm.register('canAnyoneRun')} />
+                    </HStack>
+                  </VStack>
+
+                  <FormHelperText maxW="xl">{`With this field ${
+                    settingsForm.watch('canAnyoneRun')
+                      ? 'checked, anyone on the internet will be able to run your app and see the output.'
+                      : 'unchecked, users will be asked to authenticate before running your app. You will be able to use the information in Zipper.userInfo to determine who sees the output.'
+                  }`}</FormHelperText>
                 </VStack>
-                {appQuery.data && (
-                  <Switch
-                    ml="auto"
-                    {...settingsForm.register('requiresAuthToRun')}
-                  />
-                )}
-              </HStack>
+              </VStack>
             </FormControl>
             <FormControl>
               <Button
@@ -328,7 +356,6 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
                 border="1px solid"
                 borderColor="gray.100"
                 borderRadius={'lg'}
-                mb="10"
               >
                 {appAccessTokenQuery.data.map((token) => (
                   <HStack

@@ -70,6 +70,7 @@ export const appRouter = createRouter()
         description: z.string().optional(),
         organizationId: z.string().nullable().optional(),
         isPrivate: z.boolean().optional().default(true),
+        requiresAuthToRun: z.boolean().optional().default(false),
       })
       .optional(),
     async resolve({
@@ -80,7 +81,13 @@ export const appRouter = createRouter()
         throw new TRPCError({ code: 'UNAUTHORIZED' });
       }
 
-      const { name, description, organizationId: orgId, isPrivate } = input;
+      const {
+        name,
+        description,
+        organizationId: orgId,
+        isPrivate,
+        requiresAuthToRun,
+      } = input;
       let { slug } = input;
 
       // if there's a name but no slug, use the name to generate a slug
@@ -137,6 +144,7 @@ export const appRouter = createRouter()
           organizationId,
           createdById: ctx.userId,
           isPrivate,
+          requiresAuthToRun,
           editors: {
             create: {
               userId: ctx.userId,
