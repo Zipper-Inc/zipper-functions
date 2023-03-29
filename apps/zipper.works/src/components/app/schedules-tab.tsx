@@ -155,7 +155,7 @@ const SchedulesTab: React.FC<SchedulesTabProps> = ({ appId }) => {
                       <Td {...tableDataStyles}>{s.crontab}</Td>
                       <Td {...tableDataStyles}>{s.filename}</Td>
                       <Td {...tableDataStyles}>
-                        <Avatar userId={s.userId} size="xs" />
+                        <Avatar userId={s.userId || undefined} size="xs" />
                       </Td>
                       <Td {...tableDataStyles}>
                         {s.appRuns.length > 0 && (
