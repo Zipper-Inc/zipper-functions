@@ -77,13 +77,22 @@ export function parseInputForTypes(
     }
 
     const inputs = mainFn.getParameters();
-
-    if (inputs.length !== 1) {
+    if (inputs.length !== 1 && inputs.length > 0) {
       console.error('You must have one and only one input object');
       return [];
     }
     const params = inputs[0] as ParameterDeclaration;
     const typeNode = params.getTypeNode();
+
+    if (typeNode?.isKind(SyntaxKind.AnyKeyword)) {
+      return [
+        {
+          key: params.getName(),
+          type: InputType.any,
+          optional: params.hasQuestionToken(),
+        },
+      ];
+    }
 
     const props: PropertySignature[] = typeNode?.isKind(SyntaxKind.TypeLiteral)
       ? // A type literal, like `params: { foo: string, bar: string }`
@@ -111,4 +120,82 @@ export function parseInputForTypes(
     console.error('caught during parseInputForTypes', e);
   }
   return [];
+}
+
+export function addParamToCode(
+  code: string,
+  paramName = 'newInput',
+  paramType = 'string',
+): string {
+  const src = getSourceFileFromCode(code);
+  let mainFn = src.getFunction('main');
+  if (!mainFn) mainFn = src.getFunction('handler');
+
+  if (!mainFn) {
+    console.error('You must define a main function');
+    return code;
+  }
+
+  const inputs = mainFn.getParameters();
+  if (!inputs.length) {
+    // Create a new input object with the desired parameter
+    const newParamString = `{ ${paramName} } : { ${paramName}${
+      paramType ? `: ${paramType}` : ''
+    } }`;
+
+    mainFn.replaceWithText(
+      mainFn.getText().replace(/\(\)/, `(${newParamString})`),
+    );
+
+    return src.getFullText();
+  }
+
+  if (inputs.length !== 1 && inputs.length > 0) {
+    return code;
+  }
+
+  const params = inputs[0] as ParameterDeclaration;
+  const typeNode = params.getTypeNode();
+
+  if (!typeNode) {
+    console.error('No types, treating input as any');
+    return code;
+  }
+
+  const existingParams = parseInputForTypes(code);
+  // If there is an existing parameter, use its name instead of the default paramName
+  if (existingParams.length && existingParams[0]) {
+    paramName = existingParams[0].key;
+  }
+
+  if (existingParams.some((param) => param.key === paramName)) {
+    console.error('Parameter with the same name already exists');
+    return code;
+  }
+
+  const insertPosition = typeNode.getEnd() - 1;
+
+  // Check if there's a type literal
+  if (typeNode.isKind(SyntaxKind.TypeLiteral)) {
+    const newParamString = existingParams.length
+      ? `, ${paramName}${paramType ? `: ${paramType}` : ''}`
+      : `${paramName}${paramType ? `: ${paramType}` : ''}`;
+
+    const newCode = [
+      code.slice(0, insertPosition),
+      newParamString,
+      code.slice(insertPosition),
+    ].join('');
+
+    return newCode;
+  }
+
+  // If there's no type literal, create one
+  const newParamString = `{ ${paramName}${paramType ? `: ${paramType}` : ''} }`;
+  const newCode = code.replace(
+    /(\{[\s\S]*\})\s*:/,
+    (_, match) => `${match} : ${newParamString}`,
+  );
+
+  return newCode;
 }

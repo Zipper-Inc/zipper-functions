@@ -34,6 +34,7 @@ import { LogLine } from '~/components/app/log-line';
 import { useRunAppContext } from '../context/run-app-context';
 import { trpc } from '~/utils/trpc';
 import { useRouter } from 'next/router';
+import { addParamToCode } from '~/utils/parse-input-for-types';
 
 import { HiOutlineClipboard, HiOutlinePlay } from 'react-icons/hi2';
 import { useEditorContext } from '../context/editor-context';
@@ -73,7 +74,8 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
     appInfo,
   } = useRunAppContext();
 
-  const { currentScript } = useEditorContext();
+  const { currentScript, currentScriptLive, setCurrentScript } =
+    useEditorContext();
 
   const router = useRouter();
   const context = trpc.useContext();
@@ -202,6 +204,16 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
     );
   };
 
+  const handleAddInput = () => {
+    if (currentScriptLive && currentScript) {
+      const codeWithInputAdded = addParamToCode(currentScriptLive?.code || '');
+
+      setCurrentScript({
+        ...currentScript,
+        code: codeWithInputAdded,
+      });
+    }
+  };
   return (
     <Tabs
       colorScheme="purple"
@@ -341,9 +353,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
                       mt={6}
                       variant="outline"
                       fontWeight="500"
-                      onClick={() => {
-                        return;
-                      }}
+                      onClick={handleAddInput}
                     >
                       Add an input
                     </Button>
