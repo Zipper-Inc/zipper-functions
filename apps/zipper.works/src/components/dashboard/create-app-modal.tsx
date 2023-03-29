@@ -111,6 +111,7 @@ export const CreateAppModal: React.FC<Props> = ({ isOpen, onClose }) => {
                     <OrganizationSelector
                       setSelectedOrganizationId={setSelectedOrganizationId}
                       selectedOrganizationId={selectedOrganizationId}
+                      fontSize="md"
                     />
                     <Text>/</Text>
                     <InputGroup>
