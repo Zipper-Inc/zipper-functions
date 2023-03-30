@@ -34,6 +34,7 @@ export type FunctionCallContextType = {
   results: Record<string, string>;
   userAuthConnectors: UserAuthConnector[];
   appEventsQuery?: AppEventUseQueryResult;
+  inputError?: string;
   setResults: (results: Record<string, string>) => void;
   run: (isCurrentFileAsEntryPoint?: boolean) => void;
 };
@@ -46,6 +47,7 @@ export const RunAppContext = createContext<FunctionCallContextType>({
   lastRunVersion: '',
   results: {},
   appEventsQuery: undefined,
+  inputError: undefined,
   userAuthConnectors: [],
   setResults: noop,
   run: noop,
@@ -55,6 +57,7 @@ export function RunAppProvider({
   app,
   children,
   inputParams,
+  inputError,
   filename,
   onBeforeRun,
   onAfterRun,
@@ -62,6 +65,7 @@ export function RunAppProvider({
   app: AppQueryOutput;
   children: any;
   inputParams?: InputParam[];
+  inputError?: string;
   filename?: string;
   onBeforeRun: VoidFunction;
   onAfterRun: VoidFunction;
@@ -112,6 +116,7 @@ export function RunAppProvider({
         formMethods,
         isRunning,
         inputParams,
+        inputError,
         lastRunVersion,
         results,
         appEventsQuery,

@@ -60,10 +60,10 @@ function getSourceFileFromCode(code: string) {
 
 export function parseInputForTypes(
   code = '',
-  throwIfNoMain = false,
+  throwErrors = false,
 ): undefined | InputParam[] {
-  if (!code && !throwIfNoMain) return [];
-  if (!code && throwIfNoMain) throw new Error('No main function');
+  if (!code && !throwErrors) return [];
+  if (!code && throwErrors) throw new Error('No main function');
 
   try {
     const src = getSourceFileFromCode(code);
@@ -71,15 +71,15 @@ export function parseInputForTypes(
     if (!mainFn) mainFn = src.getFunction('handler');
 
     if (!mainFn) {
-      if (throwIfNoMain) throw new Error('No main function');
+      if (throwErrors) throw new Error('No main function');
       console.error('You must define a main function');
-      throw new Error('NO_MAIN');
+      return [];
     }
 
     const inputs = mainFn.getParameters();
     if (inputs.length !== 1 && inputs.length > 0) {
+      if (throwErrors) throw new Error('MULTIPLE_INPUT_OBJECTS');
       console.error('You must have one and only one input object');
-      throw new Error('MULTIPLE_INPUT_OBJECTS');
     }
     const params = inputs[0] as ParameterDeclaration;
     if (!params) {
@@ -97,14 +97,24 @@ export function parseInputForTypes(
       ];
     }
 
-    const props: PropertySignature[] = typeNode?.isKind(SyntaxKind.TypeLiteral)
-      ? // A type literal, like `params: { foo: string, bar: string }`
-        (typeNode as any)?.getProperties()
-      : // A type reference, like `params: Params`
-        // Finds the type alias by its name and grabs the node from there
-        (
-          src.getTypeAlias(typeNode?.getText() as string)?.getTypeNode() as any
-        )?.getProperties();
+    let props: PropertySignature[] = [];
+    try {
+      props = typeNode?.isKind(SyntaxKind.TypeLiteral)
+        ? // A type literal, like `params: { foo: string, bar: string }`
+          (typeNode as any)?.getProperties()
+        : // A type reference, like `params: Params`
+          // Finds the type alias by its name and grabs the node from there
+          (
+            src
+              .getTypeAlias(typeNode?.getText() as string)
+              ?.getTypeNode() as any
+          )?.getProperties();
+    } catch (e) {
+      if (throwErrors) {
+        throw new Error('Cannot get properties for your input');
+      }
+      return [];
+    }
 
     if (!typeNode || !props) {
       console.error('No types, treating input as any');
@@ -119,7 +129,7 @@ export function parseInputForTypes(
       };
     });
   } catch (e) {
-    if (throwIfNoMain) throw e;
+    if (throwErrors) throw e;
     console.error('caught during parseInputForTypes', e);
   }
   return [];
