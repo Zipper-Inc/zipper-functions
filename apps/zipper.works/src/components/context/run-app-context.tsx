@@ -28,7 +28,7 @@ type UserAuthConnector = {
 export type FunctionCallContextType = {
   appInfo: AppInfo;
   formMethods: any;
-  inputParams: InputParam[];
+  inputParams?: InputParam[];
   isRunning: boolean;
   lastRunVersion: string;
   results: Record<string, string>;
@@ -41,7 +41,7 @@ export type FunctionCallContextType = {
 export const RunAppContext = createContext<FunctionCallContextType>({
   appInfo: {} as AppInfo,
   formMethods: {},
-  inputParams: [],
+  inputParams: undefined,
   isRunning: false,
   lastRunVersion: '',
   results: {},
@@ -61,7 +61,7 @@ export function RunAppProvider({
 }: {
   app: AppQueryOutput;
   children: any;
-  inputParams: InputParam[];
+  inputParams?: InputParam[];
   filename?: string;
   onBeforeRun: VoidFunction;
   onAfterRun: VoidFunction;
@@ -119,7 +119,8 @@ export function RunAppProvider({
           (c) => c.userScopes.length > 0,
         ) as UserAuthConnector[],
         setResults,
-        run: async (isCurrentFileAsEntryPoint?: boolean) => {
+        run: async (isCurrentFileTheEntryPoint?: boolean) => {
+          if (!inputParams) return;
           setIsRunning(true);
           await onBeforeRun();
 
@@ -128,13 +129,17 @@ export function RunAppProvider({
           let formKeys: string[] = [];
 
           // We need to filter the form values since `useForm` hook keeps these around
-          if (isCurrentFileAsEntryPoint) {
+          if (isCurrentFileTheEntryPoint) {
             formKeys = inputParams.map(({ key, type }) => `${key}:${type}`);
           } else {
             const mainScript = app.scripts.find(
               (s) => s.id === app.scriptMain?.scriptId,
             );
             const mainInputParams = parseInputForTypes(mainScript?.code);
+            if (!mainInputParams) {
+              setIsRunning(false);
+              return;
+            }
             formKeys = mainInputParams.map(({ key, type }) => `${key}:${type}`);
           }
 
@@ -163,7 +168,7 @@ export function RunAppProvider({
             getRunUrl(
               slug,
               version,
-              isCurrentFileAsEntryPoint ? filename : 'main.ts',
+              isCurrentFileTheEntryPoint ? filename : 'main.ts',
             ),
             {
               method: 'POST',

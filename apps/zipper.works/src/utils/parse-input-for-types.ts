@@ -61,7 +61,7 @@ function getSourceFileFromCode(code: string) {
 export function parseInputForTypes(
   code = '',
   throwIfNoMain = false,
-): InputParam[] {
+): undefined | InputParam[] {
   if (!code && !throwIfNoMain) return [];
   if (!code && throwIfNoMain) throw new Error('No main function');
 
@@ -73,13 +73,13 @@ export function parseInputForTypes(
     if (!mainFn) {
       if (throwIfNoMain) throw new Error('No main function');
       console.error('You must define a main function');
-      return [];
+      throw new Error('NO_MAIN');
     }
 
     const inputs = mainFn.getParameters();
     if (inputs.length !== 1 && inputs.length > 0) {
       console.error('You must have one and only one input object');
-      return [];
+      throw new Error('MULTIPLE_INPUT_OBJECTS');
     }
     const params = inputs[0] as ParameterDeclaration;
     if (!params) {
@@ -166,6 +166,7 @@ export function addParamToCode(
   }
 
   const existingParams = parseInputForTypes(code);
+  if (!existingParams) return code;
   // If there is an existing parameter, use its name instead of the default paramName
   if (existingParams.length && existingParams[0]) {
     paramName = existingParams[0].key;

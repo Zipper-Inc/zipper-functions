@@ -45,7 +45,7 @@ export function Playground({
 }) {
   const { editorIds, onlineEditorIds, selfId } = useAppEditors();
 
-  const [inputParams, setInputParams] = useState<InputParam[]>([]);
+  const [inputParams, setInputParams] = useState<InputParam[] | undefined>([]);
   const [tabIndex, setTabIndex] = useState(0);
 
   const [isShareModalOpen, setShareModalOpen] = useState(false);
@@ -68,9 +68,15 @@ export function Playground({
   }, []);
 
   useEffect(() => {
-    setInputParams(
-      parseInputForTypes(currentScriptLive?.code || currentScript?.code),
-    );
+    try {
+      const inputs = parseInputForTypes(
+        currentScriptLive?.code || currentScript?.code,
+        true,
+      );
+      setInputParams(inputs);
+    } catch (e) {
+      setInputParams(undefined);
+    }
   }, [currentScriptLive?.code, currentScript?.code]);
 
   const switchToCodeTab = () => setTabIndex(0);

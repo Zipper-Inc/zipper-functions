@@ -77,6 +77,8 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
     appInfo,
   } = useRunAppContext();
 
+  console.log(inputParams);
+
   const { currentScript, currentScriptLive, setCurrentScript } =
     useEditorContext();
 
@@ -307,7 +309,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
             display="flex"
             gap={2}
             fontWeight="medium"
-            isDisabled={!appInfo.canUserEdit || isRunning}
+            isDisabled={!appInfo.canUserEdit || isRunning || !inputParams}
           >
             <HiOutlinePlay />
             <Text>{`Run${
