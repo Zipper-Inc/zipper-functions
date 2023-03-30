@@ -28,12 +28,13 @@ type UserAuthConnector = {
 export type FunctionCallContextType = {
   appInfo: AppInfo;
   formMethods: any;
-  inputParams: InputParam[];
+  inputParams?: InputParam[];
   isRunning: boolean;
   lastRunVersion: string;
   results: Record<string, string>;
   userAuthConnectors: UserAuthConnector[];
   appEventsQuery?: AppEventUseQueryResult;
+  inputError?: string;
   setResults: (results: Record<string, string>) => void;
   run: (isCurrentFileAsEntryPoint?: boolean) => void;
 };
@@ -41,11 +42,12 @@ export type FunctionCallContextType = {
 export const RunAppContext = createContext<FunctionCallContextType>({
   appInfo: {} as AppInfo,
   formMethods: {},
-  inputParams: [],
+  inputParams: undefined,
   isRunning: false,
   lastRunVersion: '',
   results: {},
   appEventsQuery: undefined,
+  inputError: undefined,
   userAuthConnectors: [],
   setResults: noop,
   run: noop,
@@ -55,13 +57,15 @@ export function RunAppProvider({
   app,
   children,
   inputParams,
+  inputError,
   filename,
   onBeforeRun,
   onAfterRun,
 }: {
   app: AppQueryOutput;
   children: any;
-  inputParams: InputParam[];
+  inputParams?: InputParam[];
+  inputError?: string;
   filename?: string;
   onBeforeRun: VoidFunction;
   onAfterRun: VoidFunction;
@@ -112,6 +116,7 @@ export function RunAppProvider({
         formMethods,
         isRunning,
         inputParams,
+        inputError,
         lastRunVersion,
         results,
         appEventsQuery,
@@ -119,7 +124,8 @@ export function RunAppProvider({
           (c) => c.userScopes.length > 0,
         ) as UserAuthConnector[],
         setResults,
-        run: async (isCurrentFileAsEntryPoint?: boolean) => {
+        run: async (isCurrentFileTheEntryPoint?: boolean) => {
+          if (!inputParams) return;
           setIsRunning(true);
           await onBeforeRun();
 
@@ -128,13 +134,17 @@ export function RunAppProvider({
           let formKeys: string[] = [];
 
           // We need to filter the form values since `useForm` hook keeps these around
-          if (isCurrentFileAsEntryPoint) {
+          if (isCurrentFileTheEntryPoint) {
             formKeys = inputParams.map(({ key, type }) => `${key}:${type}`);
           } else {
             const mainScript = app.scripts.find(
               (s) => s.id === app.scriptMain?.scriptId,
             );
             const mainInputParams = parseInputForTypes(mainScript?.code);
+            if (!mainInputParams) {
+              setIsRunning(false);
+              return;
+            }
             formKeys = mainInputParams.map(({ key, type }) => `${key}:${type}`);
           }
 
@@ -163,7 +173,7 @@ export function RunAppProvider({
             getRunUrl(
               slug,
               version,
-              isCurrentFileAsEntryPoint ? filename : 'main.ts',
+              isCurrentFileTheEntryPoint ? filename : 'main.ts',
             ),
             {
               method: 'POST',

@@ -136,7 +136,7 @@ export default async function handler(
         lastDeploymentVersion,
         updatedAt,
       },
-      inputs: parseInputForTypes(entryPoint.code),
+      inputs: parseInputForTypes(entryPoint.code) || [],
       userAuthConnectors: appFound.connectors.filter(
         (c) => c.userScopes.length > 0,
       ) as UserAuthConnector[],

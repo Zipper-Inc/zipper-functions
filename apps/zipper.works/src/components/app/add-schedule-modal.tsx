@@ -26,7 +26,6 @@ import cronstrue from 'cronstrue';
 import { useEffect, useState } from 'react';
 import { FieldValues, useForm } from 'react-hook-form';
 import { parseInputForTypes } from '~/utils/parse-input-for-types';
-import { Avatar } from '../avatar';
 import { useEditorContext } from '../context/editor-context';
 import { useRunAppContext } from '../context/run-app-context';
 
@@ -55,9 +54,7 @@ export const AddScheduleModal: React.FC<AddScheduleModalProps> = ({
     },
   });
   const [cronString, setCronString] = useState<string>();
-  const [inputParams, setInputParams] = useState<InputParam[] | undefined>(
-    parseInputForTypes(scripts.find((s) => s.filename === 'main.ts')?.code),
-  );
+  const [inputParams, setInputParams] = useState<InputParam[] | undefined>();
   const currentCrontab: string = addModalForm.watch('crontab');
 
   useEffect(() => {
@@ -73,6 +70,14 @@ export const AddScheduleModal: React.FC<AddScheduleModalProps> = ({
       setCronString(error || 'Invalid cron expression');
     }
   }, [currentCrontab]);
+
+  useEffect(() => {
+    if (isOpen) {
+      setInputParams(
+        parseInputForTypes(scripts.find((s) => s.filename === 'main.ts')?.code),
+      );
+    }
+  }, [isOpen]);
 
   const user = useUser();
   const { appInfo } = useRunAppContext();
