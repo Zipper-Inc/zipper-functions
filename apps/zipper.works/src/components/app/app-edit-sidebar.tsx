@@ -34,6 +34,7 @@ import { LogLine } from '~/components/app/log-line';
 import { useRunAppContext } from '../context/run-app-context';
 import { trpc } from '~/utils/trpc';
 import { useRouter } from 'next/router';
+import { addParamToCode } from '~/utils/parse-input-for-types';
 
 import { HiOutlineClipboard, HiOutlinePlay } from 'react-icons/hi2';
 import { useEditorContext } from '../context/editor-context';
@@ -76,7 +77,8 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
     appInfo,
   } = useRunAppContext();
 
-  const { currentScript } = useEditorContext();
+  const { currentScript, currentScriptLive, setCurrentScript } =
+    useEditorContext();
 
   const router = useRouter();
   const context = trpc.useContext();
@@ -260,6 +262,16 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
     );
   };
 
+  const handleAddInput = () => {
+    if (currentScriptLive && currentScript) {
+      const codeWithInputAdded = addParamToCode(currentScriptLive?.code || '');
+
+      setCurrentScript({
+        ...currentScript,
+        code: codeWithInputAdded,
+      });
+    }
+  };
   return (
     <Tabs
       colorScheme="purple"
@@ -346,7 +358,13 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
           >
             {/** @todo make this height thing less jank */}
             {userAuthConnectors.length > 0 && (
-              <Box p={4} mb="4" backgroundColor="gray.100" position="relative">
+              <Box
+                p={4}
+                mb="4"
+                backgroundColor="gray.100"
+                position="relative"
+                rounded="lg"
+              >
                 <FunctionUserConnectors
                   userAuthConnectors={userAuthConnectors}
                   actions={{
@@ -375,7 +393,6 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
               backgroundColor="gray.100"
               position="relative"
               rounded="lg"
-              bgColor={'neutral.50'}
             >
               <>
                 <Heading size="sm" mb="4">
@@ -404,9 +421,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
                       mt={6}
                       variant="outline"
                       fontWeight="500"
-                      onClick={() => {
-                        return;
-                      }}
+                      onClick={handleAddInput}
                     >
                       Add an input
                     </Button>

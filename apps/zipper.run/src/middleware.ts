@@ -47,11 +47,8 @@ export default withClerkMiddleware(async (request: NextRequest) => {
     }
   }
 
-  if (!request.cookies.get('__zipper_user_id')) {
-    res.cookies.set(
-      '__zipper_user_id',
-      auth.userId || `temp__${crypto.randomUUID()}`,
-    );
+  if (!auth.userId && !request.cookies.get('__zipper_temp_user_id')) {
+    res.cookies.set('__zipper_temp_user_id', `temp__${crypto.randomUUID()}`);
   }
 
   return res;

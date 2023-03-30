@@ -18,6 +18,7 @@ import { useAppOwner } from '~/hooks/use-app-owner';
 import { NextPageWithLayout } from '~/pages/_app';
 import { getValidSubdomain } from '~/utils/subdomains';
 import { trpc } from '~/utils/trpc';
+import NextLink from 'next/link';
 
 const APPROXIMATE_HEADER_HEIGHT_PX = '116px';
 const CODE_PREVIEW_HEIGHT = `calc(100vh - ${APPROXIMATE_HEADER_HEIGHT_PX})`;
@@ -53,12 +54,19 @@ const AppPage: NextPageWithLayout = () => {
   const appOwner = getAppOwner(data);
 
   return (
-    <HStack gap={4} pl={10} pt="14" mr={0} alignItems="stretch" flex={1}>
+    <HStack gap={4} pl={10} mr={0} alignItems="stretch" flex={1}>
       <VStack flex={2} gap={4} alignItems="start">
-        <Heading as="h1" size="2xl" fontWeight="bold" overflowWrap="normal">
+        <Heading as="h1" size="xl" fontWeight="bold" overflowWrap="normal">
           {headline}
         </Heading>
-        <Heading as="h2" color="purple.700" fontSize="2xl">
+        <Heading
+          as={Link}
+          href={`/${resourceOwnerSlug}/${appSlug}/edit/${
+            appQuery.data.scriptMain?.script.filename || 'main.ts'
+          }`}
+          color="purple.700"
+          fontSize="2xl"
+        >
           {data.name || data.slug}
         </Heading>
 
@@ -76,14 +84,16 @@ const AppPage: NextPageWithLayout = () => {
               <Text flex={1} color="gray.700">
                 Built by
               </Text>
-              <Text
+              <Link
+                as={NextLink}
                 flex={1}
                 color="purple.600"
                 overflow="auto"
                 whiteSpace="nowrap"
+                href={`/${appOwner.resourceOwnerSlug}`}
               >
-                {appOwner.name}
-              </Text>
+                {appOwner.resourceOwnerName}
+              </Link>
             </HStack>
             <HStack overflow="hidden" minWidth={0}>
               <Text flex={1} color="gray.700">
@@ -169,12 +179,13 @@ const AppPage: NextPageWithLayout = () => {
           <Button
             colorScheme="blue"
             paddingX={6}
-            onClick={(e) => {
-              e.preventDefault();
-              window.location.href = `/${resourceOwnerSlug}/${appSlug}/edit/${
-                appQuery.data.scriptMain?.script.filename || 'main.ts'
-              }`;
-            }}
+            onClick={() =>
+              router.push(
+                `/${resourceOwnerSlug}/${appSlug}/edit/${
+                  appQuery.data.scriptMain?.script.filename || 'main.ts'
+                }`,
+              )
+            }
             _hover={{ transform: 'scale(1.1)' }}
           >
             Explore This App

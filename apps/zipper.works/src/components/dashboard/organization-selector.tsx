@@ -16,8 +16,13 @@ import { HiOutlineChevronUpDown } from 'react-icons/hi2';
 
 export const OrganizationSelector: React.FC<{
   selectedOrganizationId?: string | null;
+  fontSize?: 'sm' | 'md' | 'lg';
   setSelectedOrganizationId: (id: string | null) => void;
-}> = ({ selectedOrganizationId = null, setSelectedOrganizationId }) => {
+}> = ({
+  selectedOrganizationId = null,
+  setSelectedOrganizationId,
+  fontSize = 'sm',
+}) => {
   const { organizationList } = useOrganizationList();
 
   const allWorkspaces = [
@@ -44,11 +49,11 @@ export const OrganizationSelector: React.FC<{
         maxW={'33%'}
         minW="max-content"
       >
-        <Text fontSize="sm" fontWeight="medium" overflow="hidden">
+        <Text fontSize={fontSize} fontWeight="medium" overflow="hidden">
           {organization?.organization.name || 'Personal Workspace'}
         </Text>
       </MenuButton>
-      <MenuList p={0} fontSize="sm" shadow={'lg'}>
+      <MenuList p={0} fontSize={fontSize} shadow={'lg'}>
         {allWorkspaces.map((org) => {
           return (
             <MenuItem

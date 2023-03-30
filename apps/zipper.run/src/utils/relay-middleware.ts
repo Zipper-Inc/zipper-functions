@@ -74,10 +74,12 @@ export async function relayRequest({
   request,
   version: _version,
   filename: _filename,
+  bearerToken,
 }: {
   request: NextRequest;
   version?: string;
   filename?: string;
+  bearerToken?: string;
 }) {
   if (!DENO_SHARED_SECRET || !RPC_HOST)
     return {
@@ -90,31 +92,29 @@ export async function relayRequest({
   if (__DEBUG__) console.log('getValidSubdomain', { host, subdomain });
   if (!subdomain) return { status: 404 };
 
+  // Get the user's JWT token from the session if there is one
   const auth = getAuth(request);
   const token = await auth.getToken();
 
-  const clerkUser = auth.userId
-    ? await clerkClient.users.getUser(auth.userId)
-    : undefined;
-
-  const cookieUserId = request.cookies
-    .get('__zipper_user_id')
+  const tempUserId = request.cookies
+    .get('__zipper_temp_user_id')
     ?.value.toString();
-
-  const userId = auth.userId || cookieUserId;
-  // Get app info from Zipper API
 
   const filename = _filename || 'main.ts';
 
   const appInfoResult = await getAppInfo({
     subdomain,
-    userId,
+    tempUserId,
     filename,
-    token,
+    token: token || bearerToken,
   });
   if (__DEBUG__) console.log('getAppInfo', { result: appInfoResult });
 
-  if (!appInfoResult.ok) return { status: 500, result: appInfoResult.error };
+  if (!appInfoResult.ok)
+    return {
+      status: appInfoResult.error === 'UNAUTHORIZED' ? 401 : 500,
+      result: appInfoResult.error,
+    };
 
   const { app, userAuthConnectors } = appInfoResult.data;
 
@@ -125,7 +125,7 @@ export async function relayRequest({
   let deploymentId = `${app.id}+${filename}@${version}`;
 
   if (userAuthConnectors.find((c) => c.isUserAuthRequired)) {
-    deploymentId = `${deploymentId}@${userId}`;
+    deploymentId = `${deploymentId}@${tempUserId || auth.userId}`;
   }
 
   const relayUrl = getPatchedUrl(request);
@@ -138,12 +138,7 @@ export async function relayRequest({
         }
       : { inputs: JSON.parse(await request.text()) };
 
-  if (clerkUser) {
-    relayBody.userInfo = {
-      emails: clerkUser.emailAddresses.map((e) => e.emailAddress) || [],
-      userId,
-    };
-  }
+  relayBody.userInfo = appInfoResult.data.userInfo;
 
   const response = await fetch(relayUrl, {
     method: 'POST',
@@ -158,7 +153,7 @@ export async function relayRequest({
     appId: app.id,
     deploymentId,
     success: response.status === 200,
-    scheduleId: request.headers.get('X-Zipper-Schedule-Id') || undefined,
+    scheduleId: request.headers.get('x-zipper-schedule-id') || undefined,
     inputs: await getInputFromRequest(request, JSON.stringify(relayBody)),
     result,
   });
@@ -175,6 +170,7 @@ export default async function serveRelay(request: NextRequest) {
     request,
     version,
     filename,
+    bearerToken: request.headers.get('Authorization')?.replace('Bearer ', ''),
   });
   if (request.method !== 'GET')
     headers?.append('Access-Control-Allow-Origin', '*');

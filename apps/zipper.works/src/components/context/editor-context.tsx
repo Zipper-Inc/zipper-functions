@@ -74,6 +74,7 @@ const EditorContextProvider = ({
   const [currentScript, setCurrentScript] = useState<Script | undefined>(
     undefined,
   );
+
   const [scripts, setScripts] = useState<Script[]>(initialScripts);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -166,6 +167,34 @@ const EditorContextProvider = ({
 
   const self = useSelf();
 
+  useEffect(() => {
+    if (currentScript) {
+      const models = editor?.getModels();
+      if (models) {
+        const fileModels = models.filter(
+          (model) => model.uri.scheme === 'file',
+        );
+        fileModels.forEach((model) => {
+          if (
+            `/${currentScript.filename}` === model.uri.path &&
+            model.getValue() !== currentScript.code
+          ) {
+            model.setValue(currentScript.code);
+            // Call mutateLive and localStorage.setItem when the currentScript is updated
+            try {
+              mutateLive(currentScript.code, model.getVersionId());
+            } catch (e) {
+              console.error('Caught error from mutateLive:', e);
+            }
+            localStorage.setItem(
+              `script-${currentScript.id}`,
+              currentScript.code,
+            );
+          }
+        });
+      }
+    }
+  }, [editor, currentScript]);
   const saveOpenModels = async () => {
     if (appId && currentScript) {
       setIsSaving(true);

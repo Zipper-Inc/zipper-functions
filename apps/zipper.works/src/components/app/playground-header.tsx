@@ -28,8 +28,7 @@ import NextLink from 'next/link';
 import { CheckIcon, LockIcon, UnlockIcon } from '@chakra-ui/icons';
 import React, { useEffect, useState } from 'react';
 import ForkIcon from '~/components/svg/forkIcon';
-import { ZipperSymbol } from '~/components/svg/zipperSymbol';
-import { ZipperLogo } from '@zipper/ui';
+import { ZipperLogo, ZipperSymbol } from '@zipper/ui';
 import { HiPencilAlt } from 'react-icons/hi';
 import {
   useUser,
@@ -117,7 +116,15 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
   });
 
   return (
-    <Flex as="header" gap={4} maxW="full" minW="md" justifyContent="center">
+    <Flex
+      as="header"
+      gap={4}
+      maxW="full"
+      minW="md"
+      justifyContent="center"
+      pt="1"
+      pb="1"
+    >
       <HStack spacing={3} alignItems="center" flex={1} minW={0}>
         <Box height={4}>
           <NextLink href="/">
@@ -146,16 +153,18 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
           )}
         </HStack>
         <HStack>
-          <Heading
-            as="h1"
-            size="md"
-            overflow="auto"
-            whiteSpace="nowrap"
-            fontWeight="medium"
-            color="gray.600"
-          >
-            {app.resourceOwner.slug}
-          </Heading>
+          <NextLink href={`/${app.resourceOwner.slug}`}>
+            <Heading
+              as="h1"
+              size="md"
+              overflow="auto"
+              whiteSpace="nowrap"
+              fontWeight="medium"
+              color="gray.600"
+            >
+              {app.resourceOwner.slug}
+            </Heading>
+          </NextLink>
 
           <Heading
             as="h1"

@@ -31,8 +31,6 @@ import {
   useDisclosure,
   HStack,
   IconButton,
-  Center,
-  VStack,
 } from '@chakra-ui/react';
 import Head from 'next/head';
 import { useForm } from 'react-hook-form';
@@ -42,12 +40,8 @@ import { encryptToHex } from '@zipper/utils';
 import { deleteCookie } from 'cookies-next';
 import { HiOutlineChevronUp, HiOutlineChevronDown } from 'react-icons/hi';
 import { getAuth } from '@clerk/nextjs/server';
-import {
-  SignInButton,
-  SignOutButton,
-  UserButton,
-  useUser,
-} from '@clerk/nextjs';
+import { UserButton } from '@clerk/nextjs';
+import Unauthorized from './unauthorized';
 
 const { __DEBUG__ } = process.env;
 
@@ -80,8 +74,6 @@ export function AppPage({
   const [modalResult, setModalResult] = useState({ heading: '', body: '' });
   const [loading, setLoading] = useState(false);
   const [isExpandedResultOpen, setIsExpandedResultOpen] = useState(true);
-
-  const { user } = useUser();
 
   const runApp = async () => {
     setLoading(true);
@@ -144,50 +136,7 @@ export function AppPage({
   };
 
   if (statusCode === 401) {
-    return (
-      <Box as="main">
-        <Flex as="header" mx={8} my={4} justifyContent="end" color="gray.600">
-          {user && (
-            <VStack
-              align={'start'}
-              spacing="0"
-              background={'gray.100'}
-              p="2"
-              borderRadius={4}
-            >
-              <UserButton showName />
-            </VStack>
-          )}
-        </Flex>
-        <Center h="lg">
-          <VStack spacing="6" w="md">
-            <ZipperLogo />
-            <VStack spacing="10" w="md">
-              <Text color="gray.500">You don't have access to this app</Text>
-              {!user && (
-                <Button
-                  colorScheme="purple"
-                  onClick={() => {
-                    router.push(
-                      `/sign-in?redirect=${encodeURIComponent(
-                        window.location.toString(),
-                      )}`,
-                    );
-                  }}
-                >
-                  Sign In
-                </Button>
-              )}
-              {user && (
-                <Button colorScheme={'purple'} variant="outline">
-                  <SignOutButton />
-                </Button>
-              )}
-            </VStack>
-          </VStack>
-        </Center>
-      </Box>
-    );
+    return <Unauthorized />;
   }
 
   return (
@@ -378,7 +327,7 @@ export const getServerSideProps: GetServerSideProps = async ({
   // grab the app if it exists
   const result = await getAppInfo({
     subdomain,
-    userId: req.cookies['__zipper_user_id'],
+    tempUserId: req.cookies['__zipper_temp_user_id'],
     filename,
     token: await getAuth(req).getToken(),
   });
@@ -423,7 +372,9 @@ export const getServerSideProps: GetServerSideProps = async ({
       const state = encryptToHex(
         `${app.id}::${
           process.env.NODE_ENV === 'development' ? 'http://' : 'https://'
-        }${req.headers.host}::${req.cookies['__zipper_user_id']}`,
+        }${req.headers.host}::${
+          getAuth(req).userId || req.cookies['__zipper_temp_user_id']
+        }`,
         process.env.ENCRYPTION_KEY || '',
       );
 

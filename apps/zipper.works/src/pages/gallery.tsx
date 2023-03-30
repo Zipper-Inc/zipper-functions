@@ -17,7 +17,13 @@ const GalleryPage: NextPageWithLayout = () => {
   }
 
   if (galleryApps.isSuccess) {
-    return <Gallery apps={galleryApps.data} />;
+    return (
+      <Gallery
+        apps={galleryApps.data}
+        heading={'Popular Apps'}
+        subheading="Browse through popular apps on Zipper"
+      />
+    );
   }
 
   return <></>;

@@ -12,9 +12,6 @@ import {
   HStack,
   Link,
   Tooltip,
-  Box,
-  useToken,
-  Stack,
 } from '@chakra-ui/react';
 import React, { useEffect, useMemo, useState } from 'react';
 import DefaultGrid from '~/components/default-grid';
@@ -31,14 +28,14 @@ import {
   getSortedRowModel,
 } from '@tanstack/react-table';
 import { LockIcon, UnlockIcon } from '@chakra-ui/icons';
-import router from 'next/router';
 import { HiBuildingOffice, HiUser } from 'react-icons/hi2';
 import { AppOwner, useAppOwner } from '~/hooks/use-app-owner';
 import { EmptySlate } from './empty-slate';
+import { ResourceOwnerType } from '@zipper/types';
 
 type _App = Unpack<inferQueryOutput<'app.byAuthedUser'>>;
 type App = _App & {
-  owner: AppOwner;
+  createdByInfo: AppOwner;
   updatedAt: Date;
 };
 
@@ -49,13 +46,13 @@ const prepareAppsData = (
   return apps.map((app): App => {
     const { createdAt, updatedAt, name, slug } = app;
     const lastUpdatedAt = updatedAt || createdAt;
-    const owner = getAppOwner(app);
+    const appOwner = getAppOwner(app);
 
     return {
       ...app,
       updatedAt: lastUpdatedAt,
       name: name || slug,
-      owner,
+      createdByInfo: appOwner,
     };
   });
 };
@@ -83,9 +80,7 @@ const columns = [
           <Link
             fontSize={'md'}
             fontWeight={600}
-            onClick={() =>
-              router.push(`/${resourceOwner.slug}/${slug}/edit/main.ts`)
-            }
+            href={`/${resourceOwner.slug}/${slug}/edit/main.ts`}
           >
             {getValue()}
           </Link>
@@ -103,15 +98,21 @@ const columns = [
     header: 'Last Updated',
     enableGlobalFilter: false,
   }),
-  columnHelper.accessor('owner.name', {
+  columnHelper.accessor('createdByInfo.resourceOwnerName', {
     cell: (info) => (
       <HStack>
-        {info.row.original.owner.type === 'user' ? (
+        {info.row.original.createdByInfo.createdByAuthedUser ||
+        info.row.original.createdByInfo.resourceOwnerType ===
+          ResourceOwnerType.User ? (
           <HiUser />
         ) : (
           <HiBuildingOffice />
         )}
-        <Text>{info.getValue()}</Text>
+        <Text>
+          {info.row.original.createdByInfo.createdByAuthedUser
+            ? 'You'
+            : info.getValue()}
+        </Text>
       </HStack>
     ),
     header: 'Owner',

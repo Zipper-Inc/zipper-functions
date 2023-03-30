@@ -16,11 +16,13 @@ const ResourceOwnerPage: NextPageWithLayout = () => {
     router.query['resource-owner'] as string,
   );
 
+  const slug = router.query['resource-owner'] as string;
+
   const appsByResourceOwnerQuery = trpc.useQuery(
     [
       'app.byResourceOwner',
       {
-        resourceOwnerSlug: router.query['resource-owner'] as string,
+        resourceOwnerSlug: slug,
       },
     ],
     {
@@ -31,7 +33,7 @@ const ResourceOwnerPage: NextPageWithLayout = () => {
   const clerkQuery = trpc.useQuery([
     'resourceOwnerSlug.lookupOnClerk',
     {
-      slug: router.query['resource-owner'] as string,
+      slug,
     },
   ]);
 
@@ -46,7 +48,12 @@ const ResourceOwnerPage: NextPageWithLayout = () => {
   if (appsByResourceOwnerQuery.isSuccess) {
     return (
       <>
-        <Gallery apps={appsByResourceOwnerQuery.data} heading={heading} />
+        <Gallery
+          apps={appsByResourceOwnerQuery.data}
+          preheading={heading !== slug ? heading : undefined}
+          heading={slug}
+          subheading={'Recent Apps'}
+        />
       </>
     );
   }
