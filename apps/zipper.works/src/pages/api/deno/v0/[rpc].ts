@@ -105,7 +105,17 @@ const jsonHeader = (json, fallback = "JSON too big") => {
   return fallback;
 }
 
-const Zipper = { env: Deno.env, storage: __storage, userInfo: {} };
+const Zipper = {
+  env: Deno.env,
+  storage: __storage,
+  appInfo: {
+    id: '${appId}',
+    slug: '${slug}',
+    version: '${version}',
+    runUrl: 'https://${slug}.${process.env.NEXT_PUBLIC_OUTPUT_SERVER_HOSTNAME}'
+  },
+  userInfo: {}
+};
 
 let fn: Function | undefined = undefined;
 if(typeof main === 'function') fn = main;
