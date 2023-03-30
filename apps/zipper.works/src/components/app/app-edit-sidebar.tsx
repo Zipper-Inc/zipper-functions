@@ -414,11 +414,13 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
                   />
                 ) : (
                   <>
-                    <Text color={'neutral.600'} size="lg" fontWeight="600">
-                      {inputError
-                        ? 'Check your inputs'
-                        : 'Add inputs to your app'}
-                    </Text>
+                    {appInfo.canUserEdit && (
+                      <Text color={'neutral.600'} size="lg" fontWeight="600">
+                        {inputError
+                          ? 'Check your inputs'
+                          : 'Add inputs to your app'}
+                      </Text>
+                    )}
                     <Text>
                       {inputError
                         ? `Something went wrong while parsing the inputs to your
@@ -428,7 +430,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
                          or feedback, which can then be processed and analyzed by
                          the app to provide more personalized content or recommendations.`}
                     </Text>
-                    {!inputError && (
+                    {!inputError && appInfo.canUserEdit && (
                       <Button
                         color={'gray.700'}
                         bg="white"
