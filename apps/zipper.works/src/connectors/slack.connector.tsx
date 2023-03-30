@@ -18,6 +18,7 @@ import {
   Icon,
   IconButton,
   Image,
+  Input,
   Spacer,
   StackDivider,
   Switch,
@@ -190,6 +191,8 @@ function SlackConnectorForm({ appId }: { appId: string }) {
     options: __user_options!,
     value: [],
   });
+  const [clientId, setClientId] = useState<string>('');
+  const [clientSecret, setClientSecret] = useState<string>('');
 
   // get the existing Slack connector data from the database
   const connector = trpc.useQuery(['connector.slack.get', { appId }], {
@@ -224,9 +227,23 @@ function SlackConnectorForm({ appId }: { appId: string }) {
     },
   ]);
 
+  console.log(slackAuthURL.data);
+
   const context = trpc.useContext();
   const router = useRouter();
   const updateAppConnectorMutation = trpc.useMutation('appConnector.update', {
+    onSuccess: () => {
+      context.invalidateQueries([
+        'app.byResourceOwnerAndAppSlugs',
+        {
+          appSlug: router.query['app-slug'] as string,
+          resourceOwnerSlug: router.query['resource-owner'] as string,
+        },
+      ]);
+    },
+  });
+
+  const addSecretMutation = trpc.useMutation('secret.add', {
     onSuccess: () => {
       context.invalidateQueries([
         'app.byResourceOwnerAndAppSlugs',
@@ -368,6 +385,83 @@ function SlackConnectorForm({ appId }: { appId: string }) {
               <Card w="full">
                 <CardBody color="gray.600">
                   <Accordion allowMultiple={true}>
+                    <AccordionItem border={'none'}>
+                      <h2>
+                        <AccordionButton>
+                          <Box
+                            as="span"
+                            flex="1"
+                            textAlign="left"
+                            fontSize={'md'}
+                            fontWeight="semibold"
+                            color={'gray.600'}
+                          >
+                            Configure your own Client ID and Secret
+                          </Box>
+                          <AccordionIcon />
+                        </AccordionButton>
+                      </h2>
+                      <AccordionPanel>
+                        <Text>
+                          If you don't have a Client ID and Secret, you can
+                          create one on the{' '}
+                          <Link href="https://api.slack.com/apps">
+                            <Box as="span" color={'blue.500'}>
+                              Slack API website
+                            </Box>
+                          </Link>
+                        </Text>
+                        <VStack align="start" w="full">
+                          <FormControl>
+                            <FormLabel color={'gray.500'}>
+                              Client ID
+                              <Icon ml="2" as={HiQuestionMarkCircle} />
+                            </FormLabel>
+                            <Input
+                              value={clientId}
+                              onChange={(e) => setClientId(e.target.value)}
+                            />
+                          </FormControl>
+
+                          <FormControl pt="2">
+                            <FormLabel color={'gray.500'}>
+                              Client Secret
+                              <Icon ml="2" as={HiQuestionMarkCircle} />
+                            </FormLabel>
+
+                            <Input
+                              type="password"
+                              value={clientSecret}
+                              onChange={(e) => setClientSecret(e.target.value)}
+                            />
+
+                            <Button
+                              mt="4"
+                              colorScheme={'purple'}
+                              isDisabled={isSaving}
+                              onClick={async () => {
+                                setIsSaving(true);
+                                await updateAppConnectorMutation.mutateAsync({
+                                  appId,
+                                  type: 'slack',
+                                  data: {
+                                    clientId,
+                                  },
+                                });
+                                await addSecretMutation.mutateAsync({
+                                  appId: appId,
+                                  key: 'SLACK_CLIENT_SECRET',
+                                  value: clientSecret,
+                                });
+                                setIsSaving(false);
+                              }}
+                            >
+                              Save
+                            </Button>
+                          </FormControl>
+                        </VStack>
+                      </AccordionPanel>
+                    </AccordionItem>
                     <AccordionItem border={'none'}>
                       <h2>
                         <AccordionButton>

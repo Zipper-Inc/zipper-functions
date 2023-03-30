@@ -122,6 +122,7 @@ model AppConnector {
   deletedAt DateTime? @db.Timestamp(6)
   type      String
   appId     String
+  clientId  String?
   metadata  Json?
   isUserAuthRequired   Boolean  @default(false)
   userScopes           String[]
