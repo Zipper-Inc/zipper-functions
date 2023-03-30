@@ -11,7 +11,7 @@ import { generateHandlersForFramework } from '@zipper/utils';
  */
 export const FRAMEWORK_PATH = path.resolve(
   '../..',
-  'packages/deno-zipper-framework',
+  'packages/zipper-framework',
 );
 export const FRAMEWORK_ENTRYPOINT = 'app.ts';
 export const HANDLERS_PATH = 'generated/handlers.gen.ts';
