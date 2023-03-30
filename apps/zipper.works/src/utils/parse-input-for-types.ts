@@ -71,14 +71,16 @@ export function parseInputForTypes(
     if (!mainFn) mainFn = src.getFunction('handler');
 
     if (!mainFn) {
-      if (throwErrors) throw new Error('No main function');
+      if (throwErrors)
+        throw new Error('You must define a main or handler function');
       console.error('You must define a main function');
       return [];
     }
 
     const inputs = mainFn.getParameters();
     if (inputs.length !== 1 && inputs.length > 0) {
-      if (throwErrors) throw new Error('MULTIPLE_INPUT_OBJECTS');
+      if (throwErrors)
+        throw new Error('You must have one and only one input object');
       console.error('You must have one and only one input object');
     }
     const params = inputs[0] as ParameterDeclaration;
