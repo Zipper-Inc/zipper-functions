@@ -41,6 +41,7 @@ import { useEditorContext } from '../context/editor-context';
 import getRunUrl from '~/utils/get-run-url';
 import Link from 'next/link';
 import { HiOutlineChevronDown, HiOutlineChevronUp } from 'react-icons/hi';
+import { getAppLink } from '@zipper/utils';
 
 type AppEditSidebarProps = {
   showInputForm: boolean;
@@ -195,7 +196,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
     if (lastRunVersion) setTabIndex(0);
   }, [lastRunVersion]);
 
-  const appLink = `${appSlug}.${process.env.NEXT_PUBLIC_OUTPUT_SERVER_HOSTNAME}`;
+  const appLink = getAppLink(appSlug);
   const copyLink = async () => {
     await navigator.clipboard.writeText(appLink);
     toast({

@@ -7,6 +7,7 @@ import ndjson from 'ndjson';
 import intoStream from 'into-stream';
 import { decryptFromBase64 } from '@zipper/utils';
 import { prisma } from '~/server/prisma';
+import { getAppLink } from '@zipper/utils';
 
 const X_DENO_CONFIG = 'x-deno-config';
 
@@ -112,7 +113,7 @@ const Zipper = {
     id: '${appId}',
     slug: '${slug}',
     version: '${version}',
-    runUrl: 'https://${slug}.${process.env.NEXT_PUBLIC_OUTPUT_SERVER_HOSTNAME}'
+    runUrl: 'https://${getAppLink(slug)}',
   },
   userInfo: {}
 };
