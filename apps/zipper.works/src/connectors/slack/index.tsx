@@ -1,37 +1,42 @@
 import createConnector from '../createConnector';
 import {
-  Accordion,
-  AccordionButton,
-  AccordionIcon,
-  AccordionItem,
-  AccordionPanel,
+  AlertDialog,
+  AlertDialogBody,
+  AlertDialogContent,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogOverlay,
   Box,
   Button,
   Card,
   CardBody,
   Code,
-  Divider,
   FormControl,
+  FormHelperText,
   FormLabel,
   Heading,
   HStack,
-  Icon,
-  IconButton,
-  Image,
+  Popover,
+  PopoverArrow,
+  PopoverBody,
+  PopoverContent,
+  PopoverHeader,
+  PopoverTrigger,
   Spacer,
   StackDivider,
   Switch,
   Text,
+  useDisclosure,
   VStack,
 } from '@chakra-ui/react';
 import { FiSlack } from 'react-icons/fi';
 import { trpc } from '~/utils/trpc';
-import { HiOutlineTrash, HiQuestionMarkCircle } from 'react-icons/hi';
-import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { HiOutlineTrash } from 'react-icons/hi';
+import { useEffect, useRef, useState } from 'react';
 import { MultiSelect, SelectOnChange, useMultiSelect } from '@zipper/ui';
 import { useRouter } from 'next/router';
 import { code, userScopes, workspaceScopes } from './constants';
+import { useRunAppContext } from '~/components/context/run-app-context';
 
 // configure the Slack connector
 export const slackConnector = createConnector({
@@ -45,6 +50,10 @@ export const slackConnector = createConnector({
 
 function SlackConnectorForm({ appId }: { appId: string }) {
   const utils = trpc.useContext();
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const cancelRef = useRef() as React.MutableRefObject<HTMLButtonElement>;
+
+  const { appInfo } = useRunAppContext();
 
   // convert the scopes to options for the multi-select menus
   const __bot_options = workspaceScopes.map((scope) => ({
@@ -144,245 +153,235 @@ function SlackConnectorForm({ appId }: { appId: string }) {
 
   const existingInstallation = existingSecret.data && connector.data?.metadata;
 
-  if (existingSecret.isLoading || connector.isLoading) {
+  if (existingSecret.isLoading || connector.isLoading || !appInfo.canUserEdit) {
     return <></>;
   }
+
+  const userAuthSwitch = () => {
+    return (
+      <HStack w="full" pt="4" pb="4">
+        <FormControl>
+          <HStack w="full">
+            <FormLabel>Require users to auth?</FormLabel>
+            <Spacer flexGrow={1} />
+            <Switch
+              isChecked={isUserAuthRequired}
+              ml="auto"
+              onChange={(e) => {
+                setIsUserAuthRequired(e.target.checked);
+              }}
+            />
+          </HStack>
+          <FormHelperText maxW="xl">
+            When checked, users will have to authorize the Slack app before
+            they're able to run the app and see the output.
+          </FormHelperText>
+        </FormControl>
+      </HStack>
+    );
+  };
 
   return (
     <Box px="10" w="full">
       {slackConnector && (
         <>
           <Box mb="5">
-            <Heading size="md">{slackConnector.name}</Heading>
-            <Text>Configure the {slackConnector.name} connector.</Text>
+            <Heading size="md">{slackConnector.name} Connector</Heading>
           </Box>
           <VStack align="start">
             {existingInstallation ? (
               <>
                 <Card w="full">
                   <CardBody color="gray.600">
-                    <HStack>
-                      <Heading size="sm" mb="4">
-                        Current installation
-                      </Heading>
-                      <Spacer />
-                      {slackAuthURL.data && (
-                        <IconButton
-                          aria-label="Delete connector"
-                          variant="ghost"
-                          onClick={() => {
-                            deleteConnectorMutation.mutateAsync({
-                              appId,
-                            });
-                          }}
-                          icon={<Icon as={HiOutlineTrash} color="gray.400" />}
-                        />
-                      )}
-                    </HStack>
-                    <VStack
-                      align="start"
-                      divider={<StackDivider />}
-                      fontSize="sm"
-                    >
-                      <HStack>
-                        <Text>Installed to:</Text>
-                        <Code>
-                          {(connector.data?.metadata as any)['team']['name']}
-                        </Code>
-                      </HStack>
-                      <HStack>
-                        <Text>Bot User ID:</Text>
-                        <Code>
-                          {(connector.data?.metadata as any)['bot_user_id']}
-                        </Code>
-                      </HStack>
-                      <HStack>
-                        <Text>Bot Scopes:</Text>
-                        <Box>
-                          {(connector.data?.metadata as any)['scope']
-                            .split(',')
-                            .map((scope: string) => (
-                              <Code>{scope}</Code>
-                            ))}
-                        </Box>
-                      </HStack>
+                    <VStack align="stretch">
+                      <Heading size="sm">Configuration</Heading>
+                      <HStack w="full" pt="2" spacing="1">
+                        <FormLabel m="0">Installed to</FormLabel>
+                        <Popover trigger="hover">
+                          <PopoverTrigger>
+                            <FormLabel
+                              cursor="context-menu"
+                              textDecor="underline"
+                              textDecorationStyle="dotted"
+                              color={'gray.900'}
+                            >
+                              {
+                                (connector.data?.metadata as any)['team'][
+                                  'name'
+                                ]
+                              }
+                            </FormLabel>
+                          </PopoverTrigger>
+                          <PopoverContent>
+                            <PopoverArrow />
+                            <PopoverHeader>Installation details</PopoverHeader>
+                            <PopoverBody>
+                              <VStack
+                                align="start"
+                                divider={<StackDivider />}
+                                fontSize="sm"
+                                py="2"
+                              >
+                                <HStack>
+                                  <Text>Bot User ID:</Text>
+                                  <Code>
+                                    {
+                                      (connector.data?.metadata as any)[
+                                        'bot_user_id'
+                                      ]
+                                    }
+                                  </Code>
+                                </HStack>
+                                <HStack>
+                                  <Text>Bot Scopes:</Text>
+                                  <Box>
+                                    {(connector.data?.metadata as any)['scope']
+                                      .split(',')
+                                      .map((scope: string) => (
+                                        <Code>{scope}</Code>
+                                      ))}
+                                  </Box>
+                                </HStack>
 
-                      {(connector.data?.metadata as any)['authed_user'] &&
-                        (connector.data?.metadata as any)['authed_user'][
-                          'scope'
-                        ] && (
-                          <HStack>
-                            <Text>User Scopes:</Text>
-                            <Box>
-                              {(connector.data?.metadata as any)['authed_user'][
-                                'scope'
-                              ]
-                                .split(',')
-                                .map((scope: string) => (
-                                  <Code>{scope}</Code>
-                                ))}
-                            </Box>
-                          </HStack>
+                                {(connector.data?.metadata as any)[
+                                  'authed_user'
+                                ] &&
+                                  (connector.data?.metadata as any)[
+                                    'authed_user'
+                                  ]['scope'] && (
+                                    <HStack>
+                                      <Text>User Scopes:</Text>
+                                      <Box>
+                                        {(connector.data?.metadata as any)[
+                                          'authed_user'
+                                        ]['scope']
+                                          .split(',')
+                                          .map((scope: string) => (
+                                            <Code>{scope}</Code>
+                                          ))}
+                                      </Box>
+                                    </HStack>
+                                  )}
+                              </VStack>
+                            </PopoverBody>
+                          </PopoverContent>
+                        </Popover>
+                        <Spacer />
+                        {slackAuthURL.data && (
+                          <Button
+                            variant="unstyled"
+                            color="red.600"
+                            onClick={onOpen}
+                          >
+                            <HStack>
+                              <HiOutlineTrash />
+                              <Text>Uninstall</Text>
+                            </HStack>
+                          </Button>
                         )}
+                      </HStack>
+                      {userAuthSwitch()}
                     </VStack>
                   </CardBody>
                 </Card>
-                <Card w="full">
-                  <CardBody color="gray.600" fontSize="sm">
-                    <Heading size="sm" mb="4">
-                      Configuration
-                    </Heading>
-                    <HStack w="full" pt="2">
-                      <Box mr="auto">
-                        <HStack>
-                          <Text>Require users to auth to access your app</Text>
-                        </HStack>
-                      </Box>
-                      <Switch
-                        isChecked={isUserAuthRequired}
-                        ml="auto"
-                        onChange={(e) => {
-                          setIsUserAuthRequired(e.target.checked);
-                          updateAppConnectorMutation.mutateAsync({
-                            appId,
-                            type: 'slack',
-                            data: { isUserAuthRequired: e.target.checked },
-                          });
-                        }}
-                      />
-                    </HStack>
-                  </CardBody>
-                </Card>
+                <AlertDialog
+                  isOpen={isOpen}
+                  leastDestructiveRef={cancelRef}
+                  onClose={onClose}
+                >
+                  <AlertDialogOverlay>
+                    <AlertDialogContent>
+                      <AlertDialogHeader fontSize="lg" fontWeight="bold">
+                        Uninstall Slack App
+                      </AlertDialogHeader>
+
+                      <AlertDialogBody>
+                        Are you sure? You can't undo this action afterwards.
+                      </AlertDialogBody>
+
+                      <AlertDialogFooter>
+                        <Button ref={cancelRef} onClick={onClose}>
+                          Cancel
+                        </Button>
+                        <Button
+                          colorScheme="red"
+                          isDisabled={isSaving}
+                          onClick={async () => {
+                            setIsSaving(true);
+                            await deleteConnectorMutation.mutateAsync({
+                              appId,
+                            });
+                            setIsSaving(false);
+                            onClose();
+                          }}
+                          ml={3}
+                        >
+                          Uninstall
+                        </Button>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialogOverlay>
+                </AlertDialog>
               </>
             ) : (
               <Card w="full">
                 <CardBody color="gray.600">
-                  <Accordion allowMultiple={true}>
-                    <AccordionItem border={'none'}>
-                      <h2>
-                        <AccordionButton>
-                          <Box
-                            as="span"
-                            flex="1"
-                            textAlign="left"
-                            fontSize={'md'}
-                            fontWeight="semibold"
-                            color={'gray.600'}
-                          >
-                            Configure scopes
-                          </Box>
-                          <AccordionIcon />
-                        </AccordionButton>
-                      </h2>
-                      <AccordionPanel pb={4}>
-                        <VStack align="start" w="full">
-                          <FormControl>
-                            <FormLabel color={'gray.500'}>
-                              Bot Scopes
-                              <Icon ml="2" as={HiQuestionMarkCircle} />
-                            </FormLabel>
-                            <MultiSelect
-                              options={botOptions}
-                              value={botValue}
-                              onChange={botOnChange as SelectOnChange}
-                            />
-                          </FormControl>
+                  <VStack align="start" w="full" overflow="visible">
+                    <Heading size="sm">Configuration</Heading>
+                    <FormControl>
+                      <FormControl>
+                        <FormLabel>Bot Scopes</FormLabel>
+                        <MultiSelect
+                          options={botOptions}
+                          value={botValue}
+                          onChange={botOnChange as SelectOnChange}
+                        />
+                      </FormControl>
 
-                          <FormControl pt="2">
-                            <FormLabel color={'gray.500'}>
-                              User Scopes
-                              <Icon ml="2" as={HiQuestionMarkCircle} />
-                            </FormLabel>
+                      <FormControl pt="4">
+                        <FormLabel>User Scopes</FormLabel>
 
-                            <MultiSelect
-                              options={userOptions}
-                              value={userValue}
-                              onChange={userOnChange as SelectOnChange}
-                            />
-                            <HStack w="full" pt="2" pb="4">
-                              <Box mr="auto">
-                                <HStack>
-                                  <Text>
-                                    Require users to auth to access your app
-                                  </Text>
-                                </HStack>
-                              </Box>
-                              <Switch
-                                isChecked={isUserAuthRequired}
-                                ml="auto"
-                                onChange={(e) => {
-                                  setIsUserAuthRequired(e.target.checked);
-                                }}
-                              />
-                            </HStack>
+                        <MultiSelect
+                          options={userOptions}
+                          value={userValue}
+                          onChange={userOnChange as SelectOnChange}
+                        />
+                      </FormControl>
+                      {userAuthSwitch()}
 
-                            <Button
-                              colorScheme={'purple'}
-                              isDisabled={isSaving}
-                              onClick={async () => {
-                                setIsSaving(true);
-                                await updateAppConnectorMutation.mutateAsync({
-                                  appId,
-                                  type: 'slack',
-                                  data: {
-                                    isUserAuthRequired,
-                                    userScopes: userValue as string[],
-                                    workspaceScopes: botValue as string[],
-                                  },
-                                });
+                      <Button
+                        mt="6"
+                        colorScheme={'purple'}
+                        isDisabled={isSaving || !slackAuthURL.data}
+                        onClick={async () => {
+                          if (slackAuthURL.data) {
+                            setIsSaving(true);
+                            await updateAppConnectorMutation.mutateAsync({
+                              appId,
+                              type: 'slack',
+                              data: {
+                                isUserAuthRequired,
+                                userScopes: userValue as string[],
+                                workspaceScopes: botValue as string[],
+                              },
+                            });
+                            router.push(slackAuthURL.data?.url);
+                          }
 
-                                setIsSaving(false);
-                              }}
-                            >
-                              Save
-                            </Button>
-                          </FormControl>
-                        </VStack>
-                      </AccordionPanel>
-                    </AccordionItem>
-
-                    <AccordionItem border={'none'}>
-                      <h2>
-                        <AccordionButton>
-                          <Box
-                            as="span"
-                            flex="1"
-                            textAlign="left"
-                            fontWeight="semibold"
-                            color={'gray.600'}
-                          >
-                            Install the app
-                          </Box>
-                          <AccordionIcon />
-                        </AccordionButton>
-                      </h2>
-                      <AccordionPanel pb={4}>
-                        <VStack align="start" w="full">
-                          {slackAuthURL.data ? (
-                            <Link href={slackAuthURL.data?.url}>
-                              <Image
-                                alt="Add to Slack"
-                                src="https://platform.slack-edge.com/img/add_to_slack.png"
-                                srcSet="https://platform.slack-edge.com/img/add_to_slack.png 1x, https://platform.slack-edge.com/img/add_to_slack@2x.png 2x"
-                              />
-                            </Link>
-                          ) : (
-                            <Image
-                              alt="Add to Slack"
-                              src="https://platform.slack-edge.com/img/add_to_slack.png"
-                              srcSet="https://platform.slack-edge.com/img/add_to_slack.png 1x, https://platform.slack-edge.com/img/add_to_slack@2x.png 2x"
-                            />
-                          )}
-                        </VStack>
-                      </AccordionPanel>
-                    </AccordionItem>
-                  </Accordion>
+                          setIsSaving(false);
+                        }}
+                      >
+                        Save & Install
+                      </Button>
+                    </FormControl>
+                  </VStack>
                 </CardBody>
               </Card>
             )}
           </VStack>
-          <Divider my={4} />
-          Connector code:
+          <Text mt="10" color="gray.600">
+            Connector code:
+          </Text>
         </>
       )}
     </Box>
