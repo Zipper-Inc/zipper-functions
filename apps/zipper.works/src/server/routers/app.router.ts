@@ -411,6 +411,7 @@ export const appRouter = createRouter()
 
       const apps = await prisma.app.findMany({
         where,
+        orderBy: { updatedAt: 'desc' },
         select: {
           ...defaultSelect,
           scripts: true,

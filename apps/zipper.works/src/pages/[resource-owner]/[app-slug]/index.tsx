@@ -127,7 +127,6 @@ const AppPage: NextPageWithLayout = () => {
       </VStack>
       <HStack position="relative" flex={3}>
         <Link
-          as={NextLink}
           href={`/${resourceOwnerSlug}/${appSlug}/edit/${
             appQuery.data.scriptMain?.script.filename || 'main.ts'
           }`}
@@ -178,12 +177,15 @@ const AppPage: NextPageWithLayout = () => {
         </Link>
         <Box position="absolute" top="90%" transform="translateX(-15%)">
           <Button
-            as={NextLink}
             colorScheme="blue"
             paddingX={6}
-            href={`/${resourceOwnerSlug}/${appSlug}/edit/${
-              appQuery.data.scriptMain?.script.filename || 'main.ts'
-            }`}
+            onClick={() =>
+              router.push(
+                `/${resourceOwnerSlug}/${appSlug}/edit/${
+                  appQuery.data.scriptMain?.script.filename || 'main.ts'
+                }`,
+              )
+            }
             _hover={{ transform: 'scale(1.1)' }}
           >
             Explore This App

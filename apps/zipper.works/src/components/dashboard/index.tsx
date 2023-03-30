@@ -31,7 +31,6 @@ import { LockIcon, UnlockIcon } from '@chakra-ui/icons';
 import { HiBuildingOffice, HiUser } from 'react-icons/hi2';
 import { AppOwner, useAppOwner } from '~/hooks/use-app-owner';
 import { EmptySlate } from './empty-slate';
-import NextLink from 'next/link';
 import { ResourceOwnerType } from '@zipper/types';
 
 type _App = Unpack<inferQueryOutput<'app.byAuthedUser'>>;
@@ -79,7 +78,6 @@ const columns = [
             {isPrivate ? <LockIcon /> : <UnlockIcon />}
           </Tooltip>
           <Link
-            as={NextLink}
             fontSize={'md'}
             fontWeight={600}
             href={`/${resourceOwner.slug}/${slug}/edit/main.ts`}

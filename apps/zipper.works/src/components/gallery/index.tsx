@@ -7,14 +7,17 @@ export function Gallery({
   apps,
   heading,
   subheading,
+  preheading,
 }: {
   apps: GalleryAppQueryOutput;
   heading?: string;
   subheading?: string;
+  preheading?: string;
 }) {
   return (
     <Center>
       <VStack flex={1} maxW="container.xl" py={6} align="stretch">
+        {preheading && <Text color={'gray.500'}>{preheading}</Text>}
         {heading && <Heading pb="6">{heading}</Heading>}
         {subheading && (
           <Text fontSize={'xl'} pb="6">
