@@ -15,9 +15,10 @@ import {
 } from '@zipper/utils';
 import fetch from 'node-fetch';
 import { AppConnectorUserAuth } from '@prisma/client';
+import { filterTokenFields } from '~/server/utils/json';
 
-export const connectorRouter = createRouter()
-  .query('slack.get', {
+export const slackConnectorRouter = createRouter()
+  .query('get', {
     input: z.object({
       appId: z.string(),
     }),
@@ -34,7 +35,7 @@ export const connectorRouter = createRouter()
       });
     },
   })
-  .query('slack.getAuthUrl', {
+  .query('getAuthUrl', {
     input: z.object({
       appId: z.string(),
       scopes: z.object({
@@ -72,7 +73,7 @@ export const connectorRouter = createRouter()
       };
     },
   })
-  .mutation('slack.delete', {
+  .mutation('delete', {
     input: z.object({
       appId: z.string(),
     }),
@@ -115,7 +116,7 @@ export const connectorRouter = createRouter()
       return true;
     },
   })
-  .mutation('slack.deleteUserAuth', {
+  .mutation('deleteUserAuth', {
     input: z.object({
       appId: z.string(),
     }),
@@ -148,7 +149,7 @@ export const connectorRouter = createRouter()
       return true;
     },
   })
-  .mutation('slack.exchangeCodeForToken', {
+  .mutation('exchangeCodeForToken', {
     input: z.object({
       code: z.string(),
       state: z.string(),
@@ -188,9 +189,7 @@ export const connectorRouter = createRouter()
         });
       }
 
-      const jsonWithoutTokens = JSON.parse(
-        JSON.stringify(json, (k, v) => (k.includes('token') ? undefined : v)),
-      );
+      const jsonWithoutTokens = filterTokenFields(json);
 
       let appConnectorUserAuth: AppConnectorUserAuth | undefined = undefined;
 

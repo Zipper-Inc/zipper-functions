@@ -1,33 +1,30 @@
 import { Heading } from '@chakra-ui/react';
-import { UserAuthConnector } from '@zipper/types';
-import { SlackUserConnectorInput } from './user-connector-inputs/slack-user-connector-input';
+import { ConnectorType, UserAuthConnector } from '@zipper/types';
+import { userConnectorInputs } from './user-connector-inputs';
 
-export function FunctionUserConnectors({
-  userAuthConnectors,
-  slack,
-}: {
+type ConnectorActionProps = {
+  onDelete: VoidFunction;
+  authUrl: string;
+};
+
+type FunctionUserConnectorsProps = {
   userAuthConnectors: UserAuthConnector[];
-  slack: {
-    onDelete: () => void;
-    authUrl: string;
-  };
-}) {
+  actions: Record<ConnectorType, ConnectorActionProps>;
+};
+
+export const FunctionUserConnectors: React.FC<FunctionUserConnectorsProps> = ({
+  userAuthConnectors,
+  actions,
+}) => {
   return (
     <>
       <Heading size="sm" mb="4">
         Connectors
       </Heading>
       {userAuthConnectors.map((c) => {
-        if (c.type === 'slack') {
-          return (
-            <SlackUserConnectorInput
-              connector={c}
-              onDelete={slack.onDelete}
-              authUrl={slack.authUrl}
-            />
-          );
-        }
+        const ConnectorInput = userConnectorInputs[c.type];
+        return <ConnectorInput connector={c} {...actions[c.type]} />;
       })}
     </>
   );
-}
+};

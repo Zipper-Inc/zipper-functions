@@ -7,7 +7,7 @@ import {
 } from '@prisma/client';
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '~/server/prisma';
-import { AppInfoResult } from '@zipper/types';
+import { AppInfoResult, UserAuthConnector } from '@zipper/types';
 import { parseInputForTypes } from '~/utils/parse-input-for-types';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import clerkClient from '@clerk/clerk-sdk-node';
@@ -139,7 +139,7 @@ export default async function handler(
       inputs: parseInputForTypes(entryPoint.code),
       userAuthConnectors: appFound.connectors.filter(
         (c) => c.userScopes.length > 0,
-      ),
+      ) as UserAuthConnector[],
       userInfo: {
         emails: appFound.requiresAuthToRun ? userInfo.emails : [],
         userId: appFound.requiresAuthToRun ? userInfo.clerkUserId : undefined,

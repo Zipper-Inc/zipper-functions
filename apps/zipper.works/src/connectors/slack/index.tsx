@@ -1,4 +1,4 @@
-import createConnector from './createConnector';
+import createConnector from '../createConnector';
 import {
   Accordion,
   AccordionButton,
@@ -31,137 +31,27 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { MultiSelect, SelectOnChange, useMultiSelect } from '@zipper/ui';
 import { useRouter } from 'next/router';
+import { code, userScopes, workspaceScopes } from './constants';
 
 // configure the Slack connector
 export const slackConnector = createConnector({
   id: 'slack',
   name: 'Slack',
   icon: <FiSlack fill="black" />,
-  code: `import { WebClient } from "https://deno.land/x/slack_web_api@6.7.2/mod.js";
-
-const client = new WebClient(Deno.env.get('SLACK_BOT_TOKEN'));
-
-export default client;
-`,
-  userScopes: [
-    'bookmarks:read',
-    'bookmarks:write',
-    'calls:read',
-    'calls:write',
-    'channels:history',
-    'channels:read',
-    'channels:write',
-    'chat:write',
-    'dnd:read',
-    'dnd:write',
-    'email',
-    'emoji:read',
-    'files:read',
-    'files:write',
-    'groups:history',
-    'groups:read',
-    'groups:write',
-    'identify',
-    'identity.avatar',
-    'identity.basic',
-    'identity.email',
-    'identity.team',
-    'im:history',
-    'im:read',
-    'im:write',
-    'links.embed:write',
-    'links:read',
-    'links:write',
-    'mpim:history',
-    'mpim:read',
-    'mpim:write',
-    'openid',
-    'pins:read',
-    'pins:write',
-    'profile',
-    'reactions:read',
-    'reactions:write',
-    'reminders:read',
-    'reminders:write',
-    'remote_files:read',
-    'remote_files:share',
-    'search:read',
-    'stars:read',
-    'stars:write',
-    'team.preferences:read',
-    'team:read',
-    'usergroups:read',
-    'usergroups:write',
-    'users.profile:read',
-    'users.profile:write',
-    'users:read',
-    'users:read.email',
-    'users:write',
-  ],
-  workspaceScopes: [
-    'app_mentions:read',
-    'bookmarks:read',
-    'bookmarks:write',
-    'calls:read',
-    'calls:write',
-    'channels:history',
-    'channels:join',
-    'channels:manage',
-    'channels:read',
-    'chat:write',
-    'chat:write.customize',
-    'chat:write.public',
-    'commands',
-    'conversations.connect:manage',
-    'conversations.connect:read',
-    'conversations.connect:write',
-    'dnd:read',
-    'emoji:read',
-    'files:read',
-    'files:write',
-    'groups:history',
-    'groups:read',
-    'groups:write',
-    'im:history',
-    'im:read',
-    'im:write',
-    'links.embed:write',
-    'links:read',
-    'links:write',
-    'metadata.message:read',
-    'mpim:history',
-    'mpim:read',
-    'mpim:write',
-    'pins:read',
-    'pins:write',
-    'reactions:read',
-    'reactions:write',
-    'reminders:read',
-    'reminders:write',
-    'remote_files:read',
-    'remote_files:share',
-    'remote_files:write',
-    'triggers:read',
-    'team:read',
-    'triggers:write',
-    'usergroups:read',
-    'usergroups:write',
-    'users.profile:read',
-    'users:read',
-    'users:read.email',
-    'users:write',
-  ],
+  code,
+  userScopes,
+  workspaceScopes,
 });
 
 function SlackConnectorForm({ appId }: { appId: string }) {
   const utils = trpc.useContext();
 
   // convert the scopes to options for the multi-select menus
-  const __bot_options = slackConnector.workspaceScopes!.map((scope) => ({
+  const __bot_options = workspaceScopes.map((scope) => ({
     label: scope,
     value: scope,
   }));
-  const __user_options = slackConnector.userScopes!.map((scope) => ({
+  const __user_options = userScopes.map((scope) => ({
     label: scope,
     value: scope,
   }));
@@ -177,7 +67,7 @@ function SlackConnectorForm({ appId }: { appId: string }) {
     onChange: botOnChange,
     setValue: setBotValue,
   } = useMultiSelect({
-    options: __bot_options!,
+    options: __bot_options,
     value: [defaultBotScope],
   });
 
@@ -187,12 +77,12 @@ function SlackConnectorForm({ appId }: { appId: string }) {
     onChange: userOnChange,
     setValue: setUserValue,
   } = useMultiSelect({
-    options: __user_options!,
+    options: __user_options,
     value: [],
   });
 
   // get the existing Slack connector data from the database
-  const connector = trpc.useQuery(['connector.slack.get', { appId }], {
+  const connector = trpc.useQuery(['slackConnector.get', { appId }], {
     onSuccess: (data) => {
       if (data && setBotValue && setUserValue) {
         setBotValue(data.workspaceScopes || [defaultBotScope]);
@@ -216,7 +106,7 @@ function SlackConnectorForm({ appId }: { appId: string }) {
   // get the Slack auth URL from the backend (it includes an encrypted state value that links
   // the auth request to the app)
   const slackAuthURL = trpc.useQuery([
-    'connector.slack.getAuthUrl',
+    'slackConnector.getAuthUrl',
     {
       appId,
       scopes: { bot: botValue as string[], user: userValue as string[] },
@@ -238,9 +128,9 @@ function SlackConnectorForm({ appId }: { appId: string }) {
     },
   });
 
-  const deleteConnectorMutation = trpc.useMutation('connector.slack.delete', {
+  const deleteConnectorMutation = trpc.useMutation('slackConnector.delete', {
     async onSuccess() {
-      await utils.invalidateQueries(['connector.slack.get', { appId }]);
+      await utils.invalidateQueries(['slackConnector.get', { appId }]);
       await utils.invalidateQueries([
         'secret.get',
         { appId, key: botTokenName },

@@ -4,7 +4,6 @@ import {
   VStack,
   HStack,
   Heading,
-  Image,
   Badge,
   Flex,
   Link,
@@ -12,10 +11,11 @@ import {
   Text,
   useDisclosure,
 } from '@chakra-ui/react';
+import { GithubCheckTokenResponse } from '@zipper/types';
 import { VscAdd } from 'react-icons/vsc';
 import { ConnectorInputProps } from './types';
 
-export const SlackUserConnectorInput: React.FC<ConnectorInputProps> = ({
+export const GithubUserConnectorInput: React.FC<ConnectorInputProps> = ({
   connector: c,
   onDelete,
   authUrl,
@@ -38,7 +38,7 @@ export const SlackUserConnectorInput: React.FC<ConnectorInputProps> = ({
                 alignSelf="center"
                 opacity={!isOpen ? '50%' : '100%'}
               >
-                Slack
+                Github
               </Heading>
               <Box mt={1} opacity={!isOpen ? '50%' : '100%'}>
                 <Badge
@@ -63,13 +63,7 @@ export const SlackUserConnectorInput: React.FC<ConnectorInputProps> = ({
             </HStack>
             {isOpen && (
               <Flex width="100%">
-                <Link href={authUrl}>
-                  <Image
-                    alt="Add to Slack"
-                    src="https://platform.slack-edge.com/img/add_to_slack.png"
-                    srcSet="https://platform.slack-edge.com/img/add_to_slack.png 1x, https://platform.slack-edge.com/img/add_to_slack@2x.png 2x"
-                  />
-                </Link>
+                <Link href={authUrl}>Add to Github</Link>
               </Flex>
             )}
           </VStack>
@@ -116,13 +110,19 @@ export const SlackUserConnectorInput: React.FC<ConnectorInputProps> = ({
   return (
     <HStack>
       <HStack flexGrow={1}>
-        <Text>{`Authed to Slack as `}</Text>
+        <Text>{`Authed to Github as `}</Text>
         <Text fontWeight={'medium'}>
-          {c.appConnectorUserAuths[0].metadata.user ||
-            c.appConnectorUserAuths[0].metadata.id}
+          {(
+            c.appConnectorUserAuths[0]
+              .metadata as GithubCheckTokenResponse['user']
+          ).login ||
+            (
+              c.appConnectorUserAuths[0]
+                .metadata as GithubCheckTokenResponse['user']
+            ).id}
         </Text>
       </HStack>
-      <Button variant={'link'} onClick={onDelete}>
+      <Button variant="link" onClick={onDelete}>
         Remove
       </Button>
     </HStack>
