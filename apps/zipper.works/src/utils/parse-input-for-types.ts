@@ -82,6 +82,9 @@ export function parseInputForTypes(
       return [];
     }
     const params = inputs[0] as ParameterDeclaration;
+    if (!params) {
+      return [];
+    }
     const typeNode = params.getTypeNode();
 
     if (typeNode?.isKind(SyntaxKind.AnyKeyword)) {

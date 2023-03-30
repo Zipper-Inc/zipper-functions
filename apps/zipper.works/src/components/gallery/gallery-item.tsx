@@ -39,7 +39,7 @@ export const GalleryItem: React.FC<GalleryItemProps> = ({ app }) => {
   return (
     <GridItem>
       <NextLink href={`/${app.resourceOwner.slug}/${app.slug}`}>
-        <Card background="white" borderRadius={10}>
+        <Card background="white" borderRadius={10} height="100%">
           <CardBody
             padding={0}
             as={HStack}
@@ -57,27 +57,24 @@ export const GalleryItem: React.FC<GalleryItemProps> = ({ app }) => {
                 colors={avatarColors}
               />
             </Box>
-            <VStack alignItems="stretch" spacing="1" flex={1} paddingBottom={6}>
+            <VStack alignItems="start" spacing="1" flex={1}>
               <Heading as="h2" size="md" fontWeight="semibold">
                 {nameOrSlug}
               </Heading>
               <Heading as="h3" size="sm" color="gray.800" fontWeight="normal">
                 {app.resourceOwner.slug}
               </Heading>
-              <VStack alignItems="stretch">
-                {badges.length > 0 && (
+              <VStack alignItems="stretch" pt="2">
+                {app.isPrivate && (
                   <HStack paddingY={1}>
-                    {badges.map((badge) => (
-                      <Badge
-                        key={badge}
-                        colorScheme="blackAlpha"
-                        rounded="xl"
-                        paddingX={2}
-                        color="gray.600"
-                      >
-                        {badge}
-                      </Badge>
-                    ))}
+                    <Badge
+                      colorScheme="blackAlpha"
+                      rounded="xl"
+                      paddingX={2}
+                      color="gray.600"
+                    >
+                      Private
+                    </Badge>
                   </HStack>
                 )}
               </VStack>

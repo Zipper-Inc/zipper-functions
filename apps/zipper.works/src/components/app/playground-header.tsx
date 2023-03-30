@@ -116,7 +116,15 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
   });
 
   return (
-    <Flex as="header" gap={4} maxW="full" minW="md" justifyContent="center">
+    <Flex
+      as="header"
+      gap={4}
+      maxW="full"
+      minW="md"
+      justifyContent="center"
+      pt="1"
+      pb="1"
+    >
       <HStack spacing={3} alignItems="center" flex={1} minW={0}>
         <Box height={4}>
           <NextLink href="/">
@@ -145,16 +153,18 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
           )}
         </HStack>
         <HStack>
-          <Heading
-            as="h1"
-            size="md"
-            overflow="auto"
-            whiteSpace="nowrap"
-            fontWeight="medium"
-            color="gray.600"
-          >
-            {app.resourceOwner.slug}
-          </Heading>
+          <NextLink href={`/${app.resourceOwner.slug}`}>
+            <Heading
+              as="h1"
+              size="md"
+              overflow="auto"
+              whiteSpace="nowrap"
+              fontWeight="medium"
+              color="gray.600"
+            >
+              {app.resourceOwner.slug}
+            </Heading>
+          </NextLink>
 
           <Heading
             as="h1"

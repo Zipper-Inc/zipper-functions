@@ -379,7 +379,7 @@ export const appRouter = createRouter()
     input: z.object({
       resourceOwnerSlug: z.string(),
     }),
-    async resolve({ input }) {
+    async resolve({ input, ctx }) {
       //find resouce owner (org or user) based on slug
       const resourceOwner = await prisma.resourceOwnerSlug.findFirstOrThrow({
         where: {
@@ -387,9 +387,20 @@ export const appRouter = createRouter()
         },
       });
 
+      if (!resourceOwner.resourceOwnerId) return [];
+
       const where: Prisma.AppWhereInput = {
         isPrivate: false,
       };
+
+      if (
+        Object.keys(ctx.organizations || {}).includes(
+          resourceOwner.resourceOwnerId,
+        ) ||
+        ctx.userId === resourceOwner.resourceOwnerId
+      ) {
+        where.isPrivate = undefined;
+      }
 
       if (resourceOwner.resourceOwnerType === ResourceOwnerType.Organization) {
         where.organizationId = resourceOwner.resourceOwnerId;
@@ -400,6 +411,7 @@ export const appRouter = createRouter()
 
       const apps = await prisma.app.findMany({
         where,
+        orderBy: { updatedAt: 'desc' },
         select: {
           ...defaultSelect,
           scripts: true,
