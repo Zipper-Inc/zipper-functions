@@ -53,6 +53,7 @@ export function AppPage({
   filename,
   defaultValues,
   slackAuthUrl,
+  githubAuthUrl,
   statusCode,
 }: {
   app: AppInfo;
@@ -62,6 +63,7 @@ export function AppPage({
   filename?: string;
   defaultValues?: Record<string, any>;
   slackAuthUrl?: string;
+  githubAuthUrl?: string;
   statusCode?: number;
 }) {
   const router = useRouter();
@@ -176,11 +178,21 @@ export function AppPage({
           <Box bg="gray.100" px={9} py={4}>
             <FunctionUserConnectors
               userAuthConnectors={userAuthConnectors}
-              slack={{
-                authUrl: slackAuthUrl || '#',
-                onDelete: () => {
-                  deleteCookie('__zipper_user_id');
-                  router.reload();
+              // TODO figure out the best strategy for removing connector user auth
+              actions={{
+                github: {
+                  authUrl: githubAuthUrl || '#',
+                  onDelete: () => {
+                    deleteCookie('__zipper_user_id');
+                    router.reload();
+                  },
+                },
+                slack: {
+                  authUrl: slackAuthUrl || '#',
+                  onDelete: () => {
+                    deleteCookie('__zipper_user_id');
+                    router.reload();
+                  },
                 },
               }}
             />
@@ -351,6 +363,9 @@ export const getServerSideProps: GetServerSideProps = async ({
     .filter((c) => c.appConnectorUserAuths.length === 0)
     .map((c) => c.type);
 
+  let slackAuthUrl: string | null = null;
+  let githubAuthUrl: string | null = null;
+
   if (connectorsMissingAuth.includes('slack')) {
     const slackConnector = userAuthConnectors.find((c) => c.type === 'slack');
     if (slackConnector) {
@@ -372,11 +387,32 @@ export const getServerSideProps: GetServerSideProps = async ({
       url.searchParams.set('user_scope', slackConnector.userScopes.join(','));
       url.searchParams.set('state', state);
 
-      return { props: { ...propsToReturn.props, slackAuthUrl: url.href } };
+      slackAuthUrl = url.href;
     }
   }
 
-  return propsToReturn;
+  if (connectorsMissingAuth.includes('github')) {
+    const githubConnector = userAuthConnectors.find((c) => c.type === 'github');
+    if (githubConnector) {
+      const state = encryptToHex(
+        `${app.id}::${
+          process.env.NODE_ENV === 'development' ? 'http://' : 'https://'
+        }${req.headers.host}::${req.cookies['__zipper_user_id']}`,
+        process.env.ENCRYPTION_KEY || '',
+      );
+
+      const url = new URL('https://github.com/login/oauth/authorize');
+      url.searchParams.set('client_id', process.env.GITHUB_CLIENT_ID!);
+      url.searchParams.set('scope', githubConnector.userScopes.join(','));
+      url.searchParams.set('state', state);
+
+      githubAuthUrl = url.href;
+    }
+  }
+
+  return {
+    props: { ...propsToReturn.props, slackAuthUrl, githubAuthUrl },
+  };
 };
 
 export default withDefaultTheme(AppPage);

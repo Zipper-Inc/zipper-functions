@@ -1,3 +1,4 @@
+import { ConnectorType } from '@zipper/types';
 import { ReactElement } from 'react';
 
 export type Connector = {
@@ -9,7 +10,7 @@ export type Connector = {
   userScopes?: string[];
 };
 
-export type ConnectorId = 'github' | 'slack';
+export type ConnectorId = ConnectorType;
 
 export const createConnector = ({
   id,

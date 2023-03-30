@@ -48,6 +48,9 @@ type AppEditSidebarProps = {
   appSlug: string;
 };
 
+// toast duration
+const duration = 1500;
+
 export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
   showInputForm = true,
   tips,
@@ -79,8 +82,9 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
 
   const router = useRouter();
   const context = trpc.useContext();
+
   const deleteConnectorUserAuth = trpc.useMutation(
-    'connector.slack.deleteUserAuth',
+    'slackConnector.deleteUserAuth',
     {
       onSuccess: () => {
         context.invalidateQueries([
@@ -90,18 +94,53 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
             resourceOwnerSlug: router.query['resource-owner'] as string,
           },
         ]);
+        toast({
+          title: 'Slack user auth revoked.',
+          status: 'success',
+          duration,
+          isClosable: true,
+        });
+      },
+    },
+  );
+  const deleteGithubConnectorUserAuth = trpc.useMutation(
+    'githubConnector.deleteUserAuth',
+    {
+      onSuccess: () => {
+        context.invalidateQueries([
+          'app.byResourceOwnerAndAppSlugs',
+          {
+            appSlug: router.query['app-slug'] as string,
+            resourceOwnerSlug: router.query['resource-owner'] as string,
+          },
+        ]);
+        toast({
+          title: 'Github user auth revoked.',
+          status: 'success',
+          duration,
+          isClosable: true,
+        });
       },
     },
   );
 
   // state to hold whether user needs to authenticate with slack
   const [slackAuthRequired, setSlackAuthRequired] = useState(false);
+  // state to hold whether user needs to authenticate with github
+  const [githubAuthRequired, setGithubAuthRequired] = useState(false);
 
   // get the existing Slack connector data from the database
   const slackConnector = trpc.useQuery(
-    ['connector.slack.get', { appId: appInfo.id }],
+    ['slackConnector.get', { appId: appInfo.id }],
     {
       enabled: slackAuthRequired,
+    },
+  );
+  // get the existing Github connector data from the database
+  const githubConnector = trpc.useQuery(
+    ['githubConnector.get', { appId: appInfo.id }],
+    {
+      enabled: githubAuthRequired,
     },
   );
 
@@ -109,7 +148,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
   // (it includes an encrypted state value that links the auth request to the app)
   const slackAuthURL = trpc.useQuery(
     [
-      'connector.slack.getAuthUrl',
+      'slackConnector.getAuthUrl',
       {
         appId: appInfo.id,
         scopes: {
@@ -124,9 +163,28 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
     },
   );
 
+  // get the Github auth URL -- if required --from the backend
+  // (it includes an encrypted state value that links the auth request to the app)
+  const githubAuthURL = trpc.useQuery(
+    [
+      'githubConnector.getAuthUrl',
+      {
+        appId: appInfo.id,
+        scopes: githubConnector.data?.userScopes || [],
+        postInstallationRedirect: window.location.href,
+      },
+    ],
+    {
+      enabled: githubConnector.isFetched,
+    },
+  );
+
   useEffect(() => {
     if (userAuthConnectors.find((c) => c.type === 'slack')) {
       setSlackAuthRequired(true);
+    }
+    if (userAuthConnectors.find((c) => c.type === 'github')) {
+      setGithubAuthRequired(true);
     }
   }, []);
 
@@ -143,7 +201,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
     toast({
       title: 'App link copied',
       status: 'info',
-      duration: 1500,
+      duration,
       isClosable: true,
     });
   };
@@ -309,12 +367,22 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
               >
                 <FunctionUserConnectors
                   userAuthConnectors={userAuthConnectors}
-                  slack={{
-                    authUrl: slackAuthURL.data?.url || '#',
-                    onDelete: () => {
-                      deleteConnectorUserAuth.mutateAsync({
-                        appId: appInfo.id,
-                      });
+                  actions={{
+                    github: {
+                      authUrl: githubAuthURL.data?.url || '#',
+                      onDelete: () => {
+                        deleteGithubConnectorUserAuth.mutateAsync({
+                          appId: appInfo.id,
+                        });
+                      },
+                    },
+                    slack: {
+                      authUrl: slackAuthURL.data?.url || '#',
+                      onDelete: () => {
+                        deleteConnectorUserAuth.mutateAsync({
+                          appId: appInfo.id,
+                        });
+                      },
                     },
                   }}
                 />

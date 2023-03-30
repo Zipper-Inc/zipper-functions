@@ -7,7 +7,7 @@ const SlackStartAuth: NextPageWithLayout = () => {
   const router = useRouter();
   console.log(router.query.appId as string);
   const slackAuthURL = trpc.useQuery([
-    'connector.slack.getAuthUrl',
+    'slackConnector.getAuthUrl',
     {
       appId: router.query.appId as string,
       scopes: {

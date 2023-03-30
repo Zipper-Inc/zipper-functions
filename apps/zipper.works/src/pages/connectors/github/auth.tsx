@@ -5,18 +5,21 @@ import { useEffect } from 'react';
 import { NextPageWithLayout } from '~/pages/_app';
 import { trpc } from '~/utils/trpc';
 
-const SlackAuth: NextPageWithLayout = () => {
+const GithubAuth: NextPageWithLayout = () => {
   const router = useRouter();
   const { code, state, error, error_description } = router.query;
 
   const exchangeMutation = trpc.useMutation(
-    'slackConnector.exchangeCodeForToken',
+    'githubConnector.exchangeCodeForToken',
     {
       onSuccess: (data) => {
         if (data.redirectTo?.includes('http')) {
           window.location.replace(data.redirectTo);
         } else {
-          router.push(data.redirectTo || `/app/${data.appId}/edit/main.ts`);
+          router.push(
+            data.redirectTo ||
+              `/${data.app.resourceOwner.slug}/${data.app.slug}/edit/main.ts`,
+          );
         }
       },
     },
@@ -38,7 +41,7 @@ const SlackAuth: NextPageWithLayout = () => {
 
   useEffect(() => {
     if (process.env.NODE_ENV === 'development') {
-      // Slack has to redirect to an https url (usually ngrok)
+      // Github has to redirect to an https url (usually ngrok)
       // so we have to redirect to localhost:3000 so that the cookie gets
       // set properly
       if (window.location.host !== 'localhost:3000') {
@@ -64,13 +67,13 @@ const SlackAuth: NextPageWithLayout = () => {
       <VStack spacing="12">
         <ZipperLogo />
         <Text>
-          Exchanging one-time code from Slack for an API token. Hold tight...
+          Exchanging one-time code from Github for an API token. Hold tight...
         </Text>
       </VStack>
     </Center>
   );
 };
 
-export default SlackAuth;
+export default GithubAuth;
 
-SlackAuth.header = () => <></>;
+GithubAuth.header = () => <></>;
