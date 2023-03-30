@@ -1,3 +1,8 @@
+/**
+ * 🦕
+ * Please refrain from importing anything into this utility to keep it Deno-compatible
+ */
+
 export function generateHandlersForFramework({
   code,
   filenames,
@@ -9,13 +14,15 @@ export function generateHandlersForFramework({
   const filenamesFiltered = filenames.filter((f) => f !== 'main.ts');
 
   const generatedImports = [
-    '/// <generated-imports> DO NOT MODIFY MANUALLY',
+    '/// <generated-imports>',
+    '/// 🛑 DO NOT MODIFY THIS PART ///',
     ...filenamesFiltered.map((f, i) => `import * as m${i} from '../src/${f}';`),
     '/// </generated-imports>',
   ].join(`\n`);
 
   const generatedExports = [
-    '/// <generated-exports> DO NOT MODIFY MANUALLY',
+    '/// <generated-exports>',
+    '/// 🛑 DO NOT MODIFY THIS PART ///',
     ...filenamesFiltered.map((f, i) => `'${f}': m${i}.handler as Handler,`),
     '/// </generated-exports>',
   ].join('\n');

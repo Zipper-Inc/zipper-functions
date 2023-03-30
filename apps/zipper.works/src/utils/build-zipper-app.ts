@@ -9,7 +9,10 @@ import { generateHandlersForFramework } from '@zipper/utils';
  * Bundle this up or put this source somewhere else
  * Totally possible that the directory structure cannot be guaranteed
  */
-export const FRAMEWORK_PATH = path.resolve('../deno-framework');
+export const FRAMEWORK_PATH = path.resolve(
+  '../..',
+  'packages/deno-zipper-framework',
+);
 export const FRAMEWORK_ENTRYPOINT = 'app.ts';
 export const HANDLERS_PATH = 'generated/handlers.gen.ts';
 export const TYPESCRIPT_CONTENT_HEADERS = {
