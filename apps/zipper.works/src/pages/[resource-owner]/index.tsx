@@ -46,7 +46,11 @@ const ResourceOwnerPage: NextPageWithLayout = () => {
   if (appsByResourceOwnerQuery.isSuccess) {
     return (
       <>
-        <Gallery apps={appsByResourceOwnerQuery.data} heading={heading} />
+        <Gallery
+          apps={appsByResourceOwnerQuery.data}
+          heading={heading}
+          subheading={'Recent Apps'}
+        />
       </>
     );
   }
