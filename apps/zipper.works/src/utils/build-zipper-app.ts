@@ -1,8 +1,10 @@
 import fs from 'fs/promises';
 import * as eszip from '@deno/eszip';
+
 import { App, Script } from '@prisma/client';
 import path from 'path';
 import { generateHandlersForFramework } from '@zipper/utils';
+import { BuildCache, CacheRecord } from './eszip-build-cache';
 
 /**
  * @todo
@@ -19,9 +21,17 @@ export const TYPESCRIPT_CONTENT_HEADERS = {
   'content-type': 'text/typescript',
 };
 
-function buildLog(msg: string, depth = 0) {
-  console.log('[ESZIP]', ...Array(depth).fill('>'), msg);
-}
+const buildCache = new BuildCache();
+
+const buildLog = ({
+  appName,
+  msg,
+  depth = 0,
+}: {
+  appName: string;
+  msg: string;
+  depth?: number;
+}) => console.log('[ESZIP]', appName, '|', ...Array(depth).fill('∟ '), msg);
 
 export async function build({
   baseUrl,
@@ -35,7 +45,7 @@ export async function build({
   const startMs = performance.now();
   const appName = `${app.name}@${version}`;
 
-  buildLog(`Building ${appName} for deployment`);
+  buildLog({ appName, msg: `Building for deployment` });
 
   const appFilesBaseUrl = `${baseUrl}/src`;
   const frameworkEntrypointUrl = `${baseUrl}/${FRAMEWORK_ENTRYPOINT}`;
@@ -45,7 +55,7 @@ export async function build({
   const fileUrlsToBundle = [frameworkEntrypointUrl, ...appFileUrls];
 
   const bundle = await eszip.build(fileUrlsToBundle, async (specifier) => {
-    buildLog(`Resolving ${specifier}`, 1);
+    buildLog({ appName, msg: `Resolving ${specifier}`, depth: 1 });
 
     /**
      * Handle user's App files
@@ -54,7 +64,7 @@ export async function build({
       const filename = specifier.replace(`${appFilesBaseUrl}/`, '');
       const script = app.scripts.find((s) => s.filename === filename);
 
-      buildLog(`Adding \`${filename}\` from ${appName}`, 2);
+      buildLog({ appName, msg: `Adding ${filename}`, depth: 2 });
 
       return {
         specifier,
@@ -72,12 +82,13 @@ export async function build({
       const filename = specifier.replace(`${baseUrl}/`, '');
       const isHandlersPath = filename === HANDLERS_PATH;
 
-      buildLog(
-        isHandlersPath
-          ? `Generating new routes at \`${filename}\``
-          : `Copying \`${filename}\` from framework`,
-        2,
-      );
+      buildLog({
+        appName,
+        msg: isHandlersPath
+          ? `Generating new routes for at ${filename}`
+          : `Adding zipper-framework/${filename}`,
+        depth: 2,
+      });
 
       const content = await fs.readFile(
         path.resolve(FRAMEWORK_PATH, filename),
@@ -99,9 +110,14 @@ export async function build({
 
     /**
      * Handle remote imports
-     * @todo caching strategy to avoid a fetch?
      */
-    const response = await fetch(specifier, { redirect: 'follow' });
+    const cachedModule = await buildCache.get(specifier);
+    if (cachedModule) return cachedModule;
+
+    const response = await fetch(specifier, {
+      redirect: 'follow',
+    });
+
     if (response.status !== 200) {
       // ensure the body is read as to not leak resources
       await response.arrayBuffer();
@@ -114,16 +130,20 @@ export async function build({
       headers[key.toLowerCase()] = value;
     });
 
-    return {
+    const mod = {
       kind: 'module',
       specifier: response.url,
       headers,
       content,
-    };
+    } as CacheRecord['module'];
+
+    buildCache.set(specifier, mod);
+
+    return mod;
   });
 
   const elapsedMs = performance.now() - startMs;
-  buildLog(`Built ${app.name}@${version} in ${Math.round(elapsedMs)}ms`);
+  buildLog({ appName, msg: `Built in ${Math.round(elapsedMs)}ms` });
 
   return bundle;
 }
