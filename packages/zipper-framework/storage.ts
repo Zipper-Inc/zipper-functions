@@ -19,9 +19,15 @@ function generateHmac(
   };
 }
 
-export class Storage {
+export class ZipperStorage {
+  public appId: string;
+
+  constructor(appId: string) {
+    this.appId = appId;
+  }
+
   async get(key?: string) {
-    let path = '/api/app/${appId}/storage';
+    let path = `/api/app/${this.appId}/storage`;
     if (key) path += '?key=' + key;
     const { hmac, timestamp } = generateHmac('GET', path);
 
@@ -34,7 +40,7 @@ export class Storage {
   }
 
   async set(key: string, value: unknown) {
-    const path = '/api/app/${appId}/storage';
+    const path = `/api/app/${this.appId}/storage`;
     const { hmac, timestamp } = generateHmac('POST', path, { key, value });
 
     const res = await fetch(Deno.env.get('RPC_HOST') + path, {
