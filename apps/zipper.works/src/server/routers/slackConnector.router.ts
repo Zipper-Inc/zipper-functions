@@ -99,6 +99,7 @@ export const slackConnectorRouter = createRouter()
         },
         data: {
           metadata: undefined,
+          clientId: null,
         },
       });
 
