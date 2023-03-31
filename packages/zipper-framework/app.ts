@@ -33,15 +33,15 @@ app.use(async ({ request, response }) => {
     delete env[key];
   });
 
+  const { appInfo, userInfo, originalRequest } = body;
+
   // Attach ZipperGlobal
   window.Zipper = {
     env,
-    storage: new ZipperStorage(body.app.id),
-    userInfo: body.userInfo,
-    meta: {
-      app: body.app,
-      request: body.request,
-    },
+    storage: new ZipperStorage(appInfo.id),
+    userInfo,
+    appInfo,
+    originalRequest,
   };
 
   // Grab the handler

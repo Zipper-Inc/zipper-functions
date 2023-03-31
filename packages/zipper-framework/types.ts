@@ -17,16 +17,24 @@ export type HandlerMap = {
   [filename: string]: Handler;
 };
 
+export type AppInfo = {
+  id: string;
+  slug: string;
+  version: string;
+  url: string;
+};
 export type UserInfo = {
   emails: string[];
   userId?: string;
 };
 
+export type OriginalRequest = { method: string; url: string };
+
 // same as RelayRequestBody in apps/zipper.run/src/utils/relay-middleware.ts
 export type RequestBody = {
   error?: string;
-  app: { id: string; slug: string };
-  request: { method: string; url: string };
+  appInfo: AppInfo;
+  originalRequest: OriginalRequest;
   inputs: Inputs;
   userInfo?: UserInfo;
   path?: string;
@@ -36,10 +44,8 @@ export type ZipperGlobal = {
   env: ReturnType<Deno.Env['toObject']>;
   storage: ZipperStorage;
   userInfo?: UserInfo;
-  meta: {
-    app: { id: string; slug: string };
-    request: { method: string; url: string };
-  };
+  appInfo: AppInfo;
+  originalRequest: OriginalRequest;
 };
 
 declare global {

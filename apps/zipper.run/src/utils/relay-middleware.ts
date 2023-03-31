@@ -7,6 +7,7 @@ import getInputFromRequest from './get-input-from-request';
 import getValidSubdomain from './get-valid-subdomain';
 import { getFilenameAndVersionFromPath } from './get-values-from-url';
 import { clerkClient, getAuth } from '@clerk/nextjs/server';
+import { getAppLink } from '@zipper/utils';
 
 const { __DEBUG__, SHARED_SECRET: DENO_SHARED_SECRET, RPC_HOST } = process.env;
 
@@ -18,8 +19,8 @@ const X_FORWARDED_HOST = 'x-forwarded-host';
 const X_DENO_SUBHOST = 'x-deno-subhost';
 
 type RelayRequestBody = {
-  app: { id: string; slug: string };
-  request: { method: string; url: string };
+  appInfo: { id: string; slug: string; version: string; url: string };
+  originalRequest: { method: string; url: string };
   inputs: Record<string, any>;
   userInfo?: {
     emails: string[];
@@ -135,8 +136,13 @@ export async function relayRequest({
   const url = new URL(relayUrl);
 
   const relayBody: RelayRequestBody = {
-    app: { id: app.id, slug: app.slug },
-    request: { method: request.method, url: request.url },
+    appInfo: {
+      id: app.id,
+      slug: app.slug,
+      version,
+      url: `https://${getAppLink(app.slug)}`,
+    },
+    originalRequest: { method: request.method, url: request.url },
     inputs:
       request.method === 'GET'
         ? Object.fromEntries(url.searchParams.entries())
