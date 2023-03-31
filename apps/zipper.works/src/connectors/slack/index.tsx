@@ -130,6 +130,8 @@ function SlackConnectorForm({ appId }: { appId: string }) {
     },
   ]);
 
+  const [slackAuthInProgress, setSlackAuthInProgress] = useState(false);
+
   const context = trpc.useContext();
   const router = useRouter();
   const updateAppConnectorMutation = trpc.useMutation('appConnector.update', {
@@ -139,15 +141,6 @@ function SlackConnectorForm({ appId }: { appId: string }) {
         {
           appSlug: router.query['app-slug'] as string,
           resourceOwnerSlug: router.query['resource-owner'] as string,
-        },
-      ]);
-      console.log('will invalidate getAuthUrl');
-      context.invalidateQueries([
-        'slackConnector.getAuthUrl',
-        {
-          appId,
-          scopes: { bot: botValue as string[], user: userValue as string[] },
-          postInstallationRedirect: window.location.href,
         },
       ]);
     },
@@ -168,6 +161,13 @@ function SlackConnectorForm({ appId }: { appId: string }) {
   useEffect(() => {
     setIsUserAuthRequired(connector.data?.isUserAuthRequired);
   }, [connector.data?.isUserAuthRequired]);
+
+  useEffect(() => {
+    if (slackAuthInProgress && slackAuthURL.data?.url) {
+      router.push(slackAuthURL.data?.url);
+      setSlackAuthInProgress(false);
+    }
+  }, [slackAuthInProgress, slackAuthURL.data?.url]);
 
   const existingInstallation = existingSecret.data && connector.data?.metadata;
 
@@ -223,7 +223,7 @@ function SlackConnectorForm({ appId }: { appId: string }) {
             <FormControl>
               <FormLabel color={'gray.500'}>Client ID</FormLabel>
               <Input
-                autoComplete="off"
+                autoComplete="new-password"
                 value={clientId}
                 onChange={(e) => setClientId(e.target.value)}
               />
@@ -233,7 +233,7 @@ function SlackConnectorForm({ appId }: { appId: string }) {
               <FormLabel color={'gray.500'}>Client Secret</FormLabel>
 
               <Input
-                autoComplete="off"
+                autoComplete="new-password"
                 type="password"
                 value={clientSecret}
                 onChange={(e) => setClientSecret(e.target.value)}
@@ -421,7 +421,17 @@ function SlackConnectorForm({ appId }: { appId: string }) {
                         onClick={async () => {
                           if (slackAuthURL.data) {
                             setIsSaving(true);
-
+                            if (
+                              isOwnClientIdRequired &&
+                              clientId &&
+                              clientSecret
+                            ) {
+                              await addSecretMutation.mutateAsync({
+                                appId: appId,
+                                key: 'SLACK_CLIENT_SECRET',
+                                value: clientSecret,
+                              });
+                            }
                             await updateAppConnectorMutation.mutateAsync({
                               appId,
                               type: 'slack',
@@ -429,19 +439,12 @@ function SlackConnectorForm({ appId }: { appId: string }) {
                                 isUserAuthRequired,
                                 userScopes: userValue as string[],
                                 workspaceScopes: botValue as string[],
-                                clientId,
+                                clientId: clientId || undefined,
                               },
                             });
-
-                            await addSecretMutation.mutateAsync({
-                              appId: appId,
-                              key: 'SLACK_CLIENT_SECRET',
-                              value: clientSecret,
-                            });
-                            console.log('slackAuthURL will be triggered');
-                            // router.push(slackAuthURL.data?.url);
+                            await slackAuthURL.refetch();
+                            setSlackAuthInProgress(true);
                           }
-
                           setIsSaving(false);
                         }}
                       >

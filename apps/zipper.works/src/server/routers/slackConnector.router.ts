@@ -176,14 +176,37 @@ export const slackConnectorRouter = createRouter()
         throw new TRPCError({ code: 'UNAUTHORIZED' });
       }
 
+      const appConnector = await prisma.appConnector.findFirst({
+        where: {
+          appId,
+          type: 'slack',
+        },
+      });
+
+      const clientSecretRecord = await prisma.secret.findFirst({
+        where: {
+          appId,
+          key: 'SLACK_CLIENT_SECRET',
+        },
+      });
+
+      const clientId =
+        appConnector?.clientId || process.env.NEXT_PUBLIC_SLACK_CLIENT_ID!;
+      const clientSecret = clientSecretRecord
+        ? decryptFromBase64(
+            clientSecretRecord.encryptedValue,
+            process.env.ENCRYPTION_KEY,
+          )
+        : process.env.SLACK_CLIENT_SECRET!;
+
       const res = await fetch('https://slack.com/api/oauth.v2.access', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
         body: new URLSearchParams({
-          client_id: process.env.NEXT_PUBLIC_SLACK_CLIENT_ID!,
-          client_secret: process.env.SLACK_CLIENT_SECRET!,
+          client_id: clientId,
+          client_secret: clientSecret,
           code: input.code,
         }),
       });
