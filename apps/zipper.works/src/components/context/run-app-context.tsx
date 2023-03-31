@@ -7,7 +7,7 @@ import {
   InputType,
   JSONEditorInputTypes,
 } from '@zipper/types';
-import { getLastRunVersion, safeJSONParse } from '@zipper/utils';
+import { safeJSONParse } from '@zipper/utils';
 import { useForm } from 'react-hook-form';
 import { trpc } from '~/utils/trpc';
 import { AppQueryOutput, AppEventUseQueryResult } from '~/types/trpc';
@@ -15,6 +15,7 @@ import useInterval from '~/hooks/use-interval';
 import getRunUrl from '~/utils/get-run-url';
 import { AppConnectorUserAuth } from '@prisma/client';
 import { parseInputForTypes } from '~/utils/parse-input-for-types';
+import { getLastRunVersion } from '~/utils/get-last-run-version';
 
 type UserAuthConnector = {
   type: ConnectorType;
@@ -82,7 +83,9 @@ export function RunAppProvider({
   const formMethods = useForm();
   const [isRunning, setIsRunning] = useState(false);
   const [results, setResults] = useState<Record<string, string>>({});
-  const [lastRunVersion, setLastRunVersion] = useState(getLastRunVersion(app));
+  const [lastRunVersion, setLastRunVersion] = useState(() =>
+    getLastRunVersion(app),
+  );
   const appEventsQuery = trpc.useQuery([
     'appEvent.all',
     { deploymentId: `${id}@${lastRunVersion}` },
@@ -167,7 +170,7 @@ export function RunAppProvider({
            * @todo detect if code changes instead of always running a new version
            * either that, or make version name based on hash of files
            */
-          const version = getLastRunVersion();
+          const version = getLastRunVersion(app);
 
           const result = await fetch(
             getRunUrl(
@@ -185,10 +188,12 @@ export function RunAppProvider({
           setResults({ ...results, [filename || 'main.ts']: result });
 
           setLastRunVersion(version);
-          editAppMutation.mutateAsync({
-            id,
-            data: { lastDeploymentVersion: version },
-          });
+          if (app.lastDeploymentVersion !== version) {
+            editAppMutation.mutateAsync({
+              id,
+              data: { lastDeploymentVersion: version },
+            });
+          }
 
           // refetch logs
           appEventsQuery.refetch();
