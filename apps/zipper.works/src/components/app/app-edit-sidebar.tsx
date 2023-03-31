@@ -44,7 +44,6 @@ import { HiOutlineChevronDown, HiOutlineChevronUp } from 'react-icons/hi';
 import { getAppLink } from '@zipper/utils';
 import { WarningIcon } from '@chakra-ui/icons';
 
-
 type AppEditSidebarProps = {
   showInputForm: boolean;
   tips?: JSX.Element;
