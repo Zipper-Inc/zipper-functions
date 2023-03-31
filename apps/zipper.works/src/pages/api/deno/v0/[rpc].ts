@@ -7,6 +7,7 @@ import ndjson from 'ndjson';
 import intoStream from 'into-stream';
 import { decryptFromBase64 } from '@zipper/utils';
 import { prisma } from '~/server/prisma';
+import { getAppLink } from '@zipper/utils';
 
 const X_DENO_CONFIG = 'x-deno-config';
 
@@ -105,7 +106,17 @@ const jsonHeader = (json, fallback = "JSON too big") => {
   return fallback;
 }
 
-const Zipper = { env: Deno.env, storage: __storage, userInfo: {} };
+const Zipper = {
+  env: Deno.env,
+  storage: __storage,
+  appInfo: {
+    id: '${appId}',
+    slug: '${slug}',
+    version: '${version}',
+    url: 'https://${getAppLink(slug)}',
+  },
+  userInfo: {}
+};
 
 let fn: Function | undefined = undefined;
 if(typeof main === 'function') fn = main;

@@ -238,7 +238,7 @@ function SlackConnectorForm({ appId }: { appId: string }) {
                                     {(connector.data?.metadata as any)['scope']
                                       .split(',')
                                       .map((scope: string) => (
-                                        <Code>{scope}</Code>
+                                        <Code key={scope}>{scope}</Code>
                                       ))}
                                   </Box>
                                 </HStack>
@@ -257,7 +257,7 @@ function SlackConnectorForm({ appId }: { appId: string }) {
                                         ]['scope']
                                           .split(',')
                                           .map((scope: string) => (
-                                            <Code>{scope}</Code>
+                                            <Code key={scope}>{scope}</Code>
                                           ))}
                                       </Box>
                                     </HStack>
