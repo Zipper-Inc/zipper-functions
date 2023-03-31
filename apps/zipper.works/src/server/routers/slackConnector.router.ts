@@ -111,6 +111,17 @@ export const slackConnectorRouter = createRouter()
         },
       });
 
+      await prisma.secret
+        .delete({
+          where: {
+            appId_key: {
+              appId: input.appId,
+              key: 'SLACK_CLIENT_SECRET',
+            },
+          },
+        })
+        .catch(() => null); // Ignore if not found, could be the case if there is not client secret
+
       await fetch('https://slack.com/api/auth.revoke', {
         method: 'POST',
         body: new URLSearchParams({
