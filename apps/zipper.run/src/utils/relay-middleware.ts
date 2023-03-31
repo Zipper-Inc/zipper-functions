@@ -18,6 +18,8 @@ const X_FORWARDED_HOST = 'x-forwarded-host';
 const X_DENO_SUBHOST = 'x-deno-subhost';
 
 type RelayRequestBody = {
+  app: { id: string; slug: string };
+  request: { method: string; url: string };
   inputs: Record<string, any>;
   userInfo?: {
     emails: string[];
@@ -132,12 +134,14 @@ export async function relayRequest({
   const relayUrl = getPatchedUrl(request);
   const url = new URL(relayUrl);
 
-  const relayBody: RelayRequestBody =
-    request.method === 'GET'
-      ? {
-          inputs: Object.fromEntries(url.searchParams.entries()),
-        }
-      : { inputs: JSON.parse(await request.text()) };
+  const relayBody: RelayRequestBody = {
+    app: { id: app.id, slug: app.slug },
+    request: { method: request.method, url: request.url },
+    inputs:
+      request.method === 'GET'
+        ? Object.fromEntries(url.searchParams.entries())
+        : JSON.parse(await request.text()),
+  };
 
   relayBody.userInfo = appInfoResult.data.userInfo;
 

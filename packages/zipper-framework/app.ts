@@ -1,7 +1,7 @@
 import { Application } from 'https://deno.land/x/oak@v12.1.0/mod.ts';
 import { handlers } from './generated/handlers.gen.ts';
 import { ENV_BLOCKLIST, MAIN_PATH } from './constants.ts';
-import { Storage } from './storage.ts';
+import { ZipperStorage } from './storage.ts';
 import { RequestBody } from './types.ts';
 
 const app = new Application();
@@ -36,8 +36,12 @@ app.use(async ({ request, response }) => {
   // Attach ZipperGlobal
   window.Zipper = {
     env,
-    storage: new Storage(),
+    storage: new ZipperStorage(body.app.id),
     userInfo: body.userInfo,
+    meta: {
+      app: body.app,
+      request: body.request,
+    },
   };
 
   // Grab the handler

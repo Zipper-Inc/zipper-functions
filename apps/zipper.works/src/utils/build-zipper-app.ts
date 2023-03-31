@@ -90,21 +90,31 @@ export async function build({
         depth: 2,
       });
 
-      const content = await fs.readFile(
+      let content = await fs.readFile(
         path.resolve(FRAMEWORK_PATH, filename),
         'utf8',
       );
+
+      // Inject Env vars
+      ['RPC_HOST', 'HMAC_SIGNING_SECRET'].forEach((key) => {
+        content = content.replaceAll(
+          `Deno.env.get('${key}')`,
+          `'${process.env[key]}'`,
+        );
+      });
+
+      if (isHandlersPath) {
+        content = generateHandlersForFramework({
+          code: content,
+          filenames: app.scripts.map((s) => s.filename),
+        });
+      }
 
       return {
         kind: 'module',
         specifier,
         headers: TYPESCRIPT_CONTENT_HEADERS,
-        content: isHandlersPath
-          ? generateHandlersForFramework({
-              code: content,
-              filenames: app.scripts.map((s) => s.filename),
-            })
-          : content,
+        content,
       };
     }
 

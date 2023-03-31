@@ -6,7 +6,7 @@
  */
 
 // deno-lint-ignore-file no-explicit-any
-import { type Storage } from './storage.ts';
+import { type ZipperStorage } from './storage.ts';
 import { MAIN_PATH } from './constants.ts';
 
 export type Inputs = Record<string, any>;
@@ -25,6 +25,8 @@ export type UserInfo = {
 // same as RelayRequestBody in apps/zipper.run/src/utils/relay-middleware.ts
 export type RequestBody = {
   error?: string;
+  app: { id: string; slug: string };
+  request: { method: string; url: string };
   inputs: Inputs;
   userInfo?: UserInfo;
   path?: string;
@@ -32,8 +34,12 @@ export type RequestBody = {
 
 export type ZipperGlobal = {
   env: ReturnType<Deno.Env['toObject']>;
-  storage: Storage;
+  storage: ZipperStorage;
   userInfo?: UserInfo;
+  meta: {
+    app: { id: string; slug: string };
+    request: { method: string; url: string };
+  };
 };
 
 declare global {
