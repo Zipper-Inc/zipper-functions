@@ -42,6 +42,8 @@ import getRunUrl from '~/utils/get-run-url';
 import Link from 'next/link';
 import { HiOutlineChevronDown, HiOutlineChevronUp } from 'react-icons/hi';
 import { getAppLink } from '@zipper/utils';
+import { WarningIcon } from '@chakra-ui/icons';
+
 
 type AppEditSidebarProps = {
   showInputForm: boolean;
@@ -69,6 +71,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
     lastRunVersion,
     appEventsQuery,
     inputParams,
+    inputError,
     formMethods,
     isRunning,
     setResults,
@@ -298,23 +301,29 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
           <TabButton title="Logs" isDisabled={!logs?.length} />
         </HStack>
         <HStack>
-          <Button
-            colorScheme="purple"
-            variant={currentScript?.filename === 'main.ts' ? 'solid' : 'ghost'}
-            onClick={() => {
-              setExpandedResult({});
-              run(true);
-            }}
-            display="flex"
-            gap={2}
-            fontWeight="medium"
-            isDisabled={!appInfo.canUserEdit || isRunning}
-          >
-            <HiOutlinePlay />
-            <Text>{`Run${
-              currentScript?.filename !== 'main.ts' ? ' this file' : ''
-            }`}</Text>
-          </Button>
+          <Tooltip label={inputError}>
+            <span>
+              <Button
+                colorScheme="purple"
+                variant={
+                  currentScript?.filename === 'main.ts' ? 'solid' : 'ghost'
+                }
+                onClick={() => {
+                  setExpandedResult({});
+                  run(true);
+                }}
+                display="flex"
+                gap={2}
+                fontWeight="medium"
+                isDisabled={!appInfo.canUserEdit || isRunning || !inputParams}
+              >
+                <HiOutlinePlay />
+                <Text>{`Run${
+                  currentScript?.filename !== 'main.ts' ? ' this file' : ''
+                }`}</Text>
+              </Button>
+            </span>
+          </Tooltip>
         </HStack>
       </TabList>
       <HStack
@@ -407,25 +416,39 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
                   />
                 ) : (
                   <>
-                    <Text color={'neutral.600'} size="lg" fontWeight="600">
-                      Add inputs to your app
-                    </Text>
+                    {appInfo.canUserEdit && (
+                      <Text color={'neutral.600'} size="lg" fontWeight="600">
+                        {inputError
+                          ? 'Check your inputs'
+                          : 'Add inputs to your app'}
+                      </Text>
+                    )}
                     <Text>
-                      Inputs can be used to collect user data, preferences, or
-                      feedback, which can then be processed and analyzed by the
-                      app to provide more personalized content or
-                      recommendations.
+                      {inputError
+                        ? `Something went wrong while parsing the inputs to your
+                        handler function. Check that there is only a single object
+                        parameter.`
+                        : `Inputs can be used to collect user data, preferences,
+                         or feedback, which can then be processed and analyzed by
+                         the app to provide more personalized content or recommendations.`}
                     </Text>
-                    <Button
-                      color={'gray.700'}
-                      bg="white"
-                      mt={6}
-                      variant="outline"
-                      fontWeight="500"
-                      onClick={handleAddInput}
-                    >
-                      Add an input
-                    </Button>
+                    {!inputError && appInfo.canUserEdit && (
+                      <Button
+                        color={'gray.700'}
+                        bg="white"
+                        mt={6}
+                        variant="outline"
+                        fontWeight="500"
+                        onClick={handleAddInput}
+                      >
+                        Add an input
+                      </Button>
+                    )}
+                    {inputError && (
+                      <Text color="gray.500" pt="4">
+                        Error: {inputError}
+                      </Text>
+                    )}
                   </>
                 )}{' '}
               </>
