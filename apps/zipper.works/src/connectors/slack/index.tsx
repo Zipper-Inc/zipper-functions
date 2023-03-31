@@ -157,7 +157,7 @@ function SlackConnectorForm({ appId }: { appId: string }) {
     return <></>;
   }
 
-  const userAuthSwitch = () => {
+  const userAuthSwitch = (mutateOnChange?: boolean) => {
     return (
       <HStack w="full" pt="4" pb="4">
         <FormControl>
@@ -168,13 +168,22 @@ function SlackConnectorForm({ appId }: { appId: string }) {
               isChecked={isUserAuthRequired}
               ml="auto"
               onChange={(e) => {
+                if (mutateOnChange) {
+                  updateAppConnectorMutation.mutate({
+                    appId,
+                    type: 'slack',
+                    data: {
+                      isUserAuthRequired: e.target.checked,
+                    },
+                  });
+                }
                 setIsUserAuthRequired(e.target.checked);
               }}
             />
           </HStack>
           <FormHelperText maxW="xl">
-            When checked, users will have to authorize the Slack app before
-            they're able to run the app and see the output.
+            When checked, users will have to authorize the Slack integration
+            before they're able to run this Zipper app and see the output.
           </FormHelperText>
         </FormControl>
       </HStack>
@@ -280,7 +289,7 @@ function SlackConnectorForm({ appId }: { appId: string }) {
                           </Button>
                         )}
                       </HStack>
-                      {userAuthSwitch()}
+                      {userAuthSwitch(true)}
                     </VStack>
                   </CardBody>
                 </Card>
