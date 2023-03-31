@@ -6,16 +6,13 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
-  console.log('HERE');
-  console.log(req.headers);
   const { userId } = getAuth(req);
-  console.log(userId);
   if (!userId) {
     res.status(500).send({ ok: false });
     return;
   }
 
-  const auth = await prisma.appConnectorUserAuth.delete({
+  await prisma.appConnectorUserAuth.delete({
     where: {
       appId_connectorType_userIdOrTempId: {
         appId: req.query.appId as string,
@@ -24,8 +21,6 @@ export default async function handler(
       },
     },
   });
-
-  console.log(auth);
 
   res.status(200).send({ ok: true });
 

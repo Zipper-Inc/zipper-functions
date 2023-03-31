@@ -10,7 +10,5 @@ export default async function removeAppConnectorUserAuth({
     credentials: 'include',
   });
 
-  console.log(res);
-
   return res.json();
 }
