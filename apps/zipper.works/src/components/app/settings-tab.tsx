@@ -42,6 +42,7 @@ import { MIN_SLUG_LENGTH, useAppSlug } from '~/hooks/use-app-slug';
 import { useRouter } from 'next/router';
 import { HiGlobe, HiOutlineClipboard, HiOutlineTrash } from 'react-icons/hi';
 import { VscCode } from 'react-icons/vsc';
+import { getAppLink } from '@zipper/utils';
 
 type Props = {
   app: Pick<
@@ -159,7 +160,7 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
   const slugExists = slug === appQuery.data?.slug ? false : _slugExists;
   const disableSave =
     slugExists || slug.length < MIN_SLUG_LENGTH || !didModelChange();
-  const appLink = `${slug}.${process.env.NEXT_PUBLIC_OUTPUT_SERVER_HOSTNAME}`;
+  const appLink = getAppLink(slug);
 
   const appAccessTokenForm = useForm({ defaultValues: { description: '' } });
   const [showAppAccessToken, setShowAppAccessToken] = useState<
