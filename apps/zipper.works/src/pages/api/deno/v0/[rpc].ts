@@ -113,7 +113,7 @@ const Zipper = {
     id: '${appId}',
     slug: '${slug}',
     version: '${version}',
-    runUrl: 'https://${getAppLink(slug)}',
+    url: 'https://${getAppLink(slug)}',
   },
   userInfo: {}
 };
