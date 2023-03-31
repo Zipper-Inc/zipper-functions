@@ -6,6 +6,7 @@ import { createRouter } from '../createRouter';
 import denyList from '../utils/slugDenyList';
 import { ResourceOwnerType } from '@zipper/types';
 import clerkClient from '@clerk/clerk-sdk-node';
+import slugify from '~/utils/slugify';
 
 const defaultSelect = Prisma.validator<Prisma.ResourceOwnerSlugSelect>()({
   slug: true,
@@ -166,7 +167,7 @@ export const resourceOwnerSlugRouter = createRouter()
     }),
     async resolve({ input }) {
       const { firstName, lastName, email, clerkUsername } = input;
-      const possibleSlugs: string[] = clerkUsername ? [clerkUsername] : [];
+      let possibleSlugs: string[] = clerkUsername ? [clerkUsername] : [];
       if (email) {
         const emailParts = email.split('@');
         if (emailParts.length >= 2) possibleSlugs.push(emailParts[0] as string);
@@ -186,6 +187,8 @@ export const resourceOwnerSlugRouter = createRouter()
           `${firstName}-${lastName}${Math.floor(Math.random() * 100)}`,
         );
       }
+
+      possibleSlugs = possibleSlugs.map((s) => slugify(s));
 
       const existingResourceOwnerSlugs =
         await prisma.resourceOwnerSlug.findMany({

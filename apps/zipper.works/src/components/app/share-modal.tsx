@@ -22,12 +22,14 @@ import {
   FormControl,
   FormLabel,
   Spacer,
+  useToast,
 } from '@chakra-ui/react';
 import { FieldValues, FormProvider, useForm } from 'react-hook-form';
 import { trpc } from '~/utils/trpc';
 import { useEffect, useState } from 'react';
 import { VscCode } from 'react-icons/vsc';
-import { useOrganization, useOrganizations, useUser } from '@clerk/nextjs';
+import { useOrganizations } from '@clerk/nextjs';
+import { stat } from 'fs';
 
 type Props = {
   isOpen: boolean;
@@ -57,6 +59,13 @@ const ShareTab: React.FC<Props> = ({ isOpen, onClose, appId }) => {
     },
   });
 
+  const removeEditor = trpc.useMutation('appEditor.deletePendingInvitation', {
+    async onSuccess() {
+      // refetches posts after a post is added
+      editorQuery.refetch();
+    },
+  });
+
   const setAppVisibility = trpc.useMutation('app.edit');
 
   const [isPrivate, setIsPrivate] = useState(appQuery.data?.isPrivate);
@@ -70,11 +79,42 @@ const ShareTab: React.FC<Props> = ({ isOpen, onClose, appId }) => {
     }
   }, [appQuery.data]);
 
+  const toast = useToast();
+
   const onSubmit = async (data: FieldValues) => {
-    await inviteEditor.mutateAsync({
+    const status = await inviteEditor.mutateAsync({
       appId,
       email: data.email,
     });
+
+    if (status === 'error') {
+      toast({
+        title: 'Something went awry.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    }
+
+    if (status === 'added') {
+      toast({
+        title: 'Editor added.',
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
+      });
+    }
+
+    if (status === 'pending') {
+      toast({
+        title: 'Editor invited.',
+        description:
+          'They will receive an email with instructions to accept the invitation.',
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
+      });
+    }
   };
   return (
     <>
@@ -94,7 +134,7 @@ const ShareTab: React.FC<Props> = ({ isOpen, onClose, appId }) => {
               <VStack align={'start'}>
                 <>
                   <Box mb={4} w="full">
-                    <VStack align={'start'}>
+                    <VStack align={'stretch'}>
                       <form
                         onSubmit={invitationForm.handleSubmit(onSubmit)}
                         style={{ width: '100%' }}
@@ -135,7 +175,7 @@ const ShareTab: React.FC<Props> = ({ isOpen, onClose, appId }) => {
                                 </Box>
                               )}
                               {editorQuery.data &&
-                                editorQuery.data.map((editor, i) => (
+                                editorQuery.data.appEditors.map((editor, i) => (
                                   <Box
                                     fontSize="sm"
                                     key={editor.user?.id || i}
@@ -166,6 +206,43 @@ const ShareTab: React.FC<Props> = ({ isOpen, onClose, appId }) => {
                                 ))}
                             </>
                           </Box>
+
+                          {editorQuery.data &&
+                            editorQuery.data.pending.length > 0 && (
+                              <VStack align="stretch" w="full">
+                                <Text
+                                  color="gray.500"
+                                  fontSize="sm"
+                                  pt="4"
+                                  fontWeight="medium"
+                                >
+                                  Pending invitations
+                                </Text>
+                                <Box p="2" pb="0" w="full">
+                                  {editorQuery.data.pending.map(({ email }) => (
+                                    <HStack w="full" pb="2">
+                                      <Text fontSize="sm" key={email}>
+                                        {email}
+                                      </Text>
+                                      <Spacer flexGrow={1} />
+                                      <Button
+                                        variant="link"
+                                        fontSize="sm"
+                                        p="0"
+                                        onClick={() => {
+                                          removeEditor.mutateAsync({
+                                            appId,
+                                            email,
+                                          });
+                                        }}
+                                      >
+                                        Revoke
+                                      </Button>
+                                    </HStack>
+                                  ))}
+                                </Box>
+                              </VStack>
+                            )}
                         </VStack>
                       </Box>
                       <Divider />

@@ -23,6 +23,9 @@ module.exports = getConfig({
    * Note: requires `ssr: true` or a `getInitialProps` in `_app.tsx`
    * @link https://nextjs.org/docs/api-reference/next.config.js/runtime-configuration
    */
+  experimental: {
+    webpackBuildWorker: true,
+  },
   publicRuntimeConfig: {
     NODE_ENV: env.NODE_ENV,
   },
@@ -48,11 +51,9 @@ module.exports = getConfig({
     return [
       {
         source: '/run/:slug/:version/:filename/:path*',
-        destination: `${
-          process.env.NODE_ENV === 'production' ? 'https' : 'http'
-        }://:slug.${
-          process.env.NEXT_PUBLIC_OUTPUT_SERVER_HOSTNAME
-        }/@:version/:filename/call`,
+        destination: `${process.env.NODE_ENV === 'production' ? 'https' : 'http'
+          }://:slug.${process.env.NEXT_PUBLIC_OUTPUT_SERVER_HOSTNAME
+          }/@:version/:filename/call`,
       },
     ];
   },

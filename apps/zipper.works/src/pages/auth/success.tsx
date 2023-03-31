@@ -17,6 +17,10 @@ export const AuthSuccess: NextPageWithLayout = (props: any) => {
     'resourceOwnerSlug.validateAndCreateUserSlug',
   );
 
+  const acceptPendingInvitations = trpc.useMutation(
+    'appEditor.acceptPendingInvitations',
+  );
+
   useEffect(() => {
     if (user) {
       if (user.publicMetadata.username) {
@@ -35,6 +39,8 @@ export const AuthSuccess: NextPageWithLayout = (props: any) => {
           id: user.id,
         });
       }
+
+      acceptPendingInvitations.mutateAsync();
 
       setReadyToRedirect(true);
     }
