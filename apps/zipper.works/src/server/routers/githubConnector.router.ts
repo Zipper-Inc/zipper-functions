@@ -16,8 +16,8 @@ import {
 import fetch from 'node-fetch';
 import { AppConnectorUserAuth, Prisma } from '@prisma/client';
 import {
-  GithubAuthTokenResponse,
-  GithubCheckTokenResponse,
+  GitHubAuthTokenResponse,
+  GitHubCheckTokenResponse,
 } from '@zipper/types';
 import { filterTokenFields } from '~/server/utils/json';
 
@@ -92,7 +92,7 @@ export const githubConnectorRouter = createRouter()
           },
         },
         data: {
-          metadata: Prisma.JsonNull,
+          metadata: Prisma.DbNull,
         },
       });
 
@@ -216,7 +216,7 @@ export const githubConnectorRouter = createRouter()
         }),
       });
 
-      const json = (await res.json()) as GithubAuthTokenResponse;
+      const json = (await res.json()) as GitHubAuthTokenResponse;
 
       if (!json.access_token) {
         throw new TRPCError({
@@ -245,7 +245,7 @@ export const githubConnectorRouter = createRouter()
           },
         );
         const userInfoJson =
-          (await userInfoRes.json()) as GithubCheckTokenResponse;
+          (await userInfoRes.json()) as GitHubCheckTokenResponse;
         if (userInfoJson.user) {
           metadata = filterTokenFields(userInfoJson);
           appConnectorUserAuth = await prisma.appConnectorUserAuth.upsert({
@@ -287,7 +287,7 @@ export const githubConnectorRouter = createRouter()
       });
       if (connector) {
         // Only update connector metadata if previously null and create the GITHUB_TOKEN secret
-        if (connector.metadata === null) {
+        if (!connector.metadata) {
           await prisma.appConnector.update({
             where: {
               appId_type: {

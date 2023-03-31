@@ -118,7 +118,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
           },
         ]);
         toast({
-          title: 'Github user auth revoked.',
+          title: 'GitHub user auth revoked.',
           status: 'success',
           duration,
           isClosable: true,
@@ -130,7 +130,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
   // state to hold whether user needs to authenticate with slack
   const [slackAuthRequired, setSlackAuthRequired] = useState(false);
   // state to hold whether user needs to authenticate with github
-  const [githubAuthRequired, setGithubAuthRequired] = useState(false);
+  const [githubAuthRequired, setGitHubAuthRequired] = useState(false);
 
   // get the existing Slack connector data from the database
   const slackConnector = trpc.useQuery(
@@ -139,7 +139,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
       enabled: slackAuthRequired,
     },
   );
-  // get the existing Github connector data from the database
+  // get the existing GitHub connector data from the database
   const githubConnector = trpc.useQuery(
     ['githubConnector.get', { appId: appInfo.id }],
     {
@@ -187,7 +187,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
       setSlackAuthRequired(true);
     }
     if (userAuthConnectors.find((c) => c.type === 'github')) {
-      setGithubAuthRequired(true);
+      setGitHubAuthRequired(true);
     }
   }, []);
 

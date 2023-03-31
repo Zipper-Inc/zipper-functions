@@ -14,7 +14,7 @@ import {
   encryptToHex,
 } from '@zipper/utils';
 import fetch from 'node-fetch';
-import { AppConnectorUserAuth } from '@prisma/client';
+import { AppConnectorUserAuth, Prisma } from '@prisma/client';
 import { filterTokenFields } from '~/server/utils/json';
 
 export const slackConnectorRouter = createRouter()
@@ -90,7 +90,7 @@ export const slackConnectorRouter = createRouter()
           },
         },
         data: {
-          metadata: undefined,
+          metadata: Prisma.DbNull,
         },
       });
 
