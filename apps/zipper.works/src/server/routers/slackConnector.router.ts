@@ -56,11 +56,19 @@ export const slackConnectorRouter = createRouter()
         process.env.ENCRYPTION_KEY || '',
       );
 
+      // check if we have a client id for this app in the appConnector table
+      const appConnector = await prisma.appConnector.findFirst({
+        where: {
+          appId,
+          type: 'slack',
+        },
+      });
+
+      const clientId =
+        appConnector?.clientId || process.env.NEXT_PUBLIC_SLACK_CLIENT_ID!;
+
       const url = new URL('https://slack.com/oauth/v2/authorize');
-      url.searchParams.set(
-        'client_id',
-        process.env.NEXT_PUBLIC_SLACK_CLIENT_ID!,
-      );
+      url.searchParams.set('client_id', clientId);
       url.searchParams.set('scope', scopes.bot.join(','));
       url.searchParams.set('user_scope', scopes.user.join(','));
       url.searchParams.set('state', state);
