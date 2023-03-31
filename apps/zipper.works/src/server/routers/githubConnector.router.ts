@@ -229,7 +229,7 @@ export const githubConnectorRouter = createRouter()
 
       const userIdOrTempId: string =
         userId || ctx.userId || (ctx.req?.cookies as any)['__zipper_user_id'];
-      if (appId && json.scope && userIdOrTempId) {
+      if (appId && json.access_token && userIdOrTempId) {
         const base64Credentials = getBase64Credentials();
         const userInfoRes = await fetch(
           `https://api.github.com/applications/${process.env.GITHUB_CLIENT_ID}/token`,
