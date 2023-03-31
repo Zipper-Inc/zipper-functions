@@ -40,8 +40,9 @@ import { encryptToHex } from '@zipper/utils';
 import { deleteCookie } from 'cookies-next';
 import { HiOutlineChevronUp, HiOutlineChevronDown } from 'react-icons/hi';
 import { getAuth } from '@clerk/nextjs/server';
-import { UserButton } from '@clerk/nextjs';
+import { UserButton, useUser } from '@clerk/nextjs';
 import Unauthorized from './unauthorized';
+import removeAppConnectorUserAuth from '~/utils/remove-app-connector-user-auth';
 
 const { __DEBUG__ } = process.env;
 
@@ -74,6 +75,7 @@ export function AppPage({
   const [modalResult, setModalResult] = useState({ heading: '', body: '' });
   const [loading, setLoading] = useState(false);
   const [isExpandedResultOpen, setIsExpandedResultOpen] = useState(true);
+  const { user } = useUser();
 
   const runApp = async () => {
     setLoading(true);
@@ -182,15 +184,29 @@ export function AppPage({
               actions={{
                 github: {
                   authUrl: githubAuthUrl || '#',
-                  onDelete: () => {
-                    deleteCookie('__zipper_user_id');
+                  onDelete: async () => {
+                    if (user) {
+                      await removeAppConnectorUserAuth({
+                        appId: app.id,
+                        type: 'github',
+                      });
+                    } else {
+                      deleteCookie('__zipper_temp_user_id');
+                    }
                     router.reload();
                   },
                 },
                 slack: {
                   authUrl: slackAuthUrl || '#',
-                  onDelete: () => {
-                    deleteCookie('__zipper_user_id');
+                  onDelete: async () => {
+                    if (user) {
+                      await removeAppConnectorUserAuth({
+                        appId: app.id,
+                        type: 'slack',
+                      });
+                    } else {
+                      deleteCookie('__zipper_temp_user_id');
+                    }
                     router.reload();
                   },
                 },
@@ -324,12 +340,14 @@ export const getServerSideProps: GetServerSideProps = async ({
   );
   if (__DEBUG__) console.log({ versionFromUrl, filename });
 
+  const auth = getAuth(req);
+
   // grab the app if it exists
   const result = await getAppInfo({
     subdomain,
     tempUserId: req.cookies['__zipper_temp_user_id'],
     filename,
-    token: await getAuth(req).getToken(),
+    token: await auth.getToken(),
   });
 
   if (__DEBUG__) console.log('getAppInfo', { result });
@@ -373,7 +391,7 @@ export const getServerSideProps: GetServerSideProps = async ({
         `${app.id}::${
           process.env.NODE_ENV === 'development' ? 'http://' : 'https://'
         }${req.headers.host}::${
-          getAuth(req).userId || req.cookies['__zipper_temp_user_id']
+          auth.userId || req.cookies['__zipper_temp_user_id']
         }`,
         process.env.ENCRYPTION_KEY || '',
       );
@@ -397,7 +415,9 @@ export const getServerSideProps: GetServerSideProps = async ({
       const state = encryptToHex(
         `${app.id}::${
           process.env.NODE_ENV === 'development' ? 'http://' : 'https://'
-        }${req.headers.host}::${req.cookies['__zipper_user_id']}`,
+        }${req.headers.host}::${
+          auth.userId || req.cookies['__zipper_temp_user_id']
+        }`,
         process.env.ENCRYPTION_KEY || '',
       );
 
