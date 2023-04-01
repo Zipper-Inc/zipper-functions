@@ -1,14 +1,8 @@
-export const code = `import { Octokit, App } from "https://cdn.skypack.dev/octokit?dts";
+export const code = `import { Octokit } from "https://cdn.skypack.dev/octokit?dts";
 
-const clientGlobal = window as typeof window & {
-  gitHubClient?: any;
-};
-
-export const client = clientGlobal.gitHubClient || new Octokit({
+const client = new Octokit({
   auth: Deno.env.get("GITHUB_TOKEN"),
 });
-
-clientGlobal.gitHubClient = client;
 
 export default client;
 `;

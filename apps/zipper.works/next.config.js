@@ -51,11 +51,9 @@ module.exports = getConfig({
     return [
       {
         source: '/run/:slug/:version/:filename/:path*',
-        destination: `${
-          process.env.NODE_ENV === 'production' ? 'https' : 'http'
-        }://:slug.${
-          process.env.NEXT_PUBLIC_OUTPUT_SERVER_HOSTNAME
-        }/@:version/:filename/call`,
+        destination: `${process.env.NODE_ENV === 'production' ? 'https' : 'http'
+          }://:slug.${process.env.NEXT_PUBLIC_OUTPUT_SERVER_HOSTNAME
+          }/@:version/:filename/call`,
       },
     ];
   },

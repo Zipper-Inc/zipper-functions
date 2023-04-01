@@ -5,7 +5,7 @@ import { useEffect } from 'react';
 import { NextPageWithLayout } from '~/pages/_app';
 import { trpc } from '~/utils/trpc';
 
-const GithubAuth: NextPageWithLayout = () => {
+const GitHubAuth: NextPageWithLayout = () => {
   const router = useRouter();
   const { code, state, error, error_description } = router.query;
 
@@ -41,7 +41,7 @@ const GithubAuth: NextPageWithLayout = () => {
 
   useEffect(() => {
     if (process.env.NODE_ENV === 'development') {
-      // Github has to redirect to an https url (usually ngrok)
+      // GitHub has to redirect to an https url (usually ngrok)
       // so we have to redirect to localhost:3000 so that the cookie gets
       // set properly
       if (window.location.host !== 'localhost:3000') {
@@ -67,13 +67,13 @@ const GithubAuth: NextPageWithLayout = () => {
       <VStack spacing="12">
         <ZipperLogo />
         <Text>
-          Exchanging one-time code from Github for an API token. Hold tight...
+          Exchanging one-time code from GitHub for an API token. Hold tight...
         </Text>
       </VStack>
     </Center>
   );
 };
 
-export default GithubAuth;
+export default GitHubAuth;
 
-GithubAuth.header = () => <></>;
+GitHubAuth.header = () => <></>;

@@ -1,10 +1,10 @@
-export type GithubAuthTokenResponse = {
+export type GitHubAuthTokenResponse = {
   access_token: string;
   token_type: string;
   scope: string;
 };
 
-export type GithubCheckTokenResponse = {
+export type GitHubCheckTokenResponse = {
   id: number;
   url: string;
   scopes: string[] | null;

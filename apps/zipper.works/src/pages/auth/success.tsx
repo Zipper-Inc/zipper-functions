@@ -1,5 +1,5 @@
 import { User } from '@clerk/clerk-sdk-node';
-import { buildClerkProps, clerkClient, getAuth } from '@clerk/nextjs/server';
+import { useUser } from '@clerk/nextjs';
 import { GetServerSideProps } from 'next';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
@@ -8,13 +8,19 @@ import { NextPageWithLayout } from '../_app';
 
 export const AuthSuccess: NextPageWithLayout = (props: any) => {
   const [readyToRedirect, setReadyToRedirect] = useState(false);
-  const user = props.__clerk_ssr_state.user as User;
+
+  const { user } = useUser();
+
   const generateSlug = trpc.useMutation(
     'resourceOwnerSlug.createGeneratedUserSlug',
   );
 
   const validateSlug = trpc.useMutation(
     'resourceOwnerSlug.validateAndCreateUserSlug',
+  );
+
+  const acceptPendingInvitations = trpc.useMutation(
+    'appEditor.acceptPendingInvitations',
   );
 
   useEffect(() => {
@@ -36,6 +42,8 @@ export const AuthSuccess: NextPageWithLayout = (props: any) => {
         });
       }
 
+      acceptPendingInvitations.mutateAsync();
+
       setReadyToRedirect(true);
     }
   }, [user]);
@@ -53,17 +61,6 @@ export const AuthSuccess: NextPageWithLayout = (props: any) => {
 
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
   const redirect = ctx.query.redirect_url || '/';
-  const { userId } = getAuth(ctx.req);
-  const user = userId ? await clerkClient.users.getUser(userId) : null;
-
-  if (user) {
-    return {
-      props: {
-        redirect,
-        ...buildClerkProps(ctx.req, { user }),
-      },
-    };
-  }
 
   return {
     props: { redirect },
