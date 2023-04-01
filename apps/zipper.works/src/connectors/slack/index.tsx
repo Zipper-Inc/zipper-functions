@@ -11,11 +11,13 @@ import {
   Card,
   CardBody,
   Code,
+  Collapse,
   FormControl,
   FormHelperText,
   FormLabel,
   Heading,
   HStack,
+  Input,
   Popover,
   PopoverArrow,
   PopoverBody,
@@ -54,6 +56,8 @@ function SlackConnectorForm({ appId }: { appId: string }) {
   const cancelRef = useRef() as React.MutableRefObject<HTMLButtonElement>;
 
   const { appInfo } = useRunAppContext();
+  const [clientId, setClientId] = useState<string>('');
+  const [clientSecret, setClientSecret] = useState<string>('');
 
   // convert the scopes to options for the multi-select menus
   const __bot_options = workspaceScopes.map((scope) => ({
@@ -104,6 +108,9 @@ function SlackConnectorForm({ appId }: { appId: string }) {
     connector.data?.isUserAuthRequired,
   );
 
+  const [isOwnClientIdRequired, setIsOwnClientIdRequired] =
+    useState<boolean>(false);
+
   const [isSaving, setIsSaving] = useState(false);
 
   // get the existing Slack bot token from the database
@@ -123,6 +130,8 @@ function SlackConnectorForm({ appId }: { appId: string }) {
     },
   ]);
 
+  const [slackAuthInProgress, setSlackAuthInProgress] = useState(false);
+
   const context = trpc.useContext();
   const router = useRouter();
   const updateAppConnectorMutation = trpc.useMutation('appConnector.update', {
@@ -137,6 +146,8 @@ function SlackConnectorForm({ appId }: { appId: string }) {
     },
   });
 
+  const addSecretMutation = trpc.useMutation('secret.add');
+
   const deleteConnectorMutation = trpc.useMutation('slackConnector.delete', {
     async onSuccess() {
       await utils.invalidateQueries(['slackConnector.get', { appId }]);
@@ -150,6 +161,13 @@ function SlackConnectorForm({ appId }: { appId: string }) {
   useEffect(() => {
     setIsUserAuthRequired(connector.data?.isUserAuthRequired);
   }, [connector.data?.isUserAuthRequired]);
+
+  useEffect(() => {
+    if (slackAuthInProgress && slackAuthURL.data?.url) {
+      router.push(slackAuthURL.data?.url);
+      setSlackAuthInProgress(false);
+    }
+  }, [slackAuthInProgress, slackAuthURL.data?.url]);
 
   const existingInstallation = existingSecret.data && connector.data?.metadata;
 
@@ -185,6 +203,52 @@ function SlackConnectorForm({ appId }: { appId: string }) {
             When checked, users will have to authorize the Slack integration
             before they're able to run this Zipper app and see the output.
           </FormHelperText>
+        </FormControl>
+      </HStack>
+    );
+  };
+
+  const requiresOwnClientIdSwitch = () => {
+    return (
+      <HStack w="full" pt="4" pb="4">
+        <FormControl>
+          <HStack w="full">
+            <FormLabel>Require own client ID?</FormLabel>
+            <Spacer flexGrow={1} />
+            <Switch
+              isChecked={isOwnClientIdRequired}
+              ml="auto"
+              onChange={(e) => {
+                setIsOwnClientIdRequired(e.target.checked);
+              }}
+            />
+          </HStack>
+          <FormHelperText maxW="xl">
+            When checked, users will have the ability to add custom client ID
+            and secret.
+          </FormHelperText>
+
+          <Collapse in={isOwnClientIdRequired} animateOpacity>
+            <FormControl>
+              <FormLabel color={'gray.500'}>Client ID</FormLabel>
+              <Input
+                autoComplete="new-password"
+                value={clientId}
+                onChange={(e) => setClientId(e.target.value)}
+              />
+            </FormControl>
+
+            <FormControl pt="2">
+              <FormLabel color={'gray.500'}>Client Secret</FormLabel>
+
+              <Input
+                autoComplete="new-password"
+                type="password"
+                value={clientSecret}
+                onChange={(e) => setClientSecret(e.target.value)}
+              />
+            </FormControl>
+          </Collapse>
         </FormControl>
       </HStack>
     );
@@ -357,6 +421,7 @@ function SlackConnectorForm({ appId }: { appId: string }) {
                         />
                       </FormControl>
                       {userAuthSwitch()}
+                      {requiresOwnClientIdSwitch()}
 
                       <Button
                         mt="6"
@@ -365,6 +430,17 @@ function SlackConnectorForm({ appId }: { appId: string }) {
                         onClick={async () => {
                           if (slackAuthURL.data) {
                             setIsSaving(true);
+                            if (
+                              isOwnClientIdRequired &&
+                              clientId &&
+                              clientSecret
+                            ) {
+                              await addSecretMutation.mutateAsync({
+                                appId: appId,
+                                key: 'SLACK_CLIENT_SECRET',
+                                value: clientSecret,
+                              });
+                            }
                             await updateAppConnectorMutation.mutateAsync({
                               appId,
                               type: 'slack',
@@ -372,11 +448,12 @@ function SlackConnectorForm({ appId }: { appId: string }) {
                                 isUserAuthRequired,
                                 userScopes: userValue as string[],
                                 workspaceScopes: botValue as string[],
+                                clientId: clientId || undefined,
                               },
                             });
-                            router.push(slackAuthURL.data?.url);
+                            await slackAuthURL.refetch();
+                            setSlackAuthInProgress(true);
                           }
-
                           setIsSaving(false);
                         }}
                       >

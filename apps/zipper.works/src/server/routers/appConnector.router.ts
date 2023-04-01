@@ -39,6 +39,7 @@ export const appConnectorRouter = createRouter()
         isUserAuthRequired: z.boolean().optional(),
         userScopes: z.array(z.string()).optional(),
         workspaceScopes: z.array(z.string()).optional(),
+        clientId: z.string().optional(),
       }),
     }),
     async resolve({ ctx, input }) {
