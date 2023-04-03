@@ -32,9 +32,7 @@ export const githubConnectorRouter = createRouter()
       appId: z.string(),
     }),
     async resolve({ ctx, input }) {
-      if (!hasAppEditPermission({ ctx, appId: input.appId })) {
-        new TRPCError({ code: 'UNAUTHORIZED' });
-      }
+      await hasAppReadPermission({ ctx, appId: input.appId });
 
       return prisma.appConnector.findFirst({
         where: {
@@ -52,9 +50,7 @@ export const githubConnectorRouter = createRouter()
       redirectUri: z.string().optional(),
     }),
     async resolve({ ctx, input }) {
-      if (!hasAppReadPermission({ ctx, appId: input.appId })) {
-        new TRPCError({ code: 'UNAUTHORIZED' });
-      }
+      await hasAppReadPermission({ ctx, appId: input.appId });
 
       const { appId, scopes, postInstallationRedirect, redirectUri } = input;
       const state = encryptToHex(
@@ -80,9 +76,7 @@ export const githubConnectorRouter = createRouter()
       appId: z.string(),
     }),
     async resolve({ ctx, input: { appId } }) {
-      if (!hasAppEditPermission({ ctx, appId })) {
-        new TRPCError({ code: 'UNAUTHORIZED' });
-      }
+      await hasAppEditPermission({ ctx, appId });
 
       await prisma.appConnector.update({
         where: {

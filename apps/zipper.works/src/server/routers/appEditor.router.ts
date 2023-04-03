@@ -1,5 +1,4 @@
-import clerk, { Clerk, clerkClient, User } from '@clerk/clerk-sdk-node';
-import { getAuth } from '@clerk/nextjs/server';
+import clerk from '@clerk/clerk-sdk-node';
 import { Prisma } from '@prisma/client';
 import { z } from 'zod';
 import { prisma } from '~/server/prisma';
@@ -163,7 +162,7 @@ export const appEditorRouter = createRouter()
     async resolve({ ctx }) {
       if (!ctx.userId) return;
 
-      const user = await clerkClient.users.getUser(ctx.userId!);
+      const user = await clerk.users.getUser(ctx.userId!);
       if (!user) return;
 
       const pending = await prisma.pendingAppEditor.findMany({
@@ -193,7 +192,7 @@ export const appEditorRouter = createRouter()
       email: z.string().email(),
     }),
     async resolve({ ctx, input }) {
-      hasAppEditPermission({ ctx, appId: input.appId });
+      await hasAppEditPermission({ ctx, appId: input.appId });
 
       return prisma.pendingAppEditor.delete({
         where: {

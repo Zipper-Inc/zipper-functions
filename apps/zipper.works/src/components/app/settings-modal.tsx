@@ -26,6 +26,7 @@ import { HiExclamationTriangle } from 'react-icons/hi2';
 import { useDebounce } from 'use-debounce';
 import slugify from '~/utils/slugify';
 import { trpc } from '~/utils/trpc';
+import { useRunAppContext } from '../context/run-app-context';
 
 const MIN_SLUG_LENGTH = 5;
 
@@ -36,15 +37,16 @@ type Props = {
 };
 
 const SettingsTab: React.FC<Props> = ({ isOpen, onClose, appId }) => {
-  const appQuery = trpc.useQuery(['app.byId', { id: appId }]);
+  const { appInfo } = useRunAppContext();
+  const utils = trpc.useContext();
   const appEditMutation = trpc.useMutation('app.edit', {
     onSuccess() {
-      appQuery.refetch();
+      utils.invalidateQueries('app.byResourceOwnerAndAppSlugs');
     },
   });
 
   const [slugExists, setSlugExists] = useState<boolean | undefined>(false);
-  const [slug, setSlug] = useState<string>(appQuery.data?.slug || '');
+  const [slug, setSlug] = useState<string>(appInfo.slug || '');
   const [debouncedSlug] = useDebounce(slug, 200);
 
   const appSlugQuery = trpc.useQuery(
@@ -54,14 +56,14 @@ const SettingsTab: React.FC<Props> = ({ isOpen, onClose, appId }) => {
 
   const settingsForm = useForm({
     defaultValues: {
-      name: appQuery.data?.name || '',
-      slug: appQuery.data?.slug || '',
-      description: appQuery.data?.description || '',
+      name: appInfo.name || '',
+      slug: appInfo.slug || '',
+      description: appInfo.description || '',
     },
   });
 
   useEffect(() => {
-    if (slug === appQuery.data?.slug) {
+    if (slug === appInfo.slug) {
       setSlugExists(false);
     } else {
       setSlugExists(!appSlugQuery.data);

@@ -15,6 +15,7 @@ import useInterval from '~/hooks/use-interval';
 import getRunUrl from '~/utils/get-run-url';
 import { AppConnectorUserAuth } from '@prisma/client';
 import { parseInputForTypes } from '~/utils/parse-input-for-types';
+import { useUser } from '@clerk/nextjs';
 
 type UserAuthConnector = {
   type: ConnectorType;
@@ -83,15 +84,20 @@ export function RunAppProvider({
   const [isRunning, setIsRunning] = useState(false);
   const [results, setResults] = useState<Record<string, string>>({});
   const [lastRunVersion, setLastRunVersion] = useState(getLastRunVersion(app));
-  const appEventsQuery = trpc.useQuery([
-    'appEvent.all',
-    { deploymentId: `${id}@${lastRunVersion}` },
-  ]);
+  const { user } = useUser();
+  const appEventsQuery = trpc.useQuery(
+    ['appEvent.all', { deploymentId: `${id}@${lastRunVersion}` }],
+    { enabled: !!user },
+  );
 
   const utils = trpc.useContext();
   const editAppMutation = trpc.useMutation('app.edit', {
     async onSuccess() {
       await utils.invalidateQueries(['app.byId', { id }]);
+      await utils.invalidateQueries([
+        'app.byResourceOwnerAndAppSlugs',
+        { resourceOwnerSlug: app.resourceOwner.slug, appSlug: app.slug },
+      ]);
     },
   });
 
@@ -185,10 +191,12 @@ export function RunAppProvider({
           setResults({ ...results, [filename || 'main.ts']: result });
 
           setLastRunVersion(version);
-          editAppMutation.mutateAsync({
-            id,
-            data: { lastDeploymentVersion: version },
-          });
+          if (canUserEdit) {
+            editAppMutation.mutateAsync({
+              id,
+              data: { lastDeploymentVersion: version },
+            });
+          }
 
           // refetch logs
           appEventsQuery.refetch();
