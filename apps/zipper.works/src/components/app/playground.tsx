@@ -84,13 +84,19 @@ export function Playground({
 
   const switchToCodeTab = () => setTabIndex(0);
 
+  const onBeforeRun = () => {
+    if (app.canUserEdit) {
+      save();
+    }
+  };
+
   return (
     <RunAppProvider
       app={app}
       filename={currentScript?.filename}
       inputParams={inputParams}
       inputError={inputError}
-      onBeforeRun={save}
+      onBeforeRun={onBeforeRun}
       onAfterRun={switchToCodeTab}
     >
       <VStack flex={1} paddingX={10} alignItems="stretch" spacing={0}>

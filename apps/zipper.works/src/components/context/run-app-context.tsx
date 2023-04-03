@@ -94,6 +94,10 @@ export function RunAppProvider({
   const editAppMutation = trpc.useMutation('app.edit', {
     async onSuccess() {
       await utils.invalidateQueries(['app.byId', { id }]);
+      await utils.invalidateQueries([
+        'app.byResourceOwnerAndAppSlugs',
+        { resourceOwnerSlug: app.resourceOwner.slug, appSlug: app.slug },
+      ]);
     },
   });
 
@@ -187,10 +191,12 @@ export function RunAppProvider({
           setResults({ ...results, [filename || 'main.ts']: result });
 
           setLastRunVersion(version);
-          editAppMutation.mutateAsync({
-            id,
-            data: { lastDeploymentVersion: version },
-          });
+          if (canUserEdit) {
+            editAppMutation.mutateAsync({
+              id,
+              data: { lastDeploymentVersion: version },
+            });
+          }
 
           // refetch logs
           appEventsQuery.refetch();

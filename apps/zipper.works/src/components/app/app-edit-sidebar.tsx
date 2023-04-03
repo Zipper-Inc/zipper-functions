@@ -42,7 +42,6 @@ import getRunUrl from '~/utils/get-run-url';
 import Link from 'next/link';
 import { HiOutlineChevronDown, HiOutlineChevronUp } from 'react-icons/hi';
 import { getAppLink } from '@zipper/utils';
-import { WarningIcon } from '@chakra-ui/icons';
 
 type AppEditSidebarProps = {
   showInputForm: boolean;
@@ -310,7 +309,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
                 display="flex"
                 gap={2}
                 fontWeight="medium"
-                isDisabled={!appInfo.canUserEdit || isRunning || !inputParams}
+                isDisabled={isRunning || !inputParams}
               >
                 <HiOutlinePlay />
                 <Text>{`Run${
