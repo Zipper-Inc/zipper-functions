@@ -213,10 +213,6 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
   const [expandedResult, setExpandedResult] = useState<Record<string, any>>({});
   const [modalResult, setModalResult] = useState({ heading: '', body: '' });
 
-  useEffect(() => {
-    console.log(modalResult.body);
-  }, [modalResult]);
-
   const output = useMemo(
     () => (
       <FunctionOutput

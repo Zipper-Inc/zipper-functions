@@ -192,7 +192,7 @@ export const appEditorRouter = createRouter()
       email: z.string().email(),
     }),
     async resolve({ ctx, input }) {
-      hasAppEditPermission({ ctx, appId: input.appId });
+      await hasAppEditPermission({ ctx, appId: input.appId });
 
       return prisma.pendingAppEditor.delete({
         where: {
