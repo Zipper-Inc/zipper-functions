@@ -43,7 +43,7 @@ export async function build({
   version: string;
 }) {
   const startMs = performance.now();
-  const appName = `${app.name}@${version}`;
+  const appName = `${app.slug}@${version}`;
 
   buildLog({ appName, msg: `Building for deployment` });
 
