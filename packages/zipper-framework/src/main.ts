@@ -1,6 +1,6 @@
 import { hello } from './hello.ts';
 
-export function main({
+export function handler({
   helloString,
   worldString,
 }: {

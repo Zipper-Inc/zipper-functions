@@ -67,17 +67,19 @@ export function parseInputForTypes(
 
   try {
     const src = getSourceFileFromCode(code);
-    let mainFn = src.getFunction('main');
-    if (!mainFn) mainFn = src.getFunction('handler');
 
-    if (!mainFn) {
-      if (throwErrors)
-        throw new Error('You must define a main or handler function');
-      console.error('You must define a main function');
+    const handlerFn = src.getFunction('handler');
+
+    if (!handlerFn || !handlerFn.hasExportKeyword()) {
+      if (throwErrors) throw new Error('You must export a handler function');
+      console.error('You must export a handler function');
       return [];
     }
 
-    const inputs = mainFn.getParameters();
+    if (handlerFn.hasDefaultKeyword() && throwErrors)
+      throw new Error('The handler function cannot be the default export');
+
+    const inputs = handlerFn.getParameters();
     if (inputs.length !== 1 && inputs.length > 0) {
       if (throwErrors)
         throw new Error('You must have one and only one input object');
@@ -143,23 +145,22 @@ export function addParamToCode(
   paramType = 'string',
 ): string {
   const src = getSourceFileFromCode(code);
-  let mainFn = src.getFunction('main');
-  if (!mainFn) mainFn = src.getFunction('handler');
+  const handler = src.getFunction('handler');
 
-  if (!mainFn) {
-    console.error('You must define a main function');
+  if (!handler) {
+    console.error('You must define a handler function');
     return code;
   }
 
-  const inputs = mainFn.getParameters();
+  const inputs = handler.getParameters();
   if (!inputs.length) {
     // Create a new input object with the desired parameter
     const newParamString = `{ ${paramName} } : { ${paramName}${
       paramType ? `: ${paramType}` : ''
     } }`;
 
-    mainFn.replaceWithText(
-      mainFn.getText().replace(/\(\)/, `(${newParamString})`),
+    handler.replaceWithText(
+      handler.getText().replace(/\(\)/, `(${newParamString})`),
     );
 
     return src.getFullText();
