@@ -1,12 +1,5 @@
 /**
- * @todo ibu
- * These should be imported from `@zipper/types` somehow.
- * That way, we can share types across the apps and framework.
- * Not sure how to do that exactly with Deno/ESZip, since `@zipper/types` is Node 🤷🏽‍♂️
- */
-
-/**
- * 🛑 DO NOT IMPORT INTO THIS FILE
+ * 🛑 DO NOT IMPORT ANYTHING INTO THIS FILE
  * It needs to be readable as is from the Monaco editor
  */
 

@@ -25,6 +25,7 @@
     "@zipper/types": "*",
     "@zipper/ui": "*",
     "@zipper/utils": "*",
+    "zipper-framework": "*",
     "chrono-node": "^2.5.0",
     "cookies-next": "^2.1.1",
     "framer-motion": "^9.0.0",

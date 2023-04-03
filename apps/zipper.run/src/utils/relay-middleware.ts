@@ -8,6 +8,7 @@ import getValidSubdomain from './get-valid-subdomain';
 import { getFilenameAndVersionFromPath } from './get-values-from-url';
 import { clerkClient, getAuth } from '@clerk/nextjs/server';
 import { getAppLink } from '@zipper/utils';
+import { RequestBody as RelayRequestBody } from 'zipper-framework';
 
 const { __DEBUG__, SHARED_SECRET: DENO_SHARED_SECRET, RPC_HOST } = process.env;
 
@@ -17,17 +18,6 @@ const RPC_ROOT = `${RPC_HOST}/api/deno/v0/`;
 
 const X_FORWARDED_HOST = 'x-forwarded-host';
 const X_DENO_SUBHOST = 'x-deno-subhost';
-
-type RelayRequestBody = {
-  appInfo: { id: string; slug: string; version: string; url: string };
-  originalRequest: { method: string; url: string };
-  inputs: Record<string, any>;
-  userInfo?: {
-    emails: string[];
-    userId?: string;
-  };
-  path?: string;
-};
 
 function getPatchedUrl(req: NextRequest) {
   // preserve path and querystring)
