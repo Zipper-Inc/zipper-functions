@@ -23,9 +23,7 @@ export const slackConnectorRouter = createRouter()
       appId: z.string(),
     }),
     async resolve({ ctx, input }) {
-      if (!hasAppEditPermission({ ctx, appId: input.appId })) {
-        new TRPCError({ code: 'UNAUTHORIZED' });
-      }
+      hasAppReadPermission({ ctx, appId: input.appId });
 
       return prisma.appConnector.findFirst({
         where: {
@@ -46,9 +44,7 @@ export const slackConnectorRouter = createRouter()
       redirectUri: z.string().optional(),
     }),
     async resolve({ ctx, input }) {
-      if (!hasAppReadPermission({ ctx, appId: input.appId })) {
-        new TRPCError({ code: 'UNAUTHORIZED' });
-      }
+      hasAppReadPermission({ ctx, appId: input.appId });
 
       const { appId, scopes, postInstallationRedirect, redirectUri } = input;
       const state = encryptToHex(

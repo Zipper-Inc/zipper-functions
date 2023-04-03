@@ -28,8 +28,8 @@ import { FieldValues, FormProvider, useForm } from 'react-hook-form';
 import { trpc } from '~/utils/trpc';
 import { useEffect, useState } from 'react';
 import { VscCode } from 'react-icons/vsc';
-import { useOrganizations } from '@clerk/nextjs';
-import { stat } from 'fs';
+import { useOrganizations, useUser } from '@clerk/nextjs';
+import { useRouter } from 'next/router';
 
 type Props = {
   isOpen: boolean;
@@ -38,11 +38,19 @@ type Props = {
 };
 
 const ShareTab: React.FC<Props> = ({ isOpen, onClose, appId }) => {
-  const appQuery = trpc.useQuery(['app.byId', { id: appId }]);
-  const editorQuery = trpc.useQuery([
-    'appEditor.all',
-    { appId, includeUsers: true },
+  const { user } = useUser();
+  const router = useRouter();
+  const appQuery = trpc.useQuery([
+    'app.byResourceOwnerAndAppSlugs',
+    {
+      resourceOwnerSlug: router.query['resource-owner'] as string,
+      appSlug: router.query['app-slug'] as string,
+    },
   ]);
+  const editorQuery = trpc.useQuery(
+    ['appEditor.all', { appId, includeUsers: true }],
+    { enabled: !!user },
+  );
 
   const [org, setOrg] = useState<any>();
 

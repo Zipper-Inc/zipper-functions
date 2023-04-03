@@ -84,10 +84,11 @@ export function RunAppProvider({
   const [isRunning, setIsRunning] = useState(false);
   const [results, setResults] = useState<Record<string, string>>({});
   const [lastRunVersion, setLastRunVersion] = useState(getLastRunVersion(app));
-  const appEventsQuery = trpc.useQuery([
-    'appEvent.all',
-    { deploymentId: `${id}@${lastRunVersion}` },
-  ]);
+  const { user } = useUser();
+  const appEventsQuery = trpc.useQuery(
+    ['appEvent.all', { deploymentId: `${id}@${lastRunVersion}` }],
+    { enabled: !!user },
+  );
 
   const utils = trpc.useContext();
   const editAppMutation = trpc.useMutation('app.edit', {
