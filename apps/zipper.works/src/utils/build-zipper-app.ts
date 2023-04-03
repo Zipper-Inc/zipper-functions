@@ -13,7 +13,7 @@ import { BuildCache, CacheRecord } from './eszip-build-cache';
  */
 export const FRAMEWORK_PATH = path.resolve(
   '../..',
-  'packages/zipper-framework',
+  'packages/zipper-framework/deno',
 );
 export const FRAMEWORK_ENTRYPOINT = 'app.ts';
 export const HANDLERS_PATH = 'generated/handlers.gen.ts';
