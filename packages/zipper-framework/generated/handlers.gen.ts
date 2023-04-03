@@ -1,6 +1,6 @@
 import { Handler, HandlerMap } from '../types.ts';
 import { MAIN_PATH } from '../constants.ts';
-import { main } from '../src/main.ts';
+import { handler as main } from '../src/main.ts';
 
 /// <generated-imports>
 /// 🛑 DO NOT MODIFY THIS PART ///

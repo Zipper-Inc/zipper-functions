@@ -418,19 +418,22 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
                     {appInfo.canUserEdit && (
                       <Text color={'neutral.600'} size="lg" fontWeight="600">
                         {inputError
-                          ? 'Check your inputs'
+                          ? 'Something went wrong'
                           : 'Add inputs to your app'}
                       </Text>
                     )}
-                    <Text>
-                      {inputError
-                        ? `Something went wrong while parsing the inputs to your
-                        handler function. Check that there is only a single object
-                        parameter.`
-                        : `Inputs can be used to collect user data, preferences,
-                         or feedback, which can then be processed and analyzed by
-                         the app to provide more personalized content or recommendations.`}
-                    </Text>
+                    {inputError ? (
+                      <Text color="red.600" pt="4" fontWeight="500">
+                        {inputError}
+                      </Text>
+                    ) : (
+                      <Text>
+                        Inputs can be used to collect user data, preferences, or
+                        feedback, which can then be processed and analyzed by
+                        the app to provide more personalized content or
+                        recommendations
+                      </Text>
+                    )}
                     {!inputError && appInfo.canUserEdit && (
                       <Button
                         color={'gray.700'}
@@ -442,11 +445,6 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
                       >
                         Add an input
                       </Button>
-                    )}
-                    {inputError && (
-                      <Text color="gray.500" pt="4">
-                        Error: {inputError}
-                      </Text>
                     )}
                   </>
                 )}{' '}
