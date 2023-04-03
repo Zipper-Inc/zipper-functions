@@ -1,8 +1,8 @@
 #!/bin/deno
 import { generateHandlersForFramework } from '../../@zipper-utils/src/utils/generate-handlers-for-framework.ts';
 
-export const SRC_DIR = './src';
-export const GEN_FILE_PATH = './generated/handlers.gen.ts';
+export const SRC_DIR = './deno/src';
+export const GEN_FILE_PATH = './deno/generated/handlers.gen.ts';
 
 export function generate() {
   const filenames = Array.from(Deno.readDirSync(SRC_DIR))
