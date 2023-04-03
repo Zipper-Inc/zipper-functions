@@ -9,7 +9,6 @@ import {
   FormLabel,
   Heading,
   HStack,
-  Icon,
   Switch,
   Text,
   VStack,
@@ -31,16 +30,20 @@ import {
   AlertDialogHeader,
   AlertDialogOverlay,
   Code,
+  Alert,
+  AlertIcon,
 } from '@chakra-ui/react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { trpc } from '~/utils/trpc';
 import { VscGithub } from 'react-icons/vsc';
 import { code, scopes } from './constants';
 import { MultiSelect, SelectOnChange, useMultiSelect } from '@zipper/ui';
-import { HiOutlineTrash, HiQuestionMarkCircle } from 'react-icons/hi';
+import { HiOutlineTrash } from 'react-icons/hi';
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/router';
 import { GitHubCheckTokenResponse } from '@zipper/types';
+import { useUser } from '@clerk/nextjs';
+import { useRunAppContext } from '~/components/context/run-app-context';
 
 export const githubConnector = createConnector({
   id: 'github',
@@ -70,6 +73,8 @@ function GitHubConnectorForm({ appId }: { appId: string }) {
     },
   });
   const isUserAuthRequired = connectorForm.watch('isUserAuthRequired');
+
+  const { appInfo } = useRunAppContext();
 
   const utils = trpc.useContext();
 
@@ -101,10 +106,10 @@ function GitHubConnectorForm({ appId }: { appId: string }) {
   const tokenName = 'GITHUB_TOKEN';
 
   // get the existing Github token from the database
-  const existingSecret = trpc.useQuery([
-    'secret.get',
-    { appId, key: tokenName },
-  ]);
+  const existingSecret = trpc.useQuery(
+    ['secret.get', { appId, key: tokenName }],
+    { enabled: !!appInfo?.canUserEdit },
+  );
 
   const toast = useToast();
 
@@ -200,169 +205,208 @@ function GitHubConnectorForm({ appId }: { appId: string }) {
   };
 
   return (
-    <Box px="10" w="full">
+    <Box px="6" w="full">
       {githubConnector && (
         <>
           <Box mb="5">
             <Heading size="md">{githubConnector.name} Connector</Heading>
           </Box>
           <VStack align="start">
-            {existingInstallation ? (
+            {appInfo.canUserEdit ? (
               <>
-                <Card w="full">
-                  <CardBody color="gray.600">
-                    <VStack align="stretch">
-                      <Heading size="sm">Configuration</Heading>
-                      <HStack w="full" pt="2" spacing="1">
-                        <FormLabel m="0">Managed by OAuth App</FormLabel>
-                        <Popover trigger="hover">
-                          <PopoverTrigger>
-                            <FormLabel
-                              cursor="context-menu"
-                              textDecor="underline"
-                              textDecorationStyle="dotted"
-                              color={'gray.900'}
-                            >
-                              {
-                                (
-                                  connector.data
-                                    ?.metadata as GitHubCheckTokenResponse
-                                ).app?.name
-                              }
-                            </FormLabel>
-                          </PopoverTrigger>
-                          <PopoverContent>
-                            <PopoverArrow />
-                            <PopoverHeader>Installation details</PopoverHeader>
-                            <PopoverBody>
-                              <VStack
-                                align="start"
-                                divider={<StackDivider />}
-                                fontSize="sm"
-                                py="2"
-                              >
-                                <HStack>
-                                  <Text>User ID:</Text>
-                                  <Code>
-                                    {
-                                      (
-                                        connector.data
-                                          ?.metadata as GitHubCheckTokenResponse
-                                      ).user.id
-                                    }
-                                  </Code>
-                                </HStack>
-                                <HStack>
-                                  <Text>User:</Text>
-                                  <Code>
-                                    {
-                                      (
-                                        connector.data
-                                          ?.metadata as GitHubCheckTokenResponse
-                                      ).user.login
-                                    }
-                                  </Code>
-                                </HStack>
-                                <HStack>
-                                  <Text>Scopes:</Text>
-                                  <HStack spacing="px">
-                                    {(
+                {existingInstallation ? (
+                  <>
+                    <Card w="full">
+                      <CardBody color="gray.600">
+                        <VStack align="stretch">
+                          <Heading size="sm">Configuration</Heading>
+                          <HStack w="full" pt="2" spacing="1">
+                            <FormLabel m="0">Managed by OAuth App</FormLabel>
+                            <Popover trigger="hover">
+                              <PopoverTrigger>
+                                <FormLabel
+                                  cursor="context-menu"
+                                  textDecor="underline"
+                                  textDecorationStyle="dotted"
+                                  color={'gray.900'}
+                                >
+                                  {
+                                    (
                                       connector.data
                                         ?.metadata as GitHubCheckTokenResponse
-                                    ).scopes?.map((scope: string) => (
-                                      <Code>{scope}</Code>
-                                    ))}
-                                  </HStack>
+                                    ).app?.name
+                                  }
+                                </FormLabel>
+                              </PopoverTrigger>
+                              <PopoverContent>
+                                <PopoverArrow />
+                                <PopoverHeader>
+                                  Installation details
+                                </PopoverHeader>
+                                <PopoverBody>
+                                  <VStack
+                                    align="start"
+                                    divider={<StackDivider />}
+                                    fontSize="sm"
+                                    py="2"
+                                  >
+                                    <HStack>
+                                      <Text>User ID:</Text>
+                                      <Code>
+                                        {
+                                          (
+                                            connector.data
+                                              ?.metadata as GitHubCheckTokenResponse
+                                          ).user.id
+                                        }
+                                      </Code>
+                                    </HStack>
+                                    <HStack>
+                                      <Text>User:</Text>
+                                      <Code>
+                                        {
+                                          (
+                                            connector.data
+                                              ?.metadata as GitHubCheckTokenResponse
+                                          ).user.login
+                                        }
+                                      </Code>
+                                    </HStack>
+                                    <HStack>
+                                      <Text>Scopes:</Text>
+                                      <HStack spacing="px">
+                                        {(
+                                          connector.data
+                                            ?.metadata as GitHubCheckTokenResponse
+                                        ).scopes?.map((scope: string) => (
+                                          <Code>{scope}</Code>
+                                        ))}
+                                      </HStack>
+                                    </HStack>
+                                  </VStack>
+                                </PopoverBody>
+                              </PopoverContent>
+                            </Popover>
+                            <Spacer />
+                            {githubAuthURL.data && (
+                              <Button
+                                variant="unstyled"
+                                color="red.600"
+                                onClick={onOpen}
+                              >
+                                <HStack>
+                                  <HiOutlineTrash />
+                                  <Text>Uninstall</Text>
                                 </HStack>
-                              </VStack>
-                            </PopoverBody>
-                          </PopoverContent>
-                        </Popover>
-                        <Spacer />
-                        {githubAuthURL.data && (
-                          <Button
-                            variant="unstyled"
-                            color="red.600"
-                            onClick={onOpen}
-                          >
-                            <HStack>
-                              <HiOutlineTrash />
-                              <Text>Uninstall</Text>
-                            </HStack>
-                          </Button>
-                        )}
+                              </Button>
+                            )}
+                          </HStack>
+                          {userAuthSwitch(true)}
+                        </VStack>
+                      </CardBody>
+                    </Card>
+                    <AlertDialog
+                      isOpen={isOpen}
+                      leastDestructiveRef={cancelRef}
+                      onClose={onClose}
+                    >
+                      <AlertDialogOverlay>
+                        <AlertDialogContent>
+                          <AlertDialogHeader fontSize="lg" fontWeight="bold">
+                            Uninstall GitHub App
+                          </AlertDialogHeader>
+
+                          <AlertDialogBody>
+                            Are you sure? You can't undo this action afterwards.
+                          </AlertDialogBody>
+
+                          <AlertDialogFooter>
+                            <Button ref={cancelRef} onClick={onClose}>
+                              Cancel
+                            </Button>
+                            <Button
+                              colorScheme="red"
+                              isDisabled={isSaving}
+                              onClick={async () => {
+                                setIsSaving(true);
+                                await deleteConnectorMutation.mutateAsync({
+                                  appId,
+                                });
+                                setIsSaving(false);
+                                onClose();
+                              }}
+                              ml={3}
+                            >
+                              Uninstall
+                            </Button>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialogOverlay>
+                    </AlertDialog>
+                  </>
+                ) : (
+                  <Card w="full">
+                    <CardBody color="gray.600">
+                      <FormProvider {...connectorForm}>
+                        <form
+                          onSubmit={connectorForm.handleSubmit(saveConnector)}
+                        >
+                          <VStack align="start" w="full">
+                            <FormControl>
+                              <FormLabel color={'gray.500'}>Scopes</FormLabel>
+                              <MultiSelect
+                                options={scopesOptions}
+                                value={scopesValue}
+                                onChange={scopesOnChange as SelectOnChange}
+                              />
+                              {userAuthSwitch()}
+                              <Button
+                                mt="6"
+                                type="submit"
+                                colorScheme={'purple'}
+                                isDisabled={isSaving}
+                              >
+                                Save & Install
+                              </Button>
+                            </FormControl>
+                          </VStack>
+                        </form>
+                      </FormProvider>
+                    </CardBody>
+                  </Card>
+                )}
+              </>
+            ) : (
+              <VStack align="stretch" w="full">
+                <Card w="full">
+                  <CardBody>
+                    <Heading size="sm">Configuration</Heading>
+                    <VStack
+                      align="start"
+                      divider={<StackDivider />}
+                      fontSize="sm"
+                      py="2"
+                      mt="2"
+                    >
+                      <HStack>
+                        <Text>User Scopes:</Text>
+                        <Box>
+                          {connector.data?.userScopes.map((scope: string) => (
+                            <Code key={scope}>{scope}</Code>
+                          ))}
+                        </Box>
                       </HStack>
-                      {userAuthSwitch(true)}
+
+                      <HStack>
+                        <Text>User auth required?</Text>
+                        <Code>
+                          {connector.data?.isUserAuthRequired ? 'Yes' : 'No'}
+                        </Code>
+                      </HStack>
                     </VStack>
                   </CardBody>
                 </Card>
-                <AlertDialog
-                  isOpen={isOpen}
-                  leastDestructiveRef={cancelRef}
-                  onClose={onClose}
-                >
-                  <AlertDialogOverlay>
-                    <AlertDialogContent>
-                      <AlertDialogHeader fontSize="lg" fontWeight="bold">
-                        Uninstall GitHub App
-                      </AlertDialogHeader>
-
-                      <AlertDialogBody>
-                        Are you sure? You can't undo this action afterwards.
-                      </AlertDialogBody>
-
-                      <AlertDialogFooter>
-                        <Button ref={cancelRef} onClick={onClose}>
-                          Cancel
-                        </Button>
-                        <Button
-                          colorScheme="red"
-                          isDisabled={isSaving}
-                          onClick={async () => {
-                            setIsSaving(true);
-                            await deleteConnectorMutation.mutateAsync({
-                              appId,
-                            });
-                            setIsSaving(false);
-                            onClose();
-                          }}
-                          ml={3}
-                        >
-                          Uninstall
-                        </Button>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialogOverlay>
-                </AlertDialog>
-              </>
-            ) : (
-              <Card w="full">
-                <CardBody color="gray.600">
-                  <FormProvider {...connectorForm}>
-                    <form onSubmit={connectorForm.handleSubmit(saveConnector)}>
-                      <VStack align="start" w="full">
-                        <FormControl pt="2">
-                          <FormLabel color={'gray.500'}>Scopes</FormLabel>
-                          <MultiSelect
-                            options={scopesOptions}
-                            value={scopesValue}
-                            onChange={scopesOnChange as SelectOnChange}
-                          />
-                          {userAuthSwitch()}
-                          <Button
-                            mt="6"
-                            type="submit"
-                            colorScheme={'purple'}
-                            isDisabled={isSaving}
-                          >
-                            Save & Install
-                          </Button>
-                        </FormControl>
-                      </VStack>
-                    </form>
-                  </FormProvider>
-                </CardBody>
-              </Card>
+              </VStack>
             )}
           </VStack>
           <Divider my={4} />

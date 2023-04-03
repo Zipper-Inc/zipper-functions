@@ -24,7 +24,11 @@ export const FunctionUserConnectors: React.FC<FunctionUserConnectorsProps> = ({
       {userAuthConnectors.map((c) => {
         const ConnectorInput = userConnectorInputs[c.type];
         return (
-          <ConnectorInput key={c.appId} connector={c} {...actions[c.type]} />
+          <ConnectorInput
+            key={`${c.appId}+${c.type}`}
+            connector={c}
+            {...actions[c.type]}
+          />
         );
       })}
     </>

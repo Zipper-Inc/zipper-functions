@@ -103,6 +103,7 @@ export function Playground({
           display="flex"
           flexDirection="column"
           justifyContent="stretch"
+          isLazy
         >
           <TabList
             borderBottom="1px solid"

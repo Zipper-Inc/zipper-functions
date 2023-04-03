@@ -15,6 +15,7 @@ import useInterval from '~/hooks/use-interval';
 import getRunUrl from '~/utils/get-run-url';
 import { AppConnectorUserAuth } from '@prisma/client';
 import { parseInputForTypes } from '~/utils/parse-input-for-types';
+import { useUser } from '@clerk/nextjs';
 
 type UserAuthConnector = {
   type: ConnectorType;
