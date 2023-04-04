@@ -6,13 +6,11 @@ import {
   Heading,
   Badge,
   Flex,
-  Link,
   Button,
   Text,
-  useDisclosure,
 } from '@chakra-ui/react';
 import { GitHubCheckTokenResponse } from '@zipper/types';
-import { VscAdd } from 'react-icons/vsc';
+import { VscGithub } from 'react-icons/vsc';
 import { ConnectorInputProps } from './types';
 
 export const GitHubUserConnectorInput: React.FC<ConnectorInputProps> = ({
@@ -20,10 +18,6 @@ export const GitHubUserConnectorInput: React.FC<ConnectorInputProps> = ({
   onDelete,
   authUrl,
 }) => {
-  const { isOpen, onOpen, onClose } = useDisclosure({
-    defaultIsOpen: c.isUserAuthRequired,
-  });
-
   if (!c.appConnectorUserAuths[0]) {
     return (
       <Box width="100%" position="relative">
@@ -36,11 +30,10 @@ export const GitHubUserConnectorInput: React.FC<ConnectorInputProps> = ({
                 ml={0.5}
                 mr={2}
                 alignSelf="center"
-                opacity={!isOpen ? '50%' : '100%'}
               >
                 GitHub
               </Heading>
-              <Box mt={1} opacity={!isOpen ? '50%' : '100%'}>
+              <Box mt={1}>
                 <Badge
                   variant="subtle"
                   colorScheme="purple"
@@ -56,53 +49,31 @@ export const GitHubUserConnectorInput: React.FC<ConnectorInputProps> = ({
               {!c.isUserAuthRequired && (
                 <Box mt={1}>
                   <Badge variant="subtle" color="gray.400" fontSize=".6rem">
-                    {!isOpen ? 'Optional' : 'Included'}
+                    Optional
                   </Badge>
                 </Box>
               )}
             </HStack>
-            {isOpen && (
-              <Flex width="100%">
-                <Link href={authUrl}>Add to GitHub</Link>
-              </Flex>
-            )}
+            <Flex width="100%">
+              <Button
+                onClick={() => {
+                  window.location.replace(authUrl);
+                }}
+                variant="outline"
+                bgColor="white"
+                colorScheme="purple"
+                borderColor="gray.300"
+                fontSize="sm"
+                minW="3xs"
+              >
+                <HStack>
+                  <VscGithub />
+                  <Text>Authorize GitHub</Text>
+                </HStack>
+              </Button>
+            </Flex>
           </VStack>
         </FormLabel>
-        {!c.isUserAuthRequired && (
-          <Flex
-            position="absolute"
-            right={0}
-            left={!isOpen ? 0 : undefined}
-            top={0}
-            height={10}
-            alignItems="center"
-            justifyContent="end"
-          >
-            <Button
-              display="flex"
-              alignItems="center"
-              justifyContent="end"
-              name={!isOpen ? 'Add input' : 'Remove input'}
-              variant="unstyled"
-              _hover={{
-                color: 'purple.500',
-              }}
-              size="xs"
-              mt="2px"
-              p={1}
-              height={6}
-              width={!isOpen ? 'full' : 6}
-              onClick={!isOpen ? onOpen : onClose}
-            >
-              <Box
-                transition="all 100ms ease-in-out"
-                transform={!isOpen ? 'rotate(0deg)' : 'rotate(45deg)'}
-              >
-                <VscAdd />
-              </Box>
-            </Button>
-          </Flex>
-        )}
       </Box>
     );
   }

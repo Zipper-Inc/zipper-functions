@@ -32,7 +32,7 @@ const defaultSelect = Prisma.validator<Prisma.AppSelect>()({
 });
 
 export const defaultCode = [
-  'async function main({worldString}: {worldString: string}) {',
+  'export async function handler({worldString}: {worldString: string}) {',
   '  return `Hello ${worldString}`;',
   '}',
 ].join('\n');
