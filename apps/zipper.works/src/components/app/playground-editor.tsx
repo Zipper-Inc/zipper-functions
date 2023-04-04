@@ -5,34 +5,14 @@ import { StandaloneServices } from 'vscode/services';
 import getMessageServiceOverride from 'vscode/service-override/messages';
 import { buildWorkerDefinition } from 'monaco-editor-workers';
 import { useMyPresence, useOthersConnectionIds } from '~/liveblocks.config';
-import {
-  CloseAction,
-  DocumentUri,
-  ErrorAction,
-  MessageTransports,
-  MonacoLanguageClient,
-  MonacoServices,
-  RequestType,
-  TextDocumentIdentifier,
-} from 'monaco-languageclient';
 
-import {
-  toSocket,
-  WebSocketMessageReader,
-  WebSocketMessageWriter,
-} from 'vscode-ws-jsonrpc';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { Range, Uri } from 'vscode';
+import { useEffect, useRef, useState } from 'react';
+import { Uri } from 'vscode';
 import { useEditorContext } from '../context/editor-context';
 import { useExitConfirmation } from '~/hooks/use-exit-confirmation';
 import { PlaygroundCollabCursor } from './playground-collab-cursor';
 import { format } from '~/utils/prettier';
 import { useRunAppContext } from '../context/run-app-context';
-
-export interface CacheParams {
-  referrer: TextDocumentIdentifier;
-  uris: TextDocumentIdentifier[];
-}
 
 type MonacoEditor = monaco.editor.IStandaloneCodeEditor;
 type Monaco = typeof monaco;
@@ -48,87 +28,9 @@ buildWorkerDefinition(
   false,
 );
 
-function createLanguageClient(
-  transports: MessageTransports,
-): MonacoLanguageClient {
-  return new MonacoLanguageClient({
-    name: 'deno',
-    clientOptions: {
-      // use a language id as a document selector
-      documentSelector: ['typescript'],
-      // disable the default error handler
-      errorHandler: {
-        error: () => ({ action: ErrorAction.Continue }),
-        closed: () => ({ action: CloseAction.DoNotRestart }),
-      },
-      initializationOptions: {
-        documentFormattingEdits: false,
-        certificateStores: null,
-        enablePaths: [],
-        config: null,
-        importMap: null,
-        internalDebug: false,
-        lint: true,
-        path: null,
-        tlsCertificate: null,
-        unsafelyIgnoreCertificateErrors: null,
-        unstable: true,
-        enable: true,
-        cache: null,
-        codeLens: {
-          implementations: true,
-          references: false,
-        },
-        suggest: {
-          autoImports: true,
-          completeFunctionCalls: true,
-          names: true,
-          paths: true,
-          imports: {
-            autoDiscover: true,
-            hosts: {
-              'https://deno.land': true,
-            },
-          },
-        },
-      },
-      middleware: {
-        provideDocumentFormattingEdits(document) {
-          const firstLine = 0;
-          const firstCol = 0;
-          const lastLine = document.lineCount - 1;
-          const lastCol = document.lineAt(lastLine).text.length;
-          const range = new Range(firstLine, firstCol, lastLine, lastCol);
-          return [
-            {
-              newText: format(document.getText()),
-              range,
-            },
-          ];
-        },
-        provideDocumentRangeFormattingEdits(document, range) {
-          return [{ newText: format(document.getText(range)), range }];
-        },
-
-        workspace: {
-          configuration: () => {
-            return [
-              {
-                enable: true,
-              },
-            ];
-          },
-        },
-      },
-    },
-    // create a language client connection from the JSON RPC connection on demand
-    connectionProvider: {
-      get: () => {
-        return Promise.resolve(transports);
-      },
-    },
-  });
-}
+const getDenoUri = (path: string) => {
+  return Uri.parse(`${path}.ts`);
+};
 
 export default function PlaygroundEditor(
   props: EditorProps & {
@@ -148,57 +50,11 @@ export default function PlaygroundEditor(
   const editorRef = useRef<MonacoEditor>();
   const monacoRef = useRef<Monaco>();
   const [isEditorReady, setIsEditorReady] = useState(false);
-  const [hasWebsocket, setHasWebsocket] = useState(false);
   const monacoEditor = useMonaco();
   const [, updateMyPresence] = useMyPresence();
   const connectionIds = useOthersConnectionIds();
 
-  const url = useMemo(
-    () => process.env.NEXT_PUBLIC_LSP,
-    [process.env.NEXT_PUBLIC_LSP],
-  );
-
   useExitConfirmation({ enable: isEditorDirty(), ignorePaths: ['/edit/'] });
-
-  const createWebSocket = (url: string) => {
-    console.log('creating websocket');
-    const webSocket = new WebSocket(url);
-    webSocket.onopen = () => {
-      setHasWebsocket(true);
-      console.log('websocket opened');
-      const socket = toSocket(webSocket);
-      const reader = new WebSocketMessageReader(socket);
-      const writer = new WebSocketMessageWriter(socket);
-      const languageClient = createLanguageClient({
-        reader,
-        writer,
-      });
-      languageClient.start();
-
-      monaco.editor.registerCommand(
-        'deno.cache',
-        (_accessor, uris: DocumentUri[] = []) => {
-          languageClient?.sendRequest(
-            new RequestType<CacheParams, boolean, void>('deno/cache'),
-            {
-              referrer: {
-                uri: editorRef.current?.getModel()?.uri.toString(),
-              },
-              uris: uris.map((uri) => ({ uri })),
-            },
-          );
-        },
-      );
-
-      reader.onClose(() => {
-        setHasWebsocket(false);
-        languageClient?.stop();
-      });
-    };
-    webSocket.onclose = () => {
-      setHasWebsocket(false);
-    };
-  };
 
   const handleEditorDidMount = (editor: MonacoEditor, _monaco: Monaco) => {
     console.log('editor mounted');
@@ -231,20 +87,17 @@ export default function PlaygroundEditor(
         mimetypes: ['application/typescript'],
       });
 
-      MonacoServices.install();
-      const diagnosticOptions = {
-        diagnosticCodesToIgnore: [
-          // Ignore this error so we can import Deno URLs
-          // TS2691: An import path cannot end with a '.ts' extension.
-          2691,
-          // Ignore this error so we can import Deno and Zipper URLs
-          // TS2792: Cannot find module.
-          2792,
-          // Ignore this error so we can use the main function
-          // TS6133: `main` is declared but never read
-          6133,
-        ],
-      };
+      const diagnosticOptions: monaco.languages.typescript.DiagnosticsOptions =
+        {
+          diagnosticCodesToIgnore: [
+            // Ignore this error so we can import Deno URLs
+            // TS2691: An import path cannot end with a '.ts' extension.
+            2691,
+            // Ignore this error so we can import Deno and Zipper URLs
+            // TS2792: Cannot find module.
+            2792,
+          ],
+        };
 
       monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions(
         diagnosticOptions,
@@ -254,36 +107,36 @@ export default function PlaygroundEditor(
       );
 
       // Add Deno and Zipper types
-      ['deno.d.ts', 'zipper.d.ts'].forEach(async (filename) => {
-        const uri = `typescript://types/${filename}`;
-        const monacoUri = monaco.Uri.parse(uri);
+      const extraLibs =
+        monaco.languages.typescript.typescriptDefaults.getExtraLibs();
 
-        if (!monaco.editor.getModel(monacoUri)) {
+      ['deno.d.ts', 'zipper.d.ts'].forEach(async (filename) => {
+        const path = `types/${filename}`;
+
+        if (!extraLibs[path]) {
           const response = await fetch(`/api/ts/declarations/${filename}`);
           const src = await response.text();
-
-          monaco.languages.typescript.javascriptDefaults.addExtraLib(src, uri);
-          monaco.editor.createModel(src, 'typescript', monacoUri);
+          monaco.languages.typescript.typescriptDefaults.addExtraLib(src, path);
         }
       });
 
       monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
-        isolatedModules: true,
-        target: monaco.languages.typescript.ScriptTarget.ES2016,
+        // isolatedModules: true,
+        target: monaco.languages.typescript.ScriptTarget.ES2020,
+        module: monaco.languages.typescript.ModuleKind.CommonJS,
         allowNonTsExtensions: true,
+        moduleResolution:
+          monaco.languages.typescript.ModuleResolutionKind.NodeJs,
         lib: ['esnext', 'dom', 'deno.ns'],
+        noResolve: true,
       });
 
       monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
-        isolatedModules: true,
-        target: monaco.languages.typescript.ScriptTarget.ES2016,
+        // isolatedModules: true,
+        target: monaco.languages.typescript.ScriptTarget.ES2020,
         allowNonTsExtensions: true,
         lib: ['esnext', 'dom', 'deno.ns'],
       });
-
-      if (url && !hasWebsocket) {
-        createWebSocket(url);
-      }
 
       // Fallback formatter
       monaco.languages.registerDocumentFormattingEditProvider('typescript', {
@@ -314,19 +167,15 @@ export default function PlaygroundEditor(
         },
       );
 
-      scripts.forEach((script) => {
-        const model = monacoEditor.editor.getModel(
-          Uri.parse(`file://${props.appName}/${script.filename}`),
-        );
+      scripts.forEach(({ code, filename }) => {
+        const uri = getDenoUri(filename);
+        const model = monaco.editor.getModel(uri);
         if (!model) {
-          //create model for each script file
-          monacoEditor.editor.createModel(
-            localStorage.getItem(`script-${script.id}`) || script.code,
-            'typescript',
-            Uri.parse(`file://${props.appName}/${script.filename}`),
-          );
+          monaco.editor.createModel(code, 'typescript', uri);
         }
       });
+
+      monaco.languages.typescript.typescriptDefaults.setEagerModelSync(true);
 
       monacoEditor.editor.getModels().forEach((model) => {
         model.onDidChangeContent((e) => {
@@ -342,9 +191,8 @@ export default function PlaygroundEditor(
 
   useEffect(() => {
     if (monacoEditor && editorRef.current && isEditorReady && currentScript) {
-      const model = monacoEditor.editor.getModel(
-        Uri.parse(`file://${props.appName}/${currentScript.filename}`),
-      );
+      const uri = getDenoUri(currentScript.filename);
+      const model = monacoEditor.editor.getModel(uri);
       if (model) {
         editorRef.current.setModel(model);
       }
@@ -352,7 +200,7 @@ export default function PlaygroundEditor(
         const newModel = monacoEditor.editor.createModel(
           currentScript.code,
           'typescript',
-          Uri.parse(`file://${props.appName}/${currentScript.filename}`),
+          uri,
         );
         setModelIsDirty(newModel.uri.path.toString(), false);
         newModel.onDidChangeContent((e) => {
