@@ -9,6 +9,11 @@ import { TRPCError } from '@trpc/server';
 import denyList from '../utils/slugDenyList';
 import { appSubmissionState, ResourceOwnerType } from '@zipper/types';
 import { Context } from '../context';
+import {
+  getAppHash,
+  getAppVersionFromHash,
+  getScriptHash,
+} from '~/utils/hashing';
 
 const defaultSelect = Prisma.validator<Prisma.AppSelect>()({
   id: true,
@@ -31,6 +36,9 @@ export const defaultCode = [
   '  return `Hello ${worldString}`;',
   '}',
 ].join('\n');
+
+const defaultMainFile = 'main';
+const defaultMainFilename = `${defaultMainFile}.ts`;
 
 const canUserEdit = (
   app: Pick<
@@ -163,12 +171,42 @@ export const appRouter = createRouter()
           script: {
             create: {
               code: defaultCode,
-              name: 'main',
-              filename: 'main.ts',
+              name: defaultMainFile,
+              filename: defaultMainFilename,
               appId: app.id,
               order: 0,
             },
           },
+        },
+      });
+      // get a hash of main script and update the script
+      const scriptHash = getScriptHash({
+        code: defaultCode,
+        filename: defaultMainFilename,
+        id: scriptMain.scriptId,
+      });
+      await prisma.script.update({
+        where: {
+          id: scriptMain.scriptId,
+        },
+        data: {
+          hash: scriptHash,
+        },
+      });
+
+      // get a hash of app and update the app
+      const appHash = getAppHash({
+        ...app,
+        scripts: [{ id: scriptMain.scriptId, hash: scriptHash }],
+      });
+      const appVersion = getAppVersionFromHash(appHash);
+      await prisma.app.update({
+        where: {
+          id: app.id,
+        },
+        data: {
+          hash: appHash,
+          lastDeploymentVersion: appVersion,
         },
       });
 
@@ -211,7 +249,7 @@ export const appRouter = createRouter()
         }
         return arr;
         // eslint-disable-next-line prettier/prettier
-      }, [] as (typeof apps[0] & { resourceOwner: ResourceOwnerSlug })[]);
+      }, [] as ((typeof apps)[0] & { resourceOwner: ResourceOwnerSlug })[]);
     },
   })
   .query('byAuthedUser', {
@@ -264,7 +302,7 @@ export const appRouter = createRouter()
         }
         return arr;
         // eslint-disable-next-line prettier/prettier
-      }, [] as (typeof apps[0] & { resourceOwner: ResourceOwnerSlug })[]);
+      }, [] as ((typeof apps)[0] & { resourceOwner: ResourceOwnerSlug })[]);
     },
   })
   .query('byId', {
@@ -484,26 +522,53 @@ export const appRouter = createRouter()
         select: defaultSelect,
       });
 
-      app.scripts.map(async (script, i) => {
-        const forkScript = await prisma.script.create({
-          data: {
-            ...script,
-            id: undefined,
-            inputSchema: JSON.stringify(script.inputSchema),
-            outputSchema: JSON.stringify(script.outputSchema),
-            appId: fork.id,
-            order: i,
-          },
-        });
+      const scriptIdsAndHashes: Parameters<typeof getAppHash>[0]['scripts'] =
+        await Promise.all(
+          app.scripts.map(async (script, i) => {
+            const forkScript = await prisma.script.create({
+              data: {
+                ...script,
+                id: undefined,
+                inputSchema: JSON.stringify(script.inputSchema),
+                outputSchema: JSON.stringify(script.outputSchema),
+                appId: fork.id,
+                order: i,
+              },
+            });
 
-        if (script.id === app.scriptMain?.scriptId) {
-          await prisma.scriptMain.create({
-            data: {
-              app: { connect: { id: fork.id } },
-              script: { connect: { id: forkScript.id } },
-            },
-          });
-        }
+            const hash = getScriptHash(forkScript);
+            await prisma.script.update({
+              where: { id: forkScript.id },
+              data: { hash },
+            });
+
+            if (script.id === app.scriptMain?.scriptId) {
+              await prisma.scriptMain.create({
+                data: {
+                  app: { connect: { id: fork.id } },
+                  script: { connect: { id: forkScript.id } },
+                },
+              });
+            }
+            return {
+              id: forkScript.id,
+              hash,
+            };
+          }),
+        );
+
+      const appHash = getAppHash({
+        id: fork.id,
+        name: fork.name,
+        scripts: scriptIdsAndHashes,
+      });
+      const lastDeploymentVersion = getAppVersionFromHash(appHash);
+      await prisma.app.update({
+        where: { id: fork.id },
+        data: {
+          hash: appHash,
+          lastDeploymentVersion,
+        },
       });
 
       const resourceOwner = await prisma.resourceOwnerSlug.findFirstOrThrow({
@@ -576,19 +641,76 @@ export const appRouter = createRouter()
           });
       }
 
+      const app = await prisma.app.findUniqueOrThrow({
+        where: { id },
+        select: { name: true, scripts: true },
+      });
+
       await prisma.app.update({
         where: { id },
         data: { updatedAt: new Date(), ...rest },
-        select: defaultSelect,
       });
 
+      let updateAppHash = Boolean(data.name && app.name !== data.name);
+      let scriptIdsAndHashes: Parameters<typeof getAppHash>[0]['scripts'] = [];
+
       if (scripts) {
-        await Promise.all(
+        scriptIdsAndHashes = await Promise.all(
           scripts.map(async (script) => {
             const { id, data } = script;
-            await prisma.script.update({ where: { id }, data });
+            const { code } = data;
+            const s = await prisma.script.findFirst({
+              where: {
+                id,
+              },
+              select: { filename: true, hash: true, code: true },
+            });
+            let hash: string | undefined = s?.hash || undefined;
+            if (code) {
+              hash =
+                s && s.code !== code
+                  ? getScriptHash({ code, filename: s.filename, id })
+                  : undefined;
+              updateAppHash ||= Boolean(hash);
+            }
+            await prisma.script.update({
+              where: { id },
+              data: {
+                ...data,
+                hash,
+              },
+            });
+            return {
+              id,
+              hash: hash || null,
+            };
           }),
         );
+      } else if (updateAppHash) {
+        scriptIdsAndHashes = app.scripts.map((s) => ({
+          hash: s.hash,
+          id: s.id,
+        }));
+      }
+
+      if (updateAppHash) {
+        const appHash = getAppHash({
+          id,
+          name: data.name || app.name,
+          scripts: scriptIdsAndHashes,
+        });
+        const lastDeploymentVersion = getAppVersionFromHash(appHash);
+
+        return prisma.app.update({
+          where: {
+            id,
+          },
+          data: {
+            hash: appHash,
+            lastDeploymentVersion,
+          },
+          select: defaultSelect,
+        });
       }
 
       return prisma.app.findUniqueOrThrow({

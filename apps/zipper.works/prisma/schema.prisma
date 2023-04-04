@@ -23,6 +23,7 @@ model App {
   categories      String[]
   parentId        String?
   lastDeploymentVersion String?
+  hash            String?
   organizationId  String?
   createdById     String?
   requiresAuthToRun   Boolean   @default(false)
@@ -205,6 +206,7 @@ model Script {
   inputSchema   Json?
   outputSchema  Json?
   connectorId   String?
+  hash          String?
 
   app        App         @relation(fields: [appId], references: [id])
   scriptMain ScriptMain?
