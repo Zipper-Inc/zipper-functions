@@ -1,6 +1,7 @@
 import { Prisma } from '@prisma/client';
 import { z } from 'zod';
 import { prisma } from '~/server/prisma';
+import { getScriptHash } from '~/utils/hashing';
 import slugify from '~/utils/slugify';
 import { createRouter } from '../createRouter';
 import { hasAppEditPermission } from '../utils/authz.utils';
@@ -41,6 +42,16 @@ export const scriptRouter = createRouter()
           filename: `${slugify(data.name)}.ts`,
         },
         select: defaultSelect,
+      });
+
+      const hash = getScriptHash(script);
+      await prisma.script.update({
+        where: {
+          id: script.id,
+        },
+        data: {
+          hash,
+        },
       });
 
       if (input.connectorId) {
@@ -96,7 +107,7 @@ export const scriptRouter = createRouter()
 
       const script = await prisma.script.findFirstOrThrow({
         where: { id },
-        select: { appId: true },
+        select: { appId: true, id: true, code: true, filename: true },
       });
 
       await hasAppEditPermission({
@@ -105,11 +116,18 @@ export const scriptRouter = createRouter()
       });
 
       const filename = data.name ? `${slugify(data.name)}.ts` : undefined;
+      const hash = filename
+        ? getScriptHash({
+            ...script,
+            filename,
+          })
+        : undefined;
 
       return prisma.script.update({
         data: {
           ...data,
           filename,
+          hash,
         },
         where: {
           id,

@@ -155,13 +155,9 @@ const EditorContextProvider = ({
     }
   }, [currentScript]);
 
-  const utils = trpc.useContext();
-
   const editAppMutation = trpc.useMutation('app.edit', {
     async onSuccess() {
-      if (appId) {
-        await utils.invalidateQueries(['app.byId', { id: appId }]);
-      }
+      refetchApp();
     },
   });
 
