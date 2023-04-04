@@ -31,6 +31,7 @@ import {
   useDisclosure,
   HStack,
   IconButton,
+  VStack,
 } from '@chakra-ui/react';
 import Head from 'next/head';
 import { useForm } from 'react-hook-form';
@@ -46,7 +47,6 @@ import removeAppConnectorUserAuth from '~/utils/remove-app-connector-user-auth';
 
 const { __DEBUG__ } = process.env;
 
-//
 export function AppPage({
   app,
   inputs,
@@ -147,6 +147,12 @@ export function AppPage({
       <Head>
         <title>{appTitle}</title>
       </Head>
+      <VStack as="main" flex={1} alignItems="stretch" spacing={14}>
+        {/* TODO bring Header here */}
+        {/* TODO bring the content here */}
+      </VStack>
+
+      {/* TODO translate this code into the new UI */}
       <Box as="main">
         <Flex as="header" mx={8} my={4} alignItems="center" color="gray.600">
           <Heading as="h2" color="black">
