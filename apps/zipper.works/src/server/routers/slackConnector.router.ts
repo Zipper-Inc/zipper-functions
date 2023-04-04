@@ -14,7 +14,7 @@ import {
   encryptToHex,
 } from '@zipper/utils';
 import fetch from 'node-fetch';
-import { AppConnectorUserAuth } from '@prisma/client';
+import { AppConnectorUserAuth, Prisma } from '@prisma/client';
 import { filterTokenFields } from '~/server/utils/json';
 
 export const slackConnectorRouter = createRouter()
@@ -23,9 +23,7 @@ export const slackConnectorRouter = createRouter()
       appId: z.string(),
     }),
     async resolve({ ctx, input }) {
-      if (!hasAppEditPermission({ ctx, appId: input.appId })) {
-        new TRPCError({ code: 'UNAUTHORIZED' });
-      }
+      await hasAppReadPermission({ ctx, appId: input.appId });
 
       return prisma.appConnector.findFirst({
         where: {
@@ -46,9 +44,7 @@ export const slackConnectorRouter = createRouter()
       redirectUri: z.string().optional(),
     }),
     async resolve({ ctx, input }) {
-      if (!hasAppReadPermission({ ctx, appId: input.appId })) {
-        new TRPCError({ code: 'UNAUTHORIZED' });
-      }
+      await hasAppReadPermission({ ctx, appId: input.appId });
 
       const { appId, scopes, postInstallationRedirect, redirectUri } = input;
       const state = encryptToHex(
@@ -56,11 +52,19 @@ export const slackConnectorRouter = createRouter()
         process.env.ENCRYPTION_KEY || '',
       );
 
+      // check if we have a client id for this app in the appConnector table
+      const appConnector = await prisma.appConnector.findFirst({
+        where: {
+          appId,
+          type: 'slack',
+        },
+      });
+
+      const clientId =
+        appConnector?.clientId || process.env.NEXT_PUBLIC_SLACK_CLIENT_ID!;
+
       const url = new URL('https://slack.com/oauth/v2/authorize');
-      url.searchParams.set(
-        'client_id',
-        process.env.NEXT_PUBLIC_SLACK_CLIENT_ID!,
-      );
+      url.searchParams.set('client_id', clientId);
       url.searchParams.set('scope', scopes.bot.join(','));
       url.searchParams.set('user_scope', scopes.user.join(','));
       url.searchParams.set('state', state);
@@ -78,9 +82,7 @@ export const slackConnectorRouter = createRouter()
       appId: z.string(),
     }),
     async resolve({ ctx, input }) {
-      if (!hasAppEditPermission({ ctx, appId: input.appId })) {
-        new TRPCError({ code: 'UNAUTHORIZED' });
-      }
+      await hasAppEditPermission({ appId: input.appId, ctx });
 
       await prisma.appConnector.update({
         where: {
@@ -90,7 +92,8 @@ export const slackConnectorRouter = createRouter()
           },
         },
         data: {
-          metadata: undefined,
+          metadata: Prisma.DbNull,
+          clientId: null,
         },
       });
 
@@ -102,6 +105,17 @@ export const slackConnectorRouter = createRouter()
           },
         },
       });
+
+      await prisma.secret
+        .delete({
+          where: {
+            appId_key: {
+              appId: input.appId,
+              key: 'SLACK_CLIENT_SECRET',
+            },
+          },
+        })
+        .catch(() => null); // Ignore if not found, could be the case if there is not client secret
 
       await fetch('https://slack.com/api/auth.revoke', {
         method: 'POST',
@@ -168,14 +182,37 @@ export const slackConnectorRouter = createRouter()
         throw new TRPCError({ code: 'UNAUTHORIZED' });
       }
 
+      const appConnector = await prisma.appConnector.findFirst({
+        where: {
+          appId,
+          type: 'slack',
+        },
+      });
+
+      const clientSecretRecord = await prisma.secret.findFirst({
+        where: {
+          appId,
+          key: 'SLACK_CLIENT_SECRET',
+        },
+      });
+
+      const clientId =
+        appConnector?.clientId || process.env.NEXT_PUBLIC_SLACK_CLIENT_ID!;
+      const clientSecret = clientSecretRecord
+        ? decryptFromBase64(
+            clientSecretRecord.encryptedValue,
+            process.env.ENCRYPTION_KEY,
+          )
+        : process.env.SLACK_CLIENT_SECRET!;
+
       const res = await fetch('https://slack.com/api/oauth.v2.access', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
         body: new URLSearchParams({
-          client_id: process.env.NEXT_PUBLIC_SLACK_CLIENT_ID!,
-          client_secret: process.env.SLACK_CLIENT_SECRET!,
+          client_id: clientId,
+          client_secret: clientSecret,
           code: input.code,
         }),
       });

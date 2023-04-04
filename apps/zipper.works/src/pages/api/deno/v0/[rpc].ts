@@ -1,12 +1,12 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import * as jose from 'jose';
-import { build } from '@deno/eszip';
 import pako from 'pako';
 import { PassThrough } from 'stream';
 import ndjson from 'ndjson';
 import intoStream from 'into-stream';
 import { decryptFromBase64 } from '@zipper/utils';
 import { prisma } from '~/server/prisma';
+import { build, FRAMEWORK_ENTRYPOINT } from '~/utils/build-zipper-app';
 import { getAppLink } from '@zipper/utils';
 
 const X_DENO_CONFIG = 'x-deno-config';
@@ -20,7 +20,7 @@ const DEFAULT_CONTENT_TYPE = 'application/octet-stream';
  *  - calls the user's main function
  *  - handles standardizing output and errors
  */
-export const wrapMainFunction = ({
+export const _wrapMainFunction = ({
   code,
   slug,
   appId,
@@ -285,54 +285,6 @@ async function decodeAuthHeader(req: NextApiRequest) {
   }
 }
 
-const createEsZip = async ({
-  baseUrl,
-  entrypoint,
-}: {
-  baseUrl: string;
-  entrypoint: string;
-}) => {
-  return build([`${baseUrl}/${entrypoint}`], async (specifier: string) => {
-    console.log("ESZIP: '", specifier);
-
-    if (specifier.startsWith(baseUrl)) {
-      const response = await fetch(specifier, {
-        credentials: 'same-origin',
-      });
-      const content = await response.text();
-
-      return {
-        specifier,
-        headers: {
-          'content-type': 'text/typescript',
-        },
-        content,
-        kind: 'module',
-        version: '1.0.0',
-      };
-    }
-
-    const response = await fetch(specifier, { redirect: 'follow' });
-    if (response.status !== 200) {
-      // ensure the body is read as to not leak resources
-      await response.arrayBuffer();
-      return undefined;
-    }
-    const content = await response.text();
-    const headers: Record<string, string> = {};
-    response.headers.forEach((value, key) => {
-      headers[key.toLowerCase()] = value;
-    });
-
-    return {
-      kind: 'module',
-      specifier: response.url,
-      headers,
-      content,
-    };
-  });
-};
-
 function errorResponse(errorMessage: string) {
   return {
     body: `addEventListener("fetch", (e) => e.respondWith(new Response("${errorMessage}")));`,
@@ -361,16 +313,12 @@ async function originBoot({
   req: NextApiRequest;
   id: string;
 }) {
-  const [appIdAndFilename, version, userId] = deploymentId.split('@');
+  const [appId, version, userId] = deploymentId.split('@');
 
-  console.log(req.body);
-
-  if (!appIdAndFilename || !version) {
+  if (!appId || !version) {
     console.error('Missing appId and version');
     return;
   }
-
-  const [appId, filename] = appIdAndFilename.split('+');
 
   const app = await prisma.app.findFirst({
     where: {
@@ -409,13 +357,14 @@ async function originBoot({
     );
   }
 
-  const proto = req.headers['x-forwarded-proto'] || 'http';
+  const baseUrl = `file://${app.name}/v${version}`;
 
-  const eszip = await createEsZip({
-    baseUrl: `${proto}://${req.headers.host}/api/app/${appId}/${version}`,
+  const eszip = await build({ baseUrl, app, version });
+
+  /**const old = await createEsZip({
+    baseUrl,
     entrypoint: filename || 'main.ts',
-  });
-
+  });*/
   // await fs.writeFile(`/tmp/${deploymentId}.eszip`, eszip, () => {
   //   console.log('done');
   // });
@@ -446,7 +395,7 @@ async function originBoot({
   // Boot metadata
   const isolateConfig = {
     // Source URL that will be used for import.meta.url of the entrypoint.
-    entrypoint: `https://${req.headers.host}/api/app/${appId}/${version}/${filename}`,
+    entrypoint: `${baseUrl}/${FRAMEWORK_ENTRYPOINT}`,
 
     envs: secretsMap,
 

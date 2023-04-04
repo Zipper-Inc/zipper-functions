@@ -42,7 +42,6 @@ import getRunUrl from '~/utils/get-run-url';
 import Link from 'next/link';
 import { HiOutlineChevronDown, HiOutlineChevronUp } from 'react-icons/hi';
 import { getAppLink } from '@zipper/utils';
-import { WarningIcon } from '@chakra-ui/icons';
 
 type AppEditSidebarProps = {
   showInputForm: boolean;
@@ -118,7 +117,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
           },
         ]);
         toast({
-          title: 'Github user auth revoked.',
+          title: 'GitHub user auth revoked.',
           status: 'success',
           duration,
           isClosable: true,
@@ -130,7 +129,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
   // state to hold whether user needs to authenticate with slack
   const [slackAuthRequired, setSlackAuthRequired] = useState(false);
   // state to hold whether user needs to authenticate with github
-  const [githubAuthRequired, setGithubAuthRequired] = useState(false);
+  const [githubAuthRequired, setGitHubAuthRequired] = useState(false);
 
   // get the existing Slack connector data from the database
   const slackConnector = trpc.useQuery(
@@ -139,7 +138,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
       enabled: slackAuthRequired,
     },
   );
-  // get the existing Github connector data from the database
+  // get the existing GitHub connector data from the database
   const githubConnector = trpc.useQuery(
     ['githubConnector.get', { appId: appInfo.id }],
     {
@@ -187,7 +186,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
       setSlackAuthRequired(true);
     }
     if (userAuthConnectors.find((c) => c.type === 'github')) {
-      setGithubAuthRequired(true);
+      setGitHubAuthRequired(true);
     }
   }, []);
 
@@ -212,10 +211,6 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [expandedResult, setExpandedResult] = useState<Record<string, any>>({});
   const [modalResult, setModalResult] = useState({ heading: '', body: '' });
-
-  useEffect(() => {
-    console.log(modalResult.body);
-  }, [modalResult]);
 
   const output = useMemo(
     () => (
@@ -314,7 +309,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
                 display="flex"
                 gap={2}
                 fontWeight="medium"
-                isDisabled={!appInfo.canUserEdit || isRunning || !inputParams}
+                isDisabled={isRunning || !inputParams}
               >
                 <HiOutlinePlay />
                 <Text>{`Run${
@@ -418,19 +413,22 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
                     {appInfo.canUserEdit && (
                       <Text color={'neutral.600'} size="lg" fontWeight="600">
                         {inputError
-                          ? 'Check your inputs'
+                          ? 'Something went wrong'
                           : 'Add inputs to your app'}
                       </Text>
                     )}
-                    <Text>
-                      {inputError
-                        ? `Something went wrong while parsing the inputs to your
-                        handler function. Check that there is only a single object
-                        parameter.`
-                        : `Inputs can be used to collect user data, preferences,
-                         or feedback, which can then be processed and analyzed by
-                         the app to provide more personalized content or recommendations.`}
-                    </Text>
+                    {inputError ? (
+                      <Text color="red.600" pt="4" fontWeight="500">
+                        {inputError}
+                      </Text>
+                    ) : (
+                      <Text>
+                        Inputs can be used to collect user data, preferences, or
+                        feedback, which can then be processed and analyzed by
+                        the app to provide more personalized content or
+                        recommendations
+                      </Text>
+                    )}
                     {!inputError && appInfo.canUserEdit && (
                       <Button
                         color={'gray.700'}
@@ -442,11 +440,6 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
                       >
                         Add an input
                       </Button>
-                    )}
-                    {inputError && (
-                      <Text color="gray.500" pt="4">
-                        Error: {inputError}
-                      </Text>
                     )}
                   </>
                 )}{' '}

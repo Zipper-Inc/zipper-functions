@@ -1,0 +1,11 @@
+{
+  "name": "zipper-framework",
+  "description": "The Zipper framework for Deno Deploy",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "build:deno": "deno run -A ./bin/generate.ts",
+    "build:watch": "deno run -A ./bin/generate-watch.ts",
+    "dev": "yarn build:watch & yarn --cwd=\"../..\" deno:dev ./packages/zipper-framework/app.ts port=8888"
+  }
+}

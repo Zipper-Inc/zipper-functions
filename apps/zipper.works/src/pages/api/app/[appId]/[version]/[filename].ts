@@ -1,5 +1,4 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { wrapMainFunction } from '~/pages/api/deno/v0/[rpc]';
 import { prisma } from '~/server/prisma';
 
 export default async function handler(
@@ -44,20 +43,5 @@ export default async function handler(
 
   res.setHeader('Content-Type', 'text/typescript');
 
-  let code = script.code;
-
-  // if (loweredQueryFilename === 'main.ts' || loweredQueryFilename === 'main') {
-  code = wrapMainFunction({
-    code: script.code,
-    slug: app.slug,
-    appId: app.id,
-    version:
-      app.lastDeploymentVersion ||
-      new Date(script.updatedAt || script.createdAt || Date.now())
-        .getTime()
-        .toString(),
-  });
-  // }
-
-  res.send(code);
+  res.send(script.code);
 }

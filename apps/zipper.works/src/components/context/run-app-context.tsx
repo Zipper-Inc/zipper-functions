@@ -16,6 +16,7 @@ import getRunUrl from '~/utils/get-run-url';
 import { AppConnectorUserAuth } from '@prisma/client';
 import { parseInputForTypes } from '~/utils/parse-input-for-types';
 import { getAppHash, getAppVersionFromHash } from '~/utils/hashing';
+import { useUser } from '@clerk/nextjs';
 
 type UserAuthConnector = {
   type: ConnectorType;
@@ -92,10 +93,12 @@ export function RunAppProvider({
   const [lastRunVersion, setLastRunVersion] = useState(
     () => app.lastDeploymentVersion || getAppVersionFromHash(getAppHash(app)),
   );
-  const appEventsQuery = trpc.useQuery([
-    'appEvent.all',
-    { deploymentId: `${id}@${lastRunVersion}` },
-  ]);
+
+  const { user } = useUser();
+  const appEventsQuery = trpc.useQuery(
+    ['appEvent.all', { deploymentId: `${id}@${lastRunVersion}` }],
+    { enabled: !!user },
+  );
 
   useInterval(async () => {
     if (lastRunVersion) {

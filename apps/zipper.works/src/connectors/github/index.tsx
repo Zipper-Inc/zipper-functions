@@ -1,10 +1,5 @@
 import createConnector from '../createConnector';
 import {
-  Accordion,
-  AccordionButton,
-  AccordionIcon,
-  AccordionItem,
-  AccordionPanel,
   Box,
   Button,
   Card,
@@ -14,26 +9,41 @@ import {
   FormLabel,
   Heading,
   HStack,
-  Icon,
   Switch,
   Text,
   VStack,
   useToast,
-  Link,
-  Code,
-  IconButton,
   Spacer,
   StackDivider,
+  Popover,
+  PopoverArrow,
+  PopoverBody,
+  PopoverContent,
+  PopoverHeader,
+  PopoverTrigger,
+  useDisclosure,
+  FormHelperText,
+  AlertDialog,
+  AlertDialogBody,
+  AlertDialogContent,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogOverlay,
+  Code,
+  Alert,
+  AlertIcon,
 } from '@chakra-ui/react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { trpc } from '~/utils/trpc';
 import { VscGithub } from 'react-icons/vsc';
 import { code, scopes } from './constants';
 import { MultiSelect, SelectOnChange, useMultiSelect } from '@zipper/ui';
-import { HiOutlineTrash, HiQuestionMarkCircle } from 'react-icons/hi';
-import { useEffect, useState } from 'react';
+import { HiOutlineTrash } from 'react-icons/hi';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/router';
-import { GithubCheckTokenResponse } from '@zipper/types';
+import { GitHubCheckTokenResponse } from '@zipper/types';
+import { useUser } from '@clerk/nextjs';
+import { useRunAppContext } from '~/components/context/run-app-context';
 
 export const githubConnector = createConnector({
   id: 'github',
@@ -64,7 +74,12 @@ function GitHubConnectorForm({ appId }: { appId: string }) {
   });
   const isUserAuthRequired = connectorForm.watch('isUserAuthRequired');
 
+  const { appInfo } = useRunAppContext();
+
   const utils = trpc.useContext();
+
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const cancelRef = useRef() as React.MutableRefObject<HTMLButtonElement>;
 
   // get the Github auth URL from the backend (it includes an encrypted state value that links
   // the auth request to the app)
@@ -91,10 +106,10 @@ function GitHubConnectorForm({ appId }: { appId: string }) {
   const tokenName = 'GITHUB_TOKEN';
 
   // get the existing Github token from the database
-  const existingSecret = trpc.useQuery([
-    'secret.get',
-    { appId, key: tokenName },
-  ]);
+  const existingSecret = trpc.useQuery(
+    ['secret.get', { appId, key: tokenName }],
+    { enabled: !!appInfo?.canUserEdit },
+  );
 
   const toast = useToast();
 
@@ -111,7 +126,7 @@ function GitHubConnectorForm({ appId }: { appId: string }) {
       ]);
       context.invalidateQueries(['githubConnector.get', { appId }]);
       toast({
-        title: 'Github config updated.',
+        title: 'GitHub config updated.',
         status: 'success',
         duration: 1500,
         isClosable: true,
@@ -129,16 +144,20 @@ function GitHubConnectorForm({ appId }: { appId: string }) {
   }, [connector.data?.isUserAuthRequired]);
 
   const saveConnector = async (data: any) => {
-    setIsSaving(true);
-    await updateAppConnectorMutation.mutateAsync({
-      appId,
-      type: 'github',
-      data: {
-        isUserAuthRequired: data.isUserAuthRequired,
-        userScopes: scopesValue as string[],
-      },
-    });
-    setIsSaving(false);
+    if (githubAuthURL.data) {
+      setIsSaving(true);
+      await updateAppConnectorMutation.mutateAsync({
+        appId,
+        type: 'github',
+        data: {
+          isUserAuthRequired: data.isUserAuthRequired,
+          userScopes: scopesValue as string[],
+        },
+      });
+
+      router.push(githubAuthURL.data.url);
+      setIsSaving(false);
+    }
   };
 
   const deleteConnectorMutation = trpc.useMutation('githubConnector.delete', {
@@ -149,208 +168,245 @@ function GitHubConnectorForm({ appId }: { appId: string }) {
     },
   });
 
+  const userAuthSwitch = (mutateOnChange?: boolean) => {
+    return (
+      <HStack w="full" pt="4" pb="4">
+        <FormControl>
+          <HStack w="full">
+            <FormLabel>Require users to auth?</FormLabel>
+            <Spacer flexGrow={1} />
+            <Switch
+              isChecked={isUserAuthRequired}
+              {...connectorForm.register('isUserAuthRequired')}
+              ml="auto"
+              onChange={(e) => {
+                if (mutateOnChange) {
+                  updateAppConnectorMutation.mutateAsync({
+                    appId,
+                    type: 'github',
+                    data: { isUserAuthRequired: e.target.checked },
+                  });
+                }
+
+                connectorForm.setValue(
+                  'isUserAuthRequired',
+                  !isUserAuthRequired,
+                );
+              }}
+            />
+          </HStack>
+          <FormHelperText maxW="xl">
+            When checked, users will have to authorize the GitHub integration
+            before they're able to run this Zipper app and see the output.
+          </FormHelperText>
+        </FormControl>
+      </HStack>
+    );
+  };
+
   return (
-    <Box px="10" w="full">
+    <Box px="6" w="full">
       {githubConnector && (
         <>
           <Box mb="5">
-            <Heading size="md">{githubConnector.name}</Heading>
-            <Text>Configure the {githubConnector.name} connector.</Text>
+            <Heading size="md">{githubConnector.name} Connector</Heading>
           </Box>
           <VStack align="start">
-            {existingInstallation ? (
+            {appInfo.canUserEdit ? (
               <>
+                {existingInstallation ? (
+                  <>
+                    <Card w="full">
+                      <CardBody color="gray.600">
+                        <VStack align="stretch">
+                          <Heading size="sm">Configuration</Heading>
+                          <HStack w="full" pt="2" spacing="1">
+                            <FormLabel m="0">Managed by OAuth App</FormLabel>
+                            <Popover trigger="hover">
+                              <PopoverTrigger>
+                                <FormLabel
+                                  cursor="context-menu"
+                                  textDecor="underline"
+                                  textDecorationStyle="dotted"
+                                  color={'gray.900'}
+                                >
+                                  {
+                                    (
+                                      connector.data
+                                        ?.metadata as GitHubCheckTokenResponse
+                                    ).app?.name
+                                  }
+                                </FormLabel>
+                              </PopoverTrigger>
+                              <PopoverContent>
+                                <PopoverArrow />
+                                <PopoverHeader>
+                                  Installation details
+                                </PopoverHeader>
+                                <PopoverBody>
+                                  <VStack
+                                    align="start"
+                                    divider={<StackDivider />}
+                                    fontSize="sm"
+                                    py="2"
+                                  >
+                                    <HStack>
+                                      <Text>User ID:</Text>
+                                      <Code>
+                                        {
+                                          (
+                                            connector.data
+                                              ?.metadata as GitHubCheckTokenResponse
+                                          ).user.id
+                                        }
+                                      </Code>
+                                    </HStack>
+                                    <HStack>
+                                      <Text>User:</Text>
+                                      <Code>
+                                        {
+                                          (
+                                            connector.data
+                                              ?.metadata as GitHubCheckTokenResponse
+                                          ).user.login
+                                        }
+                                      </Code>
+                                    </HStack>
+                                    <HStack>
+                                      <Text>Scopes:</Text>
+                                      <HStack spacing="px">
+                                        {(
+                                          connector.data
+                                            ?.metadata as GitHubCheckTokenResponse
+                                        ).scopes?.map((scope: string) => (
+                                          <Code>{scope}</Code>
+                                        ))}
+                                      </HStack>
+                                    </HStack>
+                                  </VStack>
+                                </PopoverBody>
+                              </PopoverContent>
+                            </Popover>
+                            <Spacer />
+                            {githubAuthURL.data && (
+                              <Button
+                                variant="unstyled"
+                                color="red.600"
+                                onClick={onOpen}
+                              >
+                                <HStack>
+                                  <HiOutlineTrash />
+                                  <Text>Uninstall</Text>
+                                </HStack>
+                              </Button>
+                            )}
+                          </HStack>
+                          {userAuthSwitch(true)}
+                        </VStack>
+                      </CardBody>
+                    </Card>
+                    <AlertDialog
+                      isOpen={isOpen}
+                      leastDestructiveRef={cancelRef}
+                      onClose={onClose}
+                    >
+                      <AlertDialogOverlay>
+                        <AlertDialogContent>
+                          <AlertDialogHeader fontSize="lg" fontWeight="bold">
+                            Uninstall GitHub App
+                          </AlertDialogHeader>
+
+                          <AlertDialogBody>
+                            Are you sure? You can't undo this action afterwards.
+                          </AlertDialogBody>
+
+                          <AlertDialogFooter>
+                            <Button ref={cancelRef} onClick={onClose}>
+                              Cancel
+                            </Button>
+                            <Button
+                              colorScheme="red"
+                              isDisabled={isSaving}
+                              onClick={async () => {
+                                setIsSaving(true);
+                                await deleteConnectorMutation.mutateAsync({
+                                  appId,
+                                });
+                                setIsSaving(false);
+                                onClose();
+                              }}
+                              ml={3}
+                            >
+                              Uninstall
+                            </Button>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialogOverlay>
+                    </AlertDialog>
+                  </>
+                ) : (
+                  <Card w="full">
+                    <CardBody color="gray.600">
+                      <FormProvider {...connectorForm}>
+                        <form
+                          onSubmit={connectorForm.handleSubmit(saveConnector)}
+                        >
+                          <VStack align="start" w="full">
+                            <FormControl>
+                              <FormLabel color={'gray.500'}>Scopes</FormLabel>
+                              <MultiSelect
+                                options={scopesOptions}
+                                value={scopesValue}
+                                onChange={scopesOnChange as SelectOnChange}
+                              />
+                              {userAuthSwitch()}
+                              <Button
+                                mt="6"
+                                type="submit"
+                                colorScheme={'purple'}
+                                isDisabled={isSaving}
+                              >
+                                Save & Install
+                              </Button>
+                            </FormControl>
+                          </VStack>
+                        </form>
+                      </FormProvider>
+                    </CardBody>
+                  </Card>
+                )}
+              </>
+            ) : (
+              <VStack align="stretch" w="full">
                 <Card w="full">
-                  <CardBody color="gray.600">
-                    <HStack>
-                      <Heading size="sm" mb="4">
-                        Current installation
-                      </Heading>
-                      <Spacer />
-                      {githubAuthURL.data && (
-                        <IconButton
-                          aria-label="Delete connector"
-                          variant="ghost"
-                          onClick={() => {
-                            deleteConnectorMutation.mutateAsync({
-                              appId,
-                            });
-                          }}
-                          icon={<Icon as={HiOutlineTrash} color="gray.400" />}
-                        />
-                      )}
-                    </HStack>
+                  <CardBody>
+                    <Heading size="sm">Configuration</Heading>
                     <VStack
                       align="start"
                       divider={<StackDivider />}
                       fontSize="sm"
+                      py="2"
+                      mt="2"
                     >
                       <HStack>
-                        <Text>Managed by OAuth App:</Text>
-                        <Code>
-                          {
-                            (
-                              connector.data
-                                ?.metadata as GithubCheckTokenResponse
-                            ).app.name
-                          }
-                        </Code>
-                      </HStack>
-                      <HStack>
-                        <Text>User ID:</Text>
-                        <Code>
-                          {
-                            (
-                              connector.data
-                                ?.metadata as GithubCheckTokenResponse
-                            ).user.id
-                          }
-                        </Code>
-                      </HStack>
-                      <HStack>
-                        <Text>User:</Text>
-                        <Code>
-                          {
-                            (
-                              connector.data
-                                ?.metadata as GithubCheckTokenResponse
-                            ).user.login
-                          }
-                        </Code>
-                      </HStack>
-                      <HStack>
-                        <Text>Scopes:</Text>
-                        <HStack spacing="px">
-                          {(
-                            connector.data?.metadata as GithubCheckTokenResponse
-                          ).scopes?.map((scope: string) => (
-                            <Code>{scope}</Code>
+                        <Text>User Scopes:</Text>
+                        <Box>
+                          {connector.data?.userScopes.map((scope: string) => (
+                            <Code key={scope}>{scope}</Code>
                           ))}
-                        </HStack>
+                        </Box>
+                      </HStack>
+
+                      <HStack>
+                        <Text>User auth required?</Text>
+                        <Code>
+                          {connector.data?.isUserAuthRequired ? 'Yes' : 'No'}
+                        </Code>
                       </HStack>
                     </VStack>
                   </CardBody>
                 </Card>
-                <Card w="full">
-                  <CardBody color="gray.600" fontSize="sm">
-                    <Heading size="sm" mb="4">
-                      Configuration
-                    </Heading>
-                    <HStack w="full" pt="2">
-                      <Box mr="auto">
-                        <HStack>
-                          <Text>Require users to auth to access your app</Text>
-                        </HStack>
-                      </Box>
-                      <Switch
-                        isChecked={isUserAuthRequired}
-                        {...connectorForm.register('isUserAuthRequired')}
-                        ml="auto"
-                        onChange={(e) => {
-                          updateAppConnectorMutation.mutateAsync({
-                            appId,
-                            type: 'github',
-                            data: { isUserAuthRequired: e.target.checked },
-                          });
-                        }}
-                      />
-                    </HStack>
-                  </CardBody>
-                </Card>
-              </>
-            ) : (
-              <Card w="full">
-                <CardBody color="gray.600">
-                  <Accordion allowMultiple={true}>
-                    <AccordionItem border={'none'}>
-                      <AccordionButton>
-                        <Box
-                          as="h2"
-                          flex={1}
-                          textAlign="left"
-                          fontSize="md"
-                          fontWeight="semibold"
-                          color="gray.600"
-                        >
-                          Configure scopes
-                        </Box>
-                        <AccordionIcon />
-                      </AccordionButton>
-                      <AccordionPanel pb={4}>
-                        <FormProvider {...connectorForm}>
-                          <form
-                            onSubmit={connectorForm.handleSubmit(saveConnector)}
-                          >
-                            <VStack align="start" w="full">
-                              <FormControl pt="2">
-                                <FormLabel color={'gray.500'}>
-                                  Scopes
-                                  <Icon ml="2" as={HiQuestionMarkCircle} />
-                                </FormLabel>
-                                <MultiSelect
-                                  options={scopesOptions}
-                                  value={scopesValue}
-                                  onChange={scopesOnChange as SelectOnChange}
-                                />
-                                <HStack w="full" pt="2" pb="4">
-                                  <Box mr="auto">
-                                    <HStack>
-                                      <Text>
-                                        Require users to auth to access your app
-                                      </Text>
-                                    </HStack>
-                                  </Box>
-                                  <Switch
-                                    ml="auto"
-                                    isChecked={isUserAuthRequired}
-                                    {...connectorForm.register(
-                                      'isUserAuthRequired',
-                                    )}
-                                  />
-                                </HStack>
-                                <Button
-                                  type="submit"
-                                  colorScheme={'purple'}
-                                  isDisabled={isSaving}
-                                >
-                                  Save
-                                </Button>
-                              </FormControl>
-                            </VStack>
-                          </form>
-                        </FormProvider>
-                      </AccordionPanel>
-                    </AccordionItem>
-                    <AccordionItem border={'none'}>
-                      <h2>
-                        <AccordionButton>
-                          <Box
-                            as="span"
-                            flex="1"
-                            textAlign="left"
-                            fontWeight="semibold"
-                            color={'gray.600'}
-                          >
-                            Install the app
-                          </Box>
-                          <AccordionIcon />
-                        </AccordionButton>
-                      </h2>
-                      <AccordionPanel pb={4}>
-                        <VStack align="start" w="full">
-                          {githubAuthURL.data ? (
-                            <Link href={githubAuthURL.data?.url}>
-                              Add to Github
-                            </Link>
-                          ) : (
-                            <Text>Add to Github</Text>
-                          )}
-                        </VStack>
-                      </AccordionPanel>
-                    </AccordionItem>
-                  </Accordion>
-                </CardBody>
-              </Card>
+              </VStack>
             )}
           </VStack>
           <Divider my={4} />

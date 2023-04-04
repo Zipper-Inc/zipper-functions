@@ -271,8 +271,20 @@ export const appRouter = createRouter()
         // if you're in your personal workspace, return apps that you created outside the context of an org
         // TODO: figure out how to show apps you were invited to
         where.OR = [
-          { organizationId: null, createdById: ctx.userId },
-          { organizationId: null, editors: { some: { userId: ctx.userId } } },
+          {
+            organizationId: null,
+            createdById: ctx.userId,
+          },
+          {
+            organizationId: {
+              notIn: Object.keys(ctx.organizations || {}),
+            },
+            editors: { some: { userId: ctx.userId } },
+          },
+          {
+            organizationId: null,
+            editors: { some: { userId: ctx.userId } },
+          },
         ];
       }
 

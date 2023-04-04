@@ -35,6 +35,7 @@ model App {
   schedules Schedule[]
   runs      AppRun[]
   editors   AppEditor[]
+  pendingEditors PendingAppEditor[]
 
   parent  App?  @relation("AppForks", fields: [parentId], references: [id])
   forks   App[] @relation("AppForks")
@@ -83,10 +84,22 @@ model AppEditor {
   appId         String
   isOwner       Boolean
 
-  app           App        @relation(fields: [appId], references: [id])
+  app           App         @relation(fields: [appId], references: [id])
 
   @@map("app_editors")
   @@id([userId, appId])
+}
+
+model PendingAppEditor {
+  appId         String
+  email         String
+  isOwner       Boolean
+  inviterUserId String
+
+  app           App         @relation(fields: [appId], references: [id])
+
+  @@map("pending_app_editors")
+  @@id([email, appId])
 }
 
 model AppEvent {
@@ -123,6 +136,7 @@ model AppConnector {
   deletedAt DateTime? @db.Timestamp(6)
   type      String
   appId     String
+  clientId  String?
   metadata  Json?
   isUserAuthRequired   Boolean  @default(false)
   userScopes           String[]
