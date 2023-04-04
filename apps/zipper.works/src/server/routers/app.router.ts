@@ -27,7 +27,7 @@ const defaultSelect = Prisma.validator<Prisma.AppSelect>()({
 });
 
 export const defaultCode = [
-  'async function main({worldString}: {worldString: string}) {',
+  'export async function handler({worldString}: {worldString: string}) {',
   '  return `Hello ${worldString}`;',
   '}',
 ].join('\n');
@@ -211,7 +211,7 @@ export const appRouter = createRouter()
         }
         return arr;
         // eslint-disable-next-line prettier/prettier
-      }, [] as (typeof apps[0] & { resourceOwner: ResourceOwnerSlug })[]);
+      }, [] as ((typeof apps)[0] & { resourceOwner: ResourceOwnerSlug })[]);
     },
   })
   .query('byAuthedUser', {
@@ -276,7 +276,7 @@ export const appRouter = createRouter()
         }
         return arr;
         // eslint-disable-next-line prettier/prettier
-      }, [] as (typeof apps[0] & { resourceOwner: ResourceOwnerSlug })[]);
+      }, [] as ((typeof apps)[0] & { resourceOwner: ResourceOwnerSlug })[]);
     },
   })
   .query('byId', {
