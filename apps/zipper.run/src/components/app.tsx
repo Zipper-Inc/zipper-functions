@@ -46,6 +46,7 @@ import removeAppConnectorUserAuth from '~/utils/remove-app-connector-user-auth';
 
 const { __DEBUG__ } = process.env;
 
+//
 export function AppPage({
   app,
   inputs,
