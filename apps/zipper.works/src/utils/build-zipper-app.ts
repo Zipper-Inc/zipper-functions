@@ -1,20 +1,15 @@
-import fs from 'fs/promises';
 import * as eszip from '@deno/eszip';
-
 import { App, Script } from '@prisma/client';
-import path from 'path';
 import { generateHandlersForFramework } from '@zipper/utils';
 import { BuildCache, CacheRecord } from './eszip-build-cache';
+import { readFrameworkFile } from './read-framework-file';
 
 /**
  * @todo
  * Bundle this up or put this source somewhere else
  * Totally possible that the directory structure cannot be guaranteed
  */
-export const FRAMEWORK_PATH = path.resolve(
-  '../..',
-  'packages/zipper-framework/deno',
-);
+
 export const FRAMEWORK_ENTRYPOINT = 'app.ts';
 export const HANDLERS_PATH = 'generated/handlers.gen.ts';
 export const TYPESCRIPT_CONTENT_HEADERS = {
@@ -90,10 +85,7 @@ export async function build({
         depth: 2,
       });
 
-      let content = await fs.readFile(
-        path.resolve(FRAMEWORK_PATH, filename),
-        'utf8',
-      );
+      let content = await readFrameworkFile(filename);
 
       // Inject Env vars
       ['RPC_HOST', 'HMAC_SIGNING_SECRET'].forEach((key) => {

@@ -160,7 +160,7 @@ export default function PlaygroundEditor(
 
   useExitConfirmation({ enable: isEditorDirty(), ignorePaths: ['/edit/'] });
 
-  function createWebSocket(url: string) {
+  const createWebSocket = (url: string) => {
     console.log('creating websocket');
     const webSocket = new WebSocket(url);
     webSocket.onopen = () => {
@@ -198,9 +198,9 @@ export default function PlaygroundEditor(
     webSocket.onclose = () => {
       setHasWebsocket(false);
     };
-  }
+  };
 
-  function handleEditorDidMount(editor: MonacoEditor, _monaco: Monaco) {
+  const handleEditorDidMount = (editor: MonacoEditor, _monaco: Monaco) => {
     console.log('editor mounted');
     // here is another way to get monaco instance
     // you can also store it in `useRef` for further usage
@@ -221,7 +221,7 @@ export default function PlaygroundEditor(
     });
 
     setIsEditorReady(true);
-  }
+  };
 
   useEffect(() => {
     if (monacoEditor) {
@@ -252,6 +252,21 @@ export default function PlaygroundEditor(
       monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions(
         diagnosticOptions,
       );
+
+      // Add Deno and Zipper types
+      ['deno.d.ts', 'zipper.d.ts'].forEach(async (filename) => {
+        const uri = `typescript://types/${filename}`;
+        const monacoUri = monaco.Uri.parse(uri);
+
+        if (!monaco.editor.getModel(monacoUri)) {
+          const response = await fetch(`/api/ts/declarations/${filename}`);
+          const src = await response.text();
+
+          monaco.languages.typescript.javascriptDefaults.addExtraLib(src, uri);
+          monaco.editor.createModel(src, 'typescript', monacoUri);
+        }
+      });
+
       monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
         isolatedModules: true,
         target: monaco.languages.typescript.ScriptTarget.ES2016,

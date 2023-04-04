@@ -40,3 +40,15 @@ export type ZipperGlobal = {
   appInfo: AppInfo;
   originalRequest: OriginalRequest;
 };
+
+declare global {
+  // Because it gets imported into the `app.ts` which assigns window.*
+  // The editor gets a little confused and thinks this is an error
+  //
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore: <see-above>
+  const Zipper: ZipperGlobal;
+  interface Window {
+    Zipper: ZipperGlobal;
+  }
+}

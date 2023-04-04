@@ -1,4 +1,4 @@
-import { AppInfo, OriginalRequest, Inputs, UserInfo } from './types.ts';
+import { AppInfo, OriginalRequest, Inputs, UserInfo } from './types.d.ts';
 
 export type RequestBody = {
   error?: string;
