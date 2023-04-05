@@ -7,12 +7,12 @@ import { buildWorkerDefinition } from 'monaco-editor-workers';
 import { useMyPresence, useOthersConnectionIds } from '~/liveblocks.config';
 
 import { useEffect, useRef, useState } from 'react';
-import { Uri } from 'vscode';
 import { useEditorContext } from '../context/editor-context';
 import { useExitConfirmation } from '~/hooks/use-exit-confirmation';
 import { PlaygroundCollabCursor } from './playground-collab-cursor';
 import { format } from '~/utils/prettier';
 import { useRunAppContext } from '../context/run-app-context';
+import { getPathFromUri, getUriFromPath } from '~/utils/model-uri';
 
 type MonacoEditor = monaco.editor.IStandaloneCodeEditor;
 type Monaco = typeof monaco;
@@ -27,10 +27,6 @@ buildWorkerDefinition(
   new URL('', window.location.href).href,
   false,
 );
-
-const getDenoUri = (path: string) => {
-  return Uri.parse(`${path}.ts`);
-};
 
 export default function PlaygroundEditor(
   props: EditorProps & {
@@ -121,7 +117,7 @@ export default function PlaygroundEditor(
       });
 
       monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
-        // isolatedModules: true,
+        isolatedModules: true,
         target: monaco.languages.typescript.ScriptTarget.ES2020,
         module: monaco.languages.typescript.ModuleKind.CommonJS,
         allowNonTsExtensions: true,
@@ -132,7 +128,7 @@ export default function PlaygroundEditor(
       });
 
       monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
-        // isolatedModules: true,
+        isolatedModules: true,
         target: monaco.languages.typescript.ScriptTarget.ES2020,
         allowNonTsExtensions: true,
         lib: ['esnext', 'dom', 'deno.ns'],
@@ -167,9 +163,10 @@ export default function PlaygroundEditor(
         },
       );
 
-      scripts.forEach(({ code, filename }) => {
-        const uri = getDenoUri(filename);
+      scripts.forEach((script) => {
+        const uri = getUriFromPath(script.filename);
         const model = monaco.editor.getModel(uri);
+        const code = localStorage.getItem(`script-${script.id}`) || script.code;
         if (!model) {
           monaco.editor.createModel(code, 'typescript', uri);
         }
@@ -178,11 +175,12 @@ export default function PlaygroundEditor(
       monaco.languages.typescript.typescriptDefaults.setEagerModelSync(true);
 
       monacoEditor.editor.getModels().forEach((model) => {
+        const path = getPathFromUri(model.uri);
         model.onDidChangeContent((e) => {
           if (e.changes[0]?.text !== model.getValue())
-            setModelIsDirty(model.uri.path.toString(), true);
+            setModelIsDirty(path, true);
         });
-        setModelIsDirty(model.uri.path.toString(), false);
+        setModelIsDirty(path, false);
       });
 
       setEditor(monaco.editor);
@@ -191,7 +189,7 @@ export default function PlaygroundEditor(
 
   useEffect(() => {
     if (monacoEditor && editorRef.current && isEditorReady && currentScript) {
-      const uri = getDenoUri(currentScript.filename);
+      const uri = getUriFromPath(currentScript.filename);
       const model = monacoEditor.editor.getModel(uri);
       if (model) {
         editorRef.current.setModel(model);
@@ -202,10 +200,11 @@ export default function PlaygroundEditor(
           'typescript',
           uri,
         );
-        setModelIsDirty(newModel.uri.path.toString(), false);
+        const path = getPathFromUri(uri);
+        setModelIsDirty(path, false);
         newModel.onDidChangeContent((e) => {
           if (e.changes[0]?.text !== newModel.getValue())
-            setModelIsDirty(newModel.uri.path.toString(), true);
+            setModelIsDirty(path, true);
         });
         editorRef.current.setModel(newModel);
       }
