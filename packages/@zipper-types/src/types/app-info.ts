@@ -14,13 +14,14 @@ export type AppInfo = {
 export type InputParams = InputParam[];
 
 export type AppInfoAndInputParams = {
-  app: Omit<AppInfo, 'canUserEdit'>;
+  app: AppInfo;
   userAuthConnectors: UserAuthConnector[];
   inputs: InputParams;
   userInfo: {
     emails: string[];
     userId?: string;
   };
+  runnableScripts: string[];
 };
 
 export type AppInfoResult =
