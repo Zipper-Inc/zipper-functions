@@ -256,17 +256,21 @@ export const appRouter = createRouter()
         },
       });
 
-      return apps.reduce((arr, app) => {
-        const resourceOwner = resourceOwners.find(
-          (r) => r.resourceOwnerId === (app.organizationId || app.createdById),
-        );
+      return apps.reduce(
+        (arr, app) => {
+          const resourceOwner = resourceOwners.find(
+            (r) =>
+              r.resourceOwnerId === (app.organizationId || app.createdById),
+          );
 
-        if (resourceOwner) {
-          arr.push({ ...app, resourceOwner });
-        }
-        return arr;
-        // eslint-disable-next-line prettier/prettier
-      }, [] as (typeof apps[0] & { resourceOwner: ResourceOwnerSlug })[]);
+          if (resourceOwner) {
+            arr.push({ ...app, resourceOwner });
+          }
+          return arr;
+        },
+        // prettier-ignore
+        [] as ((typeof apps)[0] & { resourceOwner: ResourceOwnerSlug })[],
+      );
     },
   })
   .query('byAuthedUser', {
@@ -321,17 +325,21 @@ export const appRouter = createRouter()
         },
       });
 
-      return apps.reduce((arr, app) => {
-        const resourceOwner = resourceOwners.find(
-          (r) => r.resourceOwnerId === (app.organizationId || app.createdById),
-        );
+      return apps.reduce(
+        (arr, app) => {
+          const resourceOwner = resourceOwners.find(
+            (r) =>
+              r.resourceOwnerId === (app.organizationId || app.createdById),
+          );
 
-        if (resourceOwner) {
-          arr.push({ ...app, resourceOwner });
-        }
-        return arr;
-        // eslint-disable-next-line prettier/prettier
-      }, [] as (typeof apps[0] & { resourceOwner: ResourceOwnerSlug })[]);
+          if (resourceOwner) {
+            arr.push({ ...app, resourceOwner });
+          }
+          return arr;
+        },
+        // prettier-ignore
+        [] as (typeof apps[0] & { resourceOwner: ResourceOwnerSlug })[],
+      );
     },
   })
   .query('byId', {
@@ -528,9 +536,10 @@ export const appRouter = createRouter()
         include: { scripts: true, scriptMain: true },
       });
 
-      const script = app.scripts.find(
-        (s) => s.id === input.scriptId || s.id === app.scriptMain?.scriptId,
-      );
+      // Find the intended script, or mainScript if we can't find it
+      const script =
+        app.scripts.find((s) => s.id === input.scriptId) ||
+        app.scripts.find((s) => s.id === app.scriptMain?.scriptId);
 
       if (!script) {
         throw new TRPCError({ code: 'NOT_FOUND' });
