@@ -113,7 +113,6 @@ export default function PlaygroundEditor(
       monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
         isolatedModules: true,
         target: monaco.languages.typescript.ScriptTarget.ES2020,
-        module: monaco.languages.typescript.ModuleKind.CommonJS,
         allowNonTsExtensions: true,
         moduleResolution:
           monaco.languages.typescript.ModuleResolutionKind.NodeJs,
@@ -125,6 +124,8 @@ export default function PlaygroundEditor(
         isolatedModules: true,
         target: monaco.languages.typescript.ScriptTarget.ES2020,
         allowNonTsExtensions: true,
+        moduleResolution:
+          monaco.languages.typescript.ModuleResolutionKind.NodeJs,
         lib: ['esnext', 'dom', 'deno.ns'],
       });
 
