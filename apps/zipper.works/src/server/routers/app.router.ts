@@ -560,7 +560,11 @@ export const appRouter = createRouter()
       const { getToken } = getAuth(ctx.req!);
 
       const result = await fetch(
-        getRunUrl(app.slug, app.hash, script.filename),
+        getRunUrl(
+          app.slug,
+          getAppVersionFromHash(app.hash || getAppHash(app)),
+          script.filename,
+        ),
         {
           method: 'POST',
           body: JSON.stringify(inputs),
