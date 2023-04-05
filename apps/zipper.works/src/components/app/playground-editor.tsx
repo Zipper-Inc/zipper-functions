@@ -167,8 +167,9 @@ export default function PlaygroundEditor(
         },
       );
 
-      scripts.forEach(({ code, filename }) => {
-        const uri = getDenoUri(filename);
+      scripts.forEach((script) => {
+        const code = localStorage.getItem(`script-${script.id}`) || script.code;
+        const uri = getDenoUri(script.filename);
         const model = monaco.editor.getModel(uri);
         if (!model) {
           monaco.editor.createModel(code, 'typescript', uri);
