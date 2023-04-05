@@ -4,10 +4,13 @@ import path from 'path';
 const ENCODING = 'utf8';
 
 export const PACKAGES_PATH = path.resolve('../../packages');
+
+export const FRAMEWORK_INTERNAL_PATH = '@zipper-framework/deno';
 export const FRAMEWORK_PATH = path.resolve(
   PACKAGES_PATH,
-  'zipper-framework/deno',
+  FRAMEWORK_INTERNAL_PATH,
 );
+
 export const DENO_TYPES_PATH = path.resolve(
   PACKAGES_PATH,
   'deno-types/generated/deno.d.ts',
