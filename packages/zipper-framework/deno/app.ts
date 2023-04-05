@@ -2,7 +2,7 @@ import { Application } from 'https://deno.land/x/oak@v12.1.0/mod.ts';
 import { handlers } from './generated/handlers.gen.ts';
 import { ENV_BLOCKLIST, MAIN_PATH } from './constants.ts';
 import { ZipperStorage } from './storage.ts';
-import { RequestBody } from './types.ts';
+import { RequestBody } from './request-body.ts';
 
 const app = new Application();
 
