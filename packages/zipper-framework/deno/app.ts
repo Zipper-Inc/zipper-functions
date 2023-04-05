@@ -45,7 +45,8 @@ app.use(async ({ request, response }) => {
   };
 
   // Grab the handler
-  const path = body.path || MAIN_PATH;
+  let path: string = body.path || MAIN_PATH;
+  if (!path.endsWith('.ts')) path = `${path}.ts`;
   const handler = handlers[path];
 
   // Handle missing paths
