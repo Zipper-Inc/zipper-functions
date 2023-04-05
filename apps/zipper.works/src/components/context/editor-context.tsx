@@ -155,6 +155,10 @@ const EditorContextProvider = ({
     }
   }, [currentScript]);
 
+  useEffect(() => {
+    setScripts(initialScripts);
+  }, [initialScripts]);
+
   const editAppMutation = trpc.useMutation('app.edit', {
     async onSuccess() {
       refetchApp();
