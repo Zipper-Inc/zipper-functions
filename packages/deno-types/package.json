@@ -1,0 +1,9 @@
+{
+  "name": "deno-types",
+  "description": "A safe place to put Deno types of the editor. Update with `yarn generate`.",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "generate": "echo '// @ts-nocheck \n// generated with `yarn generate`\n// 🛑 DO NOT MODIFY\n\n'\"$(deno types)\" > generated/deno.d.ts"
+  }
+}
