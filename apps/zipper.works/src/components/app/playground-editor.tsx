@@ -1,8 +1,5 @@
 import * as monaco from 'monaco-editor';
 import Editor, { EditorProps, useMonaco, loader } from '@monaco-editor/react';
-import 'vscode';
-import { StandaloneServices } from 'vscode/services';
-import getMessageServiceOverride from 'vscode/service-override/messages';
 import { buildWorkerDefinition } from 'monaco-editor-workers';
 import { useMyPresence, useOthersConnectionIds } from '~/liveblocks.config';
 
@@ -19,9 +16,6 @@ type Monaco = typeof monaco;
 
 loader.config({ monaco });
 
-StandaloneServices.initialize({
-  ...getMessageServiceOverride(document.body),
-});
 buildWorkerDefinition(
   '../../../workers',
   new URL('', window.location.href).href,
