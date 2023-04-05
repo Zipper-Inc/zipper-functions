@@ -38,11 +38,10 @@ const Header: React.FC<AppInfo> = ({ canUserEdit, name }) => {
                 whiteSpace="nowrap"
                 fontWeight="light"
                 color="gray.400"
-                margin="0"
               >
                 /
               </Heading>
-              <Box>
+              <Box display="flex" flexDirection="row" alignItems="center">
                 <NextLink href="#">
                   <Heading
                     as="h1"
@@ -51,18 +50,17 @@ const Header: React.FC<AppInfo> = ({ canUserEdit, name }) => {
                     whiteSpace="nowrap"
                     fontWeight="medium"
                     color="neutral.800"
-                    margin="0"
                   >
                     {user.organizationMemberships[0]?.organization.name}
-                    {user.organizationMemberships.length > 1 && (
-                      <IconButton
-                        aria-label="hidden"
-                        icon={<HiOutlineChevronDown />}
-                        colorScheme="transparent"
-                      />
-                    )}
                   </Heading>
                 </NextLink>
+                {user.organizationMemberships.length > 1 && (
+                  <IconButton
+                    aria-label="hidden"
+                    icon={<HiOutlineChevronDown color="gray" />}
+                    colorScheme="transparent"
+                  />
+                )}
               </Box>
             </>
           )}
