@@ -6,7 +6,7 @@ import getAppInfo from './get-app-info';
 import getInputFromRequest from './get-input-from-request';
 import getValidSubdomain from './get-valid-subdomain';
 import { getFilenameAndVersionFromPath } from './get-values-from-url';
-import { clerkClient, getAuth } from '@clerk/nextjs/server';
+import { getAuth } from '@clerk/nextjs/server';
 import { getAppLink } from '@zipper/utils';
 import { RequestBody as RelayRequestBody } from 'zipper-framework';
 
