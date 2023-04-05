@@ -1,4 +1,4 @@
 export type ConnectorActionProps = {
-  onDelete: VoidFunction;
+  onDelete: () => void;
   authUrl: string;
 };
