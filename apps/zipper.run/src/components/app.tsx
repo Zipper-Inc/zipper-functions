@@ -44,6 +44,7 @@ import { getAuth } from '@clerk/nextjs/server';
 import { UserButton, useUser } from '@clerk/nextjs';
 import Unauthorized from './unauthorized';
 import removeAppConnectorUserAuth from '~/utils/remove-app-connector-user-auth';
+import Header from './header';
 
 const { __DEBUG__ } = process.env;
 
@@ -148,7 +149,7 @@ export function AppPage({
         <title>{appTitle}</title>
       </Head>
       <VStack as="main" flex={1} alignItems="stretch" spacing={14}>
-        {/* TODO bring Header here */}
+        <Header {...app} />
         {/* TODO bring the content here */}
       </VStack>
 
