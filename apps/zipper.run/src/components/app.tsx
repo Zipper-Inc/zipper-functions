@@ -199,6 +199,7 @@ export function AppPage({
             <VStack maxW="container.sm" minW={500} align="stretch" spacing={6}>
               {userAuthConnectors.length > 0 && (
                 <AuthUserConnectors
+                  appTitle={appTitle}
                   actions={connectorActions}
                   userAuthConnectors={userAuthConnectors}
                 />

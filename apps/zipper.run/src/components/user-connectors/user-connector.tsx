@@ -20,8 +20,9 @@ const connectors: Record<ConnectorType, { icon: IconType; name: string }> = {
   },
 };
 
-type ConnectorButtonProps = ConnectorActionProps & {
+export type UserConnectorProps = ConnectorActionProps & {
   connector: UserAuthConnector;
+  appTitle: string;
 };
 
 const getAuthedUser = ({
@@ -38,10 +39,11 @@ const iconStyles: IconBaseProps = {
   size: 20,
 };
 
-const UserConnector: React.FC<ConnectorButtonProps> = ({
+const UserConnector: React.FC<UserConnectorProps> = ({
   connector,
   authUrl,
   onDelete,
+  appTitle,
 }) => {
   const type = connector.type;
   const connectorName = connectors[type].name;
@@ -51,7 +53,7 @@ const UserConnector: React.FC<ConnectorButtonProps> = ({
     return (
       <VStack spacing={3} align="start">
         <Text color="gray.700" fontWeight="semibold" fontSize="lg">
-          Sign in to {connectorName} to use Team Dashboard
+          Sign in to {connectorName} to use {appTitle}
         </Text>
         <Button
           colorScheme="purple"

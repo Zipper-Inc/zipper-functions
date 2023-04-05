@@ -1,12 +1,12 @@
 import { VStack } from '@chakra-ui/react';
-import UserConnector from './user-connector';
+import UserConnector, { UserConnectorProps } from './user-connector';
 import {
   ConnectorActionProps,
   ConnectorType,
   UserAuthConnector,
 } from '@zipper/types';
 
-type AuthUserConnectorsProps = {
+type AuthUserConnectorsProps = Pick<UserConnectorProps, 'appTitle'> & {
   userAuthConnectors: UserAuthConnector[];
   actions: Record<ConnectorType, ConnectorActionProps>;
 };
@@ -14,6 +14,7 @@ type AuthUserConnectorsProps = {
 const AuthUserConnectors: React.FC<AuthUserConnectorsProps> = ({
   actions,
   userAuthConnectors,
+  appTitle,
 }) => {
   return (
     <VStack
@@ -27,7 +28,11 @@ const AuthUserConnectors: React.FC<AuthUserConnectorsProps> = ({
     >
       {userAuthConnectors.map((uac) => (
         <li key={uac.type}>
-          <UserConnector connector={uac} {...actions[uac.type]} />
+          <UserConnector
+            connector={uac}
+            {...actions[uac.type]}
+            appTitle={appTitle}
+          />
         </li>
       ))}
     </VStack>
