@@ -13,6 +13,7 @@ import {
 import { trpc } from '~/utils/trpc';
 import { useRouter } from 'next/router';
 import { LiveObject, LsonObject } from '@liveblocks/client';
+import { getAppHash } from '~/utils/hashing';
 
 export type EditorContextType = {
   currentScript?: Script;

@@ -82,22 +82,23 @@ export function Playground({
     }
   }, [currentScriptLive?.code, currentScript?.code]);
 
-  const switchToCodeTab = () => setTabIndex(0);
+  const onAfterRun = async () => {
+    setTabIndex(0);
+  };
 
-  const onBeforeRun = () => {
+  const onBeforeRun = async () => {
     if (app.canUserEdit) {
-      save();
+      await save();
     }
   };
 
   return (
     <RunAppProvider
       app={app}
-      filename={currentScript?.filename}
       inputParams={inputParams}
       inputError={inputError}
       onBeforeRun={onBeforeRun}
-      onAfterRun={switchToCodeTab}
+      onAfterRun={onAfterRun}
     >
       <VStack flex={1} paddingX={10} alignItems="stretch" spacing={0}>
         <PlaygroundHeader app={app} />

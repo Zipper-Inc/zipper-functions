@@ -1,22 +1,14 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import noop from '~/utils/noop';
-import {
-  AppInfo,
-  ConnectorType,
-  InputParam,
-  InputType,
-  JSONEditorInputTypes,
-} from '@zipper/types';
-import { safeJSONParse } from '@zipper/utils';
+import { AppInfo, ConnectorType, InputParam } from '@zipper/types';
 import { useForm } from 'react-hook-form';
 import { trpc } from '~/utils/trpc';
 import { AppQueryOutput, AppEventUseQueryResult } from '~/types/trpc';
 import useInterval from '~/hooks/use-interval';
-import getRunUrl from '~/utils/get-run-url';
 import { AppConnectorUserAuth } from '@prisma/client';
-import { parseInputForTypes } from '~/utils/parse-input-for-types';
 import { getAppHash, getAppVersionFromHash } from '~/utils/hashing';
 import { useUser } from '@clerk/nextjs';
+import { useEditorContext } from './editor-context';
 
 type UserAuthConnector = {
   type: ConnectorType;
@@ -55,14 +47,11 @@ export const RunAppContext = createContext<FunctionCallContextType>({
   run: noop,
 });
 
-type RunState = 'idle' | 'prerun' | 'running' | 'ended';
-
 export function RunAppProvider({
   app,
   children,
   inputParams,
   inputError,
-  filename,
   onBeforeRun,
   onAfterRun,
 }: {
@@ -70,9 +59,8 @@ export function RunAppProvider({
   children: any;
   inputParams?: InputParam[];
   inputError?: string;
-  filename?: string;
-  onBeforeRun: VoidFunction;
-  onAfterRun: VoidFunction;
+  onBeforeRun: () => Promise<void>;
+  onAfterRun: () => Promise<void>;
 }) {
   const {
     id,
@@ -84,15 +72,13 @@ export function RunAppProvider({
     canUserEdit,
   } = app;
   const formMethods = useForm();
-  const [runState, setRunState] = useState<RunState>('idle');
-  const [isCurrentFileTheEntryPoint, setIsCurrentFileTheEntryPoint] = useState<
-    boolean | undefined
-  >();
   const [isRunning, setIsRunning] = useState(false);
   const [results, setResults] = useState<Record<string, string>>({});
   const [lastRunVersion, setLastRunVersion] = useState(
     () => app.lastDeploymentVersion || getAppVersionFromHash(getAppHash(app)),
   );
+
+  const runAppMutation = trpc.useMutation('app.run');
 
   const { user } = useUser();
   const appEventsQuery = trpc.useQuery(
@@ -106,91 +92,28 @@ export function RunAppProvider({
     }
   }, 10000);
 
-  const run: Record<RunState, (isCurrentFileTheEntryPoint?: boolean) => void> =
-    {
-      idle: (isCurrentFileTheEntryPoint) => {
-        setIsRunning(true);
-        setRunState('prerun');
-        setIsCurrentFileTheEntryPoint(isCurrentFileTheEntryPoint);
-      },
-      prerun: async () => {
-        await onBeforeRun();
-      },
-      running: async () => {
-        const formValues = formMethods.getValues();
-        const inputs: Record<string, any> = {};
-        let formKeys: string[] = [];
+  const { currentScript } = useEditorContext();
 
-        // We need to filter the form values since `useForm` hook keeps these around
-        if (isCurrentFileTheEntryPoint) {
-          formKeys =
-            inputParams?.map(({ key, type }) => `${key}:${type}`) || [];
-        } else {
-          const mainScript = app.scripts.find(
-            (s) => s.id === app.scriptMain?.scriptId,
-          );
-          const mainInputParams = parseInputForTypes(mainScript?.code);
-          if (!mainInputParams) {
-            setIsRunning(false);
-            return;
-          }
-          formKeys = mainInputParams.map(({ key, type }) => `${key}:${type}`);
-        }
+  const run = async (isCurrentFileTheEntryPoint?: boolean) => {
+    setIsRunning(true);
+    await onBeforeRun();
+    const formValues = formMethods.getValues();
+    const result = await runAppMutation.mutateAsync({
+      formData: formValues,
+      appId: id,
+      scriptId: isCurrentFileTheEntryPoint ? currentScript?.id : undefined,
+    });
 
-        Object.keys(formValues)
-          .filter((k) => formKeys.includes(k))
-          .forEach((k) => {
-            const [inputKey, type] = k.split(':');
-
-            const value = JSONEditorInputTypes.includes(type as InputType)
-              ? safeJSONParse(
-                  formValues[k],
-                  undefined,
-                  type === InputType.array ? [] : {},
-                )
-              : formValues[k];
-            inputs[inputKey as string] = value;
-          });
-
-        /**
-         * @todo detect if code changes instead of always running a new version
-         * either that, or make version name based on hash of files
-         */
-        const version = app.lastDeploymentVersion || lastRunVersion;
-
-        const result = await fetch(
-          getRunUrl(
-            slug,
-            version,
-            isCurrentFileTheEntryPoint ? filename : 'main.ts',
-          ),
-          {
-            method: 'POST',
-            body: JSON.stringify(inputs),
-            credentials: 'include',
-          },
-        ).then((r) => r.text());
-
-        setResults({ ...results, [filename || 'main.ts']: result });
-
-        // refetch logs
-        appEventsQuery.refetch();
-
-        setRunState('ended');
-      },
-      ended: async () => {
-        setIsRunning(false);
-        await onAfterRun();
-        setIsCurrentFileTheEntryPoint(undefined);
-        setRunState('idle');
-      },
-    };
-
-  useEffect(() => {
-    if (runState !== 'idle') {
-      run[runState]();
+    if (result.ok && result.filename) {
+      setResults({ ...results, [result.filename]: result.result });
     }
-  }, [runState]);
+
+    // refetch logs
+    appEventsQuery.refetch();
+
+    setIsRunning(false);
+    await onAfterRun();
+  };
 
   useEffect(() => {
     if (
@@ -200,12 +123,6 @@ export function RunAppProvider({
       setLastRunVersion(app.lastDeploymentVersion);
     }
   }, [app.lastDeploymentVersion]);
-
-  useEffect(() => {
-    if (runState === 'prerun') {
-      setRunState('running');
-    }
-  }, [app.updatedAt]);
 
   return (
     <RunAppContext.Provider
@@ -232,7 +149,7 @@ export function RunAppProvider({
         setResults,
         run: async (isCurrentFileTheEntryPoint?: boolean) => {
           if (!inputParams) return;
-          run[runState](isCurrentFileTheEntryPoint);
+          run(isCurrentFileTheEntryPoint);
         },
       }}
     >
