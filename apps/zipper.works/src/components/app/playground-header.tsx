@@ -204,14 +204,28 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
         </HStack>
       </HStack>
       <HStack justifyContent="end">
-        {!user && <SignInButton />}
+        {!user && (
+          <Button
+            variant="link"
+            colorScheme="purple"
+            mr="3"
+            onClick={() => {
+              router.push(
+                `/sign-in?redirect=${encodeURIComponent(
+                  window.location.toString(),
+                )}`,
+              );
+            }}
+          >
+            Sign In
+          </Button>
+        )}
         {!app.canUserEdit && isLoaded && (
           <Button
             type="button"
             paddingX={6}
             variant="outline"
-            borderColor="purple.800"
-            textColor="purple.800"
+            colorScheme="purple"
             onClick={() => {
               if (user) {
                 onOpen();

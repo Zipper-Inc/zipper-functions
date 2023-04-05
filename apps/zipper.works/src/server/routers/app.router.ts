@@ -1,4 +1,10 @@
-import { App, AppEditor, Prisma, ResourceOwnerSlug } from '@prisma/client';
+import {
+  App,
+  AppEditor,
+  Prisma,
+  ResourceOwnerSlug,
+  Script,
+} from '@prisma/client';
 import { z } from 'zod';
 import { prisma } from '~/server/prisma';
 import { createRouter } from '../createRouter';
@@ -7,13 +13,24 @@ import slugify from '~/utils/slugify';
 import { generateDefaultSlug } from '~/utils/generate-default';
 import { TRPCError } from '@trpc/server';
 import denyList from '../utils/slugDenyList';
-import { appSubmissionState, ResourceOwnerType } from '@zipper/types';
+import {
+  appSubmissionState,
+  InputType,
+  JSONEditorInputTypes,
+  ResourceOwnerType,
+} from '@zipper/types';
 import { Context } from '../context';
 import {
   getAppHash,
   getAppVersionFromHash,
   getScriptHash,
 } from '~/utils/hashing';
+import { parseInputForTypes } from '~/utils/parse-input-for-types';
+import { safeJSONParse } from '@zipper/utils';
+import getRunUrl from '~/utils/get-run-url';
+import { randomUUID } from 'crypto';
+import fetch from 'node-fetch';
+import { getAuth } from '@clerk/nextjs/server';
 
 const defaultSelect = Prisma.validator<Prisma.AppSelect>()({
   id: true,
@@ -249,7 +266,7 @@ export const appRouter = createRouter()
         }
         return arr;
         // eslint-disable-next-line prettier/prettier
-      }, [] as ((typeof apps)[0] & { resourceOwner: ResourceOwnerSlug })[]);
+      }, [] as (typeof apps[0] & { resourceOwner: ResourceOwnerSlug })[]);
     },
   })
   .query('byAuthedUser', {
@@ -314,7 +331,7 @@ export const appRouter = createRouter()
         }
         return arr;
         // eslint-disable-next-line prettier/prettier
-      }, [] as ((typeof apps)[0] & { resourceOwner: ResourceOwnerSlug })[]);
+      }, [] as (typeof apps[0] & { resourceOwner: ResourceOwnerSlug })[]);
     },
   })
   .query('byId', {
@@ -499,6 +516,70 @@ export const appRouter = createRouter()
       return !!existingSlug;
     },
   })
+  .mutation('run', {
+    input: z.object({
+      appId: z.string().uuid(),
+      formData: z.record(z.string()),
+      scriptId: z.string().uuid().optional(),
+    }),
+    async resolve({ input, ctx }) {
+      const app = await prisma.app.findFirstOrThrow({
+        where: { id: input.appId },
+        include: { scripts: true, scriptMain: true },
+      });
+
+      const script = app.scripts.find(
+        (s) => s.id === input.scriptId || s.id === app.scriptMain?.scriptId,
+      );
+
+      if (!script) {
+        throw new TRPCError({ code: 'NOT_FOUND' });
+      }
+
+      const inputs: Record<string, any> = {};
+
+      const inputParams = parseInputForTypes(script.code);
+      if (!inputParams) return { ok: false };
+      const formKeys = inputParams.map(({ key, type }) => `${key}:${type}`);
+
+      Object.keys(input.formData)
+        .filter((k) => formKeys.includes(k))
+        .forEach((k) => {
+          const [inputKey, type] = k.split(':');
+
+          const value = JSONEditorInputTypes.includes(type as InputType)
+            ? safeJSONParse(
+                input.formData[k],
+                undefined,
+                type === InputType.array ? [] : {},
+              )
+            : input.formData[k];
+          inputs[inputKey as string] = value;
+        });
+
+      const { getToken } = getAuth(ctx.req!);
+
+      const result = await fetch(
+        getRunUrl(app.slug, app.hash, script.filename),
+        {
+          method: 'POST',
+          body: JSON.stringify(inputs),
+          headers: {
+            authorization: `Bearer ${await getToken()}`,
+          },
+        },
+      ).then((r) => r.text());
+
+      await prisma.app.update({
+        where: { id: app.id },
+        data: {
+          lastDeploymentVersion: getAppVersionFromHash(app.hash!),
+        },
+      });
+
+      return { ok: true, filename: script.filename, result };
+    },
+  })
   // update
   .mutation('fork', {
     input: z.object({
@@ -534,64 +615,54 @@ export const appRouter = createRouter()
         select: defaultSelect,
       });
 
-      const scriptIdsAndHashes: Parameters<typeof getAppHash>[0]['scripts'] =
-        await Promise.all(
-          app.scripts.map(async (script, i) => {
-            const forkScript = await prisma.script.create({
+      const forkScripts: Script[] = [];
+
+      await Promise.all(
+        app.scripts.map(async (script, i) => {
+          const newId = randomUUID();
+          const forkScript = await prisma.script.create({
+            data: {
+              ...script,
+              id: newId,
+              inputSchema: JSON.stringify(script.inputSchema),
+              outputSchema: JSON.stringify(script.outputSchema),
+              appId: fork.id,
+              order: i,
+              hash: getScriptHash({ ...script, id: newId }),
+            },
+          });
+
+          forkScripts.push(forkScript);
+
+          if (script.id === app.scriptMain?.scriptId) {
+            await prisma.scriptMain.create({
               data: {
-                ...script,
-                id: undefined,
-                inputSchema: JSON.stringify(script.inputSchema),
-                outputSchema: JSON.stringify(script.outputSchema),
-                appId: fork.id,
-                order: i,
+                app: { connect: { id: fork.id } },
+                script: { connect: { id: forkScript.id } },
               },
             });
-
-            const hash = getScriptHash(forkScript);
-            await prisma.script.update({
-              where: { id: forkScript.id },
-              data: { hash },
-            });
-
-            if (script.id === app.scriptMain?.scriptId) {
-              await prisma.scriptMain.create({
-                data: {
-                  app: { connect: { id: fork.id } },
-                  script: { connect: { id: forkScript.id } },
-                },
-              });
-            }
-            return {
-              id: forkScript.id,
-              hash,
-            };
-          }),
-        );
+          }
+        }),
+      );
 
       const appHash = getAppHash({
         id: fork.id,
         name: fork.name,
-        scripts: scriptIdsAndHashes,
+        scripts: forkScripts,
       });
-      const lastDeploymentVersion = getAppVersionFromHash(appHash);
-      await prisma.app.update({
+
+      const appWithScripts = await prisma.app.update({
         where: { id: fork.id },
         data: {
           hash: appHash,
-          lastDeploymentVersion,
         },
+        select: defaultSelect,
       });
 
       const resourceOwner = await prisma.resourceOwnerSlug.findFirstOrThrow({
         where: {
           resourceOwnerId: fork.organizationId || fork.createdById,
         },
-      });
-
-      const appWithScripts = await prisma.app.findUniqueOrThrow({
-        where: { id: fork.id },
-        select: defaultSelect,
       });
 
       return { ...appWithScripts, resourceOwner, canUserEdit: true };
@@ -636,13 +707,16 @@ export const appRouter = createRouter()
       const { id, data } = input;
       const { scripts, ...rest } = data;
 
+      // if slug is provided, check if it's valid
       if (data.slug) {
+        // is it on the deny list? If so, throw an error
         const deniedSlug = denyList.find((d) => d === data.slug);
         if (deniedSlug)
           throw new TRPCError({
             message: 'Invalid slug',
             code: 'INTERNAL_SERVER_ERROR',
           });
+        // is it already being used? If so throw na error
         const existingAppWithSlug = await prisma.app.findFirst({
           where: { slug: data.slug, id: { not: input.id } },
         });
@@ -653,80 +727,50 @@ export const appRouter = createRouter()
           });
       }
 
-      const app = await prisma.app.findUniqueOrThrow({
-        where: { id },
-        select: { name: true, scripts: true },
-      });
-
-      await prisma.app.update({
+      const app = await prisma.app.update({
         where: { id },
         data: { updatedAt: new Date(), ...rest },
+        include: { scripts: true },
       });
 
-      let updateAppHash = Boolean(data.name && app.name !== data.name);
-      let scriptIdsAndHashes: Parameters<typeof getAppHash>[0]['scripts'] = [];
+      const filenames: Record<string, string> = {};
+      app.scripts.map((s) => {
+        filenames[s.id] = s.filename;
+      });
 
+      const updatedScripts: Script[] = [];
       if (scripts) {
-        scriptIdsAndHashes = await Promise.all(
+        await Promise.all(
           scripts.map(async (script) => {
             const { id, data } = script;
-            const { code } = data;
-            const s = await prisma.script.findFirst({
-              where: {
-                id,
-              },
-              select: { filename: true, hash: true, code: true },
-            });
-            let hash: string | undefined = s?.hash || undefined;
-            if (code) {
-              hash =
-                s && s.code !== code
-                  ? getScriptHash({ code, filename: s.filename, id })
-                  : undefined;
-              updateAppHash ||= Boolean(hash);
-            }
-            await prisma.script.update({
-              where: { id },
-              data: {
-                ...data,
-                hash,
-              },
-            });
-            return {
-              id,
-              hash: hash || null,
-            };
+            updatedScripts.push(
+              await prisma.script.update({
+                where: { id },
+                data: {
+                  ...data,
+                  hash: getScriptHash({
+                    id,
+                    filename: filenames[id]!,
+                    code: data.code!,
+                  }),
+                },
+              }),
+            );
           }),
         );
-      } else if (updateAppHash) {
-        scriptIdsAndHashes = app.scripts.map((s) => ({
-          hash: s.hash,
-          id: s.id,
-        }));
       }
 
-      if (updateAppHash) {
-        const appHash = getAppHash({
+      return prisma.app.update({
+        where: {
           id,
-          name: data.name || app.name,
-          scripts: scriptIdsAndHashes,
-        });
-        const lastDeploymentVersion = getAppVersionFromHash(appHash);
-
-        return prisma.app.update({
-          where: {
-            id,
-          },
-          data: {
-            hash: appHash,
-            lastDeploymentVersion,
-          },
-          select: defaultSelect,
-        });
-      }
-
-      return prisma.app.findUniqueOrThrow({
-        where: { id },
+        },
+        data: {
+          hash: getAppHash({
+            id: app.id,
+            name: app.name,
+            scripts: updatedScripts,
+          }),
+        },
         select: defaultSelect,
       });
     },
