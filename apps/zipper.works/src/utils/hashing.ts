@@ -18,10 +18,15 @@ export function getAppHash(
     scripts: Pick<Script, 'id' | 'hash'>[];
   },
 ) {
-  const scripts = app.scripts.map(({ id, hash }) => ({
-    id,
-    hash,
-  }));
+  const scripts = JSON.stringify(
+    app.scripts
+      .map(({ id, hash }) => ({
+        id,
+        hash,
+      }))
+      .sort(),
+  );
+
   return hash(
     { id: app.id, name: app.name, scripts },
     {
