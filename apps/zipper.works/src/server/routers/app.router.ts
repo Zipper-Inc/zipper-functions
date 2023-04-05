@@ -29,6 +29,8 @@ import { parseInputForTypes } from '~/utils/parse-input-for-types';
 import { safeJSONParse } from '@zipper/utils';
 import getRunUrl from '~/utils/get-run-url';
 import { randomUUID } from 'crypto';
+import fetch from 'node-fetch';
+import { getAuth } from '@clerk/nextjs/server';
 
 const defaultSelect = Prisma.validator<Prisma.AppSelect>()({
   id: true,
@@ -520,7 +522,7 @@ export const appRouter = createRouter()
       formData: z.record(z.string()),
       scriptId: z.string().uuid().optional(),
     }),
-    async resolve({ input }) {
+    async resolve({ input, ctx }) {
       const app = await prisma.app.findFirstOrThrow({
         where: { id: input.appId },
         include: { scripts: true, scriptMain: true },
@@ -555,12 +557,16 @@ export const appRouter = createRouter()
           inputs[inputKey as string] = value;
         });
 
+      const { getToken } = getAuth(ctx.req!);
+
       const result = await fetch(
         getRunUrl(app.slug, app.hash, script.filename),
         {
           method: 'POST',
           body: JSON.stringify(inputs),
-          credentials: 'include',
+          headers: {
+            authorization: `Bearer ${await getToken()}`,
+          },
         },
       ).then((r) => r.text());
 
