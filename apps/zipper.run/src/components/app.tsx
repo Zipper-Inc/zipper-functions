@@ -148,9 +148,11 @@ export function AppPage({
       <Head>
         <title>{appTitle}</title>
       </Head>
-      <VStack as="main" flex={1} alignItems="stretch" spacing={14}>
+      <VStack flex={1} alignItems="stretch" spacing={14}>
         <Header {...app} />
-        {/* TODO bring the content here */}
+        <VStack as="main" flex={1}>
+          {/* TODO bring the content here */}
+        </VStack>
       </VStack>
 
       {/* TODO translate this code into the new UI */}
