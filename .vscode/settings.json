@@ -3,5 +3,5 @@
   "git.ignoreLimitWarning": true,
   "deno.enable": true,
   "deno.unstable": true,
-  "deno.enablePaths": ["./packages/zipper-framework"]
+  "deno.enablePaths": ["./packages/zipper-framework/deno", "./packages/zipper-framework/bin"]
 }

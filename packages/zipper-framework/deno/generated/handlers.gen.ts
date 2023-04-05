@@ -1,4 +1,4 @@
-import { Handler, HandlerMap } from '../types.ts';
+import { Handler, HandlerMap } from '../types.d.ts';
 import { MAIN_PATH } from '../constants.ts';
 import { handler as main } from '../src/main.ts';
 

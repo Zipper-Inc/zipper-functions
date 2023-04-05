@@ -1,4 +1,3 @@
-
 /**
  * Don't be scared of the generics here.
  * All they do is to give us autocompletion when using this.
@@ -13,14 +12,22 @@ function getConfig(config) {
 
 module.exports = getConfig({
   reactStrictMode: true,
-  transpilePackages: ['@zipper/types', '@zipper/ui', '@zipper/utils'],
+  transpilePackages: [
+    '@zipper/types',
+    '@zipper/ui',
+    '@zipper/utils',
+    'zipper-framework',
+  ],
 
   async rewrites() {
     return [
       {
         source: '/removeConnector/:appId/:connectorType/:path*',
-        destination: `${process.env.NODE_ENV === 'production' ? 'https' : 'http'
-          }://${process.env.NEXT_PUBLIC_ZIPPER_HOST}/api/app/:appId/removeConnector/:connectorType`,
+        destination: `${
+          process.env.NODE_ENV === 'production' ? 'https' : 'http'
+        }://${
+          process.env.NEXT_PUBLIC_ZIPPER_HOST
+        }/api/app/:appId/removeConnector/:connectorType`,
       },
     ];
   },

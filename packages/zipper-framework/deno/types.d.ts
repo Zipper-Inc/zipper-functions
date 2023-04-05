@@ -1,19 +1,22 @@
 /**
- * @todo ibu
- * These should be imported from `@zipper/types` somehow.
- * That way, we can share types across the apps and framework.
- * Not sure how to do that exactly with Deno/ESZip, since `@zipper/types` is Node 🤷🏽‍♂️
+ * 🛑 DO NOT IMPORT ANYTHING INTO THIS FILE
+ * It needs to be readable as is from the Monaco editor
  */
 
 // deno-lint-ignore-file no-explicit-any
-import { type ZipperStorage } from './storage.ts';
-import { MAIN_PATH } from './constants.ts';
+export declare class ZipperStorage {
+  appId: string;
+  constructor(appId: string);
+  get(key?: string): Promise<any>;
+  set(key: string, value: unknown): Promise<any>;
+  delete(key: string): Promise<any>;
+}
 
 export type Inputs = Record<string, any>;
 export type Output = any;
 export type Handler = (inputs?: Inputs) => Output;
 export type HandlerMap = {
-  [MAIN_PATH]: Handler;
+  ['main.ts']: Handler;
   [filename: string]: Handler;
 };
 
@@ -30,18 +33,8 @@ export type UserInfo = {
 
 export type OriginalRequest = { method: string; url: string };
 
-// same as RelayRequestBody in apps/zipper.run/src/utils/relay-middleware.ts
-export type RequestBody = {
-  error?: string;
-  appInfo: AppInfo;
-  originalRequest: OriginalRequest;
-  inputs: Inputs;
-  userInfo?: UserInfo;
-  path?: string;
-};
-
 export type ZipperGlobal = {
-  env: ReturnType<Deno.Env['toObject']>;
+  env: Record<string, string>;
   storage: ZipperStorage;
   userInfo?: UserInfo;
   appInfo: AppInfo;
@@ -49,6 +42,12 @@ export type ZipperGlobal = {
 };
 
 declare global {
+  // Because it gets imported into the `app.ts` which assigns window.*
+  // The editor gets a little confused and thinks this is an error
+  //
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore: <see-above>
+  const Zipper: ZipperGlobal;
   interface Window {
     Zipper: ZipperGlobal;
   }
