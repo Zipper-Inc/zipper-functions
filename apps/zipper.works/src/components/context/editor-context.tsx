@@ -13,7 +13,6 @@ import {
 import { trpc } from '~/utils/trpc';
 import { useRouter } from 'next/router';
 import { LiveObject, LsonObject } from '@liveblocks/client';
-import { getAppHash } from '~/utils/hashing';
 import { getPathFromUri } from '~/utils/model-uri';
 
 export type EditorContextType = {
