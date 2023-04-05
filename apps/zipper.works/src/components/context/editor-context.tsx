@@ -215,7 +215,9 @@ const EditorContextProvider = ({
 
       editor?.getModels().map((model) => {
         if (model.uri.scheme === 'file') {
-          fileValues[model.uri.path] = model.getValue();
+          // Strip the extra '.ts' that's required by intellisense
+          const path = model.uri.path.replace(/.ts$/, '');
+          fileValues[path] = model.getValue();
         }
       });
 
