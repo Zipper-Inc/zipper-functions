@@ -13,10 +13,10 @@ function getConfig(config) {
 module.exports = getConfig({
   reactStrictMode: true,
   transpilePackages: [
+    '@zipper/framework',
     '@zipper/types',
     '@zipper/ui',
     '@zipper/utils',
-    'zipper-framework',
   ],
 
   async rewrites() {
