@@ -19,8 +19,6 @@ const AuthUserConnectors: React.FC<AuthUserConnectorsProps> = ({
     <VStack
       as="ul"
       alignItems="stretch"
-      maxW="container.sm"
-      minW={500}
       bgColor="gray.50"
       p={6}
       rounded="2xl"
