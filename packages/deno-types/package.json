@@ -2,8 +2,10 @@
   "name": "deno-types",
   "description": "A safe place to put Deno types of the editor. Update with `yarn generate`.",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.28.3",
   "scripts": {
-    "generate": "echo '// @ts-nocheck \n// generated with `yarn generate`\n// 🛑 DO NOT MODIFY\n\n'\"$(deno types)\" > generated/deno.d.ts"
+    "generate:version": "DENO_VER=$(deno -V); DENO_VER=${DENO_VER/deno /}; sed -i '' -E 's/\"version\": \"(.*)\"/\"version\": \"'\"$DENO_VER\"'\"/g' package.json",
+    "generate:file": "echo '// @ts-nocheck \n// generated with `yarn generate`\n// 🛑 DO NOT MODIFY\n\n'\"$(deno types)\" > generated/deno.d.ts",
+    "generate": "run-s generate:*; echo '🦕 Updated deno.d.ts and package.json'; "
   }
 }
