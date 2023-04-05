@@ -50,7 +50,7 @@ export function AppPage({
   app,
   inputs,
   userAuthConnectors,
-  version = app?.lastDeploymentVersion || Date.now().toString(32),
+  version = 'latest',
   filename,
   defaultValues,
   slackAuthUrl,
@@ -358,10 +358,7 @@ export const getServerSideProps: GetServerSideProps = async ({
 
   const { app, inputs, userAuthConnectors } = result.data;
 
-  const version =
-    versionFromUrl ||
-    app.lastDeploymentVersion?.toString() ||
-    Date.now().toString();
+  const version = versionFromUrl || 'latest';
 
   const defaultValues = getInputValuesFromUrl(inputs, req.url);
   if (__DEBUG__) console.log({ defaultValues });

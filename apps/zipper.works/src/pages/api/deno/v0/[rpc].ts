@@ -8,6 +8,7 @@ import { decryptFromBase64 } from '@zipper/utils';
 import { prisma } from '~/server/prisma';
 import { build, FRAMEWORK_ENTRYPOINT } from '~/utils/build-zipper-app';
 import { getAppLink } from '@zipper/utils';
+import { getAppHash, getAppVersionFromHash } from '~/utils/hashing';
 
 const X_DENO_CONFIG = 'x-deno-config';
 
@@ -313,7 +314,8 @@ async function originBoot({
   req: NextApiRequest;
   id: string;
 }) {
-  const [appId, version, userId] = deploymentId.split('@');
+  // eslint-disable-next-line prefer-const
+  let [appId, version, userId] = deploymentId.split('@');
 
   if (!appId || !version) {
     console.error('Missing appId and version');
@@ -339,6 +341,10 @@ async function originBoot({
   if (!app) {
     return errorResponse(`Missing app ID`);
   }
+
+  if (version === 'latest')
+    version =
+      app.lastDeploymentVersion || getAppVersionFromHash(getAppHash(app));
 
   const missingUserAuths = app.connectors.filter((connector) => {
     if (
