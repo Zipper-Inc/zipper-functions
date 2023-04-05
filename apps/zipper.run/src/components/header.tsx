@@ -8,50 +8,65 @@ import {
   Heading,
   Button,
   Text,
-  Avatar as BaseAvatar,
+  IconButton,
 } from '@chakra-ui/react';
 import NextLink from 'next/link';
+import { HiOutlineChevronDown } from 'react-icons/hi';
 
 import { ZipperSymbol } from '@zipper/ui';
 import { HiOutlineUpload } from 'react-icons/hi';
 import { AppInfo } from '@zipper/types';
-import { useUser } from '@clerk/nextjs';
+import { SignInButton, UserButton, useUser } from '@clerk/nextjs';
+import React from 'react';
 
-const Header: React.FC<AppInfo> = ({ canUserEdit }) => {
-  // need to get user info
+const Header: React.FC<AppInfo> = ({ canUserEdit, name }) => {
   const { user } = useUser();
 
-  console.log('canUserEdit', canUserEdit);
   return (
     <>
-      <Flex as="header" gap={4} pt="20px" maxW="full" minW="md" paddingX={10}>
+      <Flex as="header" pt="20px" maxW="full" minW="md" paddingX={10}>
         <HStack spacing={3} alignItems="center" flex={1} minW={0}>
           <Box height={4}>
             <ZipperSymbol style={{ maxHeight: '100%' }} />
           </Box>
-          <Heading
-            as="h1"
-            size="md"
-            whiteSpace="nowrap"
-            fontWeight="light"
-            color="gray.400"
-          >
-            /
-          </Heading>
-          <Box>
-            <NextLink href="#">
+
+          {user && user.organizationMemberships.length > 0 && (
+            <>
               <Heading
                 as="h1"
                 size="md"
-                overflow="auto"
                 whiteSpace="nowrap"
-                fontWeight="medium"
-                color="neutral.800"
+                fontWeight="light"
+                color="gray.400"
+                margin="0"
               >
-                Sachin
+                /
               </Heading>
-            </NextLink>
-          </Box>
+              <Box>
+                <NextLink href="#">
+                  <Heading
+                    as="h1"
+                    size="md"
+                    overflow="auto"
+                    whiteSpace="nowrap"
+                    fontWeight="medium"
+                    color="neutral.800"
+                    margin="0"
+                  >
+                    {user.organizationMemberships[0]?.organization.name}
+                    {user.organizationMemberships.length > 1 && (
+                      <IconButton
+                        aria-label="hidden"
+                        icon={<HiOutlineChevronDown />}
+                        colorScheme="transparent"
+                      />
+                    )}
+                  </Heading>
+                </NextLink>
+              </Box>
+            </>
+          )}
+
           <Heading
             as="h1"
             size="md"
@@ -71,7 +86,7 @@ const Header: React.FC<AppInfo> = ({ canUserEdit }) => {
                 fontWeight="semibold"
                 color="gray.800"
               >
-                Team Dashboard
+                {name}
               </Heading>
             </NextLink>
           </Box>
@@ -99,7 +114,9 @@ const Header: React.FC<AppInfo> = ({ canUserEdit }) => {
               <Text>Edit App</Text>
             </Button>
           )}
-          <BaseAvatar size="sm" src={user?.profileImageUrl || ''} />
+
+          {!user && <SignInButton />}
+          <UserButton afterSignOutUrl="/" />
         </HStack>
       </Flex>
     </>
