@@ -35,6 +35,7 @@ export type EditorContextType = {
   setIsSaving: (isSaving: boolean) => void;
   save: () => Promise<void>;
   refetchApp: VoidFunction;
+  replaceCurrentScriptCode: (code: string) => void;
 };
 
 export const EditorContext = createContext<EditorContextType>({
@@ -54,6 +55,7 @@ export const EditorContext = createContext<EditorContextType>({
   setIsSaving: noop,
   save: asyncNoop,
   refetchApp: noop,
+  replaceCurrentScriptCode: noop,
 });
 
 const EditorContextProvider = ({
@@ -167,8 +169,9 @@ const EditorContextProvider = ({
 
   const self = useSelf();
 
-  useEffect(() => {
+  const replaceCurrentScriptCode = (code: string) => {
     if (currentScript) {
+      setCurrentScript({ ...currentScript, code });
       const models = editor?.getModels();
       if (models) {
         const fileModels = models.filter(
@@ -194,7 +197,8 @@ const EditorContextProvider = ({
         });
       }
     }
-  }, [editor, currentScript]);
+  };
+
   const saveOpenModels = async () => {
     if (appId && currentScript) {
       setIsSaving(true);
@@ -276,6 +280,7 @@ const EditorContextProvider = ({
         setIsSaving,
         save: saveOpenModels,
         refetchApp,
+        replaceCurrentScriptCode,
       }}
     >
       {children}

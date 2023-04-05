@@ -79,7 +79,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
     appInfo,
   } = useRunAppContext();
 
-  const { currentScript, currentScriptLive, setCurrentScript } =
+  const { currentScript, currentScriptLive, replaceCurrentScriptCode } =
     useEditorContext();
 
   const router = useRouter();
@@ -263,11 +263,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
   const handleAddInput = () => {
     if (currentScriptLive && currentScript) {
       const codeWithInputAdded = addParamToCode(currentScriptLive?.code || '');
-
-      setCurrentScript({
-        ...currentScript,
-        code: codeWithInputAdded,
-      });
+      replaceCurrentScriptCode(codeWithInputAdded);
     }
   };
   return (
