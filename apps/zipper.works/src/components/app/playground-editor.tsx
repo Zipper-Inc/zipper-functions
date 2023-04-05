@@ -164,7 +164,7 @@ export default function PlaygroundEditor(
       );
 
       scripts.forEach((script) => {
-        const uri = getUriFromPath(script.filename);
+        const uri = getUriFromPath(script.filename, monaco.Uri.parse);
         const model = monaco.editor.getModel(uri);
         const code = localStorage.getItem(`script-${script.id}`) || script.code;
         if (!model) {
@@ -189,7 +189,7 @@ export default function PlaygroundEditor(
 
   useEffect(() => {
     if (monacoEditor && editorRef.current && isEditorReady && currentScript) {
-      const uri = getUriFromPath(currentScript.filename);
+      const uri = getUriFromPath(currentScript.filename, monaco.Uri.parse);
       const model = monacoEditor.editor.getModel(uri);
       if (model) {
         editorRef.current.setModel(model);

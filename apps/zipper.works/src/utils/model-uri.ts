@@ -1,4 +1,4 @@
-import { Uri } from 'vscode';
+import { type Uri } from 'monaco-editor/esm/vs/editor/editor.api';
 
 /**
  * In Deno, imports look like `import { foo } from './foo.ts'`
@@ -12,9 +12,10 @@ const DENO_FRIENDLY_SUFFIX = '.ts';
 
 /**
  * Create a Monaco-friendly model URI from a Deno import path
+ * You have to pass in `monaco.Uri.parse` because loading monaco has all kinds of side effects
  */
-export const getUriFromPath = (path: string) =>
-  Uri.parse(`${path}${DENO_FRIENDLY_SUFFIX}`);
+export const getUriFromPath = (path: string, parseFn: (path: string) => Uri) =>
+  parseFn(`${path}${DENO_FRIENDLY_SUFFIX}`);
 
 /**
  * Get a Deno-friendly import path from a Monaco model URI
