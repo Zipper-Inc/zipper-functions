@@ -332,13 +332,11 @@ export const appRouter = createRouter()
               r.resourceOwnerId === (app.organizationId || app.createdById),
           );
 
-          if (resourceOwner) {
-            arr.push({ ...app, resourceOwner });
-          }
+          arr.push(resourceOwner ? { ...app, resourceOwner } : app);
           return arr;
         },
         // prettier-ignore
-        [] as (typeof apps[0] & { resourceOwner: ResourceOwnerSlug })[],
+        [] as (typeof apps[0] & Partial<{ resourceOwner: ResourceOwnerSlug }>)[],
       );
     },
   })
