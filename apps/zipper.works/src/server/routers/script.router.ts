@@ -31,7 +31,7 @@ export const scriptRouter = createRouter()
       name: z.string().min(3).max(255),
       description: z.string().optional(),
       appId: z.string().uuid(),
-      code: z.string().optional(),
+      code: z.string().default(DEFAULT_CODE),
       order: z.number(),
       connectorId: z.enum(['github', 'slack']).optional(),
     }),
@@ -42,7 +42,6 @@ export const scriptRouter = createRouter()
       const script = await prisma.script.create({
         data: {
           ...data,
-          code: data.code || DEFAULT_CODE,
           isRunnable: isCodeRunnable(data.code),
           app: {
             connect: { id: appId },
