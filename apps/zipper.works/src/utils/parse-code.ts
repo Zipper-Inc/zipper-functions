@@ -59,11 +59,13 @@ function getSourceFileFromCode(code: string) {
   return project.createSourceFile('main.ts', code);
 }
 
-export function parseInputForTypes(
+export function parseInputForTypes({
   code = '',
   throwErrors = false,
-  srcPassedIn?: SourceFile,
-): undefined | InputParam[] {
+  srcPassedIn,
+}: { code?: string; throwErrors?: boolean; srcPassedIn?: SourceFile } = {}):
+  | undefined
+  | InputParam[] {
   if (!code && !throwErrors) return [];
   if (!code && throwErrors) throw new Error('No main function');
 
@@ -78,8 +80,9 @@ export function parseInputForTypes(
       return [];
     }
 
-    if (handlerFn.hasDefaultKeyword() && throwErrors)
+    if (handlerFn.hasDefaultKeyword() && throwErrors) {
       throw new Error('The handler function cannot be the default export');
+    }
 
     const inputs = handlerFn.getParameters();
     if (inputs.length !== 1 && inputs.length > 0) {
@@ -141,11 +144,15 @@ export function parseInputForTypes(
   return [];
 }
 
-export function parseImports(
+export function parseImports({
   code = '',
-  srcPassedIn?: SourceFile,
+  srcPassedIn,
   externalOnly = true,
-): string[] {
+}: {
+  code?: string;
+  srcPassedIn?: SourceFile;
+  externalOnly?: boolean;
+} = {}): string[] {
   if (!code) return [];
   const src = srcPassedIn || getSourceFileFromCode(code);
   return src
@@ -159,22 +166,26 @@ export function parseImports(
     });
 }
 
-export function parseCode(
+export function parseCode({
   code = '',
   throwErrors = false,
-  srcPassedIn?: SourceFile,
-) {
+  srcPassedIn,
+}: { code?: string; throwErrors?: boolean; srcPassedIn?: SourceFile } = {}) {
   const src = srcPassedIn || (code ? getSourceFileFromCode(code) : undefined);
-  const inputs = parseInputForTypes(code, throwErrors, src);
-  const imports = parseImports(code, src);
+  const inputs = parseInputForTypes({ code, throwErrors, srcPassedIn: src });
+  const imports = parseImports({ code, srcPassedIn: src });
   return { inputs, imports };
 }
 
-export function addParamToCode(
-  code: string,
+export function addParamToCode({
+  code,
   paramName = 'newInput',
   paramType = 'string',
-): string {
+}: {
+  code: string;
+  paramName?: string;
+  paramType?: string;
+}): string {
   const src = getSourceFileFromCode(code);
   const handler = src.getFunction('handler');
 
@@ -209,7 +220,7 @@ export function addParamToCode(
     return code;
   }
 
-  const existingParams = parseInputForTypes(code);
+  const existingParams = parseInputForTypes({ code });
   if (!existingParams) return code;
   // If there is an existing parameter, use its name instead of the default paramName
   if (existingParams.length && existingParams[0]) {

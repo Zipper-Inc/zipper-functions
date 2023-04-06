@@ -262,7 +262,9 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
 
   const handleAddInput = () => {
     if (currentScriptLive && currentScript) {
-      const codeWithInputAdded = addParamToCode(currentScriptLive?.code || '');
+      const codeWithInputAdded = addParamToCode({
+        code: currentScriptLive?.code || '',
+      });
       replaceCurrentScriptCode(codeWithInputAdded);
     }
   };

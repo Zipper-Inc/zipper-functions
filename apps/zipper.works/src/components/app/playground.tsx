@@ -70,10 +70,10 @@ export function Playground({
 
   useEffect(() => {
     try {
-      const { inputs, imports } = parseCode(
-        currentScriptLive?.code || currentScript?.code,
-        true,
-      );
+      const { inputs, imports } = parseCode({
+        code: currentScriptLive?.code || currentScript?.code,
+        throwErrors: true,
+      });
 
       console.log('[IMPORTS]', imports);
 
