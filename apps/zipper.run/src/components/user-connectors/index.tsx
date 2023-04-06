@@ -1,14 +1,15 @@
-import { VStack } from '@chakra-ui/react';
-import UserConnector, { UserConnectorProps } from './user-connector';
+import { VStack, Text } from '@chakra-ui/react';
+import UserConnector from './user-connector';
 import {
   ConnectorActionProps,
   ConnectorType,
   UserAuthConnector,
 } from '@zipper/types';
 
-type AuthUserConnectorsProps = Pick<UserConnectorProps, 'appTitle'> & {
+type AuthUserConnectorsProps = {
   userAuthConnectors: UserAuthConnector[];
   actions: Record<ConnectorType, ConnectorActionProps>;
+  appTitle: string;
 };
 
 const AuthUserConnectors: React.FC<AuthUserConnectorsProps> = ({
@@ -16,6 +17,13 @@ const AuthUserConnectors: React.FC<AuthUserConnectorsProps> = ({
   userAuthConnectors,
   appTitle,
 }) => {
+  const unauthorizedConnectors = userAuthConnectors.filter(
+    (uac) => !uac.appConnectorUserAuths[0],
+  );
+  const authorizedConnectors = userAuthConnectors.filter((uac) =>
+    Boolean(uac.appConnectorUserAuths[0]),
+  );
+
   return (
     <VStack
       as="ul"
@@ -26,13 +34,16 @@ const AuthUserConnectors: React.FC<AuthUserConnectorsProps> = ({
       spacing="2.5"
       listStyleType="none"
     >
-      {userAuthConnectors.map((uac) => (
+      {unauthorizedConnectors.length > 0 && (
+        <li>
+          <Text color="gray.700" fontWeight="semibold" fontSize="lg">
+            Sign in to use {appTitle}
+          </Text>
+        </li>
+      )}
+      {unauthorizedConnectors.concat(authorizedConnectors).map((uac) => (
         <li key={uac.type}>
-          <UserConnector
-            connector={uac}
-            {...actions[uac.type]}
-            appTitle={appTitle}
-          />
+          <UserConnector connector={uac} {...actions[uac.type]} />
         </li>
       ))}
     </VStack>
