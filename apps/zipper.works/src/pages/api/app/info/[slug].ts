@@ -2,6 +2,7 @@ import {
   App,
   AppConnector,
   AppConnectorUserAuth,
+  AppEditor,
   Script,
   ScriptMain,
 } from '@prisma/client';
@@ -12,6 +13,8 @@ import { parseInputForTypes } from '~/utils/parse-code';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import clerkClient from '@clerk/clerk-sdk-node';
 import { compare } from 'bcryptjs';
+import { canUserEdit } from '~/server/routers/app.router';
+import { getAuth } from '@clerk/nextjs/server';
 
 /**
  * @todo
@@ -50,6 +53,7 @@ export default async function handler(
     | (App & {
         scriptMain: ScriptMain | null;
         scripts: Script[];
+        editors: AppEditor[];
         connectors: (AppConnector & {
           appConnectorUserAuths: AppConnectorUserAuth[];
         })[];
@@ -60,6 +64,7 @@ export default async function handler(
     appFound = await prisma.app.findUnique({
       where: { slug: slugFromUrl },
       include: {
+        editors: true,
         scripts: true,
         scriptMain: true,
         connectors: {
@@ -125,6 +130,8 @@ export default async function handler(
     });
   }
 
+  const { userId, sessionClaims, orgId } = getAuth(req);
+
   const result: AppInfoResult = {
     ok: true,
     data: {
@@ -135,8 +142,20 @@ export default async function handler(
         description,
         lastDeploymentVersion,
         updatedAt,
+        canUserEdit: canUserEdit(appFound, {
+          req,
+          userId: userId || undefined,
+          orgId: orgId || undefined,
+          organizations: sessionClaims?.organizations as Record<
+            string,
+            string
+          >[],
+        }),
       },
       inputs: parseInputForTypes({ code: entryPoint.code }) || [],
+      runnableScripts: scripts
+        .filter((s) => s.isRunnable)
+        .map((s) => s.filename),
       userAuthConnectors: appFound.connectors.filter(
         (c) => c.userScopes.length > 0,
       ) as UserAuthConnector[],

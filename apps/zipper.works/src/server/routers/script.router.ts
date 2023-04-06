@@ -2,6 +2,7 @@ import { Prisma } from '@prisma/client';
 import { z } from 'zod';
 import { prisma } from '~/server/prisma';
 import { getScriptHash } from '~/utils/hashing';
+import isCodeRunnable from '~/utils/is-code-runnable';
 import slugify from '~/utils/slugify';
 import { createRouter } from '../createRouter';
 import { hasAppEditPermission } from '../utils/authz.utils';
@@ -42,6 +43,7 @@ export const scriptRouter = createRouter()
         data: {
           ...data,
           code: data.code || DEFAULT_CODE,
+          isRunnable: isCodeRunnable(data.code),
           app: {
             connect: { id: appId },
           },

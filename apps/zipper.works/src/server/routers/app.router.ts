@@ -31,6 +31,7 @@ import getRunUrl from '~/utils/get-run-url';
 import { randomUUID } from 'crypto';
 import fetch from 'node-fetch';
 import { getAuth } from '@clerk/nextjs/server';
+import isCodeRunnable from '~/utils/is-code-runnable';
 
 const defaultSelect = Prisma.validator<Prisma.AppSelect>()({
   id: true,
@@ -57,7 +58,7 @@ export const defaultCode = [
 const defaultMainFile = 'main';
 const defaultMainFilename = `${defaultMainFile}.ts`;
 
-const canUserEdit = (
+export const canUserEdit = (
   app: Pick<
     App & { editors: AppEditor[] },
     'editors' | 'organizationId' | 'isPrivate'
@@ -190,6 +191,7 @@ export const appRouter = createRouter()
               code: defaultCode,
               name: defaultMainFile,
               filename: defaultMainFilename,
+              isRunnable: true,
               appId: app.id,
               order: 0,
             },
@@ -756,11 +758,16 @@ export const appRouter = createRouter()
         await Promise.all(
           scripts.map(async (script) => {
             const { id, data } = script;
+            let isRunnable: boolean | undefined = undefined;
+            if (data.code) {
+              isRunnable = isCodeRunnable(data.code);
+            }
             updatedScripts.push(
               await prisma.script.update({
                 where: { id },
                 data: {
                   ...data,
+                  isRunnable,
                   hash: getScriptHash({
                     id,
                     filename: filenames[id]!,
