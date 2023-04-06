@@ -8,7 +8,7 @@ import {
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '~/server/prisma';
 import { AppInfoResult, UserAuthConnector } from '@zipper/types';
-import { parseInputForTypes } from '~/utils/parse-input-for-types';
+import { parseInputForTypes } from '~/utils/parse-code';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import clerkClient from '@clerk/clerk-sdk-node';
 import { compare } from 'bcryptjs';

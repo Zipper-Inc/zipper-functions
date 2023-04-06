@@ -25,7 +25,7 @@ import {
   getAppVersionFromHash,
   getScriptHash,
 } from '~/utils/hashing';
-import { parseInputForTypes } from '~/utils/parse-input-for-types';
+import { parseInputForTypes } from '~/utils/parse-code';
 import { safeJSONParse } from '@zipper/utils';
 import getRunUrl from '~/utils/get-run-url';
 import { randomUUID } from 'crypto';

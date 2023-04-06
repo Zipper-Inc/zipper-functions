@@ -25,7 +25,7 @@ import { FunctionInputs } from '@zipper/ui';
 import cronstrue from 'cronstrue';
 import { useEffect, useState } from 'react';
 import { FieldValues, useForm } from 'react-hook-form';
-import { parseInputForTypes } from '~/utils/parse-input-for-types';
+import { parseInputForTypes } from '~/utils/parse-code';
 import { useEditorContext } from '../context/editor-context';
 import { useRunAppContext } from '../context/run-app-context';
 
