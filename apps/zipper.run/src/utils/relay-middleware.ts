@@ -110,7 +110,7 @@ export async function relayRequest({
       result: appInfoResult.error,
     };
 
-  const { app, userAuthConnectors } = appInfoResult.data;
+  const { app, userAuthConnectors, userInfo } = appInfoResult.data;
 
   // Get a version from URL or use the latest
   const version =
@@ -139,7 +139,7 @@ export async function relayRequest({
         : JSON.parse(await request.text()),
   };
 
-  relayBody.userInfo = appInfoResult.data.userInfo;
+  relayBody.userInfo = userInfo;
 
   relayBody.path = _filename;
 
