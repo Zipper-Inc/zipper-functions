@@ -13,7 +13,7 @@ import {
 import { trpc } from '~/utils/trpc';
 import { useRouter } from 'next/router';
 import { LiveObject, LsonObject } from '@liveblocks/client';
-import { getAppHash } from '~/utils/hashing';
+import { getPathFromUri } from '~/utils/model-uri';
 
 export type EditorContextType = {
   currentScript?: Script;
@@ -126,10 +126,12 @@ const EditorContextProvider = ({
       fileModels.forEach((model) => {
         // if the model is not in the scripts, dispose of it
         if (
-          !scripts.find((script) => `/${script.filename}` === model.uri.path)
+          !scripts.find(
+            (script) => `/${script.filename}` === getPathFromUri(model.uri),
+          )
         ) {
           // if the model is the script that has been deleted, set the current script to the first script
-          if (`/${currentScript?.filename}` === model.uri.path) {
+          if (`/${currentScript?.filename}` === getPathFromUri(model.uri)) {
             setCurrentScript(scripts[0]);
           }
           model.dispose();
@@ -180,7 +182,7 @@ const EditorContextProvider = ({
         );
         fileModels.forEach((model) => {
           if (
-            `/${currentScript.filename}` === model.uri.path &&
+            `/${currentScript.filename}` === getPathFromUri(model.uri) &&
             model.getValue() !== currentScript.code
           ) {
             model.setValue(currentScript.code);
@@ -215,7 +217,8 @@ const EditorContextProvider = ({
 
       editor?.getModels().map((model) => {
         if (model.uri.scheme === 'file') {
-          fileValues[model.uri.path] = model.getValue();
+          // Strip the extra '.ts' that's required by intellisense
+          fileValues[getPathFromUri(model.uri)] = model.getValue();
         }
       });
 
