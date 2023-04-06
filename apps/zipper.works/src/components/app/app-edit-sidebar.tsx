@@ -68,8 +68,6 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
   const {
     lastRunVersion,
     appEventsQuery,
-    inputParams,
-    inputError,
     formMethods,
     isRunning,
     setResults,
@@ -79,8 +77,13 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
     appInfo,
   } = useRunAppContext();
 
-  const { currentScript, currentScriptLive, replaceCurrentScriptCode } =
-    useEditorContext();
+  const {
+    currentScript,
+    currentScriptLive,
+    replaceCurrentScriptCode,
+    inputParams,
+    inputError,
+  } = useEditorContext();
 
   const router = useRouter();
   const context = trpc.useContext();

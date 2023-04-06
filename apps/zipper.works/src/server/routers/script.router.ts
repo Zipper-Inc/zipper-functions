@@ -19,6 +19,11 @@ const defaultSelect = Prisma.validator<Prisma.ScriptSelect>()({
   connectorId: true,
 });
 
+const DEFAULT_CODE = `export async function handler({ world }: { world: string }) {
+  return \`hello \${world}\`;
+};
+`;
+
 export const scriptRouter = createRouter()
   // create
   .mutation('add', {
@@ -26,7 +31,7 @@ export const scriptRouter = createRouter()
       name: z.string().min(3).max(255),
       description: z.string().optional(),
       appId: z.string().uuid(),
-      code: z.string(),
+      code: z.string().default(DEFAULT_CODE),
       order: z.number(),
       connectorId: z.enum(['github', 'slack']).optional(),
     }),
