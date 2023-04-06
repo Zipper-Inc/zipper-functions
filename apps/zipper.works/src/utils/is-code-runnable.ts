@@ -1,8 +1,8 @@
-import { parseInputForTypes } from './parse-input-for-types';
+import { parseInputForTypes } from './parse-code';
 
 export default function isCodeRunnable(code: string) {
   try {
-    parseInputForTypes(code, true);
+    parseInputForTypes({ code: code, throwErrors: true });
 
     return true;
   } catch (e) {
