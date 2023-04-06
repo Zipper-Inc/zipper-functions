@@ -13,7 +13,7 @@ export function ActionButton({
   async function runScript() {
     const res = await fetch(getRunUrl(action.script), {
       method: 'POST',
-      body: JSON.stringify(action.inputs),
+      body: JSON.stringify(action.inputs || []),
     });
     const text = await res.text();
 
