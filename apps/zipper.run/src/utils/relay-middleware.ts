@@ -8,7 +8,7 @@ import getValidSubdomain from './get-valid-subdomain';
 import { getFilenameAndVersionFromPath } from './get-values-from-url';
 import { getAuth } from '@clerk/nextjs/server';
 import { getAppLink } from '@zipper/utils';
-import { RequestBody as RelayRequestBody } from 'zipper-framework';
+import { RequestBody as RelayRequestBody } from '@zipper/framework';
 
 const { __DEBUG__, SHARED_SECRET: DENO_SHARED_SECRET, RPC_HOST } = process.env;
 

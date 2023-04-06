@@ -1,6 +1,6 @@
 export default function getRunUrl(
   slug: string,
-  version: string | null | undefined = Date.now().toString(32),
+  version: string | null | undefined = 'latest',
   filename?: string,
 ) {
   const path = `run/${slug}/${version}/${filename || 'main.ts'}`;

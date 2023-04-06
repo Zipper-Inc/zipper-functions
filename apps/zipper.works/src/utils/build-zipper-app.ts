@@ -2,7 +2,7 @@ import * as eszip from '@deno/eszip';
 import { App, Script } from '@prisma/client';
 import { generateHandlersForFramework } from '@zipper/utils';
 import { BuildCache, CacheRecord } from './eszip-build-cache';
-import { readFrameworkFile } from './read-file';
+import { readFrameworkFile, FRAMEWORK_INTERNAL_PATH } from './read-file';
 
 /**
  * @todo
@@ -81,7 +81,7 @@ export async function build({
         appName,
         msg: isHandlersPath
           ? `Generating new routes for at ${filename}`
-          : `Adding zipper-framework/${filename}`,
+          : `Adding ${FRAMEWORK_INTERNAL_PATH}/${filename}`,
         depth: 2,
       });
 
