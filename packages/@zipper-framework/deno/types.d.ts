@@ -4,13 +4,6 @@
  */
 
 // deno-lint-ignore-file no-explicit-any
-export declare class ZipperStorage {
-  appId: string;
-  constructor(appId: string);
-  get(key?: string): Promise<any>;
-  set(key: string, value: unknown): Promise<any>;
-  delete(key: string): Promise<any>;
-}
 
 export type Inputs = Record<string, any>;
 export type Output = any;
@@ -20,35 +13,59 @@ export type HandlerMap = {
   [filename: string]: Handler;
 };
 
+export declare class ZipperStorage {
+  appId: string;
+  constructor(appId: string);
+  get(key?: string): Promise<any>;
+  set(key: string, value: unknown): Promise<any>;
+  delete(key: string): Promise<any>;
+}
+
+export type UserInfo = {
+  emails: string[];
+  userId?: string;
+};
+
 export type AppInfo = {
   id: string;
   slug: string;
   version: string;
   url: string;
 };
-export type UserInfo = {
-  emails: string[];
-  userId?: string;
-};
 
 export type OriginalRequest = { method: string; url: string };
 
-export type ZipperGlobal = {
-  env: Record<string, string>;
-  storage: ZipperStorage;
-  userInfo?: UserInfo;
-  appInfo: AppInfo;
-  originalRequest: OriginalRequest;
-};
-
 declare global {
-  // Because it gets imported into the `app.ts` which assigns window.*
-  // The editor gets a little confused and thinks this is an error
-  //
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore: <see-above>
-  const Zipper: ZipperGlobal;
+  /**
+   * The Zipper global gives you access to env info, who called it, as well as basic storage
+   */
+  const Zipper: {
+    /**
+     * An object containing useful environment variables
+     */
+    env: Record<string, string>;
+    /**
+     * Asynchronous storage solution for your apps
+     *  `storage.get` will get you the full storage, or single key if you pass a key
+     *  `storage.set` will set a key to a given value
+     *  `storage.delete` will delete a key
+     */
+    storage: ZipperStorage;
+    /**
+     * Information about the user who called this app, blank if public
+     */
+    userInfo?: UserInfo;
+    /**
+     * Meta info about the app itself
+     */
+    appInfo: AppInfo;
+    /**
+     * Information about the original request
+     */
+    originalRequest: OriginalRequest;
+  };
+
   interface Window {
-    Zipper: ZipperGlobal;
+    Zipper: typeof Zipper;
   }
 }
