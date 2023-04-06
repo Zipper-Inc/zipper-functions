@@ -10,13 +10,11 @@ import {
   Button,
   ChakraProps,
 } from '@chakra-ui/react';
-import { InputParam } from '@zipper/types';
 import React, { useState, useEffect } from 'react';
 import SecretsTab from '~/components/app/secrets-tab';
 import SchedulesTab from '~/components/app/schedules-tab';
 import SettingsTab from './settings-tab';
 import ShareModal from '~/components/app/share-modal';
-import { parseCode } from '~/utils/parse-code';
 import { PlaygroundHeader } from './playground-header';
 import { CodeTab } from './code-tab';
 import { useEditorContext } from '../context/editor-context';
@@ -51,8 +49,7 @@ export function Playground({
 
   const { id } = app;
 
-  const { setCurrentScript, currentScriptLive, save, isSaving } =
-    useEditorContext();
+  const { setCurrentScript, save, isSaving } = useEditorContext();
 
   const mainScript = app.scripts.find(
     (script) => script.id === app.scriptMain?.scriptId,
