@@ -23,7 +23,9 @@ export function generateHandlersForFramework({
   const generatedExports = [
     '/// <generated-exports>',
     '/// 🛑 DO NOT MODIFY THIS PART ///',
-    ...filenamesFiltered.map((f, i) => `'${f}': m${i}.handler as Handler,`),
+    ...filenamesFiltered.map(
+      (f, i) => `'${f}': m${i}.handler as Zipper.Handler,`,
+    ),
     '/// </generated-exports>',
   ].join('\n');
 

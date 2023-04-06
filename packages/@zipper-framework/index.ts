@@ -1,2 +1,2 @@
-export * from './deno/types';
+import './deno/types';
 export * from './deno/request-body';
