@@ -204,7 +204,7 @@ export function AppPage({
                   userAuthConnectors={userAuthConnectors}
                 />
               )}
-              {/*               
+              {/*
                     TODO inputs should go here
                     The run button should set the screen value to 'run' by using the setScreen function
                */}
@@ -469,7 +469,7 @@ export const getServerSideProps: GetServerSideProps = async ({
       const url = new URL('https://slack.com/oauth/v2/authorize');
       url.searchParams.set(
         'client_id',
-        process.env.NEXT_PUBLIC_SLACK_CLIENT_ID!,
+        slackConnector.clientId || process.env.NEXT_PUBLIC_SLACK_CLIENT_ID!,
       );
       url.searchParams.set('scope', slackConnector.workspaceScopes.join(','));
       url.searchParams.set('user_scope', slackConnector.userScopes.join(','));
