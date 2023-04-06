@@ -547,7 +547,7 @@ export const appRouter = createRouter()
 
       const inputs: Record<string, any> = {};
 
-      const inputParams = parseInputForTypes(script.code);
+      const inputParams = parseInputForTypes({ code: script.code });
       if (!inputParams) return { ok: false };
       const formKeys = inputParams.map(({ key, type }) => `${key}:${type}`);
 

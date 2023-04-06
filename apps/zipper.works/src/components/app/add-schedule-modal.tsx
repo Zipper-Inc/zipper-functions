@@ -74,7 +74,9 @@ export const AddScheduleModal: React.FC<AddScheduleModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       setInputParams(
-        parseInputForTypes(scripts.find((s) => s.filename === 'main.ts')?.code),
+        parseInputForTypes({
+          code: scripts.find((s) => s.filename === 'main.ts')?.code,
+        }),
       );
     }
   }, [isOpen]);
@@ -106,10 +108,11 @@ export const AddScheduleModal: React.FC<AddScheduleModalProps> = ({
                 onChange: (e) => {
                   addModalForm.setValue('filename', e.target.value);
                   try {
-                    const inputs = parseInputForTypes(
-                      scripts.find((s) => s.filename === e.target.value)?.code,
-                      true,
-                    );
+                    const inputs = parseInputForTypes({
+                      code: scripts.find((s) => s.filename === e.target.value)
+                        ?.code,
+                      throwErrors: true,
+                    });
                     setInputParams(inputs);
                   } catch (e) {
                     setInputParams(undefined);
