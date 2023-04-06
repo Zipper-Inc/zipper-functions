@@ -1,5 +1,6 @@
 // * 🛑 DO NOT IMPORT ANYTHING INTO THIS FILE
 // * It needs to be readable as is from the Monaco editor
+// deno-lint-ignore-file no-explicit-any
 
 /**
  * The global Zipper namespace ✨
