@@ -16,7 +16,7 @@ import SecretsTab from '~/components/app/secrets-tab';
 import SchedulesTab from '~/components/app/schedules-tab';
 import SettingsTab from './settings-tab';
 import ShareModal from '~/components/app/share-modal';
-import { parseInputForTypes } from '~/utils/parse-code';
+import { parseCode } from '~/utils/parse-code';
 import { PlaygroundHeader } from './playground-header';
 import { CodeTab } from './code-tab';
 import { useEditorContext } from '../context/editor-context';
@@ -70,10 +70,14 @@ export function Playground({
 
   useEffect(() => {
     try {
-      const inputs = parseInputForTypes(
+      const { inputs, imports } = parseCode(
         currentScriptLive?.code || currentScript?.code,
         true,
       );
+      const externalImports = imports.filter(
+        (i) => i.startsWith('http://') || i.startsWith('https://'),
+      );
+      console.log(externalImports);
       setInputParams(inputs);
       setInputError(undefined);
     } catch (e: any) {

@@ -6,6 +6,7 @@ import {
   PropertySignature,
   SyntaxKind,
   ts,
+  SourceFile,
 } from 'ts-morph';
 
 // Strip the Deno-style file extension since TS-Morph can't handle it
@@ -61,12 +62,13 @@ function getSourceFileFromCode(code: string) {
 export function parseInputForTypes(
   code = '',
   throwErrors = false,
+  srcPassedIn?: SourceFile,
 ): undefined | InputParam[] {
   if (!code && !throwErrors) return [];
   if (!code && throwErrors) throw new Error('No main function');
 
   try {
-    const src = getSourceFileFromCode(code);
+    const src = srcPassedIn || getSourceFileFromCode(code);
 
     const handlerFn = src.getFunction('handler');
 
@@ -137,6 +139,23 @@ export function parseInputForTypes(
     console.error('caught during parseInputForTypes', e);
   }
   return [];
+}
+
+export function parseImports(code = '', srcPassedIn?: SourceFile): string[] {
+  if (!code) return [];
+  const src = srcPassedIn || getSourceFileFromCode(code);
+  return src.getImportDeclarations().map((i) => i.getModuleSpecifierValue());
+}
+
+export function parseCode(
+  code = '',
+  throwErrors = false,
+  srcPassedIn?: SourceFile,
+) {
+  const src = code ? getSourceFileFromCode(code) : undefined;
+  const inputs = parseInputForTypes(code, throwErrors, src);
+  const imports = parseImports(code, src);
+  return { inputs, imports };
 }
 
 export function addParamToCode(
