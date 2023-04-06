@@ -34,7 +34,7 @@ import { LogLine } from '~/components/app/log-line';
 import { useRunAppContext } from '../context/run-app-context';
 import { trpc } from '~/utils/trpc';
 import { useRouter } from 'next/router';
-import { addParamToCode } from '~/utils/parse-input-for-types';
+import { addParamToCode } from '~/utils/parse-code';
 
 import { HiOutlineClipboard, HiOutlinePlay } from 'react-icons/hi2';
 import { useEditorContext } from '../context/editor-context';
