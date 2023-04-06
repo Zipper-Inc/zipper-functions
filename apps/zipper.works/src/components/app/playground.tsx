@@ -74,10 +74,9 @@ export function Playground({
         currentScriptLive?.code || currentScript?.code,
         true,
       );
-      const externalImports = imports.filter(
-        (i) => i.startsWith('http://') || i.startsWith('https://'),
-      );
-      console.log(externalImports);
+
+      console.log('[IMPORTS]', imports);
+
       setInputParams(inputs);
       setInputError(undefined);
     } catch (e: any) {

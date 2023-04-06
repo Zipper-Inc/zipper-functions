@@ -141,10 +141,22 @@ export function parseInputForTypes(
   return [];
 }
 
-export function parseImports(code = '', srcPassedIn?: SourceFile): string[] {
+export function parseImports(
+  code = '',
+  srcPassedIn?: SourceFile,
+  externalOnly = true,
+): string[] {
   if (!code) return [];
   const src = srcPassedIn || getSourceFileFromCode(code);
-  return src.getImportDeclarations().map((i) => i.getModuleSpecifierValue());
+  return src
+    .getImportDeclarations()
+    .map((i) => i.getModuleSpecifierValue())
+    .filter((specifier) => {
+      if (!externalOnly) return true;
+      return (
+        specifier.startsWith('http://') || specifier.startsWith('https://')
+      );
+    });
 }
 
 export function parseCode(
@@ -152,7 +164,7 @@ export function parseCode(
   throwErrors = false,
   srcPassedIn?: SourceFile,
 ) {
-  const src = code ? getSourceFileFromCode(code) : undefined;
+  const src = srcPassedIn || (code ? getSourceFileFromCode(code) : undefined);
   const inputs = parseInputForTypes(code, throwErrors, src);
   const imports = parseImports(code, src);
   return { inputs, imports };
