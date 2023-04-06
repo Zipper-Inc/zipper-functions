@@ -1,2 +1,3 @@
-import './deno/zipper';
-export * from './deno/request-body';
+// This is just a dummy file to share the Zipper namespace
+/// <reference types="./deno/zipper"/>
+export {};
