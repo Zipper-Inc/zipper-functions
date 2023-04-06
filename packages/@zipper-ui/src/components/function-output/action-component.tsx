@@ -5,7 +5,7 @@ export type Action = {
   action_type: string;
   text: string;
   script: string;
-  showAs: 'modal' | 'expanded' | 'replace_all';
+  show_as: 'modal' | 'expanded' | 'replace_all';
   inputs: Record<string, any>;
 };
 
