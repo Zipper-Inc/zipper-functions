@@ -45,15 +45,13 @@ export function Playground({
 }) {
   const { editorIds, onlineEditorIds, selfId } = useAppEditors();
 
-  const [inputParams, setInputParams] = useState<InputParam[] | undefined>([]);
-  const [inputError, setInputError] = useState<string | undefined>();
   const [tabIndex, setTabIndex] = useState(0);
 
   const [isShareModalOpen, setShareModalOpen] = useState(false);
 
   const { id } = app;
 
-  const { setCurrentScript, currentScript, currentScriptLive, save, isSaving } =
+  const { setCurrentScript, currentScriptLive, save, isSaving } =
     useEditorContext();
 
   const mainScript = app.scripts.find(
@@ -68,23 +66,6 @@ export function Playground({
     setCurrentScript(initialScript!);
   }, []);
 
-  useEffect(() => {
-    try {
-      const { inputs, imports } = parseCode({
-        code: currentScriptLive?.code || currentScript?.code,
-        throwErrors: true,
-      });
-
-      console.log('[IMPORTS]', imports);
-
-      setInputParams(inputs);
-      setInputError(undefined);
-    } catch (e: any) {
-      setInputParams(undefined);
-      setInputError(e.message);
-    }
-  }, [currentScriptLive?.code, currentScript?.code]);
-
   const onAfterRun = async () => {
     setTabIndex(0);
   };
@@ -96,13 +77,7 @@ export function Playground({
   };
 
   return (
-    <RunAppProvider
-      app={app}
-      inputParams={inputParams}
-      inputError={inputError}
-      onBeforeRun={onBeforeRun}
-      onAfterRun={onAfterRun}
-    >
+    <RunAppProvider app={app} onBeforeRun={onBeforeRun} onAfterRun={onAfterRun}>
       <VStack flex={1} paddingX={10} alignItems="stretch" spacing={0}>
         <PlaygroundHeader app={app} />
         <Tabs
