@@ -1,4 +1,5 @@
 import { hmac as _generateHmac } from 'https://deno.land/x/hmac@v2.0.1/mod.ts';
+import { ZipperStorage as Storage } from './types.d.ts';
 
 function generateHmac(
   method: 'GET' | 'POST' | 'DELETE',
@@ -19,7 +20,7 @@ function generateHmac(
   };
 }
 
-export class ZipperStorage {
+export class ZipperStorage implements Storage {
   public appId: string;
 
   constructor(appId: string) {

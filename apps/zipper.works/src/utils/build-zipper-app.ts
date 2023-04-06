@@ -1,20 +1,15 @@
-import fs from 'fs/promises';
 import * as eszip from '@deno/eszip';
-
 import { App, Script } from '@prisma/client';
-import path from 'path';
 import { generateHandlersForFramework } from '@zipper/utils';
 import { BuildCache, CacheRecord } from './eszip-build-cache';
+import { readFrameworkFile, FRAMEWORK_INTERNAL_PATH } from './read-file';
 
 /**
  * @todo
  * Bundle this up or put this source somewhere else
  * Totally possible that the directory structure cannot be guaranteed
  */
-export const FRAMEWORK_PATH = path.resolve(
-  '../..',
-  'packages/zipper-framework',
-);
+
 export const FRAMEWORK_ENTRYPOINT = 'app.ts';
 export const HANDLERS_PATH = 'generated/handlers.gen.ts';
 export const TYPESCRIPT_CONTENT_HEADERS = {
@@ -43,7 +38,7 @@ export async function build({
   version: string;
 }) {
   const startMs = performance.now();
-  const appName = `${app.name}@${version}`;
+  const appName = `${app.slug}@${version}`;
 
   buildLog({ appName, msg: `Building for deployment` });
 
@@ -86,14 +81,11 @@ export async function build({
         appName,
         msg: isHandlersPath
           ? `Generating new routes for at ${filename}`
-          : `Adding zipper-framework/${filename}`,
+          : `Adding ${FRAMEWORK_INTERNAL_PATH}/${filename}`,
         depth: 2,
       });
 
-      let content = await fs.readFile(
-        path.resolve(FRAMEWORK_PATH, filename),
-        'utf8',
-      );
+      let content = await readFrameworkFile(filename);
 
       // Inject Env vars
       ['RPC_HOST', 'HMAC_SIGNING_SECRET'].forEach((key) => {
