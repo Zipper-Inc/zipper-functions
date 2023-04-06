@@ -48,6 +48,8 @@ import Header from './header';
 
 const { __DEBUG__ } = process.env;
 
+type Screen = 'initial' | 'run' | 'edit';
+
 export function AppPage({
   app,
   inputs,
@@ -78,6 +80,7 @@ export function AppPage({
   const [loading, setLoading] = useState(false);
   const [isExpandedResultOpen, setIsExpandedResultOpen] = useState(true);
   const { user } = useUser();
+  const [screen, setScreen] = useState<Screen>('initial');
 
   const runApp = async () => {
     setLoading(true);
@@ -143,6 +146,9 @@ export function AppPage({
     return <Unauthorized />;
   }
 
+  const showInput = (['initial', 'edit'] as Screen[]).includes(screen);
+  const showRunOutput = (['edit', 'run'] as Screen[]).includes(screen);
+
   return (
     <>
       <Head>
@@ -150,8 +156,21 @@ export function AppPage({
       </Head>
       <VStack flex={1} alignItems="stretch" spacing={14}>
         <Header {...app} />
-        <VStack as="main" flex={1}>
-          {/* TODO bring the content here */}
+        <VStack as="main" flex={1} spacing={14}>
+          {showInput && (
+            <VStack maxW="container.sm" minW={500} align="stretch" spacing={6}>
+              {/* TODO user auth connectors should go here */}
+              {/*               
+                    TODO inputs should go here
+                    The run button should set the screen value to 'run' by using the setScreen function
+               */}
+            </VStack>
+          )}
+          {showRunOutput && (
+            <VStack w="full" align="stretch" px={10} spacing={6}>
+              {/* TODO run output should go here */}
+            </VStack>
+          )}
         </VStack>
       </VStack>
 
