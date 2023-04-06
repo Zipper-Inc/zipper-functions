@@ -193,7 +193,7 @@ export function AppPage({
         <title>{appTitle}</title>
       </Head>
       <VStack flex={1} alignItems="stretch" spacing={14}>
-        <Header {...app} />
+        <Header {...app} fileName={filename} />
         <VStack as="main" flex={1} spacing={14}>
           {showInput && (
             <VStack maxW="container.sm" minW={500} align="stretch" spacing={6}>
