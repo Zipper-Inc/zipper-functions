@@ -8,7 +8,13 @@ import {
   useCmdOrCtrl,
   FunctionUserConnectors,
 } from '@zipper/ui';
-import { AppInfo, InputParams, UserAuthConnector } from '@zipper/types';
+import {
+  AppInfo,
+  ConnectorActionProps,
+  ConnectorType,
+  InputParams,
+  UserAuthConnector,
+} from '@zipper/types';
 import getAppInfo from '~/utils/get-app-info';
 import getValidSubdomain from '~/utils/get-valid-subdomain';
 import { getFilenameAndVersionFromPath } from '~/utils/get-values-from-url';
@@ -45,6 +51,7 @@ import { UserButton, useUser } from '@clerk/nextjs';
 import Unauthorized from './unauthorized';
 import removeAppConnectorUserAuth from '~/utils/remove-app-connector-user-auth';
 import Header from './header';
+import AuthUserConnectors from './user-connectors';
 
 const { __DEBUG__ } = process.env;
 
@@ -146,6 +153,37 @@ export function AppPage({
     return <Unauthorized />;
   }
 
+  const connectorActions: Record<ConnectorType, ConnectorActionProps> = {
+    github: {
+      authUrl: githubAuthUrl || '#',
+      onDelete: async () => {
+        if (user) {
+          await removeAppConnectorUserAuth({
+            appId: app.id,
+            type: 'github',
+          });
+        } else {
+          deleteCookie('__zipper_temp_user_id');
+        }
+        router.reload();
+      },
+    },
+    slack: {
+      authUrl: slackAuthUrl || '#',
+      onDelete: async () => {
+        if (user) {
+          await removeAppConnectorUserAuth({
+            appId: app.id,
+            type: 'slack',
+          });
+        } else {
+          deleteCookie('__zipper_temp_user_id');
+        }
+        router.reload();
+      },
+    },
+  };
+
   const showInput = (['initial', 'edit'] as Screen[]).includes(screen);
   const showRunOutput = (['edit', 'run'] as Screen[]).includes(screen);
 
@@ -159,8 +197,14 @@ export function AppPage({
         <VStack as="main" flex={1} spacing={14}>
           {showInput && (
             <VStack maxW="container.sm" minW={500} align="stretch" spacing={6}>
-              {/* TODO user auth connectors should go here */}
-              {/*               
+              {userAuthConnectors.length > 0 && (
+                <AuthUserConnectors
+                  appTitle={appTitle}
+                  actions={connectorActions}
+                  userAuthConnectors={userAuthConnectors}
+                />
+              )}
+              {/*
                     TODO inputs should go here
                     The run button should set the screen value to 'run' by using the setScreen function
                */}
@@ -425,7 +469,7 @@ export const getServerSideProps: GetServerSideProps = async ({
       const url = new URL('https://slack.com/oauth/v2/authorize');
       url.searchParams.set(
         'client_id',
-        process.env.NEXT_PUBLIC_SLACK_CLIENT_ID!,
+        slackConnector.clientId || process.env.NEXT_PUBLIC_SLACK_CLIENT_ID!,
       );
       url.searchParams.set('scope', slackConnector.workspaceScopes.join(','));
       url.searchParams.set('user_scope', slackConnector.userScopes.join(','));
