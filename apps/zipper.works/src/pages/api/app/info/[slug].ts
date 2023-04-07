@@ -13,8 +13,8 @@ import { parseInputForTypes } from '~/utils/parse-code';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import clerkClient from '@clerk/clerk-sdk-node';
 import { compare } from 'bcryptjs';
-import { canUserEdit } from '~/server/routers/app.router';
-import { getAuth } from '@clerk/nextjs/server';
+// import { canUserEdit } from '~/server/routers/app.router';
+// import { getAuth } from '@clerk/nextjs/server';
 
 /**
  * @todo
@@ -130,7 +130,7 @@ export default async function handler(
     });
   }
 
-  const { userId, sessionClaims, orgId } = getAuth(req);
+  // const { userId, sessionClaims, orgId } = getAuth(req);
 
   const result: AppInfoResult = {
     ok: true,
@@ -142,15 +142,16 @@ export default async function handler(
         description,
         lastDeploymentVersion,
         updatedAt,
-        canUserEdit: canUserEdit(appFound, {
-          req,
-          userId: userId || undefined,
-          orgId: orgId || undefined,
-          organizations: sessionClaims?.organizations as Record<
-            string,
-            string
-          >[],
-        }),
+        canUserEdit: false,
+        // canUserEdit: canUserEdit(appFound, {
+        //   req,
+        //   userId: userId || undefined,
+        //   orgId: orgId || undefined,
+        //   organizations: sessionClaims?.organizations as Record<
+        //     string,
+        //     string
+        //   >[],
+        // }),
       },
       inputs: parseInputForTypes({ code: entryPoint.code }) || [],
       runnableScripts: scripts
