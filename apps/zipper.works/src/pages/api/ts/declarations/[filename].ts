@@ -14,7 +14,7 @@ export default async function handler(
       return res.setHeader('Content-Type', 'text/typescript').send(src);
     }
     case ZIPPER: {
-      const src = await readFrameworkFile('types.d.ts');
+      const src = await readFrameworkFile('zipper.d.ts');
       return res.setHeader('Content-Type', 'text/typescript').send(src);
     }
     default: {

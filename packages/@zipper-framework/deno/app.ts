@@ -59,7 +59,7 @@ app.use(async ({ request, response }) => {
   try {
     const output = await handler(body.inputs);
     response.status = 200;
-    response.body = output;
+    response.body = output || '';
   } catch (e) {
     response.status = 500;
     response.body = `Zipper Error 500: ${
