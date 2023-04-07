@@ -88,7 +88,7 @@ export async function relayRequest({
 
   // Get the user's JWT token from the session if there is one
   const auth = getAuth(request);
-  const token = await auth.getToken();
+  const token = await auth.getToken({ template: 'incl_orgs' });
 
   const tempUserId = request.cookies
     .get('__zipper_temp_user_id')
