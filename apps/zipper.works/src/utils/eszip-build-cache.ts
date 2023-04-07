@@ -84,3 +84,38 @@ export class BuildCache {
     }
   }
 }
+
+export async function getModule(
+  specifier: string,
+  buildCache = new BuildCache(),
+) {
+  const cachedModule = await buildCache.get(specifier);
+  if (cachedModule) return cachedModule;
+
+  const response = await fetch(specifier, {
+    redirect: 'follow',
+  });
+
+  if (response.status !== 200) {
+    // ensure the body is read as to not leak resources
+    await response.arrayBuffer();
+    return undefined;
+  }
+
+  const content = await response.text();
+  const headers: Record<string, string> = {};
+  response.headers.forEach((value, key) => {
+    headers[key.toLowerCase()] = value;
+  });
+
+  const mod = {
+    kind: 'module',
+    specifier: response.url,
+    headers,
+    content,
+  } as CacheRecord['module'];
+
+  buildCache.set(specifier, mod);
+
+  return mod;
+}
