@@ -2,7 +2,6 @@ import { Application } from 'https://deno.land/x/oak@v12.1.0/mod.ts';
 import { handlers } from './generated/handlers.gen.ts';
 import { ENV_BLOCKLIST, MAIN_PATH } from './constants.ts';
 import { ZipperStorage } from './storage.ts';
-import { RequestBody } from './request-body.ts';
 
 const app = new Application();
 
@@ -12,7 +11,8 @@ app.use(async ({ request, response }) => {
 
   // Parse the body
   try {
-    body = (await request.body({ type: 'json' }).value) as RequestBody;
+    body = (await request.body({ type: 'json' })
+      .value) as Zipper.Relay.RequestBody;
   } catch (e) {
     error = e;
   }
