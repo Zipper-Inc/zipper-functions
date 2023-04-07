@@ -1,7 +1,7 @@
 import * as eszip from '@deno/eszip';
 import { App, Script } from '@prisma/client';
 import { generateHandlersForFramework } from '@zipper/utils';
-import { BuildCache, CacheRecord, getModule } from './eszip-build-cache';
+import { BuildCache, getModule } from './eszip-build-cache';
 import { readFrameworkFile, FRAMEWORK_INTERNAL_PATH } from './read-file';
 
 /**

@@ -1,4 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
+import * as eszip from '@deno/eszip';
 import { BuildCache, getModule } from '~/utils/eszip-build-cache';
 
 const buildCache = new BuildCache();
@@ -36,5 +37,19 @@ export default async function handler(
       .send(rootModule.content);
   }
 
-  return res.status(501).send('bundle not setup');
+  const bundle: Record<string, string> = {};
+
+  await eszip.build([rootModule.specifier], async (specifier) => {
+    console.log('Bundling', specifier, rootModule.specifier);
+    if (specifier === rootModule.specifier) {
+      bundle[specifier] = rootModule.content;
+      return rootModule;
+    } else {
+      const mod = await getModule(specifier, buildCache);
+      if (mod?.content) bundle[specifier] = mod.content;
+      return mod;
+    }
+  });
+
+  return res.status(200).send(JSON.stringify(bundle));
 }
