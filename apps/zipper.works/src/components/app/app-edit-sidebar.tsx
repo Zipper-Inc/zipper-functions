@@ -34,7 +34,7 @@ import { LogLine } from '~/components/app/log-line';
 import { useRunAppContext } from '../context/run-app-context';
 import { trpc } from '~/utils/trpc';
 import { useRouter } from 'next/router';
-import { addParamToCode } from '~/utils/parse-input-for-types';
+import { addParamToCode } from '~/utils/parse-code';
 
 import { HiOutlineClipboard, HiOutlinePlay } from 'react-icons/hi2';
 import { useEditorContext } from '../context/editor-context';
@@ -68,8 +68,6 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
   const {
     lastRunVersion,
     appEventsQuery,
-    inputParams,
-    inputError,
     formMethods,
     isRunning,
     setResults,
@@ -79,8 +77,13 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
     appInfo,
   } = useRunAppContext();
 
-  const { currentScript, currentScriptLive, replaceCurrentScriptCode } =
-    useEditorContext();
+  const {
+    currentScript,
+    currentScriptLive,
+    replaceCurrentScriptCode,
+    inputParams,
+    inputError,
+  } = useEditorContext();
 
   const router = useRouter();
   const context = trpc.useContext();
@@ -262,7 +265,9 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
 
   const handleAddInput = () => {
     if (currentScriptLive && currentScript) {
-      const codeWithInputAdded = addParamToCode(currentScriptLive?.code || '');
+      const codeWithInputAdded = addParamToCode({
+        code: currentScriptLive?.code || '',
+      });
       replaceCurrentScriptCode(codeWithInputAdded);
     }
   };

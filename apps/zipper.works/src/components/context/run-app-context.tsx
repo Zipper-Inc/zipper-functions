@@ -28,7 +28,6 @@ export type FunctionCallContextType = {
   results: Record<string, string>;
   userAuthConnectors: UserAuthConnector[];
   appEventsQuery?: AppEventUseQueryResult;
-  inputError?: string;
   setResults: (results: Record<string, string>) => void;
   run: (isCurrentFileAsEntryPoint?: boolean) => void;
 };
@@ -41,7 +40,6 @@ export const RunAppContext = createContext<FunctionCallContextType>({
   lastRunVersion: '',
   results: {},
   appEventsQuery: undefined,
-  inputError: undefined,
   userAuthConnectors: [],
   setResults: noop,
   run: noop,
@@ -50,15 +48,11 @@ export const RunAppContext = createContext<FunctionCallContextType>({
 export function RunAppProvider({
   app,
   children,
-  inputParams,
-  inputError,
   onBeforeRun,
   onAfterRun,
 }: {
   app: AppQueryOutput;
   children: any;
-  inputParams?: InputParam[];
-  inputError?: string;
   onBeforeRun: () => Promise<void>;
   onAfterRun: () => Promise<void>;
 }) {
@@ -92,7 +86,7 @@ export function RunAppProvider({
     }
   }, 10000);
 
-  const { currentScript } = useEditorContext();
+  const { currentScript, inputParams } = useEditorContext();
 
   const run = async (isCurrentFileTheEntryPoint?: boolean) => {
     setIsRunning(true);
@@ -138,8 +132,6 @@ export function RunAppProvider({
         },
         formMethods,
         isRunning,
-        inputParams,
-        inputError,
         lastRunVersion,
         results,
         appEventsQuery,

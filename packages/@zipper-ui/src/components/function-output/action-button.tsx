@@ -1,4 +1,4 @@
-import { Box, Button, Flex, Spinner } from '@chakra-ui/react';
+import { Button, Flex, Spinner } from '@chakra-ui/react';
 import { useState } from 'react';
 import { Action } from './action-component';
 import { FunctionOutputProps } from './types';
@@ -13,11 +13,12 @@ export function ActionButton({
   async function runScript() {
     const res = await fetch(getRunUrl(action.script), {
       method: 'POST',
-      body: JSON.stringify(action.inputs),
+      body: JSON.stringify(action.inputs || []),
+      credentials: 'include',
     });
     const text = await res.text();
 
-    switch (action.showAs) {
+    switch (action.show_as) {
       case 'modal':
         setModalResult({ heading: `${action.script}`, body: text });
         break;

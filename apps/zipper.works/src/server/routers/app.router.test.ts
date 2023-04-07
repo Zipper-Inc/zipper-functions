@@ -160,6 +160,7 @@ describe('when calling app.add', () => {
               code: defaultCode,
               appId,
               order: 0,
+              isRunnable: true,
             },
           }),
         },

@@ -14,6 +14,8 @@ import { trpc } from '~/utils/trpc';
 import { useRouter } from 'next/router';
 import { LiveObject, LsonObject } from '@liveblocks/client';
 import { getPathFromUri } from '~/utils/model-uri';
+import { InputParam } from '@zipper/types';
+import { parseCode } from '~/utils/parse-code';
 
 export type EditorContextType = {
   currentScript?: Script;
@@ -37,6 +39,9 @@ export type EditorContextType = {
   save: () => Promise<void>;
   refetchApp: VoidFunction;
   replaceCurrentScriptCode: (code: string) => void;
+  inputParams?: InputParam[];
+  setInputParams: (inputParams: InputParam[]) => void;
+  inputError?: string;
 };
 
 export const EditorContext = createContext<EditorContextType>({
@@ -57,6 +62,9 @@ export const EditorContext = createContext<EditorContextType>({
   save: asyncNoop,
   refetchApp: noop,
   replaceCurrentScriptCode: noop,
+  inputParams: undefined,
+  setInputParams: noop,
+  inputError: undefined,
 });
 
 const EditorContextProvider = ({
@@ -77,6 +85,9 @@ const EditorContextProvider = ({
   const [currentScript, setCurrentScript] = useState<Script | undefined>(
     undefined,
   );
+
+  const [inputParams, setInputParams] = useState<InputParam[] | undefined>([]);
+  const [inputError, setInputError] = useState<string | undefined>();
 
   const [scripts, setScripts] = useState<Script[]>(initialScripts);
   const [isSaving, setIsSaving] = useState(false);
@@ -99,6 +110,18 @@ const EditorContextProvider = ({
         `script-${currentScript?.id}`,
       ) as LiveObject<LsonObject>;
 
+      if (!stored) {
+        storage.set(
+          `script-${currentScript?.id}`,
+          new LiveObject<LsonObject>({
+            code: newCode,
+            lastLocalVersion: newVersion,
+            lastConnectionId: self.connectionId,
+          }),
+        );
+        return;
+      }
+
       if (!stored || stored.get('code') === newCode) return;
 
       stored.set('code', newCode);
@@ -110,12 +133,26 @@ const EditorContextProvider = ({
 
   const onChange: EditorProps['onChange'] = (value = '', event) => {
     try {
+      localStorage.setItem(`script-${currentScript?.id}`, value);
       mutateLive(value, event.versionId);
+
+      try {
+        const { inputs, imports } = parseCode({
+          code: value,
+          throwErrors: true,
+        });
+
+        console.log('[IMPORTS]', imports);
+
+        setInputParams(inputs);
+        setInputError(undefined);
+      } catch (e: any) {
+        setInputParams(undefined);
+        setInputError(e.message);
+      }
     } catch (e) {
       console.error('Caught error from mutateLive:', e);
     }
-
-    localStorage.setItem(`script-${currentScript?.id}`, value);
   };
 
   useEffect(() => {
@@ -141,6 +178,7 @@ const EditorContextProvider = ({
   }, [scripts]);
 
   const router = useRouter();
+
   useEffect(() => {
     if (currentScript) {
       if (router.query.filename !== currentScript.filename) {
@@ -285,6 +323,9 @@ const EditorContextProvider = ({
         save: saveOpenModels,
         refetchApp,
         replaceCurrentScriptCode,
+        inputParams,
+        setInputParams,
+        inputError,
       }}
     >
       {children}
