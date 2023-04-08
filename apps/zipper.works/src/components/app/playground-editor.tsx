@@ -35,6 +35,8 @@ export default function PlaygroundEditor(
     setModelIsDirty,
     isEditorDirty,
     connectionId,
+    unhandledImports,
+    importSetRef,
   } = useEditorContext();
   const { appInfo } = useRunAppContext();
   const editorRef = useRef<MonacoEditor>();
@@ -241,6 +243,36 @@ export default function PlaygroundEditor(
     );
     editorRef.current.pushUndoStop();
   }, [connectionId, currentScriptLive?.code, editorRef.current]);
+
+  // Handle imports
+  // Handle new imports
+  useEffect(() => {
+    if (!monacoEditor || !importSetRef) return;
+    unhandledImports.forEach(async (importUrl) => {
+      try {
+        // optimistically add it to the import set
+        importSetRef.current.add(importUrl);
+
+        console.log('[IMPORTS]', 'Caching import', importUrl);
+
+        const bundle = await fetch(
+          `/api/ts/module?x=${importUrl}&bundle=1`,
+        ).then((r) => r.json());
+
+        Object.keys(bundle).forEach((url) => {
+          console.log('[IMPORTS]', '∟ ', `Handling ${url}`);
+          const uri = getUriFromPath(url, monacoEditor.Uri.parse);
+          if (!monacoEditor.editor.getModel(uri)) {
+            monacoEditor.editor.createModel(bundle[url], 'typescript', uri);
+          }
+        });
+      } catch (e) {
+        // remove it from the import set if there's an error
+        importSetRef.current.delete(importUrl);
+        console.error('[IMPORTS]', '∟ ', 'Error adding import', e);
+      }
+    });
+  }, [unhandledImports, monacoEditor, importSetRef]);
 
   return (
     <>
