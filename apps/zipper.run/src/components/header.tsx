@@ -11,7 +11,7 @@ import {
 import NextLink from 'next/link';
 import { getAppLink } from '@zipper/utils';
 import { ZipperSymbol } from '@zipper/ui';
-import { HiOutlineUpload } from 'react-icons/hi';
+import { HiOutlineUpload, HiOutlinePencilAlt } from 'react-icons/hi';
 import { AppInfo } from '@zipper/types';
 import { UserButton, useUser } from '@clerk/nextjs';
 import React from 'react';
@@ -113,8 +113,11 @@ const Header: React.FC<AppInfo & { fileName?: string }> = ({
               display="flex"
               gap={2}
               fontWeight="medium"
+              onClick={() => {
+                window.location.href = `http://${process.env.NEXT_PUBLIC_ZIPPER_HOST}/${slug}/edit/${fileName}`;
+              }}
             >
-              <HiOutlineUpload />
+              <HiOutlinePencilAlt />
               <Text>Edit App</Text>
             </Button>
           )}
