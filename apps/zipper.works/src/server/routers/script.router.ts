@@ -2,6 +2,7 @@ import { Prisma } from '@prisma/client';
 import { z } from 'zod';
 import { prisma } from '~/server/prisma';
 import { getScriptHash } from '~/utils/hashing';
+import isCodeRunnable from '~/utils/is-code-runnable';
 import slugify from '~/utils/slugify';
 import { createRouter } from '../createRouter';
 import { hasAppEditPermission } from '../utils/authz.utils';
@@ -18,6 +19,11 @@ const defaultSelect = Prisma.validator<Prisma.ScriptSelect>()({
   connectorId: true,
 });
 
+const DEFAULT_CODE = `export async function handler({ world }: { world: string }) {
+  return \`hello \${world}\`;
+};
+`;
+
 export const scriptRouter = createRouter()
   // create
   .mutation('add', {
@@ -25,7 +31,7 @@ export const scriptRouter = createRouter()
       name: z.string().min(3).max(255),
       description: z.string().optional(),
       appId: z.string().uuid(),
-      code: z.string(),
+      code: z.string().default(DEFAULT_CODE),
       order: z.number(),
       connectorId: z.enum(['github', 'slack']).optional(),
     }),
@@ -36,6 +42,7 @@ export const scriptRouter = createRouter()
       const script = await prisma.script.create({
         data: {
           ...data,
+          isRunnable: isCodeRunnable(data.code),
           app: {
             connect: { id: appId },
           },

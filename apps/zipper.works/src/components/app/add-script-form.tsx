@@ -51,19 +51,16 @@ export default function AddScriptForm({
           Create a script
         </Text>
         <form
-          onSubmit={handleSubmit(
-            ({ name, description, code = '// Here we go!' }) => {
-              if (isFilenameValid) {
-                addScript.mutateAsync({
-                  name,
-                  description,
-                  code: code,
-                  appId,
-                  order: scripts.length + connectors.length + 1,
-                });
-              }
-            },
-          )}
+          onSubmit={handleSubmit(({ name, description }) => {
+            if (isFilenameValid) {
+              addScript.mutateAsync({
+                name,
+                description,
+                appId,
+                order: scripts.length + connectors.length + 1,
+              });
+            }
+          })}
         >
           {addScript.error && (
             <FormErrorMessage>{addScript.error.message}</FormErrorMessage>
@@ -116,7 +113,7 @@ export default function AddScriptForm({
                     onClick={() => {
                       addScript.mutateAsync({
                         name: `${connector.id}-connector`,
-                        code: connector.code || '// Here we go!',
+                        code: connector.code,
                         appId,
                         order: scripts.length + connectors.length + 1,
                         connectorId: connector.id,

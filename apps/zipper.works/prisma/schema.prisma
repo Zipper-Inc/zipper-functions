@@ -221,6 +221,7 @@ model Script {
   outputSchema  Json?
   connectorId   String?
   hash          String?
+  isRunnable    Boolean   @default(false)
 
   app        App         @relation(fields: [appId], references: [id])
   scriptMain ScriptMain?
