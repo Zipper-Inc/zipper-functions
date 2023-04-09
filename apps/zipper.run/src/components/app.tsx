@@ -420,7 +420,7 @@ export const getServerSideProps: GetServerSideProps = async ({
     subdomain,
     tempUserId: req.cookies['__zipper_temp_user_id'],
     filename,
-    token: await auth.getToken(),
+    token: await auth.getToken({ template: 'incl_orgs' }),
   });
 
   if (__DEBUG__) console.log('getAppInfo', { result });

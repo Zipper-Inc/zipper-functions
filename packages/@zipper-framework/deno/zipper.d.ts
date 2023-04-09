@@ -93,7 +93,7 @@ declare namespace Zipper {
    * @category Runtime
    */
   export type UserInfo = {
-    emails: string[];
+    email?: string;
     userId?: string;
   };
 

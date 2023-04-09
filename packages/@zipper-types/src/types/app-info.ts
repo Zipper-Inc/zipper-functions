@@ -18,7 +18,7 @@ export type AppInfoAndInputParams = {
   userAuthConnectors: UserAuthConnector[];
   inputs: InputParams;
   userInfo: {
-    emails: string[];
+    email?: string;
     userId?: string;
   };
   runnableScripts: string[];
