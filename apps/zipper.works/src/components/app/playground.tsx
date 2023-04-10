@@ -10,13 +10,11 @@ import {
   Button,
   ChakraProps,
 } from '@chakra-ui/react';
-import { InputParam } from '@zipper/types';
 import React, { useState, useEffect } from 'react';
 import SecretsTab from '~/components/app/secrets-tab';
 import SchedulesTab from '~/components/app/schedules-tab';
 import SettingsTab from './settings-tab';
 import ShareModal from '~/components/app/share-modal';
-import { parseInputForTypes } from '~/utils/parse-input-for-types';
 import { PlaygroundHeader } from './playground-header';
 import { CodeTab } from './code-tab';
 import { useEditorContext } from '../context/editor-context';
@@ -45,16 +43,13 @@ export function Playground({
 }) {
   const { editorIds, onlineEditorIds, selfId } = useAppEditors();
 
-  const [inputParams, setInputParams] = useState<InputParam[] | undefined>([]);
-  const [inputError, setInputError] = useState<string | undefined>();
   const [tabIndex, setTabIndex] = useState(0);
 
   const [isShareModalOpen, setShareModalOpen] = useState(false);
 
   const { id } = app;
 
-  const { setCurrentScript, currentScript, currentScriptLive, save, isSaving } =
-    useEditorContext();
+  const { setCurrentScript, save, isSaving } = useEditorContext();
 
   const mainScript = app.scripts.find(
     (script) => script.id === app.scriptMain?.scriptId,
@@ -68,20 +63,6 @@ export function Playground({
     setCurrentScript(initialScript!);
   }, []);
 
-  useEffect(() => {
-    try {
-      const inputs = parseInputForTypes(
-        currentScriptLive?.code || currentScript?.code,
-        true,
-      );
-      setInputParams(inputs);
-      setInputError(undefined);
-    } catch (e: any) {
-      setInputParams(undefined);
-      setInputError(e.message);
-    }
-  }, [currentScriptLive?.code, currentScript?.code]);
-
   const onAfterRun = async () => {
     setTabIndex(0);
   };
@@ -93,13 +74,7 @@ export function Playground({
   };
 
   return (
-    <RunAppProvider
-      app={app}
-      inputParams={inputParams}
-      inputError={inputError}
-      onBeforeRun={onBeforeRun}
-      onAfterRun={onAfterRun}
-    >
+    <RunAppProvider app={app} onBeforeRun={onBeforeRun} onAfterRun={onAfterRun}>
       <VStack flex={1} paddingX={10} alignItems="stretch" spacing={0}>
         <PlaygroundHeader app={app} />
         <Tabs

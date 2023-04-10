@@ -8,7 +8,7 @@ import getValidSubdomain from './get-valid-subdomain';
 import { getFilenameAndVersionFromPath } from './get-values-from-url';
 import { getAuth } from '@clerk/nextjs/server';
 import { getAppLink } from '@zipper/utils';
-import { RequestBody as RelayRequestBody } from '@zipper/framework';
+import Zipper from '@zipper/framework';
 
 const { __DEBUG__, SHARED_SECRET: DENO_SHARED_SECRET, RPC_HOST } = process.env;
 
@@ -110,7 +110,7 @@ export async function relayRequest({
       result: appInfoResult.error,
     };
 
-  const { app, userAuthConnectors } = appInfoResult.data;
+  const { app, userAuthConnectors, userInfo } = appInfoResult.data;
 
   // Get a version from URL or use the latest
   const version =
@@ -125,7 +125,7 @@ export async function relayRequest({
   const relayUrl = getPatchedUrl(request);
   const url = new URL(relayUrl);
 
-  const relayBody: RelayRequestBody = {
+  const relayBody: Zipper.Relay.RequestBody = {
     appInfo: {
       id: app.id,
       slug: app.slug,
@@ -139,7 +139,7 @@ export async function relayRequest({
         : JSON.parse(await request.text()),
   };
 
-  relayBody.userInfo = appInfoResult.data.userInfo;
+  relayBody.userInfo = userInfo;
 
   relayBody.path = _filename;
 

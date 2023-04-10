@@ -6,6 +6,7 @@ import {
   PropertySignature,
   SyntaxKind,
   ts,
+  SourceFile,
 } from 'ts-morph';
 
 // Strip the Deno-style file extension since TS-Morph can't handle it
@@ -58,15 +59,18 @@ function getSourceFileFromCode(code: string) {
   return project.createSourceFile('main.ts', code);
 }
 
-export function parseInputForTypes(
+export function parseInputForTypes({
   code = '',
   throwErrors = false,
-): undefined | InputParam[] {
+  srcPassedIn,
+}: { code?: string; throwErrors?: boolean; srcPassedIn?: SourceFile } = {}):
+  | undefined
+  | InputParam[] {
   if (!code && !throwErrors) return [];
   if (!code && throwErrors) throw new Error('No main function');
 
   try {
-    const src = getSourceFileFromCode(code);
+    const src = srcPassedIn || getSourceFileFromCode(code);
 
     const handlerFn = src.getFunction('handler');
 
@@ -76,8 +80,9 @@ export function parseInputForTypes(
       return [];
     }
 
-    if (handlerFn.hasDefaultKeyword() && throwErrors)
+    if (handlerFn.hasDefaultKeyword() && throwErrors) {
       throw new Error('The handler function cannot be the default export');
+    }
 
     const inputs = handlerFn.getParameters();
     if (inputs.length !== 1 && inputs.length > 0) {
@@ -139,11 +144,48 @@ export function parseInputForTypes(
   return [];
 }
 
-export function addParamToCode(
-  code: string,
+export function parseImports({
+  code = '',
+  srcPassedIn,
+  externalOnly = true,
+}: {
+  code?: string;
+  srcPassedIn?: SourceFile;
+  externalOnly?: boolean;
+} = {}): string[] {
+  if (!code) return [];
+  const src = srcPassedIn || getSourceFileFromCode(code);
+  return src
+    .getImportDeclarations()
+    .map((i) => i.getModuleSpecifierValue())
+    .filter((specifier) => {
+      if (!externalOnly) return true;
+      return (
+        specifier.startsWith('http://') || specifier.startsWith('https://')
+      );
+    });
+}
+
+export function parseCode({
+  code = '',
+  throwErrors = false,
+  srcPassedIn,
+}: { code?: string; throwErrors?: boolean; srcPassedIn?: SourceFile } = {}) {
+  const src = srcPassedIn || (code ? getSourceFileFromCode(code) : undefined);
+  const inputs = parseInputForTypes({ code, throwErrors, srcPassedIn: src });
+  const imports = parseImports({ code, srcPassedIn: src });
+  return { inputs, imports };
+}
+
+export function addParamToCode({
+  code,
   paramName = 'newInput',
   paramType = 'string',
-): string {
+}: {
+  code: string;
+  paramName?: string;
+  paramType?: string;
+}): string {
   const src = getSourceFileFromCode(code);
   const handler = src.getFunction('handler');
 
@@ -178,7 +220,7 @@ export function addParamToCode(
     return code;
   }
 
-  const existingParams = parseInputForTypes(code);
+  const existingParams = parseInputForTypes({ code });
   if (!existingParams) return code;
   // If there is an existing parameter, use its name instead of the default paramName
   if (existingParams.length && existingParams[0]) {
