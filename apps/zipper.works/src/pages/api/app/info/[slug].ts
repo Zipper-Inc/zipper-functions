@@ -13,6 +13,7 @@ import { parseInputForTypes } from '~/utils/parse-code';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import clerkClient from '@clerk/clerk-sdk-node';
 import { compare } from 'bcryptjs';
+import { canUserEdit } from '~/server/routers/app.router';
 // import { canUserEdit } from '~/server/routers/app.router';
 // import { getAuth } from '@clerk/nextjs/server';
 
@@ -38,8 +39,13 @@ export default async function handler(
   const slugFromUrl = req.query.slug as string;
   const body = JSON.parse(req.body);
 
-  let userInfo: { clerkUserId?: string; emails: string[] } = {
-    emails: [],
+  let userInfo: {
+    clerkUserId?: string;
+    email?: string;
+    organizations: Record<string, string>[];
+  } = {
+    email: undefined,
+    organizations: [],
   };
 
   // get the token from the request headers. Could be a Clerk session token or a Zipper access token
@@ -130,8 +136,6 @@ export default async function handler(
     });
   }
 
-  // const { userId, sessionClaims, orgId } = getAuth(req);
-
   const result: AppInfoResult = {
     ok: true,
     data: {
@@ -142,16 +146,12 @@ export default async function handler(
         description,
         lastDeploymentVersion,
         updatedAt,
-        canUserEdit: false,
-        // canUserEdit: canUserEdit(appFound, {
-        //   req,
-        //   userId: userId || undefined,
-        //   orgId: orgId || undefined,
-        //   organizations: sessionClaims?.organizations as Record<
-        //     string,
-        //     string
-        //   >[],
-        // }),
+        canUserEdit: canUserEdit(appFound, {
+          req,
+          userId: userInfo.clerkUserId,
+          orgId: undefined,
+          organizations: userInfo.organizations,
+        }),
       },
       inputs: parseInputForTypes({ code: entryPoint.code }) || [],
       runnableScripts: scripts
@@ -161,7 +161,7 @@ export default async function handler(
         (c) => c.userScopes.length > 0,
       ) as UserAuthConnector[],
       userInfo: {
-        emails: appFound.requiresAuthToRun ? userInfo.emails : [],
+        email: appFound.requiresAuthToRun ? userInfo.email : undefined,
         userId: appFound.requiresAuthToRun ? userInfo.clerkUserId : undefined,
       },
     },
@@ -200,12 +200,11 @@ async function getUserInfo(token: string, appSlug: string) {
       if (!auth || !auth.sub) {
         throw new Error('No Clerk user');
       }
-      const user = await clerkClient.users.getUser(auth.sub);
-      if (!user) throw new Error('No Clerk user');
 
       return {
-        emails: user.emailAddresses.map((e) => e.emailAddress),
-        clerkUserId: user.id,
+        email: auth.primary_email,
+        clerkUserId: auth.sub,
+        organizations: auth.organizations,
       };
     } else {
       // Validate the Zipper access token
@@ -243,16 +242,24 @@ async function getUserInfo(token: string, appSlug: string) {
 
       if (!validSecret) throw new Error();
 
-      const user = await clerkClient.users.getUser(appAccessToken.userId);
+      const [user, orgs] = await Promise.all([
+        clerkClient.users.getUser(appAccessToken.userId),
+        clerkClient.users.getOrganizationMembershipList({
+          userId: appAccessToken.userId,
+        }),
+      ]);
 
       if (!user) throw new Error('No Clerk user');
 
       return {
-        emails: user.emailAddresses.map((e) => e.emailAddress),
+        email: user.emailAddresses.find(
+          (e) => e.id === user.primaryEmailAddressId,
+        ),
         clerkUserId: user.id,
+        organizations: orgs || [],
       };
     }
   } catch (e) {
-    return { emails: [] };
+    return { email: undefined, organizations: [] };
   }
 }
