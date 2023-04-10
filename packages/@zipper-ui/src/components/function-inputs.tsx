@@ -80,7 +80,6 @@ function FunctionParamInput({
     }
 
     case InputType.string: {
-      console.log(isDisabled);
       return (
         <Textarea
           backgroundColor="white"
