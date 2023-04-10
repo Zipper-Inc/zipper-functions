@@ -46,7 +46,6 @@ import { useRouter } from 'next/router';
 import { encryptToHex } from '@zipper/utils';
 import { deleteCookie } from 'cookies-next';
 import { HiOutlineChevronUp, HiOutlineChevronDown } from 'react-icons/hi';
-import { HiOutlinePlay } from 'react-icons/hi2';
 
 import { getAuth } from '@clerk/nextjs/server';
 import { UserButton, useUser } from '@clerk/nextjs';
@@ -186,8 +185,6 @@ export function AppPage({
       },
     },
   };
-
-  console.log('userAuthConnectors', userAuthConnectors);
 
   const showInput = (['initial', 'edit'] as Screen[]).includes(screen);
   const showRunOutput = (['edit', 'run'] as Screen[]).includes(screen);
@@ -485,7 +482,7 @@ export const getServerSideProps: GetServerSideProps = async ({
       const url = new URL('https://slack.com/oauth/v2/authorize');
       url.searchParams.set(
         'client_id',
-        process.env.NEXT_PUBLIC_SLACK_CLIENT_ID!,
+        slackConnector.clientId || process.env.NEXT_PUBLIC_SLACK_CLIENT_ID!,
       );
       url.searchParams.set('scope', slackConnector.workspaceScopes.join(','));
       url.searchParams.set('user_scope', slackConnector.userScopes.join(','));
