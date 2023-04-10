@@ -253,17 +253,21 @@ export default function PlaygroundEditor(
         // optimistically add it to the import set
         importSetRef.current.add(importUrl);
 
-        console.log('[IMPORTS]', 'Caching import', importUrl);
+        console.log('[IMPORTS]', `(${importUrl})`, 'Fetching import');
 
         const bundle = await fetch(
           `/api/ts/module?x=${importUrl}&bundle=1`,
         ).then((r) => r.json());
 
         Object.keys(bundle).forEach((url) => {
-          console.log('[IMPORTS]', '∟ ', `Handling ${url}`);
+          console.log('[IMPORTS]', `(${importUrl})`, `Handling ${url}`);
+          const src = bundle[url];
           const uri = getUriFromPath(url, monacoEditor.Uri.parse);
           if (!monacoEditor.editor.getModel(uri)) {
-            monacoEditor.editor.createModel(bundle[url], 'typescript', uri);
+            monaco.languages.typescript.typescriptDefaults.addExtraLib(
+              src,
+              uri.toString(),
+            );
           }
         });
       } catch (e) {
