@@ -26,6 +26,7 @@ interface Props {
   params: InputParam[];
   defaultValues?: any;
   formContext: UseFormReturn<FieldValues, any>;
+  isDisabled?: boolean;
 }
 
 /*
@@ -47,12 +48,14 @@ function FunctionParamInput({
   type,
   optional,
   formContext,
+  isDisabled,
 }: {
   inputKey: string;
   type: string;
   optional: boolean;
   value: any;
   formContext: Props['formContext'];
+  isDisabled?: boolean;
 }) {
   const { register } = formContext;
   const name = `${inputKey}:${type}`;
@@ -70,16 +73,20 @@ function FunctionParamInput({
 
   switch (type) {
     case InputType.boolean: {
-      return <Switch colorScheme="purple" {...formProps} />;
+      return (
+        <Switch colorScheme="purple" {...formProps} isDisabled={isDisabled} />
+      );
     }
 
     case InputType.string: {
+      console.log(isDisabled);
       return (
         <Textarea
           backgroundColor="white"
           fontFamily="monospace"
           fontSize="smaller"
           minHeight={14}
+          isDisabled={isDisabled}
           {...formProps}
         />
       );
@@ -129,11 +136,13 @@ function SingleInput({
   type,
   optional,
   formContext,
+  isDisabled,
 }: {
   name: string;
   type: InputType;
   optional: boolean;
   formContext: UseFormReturn<FieldValues, any>;
+  isDisabled?: boolean;
 }): JSX.Element {
   const formName = `${name}:${type}`;
   const { isOpen, onOpen, onClose } = useDisclosure({
@@ -200,6 +209,7 @@ function SingleInput({
                 value={null}
                 optional={optional}
                 formContext={formContext}
+                isDisabled={isDisabled}
               />
             </Flex>
           )}
@@ -244,7 +254,11 @@ function SingleInput({
   );
 }
 
-export function FunctionInputs({ params = [], formContext }: Props) {
+export function FunctionInputs({
+  params = [],
+  formContext,
+  isDisabled,
+}: Props) {
   const inputs = params.map(({ key: name, type, optional }, i) => (
     <SingleInput
       key={`${name}--${i}`}
@@ -252,6 +266,7 @@ export function FunctionInputs({ params = [], formContext }: Props) {
       type={type}
       optional={optional}
       formContext={formContext}
+      isDisabled={isDisabled}
     />
   ));
 
@@ -266,6 +281,7 @@ export function FunctionInputs({ params = [], formContext }: Props) {
       fontSize="smaller"
       minHeight={90}
       defaultValue="{}"
+      isDisabled={isDisabled}
       {...formContext.register('params')}
     />
   );
