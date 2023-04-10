@@ -17,7 +17,9 @@ export default function UserInputs({
   formContext,
   canRunApp,
   runApp,
+  hasResult,
 }: UserInputsProps) {
+  console.log('app results', hasResult);
   return (
     <VStack
       p={6}
@@ -31,6 +33,7 @@ export default function UserInputs({
           params={inputs}
           formContext={formContext}
           isDisabled={!canRunApp}
+          hasResult={hasResult}
         />
       </Box>
       <Box>

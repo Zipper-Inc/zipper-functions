@@ -27,6 +27,7 @@ interface Props {
   defaultValues?: any;
   formContext: UseFormReturn<FieldValues, any>;
   isDisabled?: boolean;
+  hasResult?: boolean;
 }
 
 /*
@@ -137,12 +138,14 @@ function SingleInput({
   optional,
   formContext,
   isDisabled,
+  hasResult = true,
 }: {
   name: string;
   type: InputType;
   optional: boolean;
   formContext: UseFormReturn<FieldValues, any>;
   isDisabled?: boolean;
+  hasResult?: boolean;
 }): JSX.Element {
   const formName = `${name}:${type}`;
   const { isOpen, onOpen, onClose } = useDisclosure({
@@ -175,21 +178,24 @@ function SingleInput({
               mr={2}
               alignSelf="center"
               opacity={!isOpen ? '50%' : '100%'}
+              color={isDisabled ? 'gray.400' : 'gray.700'}
             >
               {name}
             </Heading>
             <Box mt={1} opacity={!isOpen ? '50%' : '100%'}>
-              <Badge
-                variant="subtle"
-                colorScheme="purple"
-                fontSize="xs"
-                fontWeight="medium"
-                rounded="full"
-                py="0.5"
-                px={2}
-              >
-                {type}
-              </Badge>
+              {hasResult && (
+                <Badge
+                  variant="subtle"
+                  colorScheme="purple"
+                  fontSize="xs"
+                  fontWeight="medium"
+                  rounded="full"
+                  py="0.5"
+                  px={2}
+                >
+                  {type}
+                </Badge>
+              )}
             </Box>
             {optional && (
               <>
@@ -258,6 +264,7 @@ export function FunctionInputs({
   params = [],
   formContext,
   isDisabled,
+  hasResult = true,
 }: Props) {
   const inputs = params.map(({ key: name, type, optional }, i) => (
     <SingleInput
@@ -267,6 +274,7 @@ export function FunctionInputs({
       optional={optional}
       formContext={formContext}
       isDisabled={isDisabled}
+      hasResult={hasResult}
     />
   ));
 

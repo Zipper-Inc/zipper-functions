@@ -200,8 +200,6 @@ export function AppPage({
     });
   }, [userAuthConnectors]);
 
-  console.log('canrunapp?', !canRunApp);
-
   return (
     <>
       <Head>
