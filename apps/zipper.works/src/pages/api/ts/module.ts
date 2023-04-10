@@ -19,6 +19,9 @@ export default async function handler(
     ? req.query.x.join(',')
     : req.query.x;
 
+  const filename = moduleUrl.substring(moduleUrl.lastIndexOf('/') + 1);
+  const modulePath = moduleUrl.replace(filename, '');
+
   const rootModule = await getModule(moduleUrl, buildCache);
 
   if (!rootModule) return res.status(404).send('Module not found');
@@ -37,10 +40,20 @@ export default async function handler(
       .send(rootModule.content);
   }
 
+  const didRedirect = moduleUrl !== rootModule.specifier;
+  let handleRedirect: undefined | ((s: string) => string);
+  if (didRedirect) {
+    const filename = moduleUrl.substring(moduleUrl.lastIndexOf('/') + 1);
+    const modulePath = moduleUrl.replace(filename, '');
+    handleRedirect = (specifier: string) =>
+      specifier.replace(specifier.replace(filename, ''), modulePath);
+  }
+
   const bundle: Record<string, string> = {};
 
-  await eszip.build([rootModule.specifier], async (specifier) => {
-    console.log('Bundling', specifier, rootModule.specifier);
+  await eszip.build([rootModule.specifier], async (specifierPassedIn) => {
+    const specifier = handleRedirect ? handleRedirect(specifierPassedIn) : specifierPassedIn;
+
     if (specifier === rootModule.specifier) {
       bundle[specifier] = rootModule.content;
       return rootModule;
