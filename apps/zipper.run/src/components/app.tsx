@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { GetServerSideProps } from 'next';
 import {
   FunctionInputs,
@@ -46,12 +46,14 @@ import { useRouter } from 'next/router';
 import { encryptToHex } from '@zipper/utils';
 import { deleteCookie } from 'cookies-next';
 import { HiOutlineChevronUp, HiOutlineChevronDown } from 'react-icons/hi';
+
 import { getAuth } from '@clerk/nextjs/server';
 import { UserButton, useUser } from '@clerk/nextjs';
 import Unauthorized from './unauthorized';
 import removeAppConnectorUserAuth from '~/utils/remove-app-connector-user-auth';
 import Header from './header';
 import AuthUserConnectors from './user-connectors';
+import UserInputs from './user-inputs';
 
 const { __DEBUG__ } = process.env;
 
@@ -108,6 +110,7 @@ export function AppPage({
     }).then((r) => r.text());
 
     if (result) setResult(result);
+    setScreen('run');
     setLoading(false);
   };
 
@@ -187,6 +190,14 @@ export function AppPage({
   const showInput = (['initial', 'edit'] as Screen[]).includes(screen);
   const showRunOutput = (['edit', 'run'] as Screen[]).includes(screen);
 
+  const canRunApp = useMemo(() => {
+    return userAuthConnectors.every((connector) => {
+      return (
+        connector.appConnectorUserAuths && connector.appConnectorUserAuths[0]
+      );
+    });
+  }, [userAuthConnectors]);
+
   return (
     <>
       <Head>
@@ -204,10 +215,13 @@ export function AppPage({
                   userAuthConnectors={userAuthConnectors}
                 />
               )}
-              {/*
-                    TODO inputs should go here
-                    The run button should set the screen value to 'run' by using the setScreen function
-               */}
+              <UserInputs
+                inputs={inputs}
+                formContext={formContext}
+                canRunApp={canRunApp}
+                runApp={runApp}
+                hasResult={Boolean(result)}
+              />
             </VStack>
           )}
           {showRunOutput && (
