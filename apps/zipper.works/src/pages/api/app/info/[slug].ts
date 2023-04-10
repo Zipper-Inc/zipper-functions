@@ -158,7 +158,7 @@ export default async function handler(
         .filter((s) => s.isRunnable)
         .map((s) => s.filename),
       userAuthConnectors: appFound.connectors.filter(
-        (c) => c.userScopes.length > 0,
+        (c) => c.userScopes.length > 0 && c.isUserAuthRequired,
       ) as UserAuthConnector[],
       userInfo: {
         email: appFound.requiresAuthToRun ? userInfo.email : undefined,
