@@ -1,7 +1,7 @@
 import * as eszip from '@deno/eszip';
 import { App, Script } from '@prisma/client';
 import { generateHandlersForFramework } from '@zipper/utils';
-import { BuildCache, CacheRecord } from './eszip-build-cache';
+import { BuildCache, getModule } from './eszip-build-cache';
 import { readFrameworkFile, FRAMEWORK_INTERNAL_PATH } from './read-file';
 
 /**
@@ -113,35 +113,7 @@ export async function build({
     /**
      * Handle remote imports
      */
-    const cachedModule = await buildCache.get(specifier);
-    if (cachedModule) return cachedModule;
-
-    const response = await fetch(specifier, {
-      redirect: 'follow',
-    });
-
-    if (response.status !== 200) {
-      // ensure the body is read as to not leak resources
-      await response.arrayBuffer();
-      return undefined;
-    }
-
-    const content = await response.text();
-    const headers: Record<string, string> = {};
-    response.headers.forEach((value, key) => {
-      headers[key.toLowerCase()] = value;
-    });
-
-    const mod = {
-      kind: 'module',
-      specifier: response.url,
-      headers,
-      content,
-    } as CacheRecord['module'];
-
-    buildCache.set(specifier, mod);
-
-    return mod;
+    return getModule(specifier, buildCache);
   });
 
   const elapsedMs = performance.now() - startMs;
