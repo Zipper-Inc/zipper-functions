@@ -36,10 +36,19 @@ export const secretRouter = createRouter()
 
       const encryptedValue = encryptToBase64(value, process.env.ENCRYPTION_KEY);
 
-      return prisma.secret.create({
-        data: {
+      return prisma.secret.upsert({
+        where: {
+          appId_key: {
+            appId,
+            key,
+          },
+        },
+        create: {
           appId,
           key,
+          encryptedValue,
+        },
+        update: {
           encryptedValue,
         },
         select: defaultSelect,

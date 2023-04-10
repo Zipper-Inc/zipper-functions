@@ -32,6 +32,8 @@ import {
   Code,
   Alert,
   AlertIcon,
+  Collapse,
+  Input,
 } from '@chakra-ui/react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { trpc } from '~/utils/trpc';
@@ -42,7 +44,6 @@ import { HiOutlineTrash } from 'react-icons/hi';
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/router';
 import { GitHubCheckTokenResponse } from '@zipper/types';
-import { useUser } from '@clerk/nextjs';
 import { useRunAppContext } from '~/components/context/run-app-context';
 
 export const githubConnector = createConnector({
@@ -101,6 +102,12 @@ function GitHubConnectorForm({ appId }: { appId: string }) {
     },
   });
 
+  const [clientId, setClientId] = useState<string>('');
+  const [clientSecret, setClientSecret] = useState<string>('');
+
+  const [isOwnClientIdRequired, setIsOwnClientIdRequired] =
+    useState<boolean>(false);
+
   const [isSaving, setIsSaving] = useState(false);
 
   const tokenName = 'GITHUB_TOKEN';
@@ -109,6 +116,11 @@ function GitHubConnectorForm({ appId }: { appId: string }) {
   const existingSecret = trpc.useQuery(
     ['secret.get', { appId, key: tokenName }],
     { enabled: !!appInfo?.canUserEdit },
+  );
+
+  const existingClientSecretSecret = trpc.useQuery(
+    ['secret.get', { appId, key: 'GITHUB_CLIENT_SECRET' }],
+    { enabled: isOwnClientIdRequired },
   );
 
   const toast = useToast();
@@ -136,26 +148,43 @@ function GitHubConnectorForm({ appId }: { appId: string }) {
 
   const existingInstallation = existingSecret.data && connector.data?.metadata;
 
+  const addSecretMutation = trpc.useMutation('secret.add');
+
   useEffect(() => {
     connectorForm.setValue(
       'isUserAuthRequired',
       connector.data?.isUserAuthRequired || false,
     );
-  }, [connector.data?.isUserAuthRequired]);
+    setClientId(connector.data?.clientId || '');
+    setIsOwnClientIdRequired(!!connector.data?.clientId);
+  }, [connector.isSuccess]);
 
   const saveConnector = async (data: any) => {
     if (githubAuthURL.data) {
       setIsSaving(true);
+
+      if (isOwnClientIdRequired && clientId && clientSecret) {
+        await addSecretMutation.mutateAsync({
+          appId: appId,
+          key: 'GITHUB_CLIENT_SECRET',
+          value: clientSecret,
+        });
+      }
       await updateAppConnectorMutation.mutateAsync({
         appId,
         type: 'github',
         data: {
           isUserAuthRequired: data.isUserAuthRequired,
+          clientId: isOwnClientIdRequired ? clientId || undefined : null,
           userScopes: scopesValue as string[],
         },
       });
 
-      router.push(githubAuthURL.data.url);
+      const updatedUrl = await githubAuthURL.refetch();
+
+      if (updatedUrl.data) {
+        router.push(updatedUrl.data?.url);
+      }
       setIsSaving(false);
     }
   };
@@ -199,6 +228,63 @@ function GitHubConnectorForm({ appId }: { appId: string }) {
             When checked, users will have to authorize the GitHub integration
             before they're able to run this Zipper app and see the output.
           </FormHelperText>
+        </FormControl>
+      </HStack>
+    );
+  };
+
+  const requiresOwnClientIdSwitch = () => {
+    return (
+      <HStack w="full" pt="4" pb="4">
+        <FormControl>
+          <HStack w="full">
+            <FormLabel>Require own client ID?</FormLabel>
+            <Spacer flexGrow={1} />
+            <Switch
+              isChecked={isOwnClientIdRequired}
+              ml="auto"
+              onChange={(e) => {
+                setIsOwnClientIdRequired(e.target.checked);
+              }}
+            />
+          </HStack>
+          <FormHelperText maxW="xl" mb="2">
+            When checked, users will have the ability to add custom client ID
+            and secret.
+          </FormHelperText>
+
+          <Collapse in={isOwnClientIdRequired} animateOpacity>
+            <FormControl>
+              <FormLabel color={'gray.500'}>Client ID</FormLabel>
+              <Input
+                autoComplete="new-password"
+                value={clientId}
+                onChange={(e) => setClientId(e.target.value)}
+              />
+            </FormControl>
+
+            <FormControl pt="2">
+              <FormLabel color={'gray.500'}>
+                Client Secret{' '}
+                <Text
+                  fontFamily="mono"
+                  as="span"
+                  color="gray.400"
+                  ml="2"
+                  fontSize="sm"
+                >
+                  GITHUB_CLIENT_SECRET
+                </Text>
+              </FormLabel>
+
+              <Input
+                autoComplete="new-password"
+                required={isOwnClientIdRequired}
+                type="password"
+                onChange={(e) => setClientSecret(e.target.value)}
+              />
+            </FormControl>
+          </Collapse>
         </FormControl>
       </HStack>
     );
@@ -250,6 +336,12 @@ function GitHubConnectorForm({ appId }: { appId: string }) {
                                     fontSize="sm"
                                     py="2"
                                   >
+                                    {connector.data?.clientId && (
+                                      <HStack>
+                                        <Text>Client ID:</Text>
+                                        <Code>{connector.data?.clientId}</Code>
+                                      </HStack>
+                                    )}
                                     <HStack>
                                       <Text>User ID:</Text>
                                       <Code>
@@ -360,6 +452,7 @@ function GitHubConnectorForm({ appId }: { appId: string }) {
                                 onChange={scopesOnChange as SelectOnChange}
                               />
                               {userAuthSwitch()}
+                              {requiresOwnClientIdSwitch()}
                               <Button
                                 mt="6"
                                 type="submit"
