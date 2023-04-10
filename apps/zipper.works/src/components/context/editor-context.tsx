@@ -1,7 +1,14 @@
 import { Script } from '@prisma/client';
 import * as monaco from 'monaco-editor';
 import { EditorProps } from '@monaco-editor/react';
-import { createContext, useContext, useEffect, useState } from 'react';
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useRef,
+  MutableRefObject,
+} from 'react';
 import noop, { asyncNoop } from '~/utils/noop';
 
 import {
@@ -42,6 +49,9 @@ export type EditorContextType = {
   inputParams?: InputParam[];
   setInputParams: (inputParams: InputParam[]) => void;
   inputError?: string;
+  importSetRef?: MutableRefObject<Set<string>>;
+  unhandledImports: string[];
+  setUnhandledImports: (imports: string[]) => void;
 };
 
 export const EditorContext = createContext<EditorContextType>({
@@ -65,6 +75,9 @@ export const EditorContext = createContext<EditorContextType>({
   inputParams: undefined,
   setInputParams: noop,
   inputError: undefined,
+  importSetRef: undefined,
+  unhandledImports: [],
+  setUnhandledImports: noop,
 });
 
 const EditorContextProvider = ({
@@ -93,6 +106,9 @@ const EditorContextProvider = ({
   const [isSaving, setIsSaving] = useState(false);
 
   const [editor, setEditor] = useState<typeof monaco.editor | undefined>();
+
+  const importSetRef = useRef(new Set<string>());
+  const [unhandledImports, setUnhandledImports] = useState<string[]>([]);
 
   const [modelsDirtyState, setModelsDirtyState] = useState<
     Record<string, boolean>
@@ -142,7 +158,17 @@ const EditorContextProvider = ({
           throwErrors: true,
         });
 
-        console.log('[IMPORTS]', imports);
+        // console.log('[IMPORTS]', imports);
+
+        // Check for new imports
+        const prevNewImportsLength = unhandledImports.length;
+        imports.forEach(async (importUrl) => {
+          if (importSetRef.current.has(importUrl)) return;
+          unhandledImports.push(importUrl);
+        });
+        if (unhandledImports.length !== prevNewImportsLength) {
+          setUnhandledImports([...unhandledImports]);
+        }
 
         setInputParams(inputs);
         setInputError(undefined);
@@ -326,6 +352,9 @@ const EditorContextProvider = ({
         inputParams,
         setInputParams,
         inputError,
+        importSetRef,
+        unhandledImports,
+        setUnhandledImports,
       }}
     >
       {children}
