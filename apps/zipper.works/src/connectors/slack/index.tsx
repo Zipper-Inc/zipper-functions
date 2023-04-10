@@ -163,7 +163,9 @@ function SlackConnectorForm({ appId }: { appId: string }) {
 
   useEffect(() => {
     setIsUserAuthRequired(connector.data?.isUserAuthRequired);
-  }, [connector.data?.isUserAuthRequired]);
+    setClientId(connector.data?.clientId || '');
+    setIsOwnClientIdRequired(!!connector.data?.clientId);
+  }, [connector.isSuccess]);
 
   useEffect(() => {
     if (slackAuthInProgress && slackAuthURL.data?.url) {
@@ -290,7 +292,7 @@ function SlackConnectorForm({ appId }: { appId: string }) {
                                   }
                                 </FormLabel>
                               </PopoverTrigger>
-                              <PopoverContent>
+                              <PopoverContent w="sm">
                                 <PopoverArrow />
                                 <PopoverHeader>
                                   Installation details
@@ -302,6 +304,12 @@ function SlackConnectorForm({ appId }: { appId: string }) {
                                     fontSize="sm"
                                     py="2"
                                   >
+                                    {connector.data?.clientId && (
+                                      <HStack>
+                                        <Text>Client ID:</Text>
+                                        <Code>{connector.data?.clientId}</Code>
+                                      </HStack>
+                                    )}
                                     <HStack>
                                       <Text>Bot User ID:</Text>
                                       <Code>
@@ -457,7 +465,9 @@ function SlackConnectorForm({ appId }: { appId: string }) {
                                     isUserAuthRequired,
                                     userScopes: userValue as string[],
                                     workspaceScopes: botValue as string[],
-                                    clientId: clientId || undefined,
+                                    clientId: isOwnClientIdRequired
+                                      ? clientId || undefined
+                                      : null,
                                   },
                                 });
                                 await slackAuthURL.refetch();

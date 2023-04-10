@@ -53,13 +53,21 @@ export const githubConnectorRouter = createRouter()
       await hasAppReadPermission({ ctx, appId: input.appId });
 
       const { appId, scopes, postInstallationRedirect, redirectUri } = input;
+
+      const connector = await prisma.appConnector.findUnique({
+        where: { appId_type: { appId, type: 'github' } },
+      });
+
       const state = encryptToHex(
         `${appId}::${postInstallationRedirect || ''}`,
         process.env.ENCRYPTION_KEY || '',
       );
 
       const url = new URL('https://github.com/login/oauth/authorize');
-      url.searchParams.set('client_id', process.env.GITHUB_CLIENT_ID!);
+      url.searchParams.set(
+        'client_id',
+        connector?.clientId || process.env.GITHUB_CLIENT_ID!,
+      );
       url.searchParams.set('scope', scopes.join(','));
       url.searchParams.set('state', state);
       if (redirectUri) {
@@ -197,14 +205,39 @@ export const githubConnectorRouter = createRouter()
         throw new TRPCError({ code: 'UNAUTHORIZED' });
       }
 
+      if (!appId) throw new TRPCError({ code: 'UNAUTHORIZED' });
+
+      const connector = await prisma.appConnector.findUniqueOrThrow({
+        where: {
+          appId_type: {
+            appId,
+            type: 'github',
+          },
+        },
+        include: {
+          app: {
+            include: {
+              secrets: {
+                where: { key: 'GITHUB_CLIENT_SECRET' },
+              },
+            },
+          },
+        },
+      });
+
       const res = await fetch('https://github.com/login/oauth/access_token', {
         method: 'POST',
         headers: {
           Accept: 'application/json',
         },
         body: new URLSearchParams({
-          client_id: process.env.GITHUB_CLIENT_ID!,
-          client_secret: process.env.GITHUB_CLIENT_SECRET!,
+          client_id: connector.clientId || process.env.GITHUB_CLIENT_ID!,
+          client_secret: connector.app.secrets[0]
+            ? decryptFromBase64(
+                connector.app.secrets[0].encryptedValue,
+                process.env.ENCRYPTION_KEY!,
+              )
+            : process.env.GITHUB_CLIENT_SECRET!,
           code: input.code,
           state: input.state,
         }),
@@ -271,65 +304,52 @@ export const githubConnectorRouter = createRouter()
         }
       }
 
-      const connector = await prisma.appConnector.findUnique({
-        where: {
-          appId_type: {
-            appId: appId!,
-            type: 'github',
+      // Only update connector metadata if previously null and create the GITHUB_TOKEN secret
+      if (!connector.metadata) {
+        await prisma.appConnector.update({
+          where: {
+            appId_type: {
+              appId: appId!,
+              type: 'github',
+            },
           },
-        },
-      });
-      if (connector) {
-        // Only update connector metadata if previously null and create the GITHUB_TOKEN secret
-        if (!connector.metadata) {
-          await prisma.appConnector.update({
-            where: {
-              appId_type: {
-                appId: appId!,
-                type: 'github',
-              },
-            },
-            data: {
-              metadata,
-            },
-          });
+          data: {
+            metadata,
+          },
+        });
 
-          const encryptedValue = encryptToBase64(
-            json.access_token,
-            process.env.ENCRYPTION_KEY,
-          );
-          await prisma.secret.upsert({
-            where: {
-              appId_key: {
-                appId: appId!,
-                key: 'GITHUB_TOKEN',
-              },
-            },
-            create: {
-              appId,
+        const encryptedValue = encryptToBase64(
+          json.access_token,
+          process.env.ENCRYPTION_KEY,
+        );
+        await prisma.secret.upsert({
+          where: {
+            appId_key: {
+              appId: appId!,
               key: 'GITHUB_TOKEN',
-              encryptedValue,
             },
-            update: {
-              encryptedValue,
-            },
-          });
-        }
+          },
+          create: {
+            appId,
+            key: 'GITHUB_TOKEN',
+            encryptedValue,
+          },
+          update: {
+            encryptedValue,
+          },
+        });
       }
-
-      const app = await prisma.app.findFirstOrThrow({
-        where: { id: appId },
-      });
 
       const resourceOwner = await prisma.resourceOwnerSlug.findFirstOrThrow({
         where: {
-          resourceOwnerId: app.organizationId || app.createdById,
+          resourceOwnerId:
+            connector.app.organizationId || connector.app.createdById,
         },
       });
 
       return {
         appId,
-        app: { ...app, resourceOwner },
+        app: { ...connector.app, resourceOwner },
         redirectTo,
         appConnectorUserAuth: appConnectorUserAuth || null,
       };
