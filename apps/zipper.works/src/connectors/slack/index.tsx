@@ -228,7 +228,7 @@ function SlackConnectorForm({ appId }: { appId: string }) {
               }}
             />
           </HStack>
-          <FormHelperText maxW="xl">
+          <FormHelperText maxW="xl" mb="2">
             When checked, users will have the ability to add custom client ID
             and secret.
           </FormHelperText>
@@ -244,7 +244,18 @@ function SlackConnectorForm({ appId }: { appId: string }) {
             </FormControl>
 
             <FormControl pt="2">
-              <FormLabel color={'gray.500'}>Client Secret</FormLabel>
+              <FormLabel color={'gray.500'}>
+                Client Secret
+                <Text
+                  as="span"
+                  fontFamily="mono"
+                  color="gray.400"
+                  fontSize="sm"
+                  ml="2"
+                >
+                  SLACK_CLIENT_SECRET
+                </Text>
+              </FormLabel>
 
               <Input
                 autoComplete="new-password"
