@@ -95,6 +95,12 @@ export default async function handler(
     });
   }
 
+  const resourceOwner = await prisma.resourceOwnerSlug.findFirst({
+    where: {
+      resourceOwnerId: appFound.organizationId || appFound.createdById,
+    },
+  });
+
   if (appFound.requiresAuthToRun) {
     // return 401 if there's no token or no user was found by getUserInfo()
     if (!token || !userInfo.clerkUserId) {
@@ -164,6 +170,13 @@ export default async function handler(
         email: appFound.requiresAuthToRun ? userInfo.email : undefined,
         userId: appFound.requiresAuthToRun ? userInfo.clerkUserId : undefined,
       },
+      editUrl: `${
+        process.env.NODE_ENV === 'development' ? 'http' : 'https'
+      }://${process.env.NEXT_PUBLIC_HOST}${
+        process.env.NODE_ENV === 'development' ? ':3000' : ''
+      }/${resourceOwner?.slug}/${appFound.slug}/edit/${
+        appFound.scripts.find((s) => s.id === scriptMain?.scriptId)?.filename
+      }`,
     },
   };
 
