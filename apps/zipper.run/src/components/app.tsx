@@ -110,6 +110,7 @@ export function AppPage({
     }).then((r) => r.text());
 
     if (result) setResult(result);
+    setScreen('run');
     setLoading(false);
   };
 
