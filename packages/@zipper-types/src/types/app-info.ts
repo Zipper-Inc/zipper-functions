@@ -22,6 +22,7 @@ export type AppInfoAndInputParams = {
     userId?: string;
   };
   runnableScripts: string[];
+  editUrl: string;
 };
 
 export type AppInfoResult =
