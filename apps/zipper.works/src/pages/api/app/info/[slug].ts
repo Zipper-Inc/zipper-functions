@@ -174,9 +174,7 @@ export default async function handler(
         process.env.NODE_ENV === 'development' ? 'http' : 'https'
       }://${process.env.NEXT_PUBLIC_HOST}${
         process.env.NODE_ENV === 'development' ? ':3000' : ''
-      }/${resourceOwner?.slug}/${appFound.slug}/edit/${
-        appFound.scripts.find((s) => s.id === scriptMain?.scriptId)?.filename
-      }`,
+      }/${resourceOwner?.slug}/${appFound.slug}/edit/${entryPoint.filename}`,
     },
   };
 
