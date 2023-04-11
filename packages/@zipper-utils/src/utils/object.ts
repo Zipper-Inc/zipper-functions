@@ -1,11 +1,12 @@
-import { InputType, JSONEditorInputTypes } from '@zipper/types';
-import { parseFieldName } from './form';
+import { InputParams, InputType, JSONEditorInputTypes } from '@zipper/types';
+import { getFieldName, parseFieldName } from './form';
 import { safeJSONParse } from './safe-json';
 
 export const parseInputObject = (
   formData: Record<string, any>,
-  formKeys: string[],
+  inputParams: InputParams,
 ) => {
+  const formKeys = inputParams.map(({ key, type }) => getFieldName(key, type));
   return Object.keys(formData)
     .filter((k) => formKeys.includes(k))
     .reduce((acc, cur) => {

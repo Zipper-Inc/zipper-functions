@@ -544,14 +544,8 @@ export const appRouter = createRouter()
 
       const inputParams = parseInputForTypes({ code: script.code });
       if (!inputParams) return { ok: false };
-      const formKeys = inputParams.map(({ key, type }) =>
-        getFieldName(key, type),
-      );
 
-      const inputs: Record<string, any> = parseInputObject(
-        input.formData,
-        formKeys,
-      );
+      const inputs = parseInputObject(input.formData, inputParams);
 
       const { getToken } = getAuth(ctx.req!);
 
