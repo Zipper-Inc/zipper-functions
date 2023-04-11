@@ -67,6 +67,13 @@ const getInputSummary = (
           value = formatShortDate(value);
         } else if (type === InputType.boolean) {
           value = Boolean(value);
+        } else if (
+          value === null ||
+          value === undefined ||
+          (type === InputType.string && !value) ||
+          (complexTypes.includes(type) && !value.trim())
+        ) {
+          value = "'blank'";
         }
 
         return `${name}: ${value}`;
