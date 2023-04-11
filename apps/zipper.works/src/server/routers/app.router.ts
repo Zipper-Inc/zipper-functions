@@ -529,7 +529,7 @@ export const appRouter = createRouter()
   .mutation('run', {
     input: z.object({
       appId: z.string().uuid(),
-      formData: z.record(z.string()),
+      formData: z.record(z.any()),
       scriptId: z.string().uuid().optional(),
     }),
     async resolve({ input, ctx }) {
