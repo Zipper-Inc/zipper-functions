@@ -1,26 +1,46 @@
 import {
   Box,
   HStack,
-  Link,
   Flex,
-  useBreakpointValue,
-  Divider,
   Heading,
   Button,
   Text,
-  IconButton,
+  useToast,
+  useClipboard,
 } from '@chakra-ui/react';
 import NextLink from 'next/link';
-import { HiOutlineChevronDown } from 'react-icons/hi';
-
+import { getAppLink } from '@zipper/utils';
 import { ZipperSymbol } from '@zipper/ui';
-import { HiOutlineUpload } from 'react-icons/hi';
+import { HiOutlineUpload, HiOutlinePencilAlt } from 'react-icons/hi';
 import { AppInfo } from '@zipper/types';
-import { SignInButton, UserButton, useUser } from '@clerk/nextjs';
+import { UserButton, useUser } from '@clerk/nextjs';
 import React from 'react';
+import { useRouter } from 'next/router';
 
-const Header: React.FC<AppInfo> = ({ canUserEdit, name }) => {
+const duration = 1500;
+
+const Header: React.FC<AppInfo & { fileName?: string; editUrl?: string }> = ({
+  canUserEdit,
+  name,
+  slug,
+  fileName,
+  editUrl,
+}) => {
+  const router = useRouter();
+  const toast = useToast();
+
   const { user } = useUser();
+  const { onCopy } = useClipboard(`https://${getAppLink(slug)}`);
+
+  const copyLink = async () => {
+    onCopy();
+    toast({
+      title: 'App link copied',
+      status: 'info',
+      duration,
+      isClosable: true,
+    });
+  };
 
   return (
     <>
@@ -29,41 +49,6 @@ const Header: React.FC<AppInfo> = ({ canUserEdit, name }) => {
           <Box height={4}>
             <ZipperSymbol style={{ maxHeight: '100%' }} />
           </Box>
-
-          {user && user.organizationMemberships.length > 0 && (
-            <>
-              <Heading
-                as="h1"
-                size="md"
-                whiteSpace="nowrap"
-                fontWeight="light"
-                color="gray.400"
-              >
-                /
-              </Heading>
-              <Box display="flex" flexDirection="row" alignItems="center">
-                <NextLink href="#">
-                  <Heading
-                    as="h1"
-                    size="md"
-                    overflow="auto"
-                    whiteSpace="nowrap"
-                    fontWeight="medium"
-                    color="neutral.800"
-                  >
-                    {user.organizationMemberships[0]?.organization.name}
-                  </Heading>
-                </NextLink>
-                {user.organizationMemberships.length > 1 && (
-                  <IconButton
-                    aria-label="hidden"
-                    icon={<HiOutlineChevronDown color="gray" />}
-                    colorScheme="transparent"
-                  />
-                )}
-              </Box>
-            </>
-          )}
 
           <Heading
             as="h1"
@@ -88,6 +73,27 @@ const Header: React.FC<AppInfo> = ({ canUserEdit, name }) => {
               </Heading>
             </NextLink>
           </Box>
+          <Heading
+            as="h1"
+            size="md"
+            whiteSpace="nowrap"
+            fontWeight="light"
+            color="gray.400"
+          >
+            /
+          </Heading>
+          <Box>
+            <Heading
+              as="h1"
+              size="md"
+              overflow="auto"
+              whiteSpace="nowrap"
+              fontWeight="semibold"
+              color="gray.800"
+            >
+              {fileName}
+            </Heading>
+          </Box>
         </HStack>
         <HStack>
           <Button
@@ -96,24 +102,40 @@ const Header: React.FC<AppInfo> = ({ canUserEdit, name }) => {
             display="flex"
             gap={2}
             fontWeight="medium"
+            onClick={copyLink}
           >
             <HiOutlineUpload />
             <Text>Share</Text>
           </Button>
-          {canUserEdit && (
+          {canUserEdit && editUrl && (
             <Button
               colorScheme="purple"
               variant="ghost"
               display="flex"
               gap={2}
               fontWeight="medium"
+              onClick={() => {
+                window.location.href = editUrl;
+              }}
             >
-              <HiOutlineUpload />
+              <HiOutlinePencilAlt />
               <Text>Edit App</Text>
             </Button>
           )}
 
-          {!user && <SignInButton />}
+          {!user && (
+            <Button
+              colorScheme="gray"
+              variant="ghost"
+              display="flex"
+              fontWeight="medium"
+              onClick={() => {
+                router.push(`/sign-in`);
+              }}
+            >
+              <Text>Sign In</Text>
+            </Button>
+          )}
           <UserButton afterSignOutUrl="/" />
         </HStack>
       </Flex>
