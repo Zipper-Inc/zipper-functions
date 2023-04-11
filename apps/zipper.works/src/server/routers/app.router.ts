@@ -21,7 +21,7 @@ import {
   getScriptHash,
 } from '~/utils/hashing';
 import { parseInputForTypes } from '~/utils/parse-code';
-import { getFieldName, parseInputObject } from '@zipper/utils';
+import { getInputsFromFormData } from '@zipper/utils';
 import getRunUrl from '~/utils/get-run-url';
 import { randomUUID } from 'crypto';
 import fetch from 'node-fetch';
@@ -545,7 +545,7 @@ export const appRouter = createRouter()
       const inputParams = parseInputForTypes({ code: script.code });
       if (!inputParams) return { ok: false };
 
-      const inputs = parseInputObject(input.formData, inputParams);
+      const inputs = getInputsFromFormData(input.formData, inputParams);
 
       const { getToken } = getAuth(ctx.req!);
 
