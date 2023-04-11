@@ -61,7 +61,7 @@ export function Playground({
       mainScript;
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     setCurrentScript(initialScript!);
-  }, []);
+  }, [filename]);
 
   const onAfterRun = async () => {
     setTabIndex(0);

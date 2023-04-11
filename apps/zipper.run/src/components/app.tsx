@@ -56,6 +56,7 @@ export function AppPage({
   slackAuthUrl,
   githubAuthUrl,
   statusCode,
+  editUrl,
 }: {
   app: AppInfo;
   inputs: InputParams;
@@ -66,6 +67,7 @@ export function AppPage({
   slackAuthUrl?: string;
   githubAuthUrl?: string;
   statusCode?: number;
+  editUrl?: string;
 }) {
   const router = useRouter();
   const appTitle = app?.name || app?.slug || 'Zipper';
@@ -347,7 +349,7 @@ export const getServerSideProps: GetServerSideProps = async ({
     subdomain,
     tempUserId: req.cookies['__zipper_temp_user_id'],
     filename,
-    token: await auth.getToken(),
+    token: await auth.getToken({ template: 'incl_orgs' }),
   });
 
   if (__DEBUG__) console.log('getAppInfo', { result });
@@ -356,7 +358,7 @@ export const getServerSideProps: GetServerSideProps = async ({
     return { notFound: true };
   }
 
-  const { app, inputs, userAuthConnectors } = result.data;
+  const { app, inputs, userAuthConnectors, editUrl } = result.data;
 
   const version = versionFromUrl || 'latest';
 
@@ -370,6 +372,7 @@ export const getServerSideProps: GetServerSideProps = async ({
       version,
       defaultValues,
       userAuthConnectors,
+      editUrl,
       filename: filename || 'main.ts',
     },
   };
