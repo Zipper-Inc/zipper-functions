@@ -13,12 +13,7 @@ import slugify from '~/utils/slugify';
 import { generateDefaultSlug } from '~/utils/generate-default';
 import { TRPCError } from '@trpc/server';
 import denyList from '../utils/slugDenyList';
-import {
-  appSubmissionState,
-  InputType,
-  JSONEditorInputTypes,
-  ResourceOwnerType,
-} from '@zipper/types';
+import { appSubmissionState, ResourceOwnerType } from '@zipper/types';
 import { Context } from '../context';
 import {
   getAppHash,
@@ -26,7 +21,7 @@ import {
   getScriptHash,
 } from '~/utils/hashing';
 import { parseInputForTypes } from '~/utils/parse-code';
-import { safeJSONParse } from '@zipper/utils';
+import { getFieldName, parseInputObject } from '@zipper/utils';
 import getRunUrl from '~/utils/get-run-url';
 import { randomUUID } from 'crypto';
 import fetch from 'node-fetch';
@@ -547,26 +542,16 @@ export const appRouter = createRouter()
         throw new TRPCError({ code: 'NOT_FOUND' });
       }
 
-      const inputs: Record<string, any> = {};
-
       const inputParams = parseInputForTypes({ code: script.code });
       if (!inputParams) return { ok: false };
-      const formKeys = inputParams.map(({ key, type }) => `${key}:${type}`);
+      const formKeys = inputParams.map(({ key, type }) =>
+        getFieldName(key, type),
+      );
 
-      Object.keys(input.formData)
-        .filter((k) => formKeys.includes(k))
-        .forEach((k) => {
-          const [inputKey, type] = k.split(':');
-
-          const value = JSONEditorInputTypes.includes(type as InputType)
-            ? safeJSONParse(
-                input.formData[k],
-                undefined,
-                type === InputType.array ? [] : {},
-              )
-            : input.formData[k];
-          inputs[inputKey as string] = value;
-        });
+      const inputs: Record<string, any> = parseInputObject(
+        input.formData,
+        formKeys,
+      );
 
       const { getToken } = getAuth(ctx.req!);
 
