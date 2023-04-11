@@ -2,8 +2,7 @@ import { Button, Container, HStack } from '@chakra-ui/react';
 import { InputParam, InputParams, InputType } from '@zipper/types';
 import { HiOutlinePlay } from 'react-icons/hi2';
 import { FieldValues, UseFormReturn } from 'react-hook-form';
-import { parseFieldName } from '@zipper/ui';
-import { formatShortDate } from '@zipper/utils';
+import { formatShortDate, parseFieldName } from '@zipper/utils';
 
 type InputSummaryProps = {
   inputs: InputParams;
