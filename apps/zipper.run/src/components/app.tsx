@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { GetServerSideProps } from 'next';
 import {
-  FunctionInputs,
   withDefaultTheme,
   ZipperLogo,
   FunctionOutput,
   useCmdOrCtrl,
   FunctionUserConnectors,
+  SmartFunctionOutput,
 } from '@zipper/ui';
 import {
   AppInfo,
@@ -25,7 +25,6 @@ import {
   Text,
   ButtonGroup,
   Button,
-  Divider,
   Progress,
   Modal,
   ModalOverlay,
@@ -228,7 +227,15 @@ export function AppPage({
           )}
           {showRunOutput && (
             <VStack w="full" align="stretch" px={10} spacing={6}>
-              {/* TODO run output should go here */}
+              <Box borderTop="1px" borderColor="gray.200" paddingTop={2}>
+                <SmartFunctionOutput
+                  getRunUrl={getRunUrl}
+                  result={result}
+                  setOverallResult={setResult}
+                  setModalResult={setModalResult}
+                  setExpandedResult={setExpandedResult}
+                />
+              </Box>
             </VStack>
           )}
         </VStack>
@@ -304,12 +311,6 @@ export function AppPage({
           </Box>
         )}
         <Box bg="gray.100" px={8} py={4} mt={4}>
-          {inputs.length > 0 && (
-            <>
-              <FunctionInputs params={inputs} formContext={formContext} />
-              <Divider orientation="horizontal" my={4} />
-            </>
-          )}
           <Flex>
             <ButtonGroup>
               <Button colorScheme="purple" onClick={runApp}>
