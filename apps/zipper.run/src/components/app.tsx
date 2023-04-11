@@ -2,10 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { GetServerSideProps } from 'next';
 import {
   withDefaultTheme,
-  ZipperLogo,
   FunctionOutput,
   useCmdOrCtrl,
-  FunctionUserConnectors,
   SmartFunctionOutput,
 } from '@zipper/ui';
 import {
@@ -21,9 +19,6 @@ import { getFilenameAndVersionFromPath } from '~/utils/get-values-from-url';
 import {
   Box,
   Heading,
-  Flex,
-  Text,
-  ButtonGroup,
   Button,
   Progress,
   Modal,
@@ -37,6 +32,7 @@ import {
   HStack,
   IconButton,
   VStack,
+  Divider,
 } from '@chakra-ui/react';
 import Head from 'next/head';
 import { useForm } from 'react-hook-form';
@@ -47,7 +43,7 @@ import { deleteCookie } from 'cookies-next';
 import { HiOutlineChevronUp, HiOutlineChevronDown } from 'react-icons/hi';
 
 import { getAuth } from '@clerk/nextjs/server';
-import { UserButton, useUser } from '@clerk/nextjs';
+import { useUser } from '@clerk/nextjs';
 import Unauthorized from './unauthorized';
 import removeAppConnectorUserAuth from '~/utils/remove-app-connector-user-auth';
 import Header from './header';
@@ -237,8 +233,8 @@ export function AppPage({
                   }}
                 />
               )}
-              {/* TODO run output should go here */}
-              <Box borderTop="1px" borderColor="gray.200" paddingTop={2}>
+              <Divider />
+              <Box>
                 <SmartFunctionOutput
                   getRunUrl={getRunUrl}
                   result={result}
@@ -253,92 +249,6 @@ export function AppPage({
       </VStack>
 
       {/* TODO translate this code into the new UI */}
-      {/* <Box as="main">
-        <Flex as="header" mx={8} my={4} alignItems="center" color="gray.600">
-          <Heading as="h2" color="black">
-            {appTitle}
-          </Heading>
-          <Text
-            fontWeight="100"
-            ml={1}
-            fontSize="3xl"
-            height="full"
-            color="gray.400"
-          >
-            @{version}
-          </Text>
-          <Text fontSize="sm" ml="auto">
-            Powered by
-          </Text>
-          <ZipperLogo
-            fill="currentColor"
-            style={{ marginLeft: '8px', height: '13px' }}
-          />
-          <Box pl="2">
-            <UserButton afterSignOutUrl="/" />
-          </Box>
-        </Flex>
-        {app.description && (
-          <Text mx={8} my={4} color="gray.600">
-            {app.description}
-          </Text>
-        )}
-        {userAuthConnectors.length > 0 && (
-          <Box bg="gray.100" px={9} py={4}>
-            <FunctionUserConnectors
-              userAuthConnectors={userAuthConnectors}
-              // TODO figure out the best strategy for removing connector user auth
-              actions={{
-                github: {
-                  authUrl: githubAuthUrl || '#',
-                  onDelete: async () => {
-                    if (user) {
-                      await removeAppConnectorUserAuth({
-                        appId: app.id,
-                        type: 'github',
-                      });
-                    } else {
-                      deleteCookie('__zipper_temp_user_id');
-                    }
-                    router.reload();
-                  },
-                },
-                slack: {
-                  authUrl: slackAuthUrl || '#',
-                  onDelete: async () => {
-                    if (user) {
-                      await removeAppConnectorUserAuth({
-                        appId: app.id,
-                        type: 'slack',
-                      });
-                    } else {
-                      deleteCookie('__zipper_temp_user_id');
-                    }
-                    router.reload();
-                  },
-                },
-              }}
-            />
-          </Box>
-        )}
-        <Box bg="gray.100" px={8} py={4} mt={4}>
-          <Flex>
-            <ButtonGroup>
-              <Button colorScheme="purple" onClick={runApp}>
-                Run
-              </Button>
-              <Button
-                onClick={() => {
-                  setResult('');
-                  formContext.reset();
-                }}
-              >
-                Reset
-              </Button>
-            </ButtonGroup>
-          </Flex>
-        </Box>
-      </Box> */}
       {loading && (
         <Progress
           colorScheme="purple"
