@@ -53,6 +53,7 @@ import removeAppConnectorUserAuth from '~/utils/remove-app-connector-user-auth';
 import Header from './header';
 import AuthUserConnectors from './user-connectors';
 import UserInputs from './user-inputs';
+import InputSummary from './input-summary';
 
 const { __DEBUG__ } = process.env;
 
@@ -227,6 +228,16 @@ export function AppPage({
           )}
           {showRunOutput && (
             <VStack w="full" align="stretch" px={10} spacing={6}>
+              {screen === 'run' && (
+                <InputSummary
+                  inputs={inputs}
+                  formContext={formContext}
+                  onEditAndRerun={() => {
+                    setScreen('edit');
+                  }}
+                />
+              )}
+              {/* TODO run output should go here */}
               <Box borderTop="1px" borderColor="gray.200" paddingTop={2}>
                 <SmartFunctionOutput
                   getRunUrl={getRunUrl}
@@ -242,7 +253,7 @@ export function AppPage({
       </VStack>
 
       {/* TODO translate this code into the new UI */}
-      <Box as="main">
+      {/* <Box as="main">
         <Flex as="header" mx={8} my={4} alignItems="center" color="gray.600">
           <Heading as="h2" color="black">
             {appTitle}
@@ -327,7 +338,7 @@ export function AppPage({
             </ButtonGroup>
           </Flex>
         </Box>
-      </Box>
+      </Box> */}
       {loading && (
         <Progress
           colorScheme="purple"

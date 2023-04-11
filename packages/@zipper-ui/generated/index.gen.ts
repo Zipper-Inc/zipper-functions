@@ -25,4 +25,5 @@ export * from '../src/hooks/use-select';
 export * from '../src/theme';
 export * from '../src/theme/multiSelectTheme';
 export { default as multiSelectTheme } from '../src/theme/multiSelectTheme';
+export * from '../src/utils/form';
 export * from '../src/utils/user-agent';
