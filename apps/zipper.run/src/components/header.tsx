@@ -19,11 +19,12 @@ import { useRouter } from 'next/router';
 
 const duration = 1500;
 
-const Header: React.FC<AppInfo & { fileName?: string }> = ({
+const Header: React.FC<AppInfo & { fileName?: string; editUrl?: string }> = ({
   canUserEdit,
   name,
   slug,
   fileName,
+  editUrl,
 }) => {
   const router = useRouter();
   const toast = useToast();
@@ -106,7 +107,7 @@ const Header: React.FC<AppInfo & { fileName?: string }> = ({
             <HiOutlineUpload />
             <Text>Share</Text>
           </Button>
-          {canUserEdit && (
+          {canUserEdit && editUrl && (
             <Button
               colorScheme="purple"
               variant="ghost"
@@ -114,7 +115,7 @@ const Header: React.FC<AppInfo & { fileName?: string }> = ({
               gap={2}
               fontWeight="medium"
               onClick={() => {
-                window.location.href = `http://${process.env.NEXT_PUBLIC_ZIPPER_HOST}/${slug}/edit/${fileName}`;
+                window.location.href = editUrl;
               }}
             >
               <HiOutlinePencilAlt />
