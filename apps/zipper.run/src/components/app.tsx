@@ -43,7 +43,7 @@ import Head from 'next/head';
 import { useForm } from 'react-hook-form';
 import { getInputValuesFromUrl } from '../utils/get-input-values-from-url';
 import { useRouter } from 'next/router';
-import { encryptToHex } from '@zipper/utils';
+import { encryptToHex, parseInputObject } from '@zipper/utils';
 import { deleteCookie } from 'cookies-next';
 import { HiOutlineChevronUp, HiOutlineChevronDown } from 'react-icons/hi';
 
@@ -97,13 +97,7 @@ export function AppPage({
   const runApp = async () => {
     setLoading(true);
     const rawValues = formContext.getValues();
-    const values: Record<string, any> = {};
-    Object.keys(rawValues).forEach((k) => {
-      const parts = k.split(':');
-      parts.pop();
-      const key = parts.join(':');
-      values[key] = rawValues[k];
-    });
+    const values = parseInputObject(rawValues, inputs);
 
     const url = filename ? `/${filename}/call` : '/call';
 
