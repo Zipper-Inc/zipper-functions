@@ -21,6 +21,7 @@ import {
 import { VscAdd } from 'react-icons/vsc';
 import { FieldValues, UseFormReturn, RegisterOptions } from 'react-hook-form';
 import { InputType, InputParam } from '@zipper/types';
+import { getFieldName } from '../utils/form';
 
 interface Props {
   params: InputParam[];
@@ -52,14 +53,14 @@ function FunctionParamInput({
   isDisabled,
 }: {
   inputKey: string;
-  type: string;
+  type: InputType;
   optional: boolean;
   value: any;
   formContext: Props['formContext'];
   isDisabled?: boolean;
 }) {
   const { register } = formContext;
-  const name = `${inputKey}:${type}`;
+  const name = getFieldName(inputKey, type);
   const formFieldOptions: RegisterOptions<FieldValues, string> = {
     required: !optional,
   };
@@ -146,7 +147,7 @@ function SingleInput({
   isDisabled?: boolean;
   hasResult?: boolean;
 }): JSX.Element {
-  const formName = `${name}:${type}`;
+  const formName = getFieldName(name, type);
   const { isOpen, onOpen, onClose } = useDisclosure({
     defaultIsOpen: !optional,
   });
@@ -154,14 +155,12 @@ function SingleInput({
 
   const open = () => {
     formContext.setValue(formName, lastValue.current);
-    console.log(formContext.getValues());
     onOpen();
   };
 
   const close = () => {
     lastValue.current = formContext.getValues()[formName];
     formContext.setValue(formName, undefined);
-    console.log(formContext.getValues());
     onClose();
   };
 
