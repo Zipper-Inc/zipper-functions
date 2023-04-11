@@ -2,7 +2,7 @@ import { InputParams, InputType, JSONEditorInputTypes } from '@zipper/types';
 import { getFieldName, parseFieldName } from './form';
 import { safeJSONParse } from './safe-json';
 
-export const parseInputObject = (
+export const getInputsFromFormData = (
   formData: Record<string, any>,
   inputParams: InputParams,
 ) => {
