@@ -203,7 +203,14 @@ export function AppPage({
       </Head>
       <VStack flex={1} alignItems="stretch" spacing={14}>
         <Header {...app} fileName={filename} editUrl={editUrl} />
-        <VStack as="main" flex={1} spacing={14}>
+        <VStack
+          as="main"
+          flex={1}
+          spacing={0}
+          gap={14}
+          position="relative"
+          px={10}
+        >
           {showInput && (
             <VStack maxW="container.sm" minW={500} align="stretch" spacing={6}>
               {userAuthConnectors.length > 0 && (
@@ -223,7 +230,7 @@ export function AppPage({
             </VStack>
           )}
           {showRunOutput && (
-            <VStack w="full" align="stretch" px={10} spacing={6}>
+            <VStack w="full" align="stretch" spacing={6}>
               {screen === 'run' && (
                 <InputSummary
                   inputs={inputs}
@@ -233,74 +240,63 @@ export function AppPage({
                   }}
                 />
               )}
-              <Divider />
-              <Box>
-                <SmartFunctionOutput
-                  getRunUrl={getRunUrl}
-                  result={result}
-                  setOverallResult={setResult}
-                  setModalResult={setModalResult}
-                  setExpandedResult={setExpandedResult}
-                />
-              </Box>
+              <Divider color="gray.300" borderColor="currentcolor" />
+              <FunctionOutput
+                result={result}
+                setOverallResult={setResult}
+                setModalResult={setModalResult}
+                setExpandedResult={setExpandedResult}
+                getRunUrl={getRunUrl}
+              />
+              {expandedResult && (
+                <Box
+                  borderLeft={'5px solid'}
+                  borderColor={'purple.300'}
+                  mt={8}
+                  pl={3}
+                  mb={4}
+                  mx={8}
+                >
+                  <HStack align={'center'} mt={2}>
+                    <Heading flexGrow={1} size="sm" ml={1}>
+                      Additional Results
+                    </Heading>
+                    <IconButton
+                      aria-label="hide"
+                      icon={
+                        isExpandedResultOpen ? (
+                          <HiOutlineChevronUp />
+                        ) : (
+                          <HiOutlineChevronDown />
+                        )
+                      }
+                      onClick={() =>
+                        setIsExpandedResultOpen(!isExpandedResultOpen)
+                      }
+                    />
+                  </HStack>
+                  {isExpandedResultOpen && (
+                    <Box>{secondaryResultComponent(expandedResult)}</Box>
+                  )}
+                </Box>
+              )}
             </VStack>
+          )}
+          {loading && (
+            <Progress
+              colorScheme="purple"
+              size="xs"
+              isIndeterminate
+              width="full"
+              position="absolute"
+              background="transparent"
+              transform="auto"
+              translateY={-7}
+            />
           )}
         </VStack>
       </VStack>
 
-      {/* TODO translate this code into the new UI */}
-      {loading && (
-        <Progress
-          colorScheme="purple"
-          size="xs"
-          isIndeterminate
-          width="full"
-          position="absolute"
-          background="transparent"
-        />
-      )}
-      {result && (
-        <Box py={4} px={8}>
-          <FunctionOutput
-            result={result}
-            setOverallResult={setResult}
-            setModalResult={setModalResult}
-            setExpandedResult={setExpandedResult}
-            getRunUrl={getRunUrl}
-          />
-        </Box>
-      )}
-
-      {expandedResult && (
-        <Box
-          borderLeft={'5px solid'}
-          borderColor={'purple.300'}
-          mt={8}
-          pl={3}
-          mb={4}
-          mx={8}
-        >
-          <HStack align={'center'} mt={2}>
-            <Heading flexGrow={1} size="sm" ml={1}>
-              Additional Results
-            </Heading>
-            <IconButton
-              aria-label="hide"
-              icon={
-                isExpandedResultOpen ? (
-                  <HiOutlineChevronUp />
-                ) : (
-                  <HiOutlineChevronDown />
-                )
-              }
-              onClick={() => setIsExpandedResultOpen(!isExpandedResultOpen)}
-            />
-          </HStack>
-          {isExpandedResultOpen && (
-            <Box>{secondaryResultComponent(expandedResult)}</Box>
-          )}
-        </Box>
-      )}
       <Modal isOpen={isOpen} onClose={closeModal} size="5xl">
         <ModalOverlay />
         <ModalContent maxH="2xl">
