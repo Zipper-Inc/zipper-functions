@@ -1,13 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { GetServerSideProps } from 'next';
-import {
-  FunctionInputs,
-  withDefaultTheme,
-  ZipperLogo,
-  FunctionOutput,
-  useCmdOrCtrl,
-  FunctionUserConnectors,
-} from '@zipper/ui';
+import { withDefaultTheme, FunctionOutput, useCmdOrCtrl } from '@zipper/ui';
 import {
   AppInfo,
   ConnectorActionProps,
@@ -21,11 +14,7 @@ import { getFilenameAndVersionFromPath } from '~/utils/get-values-from-url';
 import {
   Box,
   Heading,
-  Flex,
-  Text,
-  ButtonGroup,
   Button,
-  Divider,
   Progress,
   Modal,
   ModalOverlay,
@@ -38,6 +27,7 @@ import {
   HStack,
   IconButton,
   VStack,
+  Divider,
 } from '@chakra-ui/react';
 import Head from 'next/head';
 import { useForm } from 'react-hook-form';
@@ -48,7 +38,7 @@ import { deleteCookie } from 'cookies-next';
 import { HiOutlineChevronUp, HiOutlineChevronDown } from 'react-icons/hi';
 
 import { getAuth } from '@clerk/nextjs/server';
-import { UserButton, useUser } from '@clerk/nextjs';
+import { useUser } from '@clerk/nextjs';
 import Unauthorized from './unauthorized';
 import removeAppConnectorUserAuth from '~/utils/remove-app-connector-user-auth';
 import Header from './header';
@@ -202,7 +192,14 @@ export function AppPage({
       </Head>
       <VStack flex={1} alignItems="stretch" spacing={14}>
         <Header {...app} fileName={filename} editUrl={editUrl} />
-        <VStack as="main" flex={1} spacing={14}>
+        <VStack
+          as="main"
+          flex={1}
+          spacing={0}
+          gap={14}
+          position="relative"
+          px={10}
+        >
           {showInput && (
             <VStack maxW="container.sm" minW={500} align="stretch" spacing={6}>
               {userAuthConnectors.length > 0 && (
@@ -222,7 +219,7 @@ export function AppPage({
             </VStack>
           )}
           {showRunOutput && (
-            <VStack w="full" align="stretch" px={10} spacing={6}>
+            <VStack w="full" align="stretch" spacing={6}>
               {screen === 'run' && (
                 <InputSummary
                   inputs={inputs}
@@ -232,157 +229,63 @@ export function AppPage({
                   }}
                 />
               )}
-              {/* TODO run output should go here */}
+              <Divider color="gray.300" borderColor="currentcolor" />
+              <FunctionOutput
+                result={result}
+                setOverallResult={setResult}
+                setModalResult={setModalResult}
+                setExpandedResult={setExpandedResult}
+                getRunUrl={getRunUrl}
+              />
+              {expandedResult && (
+                <Box
+                  borderLeft={'5px solid'}
+                  borderColor={'purple.300'}
+                  mt={8}
+                  pl={3}
+                  mb={4}
+                  mx={8}
+                >
+                  <HStack align={'center'} mt={2}>
+                    <Heading flexGrow={1} size="sm" ml={1}>
+                      Additional Results
+                    </Heading>
+                    <IconButton
+                      aria-label="hide"
+                      icon={
+                        isExpandedResultOpen ? (
+                          <HiOutlineChevronUp />
+                        ) : (
+                          <HiOutlineChevronDown />
+                        )
+                      }
+                      onClick={() =>
+                        setIsExpandedResultOpen(!isExpandedResultOpen)
+                      }
+                    />
+                  </HStack>
+                  {isExpandedResultOpen && (
+                    <Box>{secondaryResultComponent(expandedResult)}</Box>
+                  )}
+                </Box>
+              )}
             </VStack>
+          )}
+          {loading && (
+            <Progress
+              colorScheme="purple"
+              size="xs"
+              isIndeterminate
+              width="full"
+              position="absolute"
+              background="transparent"
+              transform="auto"
+              translateY={-7}
+            />
           )}
         </VStack>
       </VStack>
 
-      {/* TODO translate this code into the new UI */}
-      {/* <Box as="main">
-        <Flex as="header" mx={8} my={4} alignItems="center" color="gray.600">
-          <Heading as="h2" color="black">
-            {appTitle}
-          </Heading>
-          <Text
-            fontWeight="100"
-            ml={1}
-            fontSize="3xl"
-            height="full"
-            color="gray.400"
-          >
-            @{version}
-          </Text>
-          <Text fontSize="sm" ml="auto">
-            Powered by
-          </Text>
-          <ZipperLogo
-            fill="currentColor"
-            style={{ marginLeft: '8px', height: '13px' }}
-          />
-          <Box pl="2">
-            <UserButton afterSignOutUrl="/" />
-          </Box>
-        </Flex>
-        {app.description && (
-          <Text mx={8} my={4} color="gray.600">
-            {app.description}
-          </Text>
-        )}
-        {userAuthConnectors.length > 0 && (
-          <Box bg="gray.100" px={9} py={4}>
-            <FunctionUserConnectors
-              userAuthConnectors={userAuthConnectors}
-              // TODO figure out the best strategy for removing connector user auth
-              actions={{
-                github: {
-                  authUrl: githubAuthUrl || '#',
-                  onDelete: async () => {
-                    if (user) {
-                      await removeAppConnectorUserAuth({
-                        appId: app.id,
-                        type: 'github',
-                      });
-                    } else {
-                      deleteCookie('__zipper_temp_user_id');
-                    }
-                    router.reload();
-                  },
-                },
-                slack: {
-                  authUrl: slackAuthUrl || '#',
-                  onDelete: async () => {
-                    if (user) {
-                      await removeAppConnectorUserAuth({
-                        appId: app.id,
-                        type: 'slack',
-                      });
-                    } else {
-                      deleteCookie('__zipper_temp_user_id');
-                    }
-                    router.reload();
-                  },
-                },
-              }}
-            />
-          </Box>
-        )}
-        <Box bg="gray.100" px={8} py={4} mt={4}>
-          {inputs.length > 0 && (
-            <>
-              <FunctionInputs params={inputs} formContext={formContext} />
-              <Divider orientation="horizontal" my={4} />
-            </>
-          )}
-          <Flex>
-            <ButtonGroup>
-              <Button colorScheme="purple" onClick={runApp}>
-                Run
-              </Button>
-              <Button
-                onClick={() => {
-                  setResult('');
-                  formContext.reset();
-                }}
-              >
-                Reset
-              </Button>
-            </ButtonGroup>
-          </Flex>
-        </Box>
-      </Box> */}
-      {loading && (
-        <Progress
-          colorScheme="purple"
-          size="xs"
-          isIndeterminate
-          width="full"
-          position="absolute"
-          background="transparent"
-        />
-      )}
-      {result && (
-        <Box py={4} px={8}>
-          <FunctionOutput
-            result={result}
-            setOverallResult={setResult}
-            setModalResult={setModalResult}
-            setExpandedResult={setExpandedResult}
-            getRunUrl={getRunUrl}
-          />
-        </Box>
-      )}
-
-      {expandedResult && (
-        <Box
-          borderLeft={'5px solid'}
-          borderColor={'purple.300'}
-          mt={8}
-          pl={3}
-          mb={4}
-          mx={8}
-        >
-          <HStack align={'center'} mt={2}>
-            <Heading flexGrow={1} size="sm" ml={1}>
-              Additional Results
-            </Heading>
-            <IconButton
-              aria-label="hide"
-              icon={
-                isExpandedResultOpen ? (
-                  <HiOutlineChevronUp />
-                ) : (
-                  <HiOutlineChevronDown />
-                )
-              }
-              onClick={() => setIsExpandedResultOpen(!isExpandedResultOpen)}
-            />
-          </HStack>
-          {isExpandedResultOpen && (
-            <Box>{secondaryResultComponent(expandedResult)}</Box>
-          )}
-        </Box>
-      )}
       <Modal isOpen={isOpen} onClose={closeModal} size="5xl">
         <ModalOverlay />
         <ModalContent maxH="2xl">
