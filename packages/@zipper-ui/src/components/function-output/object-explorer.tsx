@@ -79,11 +79,10 @@ function ObjectExplorerRow({
           </Collapse>
         </Box>
       ) : (
-        <Box>
+        <Box flex={5}>
           <Text
             py={6}
             size="sm"
-            flex={5}
             maxW={'md'}
             whiteSpace="normal"
             textAlign="right"

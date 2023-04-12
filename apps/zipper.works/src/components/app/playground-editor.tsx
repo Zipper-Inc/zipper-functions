@@ -22,12 +22,16 @@ buildWorkerDefinition(
   false,
 );
 
+const isExternalResource = (resource: string | monaco.Uri) =>
+  /^https?/.test(resource.toString());
+
 export default function PlaygroundEditor(
   props: EditorProps & {
     appName: string;
   },
 ) {
   const {
+    setCurrentScript,
     currentScript,
     currentScriptLive,
     scripts,
@@ -37,6 +41,7 @@ export default function PlaygroundEditor(
     connectionId,
     unhandledImports,
     importSetRef,
+    invalidImportSetRef,
   } = useEditorContext();
   const { appInfo } = useRunAppContext();
   const editorRef = useRef<MonacoEditor>();
@@ -69,6 +74,35 @@ export default function PlaygroundEditor(
     });
 
     setIsEditorReady(true);
+
+    // A hack to take over the opening of models by trying to cmd+click
+    // or view a link to a model
+    // @see https://github.com/Microsoft/monaco-editor/issues/2000#issuecomment-649622966
+    const editorService = (editor as any)._codeEditorService;
+    const openEditorBase = editorService.openCodeEditor.bind(editorService);
+    editorService.openCodeEditor = async (
+      input: { resource: monaco.Uri },
+      source: typeof editor,
+    ) => {
+      const { resource } = input;
+
+      if (isExternalResource(resource)) {
+        const { scheme, authority } = resource;
+        const path = getPathFromUri(resource);
+        window.open(`${scheme}://${authority}${path}`);
+        return null;
+      }
+
+      const result = await openEditorBase(input, source);
+
+      if (result === null) {
+        const path = getPathFromUri(resource);
+        const script = scripts.find((s) => path === `/${s.filename}`);
+        if (script) setCurrentScript(script);
+      }
+
+      return result;
+    };
   };
 
   useEffect(() => {
@@ -247,7 +281,7 @@ export default function PlaygroundEditor(
   // Handle imports
   // Handle new imports
   useEffect(() => {
-    if (!monacoEditor || !importSetRef) return;
+    if (!monacoEditor || !importSetRef || !invalidImportSetRef) return;
     unhandledImports.forEach(async (importUrl) => {
       try {
         // optimistically add it to the import set
@@ -255,28 +289,27 @@ export default function PlaygroundEditor(
 
         console.log('[IMPORTS]', `(${importUrl})`, 'Fetching import');
 
-        const bundle = await fetch(
-          `/api/ts/module?x=${importUrl}&bundle=1`,
-        ).then((r) => r.json());
+        const bundle = await fetch(`/api/ts/bundle?x=${importUrl}`).then((r) =>
+          r.json(),
+        );
 
         Object.keys(bundle).forEach((url) => {
           console.log('[IMPORTS]', `(${importUrl})`, `Handling ${url}`);
           const src = bundle[url];
           const uri = getUriFromPath(url, monacoEditor.Uri.parse);
           if (!monacoEditor.editor.getModel(uri)) {
-            monaco.languages.typescript.typescriptDefaults.addExtraLib(
-              src,
-              uri.toString(),
-            );
+            monacoEditor.editor.createModel(src, 'typescript', uri);
           }
         });
       } catch (e) {
         // remove it from the import set if there's an error
+        // and add it to the set of invalid imports so we don't try it again
         importSetRef.current.delete(importUrl);
-        console.error('[IMPORTS]', '∟ ', 'Error adding import', e);
+        invalidImportSetRef.current.add(importUrl);
+        console.error('[IMPORTS]', `(${importUrl})`, 'Error adding import', e);
       }
     });
-  }, [unhandledImports, monacoEditor, importSetRef]);
+  }, [unhandledImports, monacoEditor, importSetRef, invalidImportSetRef]);
 
   return (
     <>
@@ -289,6 +322,23 @@ export default function PlaygroundEditor(
           automaticLayout: true,
           scrollbar: { verticalScrollbarSize: 0, horizontalScrollbarSize: 0 },
           readOnly: !appInfo.canUserEdit,
+        }}
+        overrideServices={{
+          openerService: {
+            open: function (url: string) {
+              const resource = getUriFromPath(url, monaco.Uri.parse);
+              // Don't try to open URLs that have models
+              // They will open from the defintion code
+              if (
+                isExternalResource(resource) &&
+                monacoEditor?.editor.getModel(resource)
+              ) {
+                return;
+              }
+
+              return window.open(url, '_blank');
+            },
+          },
         }}
         onMount={handleEditorDidMount}
         {...props}
