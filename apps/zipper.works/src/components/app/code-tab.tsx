@@ -1,5 +1,8 @@
 import { FormControl, Text, Code, HStack, VStack } from '@chakra-ui/react';
-import { AppEditSidebar } from '~/components/app/app-edit-sidebar';
+import {
+  AppEditSidebar,
+  AppEditSidebarAPI,
+} from '~/components/app/app-edit-sidebar';
 import { useCmdOrCtrl } from '@zipper/ui';
 import { ConnectorForm } from './connector-form';
 import { PlaygroundSidebar } from './playground-sidebar';
@@ -9,6 +12,8 @@ import { useRunAppContext } from '../context/run-app-context';
 import { ConnectorId } from '~/connectors/createConnector';
 import { AppQueryOutput } from '~/types/trpc';
 import { Script } from '@prisma/client';
+import { useRef } from 'react';
+import noop from '~/utils/noop';
 
 export const PlaygroundEditor = dynamic(() => import('./playground-editor'), {
   ssr: false,
@@ -44,6 +49,9 @@ type CodeTabProps = {
 export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
   const { currentScript, save, onChange } = useEditorContext();
   const { run } = useRunAppContext();
+  const appEditApiRef = useRef<AppEditSidebarAPI>({
+    resetExpandedResult: noop,
+  });
 
   useCmdOrCtrl(
     'S',
@@ -58,6 +66,7 @@ export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
     'Enter',
     (e: Event) => {
       e.preventDefault();
+      appEditApiRef.current.resetExpandedResult();
       run();
     },
     [],
@@ -120,6 +129,7 @@ export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
           showInputForm={!currentScriptConnectorId}
           tips={ConnectorSidebarTips(currentScriptConnectorId)}
           appSlug={app.slug}
+          apiRef={appEditApiRef}
         />
       </VStack>
     </HStack>

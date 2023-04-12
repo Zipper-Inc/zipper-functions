@@ -43,10 +43,18 @@ import Link from 'next/link';
 import { HiOutlineChevronDown, HiOutlineChevronUp } from 'react-icons/hi';
 import { getAppLink } from '@zipper/utils';
 
+export type AppEditSidebarAPI = {
+  resetExpandedResult: VoidFunction;
+};
+
 type AppEditSidebarProps = {
   showInputForm: boolean;
   tips?: JSX.Element;
   appSlug: string;
+  /**
+   * ref object to attach the AppEditSidebar API to
+   */
+  apiRef?: React.MutableRefObject<AppEditSidebarAPI>;
 };
 
 // toast duration
@@ -56,6 +64,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
   showInputForm = true,
   tips,
   appSlug,
+  apiRef,
 }) => {
   const [tabIndex, setTabIndex] = useState(0);
   const [isExpandedResultOpen, setIsExpandedResultOpen] = useState(true);
@@ -191,6 +200,11 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
     if (userAuthConnectors.find((c) => c.type === 'github')) {
       setGitHubAuthRequired(true);
     }
+    if (apiRef) {
+      apiRef.current = {
+        resetExpandedResult,
+      };
+    }
   }, []);
 
   const logs = appEventsQuery?.data?.map((event: any) => event.eventPayload);
@@ -271,6 +285,9 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
       replaceCurrentScriptCode(codeWithInputAdded);
     }
   };
+
+  const resetExpandedResult = () => setExpandedResult({});
+
   return (
     <Tabs
       colorScheme="purple"
@@ -304,7 +321,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
                   currentScript?.filename === 'main.ts' ? 'solid' : 'ghost'
                 }
                 onClick={() => {
-                  setExpandedResult({});
+                  resetExpandedResult();
                   run(true);
                 }}
                 display="flex"
