@@ -61,6 +61,8 @@ export function AppPage({
   githubAuthUrl,
   statusCode,
   editUrl,
+  result: paramResult,
+  runnableScripts,
 }: {
   app: AppInfo;
   inputs: InputParams;
@@ -72,6 +74,8 @@ export function AppPage({
   githubAuthUrl?: string;
   statusCode?: number;
   editUrl?: string;
+  result?: string;
+  runnableScripts?: string[];
 }) {
   const router = useRouter();
   const appTitle = app?.name || app?.slug || 'Zipper';
@@ -82,7 +86,16 @@ export function AppPage({
   const [loading, setLoading] = useState(false);
   const [isExpandedResultOpen, setIsExpandedResultOpen] = useState(true);
   const { user } = useUser();
-  const [screen, setScreen] = useState<Screen>('initial');
+  const [screen, setScreen] = useState<Screen>(paramResult ? 'run' : 'initial');
+
+  // We have to do this so that the results aren't SSRed
+  // (if they are DOMParser in FunctionOutput will be undefined)
+  useEffect(() => {
+    if (paramResult) {
+      setResult(paramResult);
+      setScreen('run');
+    }
+  }, [paramResult]);
 
   const runApp = async () => {
     setLoading(true);
@@ -91,11 +104,18 @@ export function AppPage({
 
     const url = filename ? `/${filename}/call` : '/call';
 
-    const result = await fetch(url, {
+    const res = await fetch(url, {
       method: 'POST',
       body: JSON.stringify(values),
-    }).then((r) => r.text());
+    });
 
+    const result = await res.text();
+    const runId = res.headers.get('x-zipper-run-id');
+    if (runId) {
+      router.push(`/run/${runId.split('-')[0]}`, undefined, {
+        shallow: true,
+      });
+    }
     if (result) setResult(result);
     setScreen('run');
     setLoading(false);
@@ -352,7 +372,8 @@ export const getServerSideProps: GetServerSideProps = async ({
     return { notFound: true };
   }
 
-  const { app, inputs, userAuthConnectors, editUrl } = result.data;
+  const { app, inputs, userAuthConnectors, editUrl, runnableScripts } =
+    result.data;
 
   const version = versionFromUrl || 'latest';
 
@@ -367,6 +388,7 @@ export const getServerSideProps: GetServerSideProps = async ({
       defaultValues,
       userAuthConnectors,
       editUrl,
+      runnableScripts,
       filename: filename || 'main.ts',
     },
   };

@@ -36,3 +36,18 @@ export function getInputValuesFromUrl(inputs: InputParam[], url?: string) {
 
   return defaultValues;
 }
+
+export function getInputValuesFromAppRun(
+  inputs: InputParam[],
+  appRunInputs: Record<string, string>,
+) {
+  const defaultValues: Record<string, string | number | true | null> = {};
+
+  inputs.forEach((input) => {
+    const name = `${input.key}:${input.type}`;
+    const value = appRunInputs[input.key];
+    defaultValues[name] = formatValueFromUrl(input, value || null);
+  });
+
+  return defaultValues;
+}
