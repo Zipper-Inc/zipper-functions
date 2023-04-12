@@ -80,13 +80,21 @@ export function AppPage({
   const router = useRouter();
   const appTitle = app?.name || app?.slug || 'Zipper';
   const formContext = useForm({ defaultValues });
-  const [result, setResult] = useState(paramResult || '');
+  const [result, setResult] = useState('');
   const [expandedResult, setExpandedResult] = useState('');
   const [modalResult, setModalResult] = useState({ heading: '', body: '' });
   const [loading, setLoading] = useState(false);
   const [isExpandedResultOpen, setIsExpandedResultOpen] = useState(true);
   const { user } = useUser();
   const [screen, setScreen] = useState<Screen>('initial');
+
+  // We have to do this so that the results aren't SSRed
+  // (if they are DOMParser in FunctionOutput will be undefined)
+  useEffect(() => {
+    if (paramResult) {
+      setResult(paramResult);
+    }
+  }, [paramResult]);
 
   const runApp = async () => {
     setLoading(true);
