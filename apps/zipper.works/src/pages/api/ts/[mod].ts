@@ -3,6 +3,12 @@ import * as eszip from '@deno/eszip';
 import { BuildCache, getModule } from '~/utils/eszip-build-cache';
 import { LoadResponseModule } from '@deno/eszip/types/loader';
 
+enum ModMode {
+  Module = 'module',
+  Bundle = 'bundle',
+  Types = 'types',
+}
+
 const buildCache = new BuildCache();
 
 function respondWithRawModule({
@@ -20,7 +26,7 @@ function respondWithRawModule({
 
   return res
     .status(200)
-    .setHeader('Content-Type', 'text/typescript')
+    .setHeader('Content-Type', 'application/typescript')
     .send(rootModule.content);
 }
 
@@ -63,29 +69,38 @@ async function respondWithBundle({
     }
   });
 
-  return res.status(200).send(JSON.stringify(bundle));
+  return res
+    .status(200)
+    .setHeader('Content-Type', 'application/json')
+    .send(JSON.stringify(bundle));
 }
 
 export default async function handler(
-  req: NextApiRequest,
+  { query: { mod, x } }: NextApiRequest,
   res: NextApiResponse,
 ) {
-  if (!req.query.x) {
+  const modMode = (Array.isArray(mod) ? mod[0] : mod) as ModMode;
+
+  if (!modMode || !Object.values(ModMode).includes(modMode)) {
+    return res.status(404).send('404 Not found');
+  }
+
+  if (!x) {
     return res.status(400).send('Missing module URL');
   }
 
-  const shouldBundle = req.query.bundle !== undefined;
-
   // commas are valid in URLs, so don't treat this as an array
-  const moduleUrl = Array.isArray(req.query.x)
-    ? req.query.x.join(',')
-    : req.query.x;
+  const moduleUrl = Array.isArray(x) ? x.join(',') : x;
 
   const rootModule = await getModule(moduleUrl, buildCache);
 
   if (!rootModule) return res.status(404).send('Module not found');
 
-  return shouldBundle
-    ? respondWithBundle({ moduleUrl, rootModule, res })
-    : respondWithRawModule({ rootModule, res });
+  switch (modMode) {
+    case ModMode.Bundle:
+      return respondWithBundle({ moduleUrl, rootModule, res });
+    case ModMode.Module:
+    default:
+      return respondWithRawModule({ rootModule, res });
+  }
 }

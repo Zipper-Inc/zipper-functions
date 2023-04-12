@@ -22,8 +22,8 @@ buildWorkerDefinition(
   false,
 );
 
-const isExternalResource = (resource: monaco.Uri) =>
-  !!(resource.scheme.match(/^https?/) && resource.path.match(/\.ts\.ts$/));
+const isExternalResource = (resource: string | monaco.Uri) =>
+  /^https?/.test(resource.toString());
 
 export default function PlaygroundEditor(
   props: EditorProps & {
@@ -288,9 +288,9 @@ export default function PlaygroundEditor(
 
         console.log('[IMPORTS]', `(${importUrl})`, 'Fetching import');
 
-        const bundle = await fetch(
-          `/api/ts/module?x=${importUrl}&bundle=1`,
-        ).then((r) => r.json());
+        const bundle = await fetch(`/api/ts/bundle?x=${importUrl}`).then((r) =>
+          r.json(),
+        );
 
         Object.keys(bundle).forEach((url) => {
           console.log('[IMPORTS]', `(${importUrl})`, `Handling ${url}`);
