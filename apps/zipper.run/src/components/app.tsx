@@ -43,7 +43,7 @@ import Head from 'next/head';
 import { useForm } from 'react-hook-form';
 import { getInputValuesFromUrl } from '../utils/get-input-values-from-url';
 import { useRouter } from 'next/router';
-import { encryptToHex } from '@zipper/utils';
+import { encryptToHex, getInputsFromFormData } from '@zipper/utils';
 import { deleteCookie } from 'cookies-next';
 import { HiOutlineChevronUp, HiOutlineChevronDown } from 'react-icons/hi';
 
@@ -54,6 +54,7 @@ import removeAppConnectorUserAuth from '~/utils/remove-app-connector-user-auth';
 import Header from './header';
 import AuthUserConnectors from './user-connectors';
 import UserInputs from './user-inputs';
+import InputSummary from './input-summary';
 
 const { __DEBUG__ } = process.env;
 
@@ -96,13 +97,7 @@ export function AppPage({
   const runApp = async () => {
     setLoading(true);
     const rawValues = formContext.getValues();
-    const values: Record<string, any> = {};
-    Object.keys(rawValues).forEach((k) => {
-      const parts = k.split(':');
-      parts.pop();
-      const key = parts.join(':');
-      values[key] = rawValues[k];
-    });
+    const values = getInputsFromFormData(rawValues, inputs);
 
     const url = filename ? `/${filename}/call` : '/call';
 
@@ -228,6 +223,15 @@ export function AppPage({
           )}
           {showRunOutput && (
             <VStack w="full" align="stretch" px={10} spacing={6}>
+              {screen === 'run' && (
+                <InputSummary
+                  inputs={inputs}
+                  formContext={formContext}
+                  onEditAndRerun={() => {
+                    setScreen('edit');
+                  }}
+                />
+              )}
               {/* TODO run output should go here */}
             </VStack>
           )}
@@ -235,7 +239,7 @@ export function AppPage({
       </VStack>
 
       {/* TODO translate this code into the new UI */}
-      <Box as="main">
+      {/* <Box as="main">
         <Flex as="header" mx={8} my={4} alignItems="center" color="gray.600">
           <Heading as="h2" color="black">
             {appTitle}
@@ -326,7 +330,7 @@ export function AppPage({
             </ButtonGroup>
           </Flex>
         </Box>
-      </Box>
+      </Box> */}
       {loading && (
         <Progress
           colorScheme="purple"

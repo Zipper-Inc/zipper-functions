@@ -19,7 +19,6 @@ export default function UserInputs({
   runApp,
   hasResult,
 }: UserInputsProps) {
-  console.log('app results', hasResult);
   return (
     <VStack
       p={6}
