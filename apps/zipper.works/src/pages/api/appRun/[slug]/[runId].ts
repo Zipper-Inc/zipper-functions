@@ -1,7 +1,7 @@
 import { App, AppEditor, AppRun, Script } from '@prisma/client';
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '~/server/prisma';
-import { AppInfoResult, InputParam, RunInfoResult } from '@zipper/types';
+import { InputParam, RunInfoResult } from '@zipper/types';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import clerkClient from '@clerk/clerk-sdk-node';
 import { compare } from 'bcryptjs';
@@ -30,6 +30,9 @@ export default async function handler(
 ) {
   if (!process.env.CLERK_JWT_KEY) throw new Error('Missing Clerk JWT key');
   const runIdFromUrl = req.query.runId as string;
+  if (runIdFromUrl.length < 8) {
+    return res.status(500).send({ ok: false, error: 'Invalid run id' });
+  }
   const slugFromUrl = req.query.slug as string;
 
   let userInfo: {

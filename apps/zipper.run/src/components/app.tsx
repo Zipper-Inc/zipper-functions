@@ -61,6 +61,8 @@ export function AppPage({
   githubAuthUrl,
   statusCode,
   editUrl,
+  result: paramResult,
+  hideRun = false,
 }: {
   app: AppInfo;
   inputs: InputParams;
@@ -72,11 +74,13 @@ export function AppPage({
   githubAuthUrl?: string;
   statusCode?: number;
   editUrl?: string;
+  result?: string;
+  hideRun: boolean;
 }) {
   const router = useRouter();
   const appTitle = app?.name || app?.slug || 'Zipper';
   const formContext = useForm({ defaultValues });
-  const [result, setResult] = useState('');
+  const [result, setResult] = useState(paramResult || '');
   const [expandedResult, setExpandedResult] = useState('');
   const [modalResult, setModalResult] = useState({ heading: '', body: '' });
   const [loading, setLoading] = useState(false);
@@ -190,6 +194,7 @@ export function AppPage({
       <Head>
         <title>{appTitle}</title>
       </Head>
+<<<<<<< HEAD
       <VStack flex={1} alignItems="stretch" spacing={14}>
         <Header {...app} fileName={filename} editUrl={editUrl} />
         <VStack
@@ -199,6 +204,134 @@ export function AppPage({
           gap={14}
           position="relative"
           px={10}
+=======
+      <Box as="main">
+        <Flex as="header" mx={8} my={4} alignItems="center" color="gray.600">
+          <Heading as="h2" color="black">
+            {appTitle}
+          </Heading>
+          <Text
+            fontWeight="100"
+            ml={1}
+            fontSize="3xl"
+            height="full"
+            color="gray.400"
+          >
+            @{version}
+          </Text>
+          <Text fontSize="sm" ml="auto">
+            Powered by
+          </Text>
+          <ZipperLogo
+            fill="currentColor"
+            style={{ marginLeft: '8px', height: '13px' }}
+          />
+          <Box pl="2">
+            <UserButton afterSignOutUrl="/" />
+          </Box>
+        </Flex>
+        {app.description && (
+          <Text mx={8} my={4} color="gray.600">
+            {app.description}
+          </Text>
+        )}
+        {!hideRun && (
+          <>
+            {userAuthConnectors.length > 0 && (
+              <Box bg="gray.100" px={9} py={4}>
+                <FunctionUserConnectors
+                  userAuthConnectors={userAuthConnectors}
+                  // TODO figure out the best strategy for removing connector user auth
+                  actions={{
+                    github: {
+                      authUrl: githubAuthUrl || '#',
+                      onDelete: async () => {
+                        if (user) {
+                          await removeAppConnectorUserAuth({
+                            appId: app.id,
+                            type: 'github',
+                          });
+                        } else {
+                          deleteCookie('__zipper_temp_user_id');
+                        }
+                        router.reload();
+                      },
+                    },
+                    slack: {
+                      authUrl: slackAuthUrl || '#',
+                      onDelete: async () => {
+                        if (user) {
+                          await removeAppConnectorUserAuth({
+                            appId: app.id,
+                            type: 'slack',
+                          });
+                        } else {
+                          deleteCookie('__zipper_temp_user_id');
+                        }
+                        router.reload();
+                      },
+                    },
+                  }}
+                />
+              </Box>
+            )}
+            <Box bg="gray.100" px={8} py={4} mt={4}>
+              {inputs.length > 0 && (
+                <>
+                  <FunctionInputs params={inputs} formContext={formContext} />
+                  <Divider orientation="horizontal" my={4} />
+                </>
+              )}
+              <Flex>
+                <ButtonGroup>
+                  <Button colorScheme="purple" onClick={runApp}>
+                    Run
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      setResult('');
+                      formContext.reset();
+                    }}
+                  >
+                    Reset
+                  </Button>
+                </ButtonGroup>
+              </Flex>
+            </Box>
+          </>
+        )}
+      </Box>
+      {loading && (
+        <Progress
+          colorScheme="purple"
+          size="xs"
+          isIndeterminate
+          width="full"
+          position="absolute"
+          background="transparent"
+        />
+      )}
+      {result && (
+        <Box py={4} px={8}>
+          <FunctionOutput
+            result={result}
+            setOverallResult={setResult}
+            setModalResult={setModalResult}
+            setExpandedResult={setExpandedResult}
+            getRunUrl={getRunUrl}
+          />
+        </Box>
+      )}
+
+      {expandedResult && (
+        <Box
+          borderLeft={'5px solid'}
+          borderColor={'purple.300'}
+          mt={8}
+          pl={3}
+          mb={4}
+          mx={8}
+>>>>>>> 795841d (hide the inputs and run button for now)
         >
           {showInput && (
             <VStack maxW="container.sm" minW={500} align="stretch" spacing={6}>
