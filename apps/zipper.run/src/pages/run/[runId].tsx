@@ -1,0 +1,369 @@
+import { useEffect, useState } from 'react';
+import { GetServerSideProps } from 'next';
+import {
+  FunctionInputs,
+  withDefaultTheme,
+  ZipperLogo,
+  FunctionOutput,
+  useCmdOrCtrl,
+  FunctionUserConnectors,
+} from '@zipper/ui';
+import { AppInfo, InputParams, UserAuthConnector } from '@zipper/types';
+import getValidSubdomain from '~/utils/get-valid-subdomain';
+import {
+  Box,
+  Heading,
+  Flex,
+  Text,
+  ButtonGroup,
+  Button,
+  Divider,
+  Progress,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalCloseButton,
+  ModalBody,
+  ModalFooter,
+  useDisclosure,
+  HStack,
+  IconButton,
+} from '@chakra-ui/react';
+import Head from 'next/head';
+import { useForm } from 'react-hook-form';
+import { useRouter } from 'next/router';
+import { deleteCookie } from 'cookies-next';
+import { HiOutlineChevronUp, HiOutlineChevronDown } from 'react-icons/hi';
+import { getAuth } from '@clerk/nextjs/server';
+import { UserButton, useUser } from '@clerk/nextjs';
+import removeAppConnectorUserAuth from '~/utils/remove-app-connector-user-auth';
+import Unauthorized from '~/components/unauthorized';
+import getRunInfo from '~/utils/get-run-info';
+
+const { __DEBUG__ } = process.env;
+
+export function AppPage({
+  app,
+  inputs,
+  userAuthConnectors,
+  version = 'latest',
+  filename,
+  defaultValues,
+  slackAuthUrl,
+  githubAuthUrl,
+  statusCode,
+  editUrl,
+  result: appRunResult,
+}: {
+  app: AppInfo;
+  inputs: InputParams;
+  userAuthConnectors: UserAuthConnector[];
+  version?: string;
+  filename?: string;
+  defaultValues?: Record<string, any>;
+  slackAuthUrl?: string;
+  githubAuthUrl?: string;
+  statusCode?: number;
+  editUrl?: string;
+  result?: string;
+}) {
+  const router = useRouter();
+  const appTitle = app?.name || app?.slug || 'Zipper';
+  const formContext = useForm({ defaultValues });
+  const [result, setResult] = useState(appRunResult || '');
+  const [expandedResult, setExpandedResult] = useState('');
+  const [modalResult, setModalResult] = useState({ heading: '', body: '' });
+  const [loading, setLoading] = useState(false);
+  const [isExpandedResultOpen, setIsExpandedResultOpen] = useState(true);
+  const { user } = useUser();
+
+  const runApp = async () => {
+    setLoading(true);
+    const rawValues = formContext.getValues();
+    const values: Record<string, any> = {};
+    Object.keys(rawValues).forEach((k) => {
+      const parts = k.split(':');
+      parts.pop();
+      const key = parts.join(':');
+      values[key] = rawValues[k];
+    });
+
+    const url = filename ? `/${filename}/call` : '/call';
+
+    const result = await fetch(url, {
+      method: 'POST',
+      body: JSON.stringify(values),
+    }).then((r) => r.text());
+
+    if (result) setResult(result);
+    setLoading(false);
+  };
+
+  useCmdOrCtrl(
+    'Enter',
+    (e: Event) => {
+      e.preventDefault();
+      runApp();
+    },
+    [],
+  );
+
+  const { isOpen, onOpen, onClose } = useDisclosure();
+
+  useEffect(() => {
+    if (modalResult.body) {
+      onOpen();
+    }
+  }, [modalResult]);
+
+  function closeModal() {
+    setModalResult({ heading: '', body: '' });
+    onClose();
+  }
+
+  function getRunUrl(scriptName: string) {
+    return `/${scriptName}/call`;
+  }
+
+  const secondaryResultComponent = (secondaryResult: any) => {
+    return (
+      <FunctionOutput
+        result={secondaryResult}
+        setOverallResult={setResult}
+        setModalResult={setModalResult}
+        setExpandedResult={setExpandedResult}
+        getRunUrl={getRunUrl}
+      />
+    );
+  };
+
+  if (statusCode === 401) {
+    return <Unauthorized />;
+  }
+
+  return (
+    <>
+      <Head>
+        <title>{appTitle}</title>
+      </Head>
+      <Box as="main">
+        <Flex as="header" mx={8} my={4} alignItems="center" color="gray.600">
+          <Heading as="h2" color="black">
+            {appTitle}
+          </Heading>
+          <Text
+            fontWeight="100"
+            ml={1}
+            fontSize="3xl"
+            height="full"
+            color="gray.400"
+          >
+            @{version}
+          </Text>
+          <Text fontSize="sm" ml="auto">
+            Powered by
+          </Text>
+          <ZipperLogo
+            fill="currentColor"
+            style={{ marginLeft: '8px', height: '13px' }}
+          />
+          <Box pl="2">
+            <UserButton afterSignOutUrl="/" />
+          </Box>
+        </Flex>
+        {app.description && (
+          <Text mx={8} my={4} color="gray.600">
+            {app.description}
+          </Text>
+        )}
+        {userAuthConnectors.length > 0 && (
+          <Box bg="gray.100" px={9} py={4}>
+            <FunctionUserConnectors
+              userAuthConnectors={userAuthConnectors}
+              // TODO figure out the best strategy for removing connector user auth
+              actions={{
+                github: {
+                  authUrl: githubAuthUrl || '#',
+                  onDelete: async () => {
+                    if (user) {
+                      await removeAppConnectorUserAuth({
+                        appId: app.id,
+                        type: 'github',
+                      });
+                    } else {
+                      deleteCookie('__zipper_temp_user_id');
+                    }
+                    router.reload();
+                  },
+                },
+                slack: {
+                  authUrl: slackAuthUrl || '#',
+                  onDelete: async () => {
+                    if (user) {
+                      await removeAppConnectorUserAuth({
+                        appId: app.id,
+                        type: 'slack',
+                      });
+                    } else {
+                      deleteCookie('__zipper_temp_user_id');
+                    }
+                    router.reload();
+                  },
+                },
+              }}
+            />
+          </Box>
+        )}
+        <Box bg="gray.100" px={8} py={4} mt={4}>
+          {inputs.length > 0 && (
+            <>
+              <FunctionInputs params={inputs} formContext={formContext} />
+              <Divider orientation="horizontal" my={4} />
+            </>
+          )}
+          <Flex>
+            <ButtonGroup>
+              <Button colorScheme="purple" onClick={runApp}>
+                Run
+              </Button>
+              <Button
+                onClick={() => {
+                  setResult('');
+                  formContext.reset();
+                }}
+              >
+                Reset
+              </Button>
+            </ButtonGroup>
+          </Flex>
+        </Box>
+      </Box>
+      {loading && (
+        <Progress
+          colorScheme="purple"
+          size="xs"
+          isIndeterminate
+          width="full"
+          position="absolute"
+          background="transparent"
+        />
+      )}
+      {result && (
+        <Box py={4} px={8}>
+          <FunctionOutput
+            result={result}
+            setOverallResult={setResult}
+            setModalResult={setModalResult}
+            setExpandedResult={setExpandedResult}
+            getRunUrl={getRunUrl}
+          />
+        </Box>
+      )}
+
+      {expandedResult && (
+        <Box
+          borderLeft={'5px solid'}
+          borderColor={'purple.300'}
+          mt={8}
+          pl={3}
+          mb={4}
+          mx={8}
+        >
+          <HStack align={'center'} mt={2}>
+            <Heading flexGrow={1} size="sm" ml={1}>
+              Additional Results
+            </Heading>
+            <IconButton
+              aria-label="hide"
+              icon={
+                isExpandedResultOpen ? (
+                  <HiOutlineChevronUp />
+                ) : (
+                  <HiOutlineChevronDown />
+                )
+              }
+              onClick={() => setIsExpandedResultOpen(!isExpandedResultOpen)}
+            />
+          </HStack>
+          {isExpandedResultOpen && (
+            <Box>{secondaryResultComponent(expandedResult)}</Box>
+          )}
+        </Box>
+      )}
+      <Modal isOpen={isOpen} onClose={closeModal} size="5xl">
+        <ModalOverlay />
+        <ModalContent maxH="2xl">
+          <ModalHeader>{modalResult.heading || appTitle} </ModalHeader>
+          <ModalCloseButton />
+          <ModalBody
+            fontSize="sm"
+            color="neutral.700"
+            flex={1}
+            display="flex"
+            flexDirection="column"
+            gap={8}
+            overflow="auto"
+          >
+            {secondaryResultComponent(modalResult.body)}
+          </ModalBody>
+          <ModalFooter justifyContent="space-between">
+            <Button
+              variant="outline"
+              onClick={closeModal}
+              mr="3"
+              flex={1}
+              fontWeight="medium"
+            >
+              Close
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+    </>
+  );
+}
+
+export const getServerSideProps: GetServerSideProps = async ({
+  req,
+  query,
+}) => {
+  const { host } = req.headers;
+
+  // validate subdomain
+  const subdomain = getValidSubdomain(host);
+  if (__DEBUG__) console.log('getValidSubdomain', { subdomain, host });
+  if (!subdomain) return { notFound: true };
+
+  const auth = getAuth(req);
+
+  // grab the app if it exists
+  const result = await getRunInfo({
+    subdomain,
+    token: await auth.getToken({ template: 'incl_orgs' }),
+    runId: query.runId as string,
+  });
+
+  if (__DEBUG__) console.log('getRunInfo', { result });
+  if (!result.ok) {
+    if (result.error === 'UNAUTHORIZED') return { props: { statusCode: 401 } };
+    return { notFound: true };
+  }
+
+  const { appRun, app, inputs, userAuthConnectors, editUrl } = result.data;
+
+  return {
+    props: {
+      app,
+      inputs,
+      version: appRun.version,
+      defaultValues: inputs,
+      userAuthConnectors,
+      editUrl,
+      filename: appRun.path,
+      result: appRun.result,
+    },
+  };
+};
+
+export default withDefaultTheme(AppPage);
