@@ -9,7 +9,34 @@ enum ModMode {
   Types = 'types',
 }
 
+const TYPES_HEADER = 'x-typescript-types';
+
 const buildCache = new BuildCache();
+
+/**
+ * Rewrites URLs so that they live relative to the original module URL
+ * i.e. if you import `deno.land/x/foo` and it redirects to `deno.land/x/foo@4.2.0`
+ *
+ * This makes sure that all references to `deno.land/x/foo@4.2.0`
+ * are rewritten to `deno.land/x/foo` so that the editor can follow the relative paths
+ */
+function getRedirectReplacer({
+  originalUrl,
+  redirectedUrl,
+}: {
+  originalUrl: string;
+  redirectedUrl: string;
+}) {
+  if (originalUrl === redirectedUrl) return;
+  // get the end file, something like `mod.ts`
+  const filename = originalUrl.substring(originalUrl.lastIndexOf('/') + 1);
+  // remove the `mod.ts` from the original url
+  const originalPath = originalUrl.replace(filename, '');
+  // get equivalent path on the redirected url
+  const redirectedPath = redirectedUrl.replace(filename, '');
+
+  return (specifier: string) => specifier.replace(redirectedPath, originalPath);
+}
 
 function respondWithRawModule({
   rootModule,
@@ -26,7 +53,7 @@ function respondWithRawModule({
 
   return res
     .status(200)
-    .setHeader('Content-Type', 'application/typescript')
+    .setHeader('Content-Type', 'text/typescript')
     .send(rootModule.content);
 }
 
@@ -39,25 +66,15 @@ async function respondWithBundle({
   rootModule: LoadResponseModule;
   res: NextApiResponse;
 }) {
-  const didRedirect = moduleUrl !== rootModule.specifier;
-  let handleRedirect: undefined | ((s: string) => string);
-
-  if (didRedirect) {
-    // get the end file, something like `mod.ts`
-    const filename = moduleUrl.substring(moduleUrl.lastIndexOf('/') + 1);
-    // remove the `mod.ts` from the original url
-    const originalPath = moduleUrl.replace(filename, '');
-    // get equivalent path on the redirected url
-    const redirectedPath = rootModule.specifier.replace(filename, '');
-
-    handleRedirect = (specifier: string) =>
-      specifier.replace(redirectedPath, originalPath);
-  }
+  const replaceRedirect = getRedirectReplacer({
+    originalUrl: moduleUrl,
+    redirectedUrl: rootModule.specifier,
+  });
 
   const bundle: Record<string, string> = {};
 
   await eszip.build([rootModule.specifier], async (specifier) => {
-    const bundlePath = handleRedirect ? handleRedirect(specifier) : specifier;
+    const bundlePath = replaceRedirect ? replaceRedirect(specifier) : specifier;
 
     if (specifier === rootModule.specifier) {
       bundle[bundlePath] = rootModule.content;
@@ -75,11 +92,71 @@ async function respondWithBundle({
     .send(JSON.stringify(bundle));
 }
 
+async function respondWithTypesBundle({
+  moduleUrl,
+  rootModule,
+  typesLocation,
+  res,
+}: {
+  moduleUrl: string;
+  rootModule: LoadResponseModule;
+  typesLocation: string;
+  res: NextApiResponse;
+}) {
+  /**
+   * The root URL where types live, taken from the X-Typescript-Types header
+   */
+  let typesRootUrl: string;
+  try {
+    typesRootUrl = new URL(typesLocation).toString();
+  } catch (e) {
+    typesRootUrl = new URL(typesLocation, moduleUrl).toString();
+  }
+
+  const replaceRedirect = getRedirectReplacer({
+    originalUrl: typesRootUrl,
+    redirectedUrl: moduleUrl,
+  });
+
+  const typesBundle: Record<string, string> = {};
+
+  try {
+    await eszip.build([typesRootUrl], async (specifier) => {
+      if (specifier === typesRootUrl) {
+        const mod = await getModule(typesRootUrl, buildCache);
+        if (mod?.content) typesBundle[moduleUrl] = mod.content;
+        return mod;
+      } else {
+        const typesUrl = replaceRedirect
+          ? replaceRedirect(specifier)
+          : specifier;
+        const mod = await getModule(specifier, buildCache);
+        if (mod?.content) typesBundle[typesUrl] = mod.content;
+        return mod;
+      }
+    });
+  } catch (e) {
+    // Just respond with a regular bundle if types fail
+    console.error(
+      '[API/TS/[MOD].TS]',
+      `(${moduleUrl})`,
+      'Failed to bundle types, sending code bundle\n',
+      e,
+    );
+    return respondWithBundle({ moduleUrl, rootModule, res });
+  }
+
+  return res
+    .status(200)
+    .setHeader('Content-Type', 'application/json')
+    .send(JSON.stringify(typesBundle));
+}
+
 export default async function handler(
   { query: { mod, x } }: NextApiRequest,
   res: NextApiResponse,
 ) {
-  const modMode = (Array.isArray(mod) ? mod[0] : mod) as ModMode;
+  let modMode = (Array.isArray(mod) ? mod[0] : mod) as ModMode;
 
   if (!modMode || !Object.values(ModMode).includes(modMode)) {
     return res.status(404).send('404 Not found');
@@ -96,9 +173,21 @@ export default async function handler(
 
   if (!rootModule) return res.status(404).send('Module not found');
 
+  const typesLocation = rootModule.headers?.[TYPES_HEADER] as string;
+  if (typesLocation) {
+    modMode = ModMode.Types;
+  }
+
   switch (modMode) {
     case ModMode.Bundle:
       return respondWithBundle({ moduleUrl, rootModule, res });
+    case ModMode.Types:
+      return respondWithTypesBundle({
+        moduleUrl,
+        rootModule,
+        typesLocation,
+        res,
+      });
     case ModMode.Module:
     default:
       return respondWithRawModule({ rootModule, res });
