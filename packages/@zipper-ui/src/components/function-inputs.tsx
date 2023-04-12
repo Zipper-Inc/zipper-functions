@@ -27,6 +27,8 @@ interface Props {
   params: InputParam[];
   defaultValues?: any;
   formContext: UseFormReturn<FieldValues, any>;
+  isDisabled?: boolean;
+  hasResult?: boolean;
 }
 
 /*
@@ -48,12 +50,14 @@ function FunctionParamInput({
   type,
   optional,
   formContext,
+  isDisabled,
 }: {
   inputKey: string;
   type: InputType;
   optional: boolean;
   value: any;
   formContext: Props['formContext'];
+  isDisabled?: boolean;
 }) {
   const { register } = formContext;
   const name = getFieldName(inputKey, type);
@@ -71,7 +75,9 @@ function FunctionParamInput({
 
   switch (type) {
     case InputType.boolean: {
-      return <Switch colorScheme="purple" {...formProps} />;
+      return (
+        <Switch colorScheme="purple" {...formProps} isDisabled={isDisabled} />
+      );
     }
 
     case InputType.string: {
@@ -81,6 +87,7 @@ function FunctionParamInput({
           fontFamily="monospace"
           fontSize="smaller"
           minHeight={14}
+          isDisabled={isDisabled}
           {...formProps}
         />
       );
@@ -130,11 +137,15 @@ function SingleInput({
   type,
   optional,
   formContext,
+  isDisabled,
+  hasResult = true,
 }: {
   name: string;
   type: InputType;
   optional: boolean;
   formContext: UseFormReturn<FieldValues, any>;
+  isDisabled?: boolean;
+  hasResult?: boolean;
 }): JSX.Element {
   const formName = getFieldName(name, type);
   const { isOpen, onOpen, onClose } = useDisclosure({
@@ -165,21 +176,24 @@ function SingleInput({
               mr={2}
               alignSelf="center"
               opacity={!isOpen ? '50%' : '100%'}
+              color={isDisabled ? 'gray.400' : 'gray.700'}
             >
               {name}
             </Heading>
             <Box mt={1} opacity={!isOpen ? '50%' : '100%'}>
-              <Badge
-                variant="subtle"
-                colorScheme="purple"
-                fontSize="xs"
-                fontWeight="medium"
-                rounded="full"
-                py="0.5"
-                px={2}
-              >
-                {type}
-              </Badge>
+              {hasResult && (
+                <Badge
+                  variant="subtle"
+                  colorScheme="purple"
+                  fontSize="xs"
+                  fontWeight="medium"
+                  rounded="full"
+                  py="0.5"
+                  px={2}
+                >
+                  {type}
+                </Badge>
+              )}
             </Box>
             {optional && (
               <>
@@ -199,6 +213,7 @@ function SingleInput({
                 value={null}
                 optional={optional}
                 formContext={formContext}
+                isDisabled={isDisabled}
               />
             </Flex>
           )}
@@ -243,7 +258,12 @@ function SingleInput({
   );
 }
 
-export function FunctionInputs({ params = [], formContext }: Props) {
+export function FunctionInputs({
+  params = [],
+  formContext,
+  isDisabled,
+  hasResult = true,
+}: Props) {
   const inputs = params.map(({ key: name, type, optional }, i) => (
     <SingleInput
       key={`${name}--${i}`}
@@ -251,6 +271,8 @@ export function FunctionInputs({ params = [], formContext }: Props) {
       type={type}
       optional={optional}
       formContext={formContext}
+      isDisabled={isDisabled}
+      hasResult={hasResult}
     />
   ));
 
@@ -265,6 +287,7 @@ export function FunctionInputs({ params = [], formContext }: Props) {
       fontSize="smaller"
       minHeight={90}
       defaultValue="{}"
+      isDisabled={isDisabled}
       {...formContext.register('params')}
     />
   );
