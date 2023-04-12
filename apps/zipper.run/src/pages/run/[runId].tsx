@@ -1,5 +1,6 @@
 import { getAuth } from '@clerk/nextjs/server';
 import { GetServerSideProps } from 'next';
+import { getInputValuesFromAppRun } from '~/utils/get-input-values-from-url';
 import getRunInfo from '~/utils/get-run-info';
 import getValidSubdomain from '~/utils/get-valid-subdomain';
 
@@ -31,12 +32,14 @@ export const getServerSideProps: GetServerSideProps = async ({
 
   const { appRun, app, inputs, userAuthConnectors, editUrl } = result.data;
 
+  const defaultValues = getInputValuesFromAppRun(inputs, appRun.inputs);
+
   return {
     props: {
       app,
       inputs,
       version: appRun.version,
-      defaultValues: inputs,
+      defaultValues,
       userAuthConnectors,
       editUrl,
       filename: appRun.path,

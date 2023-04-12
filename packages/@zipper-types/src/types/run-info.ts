@@ -5,6 +5,7 @@ export type RunInfo = AppInfoAndInputParams & {
     path: string;
     version: string;
     result: any;
+    inputs: Record<string, string>;
   };
 };
 

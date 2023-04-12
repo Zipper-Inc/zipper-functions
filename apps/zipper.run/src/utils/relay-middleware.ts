@@ -93,7 +93,10 @@ export async function relayRequest({
     .get('__zipper_temp_user_id')
     ?.value.toString();
 
-  const filename = _filename || 'main.ts';
+  let filename = _filename || 'main.ts';
+  if (!filename.endsWith('.ts')) {
+    filename = `${filename}.ts`;
+  }
 
   const appInfoResult = await getAppInfo({
     subdomain,
@@ -140,7 +143,7 @@ export async function relayRequest({
 
   relayBody.userInfo = userInfo;
 
-  relayBody.path = _filename;
+  relayBody.path = filename;
 
   const response = await fetch(relayUrl, {
     method: 'POST',

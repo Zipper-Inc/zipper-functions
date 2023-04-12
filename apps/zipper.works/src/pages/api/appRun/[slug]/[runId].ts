@@ -7,6 +7,7 @@ import clerkClient from '@clerk/clerk-sdk-node';
 import { compare } from 'bcryptjs';
 import { canUserEdit } from '~/server/routers/app.router';
 import { JSONValue } from 'superjson/dist/types';
+import { parseInputForTypes } from '~/utils/parse-code';
 // import { canUserEdit } from '~/server/routers/app.router';
 // import { getAuth } from '@clerk/nextjs/server';
 
@@ -86,6 +87,12 @@ export default async function handler(
     },
   });
 
+  let entryPoint = appRun.app.scripts.find((s) => s.filename === appRun?.path);
+
+  if (!entryPoint) {
+    entryPoint = appRun.app.scripts.find((s) => s.filename === 'main.ts');
+  }
+
   if (appRun.userId) {
     // return 401 if there's no token or no user was found by getUserInfo()
     if (!token || !userInfo.clerkUserId) {
@@ -105,6 +112,7 @@ export default async function handler(
         path: appRun.path,
         version: appRun.version || 'latest',
         result: appRun.result || '',
+        inputs: appRun.inputs as Record<string, string>,
       },
       app: {
         id,
@@ -120,7 +128,7 @@ export default async function handler(
           organizations: userInfo.organizations,
         }),
       },
-      inputs: (appRun.inputs as JSONValue as InputParam[] | undefined) || [],
+      inputs: parseInputForTypes({ code: entryPoint?.code }) || [],
       runnableScripts: scripts
         .filter((s) => s.isRunnable)
         .map((s) => s.filename),
