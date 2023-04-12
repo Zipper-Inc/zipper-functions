@@ -211,12 +211,7 @@ export function AppPage({
         <title>{appTitle}</title>
       </Head>
       <VStack flex={1} alignItems="stretch" spacing={14}>
-        <Header
-          {...app}
-          fileName={filename}
-          editUrl={editUrl}
-          runnableScripts={runnableScripts}
-        />
+        <Header {...app} fileName={filename} editUrl={editUrl} />
         <VStack
           as="main"
           flex={1}
