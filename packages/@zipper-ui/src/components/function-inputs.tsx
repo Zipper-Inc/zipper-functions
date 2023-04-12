@@ -21,7 +21,7 @@ import {
 import { VscAdd } from 'react-icons/vsc';
 import { FieldValues, UseFormReturn, RegisterOptions } from 'react-hook-form';
 import { InputType, InputParam } from '@zipper/types';
-import { getFieldName } from '../utils/form';
+import { getFieldName } from '@zipper/utils';
 
 interface Props {
   params: InputParam[];
