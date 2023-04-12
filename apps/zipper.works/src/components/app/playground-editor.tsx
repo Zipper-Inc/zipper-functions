@@ -41,6 +41,7 @@ export default function PlaygroundEditor(
     connectionId,
     unhandledImports,
     importSetRef,
+    invalidImportSetRef,
   } = useEditorContext();
   const { appInfo } = useRunAppContext();
   const editorRef = useRef<MonacoEditor>();
@@ -280,7 +281,7 @@ export default function PlaygroundEditor(
   // Handle imports
   // Handle new imports
   useEffect(() => {
-    if (!monacoEditor || !importSetRef) return;
+    if (!monacoEditor || !importSetRef || !invalidImportSetRef) return;
     unhandledImports.forEach(async (importUrl) => {
       try {
         // optimistically add it to the import set
@@ -302,11 +303,13 @@ export default function PlaygroundEditor(
         });
       } catch (e) {
         // remove it from the import set if there's an error
+        // and add it to the set of invalid imports so we don't try it again
         importSetRef.current.delete(importUrl);
+        invalidImportSetRef.current.add(importUrl);
         console.error('[IMPORTS]', `(${importUrl})`, 'Error adding import', e);
       }
     });
-  }, [unhandledImports, monacoEditor, importSetRef]);
+  }, [unhandledImports, monacoEditor, importSetRef, invalidImportSetRef]);
 
   return (
     <>

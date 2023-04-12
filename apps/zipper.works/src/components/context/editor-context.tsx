@@ -50,6 +50,7 @@ export type EditorContextType = {
   setInputParams: (inputParams: InputParam[]) => void;
   inputError?: string;
   importSetRef?: MutableRefObject<Set<string>>;
+  invalidImportSetRef?: MutableRefObject<Set<string>>;
   unhandledImports: string[];
   setUnhandledImports: (imports: string[]) => void;
 };
@@ -76,6 +77,7 @@ export const EditorContext = createContext<EditorContextType>({
   setInputParams: noop,
   inputError: undefined,
   importSetRef: undefined,
+  invalidImportSetRef: undefined,
   unhandledImports: [],
   setUnhandledImports: noop,
 });
@@ -108,6 +110,7 @@ const EditorContextProvider = ({
   const [editor, setEditor] = useState<typeof monaco.editor | undefined>();
 
   const importSetRef = useRef(new Set<string>());
+  const invalidImportSetRef = useRef(new Set<string>());
   const [unhandledImports, setUnhandledImports] = useState<string[]>([]);
 
   const [modelsDirtyState, setModelsDirtyState] = useState<
@@ -158,12 +161,14 @@ const EditorContextProvider = ({
           throwErrors: true,
         });
 
-        // console.log('[IMPORTS]', imports);
-
         // Check for new imports
         const prevNewImportsLength = unhandledImports.length;
         imports.forEach(async (importUrl) => {
-          if (importSetRef.current.has(importUrl)) return;
+          if (
+            importSetRef.current.has(importUrl) ||
+            invalidImportSetRef.current.has(importUrl)
+          )
+            return;
           unhandledImports.push(importUrl);
         });
         if (unhandledImports.length !== prevNewImportsLength) {
@@ -353,6 +358,7 @@ const EditorContextProvider = ({
         setInputParams,
         inputError,
         importSetRef,
+        invalidImportSetRef,
         unhandledImports,
         setUnhandledImports,
       }}
