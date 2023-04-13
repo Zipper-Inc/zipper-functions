@@ -141,11 +141,14 @@ export default async function handler(
         email: undefined,
         userId: undefined,
       },
-      editUrl: `${
-        process.env.NODE_ENV === 'development' ? 'http' : 'https'
-      }://${process.env.NEXT_PUBLIC_HOST}${
-        process.env.NODE_ENV === 'development' ? ':3000' : ''
-      }/${resourceOwner?.slug}/${appRun.app.slug}/edit/${appRun.path}`,
+      entryPoint: {
+        filename: appRun.path,
+        editUrl: `${
+          process.env.NODE_ENV === 'development' ? 'http' : 'https'
+        }://${process.env.NEXT_PUBLIC_HOST}${
+          process.env.NODE_ENV === 'development' ? ':3000' : ''
+        }/${resourceOwner?.slug}/${appRun.app.slug}/edit/${appRun.path}`,
+      },
     },
   };
 

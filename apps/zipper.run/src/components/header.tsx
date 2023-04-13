@@ -7,25 +7,27 @@ import {
   Text,
   useToast,
   useClipboard,
+  Link,
+  Menu,
+  MenuButton,
+  MenuDivider,
+  MenuItem,
+  MenuList,
 } from '@chakra-ui/react';
-import NextLink from 'next/link';
 import { getAppLink } from '@zipper/utils';
 import { ZipperSymbol } from '@zipper/ui';
 import { HiOutlineUpload, HiOutlinePencilAlt } from 'react-icons/hi';
-import { AppInfo } from '@zipper/types';
+import { AppInfo, EntryPointInfo } from '@zipper/types';
 import { UserButton, useUser } from '@clerk/nextjs';
 import React from 'react';
 import { useRouter } from 'next/router';
+import { FiChevronDown } from 'react-icons/fi';
 
 const duration = 1500;
 
-const Header: React.FC<AppInfo & { fileName?: string; editUrl?: string }> = ({
-  canUserEdit,
-  name,
-  slug,
-  fileName,
-  editUrl,
-}) => {
+const Header: React.FC<
+  AppInfo & { entryPoint?: EntryPointInfo; runnableScripts?: string[] }
+> = ({ canUserEdit, name, slug, entryPoint, runnableScripts = [] }) => {
   const router = useRouter();
   const toast = useToast();
 
@@ -41,6 +43,10 @@ const Header: React.FC<AppInfo & { fileName?: string; editUrl?: string }> = ({
       isClosable: true,
     });
   };
+
+  if (!entryPoint) {
+    return <></>;
+  }
 
   return (
     <>
@@ -60,7 +66,7 @@ const Header: React.FC<AppInfo & { fileName?: string; editUrl?: string }> = ({
             /
           </Heading>
           <Box>
-            <NextLink href="#">
+            <Link href="/">
               <Heading
                 as="h1"
                 size="md"
@@ -71,7 +77,7 @@ const Header: React.FC<AppInfo & { fileName?: string; editUrl?: string }> = ({
               >
                 {name}
               </Heading>
-            </NextLink>
+            </Link>
           </Box>
           <Heading
             as="h1"
@@ -83,16 +89,49 @@ const Header: React.FC<AppInfo & { fileName?: string; editUrl?: string }> = ({
             /
           </Heading>
           <Box>
-            <Heading
-              as="h1"
-              size="md"
-              overflow="auto"
-              whiteSpace="nowrap"
-              fontWeight="semibold"
-              color="gray.800"
-            >
-              {fileName}
-            </Heading>
+            {runnableScripts.length > 1 ? (
+              <Menu>
+                <MenuButton as={Text}>
+                  <HStack>
+                    <Text
+                      fontFamily="heading"
+                      fontSize="xl"
+                      fontWeight="semibold"
+                      color="gray.800"
+                    >
+                      {entryPoint.filename.replace(/\.ts$/, '')}
+                    </Text>
+                    <FiChevronDown />
+                  </HStack>
+                </MenuButton>
+                <MenuList>
+                  {runnableScripts
+                    .filter((s) => s !== entryPoint.filename)
+                    .sort()
+                    .map((s, i) => {
+                      return (
+                        <MenuItem
+                          key={`${s}-${i}`}
+                          onClick={() => router.push(`/${s}`)}
+                        >
+                          {s.replace(/\.ts$/, '')}
+                        </MenuItem>
+                      );
+                    })}
+                </MenuList>
+              </Menu>
+            ) : (
+              <Heading
+                as="h1"
+                size="md"
+                overflow="auto"
+                whiteSpace="nowrap"
+                fontWeight="semibold"
+                color="gray.800"
+              >
+                {entryPoint.filename.replace(/\.ts$/, '')}
+              </Heading>
+            )}
           </Box>
         </HStack>
         <HStack>
@@ -107,7 +146,7 @@ const Header: React.FC<AppInfo & { fileName?: string; editUrl?: string }> = ({
             <HiOutlineUpload />
             <Text>Share</Text>
           </Button>
-          {canUserEdit && editUrl && (
+          {canUserEdit && entryPoint.editUrl && (
             <Button
               colorScheme="purple"
               variant="ghost"
@@ -115,7 +154,7 @@ const Header: React.FC<AppInfo & { fileName?: string; editUrl?: string }> = ({
               gap={2}
               fontWeight="medium"
               onClick={() => {
-                window.location.href = editUrl;
+                window.location.href = entryPoint.editUrl;
               }}
             >
               <HiOutlinePencilAlt />

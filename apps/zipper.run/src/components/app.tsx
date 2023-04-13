@@ -5,6 +5,7 @@ import {
   AppInfo,
   ConnectorActionProps,
   ConnectorType,
+  EntryPointInfo,
   InputParams,
   UserAuthConnector,
 } from '@zipper/types';
@@ -60,7 +61,7 @@ export function AppPage({
   slackAuthUrl,
   githubAuthUrl,
   statusCode,
-  editUrl,
+  entryPoint,
   result: paramResult,
   runnableScripts,
 }: {
@@ -73,7 +74,7 @@ export function AppPage({
   slackAuthUrl?: string;
   githubAuthUrl?: string;
   statusCode?: number;
-  editUrl?: string;
+  entryPoint?: EntryPointInfo;
   result?: string;
   runnableScripts?: string[];
 }) {
@@ -211,7 +212,11 @@ export function AppPage({
         <title>{appTitle}</title>
       </Head>
       <VStack flex={1} alignItems="stretch" spacing={14}>
-        <Header {...app} fileName={filename} editUrl={editUrl} />
+        <Header
+          {...app}
+          entryPoint={entryPoint}
+          runnableScripts={runnableScripts}
+        />
         <VStack
           as="main"
           flex={1}
@@ -372,7 +377,7 @@ export const getServerSideProps: GetServerSideProps = async ({
     return { notFound: true };
   }
 
-  const { app, inputs, userAuthConnectors, editUrl, runnableScripts } =
+  const { app, inputs, userAuthConnectors, entryPoint, runnableScripts } =
     result.data;
 
   const version = versionFromUrl || 'latest';
@@ -387,7 +392,7 @@ export const getServerSideProps: GetServerSideProps = async ({
       version,
       defaultValues,
       userAuthConnectors,
-      editUrl,
+      entryPoint,
       runnableScripts,
       filename: filename || 'main.ts',
     },

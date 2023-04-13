@@ -30,7 +30,7 @@ export const getServerSideProps: GetServerSideProps = async ({
     return { notFound: true };
   }
 
-  const { appRun, app, inputs, userAuthConnectors, editUrl } = result.data;
+  const { appRun, app, inputs, userAuthConnectors, entryPoint } = result.data;
 
   const defaultValues = getInputValuesFromAppRun(inputs, appRun.inputs);
 
@@ -41,7 +41,7 @@ export const getServerSideProps: GetServerSideProps = async ({
       version: appRun.version,
       defaultValues,
       userAuthConnectors,
-      editUrl,
+      entryPoint,
       filename: appRun.path,
       result: appRun.result,
       hideRun: true,

@@ -170,11 +170,14 @@ export default async function handler(
         email: appFound.requiresAuthToRun ? userInfo.email : undefined,
         userId: appFound.requiresAuthToRun ? userInfo.clerkUserId : undefined,
       },
-      editUrl: `${
-        process.env.NODE_ENV === 'development' ? 'http' : 'https'
-      }://${process.env.NEXT_PUBLIC_HOST}${
-        process.env.NODE_ENV === 'development' ? ':3000' : ''
-      }/${resourceOwner?.slug}/${appFound.slug}/edit/${entryPoint.filename}`,
+      entryPoint: {
+        filename: entryPoint.filename,
+        editUrl: `${
+          process.env.NODE_ENV === 'development' ? 'http' : 'https'
+        }://${process.env.NEXT_PUBLIC_HOST}${
+          process.env.NODE_ENV === 'development' ? ':3000' : ''
+        }/${resourceOwner?.slug}/${appFound.slug}/edit/${entryPoint.filename}`,
+      },
     },
   };
 
