@@ -159,10 +159,6 @@ export function AppPage({
     );
   };
 
-  if (statusCode === 401) {
-    return <Unauthorized />;
-  }
-
   const connectorActions: Record<ConnectorType, ConnectorActionProps> = {
     github: {
       authUrl: githubAuthUrl || '#',
@@ -198,12 +194,16 @@ export function AppPage({
   const showRunOutput = (['edit', 'run'] as Screen[]).includes(screen);
 
   const canRunApp = useMemo(() => {
-    return userAuthConnectors.every((connector) => {
+    return (userAuthConnectors || []).every((connector) => {
       return (
         connector.appConnectorUserAuths && connector.appConnectorUserAuths[0]
       );
     });
   }, [userAuthConnectors]);
+
+  if (statusCode === 401) {
+    return <Unauthorized />;
+  }
 
   return (
     <>

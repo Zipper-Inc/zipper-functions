@@ -93,25 +93,29 @@ export default async function handler(
     entryPoint = appRun.app.scripts.find((s) => s.filename === 'main.ts');
   }
 
+  let result: any = appRun.result;
+
   if (appRun.userId) {
     // return 401 if there's no token or no user was found by getUserInfo()
     if (!token || !userInfo.clerkUserId) {
-      return res.status(401).send({
-        ok: false,
-        error: 'UNAUTHORIZED',
-      });
+      return res.status(401).send({ ok: false, error: 'UNAUTHORIZED' });
+    }
+
+    if (appRun.userId !== userInfo.clerkUserId) {
+      result =
+        "You're not authorized to view this run. Try re-running the app.";
     }
   }
 
   const { id, name, slug, description, updatedAt, scripts } = appRun.app;
 
-  const result: RunInfoResult = {
+  const runInfoResult: RunInfoResult = {
     ok: true,
     data: {
       appRun: {
         path: appRun.path,
         version: appRun.version || 'latest',
-        result: appRun.result || '',
+        result,
         inputs: appRun.inputs as Record<string, string>,
       },
       app: {
@@ -145,7 +149,7 @@ export default async function handler(
     },
   };
 
-  return res.status(200).send(result);
+  return res.status(200).send(runInfoResult);
 }
 
 /* There are two types of auth tokens that can be used to run an app:
