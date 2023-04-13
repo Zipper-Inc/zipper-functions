@@ -108,39 +108,7 @@ function OpenAIConnectorForm({ appId }: { appId: string }) {
                           <HStack w="full" pt="2" spacing="1">
                             <FormLabel m="0">Installed!</FormLabel>
                             <Spacer />
-                            <Popover trigger="hover">
-                              <PopoverTrigger>
-                                <FormLabel
-                                  cursor="context-menu"
-                                  textDecor="underline"
-                                  textDecorationStyle="dotted"
-                                  color={'gray.900'}
-                                >
-                                  CURRENT_API_KEY
-                                </FormLabel>
-                              </PopoverTrigger>
-                              <PopoverContent w="sm">
-                                <PopoverArrow />
-                                <PopoverHeader>
-                                  Installation details
-                                </PopoverHeader>
-                                <PopoverBody>
-                                  <VStack
-                                    align="start"
-                                    divider={<StackDivider />}
-                                    fontSize="sm"
-                                    py="2"
-                                  >
-                                    <HStack>
-                                      <Text>API_KEY:</Text>
-                                      <Box>
-                                        <Code>API_KEY</Code>
-                                      </Box>
-                                    </HStack>
-                                  </VStack>
-                                </PopoverBody>
-                              </PopoverContent>
-                            </Popover>
+
                             <Button
                               variant="unstyled"
                               color="red.600"
