@@ -363,7 +363,7 @@ async function originBoot({
     );
   }
 
-  const baseUrl = `file://${app.name}/v${version}`;
+  const baseUrl = `file://${app.slug}/v${version}`;
 
   const eszip = await build({ baseUrl, app, version });
 
