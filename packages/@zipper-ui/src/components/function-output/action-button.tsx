@@ -1,6 +1,5 @@
 import { Button, Flex, Spinner } from '@chakra-ui/react';
 import { useState } from 'react';
-import { Action } from './action-component';
 import { FunctionOutputProps } from './types';
 
 export function ActionButton({
@@ -9,18 +8,18 @@ export function ActionButton({
   setModalResult,
   setOverallResult,
   getRunUrl,
-}: Omit<FunctionOutputProps, 'result'> & { action: Action }) {
+}: Omit<FunctionOutputProps, 'result'> & { action: Zipper.Action }) {
   async function runScript() {
-    const res = await fetch(getRunUrl(action.script), {
+    const res = await fetch(getRunUrl(action.path), {
       method: 'POST',
       body: JSON.stringify(action.inputs || []),
       credentials: 'include',
     });
     const text = await res.text();
 
-    switch (action.show_as) {
+    switch (action.showAs) {
       case 'modal':
-        setModalResult({ heading: `${action.script}`, body: text });
+        setModalResult({ heading: `${action.path}`, body: text });
         break;
       case 'expanded':
         setExpandedResult(text);
@@ -49,7 +48,7 @@ export function ActionButton({
         mr={2}
       >
         {isLoading && <Spinner />}
-        {!isLoading && (action.text || `Run ${action.script}`)}
+        {!isLoading && (action.text || `Run ${action.path}`)}
       </Button>
     </Flex>
   );
