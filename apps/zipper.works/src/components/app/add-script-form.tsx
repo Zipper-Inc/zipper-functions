@@ -14,7 +14,7 @@ import { trpc } from '~/utils/trpc';
 import { AppConnector, Script } from '@prisma/client';
 import { connectors as defaultConnectors } from '~/connectors/connectors';
 import { useEditorContext } from '../context/editor-context';
-import slugify from '~/utils/slugify';
+import { slugifyAllowDot } from '~/utils/slugify';
 import { useScriptFilename } from '~/hooks/use-script-filename';
 import { HiCheck } from 'react-icons/hi';
 
@@ -42,7 +42,7 @@ export default function AddScriptForm({
 
   const scriptFilename = watch('name');
   const { isFilenameValid } = useScriptFilename(scriptFilename, appId);
-  const slugifiedScriptFilename = slugify(scriptFilename ?? '');
+  const slugifiedScriptFilename = slugifyAllowDot(scriptFilename ?? '');
 
   return (
     <VStack alignItems="stretch" spacing={0} gap={4} minW={0}>

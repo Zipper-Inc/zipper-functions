@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { prisma } from '~/server/prisma';
 import { getScriptHash } from '~/utils/hashing';
 import isCodeRunnable from '~/utils/is-code-runnable';
-import slugify from '~/utils/slugify';
+import { slugifyAllowDot } from '~/utils/slugify';
 import { createRouter } from '../createRouter';
 import { hasAppEditPermission } from '../utils/authz.utils';
 
@@ -46,7 +46,7 @@ export const scriptRouter = createRouter()
           app: {
             connect: { id: appId },
           },
-          filename: `${slugify(data.name)}.ts`,
+          filename: `${slugifyAllowDot(data.name)}.ts`,
         },
         select: defaultSelect,
       });
@@ -122,7 +122,9 @@ export const scriptRouter = createRouter()
         appId: script.appId,
       });
 
-      const filename = data.name ? `${slugify(data.name)}.ts` : undefined;
+      const filename = data.name
+        ? `${slugifyAllowDot(data.name)}.ts`
+        : undefined;
       const hash = filename
         ? getScriptHash({
             ...script,

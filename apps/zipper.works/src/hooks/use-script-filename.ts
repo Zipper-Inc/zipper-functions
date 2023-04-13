@@ -1,5 +1,5 @@
-import slugify from 'slugify';
 import { useDebounce } from 'use-debounce';
+import { slugifyAllowDot } from '~/utils/slugify';
 import { trpc } from '~/utils/trpc';
 
 export const MIN_SLUG_LENGTH = 5;
@@ -10,7 +10,10 @@ export const useScriptFilename = (filename: string, appId: string) => {
   const validateFilenameQuery = trpc.useQuery(
     [
       'script.validateFilename',
-      { appId, newFilename: slugify((debouncedFilename as string) || '') },
+      {
+        appId,
+        newFilename: slugifyAllowDot((debouncedFilename as string) || ''),
+      },
     ],
     { enabled: !!debouncedFilename },
   );
