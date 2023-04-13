@@ -1,4 +1,5 @@
 import { Prisma } from '@prisma/client';
+import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { prisma } from '~/server/prisma';
 import { createRouter } from '../createRouter';
@@ -13,6 +14,11 @@ const defaultSelect = Prisma.validator<Prisma.AppRunSelect>()({
   inputs: true,
   scheduleId: true,
   createdAt: true,
+  originalRequestUrl: true,
+  originalRequestMethod: true,
+  path: true,
+  userId: true,
+  version: true,
 });
 
 export const appRunRouter = createRouter()
@@ -23,14 +29,40 @@ export const appRunRouter = createRouter()
       success: z.boolean(),
       result: z.string(),
       deploymentId: z.string(),
-      inputs: z.string(),
+      inputs: z.record(z.any()),
       scheduleId: z.string().optional(),
+      originalRequestUrl: z.string(),
+      originalRequestMethod: z.string(),
+      path: z.string(),
+      userId: z.string(),
+      version: z.string(),
     }),
     async resolve({ input }) {
       return prisma.appRun.create({
         data: { ...input },
         select: defaultSelect,
       });
+    },
+  })
+  .query('byId', {
+    input: z.object({
+      appSlug: z.string(),
+      runId: z.string(),
+    }),
+    async resolve({ ctx, input }) {
+      const appRun = await prisma.appRun.findFirst({
+        where: {
+          id: { startsWith: input.runId },
+          app: { slug: input.appSlug },
+        },
+        select: defaultSelect,
+      });
+
+      if (appRun?.userId && appRun.userId !== ctx.userId) {
+        throw new TRPCError({ code: 'UNAUTHORIZED' });
+      }
+
+      return appRun;
     },
   })
   // read

@@ -1,12 +1,4 @@
-import {
-  Icon,
-  Flex,
-  VStack,
-  Text,
-  Center,
-  Button,
-  Box,
-} from '@chakra-ui/react';
+import { Flex, VStack, Text, Center, Button, Box } from '@chakra-ui/react';
 import { UserButton, SignOutButton, useUser } from '@clerk/nextjs';
 import { ZipperLogo, ZipperSymbol } from '@zipper/ui';
 import router from 'next/router';
