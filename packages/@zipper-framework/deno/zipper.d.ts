@@ -77,6 +77,42 @@ declare namespace Zipper {
   export type Handler<I = Inputs> = (inputs?: I) => Output | Promise<Output>;
 
   /**
+   * Actions
+   */
+  export interface Action<I = Inputs> {
+    /**
+     *
+     */
+    /**
+     * The type of action this is
+     */
+    actionType: 'button';
+    /**
+     * The visible text for the Action
+     */
+    text?: string;
+    /**
+     * The path to the handler for this action
+     */
+    path: string;
+    /**
+     * Determines how we should show the input
+     */
+    showAs: 'modal' | 'expanded' | 'replace_all';
+    /**
+     * The inputs to run the function with
+     */
+    inputs?: I;
+  }
+
+  export namespace Action {
+    /**
+     * Creates an action
+     */
+    export function create<I = Inputs>(action: Action<I>): Action<I>;
+  }
+
+  /**
    * Simple async key value store, one per app
    * @category Storage
    */
