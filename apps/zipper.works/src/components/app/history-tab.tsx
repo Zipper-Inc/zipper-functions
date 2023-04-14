@@ -17,6 +17,7 @@ import {
   Flex,
   Icon,
   Tooltip,
+  Spinner,
 } from '@chakra-ui/react';
 import { Avatar } from '../avatar';
 import { useRouter } from 'next/router';
@@ -81,13 +82,25 @@ const HistoryTab: React.FC<HistoryTabProps> = ({ appId }) => {
             }),
             time: (
               <HStack>
-                <Text>
+                <Link
+                  href={`${
+                    process.env.NODE_ENV === 'development' ? 'http' : 'https'
+                  }://${router.query['app-slug']}.${
+                    process.env.NEXT_PUBLIC_OUTPUT_SERVER_HOSTNAME
+                  }/run/${r.id.split('-')[0]}`}
+                >
                   {r.createdAt.toLocaleTimeString([], {
                     hour: '2-digit',
                     minute: '2-digit',
                   })}
-                </Text>
-                {r.scheduleId && <Icon as={TbClockPlay} />}
+                </Link>
+                {r.scheduleId && (
+                  <Tooltip label="Scheduled run">
+                    <span>
+                      <Icon as={TbClockPlay} />
+                    </span>
+                  </Tooltip>
+                )}
               </HStack>
             ),
             user: (
@@ -192,31 +205,43 @@ const HistoryTab: React.FC<HistoryTabProps> = ({ appId }) => {
             ))}
           </Thead>
           <Tbody {...getTableBodyProps()} color="gray.600" fontSize="sm">
-            {rows.map((row, i) => {
-              prepareRow(row);
-              return (
-                <Tr {...row.getRowProps()}>
-                  {row.cells.map((cell, j) => {
-                    return (
-                      <Td
-                        {...cell.getCellProps({
-                          style: { whiteSpace: 'nowrap' },
-                        })}
-                        isTruncated
-                        _notFirst={{ pl: 0 }}
-                      >
-                        {cell.column.Header === 'Date' &&
-                        cell.value === rows[i - 1]?.cells[j]?.value ? (
-                          <></>
-                        ) : (
-                          cell.render('Cell')
-                        )}
-                      </Td>
-                    );
-                  })}
-                </Tr>
-              );
-            })}
+            {appRuns.data && appRuns.data.length > 0 ? (
+              rows.map((row, i) => {
+                prepareRow(row);
+                return (
+                  <Tr {...row.getRowProps()}>
+                    {row.cells.map((cell, j) => {
+                      return (
+                        <Td
+                          {...cell.getCellProps({
+                            style: { whiteSpace: 'nowrap' },
+                          })}
+                          isTruncated
+                          _notFirst={{ pl: 0 }}
+                        >
+                          {cell.column.Header === 'Date' &&
+                          cell.value === rows[i - 1]?.cells[j]?.value ? (
+                            <></>
+                          ) : (
+                            cell.render('Cell')
+                          )}
+                        </Td>
+                      );
+                    })}
+                  </Tr>
+                );
+              })
+            ) : (
+              <Tr>
+                <Td colSpan={6}>
+                  {appRuns.isLoading ? (
+                    <Spinner color="purple" />
+                  ) : (
+                    "This app hasn't been run yet."
+                  )}
+                </Td>
+              </Tr>
+            )}
           </Tbody>
         </Table>
       </Flex>
