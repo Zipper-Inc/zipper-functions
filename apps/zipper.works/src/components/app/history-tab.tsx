@@ -216,6 +216,12 @@ const HistoryTab: React.FC<HistoryTabProps> = ({ appId }) => {
                           {...cell.getCellProps({
                             style: { whiteSpace: 'nowrap' },
                           })}
+                          // fontSize={cell.column.Header === 'Date' ? 'md' : 'sm'}
+                          fontWeight={
+                            cell.column.Header === 'Date'
+                              ? 'semibold'
+                              : 'normal'
+                          }
                           isTruncated
                           _notFirst={{ pl: 0 }}
                         >
