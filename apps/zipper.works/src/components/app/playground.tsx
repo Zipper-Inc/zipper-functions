@@ -25,6 +25,7 @@ import { PlaygroundAvatars } from './playground-avatars';
 import { useAppEditors } from '~/hooks/use-app-editors';
 import { HiOutlineUpload } from 'react-icons/hi';
 import { TabButton } from '@zipper/ui';
+import HistoryTab from './history-tab';
 
 const tabPanelStyles: ChakraProps = {
   flex: 1,
@@ -107,6 +108,8 @@ export function Playground({
               <TabButton title="Schedules" />
               {/* SECRETS */}
               <TabButton title="Secrets" />
+              {/* HISTORY */}
+              <TabButton title="History" />
               {/* SETTINGS */}
               <TabButton title="Settings" />
             </HStack>
@@ -162,6 +165,11 @@ export function Playground({
             {/* SECRETS */}
             <TabPanel {...tabPanelStyles}>
               <SecretsTab editable={app.canUserEdit} appId={id} />
+            </TabPanel>
+
+            {/* HISTORY */}
+            <TabPanel {...tabPanelStyles}>
+              <HistoryTab appId={id} />
             </TabPanel>
 
             {/* SETTINGS */}
