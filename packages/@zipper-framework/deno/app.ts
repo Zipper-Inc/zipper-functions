@@ -42,6 +42,9 @@ app.use(async ({ request, response }) => {
     userInfo,
     appInfo,
     originalRequest,
+    Action: {
+      create: (action) => action,
+    },
   };
 
   // Grab the handler

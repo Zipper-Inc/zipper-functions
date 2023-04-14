@@ -10,6 +10,8 @@ export const isHtml = (value: any) => {
   const doc = new DOMParser().parseFromString(value, 'text/html');
   return Array.from(doc.body.childNodes).some((node) => node.nodeType === 1);
 };
+export const isAction = (value: Zipper.Action) =>
+  value?.actionType && value?.showAs && value?.path;
 
 export function parseResult(result: any): { type: OutputType; data: any } {
   const data = isString(result) ? safeJSONParse(result) : result;
@@ -23,12 +25,12 @@ export function parseResult(result: any): { type: OutputType; data: any } {
 
   if (Array.isArray(data)) {
     if (data.every(isPrimitive)) type = OutputType.Array;
-    else if (data.every((item) => item?.action_type))
+    else if (data.every((item) => isAction(item)))
       type = OutputType.ActionArray;
     else type = OutputType.Collection;
   }
 
-  if (type === OutputType.Object && data?.action_type) type = OutputType.Action;
+  if (type === OutputType.Object && isAction(data)) type = OutputType.Action;
 
   return { type, data };
 }
