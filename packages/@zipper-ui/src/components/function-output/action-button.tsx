@@ -1,6 +1,7 @@
 import { Button, Flex, Spinner } from '@chakra-ui/react';
 import { useState } from 'react';
 import { FunctionOutputProps } from './types';
+import { normalizeAppPath } from '@zipper/utils';
 
 export function ActionButton({
   action,
@@ -10,6 +11,11 @@ export function ActionButton({
   getRunUrl,
 }: Omit<FunctionOutputProps, 'result'> & { action: Zipper.Action }) {
   async function runScript() {
+    console.log({
+      path: action.path,
+      runUrl: getRunUrl(action.path),
+    });
+
     const res = await fetch(getRunUrl(action.path), {
       method: 'POST',
       body: JSON.stringify(action.inputs || []),
@@ -42,13 +48,13 @@ export function ActionButton({
         isDisabled={isLoading}
         onClick={async () => {
           setIsLoading(true);
-          await runScript();
+          await runScript().catch(console.error);
           setIsLoading(false);
         }}
         mr={2}
       >
         {isLoading && <Spinner />}
-        {!isLoading && (action.text || `Run ${action.path}`)}
+        {!isLoading && (action.text || `Run ${normalizeAppPath(action.path)}`)}
       </Button>
     </Flex>
   );
