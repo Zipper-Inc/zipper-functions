@@ -69,7 +69,7 @@ const initializeWorkers = () => {
           );
 
           try {
-            const raw = await fetch(url, {
+            await fetch(url, {
               method: 'POST',
               headers: {
                 'x-zipper-schedule-id': schedule.id,
@@ -77,36 +77,9 @@ const initializeWorkers = () => {
               },
               body: JSON.stringify(inputsWithoutAnnotations),
             });
-
-            const res = (await raw.json()) as any;
-
-            await prisma.appRun.create({
-              data: {
-                app: { connect: { id: schedule.appId } },
-                success: true,
-                result: JSON.stringify(res, null, 2),
-                inputs: JSON.stringify(schedule.inputs, null, 2),
-                schedule: { connect: { id: schedule.id } },
-                deploymentId: `${
-                  schedule.appId
-                }@${schedule.app.updatedAt?.getTime()}`,
-              },
-            });
           } catch (error) {
             console.log(`[Job Queue] Error with job ID ${job.id}`);
             console.log(error);
-            await prisma.appRun.create({
-              data: {
-                app: { connect: { id: schedule.appId } },
-                success: false,
-                result: {},
-                inputs: JSON.stringify(schedule.inputs, null, 2),
-                schedule: { connect: { id: schedule.id } },
-                deploymentId: `${
-                  schedule.appId
-                }@${schedule.app.updatedAt?.getTime()}`,
-              },
-            });
           }
         }
       },

@@ -1,3 +1,4 @@
+import clerkClient from '@clerk/clerk-sdk-node';
 import { Prisma } from '@prisma/client';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
@@ -81,13 +82,23 @@ export const appRunRouter = createRouter()
        * @link https://trpc.io/docs/useInfiniteQuery
        */
 
-      return prisma.appRun.findMany({
+      const appRuns = await prisma.appRun.findMany({
         where: {
           appId: input.appId,
         },
         take: input.limit,
         orderBy: { createdAt: 'desc' },
         select: defaultSelect,
+      });
+
+      const userIds = appRuns.filter((r) => !!r.userId).map((r) => r.userId);
+
+      const clerkUsers = await clerkClient.users.getUserList({
+        userId: userIds as string[],
+      });
+
+      return appRuns.map((r) => {
+        return { ...r, user: clerkUsers.find((u) => u.id === r.userId) };
       });
     },
   });

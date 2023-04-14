@@ -133,8 +133,8 @@ const SchedulesTab: React.FC<SchedulesTabProps> = ({ appId }) => {
                 <Th {...tableHeaderStyles}>Schedule</Th>
                 <Th {...tableHeaderStyles}>Cron Expression</Th>
                 <Th {...tableHeaderStyles}>Script</Th>
-                <Th {...tableHeaderStyles}>Last Run</Th>
                 <Th {...tableHeaderStyles}>Run As</Th>
+                <Th {...tableHeaderStyles}>Last Run</Th>
                 <Th {...tableHeaderStyles} w={0} pr={0}></Th>
               </Tr>
             </Thead>
@@ -158,7 +158,7 @@ const SchedulesTab: React.FC<SchedulesTabProps> = ({ appId }) => {
                         <Avatar userId={s.userId || undefined} size="xs" />
                       </Td>
                       <Td {...tableDataStyles}>
-                        {s.appRuns.length > 0 && (
+                        {s.appRuns.length > 0 ? (
                           <HStack>
                             <Text color="gray.600" fontSize="xs">
                               {lastRunAt}
@@ -171,6 +171,10 @@ const SchedulesTab: React.FC<SchedulesTabProps> = ({ appId }) => {
                               {lastRunSuccessful ? 'SUCCESSFUL' : 'FAILED'}
                             </Badge>
                           </HStack>
+                        ) : (
+                          <Text color="gray.600" fontSize="xs">
+                            Not run yet
+                          </Text>
                         )}
                       </Td>
                       <Td {...tableDataStyles} py={0} pr={0}>
