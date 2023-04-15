@@ -97,34 +97,32 @@ export const slackConnectorRouter = createRouter()
         },
       });
 
-      const secret = await prisma.secret.delete({
+      const tokens = await prisma.secret.findMany({
         where: {
-          appId_key: {
-            appId: input.appId,
-            key: 'SLACK_BOT_TOKEN',
+          appId: input.appId,
+          key: { in: ['SLACK_BOT_TOKEN', 'SLACK_USER_TOKEN'] },
+        },
+      });
+
+      await prisma.secret.deleteMany({
+        where: {
+          appId: input.appId,
+          key: {
+            in: ['SLACK_BOT_TOKEN', 'SLACK_USER_TOKEN', 'SLACK_CLIENT_SECRET'],
           },
         },
       });
 
-      await prisma.secret
-        .delete({
-          where: {
-            appId_key: {
-              appId: input.appId,
-              key: 'SLACK_CLIENT_SECRET',
-            },
-          },
-        })
-        .catch(() => null); // Ignore if not found, could be the case if there is not client secret
-
-      await fetch('https://slack.com/api/auth.revoke', {
-        method: 'POST',
-        body: new URLSearchParams({
-          token: decryptFromBase64(
-            secret.encryptedValue,
-            process.env.ENCRYPTION_KEY!,
-          ),
-        }),
+      tokens.forEach((secret) => {
+        fetch('https://slack.com/api/auth.revoke', {
+          method: 'POST',
+          body: new URLSearchParams({
+            token: decryptFromBase64(
+              secret.encryptedValue,
+              process.env.ENCRYPTION_KEY!,
+            ),
+          }),
+        });
       });
 
       return true;

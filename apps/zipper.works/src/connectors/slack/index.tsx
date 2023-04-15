@@ -276,6 +276,18 @@ function SlackConnectorForm({ appId }: { appId: string }) {
                 onChange={(e) => setClientSecret(e.target.value)}
               />
             </FormControl>
+
+            <FormControl pt="2">
+              <FormLabel>Redirect URL</FormLabel>
+              <Text>
+                Set your Slack app's redirect URL to:{' '}
+                {process.env.NODE_ENV === 'development' ? (
+                  <Code>https://your.ngrok.url/connectors/slack/auth</Code>
+                ) : (
+                  <Code>https://zipper.dev/connectors/slack/auth</Code>
+                )}
+              </Text>
+            </FormControl>
           </Collapse>
         </FormControl>
       </HStack>
