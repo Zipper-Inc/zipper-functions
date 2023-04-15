@@ -244,7 +244,9 @@ export const slackConnectorRouter = createRouter()
             token: json.authed_user.access_token,
           }),
         });
+
         const userInfoJson = await userInfoRes.json();
+
         if (userInfoJson.ok) {
           appConnectorUserAuth = await prisma.appConnectorUserAuth.upsert({
             where: {
@@ -287,27 +289,53 @@ export const slackConnectorRouter = createRouter()
         },
       });
 
-      const encryptedValue = encryptToBase64(
-        json.access_token,
-        process.env.ENCRYPTION_KEY,
-      );
+      if (json.access_token) {
+        const encryptedValue = encryptToBase64(
+          json.access_token,
+          process.env.ENCRYPTION_KEY,
+        );
 
-      await prisma.secret.upsert({
-        where: {
-          appId_key: {
-            appId: appId!,
-            key: 'SLACK_BOT_TOKEN',
+        await prisma.secret.upsert({
+          where: {
+            appId_key: {
+              appId: appId!,
+              key: 'SLACK_BOT_TOKEN',
+            },
           },
-        },
-        create: {
-          appId,
-          key: 'SLACK_BOT_TOKEN',
-          encryptedValue,
-        },
-        update: {
-          encryptedValue,
-        },
-      });
+          create: {
+            appId,
+            key: 'SLACK_BOT_TOKEN',
+            encryptedValue,
+          },
+          update: {
+            encryptedValue,
+          },
+        });
+      }
+
+      if (json.authed_user.access_token) {
+        const encryptedValue = encryptToBase64(
+          json.authed_user.access_token,
+          process.env.ENCRYPTION_KEY,
+        );
+
+        await prisma.secret.upsert({
+          where: {
+            appId_key: {
+              appId: appId!,
+              key: 'SLACK_USER_TOKEN',
+            },
+          },
+          create: {
+            appId,
+            key: 'SLACK_USER_TOKEN',
+            encryptedValue,
+          },
+          update: {
+            encryptedValue,
+          },
+        });
+      }
 
       return {
         appId,
