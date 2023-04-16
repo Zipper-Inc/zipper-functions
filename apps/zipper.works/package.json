@@ -39,7 +39,7 @@
     "@chakra-ui/react": "^2.4.9",
     "@clerk/clerk-sdk-node": "^4.5.14",
     "@clerk/nextjs": "^4.11.0",
-    "@deno/eszip": "^0.29.0",
+    "@deno/eszip": "^0.40.0",
     "@emotion/react": "^11.10.5",
     "@emotion/styled": "^11.10.5",
     "@fontsource/inter": "^4.5.13",
