@@ -6,12 +6,12 @@ import {
   VStack,
   Heading,
   Button,
-  Flex,
   Icon,
   Input,
   HStack,
   Link,
   Tooltip,
+  Spacer,
 } from '@chakra-ui/react';
 import React, { useEffect, useMemo, useState } from 'react';
 import DefaultGrid from '~/components/default-grid';
@@ -26,6 +26,7 @@ import {
   createColumnHelper,
   getFilteredRowModel,
   getSortedRowModel,
+  ColumnFilter,
 } from '@tanstack/react-table';
 import { LockIcon, UnlockIcon } from '@chakra-ui/icons';
 import { HiBuildingOffice, HiUser } from 'react-icons/hi2';
@@ -98,25 +99,23 @@ const columns = [
     header: 'Last Updated',
     enableGlobalFilter: false,
   }),
-  columnHelper.accessor('createdByInfo.resourceOwnerName', {
+  columnHelper.accessor((row) => row.createdByInfo.resourceOwnerName, {
     cell: (info) => (
       <HStack>
-        {info.row.original.createdByInfo.createdByAuthedUser ||
-        info.row.original.createdByInfo.resourceOwnerType ===
-          ResourceOwnerType.User ? (
+        {info.row.original.createdByInfo.resourceOwnerType ===
+        ResourceOwnerType.User ? (
           <HiUser />
         ) : (
           <HiBuildingOffice />
         )}
-        <Text>
-          {info.row.original.createdByInfo.createdByAuthedUser
-            ? 'You'
-            : info.getValue()}
-        </Text>
+        <Text>{info.getValue()}</Text>
       </HStack>
     ),
-    header: 'Owner',
+    id: 'owner',
+    header: () => <Text mb={0}>Owner</Text>,
     enableGlobalFilter: false,
+    enableColumnFilter: true,
+    filterFn: 'weakEquals',
   }),
   columnHelper.accessor('description', {
     cell: (info) => info.getValue(),
@@ -128,14 +127,34 @@ const emptyApps: App[] = [];
 
 export function Dashboard() {
   const { organization } = useOrganization();
-  const appQuery = trpc.useQuery(['app.byAuthedUser']);
   const [appSearchTerm, setAppSearchTerm] = useState('');
+  const [ownerSearchTerm, setOwnerSearchTerm] = useState('');
+  const appQuery = trpc.useQuery([
+    'app.byAuthedUser',
+    { filterByOrganization: !organization },
+  ]);
   const [isCreateAppModalOpen, setCreateAppModalOpen] = useState(false);
   const [columnVisibility] = useState<Partial<Record<DeepKeys<App>, boolean>>>({
     description: false,
   });
+
+  const [columnFilters, setColumnFilters] = useState<ColumnFilter[]>([]);
+
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const { getAppOwner } = useAppOwner();
+
+  useEffect(() => {
+    if (ownerSearchTerm.length > 0) {
+      setColumnFilters([
+        {
+          id: 'owner',
+          value: ownerSearchTerm.replace(/'|"/g, ''),
+        },
+      ]);
+    } else {
+      setColumnFilters([]);
+    }
+  }, [ownerSearchTerm]);
 
   const apps = useMemo(
     () =>
@@ -145,17 +164,29 @@ export function Dashboard() {
 
   useEffect(() => {
     appQuery.refetch();
+    let search = appSearchTerm.replace(`owner:${ownerSearchTerm}`, '');
+    if (organization) {
+      search = `${search} owner:"${organization?.name || ''}"`;
+    }
+    setAppSearchTerm(search.trim());
+
+    setOwnerSearchTerm(organization ? `"${organization?.name}"` : '');
   }, [organization]);
+
+  console.log(appSearchTerm, ownerSearchTerm);
 
   return (
     <>
       <DefaultGrid flex={1} w="full">
         <GridItem colSpan={12}>
           <VStack align="start" w="full">
-            <Flex w="full" align="center" h="20" px="4">
-              <Heading size="md" flexGrow={1}>
-                Your Apps
-              </Heading>
+            <HStack w="full" align="center" h="20" px="4">
+              <HStack>
+                <Heading size="md" flexGrow={1}>
+                  Your Apps
+                </Heading>
+              </HStack>
+              <Spacer flexGrow={1} />
               <Button
                 type="button"
                 paddingX={4}
@@ -170,14 +201,28 @@ export function Dashboard() {
                 <Icon as={FiPlus} mr="2"></Icon>
                 Create new app
               </Button>
-            </Flex>
+            </HStack>
             {apps && apps.length > 0 ? (
               <>
-                <Input
-                  placeholder="Search app (name, slug or description)"
-                  value={appSearchTerm}
-                  onChange={(e) => setAppSearchTerm(e.target.value)}
-                />
+                <HStack w="full">
+                  <Input
+                    w="full"
+                    placeholder="Search app (name, slug or description)"
+                    value={appSearchTerm}
+                    onChange={(e) => {
+                      const searchString = e.target.value;
+                      const ownerMatch = searchString.match(
+                        /owner:('.*?'|".*?"|\S+)/gi,
+                      );
+                      if (ownerMatch && ownerMatch[0]) {
+                        setOwnerSearchTerm(ownerMatch[0].split(':')[1]);
+                      } else {
+                        setOwnerSearchTerm('');
+                      }
+                      setAppSearchTerm(searchString);
+                    }}
+                  />
+                </HStack>
                 <TableContainer w="full">
                   <DataTable
                     columns={columns}
@@ -190,7 +235,13 @@ export function Dashboard() {
                     getSortedRowModel={getSortedRowModel()}
                     getFilteredRowModel={getFilteredRowModel()}
                     state={{
-                      globalFilter: appSearchTerm,
+                      globalFilter: (ownerSearchTerm.length > 0
+                        ? appSearchTerm.replace(`owner:${ownerSearchTerm}`, '')
+                        : appSearchTerm
+                      )
+                        .trimStart()
+                        .trimEnd(),
+                      columnFilters,
                       columnVisibility,
                       sorting,
                     }}
