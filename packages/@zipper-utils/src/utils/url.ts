@@ -13,3 +13,11 @@ export function getSearchParams(url?: string) {
     return new URLSearchParams();
   }
 }
+
+export function getHost(url?: string) {
+  try {
+    return createUrlFromRelativeUrl(url).host;
+  } catch (e) {
+    return null;
+  }
+}
