@@ -5,16 +5,16 @@ const DEFAULT_OPTIONS = {
   remove: /[*+~.()'"!:@]/g,
 };
 
-const slugify = (
-  string: string,
-  options?: {
-    replacement?: string;
-    remove?: RegExp;
-    lower?: boolean;
-    strict?: boolean;
-    locale?: string;
-    trim?: boolean;
-  },
-) => ogSlugify(string, { ...DEFAULT_OPTIONS, ...options });
+type Options = Exclude<Parameters<typeof ogSlugify>[1], string>;
+
+const slugify = (string: string, options: Options = {}) =>
+  ogSlugify(string, { ...DEFAULT_OPTIONS, ...options });
 
 export default slugify;
+
+export const slugifyAllowDot: typeof slugify = (string, options) =>
+  ogSlugify(string, {
+    ...DEFAULT_OPTIONS,
+    ...options,
+    remove: /[*+~()'"!:@]/g,
+  });
