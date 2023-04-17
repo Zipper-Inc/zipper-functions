@@ -354,4 +354,115 @@ export function AppPage({
 }
 
 export const getServerSideProps: GetServerSideProps = async ({
+  req,
+  query,
+}) => {
+  const { host } = req.headers;
+
+  // validate subdomain
+  const subdomain = getValidSubdomain(host);
+  if (__DEBUG__) console.log('getValidSubdomain', { subdomain, host });
+  if (!subdomain) return { notFound: true };
+
+  const { version: versionFromUrl, filename } = getFilenameAndVersionFromPath(
+    ((query.versionAndFilename as string[]) || []).join('/'),
+    [],
+  );
+  if (__DEBUG__) console.log({ versionFromUrl, filename });
+
+  const auth = getAuth(req);
+
+  // grab the app if it exists
+  const result = await getAppInfo({
+    subdomain,
+    tempUserId: req.cookies['__zipper_temp_user_id'],
+    filename,
+    token: await auth.getToken({ template: 'incl_orgs' }),
+  });
+
+  if (__DEBUG__) console.log('getAppInfo', { result });
+  if (!result.ok) {
+    if (result.error === 'UNAUTHORIZED') return { props: { statusCode: 401 } };
+    return { notFound: true };
+  }
+
+  const { app, inputs, userAuthConnectors, editUrl, runnableScripts } =
+    result.data;
+
+  const version = versionFromUrl || 'latest';
+
+  const defaultValues = getInputValuesFromUrl(inputs, req.url);
+  if (__DEBUG__) console.log({ defaultValues });
+
+  const propsToReturn = {
+    props: {
+      app,
+      inputs,
+      version,
+      defaultValues,
+      userAuthConnectors,
+      editUrl,
+      runnableScripts,
+      filename: filename || 'main.ts',
+    },
+  };
+
+  const connectorsMissingAuth = userAuthConnectors
+    .filter((c) => c.appConnectorUserAuths.length === 0)
+    .map((c) => c.type);
+
+  let slackAuthUrl: string | null = null;
+  let githubAuthUrl: string | null = null;
+
+  if (connectorsMissingAuth.includes('slack')) {
+    const slackConnector = userAuthConnectors.find((c) => c.type === 'slack');
+    if (slackConnector) {
+      const state = encryptToHex(
+        `${app.id}::${
+          process.env.NODE_ENV === 'development' ? 'http://' : 'https://'
+        }${req.headers.host}::${
+          auth.userId || req.cookies['__zipper_temp_user_id']
+        }`,
+        process.env.ENCRYPTION_KEY || '',
+      );
+
+      const url = new URL('https://slack.com/oauth/v2/authorize');
+      url.searchParams.set(
+        'client_id',
+        slackConnector.clientId || process.env.NEXT_PUBLIC_SLACK_CLIENT_ID!,
+      );
+      url.searchParams.set('scope', slackConnector.workspaceScopes.join(','));
+      url.searchParams.set('user_scope', slackConnector.userScopes.join(','));
+      url.searchParams.set('state', state);
+
+      slackAuthUrl = url.href;
+    }
+  }
+
+  if (connectorsMissingAuth.includes('github')) {
+    const githubConnector = userAuthConnectors.find((c) => c.type === 'github');
+    if (githubConnector) {
+      const state = encryptToHex(
+        `${app.id}::${
+          process.env.NODE_ENV === 'development' ? 'http://' : 'https://'
+        }${req.headers.host}::${
+          auth.userId || req.cookies['__zipper_temp_user_id']
+        }`,
+        process.env.ENCRYPTION_KEY || '',
+      );
+
+      const url = new URL('https://github.com/login/oauth/authorize');
+      url.searchParams.set('client_id', process.env.GITHUB_CLIENT_ID!);
+      url.searchParams.set('scope', githubConnector.userScopes.join(','));
+      url.searchParams.set('state', state);
+
+      githubAuthUrl = url.href;
+    }
+  }
+
+  return {
+    props: { ...propsToReturn.props, slackAuthUrl, githubAuthUrl },
+  };
+};
+
 export default withDefaultTheme(AppPage);
