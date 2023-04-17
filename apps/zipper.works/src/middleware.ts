@@ -14,5 +14,6 @@ export default withClerkMiddleware((req: NextRequest) => {
 
 // Stop Middleware running on static files
 export const config = {
-  matcher: '/(.*?trpc.*?|(?!static|.*\\..*|_next|favicon.ico|.*?api/ts.*?).*)',
+  matcher:
+    '/(.*?trpc.*?|(?!static|.*\\..*|_next|favicon.ico|apple-touch-icon.png|.*?api/ts.*?).*)',
 };

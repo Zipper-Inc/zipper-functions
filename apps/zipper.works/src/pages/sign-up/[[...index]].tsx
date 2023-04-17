@@ -2,7 +2,6 @@ import { Center, VStack } from '@chakra-ui/react';
 import { SignUp } from '@clerk/nextjs';
 import { ZipperLogo } from '@zipper/ui';
 import { useRouter } from 'next/router';
-import { ReactNode } from 'react';
 
 const SignUpPage = () => {
   const router = useRouter();
@@ -16,7 +15,7 @@ const SignUpPage = () => {
           path="/sign-up"
           routing="path"
           signInUrl="/sign-in"
-          redirectUrl={`/auth/success?redirect_url=${redirectUrl || '/'}`}
+          // redirectUrl={`/auth/success?redirect_url=${redirectUrl || '/'}`}
         />
       </VStack>
     </Center>
