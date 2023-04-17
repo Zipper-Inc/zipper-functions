@@ -24,8 +24,10 @@ export const getAuthedSlackUser = (
   return { userId: metadata?.user_id || '', username: metadata?.user || '' };
 };
 
+export type AuthedConnectorType = Exclude<ConnectorType, 'openai'>;
+
 export const authedUserGetters: Record<
-  ConnectorType,
+  AuthedConnectorType,
   (metadata: any) => AuthedUser
 > = {
   github: getAuthedGithubUser,

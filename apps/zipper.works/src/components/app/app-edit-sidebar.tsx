@@ -129,6 +129,24 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
     },
   );
 
+  const deleteOpenAISecret = trpc.useMutation('secret.delete', {
+    onSuccess: () => {
+      context.invalidateQueries([
+        'app.byResourceOwnerAndAppSlugs',
+        {
+          appSlug: router.query['app-slug'] as string,
+          resourceOwnerSlug: router.query['resource-owner'] as string,
+        },
+      ]);
+      toast({
+        title: 'OpenAI user auth revoked.',
+        status: 'success',
+        duration,
+        isClosable: true,
+      });
+    },
+  });
+
   // state to hold whether user needs to authenticate with slack
   const [slackAuthRequired, setSlackAuthRequired] = useState(false);
   // state to hold whether user needs to authenticate with github
@@ -386,6 +404,15 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
                       onDelete: () => {
                         deleteConnectorUserAuth.mutateAsync({
                           appId: appInfo.id,
+                        });
+                      },
+                    },
+                    openai: {
+                      authUrl: '#',
+                      onDelete: () => {
+                        deleteOpenAISecret.mutateAsync({
+                          appId: appInfo.id,
+                          key: 'OPENAI_API_KEY',
                         });
                       },
                     },
