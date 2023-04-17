@@ -1,12 +1,20 @@
-import { App, AppEditor, AppRun, Script } from '@prisma/client';
+import {
+  App,
+  AppConnector,
+  AppConnectorUserAuth,
+  AppEditor,
+  AppRun,
+  Script,
+} from '@prisma/client';
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '~/server/prisma';
-import { RunInfoResult } from '@zipper/types';
+import { RunInfoResult, UserAuthConnector } from '@zipper/types';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import clerkClient from '@clerk/clerk-sdk-node';
 import { compare } from 'bcryptjs';
 import { canUserEdit } from '~/server/routers/app.router';
 import { parseInputForTypes } from '~/utils/parse-code';
+import { requiredUserAuthConnectorFilter } from '~/utils/user-auth-connector-filter';
 
 /**
  * @todo
@@ -38,7 +46,6 @@ export default async function handler(
     email?: string;
     organizations: Record<string, string>[];
   } = {
-    email: undefined,
     organizations: [],
   };
 
@@ -48,6 +55,9 @@ export default async function handler(
           | (App & {
               editors: AppEditor[];
               scripts: Script[];
+              connectors: (AppConnector & {
+                appConnectorUserAuths: AppConnectorUserAuth[];
+              })[];
             })
           | null;
       })
@@ -64,7 +74,17 @@ export default async function handler(
         app: { slug: slugFromUrl },
       },
       include: {
-        app: { include: { editors: true, scripts: true } },
+        app: {
+          include: {
+            editors: true,
+            scripts: true,
+            connectors: {
+              include: {
+                appConnectorUserAuths: true,
+              },
+            },
+          },
+        },
       },
     });
   } catch (e: any) {
@@ -133,7 +153,9 @@ export default async function handler(
       runnableScripts: scripts
         .filter((s) => s.isRunnable)
         .map((s) => s.filename),
-      userAuthConnectors: [],
+      userAuthConnectors: appRun.app.connectors.filter(
+        requiredUserAuthConnectorFilter,
+      ) as UserAuthConnector[],
       userInfo: {
         email: undefined,
         userId: undefined,

@@ -37,15 +37,14 @@ import { useRouter } from 'next/router';
 import { encryptToHex, getInputsFromFormData } from '@zipper/utils';
 import { deleteCookie } from 'cookies-next';
 import { HiOutlineChevronUp, HiOutlineChevronDown } from 'react-icons/hi';
-
 import { getAuth } from '@clerk/nextjs/server';
 import { useUser } from '@clerk/nextjs';
 import Unauthorized from './unauthorized';
 import removeAppConnectorUserAuth from '~/utils/remove-app-connector-user-auth';
 import Header from './header';
-import AuthUserConnectors from './user-connectors';
-import UserInputs from './user-inputs';
 import InputSummary from './input-summary';
+import { getShortRunId } from '~/utils/run-id';
+import ConnectorsAuthInputsSection from './connectors-auth-inputs-section';
 
 const { __DEBUG__ } = process.env;
 
@@ -88,6 +87,8 @@ export function AppPage({
   const [isExpandedResultOpen, setIsExpandedResultOpen] = useState(true);
   const { user } = useUser();
   const [screen, setScreen] = useState<Screen>(paramResult ? 'run' : 'initial');
+  const [latestRunId, setLatestRunId] = useState<string>();
+  const [expandInputsSection, setExpandInputsSection] = useState(true);
 
   // We have to do this so that the results aren't SSRed
   // (if they are DOMParser in FunctionOutput will be undefined)
@@ -114,7 +115,9 @@ export function AppPage({
       const result = await res.text();
       const runId = res.headers.get('x-zipper-run-id');
       if (runId) {
-        router.push(`/run/${runId.split('-')[0]}`, undefined, {
+        const shortRunId = getShortRunId(runId);
+        setLatestRunId(shortRunId);
+        router.push(`/run/${shortRunId}`, undefined, {
           shallow: true,
         });
       }
@@ -218,6 +221,7 @@ export function AppPage({
           {...app}
           entryPoint={entryPoint}
           runnableScripts={runnableScripts}
+          runId={latestRunId}
         />
         <VStack
           as="main"
@@ -228,22 +232,23 @@ export function AppPage({
           px={10}
         >
           {showInput && (
-            <VStack maxW="container.sm" minW={500} align="stretch" spacing={6}>
-              {userAuthConnectors.length > 0 && (
-                <AuthUserConnectors
-                  appTitle={appTitle}
-                  actions={connectorActions}
-                  userAuthConnectors={userAuthConnectors}
-                />
-              )}
-              <UserInputs
-                inputs={inputs}
-                formContext={formContext}
-                canRunApp={canRunApp}
-                runApp={runApp}
-                hasResult={Boolean(result)}
-              />
-            </VStack>
+            <ConnectorsAuthInputsSection
+              isCollapsible={screen === 'edit'}
+              expandByDefault={expandInputsSection}
+              toggleIsExpanded={setExpandInputsSection}
+              userAuthProps={{
+                actions: connectorActions,
+                appTitle,
+                userAuthConnectors,
+              }}
+              userInputsProps={{
+                canRunApp,
+                formContext,
+                hasResult: Boolean(result),
+                inputs,
+                runApp,
+              }}
+            />
           )}
           {showRunOutput && (
             <VStack w="full" align="stretch" spacing={6}>

@@ -18,7 +18,7 @@ import { ZipperSymbol } from '@zipper/ui';
 import { HiOutlineUpload, HiOutlinePencilAlt } from 'react-icons/hi';
 import { AppInfo, EntryPointInfo } from '@zipper/types';
 import { UserButton, useUser } from '@clerk/nextjs';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { FiChevronDown, FiChevronUp } from 'react-icons/fi';
 
@@ -27,14 +27,33 @@ const duration = 1500;
 const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
 const zipperWorksUrl = `${protocol}://${process.env.NEXT_PUBLIC_ZIPPER_HOST}`;
 
-const Header: React.FC<
-  AppInfo & { entryPoint?: EntryPointInfo; runnableScripts?: string[] }
-> = ({ canUserEdit, name, slug, entryPoint, runnableScripts = [] }) => {
+export type HeaderProps = AppInfo & {
+  entryPoint?: EntryPointInfo;
+  runnableScripts?: string[];
+  runId?: string;
+};
+
+const Header: React.FC<HeaderProps> = ({
+  canUserEdit,
+  name,
+  slug,
+  entryPoint,
+  runnableScripts = [],
+  runId,
+}) => {
   const router = useRouter();
   const toast = useToast();
-
   const { user } = useUser();
-  const { onCopy } = useClipboard(`${protocol}://${getAppLink(slug)}`);
+  const { onCopy, setValue } = useClipboard('');
+
+  useEffect(() => {
+    const baseUrl = `${protocol}://${getAppLink(slug)}`;
+    if (runId) {
+      setValue(`${baseUrl}/run/${runId}`);
+    } else {
+      setValue(baseUrl);
+    }
+  }, [runId]);
 
   const copyLink = async () => {
     onCopy();
