@@ -1274,10 +1274,10 @@
   dependencies:
     "@jridgewell/trace-mapping" "0.3.9"
 
-"@deno/eszip@^0.29.0":
-  version "0.29.0"
-  resolved "https://registry.yarnpkg.com/@deno/eszip/-/eszip-0.29.0.tgz#807028aede6a65263a2ef8dbf4b2114096691cf5"
-  integrity sha512-wY4Sjegcw+mdKw8x5jOg/IQKfaPKgESx5VwiklrlXNqi1HFbSE53d6+ShYzVjw2f1y1Mf6w1YQrtso/j7DtydQ==
+"@deno/eszip@^0.40.0":
+  version "0.40.0"
+  resolved "https://registry.yarnpkg.com/@deno/eszip/-/eszip-0.40.0.tgz#96ffa56856f410138f4d0615ae6f58ee21323bed"
+  integrity sha512-uHiOd5KUwJjXFzwrc8914q1diVWg0wMHEVVYOarkNqkcbOKoKsy31bJ60eQiA2OiFOUVsinfGoAWWrQoAkqLHQ==
   dependencies:
     "@deno/shim-deno" "~0.7.0"
     undici "^5.5.1"
