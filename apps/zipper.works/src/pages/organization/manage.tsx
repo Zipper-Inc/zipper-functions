@@ -47,18 +47,20 @@ import { OrganizationMembershipRole } from '@clerk/clerk-sdk-node';
 import { MembershipRole } from '@clerk/types';
 import { trpc } from '~/utils/trpc';
 import { useRouter } from 'next/router';
+import { NextPageWithLayout } from '../_app';
+import Header from '~/components/header';
 
 // View and manage active organization members, along with any
 // pending invitations.
 // Invite new members.
-export default function Organization() {
+export const OrganizationManagePage: NextPageWithLayout = () => {
   const [menuHover, setMenuHover] = useState<
     'members' | 'settings' | undefined
   >();
   const [currentPage, setCurrentPage] = useState<'members' | 'settings'>(
     'members',
   );
-  const { organization, isLoaded } = useOrganization();
+  const { organization, isLoaded, membership } = useOrganization();
   const router = useRouter();
 
   if (isLoaded && !organization) {
@@ -150,12 +152,14 @@ export default function Organization() {
                         View and manage organization members
                       </Heading>
                     </Box>
-                    <Button
-                      colorScheme="purple"
-                      onClick={() => setShowInviteForm(true)}
-                    >
-                      <Icon as={HiUserAdd} mr={2} /> Invite
-                    </Button>
+                    {membership?.role === 'admin' && (
+                      <Button
+                        colorScheme="purple"
+                        onClick={() => setShowInviteForm(true)}
+                      >
+                        <Icon as={HiUserAdd} mr={2} /> Invite
+                      </Button>
+                    )}
                   </HStack>
                   <TabList>
                     <Tab>Active</Tab>
@@ -178,7 +182,7 @@ export default function Organization() {
       </DefaultGrid>
     </Tabs>
   );
-}
+};
 
 function Settings() {
   const [disabled, setDisabled] = useState(false);
@@ -279,7 +283,7 @@ function MemberList() {
                           {`${
                             m.publicMetadata.username ||
                             m.publicUserData.identifier
-                          }}`}
+                          }`}
                         </>
                       )}
                     </Text>
@@ -300,7 +304,7 @@ function MemberList() {
               <Td>
                 <Select
                   fontSize="sm"
-                  isDisabled={isCurrentUserAdmin && m.id === membership?.id}
+                  isDisabled={!isCurrentUserAdmin || m.id === membership?.id}
                   onChange={async (e) => {
                     await m.update({
                       role: e.target.value as MembershipRole,
@@ -499,13 +503,22 @@ function InviteMember({
 }) {
   const { organization } = useOrganization();
   const [emailAddress, setEmailAddress] = useState('');
-  const [role, setRole] = useState<'basic_member' | 'admin'>('basic_member');
+  const [role, setRole] = useState<'admin' | 'basic_member'>('basic_member');
   const [disabled, setDisabled] = useState(false);
+  const inviteMember = trpc.useMutation('user.sendOrganizationInvitation');
 
   const onSubmit = async (e: any) => {
     e.preventDefault();
     setDisabled(true);
-    await organization?.inviteMember({ emailAddress, role });
+
+    // await organization?.inviteMember({ emailAddress, role });
+    if (organization) {
+      await inviteMember.mutateAsync({
+        email: emailAddress,
+        role,
+        organizationId: organization.id,
+      });
+    }
     setShowInviteForm(false);
     setEmailAddress('');
     setRole('basic_member');
@@ -544,13 +557,15 @@ function InviteMember({
               onChange={(e) => setEmailAddress(e.target.value)}
             />
           </FormControl>
-          <FormControl w="50">
+          <FormControl w="xs">
             <FormLabel fontSize="sm">Role</FormLabel>
-            <Select>
-              <option defaultChecked onSelect={() => setRole('admin')}>
-                Admin
-              </option>
-              <option onSelect={() => setRole('basic_member')}>Member</option>
+            <Select
+              onChange={(e) => {
+                setRole(e.target.value === 'admin' ? 'admin' : 'basic_member');
+              }}
+            >
+              <option value="basic_member">Member</option>
+              <option value="admin">Admin</option>
             </Select>
           </FormControl>
         </HStack>
@@ -571,3 +586,6 @@ function InviteMember({
     </>
   );
 }
+
+OrganizationManagePage.header = () => <Header showOrgSwitcher={true}></Header>;
+export default OrganizationManagePage;
