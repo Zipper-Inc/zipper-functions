@@ -34,7 +34,6 @@ import { HiBuildingOffice, HiUser } from 'react-icons/hi2';
 import { AppOwner, useAppOwner } from '~/hooks/use-app-owner';
 import { EmptySlate } from './empty-slate';
 import { ResourceOwnerType } from '@zipper/types';
-import { HiOutlineUserCircle } from 'react-icons/hi';
 
 type _App = Unpack<inferQueryOutput<'app.byAuthedUser'>>;
 type App = _App & {
