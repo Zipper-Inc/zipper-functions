@@ -99,27 +99,29 @@ export function AppPage({
   }, [paramResult]);
 
   const runApp = async () => {
-    setLoading(true);
-    const rawValues = formContext.getValues();
-    const values = getInputsFromFormData(rawValues, inputs);
+    if (!loading) {
+      setLoading(true);
+      const rawValues = formContext.getValues();
+      const values = getInputsFromFormData(rawValues, inputs);
 
-    const url = filename ? `/${filename}/call` : '/call';
+      const url = filename ? `/${filename}/call` : '/call';
 
-    const res = await fetch(url, {
-      method: 'POST',
-      body: JSON.stringify(values),
-    });
-
-    const result = await res.text();
-    const runId = res.headers.get('x-zipper-run-id');
-    if (runId) {
-      router.push(`/run/${runId.split('-')[0]}`, undefined, {
-        shallow: true,
+      const res = await fetch(url, {
+        method: 'POST',
+        body: JSON.stringify(values),
       });
+
+      const result = await res.text();
+      const runId = res.headers.get('x-zipper-run-id');
+      if (runId) {
+        router.push(`/run/${runId.split('-')[0]}`, undefined, {
+          shallow: true,
+        });
+      }
+      if (result) setResult(result);
+      setScreen('run');
+      setLoading(false);
     }
-    if (result) setResult(result);
-    setScreen('run');
-    setLoading(false);
   };
 
   useCmdOrCtrl(

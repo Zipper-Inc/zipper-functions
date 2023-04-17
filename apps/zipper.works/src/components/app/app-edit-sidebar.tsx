@@ -22,6 +22,7 @@ import {
   ModalHeader,
   ModalOverlay,
   useDisclosure,
+  useClipboard,
 } from '@chakra-ui/react';
 import {
   FunctionInputs,
@@ -201,8 +202,10 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
   }, [lastRunVersion]);
 
   const appLink = getAppLink(appSlug);
+  const { onCopy } = useClipboard(appLink);
+
   const copyLink = async () => {
-    await navigator.clipboard.writeText(appLink);
+    onCopy();
     toast({
       title: 'App link copied',
       status: 'info',

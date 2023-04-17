@@ -10,7 +10,6 @@ import {
   Link,
   Menu,
   MenuButton,
-  MenuDivider,
   MenuItem,
   MenuList,
 } from '@chakra-ui/react';
@@ -21,9 +20,12 @@ import { AppInfo, EntryPointInfo } from '@zipper/types';
 import { UserButton, useUser } from '@clerk/nextjs';
 import React from 'react';
 import { useRouter } from 'next/router';
-import { FiChevronDown } from 'react-icons/fi';
+import { FiChevronDown, FiChevronUp } from 'react-icons/fi';
 
 const duration = 1500;
+
+const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
+const zipperWorksUrl = `${protocol}://${process.env.NEXT_PUBLIC_ZIPPER_HOST}`;
 
 const Header: React.FC<
   AppInfo & { entryPoint?: EntryPointInfo; runnableScripts?: string[] }
@@ -32,7 +34,7 @@ const Header: React.FC<
   const toast = useToast();
 
   const { user } = useUser();
-  const { onCopy } = useClipboard(`https://${getAppLink(slug)}`);
+  const { onCopy } = useClipboard(`${protocol}://${getAppLink(slug)}`);
 
   const copyLink = async () => {
     onCopy();
@@ -52,9 +54,9 @@ const Header: React.FC<
     <>
       <Flex as="header" pt="20px" maxW="full" minW="md" paddingX={10}>
         <HStack spacing={3} alignItems="center" flex={1} minW={0}>
-          <Box height={4}>
+          <Link height={4} href={zipperWorksUrl}>
             <ZipperSymbol style={{ maxHeight: '100%' }} />
-          </Box>
+          </Link>
 
           <Heading
             as="h1"
@@ -66,7 +68,12 @@ const Header: React.FC<
             /
           </Heading>
           <Box>
-            <Link href="/">
+            <Link
+              href="/"
+              _hover={{
+                textDecor: 'none',
+              }}
+            >
               <Heading
                 as="h1"
                 size="md"
@@ -91,34 +98,38 @@ const Header: React.FC<
           <Box>
             {runnableScripts.length > 1 ? (
               <Menu>
-                <MenuButton as={Text}>
-                  <HStack>
-                    <Text
-                      fontFamily="heading"
-                      fontSize="xl"
-                      fontWeight="semibold"
-                      color="gray.800"
-                    >
-                      {entryPoint.filename.replace(/\.ts$/, '')}
-                    </Text>
-                    <FiChevronDown />
-                  </HStack>
-                </MenuButton>
-                <MenuList>
-                  {runnableScripts
-                    .filter((s) => s !== entryPoint.filename)
-                    .sort()
-                    .map((s, i) => {
-                      return (
-                        <MenuItem
-                          key={`${s}-${i}`}
-                          onClick={() => router.push(`/${s}`)}
+                {({ isOpen }) => (
+                  <>
+                    <MenuButton>
+                      <HStack>
+                        <Text
+                          fontFamily="heading"
+                          fontSize="xl"
+                          fontWeight="semibold"
+                          color="gray.800"
                         >
-                          {s.replace(/\.ts$/, '')}
-                        </MenuItem>
-                      );
-                    })}
-                </MenuList>
+                          {entryPoint.filename.replace(/\.ts$/, '')}
+                        </Text>
+                        {isOpen ? <FiChevronUp /> : <FiChevronDown />}
+                      </HStack>
+                    </MenuButton>
+                    <MenuList>
+                      {runnableScripts
+                        .filter((s) => s !== entryPoint.filename)
+                        .sort()
+                        .map((s, i) => {
+                          return (
+                            <MenuItem
+                              key={`${s}-${i}`}
+                              onClick={() => router.push(`/${s}`)}
+                            >
+                              {s.replace(/\.ts$/, '')}
+                            </MenuItem>
+                          );
+                        })}
+                    </MenuList>
+                  </>
+                )}
               </Menu>
             ) : (
               <Heading

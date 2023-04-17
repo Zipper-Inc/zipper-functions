@@ -1,15 +1,12 @@
 import { App, AppEditor, AppRun, Script } from '@prisma/client';
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '~/server/prisma';
-import { InputParam, RunInfoResult } from '@zipper/types';
+import { RunInfoResult } from '@zipper/types';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import clerkClient from '@clerk/clerk-sdk-node';
 import { compare } from 'bcryptjs';
 import { canUserEdit } from '~/server/routers/app.router';
-import { JSONValue } from 'superjson/dist/types';
 import { parseInputForTypes } from '~/utils/parse-code';
-// import { canUserEdit } from '~/server/routers/app.router';
-// import { getAuth } from '@clerk/nextjs/server';
 
 /**
  * @todo

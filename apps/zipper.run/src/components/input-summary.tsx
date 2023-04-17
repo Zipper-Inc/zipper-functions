@@ -1,8 +1,8 @@
 import { Button, Container, HStack } from '@chakra-ui/react';
-import { InputParam, InputParams, InputType } from '@zipper/types';
+import { InputParams, InputType } from '@zipper/types';
 import { HiOutlinePlay } from 'react-icons/hi2';
 import { FieldValues, UseFormReturn } from 'react-hook-form';
-import { formatShortDate, parseFieldName } from '@zipper/utils';
+import { formatShortDate, getFieldName } from '@zipper/utils';
 
 type InputSummaryProps = {
   inputs: InputParams;
@@ -23,17 +23,13 @@ const getInputSummary = (
   inputs: InputSummaryProps['inputs'],
   formContext: InputSummaryProps['formContext'],
 ) => {
-  const inputsObject = inputs.reduce((acc, cur) => {
-    return { ...acc, [cur.key]: cur };
-  }, {} as Record<string, InputParam>);
-
   const inputValues = formContext.getValues();
 
   return (
-    Object.keys(inputValues)
-      .map((key) => ({
-        key,
-        ...parseFieldName(key),
+    inputs
+      .map((i) => ({
+        ...i,
+        fieldName: getFieldName(i.key, i.type),
       }))
       // push objects and arrays at the end
       .sort((a, b) => {
@@ -50,13 +46,10 @@ const getInputSummary = (
         }
         return 0;
       })
-      .map(({ key, name, type }) => {
-        let value = inputValues[key];
+      .map(({ key, fieldName, type, optional }) => {
+        let value = inputValues[fieldName];
         // make filtering optional null and undefined values possible
-        if (
-          (value === undefined || value === null) &&
-          inputsObject[name]?.optional
-        ) {
+        if ((value === undefined || value === null) && optional) {
           return undefined;
         }
         if (
@@ -76,7 +69,7 @@ const getInputSummary = (
           value = "'blank'";
         }
 
-        return `${name}: ${value}`;
+        return `${key}: ${value}`;
       })
       // filter undefined values
       .filter((s) => s !== undefined)

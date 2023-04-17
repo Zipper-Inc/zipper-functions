@@ -42,10 +42,12 @@ export function getInputValuesFromAppRun(
   appRunInputs: Record<string, string>,
 ) {
   const defaultValues: Record<string, string | number | true | null> = {};
-
   inputs.forEach((input) => {
     const name = `${input.key}:${input.type}`;
-    const value = appRunInputs[input.key];
+    let value = appRunInputs[input.key] || null;
+    if (value !== null && typeof value !== 'string') {
+      value = JSON.stringify(value);
+    }
     defaultValues[name] = formatValueFromUrl(input, value || null);
   });
 
