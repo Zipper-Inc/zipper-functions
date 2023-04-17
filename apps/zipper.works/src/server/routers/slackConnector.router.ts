@@ -97,34 +97,32 @@ export const slackConnectorRouter = createRouter()
         },
       });
 
-      const secret = await prisma.secret.delete({
+      const tokens = await prisma.secret.findMany({
         where: {
-          appId_key: {
-            appId: input.appId,
-            key: 'SLACK_BOT_TOKEN',
+          appId: input.appId,
+          key: { in: ['SLACK_BOT_TOKEN', 'SLACK_USER_TOKEN'] },
+        },
+      });
+
+      await prisma.secret.deleteMany({
+        where: {
+          appId: input.appId,
+          key: {
+            in: ['SLACK_BOT_TOKEN', 'SLACK_USER_TOKEN', 'SLACK_CLIENT_SECRET'],
           },
         },
       });
 
-      await prisma.secret
-        .delete({
-          where: {
-            appId_key: {
-              appId: input.appId,
-              key: 'SLACK_CLIENT_SECRET',
-            },
-          },
-        })
-        .catch(() => null); // Ignore if not found, could be the case if there is not client secret
-
-      await fetch('https://slack.com/api/auth.revoke', {
-        method: 'POST',
-        body: new URLSearchParams({
-          token: decryptFromBase64(
-            secret.encryptedValue,
-            process.env.ENCRYPTION_KEY!,
-          ),
-        }),
+      tokens.forEach((secret) => {
+        fetch('https://slack.com/api/auth.revoke', {
+          method: 'POST',
+          body: new URLSearchParams({
+            token: decryptFromBase64(
+              secret.encryptedValue,
+              process.env.ENCRYPTION_KEY!,
+            ),
+          }),
+        });
       });
 
       return true;
@@ -244,7 +242,9 @@ export const slackConnectorRouter = createRouter()
             token: json.authed_user.access_token,
           }),
         });
+
         const userInfoJson = await userInfoRes.json();
+
         if (userInfoJson.ok) {
           appConnectorUserAuth = await prisma.appConnectorUserAuth.upsert({
             where: {
@@ -287,27 +287,53 @@ export const slackConnectorRouter = createRouter()
         },
       });
 
-      const encryptedValue = encryptToBase64(
-        json.access_token,
-        process.env.ENCRYPTION_KEY,
-      );
+      if (json.access_token) {
+        const encryptedValue = encryptToBase64(
+          json.access_token,
+          process.env.ENCRYPTION_KEY,
+        );
 
-      await prisma.secret.upsert({
-        where: {
-          appId_key: {
-            appId: appId!,
-            key: 'SLACK_BOT_TOKEN',
+        await prisma.secret.upsert({
+          where: {
+            appId_key: {
+              appId: appId!,
+              key: 'SLACK_BOT_TOKEN',
+            },
           },
-        },
-        create: {
-          appId,
-          key: 'SLACK_BOT_TOKEN',
-          encryptedValue,
-        },
-        update: {
-          encryptedValue,
-        },
-      });
+          create: {
+            appId,
+            key: 'SLACK_BOT_TOKEN',
+            encryptedValue,
+          },
+          update: {
+            encryptedValue,
+          },
+        });
+      }
+
+      if (json.authed_user.access_token) {
+        const encryptedValue = encryptToBase64(
+          json.authed_user.access_token,
+          process.env.ENCRYPTION_KEY,
+        );
+
+        await prisma.secret.upsert({
+          where: {
+            appId_key: {
+              appId: appId!,
+              key: 'SLACK_USER_TOKEN',
+            },
+          },
+          create: {
+            appId,
+            key: 'SLACK_USER_TOKEN',
+            encryptedValue,
+          },
+          update: {
+            encryptedValue,
+          },
+        });
+      }
 
       return {
         appId,

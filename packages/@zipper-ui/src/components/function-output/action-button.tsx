@@ -1,7 +1,7 @@
 import { Button, Flex, Spinner } from '@chakra-ui/react';
 import { useState } from 'react';
-import { Action } from './action-component';
 import { FunctionOutputProps } from './types';
+import { normalizeAppPath } from '@zipper/utils';
 
 export function ActionButton({
   action,
@@ -9,18 +9,23 @@ export function ActionButton({
   setModalResult,
   setOverallResult,
   getRunUrl,
-}: Omit<FunctionOutputProps, 'result'> & { action: Action }) {
+}: Omit<FunctionOutputProps, 'result'> & { action: Zipper.Action }) {
   async function runScript() {
-    const res = await fetch(getRunUrl(action.script), {
+    console.log({
+      path: action.path,
+      runUrl: getRunUrl(action.path),
+    });
+
+    const res = await fetch(getRunUrl(action.path), {
       method: 'POST',
       body: JSON.stringify(action.inputs || []),
       credentials: 'include',
     });
     const text = await res.text();
 
-    switch (action.show_as) {
+    switch (action.showAs) {
       case 'modal':
-        setModalResult({ heading: `${action.script}`, body: text });
+        setModalResult({ heading: `${action.path}`, body: text });
         break;
       case 'expanded':
         setExpandedResult(text);
@@ -43,13 +48,13 @@ export function ActionButton({
         isDisabled={isLoading}
         onClick={async () => {
           setIsLoading(true);
-          await runScript();
+          await runScript().catch(console.error);
           setIsLoading(false);
         }}
         mr={2}
       >
         {isLoading && <Spinner />}
-        {!isLoading && (action.text || `Run ${action.script}`)}
+        {!isLoading && (action.text || `Run ${normalizeAppPath(action.path)}`)}
       </Button>
     </Flex>
   );

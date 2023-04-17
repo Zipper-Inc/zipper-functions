@@ -46,6 +46,10 @@ export function PlaygroundSidebar({
     else orderA = a.createdAt === null ? Infinity : a.createdAt;
     if (b.id === mainScript?.id) orderB = -Infinity;
     else orderB = b.createdAt === null ? Infinity : b.createdAt;
+
+    // now let's make sure non-runnable files go below runnable scripts
+    if (!a.isRunnable) orderA = new Date(a.createdAt.getTime() * 100);
+    if (!b.isRunnable) orderB = new Date(b.createdAt.getTime() * 100);
     return orderA > orderB ? 1 : -1;
   };
 
@@ -132,7 +136,7 @@ export function PlaygroundSidebar({
       >
         <HStack px={3}>
           <Text size="sm" flexGrow={1}>
-            Scripts
+            Files
           </Text>
           {app.canUserEdit && (
             <Popover>
