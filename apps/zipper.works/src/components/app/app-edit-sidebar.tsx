@@ -42,6 +42,7 @@ import getRunUrl from '~/utils/get-run-url';
 import Link from 'next/link';
 import { HiOutlineChevronDown, HiOutlineChevronUp } from 'react-icons/hi';
 import { getAppLink } from '@zipper/utils';
+import { useAppEditSidebarContext } from '~/components/context/app-edit-sidebar-context';
 
 type AppEditSidebarProps = {
   showInputForm: boolean;
@@ -230,8 +231,8 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
   };
 
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const [expandedResult, setExpandedResult] = useState<Record<string, any>>({});
   const [modalResult, setModalResult] = useState({ heading: '', body: '' });
+  const { expandedResult, setExpandedResult } = useAppEditSidebarContext();
 
   const output = useMemo(
     () => (
@@ -289,6 +290,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
       replaceCurrentScriptCode(codeWithInputAdded);
     }
   };
+
   return (
     <Tabs
       colorScheme="purple"

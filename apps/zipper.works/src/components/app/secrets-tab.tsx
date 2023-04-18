@@ -58,7 +58,6 @@ const SecretsTab: React.FC<SecretsTabProps> = ({ appId, editable }) => {
   });
 
   const onSubmit = handleSubmit((data) => {
-    console.log(data);
     data.secrets.map((secret: Record<'key' | 'value', string>) => {
       if (secret.key && secret.value) {
         addSecret.mutate({
