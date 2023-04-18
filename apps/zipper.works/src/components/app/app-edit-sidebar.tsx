@@ -43,6 +43,7 @@ import getRunUrl from '~/utils/get-run-url';
 import Link from 'next/link';
 import { HiOutlineChevronDown, HiOutlineChevronUp } from 'react-icons/hi';
 import { getAppLink } from '@zipper/utils';
+import { useAppEditSidebarContext } from '~/components/context/app-edit-sidebar-context';
 
 type AppEditSidebarProps = {
   showInputForm: boolean;
@@ -130,6 +131,24 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
     },
   );
 
+  const deleteOpenAISecret = trpc.useMutation('secret.delete', {
+    onSuccess: () => {
+      context.invalidateQueries([
+        'app.byResourceOwnerAndAppSlugs',
+        {
+          appSlug: router.query['app-slug'] as string,
+          resourceOwnerSlug: router.query['resource-owner'] as string,
+        },
+      ]);
+      toast({
+        title: 'OpenAI user auth revoked.',
+        status: 'success',
+        duration,
+        isClosable: true,
+      });
+    },
+  });
+
   // state to hold whether user needs to authenticate with slack
   const [slackAuthRequired, setSlackAuthRequired] = useState(false);
   // state to hold whether user needs to authenticate with github
@@ -215,8 +234,8 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
   };
 
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const [expandedResult, setExpandedResult] = useState<Record<string, any>>({});
   const [modalResult, setModalResult] = useState({ heading: '', body: '' });
+  const { expandedResult, setExpandedResult } = useAppEditSidebarContext();
 
   const output = useMemo(
     () => (
@@ -274,6 +293,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
       replaceCurrentScriptCode(codeWithInputAdded);
     }
   };
+
   return (
     <Tabs
       colorScheme="purple"
@@ -389,6 +409,15 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
                       onDelete: () => {
                         deleteConnectorUserAuth.mutateAsync({
                           appId: appInfo.id,
+                        });
+                      },
+                    },
+                    openai: {
+                      authUrl: '#',
+                      onDelete: () => {
+                        deleteOpenAISecret.mutateAsync({
+                          appId: appInfo.id,
+                          key: 'OPENAI_API_KEY',
                         });
                       },
                     },

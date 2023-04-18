@@ -267,7 +267,6 @@ const ShareTab: React.FC<Props> = ({ isOpen, onClose, appId }) => {
                             <Switch
                               isChecked={!isPrivate}
                               onChange={async () => {
-                                console.log(isPrivate);
                                 setAppVisibility.mutateAsync({
                                   id: appId,
                                   data: {

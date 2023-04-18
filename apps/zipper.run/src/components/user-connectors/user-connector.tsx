@@ -4,10 +4,11 @@ import {
   ConnectorType,
   UserAuthConnector,
 } from '@zipper/types';
+import { SiOpenai } from 'react-icons/si';
 import { FiGithub } from 'react-icons/fi';
 import { BsSlack } from 'react-icons/bs';
 import { IconBaseProps, IconType } from 'react-icons';
-import { authedUserGetters } from '@zipper/utils';
+import { AuthedConnectorType, authedUserGetters } from '@zipper/utils';
 
 const connectors: Record<ConnectorType, { icon: IconType; name: string }> = {
   github: {
@@ -17,6 +18,10 @@ const connectors: Record<ConnectorType, { icon: IconType; name: string }> = {
   slack: {
     name: 'Slack',
     icon: BsSlack,
+  },
+  openai: {
+    name: 'OpenAI',
+    icon: SiOpenai,
   },
 };
 
@@ -29,7 +34,7 @@ const getAuthedUser = ({
   type,
 }: {
   metadata: any;
-  type: ConnectorType;
+  type: AuthedConnectorType;
 }) => {
   return authedUserGetters[type](metadata);
 };
@@ -43,7 +48,7 @@ const UserConnector: React.FC<UserConnectorProps> = ({
   authUrl,
   onDelete,
 }) => {
-  const type = connector.type;
+  const type = connector.type as AuthedConnectorType;
   const connectorName = connectors[type].name;
   const Icon = connectors[type].icon;
 

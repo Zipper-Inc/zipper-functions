@@ -9,6 +9,11 @@ import { useRunAppContext } from '../context/run-app-context';
 import { ConnectorId } from '~/connectors/createConnector';
 import { AppQueryOutput } from '~/types/trpc';
 import { Script } from '@prisma/client';
+import { useState } from 'react';
+import {
+  AppEditSidebarContextType,
+  AppEditSidebarProvider,
+} from '~/components/context/app-edit-sidebar-context';
 
 export const PlaygroundEditor = dynamic(() => import('./playground-editor'), {
   ssr: false,
@@ -43,7 +48,10 @@ type CodeTabProps = {
 
 export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
   const { currentScript, save, onChange } = useEditorContext();
-  const { run } = useRunAppContext();
+  const { isRunning, run } = useRunAppContext();
+  const [expandedResult, setExpandedResult] = useState<
+    AppEditSidebarContextType['expandedResult']
+  >({});
 
   useCmdOrCtrl(
     'S',
@@ -58,7 +66,10 @@ export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
     'Enter',
     (e: Event) => {
       e.preventDefault();
-      run();
+      setExpandedResult({});
+      if (!isRunning) {
+        run();
+      }
     },
     [],
   );
@@ -116,11 +127,18 @@ export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
         </FormControl>
       </VStack>
       <VStack flex={2} alignItems="stretch" minW="220px" overflow="auto">
-        <AppEditSidebar
-          showInputForm={!currentScriptConnectorId}
-          tips={ConnectorSidebarTips(currentScriptConnectorId)}
-          appSlug={app.slug}
-        />
+        <AppEditSidebarProvider
+          value={{
+            expandedResult,
+            setExpandedResult,
+          }}
+        >
+          <AppEditSidebar
+            showInputForm={!currentScriptConnectorId}
+            tips={ConnectorSidebarTips(currentScriptConnectorId)}
+            appSlug={app.slug}
+          />
+        </AppEditSidebarProvider>
       </VStack>
     </HStack>
   );

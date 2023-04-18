@@ -1,8 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { trpc } from '~/utils/trpc';
-import { useTable, useFlexLayout, useResizeColumns } from 'react-table';
 import {
-  Box,
   HStack,
   Table,
   Tbody,
@@ -18,11 +16,27 @@ import {
   Icon,
   Tooltip,
   Spinner,
+  ModalHeader,
+  ModalCloseButton,
+  ModalBody,
+  Modal,
+  useDisclosure,
+  ModalContent,
+  ModalOverlay,
 } from '@chakra-ui/react';
 import { Avatar } from '../avatar';
 import { useRouter } from 'next/router';
 import { HiExclamationTriangle, HiCheck } from 'react-icons/hi2';
 import { TbClockPlay } from 'react-icons/tb';
+import {
+  createColumnHelper,
+  flexRender,
+  getCoreRowModel,
+  useReactTable,
+} from '@tanstack/react-table';
+import { AppRun } from '@prisma/client';
+import { User } from '@clerk/clerk-sdk-node';
+import { JSONViewer } from '../json-editor';
 
 type HistoryTabProps = {
   appId: string;
@@ -33,138 +47,196 @@ const HistoryTab: React.FC<HistoryTabProps> = ({ appId }) => {
 
   const [data, setData] = useState<any[]>([]);
 
-  const columns = useMemo(
-    () => [
+  const columnHelper = createColumnHelper<AppRun & { user: User }>();
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [modalValue, setModalValue] = useState<any>();
+  const [modalHeading, setModalHeading] = useState<string>();
+
+  const columns = [
+    //date
+    columnHelper.accessor(
+      (row) =>
+        row.createdAt.toLocaleDateString([], {
+          month: 'long',
+          day: '2-digit',
+        }),
       {
-        Header: 'Date',
-        accessor: 'date', // accessor is the "key" in the data
-        width: 80,
+        id: 'date',
+        header: 'Date',
+        size: 80,
+      },
+    ),
+    //time
+    columnHelper.accessor(
+      (row) =>
+        row.createdAt.toLocaleTimeString([], {
+          hour: '2-digit',
+          minute: '2-digit',
+        }),
+      {
+        id: 'time',
+        header: 'Time',
+        size: 80,
+
+        cell: ({
+          getValue,
+          row: {
+            original: { id, scheduleId },
+          },
+        }) => {
+          return (
+            <HStack>
+              <Link
+                href={`${
+                  process.env.NODE_ENV === 'development' ? 'http' : 'https'
+                }://${router.query['app-slug']}.${
+                  process.env.NEXT_PUBLIC_OUTPUT_SERVER_HOSTNAME
+                }/run/${id.split('-')[0]}`}
+              >
+                {getValue()}
+              </Link>
+              {scheduleId && (
+                <Tooltip label="Scheduled run">
+                  <span>
+                    <Icon as={TbClockPlay} />
+                  </span>
+                </Tooltip>
+              )}
+            </HStack>
+          );
+        },
+      },
+    ),
+    //run by
+    columnHelper.accessor(
+      (row) => {
+        return `${row.user?.firstName || ''} ${row.user?.lastName || ''}`;
       },
       {
-        Header: 'Time',
-        accessor: 'time',
-        width: 80,
+        id: 'user',
+        size: 100,
+        header: 'Run by',
+        cell: ({
+          getValue,
+          row: {
+            original: { userId },
+          },
+        }) => {
+          return (
+            <HStack>
+              {userId && <Avatar userId={userId} size="xs" />}
+              <Text>{getValue()}</Text>
+            </HStack>
+          );
+        },
+      },
+    ),
+    //path
+    columnHelper.accessor('path', {
+      id: 'path',
+      header: 'Filename',
+      size: 80,
+      cell({
+        row: {
+          original: { path },
+        },
+      }) {
+        return <Link href={`./${path}`}>{path}</Link>;
+      },
+    }),
+    columnHelper.accessor('inputs', {
+      id: 'inputs',
+      header: 'Inputs',
+      size: 120,
+      cell({
+        row: {
+          original: { inputs, createdAt },
+        },
+      }) {
+        const inputString =
+          typeof inputs === 'object'
+            ? Object.keys(inputs || {})
+                .map(
+                  (k) =>
+                    `${k}: ${JSON.stringify(
+                      (inputs as Record<string, string>)[k],
+                    )}`,
+                )
+                .join(' / ')
+            : inputs.toString();
+        return (
+          <Text
+            cursor="pointer"
+            onClick={() => {
+              setModalHeading(
+                `${createdAt.toLocaleDateString()} @ ${createdAt.toLocaleTimeString()}`,
+              );
+              setModalValue(JSON.stringify(inputs, null, 2));
+              onOpen();
+            }}
+          >
+            {inputString}
+          </Text>
+        );
+      },
+    }),
+    //runUrl
+    columnHelper.accessor(
+      (row) => {
+        return `${
+          process.env.NODE_ENV === 'development' ? 'http' : 'https'
+        }://${router.query['app-slug']}.${
+          process.env.NEXT_PUBLIC_OUTPUT_SERVER_HOSTNAME
+        }/run/${row.id.split('-')[0]}`;
       },
       {
-        Header: 'Run by',
-        accessor: 'user',
-        width: 100,
+        id: 'runUrl',
+        header: '',
+        size: 10,
+        cell({
+          getValue,
+          row: {
+            original: { success, result },
+          },
+        }) {
+          return (
+            <>
+              {success ? (
+                <Link href={getValue()}>
+                  <Icon as={HiCheck} fill="green.600" />
+                </Link>
+              ) : (
+                <Tooltip label={result?.toString()}>
+                  <span>
+                    <Icon as={HiExclamationTriangle} fill="orange.600" />
+                  </span>
+                </Tooltip>
+              )}
+            </>
+          );
+        },
       },
-      {
-        Header: 'Filename',
-        accessor: 'path',
-        width: 80,
-      },
-      {
-        Header: 'Inputs',
-        accessor: 'inputs',
-        width: 120,
-      },
-      {
-        Header: '',
-        accessor: 'runUrl',
-        width: 10,
-      },
-    ],
-    [],
-  );
+    ),
+  ];
 
   const router = useRouter();
 
   useEffect(() => {
-    if (appRuns.data) {
-      setData(
-        appRuns.data.map((r) => {
-          return {
-            date: r.createdAt.toLocaleDateString([], {
-              month: 'long',
-              day: '2-digit',
-            }),
-            time: (
-              <HStack>
-                <Link
-                  href={`${
-                    process.env.NODE_ENV === 'development' ? 'http' : 'https'
-                  }://${router.query['app-slug']}.${
-                    process.env.NEXT_PUBLIC_OUTPUT_SERVER_HOSTNAME
-                  }/run/${r.id.split('-')[0]}`}
-                >
-                  {r.createdAt.toLocaleTimeString([], {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
-                </Link>
-                {r.scheduleId && (
-                  <Tooltip label="Scheduled run">
-                    <span>
-                      <Icon as={TbClockPlay} />
-                    </span>
-                  </Tooltip>
-                )}
-              </HStack>
-            ),
-            user: (
-              <HStack>
-                {r.userId && <Avatar userId={r.userId} size="xs" />}
-                <Text>
-                  {r.user?.firstName || ''} {r.user?.lastName || ''}
-                </Text>
-              </HStack>
-            ),
-            path: <Link href={`./${r.path}`}>{r.path}</Link>,
-            inputs:
-              typeof r.inputs === 'object'
-                ? Object.keys(r.inputs || {})
-                    .map(
-                      (k) =>
-                        `${k}: ${JSON.stringify(
-                          (r.inputs as Record<string, string>)[k],
-                        )}`,
-                    )
-                    .join(' / ')
-                : r.inputs.toString(),
-            runUrl: (
-              <>
-                {r.success ? (
-                  <Link
-                    href={`${
-                      process.env.NODE_ENV === 'development' ? 'http' : 'https'
-                    }://${router.query['app-slug']}.${
-                      process.env.NEXT_PUBLIC_OUTPUT_SERVER_HOSTNAME
-                    }/run/${r.id.split('-')[0]}`}
-                  >
-                    <Icon as={HiCheck} fill="green.600" />
-                  </Link>
-                ) : (
-                  <Tooltip label={r.result?.toString()}>
-                    <span>
-                      <Icon as={HiExclamationTriangle} fill="orange.600" />
-                    </span>
-                  </Tooltip>
-                )}
-              </>
-            ),
-          };
-        }),
-      );
-    }
+    if (appRuns.data) setData(appRuns.data);
   }, [appRuns.data]);
 
-  const tableInstance = useTable(
-    {
-      columns,
-      data,
-      defaultColumn: {
-        minWidth: 30,
-        width: 150,
-        maxWidth: 400,
-      },
+  const tableInstance = useReactTable({
+    columns,
+    data,
+    getCoreRowModel: getCoreRowModel(),
+    defaultColumn: {
+      maxSize: 300,
+      minSize: 30,
     },
-    useFlexLayout,
-    useResizeColumns,
-  );
-  const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } =
-    tableInstance;
+  });
+
+  const { getHeaderGroups, getRowModel } = tableInstance;
+  const rows = getRowModel().rows;
 
   return (
     <HStack spacing={0} flex={1} alignItems="start" gap={16}>
@@ -177,59 +249,57 @@ const HistoryTab: React.FC<HistoryTabProps> = ({ appId }) => {
         </Text>
       </VStack>
       <Flex flex={4}>
-        <Table {...getTableProps()}>
+        <Table>
           <Thead>
-            {headerGroups.map((headerGroup) => (
-              <Tr {...headerGroup.getHeaderGroupProps()}>
-                {headerGroup.headers.map((column: any) => (
+            {getHeaderGroups().map((headerGroup) => (
+              <Tr key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
                   <>
                     <Th
-                      {...column.getHeaderProps()}
+                      key={header.id}
                       fontWeight="normal"
                       fontSize="sm"
                       textTransform="none"
                       _notFirst={{ pl: 0 }}
                     >
-                      {column.render('Header')}
+                      {flexRender(
+                        header.column.columnDef.header,
+                        header.getContext(),
+                      )}
                     </Th>
-                    <Box
-                      w="2"
-                      {...column.getResizerProps()}
-                      className={`resizer ${
-                        column.isResizing ? 'isResizing' : ''
-                      }`}
-                    />
                   </>
                 ))}
               </Tr>
             ))}
           </Thead>
-          <Tbody {...getTableBodyProps()} color="gray.600" fontSize="sm">
+          <Tbody color="gray.600" fontSize="sm">
             {appRuns.data && appRuns.data.length > 0 ? (
               rows.map((row, i) => {
-                prepareRow(row);
                 return (
-                  <Tr {...row.getRowProps()}>
-                    {row.cells.map((cell, j) => {
+                  <Tr key={row.id}>
+                    {row.getVisibleCells().map((cell, j) => {
+                      // see https://tanstack.com/table/v8/docs/api/core/column-def#meta to type this correctly
                       return (
                         <Td
-                          {...cell.getCellProps({
-                            style: { whiteSpace: 'nowrap' },
-                          })}
-                          // fontSize={cell.column.Header === 'Date' ? 'md' : 'sm'}
+                          key={cell.id}
+                          style={{ whiteSpace: 'nowrap' }}
                           fontWeight={
-                            cell.column.Header === 'Date'
+                            cell.column.columnDef.id === 'date'
                               ? 'semibold'
                               : 'normal'
                           }
                           isTruncated
                           _notFirst={{ pl: 0 }}
                         >
-                          {cell.column.Header === 'Date' &&
-                          cell.value === rows[i - 1]?.cells[j]?.value ? (
+                          {cell.column.columnDef.id === 'date' &&
+                          cell.getValue() ===
+                            rows[i - 1]?.getVisibleCells()[j]?.getValue() ? (
                             <></>
                           ) : (
-                            cell.render('Cell')
+                            flexRender(
+                              cell.column.columnDef.cell,
+                              cell.getContext(),
+                            )
                           )}
                         </Td>
                       );
@@ -251,6 +321,19 @@ const HistoryTab: React.FC<HistoryTabProps> = ({ appId }) => {
           </Tbody>
         </Table>
       </Flex>
+      <Modal isOpen={isOpen} onClose={onClose}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader fontSize={'md'}>{modalHeading}</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <Heading fontSize="md" mb="4">
+              Inputs
+            </Heading>
+            <JSONViewer value={modalValue} />
+          </ModalBody>
+        </ModalContent>
+      </Modal>
     </HStack>
   );
 };

@@ -33,7 +33,7 @@ export const scriptRouter = createRouter()
       appId: z.string().uuid(),
       code: z.string().default(DEFAULT_CODE),
       order: z.number(),
-      connectorId: z.enum(['github', 'slack']).optional(),
+      connectorId: z.enum(['github', 'slack', 'openai']).optional(),
     }),
     async resolve({ ctx, input }) {
       const { appId, ...data } = input;

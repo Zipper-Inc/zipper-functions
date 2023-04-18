@@ -93,6 +93,7 @@ export function RunAppProvider({
     setIsRunning(true);
     await onBeforeRun();
     const formValues = formMethods.getValues();
+
     const result = await runAppMutation.mutateAsync({
       formData: formValues,
       appId: id,

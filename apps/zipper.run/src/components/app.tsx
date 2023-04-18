@@ -194,6 +194,20 @@ export function AppPage({
         router.reload();
       },
     },
+    openai: {
+      authUrl: '#',
+      onDelete: async () => {
+        if (user) {
+          await removeAppConnectorUserAuth({
+            appId: app.id,
+            type: 'openai',
+          });
+        } else {
+          deleteCookie('__zipper_temp_user_id');
+        }
+        router.reload();
+      },
+    },
   };
 
   const showInput = (['initial', 'edit'] as Screen[]).includes(screen);

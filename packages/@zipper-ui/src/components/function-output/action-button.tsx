@@ -11,11 +11,6 @@ export function ActionButton({
   getRunUrl,
 }: Omit<FunctionOutputProps, 'result'> & { action: Zipper.Action }) {
   async function runScript() {
-    console.log({
-      path: action.path,
-      runUrl: getRunUrl(action.path),
-    });
-
     const res = await fetch(getRunUrl(action.path), {
       method: 'POST',
       body: JSON.stringify(action.inputs || []),

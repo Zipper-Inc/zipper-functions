@@ -68,6 +68,10 @@ const getInputSummary = (
         ) {
           value = "'blank'";
         }
+        // return `${key}: ${value}`;
+        if (typeof value === 'object') {
+          value = JSON.stringify(value);
+        }
 
         return `${key}: ${value}`;
       })
