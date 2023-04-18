@@ -76,6 +76,10 @@ const getInputSummary = (
           value = "'blank'";
         }
 
+        if (typeof value === 'object') {
+          value = JSON.stringify(value);
+        }
+
         return `${name}: ${value}`;
       })
       // filter undefined values

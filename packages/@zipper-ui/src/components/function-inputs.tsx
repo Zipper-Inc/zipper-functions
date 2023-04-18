@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import {
   Box,
   Flex,
@@ -17,6 +17,7 @@ import {
   NumberDecrementStepper,
   Button,
   useDisclosure,
+  Text,
 } from '@chakra-ui/react';
 import { VscAdd } from 'react-icons/vsc';
 import { FieldValues, UseFormReturn, RegisterOptions } from 'react-hook-form';
@@ -118,15 +119,31 @@ function FunctionParamInput({
     case InputType.object:
     case InputType.any:
     default: {
+      const [error, setError] = useState<string | undefined>();
       return (
-        <Textarea
-          backgroundColor="white"
-          fontFamily="monospace"
-          fontSize="smaller"
-          minHeight={90}
-          defaultValue={type === InputType.array ? '[]' : '{}'}
-          {...formProps}
-        />
+        <VStack align="start" w="full">
+          <Textarea
+            backgroundColor="white"
+            fontFamily="monospace"
+            fontSize="smaller"
+            minHeight={90}
+            defaultValue={type === InputType.array ? '[]' : '{}'}
+            {...formProps}
+            onChange={(e) => {
+              try {
+                JSON.parse(e.target.value);
+                setError(undefined);
+              } catch (e: any) {
+                setError(`Error parsing value: ${e.message}`);
+              }
+            }}
+          />
+          {error && (
+            <Text color="gray.600" fontWeight="light" fontSize="sm" pl={1}>
+              {error}
+            </Text>
+          )}
+        </VStack>
       );
     }
   }
