@@ -1,6 +1,6 @@
 import { Script } from '@prisma/client';
 import * as monaco from 'monaco-editor';
-import { EditorProps } from '@monaco-editor/react';
+import { EditorProps, Monaco } from '@monaco-editor/react';
 import {
   createContext,
   useContext,
@@ -20,7 +20,7 @@ import {
 import { trpc } from '~/utils/trpc';
 import { useRouter } from 'next/router';
 import { LiveObject, LsonObject } from '@liveblocks/client';
-import { getPathFromUri } from '~/utils/model-uri';
+import { getPathFromUri, getUriFromPath } from '~/utils/model-uri';
 import { InputParam } from '@zipper/types';
 import { parseCode } from '~/utils/parse-code';
 
@@ -53,6 +53,7 @@ export type EditorContextType = {
   invalidImportSetRef?: MutableRefObject<Set<string>>;
   unhandledImports: string[];
   setUnhandledImports: (imports: string[]) => void;
+  monacoRef?: MutableRefObject<Monaco | undefined>;
 };
 
 export const EditorContext = createContext<EditorContextType>({
@@ -80,6 +81,7 @@ export const EditorContext = createContext<EditorContextType>({
   invalidImportSetRef: undefined,
   unhandledImports: [],
   setUnhandledImports: noop,
+  monacoRef: undefined,
 });
 
 const EditorContextProvider = ({
@@ -108,9 +110,12 @@ const EditorContextProvider = ({
   const [isSaving, setIsSaving] = useState(false);
 
   const [editor, setEditor] = useState<typeof monaco.editor | undefined>();
+  const monacoRef = useRef<Monaco>();
 
   const importSetRef = useRef(new Set<string>());
-  const invalidImportSetRef = useRef(new Set<string>());
+  const invalidImportUrlsRef = useRef(new Set<string>());
+  const importModelsRef = useRef<string[]>([]);
+
   const [unhandledImports, setUnhandledImports] = useState<string[]>([]);
 
   const [modelsDirtyState, setModelsDirtyState] = useState<
@@ -156,27 +161,83 @@ const EditorContextProvider = ({
       mutateLive(value, event.versionId);
 
       try {
-        const { inputs, imports } = parseCode({
+        const { inputs, imports: importsFromCode } = parseCode({
           code: value,
           throwErrors: true,
         });
 
-        // Check for new imports
-        const prevNewImportsLength = unhandledImports.length;
-        imports.forEach(async (importUrl) => {
-          if (
-            importSetRef.current.has(importUrl) ||
-            invalidImportSetRef.current.has(importUrl)
-          )
-            return;
-          unhandledImports.push(importUrl);
-        });
-        if (unhandledImports.length !== prevNewImportsLength) {
-          setUnhandledImports([...unhandledImports]);
-        }
-
         setInputParams(inputs);
         setInputError(undefined);
+
+        if (!monacoRef?.current) return;
+        const uriParser = monacoRef.current.Uri.parse;
+
+        const oldImportModels = importModelsRef.current;
+        const newImportModels: string[] = [];
+
+        // First, let's cleanup anything removed from the code
+        oldImportModels.forEach((importUrl) => {
+          const modelToDelete =
+            !importsFromCode.includes(importUrl) &&
+            monacoRef?.current?.editor.getModel(
+              getUriFromPath(importUrl, uriParser),
+            );
+
+          if (modelToDelete) {
+            console.log('[IMPORTS]', `Removing ${importUrl}`);
+            modelToDelete.dispose();
+          }
+        });
+
+        // Handle changes in code
+        importsFromCode.forEach(async (importUrl, index) => {
+          // First let's move the pointer to the right spot
+          newImportModels[index] = importUrl;
+
+          // Code matches what we have models for, do nothing
+          if (importUrl === oldImportModels[index]) return;
+
+          // If this is net new and not already invalid, let's download it
+          if (
+            !importModelsRef.current.includes(importUrl) &&
+            !invalidImportUrlsRef.current.has(importUrl)
+          ) {
+            // download that shit
+
+            try {
+              // optimistically add it to the import set
+
+              console.log('[IMPORTS]', `(${importUrl})`, 'Fetching import');
+
+              const bundle = await fetch(`/api/ts/bundle?x=${importUrl}`).then(
+                (r) => r.json(),
+              );
+
+              Object.keys(bundle).forEach((url) => {
+                console.log('[IMPORTS]', `(${importUrl})`, `Handling ${url}`);
+                const src = bundle[url];
+                const uri = getUriFromPath(url, uriParser);
+                if (!monacoRef?.current?.editor.getModel(uri)) {
+                  monacoRef?.current?.editor.createModel(
+                    src,
+                    'typescript',
+                    uri,
+                  );
+                }
+              });
+            } catch (e) {
+              invalidImportUrlsRef.current.add(importUrl);
+              console.error(
+                '[IMPORTS]',
+                `(${importUrl})`,
+                'Error adding import',
+                e,
+              );
+            }
+          }
+        });
+
+        importModelsRef.current = newImportModels;
       } catch (e: any) {
         setInputParams(undefined);
         setInputError(e.message);
@@ -358,9 +419,10 @@ const EditorContextProvider = ({
         setInputParams,
         inputError,
         importSetRef,
-        invalidImportSetRef,
+        invalidImportSetRef: invalidImportUrlsRef,
         unhandledImports,
         setUnhandledImports,
+        monacoRef,
       }}
     >
       {children}
