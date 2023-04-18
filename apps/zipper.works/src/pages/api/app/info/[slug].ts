@@ -14,6 +14,7 @@ import jwt, { JwtPayload } from 'jsonwebtoken';
 import clerkClient from '@clerk/clerk-sdk-node';
 import { compare } from 'bcryptjs';
 import { canUserEdit } from '~/server/routers/app.router';
+import { requiredUserAuthConnectorFilter } from '~/utils/user-auth-connector-filter';
 // import { canUserEdit } from '~/server/routers/app.router';
 // import { getAuth } from '@clerk/nextjs/server';
 
@@ -164,17 +165,20 @@ export default async function handler(
         .filter((s) => s.isRunnable)
         .map((s) => s.filename),
       userAuthConnectors: appFound.connectors.filter(
-        (c) => c.userScopes.length > 0 && c.isUserAuthRequired,
+        requiredUserAuthConnectorFilter,
       ) as UserAuthConnector[],
       userInfo: {
         email: appFound.requiresAuthToRun ? userInfo.email : undefined,
         userId: appFound.requiresAuthToRun ? userInfo.clerkUserId : undefined,
       },
-      editUrl: `${
-        process.env.NODE_ENV === 'development' ? 'http' : 'https'
-      }://${process.env.NEXT_PUBLIC_HOST}${
-        process.env.NODE_ENV === 'development' ? ':3000' : ''
-      }/${resourceOwner?.slug}/${appFound.slug}/edit/${entryPoint.filename}`,
+      entryPoint: {
+        filename: entryPoint.filename,
+        editUrl: `${
+          process.env.NODE_ENV === 'development' ? 'http' : 'https'
+        }://${process.env.NEXT_PUBLIC_HOST}${
+          process.env.NODE_ENV === 'development' ? ':3000' : ''
+        }/${resourceOwner?.slug}/${appFound.slug}/edit/${entryPoint.filename}`,
+      },
     },
   };
 

@@ -13,6 +13,11 @@ export type AppInfo = {
 
 export type InputParams = InputParam[];
 
+export type EntryPointInfo = {
+  filename: string;
+  editUrl: string;
+};
+
 export type AppInfoAndInputParams = {
   app: AppInfo;
   userAuthConnectors: UserAuthConnector[];
@@ -22,7 +27,7 @@ export type AppInfoAndInputParams = {
     userId?: string;
   };
   runnableScripts: string[];
-  editUrl: string;
+  entryPoint: EntryPointInfo;
 };
 
 export type AppInfoResult =

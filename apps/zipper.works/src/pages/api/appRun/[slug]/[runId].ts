@@ -1,15 +1,20 @@
-import { App, AppEditor, AppRun, Script } from '@prisma/client';
+import {
+  App,
+  AppConnector,
+  AppConnectorUserAuth,
+  AppEditor,
+  AppRun,
+  Script,
+} from '@prisma/client';
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '~/server/prisma';
-import { InputParam, RunInfoResult } from '@zipper/types';
+import { RunInfoResult, UserAuthConnector } from '@zipper/types';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import clerkClient from '@clerk/clerk-sdk-node';
 import { compare } from 'bcryptjs';
 import { canUserEdit } from '~/server/routers/app.router';
-import { JSONValue } from 'superjson/dist/types';
 import { parseInputForTypes } from '~/utils/parse-code';
-// import { canUserEdit } from '~/server/routers/app.router';
-// import { getAuth } from '@clerk/nextjs/server';
+import { requiredUserAuthConnectorFilter } from '~/utils/user-auth-connector-filter';
 
 /**
  * @todo
@@ -41,7 +46,6 @@ export default async function handler(
     email?: string;
     organizations: Record<string, string>[];
   } = {
-    email: undefined,
     organizations: [],
   };
 
@@ -51,6 +55,9 @@ export default async function handler(
           | (App & {
               editors: AppEditor[];
               scripts: Script[];
+              connectors: (AppConnector & {
+                appConnectorUserAuths: AppConnectorUserAuth[];
+              })[];
             })
           | null;
       })
@@ -67,7 +74,17 @@ export default async function handler(
         app: { slug: slugFromUrl },
       },
       include: {
-        app: { include: { editors: true, scripts: true } },
+        app: {
+          include: {
+            editors: true,
+            scripts: true,
+            connectors: {
+              include: {
+                appConnectorUserAuths: true,
+              },
+            },
+          },
+        },
       },
     });
   } catch (e: any) {
@@ -136,16 +153,21 @@ export default async function handler(
       runnableScripts: scripts
         .filter((s) => s.isRunnable)
         .map((s) => s.filename),
-      userAuthConnectors: [],
+      userAuthConnectors: appRun.app.connectors.filter(
+        requiredUserAuthConnectorFilter,
+      ) as UserAuthConnector[],
       userInfo: {
         email: undefined,
         userId: undefined,
       },
-      editUrl: `${
-        process.env.NODE_ENV === 'development' ? 'http' : 'https'
-      }://${process.env.NEXT_PUBLIC_HOST}${
-        process.env.NODE_ENV === 'development' ? ':3000' : ''
-      }/${resourceOwner?.slug}/${appRun.app.slug}/edit/${appRun.path}`,
+      entryPoint: {
+        filename: appRun.path,
+        editUrl: `${
+          process.env.NODE_ENV === 'development' ? 'http' : 'https'
+        }://${process.env.NEXT_PUBLIC_HOST}${
+          process.env.NODE_ENV === 'development' ? ':3000' : ''
+        }/${resourceOwner?.slug}/${appRun.app.slug}/edit/${appRun.path}`,
+      },
     },
   };
 

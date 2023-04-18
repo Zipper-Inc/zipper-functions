@@ -9,6 +9,7 @@ import { AppConnectorUserAuth } from '@prisma/client';
 import { getAppHash, getAppVersionFromHash } from '~/utils/hashing';
 import { useUser } from '@clerk/nextjs';
 import { useEditorContext } from './editor-context';
+import { requiredUserAuthConnectorFilter } from '~/utils/user-auth-connector-filter';
 
 type UserAuthConnector = {
   type: ConnectorType;
@@ -137,7 +138,7 @@ export function RunAppProvider({
         results,
         appEventsQuery,
         userAuthConnectors: app.connectors.filter(
-          (c) => c.userScopes.length > 0 && c.isUserAuthRequired,
+          requiredUserAuthConnectorFilter,
         ) as UserAuthConnector[],
         setResults,
         run: async (isCurrentFileTheEntryPoint?: boolean) => {

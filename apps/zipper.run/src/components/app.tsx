@@ -5,6 +5,7 @@ import {
   AppInfo,
   ConnectorActionProps,
   ConnectorType,
+  EntryPointInfo,
   InputParams,
   UserAuthConnector,
 } from '@zipper/types';
@@ -36,15 +37,14 @@ import { useRouter } from 'next/router';
 import { encryptToHex, getInputsFromFormData } from '@zipper/utils';
 import { deleteCookie } from 'cookies-next';
 import { HiOutlineChevronUp, HiOutlineChevronDown } from 'react-icons/hi';
-
 import { getAuth } from '@clerk/nextjs/server';
 import { useUser } from '@clerk/nextjs';
 import Unauthorized from './unauthorized';
 import removeAppConnectorUserAuth from '~/utils/remove-app-connector-user-auth';
 import Header from './header';
-import AuthUserConnectors from './user-connectors';
-import UserInputs from './user-inputs';
 import InputSummary from './input-summary';
+import { getShortRunId } from '~/utils/run-id';
+import ConnectorsAuthInputsSection from './connectors-auth-inputs-section';
 
 const { __DEBUG__ } = process.env;
 
@@ -60,7 +60,7 @@ export function AppPage({
   slackAuthUrl,
   githubAuthUrl,
   statusCode,
-  editUrl,
+  entryPoint,
   result: paramResult,
   runnableScripts,
 }: {
@@ -73,7 +73,7 @@ export function AppPage({
   slackAuthUrl?: string;
   githubAuthUrl?: string;
   statusCode?: number;
-  editUrl?: string;
+  entryPoint?: EntryPointInfo;
   result?: string;
   runnableScripts?: string[];
 }) {
@@ -87,6 +87,8 @@ export function AppPage({
   const [isExpandedResultOpen, setIsExpandedResultOpen] = useState(true);
   const { user } = useUser();
   const [screen, setScreen] = useState<Screen>(paramResult ? 'run' : 'initial');
+  const [latestRunId, setLatestRunId] = useState<string>();
+  const [expandInputsSection, setExpandInputsSection] = useState(true);
 
   // We have to do this so that the results aren't SSRed
   // (if they are DOMParser in FunctionOutput will be undefined)
@@ -98,27 +100,31 @@ export function AppPage({
   }, [paramResult]);
 
   const runApp = async () => {
-    setLoading(true);
-    const rawValues = formContext.getValues();
-    const values = getInputsFromFormData(rawValues, inputs);
+    if (!loading) {
+      setLoading(true);
+      const rawValues = formContext.getValues();
+      const values = getInputsFromFormData(rawValues, inputs);
 
-    const url = filename ? `/${filename}/call` : '/call';
+      const url = filename ? `/${filename}/call` : '/call';
 
-    const res = await fetch(url, {
-      method: 'POST',
-      body: JSON.stringify(values),
-    });
-
-    const result = await res.text();
-    const runId = res.headers.get('x-zipper-run-id');
-    if (runId) {
-      router.push(`/run/${runId.split('-')[0]}`, undefined, {
-        shallow: true,
+      const res = await fetch(url, {
+        method: 'POST',
+        body: JSON.stringify(values),
       });
+
+      const result = await res.text();
+      const runId = res.headers.get('x-zipper-run-id');
+      if (runId) {
+        const shortRunId = getShortRunId(runId);
+        setLatestRunId(shortRunId);
+        router.push(`/run/${shortRunId}`, undefined, {
+          shallow: true,
+        });
+      }
+      if (result) setResult(result);
+      setScreen('run');
+      setLoading(false);
     }
-    if (result) setResult(result);
-    setScreen('run');
-    setLoading(false);
   };
 
   useCmdOrCtrl(
@@ -225,7 +231,12 @@ export function AppPage({
         <title>{appTitle}</title>
       </Head>
       <VStack flex={1} alignItems="stretch" spacing={14}>
-        <Header {...app} fileName={filename} editUrl={editUrl} />
+        <Header
+          {...app}
+          entryPoint={entryPoint}
+          runnableScripts={runnableScripts}
+          runId={latestRunId}
+        />
         <VStack
           as="main"
           flex={1}
@@ -235,22 +246,23 @@ export function AppPage({
           px={10}
         >
           {showInput && (
-            <VStack maxW="container.sm" minW={500} align="stretch" spacing={6}>
-              {userAuthConnectors.length > 0 && (
-                <AuthUserConnectors
-                  appTitle={appTitle}
-                  actions={connectorActions}
-                  userAuthConnectors={userAuthConnectors}
-                />
-              )}
-              <UserInputs
-                inputs={inputs}
-                formContext={formContext}
-                canRunApp={canRunApp}
-                runApp={runApp}
-                hasResult={Boolean(result)}
-              />
-            </VStack>
+            <ConnectorsAuthInputsSection
+              isCollapsible={screen === 'edit'}
+              expandByDefault={expandInputsSection}
+              toggleIsExpanded={setExpandInputsSection}
+              userAuthProps={{
+                actions: connectorActions,
+                appTitle,
+                userAuthConnectors,
+              }}
+              userInputsProps={{
+                canRunApp,
+                formContext,
+                hasResult: Boolean(result),
+                inputs,
+                runApp,
+              }}
+            />
           )}
           {showRunOutput && (
             <VStack w="full" align="stretch" spacing={6}>
@@ -386,7 +398,7 @@ export const getServerSideProps: GetServerSideProps = async ({
     return { notFound: true };
   }
 
-  const { app, inputs, userAuthConnectors, editUrl, runnableScripts } =
+  const { app, inputs, userAuthConnectors, entryPoint, runnableScripts } =
     result.data;
 
   const version = versionFromUrl || 'latest';
@@ -401,7 +413,7 @@ export const getServerSideProps: GetServerSideProps = async ({
       version,
       defaultValues,
       userAuthConnectors,
-      editUrl,
+      entryPoint,
       runnableScripts,
       filename: filename || 'main.ts',
     },

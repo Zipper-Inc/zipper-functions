@@ -6,7 +6,7 @@ import {
   UserAuthConnector,
 } from '@zipper/types';
 
-type AuthUserConnectorsProps = {
+export type AuthUserConnectorsProps = {
   userAuthConnectors: UserAuthConnector[];
   actions: Record<ConnectorType, ConnectorActionProps>;
   appTitle: string;

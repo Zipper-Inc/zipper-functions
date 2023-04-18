@@ -7,30 +7,53 @@ import {
   Text,
   useToast,
   useClipboard,
+  Link,
+  Menu,
+  MenuButton,
+  MenuItem,
+  MenuList,
 } from '@chakra-ui/react';
-import NextLink from 'next/link';
 import { getAppLink } from '@zipper/utils';
 import { ZipperSymbol } from '@zipper/ui';
 import { HiOutlineUpload, HiOutlinePencilAlt } from 'react-icons/hi';
-import { AppInfo } from '@zipper/types';
+import { AppInfo, EntryPointInfo } from '@zipper/types';
 import { UserButton, useUser } from '@clerk/nextjs';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useRouter } from 'next/router';
+import { FiChevronDown, FiChevronUp } from 'react-icons/fi';
 
 const duration = 1500;
 
-const Header: React.FC<AppInfo & { fileName?: string; editUrl?: string }> = ({
+const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
+const zipperWorksUrl = `${protocol}://${process.env.NEXT_PUBLIC_ZIPPER_HOST}`;
+
+export type HeaderProps = AppInfo & {
+  entryPoint?: EntryPointInfo;
+  runnableScripts?: string[];
+  runId?: string;
+};
+
+const Header: React.FC<HeaderProps> = ({
   canUserEdit,
   name,
   slug,
-  fileName,
-  editUrl,
+  entryPoint,
+  runnableScripts = [],
+  runId,
 }) => {
   const router = useRouter();
   const toast = useToast();
-
   const { user } = useUser();
-  const { onCopy } = useClipboard(`https://${getAppLink(slug)}`);
+  const { onCopy, setValue } = useClipboard('');
+
+  useEffect(() => {
+    const baseUrl = `${protocol}://${getAppLink(slug)}`;
+    if (runId) {
+      setValue(`${baseUrl}/run/${runId}`);
+    } else {
+      setValue(baseUrl);
+    }
+  }, [runId]);
 
   const copyLink = async () => {
     onCopy();
@@ -42,13 +65,17 @@ const Header: React.FC<AppInfo & { fileName?: string; editUrl?: string }> = ({
     });
   };
 
+  if (!entryPoint) {
+    return <></>;
+  }
+
   return (
     <>
       <Flex as="header" pt="20px" maxW="full" minW="md" paddingX={10}>
         <HStack spacing={3} alignItems="center" flex={1} minW={0}>
-          <Box height={4}>
+          <Link height={4} href={zipperWorksUrl}>
             <ZipperSymbol style={{ maxHeight: '100%' }} />
-          </Box>
+          </Link>
 
           <Heading
             as="h1"
@@ -60,7 +87,12 @@ const Header: React.FC<AppInfo & { fileName?: string; editUrl?: string }> = ({
             /
           </Heading>
           <Box>
-            <NextLink href="#">
+            <Link
+              href="/"
+              _hover={{
+                textDecor: 'none',
+              }}
+            >
               <Heading
                 as="h1"
                 size="md"
@@ -71,7 +103,7 @@ const Header: React.FC<AppInfo & { fileName?: string; editUrl?: string }> = ({
               >
                 {name}
               </Heading>
-            </NextLink>
+            </Link>
           </Box>
           <Heading
             as="h1"
@@ -83,16 +115,53 @@ const Header: React.FC<AppInfo & { fileName?: string; editUrl?: string }> = ({
             /
           </Heading>
           <Box>
-            <Heading
-              as="h1"
-              size="md"
-              overflow="auto"
-              whiteSpace="nowrap"
-              fontWeight="semibold"
-              color="gray.800"
-            >
-              {fileName}
-            </Heading>
+            {runnableScripts.length > 1 ? (
+              <Menu>
+                {({ isOpen }) => (
+                  <>
+                    <MenuButton>
+                      <HStack>
+                        <Text
+                          fontFamily="heading"
+                          fontSize="xl"
+                          fontWeight="semibold"
+                          color="gray.800"
+                        >
+                          {entryPoint.filename.replace(/\.ts$/, '')}
+                        </Text>
+                        {isOpen ? <FiChevronUp /> : <FiChevronDown />}
+                      </HStack>
+                    </MenuButton>
+                    <MenuList>
+                      {runnableScripts
+                        .filter((s) => s !== entryPoint.filename)
+                        .sort()
+                        .map((s, i) => {
+                          return (
+                            <MenuItem
+                              key={`${s}-${i}`}
+                              onClick={() => router.push(`/${s}`)}
+                            >
+                              {s.replace(/\.ts$/, '')}
+                            </MenuItem>
+                          );
+                        })}
+                    </MenuList>
+                  </>
+                )}
+              </Menu>
+            ) : (
+              <Heading
+                as="h1"
+                size="md"
+                overflow="auto"
+                whiteSpace="nowrap"
+                fontWeight="semibold"
+                color="gray.800"
+              >
+                {entryPoint.filename.replace(/\.ts$/, '')}
+              </Heading>
+            )}
           </Box>
         </HStack>
         <HStack>
@@ -107,7 +176,7 @@ const Header: React.FC<AppInfo & { fileName?: string; editUrl?: string }> = ({
             <HiOutlineUpload />
             <Text>Share</Text>
           </Button>
-          {canUserEdit && editUrl && (
+          {canUserEdit && entryPoint.editUrl && (
             <Button
               colorScheme="purple"
               variant="ghost"
@@ -115,7 +184,7 @@ const Header: React.FC<AppInfo & { fileName?: string; editUrl?: string }> = ({
               gap={2}
               fontWeight="medium"
               onClick={() => {
-                window.location.href = editUrl;
+                window.location.href = entryPoint.editUrl;
               }}
             >
               <HiOutlinePencilAlt />

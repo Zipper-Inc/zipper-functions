@@ -4,7 +4,7 @@ import { Box, Button, Text, VStack } from '@chakra-ui/react';
 import { UseFormReturn, FieldValues } from 'react-hook-form';
 import { HiOutlinePlay } from 'react-icons/hi2';
 
-type UserInputsProps = {
+export type UserInputsProps = {
   inputs: InputParams;
   hasResult: boolean;
   formContext: UseFormReturn<FieldValues, any>;
