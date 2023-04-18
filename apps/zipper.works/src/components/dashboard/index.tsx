@@ -6,12 +6,14 @@ import {
   VStack,
   Heading,
   Button,
-  Flex,
   Icon,
   Input,
   HStack,
   Link,
   Tooltip,
+  Spacer,
+  Spinner,
+  Center,
 } from '@chakra-ui/react';
 import React, { useEffect, useMemo, useState } from 'react';
 import DefaultGrid from '~/components/default-grid';
@@ -99,22 +101,21 @@ const columns = [
     enableGlobalFilter: false,
   }),
   columnHelper.accessor('createdByInfo.resourceOwnerName', {
-    cell: (info) => (
-      <HStack>
-        {info.row.original.createdByInfo.createdByAuthedUser ||
-        info.row.original.createdByInfo.resourceOwnerType ===
-          ResourceOwnerType.User ? (
-          <HiUser />
-        ) : (
-          <HiBuildingOffice />
-        )}
-        <Text>
-          {info.row.original.createdByInfo.createdByAuthedUser
-            ? 'You'
-            : info.getValue()}
-        </Text>
-      </HStack>
-    ),
+    cell: (info) => {
+      const createdByInfo = info.row.original.createdByInfo;
+      return (
+        <HStack>
+          {createdByInfo.resourceOwnerType === ResourceOwnerType.User ? (
+            <HiUser />
+          ) : (
+            <Icon as={HiBuildingOffice} />
+          )}
+          <Link href={`/${info.row.original.resourceOwner.slug}`}>
+            {info.getValue()}
+          </Link>
+        </HStack>
+      );
+    },
     header: 'Owner',
     enableGlobalFilter: false,
   }),
@@ -147,15 +148,36 @@ export function Dashboard() {
     appQuery.refetch();
   }, [organization]);
 
+  if (appQuery.isLoading) {
+    return (
+      <Center>
+        <Spinner color="purple.700" />
+      </Center>
+    );
+  }
+
   return (
     <>
       <DefaultGrid flex={1} w="full">
         <GridItem colSpan={12}>
           <VStack align="start" w="full">
-            <Flex w="full" align="center" h="20" px="4">
-              <Heading size="md" flexGrow={1}>
-                Your Apps
-              </Heading>
+            <HStack w="full" align="center" h="20" px="4">
+              <VStack align="start">
+                <Heading size="md" flexGrow={1}>
+                  {organization
+                    ? organization.name
+                        .split(' ')
+                        .map((w) => `${w.charAt(0).toUpperCase()}${w.slice(1)}`)
+                        .join(' ')
+                    : 'Your Apps'}
+                </Heading>
+                {appQuery.data && (
+                  <Text>{`${appQuery.data?.length} ${
+                    appQuery.data.length === 1 ? 'App' : 'Apps'
+                  }`}</Text>
+                )}
+              </VStack>
+              <Spacer flexGrow={1} />
               <Button
                 type="button"
                 paddingX={4}
@@ -170,7 +192,7 @@ export function Dashboard() {
                 <Icon as={FiPlus} mr="2"></Icon>
                 Create new app
               </Button>
-            </Flex>
+            </HStack>
             {apps && apps.length > 0 ? (
               <>
                 <Input
