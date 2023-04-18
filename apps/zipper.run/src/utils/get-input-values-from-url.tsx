@@ -1,4 +1,8 @@
-import { getSearchParams, safeJSONParse } from '@zipper/utils';
+import {
+  getSearchParams,
+  safeJSONParse,
+  safeJSONStringify,
+} from '@zipper/utils';
 import { InputParam, InputType } from '@zipper/types';
 import { parseDate } from 'chrono-node';
 
@@ -45,7 +49,7 @@ export function getInputValuesFromAppRun(
 
   inputs.forEach((input) => {
     const name = `${input.key}:${input.type}`;
-    const value = appRunInputs[input.key];
+    const value = safeJSONStringify(appRunInputs[input.key]);
     defaultValues[name] = formatValueFromUrl(input, value || null);
   });
 

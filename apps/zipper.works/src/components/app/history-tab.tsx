@@ -1,7 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { trpc } from '~/utils/trpc';
 import {
-  Box,
   HStack,
   Table,
   Tbody,
@@ -17,6 +16,13 @@ import {
   Icon,
   Tooltip,
   Spinner,
+  ModalHeader,
+  ModalCloseButton,
+  ModalBody,
+  Modal,
+  useDisclosure,
+  ModalContent,
+  ModalOverlay,
 } from '@chakra-ui/react';
 import { Avatar } from '../avatar';
 import { useRouter } from 'next/router';
@@ -30,6 +36,7 @@ import {
 } from '@tanstack/react-table';
 import { AppRun } from '@prisma/client';
 import { User } from '@clerk/clerk-sdk-node';
+import { JSONViewer } from '../json-editor';
 
 type HistoryTabProps = {
   appId: string;
@@ -41,6 +48,9 @@ const HistoryTab: React.FC<HistoryTabProps> = ({ appId }) => {
   const [data, setData] = useState<any[]>([]);
 
   const columnHelper = createColumnHelper<AppRun & { user: User }>();
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [modalValue, setModalValue] = useState<any>();
+  const [modalHeading, setModalHeading] = useState<string>();
 
   const columns = [
     //date
@@ -140,19 +150,34 @@ const HistoryTab: React.FC<HistoryTabProps> = ({ appId }) => {
       size: 120,
       cell({
         row: {
-          original: { inputs },
+          original: { inputs, createdAt },
         },
       }) {
-        return typeof inputs === 'object'
-          ? Object.keys(inputs || {})
-              .map(
-                (k) =>
-                  `${k}: ${JSON.stringify(
-                    (inputs as Record<string, string>)[k],
-                  )}`,
-              )
-              .join(' / ')
-          : inputs.toString();
+        const inputString =
+          typeof inputs === 'object'
+            ? Object.keys(inputs || {})
+                .map(
+                  (k) =>
+                    `${k}: ${JSON.stringify(
+                      (inputs as Record<string, string>)[k],
+                    )}`,
+                )
+                .join(' / ')
+            : inputs.toString();
+        return (
+          <Text
+            cursor="pointer"
+            onClick={() => {
+              setModalHeading(
+                `${createdAt.toLocaleDateString()} @ ${createdAt.toLocaleTimeString()}`,
+              );
+              setModalValue(JSON.stringify(inputs, null, 2));
+              onOpen();
+            }}
+          >
+            {inputString}
+          </Text>
+        );
       },
     }),
     //runUrl
@@ -242,13 +267,6 @@ const HistoryTab: React.FC<HistoryTabProps> = ({ appId }) => {
                         header.getContext(),
                       )}
                     </Th>
-                    {/* <Box
-                      w="2"
-                      {...column.getResizerProps()}
-                      className={`resizer ${
-                        column.isResizing ? 'isResizing' : ''
-                      }`}
-                    /> */}
                   </>
                 ))}
               </Tr>
@@ -303,6 +321,19 @@ const HistoryTab: React.FC<HistoryTabProps> = ({ appId }) => {
           </Tbody>
         </Table>
       </Flex>
+      <Modal isOpen={isOpen} onClose={onClose}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader fontSize={'md'}>{modalHeading}</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <Heading fontSize="md" mb="4">
+              Inputs
+            </Heading>
+            <JSONViewer value={modalValue} />
+          </ModalBody>
+        </ModalContent>
+      </Modal>
     </HStack>
   );
 };
