@@ -74,6 +74,7 @@ function SlackConnectorForm({ appId }: { appId: string }) {
 
   const defaultBotScope = 'channels:read';
   const botTokenName = 'SLACK_BOT_TOKEN';
+  const userTokenName = 'SLACK_USER_TOKEN';
 
   // useMultiSelect hook gives us the value state and the onChange and setValue methods
   // for the multi-select menus
@@ -119,6 +120,11 @@ function SlackConnectorForm({ appId }: { appId: string }) {
   // get the existing Slack bot token from the database
   const existingSecret = trpc.useQuery(
     ['secret.get', { appId, key: botTokenName }],
+    { enabled: !!user },
+  );
+
+  const existingUserSecret = trpc.useQuery(
+    ['secret.get', { appId, key: userTokenName }],
     { enabled: !!user },
   );
 
@@ -174,9 +180,15 @@ function SlackConnectorForm({ appId }: { appId: string }) {
     }
   }, [slackAuthInProgress, slackAuthURL.data?.url]);
 
-  const existingInstallation = existingSecret.data && connector.data?.metadata;
+  const existingInstallation =
+    (existingSecret.data || existingUserSecret.data) &&
+    connector.data?.metadata;
 
-  if (existingSecret.isLoading || connector.isLoading) {
+  if (
+    existingUserSecret.isLoading ||
+    existingSecret.isLoading ||
+    connector.isLoading
+  ) {
     return <></>;
   }
 
@@ -264,6 +276,18 @@ function SlackConnectorForm({ appId }: { appId: string }) {
                 onChange={(e) => setClientSecret(e.target.value)}
               />
             </FormControl>
+
+            <FormControl pt="2">
+              <FormLabel>Redirect URL</FormLabel>
+              <Text>
+                Set your Slack app's redirect URL to:{' '}
+                {process.env.NODE_ENV === 'development' ? (
+                  <Code>https://your.ngrok.url/connectors/slack/auth</Code>
+                ) : (
+                  <Code>https://zipper.dev/connectors/slack/auth</Code>
+                )}
+              </Text>
+            </FormControl>
           </Collapse>
         </FormControl>
       </HStack>
@@ -334,9 +358,11 @@ function SlackConnectorForm({ appId }: { appId: string }) {
                                     <HStack>
                                       <Text>Bot Scopes:</Text>
                                       <Box>
-                                        {(connector.data?.metadata as any)[
-                                          'scope'
-                                        ]
+                                        {(
+                                          (connector.data?.metadata as any)[
+                                            'scope'
+                                          ] || ''
+                                        )
                                           .split(',')
                                           .map((scope: string) => (
                                             <Code key={scope}>{scope}</Code>

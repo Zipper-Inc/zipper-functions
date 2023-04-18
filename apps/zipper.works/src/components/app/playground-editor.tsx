@@ -283,6 +283,13 @@ export default function PlaygroundEditor(
   useEffect(() => {
     if (!monacoEditor || !importSetRef || !invalidImportSetRef) return;
     unhandledImports.forEach(async (importUrl) => {
+      // Don't dupe work
+      if (
+        importSetRef.current.has(importUrl) ||
+        invalidImportSetRef.current.has(importUrl)
+      )
+        return;
+
       try {
         // optimistically add it to the import set
         importSetRef.current.add(importUrl);

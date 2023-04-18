@@ -3,7 +3,6 @@ import { NextRequest } from 'next/server';
 import * as jose from 'jose';
 import addAppRun from './add-app-run';
 import getAppInfo from './get-app-info';
-import getInputFromRequest from './get-input-from-request';
 import getValidSubdomain from './get-valid-subdomain';
 import { getFilenameAndVersionFromPath } from './get-values-from-url';
 import { getAuth } from '@clerk/nextjs/server';
@@ -94,7 +93,10 @@ export async function relayRequest({
     .get('__zipper_temp_user_id')
     ?.value.toString();
 
-  const filename = _filename || 'main.ts';
+  let filename = _filename || 'main.ts';
+  if (!filename.endsWith('.ts')) {
+    filename = `${filename}.ts`;
+  }
 
   const appInfoResult = await getAppInfo({
     subdomain,
@@ -141,7 +143,7 @@ export async function relayRequest({
 
   relayBody.userInfo = userInfo;
 
-  relayBody.path = _filename;
+  relayBody.path = filename;
 
   const response = await fetch(relayUrl, {
     method: 'POST',
@@ -152,14 +154,15 @@ export async function relayRequest({
   const { status, headers } = response;
   const result = await response.text();
 
-  addAppRun({
+  const appRunRes = await addAppRun({
     appId: app.id,
     deploymentId,
     success: response.status === 200,
     scheduleId: request.headers.get('x-zipper-schedule-id') || undefined,
-    inputs: await getInputFromRequest(request, JSON.stringify(relayBody)),
+    rpcBody: relayBody,
     result,
   });
+  headers.set('x-zipper-run-id', await appRunRes.text());
 
   return { result, status, headers };
 }

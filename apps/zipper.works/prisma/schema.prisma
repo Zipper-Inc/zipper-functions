@@ -119,10 +119,15 @@ model AppRun {
   success      Boolean
   deploymentId String
   scheduleId   String?
+  path         String    @default("main.ts")
   result       Json?
   inputs       Json?
+  userId       String?
+  originalRequestUrl     String?
+  originalRequestMethod  String?
+  appId        String
+  version      String?
 
-  appId     String
   app       App?          @relation(fields: [appId], references: [id])
   schedule  Schedule?     @relation(fields: [scheduleId], references: [id])
 
