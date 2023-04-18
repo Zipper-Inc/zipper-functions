@@ -67,7 +67,9 @@ export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
     (e: Event) => {
       e.preventDefault();
       setExpandedResult({});
-      run();
+      if (!isRunning) {
+        run();
+      }
     },
     [],
   );
@@ -131,11 +133,11 @@ export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
             setExpandedResult,
           }}
         >
-        <AppEditSidebar
-          showInputForm={!currentScriptConnectorId}
-          tips={ConnectorSidebarTips(currentScriptConnectorId)}
-          appSlug={app.slug}
-        />
+          <AppEditSidebar
+            showInputForm={!currentScriptConnectorId}
+            tips={ConnectorSidebarTips(currentScriptConnectorId)}
+            appSlug={app.slug}
+          />
         </AppEditSidebarProvider>
       </VStack>
     </HStack>
