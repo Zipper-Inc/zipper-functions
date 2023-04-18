@@ -1,8 +1,5 @@
 import { FormControl, Text, Code, HStack, VStack } from '@chakra-ui/react';
-import {
-  AppEditSidebar,
-  AppEditSidebarAPI,
-} from '~/components/app/app-edit-sidebar';
+import { AppEditSidebar } from '~/components/app/app-edit-sidebar';
 import { useCmdOrCtrl } from '@zipper/ui';
 import { ConnectorForm } from './connector-form';
 import { PlaygroundSidebar } from './playground-sidebar';
@@ -12,8 +9,11 @@ import { useRunAppContext } from '../context/run-app-context';
 import { ConnectorId } from '~/connectors/createConnector';
 import { AppQueryOutput } from '~/types/trpc';
 import { Script } from '@prisma/client';
-import { useRef } from 'react';
-import noop from '~/utils/noop';
+import { useState } from 'react';
+import {
+  AppEditSidebarContextType,
+  AppEditSidebarProvider,
+} from '~/components/context/app-edit-sidebar-context';
 
 export const PlaygroundEditor = dynamic(() => import('./playground-editor'), {
   ssr: false,
@@ -48,10 +48,10 @@ type CodeTabProps = {
 
 export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
   const { currentScript, save, onChange } = useEditorContext();
-  const { run } = useRunAppContext();
-  const appEditApiRef = useRef<AppEditSidebarAPI>({
-    resetExpandedResult: noop,
-  });
+  const { isRunning, run } = useRunAppContext();
+  const [expandedResult, setExpandedResult] = useState<
+    AppEditSidebarContextType['expandedResult']
+  >({});
 
   useCmdOrCtrl(
     'S',
@@ -66,7 +66,7 @@ export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
     'Enter',
     (e: Event) => {
       e.preventDefault();
-      appEditApiRef.current.resetExpandedResult();
+      setExpandedResult({});
       run();
     },
     [],
@@ -125,12 +125,18 @@ export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
         </FormControl>
       </VStack>
       <VStack flex={2} alignItems="stretch" minW="220px" overflow="auto">
+        <AppEditSidebarProvider
+          value={{
+            expandedResult,
+            setExpandedResult,
+          }}
+        >
         <AppEditSidebar
           showInputForm={!currentScriptConnectorId}
           tips={ConnectorSidebarTips(currentScriptConnectorId)}
           appSlug={app.slug}
-          apiRef={appEditApiRef}
         />
+        </AppEditSidebarProvider>
       </VStack>
     </HStack>
   );

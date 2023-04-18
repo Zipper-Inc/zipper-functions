@@ -42,19 +42,12 @@ import getRunUrl from '~/utils/get-run-url';
 import Link from 'next/link';
 import { HiOutlineChevronDown, HiOutlineChevronUp } from 'react-icons/hi';
 import { getAppLink } from '@zipper/utils';
-
-export type AppEditSidebarAPI = {
-  resetExpandedResult: VoidFunction;
-};
+import { useAppEditSidebarContext } from '~/components/context/app-edit-sidebar-context';
 
 type AppEditSidebarProps = {
   showInputForm: boolean;
   tips?: JSX.Element;
   appSlug: string;
-  /**
-   * ref object to attach the AppEditSidebar API to
-   */
-  apiRef?: React.MutableRefObject<AppEditSidebarAPI>;
 };
 
 // toast duration
@@ -64,7 +57,6 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
   showInputForm = true,
   tips,
   appSlug,
-  apiRef,
 }) => {
   const [tabIndex, setTabIndex] = useState(0);
   const [isExpandedResultOpen, setIsExpandedResultOpen] = useState(true);
@@ -200,11 +192,6 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
     if (userAuthConnectors.find((c) => c.type === 'github')) {
       setGitHubAuthRequired(true);
     }
-    if (apiRef) {
-      apiRef.current = {
-        resetExpandedResult,
-      };
-    }
   }, []);
 
   const logs = appEventsQuery?.data?.map((event: any) => event.eventPayload);
@@ -226,8 +213,8 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
   };
 
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const [expandedResult, setExpandedResult] = useState<Record<string, any>>({});
   const [modalResult, setModalResult] = useState({ heading: '', body: '' });
+  const { expandedResult, setExpandedResult } = useAppEditSidebarContext();
 
   const output = useMemo(
     () => (
@@ -286,8 +273,6 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
     }
   };
 
-  const resetExpandedResult = () => setExpandedResult({});
-
   return (
     <Tabs
       colorScheme="purple"
@@ -321,7 +306,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
                   currentScript?.filename === 'main.ts' ? 'solid' : 'ghost'
                 }
                 onClick={() => {
-                  resetExpandedResult();
+                  setExpandedResult({});
                   run(true);
                 }}
                 display="flex"
