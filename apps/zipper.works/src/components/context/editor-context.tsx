@@ -49,10 +49,6 @@ export type EditorContextType = {
   inputParams?: InputParam[];
   setInputParams: (inputParams: InputParam[]) => void;
   inputError?: string;
-  importSetRef?: MutableRefObject<Set<string>>;
-  invalidImportSetRef?: MutableRefObject<Set<string>>;
-  unhandledImports: string[];
-  setUnhandledImports: (imports: string[]) => void;
   monacoRef?: MutableRefObject<Monaco | undefined>;
 };
 
@@ -77,12 +73,10 @@ export const EditorContext = createContext<EditorContextType>({
   inputParams: undefined,
   setInputParams: noop,
   inputError: undefined,
-  importSetRef: undefined,
-  invalidImportSetRef: undefined,
-  unhandledImports: [],
-  setUnhandledImports: noop,
   monacoRef: undefined,
 });
+
+const MAX_RETRIES_FOR_EXTERNAL_IMPORT = 3;
 
 const EditorContextProvider = ({
   children,
@@ -112,11 +106,8 @@ const EditorContextProvider = ({
   const [editor, setEditor] = useState<typeof monaco.editor | undefined>();
   const monacoRef = useRef<Monaco>();
 
-  const importSetRef = useRef(new Set<string>());
-  const invalidImportUrlsRef = useRef(new Set<string>());
-  const importModelsRef = useRef<string[]>([]);
-
-  const [unhandledImports, setUnhandledImports] = useState<string[]>([]);
+  const invalidImportUrlsRef = useRef<{ [url: string]: number }>({});
+  const externalImportModelsRef = useRef<string[]>([]);
 
   const [modelsDirtyState, setModelsDirtyState] = useState<
     Record<string, boolean>
@@ -170,9 +161,9 @@ const EditorContextProvider = ({
         setInputError(undefined);
 
         if (!monacoRef?.current) return;
-        const uriParser = monacoRef.current.Uri.parse;
+        const uriParse = monacoRef.current.Uri.parse;
 
-        const oldImportModels = importModelsRef.current;
+        const oldImportModels = externalImportModelsRef.current;
         const newImportModels: string[] = [];
 
         // First, let's cleanup anything removed from the code
@@ -180,7 +171,7 @@ const EditorContextProvider = ({
           const modelToDelete =
             !importsFromCode.includes(importUrl) &&
             monacoRef?.current?.editor.getModel(
-              getUriFromPath(importUrl, uriParser),
+              getUriFromPath(importUrl, uriParse),
             );
 
           if (modelToDelete) {
@@ -199,8 +190,9 @@ const EditorContextProvider = ({
 
           // If this is net new and not already invalid, let's download it
           if (
-            !importModelsRef.current.includes(importUrl) &&
-            !invalidImportUrlsRef.current.has(importUrl)
+            !externalImportModelsRef.current.includes(importUrl) &&
+            (invalidImportUrlsRef.current[importUrl] || 0) <
+              MAX_RETRIES_FOR_EXTERNAL_IMPORT
           ) {
             // download that shit
 
@@ -216,7 +208,7 @@ const EditorContextProvider = ({
               Object.keys(bundle).forEach((url) => {
                 console.log('[IMPORTS]', `(${importUrl})`, `Handling ${url}`);
                 const src = bundle[url];
-                const uri = getUriFromPath(url, uriParser);
+                const uri = getUriFromPath(url, uriParse);
                 if (!monacoRef?.current?.editor.getModel(uri)) {
                   monacoRef?.current?.editor.createModel(
                     src,
@@ -226,18 +218,21 @@ const EditorContextProvider = ({
                 }
               });
             } catch (e) {
-              invalidImportUrlsRef.current.add(importUrl);
+              let currentRetries = invalidImportUrlsRef.current[importUrl] || 0;
+              invalidImportUrlsRef.current[importUrl] = currentRetries += 1;
               console.error(
                 '[IMPORTS]',
                 `(${importUrl})`,
-                'Error adding import',
+                `Error adding import, will try ${
+                  MAX_RETRIES_FOR_EXTERNAL_IMPORT - currentRetries
+                } more times`,
                 e,
               );
             }
           }
         });
 
-        importModelsRef.current = newImportModels;
+        externalImportModelsRef.current = newImportModels;
       } catch (e: any) {
         setInputParams(undefined);
         setInputError(e.message);
@@ -418,10 +413,6 @@ const EditorContextProvider = ({
         inputParams,
         setInputParams,
         inputError,
-        importSetRef,
-        invalidImportSetRef: invalidImportUrlsRef,
-        unhandledImports,
-        setUnhandledImports,
         monacoRef,
       }}
     >
