@@ -10,11 +10,14 @@ export type CacheRecord = {
 const DEFAULT_TTL = 604800;
 
 const CACHE_KEY_PREFIX = 'eszipBuildCache';
-const CACHE_BUST_TIMESTAMP = 1680232726943;
+const CACHE_BUST_TIMESTAMP = 1681840170;
 
 /**
  * Makes a cache key for a specifier url
- * @exampleOutput eszipBuildCache-1680232726943[https://deno.land/x/oak@v3.0.0/mod.ts]
+ *
+ * @example
+ * const cacheKey = getCacheKey('https://deno.land/x/oak@v3.0.0/mod.ts');
+ * // cacheKey === `eszipBuildCache-1681840170[https://deno.land/x/oak@v3.0.0/mod.ts]`
  */
 const getCacheKey = (specifier: string) =>
   `${CACHE_KEY_PREFIX}-${CACHE_BUST_TIMESTAMP}[${specifier}]`;

@@ -1,5 +1,10 @@
 import * as monaco from 'monaco-editor';
-import Editor, { EditorProps, useMonaco, loader } from '@monaco-editor/react';
+import Editor, {
+  EditorProps,
+  useMonaco,
+  loader,
+  Monaco,
+} from '@monaco-editor/react';
 import { buildWorkerDefinition } from 'monaco-editor-workers';
 import { useMyPresence, useOthersConnectionIds } from '~/liveblocks.config';
 
@@ -12,7 +17,6 @@ import { useRunAppContext } from '../context/run-app-context';
 import { getPathFromUri, getUriFromPath } from '~/utils/model-uri';
 
 type MonacoEditor = monaco.editor.IStandaloneCodeEditor;
-type Monaco = typeof monaco;
 
 loader.config({ monaco });
 
@@ -39,13 +43,10 @@ export default function PlaygroundEditor(
     setModelIsDirty,
     isEditorDirty,
     connectionId,
-    unhandledImports,
-    importSetRef,
-    invalidImportSetRef,
+    monacoRef,
   } = useEditorContext();
   const { appInfo } = useRunAppContext();
   const editorRef = useRef<MonacoEditor>();
-  const monacoRef = useRef<Monaco>();
   const [isEditorReady, setIsEditorReady] = useState(false);
   const monacoEditor = useMonaco();
   const [, updateMyPresence] = useMyPresence();
@@ -53,14 +54,14 @@ export default function PlaygroundEditor(
 
   useExitConfirmation({ enable: isEditorDirty(), ignorePaths: ['/edit/'] });
 
-  const handleEditorDidMount = (editor: MonacoEditor, _monaco: Monaco) => {
+  const handleEditorDidMount = (editor: MonacoEditor, monaco: Monaco) => {
     console.log('editor mounted');
-    // here is another way to get monaco instance
-    // you can also store it in `useRef` for further usage
+
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    monacoRef!.current = monaco;
     editorRef.current = editor;
-    // clear existing models
-    monacoRef.current?.editor.getModels().forEach((model) => model.dispose());
-    monacoRef.current?.languages.typescript.javascriptDefaults.setEagerModelSync(
+
+    monacoRef?.current?.languages.typescript.javascriptDefaults.setEagerModelSync(
       true,
     );
 
@@ -277,46 +278,6 @@ export default function PlaygroundEditor(
     );
     editorRef.current.pushUndoStop();
   }, [connectionId, currentScriptLive?.code, editorRef.current]);
-
-  // Handle imports
-  // Handle new imports
-  useEffect(() => {
-    if (!monacoEditor || !importSetRef || !invalidImportSetRef) return;
-    unhandledImports.forEach(async (importUrl) => {
-      // Don't dupe work
-      if (
-        importSetRef.current.has(importUrl) ||
-        invalidImportSetRef.current.has(importUrl)
-      )
-        return;
-
-      try {
-        // optimistically add it to the import set
-        importSetRef.current.add(importUrl);
-
-        console.log('[IMPORTS]', `(${importUrl})`, 'Fetching import');
-
-        const bundle = await fetch(`/api/ts/bundle?x=${importUrl}`).then((r) =>
-          r.json(),
-        );
-
-        Object.keys(bundle).forEach((url) => {
-          console.log('[IMPORTS]', `(${importUrl})`, `Handling ${url}`);
-          const src = bundle[url];
-          const uri = getUriFromPath(url, monacoEditor.Uri.parse);
-          if (!monacoEditor.editor.getModel(uri)) {
-            monacoEditor.editor.createModel(src, 'typescript', uri);
-          }
-        });
-      } catch (e) {
-        // remove it from the import set if there's an error
-        // and add it to the set of invalid imports so we don't try it again
-        importSetRef.current.delete(importUrl);
-        invalidImportSetRef.current.add(importUrl);
-        console.error('[IMPORTS]', `(${importUrl})`, 'Error adding import', e);
-      }
-    });
-  }, [unhandledImports, monacoEditor, importSetRef, invalidImportSetRef]);
 
   return (
     <>
