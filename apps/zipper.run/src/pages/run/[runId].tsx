@@ -25,6 +25,7 @@ export const getServerSideProps: GetServerSideProps = async ({
     subdomain,
     token: await auth.getToken({ template: 'incl_orgs' }),
     runId: query.runId as string,
+    tempUserId: req.cookies[ZIPPER_TEMP_USER_ID_COOKIE_NAME],
   });
 
   if (!result.ok) {
