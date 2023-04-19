@@ -92,7 +92,7 @@ export function DataTable<Data extends Record<string, unknown>>({
       </Thead>
       <Tbody>
         {table.getRowModel().rows.map((row) => (
-          <TableRow row={row} />
+          <TableRow row={row} key={row.id} />
         ))}
         {isEmpty && (
           <Tr>
@@ -127,7 +127,7 @@ const TableRow: React.FC<{ row: Row<any> }> = ({ row }) => {
         }
         if (i === 2 && isHovering) {
           return (
-            <Td>
+            <Td key={cell.id}>
               <HStack>
                 <Button
                   variant={'outline'}

@@ -15,7 +15,7 @@ const SignUpPage = () => {
           path="/sign-up"
           routing="path"
           signInUrl="/sign-in"
-          // redirectUrl={`/auth/success?redirect_url=${redirectUrl || '/'}`}
+          redirectUrl={`/auth/success?redirect_url=${redirectUrl || '/'}`}
         />
       </VStack>
     </Center>
