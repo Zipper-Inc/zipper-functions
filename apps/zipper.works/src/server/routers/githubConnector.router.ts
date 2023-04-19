@@ -284,9 +284,6 @@ export const githubConnectorRouter = createRouter()
           clientSecret,
         });
 
-        console.log('githubClientId: ', githubClientId);
-        console.log('githubClientSecret: ', githubClientSecret);
-
         const userInfoRes = await fetch(
           `https://api.github.com/applications/${githubClientId}/token`,
           {
@@ -304,7 +301,6 @@ export const githubConnectorRouter = createRouter()
         const userInfoJson =
           (await userInfoRes.json()) as GitHubCheckTokenResponse;
 
-        console.log('userInfoJson: ', userInfoJson);
         if (userInfoJson.user) {
           metadata = filterTokenFields(userInfoJson);
           appConnectorUserAuth = await prisma.appConnectorUserAuth.upsert({
