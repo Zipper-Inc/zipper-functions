@@ -107,6 +107,7 @@ export function DataTable<Data extends Record<string, unknown>>({
 
 const TableRow: React.FC<{ row: Row<any> }> = ({ row }) => {
   const [isHovering, setIsHovering] = React.useState(false);
+  const router = useRouter();
   return (
     <Tr
       key={row.id}
@@ -128,11 +129,35 @@ const TableRow: React.FC<{ row: Row<any> }> = ({ row }) => {
           return (
             <Td>
               <HStack>
-                <Button variant={'outline'} colorScheme="purple" size={'sm'}>
+                <Button
+                  variant={'outline'}
+                  colorScheme="purple"
+                  size={'sm'}
+                  onClick={() =>
+                    window.location.replace(
+                      `/${row.original.resourceOwner.slug}/${row.original.slug}/edit/main.ts`,
+                    )
+                  }
+                >
                   <Icon as={VscCode} mr="1" />
                   Edit
                 </Button>
-                <Button variant={'outline'} colorScheme="purple" size={'sm'}>
+                <Button
+                  variant={'outline'}
+                  colorScheme="purple"
+                  size={'sm'}
+                  onClick={() =>
+                    router.push(
+                      `${
+                        process.env.NODE_ENV === 'development'
+                          ? 'http://'
+                          : 'https://'
+                      }${row.original.slug}.${
+                        process.env.NEXT_PUBLIC_OUTPUT_SERVER_HOSTNAME
+                      }`,
+                    )
+                  }
+                >
                   <Icon as={HiExternalLink} mr="1" />
                   View
                 </Button>

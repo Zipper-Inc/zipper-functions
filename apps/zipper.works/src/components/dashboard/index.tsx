@@ -95,23 +95,48 @@ const columns = [
     header: 'Applet Name',
   }),
   columnHelper.accessor('createdByInfo.createdByAuthedUser', {
+    id: 'createdBy',
     cell: (info) => {
       const createdByInfo = info.row.original.createdByInfo;
       return (
-        <HStack>
-          {createdByInfo.resourceOwnerType === ResourceOwnerType.User ? (
-            <HiUser />
+        <>
+          {info.getValue() ? (
+            <HStack>
+              <HiUser />
+              <Text>You</Text>
+            </HStack>
           ) : (
-            <Icon as={HiBuildingOffice} />
+            <HStack>
+              <Icon as={HiBuildingOffice} />
+              <Text>{createdByInfo.resourceOwnerName}</Text>
+            </HStack>
           )}
-          <Text>
-            {info.getValue() ? 'You' : createdByInfo.resourceOwnerName}
-          </Text>
-        </HStack>
+        </>
       );
     },
     header: 'Created by',
     enableGlobalFilter: false,
+    size: 52,
+  }),
+  columnHelper.accessor('resourceOwner.slug', {
+    id: 'owner',
+    cell: (info) => {
+      const createdByInfo = info.row.original.createdByInfo;
+
+      return (
+        <>
+          <HStack>
+            {createdByInfo.resourceOwnerType === ResourceOwnerType.User ? (
+              <Icon as={HiUser} />
+            ) : (
+              <Icon as={HiBuildingOffice} />
+            )}
+            <Text>{info.getValue()}</Text>
+          </HStack>
+        </>
+      );
+    },
+    header: 'Owner',
     size: 52,
   }),
   columnHelper.accessor('updatedAt', {
@@ -133,11 +158,17 @@ const emptyApps: App[] = [];
 
 export function Dashboard() {
   const { organization } = useOrganization();
-  const appQuery = trpc.useQuery(['app.byAuthedUser']);
   const [appSearchTerm, setAppSearchTerm] = useState('');
+  const appQuery = trpc.useQuery([
+    'app.byAuthedUser',
+    { filterByOrganization: !appSearchTerm },
+  ]);
   const [isCreateAppModalOpen, setCreateAppModalOpen] = useState(false);
-  const [columnVisibility] = useState<Partial<Record<DeepKeys<App>, boolean>>>({
+  const [columnVisibility, setColumnVisibility] = useState<
+    Partial<Record<DeepKeys<App>, boolean>>
+  >({
     description: false,
+    owner: false,
   });
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const { getAppOwner } = useAppOwner();
@@ -151,6 +182,14 @@ export function Dashboard() {
   useEffect(() => {
     appQuery.refetch();
   }, [organization]);
+
+  useEffect(() => {
+    setColumnVisibility({
+      description: false,
+      owner: !!appSearchTerm,
+      createdBy: !appSearchTerm,
+    });
+  });
 
   if (appQuery.isLoading) {
     return (
