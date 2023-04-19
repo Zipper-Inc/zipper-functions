@@ -6,5 +6,5 @@ const DashboardPage: NextPageWithLayout = () => {
   return <Dashboard />;
 };
 
-DashboardPage.header = () => <Header showOrgSwitcher={true}></Header>;
+// DashboardPage.header = () => <Header showOrgSwitcher={true}></Header>;
 export default DashboardPage;
