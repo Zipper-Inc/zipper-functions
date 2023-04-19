@@ -31,6 +31,7 @@ import {
   FunctionUserConnectors,
 } from '@zipper/ui';
 import { useEffect, useMemo, useState } from 'react';
+import { Console } from 'console-feed';
 import { LogLine } from '~/components/app/log-line';
 import { useRunAppContext } from '../context/run-app-context';
 import { trpc } from '~/utils/trpc';
@@ -50,6 +51,8 @@ type AppEditSidebarProps = {
   tips?: JSX.Element;
   appSlug: string;
 };
+
+type Messages = React.ComponentProps<typeof Console>['logs'];
 
 // toast duration
 const duration = 1500;
@@ -214,6 +217,15 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
   }, []);
 
   const logs = appEventsQuery?.data?.map((event: any) => event.eventPayload);
+
+  console.log({ logs });
+
+  const msgs: Messages =
+    logs?.map((log, i) => ({
+      id: i.toString(),
+      method: log.level || 'info',
+      data: log.msg ? [log.msg.trim()] : ['Booted in', log.boot_time],
+    })) || [];
 
   useEffect(() => {
     // don't switch over on the intial load
@@ -567,23 +579,14 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
         {tips && <TabPanel flex={1}>{tips}</TabPanel>}
 
         {/* LOGS */}
-        <TabPanel flex={1}>
-          <VStack
-            spacing={0}
-            align="start"
-            fontFamily="monospace"
-            fontSize={12}
-            borderTop="1px"
-            borderColor="gray.200"
-            mt={-2}
-            ml={-4}
-            mr={-4}
-            divider={<Divider />}
-          >
-            {logs?.map((log: any, i: number) => (
-              <LogLine log={log} key={i} />
-            ))}
-          </VStack>
+        <TabPanel flex={1} padding="0">
+          <Console
+            logs={msgs}
+            styles={{
+              BASE_LINE_HEIGHT: 'inherit',
+              TREENODE_LINE_HEIGHT: 'inherit',
+            }}
+          />
         </TabPanel>
       </TabPanels>
     </Tabs>
