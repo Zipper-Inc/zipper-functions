@@ -132,6 +132,7 @@ function FunctionParamInput({
             onChange={(e) => {
               try {
                 JSON.parse(e.target.value);
+                formContext.setValue(name, e.target.value);
                 setError(undefined);
               } catch (e: any) {
                 setError(`Error parsing value: ${e.message}`);
