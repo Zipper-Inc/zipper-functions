@@ -9,7 +9,7 @@ import {
   Button,
   Text,
 } from '@chakra-ui/react';
-import { GitHubCheckTokenResponse } from '@zipper/types';
+import { GithubConnectorAuthMetadata } from '@zipper/types';
 import { VscGithub } from 'react-icons/vsc';
 import { ConnectorInputProps } from './types';
 
@@ -85,11 +85,11 @@ export const GitHubUserConnectorInput: React.FC<ConnectorInputProps> = ({
         <Text fontWeight={'medium'}>
           {(
             c.appConnectorUserAuths[0]
-              .metadata as GitHubCheckTokenResponse['user']
+              .metadata as GithubConnectorAuthMetadata['user']
           ).login ||
             (
               c.appConnectorUserAuths[0]
-                .metadata as GitHubCheckTokenResponse['user']
+                .metadata as GithubConnectorAuthMetadata['user']
             ).id}
         </Text>
       </HStack>
