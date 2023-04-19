@@ -22,7 +22,6 @@ import { CreateAppModal } from './create-app-modal';
 import { FiPlus } from 'react-icons/fi';
 import { DataTable } from './table';
 import {
-  DeepKeys,
   SortingState,
   createColumnHelper,
   getFilteredRowModel,
@@ -165,7 +164,7 @@ export function Dashboard() {
   ]);
   const [isCreateAppModalOpen, setCreateAppModalOpen] = useState(false);
   const [columnVisibility, setColumnVisibility] = useState<
-    Partial<Record<DeepKeys<App>, boolean>>
+    Record<string, boolean>
   >({
     description: false,
     owner: false,
