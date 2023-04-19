@@ -1,4 +1,5 @@
 import { AppInfoResult } from '@zipper/types';
+import { ZIPPER_TEMP_USER_ID_HEADER } from '@zipper/utils';
 
 /**
  * App info endpoint url
@@ -21,7 +22,7 @@ export default async function getAppInfo({
     Authorization: `Bearer ${token || ''}`,
   };
   if (tempUserId) {
-    headers['x-zipper-temp-user-id'] = tempUserId;
+    headers[ZIPPER_TEMP_USER_ID_HEADER] = tempUserId;
   }
   return fetch(`${APP_INFO_URL}/${subdomain}`, {
     method: 'POST',

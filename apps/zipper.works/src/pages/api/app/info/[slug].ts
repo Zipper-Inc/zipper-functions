@@ -15,6 +15,7 @@ import clerkClient from '@clerk/clerk-sdk-node';
 import { compare } from 'bcryptjs';
 import { canUserEdit } from '~/server/routers/app.router';
 import { requiredUserAuthConnectorFilter } from '~/utils/user-auth-connector-filter';
+import { ZIPPER_TEMP_USER_ID_HEADER } from '@zipper/utils';
 // import { canUserEdit } from '~/server/routers/app.router';
 // import { getAuth } from '@clerk/nextjs/server';
 
@@ -54,7 +55,9 @@ export default async function handler(
   if (token) {
     userInfo = await getUserInfo(token, slugFromUrl);
   }
-  const tempUserId = req.headers['x-zipper-temp-user-id'] as string | undefined;
+  const tempUserId = req.headers[ZIPPER_TEMP_USER_ID_HEADER] as
+    | string
+    | undefined;
 
   let appFound:
     | (App & {
