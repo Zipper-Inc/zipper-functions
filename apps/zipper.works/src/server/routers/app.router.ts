@@ -274,6 +274,7 @@ export const appRouter = createRouter()
     input: z
       .object({
         parentId: z.string().optional(),
+        filterByOrganization: z.boolean().default(true),
       })
       .optional(),
     async resolve({ ctx, input }) {
@@ -282,7 +283,7 @@ export const appRouter = createRouter()
         parentId: input?.parentId,
       };
 
-      if (ctx.orgId) {
+      if (ctx.orgId && (!input || input.filterByOrganization)) {
         // return apps that belong to the organization workspace you're currently in
         where.organizationId = ctx.orgId;
       } else {
@@ -304,6 +305,14 @@ export const appRouter = createRouter()
             editors: { some: { userId: ctx.userId } },
           },
         ];
+
+        if (input && !input.filterByOrganization) {
+          where.OR.push({
+            organizationId: {
+              in: Object.keys(ctx.organizations || {}),
+            },
+          });
+        }
       }
 
       const apps = await prisma.app.findMany({
