@@ -10,3 +10,4 @@ export * from '../src/utils/get-app-link';
 export * from '../src/utils/object';
 export * from '../src/utils/safe-json';
 export * from '../src/utils/url';
+export * from '../src/constants';
