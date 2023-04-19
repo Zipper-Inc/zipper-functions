@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import noop from '~/utils/noop';
-import { AppInfo, ConnectorType, InputParam } from '@zipper/types';
+import { AppInfo, ConnectorType, InputParam, Log } from '@zipper/types';
 import { useForm } from 'react-hook-form';
 import { trpc } from '~/utils/trpc';
 import { AppQueryOutput, AppEventUseQueryResult } from '~/types/trpc';
@@ -10,6 +10,7 @@ import { getAppHash, getAppVersionFromHash } from '~/utils/hashing';
 import { useUser } from '@clerk/nextjs';
 import { useEditorContext } from './editor-context';
 import { requiredUserAuthConnectorFilter } from '~/utils/user-auth-connector-filter';
+import { useArray } from '@zipper/ui';
 
 type UserAuthConnector = {
   type: ConnectorType;
@@ -26,6 +27,7 @@ export type FunctionCallContextType = {
   inputParams?: InputParam[];
   isRunning: boolean;
   lastRunVersion: string;
+  logs: ReturnType<typeof useArray<Log>>;
   results: Record<string, string>;
   userAuthConnectors: UserAuthConnector[];
   appEventsQuery?: AppEventUseQueryResult;
@@ -39,6 +41,13 @@ export const RunAppContext = createContext<FunctionCallContextType>({
   inputParams: undefined,
   isRunning: false,
   lastRunVersion: '',
+  logs: {
+    value: [],
+    setValue: noop,
+    push: noop,
+    remove: noop,
+    isEmpty: () => true,
+  },
   results: {},
   appEventsQuery: undefined,
   userAuthConnectors: [],
@@ -72,6 +81,7 @@ export function RunAppProvider({
   const [lastRunVersion, setLastRunVersion] = useState(
     () => app.lastDeploymentVersion || getAppVersionFromHash(getAppHash(app)),
   );
+  const logs = useArray<Log>([]);
 
   const runAppMutation = trpc.useMutation('app.run');
 
@@ -135,6 +145,7 @@ export function RunAppProvider({
         formMethods,
         isRunning,
         lastRunVersion,
+        logs,
         results,
         appEventsQuery,
         userAuthConnectors: app.connectors.filter(
