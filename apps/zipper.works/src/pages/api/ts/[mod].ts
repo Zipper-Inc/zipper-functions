@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import * as eszip from '@deno/eszip';
 import { BuildCache, getModule } from '~/utils/eszip-build-cache';
 import { LoadResponseModule } from '@deno/eszip/types/loader';
+import { createUrlFromRelativeUrl, getHost } from '@zipper/utils';
 
 enum ModMode {
   Module = 'module',
@@ -21,19 +22,26 @@ const buildCache = new BuildCache();
  * are rewritten to `deno.land/x/foo` so that the editor can follow the relative paths
  */
 function getRedirectReplacer({
-  originalUrl,
-  redirectedUrl,
+  originalUrl: originalUrlPassedIn,
+  redirectedUrl: redirectedUrlPassedIn,
 }: {
   originalUrl: string;
   redirectedUrl: string;
 }) {
-  if (originalUrl === redirectedUrl) return;
+  if (originalUrlPassedIn === redirectedUrlPassedIn) return;
   // get the end file, something like `mod.ts`
-  const filename = originalUrl.substring(originalUrl.lastIndexOf('/') + 1);
+
+  const originalUrl = createUrlFromRelativeUrl(originalUrlPassedIn);
+  const redirectedUrl = createUrlFromRelativeUrl(redirectedUrlPassedIn);
+
+  const filename = originalUrl.pathname.substring(
+    originalUrlPassedIn.lastIndexOf('/') + 1,
+  );
+
   // remove the `mod.ts` from the original url
-  const originalPath = originalUrl.replace(filename, '');
+  const originalPath = originalUrl.pathname.replace(filename, '');
   // get equivalent path on the redirected url
-  const redirectedPath = redirectedUrl.replace(filename, '');
+  const redirectedPath = redirectedUrl.pathname.replace(filename, '');
 
   return (specifier: string) => specifier.replace(redirectedPath, originalPath);
 }
@@ -130,6 +138,7 @@ async function respondWithTypesBundle({
         const typesUrl = replaceRedirect
           ? replaceRedirect(specifier)
           : specifier;
+
         const mod = await getModule(specifier, buildCache);
         if (mod?.content) typesBundle[typesUrl] = mod.content;
         return mod;
@@ -169,18 +178,42 @@ export default async function handler(
   // commas are valid in URLs, so don't treat this as an array
   const moduleUrl = Array.isArray(x) ? x.join(',') : x;
 
-  const rootModule = await getModule(moduleUrl, buildCache);
+  // @todo maybe change this?
+  const preferTypes = true;
+  let moduleUrlEnhanced = '';
+
+  if (getHost(moduleUrl) === 'cdn.skypack.dev') {
+    const url = new URL(moduleUrl);
+    url.searchParams.set('dts', '');
+    moduleUrlEnhanced = url.toString();
+  }
+
+  if (getHost(moduleUrl) === 'esm.sh') {
+    const url = new URL(moduleUrl);
+    url.searchParams.set('target', 'deno');
+    url.searchParams.set('bundle', '');
+  }
+
+  const rootModule = await getModule(
+    moduleUrlEnhanced || moduleUrl,
+    buildCache,
+  );
 
   if (!rootModule) return res.status(404).send('Module not found');
 
   const typesLocation = rootModule.headers?.[TYPES_HEADER] as string;
-  if (typesLocation) {
+
+  if (preferTypes && typesLocation) {
     modMode = ModMode.Types;
   }
 
   switch (modMode) {
     case ModMode.Bundle:
-      return respondWithBundle({ moduleUrl, rootModule, res });
+      return respondWithBundle({
+        moduleUrl,
+        rootModule,
+        res,
+      });
     case ModMode.Types:
       return respondWithTypesBundle({
         moduleUrl,
