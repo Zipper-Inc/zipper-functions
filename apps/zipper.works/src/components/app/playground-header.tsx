@@ -136,22 +136,6 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
             </SignedOut>
           </NextLink>
         </Box>
-        <HStack spacing={2} alignItems="center" minW={0}>
-          <Box>
-            {app.isPrivate ? (
-              <Icon as={LockIcon} color={'gray.500'} boxSize={4} mb={1} />
-            ) : (
-              <Icon as={UnlockIcon} color={'gray.400'} boxSize={4} mb={1} />
-            )}
-          </Box>
-          {app.parentId && (
-            <Box>
-              <Link href={`/app/${app.parentId}/edit`} target="_blank">
-                <Icon as={ForkIcon} color={'gray.400'} size={16} />
-              </Link>
-            </Box>
-          )}
-        </HStack>
         <HStack>
           <NextLink href={`/${app.resourceOwner.slug}`}>
             <Heading
@@ -176,6 +160,23 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
           >
             /
           </Heading>
+
+          <HStack spacing={2} alignItems="center" minW={0}>
+            <Box>
+              {app.isPrivate ? (
+                <Icon as={LockIcon} color={'gray.500'} boxSize={4} mb={1} />
+              ) : (
+                <Icon as={UnlockIcon} color={'gray.400'} boxSize={4} mb={1} />
+              )}
+            </Box>
+            {app.parentId && (
+              <Box>
+                <Link href={`/app/${app.parentId}/edit`} target="_blank">
+                  <Icon as={ForkIcon} color={'gray.400'} size={16} />
+                </Link>
+              </Box>
+            )}
+          </HStack>
           {editSlug ? (
             <EditAppSlugForm app={app} onClose={() => setEditSlug(false)} />
           ) : (

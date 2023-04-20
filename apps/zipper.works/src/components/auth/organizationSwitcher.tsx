@@ -1,4 +1,4 @@
-import { useOrganization, useOrganizationList } from '@clerk/nextjs';
+import { useOrganization, useOrganizationList, useUser } from '@clerk/nextjs';
 import {
   Box,
   Button,
@@ -10,28 +10,21 @@ import {
   Text,
   Icon,
   VStack,
-  IconButton,
   useDisclosure,
   ButtonProps,
 } from '@chakra-ui/react';
-import { useRouter } from 'next/router';
-import {
-  HiChevronUpDown,
-  HiOutlineChevronUpDown,
-  HiPlus,
-} from 'react-icons/hi2';
-import { HiSwitchHorizontal, HiCog } from 'react-icons/hi';
+import { HiOutlineChevronUpDown, HiPlus } from 'react-icons/hi2';
+import { HiSwitchHorizontal } from 'react-icons/hi';
 import { useState } from 'react';
 import { CreateOrganizationModal } from './createOrganizationModal';
 
 export const OrganizationSwitcher: React.FC<ButtonProps> = (props) => {
   // get the authed user's organizations from Clerk
   const { setActive, organizationList, isLoaded } = useOrganizationList();
+  const { user } = useUser();
   if (!isLoaded) return <></>;
 
   const { organization, membership } = useOrganization();
-
-  const router = useRouter();
 
   const [hoverOrg, setHoverOrg] = useState<string | undefined | null>(
     undefined,
@@ -65,11 +58,15 @@ export const OrganizationSwitcher: React.FC<ButtonProps> = (props) => {
           {...props}
         >
           <HStack>
-            <Text>{organization?.name || 'Personal Workspace'}</Text>
+            <Text>
+              {organization?.name ||
+                (user?.publicMetadata.username as string) ||
+                'Personal Workspace'}
+            </Text>
             <Icon as={HiOutlineChevronUpDown} fontSize="md" />
           </HStack>
         </MenuButton>
-        <MenuList p={0} fontSize="sm" shadow={'lg'}>
+        <MenuList p={0} fontSize="sm" boxShadow={'xl'}>
           <HStack
             borderBottom="1px"
             borderColor="gray.300"
@@ -81,19 +78,13 @@ export const OrganizationSwitcher: React.FC<ButtonProps> = (props) => {
               <Text fontWeight="medium">
                 {organization?.name || 'Personal Workspace'}
               </Text>
+              {!organization && (
+                <Text>{user?.publicMetadata.username as string}</Text>
+              )}
               {membership && (
                 <Text>{membership.role === 'admin' ? 'Admin' : 'Member'}</Text>
               )}
             </VStack>
-            {organization && (
-              <IconButton
-                aria-label="Manage organization"
-                variant={'ghost'}
-                onClick={() => router.push('/organization/manage')}
-              >
-                <HiCog />
-              </IconButton>
-            )}
           </HStack>
           {workspacesExcludingCurrent.length > 0 && (
             <Box
