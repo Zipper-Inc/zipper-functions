@@ -116,7 +116,11 @@ export const resourceOwnerSlugRouter = createRouter()
               ? `${clerkUser.firstName} ${clerkUser.lastName}`
               : clerkUser.publicMetadata.identifier || clerkUser.username;
 
-          return { name };
+          return {
+            name,
+            id: clerkUser.id,
+            resourceOwnerType: ResourceOwnerType.User,
+          };
         }
       }
 
@@ -126,7 +130,11 @@ export const resourceOwnerSlugRouter = createRouter()
         });
 
         if (clerkOrg) {
-          return { name: clerkOrg.name };
+          return {
+            name: clerkOrg.name,
+            id: clerkOrg.id,
+            resourceOwnerType: ResourceOwnerType.Organization,
+          };
         }
       }
 

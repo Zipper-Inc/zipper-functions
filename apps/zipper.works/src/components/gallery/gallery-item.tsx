@@ -50,7 +50,7 @@ export const GalleryItem: React.FC<GalleryItemProps> = ({ app }) => {
           >
             <Box w={24}>
               <Avatar
-                size="full"
+                size="100%"
                 name={nameOrSlug}
                 variant="bauhaus"
                 square

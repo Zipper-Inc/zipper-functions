@@ -70,13 +70,14 @@ export const OrganizationSwitcher: React.FC<ButtonProps> = (props) => {
             <Icon as={HiOutlineChevronUpDown} fontSize="md" />
           </HStack>
         </MenuButton>
-        <MenuList p={0} fontSize="sm" boxShadow={'xl'}>
+        <MenuList p={0} fontSize="sm" boxShadow={'xl'} minWidth="xs">
           <HStack
             borderBottom="1px"
             borderColor="gray.300"
             px={4}
             py={6}
             w="full"
+            spacing={10}
           >
             <VStack flexGrow="1" alignItems="start" spacing={0}>
               <Text fontWeight="medium">
@@ -101,7 +102,7 @@ export const OrganizationSwitcher: React.FC<ButtonProps> = (props) => {
               size="xs"
             >
               <Icon as={HiEye} mr="2" />
-              View Profile
+              Profile
             </Button>
           </HStack>
           {workspacesExcludingCurrent.length > 0 && (
