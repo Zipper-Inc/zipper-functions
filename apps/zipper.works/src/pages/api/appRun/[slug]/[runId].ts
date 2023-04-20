@@ -15,6 +15,7 @@ import { compare } from 'bcryptjs';
 import { canUserEdit } from '~/server/routers/app.router';
 import { parseInputForTypes } from '~/utils/parse-code';
 import { requiredUserAuthConnectorFilter } from '~/utils/user-auth-connector-filter';
+import { ZIPPER_TEMP_USER_ID_HEADER } from '@zipper/utils';
 
 /**
  * @todo
@@ -67,6 +68,11 @@ export default async function handler(
   if (token) {
     userInfo = await getUserInfo(token, slugFromUrl);
   }
+  const userIdOrTempId =
+    userInfo.clerkUserId ||
+    (req.headers[ZIPPER_TEMP_USER_ID_HEADER] as string | undefined) ||
+    '';
+
   try {
     appRun = await prisma.appRun.findFirst({
       where: {
@@ -80,7 +86,11 @@ export default async function handler(
             scripts: true,
             connectors: {
               include: {
-                appConnectorUserAuths: true,
+                appConnectorUserAuths: {
+                  where: {
+                    userIdOrTempId,
+                  },
+                },
               },
             },
           },

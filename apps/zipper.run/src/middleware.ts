@@ -5,6 +5,7 @@ import type { NextRequest } from 'next/server';
 import serveRelay from './utils/relay-middleware';
 import jsonHandler from './api-handlers/json.handler';
 import yamlHandler from './api-handlers/yaml.handler';
+import { ZIPPER_TEMP_USER_ID_COOKIE_NAME } from '@zipper/utils';
 
 const { __DEBUG__ } = process.env;
 
@@ -47,8 +48,11 @@ export default withClerkMiddleware(async (request: NextRequest) => {
     }
   }
 
-  if (!auth.userId && !request.cookies.get('__zipper_temp_user_id')) {
-    res.cookies.set('__zipper_temp_user_id', `temp__${crypto.randomUUID()}`);
+  if (!auth.userId && !request.cookies.get(ZIPPER_TEMP_USER_ID_COOKIE_NAME)) {
+    res.cookies.set(
+      ZIPPER_TEMP_USER_ID_COOKIE_NAME,
+      `temp__${crypto.randomUUID()}`,
+    );
   }
 
   return res;

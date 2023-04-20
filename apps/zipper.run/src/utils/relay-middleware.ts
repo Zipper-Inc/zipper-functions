@@ -6,7 +6,7 @@ import getAppInfo from './get-app-info';
 import getValidSubdomain from './get-valid-subdomain';
 import { getFilenameAndVersionFromPath } from './get-values-from-url';
 import { getAuth } from '@clerk/nextjs/server';
-import { getAppLink } from '@zipper/utils';
+import { getAppLink, ZIPPER_TEMP_USER_ID_COOKIE_NAME } from '@zipper/utils';
 import Zipper from '@zipper/framework';
 
 const { __DEBUG__, SHARED_SECRET: DENO_SHARED_SECRET, RPC_HOST } = process.env;
@@ -90,7 +90,7 @@ export async function relayRequest({
   const token = await auth.getToken({ template: 'incl_orgs' });
 
   const tempUserId = request.cookies
-    .get('__zipper_temp_user_id')
+    .get(ZIPPER_TEMP_USER_ID_COOKIE_NAME)
     ?.value.toString();
 
   let filename = _filename || 'main.ts';

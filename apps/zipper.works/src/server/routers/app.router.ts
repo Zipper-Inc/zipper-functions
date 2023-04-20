@@ -21,7 +21,10 @@ import {
   getScriptHash,
 } from '~/utils/hashing';
 import { parseInputForTypes } from '~/utils/parse-code';
-import { getInputsFromFormData } from '@zipper/utils';
+import {
+  getInputsFromFormData,
+  ZIPPER_TEMP_USER_ID_COOKIE_NAME,
+} from '@zipper/utils';
 import getRunUrl from '~/utils/get-run-url';
 import { randomUUID } from 'crypto';
 import fetch from 'node-fetch';
@@ -441,7 +444,7 @@ export const appRouter = createRouter()
                 where: {
                   userIdOrTempId:
                     ctx.userId ||
-                    (ctx.req?.cookies as any)['__zipper_temp_user_id'],
+                    (ctx.req?.cookies as any)[ZIPPER_TEMP_USER_ID_COOKIE_NAME],
                 },
               },
             },

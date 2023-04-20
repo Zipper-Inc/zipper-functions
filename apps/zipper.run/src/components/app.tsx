@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { GetServerSideProps } from 'next';
 import { withDefaultTheme, FunctionOutput, useCmdOrCtrl } from '@zipper/ui';
 import {
@@ -34,7 +34,10 @@ import Head from 'next/head';
 import { useForm } from 'react-hook-form';
 import { getInputValuesFromUrl } from '../utils/get-input-values-from-url';
 import { useRouter } from 'next/router';
-import { encryptToHex, getInputsFromFormData } from '@zipper/utils';
+import {
+  getInputsFromFormData,
+  ZIPPER_TEMP_USER_ID_COOKIE_NAME,
+} from '@zipper/utils';
 import { deleteCookie } from 'cookies-next';
 import { HiOutlineChevronUp, HiOutlineChevronDown } from 'react-icons/hi';
 import { getAuth } from '@clerk/nextjs/server';
@@ -45,10 +48,26 @@ import Header from './header';
 import InputSummary from './input-summary';
 import { getShortRunId } from '~/utils/run-id';
 import ConnectorsAuthInputsSection from './connectors-auth-inputs-section';
+import { getConnectorsAuthUrl } from '~/utils/get-connectors-auth-url';
 
 const { __DEBUG__ } = process.env;
 
 type Screen = 'initial' | 'run' | 'edit';
+
+export type AppPageProps = {
+  app: AppInfo;
+  inputs: InputParams;
+  userAuthConnectors: UserAuthConnector[];
+  version?: string;
+  filename?: string;
+  defaultValues?: Record<string, any>;
+  slackAuthUrl?: string;
+  githubAuthUrl?: string;
+  statusCode?: number;
+  entryPoint?: EntryPointInfo;
+  result?: string;
+  runnableScripts?: string[];
+};
 
 export function AppPage({
   app,
@@ -63,21 +82,9 @@ export function AppPage({
   entryPoint,
   result: paramResult,
   runnableScripts,
-}: {
-  app: AppInfo;
-  inputs: InputParams;
-  userAuthConnectors: UserAuthConnector[];
-  version?: string;
-  filename?: string;
-  defaultValues?: Record<string, any>;
-  slackAuthUrl?: string;
-  githubAuthUrl?: string;
-  statusCode?: number;
-  entryPoint?: EntryPointInfo;
-  result?: string;
-  runnableScripts?: string[];
-}) {
+}: AppPageProps) {
   const router = useRouter();
+  const { asPath } = router;
   const appTitle = app?.name || app?.slug || 'Zipper';
   const formContext = useForm({ defaultValues });
   const [result, setResult] = useState('');
@@ -89,6 +96,7 @@ export function AppPage({
   const [screen, setScreen] = useState<Screen>(paramResult ? 'run' : 'initial');
   const [latestRunId, setLatestRunId] = useState<string>();
   const [expandInputsSection, setExpandInputsSection] = useState(true);
+  const previousRouteRef = useRef(asPath);
 
   // We have to do this so that the results aren't SSRed
   // (if they are DOMParser in FunctionOutput will be undefined)
@@ -99,8 +107,19 @@ export function AppPage({
     }
   }, [paramResult]);
 
+  useEffect(() => {
+    if (
+      router.pathname !== '/run/[runId]' &&
+      asPath !== previousRouteRef.current
+    ) {
+      setScreen('initial');
+      setResult('');
+    }
+    previousRouteRef.current = asPath;
+  }, [asPath]);
+
   const runApp = async () => {
-    if (!loading) {
+    if (!loading && canRunApp) {
       setLoading(true);
       const rawValues = formContext.getValues();
       const values = getInputsFromFormData(rawValues, inputs);
@@ -175,7 +194,7 @@ export function AppPage({
             type: 'github',
           });
         } else {
-          deleteCookie('__zipper_temp_user_id');
+          deleteCookie(ZIPPER_TEMP_USER_ID_COOKIE_NAME);
         }
         router.reload();
       },
@@ -189,7 +208,7 @@ export function AppPage({
             type: 'slack',
           });
         } else {
-          deleteCookie('__zipper_temp_user_id');
+          deleteCookie(ZIPPER_TEMP_USER_ID_COOKIE_NAME);
         }
         router.reload();
       },
@@ -203,7 +222,7 @@ export function AppPage({
             type: 'openai',
           });
         } else {
-          deleteCookie('__zipper_temp_user_id');
+          deleteCookie(ZIPPER_TEMP_USER_ID_COOKIE_NAME);
         }
         router.reload();
       },
@@ -387,7 +406,7 @@ export const getServerSideProps: GetServerSideProps = async ({
   // grab the app if it exists
   const result = await getAppInfo({
     subdomain,
-    tempUserId: req.cookies['__zipper_temp_user_id'],
+    tempUserId: req.cookies[ZIPPER_TEMP_USER_ID_COOKIE_NAME],
     filename,
     token: await auth.getToken({ template: 'incl_orgs' }),
   });
@@ -419,58 +438,13 @@ export const getServerSideProps: GetServerSideProps = async ({
     },
   };
 
-  const connectorsMissingAuth = userAuthConnectors
-    .filter((c) => c.appConnectorUserAuths.length === 0)
-    .map((c) => c.type);
-
-  let slackAuthUrl: string | null = null;
-  let githubAuthUrl: string | null = null;
-
-  if (connectorsMissingAuth.includes('slack')) {
-    const slackConnector = userAuthConnectors.find((c) => c.type === 'slack');
-    if (slackConnector) {
-      const state = encryptToHex(
-        `${app.id}::${
-          process.env.NODE_ENV === 'development' ? 'http://' : 'https://'
-        }${req.headers.host}::${
-          auth.userId || req.cookies['__zipper_temp_user_id']
-        }`,
-        process.env.ENCRYPTION_KEY || '',
-      );
-
-      const url = new URL('https://slack.com/oauth/v2/authorize');
-      url.searchParams.set(
-        'client_id',
-        slackConnector.clientId || process.env.NEXT_PUBLIC_SLACK_CLIENT_ID!,
-      );
-      url.searchParams.set('scope', slackConnector.workspaceScopes.join(','));
-      url.searchParams.set('user_scope', slackConnector.userScopes.join(','));
-      url.searchParams.set('state', state);
-
-      slackAuthUrl = url.href;
-    }
-  }
-
-  if (connectorsMissingAuth.includes('github')) {
-    const githubConnector = userAuthConnectors.find((c) => c.type === 'github');
-    if (githubConnector) {
-      const state = encryptToHex(
-        `${app.id}::${
-          process.env.NODE_ENV === 'development' ? 'http://' : 'https://'
-        }${req.headers.host}::${
-          auth.userId || req.cookies['__zipper_temp_user_id']
-        }`,
-        process.env.ENCRYPTION_KEY || '',
-      );
-
-      const url = new URL('https://github.com/login/oauth/authorize');
-      url.searchParams.set('client_id', process.env.GITHUB_CLIENT_ID!);
-      url.searchParams.set('scope', githubConnector.userScopes.join(','));
-      url.searchParams.set('state', state);
-
-      githubAuthUrl = url.href;
-    }
-  }
+  const { githubAuthUrl, slackAuthUrl } = getConnectorsAuthUrl({
+    userAuthConnectors,
+    userId:
+      auth.userId || (req.cookies[ZIPPER_TEMP_USER_ID_COOKIE_NAME] as string),
+    appId: app.id,
+    host: req.headers.host,
+  });
 
   return {
     props: { ...propsToReturn.props, slackAuthUrl, githubAuthUrl },

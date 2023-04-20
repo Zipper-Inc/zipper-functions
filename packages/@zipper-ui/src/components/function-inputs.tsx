@@ -96,7 +96,7 @@ function FunctionParamInput({
 
     case InputType.number: {
       return (
-        <NumberInput width="full">
+        <NumberInput width="full" isDisabled={isDisabled}>
           <NumberInputField
             backgroundColor="white"
             fontFamily="monospace"
@@ -112,7 +112,14 @@ function FunctionParamInput({
     }
 
     case InputType.date: {
-      return <Input backgroundColor="white" type="date" {...formProps} />;
+      return (
+        <Input
+          backgroundColor="white"
+          type="date"
+          {...formProps}
+          isDisabled={isDisabled}
+        />
+      );
     }
 
     case InputType.array:
@@ -129,9 +136,11 @@ function FunctionParamInput({
             minHeight={90}
             defaultValue={type === InputType.array ? '[]' : '{}'}
             {...formProps}
+            isDisabled={isDisabled}
             onChange={(e) => {
               try {
                 JSON.parse(e.target.value);
+                formContext.setValue(name, e.target.value);
                 setError(undefined);
               } catch (e: any) {
                 setError(`Error parsing value: ${e.message}`);
