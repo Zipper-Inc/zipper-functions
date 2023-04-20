@@ -21,9 +21,17 @@ import {
 } from '@zipper/types';
 import { filterTokenFields } from '~/server/utils/json';
 
-const getBase64Credentials = () =>
+const getBase64Credentials = ({
+  clientId,
+  clientSecret,
+}: {
+  clientId?: string;
+  clientSecret?: string;
+} = {}) =>
   Buffer.from(
-    `${process.env.GITHUB_CLIENT_ID}:${process.env.GITHUB_CLIENT_SECRET}`,
+    `${clientId || process.env.GITHUB_CLIENT_ID}:${
+      clientSecret || process.env.GITHUB_CLIENT_SECRET
+    }`,
   ).toString('base64');
 
 export const githubConnectorRouter = createRouter()
@@ -257,9 +265,27 @@ export const githubConnectorRouter = createRouter()
       const userIdOrTempId: string =
         userId || ctx.userId || (ctx.req?.cookies as any)['__zipper_user_id'];
       if (appId && json.access_token && userIdOrTempId) {
-        const base64Credentials = getBase64Credentials();
+        const githubClientId =
+          connector.clientId || process.env.GITHUB_CLIENT_ID;
+
+        const githubClientSecret = connector.app.secrets.find(
+          (s) => s.key === 'GITHUB_CLIENT_SECRET',
+        );
+
+        const clientSecret = githubClientSecret?.encryptedValue
+          ? decryptFromBase64(
+              githubClientSecret?.encryptedValue,
+              process.env.ENCRYPTION_KEY!,
+            )
+          : undefined;
+
+        const base64Credentials = getBase64Credentials({
+          clientId: githubClientId,
+          clientSecret,
+        });
+
         const userInfoRes = await fetch(
-          `https://api.github.com/applications/${process.env.GITHUB_CLIENT_ID}/token`,
+          `https://api.github.com/applications/${githubClientId}/token`,
           {
             method: 'POST',
             headers: {
@@ -271,8 +297,10 @@ export const githubConnectorRouter = createRouter()
             }),
           },
         );
+
         const userInfoJson =
           (await userInfoRes.json()) as GitHubCheckTokenResponse;
+
         if (userInfoJson.user) {
           metadata = filterTokenFields(userInfoJson);
           appConnectorUserAuth = await prisma.appConnectorUserAuth.upsert({

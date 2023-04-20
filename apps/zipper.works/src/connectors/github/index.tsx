@@ -30,8 +30,6 @@ import {
   AlertDialogHeader,
   AlertDialogOverlay,
   Code,
-  Alert,
-  AlertIcon,
   Collapse,
   Input,
 } from '@chakra-ui/react';
@@ -43,8 +41,8 @@ import { MultiSelect, SelectOnChange, useMultiSelect } from '@zipper/ui';
 import { HiOutlineTrash } from 'react-icons/hi';
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/router';
-import { GitHubCheckTokenResponse } from '@zipper/types';
 import { useRunAppContext } from '~/components/context/run-app-context';
+import { GithubConnectorAuthMetadata } from '@zipper/types';
 
 export const githubConnector = createConnector({
   id: 'github',
@@ -319,7 +317,7 @@ function GitHubConnectorForm({ appId }: { appId: string }) {
                                   {
                                     (
                                       connector.data
-                                        ?.metadata as GitHubCheckTokenResponse
+                                        ?.metadata as GithubConnectorAuthMetadata
                                     ).app?.name
                                   }
                                 </FormLabel>
@@ -348,7 +346,7 @@ function GitHubConnectorForm({ appId }: { appId: string }) {
                                         {
                                           (
                                             connector.data
-                                              ?.metadata as GitHubCheckTokenResponse
+                                              ?.metadata as GithubConnectorAuthMetadata
                                           ).user.id
                                         }
                                       </Code>
@@ -359,7 +357,7 @@ function GitHubConnectorForm({ appId }: { appId: string }) {
                                         {
                                           (
                                             connector.data
-                                              ?.metadata as GitHubCheckTokenResponse
+                                              ?.metadata as GithubConnectorAuthMetadata
                                           ).user.login
                                         }
                                       </Code>
@@ -369,7 +367,7 @@ function GitHubConnectorForm({ appId }: { appId: string }) {
                                       <HStack spacing="px">
                                         {(
                                           connector.data
-                                            ?.metadata as GitHubCheckTokenResponse
+                                            ?.metadata as GithubConnectorAuthMetadata
                                         ).scopes?.map((scope: string) => (
                                           <Code>{scope}</Code>
                                         ))}

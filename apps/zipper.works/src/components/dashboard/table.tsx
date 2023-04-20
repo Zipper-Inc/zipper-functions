@@ -1,5 +1,16 @@
 import * as React from 'react';
-import { Table, Thead, Tbody, Tr, Th, Td, chakra } from '@chakra-ui/react';
+import {
+  Table,
+  Thead,
+  Tbody,
+  Tr,
+  Th,
+  Td,
+  chakra,
+  Button,
+  HStack,
+  Icon,
+} from '@chakra-ui/react';
 import { TriangleDownIcon, TriangleUpIcon } from '@chakra-ui/icons';
 import {
   useReactTable,
@@ -9,7 +20,12 @@ import {
   TableState,
   FiltersOptions,
   SortingOptions,
+  Row,
 } from '@tanstack/react-table';
+import { HiExternalLink } from 'react-icons/hi';
+import App from 'next/app';
+import { useRouter } from 'next/router';
+import { VscCode } from 'react-icons/vsc';
 
 export type DataTableProps<Data extends Record<string, unknown>> = {
   data: Data[];
@@ -33,6 +49,10 @@ export function DataTable<Data extends Record<string, unknown>>({
     getCoreRowModel: getCoreRowModel(),
     state,
     ...rest,
+    defaultColumn: {
+      minSize: 208,
+      size: 700,
+    },
   });
 
   return (
@@ -48,6 +68,7 @@ export function DataTable<Data extends Record<string, unknown>>({
                   key={header.id}
                   onClick={header.column.getToggleSortingHandler()}
                   isNumeric={meta?.isNumeric}
+                  width={header.column.getSize()}
                 >
                   {flexRender(
                     header.column.columnDef.header,
@@ -71,17 +92,7 @@ export function DataTable<Data extends Record<string, unknown>>({
       </Thead>
       <Tbody>
         {table.getRowModel().rows.map((row) => (
-          <Tr key={row.id}>
-            {row.getVisibleCells().map((cell) => {
-              // see https://tanstack.com/table/v8/docs/api/core/column-def#meta to type this correctly
-              const meta: any = cell.column.columnDef.meta;
-              return (
-                <Td key={cell.id} isNumeric={meta?.isNumeric}>
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </Td>
-              );
-            })}
-          </Tr>
+          <TableRow row={row} />
         ))}
         {isEmpty && (
           <Tr>
@@ -93,3 +104,68 @@ export function DataTable<Data extends Record<string, unknown>>({
     </Table>
   );
 }
+
+const TableRow: React.FC<{ row: Row<any> }> = ({ row }) => {
+  const [isHovering, setIsHovering] = React.useState(false);
+  const router = useRouter();
+  return (
+    <Tr
+      key={row.id}
+      backgroundColor={isHovering ? 'gray.50' : 'white'}
+      onMouseEnter={() => setIsHovering(true)}
+      onMouseLeave={() => setIsHovering(false)}
+    >
+      {row.getVisibleCells().map((cell, i) => {
+        // see https://tanstack.com/table/v8/docs/api/core/column-def#meta to type this correctly
+        const meta: any = cell.column.columnDef.meta;
+        if (i < 2 || !isHovering) {
+          return (
+            <Td key={cell.id} isNumeric={meta?.isNumeric}>
+              {flexRender(cell.column.columnDef.cell, cell.getContext())}
+            </Td>
+          );
+        }
+        if (i === 2 && isHovering) {
+          return (
+            <Td>
+              <HStack>
+                <Button
+                  variant={'outline'}
+                  colorScheme="purple"
+                  size={'sm'}
+                  onClick={() =>
+                    window.location.replace(
+                      `/${row.original.resourceOwner.slug}/${row.original.slug}/edit/main.ts`,
+                    )
+                  }
+                >
+                  <Icon as={VscCode} mr="1" />
+                  Edit
+                </Button>
+                <Button
+                  variant={'outline'}
+                  colorScheme="purple"
+                  size={'sm'}
+                  onClick={() =>
+                    router.push(
+                      `${
+                        process.env.NODE_ENV === 'development'
+                          ? 'http://'
+                          : 'https://'
+                      }${row.original.slug}.${
+                        process.env.NEXT_PUBLIC_OUTPUT_SERVER_HOSTNAME
+                      }`,
+                    )
+                  }
+                >
+                  <Icon as={HiExternalLink} mr="1" />
+                  View
+                </Button>
+              </HStack>
+            </Td>
+          );
+        }
+      })}
+    </Tr>
+  );
+};

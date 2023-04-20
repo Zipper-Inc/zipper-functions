@@ -12,14 +12,19 @@ import {
   VStack,
   IconButton,
   useDisclosure,
+  ButtonProps,
 } from '@chakra-ui/react';
 import { useRouter } from 'next/router';
-import { HiOutlineChevronUpDown, HiPlus } from 'react-icons/hi2';
+import {
+  HiChevronUpDown,
+  HiOutlineChevronUpDown,
+  HiPlus,
+} from 'react-icons/hi2';
 import { HiSwitchHorizontal, HiCog } from 'react-icons/hi';
 import { useState } from 'react';
 import { CreateOrganizationModal } from './createOrganizationModal';
 
-export const OrganizationSwitcher = () => {
+export const OrganizationSwitcher: React.FC<ButtonProps> = (props) => {
   // get the authed user's organizations from Clerk
   const { setActive, organizationList, isLoaded } = useOrganizationList();
   if (!isLoaded) return <></>;
@@ -52,14 +57,17 @@ export const OrganizationSwitcher = () => {
       <Menu>
         <MenuButton
           as={Button}
-          rightIcon={<HiOutlineChevronUpDown />}
           backgroundColor="transparent"
           border="1px"
           borderColor="gray.100"
+          fontSize="sm"
+          fontWeight="medium"
+          {...props}
         >
-          <Text fontSize="sm" fontWeight="medium">
-            {organization?.name || 'Personal Workspace'}
-          </Text>
+          <HStack>
+            <Text>{organization?.name || 'Personal Workspace'}</Text>
+            <Icon as={HiOutlineChevronUpDown} fontSize="md" />
+          </HStack>
         </MenuButton>
         <MenuList p={0} fontSize="sm" shadow={'lg'}>
           <HStack

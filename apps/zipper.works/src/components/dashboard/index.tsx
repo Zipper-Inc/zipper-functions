@@ -4,16 +4,15 @@ import {
   TableContainer,
   Text,
   VStack,
-  Heading,
   Button,
   Icon,
   Input,
   HStack,
   Link,
   Tooltip,
-  Spacer,
   Spinner,
   Center,
+  Spacer,
 } from '@chakra-ui/react';
 import React, { useEffect, useMemo, useState } from 'react';
 import DefaultGrid from '~/components/default-grid';
@@ -23,7 +22,6 @@ import { CreateAppModal } from './create-app-modal';
 import { FiPlus } from 'react-icons/fi';
 import { DataTable } from './table';
 import {
-  DeepKeys,
   SortingState,
   createColumnHelper,
   getFilteredRowModel,
@@ -34,6 +32,7 @@ import { HiBuildingOffice, HiUser } from 'react-icons/hi2';
 import { AppOwner, useAppOwner } from '~/hooks/use-app-owner';
 import { EmptySlate } from './empty-slate';
 import { ResourceOwnerType } from '@zipper/types';
+import OrganizationSwitcher from '../auth/organizationSwitcher';
 
 type _App = Unpack<inferQueryOutput<'app.byAuthedUser'>>;
 type App = _App & {
@@ -68,29 +67,76 @@ const columns = [
       row: {
         original: { isPrivate, resourceOwner, slug, description },
       },
-    }) => (
-      <VStack align={'start'} py="2">
-        <HStack>
-          <Tooltip
-            placement="top"
-            label={isPrivate ? 'Private' : 'Public'}
-            textColor="gray.100"
-            backgroundColor="purple.500"
-          >
-            {isPrivate ? <LockIcon /> : <UnlockIcon />}
-          </Tooltip>
-          <Link
-            fontSize={'md'}
-            fontWeight={600}
-            href={`/${resourceOwner.slug}/${slug}/edit/main.ts`}
-          >
-            {getValue()}
-          </Link>
-        </HStack>
-        <Text>{description}</Text>
-      </VStack>
-    ),
-    header: 'App Name',
+    }) => {
+      return (
+        <VStack align={'start'} py="2">
+          <HStack>
+            <Tooltip
+              placement="top"
+              label={isPrivate ? 'Private' : 'Public'}
+              textColor="gray.100"
+              backgroundColor="purple.500"
+            >
+              {isPrivate ? <LockIcon /> : <UnlockIcon />}
+            </Tooltip>
+            <Link
+              fontSize={'md'}
+              fontWeight={600}
+              href={`/${resourceOwner.slug}/${slug}/edit/main.ts`}
+            >
+              {getValue()}
+            </Link>
+          </HStack>
+          <Text>{description}</Text>
+        </VStack>
+      );
+    },
+    header: 'Applet Name',
+  }),
+  columnHelper.accessor('createdByInfo.createdByAuthedUser', {
+    id: 'createdBy',
+    cell: (info) => {
+      const createdByInfo = info.row.original.createdByInfo;
+      return (
+        <>
+          {info.getValue() ? (
+            <HStack>
+              <HiUser />
+              <Text>You</Text>
+            </HStack>
+          ) : (
+            <HStack>
+              <Icon as={HiBuildingOffice} />
+              <Text>{createdByInfo.resourceOwnerName}</Text>
+            </HStack>
+          )}
+        </>
+      );
+    },
+    header: 'Created by',
+    enableGlobalFilter: false,
+    size: 52,
+  }),
+  columnHelper.accessor('resourceOwner.slug', {
+    id: 'owner',
+    cell: (info) => {
+      const createdByInfo = info.row.original.createdByInfo;
+
+      return (
+        <>
+          <HStack>
+            {createdByInfo.resourceOwnerType === ResourceOwnerType.User ? (
+              <Icon as={HiUser} />
+            ) : (
+              <Icon as={HiBuildingOffice} />
+            )}
+            <Text>{info.getValue()}</Text>
+          </HStack>
+        </>
+      );
+    },
+    header: 'Owner',
+    size: 52,
   }),
   columnHelper.accessor('updatedAt', {
     cell: (info) =>
@@ -99,25 +145,7 @@ const columns = [
       }).format(info.getValue()),
     header: 'Last Updated',
     enableGlobalFilter: false,
-  }),
-  columnHelper.accessor('createdByInfo.resourceOwnerName', {
-    cell: (info) => {
-      const createdByInfo = info.row.original.createdByInfo;
-      return (
-        <HStack>
-          {createdByInfo.resourceOwnerType === ResourceOwnerType.User ? (
-            <HiUser />
-          ) : (
-            <Icon as={HiBuildingOffice} />
-          )}
-          <Link href={`/${info.row.original.resourceOwner.slug}`}>
-            {info.getValue()}
-          </Link>
-        </HStack>
-      );
-    },
-    header: 'Owner',
-    enableGlobalFilter: false,
+    size: 52,
   }),
   columnHelper.accessor('description', {
     cell: (info) => info.getValue(),
@@ -129,11 +157,17 @@ const emptyApps: App[] = [];
 
 export function Dashboard() {
   const { organization } = useOrganization();
-  const appQuery = trpc.useQuery(['app.byAuthedUser']);
   const [appSearchTerm, setAppSearchTerm] = useState('');
+  const appQuery = trpc.useQuery([
+    'app.byAuthedUser',
+    { filterByOrganization: !appSearchTerm },
+  ]);
   const [isCreateAppModalOpen, setCreateAppModalOpen] = useState(false);
-  const [columnVisibility] = useState<Partial<Record<DeepKeys<App>, boolean>>>({
+  const [columnVisibility, setColumnVisibility] = useState<
+    Record<string, boolean>
+  >({
     description: false,
+    owner: false,
   });
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const { getAppOwner } = useAppOwner();
@@ -148,6 +182,14 @@ export function Dashboard() {
     appQuery.refetch();
   }, [organization]);
 
+  useEffect(() => {
+    setColumnVisibility({
+      description: false,
+      owner: !!appSearchTerm,
+      createdBy: !appSearchTerm,
+    });
+  });
+
   if (appQuery.isLoading) {
     return (
       <Center>
@@ -158,29 +200,41 @@ export function Dashboard() {
 
   return (
     <>
-      <DefaultGrid flex={1} w="full">
+      <DefaultGrid flex={1} w="full" mb="10">
         <GridItem colSpan={12}>
           <VStack align="start" w="full">
-            <HStack w="full" align="center" h="20" px="4">
-              <VStack align="start">
-                <Heading size="md" flexGrow={1}>
-                  {organization
-                    ? organization.name
-                        .split(' ')
-                        .map((w) => `${w.charAt(0).toUpperCase()}${w.slice(1)}`)
-                        .join(' ')
-                    : 'Your Apps'}
-                </Heading>
-                {appQuery.data && (
-                  <Text>{`${appQuery.data?.length} ${
-                    appQuery.data.length === 1 ? 'App' : 'Apps'
-                  }`}</Text>
-                )}
-              </VStack>
+            <HStack w="full">
+              {appSearchTerm ? (
+                <VStack align="start">
+                  <Text fontSize="3xl" fontWeight="medium" p="0" m="-0.5">
+                    Search
+                  </Text>
+                  <Text color="gray.600">
+                    Searching applets across all your workspaces
+                  </Text>
+                </VStack>
+              ) : (
+                <VStack align="start">
+                  <OrganizationSwitcher
+                    fontSize="3xl"
+                    fontWeight="medium"
+                    border="none"
+                    p="0"
+                    variant={'unstyled'}
+                    display="flex"
+                  />
+                  <Text color="gray.600">
+                    {organization
+                      ? 'Applets that you and other organization members have created within this workspace.'
+                      : "Applets that you've created or that have been shared with you outside an organization workspace."}
+                  </Text>
+                </VStack>
+              )}
               <Spacer flexGrow={1} />
               <Button
                 type="button"
-                paddingX={4}
+                pl={4}
+                pr={6}
                 variant="solid"
                 colorScheme="purple"
                 textColor="gray.100"
@@ -190,16 +244,18 @@ export function Dashboard() {
                 }}
               >
                 <Icon as={FiPlus} mr="2"></Icon>
-                Create new app
+                Create Applet
               </Button>
+            </HStack>
+            <HStack w="full" align="center" h="20">
+              <Input
+                placeholder="Search applets (name, slug or description)"
+                value={appSearchTerm}
+                onChange={(e) => setAppSearchTerm(e.target.value)}
+              />
             </HStack>
             {apps && apps.length > 0 ? (
               <>
-                <Input
-                  placeholder="Search app (name, slug or description)"
-                  value={appSearchTerm}
-                  onChange={(e) => setAppSearchTerm(e.target.value)}
-                />
                 <TableContainer w="full">
                   <DataTable
                     columns={columns}

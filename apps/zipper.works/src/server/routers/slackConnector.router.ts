@@ -276,7 +276,6 @@ export const slackConnectorRouter = createRouter()
           });
         }
       }
-
       await prisma.appConnector.update({
         where: {
           appId_type: {
