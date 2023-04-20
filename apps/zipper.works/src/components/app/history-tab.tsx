@@ -23,10 +23,21 @@ import {
   useDisclosure,
   ModalContent,
   ModalOverlay,
+  Drawer,
+  DrawerOverlay,
+  DrawerContent,
+  DrawerHeader,
+  DrawerCloseButton,
+  DrawerBody,
 } from '@chakra-ui/react';
 import { Avatar } from '../avatar';
 import { useRouter } from 'next/router';
-import { HiExclamationTriangle, HiCheck } from 'react-icons/hi2';
+import {
+  HiExclamationTriangle,
+  HiCheck,
+  HiMagnifyingGlass,
+  HiMagnifyingGlassPlus,
+} from 'react-icons/hi2';
 import { TbClockPlay } from 'react-icons/tb';
 import {
   createColumnHelper,
@@ -37,6 +48,7 @@ import {
 import { AppRun } from '@prisma/client';
 import { User } from '@clerk/clerk-sdk-node';
 import { JSONViewer } from '../json-editor';
+import { HiEye } from 'react-icons/hi';
 
 type HistoryTabProps = {
   appId: string;
@@ -165,8 +177,10 @@ const HistoryTab: React.FC<HistoryTabProps> = ({ appId }) => {
                 .join(' / ')
             : inputs.toString();
         return (
-          <Text
+          <HStack
             cursor="pointer"
+            maxW={'lg'}
+            _hover={{ color: 'purple' }}
             onClick={() => {
               setModalHeading(
                 `${createdAt.toLocaleDateString()} @ ${createdAt.toLocaleTimeString()}`,
@@ -175,8 +189,8 @@ const HistoryTab: React.FC<HistoryTabProps> = ({ appId }) => {
               onOpen();
             }}
           >
-            {inputString}
-          </Text>
+            <Text isTruncated>{inputString}</Text>
+          </HStack>
         );
       },
     }),
@@ -321,19 +335,19 @@ const HistoryTab: React.FC<HistoryTabProps> = ({ appId }) => {
           </Tbody>
         </Table>
       </Flex>
-      <Modal isOpen={isOpen} onClose={onClose}>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader fontSize={'md'}>{modalHeading}</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
+      <Drawer isOpen={isOpen} onClose={onClose} size="lg">
+        <DrawerOverlay />
+        <DrawerContent>
+          <DrawerHeader fontSize={'md'}>{modalHeading}</DrawerHeader>
+          <DrawerCloseButton />
+          <DrawerBody>
             <Heading fontSize="md" mb="4">
               Inputs
             </Heading>
-            <JSONViewer value={modalValue} />
-          </ModalBody>
-        </ModalContent>
-      </Modal>
+            <JSONViewer value={modalValue} options={{ readOnly: true }} />
+          </DrawerBody>
+        </DrawerContent>
+      </Drawer>
     </HStack>
   );
 };

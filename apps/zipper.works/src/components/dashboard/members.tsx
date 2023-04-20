@@ -29,16 +29,24 @@ import {
   Tr,
   useDisclosure,
   VStack,
+  Flex,
+  Box,
 } from '@chakra-ui/react';
 import { useOrganization } from '@clerk/nextjs';
 import { useEffect, useRef, useState } from 'react';
 import { HiTrash, HiUserAdd } from 'react-icons/hi';
 import { trpc } from '~/utils/trpc';
 import { HiEnvelope } from 'react-icons/hi2';
+import { Avatar } from '../avatar';
 
 const ManageMembers = () => {
   return (
-    <HStack spacing={0} flex={1} alignItems="start" gap={16}>
+    <Flex
+      flexDir={{ base: 'column', xl: 'row' }}
+      flex={1}
+      alignItems="start"
+      gap={{ base: 10, xl: 16 }}
+    >
       <VStack flex={1} alignItems="stretch">
         <HStack pb="4">
           <Heading as="h6" fontWeight={400}>
@@ -50,7 +58,7 @@ const ManageMembers = () => {
       <VStack align="stretch" flex={3} pb="10">
         <MemberList />
       </VStack>
-    </HStack>
+    </Flex>
   );
 };
 
@@ -77,6 +85,8 @@ function MemberList() {
     isInvite: boolean;
   };
 
+  const [peopleSearchTerm, setPeopleSearchTerm] = useState('');
+
   useEffect(() => {
     let members: UserListItem[] = [];
     let invites: UserListItem[] = [];
@@ -88,7 +98,9 @@ function MemberList() {
           username: m.publicMetadata.username as string | undefined,
           identifier: m.publicUserData.identifier,
           isInvite: false,
-          ...m,
+          id: m.publicUserData.userId,
+          createdAt: m.createdAt,
+          role: m.role,
         };
       });
     }
@@ -103,8 +115,17 @@ function MemberList() {
       });
     }
 
-    setUserList(members.concat(invites));
-  }, [membershipList, invitationList]);
+    setUserList(
+      members
+        .concat(invites)
+        .filter(
+          (m) =>
+            m.firstName?.includes(peopleSearchTerm) ||
+            m.lastName?.includes(peopleSearchTerm) ||
+            m.identifier.includes(peopleSearchTerm),
+        ),
+    );
+  }, [membershipList, invitationList, peopleSearchTerm]);
 
   if (!userList) {
     return null;
@@ -119,165 +140,184 @@ function MemberList() {
       {showInviteForm ? (
         <InviteMember setShowInviteForm={setShowInviteForm} />
       ) : (
-        <TableContainer>
-          <Table fontSize="sm">
-            <Thead color="gray.500" pt="0">
-              <Tr>
-                <Td pt="0">User</Td>
-                <Td pt="0">Joined</Td>
-                <Td pt="0">Role</Td>
-                <Td pt="0" textAlign="end" w="1">
-                  {membership?.role === 'admin' && (
-                    <Button
-                      type="button"
-                      pl={4}
-                      pr={6}
-                      variant="solid"
-                      colorScheme="purple"
-                      textColor="gray.100"
-                      fontSize="sm"
-                      onClick={() => setShowInviteForm(true)}
-                    >
-                      <Icon mr="2" as={HiUserAdd} /> Invite
-                    </Button>
-                  )}
-                </Td>
-              </Tr>
-            </Thead>
-            <Tbody>
-              {userList.map((m, i) => (
-                <Tr key={m.id || i}>
-                  <Td>
-                    <VStack alignItems="start" spacing={0}>
-                      <HStack>
-                        {m.isInvite && <Icon as={HiEnvelope} fill="gray.500" />}
-                        <Text>{m.identifier}</Text>
-                        {m.id === membership?.id && (
-                          <Badge
-                            variant="subtle"
-                            colorScheme="purple"
-                            fontSize={'2xs'}
-                          >
-                            you
-                          </Badge>
-                        )}
-                      </HStack>
-                      {(m.firstName || m.lastName) && (
-                        <Text color="gray.500">
-                          {m.firstName || m.lastName ? (
-                            <>{`${m.firstName} ${m.lastName}`}</>
-                          ) : (
-                            <>{`${m.username || m.identifier}`}</>
+        <VStack align="stretch">
+          <HStack pb="4">
+            <Input
+              placeholder="Search people"
+              value={peopleSearchTerm}
+              onChange={(e) => setPeopleSearchTerm(e.target.value)}
+            />
+            {membership?.role === 'admin' && (
+              <Button
+                type="button"
+                pl={4}
+                pr={6}
+                variant="solid"
+                colorScheme="purple"
+                textColor="gray.100"
+                fontSize="sm"
+                onClick={() => setShowInviteForm(true)}
+              >
+                <Icon mr="2" as={HiUserAdd} /> Invite
+              </Button>
+            )}
+          </HStack>
+          <TableContainer>
+            <Table>
+              <Thead
+                fontWeight="bold"
+                py="3"
+                fontSize="xs"
+                textTransform="uppercase"
+                color="gray.600"
+              >
+                <Tr>
+                  <Td pl="2">User</Td>
+                  <Td>Joined</Td>
+                  <Td>Role</Td>
+                  <Td textAlign="end" w="1"></Td>
+                </Tr>
+              </Thead>
+              <Tbody>
+                {userList.map((m, i) => (
+                  <Tr key={m.id || i}>
+                    <Td pl="2">
+                      <HStack spacing={4}>
+                        <Avatar userId={m.id} />
+                        <VStack alignItems="start" spacing={1}>
+                          <HStack>
+                            {m.isInvite && (
+                              <Icon as={HiEnvelope} fill="gray.500" />
+                            )}
+                            <Text>{m.identifier}</Text>
+                            {m.id === membership?.id && (
+                              <Badge
+                                variant="subtle"
+                                colorScheme="purple"
+                                fontSize={'2xs'}
+                              >
+                                you
+                              </Badge>
+                            )}
+                          </HStack>
+                          {(m.firstName || m.lastName) && (
+                            <Text color="gray.500" fontSize="sm">
+                              {m.firstName || m.lastName
+                                ? `${m.firstName} ${m.lastName}`
+                                : `${m.username || m.identifier}`}
+                            </Text>
                           )}
-                        </Text>
-                      )}
-                    </VStack>
-                  </Td>
-                  <Td>
-                    {m.createdAt ? m.createdAt.toLocaleDateString() : 'Invited'}
-                  </Td>
-                  <Td>
-                    <Select
-                      fontSize="sm"
-                      isDisabled={
-                        !isCurrentUserAdmin ||
-                        m.id === membership?.id ||
-                        m.isInvite
-                      }
-                      onChange={async (e) => {
-                        const member = membershipList?.find(
-                          (member) => m.id === member.id,
-                        );
-                        if (member) {
-                          await member.update({
-                            role: e.target.value as MembershipRole,
-                          });
+                        </VStack>
+                      </HStack>
+                    </Td>
+                    <Td>
+                      {m.createdAt
+                        ? m.createdAt.toLocaleDateString()
+                        : 'Invited'}
+                    </Td>
+                    <Td>
+                      <Select
+                        fontSize="sm"
+                        isDisabled={
+                          !isCurrentUserAdmin ||
+                          m.id === membership?.id ||
+                          m.isInvite
                         }
-                      }}
-                    >
-                      <option
-                        value="basic_member"
-                        selected={m.role === 'basic_member'}
-                      >
-                        Member
-                      </option>
-                      <option value="admin" selected={m.role === 'admin'}>
-                        Admin
-                      </option>
-                    </Select>
-                  </Td>
-                  <Td textAlign={'end'}>
-                    {isCurrentUserAdmin && m.id !== membership.id && (
-                      <IconButton
-                        aria-label="remove user"
-                        variant="outline"
-                        colorScheme="red"
-                        onClick={() => {
-                          setMemberToDestroy(m);
-                          onOpen();
+                        onChange={async (e) => {
+                          const member = membershipList?.find(
+                            (member) => m.id === member.id,
+                          );
+                          if (member) {
+                            await member.update({
+                              role: e.target.value as MembershipRole,
+                            });
+                          }
                         }}
                       >
-                        <Icon as={HiTrash} />
-                      </IconButton>
-                    )}
-                  </Td>
-                </Tr>
-              ))}
-            </Tbody>
-          </Table>
-          <AlertDialog
-            isOpen={isOpen}
-            leastDestructiveRef={cancelRef}
-            onClose={onClose}
-          >
-            <AlertDialogOverlay>
-              <AlertDialogContent>
-                <AlertDialogHeader fontSize="lg" fontWeight="bold">
-                  Remove user
-                </AlertDialogHeader>
+                        <option
+                          value="basic_member"
+                          selected={m.role === 'basic_member'}
+                        >
+                          Member
+                        </option>
+                        <option value="admin" selected={m.role === 'admin'}>
+                          Admin
+                        </option>
+                      </Select>
+                    </Td>
+                    <Td textAlign={'end'}>
+                      {isCurrentUserAdmin && m.id !== membership.id && (
+                        <IconButton
+                          aria-label="remove user"
+                          variant="outline"
+                          colorScheme="red"
+                          onClick={() => {
+                            setMemberToDestroy(m);
+                            onOpen();
+                          }}
+                        >
+                          <Icon as={HiTrash} />
+                        </IconButton>
+                      )}
+                    </Td>
+                  </Tr>
+                ))}
+              </Tbody>
+            </Table>
+            <AlertDialog
+              isOpen={isOpen}
+              leastDestructiveRef={cancelRef}
+              onClose={onClose}
+            >
+              <AlertDialogOverlay>
+                <AlertDialogContent>
+                  <AlertDialogHeader fontSize="lg" fontWeight="bold">
+                    Remove user
+                  </AlertDialogHeader>
 
-                <AlertDialogBody>
-                  Are you sure? You can't undo this action afterwards.
-                </AlertDialogBody>
+                  <AlertDialogBody>
+                    Are you sure? You can't undo this action afterwards.
+                  </AlertDialogBody>
 
-                <AlertDialogFooter>
-                  <Button ref={cancelRef} onClick={onClose}>
-                    Cancel
-                  </Button>
-                  <Button
-                    colorScheme="red"
-                    onClick={async () => {
-                      if (memberToDestroy) {
-                        if (memberToDestroy.isInvite) {
-                          invitationList
-                            ?.find(
-                              (i) =>
-                                i.emailAddress === memberToDestroy.identifier,
-                            )
-                            ?.revoke();
-                        } else {
-                          membershipList
-                            ?.find((m) => m.id === memberToDestroy.id)
-                            ?.destroy();
-                          delete userList[
-                            userList.findIndex(
-                              (u) => u.id === memberToDestroy.id,
-                            )
-                          ];
+                  <AlertDialogFooter>
+                    <Button ref={cancelRef} onClick={onClose}>
+                      Cancel
+                    </Button>
+                    <Button
+                      colorScheme="red"
+                      onClick={async () => {
+                        if (memberToDestroy) {
+                          if (memberToDestroy.isInvite) {
+                            invitationList
+                              ?.find(
+                                (i) =>
+                                  i.emailAddress === memberToDestroy.identifier,
+                              )
+                              ?.revoke();
+                          } else {
+                            membershipList
+                              ?.find((m) => m.id === memberToDestroy.id)
+                              ?.destroy();
+                            delete userList[
+                              userList.findIndex(
+                                (u) => u.id === memberToDestroy.id,
+                              )
+                            ];
+                          }
+                          setMemberToDestroy(undefined);
                         }
-                        setMemberToDestroy(undefined);
-                      }
-                      onClose();
-                    }}
-                    ml={3}
-                  >
-                    Delete
-                  </Button>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialogOverlay>
-          </AlertDialog>
-        </TableContainer>
+                        onClose();
+                      }}
+                      ml={3}
+                    >
+                      Delete
+                    </Button>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialogOverlay>
+            </AlertDialog>
+          </TableContainer>
+        </VStack>
       )}
     </>
   );
