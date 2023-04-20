@@ -55,34 +55,40 @@ export const userRouter = createProtectedRouter()
           userId: ctx.userId,
         },
       );
-      const isAdmin = userOrgMemberList.find((uo) => {
+      const isInviterAdmin = userOrgMemberList.find((uo) => {
         return (
           uo.organization.id === input.organizationId && uo.role === 'admin'
         );
       });
 
-      if (isAdmin) {
-        try {
-          const invitation =
-            await clerk.organizations.createOrganizationInvitation({
-              emailAddress: input.email,
-              organizationId: input.organizationId,
-              inviterUserId: ctx.userId,
-              role: input.role,
-              redirectUrl: `${
-                process.env.NODE_ENV === 'development'
-                  ? 'http://localhost:3000'
-                  : 'https://' + process.env.NEXT_PUBLIC_HOST
-              }/sign-up`,
-            });
+      if (!isInviterAdmin) throw new TRPCError({ code: 'UNAUTHORIZED' });
 
-          return invitation;
-        } catch (e: any) {
-          throw new TRPCError({
-            code: 'INTERNAL_SERVER_ERROR',
-            message: e.toString(),
+      const invitee = await clerk.users.getUserList({
+        emailAddress: [input.email],
+      });
+
+      const signInOrSignUp = invitee.length > 0 ? 'sign-in' : 'sign-up';
+
+      try {
+        const invitation =
+          await clerk.organizations.createOrganizationInvitation({
+            emailAddress: input.email,
+            organizationId: input.organizationId,
+            inviterUserId: ctx.userId,
+            role: input.role,
+            redirectUrl: `${
+              process.env.NODE_ENV === 'development'
+                ? 'http://localhost:3000'
+                : 'https://' + process.env.NEXT_PUBLIC_HOST
+            }/${signInOrSignUp}`,
           });
-        }
+
+        return invitation;
+      } catch (e: any) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: e.toString(),
+        });
       }
     },
   });

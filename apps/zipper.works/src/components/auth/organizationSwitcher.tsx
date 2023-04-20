@@ -89,7 +89,7 @@ export const OrganizationSwitcher: React.FC<ButtonProps> = (props) => {
               <IconButton
                 aria-label="Manage organization"
                 variant={'ghost'}
-                onClick={() => router.push('/organization/manage')}
+                onClick={() => window.location.replace('/organization/manage')}
               >
                 <HiCog />
               </IconButton>
