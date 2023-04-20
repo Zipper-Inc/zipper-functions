@@ -1,6 +1,5 @@
 import { inferQueryOutput, trpc } from '~/utils/trpc';
 import {
-  GridItem,
   TableContainer,
   Text,
   VStack,
@@ -14,19 +13,17 @@ import {
   Center,
   Spacer,
   TabList,
-  Tab,
   TabPanels,
   TabPanel,
   Tabs,
-  Divider,
 } from '@chakra-ui/react';
 import React, { useEffect, useMemo, useState } from 'react';
-import DefaultGrid from '~/components/default-grid';
 import { useOrganization } from '@clerk/nextjs';
 import { CreateAppModal } from './create-app-modal';
 
 import { FiPlus } from 'react-icons/fi';
 import { DataTable } from './table';
+import NextLink from 'next/link';
 import {
   SortingState,
   createColumnHelper,
@@ -38,11 +35,11 @@ import { HiBuildingOffice, HiUser } from 'react-icons/hi2';
 import { AppOwner, useAppOwner } from '~/hooks/use-app-owner';
 import { EmptySlate } from './empty-slate';
 import { ResourceOwnerType } from '@zipper/types';
-import OrganizationSwitcher from '../auth/organizationSwitcher';
 import { TabButton } from '@zipper/ui';
 import ManageMembers from './members';
 import OrganizationSettings from './organization-settings';
 import UserSettings from './user-settings';
+import { HiEye } from 'react-icons/hi';
 
 type _App = Unpack<inferQueryOutput<'app.byAuthedUser'>>;
 type App = _App & {
@@ -239,7 +236,7 @@ export function Dashboard() {
             justifyContent="space-between"
             overflowX="auto"
           >
-            <HStack spacing={2}>
+            <HStack spacing={2} w="full">
               <TabButton title="Applets" />
               {organization && <TabButton title="People" />}
               <TabButton title="Settings" />
@@ -247,7 +244,7 @@ export function Dashboard() {
           </TabList>
           <TabPanels>
             <TabPanel>
-              <HStack w="full">
+              <HStack w="full" spacing={4}>
                 <Text color="gray.600">
                   {organization
                     ? 'Applets that you and other organization members have created within this workspace.'

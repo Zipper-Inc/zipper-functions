@@ -14,9 +14,11 @@ import {
   ButtonProps,
 } from '@chakra-ui/react';
 import { HiOutlineChevronUpDown, HiPlus } from 'react-icons/hi2';
-import { HiSwitchHorizontal } from 'react-icons/hi';
+import { HiEye, HiSwitchHorizontal } from 'react-icons/hi';
 import { useState } from 'react';
 import { CreateOrganizationModal } from './createOrganizationModal';
+import Link from 'next/link';
+import { useRouter } from 'next/router';
 
 export const OrganizationSwitcher: React.FC<ButtonProps> = (props) => {
   // get the authed user's organizations from Clerk
@@ -44,6 +46,8 @@ export const OrganizationSwitcher: React.FC<ButtonProps> = (props) => {
     onOpen: onOpenCreateOrg,
     onClose: onCloseCreateOrg,
   } = useDisclosure();
+
+  const router = useRouter();
 
   return (
     <Box>
@@ -85,6 +89,20 @@ export const OrganizationSwitcher: React.FC<ButtonProps> = (props) => {
                 <Text>{membership.role === 'admin' ? 'Admin' : 'Member'}</Text>
               )}
             </VStack>
+            <Button
+              onClick={() => {
+                router.push(
+                  `/${
+                    organization?.slug ||
+                    (user?.publicMetadata.username as string)
+                  }`,
+                );
+              }}
+              size="xs"
+            >
+              <Icon as={HiEye} mr="2" />
+              View Profile
+            </Button>
           </HStack>
           {workspacesExcludingCurrent.length > 0 && (
             <Box

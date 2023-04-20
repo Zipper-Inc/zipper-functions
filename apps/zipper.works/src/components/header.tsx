@@ -6,6 +6,7 @@ import {
   Flex,
   useBreakpointValue,
   Divider,
+  Button,
 } from '@chakra-ui/react';
 import { useRouter } from 'next/router';
 import NextLink from 'next/link';
@@ -25,8 +26,8 @@ type HeaderProps = {
 
 const navRoutes = [
   { href: '/gallery', text: 'Gallery' },
-  { href: '#', text: 'Learn' },
-  { href: '#', text: 'Build' },
+  { href: '#', text: 'Changelog' },
+  { href: '#', text: 'Docs' },
 ];
 
 const Header: React.FC<HeaderProps> = ({
@@ -62,7 +63,7 @@ const Header: React.FC<HeaderProps> = ({
           <Box my={3} height={4}>
             <NextLink href="/">
               <SignedIn>
-                {showNav ? (
+                {showNav && showOrgSwitcher ? (
                   <ZipperSymbol style={{ maxHeight: '100%' }} />
                 ) : (
                   <ZipperLogo style={{ maxHeight: '100%' }} />
@@ -106,7 +107,8 @@ const Header: React.FC<HeaderProps> = ({
                 height="100%"
                 spacing={4}
                 fontSize="lg"
-                color="purple"
+                color={user ? 'gray.600' : 'purple'}
+                textDecorationColor="purple"
                 textDecoration="none"
               >
                 {navRoutes.map((r) => {
@@ -120,7 +122,7 @@ const Header: React.FC<HeaderProps> = ({
                       key={r.text}
                       textUnderlineOffset={12}
                       textDecoration={textDecoration}
-                      fontSize="md"
+                      fontSize="sm"
                     >
                       {r.text}
                     </Link>
@@ -129,6 +131,11 @@ const Header: React.FC<HeaderProps> = ({
               </HStack>
             )}
             <HStack spacing="4" justifyContent="end">
+              {user && (
+                <Button size="sm" variant={'outline'} color="gray.600">
+                  Feedback
+                </Button>
+              )}
               <SignedIn>
                 <UserButton afterSignOutUrl="/" />
               </SignedIn>
