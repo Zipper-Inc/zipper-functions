@@ -70,7 +70,7 @@ export const OrganizationSwitcher: React.FC<ButtonProps> = (props) => {
             <Icon as={HiOutlineChevronUpDown} fontSize="md" />
           </HStack>
         </MenuButton>
-        <MenuList p={0} fontSize="sm" boxShadow={'xl'}>
+        <MenuList p={0} fontSize="sm" boxShadow={'xl'} minWidth="xs">
           <HStack
             borderBottom="1px"
             borderColor="gray.300"

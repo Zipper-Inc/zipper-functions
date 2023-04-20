@@ -50,6 +50,8 @@ const ResourceOwnerPage: NextPageWithLayout = () => {
       <>
         <Gallery
           apps={appsByResourceOwnerQuery.data}
+          resourceOwnerId={clerkQuery.data?.id}
+          resourceOwnerType={clerkQuery.data?.resourceOwnerType}
           preheading={heading !== slug ? heading : undefined}
           heading={slug}
           subheading={'Recent Apps'}
