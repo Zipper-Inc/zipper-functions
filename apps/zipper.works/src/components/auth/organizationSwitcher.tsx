@@ -77,6 +77,7 @@ export const OrganizationSwitcher: React.FC<ButtonProps> = (props) => {
             px={4}
             py={6}
             w="full"
+            spacing={10}
           >
             <VStack flexGrow="1" alignItems="start" spacing={0}>
               <Text fontWeight="medium">
@@ -101,7 +102,7 @@ export const OrganizationSwitcher: React.FC<ButtonProps> = (props) => {
               size="xs"
             >
               <Icon as={HiEye} mr="2" />
-              View Profile
+              Profile
             </Button>
           </HStack>
           {workspacesExcludingCurrent.length > 0 && (
