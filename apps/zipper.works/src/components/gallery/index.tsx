@@ -12,7 +12,7 @@ import {
 import { useOrganizationList, useUser } from '@clerk/nextjs';
 import { ResourceOwnerType } from '@zipper/types';
 import { useRouter } from 'next/router';
-import React from 'react';
+import React, { useState } from 'react';
 import { HiCog } from 'react-icons/hi';
 import { GalleryAppQueryOutput } from '~/pages';
 import { GalleryItem } from './gallery-item';
@@ -34,6 +34,7 @@ export function Gallery({
 }) {
   const { user } = useUser();
   const { organizationList, setActive } = useOrganizationList();
+  const [isNavigating, setIsNavigating] = useState(false);
 
   const router = useRouter();
 
@@ -55,8 +56,10 @@ export function Gallery({
               variant="outline"
               size="sm"
               colorScheme="purple"
+              isDisabled={isNavigating}
               p="4"
               onClick={async () => {
+                setIsNavigating(true);
                 setActive &&
                   (await setActive({
                     organization:

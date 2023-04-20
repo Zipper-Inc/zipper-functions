@@ -23,7 +23,6 @@ import { CreateAppModal } from './create-app-modal';
 
 import { FiPlus } from 'react-icons/fi';
 import { DataTable } from './table';
-import NextLink from 'next/link';
 import {
   SortingState,
   createColumnHelper,
@@ -39,7 +38,6 @@ import { TabButton } from '@zipper/ui';
 import ManageMembers from './members';
 import OrganizationSettings from './organization-settings';
 import UserSettings from './user-settings';
-import { HiEye } from 'react-icons/hi';
 
 type _App = Unpack<inferQueryOutput<'app.byAuthedUser'>>;
 type App = _App & {
@@ -180,6 +178,10 @@ export function Dashboard() {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const { getAppOwner } = useAppOwner();
 
+  const tabs = organization
+    ? ['Applets', 'People', 'Settings']
+    : ['Applets', 'Settings'];
+
   const apps = useMemo(
     () =>
       appQuery.data ? prepareAppsData(appQuery.data, getAppOwner) : emptyApps,
@@ -237,9 +239,9 @@ export function Dashboard() {
             overflowX="auto"
           >
             <HStack spacing={2} w="full">
-              <TabButton title="Applets" />
-              {organization && <TabButton title="People" />}
-              <TabButton title="Settings" />
+              {tabs.map((tab) => {
+                return <TabButton key={tab} title={tab} />;
+              })}
             </HStack>
           </TabList>
           <TabPanels>

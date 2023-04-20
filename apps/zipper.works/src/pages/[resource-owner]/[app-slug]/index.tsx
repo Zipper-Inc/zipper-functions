@@ -178,15 +178,12 @@ const AppPage: NextPageWithLayout = () => {
         <Box position="absolute" top="90%" transform="translateX(-15%)">
           <Button
             colorScheme="blue"
+            as={Link}
             paddingX={6}
-            onClick={() =>
-              router.push(
-                `/${resourceOwnerSlug}/${appSlug}/edit/${
-                  appQuery.data.scriptMain?.script.filename || 'main.ts'
-                }`,
-              )
-            }
-            _hover={{ transform: 'scale(1.1)' }}
+            href={`/${resourceOwnerSlug}/${appSlug}/edit/${
+              appQuery.data.scriptMain?.script.filename || 'main.ts'
+            }`}
+            _hover={{ transform: 'scale(1.1)', textDecoration: 'none' }}
           >
             Explore This App
           </Button>
