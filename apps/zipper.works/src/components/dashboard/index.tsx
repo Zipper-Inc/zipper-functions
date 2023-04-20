@@ -1,6 +1,5 @@
 import { inferQueryOutput, trpc } from '~/utils/trpc';
 import {
-  GridItem,
   TableContainer,
   Text,
   VStack,
@@ -13,14 +12,18 @@ import {
   Spinner,
   Center,
   Spacer,
+  TabList,
+  TabPanels,
+  TabPanel,
+  Tabs,
 } from '@chakra-ui/react';
 import React, { useEffect, useMemo, useState } from 'react';
-import DefaultGrid from '~/components/default-grid';
 import { useOrganization } from '@clerk/nextjs';
 import { CreateAppModal } from './create-app-modal';
 
 import { FiPlus } from 'react-icons/fi';
 import { DataTable } from './table';
+import NextLink from 'next/link';
 import {
   SortingState,
   createColumnHelper,
@@ -32,7 +35,11 @@ import { HiBuildingOffice, HiUser } from 'react-icons/hi2';
 import { AppOwner, useAppOwner } from '~/hooks/use-app-owner';
 import { EmptySlate } from './empty-slate';
 import { ResourceOwnerType } from '@zipper/types';
-import OrganizationSwitcher from '../auth/organizationSwitcher';
+import { TabButton } from '@zipper/ui';
+import ManageMembers from './members';
+import OrganizationSettings from './organization-settings';
+import UserSettings from './user-settings';
+import { HiEye } from 'react-icons/hi';
 
 type _App = Unpack<inferQueryOutput<'app.byAuthedUser'>>;
 type App = _App & {
@@ -156,6 +163,7 @@ const columns = [
 const emptyApps: App[] = [];
 
 export function Dashboard() {
+  const [tabIndex, setTabIndex] = useState(0);
   const { organization } = useOrganization();
   const [appSearchTerm, setAppSearchTerm] = useState('');
   const appQuery = trpc.useQuery([
@@ -188,7 +196,11 @@ export function Dashboard() {
       owner: !!appSearchTerm,
       createdBy: !appSearchTerm,
     });
-  });
+  }, [appSearchTerm]);
+
+  useEffect(() => {
+    setTabIndex(0);
+  }, [organization]);
 
   if (appQuery.isLoading) {
     return (
@@ -200,90 +212,108 @@ export function Dashboard() {
 
   return (
     <>
-      <DefaultGrid flex={1} w="full" mb="10">
-        <GridItem colSpan={12}>
-          <VStack align="start" w="full">
-            <HStack w="full">
-              {appSearchTerm ? (
-                <VStack align="start">
-                  <Text fontSize="3xl" fontWeight="medium" p="0" m="-0.5">
-                    Search
-                  </Text>
-                  <Text color="gray.600">
-                    Searching applets across all your workspaces
-                  </Text>
-                </VStack>
+      <VStack flex={1} paddingX={10} alignItems="stretch" spacing={0}>
+        <Tabs
+          colorScheme="purple"
+          flex={1}
+          display="flex"
+          flexDirection="column"
+          justifyContent="stretch"
+          isLazy
+          w="full"
+          index={tabIndex}
+          onChange={(index) => setTabIndex(index)}
+        >
+          <TabList
+            borderBottom="1px solid"
+            borderColor={'gray.100'}
+            p={1}
+            pb={4}
+            mb={2}
+            pt={3}
+            color="gray.500"
+            gap={4}
+            justifyContent="space-between"
+            overflowX="auto"
+          >
+            <HStack spacing={2} w="full">
+              <TabButton title="Applets" />
+              {organization && <TabButton title="People" />}
+              <TabButton title="Settings" />
+            </HStack>
+          </TabList>
+          <TabPanels>
+            <TabPanel>
+              <HStack w="full" spacing={4}>
+                <Text color="gray.600">
+                  {organization
+                    ? 'Applets that you and other organization members have created within this workspace.'
+                    : "Applets that you've created or that have been shared with you outside an organization workspace."}
+                </Text>
+                <Spacer flexGrow={1} />
+
+                <Button
+                  type="button"
+                  pl={4}
+                  pr={6}
+                  variant="solid"
+                  colorScheme="purple"
+                  textColor="gray.100"
+                  fontSize="sm"
+                  onClick={async () => {
+                    setCreateAppModalOpen(true);
+                  }}
+                >
+                  <Icon as={FiPlus} mr="2" />
+                  Create Applet
+                </Button>
+              </HStack>
+              <HStack w="full" align="center" h="20">
+                <Input
+                  placeholder="Search applets (name, slug or description)"
+                  value={appSearchTerm}
+                  onChange={(e) => setAppSearchTerm(e.target.value)}
+                />
+              </HStack>
+              {apps && apps.length > 0 ? (
+                <>
+                  <TableContainer w="full">
+                    <DataTable
+                      columns={columns}
+                      data={apps}
+                      isEmpty={!appQuery.isLoading && !appQuery.data}
+                      setGlobalFilter={setAppSearchTerm}
+                      onSortingChange={setSorting}
+                      onGlobalFilterChange={setAppSearchTerm}
+                      globalFilterFn="includesString"
+                      getSortedRowModel={getSortedRowModel()}
+                      getFilteredRowModel={getFilteredRowModel()}
+                      state={{
+                        globalFilter: appSearchTerm,
+                        columnVisibility,
+                        sorting,
+                      }}
+                    />
+                  </TableContainer>
+                </>
               ) : (
-                <VStack align="start">
-                  <OrganizationSwitcher
-                    fontSize="3xl"
-                    fontWeight="medium"
-                    border="none"
-                    p="0"
-                    variant={'unstyled'}
-                    display="flex"
-                  />
-                  <Text color="gray.600">
-                    {organization
-                      ? 'Applets that you and other organization members have created within this workspace.'
-                      : "Applets that you've created or that have been shared with you outside an organization workspace."}
-                  </Text>
-                </VStack>
+                <EmptySlate
+                  organization={organization}
+                  onCreateButtonClick={() => setCreateAppModalOpen(true)}
+                />
               )}
-              <Spacer flexGrow={1} />
-              <Button
-                type="button"
-                pl={4}
-                pr={6}
-                variant="solid"
-                colorScheme="purple"
-                textColor="gray.100"
-                fontSize="sm"
-                onClick={async () => {
-                  setCreateAppModalOpen(true);
-                }}
-              >
-                <Icon as={FiPlus} mr="2"></Icon>
-                Create Applet
-              </Button>
-            </HStack>
-            <HStack w="full" align="center" h="20">
-              <Input
-                placeholder="Search applets (name, slug or description)"
-                value={appSearchTerm}
-                onChange={(e) => setAppSearchTerm(e.target.value)}
-              />
-            </HStack>
-            {apps && apps.length > 0 ? (
-              <>
-                <TableContainer w="full">
-                  <DataTable
-                    columns={columns}
-                    data={apps}
-                    isEmpty={!appQuery.isLoading && !appQuery.data}
-                    setGlobalFilter={setAppSearchTerm}
-                    onSortingChange={setSorting}
-                    onGlobalFilterChange={setAppSearchTerm}
-                    globalFilterFn="includesString"
-                    getSortedRowModel={getSortedRowModel()}
-                    getFilteredRowModel={getFilteredRowModel()}
-                    state={{
-                      globalFilter: appSearchTerm,
-                      columnVisibility,
-                      sorting,
-                    }}
-                  />
-                </TableContainer>
-              </>
-            ) : (
-              <EmptySlate
-                organization={organization}
-                onCreateButtonClick={() => setCreateAppModalOpen(true)}
-              />
+            </TabPanel>
+            {organization && (
+              <TabPanel>
+                <ManageMembers />
+              </TabPanel>
             )}
-          </VStack>
-        </GridItem>
-      </DefaultGrid>
+            <TabPanel>
+              {organization ? <OrganizationSettings /> : <UserSettings />}
+            </TabPanel>
+          </TabPanels>
+        </Tabs>
+      </VStack>
       <CreateAppModal
         isOpen={isCreateAppModalOpen}
         onClose={() => setCreateAppModalOpen(false)}
