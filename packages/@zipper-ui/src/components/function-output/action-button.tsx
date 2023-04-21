@@ -14,7 +14,6 @@ export function ActionButton({ action }: { action: Zipper.Action }) {
   } = useContext(FunctionOutputContext);
 
   async function runScript() {
-    console.log(path, inputs);
     const res = await fetch(
       getRunUrl(action.showAs === 'refresh' ? path : action.path),
       {
