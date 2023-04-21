@@ -4,15 +4,27 @@ import { normalizeAppPath } from '@zipper/utils';
 import { FunctionOutputContext } from './function-output-context';
 
 export function ActionButton({ action }: { action: Zipper.Action }) {
-  const { setModalResult, setExpandedResult, setOverallResult, getRunUrl } =
-    useContext(FunctionOutputContext);
+  const {
+    setModalResult,
+    setExpandedResult,
+    setOverallResult,
+    getRunUrl,
+    path,
+    inputs,
+  } = useContext(FunctionOutputContext);
 
   async function runScript() {
-    const res = await fetch(getRunUrl(action.path), {
-      method: 'POST',
-      body: JSON.stringify(action.inputs || []),
-      credentials: 'include',
-    });
+    console.log(path, inputs);
+    const res = await fetch(
+      getRunUrl(action.showAs === 'refresh' ? path : action.path),
+      {
+        method: 'POST',
+        body: JSON.stringify(
+          action.showAs === 'refresh' ? inputs || [] : action.inputs || [],
+        ),
+        credentials: 'include',
+      },
+    );
     const text = await res.text();
 
     switch (action.showAs) {

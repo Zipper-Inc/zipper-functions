@@ -79,7 +79,7 @@ declare namespace Zipper {
   /**
    * Actions
    */
-  export interface Action<I = Inputs> {
+  export interface ActionBase<I = Inputs> {
     /**
      *
      */
@@ -92,18 +92,34 @@ declare namespace Zipper {
      */
     text?: string;
     /**
-     * The path to the handler for this action
-     */
-    path: string;
-    /**
-     * Determines how we should show the input
-     */
-    showAs: 'modal' | 'expanded' | 'replace_all' | 'refresh';
-    /**
      * The inputs to run the function with
      */
     inputs?: I;
   }
+
+  export type Action = ActionBase &
+    (
+      | {
+          /**
+           * Determines how we should show the input
+           */
+          showAs: 'refresh';
+          /**
+           * The path to the handler for this action
+           */
+          path?: string;
+        }
+      | {
+          /**
+           * Determines how we should show the input
+           */
+          showAs: 'modal' | 'expanded' | 'replace_all';
+          /**
+           * The path to the handler for this action
+           */
+          path: string;
+        }
+    );
 
   export namespace Action {
     /**

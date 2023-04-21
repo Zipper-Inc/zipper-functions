@@ -236,9 +236,10 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [modalResult, setModalResult] = useState({ heading: '', body: '' });
   const { expandedResult, setExpandedResult } = useAppEditSidebarContext();
+  const [inputs, setInputs] = useState<Record<string, any>>({});
 
-  const output = useMemo(
-    () => (
+  const output = useMemo(() => {
+    return (
       <FunctionOutput
         result={results[currentScript?.filename || 'main.ts']}
         setExpandedResult={(result) =>
@@ -252,13 +253,11 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
           return getRunUrl(appSlug, lastRunVersion, scriptName);
         }}
         path={currentScript?.filename || 'main.ts'}
-        inputs={inputParams?.map((i) => {
-          return { [i.key]: formMethods.getValues()[`${i.key}:${i.type}`] };
-        })}
+        inputs={inputs}
+        currentContext={'main'}
       />
-    ),
-    [results, currentScript],
-  );
+    );
+  }, [results, currentScript]);
 
   useEffect(() => {
     if (modalResult.body) {
@@ -271,7 +270,18 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
     onClose();
   }
 
-  const functionOutputComponent = (secondaryResults: any) => {
+  const functionOutputComponent = (
+    secondaryResults: any,
+    secondaryContext: 'modal' | 'expanded',
+  ) => {
+    const formValues = formMethods.getValues();
+    const formKeys = inputParams?.map((param) => `${param.key}:${param.type}`);
+    const inputs: Record<string, any> = {};
+    formKeys?.map((k) => {
+      const key = k.split(':')[0] as string;
+      inputs[key] = formValues[k];
+    });
+
     return (
       <FunctionOutput
         result={secondaryResults}
@@ -285,6 +295,9 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
         getRunUrl={(scriptName: string) => {
           return getRunUrl(appSlug, undefined, scriptName);
         }}
+        inputs={inputs}
+        path={currentScript?.filename || 'main.ts'}
+        currentContext={secondaryContext}
       />
     );
   };
@@ -332,6 +345,17 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
                 }
                 onClick={() => {
                   setExpandedResult({});
+
+                  const formValues = formMethods.getValues();
+                  const formKeys = inputParams?.map(
+                    (param) => `${param.key}:${param.type}`,
+                  );
+                  const inputs: Record<string, any> = {};
+                  formKeys?.map((k) => {
+                    const key = k.split(':')[0] as string;
+                    inputs[key] = formValues[k];
+                  });
+                  setInputs(inputs);
                   run(true);
                 }}
                 display="flex"
@@ -529,6 +553,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
                   <Box mt={4}>
                     {functionOutputComponent(
                       expandedResult[currentScript?.filename || 'main.ts'],
+                      'expanded',
                     )}
                   </Box>
                 )}
@@ -549,7 +574,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
                   gap={8}
                   overflow="auto"
                 >
-                  {functionOutputComponent(modalResult.body)}
+                  {functionOutputComponent(modalResult.body, 'modal')}
                 </ModalBody>
                 <ModalFooter justifyContent="space-between">
                   <Button

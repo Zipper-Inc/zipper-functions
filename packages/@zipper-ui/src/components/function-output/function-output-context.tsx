@@ -1,12 +1,13 @@
 import { createContext, useContext } from 'react';
 
-type FunctionOutputContextType = {
+export type FunctionOutputContextType = {
   setExpandedResult: (result: any) => void;
   setModalResult: (result: any) => void;
   setOverallResult: (result: any) => void;
   getRunUrl: (scriptName: string) => string;
-  inputs: Record<string, any>;
+  inputs?: Record<string, any>;
   path: string;
+  currentContext: 'main' | 'modal' | 'expanded';
 };
 
 export const FunctionOutputContext = createContext<FunctionOutputContextType>({
@@ -22,6 +23,7 @@ export const FunctionOutputContext = createContext<FunctionOutputContextType>({
   getRunUrl: () => '',
   inputs: {},
   path: '',
+  currentContext: 'main',
 });
 
 const FunctionOutputProvider = ({
@@ -32,6 +34,7 @@ const FunctionOutputProvider = ({
   getRunUrl,
   path,
   inputs,
+  currentContext,
 }: FunctionOutputContextType & { children: any }) => {
   return (
     <FunctionOutputContext.Provider
@@ -42,6 +45,7 @@ const FunctionOutputProvider = ({
         getRunUrl,
         inputs,
         path,
+        currentContext,
       }}
     >
       {children}

@@ -28,6 +28,9 @@ export function FunctionOutput({
   setModalResult,
   setOverallResult,
   getRunUrl,
+  inputs,
+  path,
+  currentContext,
 }: FunctionOutputProps) {
   return (
     <FunctionOutputProvider
@@ -35,6 +38,9 @@ export function FunctionOutput({
       setModalResult={setModalResult}
       setOverallResult={setOverallResult}
       getRunUrl={getRunUrl}
+      inputs={inputs}
+      path={path}
+      currentContext={currentContext}
     >
       <ErrorBoundary
         // this makes sure we render a new boundary with a new result set
