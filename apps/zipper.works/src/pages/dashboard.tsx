@@ -9,4 +9,5 @@ const DashboardPage: NextPageWithLayout = () => {
 DashboardPage.header = () => (
   <Header showOrgSwitcher={true} showDivider={false} />
 );
+
 export default DashboardPage;

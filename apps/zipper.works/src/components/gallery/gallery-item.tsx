@@ -10,25 +10,11 @@ import {
   Box,
 } from '@chakra-ui/react';
 import { GalleryAppQueryOutput } from '~/pages';
-import Avatar from 'boring-avatars';
-import { baseColors } from '@zipper/ui';
+import AppAvatar from '../app-avatar';
 
 type GalleryItemProps = {
   app: Unpack<GalleryAppQueryOutput>;
 };
-
-const avatarColors = [
-  // brand purple 600: #9B2FB4
-  baseColors.purple['600'],
-  // brand purple 900: #3D1353
-  baseColors.purple['900'],
-  // orange 500: #F74441
-  '#F74441',
-  // brand gray warm 200: #E3E2E1
-  baseColors.neutral['200'],
-  // white: #FFFFFF
-  'white',
-];
 
 // TODO get the badges from api
 const badges: string[] = [];
@@ -49,13 +35,7 @@ export const GalleryItem: React.FC<GalleryItemProps> = ({ app }) => {
             spacing={4}
           >
             <Box w={24}>
-              <Avatar
-                size="100%"
-                name={nameOrSlug}
-                variant="bauhaus"
-                square
-                colors={avatarColors}
-              />
+              <AppAvatar nameOrSlug={nameOrSlug} />
             </Box>
             <VStack alignItems="start" spacing="1" flex={1}>
               <Heading as="h2" size="md" fontWeight="semibold">
