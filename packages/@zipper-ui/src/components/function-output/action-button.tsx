@@ -1,15 +1,11 @@
 import { Button, Flex, Spinner } from '@chakra-ui/react';
-import { useState } from 'react';
-import { FunctionOutputProps } from './types';
+import { useContext, useState } from 'react';
 import { normalizeAppPath } from '@zipper/utils';
+import { FunctionOutputContext } from './function-output-context';
 
-export function ActionButton({
-  action,
-  setExpandedResult,
-  setModalResult,
-  setOverallResult,
-  getRunUrl,
-}: Omit<FunctionOutputProps, 'result'> & { action: Zipper.Action }) {
+export function ActionButton({ action }: { action: Zipper.Action }) {
+  const { setModalResult, setExpandedResult, setOverallResult, getRunUrl } =
+    useContext(FunctionOutputContext);
   async function runScript() {
     const res = await fetch(getRunUrl(action.path), {
       method: 'POST',
