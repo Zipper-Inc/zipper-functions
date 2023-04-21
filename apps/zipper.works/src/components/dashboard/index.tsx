@@ -18,10 +18,11 @@ import {
   Heading,
   Box,
   Flex,
+  useDisclosure,
 } from '@chakra-ui/react';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useOrganization } from '@clerk/nextjs';
-import { CreateAppModal } from './create-app-modal';
+import { CreateAppForm } from './create-app-form';
 
 import { FiPlus } from 'react-icons/fi';
 import { DataTable } from './table';
@@ -188,7 +189,7 @@ export function Dashboard() {
     'app.byAuthedUser',
     { filterByOrganization: !appSearchTerm },
   ]);
-  const [isCreateAppModalOpen, setCreateAppModalOpen] = useState(false);
+  const { onOpen, isOpen, onClose } = useDisclosure();
   const [columnVisibility, setColumnVisibility] = useState<
     Record<string, boolean>
   >({
@@ -281,57 +282,61 @@ export function Dashboard() {
                       : "Applets that you've created or that have been shared with you outside an organization workspace."}
                   </Text>
                 </VStack>
-                <VStack flex={3}>
-                  <HStack w="full" spacing={4} pb="4">
-                    <Input
-                      placeholder="Search applets (name, slug or description)"
-                      value={appSearchTerm}
-                      onChange={(e) => setAppSearchTerm(e.target.value)}
-                    />
-                    <Button
-                      type="button"
-                      pl={4}
-                      pr={6}
-                      variant="solid"
-                      colorScheme="purple"
-                      textColor="gray.100"
-                      fontSize="sm"
-                      onClick={async () => {
-                        setCreateAppModalOpen(true);
-                      }}
-                    >
-                      <Icon as={FiPlus} mr="2" />
-                      Create Applet
-                    </Button>
-                  </HStack>
-                  {apps && apps.length > 0 ? (
-                    <>
-                      <TableContainer w="full">
-                        <DataTable
-                          columns={columns}
-                          data={apps}
-                          isEmpty={!appQuery.isLoading && !appQuery.data}
-                          setGlobalFilter={setAppSearchTerm}
-                          onSortingChange={setSorting}
-                          onGlobalFilterChange={setAppSearchTerm}
-                          globalFilterFn="includesString"
-                          getSortedRowModel={getSortedRowModel()}
-                          getFilteredRowModel={getFilteredRowModel()}
-                          state={{
-                            globalFilter: appSearchTerm,
-                            columnVisibility,
-                            sorting,
-                          }}
-                        />
-                      </TableContainer>
-                    </>
-                  ) : (
-                    <EmptySlate
-                      organization={organization}
-                      onCreateButtonClick={() => setCreateAppModalOpen(true)}
-                    />
-                  )}
-                </VStack>
+                {isOpen ? (
+                  <VStack flex={3} align="start">
+                    <CreateAppForm onClose={onClose} />
+                  </VStack>
+                ) : (
+                  <VStack flex={3}>
+                    <HStack w="full" spacing={4} pb="4">
+                      <Input
+                        placeholder="Search applets (name, slug or description)"
+                        value={appSearchTerm}
+                        onChange={(e) => setAppSearchTerm(e.target.value)}
+                      />
+                      <Button
+                        type="button"
+                        pl={4}
+                        pr={6}
+                        variant="solid"
+                        colorScheme="purple"
+                        textColor="gray.100"
+                        fontSize="sm"
+                        onClick={onOpen}
+                      >
+                        <Icon as={FiPlus} mr="2" />
+                        Create Applet
+                      </Button>
+                    </HStack>
+                    {apps && apps.length > 0 ? (
+                      <>
+                        <TableContainer w="full">
+                          <DataTable
+                            columns={columns}
+                            data={apps}
+                            isEmpty={!appQuery.isLoading && !appQuery.data}
+                            setGlobalFilter={setAppSearchTerm}
+                            onSortingChange={setSorting}
+                            onGlobalFilterChange={setAppSearchTerm}
+                            globalFilterFn="includesString"
+                            getSortedRowModel={getSortedRowModel()}
+                            getFilteredRowModel={getFilteredRowModel()}
+                            state={{
+                              globalFilter: appSearchTerm,
+                              columnVisibility,
+                              sorting,
+                            }}
+                          />
+                        </TableContainer>
+                      </>
+                    ) : (
+                      <EmptySlate
+                        organization={organization}
+                        onCreateButtonClick={onOpen}
+                      />
+                    )}
+                  </VStack>
+                )}
               </Flex>
             </TabPanel>
             {organization && (
@@ -345,10 +350,6 @@ export function Dashboard() {
           </TabPanels>
         </Tabs>
       </VStack>
-      <CreateAppModal
-        isOpen={isCreateAppModalOpen}
-        onClose={() => setCreateAppModalOpen(false)}
-      />
     </>
   );
 }
