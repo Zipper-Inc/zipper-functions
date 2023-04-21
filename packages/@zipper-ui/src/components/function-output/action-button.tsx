@@ -6,6 +6,7 @@ import { FunctionOutputContext } from './function-output-context';
 export function ActionButton({ action }: { action: Zipper.Action }) {
   const { setModalResult, setExpandedResult, setOverallResult, getRunUrl } =
     useContext(FunctionOutputContext);
+
   async function runScript() {
     const res = await fetch(getRunUrl(action.path), {
       method: 'POST',
@@ -22,6 +23,9 @@ export function ActionButton({ action }: { action: Zipper.Action }) {
         setExpandedResult(text);
         break;
       case 'replace_all':
+        setOverallResult(text);
+        break;
+      case 'refresh':
         setOverallResult(text);
         break;
       default:

@@ -98,7 +98,7 @@ declare namespace Zipper {
     /**
      * Determines how we should show the input
      */
-    showAs: 'modal' | 'expanded' | 'replace_all';
+    showAs: 'modal' | 'expanded' | 'replace_all' | 'refresh';
     /**
      * The inputs to run the function with
      */

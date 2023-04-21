@@ -251,6 +251,10 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
         getRunUrl={(scriptName: string) => {
           return getRunUrl(appSlug, lastRunVersion, scriptName);
         }}
+        path={currentScript?.filename || 'main.ts'}
+        inputs={inputParams?.map((i) => {
+          return { [i.key]: formMethods.getValues()[`${i.key}:${i.type}`] };
+        })}
       />
     ),
     [results, currentScript],

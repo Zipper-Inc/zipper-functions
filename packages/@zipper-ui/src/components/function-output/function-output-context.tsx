@@ -5,6 +5,8 @@ type FunctionOutputContextType = {
   setModalResult: (result: any) => void;
   setOverallResult: (result: any) => void;
   getRunUrl: (scriptName: string) => string;
+  inputs: Record<string, any>;
+  path: string;
 };
 
 export const FunctionOutputContext = createContext<FunctionOutputContextType>({
@@ -18,6 +20,8 @@ export const FunctionOutputContext = createContext<FunctionOutputContextType>({
     return;
   },
   getRunUrl: () => '',
+  inputs: {},
+  path: '',
 });
 
 const FunctionOutputProvider = ({
@@ -26,6 +30,8 @@ const FunctionOutputProvider = ({
   setModalResult,
   setOverallResult,
   getRunUrl,
+  path,
+  inputs,
 }: FunctionOutputContextType & { children: any }) => {
   return (
     <FunctionOutputContext.Provider
@@ -34,6 +40,8 @@ const FunctionOutputProvider = ({
         setModalResult,
         setOverallResult,
         getRunUrl,
+        inputs,
+        path,
       }}
     >
       {children}

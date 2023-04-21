@@ -5,6 +5,8 @@ export interface FunctionOutputProps {
   setExpandedResult: (result: any) => void;
   setOverallResult: (result: any) => void;
   getRunUrl: (scriptName: string) => string;
+  path: string;
+  inputs: Record<string, any>[];
 }
 
 export interface RawOutputProps {
