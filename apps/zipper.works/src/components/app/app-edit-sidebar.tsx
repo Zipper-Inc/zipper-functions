@@ -238,6 +238,17 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
   const { expandedResult, setExpandedResult } = useAppEditSidebarContext();
   const [inputs, setInputs] = useState<Record<string, any>>({});
 
+  const setInputsAtTimeOfRun = () => {
+    const formValues = formMethods.getValues();
+    const formKeys = inputParams?.map((param) => `${param.key}:${param.type}`);
+    const inputs: Record<string, any> = {};
+    formKeys?.map((k) => {
+      const key = k.split(':')[0] as string;
+      inputs[key] = formValues[k];
+    });
+    setInputs(inputs);
+  };
+
   const output = useMemo(() => {
     return (
       <FunctionOutput
@@ -345,17 +356,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
                 }
                 onClick={() => {
                   setExpandedResult({});
-
-                  const formValues = formMethods.getValues();
-                  const formKeys = inputParams?.map(
-                    (param) => `${param.key}:${param.type}`,
-                  );
-                  const inputs: Record<string, any> = {};
-                  formKeys?.map((k) => {
-                    const key = k.split(':')[0] as string;
-                    inputs[key] = formValues[k];
-                  });
-                  setInputs(inputs);
+                  setInputsAtTimeOfRun();
                   run(true);
                 }}
                 display="flex"
