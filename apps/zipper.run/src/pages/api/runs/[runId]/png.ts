@@ -7,7 +7,9 @@ export default async function handler(
 ) {
   const host = req.headers['x-forwarded-host'] || req.headers.host;
   const proto = process.env.NODE_ENV === 'production' ? 'https' : 'http';
-  const path = req.url?.replace('api/png', 'run');
+  const { runId } = req.query;
+  const path = `/run/${runId}`;
+  console.log(path);
 
   const runUrl = `${proto}://${host}${path}`;
 
@@ -26,5 +28,6 @@ export default async function handler(
   await browser.close();
 
   res.setHeader('Content-Type', 'image/png');
+  res.setHeader('Content-Disposition', `inline; filename="${runId}.png"`);
   res.end(buffer, 'binary');
 }
