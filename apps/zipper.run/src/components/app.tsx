@@ -96,6 +96,7 @@ export function AppPage({
   const [screen, setScreen] = useState<Screen>(paramResult ? 'run' : 'initial');
   const [latestRunId, setLatestRunId] = useState<string>();
   const [expandInputsSection, setExpandInputsSection] = useState(true);
+  const [inputValues, setInputValues] = useState<Record<string, any>>({});
   const previousRouteRef = useRef(asPath);
 
   // We have to do this so that the results aren't SSRed
@@ -123,6 +124,7 @@ export function AppPage({
       setLoading(true);
       const rawValues = formContext.getValues();
       const values = getInputsFromFormData(rawValues, inputs);
+      setInputValues(values);
 
       const url = filename ? `/${filename}/call` : '/call';
 
@@ -172,7 +174,10 @@ export function AppPage({
     return `/${scriptName}/call`;
   }
 
-  const secondaryResultComponent = (secondaryResult: any) => {
+  const secondaryResultComponent = (
+    secondaryResult: any,
+    secondaryContext: 'expanded' | 'modal',
+  ) => {
     return (
       <FunctionOutput
         result={secondaryResult}
@@ -180,6 +185,9 @@ export function AppPage({
         setModalResult={setModalResult}
         setExpandedResult={setExpandedResult}
         getRunUrl={getRunUrl}
+        currentContext={secondaryContext}
+        inputs={inputValues}
+        path={entryPoint?.filename || 'main.ts'}
       />
     );
   };
@@ -301,6 +309,9 @@ export function AppPage({
                 setModalResult={setModalResult}
                 setExpandedResult={setExpandedResult}
                 getRunUrl={getRunUrl}
+                currentContext="main"
+                inputs={inputs}
+                path={entryPoint?.filename || 'main.ts'}
               />
               {expandedResult && (
                 <Box
@@ -330,7 +341,9 @@ export function AppPage({
                     />
                   </HStack>
                   {isExpandedResultOpen && (
-                    <Box>{secondaryResultComponent(expandedResult)}</Box>
+                    <Box>
+                      {secondaryResultComponent(expandedResult, 'expanded')}
+                    </Box>
                   )}
                 </Box>
               )}
@@ -365,7 +378,7 @@ export function AppPage({
             gap={8}
             overflow="auto"
           >
-            {secondaryResultComponent(modalResult.body)}
+            {secondaryResultComponent(modalResult.body, 'modal')}
           </ModalBody>
           <ModalFooter justifyContent="space-between">
             <Button
