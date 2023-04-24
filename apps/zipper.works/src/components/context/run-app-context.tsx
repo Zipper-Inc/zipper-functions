@@ -11,6 +11,7 @@ import { useUser } from '@clerk/nextjs';
 import { useEditorContext } from './editor-context';
 import { requiredUserAuthConnectorFilter } from '~/utils/user-auth-connector-filter';
 import { useArray } from '@zipper/ui';
+import { uuid } from '@zipper/utils';
 
 type UserAuthConnector = {
   type: ConnectorType;
@@ -27,6 +28,7 @@ export type FunctionCallContextType = {
   inputParams?: InputParam[];
   isRunning: boolean;
   lastRunVersion: string;
+  lastRunId: string;
   logs: ReturnType<typeof useArray<Log>>;
   results: Record<string, string>;
   userAuthConnectors: UserAuthConnector[];
@@ -41,6 +43,7 @@ export const RunAppContext = createContext<FunctionCallContextType>({
   inputParams: undefined,
   isRunning: false,
   lastRunVersion: '',
+  lastRunId: '',
   logs: {
     value: [],
     setValue: noop,
@@ -78,6 +81,7 @@ export function RunAppProvider({
   const formMethods = useForm();
   const [isRunning, setIsRunning] = useState(false);
   const [results, setResults] = useState<Record<string, string>>({});
+  const [lastRunId, setLastRunId] = useState<string>('');
   const [lastRunVersion, setLastRunVersion] = useState(
     () => app.lastDeploymentVersion || getAppVersionFromHash(getAppHash(app)),
   );
@@ -103,11 +107,14 @@ export function RunAppProvider({
     setIsRunning(true);
     await onBeforeRun();
     const formValues = formMethods.getValues();
+    const runId = uuid();
+    setLastRunId(runId);
 
     const result = await runAppMutation.mutateAsync({
       formData: formValues,
       appId: id,
       scriptId: isCurrentFileTheEntryPoint ? currentScript?.id : undefined,
+      runId,
     });
 
     if (result.ok && result.filename) {
@@ -145,6 +152,7 @@ export function RunAppProvider({
         formMethods,
         isRunning,
         lastRunVersion,
+        lastRunId,
         logs,
         results,
         appEventsQuery,

@@ -126,7 +126,7 @@ export async function relayRequest({
 
   const relayUrl = getPatchedUrl(request);
   const url = new URL(relayUrl);
-  const runId = uuid();
+  const runId = request.headers.get('x-zipper-run-id') || uuid();
 
   const relayBody: Zipper.Relay.RequestBody = {
     appInfo: {
