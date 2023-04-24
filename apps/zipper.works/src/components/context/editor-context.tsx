@@ -328,6 +328,19 @@ const EditorContextProvider = ({
 
   useEffect(() => {
     if (currentScript) {
+      try {
+        const { inputs } = parseCode({
+          code: currentScriptLive.code,
+          throwErrors: true,
+        });
+
+        setInputParams(inputs);
+        setInputError(undefined);
+      } catch (e: any) {
+        setInputParams(undefined);
+        setInputError(e.message);
+      }
+
       if (router.query.filename !== currentScript.filename) {
         router.push(
           {
