@@ -285,14 +285,6 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
     secondaryResults: any,
     secondaryContext: 'modal' | 'expanded',
   ) => {
-    const formValues = formMethods.getValues();
-    const formKeys = inputParams?.map((param) => `${param.key}:${param.type}`);
-    const inputs: Record<string, any> = {};
-    formKeys?.map((k) => {
-      const key = k.split(':')[0] as string;
-      inputs[key] = formValues[k];
-    });
-
     return (
       <FunctionOutput
         result={secondaryResults}
