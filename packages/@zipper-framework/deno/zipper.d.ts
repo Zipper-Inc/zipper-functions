@@ -79,7 +79,7 @@ declare namespace Zipper {
   /**
    * Actions
    */
-  export interface ActionBase<I = Inputs> {
+  interface ActionBase<I = Inputs> {
     /**
      *
      */
@@ -97,7 +97,7 @@ declare namespace Zipper {
     inputs?: I;
   }
 
-  export type Action = ActionBase &
+  export type Action<I = Inputs> = ActionBase<I> &
     (
       | {
           /**
