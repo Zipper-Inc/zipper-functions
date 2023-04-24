@@ -6,12 +6,13 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
-  const { appId, deploymentId, scheduleId, rpcBody, success, result } =
+  const { id, appId, deploymentId, scheduleId, rpcBody, success, result } =
     req.body as AddAppRun;
 
   try {
     const appRun = await prisma.appRun.create({
       data: {
+        id,
         appId,
         deploymentId,
         scheduleId,

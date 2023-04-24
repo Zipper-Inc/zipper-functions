@@ -6,7 +6,7 @@ import getAppInfo from './get-app-info';
 import getValidSubdomain from './get-valid-subdomain';
 import { getFilenameAndVersionFromPath } from './get-values-from-url';
 import { getAuth } from '@clerk/nextjs/server';
-import { getAppLink } from '@zipper/utils';
+import { getAppLink, uuid } from '@zipper/utils';
 import Zipper from '@zipper/framework';
 
 const { __DEBUG__, SHARED_SECRET: DENO_SHARED_SECRET, RPC_HOST } = process.env;
@@ -126,6 +126,7 @@ export async function relayRequest({
 
   const relayUrl = getPatchedUrl(request);
   const url = new URL(relayUrl);
+  const runId = uuid();
 
   const relayBody: Zipper.Relay.RequestBody = {
     appInfo: {
@@ -139,6 +140,7 @@ export async function relayRequest({
       request.method === 'GET'
         ? Object.fromEntries(url.searchParams.entries())
         : JSON.parse(await request.text()),
+    runId,
   };
 
   relayBody.userInfo = userInfo;
@@ -155,6 +157,7 @@ export async function relayRequest({
   const result = await response.text();
 
   const appRunRes = await addAppRun({
+    id: runId,
     appId: app.id,
     deploymentId,
     success: response.status === 200,

@@ -163,6 +163,7 @@ declare namespace Zipper {
     export type RequestBody = {
       error?: string;
       appInfo: AppInfo;
+      runId: string;
       originalRequest: OriginalRequest;
       inputs: Inputs;
       userInfo?: UserInfo;
