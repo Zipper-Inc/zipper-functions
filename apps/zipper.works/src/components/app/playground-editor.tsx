@@ -291,6 +291,8 @@ export default function PlaygroundEditor(
           scrollbar: { verticalScrollbarSize: 0, horizontalScrollbarSize: 0 },
           readOnly: !appInfo.canUserEdit,
           fixedOverflowWidgets: true,
+          renderLineHighlight: 'line',
+          renderLineHighlightOnlyWhenFocus: true,
         }}
         overrideServices={{
           openerService: {

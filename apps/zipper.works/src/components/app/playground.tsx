@@ -6,15 +6,12 @@ import {
   TabPanel,
   Progress,
   VStack,
-  Text,
-  Button,
   ChakraProps,
 } from '@chakra-ui/react';
 import React, { useState, useEffect } from 'react';
 import SecretsTab from '~/components/app/secrets-tab';
 import SchedulesTab from '~/components/app/schedules-tab';
 import SettingsTab from './settings-tab';
-import ShareModal from '~/components/app/share-modal';
 import { PlaygroundHeader } from './playground-header';
 import { CodeTab } from './code-tab';
 import { useEditorContext } from '../context/editor-context';
@@ -23,7 +20,6 @@ import { AppQueryOutput } from '~/types/trpc';
 import { RunAppProvider } from '../context/run-app-context';
 import { PlaygroundAvatars } from './playground-avatars';
 import { useAppEditors } from '~/hooks/use-app-editors';
-import { HiOutlineUpload } from 'react-icons/hi';
 import { TabButton } from '@zipper/ui';
 import HistoryTab from './history-tab';
 
@@ -45,8 +41,6 @@ export function Playground({
   const { editorIds, onlineEditorIds, selfId } = useAppEditors();
 
   const [tabIndex, setTabIndex] = useState(0);
-
-  const [isShareModalOpen, setShareModalOpen] = useState(false);
 
   const { id } = app;
 
@@ -114,22 +108,13 @@ export function Playground({
               <TabButton title="Settings" />
             </HStack>
             <HStack justifySelf="start">
-              <Button
-                colorScheme="purple"
-                variant="ghost"
-                onClick={() => setShareModalOpen(true)}
-                display="flex"
-                gap={2}
-                fontWeight="medium"
-              >
-                <HiOutlineUpload />
-                <Text>Share</Text>
-              </Button>
-              <PlaygroundAvatars
-                editorIds={editorIds}
-                onlineEditorIds={onlineEditorIds}
-                selfId={selfId}
-              />
+              {editorIds.length > 1 && (
+                <PlaygroundAvatars
+                  editorIds={editorIds}
+                  onlineEditorIds={onlineEditorIds}
+                  selfId={selfId}
+                />
+              )}
             </HStack>
           </TabList>
           {/* TAB PANELS */}
@@ -179,12 +164,6 @@ export function Playground({
               </TabPanel>
             )}
           </TabPanels>
-
-          <ShareModal
-            isOpen={isShareModalOpen}
-            onClose={() => setShareModalOpen(false)}
-            appId={id}
-          />
         </Tabs>
       </VStack>
     </RunAppProvider>
