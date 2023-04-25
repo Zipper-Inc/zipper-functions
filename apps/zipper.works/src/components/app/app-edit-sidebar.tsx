@@ -221,7 +221,13 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
   }, [lastRunVersion]);
 
   const appLink = getAppLink(appSlug);
-  const { onCopy } = useClipboard(appLink);
+  const { onCopy } = useClipboard(
+    `${appLink}${
+      currentScript?.filename === 'main.ts'
+        ? ''
+        : `/${currentScript?.filename.slice(0, -3)}`
+    }`,
+  );
 
   const copyLink = async () => {
     onCopy();
@@ -347,10 +353,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
                 {currentScript?.filename === 'main.ts' ? (
                   <>{appLink}</>
                 ) : (
-                  <>{`${appLink}/${currentScript?.filename.replace(
-                    '.ts',
-                    '',
-                  )}`}</>
+                  <>{`${appLink}/${currentScript?.filename.slice(0, -3)}`}</>
                 )}
               </Link>
             </Text>
