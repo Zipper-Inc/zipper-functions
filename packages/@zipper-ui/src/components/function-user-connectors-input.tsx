@@ -18,9 +18,6 @@ export const FunctionUserConnectors: React.FC<FunctionUserConnectorsProps> = ({
 }) => {
   return (
     <>
-      <Heading size="sm" mb="4">
-        Connectors
-      </Heading>
       {userAuthConnectors.map((c) => {
         const ConnectorInput = userConnectorInputs[c.type];
         return (

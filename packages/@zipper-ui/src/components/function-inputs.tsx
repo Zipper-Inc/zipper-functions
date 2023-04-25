@@ -303,9 +303,7 @@ export function FunctionInputs({
   ));
 
   return inputs.length ? (
-    <VStack px={1} spacing={1}>
-      {inputs}
-    </VStack>
+    <VStack spacing={1}>{inputs}</VStack>
   ) : (
     <Textarea
       backgroundColor="white"
