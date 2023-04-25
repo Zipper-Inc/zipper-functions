@@ -41,6 +41,8 @@ export const PlaygroundAvatars: React.FC<PlaygroundAvatarsProps> = ({
         else if (isOnline) tooltip = 'Currently editing';
         else if (!isSelfAnon) tooltip = 'Inactive';
 
+        if (isSelf && isFirst) return;
+
         return (
           <Avatar
             key={`${id}-${index}`}

@@ -314,31 +314,58 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
     }
   };
 
+  const isLibrary = !inputParams && !inputError;
+  const isHandler = inputParams || inputError;
+
   return (
-    <Tabs
-      colorScheme="purple"
-      index={tabIndex}
-      onChange={handleTabsChange}
-      flex={1}
-      display="flex"
-      flexDirection="column"
-      gap={5}
-      alignItems="stretch"
-    >
-      <TabList
-        border="none"
-        color="gray.500"
-        gap={4}
-        justifyContent="space-between"
-        overflow="auto"
-        p={1}
-      >
-        <HStack spacing={2}>
-          {showInputForm && <TabButton title="Preview" />}
-          {tips && <TabButton title="Tips" />}
-          <TabButton title="Logs" isDisabled={!logs?.length} />
-        </HStack>
-        <HStack>
+    <VStack align="stretch">
+      {isHandler && (
+        <HStack w="full" mb="2">
+          <HStack
+            color="purple.700"
+            px={4}
+            py={2}
+            rounded="lg"
+            justifyContent="space-between"
+            overflow="auto"
+            border="1px"
+            borderColor="gray.200"
+            w="full"
+          >
+            <Text
+              fontWeight="semibold"
+              fontSize="xs"
+              whiteSpace="nowrap"
+              flex={1}
+            >
+              <Link
+                href={`${
+                  process.env.NODE_ENV === 'development' ? 'http' : 'https'
+                }://${appLink}`}
+                target="_blank"
+              >
+                {currentScript?.filename === 'main.ts' ? (
+                  <>{appLink}</>
+                ) : (
+                  <>{`${appLink}/${currentScript?.filename.replace(
+                    '.ts',
+                    '',
+                  )}`}</>
+                )}
+              </Link>
+            </Text>
+            <Tooltip label="Copy" bgColor="purple.500" textColor="gray.100">
+              <IconButton
+                aria-label="copy"
+                colorScheme="purple"
+                variant="ghost"
+                size="xs"
+                onClick={copyLink}
+              >
+                <HiOutlineClipboard />
+              </IconButton>
+            </Tooltip>
+          </HStack>
           <Tooltip label={inputError}>
             <span>
               <Button
@@ -364,286 +391,274 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
             </span>
           </Tooltip>
         </HStack>
-      </TabList>
-      {inputParams && (
-        <HStack
-          bgColor="gray.100"
-          color="purple.700"
+      )}
+
+      {isLibrary && (
+        <Box
           p={4}
-          rounded="lg"
+          backgroundColor="gray.100"
+          position="relative"
+          rounded="md"
+          border="1px"
+          borderColor="gray.200"
+        >
+          <Heading size="sm" mb="4">
+            Library file
+          </Heading>
+
+          <Text mb={4}>
+            This file isn't runnable and won't be mapped to a route because it
+            doesn't export a handler function. You can use it to encapsulate
+            reusable functionality or to better organize your code.
+          </Text>
+        </Box>
+      )}
+
+      <Tabs
+        colorScheme="purple"
+        index={tabIndex}
+        onChange={handleTabsChange}
+        flex={1}
+        display="flex"
+        flexDirection="column"
+        gap={5}
+        alignItems="stretch"
+        hidden={isLibrary}
+      >
+        <TabList
+          border="none"
+          borderBottom="1px solid"
+          borderColor={'gray.100'}
+          color="gray.500"
+          gap={4}
           justifyContent="space-between"
           overflow="auto"
+          pb={4}
         >
-          <Text
-            fontWeight="semibold"
-            fontSize="xs"
-            whiteSpace="nowrap"
-            flex={1}
-          >
-            <Link
-              href={`${
-                process.env.NODE_ENV === 'development' ? 'http' : 'https'
-              }://${appLink}`}
-              target="_blank"
+          <HStack spacing={2}>
+            {showInputForm && <TabButton title="Preview" />}
+            {tips && <TabButton title="Tips" />}
+            <TabButton title="Logs" isDisabled={!logs?.length} />
+          </HStack>
+        </TabList>
+        <TabPanels as={VStack} alignItems="stretch" flex={1}>
+          {/* INPUT */}
+          {showInputForm && (
+            <TabPanel
+              p={0}
+              flex={1}
+              display="flex"
+              flexDir="column"
+              alignItems="stretch"
             >
-              {currentScript?.filename === 'main.ts' ? (
-                <>{appLink}</>
-              ) : (
-                <>{`${appLink}/${currentScript?.filename.replace(
-                  '.ts',
-                  '',
-                )}`}</>
-              )}
-            </Link>
-          </Text>
-          <Tooltip label="Copy" bgColor="purple.500" textColor="gray.100">
-            <IconButton
-              aria-label="copy"
-              colorScheme="purple"
-              variant="ghost"
-              size="xs"
-              onClick={copyLink}
-            >
-              <HiOutlineClipboard />
-            </IconButton>
-          </Tooltip>
-        </HStack>
-      )}
-      <TabPanels as={VStack} alignItems="stretch" flex={1}>
-        {/* INPUT */}
-        {showInputForm && (
-          <TabPanel
-            p={0}
-            flex={1}
-            display="flex"
-            flexDir="column"
-            alignItems="stretch"
-          >
-            {/** @todo make this height thing less jank */}
-            {inputParams && userAuthConnectors.length > 0 && (
+              {/** @todo make this height thing less jank */}
               <Box
                 p={4}
-                mb="4"
                 backgroundColor="gray.100"
                 position="relative"
-                rounded="lg"
+                rounded="md"
+                border="1px"
+                borderColor="gray.200"
               >
-                <FunctionUserConnectors
-                  userAuthConnectors={userAuthConnectors}
-                  actions={{
-                    github: {
-                      authUrl: githubAuthURL.data?.url || '#',
-                      onDelete: () => {
-                        deleteGithubConnectorUserAuth.mutateAsync({
-                          appId: appInfo.id,
-                        });
-                      },
-                    },
-                    slack: {
-                      authUrl: slackAuthURL.data?.url || '#',
-                      onDelete: () => {
-                        deleteConnectorUserAuth.mutateAsync({
-                          appId: appInfo.id,
-                        });
-                      },
-                    },
-                    openai: {
-                      authUrl: '#',
-                      onDelete: () => {
-                        deleteOpenAISecret.mutateAsync({
-                          appId: appInfo.id,
-                          key: 'OPENAI_API_KEY',
-                        });
-                      },
-                    },
-                  }}
-                />
-              </Box>
-            )}
-            <Box
-              p={4}
-              backgroundColor="gray.100"
-              position="relative"
-              rounded="lg"
-            >
-              <>
-                {inputParams && inputParams.length ? (
-                  <>
-                    <Heading size="sm" mb="4">
-                      Inputs
-                    </Heading>
-                    <FunctionInputs
-                      params={inputParams || []}
-                      defaultValues={{}}
-                      formContext={formMethods}
-                    />
-                  </>
-                ) : (
-                  <>
-                    {/* has handler function? */}
-                    {(inputParams || inputError) && (
-                      <>
-                        <Heading size="sm" mb="4">
-                          Inputs
-                        </Heading>
-                        {inputError ? (
-                          <VStack align="start">
+                <>
+                  {inputParams?.length || userAuthConnectors?.length ? (
+                    <>
+                      <Heading size="sm" mb="2">
+                        Inputs
+                      </Heading>
+                      {userAuthConnectors.length > 0 && (
+                        <FunctionUserConnectors
+                          userAuthConnectors={userAuthConnectors}
+                          actions={{
+                            github: {
+                              authUrl: githubAuthURL.data?.url || '#',
+                              onDelete: () => {
+                                deleteGithubConnectorUserAuth.mutateAsync({
+                                  appId: appInfo.id,
+                                });
+                              },
+                            },
+                            slack: {
+                              authUrl: slackAuthURL.data?.url || '#',
+                              onDelete: () => {
+                                deleteConnectorUserAuth.mutateAsync({
+                                  appId: appInfo.id,
+                                });
+                              },
+                            },
+                            openai: {
+                              authUrl: '#',
+                              onDelete: () => {
+                                deleteOpenAISecret.mutateAsync({
+                                  appId: appInfo.id,
+                                  key: 'OPENAI_API_KEY',
+                                });
+                              },
+                            },
+                          }}
+                        />
+                      )}
+                      {inputParams && inputParams.length > 0 && (
+                        <FunctionInputs
+                          params={inputParams}
+                          defaultValues={{}}
+                          formContext={formMethods}
+                        />
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      {isHandler && (
+                        <>
+                          <Heading size="sm" mb="4">
+                            Inputs
+                          </Heading>
+                          {inputError ? (
+                            <VStack align="start">
+                              <Text>
+                                There was an error while parsing your handler
+                                function.
+                              </Text>
+                              <Text color="red.500">{inputError}</Text>
+                            </VStack>
+                          ) : (
                             <Text>
-                              There was an error while parsing your handler
-                              function.
+                              Add an object parameter to your handler function
+                              if your applet has inputs. The properties of the
+                              parameter will be used to generate a form to
+                              collect information from users.
                             </Text>
-                            <Text color="red.500">{inputError}</Text>
-                          </VStack>
-                        ) : (
-                          <Text>
-                            Add an object parameter to your handler function if
-                            your applet has inputs. The properties of the
-                            parameter will be used to generate a form to collect
-                            information from users.
-                          </Text>
-                        )}
-                        {!inputError && appInfo.canUserEdit && (
-                          <Button
-                            color={'gray.700'}
-                            bg="white"
-                            mt={6}
-                            variant="outline"
-                            fontWeight="500"
-                            onClick={handleAddInput}
-                          >
-                            Add an input
-                          </Button>
-                        )}
-                      </>
-                    )}
-
-                    {!inputParams && !inputError && (
-                      <>
-                        <Heading size="sm" mb="4">
-                          Library file
-                        </Heading>
-
-                        <Text mb={4}>
-                          This file isn't runnable and won't be mapped to a
-                          route because it doesn't export a handler function.
-                          You can use it to encapsulate reusable functionality
-                          or to better organize your code.
-                        </Text>
-                      </>
-                    )}
-                  </>
-                )}{' '}
-              </>
-              {isRunning && (
-                <Progress
-                  colorScheme="purple"
-                  size="xs"
-                  isIndeterminate
-                  width="full"
-                  position="absolute"
-                  left={0}
-                  right={0}
-                  bottom={0}
-                />
-              )}
-            </Box>
-
-            {currentScript && results[currentScript.filename] && (
-              <Box mt={4}>{output}</Box>
-            )}
-
-            {expandedResult[currentScript?.filename || 'main.ts'] && (
-              <Box
-                borderLeft={'5px solid'}
-                borderColor={'purple.300'}
-                mt={8}
-                pl={3}
-                mb={4}
-              >
-                <HStack align={'center'} mt={2}>
-                  <Heading flexGrow={1} size="sm" ml={1}>
-                    Additional Results
-                  </Heading>
-                  <IconButton
-                    aria-label="hide"
-                    icon={
-                      isExpandedResultOpen ? (
-                        <HiOutlineChevronUp />
-                      ) : (
-                        <HiOutlineChevronDown />
-                      )
-                    }
-                    onClick={() =>
-                      setIsExpandedResultOpen(!isExpandedResultOpen)
-                    }
+                          )}
+                          {!inputError && appInfo.canUserEdit && (
+                            <Button
+                              color={'gray.700'}
+                              bg="white"
+                              mt={6}
+                              variant="outline"
+                              fontWeight="500"
+                              onClick={handleAddInput}
+                            >
+                              Add an input
+                            </Button>
+                          )}
+                        </>
+                      )}
+                    </>
+                  )}{' '}
+                </>
+                {isRunning && (
+                  <Progress
+                    colorScheme="purple"
+                    size="xs"
+                    isIndeterminate
+                    width="full"
+                    position="absolute"
+                    left={0}
+                    right={0}
+                    bottom={0}
                   />
-                </HStack>
-                {isExpandedResultOpen && (
-                  <Box mt={4}>
-                    {functionOutputComponent(
-                      expandedResult[currentScript?.filename || 'main.ts'],
-                      'expanded',
-                    )}
-                  </Box>
                 )}
               </Box>
-            )}
 
-            <Modal isOpen={isOpen} onClose={closeModal} size="5xl">
-              <ModalOverlay />
-              <ModalContent maxH="2xl">
-                <ModalHeader>{modalResult.heading || appInfo.name}</ModalHeader>
-                <ModalCloseButton />
-                <ModalBody
-                  fontSize="sm"
-                  color="neutral.700"
-                  flex={1}
-                  display="flex"
-                  flexDirection="column"
-                  gap={8}
-                  overflow="auto"
+              {currentScript && results[currentScript.filename] && (
+                <Box mt={4}>{output}</Box>
+              )}
+
+              {expandedResult[currentScript?.filename || 'main.ts'] && (
+                <Box
+                  borderLeft={'5px solid'}
+                  borderColor={'purple.300'}
+                  mt={8}
+                  pl={3}
+                  mb={4}
                 >
-                  {functionOutputComponent(modalResult.body, 'modal')}
-                </ModalBody>
-                <ModalFooter justifyContent="space-between">
-                  <Button
-                    variant="outline"
-                    onClick={closeModal}
-                    mr="3"
+                  <HStack align={'center'} mt={2}>
+                    <Heading flexGrow={1} size="sm" ml={1}>
+                      Additional Results
+                    </Heading>
+                    <IconButton
+                      aria-label="hide"
+                      icon={
+                        isExpandedResultOpen ? (
+                          <HiOutlineChevronUp />
+                        ) : (
+                          <HiOutlineChevronDown />
+                        )
+                      }
+                      onClick={() =>
+                        setIsExpandedResultOpen(!isExpandedResultOpen)
+                      }
+                    />
+                  </HStack>
+                  {isExpandedResultOpen && (
+                    <Box mt={4}>
+                      {functionOutputComponent(
+                        expandedResult[currentScript?.filename || 'main.ts'],
+                        'expanded',
+                      )}
+                    </Box>
+                  )}
+                </Box>
+              )}
+
+              <Modal isOpen={isOpen} onClose={closeModal} size="5xl">
+                <ModalOverlay />
+                <ModalContent maxH="2xl">
+                  <ModalHeader>
+                    {modalResult.heading || appInfo.name}
+                  </ModalHeader>
+                  <ModalCloseButton />
+                  <ModalBody
+                    fontSize="sm"
+                    color="neutral.700"
                     flex={1}
-                    fontWeight="medium"
+                    display="flex"
+                    flexDirection="column"
+                    gap={8}
+                    overflow="auto"
                   >
-                    Close
-                  </Button>
-                </ModalFooter>
-              </ModalContent>
-            </Modal>
+                    {functionOutputComponent(modalResult.body, 'modal')}
+                  </ModalBody>
+                  <ModalFooter justifyContent="space-between">
+                    <Button
+                      variant="outline"
+                      onClick={closeModal}
+                      mr="3"
+                      flex={1}
+                      fontWeight="medium"
+                    >
+                      Close
+                    </Button>
+                  </ModalFooter>
+                </ModalContent>
+              </Modal>
+            </TabPanel>
+          )}
+
+          {/* TIPS */}
+          {tips && <TabPanel flex={1}>{tips}</TabPanel>}
+
+          {/* LOGS */}
+          <TabPanel flex={1}>
+            <VStack
+              spacing={0}
+              align="start"
+              fontFamily="monospace"
+              fontSize={12}
+              borderTop="1px"
+              borderColor="gray.200"
+              mt={-2}
+              ml={-4}
+              mr={-4}
+              divider={<Divider />}
+            >
+              {logs?.map((log: any, i: number) => (
+                <LogLine log={log} key={i} />
+              ))}
+            </VStack>
           </TabPanel>
-        )}
-
-        {/* TIPS */}
-        {tips && <TabPanel flex={1}>{tips}</TabPanel>}
-
-        {/* LOGS */}
-        <TabPanel flex={1}>
-          <VStack
-            spacing={0}
-            align="start"
-            fontFamily="monospace"
-            fontSize={12}
-            borderTop="1px"
-            borderColor="gray.200"
-            mt={-2}
-            ml={-4}
-            mr={-4}
-            divider={<Divider />}
-          >
-            {logs?.map((log: any, i: number) => (
-              <LogLine log={log} key={i} />
-            ))}
-          </VStack>
-        </TabPanel>
-      </TabPanels>
-    </Tabs>
+        </TabPanels>
+      </Tabs>
+    </VStack>
   );
 };

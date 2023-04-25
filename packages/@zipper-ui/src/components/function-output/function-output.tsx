@@ -5,20 +5,36 @@ import {
   TabPanel,
   ChakraProps,
   Box,
+  Tab,
 } from '@chakra-ui/react';
 import { FunctionOutputProps } from './types';
 import { RawFunctionOutput } from './raw-function-output';
 import { SmartFunctionOutput } from './smart-function-output';
 import { ErrorBoundary } from '../error-boundary';
-import { TabButton } from '../tab-button';
 import FunctionOutputProvider from './function-output-context';
 
-const tabsStyles: ChakraProps = { display: 'flex', flexDir: 'column', gap: 5 };
+const tabsStyles: ChakraProps = { display: 'flex', flexDir: 'column', gap: 0 };
 const tablistStyles: ChakraProps = {
-  gap: 2,
-  border: 'none',
+  gap: 1,
+  border: '1px',
   color: 'gray.500',
-  p: 1,
+  bg: 'gray.100',
+  borderColor: 'gray.200',
+  p: 2,
+  w: 'full',
+  borderTopRadius: 'md',
+};
+const tabButtonStyles: ChakraProps = {
+  rounded: 'lg',
+  py: 1,
+  px: 2,
+  _selected: {
+    fontWeight: 'bold',
+    textColor: 'gray.800',
+  },
+  _hover: {
+    backgroundColor: 'gray.200',
+  },
 };
 
 export function FunctionOutput({
@@ -48,7 +64,7 @@ export function FunctionOutput({
         fallback={
           <Tabs colorScheme="purple" variant="enclosed" {...tabsStyles}>
             <TabList {...tablistStyles}>
-              <TabButton title="Raw Output" />
+              <Tab {...tabButtonStyles}>Raw Output</Tab>
             </TabList>
             <TabPanels
               border="1px solid"
@@ -64,8 +80,8 @@ export function FunctionOutput({
       >
         <Tabs colorScheme="purple" variant="enclosed" {...tabsStyles}>
           <TabList {...tablistStyles}>
-            <TabButton title="Result" />
-            <TabButton title="Raw Output" />
+            <Tab {...tabButtonStyles}>Results</Tab>
+            <Tab {...tabButtonStyles}>Raw Output</Tab>
           </TabList>
           <TabPanels
             border="1px solid"
