@@ -365,36 +365,50 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
           </Tooltip>
         </HStack>
       </TabList>
-      <HStack
-        bgColor="gray.100"
-        color="purple.700"
-        p={4}
-        rounded="lg"
-        justifyContent="space-between"
-        overflow="auto"
-      >
-        <Text fontWeight="semibold" fontSize="xs" whiteSpace="nowrap" flex={1}>
-          <Link
-            href={`${
-              process.env.NODE_ENV === 'development' ? 'http' : 'https'
-            }://${appLink}`}
-            target="_blank"
+      {inputParams && (
+        <HStack
+          bgColor="gray.100"
+          color="purple.700"
+          p={4}
+          rounded="lg"
+          justifyContent="space-between"
+          overflow="auto"
+        >
+          <Text
+            fontWeight="semibold"
+            fontSize="xs"
+            whiteSpace="nowrap"
+            flex={1}
           >
-            {appLink}
-          </Link>
-        </Text>
-        <Tooltip label="Copy" bgColor="purple.500" textColor="gray.100">
-          <IconButton
-            aria-label="copy"
-            colorScheme="purple"
-            variant="ghost"
-            size="xs"
-            onClick={copyLink}
-          >
-            <HiOutlineClipboard />
-          </IconButton>
-        </Tooltip>
-      </HStack>
+            <Link
+              href={`${
+                process.env.NODE_ENV === 'development' ? 'http' : 'https'
+              }://${appLink}`}
+              target="_blank"
+            >
+              {currentScript?.filename === 'main.ts' ? (
+                <>{appLink}</>
+              ) : (
+                <>{`${appLink}/${currentScript?.filename.replace(
+                  '.ts',
+                  '',
+                )}`}</>
+              )}
+            </Link>
+          </Text>
+          <Tooltip label="Copy" bgColor="purple.500" textColor="gray.100">
+            <IconButton
+              aria-label="copy"
+              colorScheme="purple"
+              variant="ghost"
+              size="xs"
+              onClick={copyLink}
+            >
+              <HiOutlineClipboard />
+            </IconButton>
+          </Tooltip>
+        </HStack>
+      )}
       <TabPanels as={VStack} alignItems="stretch" flex={1}>
         {/* INPUT */}
         {showInputForm && (
@@ -406,7 +420,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
             alignItems="stretch"
           >
             {/** @todo make this height thing less jank */}
-            {userAuthConnectors.length > 0 && (
+            {inputParams && userAuthConnectors.length > 0 && (
               <Box
                 p={4}
                 mb="4"
@@ -453,47 +467,69 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
               rounded="lg"
             >
               <>
-                <Heading size="sm" mb="4">
-                  Inputs
-                </Heading>
                 {inputParams && inputParams.length ? (
-                  <FunctionInputs
-                    params={inputParams || []}
-                    defaultValues={{}}
-                    formContext={formMethods}
-                  />
+                  <>
+                    <Heading size="sm" mb="4">
+                      Inputs
+                    </Heading>
+                    <FunctionInputs
+                      params={inputParams || []}
+                      defaultValues={{}}
+                      formContext={formMethods}
+                    />
+                  </>
                 ) : (
                   <>
-                    {appInfo.canUserEdit && (
-                      <Text color={'neutral.600'} size="lg" fontWeight="600">
-                        {inputError
-                          ? 'Something went wrong'
-                          : 'Add inputs to your app'}
-                      </Text>
+                    {/* has handler function? */}
+                    {(inputParams || inputError) && (
+                      <>
+                        <Heading size="sm" mb="4">
+                          Inputs
+                        </Heading>
+                        {inputError ? (
+                          <VStack align="start">
+                            <Text>
+                              There was an error while parsing your handler
+                              function.
+                            </Text>
+                            <Text color="red.500">{inputError}</Text>
+                          </VStack>
+                        ) : (
+                          <Text>
+                            Add an object parameter to your handler function if
+                            your applet has inputs. The properties of the
+                            parameter will be used to generate a form to collect
+                            information from users.
+                          </Text>
+                        )}
+                        {!inputError && appInfo.canUserEdit && (
+                          <Button
+                            color={'gray.700'}
+                            bg="white"
+                            mt={6}
+                            variant="outline"
+                            fontWeight="500"
+                            onClick={handleAddInput}
+                          >
+                            Add an input
+                          </Button>
+                        )}
+                      </>
                     )}
-                    {inputError ? (
-                      <Text color="red.600" pt="4" fontWeight="500">
-                        {inputError}
-                      </Text>
-                    ) : (
-                      <Text>
-                        Inputs can be used to collect user data, preferences, or
-                        feedback, which can then be processed and analyzed by
-                        the app to provide more personalized content or
-                        recommendations
-                      </Text>
-                    )}
-                    {!inputError && appInfo.canUserEdit && (
-                      <Button
-                        color={'gray.700'}
-                        bg="white"
-                        mt={6}
-                        variant="outline"
-                        fontWeight="500"
-                        onClick={handleAddInput}
-                      >
-                        Add an input
-                      </Button>
+
+                    {!inputParams && !inputError && (
+                      <>
+                        <Heading size="sm" mb="4">
+                          Library file
+                        </Heading>
+
+                        <Text mb={4}>
+                          This file isn't runnable and won't be mapped to a
+                          route because it doesn't export a handler function.
+                          You can use it to encapsulate reusable functionality
+                          or to better organize your code.
+                        </Text>
+                      </>
                     )}
                   </>
                 )}{' '}

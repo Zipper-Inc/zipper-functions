@@ -59,6 +59,7 @@ function getSourceFileFromCode(code: string) {
   return project.createSourceFile('main.ts', code);
 }
 
+// returns undefined if the file isn't runnable (no handler function)
 export function parseInputForTypes({
   code = '',
   throwErrors = false,
@@ -66,29 +67,34 @@ export function parseInputForTypes({
 }: { code?: string; throwErrors?: boolean; srcPassedIn?: SourceFile } = {}):
   | undefined
   | InputParam[] {
-  if (!code && !throwErrors) return [];
-  if (!code && throwErrors) throw new Error('No main function');
+  if (!code) return undefined;
 
   try {
     const src = srcPassedIn || getSourceFileFromCode(code);
 
     const handlerFn = src.getFunction('handler');
 
-    if (!handlerFn || !handlerFn.hasExportKeyword()) {
-      if (throwErrors) throw new Error('You must export a handler function');
-      console.error('You must export a handler function');
-      return [];
+    if (!handlerFn) {
+      return undefined;
+    }
+
+    if (!handlerFn.hasExportKeyword() && throwErrors) {
+      throw new Error('The handler function must be exported.');
     }
 
     if (handlerFn.hasDefaultKeyword() && throwErrors) {
-      throw new Error('The handler function cannot be the default export');
+      throw new Error('The handler function cannot be the default export.');
     }
 
     const inputs = handlerFn.getParameters();
     if (inputs.length !== 1 && inputs.length > 0) {
       if (throwErrors)
-        throw new Error('You must have one and only one input object');
-      console.error('You must have one and only one input object');
+        throw new Error(
+          'The handler function can only have a single object parameter.',
+        );
+      console.error(
+        'The handler function can only have a single object parameter',
+      );
     }
     const params = inputs[0] as ParameterDeclaration;
     if (!params) {
@@ -120,7 +126,7 @@ export function parseInputForTypes({
           )?.getProperties();
     } catch (e) {
       if (throwErrors) {
-        throw new Error('Cannot get properties for your input');
+        throw new Error('Cannot get the properties of the object parameter.');
       }
       return [];
     }

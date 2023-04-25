@@ -330,7 +330,7 @@ const EditorContextProvider = ({
     if (currentScript) {
       try {
         const { inputs } = parseCode({
-          code: currentScriptLive.code,
+          code: currentScriptLive?.code || currentScript.code,
           throwErrors: true,
         });
 
