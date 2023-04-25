@@ -202,7 +202,7 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
             display="block"
             colorScheme="purple"
             type="submit"
-            isDisabled={isDisabled}
+            isDisabled={isDisabled || addApp.isLoading}
             onClick={createAppForm.handleSubmit(
               async ({ description, isPublic, canAnyoneRun, name }) => {
                 await addApp.mutateAsync(
