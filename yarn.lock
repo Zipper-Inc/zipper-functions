@@ -2483,6 +2483,13 @@
     "@types/mime" "*"
     "@types/node" "*"
 
+"@types/signale@^1.4.4":
+  version "1.4.4"
+  resolved "https://registry.yarnpkg.com/@types/signale/-/signale-1.4.4.tgz#dbfd32b39f1084551ecda9ba0888e4fef49e9fea"
+  integrity sha512-VYy4VL64gA4uyUIYVj4tiGFF0VpdnRbJeqNENKGX42toNiTvt83rRzxdr0XK4DR3V01zPM0JQNIsL+IwWWfhsQ==
+  dependencies:
+    "@types/node" "*"
+
 "@types/stack-utils@^2.0.0":
   version "2.0.1"
   resolved "https://registry.npmjs.org/@types/stack-utils/-/stack-utils-2.0.1.tgz"
@@ -3611,9 +3618,24 @@ dot-case@^3.0.4:
     no-case "^3.0.4"
     tslib "^2.0.3"
 
-dotenv@^16.0.3:
+dotenv-cli@^7.2.1:
+  version "7.2.1"
+  resolved "https://registry.yarnpkg.com/dotenv-cli/-/dotenv-cli-7.2.1.tgz#e595afd9ebfb721df9da809a435b9aa966c92062"
+  integrity sha512-ODHbGTskqRtXAzZapDPvgNuDVQApu4oKX8lZW7Y0+9hKA6le1ZJlyRS687oU9FXjOVEDU/VFV6zI125HzhM1UQ==
+  dependencies:
+    cross-spawn "^7.0.3"
+    dotenv "^16.0.0"
+    dotenv-expand "^10.0.0"
+    minimist "^1.2.6"
+
+dotenv-expand@^10.0.0:
+  version "10.0.0"
+  resolved "https://registry.yarnpkg.com/dotenv-expand/-/dotenv-expand-10.0.0.tgz#12605d00fb0af6d0a592e6558585784032e4ef37"
+  integrity sha512-GopVGCpVS1UKH75VKHGuQFqS1Gusej0z4FyQkPdwjil2gNIv+LNsqBlboOzpJFZKVT95GkCyWJbBSdFEFUWI2A==
+
+dotenv@^16.0.0, dotenv@^16.0.3:
   version "16.0.3"
-  resolved "https://registry.npmjs.org/dotenv/-/dotenv-16.0.3.tgz"
+  resolved "https://registry.yarnpkg.com/dotenv/-/dotenv-16.0.3.tgz#115aec42bac5053db3c456db30cc243a5a836a07"
   integrity sha512-7GO6HghkA5fYG9TYnNxi14/7K9f5occMlp3zXAuSxn7CKCxt9xbNWG7yF8hTCSUchlfWSe3uLmlPfigevRItzQ==
 
 duplexer@~0.1.1:
@@ -6911,7 +6933,7 @@ signal-exit@^3.0.2, signal-exit@^3.0.3, signal-exit@^3.0.7:
 
 signale@^1.4.0:
   version "1.4.0"
-  resolved "https://registry.npmjs.org/signale/-/signale-1.4.0.tgz"
+  resolved "https://registry.yarnpkg.com/signale/-/signale-1.4.0.tgz#c4be58302fb0262ac00fc3d886a7c113759042f1"
   integrity sha512-iuh+gPf28RkltuJC7W5MRi6XAjTDCAPC/prJUpQoG4vIP3MJZ+GTydVnodXA7pwvTKb2cA0m9OFZW/cdWy/I/w==
   dependencies:
     chalk "^2.3.2"
