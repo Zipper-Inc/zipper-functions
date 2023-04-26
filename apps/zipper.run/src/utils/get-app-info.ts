@@ -4,7 +4,7 @@ import { AppInfoResult } from '@zipper/types';
  * App info endpoint url
  * @see /apps/zipper.works/pages/api/app/info
  */
-const APP_INFO_URL = `${process.env.ZIPPER_API_URL}/app/info`;
+const APP_INFO_URL = `${process.env.NEXT_PUBLIC_ZIPPER_API_URL}/app/info`;
 
 export default async function getAppInfo({
   subdomain,

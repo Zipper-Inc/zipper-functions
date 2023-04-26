@@ -5,7 +5,7 @@ import { AddAppRun } from '@zipper/types';
  * @see /apps/zipper.works/pages/api/appRun/create
  */
 export default async function addAppRun(params: AddAppRun): Promise<Response> {
-  const url = `${process.env.ZIPPER_API_URL}/appRun/create`;
+  const url = `${process.env.NEXT_PUBLIC_ZIPPER_API_URL}/appRun/create`;
   return fetch(url, {
     method: 'POST',
     headers: {
