@@ -20,3 +20,7 @@ export interface Log {
   // Time of log
   timestamp?: string;
 }
+
+export type LogRecord = Omit<Log, 'timestamp'> & {
+  timestamp: number;
+};
