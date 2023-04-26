@@ -16,13 +16,7 @@ import {
   Icon,
   Tooltip,
   Spinner,
-  ModalHeader,
-  ModalCloseButton,
-  ModalBody,
-  Modal,
   useDisclosure,
-  ModalContent,
-  ModalOverlay,
   Drawer,
   DrawerOverlay,
   DrawerContent,
@@ -48,14 +42,13 @@ import {
 import { AppRun } from '@prisma/client';
 import { User } from '@clerk/clerk-sdk-node';
 import { JSONViewer } from '../json-editor';
-import { HiEye } from 'react-icons/hi';
 
 type HistoryTabProps = {
   appId: string;
 };
 
 const HistoryTab: React.FC<HistoryTabProps> = ({ appId }) => {
-  const appRuns = trpc.useQuery(['appRun.all', { appId, limit: 500 }]);
+  const appRuns = trpc.useQuery(['appRun.all', { appId, limit: 100 }]);
 
   const [data, setData] = useState<any[]>([]);
 
