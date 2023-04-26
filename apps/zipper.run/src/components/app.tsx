@@ -1,6 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { GetServerSideProps } from 'next';
-import { withDefaultTheme, FunctionOutput, useCmdOrCtrl } from '@zipper/ui';
+import {
+  withDefaultTheme,
+  FunctionOutput,
+  useCmdOrCtrl,
+  userConnectorInputs,
+} from '@zipper/ui';
 import {
   AppInfo,
   ConnectorActionProps,
@@ -251,6 +256,16 @@ export function AppPage({
   if (statusCode === 401) {
     return <Unauthorized />;
   }
+
+  useEffect(() => {
+    if (
+      inputs.length === 0 &&
+      userAuthConnectors.length === 0 &&
+      screen === 'initial' &&
+      canRunApp
+    )
+      runApp();
+  }, [inputs, userAuthConnectors]);
 
   return (
     <>

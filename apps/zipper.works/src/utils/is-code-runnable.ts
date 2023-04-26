@@ -2,9 +2,7 @@ import { parseInputForTypes } from './parse-code';
 
 export default function isCodeRunnable(code: string) {
   try {
-    parseInputForTypes({ code: code, throwErrors: true });
-
-    return true;
+    return !!parseInputForTypes({ code: code, throwErrors: true });
   } catch (e) {
     return false;
   }
