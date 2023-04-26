@@ -121,7 +121,7 @@ export async function relayRequest({
   let deploymentId = `${app.id}@${version}`;
 
   if (userAuthConnectors.find((c) => c.isUserAuthRequired)) {
-    deploymentId = `${deploymentId}@${tempUserId || auth.userId}`;
+    deploymentId = `${deploymentId}@${auth.userId || tempUserId}`;
   }
 
   const relayUrl = getPatchedUrl(request);
