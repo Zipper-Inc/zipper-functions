@@ -6,7 +6,11 @@ import getAppInfo from './get-app-info';
 import getValidSubdomain from './get-valid-subdomain';
 import { getFilenameAndVersionFromPath } from './get-values-from-url';
 import { getAuth } from '@clerk/nextjs/server';
-import { getAppLink, ZIPPER_TEMP_USER_ID_COOKIE_NAME } from '@zipper/utils';
+import {
+  formatDeploymentId,
+  getAppLink,
+  ZIPPER_TEMP_USER_ID_COOKIE_NAME,
+} from '@zipper/utils';
 import Zipper from '@zipper/framework';
 
 const { __DEBUG__, SHARED_SECRET: DENO_SHARED_SECRET, RPC_HOST } = process.env;
@@ -118,11 +122,16 @@ export async function relayRequest({
   const version =
     _version || app.lastDeploymentVersion || Date.now().toString(32);
 
-  let deploymentId = `${app.id}@${version}`;
-
-  if (userAuthConnectors.find((c) => c.isUserAuthRequired)) {
-    deploymentId = `${deploymentId}@${auth.userId || tempUserId}`;
-  }
+  const requiredAuthUserId = userAuthConnectors.find(
+    (c) => c.isUserAuthRequired,
+  )
+    ? auth.userId || tempUserId
+    : undefined;
+  const deploymentId = formatDeploymentId({
+    appId: app.id,
+    version,
+    userId: requiredAuthUserId,
+  });
 
   const relayUrl = getPatchedUrl(request);
   const url = new URL(relayUrl);
