@@ -37,8 +37,10 @@ class RedisLogger {
 
   async get(fromTimestamp?: number): Promise<LogRecord[]> {
     try {
-      const raw = await this.client.lrange(this.key, 0, -1);
-      const logs = raw.map((l) => JSON.parse(l));
+      const logs = (await this.client.lrange(this.key, 0, -1))
+        .map((l) => JSON.parse(l) as LogRecord)
+        .sort((a, b) => a.timestamp - b.timestamp);
+
       return fromTimestamp
         ? logs.filter((log) => log.timestamp > fromTimestamp)
         : logs;
