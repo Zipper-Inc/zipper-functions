@@ -24,7 +24,7 @@ export function getAppHash(
         id,
         hash,
       }))
-      .sort(),
+      .sort((a, b) => (a.id > b.id ? 1 : -1)),
   );
 
   return hash(

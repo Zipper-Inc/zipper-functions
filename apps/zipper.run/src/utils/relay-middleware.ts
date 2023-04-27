@@ -63,17 +63,20 @@ function encodeJWT(deploymentId: string) {
   return new jose.SignJWT(claims).setProtectedHeader(header).sign(secretKey);
 }
 
-export async function relayRequest({
-  request,
-  version: _version,
-  filename: _filename,
-  bearerToken,
-}: {
-  request: NextRequest;
-  version?: string;
-  filename?: string;
-  bearerToken?: string;
-}) {
+export async function relayRequest(
+  {
+    request,
+    version: _version,
+    filename: _filename,
+    bearerToken,
+  }: {
+    request: NextRequest;
+    version?: string;
+    filename?: string;
+    bearerToken?: string;
+  },
+  bootOnly = false,
+) {
   if (!DENO_SHARED_SECRET || !RPC_HOST)
     return {
       status: 500,
@@ -124,8 +127,11 @@ export async function relayRequest({
     deploymentId = `${deploymentId}@${tempUserId || auth.userId}`;
   }
 
-  const relayUrl = getPatchedUrl(request);
-  const url = new URL(relayUrl);
+  let relayUrl = getPatchedUrl(request);
+
+  if (bootOnly) {
+    relayUrl = new URL('/__BOOT__', relayUrl);
+  }
 
   const relayBody: Zipper.Relay.RequestBody = {
     appInfo: {
@@ -137,7 +143,7 @@ export async function relayRequest({
     originalRequest: { method: request.method, url: request.url },
     inputs:
       request.method === 'GET'
-        ? Object.fromEntries(url.searchParams.entries())
+        ? Object.fromEntries(relayUrl.searchParams.entries())
         : JSON.parse(await request.text()),
   };
 
@@ -167,17 +173,27 @@ export async function relayRequest({
   return { result, status, headers };
 }
 
-export default async function serveRelay(request: NextRequest) {
+export default async function serveRelay({
+  request,
+  bootOnly,
+}: {
+  request: NextRequest;
+  bootOnly: boolean;
+}) {
   const { version, filename } = getFilenameAndVersionFromPath(
     request.nextUrl.pathname,
-    ['call'],
+    bootOnly ? ['boot'] : ['call'],
   );
-  const { result, status, headers } = await relayRequest({
-    request,
-    version,
-    filename,
-    bearerToken: request.headers.get('Authorization')?.replace('Bearer ', ''),
-  });
+
+  const { result, status, headers } = await relayRequest(
+    {
+      request,
+      version,
+      filename,
+      bearerToken: request.headers.get('Authorization')?.replace('Bearer ', ''),
+    },
+    bootOnly,
+  );
   if (request.method !== 'GET')
     headers?.append('Access-Control-Allow-Origin', '*');
 
