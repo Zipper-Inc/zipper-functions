@@ -4,7 +4,7 @@ import pako from 'pako';
 import { PassThrough } from 'stream';
 import ndjson from 'ndjson';
 import intoStream from 'into-stream';
-import { decryptFromBase64 } from '@zipper/utils';
+import { decryptFromBase64, parseDeploymentId } from '@zipper/utils';
 import { prisma } from '~/server/prisma';
 import { build, FRAMEWORK_ENTRYPOINT } from '~/utils/build-zipper-app';
 import { getAppLink } from '@zipper/utils';
@@ -315,9 +315,13 @@ async function originBoot({
   id: string;
 }) {
   // eslint-disable-next-line prefer-const
-  let [appId, version, userId] = deploymentId.split('@');
+  const {
+    appId,
+    userId,
+    version: deploymentVersion,
+  } = parseDeploymentId(deploymentId);
 
-  if (!appId || !version) {
+  if (!appId || !deploymentVersion) {
     console.error('Missing appId and version');
     return;
   }
@@ -342,9 +346,10 @@ async function originBoot({
     return errorResponse(`Missing app ID`);
   }
 
-  if (version === 'latest')
-    version =
-      app.lastDeploymentVersion || getAppVersionFromHash(getAppHash(app));
+  const version =
+    deploymentVersion === 'latest'
+      ? app.lastDeploymentVersion || getAppVersionFromHash(getAppHash(app))
+      : deploymentVersion;
 
   const missingUserAuths = app.connectors.filter((connector) => {
     if (
