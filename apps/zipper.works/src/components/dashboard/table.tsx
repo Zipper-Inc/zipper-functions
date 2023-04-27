@@ -23,7 +23,6 @@ import {
   Row,
 } from '@tanstack/react-table';
 import { HiExternalLink } from 'react-icons/hi';
-import App from 'next/app';
 import { useRouter } from 'next/router';
 import { VscCode } from 'react-icons/vsc';
 
@@ -50,7 +49,6 @@ export function DataTable<Data extends Record<string, unknown>>({
     state,
     ...rest,
     defaultColumn: {
-      minSize: 208,
       size: 700,
     },
   });
@@ -69,6 +67,7 @@ export function DataTable<Data extends Record<string, unknown>>({
                   onClick={header.column.getToggleSortingHandler()}
                   isNumeric={meta?.isNumeric}
                   width={header.column.getSize()}
+                  _first={{ pl: 2 }}
                 >
                   {flexRender(
                     header.column.columnDef.header,
@@ -92,10 +91,10 @@ export function DataTable<Data extends Record<string, unknown>>({
       </Thead>
       <Tbody>
         {table.getRowModel().rows.map((row) => (
-          <TableRow row={row} />
+          <TableRow row={row} key={row.id} />
         ))}
         {isEmpty && (
-          <Tr>
+          <Tr pl="0">
             <Td>You're all out of apps. Probably a good time to create one.</Td>
             <Td />
           </Tr>
@@ -120,14 +119,14 @@ const TableRow: React.FC<{ row: Row<any> }> = ({ row }) => {
         const meta: any = cell.column.columnDef.meta;
         if (i < 2 || !isHovering) {
           return (
-            <Td key={cell.id} isNumeric={meta?.isNumeric}>
+            <Td key={cell.id} isNumeric={meta?.isNumeric} _first={{ pl: 2 }}>
               {flexRender(cell.column.columnDef.cell, cell.getContext())}
             </Td>
           );
         }
         if (i === 2 && isHovering) {
           return (
-            <Td>
+            <Td key={cell.id}>
               <HStack>
                 <Button
                   variant={'outline'}

@@ -1,4 +1,5 @@
 import {
+  getFieldName,
   getSearchParams,
   safeJSONParse,
   safeJSONStringify,
@@ -29,14 +30,16 @@ export function formatValueFromUrl(input: InputParam, value: string | null) {
 }
 
 export function getInputValuesFromUrl(inputs: InputParam[], url?: string) {
-  const defaultValues: Record<string, string | number | true | null> = {};
   const searchParams = getSearchParams(url);
 
-  inputs.forEach((input) => {
-    const name = `${input.key}:${input.type}`;
-    const value = searchParams.get(input.key);
-    defaultValues[name] = formatValueFromUrl(input, value);
-  });
+  const defaultValues = inputs.reduce<Record<string, Zipper.Primitive>>(
+    (values, input) => {
+      const name = getFieldName(input.key, input.type);
+      const value = searchParams.get(input.key);
+      return { ...values, [name]: formatValueFromUrl(input, value) };
+    },
+    {},
+  );
 
   return defaultValues;
 }
@@ -45,16 +48,18 @@ export function getInputValuesFromAppRun(
   inputs: InputParam[],
   appRunInputs: Record<string, string>,
 ) {
-  const defaultValues: Record<string, string | number | true | null> = {};
-  inputs.forEach((input) => {
-    const name = `${input.key}:${input.type}`;
-    // let value = appRunInputs[input.key] || null;
-    // if (value !== null && typeof value !== 'string') {
-    //   value = JSON.stringify(value);
-    // }
-    const value = safeJSONStringify(appRunInputs[input.key]);
-    defaultValues[name] = formatValueFromUrl(input, value || null);
-  });
+  const defaultValues = inputs.reduce<Record<string, Zipper.Primitive>>(
+    (values, input) => {
+      const name = getFieldName(input.key, input.type);
+      let value = appRunInputs[input.key] || null;
+      if (value !== null && typeof value !== 'string') {
+        value = safeJSONStringify(value) || null;
+      }
+      const formatedValue = formatValueFromUrl(input, value);
+      return { ...values, [name]: formatedValue };
+    },
+    {},
+  );
 
   return defaultValues;
 }

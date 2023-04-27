@@ -6,7 +6,12 @@ import getAppInfo from './get-app-info';
 import getValidSubdomain from './get-valid-subdomain';
 import { getFilenameAndVersionFromPath } from './get-values-from-url';
 import { getAuth } from '@clerk/nextjs/server';
-import { getAppLink, uuid } from '@zipper/utils';
+import {
+  formatDeploymentId,
+  getAppLink,
+  ZIPPER_TEMP_USER_ID_COOKIE_NAME,
+  uuid,
+} from '@zipper/utils';
 import Zipper from '@zipper/framework';
 
 const { __DEBUG__, SHARED_SECRET: DENO_SHARED_SECRET, RPC_HOST } = process.env;
@@ -63,17 +68,20 @@ function encodeJWT(deploymentId: string) {
   return new jose.SignJWT(claims).setProtectedHeader(header).sign(secretKey);
 }
 
-export async function relayRequest({
-  request,
-  version: _version,
-  filename: _filename,
-  bearerToken,
-}: {
-  request: NextRequest;
-  version?: string;
-  filename?: string;
-  bearerToken?: string;
-}) {
+export async function relayRequest(
+  {
+    request,
+    version: _version,
+    filename: _filename,
+    bearerToken,
+  }: {
+    request: NextRequest;
+    version?: string;
+    filename?: string;
+    bearerToken?: string;
+  },
+  bootOnly = false,
+) {
   if (!DENO_SHARED_SECRET || !RPC_HOST)
     return {
       status: 500,
@@ -90,7 +98,7 @@ export async function relayRequest({
   const token = await auth.getToken({ template: 'incl_orgs' });
 
   const tempUserId = request.cookies
-    .get('__zipper_temp_user_id')
+    .get(ZIPPER_TEMP_USER_ID_COOKIE_NAME)
     ?.value.toString();
 
   let filename = _filename || 'main.ts';
@@ -118,14 +126,23 @@ export async function relayRequest({
   const version =
     _version || app.lastDeploymentVersion || Date.now().toString(32);
 
-  let deploymentId = `${app.id}@${version}`;
+  const requiredAuthUserId = userAuthConnectors.find(
+    (c) => c.isUserAuthRequired,
+  )
+    ? auth.userId || tempUserId
+    : undefined;
+  const deploymentId = formatDeploymentId({
+    appId: app.id,
+    version,
+    userId: requiredAuthUserId,
+  });
 
-  if (userAuthConnectors.find((c) => c.isUserAuthRequired)) {
-    deploymentId = `${deploymentId}@${tempUserId || auth.userId}`;
+  let relayUrl = getPatchedUrl(request);
+
+  if (bootOnly) {
+    relayUrl = new URL('/__BOOT__', relayUrl);
   }
 
-  const relayUrl = getPatchedUrl(request);
-  const url = new URL(relayUrl);
   const runId = request.headers.get('x-zipper-run-id') || uuid();
 
   const relayBody: Zipper.Relay.RequestBody = {
@@ -138,7 +155,7 @@ export async function relayRequest({
     originalRequest: { method: request.method, url: request.url },
     inputs:
       request.method === 'GET'
-        ? Object.fromEntries(url.searchParams.entries())
+        ? Object.fromEntries(relayUrl.searchParams.entries())
         : JSON.parse(await request.text()),
     runId,
   };
@@ -170,17 +187,27 @@ export async function relayRequest({
   return { result, status, headers };
 }
 
-export default async function serveRelay(request: NextRequest) {
+export default async function serveRelay({
+  request,
+  bootOnly,
+}: {
+  request: NextRequest;
+  bootOnly: boolean;
+}) {
   const { version, filename } = getFilenameAndVersionFromPath(
     request.nextUrl.pathname,
-    ['call'],
+    bootOnly ? ['boot'] : ['call'],
   );
-  const { result, status, headers } = await relayRequest({
-    request,
-    version,
-    filename,
-    bearerToken: request.headers.get('Authorization')?.replace('Bearer ', ''),
-  });
+
+  const { result, status, headers } = await relayRequest(
+    {
+      request,
+      version,
+      filename,
+      bearerToken: request.headers.get('Authorization')?.replace('Bearer ', ''),
+    },
+    bootOnly,
+  );
   if (request.method !== 'GET')
     headers?.append('Access-Control-Allow-Origin', '*');
 

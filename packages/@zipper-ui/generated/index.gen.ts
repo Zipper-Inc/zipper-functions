@@ -2,6 +2,8 @@
 
 export * from '../src/components/function-output/action-button';
 export * from '../src/components/function-output/action-component';
+export * from '../src/components/function-output/function-output-context';
+export { default as FunctionOutputProvider } from '../src/components/function-output/function-output-context';
 export * from '../src/components/function-output/function-output';
 export * from '../src/components/function-output/object-explorer';
 export * from '../src/components/function-output/raw-function-output';

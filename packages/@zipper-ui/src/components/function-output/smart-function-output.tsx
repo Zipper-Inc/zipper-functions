@@ -16,7 +16,6 @@ import styled from '@emotion/styled';
 import { useTable, useSortBy } from 'react-table';
 import { ObjectExplorer } from './object-explorer';
 import { isPrimitive, parseResult } from './utils';
-import { FunctionOutputProps } from './types';
 import { RawFunctionOutput } from './raw-function-output';
 import { HiCheck, HiX } from 'react-icons/hi';
 import { ActionComponent } from './action-component';
@@ -116,13 +115,7 @@ function TableArray(props: { data: Array<any> }) {
   );
 }
 
-function TableCollection(props: {
-  data: Array<any>;
-  setExpandedResult: any;
-  setModalResult: any;
-  setOverallResult: any;
-  getRunUrl: (scriptName: string) => string;
-}) {
+function TableCollection(props: { data: Array<any> }) {
   const columns = useMemo(() => {
     const keys: Array<string> = [];
     props.data.forEach((record) => {
@@ -186,13 +179,7 @@ function TableCollection(props: {
                   }
                   return (
                     <Td {...cell.getCellProps()}>
-                      <SmartFunctionOutput
-                        result={cell.value}
-                        setExpandedResult={props.setExpandedResult}
-                        setModalResult={props.setModalResult}
-                        setOverallResult={props.setOverallResult}
-                        getRunUrl={props.getRunUrl}
-                      />
+                      <SmartFunctionOutput result={cell.value} />
                     </Td>
                   );
                 })}
@@ -208,11 +195,10 @@ function TableCollection(props: {
 export function SmartFunctionOutput({
   result,
   level = 0,
-  setExpandedResult,
-  setModalResult,
-  setOverallResult,
-  getRunUrl,
-}: FunctionOutputProps) {
+}: {
+  result: any;
+  level?: number;
+}) {
   if (!result) return null;
 
   const { type, data } = parseResult(result);
@@ -225,15 +211,7 @@ export function SmartFunctionOutput({
       return <TableArray data={data} />;
 
     case OutputType.Collection:
-      return (
-        <TableCollection
-          data={data}
-          setExpandedResult={setExpandedResult}
-          setModalResult={setModalResult}
-          setOverallResult={setOverallResult}
-          getRunUrl={getRunUrl}
-        />
-      );
+      return <TableCollection data={data} />;
 
     case OutputType.Html:
       return (
@@ -243,38 +221,13 @@ export function SmartFunctionOutput({
       );
 
     case OutputType.Object:
-      return (
-        <ObjectExplorer
-          data={data}
-          level={level}
-          setExpandedResult={setExpandedResult}
-          setModalResult={setModalResult}
-          setOverallResult={setOverallResult}
-          getRunUrl={getRunUrl}
-        />
-      );
+      return <ObjectExplorer data={data} level={level} />;
 
     case OutputType.Action:
-      return (
-        <ActionComponent
-          action={data}
-          setExpandedResult={setExpandedResult}
-          setModalResult={setModalResult}
-          setOverallResult={setOverallResult}
-          getRunUrl={getRunUrl}
-        />
-      );
+      return <ActionComponent action={data} />;
 
     case OutputType.ActionArray:
-      return data.map((action: any) => (
-        <ActionComponent
-          action={action}
-          setExpandedResult={setExpandedResult}
-          setModalResult={setModalResult}
-          setOverallResult={setOverallResult}
-          getRunUrl={getRunUrl}
-        />
-      ));
+      return data.map((action: any) => <ActionComponent action={action} />);
 
     default:
       return <RawFunctionOutput result={result} />;

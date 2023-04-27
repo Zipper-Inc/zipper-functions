@@ -29,13 +29,14 @@ import { CheckIcon, LockIcon, UnlockIcon } from '@chakra-ui/icons';
 import React, { useEffect, useState } from 'react';
 import ForkIcon from '~/components/svg/forkIcon';
 import { ZipperLogo, ZipperSymbol } from '@zipper/ui';
-import { HiPencilAlt } from 'react-icons/hi';
+import { HiOutlineUpload, HiPencilAlt } from 'react-icons/hi';
 import {
   useUser,
   SignedIn,
   SignedOut,
   useOrganization,
   useOrganizationList,
+  UserButton,
 } from '@clerk/nextjs';
 import { AppQueryOutput } from '~/types/trpc';
 import { EditAppSlugForm } from './edit-app-slug-form';
@@ -49,6 +50,7 @@ import { trpc } from '~/utils/trpc';
 import { generateDefaultSlug } from '~/utils/generate-default';
 import { useRouter } from 'next/router';
 import SignInButton from '../auth/signInButton';
+import ShareModal from './share-modal';
 
 const getDefaultCreateAppFormValues = () => ({
   name: generateDefaultSlug(),
@@ -60,6 +62,9 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { user, isLoaded } = useUser();
   const [editSlug, setEditSlug] = useState(false);
+
+  const [isShareModalOpen, setShareModalOpen] = useState(false);
+
   const { editorIds, onlineEditorIds } = useAppEditors();
   const router = useRouter();
 
@@ -136,22 +141,6 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
             </SignedOut>
           </NextLink>
         </Box>
-        <HStack spacing={2} alignItems="center" minW={0}>
-          <Box>
-            {app.isPrivate ? (
-              <Icon as={LockIcon} color={'gray.500'} boxSize={4} mb={1} />
-            ) : (
-              <Icon as={UnlockIcon} color={'gray.400'} boxSize={4} mb={1} />
-            )}
-          </Box>
-          {app.parentId && (
-            <Box>
-              <Link href={`/app/${app.parentId}/edit`} target="_blank">
-                <Icon as={ForkIcon} color={'gray.400'} size={16} />
-              </Link>
-            </Box>
-          )}
-        </HStack>
         <HStack>
           <NextLink href={`/${app.resourceOwner.slug}`}>
             <Heading
@@ -176,6 +165,23 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
           >
             /
           </Heading>
+
+          <HStack spacing={2} alignItems="center" minW={0}>
+            <Box>
+              {app.isPrivate ? (
+                <Icon as={LockIcon} color={'gray.500'} boxSize={4} mb={1} />
+              ) : (
+                <Icon as={UnlockIcon} color={'gray.400'} boxSize={4} mb={1} />
+              )}
+            </Box>
+            {app.parentId && (
+              <Box>
+                <Link href={`/app/${app.parentId}/edit`} target="_blank">
+                  <Icon as={ForkIcon} color={'gray.400'} size={16} />
+                </Link>
+              </Box>
+            )}
+          </HStack>
           {editSlug ? (
             <EditAppSlugForm app={app} onClose={() => setEditSlug(false)} />
           ) : (
@@ -220,6 +226,20 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
             Sign In
           </Button>
         )}
+        <SignedIn>
+          <Button
+            colorScheme="purple"
+            variant="ghost"
+            onClick={() => setShareModalOpen(true)}
+            display="flex"
+            gap={2}
+            fontWeight="medium"
+          >
+            <HiOutlineUpload />
+            <Text>Share</Text>
+          </Button>
+          <UserButton afterSignOutUrl="/" />
+        </SignedIn>
         {!app.canUserEdit && isLoaded && (
           <Button
             type="button"
@@ -240,6 +260,11 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
           </Button>
         )}
       </HStack>
+      <ShareModal
+        isOpen={isShareModalOpen}
+        onClose={() => setShareModalOpen(false)}
+        appId={app.id}
+      />
       <Modal isOpen={isOpen} onClose={onClose} size="2xl">
         <ModalOverlay />
         <ModalContent maxH="2xl">

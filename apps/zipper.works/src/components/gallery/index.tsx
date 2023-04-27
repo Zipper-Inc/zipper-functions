@@ -1,5 +1,19 @@
-import { Heading, Grid, VStack, Center, Text } from '@chakra-ui/react';
-import React from 'react';
+import {
+  Heading,
+  Grid,
+  VStack,
+  Center,
+  Text,
+  HStack,
+  Button,
+  Spacer,
+  Icon,
+} from '@chakra-ui/react';
+import { useOrganizationList, useUser } from '@clerk/nextjs';
+import { ResourceOwnerType } from '@zipper/types';
+import { useRouter } from 'next/router';
+import React, { useState } from 'react';
+import { HiCog } from 'react-icons/hi';
 import { GalleryAppQueryOutput } from '~/pages';
 import { GalleryItem } from './gallery-item';
 
@@ -8,17 +22,59 @@ export function Gallery({
   heading,
   subheading,
   preheading,
+  resourceOwnerId,
+  resourceOwnerType,
 }: {
   apps: GalleryAppQueryOutput;
+  resourceOwnerId?: string;
+  resourceOwnerType?: ResourceOwnerType;
   heading?: string;
   subheading?: string;
   preheading?: string;
 }) {
+  const { user } = useUser();
+  const { organizationList, setActive } = useOrganizationList();
+  const [isNavigating, setIsNavigating] = useState(false);
+
+  const router = useRouter();
+
+  const showManage =
+    (resourceOwnerType === ResourceOwnerType.User &&
+      user?.id === resourceOwnerId) ||
+    (resourceOwnerType === ResourceOwnerType.Organization &&
+      organizationList?.find((o) => o.organization.id === resourceOwnerId));
+
   return (
     <Center>
       <VStack flex={1} maxW="container.xl" py={6} align="stretch">
         {preheading && <Text color={'gray.500'}>{preheading}</Text>}
-        {heading && <Heading pb="6">{heading}</Heading>}
+        <HStack w="full" pb="6" spacing={4}>
+          {heading && <Heading>{heading}</Heading>}
+          <Spacer flexGrow={1} />
+          {showManage && (
+            <Button
+              variant="outline"
+              size="sm"
+              colorScheme="purple"
+              isDisabled={isNavigating}
+              p="4"
+              onClick={async () => {
+                setIsNavigating(true);
+                setActive &&
+                  (await setActive({
+                    organization:
+                      resourceOwnerType === ResourceOwnerType.Organization
+                        ? resourceOwnerId
+                        : null,
+                  }));
+                router.push('/dashboard');
+              }}
+            >
+              <Icon as={HiCog} mr="2" />
+              Manage
+            </Button>
+          )}
+        </HStack>
         {subheading && (
           <Text fontSize={'xl'} pb="6">
             {subheading}

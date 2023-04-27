@@ -33,6 +33,7 @@ export type FunctionCallContextType = {
   appEventsQuery?: AppEventUseQueryResult;
   setResults: (results: Record<string, string>) => void;
   run: (isCurrentFileAsEntryPoint?: boolean) => void;
+  boot: () => void;
 };
 
 export const RunAppContext = createContext<FunctionCallContextType>({
@@ -47,6 +48,7 @@ export const RunAppContext = createContext<FunctionCallContextType>({
   userAuthConnectors: [],
   setResults: noop,
   run: noop,
+  boot: noop,
 });
 
 export function RunAppProvider({
@@ -76,8 +78,25 @@ export function RunAppProvider({
   const [lastRunVersion, setLastRunVersion] = useState(
     () => app.lastDeploymentVersion || getAppVersionFromHash(getAppHash(app)),
   );
+  const utils = trpc.useContext();
 
-  const runAppMutation = trpc.useMutation('app.run');
+  const runAppMutation = trpc.useMutation('app.run', {
+    async onSuccess() {
+      await utils.invalidateQueries([
+        'app.byResourceOwnerAndAppSlugs',
+        { resourceOwnerSlug: app.resourceOwner.slug, appSlug: slug },
+      ]);
+    },
+  });
+
+  const bootAppMutation = trpc.useMutation('app.boot', {
+    async onSuccess() {
+      await utils.invalidateQueries([
+        'app.byResourceOwnerAndAppSlugs',
+        { resourceOwnerSlug: app.resourceOwner.slug, appSlug: slug },
+      ]);
+    },
+  });
 
   const { user } = useUser();
   const appEventsQuery = trpc.useQuery(
@@ -93,7 +112,17 @@ export function RunAppProvider({
 
   const { currentScript, inputParams } = useEditorContext();
 
+  const boot = async () => {
+    await bootAppMutation.mutateAsync({
+      appId: id,
+    });
+
+    // refetch logs
+    appEventsQuery.refetch();
+  };
+
   const run = async (isCurrentFileTheEntryPoint?: boolean) => {
+    if (!inputParams) return;
     setIsRunning(true);
     await onBeforeRun();
     const formValues = formMethods.getValues();
@@ -149,10 +178,8 @@ export function RunAppProvider({
           requiredUserAuthConnectorFilter,
         ) as UserAuthConnector[],
         setResults,
-        run: async (isCurrentFileTheEntryPoint?: boolean) => {
-          if (!inputParams) return;
-          run(isCurrentFileTheEntryPoint);
-        },
+        run,
+        boot,
       }}
     >
       {children}

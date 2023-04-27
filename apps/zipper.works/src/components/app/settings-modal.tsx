@@ -40,8 +40,11 @@ const SettingsTab: React.FC<Props> = ({ isOpen, onClose, appId }) => {
   const { appInfo } = useRunAppContext();
   const utils = trpc.useContext();
   const appEditMutation = trpc.useMutation('app.edit', {
-    onSuccess() {
-      utils.invalidateQueries('app.byResourceOwnerAndAppSlugs');
+    onSuccess(data) {
+      utils.invalidateQueries([
+        'app.byResourceOwnerAndAppSlugs',
+        { appSlug: appInfo.slug, resourceOwnerSlug: data.resourceOwner.slug },
+      ]);
     },
   });
 

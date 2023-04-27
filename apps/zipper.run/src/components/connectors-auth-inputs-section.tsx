@@ -42,8 +42,7 @@ const ConnectorsAuthInputsSection: React.FC<
       : undefined;
 
   return (
-    <VStack maxW="container.sm" minW={500} align="stretch">
-      {/* {screen === 'edit' ? ( */}
+    <VStack w="container.sm" align="stretch">
       {isCollapsible ? (
         <Accordion
           allowToggle
@@ -62,7 +61,6 @@ const ConnectorsAuthInputsSection: React.FC<
               </Box>
               <AccordionIcon />
             </AccordionButton>
-            {/* <h2></h2> */}
             <AccordionPanel pb={4}>{inputsSection}</AccordionPanel>
           </AccordionItem>
         </Accordion>

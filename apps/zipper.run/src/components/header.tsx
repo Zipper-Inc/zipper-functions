@@ -12,6 +12,7 @@ import {
   MenuButton,
   MenuItem,
   MenuList,
+  Divider,
 } from '@chakra-ui/react';
 import { getAppLink } from '@zipper/utils';
 import { ZipperSymbol } from '@zipper/ui';
@@ -117,7 +118,7 @@ const Header: React.FC<HeaderProps> = ({
           <Box>
             {runnableScripts.length > 1 ? (
               <Menu>
-                {({ isOpen }) => (
+                {({ isOpen, onClose }) => (
                   <>
                     <MenuButton>
                       <HStack>
@@ -127,12 +128,37 @@ const Header: React.FC<HeaderProps> = ({
                           fontWeight="semibold"
                           color="gray.800"
                         >
-                          {entryPoint.filename.replace(/\.ts$/, '')}
+                          {entryPoint.filename.slice(0, -3)}
                         </Text>
                         {isOpen ? <FiChevronUp /> : <FiChevronDown />}
                       </HStack>
                     </MenuButton>
-                    <MenuList>
+                    <MenuList pb={0}>
+                      <Box pb="4" pt="2" px={4}>
+                        <Link
+                          fontSize="sm"
+                          fontWeight="medium"
+                          onClick={() => {
+                            onClose();
+                            router.push(`/${entryPoint.filename}`);
+                          }}
+                          _hover={{ background: 'none' }}
+                        >
+                          {entryPoint.filename.slice(0, -3)}
+                        </Link>
+                      </Box>
+
+                      <Divider />
+                      <Box
+                        w="full"
+                        backgroundColor={'gray.50'}
+                        backdropFilter="blur(10px)"
+                        pl="4"
+                        pt="5"
+                        fontSize="xs"
+                      >
+                        <Text>Other paths:</Text>
+                      </Box>
                       {runnableScripts
                         .filter((s) => s !== entryPoint.filename)
                         .sort()
@@ -141,8 +167,18 @@ const Header: React.FC<HeaderProps> = ({
                             <MenuItem
                               key={`${s}-${i}`}
                               onClick={() => router.push(`/${s}`)}
+                              backgroundColor="gray.50"
+                              px="4"
+                              pt="2"
+                              fontWeight="medium"
+                              fontSize="sm"
+                              _last={{
+                                pb: 4,
+                                borderEndRadius: 8,
+                                borderBottomLeftRadius: 8,
+                              }}
                             >
-                              {s.replace(/\.ts$/, '')}
+                              {s.slice(0, -3)}
                             </MenuItem>
                           );
                         })}

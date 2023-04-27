@@ -1,9 +1,11 @@
 import { getAuth } from '@clerk/nextjs/server';
+import { ZIPPER_TEMP_USER_ID_COOKIE_NAME } from '@zipper/utils';
 import { GetServerSideProps } from 'next';
+import { getConnectorsAuthUrl } from '~/utils/get-connectors-auth-url';
 import { getInputValuesFromAppRun } from '~/utils/get-input-values-from-url';
 import getRunInfo from '~/utils/get-run-info';
 import getValidSubdomain from '~/utils/get-valid-subdomain';
-
+import type { AppPageProps } from '~/components/app';
 export { default } from '~/components/app';
 
 export const getServerSideProps: GetServerSideProps = async ({
@@ -23,6 +25,7 @@ export const getServerSideProps: GetServerSideProps = async ({
     subdomain,
     token: await auth.getToken({ template: 'incl_orgs' }),
     runId: query.runId as string,
+    tempUserId: req.cookies[ZIPPER_TEMP_USER_ID_COOKIE_NAME],
   });
 
   if (!result.ok) {
@@ -41,6 +44,14 @@ export const getServerSideProps: GetServerSideProps = async ({
 
   const defaultValues = getInputValuesFromAppRun(inputs, appRun.inputs);
 
+  const { githubAuthUrl, slackAuthUrl } = getConnectorsAuthUrl({
+    appId: app.id,
+    userAuthConnectors,
+    userId:
+      auth.userId || (req.cookies[ZIPPER_TEMP_USER_ID_COOKIE_NAME] as string),
+    host: req.headers.host,
+  });
+
   return {
     props: {
       app,
@@ -53,6 +64,8 @@ export const getServerSideProps: GetServerSideProps = async ({
       result: appRun.result,
       hideRun: true,
       runnableScripts,
-    },
+      githubAuthUrl,
+      slackAuthUrl,
+    } as AppPageProps,
   };
 };
