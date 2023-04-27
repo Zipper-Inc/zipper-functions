@@ -221,7 +221,6 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
     runId: lastRunId,
   });
   */
-  const appLogs: Log[] = [];
 
   //const logs = appEventsQuery?.data?.map((event: any) => event.eventPayload);
 
@@ -233,6 +232,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
     })) || [];*/
 
   const [deployLogs, setDeployLogs] = useState<Log[]>([]);
+  const [appLogs, setAppLogs] = useState<Log[]>([]);
 
   console.log({ appLogs, deployLogs });
 
@@ -240,13 +240,16 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
     // don't fetch if there's no run ID or deployment version
     if (!appInfo.lastDeploymentVersion || !lastRunId) return;
 
-    console.log('new last run version');
-    setDeployLogs([]);
-
     fetchLogs({
       appId: appInfo.id,
       version: appInfo.lastDeploymentVersion,
     }).then(setDeployLogs);
+
+    fetchLogs({
+      appId: appInfo.id,
+      version: appInfo.lastDeploymentVersion,
+      runId: lastRunId,
+    }).then(setAppLogs);
   }, [appInfo.lastDeploymentVersion, lastRunId]);
 
   const appLink = getAppLink(appSlug);
