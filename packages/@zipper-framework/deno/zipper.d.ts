@@ -133,11 +133,11 @@ declare namespace Zipper {
       // The arguments passed to console API
       data: Zipper.Serializable[];
       // Time of log
-      timestamp?: string;
+      timestamp: number;
     }
 
-    export type SortableMessage = Omit<Message, 'timestamp'> & {
-      timestamp: number;
+    export type MessageorDisplay = Omit<Message, 'timestamp'> & {
+      timestamp?: string;
     };
   }
 

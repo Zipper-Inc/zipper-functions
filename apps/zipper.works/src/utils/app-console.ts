@@ -1,7 +1,6 @@
 import {
-  Log,
   logMethods,
-  LogRecord,
+  LogMessage,
   ConsoleLogger,
   LogMethod,
 } from '@zipper/types';
@@ -36,11 +35,7 @@ export async function fetchLogs({
 }: LoggerParams & { url?: URL; fromTimestamp?: number }) {
   if (fromTimestamp)
     url.searchParams.set('fromTimestamp', fromTimestamp.toString());
-  const raw = await fetch(url);
-  const json = (await raw.json()) as LogRecord[];
-  return json.map(
-    (log) => ({ ...log, timestamp: log.timestamp.toString() } as Log),
-  );
+  return (await fetch(url).then((r) => r.json())) as LogMessage[];
 }
 
 /**
@@ -52,7 +47,7 @@ export async function sendLog({
   runId,
   url = getLogsApiUrl({ appId, version, runId }),
   log,
-}: LoggerParams & { url?: URL; log: LogRecord }) {
+}: LoggerParams & { url?: URL; log: LogMessage }) {
   await fetch(url, { method: 'POST', body: safeJSONStringify(log) });
 }
 
@@ -64,7 +59,7 @@ export function makeLog({
   method = LogMethod.log,
   timestamp = Date.now(),
   data = [],
-}: Partial<LogRecord>) {
+}: Partial<LogMessage>) {
   return { id, method, timestamp, data };
 }
 
@@ -80,7 +75,7 @@ export function getLogger({
   const url = getLogsApiUrl({ appId, version, runId });
 
   const initialLogger = {
-    send: (log: LogRecord) => sendLog({ appId, version, runId, url, log }),
+    send: (log: LogMessage) => sendLog({ appId, version, runId, url, log }),
     fetch: (fromTimestamp: number) =>
       fetchLogs({ appId, version, runId, url, fromTimestamp }),
   };

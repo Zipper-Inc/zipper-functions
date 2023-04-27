@@ -14,11 +14,9 @@ export enum LogMethod {
 
 export const logMethods = Object.values(LogMethod);
 
-export type Log = Zipper.Log.Message;
-
-export type LogRecord = Zipper.Log.SortableMessage;
+export type LogMessage = Zipper.Log.Message;
 
 export type ConsoleLogger = {
-  fetch: (fromTimestamp?: number) => Promise<Log[]>;
-  send: (log: LogRecord) => void;
-} & Record<LogMethod, (...data: Log['data']) => void>;
+  fetch: (fromTimestamp?: number) => Promise<LogMessage[]>;
+  send: (log: LogMessage) => void;
+} & Record<LogMethod, (...data: LogMessage['data']) => void>;

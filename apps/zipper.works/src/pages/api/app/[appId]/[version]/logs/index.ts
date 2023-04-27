@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import Redis from 'ioredis';
-import { LogRecord } from '@zipper/types';
+import { LogMessage } from '@zipper/types';
 
 /** One day in seconds */
 const DEFAULT_TTL = 86400;
@@ -35,10 +35,10 @@ class RedisLogger {
     });
   }
 
-  async get(fromTimestamp?: number): Promise<LogRecord[]> {
+  async get(fromTimestamp?: number): Promise<LogMessage[]> {
     try {
       const logs = (await this.client.lrange(this.key, 0, -1))
-        .map((l) => JSON.parse(l) as LogRecord)
+        .map((l) => JSON.parse(l) as LogMessage)
         .sort((a, b) => a.timestamp - b.timestamp);
 
       return fromTimestamp
@@ -49,9 +49,9 @@ class RedisLogger {
     }
   }
 
-  async log(record: LogRecord): Promise<number> {
+  async log(message: LogMessage): Promise<number> {
     this.client.expire(this.key, DEFAULT_TTL);
-    return this.client.rpush(this.key, JSON.stringify(record));
+    return this.client.rpush(this.key, JSON.stringify(message));
   }
 
   purge(): Promise<'OK'> {
@@ -79,8 +79,8 @@ export default async function handler(
     }
 
     case 'POST': {
-      const record = JSON.parse(req.body) as LogRecord;
-      const result = await logger.log(record);
+      const message = JSON.parse(req.body) as LogMessage;
+      const result = await logger.log(message);
       return res.status(201).send(result);
     }
 

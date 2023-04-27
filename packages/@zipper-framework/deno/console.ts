@@ -7,7 +7,7 @@ export function sendLog({
   appId: string;
   version: string;
   runId?: string;
-  log: Zipper.Log.SortableMessage;
+  log: Zipper.Log.Message;
 }) {
   const url = new URL(Deno.env.get('RPC_HOST') as string);
   url.pathname = `/api/app/${appId}/${version}/logs`;

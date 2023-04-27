@@ -2,7 +2,7 @@ import * as eszip from '@deno/eszip';
 import { App, Script } from '@prisma/client';
 import { baseColors, brandColors } from '@zipper/ui';
 import { generateHandlersForFramework } from '@zipper/utils';
-import { getLogger } from './app-logs';
+import { getLogger } from './app-console';
 import { BuildCache, getModule } from './eszip-build-cache';
 import { readFrameworkFile, FRAMEWORK_INTERNAL_PATH } from './read-file';
 

@@ -43,8 +43,8 @@ import Link from 'next/link';
 import { HiOutlineChevronDown, HiOutlineChevronUp } from 'react-icons/hi';
 import { getAppLink } from '@zipper/utils';
 import { useAppEditSidebarContext } from '~/components/context/app-edit-sidebar-context';
-import { fetchLogs } from '~/utils/app-logs';
-import { Log } from '@zipper/types';
+import { fetchLogs } from '~/utils/app-console';
+import { LogMessage } from '@zipper/types';
 
 type AppEditSidebarProps = {
   showInputForm: boolean;
@@ -231,8 +231,8 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
       data: log.msg ? [log.msg.trim()] : ['Booted in', log.boot_time],
     })) || [];*/
 
-  const [deployLogs, setDeployLogs] = useState<Log[]>([]);
-  const [appLogs, setAppLogs] = useState<Log[]>([]);
+  const [deployLogs, setDeployLogs] = useState<LogMessage[]>([]);
+  const [appLogs, setAppLogs] = useState<LogMessage[]>([]);
 
   console.log({ appLogs, deployLogs });
 
