@@ -1,4 +1,5 @@
 import { InputParam, InputType } from '@zipper/types';
+import { parse } from 'comment-parser';
 
 import {
   ParameterDeclaration,
@@ -178,9 +179,22 @@ export function parseCode({
   srcPassedIn,
 }: { code?: string; throwErrors?: boolean; srcPassedIn?: SourceFile } = {}) {
   const src = srcPassedIn || (code ? getSourceFileFromCode(code) : undefined);
-  const inputs = parseInputForTypes({ code, throwErrors, srcPassedIn: src });
+  let inputs = parseInputForTypes({ code, throwErrors, srcPassedIn: src });
   const imports = parseImports({ code, srcPassedIn: src });
-  return { inputs, imports };
+  const comments = parseComments({ code, srcPassedIn: src });
+  if (comments) {
+    inputs = inputs?.map((i) => {
+      const matchingTag = comments.tags.find(
+        (t) => t.tag === 'param' && t.name === i.key,
+      );
+      if (!matchingTag) return i;
+      const [name, description] = matchingTag.description
+        .split(':')
+        .map((i) => i.trim());
+      return { ...i, name, description };
+    });
+  }
+  return { inputs, imports, comments };
 }
 
 export function addParamToCode({
@@ -263,4 +277,26 @@ export function addParamToCode({
   );
 
   return newCode;
+}
+
+export function parseComments({
+  code,
+  srcPassedIn,
+}: {
+  code?: string;
+  srcPassedIn?: SourceFile;
+}) {
+  if (!code) return;
+
+  const src = srcPassedIn || getSourceFileFromCode(code);
+  const handlerFn = src.getFunction('handler');
+
+  if (!handlerFn) return;
+
+  const jsDocComments = handlerFn.getJsDocs();
+  if (jsDocComments.length > 0) {
+    return parse(jsDocComments.at(-1)?.getFullText() || '')[0];
+  }
+
+  return;
 }
