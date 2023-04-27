@@ -27,17 +27,18 @@ export default function UserInputs({
       rounded="2xl"
       spacing="2.5"
     >
-      <Box>
-        <FunctionInputs
-          params={inputs}
-          formContext={formContext}
-          isDisabled={!canRunApp}
-          hasResult={hasResult}
-        />
-      </Box>
+      {inputs.length > 0 && (
+        <Box mb={4}>
+          <FunctionInputs
+            params={inputs}
+            formContext={formContext}
+            isDisabled={!canRunApp}
+            hasResult={hasResult}
+          />
+        </Box>
+      )}
       <Box>
         <Button
-          mt={4}
           colorScheme="purple"
           onClick={runApp}
           width="full"
