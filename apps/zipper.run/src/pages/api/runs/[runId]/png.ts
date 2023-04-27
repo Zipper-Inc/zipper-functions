@@ -13,7 +13,7 @@ export default async function handler(
 
   const runUrl = `${proto}://${host}${path}`;
 
-  const selector = '#smart-function-output';
+  const selector = '[data-function-output="smart"]';
   const browser = await chromium.launch();
   const context = await browser.newContext({ deviceScaleFactor: 2 });
   const page = await context.newPage();
