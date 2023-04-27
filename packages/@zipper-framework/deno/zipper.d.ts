@@ -112,6 +112,35 @@ declare namespace Zipper {
     export function create<I = Inputs>(action: Action<I>): Action<I>;
   }
 
+  export namespace Log {
+    type Method =
+      | 'log'
+      | 'debug'
+      | 'info'
+      | 'warn'
+      | 'error'
+      | 'table'
+      | 'clear'
+      | 'time'
+      | 'timeEnd'
+      | 'count'
+      | 'assert';
+
+    export interface Message {
+      id: string;
+      // The log method
+      method: Method;
+      // The arguments passed to console API
+      data: Zipper.Serializable[];
+      // Time of log
+      timestamp?: string;
+    }
+
+    export type SortableMessage = Omit<Message, 'timestamp'> & {
+      timestamp: number;
+    };
+  }
+
   /**
    * Simple async key value store, one per app
    * @category Storage
@@ -210,6 +239,11 @@ declare namespace Zipper {
    * Meta info about the app itself
    */
   export const appInfo: AppInfo;
+
+  /**
+   * The ID for this particular run
+   */
+  export const runId: string;
 
   /**
    * Information about the original request
