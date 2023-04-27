@@ -25,7 +25,7 @@ import {
   getInputsFromFormData,
   ZIPPER_TEMP_USER_ID_COOKIE_NAME,
 } from '@zipper/utils';
-import getRunUrl from '~/utils/get-run-url';
+import getRunUrl, { getBootUrl } from '~/utils/get-run-url';
 import { randomUUID } from 'crypto';
 import fetch from 'node-fetch';
 import { getAuth } from '@clerk/nextjs/server';
@@ -533,6 +533,43 @@ export const appRouter = createRouter()
       return !!existingSlug;
     },
   })
+  .mutation('boot', {
+    input: z.object({
+      appId: z.string().uuid(),
+    }),
+    async resolve({ input, ctx }) {
+      const app = await prisma.app.findFirstOrThrow({
+        where: { id: input.appId },
+        include: { scripts: true, scriptMain: true },
+      });
+
+      const { getToken } = getAuth(ctx.req!);
+      const version = getAppVersionFromHash(app.hash || getAppHash(app));
+
+      console.log('Boot version: ', version);
+
+      const result = await fetch(getBootUrl(app.slug, version), {
+        method: 'POST',
+        body: '{}',
+        headers: {
+          authorization: `Bearer ${await getToken()}`,
+        },
+      }).then((r) => r.status);
+
+      if (result === 200) {
+        await prisma.app.update({
+          where: { id: app.id },
+          data: {
+            lastDeploymentVersion: version,
+          },
+        });
+
+        return { ok: true, version };
+      }
+
+      return { ok: false };
+    },
+  })
   .mutation('run', {
     input: z.object({
       appId: z.string().uuid(),
@@ -544,6 +581,10 @@ export const appRouter = createRouter()
         where: { id: input.appId },
         include: { scripts: true, scriptMain: true },
       });
+
+      const version = getAppVersionFromHash(app.hash || getAppHash(app));
+
+      console.log('Run version: ', version);
 
       // Find the intended script, or mainScript if we can't find it
       const script =
@@ -562,11 +603,7 @@ export const appRouter = createRouter()
       const { getToken } = getAuth(ctx.req!);
 
       const result = await fetch(
-        getRunUrl(
-          app.slug,
-          getAppVersionFromHash(app.hash || getAppHash(app)),
-          script.filename,
-        ),
+        getRunUrl(app.slug, version, script.filename),
         {
           method: 'POST',
           body: JSON.stringify(inputs),
@@ -579,11 +616,11 @@ export const appRouter = createRouter()
       await prisma.app.update({
         where: { id: app.id },
         data: {
-          lastDeploymentVersion: getAppVersionFromHash(app.hash!),
+          lastDeploymentVersion: version,
         },
       });
 
-      return { ok: true, filename: script.filename, result };
+      return { ok: true, filename: script.filename, version, result };
     },
   })
   // update
@@ -739,6 +776,15 @@ export const appRouter = createRouter()
         include: { scripts: true },
       });
 
+      const resourceOwner = await prisma.resourceOwnerSlug.findFirst({
+        where: {
+          resourceOwnerId: app.organizationId || app.createdById,
+        },
+      });
+
+      if (!resourceOwner)
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+
       const filenames: Record<string, string> = {};
       app.scripts.map((s) => {
         filenames[s.id] = s.filename;
@@ -771,7 +817,7 @@ export const appRouter = createRouter()
         );
       }
 
-      return prisma.app.update({
+      const appWithUpdatedHash = await prisma.app.update({
         where: {
           id,
         },
@@ -784,6 +830,8 @@ export const appRouter = createRouter()
         },
         select: defaultSelect,
       });
+
+      return { ...appWithUpdatedHash, resourceOwner };
     },
   })
   // delete

@@ -31,7 +31,13 @@ export default withClerkMiddleware(async (request: NextRequest) => {
 
     case /\/call(\/?)$/.test(appRoute): {
       console.log('matching call route');
-      res = await serveRelay(request);
+      res = await serveRelay({ request, bootOnly: false });
+      break;
+    }
+
+    case /\/boot(\/?)$/.test(appRoute): {
+      console.log('matching boot route (it rhymes)');
+      res = await serveRelay({ request, bootOnly: true });
       break;
     }
 
