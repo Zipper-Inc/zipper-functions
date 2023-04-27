@@ -30,7 +30,6 @@ import {
   FunctionUserConnectors,
 } from '@zipper/ui';
 import { useEffect, useMemo, useState } from 'react';
-import { Console } from 'console-feed';
 import { useRunAppContext } from '../context/run-app-context';
 import { trpc } from '~/utils/trpc';
 import { useRouter } from 'next/router';
@@ -45,6 +44,7 @@ import { getAppLink } from '@zipper/utils';
 import { useAppEditSidebarContext } from '~/components/context/app-edit-sidebar-context';
 import { fetchLogs } from '~/utils/app-console';
 import { LogMessage } from '@zipper/types';
+import { AppConsole } from './app-console';
 
 type AppEditSidebarProps = {
   showInputForm: boolean;
@@ -213,23 +213,6 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
       setGitHubAuthRequired(true);
     }
   }, []);
-
-  /**
-  const { logs: appLogs } = useLogs({
-    appId: appInfo.id,
-    version: lastRunVersion,
-    runId: lastRunId,
-  });
-  */
-
-  //const logs = appEventsQuery?.data?.map((event: any) => event.eventPayload);
-
-  /**const msgs: Messages =
-    logs?.map((log, i) => ({
-      id: i.toString(),
-      method: log.level || 'info',
-      data: log.msg ? [log.msg.trim()] : ['Booted in', log.boot_time],
-    })) || [];*/
 
   const [deployLogs, setDeployLogs] = useState<LogMessage[]>([]);
   const [appLogs, setAppLogs] = useState<LogMessage[]>([]);
@@ -600,15 +583,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
 
         {/* LOGS */}
         <TabPanel flex={1} padding="0">
-          <Console
-            logs={deployLogs
-              .concat(appLogs)
-              .map(({ timestamp: _ignore, ...log }) => log)}
-            styles={{
-              BASE_LINE_HEIGHT: 'inherit',
-              TREENODE_LINE_HEIGHT: 'inherit',
-            }}
-          />
+          <AppConsole logs={deployLogs.concat(appLogs)} />
         </TabPanel>
       </TabPanels>
     </Tabs>
