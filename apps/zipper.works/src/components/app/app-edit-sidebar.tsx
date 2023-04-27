@@ -4,7 +4,6 @@ import {
   TabPanels,
   TabPanel,
   VStack,
-  Divider,
   Box,
   Text,
   Progress,
@@ -32,7 +31,6 @@ import {
 } from '@zipper/ui';
 import { useEffect, useMemo, useState } from 'react';
 import { Console } from 'console-feed';
-import { LogLine } from '~/components/app/log-line';
 import { useRunAppContext } from '../context/run-app-context';
 import { trpc } from '~/utils/trpc';
 import { useRouter } from 'next/router';
@@ -45,14 +43,14 @@ import Link from 'next/link';
 import { HiOutlineChevronDown, HiOutlineChevronUp } from 'react-icons/hi';
 import { getAppLink } from '@zipper/utils';
 import { useAppEditSidebarContext } from '~/components/context/app-edit-sidebar-context';
+import { fetchLogs } from '~/utils/app-logs';
+import { Log } from '@zipper/types';
 
 type AppEditSidebarProps = {
   showInputForm: boolean;
   tips?: JSX.Element;
   appSlug: string;
 };
-
-type Messages = React.ComponentProps<typeof Console>['logs'];
 
 // toast duration
 const duration = 1500;
@@ -72,7 +70,6 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
 
   const {
     lastRunVersion,
-    appEventsQuery,
     formMethods,
     isRunning,
     setResults,
@@ -80,6 +77,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
     run,
     userAuthConnectors,
     appInfo,
+    lastRunId,
   } = useRunAppContext();
 
   const {
@@ -216,21 +214,40 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
     }
   }, []);
 
-  const logs = appEventsQuery?.data?.map((event: any) => event.eventPayload);
+  /**
+  const { logs: appLogs } = useLogs({
+    appId: appInfo.id,
+    version: lastRunVersion,
+    runId: lastRunId,
+  });
+  */
+  const appLogs: Log[] = [];
 
-  console.log({ logs });
+  //const logs = appEventsQuery?.data?.map((event: any) => event.eventPayload);
 
-  const msgs: Messages =
+  /**const msgs: Messages =
     logs?.map((log, i) => ({
       id: i.toString(),
       method: log.level || 'info',
       data: log.msg ? [log.msg.trim()] : ['Booted in', log.boot_time],
-    })) || [];
+    })) || [];*/
+
+  const [deployLogs, setDeployLogs] = useState<Log[]>([]);
+
+  console.log({ appLogs, deployLogs });
 
   useEffect(() => {
-    // don't switch over on the intial load
-    if (lastRunVersion) setTabIndex(0);
-  }, [lastRunVersion]);
+    // don't fetch if there's no run ID or deployment version
+    if (!appInfo.lastDeploymentVersion || !lastRunId) return;
+
+    console.log('new last run version');
+    setDeployLogs([]);
+
+    fetchLogs({
+      appId: appInfo.id,
+      version: appInfo.lastDeploymentVersion,
+    }).then(setDeployLogs);
+  }, [appInfo.lastDeploymentVersion, lastRunId]);
 
   const appLink = getAppLink(appSlug);
   const { onCopy } = useClipboard(appLink);
@@ -328,7 +345,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
         <HStack spacing={2}>
           {showInputForm && <TabButton title="Preview" />}
           {tips && <TabButton title="Tips" />}
-          <TabButton title="Logs" isDisabled={!logs?.length} />
+          <TabButton title="Logs" />
         </HStack>
         <HStack>
           <Tooltip label={inputError}>
@@ -581,7 +598,9 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
         {/* LOGS */}
         <TabPanel flex={1} padding="0">
           <Console
-            logs={msgs}
+            logs={deployLogs
+              .concat(appLogs)
+              .map(({ timestamp: _ignore, ...log }) => log)}
             styles={{
               BASE_LINE_HEIGHT: 'inherit',
               TREENODE_LINE_HEIGHT: 'inherit',
