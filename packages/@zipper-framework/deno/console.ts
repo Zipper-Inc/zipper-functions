@@ -12,7 +12,13 @@ export function sendLog({
   const url = new URL(Deno.env.get('RPC_HOST') as string);
   url.pathname = `/api/app/${appId}/${version}/logs`;
   if (runId) url.pathname = `${url.pathname}/${runId}`;
-  fetch(url, { method: 'POST', body: JSON.stringify(log) });
+  let promise: unknown = fetch(url, {
+    method: 'POST',
+    body: JSON.stringify(log),
+  });
+  // Prevent deno from waiting on this promise
+  promise = null;
+  return promise;
 }
 
 /**

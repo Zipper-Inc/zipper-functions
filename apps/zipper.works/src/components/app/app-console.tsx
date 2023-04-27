@@ -1,4 +1,11 @@
-import { Flex, FormControl, FormLabel, Switch, Input } from '@chakra-ui/react';
+import {
+  Flex,
+  FormControl,
+  FormLabel,
+  Switch,
+  Input,
+  Box,
+} from '@chakra-ui/react';
 import { LogMessage } from '@zipper/types';
 import { Console } from 'console-feed';
 import { useEffect, useState } from 'react';
@@ -32,39 +39,59 @@ export function AppConsole({ logs }: { logs: LogMessage[] }) {
     .filter((log) => (showDeployLogs ? true : !isDeployLog(log)));
 
   return (
-    <>
-      {revealedLogs.length ? (
-        <Flex marginBottom={2} marginLeft={2}>
-          <FormControl display="flex" alignItems="center" height={6}>
-            <FormLabel htmlFor="show-deploy-logs-alerts" mb="0" fontSize="xs">
-              Show deploy logs
-            </FormLabel>
-            <Switch
-              id="show-deploy-logs"
-              size="sm"
-              checked={showDeployLogs}
-              defaultChecked={true}
-              onChange={() => setShowDeployLogs(!showDeployLogs)}
-            />
-          </FormControl>
-          <Input
-            fontFamily="monospace"
-            fontSize="xs"
-            onChange={(e) => setLogFilter(e.target.value)}
-            height={6}
-            p={2}
-            placeholder="Filter"
-            marginBottom={2}
+    <Box position="relative">
+      <Flex marginBottom={2} marginLeft={2} position="sticky">
+        <FormControl display="flex" alignItems="center" height={6}>
+          <Switch
+            colorScheme="blue"
+            id="show-deploy-logs"
+            size="sm"
+            checked={showDeployLogs}
+            defaultChecked={true}
+            onChange={() => setShowDeployLogs(!showDeployLogs)}
           />
-        </Flex>
-      ) : null}
+          <FormLabel
+            htmlFor="show-deploy-logs-alerts"
+            ml={2}
+            mb="0"
+            fontWeight="normal"
+            fontSize="xs"
+          >
+            Show deploy logs
+          </FormLabel>
+        </FormControl>
+        <Input
+          fontFamily="monospace"
+          fontSize="xs"
+          onChange={(e) => setLogFilter(e.target.value)}
+          height={6}
+          p={2}
+          placeholder="Filter"
+          marginBottom={2}
+        />
+      </Flex>
       <Console
-        logs={filteredLogs.map(({ timestamp: _ignore, ...log }) => log)}
+        logs={
+          filteredLogs.length
+            ? filteredLogs.map(({ timestamp: _ignore, ...log }) => log)
+            : [
+                {
+                  id: 'PLACEHOLDER',
+                  method: 'info',
+                  data: [
+                    !!logFilter
+                      ? '%c No matching logs found.'
+                      : '%c No logs yet.',
+                    'opacity: .5',
+                  ],
+                },
+              ]
+        }
         styles={{
           BASE_LINE_HEIGHT: 'inherit',
           TREENODE_LINE_HEIGHT: 'inherit',
         }}
       />
-    </>
+    </Box>
   );
 }

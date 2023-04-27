@@ -217,8 +217,6 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
   const [deployLogs, setDeployLogs] = useState<LogMessage[]>([]);
   const [appLogs, setAppLogs] = useState<LogMessage[]>([]);
 
-  console.log({ appLogs, deployLogs });
-
   useEffect(() => {
     // don't fetch if there's no run ID or deployment version
     if (!appInfo.lastDeploymentVersion || !lastRunId) return;

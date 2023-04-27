@@ -33,15 +33,15 @@ const buildLog = ({
 }) => {
   const data = [
     '%c DEPLOY ' + `%c  ${appName}  ` + (topic ? `%c ${topic} ` : ''),
-    `fontWeight: 800; color: white; background: ${brandColors.brandPurple};`,
+    `fontWeight: 800; color: white; background: ${brandColors.brandBlue};`,
     `fontWeight: 500; color: ${baseColors.gray[600]}; background: ${baseColors.gray[50]};`,
     topic
       ? `fontWeight: 200; font-size: smaller; height: 100%; color: ${brandColors.brandDarkPurple}; text-transform: uppercase;`
       : '',
     msg,
   ].filter((v) => !!v);
-  console.log(...data);
-  logger.log(...data);
+  console.info(...data);
+  logger.info(...data);
 };
 
 export async function build({
