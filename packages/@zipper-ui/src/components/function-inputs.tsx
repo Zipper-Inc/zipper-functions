@@ -160,6 +160,7 @@ function FunctionParamInput({
 
 function SingleInput({
   name,
+  description,
   type,
   optional,
   formContext,
@@ -167,6 +168,7 @@ function SingleInput({
   hasResult = true,
 }: {
   name: string;
+  description?: string;
   type: InputType;
   optional: boolean;
   formContext: UseFormReturn<FieldValues, any>;
@@ -232,16 +234,24 @@ function SingleInput({
             )}
           </HStack>
           {isOpen && (
-            <Flex width="100%">
-              <FunctionParamInput
-                inputKey={name}
-                type={type}
-                value={null}
-                optional={optional}
-                formContext={formContext}
-                isDisabled={isDisabled}
-              />
-            </Flex>
+            <VStack w="full" align="start" spacing="2">
+              <Flex width="100%">
+                <FunctionParamInput
+                  inputKey={name}
+                  type={type}
+                  value={null}
+                  optional={optional}
+                  formContext={formContext}
+                  isDisabled={isDisabled}
+                />
+              </Flex>
+
+              {description && (
+                <Text fontSize="sm" fontWeight="normal" color="gray.600">
+                  {description}
+                </Text>
+              )}
+            </VStack>
           )}
         </VStack>
       </FormLabel>
@@ -290,10 +300,11 @@ export function FunctionInputs({
   isDisabled,
   hasResult = true,
 }: Props) {
-  const inputs = params.map(({ key: name, type, optional }, i) => (
+  const inputs = params.map(({ key, name, description, type, optional }, i) => (
     <SingleInput
-      key={`${name}--${i}`}
-      name={name}
+      key={`${key}--${i}`}
+      name={name || key}
+      description={description}
       type={type}
       optional={optional}
       formContext={formContext}

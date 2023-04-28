@@ -4,6 +4,8 @@ export interface InputParam {
   key: string;
   type: InputType;
   optional: boolean;
+  name?: string;
+  description?: string;
 }
 
 export interface ParseInputResponse {

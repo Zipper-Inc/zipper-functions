@@ -9,7 +9,7 @@ import {
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '~/server/prisma';
 import { AppInfoResult, UserAuthConnector } from '@zipper/types';
-import { parseInputForTypes } from '~/utils/parse-code';
+import { parseCode, parseInputForTypes } from '~/utils/parse-code';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import clerkClient from '@clerk/clerk-sdk-node';
 import { compare } from 'bcryptjs';
@@ -145,6 +145,7 @@ export default async function handler(
       error: `Can't get inputs for app: ${slug} is missing code`,
     });
   }
+  const parsedCode = parseCode({ code: entryPoint.code });
 
   const result: AppInfoResult = {
     ok: true,
@@ -163,7 +164,15 @@ export default async function handler(
           organizations: userInfo.organizations,
         }),
       },
-      inputs: parseInputForTypes({ code: entryPoint.code }) || [],
+      inputs: parsedCode.inputs || [],
+      metadata: {
+        h1: parsedCode.comments?.tags.find(
+          (t) => t.tag === 'heading' && t.name === 'h1',
+        )?.description,
+        h2: parsedCode.comments?.tags.find(
+          (t) => t.tag === 'heading' && t.name === 'h2',
+        )?.description,
+      },
       runnableScripts: scripts
         .filter((s) => s.isRunnable)
         .map((s) => s.filename),
