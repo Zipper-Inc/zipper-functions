@@ -44,7 +44,7 @@ export type EditorContextType = {
   isEditorDirty: () => boolean;
   isSaving: boolean;
   setIsSaving: (isSaving: boolean) => void;
-  save: () => Promise<void>;
+  save: () => Promise<void | string | null | undefined>;
   refetchApp: VoidFunction;
   replaceCurrentScriptCode: (code: string) => void;
   inputParams?: InputParam[];
@@ -218,7 +218,7 @@ const EditorContextProvider = ({
   appSlug: string | undefined;
   resourceOwnerSlug: string | undefined;
   initialScripts: Script[];
-  refetchApp: VoidFunction;
+  refetchApp: () => Promise<void>;
 }) => {
   const [currentScript, setCurrentScript] = useState<Script | undefined>(
     undefined,
@@ -429,7 +429,7 @@ const EditorContextProvider = ({
         }, {} as Record<string, boolean>),
       );
 
-      await editAppMutation.mutateAsync({
+      const newApp = await editAppMutation.mutateAsync({
         id: appId,
         data: {
           scripts: scripts.map((script: any) => ({
@@ -443,7 +443,9 @@ const EditorContextProvider = ({
         },
       });
 
+      refetchApp();
       setIsSaving(false);
+      return newApp.hash;
     }
   };
 

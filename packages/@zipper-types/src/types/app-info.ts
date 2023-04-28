@@ -9,6 +9,7 @@ export type AppInfo = {
   lastDeploymentVersion: string | null;
   updatedAt: Date | null;
   canUserEdit: boolean;
+  hash: string | null;
 };
 
 export type InputParams = InputParam[];
