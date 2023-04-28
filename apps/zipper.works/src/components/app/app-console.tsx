@@ -39,11 +39,21 @@ export function AppConsole({ logs }: { logs: LogMessage[] }) {
     .filter((log) => (showDeployLogs ? true : !isDeployLog(log)));
 
   return (
-    <Box position="relative">
-      <Flex marginBottom={2} marginLeft={2} position="sticky">
+    <Box id="app-console">
+      <Flex
+        padding={4}
+        width="100%"
+        border="solid 1px"
+        backgroundColor="gray.100"
+        borderColor="gray.200"
+        borderTopRadius="md"
+        position="sticky"
+        top={0}
+        zIndex="docked"
+      >
         <FormControl display="flex" alignItems="center" height={6}>
           <Switch
-            colorScheme="blue"
+            colorScheme="purple"
             id="show-deploy-logs"
             size="sm"
             checked={showDeployLogs}
@@ -51,7 +61,7 @@ export function AppConsole({ logs }: { logs: LogMessage[] }) {
             onChange={() => setShowDeployLogs(!showDeployLogs)}
           />
           <FormLabel
-            htmlFor="show-deploy-logs-alerts"
+            htmlFor="show-deploy-logs"
             ml={2}
             mb="0"
             fontWeight="normal"
@@ -61,37 +71,56 @@ export function AppConsole({ logs }: { logs: LogMessage[] }) {
           </FormLabel>
         </FormControl>
         <Input
+          backgroundColor="white"
           fontFamily="monospace"
           fontSize="xs"
           onChange={(e) => setLogFilter(e.target.value)}
           height={6}
-          p={2}
           placeholder="Filter"
-          marginBottom={2}
         />
       </Flex>
-      <Console
-        logs={
-          filteredLogs.length
-            ? filteredLogs.map(({ timestamp: _ignore, ...log }) => log)
-            : [
-                {
-                  id: 'PLACEHOLDER',
-                  method: 'info',
-                  data: [
-                    !!logFilter
-                      ? '%c No matching logs found.'
-                      : '%c No logs yet.',
-                    'opacity: .5',
-                  ],
-                },
-              ]
-        }
-        styles={{
-          BASE_LINE_HEIGHT: 'inherit',
-          TREENODE_LINE_HEIGHT: 'inherit',
-        }}
-      />
+      <Box
+        color="gray.200"
+        borderColor="gray.200"
+        borderBottomRadius="md"
+        px={2}
+        border="solid 1px"
+        borderTop="none"
+      >
+        <Console
+          logs={
+            filteredLogs.length
+              ? filteredLogs.map(({ timestamp: _ignore, ...log }) => log)
+              : [
+                  {
+                    id: 'PLACEHOLDER',
+                    method: 'info',
+                    data: [
+                      !!logFilter
+                        ? '%c No matching logs found.'
+                        : '%c No logs yet.',
+                      'opacity: .5',
+                    ],
+                  },
+                ]
+          }
+          styles={{
+            BASE_LINE_HEIGHT: 'inherit',
+            TREENODE_LINE_HEIGHT: 'inherit',
+            LOG_ICON_HEIGHT: '22px',
+            /** 
+             * @TODO replace icons with better zipper-y ones
+             *
+            LOG_ICON: '',
+            LOG_COMMAND_ICON: '',
+            LOG_ERROR_ICON: '',
+            LOG_INFO_ICON: '',
+            LOG_RESULT_ICON: '',
+            LOG_WARN_ICON: '',
+             */
+          }}
+        />
+      </Box>
     </Box>
   );
 }

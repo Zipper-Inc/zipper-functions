@@ -218,6 +218,10 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
   const [appLogs, setAppLogs] = useState<LogMessage[]>([]);
 
   useEffect(() => {
+    console.log('last run version?');
+  }, [lastRunVersion]);
+
+  useEffect(() => {
     // don't fetch if there's no run ID or deployment version
     if (!appInfo.lastDeploymentVersion || !lastRunId) return;
 
@@ -454,10 +458,10 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
           <HStack spacing={2}>
             {showInputForm && <TabButton title="Preview" />}
             {tips && <TabButton title="Tips" />}
-            <TabButton title="Logs" isDisabled={!logs?.length} />
+            <TabButton title="Console" />
           </HStack>
         </TabList>
-        <TabPanels as={VStack} alignItems="stretch" flex={1}>
+        <TabPanels as={VStack} alignItems="stretch" flex={1} spacing="0">
           {/* INPUT */}
           {showInputForm && (
             <TabPanel
@@ -654,11 +658,12 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
           {/* TIPS */}
           {tips && <TabPanel flex={1}>{tips}</TabPanel>}
 
-        {/* LOGS */}
-        <TabPanel flex={1} padding="0">
-          <AppConsole logs={deployLogs.concat(appLogs)} />
-        </TabPanel>
-      </TabPanels>
-    </Tabs>
+          {/* LOGS */}
+          <TabPanel flex={1} p={0} mt={0}>
+            <AppConsole logs={deployLogs.concat(appLogs)} />
+          </TabPanel>
+        </TabPanels>
+      </Tabs>
+    </VStack>
   );
 };
