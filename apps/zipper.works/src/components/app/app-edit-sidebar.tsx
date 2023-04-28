@@ -42,7 +42,7 @@ import { useEditorContext } from '../context/editor-context';
 import getRunUrl from '~/utils/get-run-url';
 import Link from 'next/link';
 import { HiOutlineChevronDown, HiOutlineChevronUp } from 'react-icons/hi';
-import { getAppLink } from '@zipper/utils';
+import { getAppLink, getInputsFromFormData } from '@zipper/utils';
 import { useAppEditSidebarContext } from '~/components/context/app-edit-sidebar-context';
 import { useForm } from 'react-hook-form';
 import { InputParams } from '@zipper/types';
@@ -244,8 +244,20 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [modalResult, setModalResult] = useState({ heading: '', body: '' });
   const { expandedResult, setExpandedResult } = useAppEditSidebarContext();
-  const [modalInputs, setModalInputs] = useState<InputParams>([]);
+  const [modalInputs, setModalInputs] = useState<{
+    inputParams: InputParams;
+    defaultValues: Record<string, any>;
+    path: string;
+  }>({ inputParams: [], defaultValues: {}, path: 'main.ts' });
   const [inputs, setInputs] = useState<Record<string, any>>({});
+
+  const modalFormContext = useForm({
+    defaultValues: modalInputs.defaultValues,
+  });
+
+  useEffect(() => {
+    modalFormContext.reset(modalInputs.defaultValues);
+  }, [modalInputs]);
 
   const setInputsAtTimeOfRun = () => {
     const formValues = formMethods.getValues();
@@ -276,19 +288,20 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
         path={currentScript?.filename || 'main.ts'}
         inputs={inputs}
         currentContext={'main'}
+        appSlug={appInfo.slug}
       />
     );
   }, [results, currentScript]);
 
   useEffect(() => {
-    if (modalResult.body || modalInputs.length) {
+    if (modalResult.body || modalInputs.inputParams.length) {
       onOpen();
     }
   }, [modalResult, modalInputs]);
 
   function closeModal() {
     setModalResult({ heading: '', body: '' });
-    setModalInputs([]);
+    setModalInputs({ inputParams: [], defaultValues: {}, path: 'main.ts' });
     onClose();
   }
 
@@ -296,14 +309,15 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
     secondaryResults: any,
     secondaryContext: 'modal' | 'expanded',
   ) => {
-    const formMethods = useForm();
     return (
       <>
-        {modalInputs && (
-          <FunctionInputs params={modalInputs} formContext={formMethods} />
-        )}
+        <FunctionInputs
+          params={modalInputs.inputParams}
+          formContext={modalFormContext}
+        />
 
-        {modalResult.body && (
+        {(modalResult.body.length > 0 ||
+          expandedResult[currentScript?.filename || 'main.ts']) && (
           <FunctionOutput
             result={secondaryResults}
             setOverallResult={(result) =>
@@ -322,6 +336,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
             inputs={inputs}
             path={currentScript?.filename || 'main.ts'}
             currentContext={secondaryContext}
+            appSlug={appInfo.slug}
           />
         )}
       </>
@@ -625,7 +640,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
                 <ModalOverlay />
                 <ModalContent maxH="2xl">
                   <ModalHeader>
-                    {modalResult.heading || appInfo.name}
+                    {modalResult.heading || modalInputs.path || appInfo.name}
                   </ModalHeader>
                   <ModalCloseButton />
                   <ModalBody
@@ -639,15 +654,43 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
                   >
                     {functionOutputComponent(modalResult.body, 'modal')}
                   </ModalBody>
-                  <ModalFooter justifyContent="space-between">
+                  <ModalFooter justifyContent="end">
                     <Button
                       variant="outline"
                       onClick={closeModal}
                       mr="3"
-                      flex={1}
                       fontWeight="medium"
                     >
                       Close
+                    </Button>
+                    <Button
+                      colorScheme="purple"
+                      onClick={async () => {
+                        const values = getInputsFromFormData(
+                          modalFormContext.getValues(),
+                          modalInputs.inputParams,
+                        );
+                        const res = await fetch(
+                          getRunUrl(
+                            appInfo.slug,
+                            appInfo.lastDeploymentVersion,
+                            modalInputs.path,
+                          ),
+                          {
+                            method: 'POST',
+                            body: JSON.stringify(values),
+                            credentials: 'include',
+                          },
+                        );
+                        const text = await res.text();
+
+                        setModalResult({
+                          heading: modalInputs.path,
+                          body: text,
+                        });
+                      }}
+                    >
+                      Run
                     </Button>
                   </ModalFooter>
                 </ModalContent>

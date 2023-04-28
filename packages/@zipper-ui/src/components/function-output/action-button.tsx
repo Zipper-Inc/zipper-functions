@@ -2,6 +2,7 @@ import { Button, Flex, Spinner } from '@chakra-ui/react';
 import { useContext, useState } from 'react';
 import { normalizeAppPath } from '@zipper/utils';
 import { FunctionOutputContext } from './function-output-context';
+import { InputParam } from '@zipper/types';
 
 export function ActionButton({ action }: { action: Zipper.Action }) {
   const {
@@ -12,33 +13,53 @@ export function ActionButton({ action }: { action: Zipper.Action }) {
     path,
     inputs,
     setModalInputs,
+    appSlug,
   } = useContext(FunctionOutputContext);
 
-  async function runScript() {
-    const res = await fetch('/api/app/info/grumpy-grumpy-animal', {
+  async function getScript() {
+    const res = await fetch(`/api/app/info/${appSlug}`, {
       method: 'POST',
       body: JSON.stringify({
-        path: 'main.ts',
+        filename: action.path,
       }),
       credentials: 'include',
     });
     const json = await res.json();
 
-    console.log(json);
-    setModalInputs(json.data.inputs);
-    const text = '';
+    const defaultValues: Record<string, any> = {};
 
-    // const res = await fetch(
-    //   getRunUrl(action.showAs === 'refresh' ? path : action.path),
-    //   {
-    //     method: 'POST',
-    //     body: JSON.stringify(
-    //       action.showAs === 'refresh' ? inputs || [] : action.inputs || [],
-    //     ),
-    //     credentials: 'include',
-    //   },
-    // );
-    // const text = await res.text();
+    if (action.inputs) {
+      Object.keys(action.inputs).forEach((k) => {
+        const input = json.data.inputs.find((i: InputParam) => i.key == k);
+        if (input) defaultValues[`${k}:${input.type}`] = action.inputs![k];
+      });
+    }
+
+    switch (action.showAs) {
+      case 'modal':
+        setModalInputs({
+          inputParams: json.data.inputs,
+          defaultValues,
+          path: action.path,
+        });
+        break;
+      default:
+        break;
+    }
+  }
+
+  async function runScript() {
+    const res = await fetch(
+      getRunUrl(action.showAs === 'refresh' ? path : action.path),
+      {
+        method: 'POST',
+        body: JSON.stringify(
+          action.showAs === 'refresh' ? inputs || [] : action.inputs || [],
+        ),
+        credentials: 'include',
+      },
+    );
+    const text = await res.text();
 
     switch (action.showAs) {
       case 'modal':
@@ -68,7 +89,10 @@ export function ActionButton({ action }: { action: Zipper.Action }) {
         isDisabled={isLoading}
         onClick={async () => {
           setIsLoading(true);
-          await runScript().catch(console.error);
+          action.run
+            ? await runScript().catch(console.error)
+            : await getScript().catch(console.error);
+
           setIsLoading(false);
         }}
         mr={2}

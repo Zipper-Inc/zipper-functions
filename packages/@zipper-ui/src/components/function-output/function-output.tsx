@@ -48,6 +48,7 @@ export function FunctionOutput({
   inputs,
   path,
   currentContext,
+  appSlug,
 }: FunctionOutputProps) {
   return (
     <FunctionOutputProvider
@@ -59,6 +60,7 @@ export function FunctionOutput({
       inputs={inputs}
       path={path}
       currentContext={currentContext}
+      appSlug={appSlug}
     >
       <ErrorBoundary
         // this makes sure we render a new boundary with a new result set

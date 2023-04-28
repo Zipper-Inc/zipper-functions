@@ -11,7 +11,7 @@ export const isHtml = (value: any) => {
   return Array.from(doc.body.childNodes).some((node) => node.nodeType === 1);
 };
 export const isAction = (value: Zipper.Action) =>
-  value?.actionType && value?.showAs && value?.path;
+  value?.actionType && value?.showAs;
 
 export function parseResult(result: any): { type: OutputType; data: any } {
   const data = isString(result) ? safeJSONParse(result) : result;

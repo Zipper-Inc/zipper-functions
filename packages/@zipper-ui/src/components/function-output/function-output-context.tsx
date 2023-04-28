@@ -4,12 +4,17 @@ import { createContext, useContext } from 'react';
 export type FunctionOutputContextType = {
   setExpandedResult: (result: any) => void;
   setModalResult: (result: any) => void;
-  setModalInputs: (inputs: InputParams) => void;
+  setModalInputs: ({}: {
+    inputParams: InputParams;
+    defaultValues: Zipper.Inputs;
+    path: string;
+  }) => void;
   setOverallResult: (result: any) => void;
   getRunUrl: (scriptName: string) => string;
   inputs?: Record<string, any>;
   path: string;
   currentContext: 'main' | 'modal' | 'expanded';
+  appSlug: string;
 };
 
 export const FunctionOutputContext = createContext<FunctionOutputContextType>({
@@ -19,7 +24,7 @@ export const FunctionOutputContext = createContext<FunctionOutputContextType>({
   setModalResult: () => {
     return;
   },
-  setModalInputs: ([]) => {
+  setModalInputs: () => {
     return;
   },
   setOverallResult: () => {
@@ -29,6 +34,7 @@ export const FunctionOutputContext = createContext<FunctionOutputContextType>({
   inputs: {},
   path: '',
   currentContext: 'main',
+  appSlug: '',
 });
 
 const FunctionOutputProvider = ({
@@ -41,6 +47,7 @@ const FunctionOutputProvider = ({
   path,
   inputs,
   currentContext,
+  appSlug,
 }: FunctionOutputContextType & { children: any }) => {
   return (
     <FunctionOutputContext.Provider
@@ -53,6 +60,7 @@ const FunctionOutputProvider = ({
         inputs,
         path,
         currentContext,
+        appSlug,
       }}
     >
       {children}
