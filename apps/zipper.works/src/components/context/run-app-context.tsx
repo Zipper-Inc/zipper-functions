@@ -1,6 +1,6 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useState } from 'react';
 import noop from '~/utils/noop';
-import { AppInfo, ConnectorType, InputParam, LogMessage } from '@zipper/types';
+import { AppInfo, ConnectorType, InputParam } from '@zipper/types';
 import { useForm } from 'react-hook-form';
 import { trpc } from '~/utils/trpc';
 import { AppQueryOutput } from '~/types/trpc';
@@ -33,8 +33,6 @@ export type RunAppContextType = {
   setResults: (results: Record<string, string>) => void;
   run: (isCurrentFileAsEntryPoint?: boolean) => void;
   boot: () => void;
-  logs: LogMessage[];
-  addLog: (method: Zipper.Log.Method, data: Zipper.Serializable[]) => void;
 };
 
 export const RunAppContext = createContext<RunAppContextType>({
@@ -48,8 +46,6 @@ export const RunAppContext = createContext<RunAppContextType>({
   setResults: noop,
   run: noop,
   boot: noop,
-  logs: [],
-  addLog: noop,
 });
 
 export function RunAppProvider({
@@ -57,11 +53,17 @@ export function RunAppProvider({
   children,
   saveAppBeforeRun,
   onAfterRun,
+  setLogStore,
 }: {
   app: AppQueryOutput;
   children: any;
   saveAppBeforeRun: () => Promise<string | null | void | undefined>;
   onAfterRun: () => Promise<void>;
+  setLogStore: (
+    cb: (
+      n: Record<string, Zipper.Log.Message[]>,
+    ) => Record<string, Zipper.Log.Message[]>,
+  ) => void;
 }) {
   const {
     id,
@@ -78,32 +80,6 @@ export function RunAppProvider({
   const [results, setResults] = useState<Record<string, string>>({});
   const [lastRunId, setLastRunId] = useState<string>('');
   const utils = trpc.useContext();
-  const [logs, setLogs] = useState<LogMessage[]>([]);
-  const [logStore, setLogStore] = useState<Record<string, LogMessage[]>>({});
-
-  useEffect(() => {
-    const newLogs: LogMessage[] = [];
-    setLogs(
-      newLogs
-        .concat(...Object.values(logStore))
-        .sort((a, b) => a.timestamp - b.timestamp),
-    );
-  }, [logStore]);
-
-  const addLog = (method: Zipper.Log.Method, data: Zipper.Serializable[]) => {
-    const newLog = {
-      id: uuid(),
-      method,
-      data,
-      timestamp: Date.now(),
-    };
-
-    setLogStore((prev) => {
-      const local = prev.local || [];
-      local.push(newLog);
-      return { ...prev, local };
-    });
-  };
 
   const runAppMutation = trpc.useMutation('app.run', {
     async onSuccess() {
@@ -135,11 +111,6 @@ export function RunAppProvider({
   const run = async (isCurrentFileTheEntryPoint?: boolean) => {
     if (!inputParams) return;
     setIsRunning(true);
-
-    addLog(
-      'info',
-      prettyLog({ topic: 'Save', subtopic: app.slug, badge: 'pending' }),
-    );
 
     const hash = (await saveAppBeforeRun()) || (app.hash as string);
     const version = getAppVersionFromHash(hash);
@@ -227,8 +198,6 @@ export function RunAppProvider({
         setResults,
         run,
         boot,
-        logs,
-        addLog,
       }}
     >
       {children}

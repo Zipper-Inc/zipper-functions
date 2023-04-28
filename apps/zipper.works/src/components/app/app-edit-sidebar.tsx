@@ -42,7 +42,6 @@ import Link from 'next/link';
 import { HiOutlineChevronDown, HiOutlineChevronUp } from 'react-icons/hi';
 import { getAppLink } from '@zipper/utils';
 import { useAppEditSidebarContext } from '~/components/context/app-edit-sidebar-context';
-import { LogMessage } from '@zipper/types';
 import { AppConsole } from './app-console';
 
 type AppEditSidebarProps = {
@@ -75,7 +74,6 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
     run,
     userAuthConnectors,
     appInfo,
-    logs,
   } = useRunAppContext();
 
   const {
@@ -84,6 +82,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
     replaceCurrentScriptCode,
     inputParams,
     inputError,
+    logs,
   } = useEditorContext();
 
   const router = useRouter();
@@ -211,9 +210,6 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
       setGitHubAuthRequired(true);
     }
   }, []);
-
-  const [deployLogs, setDeployLogs] = useState<LogMessage[]>([]);
-  const [appLogs, setAppLogs] = useState<LogMessage[]>([]);
 
   const appLink = getAppLink(appSlug);
   const { onCopy } = useClipboard(

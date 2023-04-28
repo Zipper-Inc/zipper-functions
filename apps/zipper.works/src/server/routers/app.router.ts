@@ -30,8 +30,6 @@ import { randomUUID } from 'crypto';
 import fetch from 'node-fetch';
 import { getAuth } from '@clerk/nextjs/server';
 import isCodeRunnable from '~/utils/is-code-runnable';
-import { getLogger } from '~/utils/app-console';
-import { prettyLog } from '~/utils/pretty-log';
 
 const defaultSelect = Prisma.validator<Prisma.AppSelect>()({
   id: true,
@@ -835,21 +833,6 @@ export const appRouter = createRouter()
         },
         select: defaultSelect,
       });
-
-      const newVersion = getAppVersionFromHash(
-        appWithUpdatedHash.hash as string,
-      );
-      getLogger({
-        appId: id,
-        version: newVersion,
-      }).info(
-        ...prettyLog({
-          topic: 'Save',
-          subtopic: `${appWithUpdatedHash.slug}@${newVersion}`,
-          badge: 'Success',
-          msg: 'Your applet is on a new version',
-        }),
-      );
 
       return { ...appWithUpdatedHash, resourceOwner };
     },
