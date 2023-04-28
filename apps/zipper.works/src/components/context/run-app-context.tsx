@@ -11,6 +11,7 @@ import { requiredUserAuthConnectorFilter } from '~/utils/user-auth-connector-fil
 import { getInputsFromFormData, uuid } from '@zipper/utils';
 import { getLogger } from '~/utils/app-console';
 import { prettyLog } from '~/utils/pretty-log';
+import { brandColors } from '@zipper/ui';
 
 type UserAuthConnector = {
   type: ConnectorType;
@@ -120,6 +121,9 @@ export function RunAppProvider({
     const versionLogger = getLogger({ appId: app.id, version });
     const runLogger = getLogger({ appId: app.id, version, runId });
 
+    // fetch deploy logs so we don't display them again
+    const vLogsToIgnore = await versionLogger.fetch();
+
     // Start fetching logs
     const updateLogs = async () => {
       const [vLogs, rLogs] = await Promise.all([
@@ -128,6 +132,8 @@ export function RunAppProvider({
       ]);
 
       if (!vLogs?.length && !rLogs?.length) return;
+
+      if (vLogsToIgnore.length) vLogs.splice(0, vLogsToIgnore.length);
 
       // We use a log store because the log fetcher grabs all the logs for a given object
       // This way, we always update the store with the freshest logs without duplicating
@@ -157,7 +163,10 @@ export function RunAppProvider({
     const formValues = formMethods.getValues();
 
     addLog('info', [
-      ...prettyLog({ topic: 'Run', subtopic: runId, badge: 'Pending' }),
+      ...prettyLog(
+        { topic: 'Run', subtopic: runId, badge: 'Pending' },
+        { topicStyle: { background: brandColors.brandPurple } },
+      ),
       { inputs: getInputsFromFormData(formValues, inputParams) },
     ]);
 
@@ -174,12 +183,15 @@ export function RunAppProvider({
 
     const runElapsed = performance.now() - runStart;
     addLog('info', [
-      ...prettyLog({
-        topic: 'Run',
-        subtopic: runId,
-        badge: 'Complete',
-        msg: `Took ${runElapsed}ms`,
-      }),
+      ...prettyLog(
+        {
+          topic: 'Run',
+          subtopic: runId,
+          badge: 'Done',
+          msg: `Completed in ${Math.round(runElapsed)}ms`,
+        },
+        { topicStyle: { background: brandColors.brandPurple } },
+      ),
       { output: result.result || null },
     ]);
     setIsRunning(false);

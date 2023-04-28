@@ -41,8 +41,8 @@ export const prettyLog = (
   },
   styles: {
     topicStyle: StyleObject;
-    subtopicStyle: StyleObject;
-    badgeStyle: StyleObject;
+    subtopicStyle?: StyleObject;
+    badgeStyle?: StyleObject;
   } = { topicStyle: {}, subtopicStyle: {}, badgeStyle: {} },
 ) => {
   const data: Zipper.Serializable[] = [];

@@ -37,7 +37,7 @@ export async function build({
     ...prettyLog({
       topic: 'Deploy',
       subtopic: appName,
-      badge: 'Building',
+      badge: 'Pending',
       msg: `Starting build for deploy`,
     }),
   );
@@ -111,7 +111,7 @@ export async function build({
     ...prettyLog({
       topic: 'Deploy',
       subtopic: appName,
-      badge: 'Build done',
+      badge: 'Done',
       msg: `Completed in ${Math.round(elapsedMs)}ms`,
     }),
   );
