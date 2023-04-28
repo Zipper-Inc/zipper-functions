@@ -44,6 +44,8 @@ import Link from 'next/link';
 import { HiOutlineChevronDown, HiOutlineChevronUp } from 'react-icons/hi';
 import { getAppLink } from '@zipper/utils';
 import { useAppEditSidebarContext } from '~/components/context/app-edit-sidebar-context';
+import { useForm } from 'react-hook-form';
+import { InputParams } from '@zipper/types';
 
 type AppEditSidebarProps = {
   showInputForm: boolean;
@@ -242,6 +244,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [modalResult, setModalResult] = useState({ heading: '', body: '' });
   const { expandedResult, setExpandedResult } = useAppEditSidebarContext();
+  const [modalInputs, setModalInputs] = useState<InputParams>([]);
   const [inputs, setInputs] = useState<Record<string, any>>({});
 
   const setInputsAtTimeOfRun = () => {
@@ -263,6 +266,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
           setExpandedResult({ [currentScript?.filename || 'main.ts']: result })
         }
         setModalResult={setModalResult}
+        setModalInputs={setModalInputs}
         setOverallResult={(result) =>
           setResults({ [currentScript?.filename || 'main.ts']: result })
         }
@@ -277,13 +281,14 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
   }, [results, currentScript]);
 
   useEffect(() => {
-    if (modalResult.body) {
+    if (modalResult.body || modalInputs.length) {
       onOpen();
     }
-  }, [modalResult]);
+  }, [modalResult, modalInputs]);
 
   function closeModal() {
     setModalResult({ heading: '', body: '' });
+    setModalInputs([]);
     onClose();
   }
 
@@ -291,23 +296,35 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
     secondaryResults: any,
     secondaryContext: 'modal' | 'expanded',
   ) => {
+    const formMethods = useForm();
     return (
-      <FunctionOutput
-        result={secondaryResults}
-        setOverallResult={(result) =>
-          setResults({ [currentScript?.filename || 'main.ts']: result })
-        }
-        setModalResult={setModalResult}
-        setExpandedResult={(result) =>
-          setExpandedResult({ [currentScript?.filename || 'main.ts']: result })
-        }
-        getRunUrl={(scriptName: string) => {
-          return getRunUrl(appSlug, undefined, scriptName);
-        }}
-        inputs={inputs}
-        path={currentScript?.filename || 'main.ts'}
-        currentContext={secondaryContext}
-      />
+      <>
+        {modalInputs && (
+          <FunctionInputs params={modalInputs} formContext={formMethods} />
+        )}
+
+        {modalResult.body && (
+          <FunctionOutput
+            result={secondaryResults}
+            setOverallResult={(result) =>
+              setResults({ [currentScript?.filename || 'main.ts']: result })
+            }
+            setModalResult={setModalResult}
+            setModalInputs={setModalInputs}
+            setExpandedResult={(result) =>
+              setExpandedResult({
+                [currentScript?.filename || 'main.ts']: result,
+              })
+            }
+            getRunUrl={(scriptName: string) => {
+              return getRunUrl(appSlug, undefined, scriptName);
+            }}
+            inputs={inputs}
+            path={currentScript?.filename || 'main.ts'}
+            currentContext={secondaryContext}
+          />
+        )}
+      </>
     );
   };
 

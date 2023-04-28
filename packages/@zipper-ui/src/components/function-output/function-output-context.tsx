@@ -1,8 +1,10 @@
+import { InputParams } from '@zipper/types';
 import { createContext, useContext } from 'react';
 
 export type FunctionOutputContextType = {
   setExpandedResult: (result: any) => void;
   setModalResult: (result: any) => void;
+  setModalInputs: (inputs: InputParams) => void;
   setOverallResult: (result: any) => void;
   getRunUrl: (scriptName: string) => string;
   inputs?: Record<string, any>;
@@ -15,6 +17,9 @@ export const FunctionOutputContext = createContext<FunctionOutputContextType>({
     return;
   },
   setModalResult: () => {
+    return;
+  },
+  setModalInputs: ([]) => {
     return;
   },
   setOverallResult: () => {
@@ -30,6 +35,7 @@ const FunctionOutputProvider = ({
   children,
   setExpandedResult,
   setModalResult,
+  setModalInputs,
   setOverallResult,
   getRunUrl,
   path,
@@ -41,6 +47,7 @@ const FunctionOutputProvider = ({
       value={{
         setExpandedResult,
         setModalResult,
+        setModalInputs,
         setOverallResult,
         getRunUrl,
         inputs,

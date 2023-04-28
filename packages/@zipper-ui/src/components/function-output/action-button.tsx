@@ -11,20 +11,34 @@ export function ActionButton({ action }: { action: Zipper.Action }) {
     getRunUrl,
     path,
     inputs,
+    setModalInputs,
   } = useContext(FunctionOutputContext);
 
   async function runScript() {
-    const res = await fetch(
-      getRunUrl(action.showAs === 'refresh' ? path : action.path),
-      {
-        method: 'POST',
-        body: JSON.stringify(
-          action.showAs === 'refresh' ? inputs || [] : action.inputs || [],
-        ),
-        credentials: 'include',
-      },
-    );
-    const text = await res.text();
+    const res = await fetch('/api/app/info/grumpy-grumpy-animal', {
+      method: 'POST',
+      body: JSON.stringify({
+        path: 'main.ts',
+      }),
+      credentials: 'include',
+    });
+    const json = await res.json();
+
+    console.log(json);
+    setModalInputs(json.data.inputs);
+    const text = '';
+
+    // const res = await fetch(
+    //   getRunUrl(action.showAs === 'refresh' ? path : action.path),
+    //   {
+    //     method: 'POST',
+    //     body: JSON.stringify(
+    //       action.showAs === 'refresh' ? inputs || [] : action.inputs || [],
+    //     ),
+    //     credentials: 'include',
+    //   },
+    // );
+    // const text = await res.text();
 
     switch (action.showAs) {
       case 'modal':

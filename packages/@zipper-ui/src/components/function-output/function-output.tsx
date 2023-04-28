@@ -42,6 +42,7 @@ export function FunctionOutput({
   level = 0,
   setExpandedResult,
   setModalResult,
+  setModalInputs,
   setOverallResult,
   getRunUrl,
   inputs,
@@ -52,6 +53,7 @@ export function FunctionOutput({
     <FunctionOutputProvider
       setExpandedResult={setExpandedResult}
       setModalResult={setModalResult}
+      setModalInputs={setModalInputs}
       setOverallResult={setOverallResult}
       getRunUrl={getRunUrl}
       inputs={inputs}
