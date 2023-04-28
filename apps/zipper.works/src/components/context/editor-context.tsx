@@ -56,6 +56,8 @@ export type EditorContextType = {
   inputError?: string;
   monacoRef?: MutableRefObject<Monaco | undefined>;
   logs: Zipper.Log.Message[];
+  preserveLogs: boolean;
+  setPreserveLogs: (v: boolean) => void;
   addLog: (method: Zipper.Log.Method, data: Zipper.Serializable[]) => void;
   setLogStore: (
     cb: (
@@ -87,6 +89,8 @@ export const EditorContext = createContext<EditorContextType>({
   inputError: undefined,
   monacoRef: undefined,
   logs: [],
+  preserveLogs: true,
+  setPreserveLogs: noop,
   addLog: noop,
   setLogStore: noop,
 });
@@ -387,6 +391,7 @@ const EditorContextProvider = ({
   const self = useSelf();
 
   // LOGS
+  const [preserveLogs, setPreserveLogs] = useState(true);
   const [logs, setLogs] = useState<Zipper.Log.Message[]>([]);
   const [logStore, setLogStore] = useState<
     Record<string, Zipper.Log.Message[]>
@@ -563,6 +568,8 @@ const EditorContextProvider = ({
         logs,
         addLog,
         setLogStore,
+        preserveLogs,
+        setPreserveLogs,
       }}
     >
       {children}

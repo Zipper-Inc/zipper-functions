@@ -6,10 +6,9 @@ import { trpc } from '~/utils/trpc';
 import { AppQueryOutput } from '~/types/trpc';
 import { AppConnectorUserAuth } from '@prisma/client';
 import { getAppVersionFromHash } from '~/utils/hashing';
-import { useUser } from '@clerk/nextjs';
 import { useEditorContext } from './editor-context';
 import { requiredUserAuthConnectorFilter } from '~/utils/user-auth-connector-filter';
-import { uuid } from '@zipper/utils';
+import { getInputsFromFormData, uuid } from '@zipper/utils';
 import { getLogger } from '~/utils/app-console';
 import { prettyLog } from '~/utils/pretty-log';
 
@@ -27,7 +26,6 @@ export type RunAppContextType = {
   formMethods: any;
   inputParams?: InputParam[];
   isRunning: boolean;
-  lastRunId: string;
   results: Record<string, string>;
   userAuthConnectors: UserAuthConnector[];
   setResults: (results: Record<string, string>) => void;
@@ -40,7 +38,6 @@ export const RunAppContext = createContext<RunAppContextType>({
   formMethods: {},
   inputParams: undefined,
   isRunning: false,
-  lastRunId: '',
   results: {},
   userAuthConnectors: [],
   setResults: noop,
@@ -53,17 +50,21 @@ export function RunAppProvider({
   children,
   saveAppBeforeRun,
   onAfterRun,
+  addLog,
   setLogStore,
+  preserveLogs,
 }: {
   app: AppQueryOutput;
   children: any;
   saveAppBeforeRun: () => Promise<string | null | void | undefined>;
   onAfterRun: () => Promise<void>;
+  addLog: (method: Zipper.Log.Method, data: Zipper.Serializable[]) => void;
   setLogStore: (
     cb: (
       n: Record<string, Zipper.Log.Message[]>,
     ) => Record<string, Zipper.Log.Message[]>,
   ) => void;
+  preserveLogs: boolean;
 }) {
   const {
     id,
@@ -78,7 +79,6 @@ export function RunAppProvider({
   const formMethods = useForm();
   const [isRunning, setIsRunning] = useState(false);
   const [results, setResults] = useState<Record<string, string>>({});
-  const [lastRunId, setLastRunId] = useState<string>('');
   const utils = trpc.useContext();
 
   const runAppMutation = trpc.useMutation('app.run', {
@@ -99,7 +99,6 @@ export function RunAppProvider({
     },
   });
 
-  const { user } = useUser();
   const { currentScript, inputParams } = useEditorContext();
 
   const boot = async () => {
@@ -110,6 +109,7 @@ export function RunAppProvider({
 
   const run = async (isCurrentFileTheEntryPoint?: boolean) => {
     if (!inputParams) return;
+    if (!preserveLogs) setLogStore(() => ({}));
     setIsRunning(true);
 
     const hash = (await saveAppBeforeRun()) || (app.hash as string);
@@ -153,7 +153,14 @@ export function RunAppProvider({
     };
     pollLogs();
 
+    const runStart = performance.now();
     const formValues = formMethods.getValues();
+
+    addLog('info', [
+      ...prettyLog({ topic: 'Run', subtopic: runId, badge: 'Pending' }),
+      { inputs: getInputsFromFormData(formValues, inputParams) },
+    ]);
+
     const result = await runAppMutation.mutateAsync({
       formData: formValues,
       appId: id,
@@ -165,6 +172,16 @@ export function RunAppProvider({
       setResults({ ...results, [result.filename]: result.result });
     }
 
+    const runElapsed = performance.now() - runStart;
+    addLog('info', [
+      ...prettyLog({
+        topic: 'Run',
+        subtopic: runId,
+        badge: 'Complete',
+        msg: `Took ${runElapsed}ms`,
+      }),
+      { output: result.result || null },
+    ]);
     setIsRunning(false);
 
     // stop polling and do one last update
@@ -190,7 +207,6 @@ export function RunAppProvider({
         },
         formMethods,
         isRunning,
-        lastRunId,
         results,
         userAuthConnectors: app.connectors.filter(
           requiredUserAuthConnectorFilter,

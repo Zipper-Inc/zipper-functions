@@ -7,16 +7,18 @@ import {
   Box,
 } from '@chakra-ui/react';
 import { LogMessage } from '@zipper/types';
+import { useCmdOrCtrl } from '@zipper/ui';
 import { Console } from 'console-feed';
 import { useEffect, useState } from 'react';
-
-const isDeployLog = (log: LogMessage) =>
-  log.data?.[0]?.toString().startsWith('%c DEPLOY');
+import { useEditorContext } from '../context/editor-context';
 
 export function AppConsole({ logs }: { logs: LogMessage[] }) {
   const [logCounter, setLogCounter] = useState(0);
   const [logFilter, setLogFilter] = useState('');
-  const [showDeployLogs, setShowDeployLogs] = useState(true);
+
+  const { setLogStore, setPreserveLogs, preserveLogs } = useEditorContext();
+
+  useCmdOrCtrl('K', () => setLogStore(() => ({})));
 
   // Slightly animate
   useEffect(() => {
@@ -32,11 +34,9 @@ export function AppConsole({ logs }: { logs: LogMessage[] }) {
   }, [logs, logCounter]);
 
   const revealedLogs = logs.slice(0, logCounter);
-  const filteredLogs = revealedLogs
-    .filter((log) =>
-      JSON.stringify(log.data).toLowerCase().includes(logFilter.toLowerCase()),
-    )
-    .filter((log) => (showDeployLogs ? true : !isDeployLog(log)));
+  const filteredLogs = revealedLogs.filter((log) =>
+    JSON.stringify(log.data).toLowerCase().includes(logFilter.toLowerCase()),
+  );
 
   return (
     <Box id="app-console">
@@ -54,20 +54,20 @@ export function AppConsole({ logs }: { logs: LogMessage[] }) {
         <FormControl display="flex" alignItems="center" height={6}>
           <Switch
             colorScheme="purple"
-            id="show-deploy-logs"
+            id="preserve-logs"
             size="sm"
-            checked={showDeployLogs}
+            checked={preserveLogs}
             defaultChecked={true}
-            onChange={() => setShowDeployLogs(!showDeployLogs)}
+            onChange={() => setPreserveLogs(!preserveLogs)}
           />
           <FormLabel
-            htmlFor="show-deploy-logs"
+            htmlFor="preserve-logs"
             ml={2}
             mb="0"
             fontWeight="normal"
             fontSize="xs"
           >
-            Show deploy logs
+            Preserve logs
           </FormLabel>
         </FormControl>
         <Input
