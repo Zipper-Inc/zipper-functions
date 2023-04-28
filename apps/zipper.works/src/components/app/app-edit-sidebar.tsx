@@ -42,7 +42,6 @@ import Link from 'next/link';
 import { HiOutlineChevronDown, HiOutlineChevronUp } from 'react-icons/hi';
 import { getAppLink } from '@zipper/utils';
 import { useAppEditSidebarContext } from '~/components/context/app-edit-sidebar-context';
-import { fetchLogs } from '~/utils/app-console';
 import { LogMessage } from '@zipper/types';
 import { AppConsole } from './app-console';
 
@@ -69,7 +68,6 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
   };
 
   const {
-    lastRunVersion,
     formMethods,
     isRunning,
     setResults,
@@ -77,7 +75,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
     run,
     userAuthConnectors,
     appInfo,
-    lastRunId,
+    logs,
   } = useRunAppContext();
 
   const {
@@ -217,26 +215,6 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
   const [deployLogs, setDeployLogs] = useState<LogMessage[]>([]);
   const [appLogs, setAppLogs] = useState<LogMessage[]>([]);
 
-  useEffect(() => {
-    console.log('last run version?');
-  }, [lastRunVersion]);
-
-  useEffect(() => {
-    // don't fetch if there's no run ID or deployment version
-    if (!appInfo.lastDeploymentVersion || !lastRunId) return;
-
-    fetchLogs({
-      appId: appInfo.id,
-      version: appInfo.lastDeploymentVersion,
-    }).then(setDeployLogs);
-
-    fetchLogs({
-      appId: appInfo.id,
-      version: appInfo.lastDeploymentVersion,
-      runId: lastRunId,
-    }).then(setAppLogs);
-  }, [appInfo.lastDeploymentVersion, lastRunId]);
-
   const appLink = getAppLink(appSlug);
   const { onCopy } = useClipboard(
     `${appLink}${
@@ -284,14 +262,14 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
           setResults({ [currentScript?.filename || 'main.ts']: result })
         }
         getRunUrl={(scriptName: string) => {
-          return getRunUrl(appSlug, lastRunVersion, scriptName);
+          return getRunUrl(appInfo.slug, appInfo.hash, scriptName);
         }}
         path={currentScript?.filename || 'main.ts'}
         inputs={inputs}
         currentContext={'main'}
       />
     );
-  }, [results, currentScript]);
+  }, [appInfo.slug, appInfo.hash, results, currentScript]);
 
   useEffect(() => {
     if (modalResult.body) {
@@ -660,7 +638,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
 
           {/* LOGS */}
           <TabPanel flex={1} p={0} mt={0}>
-            <AppConsole logs={deployLogs.concat(appLogs)} />
+            <AppConsole logs={logs} />
           </TabPanel>
         </TabPanels>
       </Tabs>

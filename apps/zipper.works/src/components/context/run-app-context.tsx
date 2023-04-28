@@ -1,16 +1,17 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import noop from '~/utils/noop';
-import { AppInfo, ConnectorType, InputParam } from '@zipper/types';
+import { AppInfo, ConnectorType, InputParam, LogMessage } from '@zipper/types';
 import { useForm } from 'react-hook-form';
 import { trpc } from '~/utils/trpc';
-import { AppQueryOutput, AppEventUseQueryResult } from '~/types/trpc';
-import useInterval from '~/hooks/use-interval';
+import { AppQueryOutput } from '~/types/trpc';
 import { AppConnectorUserAuth } from '@prisma/client';
-import { getAppHash, getAppVersionFromHash } from '~/utils/hashing';
+import { getAppVersionFromHash } from '~/utils/hashing';
 import { useUser } from '@clerk/nextjs';
 import { useEditorContext } from './editor-context';
 import { requiredUserAuthConnectorFilter } from '~/utils/user-auth-connector-filter';
 import { uuid } from '@zipper/utils';
+import { getLogger } from '~/utils/app-console';
+import { prettyLog } from '~/utils/pretty-log';
 
 type UserAuthConnector = {
   type: ConnectorType;
@@ -21,45 +22,45 @@ type UserAuthConnector = {
   appConnectorUserAuths: AppConnectorUserAuth[];
 };
 
-export type FunctionCallContextType = {
+export type RunAppContextType = {
   appInfo: AppInfo;
   formMethods: any;
   inputParams?: InputParam[];
   isRunning: boolean;
-  lastRunVersion: string;
   lastRunId: string;
   results: Record<string, string>;
   userAuthConnectors: UserAuthConnector[];
-  appEventsQuery?: AppEventUseQueryResult;
   setResults: (results: Record<string, string>) => void;
   run: (isCurrentFileAsEntryPoint?: boolean) => void;
   boot: () => void;
+  logs: LogMessage[];
+  addLog: (method: Zipper.Log.Method, data: Zipper.Serializable[]) => void;
 };
 
-export const RunAppContext = createContext<FunctionCallContextType>({
+export const RunAppContext = createContext<RunAppContextType>({
   appInfo: {} as AppInfo,
   formMethods: {},
   inputParams: undefined,
   isRunning: false,
-  lastRunVersion: '',
   lastRunId: '',
   results: {},
-  appEventsQuery: undefined,
   userAuthConnectors: [],
   setResults: noop,
   run: noop,
   boot: noop,
+  logs: [],
+  addLog: noop,
 });
 
 export function RunAppProvider({
   app,
   children,
-  onBeforeRun,
+  saveAppBeforeRun,
   onAfterRun,
 }: {
   app: AppQueryOutput;
   children: any;
-  onBeforeRun: () => Promise<void>;
+  saveAppBeforeRun: () => Promise<string | null | void | undefined>;
   onAfterRun: () => Promise<void>;
 }) {
   const {
@@ -70,15 +71,39 @@ export function RunAppProvider({
     updatedAt,
     lastDeploymentVersion,
     canUserEdit,
+    hash,
   } = app;
   const formMethods = useForm();
   const [isRunning, setIsRunning] = useState(false);
   const [results, setResults] = useState<Record<string, string>>({});
   const [lastRunId, setLastRunId] = useState<string>('');
-  const [lastRunVersion, setLastRunVersion] = useState(
-    () => app.lastDeploymentVersion || getAppVersionFromHash(getAppHash(app)),
-  );
   const utils = trpc.useContext();
+  const [logs, setLogs] = useState<LogMessage[]>([]);
+  const [logStore, setLogStore] = useState<Record<string, LogMessage[]>>({});
+
+  useEffect(() => {
+    const newLogs: LogMessage[] = [];
+    setLogs(
+      newLogs
+        .concat(...Object.values(logStore))
+        .sort((a, b) => a.timestamp - b.timestamp),
+    );
+  }, [logStore]);
+
+  const addLog = (method: Zipper.Log.Method, data: Zipper.Serializable[]) => {
+    const newLog = {
+      id: uuid(),
+      method,
+      data,
+      timestamp: Date.now(),
+    };
+
+    setLogStore((prev) => {
+      const local = prev.local || [];
+      local.push(newLog);
+      return { ...prev, local };
+    });
+  };
 
   const runAppMutation = trpc.useMutation('app.run', {
     async onSuccess() {
@@ -99,36 +124,65 @@ export function RunAppProvider({
   });
 
   const { user } = useUser();
-  const appEventsQuery = trpc.useQuery(
-    ['appEvent.all', { deploymentId: `${id}@${lastRunVersion}` }],
-    { enabled: !!user },
-  );
-
-  useInterval(async () => {
-    if (lastRunVersion) {
-      appEventsQuery.refetch();
-    }
-  }, 10000);
-
   const { currentScript, inputParams } = useEditorContext();
 
   const boot = async () => {
     await bootAppMutation.mutateAsync({
       appId: id,
     });
-
-    // refetch logs
-    appEventsQuery.refetch();
   };
 
   const run = async (isCurrentFileTheEntryPoint?: boolean) => {
     if (!inputParams) return;
     setIsRunning(true);
-    await onBeforeRun();
-    const formValues = formMethods.getValues();
-    const runId = uuid();
-    setLastRunId(runId);
 
+    addLog(
+      'info',
+      prettyLog({ topic: 'Save', subtopic: app.slug, badge: 'pending' }),
+    );
+
+    const hash = (await saveAppBeforeRun()) || (app.hash as string);
+    const version = getAppVersionFromHash(hash);
+
+    const runId = uuid();
+
+    const versionLogger = getLogger({ appId: app.id, version });
+    const runLogger = getLogger({ appId: app.id, version, runId });
+
+    // Start fetching logs
+    const updateLogs = async () => {
+      const [vLogs, rLogs] = await Promise.all([
+        versionLogger.fetch(),
+        runLogger.fetch(),
+      ]);
+
+      if (!vLogs?.length && !rLogs?.length) return;
+
+      // We use a log store because the log fetcher grabs all the logs for a given object
+      // This way, we always update the store with the freshest logs without duplicating
+      setLogStore((prev) => {
+        const prevVLogs = prev[versionLogger.url] || [];
+        const prevRLogs = prev[runLogger.url] || [];
+
+        const newVLogs = prevVLogs.length > vLogs.length ? prevVLogs : vLogs;
+        const newRLogs = prevRLogs.length > rLogs.length ? prevRLogs : rLogs;
+        return {
+          ...prev,
+          [versionLogger.url]: newVLogs,
+          [runLogger.url]: newRLogs,
+        };
+      });
+    };
+
+    // Start polling for logs
+    let currentPoll;
+    const pollLogs = async () => {
+      await updateLogs();
+      currentPoll = setTimeout(() => pollLogs, 500);
+    };
+    pollLogs();
+
+    const formValues = formMethods.getValues();
     const result = await runAppMutation.mutateAsync({
       formData: formValues,
       appId: id,
@@ -140,21 +194,15 @@ export function RunAppProvider({
       setResults({ ...results, [result.filename]: result.result });
     }
 
-    // refetch logs
-    appEventsQuery.refetch();
-
     setIsRunning(false);
+
+    // stop polling and do one last update
+    // do it once more just time
+    clearTimeout(currentPoll);
+    updateLogs();
+
     await onAfterRun();
   };
-
-  useEffect(() => {
-    if (
-      app.lastDeploymentVersion &&
-      app.lastDeploymentVersion !== lastRunVersion
-    ) {
-      setLastRunVersion(app.lastDeploymentVersion);
-    }
-  }, [app.lastDeploymentVersion]);
 
   return (
     <RunAppContext.Provider
@@ -167,19 +215,20 @@ export function RunAppProvider({
           updatedAt,
           lastDeploymentVersion,
           canUserEdit,
+          hash,
         },
         formMethods,
         isRunning,
-        lastRunVersion,
         lastRunId,
         results,
-        appEventsQuery,
         userAuthConnectors: app.connectors.filter(
           requiredUserAuthConnectorFilter,
         ) as UserAuthConnector[],
         setResults,
         run,
         boot,
+        logs,
+        addLog,
       }}
     >
       {children}
