@@ -86,7 +86,6 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
   const isDisabled = slugExists || slug.length < MIN_SLUG_LENGTH;
 
   const duration = 1500;
-  const router = useRouter();
   const toast = useToast();
 
   return (
