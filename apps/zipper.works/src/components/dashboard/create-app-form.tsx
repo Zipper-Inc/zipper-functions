@@ -1,6 +1,5 @@
 import { CheckIcon } from '@chakra-ui/icons';
 import {
-  Box,
   Button,
   FormControl,
   FormErrorMessage,
@@ -34,6 +33,7 @@ import { useOrganization, useOrganizationList, useUser } from '@clerk/nextjs';
 import { OrganizationSelector } from './organization-selector';
 import { useAppSlug, MIN_SLUG_LENGTH } from '~/hooks/use-app-slug';
 import { VscCode } from 'react-icons/vsc';
+import { useToast } from '@chakra-ui/react';
 
 const getDefaultCreateAppFormValues = () => ({
   name: generateDefaultSlug(),
@@ -84,6 +84,10 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
   const isSlugValid =
     appSlugQuery.isFetched && slug && slug.length >= MIN_SLUG_LENGTH;
   const isDisabled = slugExists || slug.length < MIN_SLUG_LENGTH;
+
+  const duration = 1500;
+  const router = useRouter();
+  const toast = useToast();
 
   return (
     <FormProvider {...createAppForm}>
@@ -225,6 +229,13 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
                           organization: selectedOrganizationId,
                         });
                       }
+                      toast({
+                        title: 'Applet created',
+                        status: 'success',
+                        duration,
+                        isClosable: true,
+                      });
+                      onClose();
                     },
                   },
                 );
