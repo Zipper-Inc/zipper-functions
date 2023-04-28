@@ -1,8 +1,8 @@
 import * as eszip from '@deno/eszip';
 import { App, Script } from '@prisma/client';
-import { baseColors, brandColors } from '@zipper/ui';
 import { generateHandlersForFramework } from '@zipper/utils';
 import { getLogger } from './app-console';
+import { prettyLog } from './pretty-log';
 import { BuildCache, getModule } from './eszip-build-cache';
 import { readFrameworkFile } from './read-file';
 
@@ -20,30 +20,6 @@ export const TYPESCRIPT_CONTENT_HEADERS = {
 
 const buildCache = new BuildCache();
 
-const buildLog = ({
-  appName,
-  msg,
-  topic,
-  logger,
-}: {
-  appName: string;
-  msg: string;
-  topic?: string;
-  logger: any;
-}) => {
-  const data = [
-    '%c DEPLOY ' + `%c  ${appName}  ` + (topic ? `%c ${topic} ` : ''),
-    `fontWeight: 800; color: white; background: ${brandColors.brandBlue};`,
-    `fontWeight: 500; color: ${baseColors.gray[600]}; background: ${baseColors.gray[50]};`,
-    topic
-      ? `fontWeight: 200; font-size: smaller; height: 100%; color: ${brandColors.brandDarkPurple}; text-transform: uppercase;`
-      : '',
-    msg,
-  ].filter((v) => !!v);
-  console.info(...data);
-  logger.info(...data);
-};
-
 export async function build({
   baseUrl,
   app,
@@ -57,7 +33,14 @@ export async function build({
   const appName = `${app.slug}@${version}`;
 
   const logger = getLogger({ appId: app.id, version });
-  buildLog({ logger, appName, msg: `Building for deployment` });
+  logger.info(
+    ...prettyLog({
+      topic: 'Deploy',
+      subtopic: appName,
+      badge: 'Building',
+      msg: `Starting build for deploy`,
+    }),
+  );
 
   const appFilesBaseUrl = `${baseUrl}/src`;
   const frameworkEntrypointUrl = `${baseUrl}/${FRAMEWORK_ENTRYPOINT}`;
@@ -67,19 +50,14 @@ export async function build({
   const fileUrlsToBundle = [frameworkEntrypointUrl, ...appFileUrls];
 
   const bundle = await eszip.build(fileUrlsToBundle, async (specifier) => {
+    // if (__DEBUG__) console.debug(specifier);
+
     /**
      * Handle user's App files
      */
     if (specifier.startsWith(appFilesBaseUrl)) {
       const filename = specifier.replace(`${appFilesBaseUrl}/`, '');
       const script = app.scripts.find((s) => s.filename === filename);
-
-      buildLog({
-        logger,
-        appName,
-        msg: `Resolving ${specifier}`,
-        topic: 'Applet',
-      });
 
       return {
         specifier,
@@ -96,13 +74,6 @@ export async function build({
     if (specifier.startsWith(baseUrl)) {
       const filename = specifier.replace(`${baseUrl}/`, '');
       const isHandlersPath = filename === HANDLERS_PATH;
-
-      buildLog({
-        logger,
-        appName,
-        msg: `Resolving ${specifier}`,
-        topic: isHandlersPath ? 'Routes' : 'Framework',
-      });
 
       let content = await readFrameworkFile(filename);
 
@@ -132,17 +103,18 @@ export async function build({
     /**
      * Handle remote imports
      */
-    buildLog({
-      logger,
-      appName,
-      msg: `Resolving ${specifier}`,
-      topic: 'Remote',
-    });
     return getModule(specifier, buildCache);
   });
 
   const elapsedMs = performance.now() - startMs;
-  buildLog({ logger, appName, msg: `Built in ${Math.round(elapsedMs)}ms` });
+  logger.info(
+    ...prettyLog({
+      topic: 'Deploy',
+      subtopic: appName,
+      badge: 'Build done',
+      msg: `Completed in ${Math.round(elapsedMs)}ms`,
+    }),
+  );
 
   return bundle;
 }
