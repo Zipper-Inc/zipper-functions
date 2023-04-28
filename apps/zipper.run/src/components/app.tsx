@@ -1,11 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { GetServerSideProps } from 'next';
-import {
-  withDefaultTheme,
-  FunctionOutput,
-  useCmdOrCtrl,
-  userConnectorInputs,
-} from '@zipper/ui';
+import { withDefaultTheme, FunctionOutput, useCmdOrCtrl } from '@zipper/ui';
 import {
   AppInfo,
   ConnectorActionProps,
@@ -72,6 +67,7 @@ export type AppPageProps = {
   entryPoint?: EntryPointInfo;
   result?: string;
   runnableScripts?: string[];
+  metadata?: Record<string, string | undefined>;
 };
 
 export function AppPage({
@@ -87,6 +83,7 @@ export function AppPage({
   entryPoint,
   result: paramResult,
   runnableScripts,
+  metadata,
 }: AppPageProps) {
   const router = useRouter();
   const { asPath } = router;
@@ -257,16 +254,6 @@ export function AppPage({
     return <Unauthorized />;
   }
 
-  useEffect(() => {
-    if (
-      inputs.length === 0 &&
-      userAuthConnectors.length === 0 &&
-      screen === 'initial' &&
-      canRunApp
-    )
-      runApp();
-  }, [inputs, userAuthConnectors]);
-
   return (
     <>
       <Head>
@@ -279,14 +266,22 @@ export function AppPage({
           runnableScripts={runnableScripts}
           runId={latestRunId}
         />
-        <VStack
-          as="main"
-          flex={1}
-          spacing={0}
-          gap={14}
-          position="relative"
-          px={10}
-        >
+        <VStack as="main" flex={1} spacing={4} position="relative" px={10}>
+          {showInput && metadata && (
+            <VStack mb="10">
+              {metadata.h1 && <Heading as="h1">{metadata.h1}</Heading>}
+              {metadata.h2 && (
+                <Heading
+                  as="h2"
+                  fontSize="lg"
+                  fontWeight="semibold"
+                  color="gray.600"
+                >
+                  {metadata.h2}
+                </Heading>
+              )}
+            </VStack>
+          )}
           {showInput && (
             <ConnectorsAuthInputsSection
               isCollapsible={screen === 'edit'}
@@ -445,8 +440,14 @@ export const getServerSideProps: GetServerSideProps = async ({
     return { notFound: true };
   }
 
-  const { app, inputs, userAuthConnectors, entryPoint, runnableScripts } =
-    result.data;
+  const {
+    app,
+    inputs,
+    userAuthConnectors,
+    entryPoint,
+    runnableScripts,
+    metadata,
+  } = result.data;
 
   const version = versionFromUrl || 'latest';
 
@@ -462,6 +463,7 @@ export const getServerSideProps: GetServerSideProps = async ({
       userAuthConnectors,
       entryPoint,
       runnableScripts,
+      metadata,
       filename: filename || 'main.ts',
     },
   };

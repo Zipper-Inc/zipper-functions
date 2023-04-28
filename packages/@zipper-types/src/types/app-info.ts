@@ -28,6 +28,7 @@ export type AppInfoAndInputParams = {
     userId?: string;
   };
   runnableScripts: string[];
+  metadata?: Record<string, string | undefined>;
   entryPoint: EntryPointInfo;
 };
 

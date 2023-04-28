@@ -90,7 +90,7 @@ export function FunctionOutput({
           >
             <TabPanel>
               <Box overflow="auto">
-                <Box width="max-content">
+                <Box width="max-content" data-function-output="smart">
                   <SmartFunctionOutput result={result} level={level} />
                 </Box>
               </Box>
