@@ -75,6 +75,7 @@ export function getLogger({
   const url = getLogsApiUrl({ appId, version, runId });
 
   const initialLogger = {
+    url,
     send: (log: LogMessage) => sendLog({ appId, version, runId, url, log }),
     fetch: (fromTimestamp: number) =>
       fetchLogs({ appId, version, runId, url, fromTimestamp }),

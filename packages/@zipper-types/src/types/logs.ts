@@ -17,6 +17,7 @@ export const logMethods = Object.values(LogMethod);
 export type LogMessage = Zipper.Log.Message;
 
 export type ConsoleLogger = {
+  url: string;
   fetch: (fromTimestamp?: number) => Promise<LogMessage[]>;
   send: (log: LogMessage) => void;
 } & Record<LogMethod, (...data: LogMessage['data']) => void>;
