@@ -103,9 +103,40 @@ export function RunAppProvider({
   const { currentScript, inputParams } = useEditorContext();
 
   const boot = async () => {
+    const hash = (await saveAppBeforeRun()) || (app.hash as string);
+    const version = getAppVersionFromHash(hash);
+    const logger = getLogger({ appId: app.id, version });
+
+    const logsToIgnore = await logger.fetch();
+
+    const updateLogs = async () => {
+      const logs = await logger.fetch();
+      if (!logs.length) return;
+      if (logsToIgnore.length) logs.splice(0, logsToIgnore.length);
+
+      setLogStore((prev) => {
+        const prevLogs = prev[logger.url] || [];
+        const newLogs = prevLogs.length > logs.length ? prevLogs : logs;
+        return { ...prev, [logger.url]: newLogs };
+      });
+    };
+
+    // Start polling for logs
+    let currentPoll;
+    const pollLogs = async () => {
+      await updateLogs();
+      currentPoll = setTimeout(() => pollLogs, 500);
+    };
+    pollLogs();
+
     await bootAppMutation.mutateAsync({
       appId: id,
     });
+
+    // stop polling and do one last update
+    // do it once more just time
+    clearTimeout(currentPoll);
+    updateLogs();
   };
 
   const run = async (isCurrentFileTheEntryPoint?: boolean) => {
