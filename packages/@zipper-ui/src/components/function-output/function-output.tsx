@@ -40,10 +40,7 @@ const tabButtonStyles: ChakraProps = {
 export function FunctionOutput({
   result,
   level = 0,
-  setExpandedResult,
-  setModalResult,
-  setModalInputs,
-  setOverallResult,
+  showSecondaryOutput,
   getRunUrl,
   inputs,
   path,
@@ -52,10 +49,7 @@ export function FunctionOutput({
 }: FunctionOutputProps) {
   return (
     <FunctionOutputProvider
-      setExpandedResult={setExpandedResult}
-      setModalResult={setModalResult}
-      setModalInputs={setModalInputs}
-      setOverallResult={setOverallResult}
+      showSecondaryOutput={showSecondaryOutput}
       getRunUrl={getRunUrl}
       inputs={inputs}
       path={path}

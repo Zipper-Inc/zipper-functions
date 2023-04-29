@@ -243,6 +243,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
 
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [modalResult, setModalResult] = useState({ heading: '', body: '' });
+  const [modalExpandedResult, setModalExpandedResult] = useState('');
   const { expandedResult, setExpandedResult } = useAppEditSidebarContext();
   const [modalInputs, setModalInputs] = useState<{
     inputParams: InputParams;
@@ -274,14 +275,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
     return (
       <FunctionOutput
         result={results[currentScript?.filename || 'main.ts']}
-        setExpandedResult={(result) =>
-          setExpandedResult({ [currentScript?.filename || 'main.ts']: result })
-        }
-        setModalResult={setModalResult}
-        setModalInputs={setModalInputs}
-        setOverallResult={(result) =>
-          setResults({ [currentScript?.filename || 'main.ts']: result })
-        }
+        showSecondaryOutput={showActionOutput}
         getRunUrl={(scriptName: string) => {
           return getRunUrl(appSlug, lastRunVersion, scriptName);
         }}
@@ -305,31 +299,95 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
     onClose();
   }
 
+  function showActionOutput({
+    currentContext,
+    actionShowAs,
+    inputs,
+    output,
+  }: {
+    currentContext: 'main' | 'modal' | 'expanded';
+    actionShowAs: Zipper.Action['showAs'];
+    inputs?: {
+      inputParams: InputParams;
+      defaultValues: Record<string, any>;
+      path: string;
+    };
+    output?: {
+      result: any;
+      path: string;
+    };
+  }) {
+    if (output?.result) {
+      if (currentContext === 'main') {
+        if (actionShowAs === 'expanded') {
+          setExpandedResult({
+            ...expandedResult,
+            [currentScript?.filename || 'main.ts']: output.result,
+          });
+        }
+        if (actionShowAs === 'modal') setModalResult(output.result);
+        if (actionShowAs === 'refresh' || actionShowAs === 'replace_all') {
+          setResults({
+            ...results,
+            [currentScript?.filename || 'main.ts']: output.result,
+          });
+          setExpandedResult({});
+        }
+      }
+
+      if (currentContext === 'modal') {
+        if (actionShowAs === 'expanded') {
+          setModalExpandedResult(output.result);
+        } else {
+          setModalResult(output.result);
+          setModalExpandedResult('');
+        }
+      }
+
+      if (currentContext === 'expanded') {
+        if (actionShowAs === 'modal') {
+          setModalResult(output.result);
+        } else {
+          setExpandedResult({
+            ...expandedResult,
+            [currentScript?.filename || 'main.ts']: output.result,
+          });
+        }
+      }
+    }
+
+    if (inputs?.inputParams) {
+      if (actionShowAs === 'modal') {
+        setModalInputs(inputs);
+      }
+    }
+  }
+
   const functionOutputComponent = (
     secondaryResults: any,
     secondaryContext: 'modal' | 'expanded',
   ) => {
+    const showOutputs =
+      modalResult.body ||
+      expandedResult[currentScript?.filename || 'main.ts'] ||
+      modalExpandedResult;
+
+    const showInputs =
+      secondaryContext === 'modal' && !!modalInputs.inputParams;
+
     return (
       <>
-        <FunctionInputs
-          params={modalInputs.inputParams}
-          formContext={modalFormContext}
-        />
+        {showInputs && (
+          <FunctionInputs
+            params={modalInputs.inputParams}
+            formContext={modalFormContext}
+          />
+        )}
 
-        {(modalResult.body.length > 0 ||
-          expandedResult[currentScript?.filename || 'main.ts']) && (
+        {showOutputs && (
           <FunctionOutput
             result={secondaryResults}
-            setOverallResult={(result) =>
-              setResults({ [currentScript?.filename || 'main.ts']: result })
-            }
-            setModalResult={setModalResult}
-            setModalInputs={setModalInputs}
-            setExpandedResult={(result) =>
-              setExpandedResult({
-                [currentScript?.filename || 'main.ts']: result,
-              })
-            }
+            showSecondaryOutput={showActionOutput}
             getRunUrl={(scriptName: string) => {
               return getRunUrl(appSlug, undefined, scriptName);
             }}
@@ -652,7 +710,28 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
                     gap={8}
                     overflow="auto"
                   >
-                    {functionOutputComponent(modalResult.body, 'modal')}
+                    <VStack align="stretch" w="full" spacing="10">
+                      {functionOutputComponent(modalResult.body, 'modal')}
+                      {modalExpandedResult && (
+                        <Box
+                          borderLeft={'5px solid'}
+                          borderColor={'purple.300'}
+                          mt={8}
+                          pl={3}
+                          mb={4}
+                        >
+                          <Heading flexGrow={1} size="sm" ml={1}>
+                            Additional Results
+                          </Heading>
+                          <Box mt={4}>
+                            {functionOutputComponent(
+                              modalExpandedResult,
+                              'modal',
+                            )}
+                          </Box>
+                        </Box>
+                      )}
+                    </VStack>
                   </ModalBody>
                   <ModalFooter justifyContent="end">
                     <Button
@@ -684,6 +763,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
                         );
                         const text = await res.text();
 
+                        setModalExpandedResult('');
                         setModalResult({
                           heading: modalInputs.path,
                           body: text,

@@ -2,14 +2,19 @@ import { InputParams } from '@zipper/types';
 import { createContext, useContext } from 'react';
 
 export type FunctionOutputContextType = {
-  setExpandedResult: (result: any) => void;
-  setModalResult: (result: any) => void;
-  setModalInputs: ({}: {
-    inputParams: InputParams;
-    defaultValues: Zipper.Inputs;
-    path: string;
+  showSecondaryOutput: (args: {
+    currentContext: 'main' | 'modal' | 'expanded';
+    actionShowAs: Zipper.Action['showAs'];
+    inputs?: {
+      inputParams: InputParams;
+      defaultValues: Record<string, any>;
+      path: string;
+    };
+    output?: {
+      result: any;
+      path: string;
+    };
   }) => void;
-  setOverallResult: (result: any) => void;
   getRunUrl: (scriptName: string) => string;
   inputs?: Record<string, any>;
   path: string;
@@ -18,16 +23,7 @@ export type FunctionOutputContextType = {
 };
 
 export const FunctionOutputContext = createContext<FunctionOutputContextType>({
-  setExpandedResult: () => {
-    return;
-  },
-  setModalResult: () => {
-    return;
-  },
-  setModalInputs: () => {
-    return;
-  },
-  setOverallResult: () => {
+  showSecondaryOutput: () => {
     return;
   },
   getRunUrl: () => '',
@@ -39,10 +35,7 @@ export const FunctionOutputContext = createContext<FunctionOutputContextType>({
 
 const FunctionOutputProvider = ({
   children,
-  setExpandedResult,
-  setModalResult,
-  setModalInputs,
-  setOverallResult,
+  showSecondaryOutput,
   getRunUrl,
   path,
   inputs,
@@ -52,10 +45,7 @@ const FunctionOutputProvider = ({
   return (
     <FunctionOutputContext.Provider
       value={{
-        setExpandedResult,
-        setModalResult,
-        setModalInputs,
-        setOverallResult,
+        showSecondaryOutput,
         getRunUrl,
         inputs,
         path,

@@ -6,14 +6,12 @@ import { InputParam } from '@zipper/types';
 
 export function ActionButton({ action }: { action: Zipper.Action }) {
   const {
-    setModalResult,
-    setExpandedResult,
-    setOverallResult,
+    showSecondaryOutput,
     getRunUrl,
     path,
     inputs,
-    setModalInputs,
     appSlug,
+    currentContext,
   } = useContext(FunctionOutputContext);
 
   async function getScript() {
@@ -35,48 +33,36 @@ export function ActionButton({ action }: { action: Zipper.Action }) {
       });
     }
 
-    switch (action.showAs) {
-      case 'modal':
-        setModalInputs({
-          inputParams: json.data.inputs,
-          defaultValues,
-          path: action.path,
-        });
-        break;
-      default:
-        break;
-    }
+    showSecondaryOutput({
+      currentContext,
+      actionShowAs: action.showAs,
+      inputs: {
+        inputParams: json.data.inputs,
+        defaultValues,
+        path: action.path!,
+      },
+    });
   }
 
   async function runScript() {
-    const res = await fetch(
-      getRunUrl(action.showAs === 'refresh' ? path : action.path),
-      {
-        method: 'POST',
-        body: JSON.stringify(
-          action.showAs === 'refresh' ? inputs || [] : action.inputs || [],
-        ),
-        credentials: 'include',
-      },
-    );
+    const runPath = action.showAs === 'refresh' ? path : action.path;
+    const res = await fetch(getRunUrl(runPath), {
+      method: 'POST',
+      body: JSON.stringify(
+        action.showAs === 'refresh' ? inputs || [] : action.inputs || [],
+      ),
+      credentials: 'include',
+    });
     const text = await res.text();
 
-    switch (action.showAs) {
-      case 'modal':
-        setModalResult({ heading: `${action.path}`, body: text });
-        break;
-      case 'expanded':
-        setExpandedResult(text);
-        break;
-      case 'replace_all':
-        setOverallResult(text);
-        break;
-      case 'refresh':
-        setOverallResult(text);
-        break;
-      default:
-        break;
-    }
+    showSecondaryOutput({
+      currentContext,
+      actionShowAs: action.showAs,
+      output: {
+        result: text,
+        path: runPath,
+      },
+    });
   }
 
   const [isLoading, setIsLoading] = useState(false);
