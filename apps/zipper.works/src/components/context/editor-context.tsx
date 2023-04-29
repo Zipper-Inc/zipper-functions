@@ -458,14 +458,11 @@ const EditorContextProvider = ({
       const version = getAppVersionFromHash(app.hash || '');
       addLog(
         'info',
-        prettyLog(
-          {
-            topic: 'Save',
-            subtopic: `${appSlug}@${version}`,
-            badge: 'Pending',
-          },
-          { topicStyle: { background: 'black' } },
-        ),
+        prettyLog({
+          topic: 'Save',
+          subtopic: `${appSlug}@${version}`,
+          badge: 'Pending',
+        }),
       );
 
       const formatPromises = editor
@@ -513,18 +510,15 @@ const EditorContextProvider = ({
       const newVersion = getAppVersionFromHash(newApp.hash || '');
       addLog(
         'info',
-        prettyLog(
-          {
-            topic: 'Save',
-            subtopic: `${appSlug}@${newVersion}`,
-            badge: 'Done',
-            msg:
-              newVersion !== version
-                ? 'You saved a new version.'
-                : 'No changes, the version is the same.',
-          },
-          { topicStyle: { background: 'black' } },
-        ),
+        prettyLog({
+          topic: 'Save',
+          subtopic: `${appSlug}@${newVersion}`,
+          badge: 'Done',
+          msg:
+            newVersion !== version
+              ? 'You saved a new version.'
+              : 'No changes, the version is the same.',
+        }),
       );
 
       return newApp.hash;

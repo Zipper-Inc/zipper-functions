@@ -34,12 +34,17 @@ export async function build({
 
   const logger = getLogger({ appId: app.id, version });
   logger.info(
-    ...prettyLog({
-      topic: 'Deploy',
-      subtopic: appName,
-      badge: 'Pending',
-      msg: `Starting build for deploy`,
-    }),
+    ...prettyLog(
+      {
+        topic: 'Deploy',
+        subtopic: appName,
+        badge: 'Pending',
+        msg: `Starting build for deploy`,
+      },
+      {
+        topicStyle: { background: 'black' },
+      },
+    ),
   );
 
   const appFilesBaseUrl = `${baseUrl}/src`;
@@ -108,12 +113,15 @@ export async function build({
 
   const elapsedMs = performance.now() - startMs;
   logger.info(
-    ...prettyLog({
-      topic: 'Deploy',
-      subtopic: appName,
-      badge: 'Done',
-      msg: `Completed in ${Math.round(elapsedMs)}ms`,
-    }),
+    ...prettyLog(
+      {
+        topic: 'Deploy',
+        subtopic: appName,
+        badge: 'Done',
+        msg: `Completed in ${Math.round(elapsedMs)}ms`,
+      },
+      { topicStyle: { background: 'black' } },
+    ),
   );
 
   return bundle;

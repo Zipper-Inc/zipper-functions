@@ -21,8 +21,6 @@ const DEFAULT_SUBTOPIC_STYLE = {
 
 const DEFAULT_BADGE_STYLES = {
   'font-weight': 200,
-  'font-size': 'smaller',
-  height: '100%',
   color: brandColors.brandDarkPurple,
   'text-transform': 'uppercase',
 };
