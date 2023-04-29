@@ -134,7 +134,7 @@ export default async function handler(
     }
   }
 
-  const { id, name, slug, description, updatedAt, scripts } = appRun.app;
+  const { id, name, slug, description, updatedAt, scripts, hash } = appRun.app;
 
   const runInfoResult: RunInfoResult = {
     ok: true,
@@ -158,6 +158,7 @@ export default async function handler(
           orgId: undefined,
           organizations: userInfo.organizations,
         }),
+        hash,
       },
       inputs: parseInputForTypes({ code: entryPoint?.code }) || [],
       runnableScripts: scripts

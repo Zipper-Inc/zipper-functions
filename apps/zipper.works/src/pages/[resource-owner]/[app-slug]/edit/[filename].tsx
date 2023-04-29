@@ -59,7 +59,7 @@ const PlaygroundPage: NextPageWithLayout = () => {
     });
   });
 
-  const refetchApp = () => {
+  const refetchApp = async () => {
     utils.invalidateQueries([
       'app.byResourceOwnerAndAppSlugs',
       { resourceOwnerSlug, appSlug },
@@ -70,6 +70,7 @@ const PlaygroundPage: NextPageWithLayout = () => {
   const playground = withLiveBlocks(
     () => (
       <EditorContextProvider
+        app={appQuery.data}
         appId={appQuery.data?.id}
         appSlug={appQuery.data.slug}
         resourceOwnerSlug={appQuery.data.resourceOwner.slug}

@@ -4,7 +4,6 @@ import {
   TabPanels,
   TabPanel,
   VStack,
-  Divider,
   Box,
   Text,
   Progress,
@@ -31,7 +30,6 @@ import {
   FunctionUserConnectors,
 } from '@zipper/ui';
 import { useEffect, useMemo, useState } from 'react';
-import { LogLine } from '~/components/app/log-line';
 import { useRunAppContext } from '../context/run-app-context';
 import { trpc } from '~/utils/trpc';
 import { useRouter } from 'next/router';
@@ -44,6 +42,7 @@ import Link from 'next/link';
 import { HiOutlineChevronDown, HiOutlineChevronUp } from 'react-icons/hi';
 import { getAppLink } from '@zipper/utils';
 import { useAppEditSidebarContext } from '~/components/context/app-edit-sidebar-context';
+import { AppConsole } from './app-console';
 
 type AppEditSidebarProps = {
   showInputForm: boolean;
@@ -68,8 +67,6 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
   };
 
   const {
-    lastRunVersion,
-    appEventsQuery,
     formMethods,
     isRunning,
     setResults,
@@ -85,6 +82,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
     replaceCurrentScriptCode,
     inputParams,
     inputError,
+    logs,
   } = useEditorContext();
 
   const router = useRouter();
@@ -213,13 +211,6 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
     }
   }, []);
 
-  const logs = appEventsQuery?.data?.map((event: any) => event.eventPayload);
-
-  useEffect(() => {
-    // don't switch over on the intial load
-    if (lastRunVersion) setTabIndex(0);
-  }, [lastRunVersion]);
-
   const appLink = getAppLink(appSlug);
   const { onCopy } = useClipboard(
     `${appLink}${
@@ -267,14 +258,14 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
           setResults({ [currentScript?.filename || 'main.ts']: result })
         }
         getRunUrl={(scriptName: string) => {
-          return getRunUrl(appSlug, lastRunVersion, scriptName);
+          return getRunUrl(appInfo.slug, appInfo.hash, scriptName);
         }}
         path={currentScript?.filename || 'main.ts'}
         inputs={inputs}
         currentContext={'main'}
       />
     );
-  }, [results, currentScript]);
+  }, [appInfo.slug, appInfo.hash, results, currentScript]);
 
   useEffect(() => {
     if (modalResult.body) {
@@ -441,10 +432,10 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
           <HStack spacing={2}>
             {showInputForm && <TabButton title="Preview" />}
             {tips && <TabButton title="Tips" />}
-            <TabButton title="Logs" isDisabled={!logs?.length} />
+            <TabButton title="Console" />
           </HStack>
         </TabList>
-        <TabPanels as={VStack} alignItems="stretch" flex={1}>
+        <TabPanels as={VStack} alignItems="stretch" flex={1} spacing="0">
           {/* INPUT */}
           {showInputForm && (
             <TabPanel
@@ -642,23 +633,8 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
           {tips && <TabPanel flex={1}>{tips}</TabPanel>}
 
           {/* LOGS */}
-          <TabPanel flex={1}>
-            <VStack
-              spacing={0}
-              align="start"
-              fontFamily="monospace"
-              fontSize={12}
-              borderTop="1px"
-              borderColor="gray.200"
-              mt={-2}
-              ml={-4}
-              mr={-4}
-              divider={<Divider />}
-            >
-              {logs?.map((log: any, i: number) => (
-                <LogLine log={log} key={i} />
-              ))}
-            </VStack>
+          <TabPanel flex={1} p={0} mt={0}>
+            <AppConsole logs={logs} />
           </TabPanel>
         </TabPanels>
       </Tabs>

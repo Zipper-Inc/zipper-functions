@@ -10,6 +10,7 @@ import {
   formatDeploymentId,
   getAppLink,
   ZIPPER_TEMP_USER_ID_COOKIE_NAME,
+  uuid,
 } from '@zipper/utils';
 import Zipper from '@zipper/framework';
 
@@ -142,6 +143,8 @@ export async function relayRequest(
     relayUrl = new URL('/__BOOT__', relayUrl);
   }
 
+  const runId = request.headers.get('x-zipper-run-id') || uuid();
+
   const relayBody: Zipper.Relay.RequestBody = {
     appInfo: {
       id: app.id,
@@ -154,6 +157,7 @@ export async function relayRequest(
       request.method === 'GET'
         ? Object.fromEntries(relayUrl.searchParams.entries())
         : JSON.parse(await request.text()),
+    runId,
   };
 
   relayBody.userInfo = userInfo;
@@ -170,6 +174,7 @@ export async function relayRequest(
   const result = await response.text();
 
   const appRunRes = await addAppRun({
+    id: runId,
     appId: app.id,
     deploymentId,
     success: response.status === 200,

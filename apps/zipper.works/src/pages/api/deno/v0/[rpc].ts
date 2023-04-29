@@ -237,14 +237,6 @@ export default async function handler(
           .pipe(ndjson.parse())
           .on('data', async (event) => {
             console.log(event);
-            await prisma.appEvent.create({
-              data: {
-                deploymentId: event.deployment_id,
-                eventPayload: event.event,
-                eventType: event.event_type,
-                timestamp: event.timestamp,
-              },
-            });
           });
       });
 

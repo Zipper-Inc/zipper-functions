@@ -44,7 +44,14 @@ export function Playground({
 
   const { id } = app;
 
-  const { setCurrentScript, save, isSaving } = useEditorContext();
+  const {
+    setCurrentScript,
+    save,
+    isSaving,
+    addLog,
+    setLogStore,
+    preserveLogs,
+  } = useEditorContext();
 
   const mainScript = app.scripts.find(
     (script) => script.id === app.scriptMain?.scriptId,
@@ -62,14 +69,21 @@ export function Playground({
     setTabIndex(0);
   };
 
-  const onBeforeRun = async () => {
+  const saveAppBeforeRun = async () => {
     if (app.canUserEdit) {
-      await save();
+      return save();
     }
   };
 
   return (
-    <RunAppProvider app={app} onBeforeRun={onBeforeRun} onAfterRun={onAfterRun}>
+    <RunAppProvider
+      app={app}
+      saveAppBeforeRun={saveAppBeforeRun}
+      addLog={addLog}
+      setLogStore={setLogStore}
+      onAfterRun={onAfterRun}
+      preserveLogs={preserveLogs}
+    >
       <VStack flex={1} paddingX={10} alignItems="stretch" spacing={0}>
         <PlaygroundHeader app={app} />
         <Tabs

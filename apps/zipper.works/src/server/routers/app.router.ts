@@ -45,6 +45,7 @@ const defaultSelect = Prisma.validator<Prisma.AppSelect>()({
   organizationId: true,
   createdById: true,
   requiresAuthToRun: true,
+  hash: true,
 });
 
 export const defaultCode = [
@@ -575,6 +576,7 @@ export const appRouter = createRouter()
       appId: z.string().uuid(),
       formData: z.record(z.any()),
       scriptId: z.string().uuid().optional(),
+      runId: z.string().uuid(),
     }),
     async resolve({ input, ctx }) {
       const app = await prisma.app.findFirstOrThrow({
@@ -609,6 +611,7 @@ export const appRouter = createRouter()
           body: JSON.stringify(inputs),
           headers: {
             authorization: `Bearer ${await getToken()}`,
+            'x-zipper-run-id': input.runId,
           },
         },
       ).then((r) => r.text());
