@@ -46,7 +46,7 @@ import Unauthorized from './unauthorized';
 import removeAppConnectorUserAuth from '~/utils/remove-app-connector-user-auth';
 import Header from './header';
 import InputSummary from './input-summary';
-import { getShortRunId } from '~/utils/run-id';
+import { getShortRunId } from '@zipper/utils';
 import ConnectorsAuthInputsSection from './connectors-auth-inputs-section';
 import { getConnectorsAuthUrl } from '~/utils/get-connectors-auth-url';
 
