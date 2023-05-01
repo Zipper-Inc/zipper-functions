@@ -53,6 +53,8 @@ export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
     AppEditSidebarContextType['expandedResult']
   >({});
 
+  const [inputs, setInputs] = useState<AppEditSidebarContextType['inputs']>({});
+
   useCmdOrCtrl(
     'S',
     async (e: Event) => {
@@ -132,6 +134,8 @@ export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
           value={{
             expandedResult,
             setExpandedResult,
+            inputs,
+            setInputs,
           }}
         >
           <AppEditSidebar
