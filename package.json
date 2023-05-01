@@ -7,7 +7,7 @@
     "packages/*"
   ],
   "prisma": {
-    "seed": "yarn dotenv -c .env.local ts-node apps/zipper.works/prisma/seed.ts"
+    "seed": "yarn dotenv -c .env.local ts-node apps/zipper.dev/prisma/seed.ts"
   },
   "engines": {
     "node": ">=18.14.0"
