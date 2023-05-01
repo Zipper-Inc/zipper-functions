@@ -24,6 +24,10 @@ import { getPathFromUri, getUriFromPath } from '~/utils/model-uri';
 import { InputParam } from '@zipper/types';
 import { parseCode } from '~/utils/parse-code';
 import debounce from 'lodash.debounce';
+import { uuid } from '@zipper/utils';
+import { prettyLog } from '~/utils/pretty-log';
+import { AppQueryOutput } from '~/types/trpc';
+import { getAppVersionFromHash } from '~/utils/hashing';
 
 export type EditorContextType = {
   currentScript?: Script;
@@ -44,13 +48,22 @@ export type EditorContextType = {
   isEditorDirty: () => boolean;
   isSaving: boolean;
   setIsSaving: (isSaving: boolean) => void;
-  save: () => Promise<void>;
+  save: () => Promise<void | string | null | undefined>;
   refetchApp: VoidFunction;
   replaceCurrentScriptCode: (code: string) => void;
   inputParams?: InputParam[];
   setInputParams: (inputParams: InputParam[]) => void;
   inputError?: string;
   monacoRef?: MutableRefObject<Monaco | undefined>;
+  logs: Zipper.Log.Message[];
+  preserveLogs: boolean;
+  setPreserveLogs: (v: boolean) => void;
+  addLog: (method: Zipper.Log.Method, data: Zipper.Serializable[]) => void;
+  setLogStore: (
+    cb: (
+      n: Record<string, Zipper.Log.Message[]>,
+    ) => Record<string, Zipper.Log.Message[]>,
+  ) => void;
 };
 
 export const EditorContext = createContext<EditorContextType>({
@@ -75,6 +88,11 @@ export const EditorContext = createContext<EditorContextType>({
   setInputParams: noop,
   inputError: undefined,
   monacoRef: undefined,
+  logs: [],
+  preserveLogs: true,
+  setPreserveLogs: noop,
+  addLog: noop,
+  setLogStore: noop,
 });
 
 const MAX_RETRIES_FOR_EXTERNAL_IMPORT = 3;
@@ -206,6 +224,7 @@ const handleExternalImportsDebounced = debounce(
 );
 
 const EditorContextProvider = ({
+  app,
   children,
   appId,
   appSlug,
@@ -213,12 +232,13 @@ const EditorContextProvider = ({
   initialScripts,
   refetchApp,
 }: {
+  app: AppQueryOutput;
   children: any;
   appId: string | undefined;
   appSlug: string | undefined;
   resourceOwnerSlug: string | undefined;
   initialScripts: Script[];
-  refetchApp: VoidFunction;
+  refetchApp: () => Promise<void>;
 }) => {
   const [currentScript, setCurrentScript] = useState<Script | undefined>(
     undefined,
@@ -370,6 +390,38 @@ const EditorContextProvider = ({
 
   const self = useSelf();
 
+  // LOGS
+  const [preserveLogs, setPreserveLogs] = useState(true);
+  const [logs, setLogs] = useState<Zipper.Log.Message[]>([]);
+  const [logStore, setLogStore] = useState<
+    Record<string, Zipper.Log.Message[]>
+  >({});
+
+  useEffect(() => {
+    const newLogs: Zipper.Log.Message[] = [];
+    setLogs(
+      newLogs
+        .concat(...Object.values(logStore))
+        .sort((a, b) => a.timestamp - b.timestamp),
+    );
+  }, [logStore]);
+
+  const addLog = (method: Zipper.Log.Method, data: Zipper.Serializable[]) => {
+    const newLog = {
+      id: uuid(),
+      method,
+      data,
+      timestamp: Date.now(),
+    };
+
+    setLogStore((prev) => {
+      const local = prev.local || [];
+      local.push(newLog);
+      return { ...prev, local };
+    });
+  };
+  // END LOGS
+
   const replaceCurrentScriptCode = (code: string) => {
     if (currentScript) {
       setCurrentScript({ ...currentScript, code });
@@ -403,6 +455,15 @@ const EditorContextProvider = ({
   const saveOpenModels = async () => {
     if (appId && currentScript) {
       setIsSaving(true);
+      const version = getAppVersionFromHash(app.hash || '');
+      addLog(
+        'info',
+        prettyLog({
+          topic: 'Save',
+          subtopic: `${appSlug}@${version}`,
+          badge: 'Pending',
+        }),
+      );
 
       const formatPromises = editor
         ?.getEditors()
@@ -429,7 +490,7 @@ const EditorContextProvider = ({
         }, {} as Record<string, boolean>),
       );
 
-      await editAppMutation.mutateAsync({
+      const newApp = await editAppMutation.mutateAsync({
         id: appId,
         data: {
           scripts: scripts.map((script: any) => ({
@@ -443,7 +504,24 @@ const EditorContextProvider = ({
         },
       });
 
+      refetchApp();
       setIsSaving(false);
+
+      const newVersion = getAppVersionFromHash(newApp.hash || '');
+      addLog(
+        'info',
+        prettyLog({
+          topic: 'Save',
+          subtopic: `${appSlug}@${newVersion}`,
+          badge: 'Done',
+          msg:
+            newVersion !== version
+              ? 'You saved a new version.'
+              : 'No changes, the version is the same.',
+        }),
+      );
+
+      return newApp.hash;
     }
   };
 
@@ -487,6 +565,11 @@ const EditorContextProvider = ({
         setInputParams,
         inputError,
         monacoRef,
+        logs,
+        addLog,
+        setLogStore,
+        preserveLogs,
+        setPreserveLogs,
       }}
     >
       {children}

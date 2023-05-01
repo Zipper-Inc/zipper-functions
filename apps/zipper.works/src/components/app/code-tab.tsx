@@ -47,8 +47,8 @@ type CodeTabProps = {
 };
 
 export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
-  const { currentScript, save, onChange } = useEditorContext();
-  const { isRunning, run, boot } = useRunAppContext();
+  const { currentScript, onChange } = useEditorContext();
+  const { isRunning, run, boot: saveAndBoot } = useRunAppContext();
   const [expandedResult, setExpandedResult] = useState<
     AppEditSidebarContextType['expandedResult']
   >({});
@@ -57,8 +57,7 @@ export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
     'S',
     async (e: Event) => {
       e.preventDefault();
-      await save();
-      boot();
+      await saveAndBoot();
     },
     [],
   );

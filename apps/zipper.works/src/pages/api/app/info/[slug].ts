@@ -124,6 +124,7 @@ export default async function handler(
     lastDeploymentVersion,
     scriptMain,
     scripts,
+    hash,
   } = appFound;
 
   let entryPoint: Script | undefined = undefined;
@@ -163,6 +164,7 @@ export default async function handler(
           orgId: undefined,
           organizations: userInfo.organizations,
         }),
+        hash,
       },
       inputs: parsedCode.inputs || [],
       metadata: {
