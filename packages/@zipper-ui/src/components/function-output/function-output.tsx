@@ -31,7 +31,7 @@ import { useEffect, useState } from 'react';
 import { getInputsFromFormData } from '@zipper/utils';
 import { FunctionInputs } from '../function-inputs';
 import { useForm } from 'react-hook-form';
-import { useApplet } from '@zipper/ui';
+import { useAppletContent } from '@zipper/ui';
 import { InputParams } from '@zipper/types';
 
 const tabsStyles: ChakraProps = { display: 'flex', flexDir: 'column', gap: 0 };
@@ -68,7 +68,7 @@ export function FunctionOutput({
   const [isExpandedResultOpen, setIsExpandedResultOpen] = useState(true);
   const { isOpen, onOpen, onClose } = useDisclosure();
 
-  const modalApplet = useApplet();
+  const modalApplet = useAppletContent();
   const modalFormContext = useForm();
   const expandedFormContext = useForm();
 
@@ -330,7 +330,7 @@ export function FunctionOutput({
                     pl={3}
                     mb={4}
                   >
-                    <HStack align={'center'} mt={2}>
+                    <HStack align={'center'} my={2}>
                       <Heading flexGrow={1} size="sm" ml={1}>
                         Additional Results
                       </Heading>

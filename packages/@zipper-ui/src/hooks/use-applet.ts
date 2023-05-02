@@ -1,9 +1,13 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { AppletReturnType, AppletPanel, InputParams } from '@zipper/types';
+import {
+  AppletContentReturnType,
+  AppletContentPanel,
+  InputParams,
+} from '@zipper/types';
 import { useEffect, useState } from 'react';
 
-export const useApplet = (): AppletReturnType => {
-  const [panels, setPanels] = useState<AppletPanel[]>([]);
+export const useAppletContent = (): AppletContentReturnType => {
+  const [panels, setPanels] = useState<AppletContentPanel[]>([]);
   const [currentPanelIndex, setCurrentPanelIndex] = useState(0);
   const [inputs, setInputs] = useState<InputParams>();
   const [output, setOutput] = useState<string | undefined>();

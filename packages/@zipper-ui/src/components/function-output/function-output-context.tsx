@@ -1,4 +1,4 @@
-import { AppletReturnType, InputParams } from '@zipper/types';
+import { AppletContentReturnType, InputParams } from '@zipper/types';
 import { createContext, useContext } from 'react';
 
 export type FunctionOutputContextType = {
@@ -16,60 +16,13 @@ export type FunctionOutputContextType = {
   getRunUrl: (scriptName: string) => string;
   currentContext: 'main' | 'modal';
   appSlug: string;
-  applet: AppletReturnType;
-  modalApplet: AppletReturnType;
+  applet: AppletContentReturnType;
+  modalApplet: AppletContentReturnType;
 };
 
-export const FunctionOutputContext = createContext<FunctionOutputContextType>({
-  showSecondaryOutput: () => {
-    return;
-  },
-  getRunUrl: () => '',
-  currentContext: 'main',
-  appSlug: '',
-  applet: {
-    setInputs: () => {
-      return;
-    },
-    setOutput: () => {
-      return;
-    },
-    setExpandedInputs: () => {
-      return;
-    },
-    setExpandedOutput: () => {
-      return;
-    },
-    setPath: () => {
-      return;
-    },
-    addPanel: () => {
-      return;
-    },
-    path: '',
-  },
-  modalApplet: {
-    setInputs: () => {
-      return;
-    },
-    setOutput: () => {
-      return;
-    },
-    setExpandedInputs: () => {
-      return;
-    },
-    setExpandedOutput: () => {
-      return;
-    },
-    setPath: () => {
-      return;
-    },
-    addPanel: () => {
-      return;
-    },
-    path: '',
-  },
-});
+export const FunctionOutputContext = createContext<
+  FunctionOutputContextType | undefined
+>(undefined);
 
 const FunctionOutputProvider = ({
   children,

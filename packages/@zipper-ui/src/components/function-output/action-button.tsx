@@ -1,7 +1,10 @@
 import { Button, Flex, Spinner } from '@chakra-ui/react';
 import { useContext, useState } from 'react';
 import { normalizeAppPath } from '@zipper/utils';
-import { FunctionOutputContext } from './function-output-context';
+import {
+  FunctionOutputContext,
+  FunctionOutputContextType,
+} from './function-output-context';
 import { InputParam } from '@zipper/types';
 
 export function ActionButton({ action }: { action: Zipper.Action }) {
@@ -12,7 +15,7 @@ export function ActionButton({ action }: { action: Zipper.Action }) {
     currentContext,
     applet,
     modalApplet,
-  } = useContext(FunctionOutputContext);
+  } = useContext(FunctionOutputContext) as FunctionOutputContextType;
 
   async function getScript() {
     const res = await fetch(`/api/app/info/${appSlug}`, {

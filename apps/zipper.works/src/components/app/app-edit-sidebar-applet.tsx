@@ -1,5 +1,5 @@
 import { Box, Heading, VStack, Button, Progress, Text } from '@chakra-ui/react';
-import { FunctionInputs, FunctionOutput, useApplet } from '@zipper/ui';
+import { FunctionInputs, FunctionOutput, useAppletContent } from '@zipper/ui';
 import { useEffect, useMemo } from 'react';
 import getRunUrl from '~/utils/get-run-url';
 import { addParamToCode } from '~/utils/parse-code';
@@ -25,7 +25,7 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
     inputError,
   } = useEditorContext();
 
-  const mainApplet = useApplet();
+  const mainApplet = useAppletContent();
 
   useEffect(() => {
     mainApplet.mainContent.set({
