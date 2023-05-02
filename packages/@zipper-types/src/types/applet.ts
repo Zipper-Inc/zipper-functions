@@ -6,22 +6,30 @@ export interface InputParamWithValue extends InputParam {
 
 export type AppletPanel = {
   inputs?: InputParamWithValue[];
-  output?: Record<string, string>;
-  expandedInputs?: InputParamWithValue[];
-  expandedOutput?: Record<string, string>;
+  output?: string;
   path: string;
+  expandedInputs?: InputParamWithValue[];
+  expandedOutput?: string;
+  expandedPath?: string;
 };
 
 export type AppletReturnType = {
   inputs?: InputParamWithValue[];
   setInputs: (input: InputParamWithValue[] | undefined) => void;
-  output?: Record<string, any>;
-  setOutput: (output: Record<string, string> | undefined) => void;
-  expandedInputs?: InputParamWithValue[];
-  setExpandedInputs: (input: InputParamWithValue[] | undefined) => void;
-  expandedOutput?: Record<string, any>;
-  setExpandedOutput: (output: Record<string, string> | undefined) => void;
+  output?: string;
+  setOutput: (output?: string) => void;
   path: string;
   setPath: (path: string) => void;
-  addPanel: () => void;
+  expandedInputs?: InputParamWithValue[];
+  setExpandedInputs: (input: InputParamWithValue[] | undefined) => void;
+  expandedOutput?: string;
+  setExpandedOutput: (output?: string) => void;
+  expandedPath?: string;
+  setExpandedPath: (path?: string) => void;
+  addPanel: (path: string) => void;
+  reset: () => void;
+  isLoading: boolean;
+  setIsLoading: (bool: boolean) => void;
+  isExpandedLoading: boolean;
+  setIsExpandedLoading: (bool: boolean) => void;
 };

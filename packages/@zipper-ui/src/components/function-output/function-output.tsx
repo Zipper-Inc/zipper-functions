@@ -19,6 +19,7 @@ import {
   ModalOverlay,
   useDisclosure,
   VStack,
+  Spinner,
 } from '@chakra-ui/react';
 import { FunctionOutputProps } from './types';
 import { RawFunctionOutput } from './raw-function-output';
@@ -69,18 +70,13 @@ export function FunctionOutput({
 
   const modalApplet = useApplet();
   const modalFormContext = useForm();
-
-  // useEffect(() => {
-  //   const defaultValues: Record<string, any> = {};
-  //   modalApplet.inputs?.forEach((i) => (defaultValues[i.key] = i.defaultValue));
-  //   modalFormContext.reset(defaultValues);
-  // }, []);
+  const expandedFormContext = useForm();
 
   useEffect(() => {
     if (modalApplet.inputs) {
       const defaultValues: Record<string, any> = {};
       modalApplet.inputs?.forEach(
-        (i) => (defaultValues[i.key] = i.defaultValue),
+        (i) => (defaultValues[`${i.key}:${i.type}`] = i.defaultValue),
       );
       modalFormContext.reset(defaultValues);
     }
@@ -90,98 +86,174 @@ export function FunctionOutput({
     }
   }, [modalApplet.output, modalApplet.inputs]);
 
+  useEffect(() => {
+    if (applet.expandedInputs) {
+      const defaultValues: Record<string, any> = {};
+      applet.expandedInputs?.forEach(
+        (i) => (defaultValues[`${i.key}:${i.type}`] = i.defaultValue),
+      );
+      expandedFormContext.reset(defaultValues);
+    }
+  }, [applet.expandedInputs, applet.expandedOutput]);
+
   function showSecondaryOutput({
-    currentContext,
     actionShowAs,
     inputs,
     output,
+    path,
   }: {
-    currentContext: 'main' | 'modal' | 'expanded';
     actionShowAs: Zipper.Action['showAs'];
     inputs?: {
       inputParams: InputParams;
       defaultValues: Record<string, any>;
-      path: string;
     };
     output?: {
-      result: any;
-      path: string;
+      result: string;
     };
+    path: string;
   }) {
-    if (!applet || !modalApplet || !applet.path || !modalApplet.path) return;
-    if (output?.result) {
-      if (currentContext === 'main') {
-        if (actionShowAs === 'expanded') {
-          applet.setExpandedOutput({
-            ...applet.expandedOutput,
-            [applet.path]: output.result,
-          });
+    if (currentContext === 'main') {
+      switch (actionShowAs) {
+        case 'expanded': {
+          applet.setExpandedInputs(inputs?.inputParams);
+          applet.setExpandedOutput(output?.result);
+          applet.setExpandedPath(path);
+          break;
         }
-        if (actionShowAs === 'modal')
-          modalApplet.setOutput({
-            ...modalApplet.output,
-            [modalApplet.path]: output.result,
-          });
-        if (actionShowAs === 'refresh' || actionShowAs === 'replace_all') {
-          applet.setOutput({
-            ...applet.output,
-            [applet.path]: output.result,
-          });
-          applet.setExpandedOutput({
-            ...applet.expandedOutput,
-            [applet.path]: '',
-          });
+        case 'modal': {
+          modalApplet.setInputs(inputs?.inputParams);
+          modalApplet.setOutput(output?.result);
+          modalApplet.setPath(path);
+          break;
+        }
+        default: {
+          applet.addPanel(path);
+          applet.setOutput(output?.result);
+          applet.setInputs(inputs?.inputParams);
         }
       }
-
-      if (currentContext === 'modal') {
-        if (actionShowAs === 'expanded') {
-          modalApplet.setExpandedOutput({
-            ...modalApplet.expandedOutput,
-            [modalApplet.path]: output.result,
-          });
-        } else {
-          modalApplet.setOutput({
-            ...modalApplet.setOutput,
-            [modalApplet.path]: output.result,
-          });
-          modalApplet.setExpandedOutput({
-            ...modalApplet.expandedOutput,
-            [modalApplet.path]: '',
-          });
+    } else {
+      switch (actionShowAs) {
+        case 'expanded': {
+          applet.setExpandedInputs(inputs?.inputParams);
+          applet.setExpandedOutput(output?.result);
+          applet.setExpandedPath(path);
+          break;
         }
-      }
-
-      if (currentContext === 'expanded') {
-        if (actionShowAs === 'modal') {
-          modalApplet.setOutput({
-            ...modalApplet.setOutput,
-            [modalApplet.path]: output.result,
-          });
-        } else {
-          applet.setExpandedOutput({
-            ...applet.expandedOutput,
-            [applet.path]: output.result,
-          });
+        case 'modal': {
+          applet.addPanel(path);
+          applet.setInputs(inputs?.inputParams);
+          applet.setOutput(output?.result);
+          break;
         }
-      }
-    }
-
-    if (inputs) {
-      if (actionShowAs === 'modal') {
-        modalApplet.setInputs(inputs?.inputParams);
+        default: {
+          applet.addPanel(path);
+          applet.setInputs(inputs?.inputParams);
+          applet.setOutput(output?.result);
+        }
       }
     }
   }
+
+  const expandedOutputComponent = () => {
+    return (
+      <>
+        {applet.expandedInputs && (
+          <Box mb="10">
+            <FunctionInputs
+              params={applet.expandedInputs}
+              formContext={expandedFormContext}
+            />
+
+            <Button
+              colorScheme="purple"
+              isDisabled={applet.isExpandedLoading}
+              onClick={async () => {
+                if (!applet.expandedPath) return;
+                applet.setIsExpandedLoading(true);
+                const values = getInputsFromFormData(
+                  expandedFormContext.getValues(),
+                  applet.expandedInputs || [],
+                );
+                const res = await fetch(getRunUrl(applet.expandedPath), {
+                  method: 'POST',
+                  body: JSON.stringify(values),
+                  credentials: 'include',
+                });
+                const text = await res.text();
+
+                applet.setExpandedOutput(text);
+                applet.setIsExpandedLoading(false);
+              }}
+            >
+              {applet.isExpandedLoading ? <Spinner /> : <>Run</>}
+            </Button>
+          </Box>
+        )}
+        {applet.expandedOutput && (
+          <Tabs colorScheme="purple" variant="enclosed" {...tabsStyles}>
+            <TabList {...tablistStyles}>
+              <Tab {...tabButtonStyles}>Results</Tab>
+              <Tab {...tabButtonStyles}>Raw Output</Tab>
+            </TabList>
+            <TabPanels
+              border="1px solid"
+              borderColor="gray.200"
+              borderBottomRadius={'md'}
+            >
+              <TabPanel>
+                <Box overflow="auto">
+                  <Box width="max-content" data-function-output="smart">
+                    <SmartFunctionOutput
+                      result={applet.expandedOutput}
+                      level={0}
+                    />
+                  </Box>
+                </Box>
+              </TabPanel>
+              <TabPanel backgroundColor="gray.100">
+                <RawFunctionOutput result={applet?.output} />
+              </TabPanel>
+            </TabPanels>
+          </Tabs>
+        )}
+      </>
+    );
+  };
 
   const modalOutputComponent = () => {
     return (
       <>
         {modalApplet.inputs && (
-          <FunctionInputs
-            params={modalApplet.inputs}
-            formContext={modalFormContext}
-          />
+          <Box>
+            <FunctionInputs
+              params={modalApplet.inputs}
+              formContext={modalFormContext}
+            />
+            <Button
+              colorScheme="purple"
+              isDisabled={modalApplet.isLoading}
+              onClick={async () => {
+                modalApplet.setIsLoading(true);
+                const values = getInputsFromFormData(
+                  modalFormContext.getValues(),
+                  modalApplet.inputs || [],
+                );
+                const res = await fetch(getRunUrl(modalApplet.path), {
+                  method: 'POST',
+                  body: JSON.stringify(values),
+                  credentials: 'include',
+                });
+                const text = await res.text();
+
+                modalApplet.setExpandedOutput(undefined);
+                modalApplet.setOutput(text);
+                modalApplet.setIsLoading(false);
+              }}
+            >
+              {modalApplet.isLoading ? <Spinner /> : <>Run</>}
+            </Button>
+          </Box>
         )}
 
         {modalApplet.output && (
@@ -197,17 +269,10 @@ export function FunctionOutput({
   };
 
   function closeModal() {
-    modalApplet.setOutput(undefined);
-    modalApplet.setInputs(undefined);
+    modalApplet.reset();
     onClose();
   }
-  const path = applet?.path || 'main.ts';
   if (!applet?.output || !applet?.inputs) return <></>;
-  if (
-    Object.keys(applet?.output || {}).length === 0 ||
-    (applet?.inputs || []).length === 0
-  )
-    return <></>;
 
   return (
     <FunctionOutputProvider
@@ -220,7 +285,7 @@ export function FunctionOutput({
     >
       <ErrorBoundary
         // this makes sure we render a new boundary with a new result set
-        key={JSON.stringify(applet?.output[path])}
+        key={applet?.output}
         fallback={
           <Tabs colorScheme="purple" variant="enclosed" {...tabsStyles}>
             <TabList {...tablistStyles}>
@@ -232,7 +297,7 @@ export function FunctionOutput({
               borderBottomRadius={'md'}
             >
               <TabPanel backgroundColor="gray.100">
-                <RawFunctionOutput result={applet?.output[path]} />
+                <RawFunctionOutput result={applet?.output} />
               </TabPanel>
             </TabPanels>
           </Tabs>
@@ -253,13 +318,13 @@ export function FunctionOutput({
                 <Box overflow="auto">
                   <Box width="max-content" data-function-output="smart">
                     <SmartFunctionOutput
-                      result={applet?.output[path]}
+                      result={applet?.output}
                       level={level}
                     />
                   </Box>
                 </Box>
 
-                {applet?.expandedOutput && (
+                {(applet?.expandedOutput || applet?.expandedInputs) && (
                   <Box
                     borderLeft={'5px solid'}
                     borderColor={'purple.300'}
@@ -285,49 +350,12 @@ export function FunctionOutput({
                         }
                       />
                     </HStack>
-                    {isExpandedResultOpen && (
-                      <Box mt={4}>
-                        <Tabs
-                          colorScheme="purple"
-                          variant="enclosed"
-                          {...tabsStyles}
-                        >
-                          <TabList {...tablistStyles}>
-                            <Tab {...tabButtonStyles}>Results</Tab>
-                            <Tab {...tabButtonStyles}>Raw Output</Tab>
-                          </TabList>
-                          <TabPanels
-                            border="1px solid"
-                            borderColor="gray.200"
-                            borderBottomRadius={'md'}
-                          >
-                            <TabPanel>
-                              <Box overflow="auto">
-                                <Box
-                                  width="max-content"
-                                  data-function-output="smart"
-                                >
-                                  <SmartFunctionOutput
-                                    result={applet.expandedOutput}
-                                    level={0}
-                                  />
-                                </Box>
-                              </Box>
-                            </TabPanel>
-                            <TabPanel backgroundColor="gray.100">
-                              <RawFunctionOutput
-                                result={applet?.output[path]}
-                              />
-                            </TabPanel>
-                          </TabPanels>
-                        </Tabs>
-                      </Box>
-                    )}
+                    {isExpandedResultOpen && <>{expandedOutputComponent()}</>}
                   </Box>
                 )}
               </TabPanel>
               <TabPanel backgroundColor="gray.100">
-                <RawFunctionOutput result={applet?.output[path]} />
+                <RawFunctionOutput result={applet?.output} />
               </TabPanel>
             </TabPanels>
           </Tabs>
@@ -353,38 +381,7 @@ export function FunctionOutput({
                     {modalOutputComponent()}
                   </VStack>
                 </ModalBody>
-                <ModalFooter justifyContent="end">
-                  <Button
-                    variant="outline"
-                    onClick={closeModal}
-                    mr="3"
-                    fontWeight="medium"
-                  >
-                    Close
-                  </Button>
-                  <Button
-                    colorScheme="purple"
-                    onClick={async () => {
-                      const values = getInputsFromFormData(
-                        modalFormContext.getValues(),
-                        modalApplet.inputs || [],
-                      );
-                      const res = await fetch(getRunUrl(modalApplet.path), {
-                        method: 'POST',
-                        body: JSON.stringify(values),
-                        credentials: 'include',
-                      });
-                      const text = await res.text();
-
-                      modalApplet.setExpandedOutput({});
-                      modalApplet.setOutput({
-                        [modalApplet.path]: text,
-                      });
-                    }}
-                  >
-                    Run
-                  </Button>
-                </ModalFooter>
+                <ModalFooter justifyContent="end"></ModalFooter>
               </ModalContent>
             </Modal>
           )}

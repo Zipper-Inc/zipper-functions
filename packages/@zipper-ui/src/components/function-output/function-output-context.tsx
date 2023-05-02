@@ -3,17 +3,15 @@ import { createContext, useContext } from 'react';
 
 export type FunctionOutputContextType = {
   showSecondaryOutput: (args: {
-    currentContext: 'main' | 'modal' | 'expanded';
     actionShowAs: Zipper.Action['showAs'];
     inputs?: {
       inputParams: InputParams;
       defaultValues: Record<string, any>;
-      path: string;
     };
     output?: {
-      result: any;
-      path: string;
+      result: string;
     };
+    path: string;
   }) => void;
   getRunUrl: (scriptName: string) => string;
   currentContext: 'main' | 'modal';

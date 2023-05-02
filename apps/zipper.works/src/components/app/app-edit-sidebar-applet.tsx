@@ -28,9 +28,7 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
   const mainApplet = useApplet();
 
   useEffect(() => {
-    const output: Record<string, any> = {};
-    Object.keys(results).map((k) => (output[k] = JSON.parse(results[k] || '')));
-    mainApplet.setOutput(output);
+    mainApplet.setOutput(results[currentScript?.filename]);
   }, [results]);
 
   useEffect(() => {

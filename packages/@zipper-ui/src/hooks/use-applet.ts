@@ -10,36 +10,45 @@ export const useApplet = (): AppletReturnType => {
   const [panels, setPanels] = useState<AppletPanel[]>([]);
   const [currentPanelIndex, setCurrentPanelIndex] = useState(0);
   const [inputs, setInputs] = useState<InputParamWithValue[]>();
-  const [output, setOutput] = useState<Record<string, string> | undefined>();
+  const [output, setOutput] = useState<string | undefined>();
   const [expandedInputs, setExpandedInputs] = useState<InputParamWithValue[]>();
-  const [expandedOutput, setExpandedOutput] = useState<
-    Record<string, string> | undefined
-  >();
+  const [expandedOutput, setExpandedOutput] = useState<string | undefined>();
+  const [expandedPath, setExpandedPath] = useState<string | undefined>();
   const [path, setPath] = useState<string>('main.ts');
+
+  const [isLoading, setIsLoading] = useState(false);
+  const [isExpandedLoading, setIsExpandedLoading] = useState(false);
 
   useEffect(() => {
     panels[currentPanelIndex] = {
       inputs,
       output,
+      path,
       expandedInputs,
       expandedOutput,
-      path,
+      expandedPath,
     };
-  }, [inputs, output, expandedInputs, expandedOutput, path]);
+  }, [inputs, output, path, expandedInputs, expandedOutput, expandedPath]);
 
   useEffect(() => {
     if (panels[currentPanelIndex]) {
       setInputs(panels[currentPanelIndex]?.inputs);
       setOutput(panels[currentPanelIndex]?.output);
+      setPath(panels[currentPanelIndex]!.path);
       setExpandedInputs(panels[currentPanelIndex]?.expandedInputs);
       setExpandedOutput(panels[currentPanelIndex]?.expandedOutput);
-      setPath(panels[currentPanelIndex]!.path);
+      setExpandedPath(panels[currentPanelIndex]!.expandedPath);
     }
   }, [currentPanelIndex]);
 
-  const addPanel = () => {
+  const addPanel = (path: string) => {
     setCurrentPanelIndex(panels.length + 1);
-    setPanels([...panels, { path: 'main.ts' }]);
+    setPanels([...panels, { path }]);
+  };
+
+  const reset = () => {
+    setPanels([]);
+    setCurrentPanelIndex(0);
   };
 
   return {
@@ -47,12 +56,19 @@ export const useApplet = (): AppletReturnType => {
     setInputs,
     output,
     setOutput,
+    path,
+    setPath,
     expandedInputs,
     setExpandedInputs,
     expandedOutput,
     setExpandedOutput,
-    path,
-    setPath,
+    expandedPath,
+    setExpandedPath,
     addPanel,
+    reset,
+    isLoading,
+    setIsLoading,
+    isExpandedLoading,
+    setIsExpandedLoading,
   };
 };
