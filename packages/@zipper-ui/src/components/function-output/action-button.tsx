@@ -49,12 +49,17 @@ export function ActionButton({ action }: { action: Zipper.Action }) {
   async function runScript() {
     const currentApplet = currentContext === 'main' ? applet : modalApplet;
     const runPath =
-      action.showAs === 'refresh' ? currentApplet?.path : action.path;
+      action.showAs === 'refresh'
+        ? currentApplet?.mainContent.path
+        : action.path;
+
+    console.log(runPath);
+
     const res = await fetch(getRunUrl(runPath || 'main.ts'), {
       method: 'POST',
       body: JSON.stringify(
         action.showAs === 'refresh'
-          ? currentApplet?.inputs || []
+          ? currentApplet?.mainContent.inputs || []
           : action.inputs || [],
       ),
       credentials: 'include',
@@ -66,7 +71,7 @@ export function ActionButton({ action }: { action: Zipper.Action }) {
       output: {
         result: text,
       },
-      path: action.path || currentApplet.path,
+      path: action.path || currentApplet.mainContent.path,
     });
   }
 

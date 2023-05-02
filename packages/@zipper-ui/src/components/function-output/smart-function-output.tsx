@@ -223,8 +223,10 @@ export function SmartFunctionOutput({
     case OutputType.Object:
       return <ObjectExplorer data={data} level={level} />;
 
-    case OutputType.Action:
+    case OutputType.Action: {
+      if (data.run === undefined) data.run = true;
       return <ActionComponent action={data} />;
+    }
 
     case OutputType.ActionArray:
       return data.map((action: any) => <ActionComponent action={action} />);

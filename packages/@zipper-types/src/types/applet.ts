@@ -1,35 +1,37 @@
-import { InputParam } from './input-params';
-
-export interface InputParamWithValue extends InputParam {
-  value?: string;
-}
+import { InputParams } from './app-info';
 
 export type AppletPanel = {
-  inputs?: InputParamWithValue[];
+  inputs?: InputParams;
   output?: string;
   path: string;
-  expandedInputs?: InputParamWithValue[];
+  expandedInputs?: InputParams;
   expandedOutput?: string;
   expandedPath?: string;
 };
 
 export type AppletReturnType = {
-  inputs?: InputParamWithValue[];
-  setInputs: (input: InputParamWithValue[] | undefined) => void;
-  output?: string;
-  setOutput: (output?: string) => void;
-  path: string;
-  setPath: (path: string) => void;
-  expandedInputs?: InputParamWithValue[];
-  setExpandedInputs: (input: InputParamWithValue[] | undefined) => void;
-  expandedOutput?: string;
-  setExpandedOutput: (output?: string) => void;
-  expandedPath?: string;
-  setExpandedPath: (path?: string) => void;
-  addPanel: (path: string) => void;
+  mainContent: {
+    inputs?: InputParams;
+    output?: string;
+    path: string;
+    isLoading: boolean;
+    setIsLoading: (bool: boolean) => void;
+    set: ({}: { path?: string; inputs?: InputParams; output?: string }) => void;
+  };
+  expandedContent: {
+    inputs?: InputParams;
+    output?: string;
+    path?: string;
+    isLoading: boolean;
+    setIsLoading: (bool: boolean) => void;
+    set: ({}: { path?: string; inputs?: InputParams; output?: string }) => void;
+  };
+  addPanel: ({}: {
+    path: string;
+    inputs?: InputParams;
+    output?: string;
+  }) => void;
   reset: () => void;
-  isLoading: boolean;
-  setIsLoading: (bool: boolean) => void;
-  isExpandedLoading: boolean;
-  setIsExpandedLoading: (bool: boolean) => void;
+  goBack: () => void;
+  numberOfPanels: () => number;
 };

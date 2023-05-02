@@ -28,17 +28,19 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
   const mainApplet = useApplet();
 
   useEffect(() => {
-    mainApplet.setOutput(results[currentScript?.filename]);
+    mainApplet.mainContent.set({
+      output: results[currentScript?.filename || 'main.ts'],
+    });
   }, [results]);
 
   useEffect(() => {
-    mainApplet.setInputs(inputParams);
+    mainApplet.mainContent.set({ inputs: inputParams });
   }, [inputParams]);
 
   const isHandler = inputParams || inputError;
 
   const output = useMemo(() => {
-    mainApplet.setPath(currentScript?.filename || 'main.ts');
+    mainApplet.mainContent.set({ path: currentScript?.filename || 'main.ts' });
     return (
       <FunctionOutput
         applet={mainApplet}
@@ -49,7 +51,7 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
         appSlug={appInfo.slug}
       />
     );
-  }, [mainApplet.output, currentScript]);
+  }, [mainApplet.mainContent.output, currentScript]);
 
   const handleAddInput = () => {
     if (currentScriptLive && currentScript) {
@@ -71,7 +73,8 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
         borderColor="gray.200"
       >
         <>
-          {mainApplet.inputs?.length || userAuthConnectors?.length ? (
+          {mainApplet.mainContent.inputs?.length ||
+          userAuthConnectors?.length ? (
             <>
               <Heading size="sm" mb="2">
                 Inputs
@@ -79,9 +82,9 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
               {userAuthConnectors.length > 0 && (
                 <AppEditSidebarAppletConnectors />
               )}
-              {mainApplet.inputs && (
+              {mainApplet.mainContent.inputs && (
                 <FunctionInputs
-                  params={mainApplet.inputs}
+                  params={mainApplet.mainContent.inputs}
                   formContext={formMethods}
                 />
               )}
@@ -138,7 +141,9 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
         )}
       </Box>
 
-      {currentScript && mainApplet.output && <Box mt={4}>{output}</Box>}
+      {currentScript && mainApplet.mainContent.output && (
+        <Box mt={4}>{output}</Box>
+      )}
     </>
   );
 };
