@@ -5,14 +5,8 @@ import { FunctionOutputContext } from './function-output-context';
 import { InputParam } from '@zipper/types';
 
 export function ActionButton({ action }: { action: Zipper.Action }) {
-  const {
-    showSecondaryOutput,
-    getRunUrl,
-    path,
-    inputs,
-    appSlug,
-    currentContext,
-  } = useContext(FunctionOutputContext);
+  const { showSecondaryOutput, getRunUrl, appSlug, currentContext, applet } =
+    useContext(FunctionOutputContext);
 
   async function getScript() {
     const res = await fetch(`/api/app/info/${appSlug}`, {
@@ -45,11 +39,13 @@ export function ActionButton({ action }: { action: Zipper.Action }) {
   }
 
   async function runScript() {
-    const runPath = action.showAs === 'refresh' ? path : action.path;
-    const res = await fetch(getRunUrl(runPath), {
+    const runPath = action.showAs === 'refresh' ? applet?.path : action.path;
+    const res = await fetch(getRunUrl(runPath || 'main.ts'), {
       method: 'POST',
       body: JSON.stringify(
-        action.showAs === 'refresh' ? inputs || [] : action.inputs || [],
+        action.showAs === 'refresh'
+          ? applet?.inputs || []
+          : action.inputs || [],
       ),
       credentials: 'include',
     });
@@ -60,7 +56,7 @@ export function ActionButton({ action }: { action: Zipper.Action }) {
       actionShowAs: action.showAs,
       output: {
         result: text,
-        path: runPath,
+        path: runPath || 'main.ts',
       },
     });
   }

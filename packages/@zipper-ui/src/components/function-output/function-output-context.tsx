@@ -1,4 +1,4 @@
-import { InputParams } from '@zipper/types';
+import { AppletReturnType, InputParams } from '@zipper/types';
 import { createContext, useContext } from 'react';
 
 export type FunctionOutputContextType = {
@@ -16,10 +16,9 @@ export type FunctionOutputContextType = {
     };
   }) => void;
   getRunUrl: (scriptName: string) => string;
-  inputs?: Record<string, any>;
-  path: string;
-  currentContext: 'main' | 'modal' | 'expanded';
+  currentContext: 'main' | 'modal';
   appSlug: string;
+  applet?: AppletReturnType;
 };
 
 export const FunctionOutputContext = createContext<FunctionOutputContextType>({
@@ -27,30 +26,27 @@ export const FunctionOutputContext = createContext<FunctionOutputContextType>({
     return;
   },
   getRunUrl: () => '',
-  inputs: {},
-  path: '',
   currentContext: 'main',
   appSlug: '',
+  applet: undefined,
 });
 
 const FunctionOutputProvider = ({
   children,
   showSecondaryOutput,
   getRunUrl,
-  path,
-  inputs,
   currentContext,
   appSlug,
+  applet,
 }: FunctionOutputContextType & { children: any }) => {
   return (
     <FunctionOutputContext.Provider
       value={{
         showSecondaryOutput,
         getRunUrl,
-        inputs,
-        path,
         currentContext,
         appSlug,
+        applet,
       }}
     >
       {children}

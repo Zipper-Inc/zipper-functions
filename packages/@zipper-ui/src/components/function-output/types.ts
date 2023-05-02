@@ -1,7 +1,6 @@
 import { FunctionOutputContextType } from './function-output-context';
 
 export type FunctionOutputProps = {
-  result: any;
   level?: number;
 } & FunctionOutputContextType;
 

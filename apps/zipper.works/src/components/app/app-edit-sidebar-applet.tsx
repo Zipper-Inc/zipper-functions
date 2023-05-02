@@ -4,8 +4,6 @@ import {
   VStack,
   Button,
   Progress,
-  HStack,
-  IconButton,
   Modal,
   ModalOverlay,
   ModalContent,
@@ -19,38 +17,22 @@ import {
 import { InputParams } from '@zipper/types';
 import { FunctionInputs, FunctionOutput } from '@zipper/ui';
 import { getInputsFromFormData } from '@zipper/utils';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
-import { HiOutlineChevronUp, HiOutlineChevronDown } from 'react-icons/hi';
+import { useApplet } from '~/hooks/use-applet';
 import getRunUrl from '~/utils/get-run-url';
 import { addParamToCode } from '~/utils/parse-code';
-import { useAppEditSidebarContext } from '../context/app-edit-sidebar-context';
 import { useEditorContext } from '../context/editor-context';
 import { useRunAppContext } from '../context/run-app-context';
 import { AppEditSidebarAppletConnectors } from './app-edit-sidebar-applet-connectors';
 
 export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
-  const [isExpandedResultOpen, setIsExpandedResultOpen] = useState(true);
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const [modalResult, setModalResult] = useState({ heading: '', body: '' });
-  const [modalExpandedResult, setModalExpandedResult] = useState('');
-  const { expandedResult, setExpandedResult, inputs } =
-    useAppEditSidebarContext();
-  const [modalInputs, setModalInputs] = useState<{
-    inputParams: InputParams;
-    defaultValues: Record<string, any>;
-    path: string;
-  }>({ inputParams: [], defaultValues: {}, path: 'main.ts' });
-
-  const modalFormContext = useForm({
-    defaultValues: modalInputs.defaultValues,
-  });
 
   const {
     lastRunVersion,
     formMethods,
     isRunning,
-    setResults,
     results,
     userAuthConnectors,
     appInfo,
@@ -64,71 +46,80 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
     inputError,
   } = useEditorContext();
 
+  const modalApplet = useApplet();
+  const mainApplet = useApplet();
+
+  const modalFormContext = useForm();
+
   useEffect(() => {
-    if (modalResult.body || modalInputs.inputParams.length) {
+    const defaultValues: Record<string, any> = {};
+    modalApplet.inputs?.forEach((i) => (defaultValues[i.key] = i.defaultValue));
+    modalFormContext.reset(defaultValues);
+  }, []);
+
+  useEffect(() => {
+    if (modalApplet.output || modalApplet.inputs) {
       onOpen();
     }
-  }, [modalResult, modalInputs]);
+  }, [modalApplet.output, modalApplet.inputs]);
+
+  useEffect(() => {
+    const output: Record<string, any> = {};
+    Object.keys(results).map((k) => (output[k] = JSON.parse(results[k] || '')));
+    mainApplet.setOutput(output);
+  }, [results]);
+
+  useEffect(() => {
+    mainApplet.setInputs(inputParams);
+  }, [inputParams]);
 
   function closeModal() {
-    setModalResult({ heading: '', body: '' });
-    setModalInputs({ inputParams: [], defaultValues: {}, path: 'main.ts' });
+    modalApplet.setOutput(undefined);
+    modalApplet.setInputs(undefined);
     onClose();
   }
 
   useEffect(() => {
-    modalFormContext.reset(modalInputs.defaultValues);
-  }, [modalInputs]);
+    const defaultValues: Record<string, any> = {};
+    modalApplet.inputs?.forEach((i) => (defaultValues[i.key] = i.defaultValue));
+    modalFormContext.reset(defaultValues);
+  }, [modalApplet.inputs]);
 
   const isHandler = inputParams || inputError;
 
   const output = useMemo(() => {
+    mainApplet.setPath(currentScript?.filename || 'main.ts');
     return (
       <FunctionOutput
-        result={results[currentScript?.filename || 'main.ts']}
+        applet={mainApplet}
         showSecondaryOutput={showActionOutput}
         getRunUrl={(scriptName: string) => {
           return getRunUrl(appSlug, lastRunVersion, scriptName);
         }}
-        path={currentScript?.filename || 'main.ts'}
-        inputs={inputs}
         currentContext={'main'}
         appSlug={appInfo.slug}
       />
     );
-  }, [results, currentScript]);
+  }, [mainApplet.output, currentScript]);
 
-  const functionOutputComponent = (
-    secondaryResults: any,
-    secondaryContext: 'modal' | 'expanded',
-  ) => {
-    const showOutputs =
-      modalResult.body ||
-      expandedResult[currentScript?.filename || 'main.ts'] ||
-      modalExpandedResult;
-
-    const showInputs =
-      secondaryContext === 'modal' && !!modalInputs.inputParams;
-
+  const modalOutputComponent = () => {
     return (
       <>
-        {showInputs && (
+        {modalApplet.inputs && (
           <FunctionInputs
-            params={modalInputs.inputParams}
+            params={modalApplet.inputs}
             formContext={modalFormContext}
           />
         )}
 
-        {showOutputs && (
+        {modalApplet.output && (
           <FunctionOutput
-            result={secondaryResults}
+            applet={modalApplet}
             showSecondaryOutput={showActionOutput}
             getRunUrl={(scriptName: string) => {
               return getRunUrl(appSlug, undefined, scriptName);
             }}
-            inputs={inputs}
-            path={currentScript?.filename || 'main.ts'}
-            currentContext={secondaryContext}
+            currentContext="modal"
             appSlug={appInfo.slug}
           />
         )}
@@ -166,45 +157,64 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
     if (output?.result) {
       if (currentContext === 'main') {
         if (actionShowAs === 'expanded') {
-          setExpandedResult({
-            ...expandedResult,
+          mainApplet.setExpandedOutput({
+            ...mainApplet.expandedOutput,
             [currentScript?.filename || 'main.ts']: output.result,
           });
         }
-        if (actionShowAs === 'modal') setModalResult(output.result);
-        if (actionShowAs === 'refresh' || actionShowAs === 'replace_all') {
-          setResults({
-            ...results,
+        if (actionShowAs === 'modal')
+          modalApplet.setOutput({
+            ...modalApplet.output,
             [currentScript?.filename || 'main.ts']: output.result,
           });
-          setExpandedResult({});
+        if (actionShowAs === 'refresh' || actionShowAs === 'replace_all') {
+          mainApplet.setOutput({
+            ...mainApplet.output,
+            [currentScript?.filename || 'main.ts']: output.result,
+          });
+          mainApplet.setExpandedOutput({
+            ...mainApplet.expandedOutput,
+            [currentScript?.filename || 'main.ts']: '',
+          });
         }
       }
 
       if (currentContext === 'modal') {
         if (actionShowAs === 'expanded') {
-          setModalExpandedResult(output.result);
+          modalApplet.setExpandedOutput({
+            ...modalApplet.expandedOutput,
+            [currentScript?.filename || 'main.ts']: output.result,
+          });
         } else {
-          setModalResult(output.result);
-          setModalExpandedResult('');
+          modalApplet.setOutput({
+            ...modalApplet.setOutput,
+            [currentScript?.filename || 'main.ts']: output.result,
+          });
+          modalApplet.setExpandedOutput({
+            ...modalApplet.expandedOutput,
+            [currentScript?.filename || 'main.ts']: '',
+          });
         }
       }
 
       if (currentContext === 'expanded') {
         if (actionShowAs === 'modal') {
-          setModalResult(output.result);
+          modalApplet.setOutput({
+            ...modalApplet.setOutput,
+            [currentScript?.filename || 'main.ts']: output.result,
+          });
         } else {
-          setExpandedResult({
-            ...expandedResult,
+          mainApplet.setExpandedOutput({
+            ...mainApplet.expandedOutput,
             [currentScript?.filename || 'main.ts']: output.result,
           });
         }
       }
     }
 
-    if (inputs?.inputParams) {
+    if (inputs) {
       if (actionShowAs === 'modal') {
-        setModalInputs(inputs);
+        modalApplet.setInputs(inputs?.inputParams);
       }
     }
   }
@@ -220,7 +230,7 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
         borderColor="gray.200"
       >
         <>
-          {inputParams?.length || userAuthConnectors?.length ? (
+          {mainApplet.inputs?.length || userAuthConnectors?.length ? (
             <>
               <Heading size="sm" mb="2">
                 Inputs
@@ -228,10 +238,9 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
               {userAuthConnectors.length > 0 && (
                 <AppEditSidebarAppletConnectors />
               )}
-              {inputParams && inputParams.length > 0 && (
+              {mainApplet.inputs && (
                 <FunctionInputs
-                  params={inputParams}
-                  defaultValues={{}}
+                  params={mainApplet.inputs}
                   formContext={formMethods}
                 />
               )}
@@ -288,50 +297,14 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
         )}
       </Box>
 
-      {currentScript && results[currentScript.filename] && (
-        <Box mt={4}>{output}</Box>
-      )}
-
-      {expandedResult[currentScript?.filename || 'main.ts'] && (
-        <Box
-          borderLeft={'5px solid'}
-          borderColor={'purple.300'}
-          mt={8}
-          pl={3}
-          mb={4}
-        >
-          <HStack align={'center'} mt={2}>
-            <Heading flexGrow={1} size="sm" ml={1}>
-              Additional Results
-            </Heading>
-            <IconButton
-              aria-label="hide"
-              icon={
-                isExpandedResultOpen ? (
-                  <HiOutlineChevronUp />
-                ) : (
-                  <HiOutlineChevronDown />
-                )
-              }
-              onClick={() => setIsExpandedResultOpen(!isExpandedResultOpen)}
-            />
-          </HStack>
-          {isExpandedResultOpen && (
-            <Box mt={4}>
-              {functionOutputComponent(
-                expandedResult[currentScript?.filename || 'main.ts'],
-                'expanded',
-              )}
-            </Box>
-          )}
-        </Box>
-      )}
+      {currentScript && mainApplet.output && <Box mt={4}>{output}</Box>}
 
       <Modal isOpen={isOpen} onClose={closeModal} size="5xl">
         <ModalOverlay />
         <ModalContent maxH="2xl">
           <ModalHeader>
-            {modalResult.heading || modalInputs.path || appInfo.name}
+            HEADING
+            {/* {modalResult.heading || modalInputs.path || appInfo.name} */}
           </ModalHeader>
           <ModalCloseButton />
           <ModalBody
@@ -344,23 +317,7 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
             overflow="auto"
           >
             <VStack align="stretch" w="full" spacing="10">
-              {functionOutputComponent(modalResult.body, 'modal')}
-              {modalExpandedResult && (
-                <Box
-                  borderLeft={'5px solid'}
-                  borderColor={'purple.300'}
-                  mt={8}
-                  pl={3}
-                  mb={4}
-                >
-                  <Heading flexGrow={1} size="sm" ml={1}>
-                    Additional Results
-                  </Heading>
-                  <Box mt={4}>
-                    {functionOutputComponent(modalExpandedResult, 'modal')}
-                  </Box>
-                </Box>
-              )}
+              {modalOutputComponent()}
             </VStack>
           </ModalBody>
           <ModalFooter justifyContent="end">
@@ -377,13 +334,13 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
               onClick={async () => {
                 const values = getInputsFromFormData(
                   modalFormContext.getValues(),
-                  modalInputs.inputParams,
+                  modalApplet.inputs || [],
                 );
                 const res = await fetch(
                   getRunUrl(
                     appInfo.slug,
                     appInfo.lastDeploymentVersion,
-                    modalInputs.path,
+                    modalApplet.path,
                   ),
                   {
                     method: 'POST',
@@ -393,10 +350,9 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
                 );
                 const text = await res.text();
 
-                setModalExpandedResult('');
-                setModalResult({
-                  heading: modalInputs.path,
-                  body: text,
+                modalApplet.setExpandedOutput({});
+                modalApplet.setOutput({
+                  [currentScript?.filename || 'main.ts']: text,
                 });
               }}
             >

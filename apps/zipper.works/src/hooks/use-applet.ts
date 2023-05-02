@@ -1,22 +1,20 @@
-import { InputParams } from '@zipper/types';
+import {
+  AppletReturnType,
+  AppletPanel,
+  InputParamWithValue,
+} from '@zipper/types';
 import { useEffect, useState } from 'react';
 
-type AppletPanel = {
-  inputs?: InputParams;
-  output?: string;
-  expandedInputs?: InputParams;
-  expandedOutput?: string;
-};
-
-export const useApplet = () => {
+export const useApplet = (): AppletReturnType => {
   const [panels, setPanels] = useState<AppletPanel[]>([]);
   const [currentPanelIndex, setCurrentPanelIndex] = useState(0);
-  const [inputs, setInputs] = useState<InputParams | undefined>();
-  const [output, setOutput] = useState<string | undefined>();
-  const [expandedInputs, setExpandedInputs] = useState<
-    InputParams | undefined
+  const [inputs, setInputs] = useState<InputParamWithValue[]>();
+  const [output, setOutput] = useState<Record<string, string> | undefined>();
+  const [expandedInputs, setExpandedInputs] = useState<InputParamWithValue[]>();
+  const [expandedOutput, setExpandedOutput] = useState<
+    Record<string, string> | undefined
   >();
-  const [expandedOutput, setExpandedOutput] = useState<string | undefined>();
+  const [path, setPath] = useState<string | undefined>();
 
   useEffect(() => {
     panels[currentPanelIndex] = {
@@ -24,14 +22,16 @@ export const useApplet = () => {
       output,
       expandedInputs,
       expandedOutput,
+      path,
     };
-  }, [inputs, output, expandedInputs, expandedOutput]);
+  }, [inputs, output, expandedInputs, expandedOutput, path]);
 
   useEffect(() => {
     setInputs(panels[currentPanelIndex]?.inputs);
     setOutput(panels[currentPanelIndex]?.output);
     setExpandedInputs(panels[currentPanelIndex]?.expandedInputs);
     setExpandedOutput(panels[currentPanelIndex]?.expandedOutput);
+    setPath(panels[currentPanelIndex]?.path);
   }, [currentPanelIndex]);
 
   const addPanel = () => {
@@ -48,6 +48,8 @@ export const useApplet = () => {
     setExpandedInputs,
     expandedOutput,
     setExpandedOutput,
+    path,
+    setPath,
     addPanel,
   };
 };

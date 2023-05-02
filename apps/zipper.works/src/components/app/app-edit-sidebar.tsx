@@ -25,7 +25,6 @@ import { useEditorContext } from '../context/editor-context';
 import Link from 'next/link';
 import { getAppLink } from '@zipper/utils';
 import AppEditSidebarApplet from './app-edit-sidebar-applet';
-import { useAppEditSidebarContext } from '../context/app-edit-sidebar-context';
 
 type AppEditSidebarProps = {
   showInputForm: boolean;
@@ -45,12 +44,11 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
     setTabIndex(index);
   };
 
-  const { lastRunVersion, appEventsQuery, formMethods, isRunning, run } =
-    useRunAppContext();
+  const { lastRunVersion, appEventsQuery, isRunning, run } = useRunAppContext();
 
   const { currentScript, inputParams, inputError } = useEditorContext();
 
-  const { setExpandedResult, setInputs } = useAppEditSidebarContext();
+  // const { setExpandedResult } = useAppEditSidebarContext();
 
   const logs = appEventsQuery?.data?.map((event: any) => event.eventPayload);
 
@@ -81,16 +79,16 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
   const isLibrary = !inputParams && !inputError;
   const isHandler = inputParams || inputError;
 
-  const setInputsAtTimeOfRun = () => {
-    const formValues = formMethods.getValues();
-    const formKeys = inputParams?.map((param) => `${param.key}:${param.type}`);
-    const inputs: Record<string, any> = {};
-    formKeys?.map((k) => {
-      const key = k.split(':')[0] as string;
-      inputs[key] = formValues[k];
-    });
-    setInputs(inputs);
-  };
+  // const setInputsAtTimeOfRun = () => {
+  //   const formValues = formMethods.getValues();
+  //   const formKeys = inputParams?.map((param) => `${param.key}:${param.type}`);
+  //   const inputs: Record<string, any> = {};
+  //   formKeys?.map((k) => {
+  //     const key = k.split(':')[0] as string;
+  //     inputs[key] = formValues[k];
+  //   });
+  //   setInputs(inputs);
+  // };
 
   return (
     <VStack align="stretch">
@@ -146,8 +144,8 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
                   currentScript?.filename === 'main.ts' ? 'solid' : 'ghost'
                 }
                 onClick={() => {
-                  setExpandedResult({});
-                  setInputsAtTimeOfRun();
+                  // setExpandedResult({});
+                  // setInputsAtTimeOfRun();
                   run(true);
                 }}
                 display="flex"
