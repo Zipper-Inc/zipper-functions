@@ -18,7 +18,8 @@ export type FunctionOutputContextType = {
   getRunUrl: (scriptName: string) => string;
   currentContext: 'main' | 'modal';
   appSlug: string;
-  applet?: AppletReturnType;
+  applet: AppletReturnType;
+  modalApplet: AppletReturnType;
 };
 
 export const FunctionOutputContext = createContext<FunctionOutputContextType>({
@@ -28,7 +29,48 @@ export const FunctionOutputContext = createContext<FunctionOutputContextType>({
   getRunUrl: () => '',
   currentContext: 'main',
   appSlug: '',
-  applet: undefined,
+  applet: {
+    setInputs: () => {
+      return;
+    },
+    setOutput: () => {
+      return;
+    },
+    setExpandedInputs: () => {
+      return;
+    },
+    setExpandedOutput: () => {
+      return;
+    },
+    setPath: () => {
+      return;
+    },
+    addPanel: () => {
+      return;
+    },
+    path: '',
+  },
+  modalApplet: {
+    setInputs: () => {
+      return;
+    },
+    setOutput: () => {
+      return;
+    },
+    setExpandedInputs: () => {
+      return;
+    },
+    setExpandedOutput: () => {
+      return;
+    },
+    setPath: () => {
+      return;
+    },
+    addPanel: () => {
+      return;
+    },
+    path: '',
+  },
 });
 
 const FunctionOutputProvider = ({
@@ -38,6 +80,7 @@ const FunctionOutputProvider = ({
   currentContext,
   appSlug,
   applet,
+  modalApplet,
 }: FunctionOutputContextType & { children: any }) => {
   return (
     <FunctionOutputContext.Provider
@@ -47,6 +90,7 @@ const FunctionOutputProvider = ({
         currentContext,
         appSlug,
         applet,
+        modalApplet,
       }}
     >
       {children}

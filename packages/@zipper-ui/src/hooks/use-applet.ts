@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import {
   AppletReturnType,
   AppletPanel,
@@ -14,7 +15,7 @@ export const useApplet = (): AppletReturnType => {
   const [expandedOutput, setExpandedOutput] = useState<
     Record<string, string> | undefined
   >();
-  const [path, setPath] = useState<string | undefined>();
+  const [path, setPath] = useState<string>('main.ts');
 
   useEffect(() => {
     panels[currentPanelIndex] = {
@@ -27,16 +28,18 @@ export const useApplet = (): AppletReturnType => {
   }, [inputs, output, expandedInputs, expandedOutput, path]);
 
   useEffect(() => {
-    setInputs(panels[currentPanelIndex]?.inputs);
-    setOutput(panels[currentPanelIndex]?.output);
-    setExpandedInputs(panels[currentPanelIndex]?.expandedInputs);
-    setExpandedOutput(panels[currentPanelIndex]?.expandedOutput);
-    setPath(panels[currentPanelIndex]?.path);
+    if (panels[currentPanelIndex]) {
+      setInputs(panels[currentPanelIndex]?.inputs);
+      setOutput(panels[currentPanelIndex]?.output);
+      setExpandedInputs(panels[currentPanelIndex]?.expandedInputs);
+      setExpandedOutput(panels[currentPanelIndex]?.expandedOutput);
+      setPath(panels[currentPanelIndex]!.path);
+    }
   }, [currentPanelIndex]);
 
   const addPanel = () => {
     setCurrentPanelIndex(panels.length + 1);
-    setPanels([...panels, {}]);
+    setPanels([...panels, { path: 'main.ts' }]);
   };
 
   return {

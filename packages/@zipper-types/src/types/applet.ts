@@ -9,7 +9,7 @@ export type AppletPanel = {
   output?: Record<string, string>;
   expandedInputs?: InputParamWithValue[];
   expandedOutput?: Record<string, string>;
-  path?: string;
+  path: string;
 };
 
 export type AppletReturnType = {
@@ -21,7 +21,7 @@ export type AppletReturnType = {
   setExpandedInputs: (input: InputParamWithValue[] | undefined) => void;
   expandedOutput?: Record<string, any>;
   setExpandedOutput: (output: Record<string, string> | undefined) => void;
-  path?: string;
+  path: string;
   setPath: (path: string) => void;
   addPanel: () => void;
 };
