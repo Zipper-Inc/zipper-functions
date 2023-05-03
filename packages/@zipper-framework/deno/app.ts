@@ -54,7 +54,27 @@ app.use(async ({ request, response }) => {
     originalRequest,
     runId,
     Action: {
-      create: (action) => ({ ...action, $zipperType: 'Zipper.Action' }),
+      create: (action) => ({ $zipperType: 'Zipper.Action', ...action }),
+    },
+    Router: {
+      redirect: (url) => ({
+        $zipperType: 'Zipper.Router',
+        redirect: url.toString(),
+      }),
+      notFound: () => ({
+        $zipperType: 'Zipper.Router',
+        notFound: true,
+      }),
+      error: (...data) => ({
+        $zipperType: 'Zipper.Router',
+        error: data
+          .map((v) =>
+            !v || (typeof v === 'object' && !(v instanceof Error))
+              ? JSON.stringify(v)
+              : v.toString(),
+          )
+          .join(' '),
+      }),
     },
   };
 

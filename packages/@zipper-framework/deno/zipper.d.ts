@@ -77,11 +77,11 @@ declare namespace Zipper {
   export type Handler<I = Inputs> = (inputs?: I) => Output | Promise<Output>;
 
   /**
-   * These are special objects we can return
-   * such as Routes and Actions
+   * These are special objects we can return such as Actions
+   * You must pass a string type to it, i.e. `Zipper.Action`
    */
-  interface SpecialOutput<T = string> {
-    $zipperType: T;
+  interface SpecialOutput<zipperType> {
+    $zipperType: zipperType;
   }
 
   /**
@@ -166,6 +166,30 @@ declare namespace Zipper {
     export type MessageorDisplay = Omit<Message, 'timestamp'> & {
       timestamp?: string;
     };
+  }
+
+  /**
+   * Handle some special routing behavior
+   * @category Runtime
+   */
+  export namespace Router {
+    type Route = SpecialOutput<'Zipper.Router'>;
+
+    export interface Redirect extends Route {
+      redirect: string;
+    }
+
+    export interface NotFound extends Route {
+      notFound: true;
+    }
+
+    export interface Error extends Route {
+      error: string;
+    }
+
+    export function redirect(url: URL | string): Router.Redirect;
+    export function notFound(): Router.NotFound;
+    export function error(...data: unknown[]): Router.Error;
   }
 
   /**
