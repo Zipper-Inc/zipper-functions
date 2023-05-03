@@ -26,6 +26,7 @@ export * from '../src/components/zipperSymbol';
 export * from '../src/hocs/with-chakra-provider';
 export * from '../src/hooks/use-array';
 export * from '../src/hooks/use-cmd-or-ctrl';
+export * from '../src/hooks/use-effect-once';
 export * from '../src/hooks/use-select';
 export * from '../src/theme';
 export * from '../src/theme/multiSelectTheme';
