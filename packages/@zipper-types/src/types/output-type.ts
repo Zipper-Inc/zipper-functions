@@ -6,4 +6,5 @@ export enum OutputType {
   Html = 'html',
   Action = 'action',
   ActionArray = 'action_array',
+  Router = 'router',
 }
