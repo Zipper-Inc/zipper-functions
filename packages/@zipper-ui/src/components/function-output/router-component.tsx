@@ -19,8 +19,10 @@ export function RedirectComponent({ redirect }: Zipper.Router.Redirect) {
   return (
     <>
       <Progress colorScheme="purple" size="xs" isIndeterminate width="full" />
-      {loc === ZipperLocation.ZipperDotDev && (
+      {loc === ZipperLocation.ZipperDotDev ? (
         <Box pt={2}>Opening redirect in a new window</Box>
+      ) : (
+        <Box p={4}>Redirecting...</Box>
       )}
     </>
   );
