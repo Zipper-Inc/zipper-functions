@@ -160,6 +160,7 @@ function FunctionParamInput({
 
 function SingleInput({
   name,
+  label,
   description,
   type,
   optional,
@@ -168,6 +169,7 @@ function SingleInput({
   hasResult = true,
 }: {
   name: string;
+  label?: string;
   description?: string;
   type: InputType;
   optional: boolean;
@@ -206,7 +208,7 @@ function SingleInput({
               opacity={!isOpen ? '50%' : '100%'}
               color={isDisabled ? 'gray.400' : 'gray.700'}
             >
-              {name}
+              {label || name}
             </Heading>
             <Box mt={1} opacity={!isOpen ? '50%' : '100%'}>
               {hasResult && (
@@ -303,7 +305,8 @@ export function FunctionInputs({
   const inputs = params.map(({ key, name, description, type, optional }, i) => (
     <SingleInput
       key={`${key}--${i}`}
-      name={name || key}
+      name={key}
+      label={name}
       description={description}
       type={type}
       optional={optional}
