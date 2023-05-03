@@ -86,7 +86,7 @@ declare namespace Zipper {
     /**
      * The type of action this is
      */
-    actionType: 'button';
+    actionType: 'button' | 'dropdown';
     /**
      * The visible text for the Action
      */
@@ -134,7 +134,6 @@ declare namespace Zipper {
       | 'debug'
       | 'info'
       | 'warn'
-      | 'error'
       | 'table'
       | 'clear'
       | 'time'
@@ -159,7 +158,8 @@ declare namespace Zipper {
 
   /**
    * Simple async key value store, one per app
-   * @category Storage
+   * @category Storage28709-[]
+   *§1
    */
   export interface Storage {
     appId: string;
