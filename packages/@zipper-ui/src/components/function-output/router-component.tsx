@@ -1,22 +1,28 @@
 import { Box, Heading, Progress } from '@chakra-ui/react';
-import { useEffect } from 'react';
+import { ZipperLocation } from '@zipper/types';
+import { useEffectOnce } from '../../hooks/use-effect-once';
+import { useState } from 'react';
 
 export function RedirectComponent({ redirect }: Zipper.Router.Redirect) {
-  useEffect(() => {
-    window.location.href = redirect.toString();
-  }, []);
+  const [loc, setLoc] = useState<ZipperLocation>();
+  useEffectOnce(() => {
+    setLoc(window.ZipperLocation);
+
+    if (window.ZipperLocation === ZipperLocation.ZipperDotRun) {
+      /** @todo handle internal URL's */
+      window.location.href = redirect.toString();
+    } else {
+      window.open(redirect, 'BLANK');
+    }
+  });
 
   return (
-    <Progress
-      colorScheme="purple"
-      size="xs"
-      isIndeterminate
-      width="full"
-      position="absolute"
-      left={0}
-      right={0}
-      bottom={0}
-    />
+    <>
+      <Progress colorScheme="purple" size="xs" isIndeterminate width="full" />
+      {loc === ZipperLocation.ZipperDotDev && (
+        <Box pt={2}>Opening redirect in a new window</Box>
+      )}
+    </>
   );
 }
 
