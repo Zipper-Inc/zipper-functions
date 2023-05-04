@@ -14,7 +14,7 @@ export function ActionDropdown({ action }: { action: Zipper.Action }) {
   } = useContext(FunctionOutputContext);
 
   async function runScript(selectedValue: string) {
-    const paramName = action.inputs?.name as string;
+    const paramName = action.inputs?.paramName as string;
 
     const bodyData =
       action.showAs === 'refresh'
