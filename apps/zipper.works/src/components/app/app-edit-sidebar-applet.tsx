@@ -51,7 +51,13 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
         appSlug={appInfo.slug}
       />
     );
-  }, [mainApplet.mainContent.output, currentScript]);
+  }, [
+    mainApplet.mainContent.output,
+    mainApplet.mainContent.inputs,
+    mainApplet.expandedContent.output,
+    mainApplet.expandedContent.inputs,
+    currentScript,
+  ]);
 
   const handleAddInput = () => {
     if (currentScriptLive && currentScript) {

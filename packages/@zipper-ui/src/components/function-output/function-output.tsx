@@ -129,6 +129,7 @@ export function FunctionOutput({
         }
         default: {
           applet.mainContent.set(content);
+          // applet.expandedContent.set({ inputs: [], output: '' });
         }
       }
     } else {
