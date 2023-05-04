@@ -8,9 +8,9 @@ ENV_FILE=".env.local"
 
 if [ -f ./$ENV_FILE ]
 then
-    ln -sf ../../$ENV_FILE ./apps/zipper.works/.env
-    ln -sf ../../$ENV_FILE ./apps/zipper.works/.env.local
-    echo "🎉 .env files linked for zipper.works"
+    ln -sf ../../$ENV_FILE ./apps/zipper.dev/.env
+    ln -sf ../../$ENV_FILE ./apps/zipper.dev/.env.local
+    echo "🎉 .env files linked for zipper.dev"
 
     ln -sf ../../$ENV_FILE ./apps/zipper.run/.env.local
     echo "🎉 .env file linked for zipper.run"

@@ -17,6 +17,8 @@ import { DefaultLayout } from '~/components/default-layout';
 import { AppRouter } from '~/server/routers/_app';
 import '@fontsource/inter/variable.css';
 import Header from '~/components/header';
+import { useEffectOnce } from '@zipper/ui';
+import { ZipperLocation } from '@zipper/types';
 
 export type NextPageWithLayout<P = Record<string, unknown>, IP = P> = NextPage<
   P,
@@ -45,6 +47,9 @@ const MyApp = (({ Component, pageProps }: AppPropsWithLayout) => {
       </DefaultLayout>
     ));
 
+  useEffectOnce(() => {
+    window.ZipperLocation = ZipperLocation.ZipperDotDev;
+  });
   return (
     <>
       <ClerkProvider

@@ -1,3 +1,4 @@
+import './zipper.d.ts';
 import { Application } from 'https://deno.land/x/oak@v12.1.0/mod.ts';
 import { handlers } from './generated/handlers.gen.ts';
 import { BOOT_PATH, ENV_BLOCKLIST, MAIN_PATH } from './constants.ts';
@@ -53,7 +54,27 @@ app.use(async ({ request, response }) => {
     originalRequest,
     runId,
     Action: {
-      create: (action) => action,
+      create: (action) => ({ $zipperType: 'Zipper.Action', ...action }),
+    },
+    Router: {
+      redirect: (url) => ({
+        $zipperType: 'Zipper.Router',
+        redirect: url.toString(),
+      }),
+      notFound: () => ({
+        $zipperType: 'Zipper.Router',
+        notFound: true,
+      }),
+      error: (...data) => ({
+        $zipperType: 'Zipper.Router',
+        error: data
+          .map((v) =>
+            !v || (typeof v === 'object' && !(v instanceof Error))
+              ? JSON.stringify(v)
+              : v.toString(),
+          )
+          .join(' '),
+      }),
     },
   };
 
