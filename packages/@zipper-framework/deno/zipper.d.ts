@@ -193,7 +193,7 @@ declare namespace Zipper {
 
   /**
    * Simple async key value store, one per app
-   * @category Storage28709-[]
+   * @category Storage
    *§1
    */
   export interface Storage {
