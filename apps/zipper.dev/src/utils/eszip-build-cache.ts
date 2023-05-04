@@ -62,6 +62,10 @@ export class BuildCache {
     });
   }
 
+  disconnect() {
+    this.client.disconnect();
+  }
+
   async get(specifier: string) {
     try {
       const raw = await this.client.get(getCacheKey(specifier));
