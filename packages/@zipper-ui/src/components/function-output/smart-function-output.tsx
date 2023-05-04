@@ -19,6 +19,7 @@ import { isPrimitive, parseResult } from './utils';
 import { RawFunctionOutput } from './raw-function-output';
 import { HiCheck, HiX } from 'react-icons/hi';
 import { ActionComponent } from './action-component';
+import { RouterComponent } from './router-component';
 
 const StyledTr = styled(Tr)`
   &:last-of-type td {
@@ -225,6 +226,9 @@ export function SmartFunctionOutput({
 
     case OutputType.Action:
       return <ActionComponent action={data} />;
+
+    case OutputType.Router:
+      return <RouterComponent route={data} />;
 
     case OutputType.ActionArray:
       return data.map((action: any) => <ActionComponent action={action} />);

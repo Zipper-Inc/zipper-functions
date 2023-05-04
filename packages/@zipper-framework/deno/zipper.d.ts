@@ -77,6 +77,14 @@ declare namespace Zipper {
   export type Handler<I = Inputs> = (inputs?: I) => Output | Promise<Output>;
 
   /**
+   * These are special objects we can return such as Actions
+   * You must pass a string type to it, i.e. `Zipper.Action`
+   */
+  interface SpecialOutput<zipperType> {
+    $zipperType: zipperType;
+  }
+
+  /**
    * Actions
    */
   interface ActionBase<I = Inputs> {
@@ -97,35 +105,38 @@ declare namespace Zipper {
     inputs?: I;
   }
 
-  export type Action<I = Inputs> = ActionBase<I> &
-    (
-      | {
-          /**
-           * Determines how we should show the input
-           */
-          showAs: 'refresh';
-          /**
-           * The path to the handler for this action
-           */
-          path?: string;
-        }
-      | {
-          /**
-           * Determines how we should show the input
-           */
-          showAs: 'modal' | 'expanded' | 'replace_all';
-          /**
-           * The path to the handler for this action
-           */
-          path: string;
-        }
-    );
+  interface RefreshAction<I = Inputs> extends ActionBase<I> {
+    /**
+     * Determines how we should show the input
+     */
+    showAs: 'refresh';
+    /**
+     * The path to the handler for this action
+     */
+    path?: string;
+  }
+
+  interface PathAction<I = Inputs> extends ActionBase<I> {
+    /**
+     * Determines how we should show the input
+     */
+    showAs: 'modal' | 'expanded' | 'replace_all';
+    /**
+     * The path to the handler for this action
+     */
+    path: string;
+  }
+
+  export type Action<I = Inputs> = SpecialOutput<'Zipper.Action'> &
+    (RefreshAction<I> | PathAction<I>);
 
   export namespace Action {
     /**
      * Creates an action
      */
-    export function create<I = Inputs>(action: Action<I>): Action<I>;
+    export function create<I = Inputs>(
+      action: RefreshAction<I> | PathAction<I>,
+    ): Action<I>;
   }
 
   export namespace Log {
@@ -154,6 +165,30 @@ declare namespace Zipper {
     export type MessageorDisplay = Omit<Message, 'timestamp'> & {
       timestamp?: string;
     };
+  }
+
+  /**
+   * Handle some special routing behavior
+   * @category Runtime
+   */
+  export namespace Router {
+    type Route = SpecialOutput<'Zipper.Router'>;
+
+    export interface Redirect extends Route {
+      redirect: string;
+    }
+
+    export interface NotFound extends Route {
+      notFound: true;
+    }
+
+    export interface Error extends Route {
+      error: string;
+    }
+
+    export function redirect(url: URL | string): Router.Redirect;
+    export function notFound(): Router.NotFound;
+    export function error(...data: unknown[]): Router.Error;
   }
 
   /**
