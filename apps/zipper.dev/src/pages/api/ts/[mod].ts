@@ -51,6 +51,8 @@ function respondWithRawModule({
     );
   }
 
+  buildCache.disconnect();
+
   return res
     .status(200)
     .setHeader('Content-Type', 'text/typescript')
@@ -85,6 +87,8 @@ async function respondWithBundle({
       return mod;
     }
   });
+
+  buildCache.disconnect();
 
   return res
     .status(200)
@@ -145,6 +149,8 @@ async function respondWithTypesBundle({
     );
     return respondWithBundle({ moduleUrl, rootModule, res });
   }
+
+  buildCache.disconnect();
 
   return res
     .status(200)
