@@ -12,7 +12,16 @@ import { RawFunctionOutput } from './raw-function-output';
 import { SmartFunctionOutput } from './smart-function-output';
 import { ErrorBoundary } from '../error-boundary';
 import FunctionOutputProvider from './function-output-context';
+import { useState } from 'react';
+import { useEffectOnce } from '../../hooks/use-effect-once';
+import { ZipperLocation } from '@zipper/types';
 
+const stickyTabsStyles: ChakraProps = {
+  top: -4,
+  position: 'sticky',
+  pt: 4,
+  background: 'white',
+};
 const tabsStyles: ChakraProps = { display: 'flex', flexDir: 'column', gap: 0 };
 const tablistStyles: ChakraProps = {
   gap: 1,
@@ -48,6 +57,11 @@ export function FunctionOutput({
   path,
   currentContext,
 }: FunctionOutputProps) {
+  const [stickyTabs, setStickyTabs] = useState(false);
+  useEffectOnce(() => {
+    if (window.ZipperLocation === ZipperLocation.ZipperDotDev)
+      setStickyTabs(true);
+  });
   return (
     <FunctionOutputProvider
       setExpandedResult={setExpandedResult}
@@ -79,10 +93,12 @@ export function FunctionOutput({
         }
       >
         <Tabs colorScheme="purple" variant="enclosed" {...tabsStyles}>
-          <TabList {...tablistStyles}>
-            <Tab {...tabButtonStyles}>Results</Tab>
-            <Tab {...tabButtonStyles}>Raw Output</Tab>
-          </TabList>
+          <Box {...(stickyTabs ? stickyTabsStyles : undefined)}>
+            <TabList {...tablistStyles}>
+              <Tab {...tabButtonStyles}>Results</Tab>
+              <Tab {...tabButtonStyles}>Raw Output</Tab>
+            </TabList>
+          </Box>
           <TabPanels
             border="1px solid"
             borderColor="gray.200"

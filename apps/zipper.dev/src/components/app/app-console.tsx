@@ -40,45 +40,44 @@ export function AppConsole({ logs }: { logs: LogMessage[] }) {
 
   return (
     <Box id="app-console">
-      <Flex
-        padding={4}
-        width="100%"
-        border="solid 1px"
-        backgroundColor="gray.100"
-        borderColor="gray.200"
-        borderTopRadius="md"
-        position="sticky"
-        top={0}
-        zIndex="docked"
-      >
-        <FormControl display="flex" alignItems="center" height={6}>
-          <Switch
-            colorScheme="purple"
-            id="preserve-logs"
-            size="sm"
-            checked={preserveLogs}
-            defaultChecked={true}
-            onChange={() => setPreserveLogs(!preserveLogs)}
-          />
-          <FormLabel
-            htmlFor="preserve-logs"
-            ml={2}
-            mb="0"
-            fontWeight="normal"
+      <Box position="sticky" top="0" pt={4} zIndex="docked" background="white">
+        <Flex
+          padding={4}
+          width="100%"
+          border="solid 1px"
+          backgroundColor="gray.100"
+          borderColor="gray.200"
+          borderTopRadius="md"
+        >
+          <FormControl display="flex" alignItems="center" height={6}>
+            <Switch
+              colorScheme="purple"
+              id="preserve-logs"
+              size="sm"
+              checked={preserveLogs}
+              defaultChecked={true}
+              onChange={() => setPreserveLogs(!preserveLogs)}
+            />
+            <FormLabel
+              htmlFor="preserve-logs"
+              ml={2}
+              mb="0"
+              fontWeight="normal"
+              fontSize="xs"
+            >
+              Preserve logs
+            </FormLabel>
+          </FormControl>
+          <Input
+            backgroundColor="white"
+            fontFamily="monospace"
             fontSize="xs"
-          >
-            Preserve logs
-          </FormLabel>
-        </FormControl>
-        <Input
-          backgroundColor="white"
-          fontFamily="monospace"
-          fontSize="xs"
-          onChange={(e) => setLogFilter(e.target.value)}
-          height={6}
-          placeholder="Filter"
-        />
-      </Flex>
+            onChange={(e) => setLogFilter(e.target.value)}
+            height={6}
+            placeholder="Filter"
+          />
+        </Flex>
+      </Box>
       <Box
         color="gray.200"
         borderColor="gray.200"
