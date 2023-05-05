@@ -160,6 +160,18 @@ export const theme = extendTheme({
         flexDirection: 'column',
         minWidth: 'container.md',
       },
+      // overrides some stuff in the AppConsole component
+      '#app-console': {
+        '[data-method]:first-child': {
+          borderTop: 'none',
+        },
+        '[data-method]': {
+          paddingY: '4px',
+        },
+        '[data-method]:last-child': {
+          borderBottom: 'none',
+        },
+      },
     },
   },
   colors: {

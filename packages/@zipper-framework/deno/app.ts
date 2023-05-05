@@ -1,7 +1,9 @@
+import './zipper.d.ts';
 import { Application } from 'https://deno.land/x/oak@v12.1.0/mod.ts';
 import { handlers } from './generated/handlers.gen.ts';
 import { BOOT_PATH, ENV_BLOCKLIST, MAIN_PATH } from './constants.ts';
 import { ZipperStorage } from './storage.ts';
+import { sendLog, methods } from './console.ts';
 
 const app = new Application();
 
@@ -41,7 +43,7 @@ app.use(async ({ request, response }) => {
     delete env[key];
   });
 
-  const { appInfo, userInfo, originalRequest } = body;
+  const { appInfo, userInfo, originalRequest, runId } = body;
 
   // Attach ZipperGlobal
   window.Zipper = {
@@ -50,10 +52,50 @@ app.use(async ({ request, response }) => {
     userInfo,
     appInfo,
     originalRequest,
+    runId,
     Action: {
-      create: (action) => action,
+      create: (action) => ({ $zipperType: 'Zipper.Action', ...action }),
+    },
+    Router: {
+      redirect: (url) => ({
+        $zipperType: 'Zipper.Router',
+        redirect: url.toString(),
+      }),
+      notFound: () => ({
+        $zipperType: 'Zipper.Router',
+        notFound: true,
+      }),
+      error: (...data) => ({
+        $zipperType: 'Zipper.Router',
+        error: data
+          .map((v) =>
+            !v || (typeof v === 'object' && !(v instanceof Error))
+              ? JSON.stringify(v)
+              : v.toString(),
+          )
+          .join(' '),
+      }),
     },
   };
+
+  // Take over console.* methods
+  methods.forEach((method) => {
+    const originalMethod = console[method] as (...data: unknown[]) => void;
+    console[method] = (...data) => {
+      originalMethod(...data);
+      sendLog({
+        appId: appInfo.id,
+        version: appInfo.version,
+        runId,
+        log: {
+          id: crypto.randomUUID(),
+          method,
+          timestamp: Date.now(),
+          data,
+        },
+      });
+    };
+  });
 
   // Grab the handler
   let path: string = body.path || MAIN_PATH;

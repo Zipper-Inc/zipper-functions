@@ -56,8 +56,6 @@ export function ActionButton({ action }: { action: Zipper.Action }) {
         ? currentApplet?.mainContent.path
         : action.path;
 
-    console.log(runPath);
-
     const res = await fetch(getRunUrl(runPath || 'main.ts'), {
       method: 'POST',
       body: JSON.stringify(

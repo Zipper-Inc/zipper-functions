@@ -31,10 +31,10 @@ This turborepo uses [Yarn](https://classic.yarnpkg.com/) as a package manager. I
 
 ### Apps and Packages
 
-- `zipper.works`: a [Next.js](https://nextjs.org/) app where users can log in, browse apps, create apps, and write code
+- `zipper.dev`: a [Next.js](https://nextjs.org/) app where users can log in, browse apps, create apps, and write code
 - `zipper.run`: a [Next.js](https://nextjs.org/) app that communicates with Deno Subhosting to start an app, gets the results, and provides different ways to view the output. It also handles routing to the public facing URLs for apps (app-slug.zipper.run)
-- `@zipper/ui`: a React component library shared by both `zipper.works` and `zipper.run` applications
-- `@zipper/types`: a library of typescript types that are shared by both `zipper.works` and `zipper.run`
+- `@zipper/ui`: a React component library shared by both `zipper.dev` and `zipper.run` applications
+- `@zipper/types`: a library of typescript types that are shared by both `zipper.dev` and `zipper.run`
 - `@zipper/utils`: common utilities that are shared across both apps
 
 Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
@@ -64,7 +64,7 @@ Tests should live in the same folder as the code that's being tested.
 4. Copy `.env.example` to `.env.local` (`cp .env.example .env.local`) - you'll be missing some environment variables so ping either Sachin or Ibu for them
 5. Create `.env` in the root directory and copy the DATABASE_URL from `.env.local`
 6. Start the databases using Docker Compose (`docker-compose up`)
-7. Get your database migrated and seeded (`yarn workspace zipper.works db-migrate-dev` and `yarn workspace zipper.works db-seed`)
+7. Get your database migrated and seeded (`yarn workspace zipper.dev db-migrate-dev` and `yarn workspace zipper.dev db-seed`)
 8. Run `yarn install` to install dependencies
 9. Run `yarn dev` to start both apps
 

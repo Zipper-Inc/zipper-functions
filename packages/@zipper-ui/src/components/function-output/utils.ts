@@ -11,7 +11,10 @@ export const isHtml = (value: any) => {
   return Array.from(doc.body.childNodes).some((node) => node.nodeType === 1);
 };
 export const isAction = (value: Zipper.Action) =>
-  value?.actionType && value?.showAs;
+  value?.$zipperType === 'Zipper.Action';
+
+export const isRouter = (value: Zipper.Router.Route) =>
+  value?.$zipperType === 'Zipper.Router';
 
 export function parseResult(result: any): { type: OutputType; data: any } {
   const data = isString(result) ? safeJSONParse(result) : result;
@@ -23,14 +26,16 @@ export function parseResult(result: any): { type: OutputType; data: any } {
 
   let type = OutputType.Object;
 
-  if (Array.isArray(data)) {
+  if (isAction(data)) {
+    type = OutputType.Action;
+  } else if (isRouter(data)) {
+    type = OutputType.Router;
+  } else if (Array.isArray(data)) {
     if (data.every(isPrimitive)) type = OutputType.Array;
     else if (data.every((item) => isAction(item)))
       type = OutputType.ActionArray;
     else type = OutputType.Collection;
   }
-
-  if (type === OutputType.Object && isAction(data)) type = OutputType.Action;
 
   return { type, data };
 }

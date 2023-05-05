@@ -7,6 +7,7 @@ export { default as FunctionOutputProvider } from '../src/components/function-ou
 export * from '../src/components/function-output/function-output';
 export * from '../src/components/function-output/object-explorer';
 export * from '../src/components/function-output/raw-function-output';
+export * from '../src/components/function-output/router-component';
 export * from '../src/components/function-output/smart-function-output';
 export * from '../src/components/function-output/types';
 export * from '../src/components/function-output/utils';
@@ -24,7 +25,9 @@ export * from '../src/components/zipper-logo';
 export * from '../src/components/zipperSymbol';
 export * from '../src/hocs/with-chakra-provider';
 export * from '../src/hooks/use-applet';
+export * from '../src/hooks/use-array';
 export * from '../src/hooks/use-cmd-or-ctrl';
+export * from '../src/hooks/use-effect-once';
 export * from '../src/hooks/use-select';
 export * from '../src/theme';
 export * from '../src/theme/multiSelectTheme';
