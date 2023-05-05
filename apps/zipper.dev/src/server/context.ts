@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { RequestLike } from '@clerk/nextjs/dist/server/types';
 import { getAuth } from '@clerk/nextjs/server';
+import { captureException } from '@sentry/nextjs';
 import * as trpc from '@trpc/server';
 import * as trpcNext from '@trpc/server/adapters/next';
 import { ServerResponse } from 'http';
@@ -32,14 +33,29 @@ export async function createContext(opts: {
   req: RequestLike;
   res: NextApiResponse | ServerResponse;
 }) {
-  const { userId, orgId, sessionClaims } = getAuth(opts.req);
+  const getAuthAndCreateContext = () => {
+    const { userId, orgId, sessionClaims } = getAuth(opts.req);
 
-  return createContextInner({
-    userId: userId || undefined,
-    orgId: orgId || undefined,
-    organizations: sessionClaims?.organizations as Record<string, string>[],
-    req: opts.req,
-  });
+    return createContextInner({
+      userId: userId || undefined,
+      orgId: orgId || undefined,
+      organizations: sessionClaims?.organizations as Record<string, string>[],
+      req: opts.req,
+    });
+  };
+
+  try {
+    return getAuthAndCreateContext();
+  } catch (e) {
+    try {
+      // we're seeing transient errors so try again;
+      captureException(e);
+      return getAuthAndCreateContext();
+    } catch (e: any) {
+      captureException(e);
+      return createContextInner({ req: opts.req });
+    }
+  }
 }
 
 export type Context = trpc.inferAsyncReturnType<typeof createContext>;
