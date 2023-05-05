@@ -52,7 +52,8 @@ export async function createContext(opts: {
       captureException(e);
       return getAuthAndCreateContext();
     } catch (e: any) {
-      throw new Error(e);
+      captureException(e);
+      return createContextInner({ req: opts.req });
     }
   }
 }
