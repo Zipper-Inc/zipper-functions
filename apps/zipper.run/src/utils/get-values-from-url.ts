@@ -26,6 +26,8 @@ export function getFilenameAndVersionFromPath(
     else filename = part;
   });
 
+  if (version === 'latest') version = undefined;
+
   return { filename, version };
 }
 

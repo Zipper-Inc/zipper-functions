@@ -94,7 +94,7 @@ export function FunctionOutput({
       );
       expandedFormContext.reset(defaultValues);
     }
-  }, [applet.expandedContent]);
+  }, [applet.expandedContent.output, applet.expandedContent.inputs]);
 
   function showSecondaryOutput({
     actionShowAs,
@@ -129,7 +129,7 @@ export function FunctionOutput({
         }
         default: {
           applet.mainContent.set(content);
-          // applet.expandedContent.set({ inputs: [], output: '' });
+          applet.expandedContent.set({ inputs: [], output: '' });
         }
       }
     } else {

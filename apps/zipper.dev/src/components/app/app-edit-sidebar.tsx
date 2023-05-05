@@ -15,8 +15,7 @@ import {
   useClipboard,
 } from '@chakra-ui/react';
 import { TabButton } from '@zipper/ui';
-import { useEffect, useState } from 'react';
-import { LogLine } from '~/components/app/log-line';
+import { useState } from 'react';
 import { useRunAppContext } from '../context/run-app-context';
 
 import { HiOutlineClipboard, HiOutlinePlay } from 'react-icons/hi2';

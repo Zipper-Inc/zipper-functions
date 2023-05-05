@@ -8,14 +8,8 @@ import { useRunAppContext } from '../context/run-app-context';
 import { AppEditSidebarAppletConnectors } from './app-edit-sidebar-applet-connectors';
 
 export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
-  const {
-    lastRunVersion,
-    formMethods,
-    isRunning,
-    results,
-    userAuthConnectors,
-    appInfo,
-  } = useRunAppContext();
+  const { formMethods, isRunning, results, userAuthConnectors, appInfo } =
+    useRunAppContext();
 
   const {
     currentScript,
@@ -28,6 +22,7 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
   const mainApplet = useAppletContent();
 
   useEffect(() => {
+    mainApplet.expandedContent.set({ inputs: undefined, output: undefined });
     mainApplet.mainContent.set({
       output: results[currentScript?.filename || 'main.ts'],
     });
@@ -45,7 +40,7 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
       <FunctionOutput
         applet={mainApplet}
         getRunUrl={(scriptName: string) => {
-          return getRunUrl(appSlug, lastRunVersion, scriptName);
+          return getRunUrl(appSlug, appInfo.lastDeploymentVersion, scriptName);
         }}
         currentContext={'main'}
         appSlug={appInfo.slug}

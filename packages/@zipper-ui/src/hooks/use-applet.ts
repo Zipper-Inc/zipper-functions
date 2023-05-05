@@ -75,6 +75,10 @@ export const useAppletContent = (): AppletContentReturnType => {
     inputs?: InputParams;
     output?: string;
   }) => {
+    if (!path && !inputs && !output) {
+      setInputs(undefined);
+      setOutput(undefined);
+    }
     if (path) setPath(path);
     if (inputs) setInputs(inputs);
     if (output) setOutput(output);
@@ -89,6 +93,10 @@ export const useAppletContent = (): AppletContentReturnType => {
     inputs?: InputParams;
     output?: string;
   }) => {
+    if (!path && !inputs && !output) {
+      setExpandedInputs(undefined);
+      setExpandedOutput(undefined);
+    }
     if (path) setExpandedPath(path);
     if (inputs) setExpandedInputs(inputs);
     if (output) setExpandedOutput(output);
