@@ -1,10 +1,11 @@
 import { Flex, VStack, Text, Center, Button, Box } from '@chakra-ui/react';
-import { UserButton, SignOutButton, useUser } from '@clerk/nextjs';
+import { UserButton, useUser, useClerk } from '@clerk/nextjs';
 import { ZipperLogo, ZipperSymbol } from '@zipper/ui';
 import router from 'next/router';
 
 export default function Unauthorized() {
   const { user } = useUser();
+  const { signOut } = useClerk();
 
   return (
     <Box as="main">
@@ -52,8 +53,12 @@ export default function Unauthorized() {
               </>
             )}
             {user && (
-              <Button colorScheme={'purple'} variant="outline">
-                <SignOutButton />
+              <Button
+                colorScheme={'purple'}
+                variant="outline"
+                onClick={() => signOut()}
+              >
+                Sign out
               </Button>
             )}
           </VStack>
