@@ -1123,26 +1123,12 @@
   resolved "https://registry.npmjs.org/@chakra-ui/visually-hidden/-/visually-hidden-2.0.15.tgz"
   integrity sha512-WWULIiucYRBIewHKFA7BssQ2ABLHLVd9lrUo3N3SZgR0u4ZRDDVEUNOy+r+9ruDze8+36dGbN9wsN1IdELtdOw==
 
-"@clerk/backend@^0.13.1":
-  version "0.13.1"
-  resolved "https://registry.npmjs.org/@clerk/backend/-/backend-0.13.1.tgz"
-  integrity sha512-OqIi94As7mqyM4fegopKuy9jrvylvM8Nz3HEBUOV3TRF3CQxfQs0M7VrLO7pb6waPjsMz9rt6nDxhPvrrmcR8w==
+"@clerk/backend@^0.18.0":
+  version "0.18.0"
+  resolved "https://registry.yarnpkg.com/@clerk/backend/-/backend-0.18.0.tgz#f178e19bc26668b2e5ce8f31541433c810cc8810"
+  integrity sha512-d3YoDBK56XLdoAkLq7wCyY9B3Qxd1DG0+snXTXE7qWQtG6AFJEQ7FKFRFEsNzMZaWRfiiE9jQ9GJMjWEVvLAUA==
   dependencies:
-    "@clerk/types" "^3.30.1"
-    "@peculiar/webcrypto" "1.4.1"
-    "@types/node" "16.18.6"
-    deepmerge "4.2.2"
-    node-fetch-native "1.0.1"
-    rfc4648 "1.5.2"
-    snakecase-keys "5.4.4"
-    tslib "2.4.1"
-
-"@clerk/backend@^0.13.5":
-  version "0.13.5"
-  resolved "https://registry.npmjs.org/@clerk/backend/-/backend-0.13.5.tgz"
-  integrity sha512-Jrbs2G/CalixMxL0BCK74dnBoMVZn+iyXa/jyO9YXI77tfvzG8BON6KlEJLU7UKt4IS7xBIfYB3Qxu0kF0yVPQ==
-  dependencies:
-    "@clerk/types" "^3.31.1"
+    "@clerk/types" "^3.36.0"
     "@peculiar/webcrypto" "1.4.1"
     "@types/node" "16.18.6"
     deepmerge "4.2.2"
@@ -1150,63 +1136,23 @@
     snakecase-keys "5.4.4"
     tslib "2.4.1"
 
-"@clerk/backend@^0.5.0":
-  version "0.5.0"
-  resolved "https://registry.npmjs.org/@clerk/backend/-/backend-0.5.0.tgz"
-  integrity sha512-UiPIS21YWdxZqHl5fkC3i3XAdvamuuRUWig4QY/sto+RbJ0DMPkDFEtuAWw/YPi2bMbgNazS/VFhhLW8qGchdQ==
+"@clerk/clerk-react@^4.15.4":
+  version "4.15.4"
+  resolved "https://registry.yarnpkg.com/@clerk/clerk-react/-/clerk-react-4.15.4.tgz#80728a007055c316c840ddb4184381dae4cbb3d6"
+  integrity sha512-OSimB3ua3hJtlau3qUWIhIGIOoRZVEUMBuyVSkCkEEyjCGhHnSyO81Vcbv9slUtlP3DWlxeppMpdA62KZ6L1iA==
   dependencies:
-    "@clerk/types" "^3.25.0"
-    "@peculiar/webcrypto" "1.4.1"
-    "@types/node" "16.18.6"
-    deepmerge "4.2.2"
-    node-fetch-native "1.0.1"
-    rfc4648 "1.5.2"
-    snakecase-keys "5.4.4"
-    tslib "2.4.1"
-
-"@clerk/clerk-react@^4.12.4":
-  version "4.12.4"
-  resolved "https://registry.npmjs.org/@clerk/clerk-react/-/clerk-react-4.12.4.tgz"
-  integrity sha512-u7/7M+Re5tGUA1gQG2p214vDAhtxQMjjktCdAAKVOegKWN3FuDUybJ1ojBHVCNm7me6e4UAK8hCBYn5cOaOI/Q==
-  dependencies:
-    "@clerk/shared" "^0.13.1"
-    "@clerk/types" "^3.30.1"
+    "@clerk/shared" "^0.15.7"
+    "@clerk/types" "^3.36.0"
     swr "1.3.0"
     tslib "2.4.1"
 
-"@clerk/clerk-react@^4.12.8":
-  version "4.12.8"
-  resolved "https://registry.npmjs.org/@clerk/clerk-react/-/clerk-react-4.12.8.tgz"
-  integrity sha512-1cou6ZQ8OGb1wc0M3nwTxvSVFqt8ZCgI+mBDy4+BBYhKaP5INenmg6HmEMCswq3YzsHTiHFTIYMAcM8oGkku4Q==
+"@clerk/clerk-sdk-node@^4.8.7":
+  version "4.8.7"
+  resolved "https://registry.yarnpkg.com/@clerk/clerk-sdk-node/-/clerk-sdk-node-4.8.7.tgz#d713469121631899f583232dff3d661b48932d81"
+  integrity sha512-fOlfPOL7XhBR9Jg9RnUnYqRB6yXlE+3/kVZ4RG0CcWNVLwLwGIgHz0C3+Sa3e3g+UAVpuvvnXq2/42rstm/ADA==
   dependencies:
-    "@clerk/shared" "^0.13.5"
-    "@clerk/types" "^3.31.1"
-    swr "1.3.0"
-    tslib "2.4.1"
-
-"@clerk/clerk-sdk-node@^4.5.14":
-  version "4.6.4"
-  resolved "https://registry.npmjs.org/@clerk/clerk-sdk-node/-/clerk-sdk-node-4.6.4.tgz"
-  integrity sha512-p0WnRxLA6RttLO24NiLKg8phGCJmA47mN5tQNV7z0TXYR17pFj6LnV7CI+/Mf9M1PK3d4ryGyJYWpGR3ULX8Ow==
-  dependencies:
-    "@clerk/backend" "^0.5.0"
-    "@clerk/types" "^3.25.0"
-    "@types/cookies" "0.7.7"
-    "@types/express" "4.17.14"
-    "@types/jsonwebtoken" "8.5.9"
-    "@types/node-fetch" "2.6.2"
-    camelcase-keys "6.2.2"
-    cookie "0.5.0"
-    snakecase-keys "3.2.1"
-    tslib "2.4.1"
-
-"@clerk/clerk-sdk-node@^4.7.11":
-  version "4.7.11"
-  resolved "https://registry.npmjs.org/@clerk/clerk-sdk-node/-/clerk-sdk-node-4.7.11.tgz"
-  integrity sha512-Gspsf+CXiNNd/dY6sczy2/IpS+yvSdSBYhKspZ0g2HIQRi6Sb7lu/bGkhpAwjadzUiDSYwoQH6eOyWv2uCHcog==
-  dependencies:
-    "@clerk/backend" "^0.13.1"
-    "@clerk/types" "^3.30.1"
+    "@clerk/backend" "^0.18.0"
+    "@clerk/types" "^3.36.0"
     "@types/cookies" "0.7.7"
     "@types/express" "4.17.14"
     "@types/node-fetch" "2.6.2"
@@ -1215,71 +1161,27 @@
     snakecase-keys "3.2.1"
     tslib "2.4.1"
 
-"@clerk/clerk-sdk-node@^4.7.16":
-  version "4.7.16"
-  resolved "https://registry.npmjs.org/@clerk/clerk-sdk-node/-/clerk-sdk-node-4.7.16.tgz"
-  integrity sha512-Z0xjoPGIOmrKL1XYh6Gh90e6ZI8mtnaADMm3U255KteQNe7CqGri3y8X9Rk6FmhNtk+857NIXM8mVblZz4c4cA==
+"@clerk/nextjs@^4.17.1":
+  version "4.17.1"
+  resolved "https://registry.yarnpkg.com/@clerk/nextjs/-/nextjs-4.17.1.tgz#8bb7eb14ee32e97eee8090c91b34645cb84fbb71"
+  integrity sha512-v6UPYUkwktUmZT01nJFWQvrWSyVJx6CYa/KVHo6gmSTyUFX7p7Tpfoknq1VCvqp6DCHdbJC1uHbXmjUd4AhwBQ==
   dependencies:
-    "@clerk/backend" "^0.13.5"
-    "@clerk/types" "^3.31.1"
-    "@types/cookies" "0.7.7"
-    "@types/express" "4.17.14"
-    "@types/node-fetch" "2.6.2"
-    camelcase-keys "6.2.2"
-    cookie "0.5.0"
-    snakecase-keys "3.2.1"
+    "@clerk/backend" "^0.18.0"
+    "@clerk/clerk-react" "^4.15.4"
+    "@clerk/clerk-sdk-node" "^4.8.7"
+    "@clerk/types" "^3.36.0"
+    path-to-regexp "6.2.1"
     tslib "2.4.1"
 
-"@clerk/nextjs@^4.11.0":
-  version "4.11.7"
-  resolved "https://registry.npmjs.org/@clerk/nextjs/-/nextjs-4.11.7.tgz"
-  integrity sha512-5M/bpToq/ztgKiz8Wc31Kysnhdey4t+01Q6AHuoIAKit0WwFGnp4GOolanEqalFWwUrgNG1swoG7E5uU3Ac36g==
-  dependencies:
-    "@clerk/backend" "^0.13.1"
-    "@clerk/clerk-react" "^4.12.4"
-    "@clerk/clerk-sdk-node" "^4.7.11"
-    "@clerk/types" "^3.30.1"
-    tslib "2.4.1"
+"@clerk/shared@^0.15.7":
+  version "0.15.7"
+  resolved "https://registry.yarnpkg.com/@clerk/shared/-/shared-0.15.7.tgz#8e324cc8b03a00a2ea28f33be3ba312d918552db"
+  integrity sha512-8kinCWFF28K8N/OCqfZYIEzxpyH8+HFZ1BmfloQLDSsiy8kpUljk3qbKkBRoHAxJKohSjZL6ax+IpBzt2FmkZw==
 
-"@clerk/nextjs@^4.11.13":
-  version "4.11.13"
-  resolved "https://registry.npmjs.org/@clerk/nextjs/-/nextjs-4.11.13.tgz"
-  integrity sha512-G1+KnYk0bQUQuwKwylMHmuUzFCnqe43cSLce8kRo3ETve4t4Tl8MZP5TCM5lDLGM+MnWZlcx9ksuOq3nqdVWLw==
-  dependencies:
-    "@clerk/backend" "^0.13.5"
-    "@clerk/clerk-react" "^4.12.8"
-    "@clerk/clerk-sdk-node" "^4.7.16"
-    "@clerk/types" "^3.31.1"
-    tslib "2.4.1"
-
-"@clerk/shared@^0.13.1":
-  version "0.13.1"
-  resolved "https://registry.npmjs.org/@clerk/shared/-/shared-0.13.1.tgz"
-  integrity sha512-Dr613euSB0rg1xFNAXGQK1vUe4lsyUpt0ql6Fbj2S7pt1RJVSTu1p7vsDCMTs6HjPvm/hk4rMjIDLol1H5dgIw==
-
-"@clerk/shared@^0.13.5":
-  version "0.13.5"
-  resolved "https://registry.npmjs.org/@clerk/shared/-/shared-0.13.5.tgz"
-  integrity sha512-AMh9FqoBr7YIRwmAC0FwWHLIqbbqICOWrxuPOr93WXe3Cm3HZVwIpXkaS7Qc+yMKJaaeFj+M7GkVNX7NohsRsQ==
-
-"@clerk/types@^3.25.0":
-  version "3.25.0"
-  resolved "https://registry.npmjs.org/@clerk/types/-/types-3.25.0.tgz"
-  integrity sha512-smT9UoS+JEkvGPRF4P4YraJoWIfJ7u0CjL7lzGgwcm7Vyyx07oRys51m4rxMIDgqX7I+J8qGu7G8H8rXtAt+sw==
-  dependencies:
-    csstype "3.1.1"
-
-"@clerk/types@^3.30.1":
-  version "3.30.1"
-  resolved "https://registry.npmjs.org/@clerk/types/-/types-3.30.1.tgz"
-  integrity sha512-2YaNnm6urOP8nnMRaYBhG9cob7KIqU75Fl5HvX4cE4clf3yQ3cv/SSpMbHVyNbbGxuuuT4/rmqBkYpguIAGnVw==
-  dependencies:
-    csstype "3.1.1"
-
-"@clerk/types@^3.31.1":
-  version "3.31.1"
-  resolved "https://registry.npmjs.org/@clerk/types/-/types-3.31.1.tgz"
-  integrity sha512-7xQtN1vUKq5kTdIwcbypiL2Qu9OU+1zS8LtIRFKgxAWt7lO2RW3yZMRVJvoPaTXyGnszyDcOla5lAHVHmKt6aQ==
+"@clerk/types@^3.36.0":
+  version "3.36.0"
+  resolved "https://registry.yarnpkg.com/@clerk/types/-/types-3.36.0.tgz#bc7c87b478ba6b945f0e68f644c23c96fe690814"
+  integrity sha512-bsOIud1h3Tkvd9F0CGTqqD7NicvAF3O0hFQ2lGjuETFrNqV8houorrGM9d0ZMU72vsyzwTQ/Jw8vB4mIHIXHMQ==
   dependencies:
     csstype "3.1.1"
 
@@ -2597,13 +2499,6 @@
   version "0.0.29"
   resolved "https://registry.npmjs.org/@types/json5/-/json5-0.0.29.tgz"
   integrity sha512-dRLjCWHYg4oaA77cxO64oO+7JwCwnIzkZPdrrC71jQmQtlhM556pwKo5bUzqvZndkVbeFLIIi+9TC40JNF5hNQ==
-
-"@types/jsonwebtoken@8.5.9":
-  version "8.5.9"
-  resolved "https://registry.npmjs.org/@types/jsonwebtoken/-/jsonwebtoken-8.5.9.tgz"
-  integrity sha512-272FMnFGzAVMGtu9tkr29hRL6bZj4Zs1KZNeHLnKqAvp06tAIcarTMwOh8/8bz4FmKRcMxZhZNeUAQsNLoiPhg==
-  dependencies:
-    "@types/node" "*"
 
 "@types/keygrip@*":
   version "1.0.2"
@@ -6702,6 +6597,11 @@ path-parse@^1.0.7:
   version "1.0.7"
   resolved "https://registry.npmjs.org/path-parse/-/path-parse-1.0.7.tgz"
   integrity sha512-LDJzPVEEEPR+y48z93A0Ed0yXb8pAByGWo/k5YYdYgpY2/2EsOsksJrq7lOHxryrVOn1ejG6oAp8ahvOIQD8sw==
+
+path-to-regexp@6.2.1:
+  version "6.2.1"
+  resolved "https://registry.yarnpkg.com/path-to-regexp/-/path-to-regexp-6.2.1.tgz#d54934d6798eb9e5ef14e7af7962c945906918e5"
+  integrity sha512-JLyh7xT1kizaEvcaXOQwOc2/Yhw6KZOvPf1S8401UyLk86CU79LN3vl7ztXGm/pZ+YjoyAJ4rxmHwbkBXJX+yw==
 
 path-type@^3.0.0:
   version "3.0.0"
