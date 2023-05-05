@@ -29,7 +29,7 @@ import {
   TabButton,
   FunctionUserConnectors,
 } from '@zipper/ui';
-import { useEffect, useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 import { useRunAppContext } from '../context/run-app-context';
 import { trpc } from '~/utils/trpc';
 import { useRouter } from 'next/router';
@@ -315,7 +315,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
   const isHandler = inputParams || inputError;
 
   return (
-    <VStack align="stretch">
+    <VStack h="full" w="full">
       {isHandler && (
         <HStack w="full" mb="2">
           <HStack
@@ -324,7 +324,6 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
             py={2}
             rounded="lg"
             justifyContent="space-between"
-            overflow="auto"
             border="1px"
             borderColor="gray.200"
             w="full"
@@ -412,11 +411,10 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
         colorScheme="purple"
         index={tabIndex}
         onChange={handleTabsChange}
-        flex={1}
         display="flex"
         flexDirection="column"
-        gap={5}
-        alignItems="stretch"
+        h="full"
+        w="full"
         hidden={isLibrary}
       >
         <TabList
@@ -426,7 +424,6 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
           color="gray.500"
           gap={4}
           justifyContent="space-between"
-          overflow="auto"
           pb={4}
         >
           <HStack spacing={2}>
@@ -435,17 +432,19 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
             <TabButton title="Console" />
           </HStack>
         </TabList>
-        <TabPanels as={VStack} alignItems="stretch" flex={1} spacing="0">
+        <TabPanels as={Fragment}>
           {/* INPUT */}
           {showInputForm && (
             <TabPanel
               p={0}
-              flex={1}
+              pt={4}
+              h="full"
               display="flex"
               flexDir="column"
-              alignItems="stretch"
+              flex="1 1 auto"
+              overflow="auto"
+              w="full"
             >
-              {/** @todo make this height thing less jank */}
               <Box
                 p={4}
                 backgroundColor="gray.100"
@@ -453,6 +452,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
                 rounded="md"
                 border="1px"
                 borderColor="gray.200"
+                w="full"
               >
                 <>
                   {inputParams?.length || userAuthConnectors?.length ? (
@@ -555,7 +555,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
               </Box>
 
               {currentScript && results[currentScript.filename] && (
-                <Box mt={4}>{output}</Box>
+                <Box>{output}</Box>
               )}
 
               {expandedResult[currentScript?.filename || 'main.ts'] && (
@@ -633,7 +633,14 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
           {tips && <TabPanel flex={1}>{tips}</TabPanel>}
 
           {/* LOGS */}
-          <TabPanel flex={1} p={0} mt={0}>
+          <TabPanel
+            h="full"
+            w="full"
+            flex="1 1 auto"
+            overflow="auto"
+            p={0}
+            background="white"
+          >
             <AppConsole logs={logs} />
           </TabPanel>
         </TabPanels>
