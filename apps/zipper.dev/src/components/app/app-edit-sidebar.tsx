@@ -5,6 +5,7 @@ import {
   TabPanel,
   VStack,
   Box,
+  Flex,
   Text,
   Progress,
   HStack,
@@ -432,7 +433,13 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
             <TabButton title="Console" />
           </HStack>
         </TabList>
-        <TabPanels as={Fragment}>
+        <TabPanels
+          as={Flex}
+          flexDirection="column"
+          h="full"
+          // IDK why we need this but it works
+          maxH="calc(100% - 115px)"
+        >
           {/* INPUT */}
           {showInputForm && (
             <TabPanel
