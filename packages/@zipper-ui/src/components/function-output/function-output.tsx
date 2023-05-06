@@ -130,7 +130,7 @@ export function FunctionOutput({
         }
         default: {
           applet.mainContent.set(content);
-          applet.expandedContent.set({ inputs: [], output: '' });
+          applet.expandedContent.set({ inputs: undefined, output: undefined });
         }
       }
     } else {
