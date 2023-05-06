@@ -32,7 +32,7 @@ import { getInputsFromFormData } from '@zipper/utils';
 import { FunctionInputs } from '../function-inputs';
 import { useForm } from 'react-hook-form';
 import { useAppletContent } from '@zipper/ui';
-import { InputParams } from '@zipper/types';
+import { InputParam, InputParams } from '@zipper/types';
 
 const tabsStyles: ChakraProps = { display: 'flex', flexDir: 'column', gap: 0 };
 const tablistStyles: ChakraProps = {
@@ -76,7 +76,8 @@ export function FunctionOutput({
     if (modalApplet.mainContent.inputs) {
       const defaultValues: Record<string, any> = {};
       modalApplet.mainContent.inputs?.forEach(
-        (i) => (defaultValues[`${i.key}:${i.type}`] = i.defaultValue),
+        (i: InputParam) =>
+          (defaultValues[`${i.key}:${i.type}`] = i.defaultValue),
       );
       modalFormContext.reset(defaultValues);
     }

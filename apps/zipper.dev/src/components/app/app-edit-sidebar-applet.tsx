@@ -22,11 +22,14 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
   const mainApplet = useAppletContent();
 
   useEffect(() => {
-    mainApplet.expandedContent.set({ inputs: undefined, output: undefined });
+    mainApplet.expandedContent.set({
+      inputs: undefined,
+      output: undefined,
+    });
     mainApplet.mainContent.set({
       output: results[currentScript?.filename || 'main.ts'],
     });
-  }, [results]);
+  }, [results, currentScript]);
 
   useEffect(() => {
     mainApplet.mainContent.set({ inputs: inputParams });
@@ -35,7 +38,9 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
   const isHandler = inputParams || inputError;
 
   const output = useMemo(() => {
-    mainApplet.mainContent.set({ path: currentScript?.filename || 'main.ts' });
+    mainApplet.mainContent.set({
+      path: currentScript?.filename || 'main.ts',
+    });
     return (
       <FunctionOutput
         applet={mainApplet}
