@@ -14,7 +14,7 @@ export const useAppletContent = (): AppletContentReturnType => {
   const [expandedInputs, setExpandedInputs] = useState<InputParams>();
   const [expandedOutput, setExpandedOutput] = useState<string | undefined>();
   const [expandedPath, setExpandedPath] = useState<string | undefined>();
-  const [path, setPath] = useState<string>('main.ts');
+  const [path, setPath] = useState<string | undefined>();
 
   const [isLoading, setIsLoading] = useState(false);
   const [isExpandedLoading, setIsExpandedLoading] = useState(false);
@@ -38,27 +38,45 @@ export const useAppletContent = (): AppletContentReturnType => {
       setExpandedInputs(panels[currentPanelIndex]?.expandedInputs);
       setExpandedOutput(panels[currentPanelIndex]?.expandedOutput);
       setExpandedPath(panels[currentPanelIndex]!.expandedPath);
+    } else {
+      setPanels([...panels, {}]);
     }
   }, [currentPanelIndex]);
 
   const addPanel = ({
-    inputs,
-    output,
-    path,
+    mainContent,
+    expandedContent,
   }: {
-    path: string;
-    inputs?: InputParams;
-    output?: string;
+    mainContent: {
+      path?: string;
+      inputs?: InputParams;
+      output?: string;
+    };
+    expandedContent?: {
+      path?: string;
+      inputs?: InputParams;
+      output?: string;
+    };
   }) => {
-    setPanels((panels) => {
-      setCurrentPanelIndex(panels.length);
-      return [...panels, { path, inputs, output }];
+    const { inputs, output, path } = mainContent;
+    setCurrentPanelIndex(currentPanelIndex + 1);
+    setPanels(() => {
+      return [
+        ...panels,
+        {
+          path,
+          inputs,
+          output,
+          expandedInputs: expandedContent?.inputs,
+          expandedOutput: expandedContent?.output,
+          expandedPath: expandedContent?.path,
+        },
+      ];
     });
   };
 
   const reset = () => {
     setPanels([]);
-    setCurrentPanelIndex(0);
     setInputs(undefined);
     setOutput(undefined);
     setExpandedInputs(undefined);
@@ -111,7 +129,9 @@ export const useAppletContent = (): AppletContentReturnType => {
     });
   };
 
-  const numberOfPanels = () => panels.length;
+  const numberOfPanels = () => {
+    return panels.length;
+  };
 
   return {
     mainContent: {

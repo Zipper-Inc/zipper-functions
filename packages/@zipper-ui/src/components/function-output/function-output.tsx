@@ -20,13 +20,19 @@ import {
   useDisclosure,
   VStack,
   Spinner,
+  Icon,
+  Divider,
 } from '@chakra-ui/react';
 import { FunctionOutputProps } from './types';
 import { RawFunctionOutput } from './raw-function-output';
 import { SmartFunctionOutput } from './smart-function-output';
 import { ErrorBoundary } from '../error-boundary';
 import FunctionOutputProvider from './function-output-context';
-import { HiOutlineChevronUp, HiOutlineChevronDown } from 'react-icons/hi';
+import {
+  HiOutlineChevronUp,
+  HiOutlineChevronDown,
+  HiChevronLeft,
+} from 'react-icons/hi';
 import { useEffect, useState } from 'react';
 import { getInputsFromFormData } from '@zipper/utils';
 import { FunctionInputs } from '../function-inputs';
@@ -121,7 +127,16 @@ export function FunctionOutput({
     if (currentContext === 'main') {
       switch (actionShowAs) {
         case 'expanded': {
-          applet.expandedContent.set(content);
+          if (applet.expandedContent.output) {
+            console.log('here');
+            applet.addPanel({
+              mainContent: applet.mainContent,
+              expandedContent: content,
+            });
+            console.log(applet.numberOfPanels());
+          } else {
+            applet.expandedContent.set(content);
+          }
           break;
         }
         case 'modal': {
@@ -136,11 +151,18 @@ export function FunctionOutput({
     } else {
       switch (actionShowAs) {
         case 'expanded': {
-          applet.expandedContent.set(content);
+          if (applet.expandedContent.output) {
+            applet.addPanel({
+              mainContent: applet.mainContent,
+              expandedContent: content,
+            });
+          } else {
+            applet.expandedContent.set(content);
+          }
           break;
         }
         default: {
-          applet.addPanel(content);
+          applet.addPanel({ mainContent: content });
         }
       }
     }
@@ -234,7 +256,7 @@ export function FunctionOutput({
                   modalApplet.mainContent.inputs || [],
                 );
                 const res = await fetch(
-                  getRunUrl(modalApplet.mainContent.path),
+                  getRunUrl(modalApplet.mainContent.path || 'main.ts'),
                   {
                     method: 'POST',
                     body: JSON.stringify(values),
@@ -315,6 +337,20 @@ export function FunctionOutput({
             >
               <TabPanel>
                 <Box overflow="auto">
+                  {applet.numberOfPanels() > 1 && (
+                    <>
+                      <Button
+                        variant="Link"
+                        fontSize="sm"
+                        color="gray.600"
+                        pl="0"
+                      >
+                        <Icon as={HiChevronLeft} />
+                        Back
+                      </Button>
+                      <Divider />
+                    </>
+                  )}
                   <Box width="max-content" data-function-output="smart">
                     <SmartFunctionOutput
                       result={applet?.mainContent.output}
