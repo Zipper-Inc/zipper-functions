@@ -94,7 +94,7 @@ declare namespace Zipper {
     /**
      * The type of action this is
      */
-    actionType: 'button';
+    actionType: 'button' | 'dropdown';
     /**
      * The visible text for the Action
      */
