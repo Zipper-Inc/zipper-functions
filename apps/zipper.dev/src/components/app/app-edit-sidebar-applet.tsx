@@ -22,6 +22,11 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
   const mainApplet = useAppletContent();
 
   useEffect(() => {
+    mainApplet.reset();
+    mainApplet.mainContent.set({ inputs: inputParams });
+  }, [isRunning]);
+
+  useEffect(() => {
     mainApplet.expandedContent.set({
       inputs: undefined,
       output: undefined,
@@ -54,8 +59,15 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
   }, [
     mainApplet.mainContent.output,
     mainApplet.mainContent.inputs,
+    mainApplet.mainContent.path,
+    mainApplet.mainContent.isLoading,
     mainApplet.expandedContent.output,
     mainApplet.expandedContent.inputs,
+    mainApplet.expandedContent.isLoading,
+    mainApplet.expandedContent.path,
+    mainApplet.previousPanels,
+    mainApplet.goBack,
+    mainApplet.showGoBackLink,
     currentScript,
   ]);
 

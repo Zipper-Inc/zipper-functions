@@ -79,6 +79,10 @@ export function FunctionOutput({
   const expandedFormContext = useForm();
 
   useEffect(() => {
+    console.log(currentContext, applet.previousPanels);
+  }, [applet.previousPanels]);
+
+  useEffect(() => {
     if (modalApplet.mainContent.inputs) {
       const defaultValues: Record<string, any> = {};
       modalApplet.mainContent.inputs?.forEach(
@@ -128,12 +132,10 @@ export function FunctionOutput({
       switch (actionShowAs) {
         case 'expanded': {
           if (applet.expandedContent.output) {
-            console.log('here');
             applet.addPanel({
               mainContent: applet.mainContent,
               expandedContent: content,
             });
-            console.log(applet.numberOfPanels());
           } else {
             applet.expandedContent.set(content);
           }
@@ -144,8 +146,9 @@ export function FunctionOutput({
           break;
         }
         default: {
-          applet.mainContent.set(content);
-          applet.expandedContent.set({ inputs: undefined, output: undefined });
+          applet.addPanel({
+            mainContent: content,
+          });
         }
       }
     } else {
@@ -337,13 +340,14 @@ export function FunctionOutput({
             >
               <TabPanel>
                 <Box overflow="auto">
-                  {applet.numberOfPanels() > 1 && (
+                  {applet.showGoBackLink() && (
                     <>
                       <Button
                         variant="Link"
                         fontSize="sm"
                         color="gray.600"
                         pl="0"
+                        onClick={() => applet.goBack()}
                       >
                         <Icon as={HiChevronLeft} />
                         Back
@@ -400,9 +404,6 @@ export function FunctionOutput({
               <ModalOverlay />
               <ModalContent maxH="2xl">
                 <ModalHeader>
-                  {modalApplet.numberOfPanels() > 1 && (
-                    <Button onClick={() => modalApplet.goBack()}>Back</Button>
-                  )}
                   HEADING
                   {/* {modalResult.heading || modalInputs.path || appInfo.name} */}
                 </ModalHeader>

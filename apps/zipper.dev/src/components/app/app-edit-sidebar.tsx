@@ -136,8 +136,6 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
                   currentScript?.filename === 'main.ts' ? 'solid' : 'ghost'
                 }
                 onClick={() => {
-                  // setExpandedResult({});
-                  // setInputsAtTimeOfRun();
                   run(true);
                 }}
                 display="flex"

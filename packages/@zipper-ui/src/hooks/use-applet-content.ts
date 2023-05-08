@@ -4,11 +4,12 @@ import {
   AppletContentPanel,
   InputParams,
 } from '@zipper/types';
-import { useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 
 export const useAppletContent = (): AppletContentReturnType => {
-  const [panels, setPanels] = useState<AppletContentPanel[]>([]);
-  const [currentPanelIndex, setCurrentPanelIndex] = useState(0);
+  const [previousPanels, setPreviousPanels] = useState<AppletContentPanel[]>(
+    [],
+  );
   const [inputs, setInputs] = useState<InputParams>();
   const [output, setOutput] = useState<string | undefined>();
   const [expandedInputs, setExpandedInputs] = useState<InputParams>();
@@ -19,64 +20,36 @@ export const useAppletContent = (): AppletContentReturnType => {
   const [isLoading, setIsLoading] = useState(false);
   const [isExpandedLoading, setIsExpandedLoading] = useState(false);
 
-  useEffect(() => {
-    panels[currentPanelIndex] = {
-      inputs,
-      output,
-      path,
-      expandedInputs,
-      expandedOutput,
-      expandedPath,
-    };
-  }, [inputs, output, path, expandedInputs, expandedOutput, expandedPath]);
-
-  useEffect(() => {
-    if (panels[currentPanelIndex]) {
-      setInputs(panels[currentPanelIndex]?.inputs);
-      setOutput(panels[currentPanelIndex]?.output);
-      setPath(panels[currentPanelIndex]!.path);
-      setExpandedInputs(panels[currentPanelIndex]?.expandedInputs);
-      setExpandedOutput(panels[currentPanelIndex]?.expandedOutput);
-      setExpandedPath(panels[currentPanelIndex]!.expandedPath);
-    } else {
-      setPanels([...panels, {}]);
-    }
-  }, [currentPanelIndex]);
-
   const addPanel = ({
     mainContent,
     expandedContent,
   }: {
-    mainContent: {
-      path?: string;
-      inputs?: InputParams;
-      output?: string;
-    };
-    expandedContent?: {
-      path?: string;
-      inputs?: InputParams;
-      output?: string;
-    };
+    mainContent: { inputs?: InputParams; output?: string; path?: string };
+    expandedContent?: { inputs?: InputParams; outputs?: string; path?: string };
   }) => {
-    const { inputs, output, path } = mainContent;
-    setCurrentPanelIndex(currentPanelIndex + 1);
-    setPanels(() => {
-      return [
-        ...panels,
-        {
-          path,
-          inputs,
-          output,
-          expandedInputs: expandedContent?.inputs,
-          expandedOutput: expandedContent?.output,
-          expandedPath: expandedContent?.path,
-        },
-      ];
-    });
+    setPreviousPanels((previousValue) => [
+      ...previousValue,
+      {
+        inputs,
+        output,
+        path,
+        expandedInputs,
+        expandedOutput,
+        expandedPath,
+      },
+    ]);
+    setMainContent(mainContent);
+    setExpandedContent(
+      expandedContent || {
+        path: undefined,
+        inputs: undefined,
+        output: undefined,
+      },
+    );
   };
 
   const reset = () => {
-    setPanels([]);
+    setPreviousPanels([]);
     setInputs(undefined);
     setOutput(undefined);
     setExpandedInputs(undefined);
@@ -120,18 +93,25 @@ export const useAppletContent = (): AppletContentReturnType => {
     if (output) setExpandedOutput(output);
   };
 
-  const goBack = () => {
-    setCurrentPanelIndex((currentPanelIndex) => {
-      const remainingPanels = panels;
-      remainingPanels.pop();
-      setPanels(remainingPanels);
-      return currentPanelIndex - 1;
-    });
-  };
+  const goBack = useCallback(() => {
+    const len = previousPanels.length - 1;
+    const previous = previousPanels[len];
 
-  const numberOfPanels = () => {
-    return panels.length;
-  };
+    setInputs(previous?.inputs);
+    setOutput(previous?.output);
+    setPath(previous?.path);
+    setExpandedInputs(previous?.expandedInputs);
+    setExpandedOutput(previous?.expandedOutput);
+    setExpandedPath(previous?.expandedPath);
+
+    setPreviousPanels((p) => {
+      return p.slice(0, -1);
+    });
+  }, [previousPanels]);
+
+  const showGoBackLink = useCallback(() => {
+    return previousPanels.length > 0;
+  }, [previousPanels]);
 
   return {
     mainContent: {
@@ -153,6 +133,7 @@ export const useAppletContent = (): AppletContentReturnType => {
     addPanel,
     reset,
     goBack,
-    numberOfPanels,
+    showGoBackLink,
+    previousPanels,
   };
 };
