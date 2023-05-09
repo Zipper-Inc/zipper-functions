@@ -228,7 +228,7 @@ export function AppPage({
     mainApplet.expandedContent.inputs,
     mainApplet.expandedContent.isLoading,
     mainApplet.expandedContent.path,
-    mainApplet.previousPanels,
+    mainApplet.panelStack,
     mainApplet.goBack,
     mainApplet.showGoBackLink,
   ]);
