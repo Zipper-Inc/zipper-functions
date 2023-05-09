@@ -94,7 +94,7 @@ declare namespace Zipper {
     /**
      * The type of action this is
      */
-    actionType: 'button' | 'dropdown';
+    actionType: 'button' | 'dropdown' | 'link';
     /**
      * The visible text for the Action
      */
@@ -132,6 +132,15 @@ declare namespace Zipper {
     path: string;
   }
 
+  interface LinkAction extends ActionBase {
+    target?: string;
+    /**
+     * The path to link (href)
+     * Can also be external
+     */
+    path: string;
+  }
+
   export type Action<I = Inputs> = SpecialOutput<'Zipper.Action'> &
     (RefreshAction<I> | PathAction<I>);
 
@@ -140,7 +149,7 @@ declare namespace Zipper {
      * Creates an action
      */
     export function create<I = Inputs>(
-      action: RefreshAction<I> | PathAction<I>,
+      action: RefreshAction<I> | PathAction<I> | LinkAction,
     ): Action<I>;
   }
 
