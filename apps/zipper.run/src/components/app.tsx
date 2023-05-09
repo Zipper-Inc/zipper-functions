@@ -1,6 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { GetServerSideProps } from 'next';
-import { withDefaultTheme, FunctionOutput, useCmdOrCtrl } from '@zipper/ui';
+import {
+  withDefaultTheme,
+  FunctionOutput,
+  useCmdOrCtrl,
+  useAppletContent,
+} from '@zipper/ui';
 import {
   AppInfo,
   ConnectorActionProps,
@@ -12,24 +17,7 @@ import {
 import getAppInfo from '~/utils/get-app-info';
 import getValidSubdomain from '~/utils/get-valid-subdomain';
 import { getFilenameAndVersionFromPath } from '~/utils/get-values-from-url';
-import {
-  Box,
-  Heading,
-  Button,
-  Progress,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalCloseButton,
-  ModalBody,
-  ModalFooter,
-  useDisclosure,
-  HStack,
-  IconButton,
-  VStack,
-  Divider,
-} from '@chakra-ui/react';
+import { Heading, Progress, VStack, Divider } from '@chakra-ui/react';
 import Head from 'next/head';
 import { useForm } from 'react-hook-form';
 import { getInputValuesFromUrl } from '../utils/get-input-values-from-url';
@@ -39,7 +27,6 @@ import {
   ZIPPER_TEMP_USER_ID_COOKIE_NAME,
 } from '@zipper/utils';
 import { deleteCookie } from 'cookies-next';
-import { HiOutlineChevronUp, HiOutlineChevronDown } from 'react-icons/hi';
 import { getAuth } from '@clerk/nextjs/server';
 import { useUser } from '@clerk/nextjs';
 import Unauthorized from './unauthorized';
@@ -90,10 +77,7 @@ export function AppPage({
   const appTitle = app?.name || app?.slug || 'Zipper';
   const formContext = useForm({ defaultValues });
   const [result, setResult] = useState('');
-  const [expandedResult, setExpandedResult] = useState('');
-  const [modalResult, setModalResult] = useState({ heading: '', body: '' });
   const [loading, setLoading] = useState(false);
-  const [isExpandedResultOpen, setIsExpandedResultOpen] = useState(true);
   const { user } = useUser();
   const [screen, setScreen] = useState<Screen>(paramResult ? 'run' : 'initial');
   const [latestRunId, setLatestRunId] = useState<string>();
@@ -120,6 +104,16 @@ export function AppPage({
     }
     previousRouteRef.current = asPath;
   }, [asPath]);
+
+  const mainApplet = useAppletContent();
+
+  useEffect(() => {
+    mainApplet.expandedContent.set({
+      inputs: undefined,
+      output: undefined,
+    });
+    mainApplet.mainContent.set({ inputs, output: result });
+  }, [result]);
 
   const runApp = async () => {
     if (!loading && canRunApp) {
@@ -159,40 +153,9 @@ export function AppPage({
     [],
   );
 
-  const { isOpen, onOpen, onClose } = useDisclosure();
-
-  useEffect(() => {
-    if (modalResult.body) {
-      onOpen();
-    }
-  }, [modalResult]);
-
-  function closeModal() {
-    setModalResult({ heading: '', body: '' });
-    onClose();
-  }
-
   function getRunUrl(scriptName: string) {
     return `/${scriptName}/call`;
   }
-
-  const secondaryResultComponent = (
-    secondaryResult: any,
-    secondaryContext: 'expanded' | 'modal',
-  ) => {
-    return (
-      <FunctionOutput
-        result={secondaryResult}
-        setOverallResult={setResult}
-        setModalResult={setModalResult}
-        setExpandedResult={setExpandedResult}
-        getRunUrl={getRunUrl}
-        currentContext={secondaryContext}
-        inputs={inputValues}
-        path={entryPoint?.filename || 'main.ts'}
-      />
-    );
-  };
 
   const connectorActions: Record<ConnectorType, ConnectorActionProps> = {
     github: {
@@ -241,6 +204,34 @@ export function AppPage({
 
   const showInput = (['initial', 'edit'] as Screen[]).includes(screen);
   const showRunOutput = (['edit', 'run'] as Screen[]).includes(screen);
+
+  const output = useMemo(() => {
+    mainApplet.mainContent.set({
+      path: filename,
+    });
+    return (
+      <FunctionOutput
+        applet={mainApplet}
+        getRunUrl={(scriptName: string) => {
+          return getRunUrl(scriptName);
+        }}
+        currentContext={'main'}
+        appSlug={app.slug}
+      />
+    );
+  }, [
+    mainApplet.mainContent.output,
+    mainApplet.mainContent.inputs,
+    mainApplet.mainContent.path,
+    mainApplet.mainContent.isLoading,
+    mainApplet.expandedContent.output,
+    mainApplet.expandedContent.inputs,
+    mainApplet.expandedContent.isLoading,
+    mainApplet.expandedContent.path,
+    mainApplet.previousPanels,
+    mainApplet.goBack,
+    mainApplet.showGoBackLink,
+  ]);
 
   const canRunApp = useMemo(() => {
     return (userAuthConnectors || []).every((connector) => {
@@ -313,50 +304,7 @@ export function AppPage({
                 />
               )}
               <Divider color="gray.300" borderColor="currentcolor" />
-              <FunctionOutput
-                result={result}
-                setOverallResult={setResult}
-                setModalResult={setModalResult}
-                setExpandedResult={setExpandedResult}
-                getRunUrl={getRunUrl}
-                currentContext="main"
-                inputs={inputs}
-                path={entryPoint?.filename || 'main.ts'}
-              />
-              {expandedResult && (
-                <Box
-                  borderLeft={'5px solid'}
-                  borderColor={'purple.300'}
-                  mt={8}
-                  pl={3}
-                  mb={4}
-                  mx={8}
-                >
-                  <HStack align={'center'} mt={2}>
-                    <Heading flexGrow={1} size="sm" ml={1}>
-                      Additional Results
-                    </Heading>
-                    <IconButton
-                      aria-label="hide"
-                      icon={
-                        isExpandedResultOpen ? (
-                          <HiOutlineChevronUp />
-                        ) : (
-                          <HiOutlineChevronDown />
-                        )
-                      }
-                      onClick={() =>
-                        setIsExpandedResultOpen(!isExpandedResultOpen)
-                      }
-                    />
-                  </HStack>
-                  {isExpandedResultOpen && (
-                    <Box>
-                      {secondaryResultComponent(expandedResult, 'expanded')}
-                    </Box>
-                  )}
-                </Box>
-              )}
+              {output}
             </VStack>
           )}
           {loading && (
@@ -373,36 +321,6 @@ export function AppPage({
           )}
         </VStack>
       </VStack>
-
-      <Modal isOpen={isOpen} onClose={closeModal} size="5xl">
-        <ModalOverlay />
-        <ModalContent maxH="2xl">
-          <ModalHeader>{modalResult.heading || appTitle} </ModalHeader>
-          <ModalCloseButton />
-          <ModalBody
-            fontSize="sm"
-            color="neutral.700"
-            flex={1}
-            display="flex"
-            flexDirection="column"
-            gap={8}
-            overflow="auto"
-          >
-            {secondaryResultComponent(modalResult.body, 'modal')}
-          </ModalBody>
-          <ModalFooter justifyContent="space-between">
-            <Button
-              variant="outline"
-              onClick={closeModal}
-              mr="3"
-              flex={1}
-              fontWeight="medium"
-            >
-              Close
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
     </>
   );
 }
