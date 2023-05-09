@@ -209,6 +209,7 @@ export function AppPage({
     mainApplet.mainContent.set({
       path: filename,
     });
+    if (!app?.slug) return <></>;
     return (
       <FunctionOutput
         applet={mainApplet}
