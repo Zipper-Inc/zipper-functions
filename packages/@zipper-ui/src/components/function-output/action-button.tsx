@@ -72,7 +72,7 @@ export function ActionButton({ action }: { action: Zipper.Action }) {
       output: {
         result: text,
       },
-      path: action.path || currentApplet.mainContent.path,
+      path: action.path || currentApplet.mainContent.path || 'main.ts',
     });
   }
 
