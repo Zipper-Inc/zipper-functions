@@ -9,6 +9,7 @@ import {
   Td,
   Box,
   Text,
+  Flex,
 } from '@chakra-ui/react';
 import { OutputType } from '@zipper/types';
 import styled from '@emotion/styled';
@@ -233,7 +234,13 @@ export function SmartFunctionOutput({
       return <RouterComponent route={data} />;
 
     case OutputType.ActionArray:
-      return data.map((action: any) => <ActionComponent action={action} />);
+      return (
+        <Flex direction="row">
+          {data.map((action: any) => (
+            <ActionComponent action={action} />
+          ))}
+        </Flex>
+      );
 
     default:
       return <RawFunctionOutput result={result} />;
