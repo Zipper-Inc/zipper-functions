@@ -403,10 +403,7 @@ export function FunctionOutput({
             <Modal isOpen={isOpen} onClose={closeModal} size="5xl">
               <ModalOverlay />
               <ModalContent maxH="2xl">
-                <ModalHeader>
-                  HEADING
-                  {/* {modalResult.heading || modalInputs.path || appInfo.name} */}
-                </ModalHeader>
+                <ModalHeader>{modalApplet.mainContent.path}</ModalHeader>
                 <ModalCloseButton />
                 <ModalBody
                   fontSize="sm"
