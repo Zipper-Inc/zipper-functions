@@ -27,11 +27,9 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
   }, [isRunning]);
 
   useEffect(() => {
-    mainApplet.expandedContent.set({
-      inputs: undefined,
-      output: undefined,
-    });
+    mainApplet.reset();
     mainApplet.mainContent.set({
+      inputs: inputParams,
       output: results[currentScript?.filename || 'main.ts'],
     });
   }, [results, currentScript]);
