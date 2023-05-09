@@ -11,14 +11,14 @@ export function ActionDropdown({ action }: { action: Zipper.Action }) {
   const {
     getRunUrl,
     showSecondaryOutput,
-    appSlug,
+    appInfoUrl,
     currentContext,
     applet,
     modalApplet,
   } = useContext(FunctionOutputContext) as FunctionOutputContextType;
 
   async function getScript() {
-    const res = await fetch(`/api/app/info/${appSlug}`, {
+    const res = await fetch(appInfoUrl, {
       method: 'POST',
       body: JSON.stringify({
         filename: action.path,
