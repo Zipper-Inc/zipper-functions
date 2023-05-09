@@ -1,51 +1,47 @@
+import { AppletContentReturnType, InputParams } from '@zipper/types';
 import { createContext, useContext } from 'react';
 
 export type FunctionOutputContextType = {
-  setExpandedResult: (result: any) => void;
-  setModalResult: (result: any) => void;
-  setOverallResult: (result: any) => void;
+  showSecondaryOutput: (args: {
+    actionShowAs: Zipper.Action['showAs'];
+    inputs?: {
+      inputParams: InputParams;
+      defaultValues: Record<string, any>;
+    };
+    output?: {
+      result: string;
+    };
+    path: string;
+  }) => void;
   getRunUrl: (scriptName: string) => string;
-  inputs?: Record<string, any>;
-  path: string;
-  currentContext: 'main' | 'modal' | 'expanded';
+  currentContext: 'main' | 'modal';
+  appSlug: string;
+  applet: AppletContentReturnType;
+  modalApplet: AppletContentReturnType;
 };
 
-export const FunctionOutputContext = createContext<FunctionOutputContextType>({
-  setExpandedResult: () => {
-    return;
-  },
-  setModalResult: () => {
-    return;
-  },
-  setOverallResult: () => {
-    return;
-  },
-  getRunUrl: () => '',
-  inputs: {},
-  path: '',
-  currentContext: 'main',
-});
+export const FunctionOutputContext = createContext<
+  FunctionOutputContextType | undefined
+>(undefined);
 
 const FunctionOutputProvider = ({
   children,
-  setExpandedResult,
-  setModalResult,
-  setOverallResult,
+  showSecondaryOutput,
   getRunUrl,
-  path,
-  inputs,
   currentContext,
+  appSlug,
+  applet,
+  modalApplet,
 }: FunctionOutputContextType & { children: any }) => {
   return (
     <FunctionOutputContext.Provider
       value={{
-        setExpandedResult,
-        setModalResult,
-        setOverallResult,
+        showSecondaryOutput,
         getRunUrl,
-        inputs,
-        path,
         currentContext,
+        appSlug,
+        applet,
+        modalApplet,
       }}
     >
       {children}

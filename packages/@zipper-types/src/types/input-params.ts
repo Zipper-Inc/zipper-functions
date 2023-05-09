@@ -6,6 +6,8 @@ export interface InputParam {
   optional: boolean;
   name?: string;
   description?: string;
+  defaultValue?: any;
+  value?: any;
 }
 
 export interface ParseInputResponse {

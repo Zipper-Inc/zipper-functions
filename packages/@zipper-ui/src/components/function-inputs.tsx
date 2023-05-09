@@ -316,17 +316,5 @@ export function FunctionInputs({
     />
   ));
 
-  return inputs.length ? (
-    <VStack spacing={1}>{inputs}</VStack>
-  ) : (
-    <Textarea
-      backgroundColor="white"
-      fontFamily="monospace"
-      fontSize="smaller"
-      minHeight={90}
-      defaultValue="{}"
-      isDisabled={isDisabled}
-      {...formContext.register('params')}
-    />
-  );
+  return inputs.length ? <VStack spacing={1}>{inputs}</VStack> : <></>;
 }

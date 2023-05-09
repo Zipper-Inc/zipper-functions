@@ -103,6 +103,11 @@ declare namespace Zipper {
      * The inputs to run the function with
      */
     inputs?: I;
+    /**
+     * Run the path with provided inputs and show the output
+     * default = true
+     */
+    run?: boolean;
   }
 
   interface RefreshAction<I = Inputs> extends ActionBase<I> {

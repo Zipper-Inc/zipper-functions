@@ -54,7 +54,10 @@ app.use(async ({ request, response }) => {
     originalRequest,
     runId,
     Action: {
-      create: (action) => ({ $zipperType: 'Zipper.Action', ...action }),
+      create: (action) => ({
+        $zipperType: 'Zipper.Action',
+        ...action,
+      }),
     },
     Router: {
       redirect: (url) => ({
