@@ -4,7 +4,7 @@ import {
   AppletContentPanel,
   InputParams,
 } from '@zipper/types';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 export const useAppletContent = (): AppletContentReturnType => {
   const [panelStack, setPanelStack] = useState<AppletContentPanel[]>([]);
@@ -14,9 +14,24 @@ export const useAppletContent = (): AppletContentReturnType => {
   const [expandedOutput, setExpandedOutput] = useState<string | undefined>();
   const [expandedPath, setExpandedPath] = useState<string | undefined>();
   const [path, setPath] = useState<string | undefined>();
+  const [updatedAt, setUpdatedAt] = useState(Date.now());
 
   const [isLoading, setIsLoading] = useState(false);
   const [isExpandedLoading, setIsExpandedLoading] = useState(false);
+
+  useEffect(() => {
+    setUpdatedAt(Date.now());
+  }, [
+    output,
+    inputs,
+    path,
+    isLoading,
+    expandedOutput,
+    expandedInputs,
+    isExpandedLoading,
+    expandedPath,
+    panelStack,
+  ]);
 
   const addPanel = ({
     mainContent,
@@ -133,5 +148,6 @@ export const useAppletContent = (): AppletContentReturnType => {
     goBack,
     showGoBackLink,
     panelStack,
+    updatedAt,
   };
 };

@@ -219,19 +219,7 @@ export function AppPage({
         appSlug={app.slug}
       />
     );
-  }, [
-    mainApplet.mainContent.output,
-    mainApplet.mainContent.inputs,
-    mainApplet.mainContent.path,
-    mainApplet.mainContent.isLoading,
-    mainApplet.expandedContent.output,
-    mainApplet.expandedContent.inputs,
-    mainApplet.expandedContent.isLoading,
-    mainApplet.expandedContent.path,
-    mainApplet.panelStack,
-    mainApplet.goBack,
-    mainApplet.showGoBackLink,
-  ]);
+  }, [mainApplet.updatedAt]);
 
   const canRunApp = useMemo(() => {
     return (userAuthConnectors || []).every((connector) => {
