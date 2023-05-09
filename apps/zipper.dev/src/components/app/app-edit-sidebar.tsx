@@ -5,6 +5,7 @@ import {
   TabPanel,
   VStack,
   Box,
+  Flex,
   Text,
   HStack,
   Button,
@@ -83,7 +84,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
   // };
 
   return (
-    <VStack align="stretch">
+    <VStack h="full" w="full">
       {isHandler && (
         <HStack w="full" mb="2">
           <HStack
@@ -92,7 +93,6 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
             py={2}
             rounded="lg"
             justifyContent="space-between"
-            overflow="auto"
             border="1px"
             borderColor="gray.200"
             w="full"
@@ -178,11 +178,10 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
         colorScheme="purple"
         index={tabIndex}
         onChange={handleTabsChange}
-        flex={1}
         display="flex"
         flexDirection="column"
-        gap={5}
-        alignItems="stretch"
+        h="full"
+        w="full"
         hidden={isLibrary}
       >
         <TabList
@@ -192,7 +191,6 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
           color="gray.500"
           gap={4}
           justifyContent="space-between"
-          overflow="auto"
           pb={4}
         >
           <HStack spacing={2}>
@@ -201,17 +199,25 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
             <TabButton title="Console" />
           </HStack>
         </TabList>
-        <TabPanels as={VStack} alignItems="stretch" flex={1} spacing="0">
+        <TabPanels
+          as={Flex}
+          flexDirection="column"
+          h="full"
+          // IDK why we need this but it works
+          maxH="calc(100% - 115px)"
+        >
           {/* INPUT */}
           {showInputForm && (
             <TabPanel
               p={0}
-              flex={1}
+              pt={4}
+              h="full"
               display="flex"
               flexDir="column"
-              alignItems="stretch"
+              flex="1 1 auto"
+              overflow="auto"
+              w="full"
             >
-              {/** @todo make this height thing less jank */}
               <AppEditSidebarApplet appSlug={appSlug} />
             </TabPanel>
           )}
@@ -220,7 +226,14 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
           {tips && <TabPanel flex={1}>{tips}</TabPanel>}
 
           {/* LOGS */}
-          <TabPanel flex={1} p={0} mt={0}>
+          <TabPanel
+            h="full"
+            w="full"
+            flex="1 1 auto"
+            overflow="auto"
+            p={0}
+            background="white"
+          >
             <AppConsole logs={logs} />
           </TabPanel>
         </TabPanels>

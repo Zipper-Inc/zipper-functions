@@ -38,7 +38,7 @@ const ConnectorSidebarTips = (connectorId?: string | null) => {
  * figure this out nicely
  * fine to hardcode for now
  */
-const APPROXIMATE_HEADER_HEIGHT_PX = '120px';
+const APPROXIMATE_HEADER_HEIGHT_PX = '175px';
 const MAX_CODE_TAB_HEIGHT = `calc(100vh - ${APPROXIMATE_HEADER_HEIGHT_PX})`;
 
 type CodeTabProps = {
@@ -81,6 +81,7 @@ export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
   return (
     <HStack
       flex={1}
+      h="full"
       p="none"
       pl="1"
       spacing={0}
@@ -88,6 +89,7 @@ export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
       pb={3}
       maxH={MAX_CODE_TAB_HEIGHT}
       minH="350px"
+      overflow="hidden"
     >
       <VStack
         flex={1}
@@ -128,7 +130,7 @@ export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
           )}
         </FormControl>
       </VStack>
-      <VStack flex={2} alignItems="stretch" minW="220px" overflow="auto">
+      <VStack flex={2} minW="220px">
         <AppEditSidebarProvider
           value={{
             expandedResult,

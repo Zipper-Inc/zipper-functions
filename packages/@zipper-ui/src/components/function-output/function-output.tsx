@@ -39,7 +39,15 @@ import { FunctionInputs } from '../function-inputs';
 import { useForm } from 'react-hook-form';
 import { useAppletContent } from '@zipper/ui';
 import { InputParam, InputParams } from '@zipper/types';
+import { useEffectOnce } from '../../hooks/use-effect-once';
+import { ZipperLocation } from '@zipper/types';
 
+const stickyTabsStyles: ChakraProps = {
+  top: -4,
+  position: 'sticky',
+  pt: 4,
+  background: 'white',
+};
 const tabsStyles: ChakraProps = { display: 'flex', flexDir: 'column', gap: 0 };
 const tablistStyles: ChakraProps = {
   gap: 1,
@@ -298,6 +306,11 @@ export function FunctionOutput({
     onClose();
   }
 
+  const [stickyTabs, setStickyTabs] = useState(false);
+  useEffectOnce(() => {
+    if (window.ZipperLocation === ZipperLocation.ZipperDotDev)
+      setStickyTabs(true);
+  });
   return (
     <FunctionOutputProvider
       showSecondaryOutput={showSecondaryOutput}
@@ -329,75 +342,77 @@ export function FunctionOutput({
       >
         <>
           <Tabs colorScheme="purple" variant="enclosed" {...tabsStyles}>
-            <TabList {...tablistStyles}>
-              <Tab {...tabButtonStyles}>Results</Tab>
-              <Tab {...tabButtonStyles}>Raw Output</Tab>
-            </TabList>
-            <TabPanels
-              border="1px solid"
-              borderColor="gray.200"
-              borderBottomRadius={'md'}
-            >
-              <TabPanel>
-                <Box overflow="auto">
-                  {applet.showGoBackLink() && (
-                    <>
-                      <Button
-                        variant="Link"
-                        fontSize="sm"
-                        color="gray.600"
-                        pl="0"
-                        onClick={() => applet.goBack()}
-                      >
-                        <Icon as={HiChevronLeft} />
-                        Back
-                      </Button>
-                      <Divider />
-                    </>
-                  )}
-                  <Box width="max-content" data-function-output="smart">
-                    <SmartFunctionOutput
-                      result={applet?.mainContent.output}
-                      level={level}
-                    />
-                  </Box>
-                </Box>
-
-                {(applet?.expandedContent.output ||
-                  applet?.expandedContent.inputs) && (
-                  <Box
-                    borderLeft={'5px solid'}
-                    borderColor={'purple.300'}
-                    mt={8}
-                    pl={3}
-                    mb={4}
-                  >
-                    <HStack align={'center'} my={2}>
-                      <Heading flexGrow={1} size="sm" ml={1}>
-                        Additional Results
-                      </Heading>
-                      <IconButton
-                        aria-label="hide"
-                        icon={
-                          isExpandedResultOpen ? (
-                            <HiOutlineChevronUp />
-                          ) : (
-                            <HiOutlineChevronDown />
-                          )
-                        }
-                        onClick={() =>
-                          setIsExpandedResultOpen(!isExpandedResultOpen)
-                        }
+            <Box {...(stickyTabs ? stickyTabsStyles : undefined)}>
+              <TabList {...tablistStyles}>
+                <Tab {...tabButtonStyles}>Results</Tab>
+                <Tab {...tabButtonStyles}>Raw Output</Tab>
+              </TabList>
+              <TabPanels
+                border="1px solid"
+                borderColor="gray.200"
+                borderBottomRadius={'md'}
+              >
+                <TabPanel>
+                  <Box overflow="auto">
+                    {applet.showGoBackLink() && (
+                      <>
+                        <Button
+                          variant="Link"
+                          fontSize="sm"
+                          color="gray.600"
+                          pl="0"
+                          onClick={() => applet.goBack()}
+                        >
+                          <Icon as={HiChevronLeft} />
+                          Back
+                        </Button>
+                        <Divider />
+                      </>
+                    )}
+                    <Box width="max-content" data-function-output="smart">
+                      <SmartFunctionOutput
+                        result={applet?.mainContent.output}
+                        level={level}
                       />
-                    </HStack>
-                    {isExpandedResultOpen && <>{expandedOutputComponent()}</>}
+                    </Box>
                   </Box>
-                )}
-              </TabPanel>
-              <TabPanel backgroundColor="gray.100">
-                <RawFunctionOutput result={applet?.mainContent.output} />
-              </TabPanel>
-            </TabPanels>
+
+                  {(applet?.expandedContent.output ||
+                    applet?.expandedContent.inputs) && (
+                    <Box
+                      borderLeft={'5px solid'}
+                      borderColor={'purple.300'}
+                      mt={8}
+                      pl={3}
+                      mb={4}
+                    >
+                      <HStack align={'center'} my={2}>
+                        <Heading flexGrow={1} size="sm" ml={1}>
+                          Additional Results
+                        </Heading>
+                        <IconButton
+                          aria-label="hide"
+                          icon={
+                            isExpandedResultOpen ? (
+                              <HiOutlineChevronUp />
+                            ) : (
+                              <HiOutlineChevronDown />
+                            )
+                          }
+                          onClick={() =>
+                            setIsExpandedResultOpen(!isExpandedResultOpen)
+                          }
+                        />
+                      </HStack>
+                      {isExpandedResultOpen && <>{expandedOutputComponent()}</>}
+                    </Box>
+                  )}
+                </TabPanel>
+                <TabPanel backgroundColor="gray.100">
+                  <RawFunctionOutput result={applet?.mainContent.output} />
+                </TabPanel>
+              </TabPanels>
+            </Box>
           </Tabs>
           {currentContext === 'main' && (
             <Modal isOpen={isOpen} onClose={closeModal} size="5xl">

@@ -132,13 +132,7 @@ export function Playground({
             </HStack>
           </TabList>
           {/* TAB PANELS */}
-          <TabPanels
-            as={VStack}
-            alignItems="stretch"
-            flex={1}
-            overflow="auto"
-            spacing={0}
-          >
+          <TabPanels as={VStack} alignItems="stretch" h="full" spacing={0}>
             {/* CODE */}
             <TabPanel position="relative" {...tabPanelStyles}>
               {isSaving && (

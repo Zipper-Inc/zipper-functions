@@ -89,6 +89,7 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
         rounded="md"
         border="1px"
         borderColor="gray.200"
+        w="full"
       >
         <>
           {mainApplet.mainContent.inputs?.length ||
