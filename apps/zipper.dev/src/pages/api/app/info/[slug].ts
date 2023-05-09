@@ -9,15 +9,14 @@ import {
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '~/server/prisma';
 import { AppInfoResult, UserAuthConnector } from '@zipper/types';
-import { parseCode, parseInputForTypes } from '~/utils/parse-code';
+import { parseCode } from '~/utils/parse-code';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import clerkClient from '@clerk/clerk-sdk-node';
 import { compare } from 'bcryptjs';
 import { canUserEdit } from '~/server/routers/app.router';
 import { requiredUserAuthConnectorFilter } from '~/utils/user-auth-connector-filter';
 import { ZIPPER_TEMP_USER_ID_HEADER } from '@zipper/utils';
-// import { canUserEdit } from '~/server/routers/app.router';
-// import { getAuth } from '@clerk/nextjs/server';
+import * as Sentry from '@sentry/nextjs';
 
 /**
  * @todo
@@ -289,6 +288,7 @@ async function getUserInfo(token: string, appSlug: string) {
       };
     }
   } catch (e) {
+    Sentry.captureException(e);
     return { email: undefined, organizations: [] };
   }
 }

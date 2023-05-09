@@ -75,6 +75,7 @@ const tabButtonStyles: ChakraProps = {
 export function FunctionOutput({
   level = 0,
   getRunUrl,
+  appInfoUrl,
   applet,
   currentContext,
   appSlug,
@@ -289,6 +290,7 @@ export function FunctionOutput({
           <FunctionOutput
             applet={modalApplet}
             getRunUrl={getRunUrl}
+            appInfoUrl={appInfoUrl}
             currentContext="modal"
             appSlug={appSlug}
           />
@@ -311,6 +313,7 @@ export function FunctionOutput({
     <FunctionOutputProvider
       showSecondaryOutput={showSecondaryOutput}
       getRunUrl={getRunUrl}
+      appInfoUrl={appInfoUrl}
       applet={applet}
       modalApplet={modalApplet}
       currentContext={currentContext}

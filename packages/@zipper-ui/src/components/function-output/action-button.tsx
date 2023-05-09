@@ -11,20 +11,21 @@ export function ActionButton({ action }: { action: Zipper.Action }) {
   const {
     showSecondaryOutput,
     getRunUrl,
-    appSlug,
+    appInfoUrl,
     currentContext,
     applet,
     modalApplet,
   } = useContext(FunctionOutputContext) as FunctionOutputContextType;
 
   async function getScript() {
-    const res = await fetch(`/api/app/info/${appSlug}`, {
+    const res = await fetch(appInfoUrl, {
       method: 'POST',
       body: JSON.stringify({
         filename: action.path,
       }),
       credentials: 'include',
     });
+
     const json = await res.json();
 
     const defaultValues: Record<string, any> = {};

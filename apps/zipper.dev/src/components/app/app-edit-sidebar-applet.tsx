@@ -50,6 +50,7 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
         getRunUrl={(scriptName: string) => {
           return getRunUrl(appSlug, appInfo.lastDeploymentVersion, scriptName);
         }}
+        appInfoUrl={`/api/app/info/${appSlug}`}
         currentContext={'main'}
         appSlug={appInfo.slug}
       />
