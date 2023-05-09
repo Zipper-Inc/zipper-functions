@@ -63,7 +63,7 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
     mainApplet.expandedContent.inputs,
     mainApplet.expandedContent.isLoading,
     mainApplet.expandedContent.path,
-    mainApplet.previousPanels,
+    mainApplet.panelStack,
     mainApplet.goBack,
     mainApplet.showGoBackLink,
     currentScript,

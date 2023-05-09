@@ -41,5 +41,5 @@ export type AppletContentReturnType = {
   reset: () => void;
   goBack: () => void;
   showGoBackLink: () => boolean;
-  previousPanels: AppletContentPanel[];
+  panelStack: AppletContentPanel[];
 };

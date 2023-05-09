@@ -7,9 +7,7 @@ import {
 import { useCallback, useState } from 'react';
 
 export const useAppletContent = (): AppletContentReturnType => {
-  const [previousPanels, setPreviousPanels] = useState<AppletContentPanel[]>(
-    [],
-  );
+  const [panelStack, setPanelStack] = useState<AppletContentPanel[]>([]);
   const [inputs, setInputs] = useState<InputParams>();
   const [output, setOutput] = useState<string | undefined>();
   const [expandedInputs, setExpandedInputs] = useState<InputParams>();
@@ -27,7 +25,7 @@ export const useAppletContent = (): AppletContentReturnType => {
     mainContent: { inputs?: InputParams; output?: string; path?: string };
     expandedContent?: { inputs?: InputParams; outputs?: string; path?: string };
   }) => {
-    setPreviousPanels((previousValue) => [
+    setPanelStack((previousValue) => [
       ...previousValue,
       {
         inputs,
@@ -49,7 +47,7 @@ export const useAppletContent = (): AppletContentReturnType => {
   };
 
   const reset = () => {
-    setPreviousPanels([]);
+    setPanelStack([]);
     setInputs(undefined);
     setOutput(undefined);
     setExpandedInputs(undefined);
@@ -94,8 +92,8 @@ export const useAppletContent = (): AppletContentReturnType => {
   };
 
   const goBack = useCallback(() => {
-    const len = previousPanels.length - 1;
-    const previous = previousPanels[len];
+    const len = panelStack.length - 1;
+    const previous = panelStack[len];
 
     setInputs(previous?.inputs);
     setOutput(previous?.output);
@@ -104,14 +102,14 @@ export const useAppletContent = (): AppletContentReturnType => {
     setExpandedOutput(previous?.expandedOutput);
     setExpandedPath(previous?.expandedPath);
 
-    setPreviousPanels((p) => {
+    setPanelStack((p) => {
       return p.slice(0, -1);
     });
-  }, [previousPanels]);
+  }, [panelStack]);
 
   const showGoBackLink = useCallback(() => {
-    return previousPanels.length > 0;
-  }, [previousPanels]);
+    return panelStack.length > 0;
+  }, [panelStack]);
 
   return {
     mainContent: {
@@ -134,6 +132,6 @@ export const useAppletContent = (): AppletContentReturnType => {
     reset,
     goBack,
     showGoBackLink,
-    previousPanels,
+    panelStack,
   };
 };

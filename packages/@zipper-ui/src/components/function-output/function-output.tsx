@@ -37,10 +37,10 @@ import { useEffect, useState } from 'react';
 import { getInputsFromFormData } from '@zipper/utils';
 import { FunctionInputs } from '../function-inputs';
 import { useForm } from 'react-hook-form';
-import { useAppletContent } from '@zipper/ui';
 import { InputParam, InputParams } from '@zipper/types';
 import { useEffectOnce } from '../../hooks/use-effect-once';
 import { ZipperLocation } from '@zipper/types';
+import { useAppletContent } from '../../hooks/use-applet-content';
 
 const stickyTabsStyles: ChakraProps = {
   top: -4,
@@ -85,10 +85,6 @@ export function FunctionOutput({
   const modalApplet = useAppletContent();
   const modalFormContext = useForm();
   const expandedFormContext = useForm();
-
-  useEffect(() => {
-    console.log(currentContext, applet.previousPanels);
-  }, [applet.previousPanels]);
 
   useEffect(() => {
     if (modalApplet.mainContent.inputs) {
