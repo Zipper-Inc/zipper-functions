@@ -122,7 +122,7 @@ export async function getModule(
     content,
   } as CacheRecord['module'];
 
-  buildCache.set(specifier, mod);
+  await buildCache.set(specifier, mod);
 
   return mod;
 }
