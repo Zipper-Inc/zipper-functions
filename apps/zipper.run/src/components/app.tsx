@@ -216,6 +216,7 @@ export function AppPage({
         getRunUrl={(scriptName: string) => {
           return getRunUrl(scriptName);
         }}
+        appInfoUrl={`/_zipper/app/info/${app?.slug}`}
         currentContext={'main'}
         appSlug={app.slug}
       />

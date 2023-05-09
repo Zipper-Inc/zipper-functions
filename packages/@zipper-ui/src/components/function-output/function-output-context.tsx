@@ -14,6 +14,7 @@ export type FunctionOutputContextType = {
     path: string;
   }) => void;
   getRunUrl: (scriptName: string) => string;
+  appInfoUrl: string;
   currentContext: 'main' | 'modal';
   appSlug: string;
   applet: AppletContentReturnType;
@@ -28,6 +29,7 @@ const FunctionOutputProvider = ({
   children,
   showSecondaryOutput,
   getRunUrl,
+  appInfoUrl,
   currentContext,
   appSlug,
   applet,
@@ -38,6 +40,7 @@ const FunctionOutputProvider = ({
       value={{
         showSecondaryOutput,
         getRunUrl,
+        appInfoUrl,
         currentContext,
         appSlug,
         applet,
