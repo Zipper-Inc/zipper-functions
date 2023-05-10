@@ -60,7 +60,13 @@ export function makeLog({
   timestamp = Date.now(),
   data = [],
 }: Partial<LogMessage>) {
-  return { id, method, timestamp, data };
+  return {
+    id,
+    method,
+    timestamp,
+    data,
+    status: 'unread' as Zipper.Log.Status,
+  };
 }
 
 /**
