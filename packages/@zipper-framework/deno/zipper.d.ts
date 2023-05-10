@@ -158,6 +158,8 @@ declare namespace Zipper {
       | 'count'
       | 'assert';
 
+    type Status = 'read' | 'unread';
+
     export interface Message {
       id: string;
       // The log method
@@ -166,6 +168,8 @@ declare namespace Zipper {
       data: Zipper.Serializable[];
       // Time of log
       timestamp: number;
+      // The log status
+      status: Status;
     }
 
     export type MessageorDisplay = Omit<Message, 'timestamp'> & {

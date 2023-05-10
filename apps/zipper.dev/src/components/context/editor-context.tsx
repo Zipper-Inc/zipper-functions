@@ -59,6 +59,7 @@ export type EditorContextType = {
   preserveLogs: boolean;
   setPreserveLogs: (v: boolean) => void;
   addLog: (method: Zipper.Log.Method, data: Zipper.Serializable[]) => void;
+  markLogsAsRead: () => void;
   setLogStore: (
     cb: (
       n: Record<string, Zipper.Log.Message[]>,
@@ -92,6 +93,7 @@ export const EditorContext = createContext<EditorContextType>({
   preserveLogs: true,
   setPreserveLogs: noop,
   addLog: noop,
+  markLogsAsRead: noop,
   setLogStore: noop,
 });
 
@@ -412,6 +414,7 @@ const EditorContextProvider = ({
       method,
       data,
       timestamp: Date.now(),
+      status: 'unread' as Zipper.Log.Status,
     };
 
     setLogStore((prev) => {
@@ -419,6 +422,21 @@ const EditorContextProvider = ({
       local.push(newLog);
       return { ...prev, local };
     });
+  };
+
+  const markLogsAsRead = () => {
+    setLogStore((prev) =>
+      // grab all logs from the store
+      Object.entries(prev).reduce<Record<string, Zipper.Log.Message[]>>(
+        (acc, [key, value]) => {
+          // updating all the logs to status 'read'
+          acc[key] = value.map((log) => ({ ...log, status: 'read' }));
+          // Adding all updated logs to the new object
+          return acc;
+        },
+        {},
+      ),
+    );
   };
   // END LOGS
 
@@ -568,6 +586,7 @@ const EditorContextProvider = ({
         logs,
         addLog,
         setLogStore,
+        markLogsAsRead,
         preserveLogs,
         setPreserveLogs,
       }}
