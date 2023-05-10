@@ -41,6 +41,7 @@ import { InputParam, InputParams } from '@zipper/types';
 import { useEffectOnce } from '../../hooks/use-effect-once';
 import { ZipperLocation } from '@zipper/types';
 import { useAppletContent } from '../../hooks/use-applet-content';
+import SmartFunctionOutputProvider from './smart-function-output-context';
 
 const stickyTabsStyles: ChakraProps = {
   top: -4,
@@ -196,6 +197,13 @@ export function FunctionOutput({
                   expandedFormContext.getValues(),
                   applet.expandedContent.inputs || [],
                 );
+                const inputsWithValues = applet.expandedContent.inputs?.map(
+                  (i) => {
+                    i.value = values[i.key];
+                    return i;
+                  },
+                );
+                applet.expandedContent.set({ inputs: inputsWithValues });
                 const res = await fetch(
                   getRunUrl(applet.expandedContent.path),
                   {
@@ -228,10 +236,12 @@ export function FunctionOutput({
               <TabPanel>
                 <Box overflow="auto">
                   <Box width="max-content" data-function-output="smart">
-                    <SmartFunctionOutput
-                      result={applet.expandedContent.output}
-                      level={0}
-                    />
+                    <SmartFunctionOutputProvider outputSection="expanded">
+                      <SmartFunctionOutput
+                        result={applet.expandedContent.output}
+                        level={0}
+                      />
+                    </SmartFunctionOutputProvider>
                   </Box>
                 </Box>
               </TabPanel>
@@ -263,6 +273,15 @@ export function FunctionOutput({
                   modalFormContext.getValues(),
                   modalApplet.mainContent.inputs || [],
                 );
+
+                const inputsWithValues = modalApplet.mainContent.inputs?.map(
+                  (i) => {
+                    i.value = values[i.key];
+                    return i;
+                  },
+                );
+                modalApplet.mainContent.set({ inputs: inputsWithValues });
+
                 const res = await fetch(
                   getRunUrl(modalApplet.mainContent.path || 'main.ts'),
                   {
@@ -369,10 +388,12 @@ export function FunctionOutput({
                       </>
                     )}
                     <Box width="max-content" data-function-output="smart">
-                      <SmartFunctionOutput
-                        result={applet?.mainContent.output}
-                        level={level}
-                      />
+                      <SmartFunctionOutputProvider outputSection="main">
+                        <SmartFunctionOutput
+                          result={applet?.mainContent.output}
+                          level={level}
+                        />
+                      </SmartFunctionOutputProvider>
                     </Box>
                   </Box>
 

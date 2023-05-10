@@ -113,6 +113,15 @@ export function AppPage({
     mainApplet.mainContent.set({ inputs, output: result });
   }, [result]);
 
+  useEffect(() => {
+    const inputsWithValues = inputs.map((i) => {
+      i.value = inputValues[i.key];
+      return i;
+    });
+
+    mainApplet.mainContent.set({ inputs: inputsWithValues });
+  }, [inputValues]);
+
   const runApp = async () => {
     if (!loading && canRunApp) {
       setLoading(true);

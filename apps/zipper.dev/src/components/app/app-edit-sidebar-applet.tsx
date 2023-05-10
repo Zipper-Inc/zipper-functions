@@ -7,7 +7,13 @@ import { useEditorContext } from '../context/editor-context';
 import { useRunAppContext } from '../context/run-app-context';
 import { AppEditSidebarAppletConnectors } from './app-edit-sidebar-applet-connectors';
 
-export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
+export const AppEditSidebarApplet = ({
+  appSlug,
+  inputValuesAtRun,
+}: {
+  appSlug: string;
+  inputValuesAtRun: Record<string, any>;
+}) => {
   const { formMethods, isRunning, results, userAuthConnectors, appInfo } =
     useRunAppContext();
 
@@ -35,8 +41,12 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
   }, [results, currentScript]);
 
   useEffect(() => {
-    mainApplet.mainContent.set({ inputs: inputParams });
-  }, [inputParams]);
+    const inputParamsWithValues = inputParams?.map((i) => {
+      i.value = inputValuesAtRun[i.key];
+      return i;
+    });
+    mainApplet.mainContent.set({ inputs: inputParamsWithValues });
+  }, [inputParams, inputValuesAtRun]);
 
   const isHandler = inputParams || inputError;
 
