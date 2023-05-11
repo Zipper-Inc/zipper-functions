@@ -5,17 +5,15 @@ import {
   FunctionOutputContext,
   FunctionOutputContextType,
 } from './function-output-context';
-import { InputParam } from '@zipper/types';
+import { AppInfoResult, InputParam, InputParams } from '@zipper/types';
+import { SmartFunctionOutputContext } from './smart-function-output-context';
 
 export function ActionDropdown({ action }: { action: Zipper.Action }) {
-  const {
-    getRunUrl,
-    showSecondaryOutput,
-    appInfoUrl,
-    currentContext,
-    applet,
-    modalApplet,
-  } = useContext(FunctionOutputContext) as FunctionOutputContextType;
+  const { getRunUrl, showSecondaryOutput, appInfoUrl, applet } = useContext(
+    FunctionOutputContext,
+  ) as FunctionOutputContextType;
+
+  const { outputSection } = useContext(SmartFunctionOutputContext);
 
   async function getScript() {
     const res = await fetch(appInfoUrl, {
@@ -38,6 +36,7 @@ export function ActionDropdown({ action }: { action: Zipper.Action }) {
 
     showSecondaryOutput({
       actionShowAs: action.showAs,
+      actionSection: outputSection,
       inputs: {
         inputParams: json.data.inputs.map((i: InputParam) => {
           i.defaultValue = action.inputs![i.key];
@@ -50,37 +49,76 @@ export function ActionDropdown({ action }: { action: Zipper.Action }) {
   }
 
   async function runScript(selectedValue: string) {
-    const currentApplet = currentContext === 'main' ? applet : modalApplet;
-    const runPath =
-      action.showAs === 'refresh'
-        ? currentApplet?.mainContent.path
-        : action.path;
+    const runPath = action.path;
 
+    let inputParamsWithValues: InputParams = [];
     const paramName = action.inputs?.paramName as string;
 
-    const bodyData =
-      action.showAs === 'refresh'
-        ? currentApplet?.mainContent.inputs || []
-        : paramName
-        ? { [paramName]: selectedValue }
-        : [];
+    const appInfoRes = await fetch(appInfoUrl, {
+      method: 'POST',
+      body: JSON.stringify({
+        filename: action.path,
+      }),
+      credentials: 'include',
+    });
 
-    const body = JSON.stringify(bodyData);
+    const appInfo = (await appInfoRes.json()) as AppInfoResult;
+    if (appInfo.ok) {
+      const inputParam = appInfo.data.inputs.find((i) => i.key === paramName);
+      if (inputParam) {
+        inputParam.value = selectedValue;
+        inputParamsWithValues = [inputParam];
+      }
+    }
 
     const res = await fetch(getRunUrl(runPath || 'main.ts'), {
       method: 'POST',
-      body,
+      body: JSON.stringify({ [paramName]: selectedValue }),
       credentials: 'include',
     });
     const text = await res.text();
 
-    showSecondaryOutput({
-      actionShowAs: action.showAs,
-      output: {
-        result: text,
-      },
-      path: action.path || currentApplet.mainContent.path || 'main.ts',
-    });
+    if (action.showAs === 'refresh') {
+      const originalInputs: Zipper.Inputs = {};
+
+      const refreshPath =
+        outputSection === 'main'
+          ? applet?.mainContent.path
+          : applet?.expandedContent.path;
+      const refreshInputParams =
+        outputSection === 'main'
+          ? applet?.mainContent.output?.inputsUsed || []
+          : applet?.expandedContent.output?.inputsUsed || [];
+
+      refreshInputParams.forEach((i) => (originalInputs[i.key] = i.value));
+
+      const refreshRes = await fetch(getRunUrl(refreshPath || 'main.ts'), {
+        method: 'POST',
+        body: JSON.stringify(originalInputs),
+        credentials: 'include',
+      });
+      const text = await refreshRes.text();
+
+      showSecondaryOutput({
+        actionShowAs: action.showAs,
+        actionSection: outputSection,
+        output: {
+          data: text,
+          inputsUsed: refreshInputParams,
+        },
+        path: refreshPath || 'main.ts',
+      });
+    } else {
+      showSecondaryOutput({
+        actionShowAs: action.showAs,
+        actionSection: outputSection,
+        output: {
+          data: text,
+          inputsUsed: inputParamsWithValues,
+        },
+        path: runPath || 'main.ts',
+      });
+    }
   }
 
   const [isLoading, setIsLoading] = useState(false);

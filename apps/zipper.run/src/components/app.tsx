@@ -106,11 +106,21 @@ export function AppPage({
   const mainApplet = useAppletContent();
 
   useEffect(() => {
-    mainApplet.expandedContent.set({
-      inputs: undefined,
-      output: undefined,
+    mainApplet.reset();
+    const inputParamsWithValues = inputs?.map((i) => {
+      if (defaultValues) {
+        i.value = defaultValues[`${i.key}:${i.type}`];
+      }
+      return i;
     });
-    mainApplet.mainContent.set({ inputs, output: result });
+
+    mainApplet.mainContent.set({
+      inputs,
+      output: {
+        data: result || '',
+        inputsUsed: inputParamsWithValues || [],
+      },
+    });
   }, [result]);
 
   const runApp = async () => {
@@ -206,9 +216,6 @@ export function AppPage({
   const showRunOutput = (['edit', 'run'] as Screen[]).includes(screen);
 
   const output = useMemo(() => {
-    mainApplet.mainContent.set({
-      path: filename,
-    });
     if (!app?.slug) return <></>;
     return (
       <FunctionOutput

@@ -3,15 +3,18 @@ import {
   AppletContentReturnType,
   AppletContentPanel,
   InputParams,
+  AppletOutput,
 } from '@zipper/types';
 import { useCallback, useEffect, useState } from 'react';
 
 export const useAppletContent = (): AppletContentReturnType => {
   const [panelStack, setPanelStack] = useState<AppletContentPanel[]>([]);
   const [inputs, setInputs] = useState<InputParams>();
-  const [output, setOutput] = useState<string | undefined>();
+  const [output, setOutput] = useState<AppletOutput | undefined>();
   const [expandedInputs, setExpandedInputs] = useState<InputParams>();
-  const [expandedOutput, setExpandedOutput] = useState<string | undefined>();
+  const [expandedOutput, setExpandedOutput] = useState<
+    AppletOutput | undefined
+  >();
   const [expandedPath, setExpandedPath] = useState<string | undefined>();
   const [path, setPath] = useState<string | undefined>();
   const [updatedAt, setUpdatedAt] = useState(Date.now());
@@ -33,12 +36,20 @@ export const useAppletContent = (): AppletContentReturnType => {
     panelStack,
   ]);
 
+  useEffect(() => {
+    console.log(path);
+  }, [path]);
+
   const addPanel = ({
     mainContent,
     expandedContent,
   }: {
-    mainContent: { inputs?: InputParams; output?: string; path?: string };
-    expandedContent?: { inputs?: InputParams; outputs?: string; path?: string };
+    mainContent: { inputs?: InputParams; output?: AppletOutput; path?: string };
+    expandedContent?: {
+      inputs?: InputParams;
+      output?: AppletOutput;
+      path?: string;
+    };
   }) => {
     setPanelStack((previousValue) => [
       ...previousValue,
@@ -77,7 +88,7 @@ export const useAppletContent = (): AppletContentReturnType => {
   }: {
     path?: string;
     inputs?: InputParams;
-    output?: string;
+    output?: AppletOutput;
   }) => {
     if (!path && !inputs && !output) {
       setInputs(undefined);
@@ -95,7 +106,7 @@ export const useAppletContent = (): AppletContentReturnType => {
   }: {
     path?: string;
     inputs?: InputParams;
-    output?: string;
+    output?: AppletOutput;
   }) => {
     if (!path && !inputs && !output) {
       setExpandedInputs(undefined);

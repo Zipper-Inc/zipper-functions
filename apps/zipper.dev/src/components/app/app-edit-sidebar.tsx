@@ -44,11 +44,11 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
     setTabIndex(index);
   };
 
-  const { isRunning, run } = useRunAppContext();
+  const { isRunning, run, formMethods } = useRunAppContext();
 
   const { currentScript, inputParams, inputError, logs } = useEditorContext();
 
-  // const { setExpandedResult } = useAppEditSidebarContext();
+  const [inputs, setInputs] = useState<Record<string, any>>({});
 
   const appLink = getAppLink(appSlug);
   const { onCopy } = useClipboard(
@@ -72,16 +72,16 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
   const isLibrary = !inputParams && !inputError;
   const isHandler = inputParams || inputError;
 
-  // const setInputsAtTimeOfRun = () => {
-  //   const formValues = formMethods.getValues();
-  //   const formKeys = inputParams?.map((param) => `${param.key}:${param.type}`);
-  //   const inputs: Record<string, any> = {};
-  //   formKeys?.map((k) => {
-  //     const key = k.split(':')[0] as string;
-  //     inputs[key] = formValues[k];
-  //   });
-  //   setInputs(inputs);
-  // };
+  const setInputsAtTimeOfRun = () => {
+    const formValues = formMethods.getValues();
+    const formKeys = inputParams?.map((param) => `${param.key}:${param.type}`);
+    const inputs: Record<string, any> = {};
+    formKeys?.map((k) => {
+      const key = k.split(':')[0] as string;
+      inputs[key] = formValues[k];
+    });
+    setInputs(inputs);
+  };
 
   return (
     <VStack h="full" w="full">
@@ -136,6 +136,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
                   currentScript?.filename === 'main.ts' ? 'solid' : 'ghost'
                 }
                 onClick={() => {
+                  setInputsAtTimeOfRun();
                   run(true);
                 }}
                 display="flex"
@@ -218,7 +219,10 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
               overflow="auto"
               w="full"
             >
-              <AppEditSidebarApplet appSlug={appSlug} />
+              <AppEditSidebarApplet
+                appSlug={appSlug}
+                inputValuesAtRun={inputs}
+              />
             </TabPanel>
           )}
 
