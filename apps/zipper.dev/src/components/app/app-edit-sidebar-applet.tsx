@@ -34,19 +34,22 @@ export const AppEditSidebarApplet = ({
 
   useEffect(() => {
     mainApplet.reset();
-    mainApplet.mainContent.set({
-      inputs: inputParams,
-      output: results[currentScript?.filename || 'main.ts'],
-    });
-  }, [results, currentScript]);
-
-  useEffect(() => {
     const inputParamsWithValues = inputParams?.map((i) => {
       i.value = inputValuesAtRun[i.key];
       return i;
     });
-    mainApplet.mainContent.set({ inputs: inputParamsWithValues });
-  }, [inputParams, inputValuesAtRun]);
+    mainApplet.mainContent.set({
+      inputs: inputParams,
+      output: {
+        data: results[currentScript?.filename || 'main.ts'] || '',
+        inputsUsed: inputParamsWithValues || [],
+      },
+    });
+  }, [results, currentScript]);
+
+  useEffect(() => {
+    mainApplet.mainContent.set({ inputs: inputParams });
+  }, [inputParams]);
 
   const isHandler = inputParams || inputError;
 
@@ -156,7 +159,7 @@ export const AppEditSidebarApplet = ({
         )}
       </Box>
 
-      {currentScript && mainApplet.mainContent.output && (
+      {currentScript && mainApplet.mainContent.output?.data && (
         <Box mt={4}>{output}</Box>
       )}
     </>

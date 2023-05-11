@@ -33,7 +33,7 @@ import {
   HiOutlineChevronDown,
   HiChevronLeft,
 } from 'react-icons/hi';
-import { useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { getInputsFromFormData } from '@zipper/utils';
 import { FunctionInputs } from '../function-inputs';
 import { useForm } from 'react-hook-form';
@@ -41,7 +41,9 @@ import { InputParam, InputParams } from '@zipper/types';
 import { useEffectOnce } from '../../hooks/use-effect-once';
 import { ZipperLocation } from '@zipper/types';
 import { useAppletContent } from '../../hooks/use-applet-content';
-import SmartFunctionOutputProvider from './smart-function-output-context';
+import SmartFunctionOutputProvider, {
+  SmartFunctionOutputContext,
+} from './smart-function-output-context';
 
 const stickyTabsStyles: ChakraProps = {
   top: -4,
@@ -98,10 +100,13 @@ export function FunctionOutput({
       modalFormContext.reset(defaultValues);
     }
 
-    if (modalApplet.mainContent.output || modalApplet.mainContent.inputs) {
+    if (
+      modalApplet.mainContent.output?.data ||
+      modalApplet.mainContent.inputs
+    ) {
       onOpen();
     }
-  }, [modalApplet.mainContent.output, modalApplet.mainContent.inputs]);
+  }, [modalApplet.mainContent.output?.data, modalApplet.mainContent.inputs]);
 
   useEffect(() => {
     if (applet.expandedContent.inputs) {
@@ -111,13 +116,14 @@ export function FunctionOutput({
       );
       expandedFormContext.reset(defaultValues);
     }
-  }, [applet.expandedContent.output, applet.expandedContent.inputs]);
+  }, [applet.expandedContent.inputs]);
 
   function showSecondaryOutput({
     actionShowAs,
     inputs,
     output,
     path,
+    actionSection,
   }: {
     actionShowAs: Zipper.Action['showAs'];
     inputs?: {
@@ -125,19 +131,21 @@ export function FunctionOutput({
       defaultValues: Record<string, any>;
     };
     output?: {
-      result: string;
+      data: string;
+      inputsUsed: InputParams;
     };
     path: string;
+    actionSection: 'main' | 'expanded';
   }) {
     const content = {
       inputs: inputs?.inputParams,
-      output: output?.result,
+      output,
       path,
     };
     if (currentContext === 'main') {
       switch (actionShowAs) {
         case 'expanded': {
-          if (applet.expandedContent.output) {
+          if (actionSection === 'expanded') {
             applet.addPanel({
               mainContent: applet.mainContent,
               expandedContent: content,
@@ -152,15 +160,22 @@ export function FunctionOutput({
           break;
         }
         default: {
-          applet.addPanel({
-            mainContent: content,
-          });
+          if (actionSection === 'expanded') {
+            applet.addPanel({
+              mainContent: applet.mainContent,
+              expandedContent: content,
+            });
+          } else {
+            applet.addPanel({
+              mainContent: content,
+            });
+          }
         }
       }
     } else {
       switch (actionShowAs) {
         case 'expanded': {
-          if (applet.expandedContent.output) {
+          if (actionSection === 'expanded') {
             applet.addPanel({
               mainContent: applet.mainContent,
               expandedContent: content,
@@ -171,7 +186,14 @@ export function FunctionOutput({
           break;
         }
         default: {
-          applet.addPanel({ mainContent: content });
+          if (actionSection === 'expanded') {
+            applet.addPanel({
+              mainContent: applet.mainContent,
+              expandedContent: content,
+            });
+          } else {
+            applet.addPanel({ mainContent: content });
+          }
         }
       }
     }
@@ -203,7 +225,6 @@ export function FunctionOutput({
                     return i;
                   },
                 );
-                applet.expandedContent.set({ inputs: inputsWithValues });
                 const res = await fetch(
                   getRunUrl(applet.expandedContent.path),
                   {
@@ -214,7 +235,9 @@ export function FunctionOutput({
                 );
                 const text = await res.text();
 
-                applet.expandedContent.set({ output: text });
+                applet.expandedContent.set({
+                  output: { data: text, inputsUsed: inputsWithValues || [] },
+                });
                 applet.expandedContent.setIsLoading(false);
               }}
             >
@@ -222,7 +245,7 @@ export function FunctionOutput({
             </Button>
           </Box>
         )}
-        {applet.expandedContent.output && (
+        {applet.expandedContent.output?.data && (
           <Tabs colorScheme="purple" variant="enclosed" {...tabsStyles}>
             <TabList {...tablistStyles}>
               <Tab {...tabButtonStyles}>Results</Tab>
@@ -238,7 +261,7 @@ export function FunctionOutput({
                   <Box width="max-content" data-function-output="smart">
                     <SmartFunctionOutputProvider outputSection="expanded">
                       <SmartFunctionOutput
-                        result={applet.expandedContent.output}
+                        result={applet.expandedContent.output.data}
                         level={0}
                       />
                     </SmartFunctionOutputProvider>
@@ -246,7 +269,7 @@ export function FunctionOutput({
                 </Box>
               </TabPanel>
               <TabPanel backgroundColor="gray.100">
-                <RawFunctionOutput result={applet?.mainContent.output} />
+                <RawFunctionOutput result={applet?.mainContent.output?.data} />
               </TabPanel>
             </TabPanels>
           </Tabs>
@@ -280,7 +303,6 @@ export function FunctionOutput({
                     return i;
                   },
                 );
-                modalApplet.mainContent.set({ inputs: inputsWithValues });
 
                 const res = await fetch(
                   getRunUrl(modalApplet.mainContent.path || 'main.ts'),
@@ -296,7 +318,9 @@ export function FunctionOutput({
                   inputs: undefined,
                   output: undefined,
                 });
-                modalApplet.mainContent.set({ output: text });
+                modalApplet.mainContent.set({
+                  output: { data: text, inputsUsed: inputsWithValues || [] },
+                });
                 modalApplet.mainContent.setIsLoading(false);
               }}
             >
@@ -305,7 +329,7 @@ export function FunctionOutput({
           </Box>
         )}
 
-        {modalApplet.mainContent.output && (
+        {modalApplet.mainContent.output?.data && (
           <FunctionOutput
             applet={modalApplet}
             getRunUrl={getRunUrl}
@@ -340,7 +364,7 @@ export function FunctionOutput({
     >
       <ErrorBoundary
         // this makes sure we render a new boundary with a new result set
-        key={applet?.mainContent.output}
+        key={applet?.mainContent.path}
         fallback={
           <Tabs colorScheme="purple" variant="enclosed" {...tabsStyles}>
             <TabList {...tablistStyles}>
@@ -352,7 +376,7 @@ export function FunctionOutput({
               borderBottomRadius={'md'}
             >
               <TabPanel backgroundColor="gray.100">
-                <RawFunctionOutput result={applet?.mainContent.output} />
+                <RawFunctionOutput result={applet?.mainContent.output?.data} />
               </TabPanel>
             </TabPanels>
           </Tabs>
@@ -390,7 +414,7 @@ export function FunctionOutput({
                     <Box width="max-content" data-function-output="smart">
                       <SmartFunctionOutputProvider outputSection="main">
                         <SmartFunctionOutput
-                          result={applet?.mainContent.output}
+                          result={applet?.mainContent.output?.data}
                           level={level}
                         />
                       </SmartFunctionOutputProvider>
@@ -429,7 +453,9 @@ export function FunctionOutput({
                   )}
                 </TabPanel>
                 <TabPanel backgroundColor="gray.100">
-                  <RawFunctionOutput result={applet?.mainContent.output} />
+                  <RawFunctionOutput
+                    result={applet?.mainContent.output?.data}
+                  />
                 </TabPanel>
               </TabPanels>
             </Box>

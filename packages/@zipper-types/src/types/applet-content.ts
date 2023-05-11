@@ -1,41 +1,54 @@
 import { InputParams } from './app-info';
 
+export type AppletOutput = {
+  inputsUsed: InputParams;
+  data: string;
+};
+
 export type AppletContentPanel = {
   inputs?: InputParams;
-  output?: string;
+  output?: AppletOutput;
   path?: string;
   expandedInputs?: InputParams;
-  expandedOutput?: string;
+  expandedOutput?: AppletOutput;
   expandedPath?: string;
 };
 
 export type AppletContentReturnType = {
   mainContent: {
     inputs?: InputParams;
-    output?: string;
+    output?: AppletOutput;
     path?: string;
     isLoading: boolean;
     setIsLoading: (bool: boolean) => void;
-    set: ({}: { path?: string; inputs?: InputParams; output?: string }) => void;
+    set: ({}: {
+      path?: string;
+      inputs?: InputParams;
+      output?: AppletOutput;
+    }) => void;
   };
   expandedContent: {
     inputs?: InputParams;
-    output?: string;
+    output?: AppletOutput;
     path?: string;
     isLoading: boolean;
     setIsLoading: (bool: boolean) => void;
-    set: ({}: { path?: string; inputs?: InputParams; output?: string }) => void;
+    set: ({}: {
+      path?: string;
+      inputs?: InputParams;
+      output?: AppletOutput;
+    }) => void;
   };
   addPanel: ({}: {
     mainContent: {
       path?: string;
       inputs?: InputParams;
-      output?: string;
+      output?: AppletOutput;
     };
     expandedContent?: {
       path?: string;
       inputs?: InputParams;
-      output?: string;
+      output?: AppletOutput;
     };
   }) => void;
   reset: () => void;
