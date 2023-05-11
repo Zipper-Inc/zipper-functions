@@ -10,14 +10,9 @@ import { SmartFunctionOutputContext } from './smart-function-output-context';
 import Zipper from '../../../../@zipper-framework';
 
 export function ActionButton({ action }: { action: Zipper.Action }) {
-  const {
-    showSecondaryOutput,
-    getRunUrl,
-    appInfoUrl,
-    currentContext,
-    applet,
-    modalApplet,
-  } = useContext(FunctionOutputContext) as FunctionOutputContextType;
+  const { showSecondaryOutput, getRunUrl, appInfoUrl, applet } = useContext(
+    FunctionOutputContext,
+  ) as FunctionOutputContextType;
 
   const { outputSection } = useContext(SmartFunctionOutputContext);
 
@@ -56,7 +51,6 @@ export function ActionButton({ action }: { action: Zipper.Action }) {
   }
 
   async function runScript() {
-    const currentApplet = currentContext === 'main' ? applet : modalApplet;
     const runPath = action.path;
     const actionInputs: Zipper.Inputs = action.inputs || {};
     let inputParamsWithValues: InputParams = [];
@@ -89,12 +83,12 @@ export function ActionButton({ action }: { action: Zipper.Action }) {
 
       const refreshPath =
         outputSection === 'main'
-          ? currentApplet?.mainContent.path
-          : currentApplet?.expandedContent.path;
+          ? applet?.mainContent.path
+          : applet?.expandedContent.path;
       const refreshInputParams =
         outputSection === 'main'
-          ? currentApplet?.mainContent.output?.inputsUsed || []
-          : currentApplet?.expandedContent.output?.inputsUsed || [];
+          ? applet?.mainContent.output?.inputsUsed || []
+          : applet?.expandedContent.output?.inputsUsed || [];
 
       refreshInputParams.forEach((i) => (originalInputs[i.key] = i.value));
 
