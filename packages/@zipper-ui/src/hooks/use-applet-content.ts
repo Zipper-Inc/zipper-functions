@@ -36,6 +36,10 @@ export const useAppletContent = (): AppletContentReturnType => {
     panelStack,
   ]);
 
+  useEffect(() => {
+    console.log(path);
+  }, [path]);
+
   const addPanel = ({
     mainContent,
     expandedContent,

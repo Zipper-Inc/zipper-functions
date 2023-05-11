@@ -57,7 +57,6 @@ export function ActionButton({ action }: { action: Zipper.Action }) {
 
   async function runScript() {
     const currentApplet = currentContext === 'main' ? applet : modalApplet;
-
     const runPath = action.path;
     const actionInputs: Zipper.Inputs = action.inputs || {};
     let inputParamsWithValues: InputParams = [];

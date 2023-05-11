@@ -44,6 +44,7 @@ export const AppEditSidebarApplet = ({
         data: results[currentScript?.filename || 'main.ts'] || '',
         inputsUsed: inputParamsWithValues || [],
       },
+      path: currentScript?.filename || 'main.ts',
     });
   }, [results, currentScript]);
 
@@ -54,9 +55,6 @@ export const AppEditSidebarApplet = ({
   const isHandler = inputParams || inputError;
 
   const output = useMemo(() => {
-    mainApplet.mainContent.set({
-      path: currentScript?.filename || 'main.ts',
-    });
     return (
       <FunctionOutput
         applet={mainApplet}
@@ -68,7 +66,7 @@ export const AppEditSidebarApplet = ({
         appSlug={appInfo.slug}
       />
     );
-  }, [mainApplet.updatedAt, currentScript]);
+  }, [mainApplet.updatedAt]);
 
   const handleAddInput = () => {
     if (currentScriptLive && currentScript) {

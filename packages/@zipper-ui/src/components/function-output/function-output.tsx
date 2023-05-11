@@ -33,7 +33,7 @@ import {
   HiOutlineChevronDown,
   HiChevronLeft,
 } from 'react-icons/hi';
-import { useContext, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { getInputsFromFormData } from '@zipper/utils';
 import { FunctionInputs } from '../function-inputs';
 import { useForm } from 'react-hook-form';
@@ -41,9 +41,7 @@ import { InputParam, InputParams } from '@zipper/types';
 import { useEffectOnce } from '../../hooks/use-effect-once';
 import { ZipperLocation } from '@zipper/types';
 import { useAppletContent } from '../../hooks/use-applet-content';
-import SmartFunctionOutputProvider, {
-  SmartFunctionOutputContext,
-} from './smart-function-output-context';
+import SmartFunctionOutputProvider from './smart-function-output-context';
 
 const stickyTabsStyles: ChakraProps = {
   top: -4,
