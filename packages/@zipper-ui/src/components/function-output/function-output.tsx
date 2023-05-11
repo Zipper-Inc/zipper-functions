@@ -88,6 +88,8 @@ export function FunctionOutput({
   const modalFormContext = useForm();
   const expandedFormContext = useForm();
 
+  // apply default values to the form if the inputs change
+  // open the modal has content in the main section, open it
   useEffect(() => {
     if (modalApplet.mainContent.inputs) {
       const defaultValues: Record<string, any> = {};
@@ -106,6 +108,7 @@ export function FunctionOutput({
     }
   }, [modalApplet.mainContent.output?.data, modalApplet.mainContent.inputs]);
 
+  // apply the default values in the expanded form if the inputs change
   useEffect(() => {
     if (applet.expandedContent.inputs) {
       const defaultValues: Record<string, any> = {};
@@ -116,6 +119,9 @@ export function FunctionOutput({
     }
   }, [applet.expandedContent.inputs]);
 
+  // all the logic for figuring out where to open the secondary output
+  // based on the action's showAs value, the current context (main or modal),
+  // and the section of the output where the action was triggered (main or expanded)
   function showSecondaryOutput({
     actionShowAs,
     inputs,
@@ -140,58 +146,57 @@ export function FunctionOutput({
       output,
       path,
     };
-    if (currentContext === 'main') {
-      switch (actionShowAs) {
-        case 'expanded': {
-          if (actionSection === 'expanded') {
-            applet.addPanel({
-              mainContent: applet.mainContent,
-              expandedContent: content,
-            });
-          } else {
-            applet.expandedContent.set(content);
-          }
-          break;
+
+    switch (actionShowAs) {
+      // show the output in the expanded section
+      case 'expanded': {
+        // if triggered from within the expanded section, add a new panel
+        // where the main content stays the same but the expanded content is new
+        if (actionSection === 'expanded') {
+          applet.addPanel({
+            mainContent: applet.mainContent,
+            expandedContent: content,
+          });
+          // if triggered from the main section, just set/replace the expanded section
+        } else {
+          applet.expandedContent.set(content);
         }
-        case 'modal': {
+        break;
+      }
+      case 'modal': {
+        // if we're in the main applet, open a modal by setting the modalApplet content
+        if (currentContext === 'main') {
           modalApplet.mainContent.set(content);
           break;
         }
-        default: {
-          if (actionSection === 'expanded') {
-            applet.addPanel({
-              mainContent: applet.mainContent,
-              expandedContent: content,
-            });
-          } else {
-            applet.addPanel({
-              mainContent: content,
-            });
-          }
-        }
+        //if we're already in a modal, add a new panel
+        applet.addPanel({
+          mainContent: content,
+        });
+        break;
       }
-    } else {
-      switch (actionShowAs) {
-        case 'expanded': {
-          if (actionSection === 'expanded') {
-            applet.addPanel({
-              mainContent: applet.mainContent,
-              expandedContent: content,
-            });
-          } else {
-            applet.expandedContent.set(content);
-          }
-          break;
+      case 'refresh': {
+        // refresh replaces the existing content without adding a panel
+        if (actionSection === 'expanded') {
+          applet.mainContent.set(applet.mainContent);
+          applet.expandedContent.set(content);
+        } else {
+          applet.mainContent.set(content);
         }
-        default: {
-          if (actionSection === 'expanded') {
-            applet.addPanel({
-              mainContent: applet.mainContent,
-              expandedContent: content,
-            });
-          } else {
-            applet.addPanel({ mainContent: content });
-          }
+        break;
+      }
+      // this covers replace_all and modal being opened from a modal
+      default: {
+        //replace all
+        if (actionSection === 'expanded') {
+          applet.addPanel({
+            mainContent: applet.mainContent,
+            expandedContent: content,
+          });
+        } else {
+          applet.addPanel({
+            mainContent: content,
+          });
         }
       }
     }
