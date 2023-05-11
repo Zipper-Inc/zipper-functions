@@ -37,7 +37,7 @@ import { getConnectorsAuthUrl } from '~/utils/get-connectors-auth-url';
 
 const { __DEBUG__ } = process.env;
 
-type Screen = 'initial' | 'run' | 'edit';
+type Screen = 'initial' | 'edit';
 
 export type AppPageProps = {
   app?: AppInfo;
@@ -71,37 +71,34 @@ export function AppPage({
   metadata,
 }: AppPageProps) {
   const router = useRouter();
-  const { asPath } = router;
+  const { query } = router;
   const appTitle = app?.name || app?.slug || 'Zipper';
   const formContext = useForm({ defaultValues });
   const [result, setResult] = useState('');
   const [loading, setLoading] = useState(false);
   const { user } = useUser();
-  const [screen, setScreen] = useState<Screen>(paramResult ? 'run' : 'initial');
+  const [screen, setScreen] = useState<Screen>(
+    paramResult ? 'edit' : 'initial',
+  );
   const [latestRunId, setLatestRunId] = useState<string>();
-  const [expandInputsSection, setExpandInputsSection] = useState(true);
+  const [expandInputsSection, setExpandInputsSection] = useState(false);
   const [inputValues, setInputValues] = useState<Record<string, any>>({});
-  const previousRouteRef = useRef(asPath);
 
   // We have to do this so that the results aren't SSRed
   // (if they are DOMParser in FunctionOutput will be undefined)
   useEffect(() => {
     if (paramResult) {
       setResult(paramResult);
-      setScreen('run');
+      setScreen('edit');
     }
   }, [paramResult]);
 
   useEffect(() => {
-    if (
-      router.pathname !== '/run/[runId]' &&
-      asPath !== previousRouteRef.current
-    ) {
+    if (JSON.stringify(query) !== JSON.stringify(inputValues)) {
       setScreen('initial');
       setResult('');
     }
-    previousRouteRef.current = asPath;
-  }, [asPath]);
+  }, [query, inputValues]);
 
   const mainApplet = useAppletContent();
 
@@ -129,7 +126,6 @@ export function AppPage({
       const rawValues = formContext.getValues();
       const values = getInputsFromFormData(rawValues, inputs);
       setInputValues(values);
-
       const url = filename ? `/${filename}/call` : '/call';
 
       const res = await fetch(url, {
@@ -142,12 +138,12 @@ export function AppPage({
       if (runId) {
         const shortRunId = getShortRunId(runId);
         setLatestRunId(shortRunId);
-        router.push(`/run/${shortRunId}`, undefined, {
+        router.push({ query: values }, undefined, {
           shallow: true,
         });
       }
       if (result) setResult(result);
-      setScreen('run');
+      setScreen('edit');
       setLoading(false);
     }
   };
@@ -212,8 +208,7 @@ export function AppPage({
     };
   };
 
-  const showInput = (['initial', 'edit'] as Screen[]).includes(screen);
-  const showRunOutput = (['edit', 'run'] as Screen[]).includes(screen);
+  const showRunOutput = (['edit'] as Screen[]).includes(screen);
 
   const output = useMemo(() => {
     if (!app?.slug) return <></>;
@@ -255,7 +250,7 @@ export function AppPage({
           runId={latestRunId}
         />
         <VStack as="main" flex={1} spacing={4} position="relative" px={10}>
-          {showInput && metadata && (
+          {metadata && (
             <VStack mb="10">
               {metadata.h1 && <Heading as="h1">{metadata.h1}</Heading>}
               {metadata.h2 && (
@@ -270,37 +265,25 @@ export function AppPage({
               )}
             </VStack>
           )}
-          {showInput && (
-            <ConnectorsAuthInputsSection
-              isCollapsible={screen === 'edit'}
-              expandByDefault={expandInputsSection}
-              toggleIsExpanded={setExpandInputsSection}
-              userAuthProps={{
-                actions: connectorActions(app.id),
-                appTitle,
-                userAuthConnectors,
-              }}
-              userInputsProps={{
-                canRunApp,
-                formContext,
-                hasResult: Boolean(result),
-                inputs,
-                runApp,
-              }}
-            />
-          )}
+          <ConnectorsAuthInputsSection
+            isCollapsible={screen === 'edit'}
+            expandByDefault={expandInputsSection}
+            toggleIsExpanded={setExpandInputsSection}
+            userAuthProps={{
+              actions: connectorActions(app.id),
+              appTitle,
+              userAuthConnectors,
+            }}
+            userInputsProps={{
+              canRunApp,
+              formContext,
+              hasResult: Boolean(result),
+              inputs,
+              runApp,
+            }}
+          />
           {showRunOutput && (
             <VStack w="full" align="stretch" spacing={6}>
-              {screen === 'run' && (
-                <InputSummary
-                  inputs={inputs}
-                  formContext={formContext}
-                  onEditAndRerun={() => {
-                    setScreen('edit');
-                  }}
-                />
-              )}
-              <Divider color="gray.300" borderColor="currentcolor" />
               {output}
             </VStack>
           )}

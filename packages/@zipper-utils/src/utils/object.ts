@@ -12,13 +12,18 @@ export const getInputsFromFormData = (
     .reduce((acc, cur) => {
       const { name, type } = parseFieldName(cur);
 
-      const value = JSONEditorInputTypes.includes(type as InputType)
+      let value = JSONEditorInputTypes.includes(type as InputType)
         ? safeJSONParse(
             formData[cur],
             undefined,
             type === InputType.array ? [] : {},
           )
         : formData[cur];
-      return { ...acc, [name]: value };
+
+      if (type === InputType.boolean) {
+        value = !!value;
+      }
+
+      return { ...acc, [name]: value.toString() };
     }, {} as Record<string, any>);
 };

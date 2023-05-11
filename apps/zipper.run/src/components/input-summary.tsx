@@ -19,7 +19,7 @@ const complexTypes = [InputType.any, InputType.array, InputType.object];
  * @param formContext the formContext holding input values
  * @returns a string representing the summary of the inputs
  */
-const getInputSummary = (
+export const getInputSummary = (
   inputs: InputSummaryProps['inputs'],
   formContext: InputSummaryProps['formContext'],
 ) => {

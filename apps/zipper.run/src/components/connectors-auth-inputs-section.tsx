@@ -8,6 +8,7 @@ import {
   Box,
   AccordionProps,
 } from '@chakra-ui/react';
+import { getInputSummary } from './input-summary';
 import AuthUserConnectors, { AuthUserConnectorsProps } from './user-connectors';
 import UserInputs, { UserInputsProps } from './user-inputs';
 
@@ -41,6 +42,11 @@ const ConnectorsAuthInputsSection: React.FC<
       ? (arg) => toggleIsExpanded(!arg)
       : undefined;
 
+  const inputSummary = getInputSummary(
+    userInputsProps.inputs,
+    userInputsProps.formContext,
+  );
+
   return (
     <VStack w="container.sm" align="stretch">
       {isCollapsible ? (
@@ -57,7 +63,7 @@ const ConnectorsAuthInputsSection: React.FC<
               rounded="xl"
             >
               <Box as="span" flex="1" textAlign="left">
-                Configuration
+                {inputSummary}
               </Box>
               <AccordionIcon />
             </AccordionButton>
