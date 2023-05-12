@@ -32,6 +32,7 @@ export type HeaderProps = AppInfo & {
   entryPoint?: EntryPointInfo;
   runnableScripts?: string[];
   runId?: string;
+  setScreen: (screen: 'initial' | 'output') => void;
 };
 
 const Header: React.FC<HeaderProps> = ({
@@ -41,6 +42,7 @@ const Header: React.FC<HeaderProps> = ({
   entryPoint,
   runnableScripts = [],
   runId,
+  setScreen,
 }) => {
   const router = useRouter();
   const toast = useToast();
@@ -140,6 +142,7 @@ const Header: React.FC<HeaderProps> = ({
                           fontWeight="medium"
                           onClick={() => {
                             onClose();
+                            setScreen('initial');
                             router.push(`/${entryPoint.filename}`);
                           }}
                           _hover={{ background: 'none' }}
@@ -166,7 +169,11 @@ const Header: React.FC<HeaderProps> = ({
                           return (
                             <MenuItem
                               key={`${s}-${i}`}
-                              onClick={() => router.push(`/${s}`)}
+                              onClick={() => {
+                                onClose();
+                                setScreen('initial');
+                                router.push(`/${s}`);
+                              }}
                               backgroundColor="gray.50"
                               px="4"
                               pt="2"

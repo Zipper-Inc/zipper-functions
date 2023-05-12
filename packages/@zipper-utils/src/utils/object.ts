@@ -24,6 +24,6 @@ export const getInputsFromFormData = (
         value = !!value;
       }
 
-      return { ...acc, [name]: value.toString() };
+      return { ...acc, [name]: value };
     }, {} as Record<string, any>);
 };

@@ -15,7 +15,7 @@ import {
 import getAppInfo from '~/utils/get-app-info';
 import getValidSubdomain from '~/utils/get-valid-subdomain';
 import { getFilenameAndVersionFromPath } from '~/utils/get-values-from-url';
-import { Heading, Progress, VStack, Divider } from '@chakra-ui/react';
+import { Heading, Progress, VStack } from '@chakra-ui/react';
 import Head from 'next/head';
 import { useForm } from 'react-hook-form';
 import { getInputValuesFromUrl } from '../utils/get-input-values-from-url';
@@ -37,7 +37,7 @@ import { getConnectorsAuthUrl } from '~/utils/get-connectors-auth-url';
 
 const { __DEBUG__ } = process.env;
 
-type Screen = 'initial' | 'edit';
+type Screen = 'initial' | 'output';
 
 export type AppPageProps = {
   app?: AppInfo;
@@ -71,34 +71,41 @@ export function AppPage({
   metadata,
 }: AppPageProps) {
   const router = useRouter();
-  const { query } = router;
+  const { asPath } = router;
   const appTitle = app?.name || app?.slug || 'Zipper';
   const formContext = useForm({ defaultValues });
   const [result, setResult] = useState('');
   const [loading, setLoading] = useState(false);
   const { user } = useUser();
   const [screen, setScreen] = useState<Screen>(
-    paramResult ? 'edit' : 'initial',
+    paramResult ? 'output' : 'initial',
   );
   const [latestRunId, setLatestRunId] = useState<string>();
   const [expandInputsSection, setExpandInputsSection] = useState(false);
-  const [inputValues, setInputValues] = useState<Record<string, any>>({});
+  const previousRouteRef = useRef(asPath);
 
   // We have to do this so that the results aren't SSRed
   // (if they are DOMParser in FunctionOutput will be undefined)
   useEffect(() => {
     if (paramResult) {
       setResult(paramResult);
-      setScreen('edit');
+      setScreen('output');
     }
   }, [paramResult]);
 
   useEffect(() => {
-    if (JSON.stringify(query) !== JSON.stringify(inputValues)) {
+    if (
+      router.pathname !== '/run/[path]' &&
+      asPath !== previousRouteRef.current
+    ) {
       setScreen('initial');
+
+      const defaultValues = getInputValuesFromUrl(inputs, asPath);
+      formContext.reset(defaultValues);
       setResult('');
     }
-  }, [query, inputValues]);
+    previousRouteRef.current = asPath;
+  }, [asPath]);
 
   const mainApplet = useAppletContent();
 
@@ -125,7 +132,6 @@ export function AppPage({
       setLoading(true);
       const rawValues = formContext.getValues();
       const values = getInputsFromFormData(rawValues, inputs);
-      setInputValues(values);
       const url = filename ? `/${filename}/call` : '/call';
 
       const res = await fetch(url, {
@@ -138,12 +144,16 @@ export function AppPage({
       if (runId) {
         const shortRunId = getShortRunId(runId);
         setLatestRunId(shortRunId);
-        router.push({ query: values }, undefined, {
-          shallow: true,
-        });
+        router.push(
+          { pathname: `/run/${filename}`, query: values },
+          undefined,
+          {
+            shallow: true,
+          },
+        );
       }
       if (result) setResult(result);
-      setScreen('edit');
+      setScreen('output');
       setLoading(false);
     }
   };
@@ -208,7 +218,7 @@ export function AppPage({
     };
   };
 
-  const showRunOutput = (['edit'] as Screen[]).includes(screen);
+  const showRunOutput = (['output'] as Screen[]).includes(screen);
 
   const output = useMemo(() => {
     if (!app?.slug) return <></>;
@@ -248,9 +258,10 @@ export function AppPage({
           entryPoint={entryPoint}
           runnableScripts={runnableScripts}
           runId={latestRunId}
+          setScreen={setScreen}
         />
         <VStack as="main" flex={1} spacing={4} position="relative" px={10}>
-          {metadata && (
+          {metadata && Object.keys(metadata).length > 0 && (
             <VStack mb="10">
               {metadata.h1 && <Heading as="h1">{metadata.h1}</Heading>}
               {metadata.h2 && (
@@ -265,25 +276,41 @@ export function AppPage({
               )}
             </VStack>
           )}
-          <ConnectorsAuthInputsSection
-            isCollapsible={screen === 'edit'}
-            expandByDefault={expandInputsSection}
-            toggleIsExpanded={setExpandInputsSection}
-            userAuthProps={{
-              actions: connectorActions(app.id),
-              appTitle,
-              userAuthConnectors,
-            }}
-            userInputsProps={{
-              canRunApp,
-              formContext,
-              hasResult: Boolean(result),
-              inputs,
-              runApp,
-            }}
-          />
+          {screen === 'initial' && (
+            <ConnectorsAuthInputsSection
+              isCollapsible={false}
+              expandByDefault={expandInputsSection}
+              toggleIsExpanded={setExpandInputsSection}
+              userAuthProps={{
+                actions: connectorActions(app.id),
+                appTitle,
+                userAuthConnectors,
+              }}
+              userInputsProps={{
+                canRunApp,
+                formContext,
+                hasResult: false,
+                inputs,
+                runApp,
+              }}
+            />
+          )}
           {showRunOutput && (
             <VStack w="full" align="stretch" spacing={6}>
+              <InputSummary
+                inputs={inputs}
+                formContext={formContext}
+                onEditAndRerun={() => {
+                  const query = router.query;
+                  delete query.path;
+
+                  router.push({
+                    pathname: `/${filename}`,
+                    query,
+                  });
+                  setScreen('initial');
+                }}
+              />
               {output}
             </VStack>
           )}
