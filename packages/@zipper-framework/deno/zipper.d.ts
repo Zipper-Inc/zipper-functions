@@ -125,10 +125,10 @@ declare namespace Zipper {
   export type HandlerConfig<I = Inputs> = Partial<{
     run: boolean | I;
     auth: boolean;
-    meta: Partial<{
+    description: Partial<{
       title: string;
       subtitle: string;
-      description: string;
+      body: string;
     }>;
     inputs: {
       [Property in keyof I]: Partial<{
