@@ -1,6 +1,6 @@
 import './zipper.d.ts';
 import { Application } from 'https://deno.land/x/oak@v12.1.0/mod.ts';
-import { handlers } from './generated/handlers.gen.ts';
+import { files } from './generated/index.gen.ts';
 import { BOOT_PATH, ENV_BLOCKLIST, MAIN_PATH } from './constants.ts';
 import { ZipperStorage } from './storage.ts';
 import { sendLog, methods } from './console.ts';
@@ -103,7 +103,7 @@ app.use(async ({ request, response }) => {
   // Grab the handler
   let path: string = body.path || MAIN_PATH;
   if (!path.endsWith('.ts')) path = `${path}.ts`;
-  const handler = handlers[path];
+  const { handler } = files[path];
 
   // Handle missing paths
   if (!handler) {
