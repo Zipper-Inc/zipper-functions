@@ -65,7 +65,6 @@ export function makeLog({
     method,
     timestamp,
     data,
-    status: 'unread' as Zipper.Log.Status,
   };
 }
 
