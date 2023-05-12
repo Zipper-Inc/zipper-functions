@@ -152,7 +152,6 @@ export async function relayRequest(
       version,
       url: `https://${getAppLink(app.slug)}`,
     },
-    originalRequest: { method: request.method, url: request.url },
     inputs:
       request.method === 'GET'
         ? Object.fromEntries(relayUrl.searchParams.entries())

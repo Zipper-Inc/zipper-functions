@@ -43,7 +43,7 @@ app.use(async ({ request, response }) => {
     delete env[key];
   });
 
-  const { appInfo, userInfo, originalRequest, runId } = body;
+  const { appInfo, userInfo, runId } = body;
 
   // Attach ZipperGlobal
   window.Zipper = {
