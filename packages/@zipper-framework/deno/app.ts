@@ -49,15 +49,13 @@ app.use(async ({ request, response }) => {
   window.Zipper = {
     env,
     storage: new ZipperStorage(appInfo.id),
-    userInfo,
-    appInfo,
-    originalRequest,
-    runId,
     Action: {
-      create: (action) => ({
-        $zipperType: 'Zipper.Action',
-        ...action,
-      }),
+      create: (action) =>
+        ({
+          $zipperType: 'Zipper.Action',
+          ...action,
+          // deno-lint-ignore no-explicit-any
+        } as any),
     },
     Router: {
       redirect: (url) => ({
@@ -109,11 +107,20 @@ app.use(async ({ request, response }) => {
   if (!handler) {
     response.status = 404;
     response.body = `Zipper Error 404: Path not found`;
+    return;
   }
+
+  const context: Zipper.HandlerContext = {
+    userInfo,
+    appInfo,
+    runId,
+    request: request.originalRequest,
+    response: await response.toDomResponse(),
+  };
 
   // Run the handler
   try {
-    const output = await handler(body.inputs);
+    const output = await handler(body.inputs, context);
     response.status = 200;
     response.body = output || '';
   } catch (e) {
