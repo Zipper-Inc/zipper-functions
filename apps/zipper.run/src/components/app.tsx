@@ -122,7 +122,7 @@ export function AppPage({
       const values = getInputsFromFormData(rawValues, inputs);
       setInputValues(values);
 
-      const url = filename ? `/${filename}/call` : '/call';
+      const url = filename ? `/${filename}/relay` : '/relay';
 
       const res = await fetch(url, {
         method: 'POST',
@@ -154,7 +154,7 @@ export function AppPage({
   );
 
   function getRunUrl(scriptName: string) {
-    return `/${scriptName}/call`;
+    return `/${scriptName}/relay`;
   }
 
   const connectorActions: Record<ConnectorType, ConnectorActionProps> = {
@@ -206,6 +206,7 @@ export function AppPage({
   const showRunOutput = (['edit', 'run'] as Screen[]).includes(screen);
 
   const output = useMemo(() => {
+    if (!app) return;
     mainApplet.mainContent.set({
       path: filename,
     });
@@ -219,7 +220,7 @@ export function AppPage({
         appSlug={app.slug}
       />
     );
-  }, [mainApplet.updatedAt]);
+  }, [app, mainApplet.updatedAt]);
 
   const canRunApp = useMemo(() => {
     return (userAuthConnectors || []).every((connector) => {

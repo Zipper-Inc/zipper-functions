@@ -29,8 +29,8 @@ export default withClerkMiddleware(async (request: NextRequest) => {
       break;
     }
 
-    case /\/call(\/?)$/.test(appRoute): {
-      console.log('matching call route');
+    case /\/relay(\/?)$/.test(appRoute): {
+      console.log('matching relay route');
       res = await serveRelay({ request, bootOnly: false });
       break;
     }
@@ -47,7 +47,7 @@ export default withClerkMiddleware(async (request: NextRequest) => {
         res = NextResponse.rewrite(url);
       }
       if (request.method === 'POST') {
-        const url = new URL('/call', request.url);
+        const url = new URL('/relay', request.url);
         res = NextResponse.rewrite(url);
       }
       break;

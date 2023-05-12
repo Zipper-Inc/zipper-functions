@@ -195,7 +195,7 @@ export default async function serveRelay({
 }) {
   const { version, filename } = getFilenameAndVersionFromPath(
     request.nextUrl.pathname,
-    bootOnly ? ['boot'] : ['call'],
+    bootOnly ? ['boot'] : ['relay'],
   );
 
   const { result, status, headers } = await relayRequest(

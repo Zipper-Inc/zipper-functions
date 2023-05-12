@@ -59,9 +59,11 @@ module.exports = getConfig({
     return [
       {
         source: '/removeConnector/:appId/:connectorType/:path*',
-        destination: `${process.env.NODE_ENV === 'production' ? 'https' : 'http'
-          }://${process.env.NEXT_PUBLIC_ZIPPER_HOST
-          }/api/app/:appId/removeConnector/:connectorType`,
+        destination: `${
+          process.env.NODE_ENV === 'production' ? 'https' : 'http'
+        }://${
+          process.env.NEXT_PUBLIC_ZIPPER_HOST
+        }/api/app/:appId/removeConnector/:connectorType`,
       },
     ];
   },
