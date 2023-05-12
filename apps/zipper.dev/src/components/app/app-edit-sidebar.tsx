@@ -51,10 +51,18 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
 
   const { isRunning, run, formMethods } = useRunAppContext();
 
-  const { currentScript, inputParams, inputError, logs, markLogsAsRead } =
-    useEditorContext();
+  const {
+    currentScript,
+    inputParams,
+    inputError,
+    logs,
+    markLogsAsRead,
+    lastReadLogsTimestamp,
+  } = useEditorContext();
 
-  const unreadLogs = logs.filter((log) => log.status === 'unread').length;
+  const unreadLogs = logs.filter(
+    (log) => log.timestamp > lastReadLogsTimestamp,
+  ).length;
 
   const [inputs, setInputs] = useState<Record<string, any>>({});
 

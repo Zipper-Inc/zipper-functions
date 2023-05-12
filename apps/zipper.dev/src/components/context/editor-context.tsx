@@ -56,6 +56,7 @@ export type EditorContextType = {
   inputError?: string;
   monacoRef?: MutableRefObject<Monaco | undefined>;
   logs: Zipper.Log.Message[];
+  lastReadLogsTimestamp: number;
   preserveLogs: boolean;
   setPreserveLogs: (v: boolean) => void;
   addLog: (method: Zipper.Log.Method, data: Zipper.Serializable[]) => void;
@@ -91,6 +92,7 @@ export const EditorContext = createContext<EditorContextType>({
   monacoRef: undefined,
   logs: [],
   preserveLogs: true,
+  lastReadLogsTimestamp: 0,
   setPreserveLogs: noop,
   addLog: noop,
   markLogsAsRead: noop,
@@ -398,9 +400,11 @@ const EditorContextProvider = ({
   const [logStore, setLogStore] = useState<
     Record<string, Zipper.Log.Message[]>
   >({});
+  const [lastReadLogsTimestamp, setLastReadLogsTimestamp] = useState<number>(0);
 
   useEffect(() => {
     const newLogs: Zipper.Log.Message[] = [];
+    // add a timestamp for the last time the logs was read
     setLogs(
       newLogs
         .concat(...Object.values(logStore))
@@ -414,7 +418,6 @@ const EditorContextProvider = ({
       method,
       data,
       timestamp: Date.now(),
-      status: 'unread' as Zipper.Log.Status,
     };
 
     setLogStore((prev) => {
@@ -425,20 +428,8 @@ const EditorContextProvider = ({
   };
 
   const markLogsAsRead = () => {
-    setLogStore((prev) =>
-      // grab all logs from the store
-      Object.entries(prev).reduce<Record<string, Zipper.Log.Message[]>>(
-        (acc, [key, value]) => {
-          // updating all the logs to status 'read'
-          acc[key] = value.map((log) => ({ ...log, status: 'read' }));
-          // Adding all updated logs to the new object
-          return acc;
-        },
-        {},
-      ),
-    );
+    setLastReadLogsTimestamp(Date.now());
   };
-  // END LOGS
 
   const replaceCurrentScriptCode = (code: string) => {
     if (currentScript) {
@@ -589,6 +580,7 @@ const EditorContextProvider = ({
         markLogsAsRead,
         preserveLogs,
         setPreserveLogs,
+        lastReadLogsTimestamp,
       }}
     >
       {children}
