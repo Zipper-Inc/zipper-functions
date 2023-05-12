@@ -114,8 +114,8 @@ app.use(async ({ request, response }) => {
     userInfo,
     appInfo,
     runId,
-    request: request.originalRequest,
-    response: await response.toDomResponse(),
+    request,
+    response,
   };
 
   // Run the handler

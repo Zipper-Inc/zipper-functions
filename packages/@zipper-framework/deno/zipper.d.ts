@@ -9,21 +9,6 @@
 /**
  * Copy pasta from 'https://deno.land/x/oak@v12.1.0/types.d.ts';
  */
-interface ServerRequestBody {
-  body: ReadableStream<Uint8Array> | null;
-  readBody: () => Promise<Uint8Array>;
-}
-
-interface ServerRequest {
-  readonly remoteAddr: string | undefined;
-  readonly headers: Headers;
-  readonly method: string;
-  readonly rawUrl?: string;
-  readonly url: string;
-  error(reason?: any): void;
-  getBody(): ServerRequestBody;
-  respond(response: Response): Promise<void>;
-}
 
 /**
  * ✨
@@ -84,13 +69,15 @@ declare namespace Zipper {
   export type HandlerContext = {
     /**
      * The request object
+     * @todo figure out how to get Oak request in here
      */
-    request: ServerRequest;
+    request: any;
 
     /**
      * The response object
+     * @todo figure out how to get Oak response in here
      */
-    response: Response;
+    response: any;
 
     /**
      * Information about the user who called this app
