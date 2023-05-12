@@ -4,12 +4,14 @@ import { createContext, useContext } from 'react';
 export type FunctionOutputContextType = {
   showSecondaryOutput: (args: {
     actionShowAs: Zipper.Action['showAs'];
+    actionSection: 'expanded' | 'main';
     inputs?: {
       inputParams: InputParams;
       defaultValues: Record<string, any>;
     };
     output?: {
-      result: string;
+      data: string;
+      inputsUsed: InputParams;
     };
     path: string;
   }) => void;

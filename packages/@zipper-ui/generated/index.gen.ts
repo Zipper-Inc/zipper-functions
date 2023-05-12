@@ -9,6 +9,8 @@ export * from '../src/components/function-output/function-output';
 export * from '../src/components/function-output/object-explorer';
 export * from '../src/components/function-output/raw-function-output';
 export * from '../src/components/function-output/router-component';
+export * from '../src/components/function-output/smart-function-output-context';
+export { default as SmartFunctionOutputProvider } from '../src/components/function-output/smart-function-output-context';
 export * from '../src/components/function-output/smart-function-output';
 export * from '../src/components/function-output/types';
 export * from '../src/components/function-output/utils';

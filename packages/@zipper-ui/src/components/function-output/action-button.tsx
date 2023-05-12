@@ -5,17 +5,16 @@ import {
   FunctionOutputContext,
   FunctionOutputContextType,
 } from './function-output-context';
-import { InputParam } from '@zipper/types';
+import { AppInfoResult, InputParam, InputParams } from '@zipper/types';
+import { SmartFunctionOutputContext } from './smart-function-output-context';
+import Zipper from '../../../../@zipper-framework';
 
 export function ActionButton({ action }: { action: Zipper.Action }) {
-  const {
-    showSecondaryOutput,
-    getRunUrl,
-    appInfoUrl,
-    currentContext,
-    applet,
-    modalApplet,
-  } = useContext(FunctionOutputContext) as FunctionOutputContextType;
+  const { showSecondaryOutput, getRunUrl, appInfoUrl, applet } = useContext(
+    FunctionOutputContext,
+  ) as FunctionOutputContextType;
+
+  const { outputSection } = useContext(SmartFunctionOutputContext);
 
   async function getScript() {
     const res = await fetch(appInfoUrl, {
@@ -39,6 +38,7 @@ export function ActionButton({ action }: { action: Zipper.Action }) {
 
     showSecondaryOutput({
       actionShowAs: action.showAs,
+      actionSection: outputSection,
       inputs: {
         inputParams: json.data.inputs.map((i: InputParam) => {
           i.defaultValue = action.inputs![i.key];
@@ -51,30 +51,74 @@ export function ActionButton({ action }: { action: Zipper.Action }) {
   }
 
   async function runScript() {
-    const currentApplet = currentContext === 'main' ? applet : modalApplet;
-    const runPath =
-      action.showAs === 'refresh'
-        ? currentApplet?.mainContent.path
-        : action.path;
+    const runPath = action.path;
+    const actionInputs: Zipper.Inputs = action.inputs || {};
+    let inputParamsWithValues: InputParams = [];
+
+    const appInfoRes = await fetch(appInfoUrl, {
+      method: 'POST',
+      body: JSON.stringify({
+        filename: action.path,
+      }),
+      credentials: 'include',
+    });
+
+    const appInfo = (await appInfoRes.json()) as AppInfoResult;
+    if (appInfo.ok) {
+      inputParamsWithValues = appInfo.data.inputs.map((i) => {
+        i.value = actionInputs[i.key];
+        return i;
+      });
+    }
 
     const res = await fetch(getRunUrl(runPath || 'main.ts'), {
       method: 'POST',
-      body: JSON.stringify(
-        action.showAs === 'refresh'
-          ? currentApplet?.mainContent.inputs || []
-          : action.inputs || [],
-      ),
+      body: JSON.stringify(actionInputs),
       credentials: 'include',
     });
     const text = await res.text();
 
-    showSecondaryOutput({
-      actionShowAs: action.showAs,
-      output: {
-        result: text,
-      },
-      path: action.path || currentApplet.mainContent.path || 'main.ts',
-    });
+    if (action.showAs === 'refresh') {
+      const originalInputs: Zipper.Inputs = {};
+
+      const refreshPath =
+        outputSection === 'main'
+          ? applet?.mainContent.path
+          : applet?.expandedContent.path;
+      const refreshInputParams =
+        outputSection === 'main'
+          ? applet?.mainContent.output?.inputsUsed || []
+          : applet?.expandedContent.output?.inputsUsed || [];
+
+      refreshInputParams.forEach((i) => (originalInputs[i.key] = i.value));
+
+      const refreshRes = await fetch(getRunUrl(refreshPath || 'main.ts'), {
+        method: 'POST',
+        body: JSON.stringify(originalInputs),
+        credentials: 'include',
+      });
+      const text = await refreshRes.text();
+
+      showSecondaryOutput({
+        actionShowAs: action.showAs,
+        actionSection: outputSection,
+        output: {
+          data: text,
+          inputsUsed: refreshInputParams,
+        },
+        path: refreshPath || 'main.ts',
+      });
+    } else {
+      showSecondaryOutput({
+        actionShowAs: action.showAs,
+        actionSection: outputSection,
+        output: {
+          data: text,
+          inputsUsed: inputParamsWithValues,
+        },
+        path: runPath || 'main.ts',
+      });
+    }
   }
 
   const [isLoading, setIsLoading] = useState(false);
