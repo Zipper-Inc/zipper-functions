@@ -11,18 +11,20 @@ function MyApp({ Component, pageProps }: AppProps) {
   });
 
   return (
-    <ClerkProvider
-      appearance={{
-        variables: {
-          borderRadius: '0.175',
-          fontFamily: 'Inter',
-          colorPrimary: '#9B2FB4',
-        },
-      }}
-      {...pageProps}
-    >
-      <Component {...pageProps} />
-    </ClerkProvider>
+    <>
+      <ClerkProvider
+        {...pageProps}
+        appearance={{
+          variables: {
+            borderRadius: '0.175',
+            fontFamily: 'Inter',
+            colorPrimary: '#9B2FB4',
+          },
+        }}
+      >
+        <Component {...pageProps} />
+      </ClerkProvider>
+    </>
   );
 }
 
