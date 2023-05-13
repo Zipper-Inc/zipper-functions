@@ -20,6 +20,7 @@ import { RawFunctionOutput } from './raw-function-output';
 import { HiCheck, HiX } from 'react-icons/hi';
 import { ActionComponent } from './action-component';
 import { RouterComponent } from './router-component';
+import SmartFunctionOutputProvider from './smart-function-output-context';
 
 const StyledTr = styled(Tr)`
   &:last-of-type td {

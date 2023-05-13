@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 // @ts-check
 /* eslint-disable @typescript-eslint/no-var-requires */
 const { withSentryConfig } = require('@sentry/nextjs');
@@ -58,12 +59,18 @@ module.exports = getConfig({
   async rewrites() {
     return [
       {
-        source: '/removeConnector/:appId/:connectorType/:path*',
+        source: '/_zipper/removeConnector/:appId/:connectorType/:path*',
         destination: `${
           process.env.NODE_ENV === 'production' ? 'https' : 'http'
         }://${
           process.env.NEXT_PUBLIC_ZIPPER_HOST
         }/api/app/:appId/removeConnector/:connectorType`,
+      },
+      {
+        source: '/_zipper/app/info/:appSlug/:path*',
+        destination: `${
+          process.env.NODE_ENV === 'production' ? 'https' : 'http'
+        }://${process.env.NEXT_PUBLIC_ZIPPER_HOST}/api/app/info/:appSlug`,
       },
     ];
   },

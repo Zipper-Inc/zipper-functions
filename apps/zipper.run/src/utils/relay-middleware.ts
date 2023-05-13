@@ -198,6 +198,8 @@ export default async function serveRelay({
     bootOnly ? ['boot'] : ['relay'],
   );
 
+  console.log('version: ', version);
+  console.log('filename: ', filename);
   const { result, status, headers } = await relayRequest(
     {
       request,

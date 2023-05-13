@@ -7,7 +7,13 @@ import { useEditorContext } from '../context/editor-context';
 import { useRunAppContext } from '../context/run-app-context';
 import { AppEditSidebarAppletConnectors } from './app-edit-sidebar-applet-connectors';
 
-export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
+export const AppEditSidebarApplet = ({
+  appSlug,
+  inputValuesAtRun,
+}: {
+  appSlug: string;
+  inputValuesAtRun: Record<string, any>;
+}) => {
   const { formMethods, isRunning, results, userAuthConnectors, appInfo } =
     useRunAppContext();
 
@@ -28,9 +34,17 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
 
   useEffect(() => {
     mainApplet.reset();
+    const inputParamsWithValues = inputParams?.map((i) => {
+      i.value = inputValuesAtRun[i.key];
+      return i;
+    });
     mainApplet.mainContent.set({
       inputs: inputParams,
-      output: results[currentScript?.filename || 'main.ts'],
+      output: {
+        data: results[currentScript?.filename || 'main.ts'] || '',
+        inputsUsed: inputParamsWithValues || [],
+      },
+      path: currentScript?.filename || 'main.ts',
     });
   }, [results, currentScript]);
 
@@ -41,20 +55,18 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
   const isHandler = inputParams || inputError;
 
   const output = useMemo(() => {
-    mainApplet.mainContent.set({
-      path: currentScript?.filename || 'main.ts',
-    });
     return (
       <FunctionOutput
         applet={mainApplet}
         getRunUrl={(scriptName: string) => {
           return getRunUrl(appSlug, appInfo.lastDeploymentVersion, scriptName);
         }}
+        appInfoUrl={`/api/app/info/${appSlug}`}
         currentContext={'main'}
         appSlug={appInfo.slug}
       />
     );
-  }, [mainApplet.updatedAt, currentScript]);
+  }, [mainApplet.updatedAt]);
 
   const handleAddInput = () => {
     if (currentScriptLive && currentScript) {
@@ -145,7 +157,7 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
         )}
       </Box>
 
-      {currentScript && mainApplet.mainContent.output && (
+      {currentScript && mainApplet.mainContent.output?.data && (
         <Box mt={4}>{output}</Box>
       )}
     </>

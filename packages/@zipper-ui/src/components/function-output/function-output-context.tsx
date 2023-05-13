@@ -4,16 +4,19 @@ import { createContext, useContext } from 'react';
 export type FunctionOutputContextType = {
   showSecondaryOutput: (args: {
     actionShowAs: Zipper.Action['showAs'];
+    actionSection: 'expanded' | 'main';
     inputs?: {
       inputParams: InputParams;
       defaultValues: Record<string, any>;
     };
     output?: {
-      result: string;
+      data: string;
+      inputsUsed: InputParams;
     };
     path: string;
   }) => void;
   getRunUrl: (scriptName: string) => string;
+  appInfoUrl: string;
   currentContext: 'main' | 'modal';
   appSlug: string;
   applet: AppletContentReturnType;
@@ -28,6 +31,7 @@ const FunctionOutputProvider = ({
   children,
   showSecondaryOutput,
   getRunUrl,
+  appInfoUrl,
   currentContext,
   appSlug,
   applet,
@@ -38,6 +42,7 @@ const FunctionOutputProvider = ({
       value={{
         showSecondaryOutput,
         getRunUrl,
+        appInfoUrl,
         currentContext,
         appSlug,
         applet,

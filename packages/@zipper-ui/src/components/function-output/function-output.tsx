@@ -41,6 +41,7 @@ import { InputParam, InputParams } from '@zipper/types';
 import { useEffectOnce } from '../../hooks/use-effect-once';
 import { ZipperLocation } from '@zipper/types';
 import { useAppletContent } from '../../hooks/use-applet-content';
+import SmartFunctionOutputProvider from './smart-function-output-context';
 
 const stickyTabsStyles: ChakraProps = {
   top: -4,
@@ -75,6 +76,7 @@ const tabButtonStyles: ChakraProps = {
 export function FunctionOutput({
   level = 0,
   getRunUrl,
+  appInfoUrl,
   applet,
   currentContext,
   appSlug,
@@ -86,6 +88,8 @@ export function FunctionOutput({
   const modalFormContext = useForm();
   const expandedFormContext = useForm();
 
+  // apply default values to the form if the inputs change
+  // open the modal has content in the main section, open it
   useEffect(() => {
     if (modalApplet.mainContent.inputs) {
       const defaultValues: Record<string, any> = {};
@@ -96,11 +100,15 @@ export function FunctionOutput({
       modalFormContext.reset(defaultValues);
     }
 
-    if (modalApplet.mainContent.output || modalApplet.mainContent.inputs) {
+    if (
+      modalApplet.mainContent.output?.data ||
+      modalApplet.mainContent.inputs
+    ) {
       onOpen();
     }
-  }, [modalApplet.mainContent.output, modalApplet.mainContent.inputs]);
+  }, [modalApplet.mainContent.output?.data, modalApplet.mainContent.inputs]);
 
+  // apply the default values in the expanded form if the inputs change
   useEffect(() => {
     if (applet.expandedContent.inputs) {
       const defaultValues: Record<string, any> = {};
@@ -109,13 +117,17 @@ export function FunctionOutput({
       );
       expandedFormContext.reset(defaultValues);
     }
-  }, [applet.expandedContent.output, applet.expandedContent.inputs]);
+  }, [applet.expandedContent.inputs]);
 
+  // all the logic for figuring out where to open the secondary output
+  // based on the action's showAs value, the current context (main or modal),
+  // and the section of the output where the action was triggered (main or expanded)
   function showSecondaryOutput({
     actionShowAs,
     inputs,
     output,
     path,
+    actionSection,
   }: {
     actionShowAs: Zipper.Action['showAs'];
     inputs?: {
@@ -123,53 +135,68 @@ export function FunctionOutput({
       defaultValues: Record<string, any>;
     };
     output?: {
-      result: string;
+      data: string;
+      inputsUsed: InputParams;
     };
     path: string;
+    actionSection: 'main' | 'expanded';
   }) {
     const content = {
       inputs: inputs?.inputParams,
-      output: output?.result,
+      output,
       path,
     };
-    if (currentContext === 'main') {
-      switch (actionShowAs) {
-        case 'expanded': {
-          if (applet.expandedContent.output) {
-            applet.addPanel({
-              mainContent: applet.mainContent,
-              expandedContent: content,
-            });
-          } else {
-            applet.expandedContent.set(content);
-          }
-          break;
+
+    switch (actionShowAs) {
+      // show the output in the expanded section
+      case 'expanded': {
+        // if triggered from within the expanded section, add a new panel
+        // where the main content stays the same but the expanded content is new
+        if (actionSection === 'expanded') {
+          applet.addPanel({
+            mainContent: applet.mainContent,
+            expandedContent: content,
+          });
+          // if triggered from the main section, just set/replace the expanded section
+        } else {
+          applet.expandedContent.set(content);
         }
-        case 'modal': {
+        break;
+      }
+      case 'modal': {
+        // if we're in the main applet, open a modal by setting the modalApplet content
+        if (currentContext === 'main') {
           modalApplet.mainContent.set(content);
           break;
         }
-        default: {
+        //if we're already in a modal, add a new panel
+        applet.addPanel({
+          mainContent: content,
+        });
+        break;
+      }
+      case 'refresh': {
+        // refresh replaces the existing content without adding a panel
+        if (actionSection === 'expanded') {
+          applet.mainContent.set(applet.mainContent);
+          applet.expandedContent.set(content);
+        } else {
+          applet.mainContent.set(content);
+        }
+        break;
+      }
+      // this covers replace_all and modal being opened from a modal
+      default: {
+        //replace all
+        if (actionSection === 'expanded') {
+          applet.addPanel({
+            mainContent: applet.mainContent,
+            expandedContent: content,
+          });
+        } else {
           applet.addPanel({
             mainContent: content,
           });
-        }
-      }
-    } else {
-      switch (actionShowAs) {
-        case 'expanded': {
-          if (applet.expandedContent.output) {
-            applet.addPanel({
-              mainContent: applet.mainContent,
-              expandedContent: content,
-            });
-          } else {
-            applet.expandedContent.set(content);
-          }
-          break;
-        }
-        default: {
-          applet.addPanel({ mainContent: content });
         }
       }
     }
@@ -195,6 +222,12 @@ export function FunctionOutput({
                   expandedFormContext.getValues(),
                   applet.expandedContent.inputs || [],
                 );
+                const inputsWithValues = applet.expandedContent.inputs?.map(
+                  (i) => {
+                    i.value = values[i.key];
+                    return i;
+                  },
+                );
                 const res = await fetch(
                   getRunUrl(applet.expandedContent.path),
                   {
@@ -205,7 +238,9 @@ export function FunctionOutput({
                 );
                 const text = await res.text();
 
-                applet.expandedContent.set({ output: text });
+                applet.expandedContent.set({
+                  output: { data: text, inputsUsed: inputsWithValues || [] },
+                });
                 applet.expandedContent.setIsLoading(false);
               }}
             >
@@ -213,7 +248,7 @@ export function FunctionOutput({
             </Button>
           </Box>
         )}
-        {applet.expandedContent.output && (
+        {applet.expandedContent.output?.data && (
           <Tabs colorScheme="purple" variant="enclosed" {...tabsStyles}>
             <TabList {...tablistStyles}>
               <Tab {...tabButtonStyles}>Results</Tab>
@@ -227,15 +262,17 @@ export function FunctionOutput({
               <TabPanel>
                 <Box overflow="auto">
                   <Box width="max-content" data-function-output="smart">
-                    <SmartFunctionOutput
-                      result={applet.expandedContent.output}
-                      level={0}
-                    />
+                    <SmartFunctionOutputProvider outputSection="expanded">
+                      <SmartFunctionOutput
+                        result={applet.expandedContent.output.data}
+                        level={0}
+                      />
+                    </SmartFunctionOutputProvider>
                   </Box>
                 </Box>
               </TabPanel>
               <TabPanel backgroundColor="gray.100">
-                <RawFunctionOutput result={applet?.mainContent.output} />
+                <RawFunctionOutput result={applet?.mainContent.output?.data} />
               </TabPanel>
             </TabPanels>
           </Tabs>
@@ -262,6 +299,14 @@ export function FunctionOutput({
                   modalFormContext.getValues(),
                   modalApplet.mainContent.inputs || [],
                 );
+
+                const inputsWithValues = modalApplet.mainContent.inputs?.map(
+                  (i) => {
+                    i.value = values[i.key];
+                    return i;
+                  },
+                );
+
                 const res = await fetch(
                   getRunUrl(modalApplet.mainContent.path || 'main.ts'),
                   {
@@ -276,7 +321,9 @@ export function FunctionOutput({
                   inputs: undefined,
                   output: undefined,
                 });
-                modalApplet.mainContent.set({ output: text });
+                modalApplet.mainContent.set({
+                  output: { data: text, inputsUsed: inputsWithValues || [] },
+                });
                 modalApplet.mainContent.setIsLoading(false);
               }}
             >
@@ -285,10 +332,11 @@ export function FunctionOutput({
           </Box>
         )}
 
-        {modalApplet.mainContent.output && (
+        {modalApplet.mainContent.output?.data && (
           <FunctionOutput
             applet={modalApplet}
             getRunUrl={getRunUrl}
+            appInfoUrl={appInfoUrl}
             currentContext="modal"
             appSlug={appSlug}
           />
@@ -311,6 +359,7 @@ export function FunctionOutput({
     <FunctionOutputProvider
       showSecondaryOutput={showSecondaryOutput}
       getRunUrl={getRunUrl}
+      appInfoUrl={appInfoUrl}
       applet={applet}
       modalApplet={modalApplet}
       currentContext={currentContext}
@@ -318,7 +367,7 @@ export function FunctionOutput({
     >
       <ErrorBoundary
         // this makes sure we render a new boundary with a new result set
-        key={applet?.mainContent.output}
+        key={applet?.mainContent.path}
         fallback={
           <Tabs colorScheme="purple" variant="enclosed" {...tabsStyles}>
             <TabList {...tablistStyles}>
@@ -330,7 +379,7 @@ export function FunctionOutput({
               borderBottomRadius={'md'}
             >
               <TabPanel backgroundColor="gray.100">
-                <RawFunctionOutput result={applet?.mainContent.output} />
+                <RawFunctionOutput result={applet?.mainContent.output?.data} />
               </TabPanel>
             </TabPanels>
           </Tabs>
@@ -366,10 +415,12 @@ export function FunctionOutput({
                       </>
                     )}
                     <Box width="max-content" data-function-output="smart">
-                      <SmartFunctionOutput
-                        result={applet?.mainContent.output}
-                        level={level}
-                      />
+                      <SmartFunctionOutputProvider outputSection="main">
+                        <SmartFunctionOutput
+                          result={applet?.mainContent.output?.data}
+                          level={level}
+                        />
+                      </SmartFunctionOutputProvider>
                     </Box>
                   </Box>
 
@@ -405,7 +456,9 @@ export function FunctionOutput({
                   )}
                 </TabPanel>
                 <TabPanel backgroundColor="gray.100">
-                  <RawFunctionOutput result={applet?.mainContent.output} />
+                  <RawFunctionOutput
+                    result={applet?.mainContent.output?.data}
+                  />
                 </TabPanel>
               </TabPanels>
             </Box>
