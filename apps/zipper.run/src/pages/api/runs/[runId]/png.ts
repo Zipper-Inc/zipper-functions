@@ -24,7 +24,7 @@ export default async function handler(
   await page.goto(runUrl);
   const output = page.locator(selector);
   await output.waitFor();
-  const buffer = await output.screenshot({ scale: 'css' });
+  const buffer = await output.screenshot({ scale: 'device' });
   await browser.close();
 
   res.setHeader('Content-Type', 'image/png');
