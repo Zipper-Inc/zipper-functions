@@ -1136,6 +1136,19 @@
     snakecase-keys "5.4.4"
     tslib "2.4.1"
 
+"@clerk/backend@^0.18.1":
+  version "0.18.1"
+  resolved "https://registry.yarnpkg.com/@clerk/backend/-/backend-0.18.1.tgz#23d2d1f216d043cbac8a8a69c4f263679a06473c"
+  integrity sha512-3xYuQ5QEaxMVZgX37IeQOkycJfQLu96Qf3T+0fjcAseC2NVgQmqTf63kvQpws5tXNdaWhCJrTVQH80TN1DDd/g==
+  dependencies:
+    "@clerk/types" "^3.36.1"
+    "@peculiar/webcrypto" "1.4.1"
+    "@types/node" "16.18.6"
+    deepmerge "4.2.2"
+    node-fetch-native "1.0.1"
+    snakecase-keys "5.4.4"
+    tslib "2.4.1"
+
 "@clerk/clerk-react@^4.15.4":
   version "4.15.4"
   resolved "https://registry.yarnpkg.com/@clerk/clerk-react/-/clerk-react-4.15.4.tgz#80728a007055c316c840ddb4184381dae4cbb3d6"
@@ -1146,6 +1159,16 @@
     swr "1.3.0"
     tslib "2.4.1"
 
+"@clerk/clerk-react@^4.15.5":
+  version "4.15.5"
+  resolved "https://registry.yarnpkg.com/@clerk/clerk-react/-/clerk-react-4.15.5.tgz#351c7d1096f9333ddc3d81cf4a566276645b2136"
+  integrity sha512-hrG9jOFLkmJrl2BmnT9OiWK6lGlwDKHHR0kuCa01y682PsfGnYDwvSdxn7czW+ukE18k/G0tKYFIwFQQc7qlyw==
+  dependencies:
+    "@clerk/shared" "^0.15.8"
+    "@clerk/types" "^3.36.1"
+    swr "1.3.0"
+    tslib "2.4.1"
+
 "@clerk/clerk-sdk-node@^4.8.7":
   version "4.8.7"
   resolved "https://registry.yarnpkg.com/@clerk/clerk-sdk-node/-/clerk-sdk-node-4.8.7.tgz#d713469121631899f583232dff3d661b48932d81"
@@ -1153,6 +1176,21 @@
   dependencies:
     "@clerk/backend" "^0.18.0"
     "@clerk/types" "^3.36.0"
+    "@types/cookies" "0.7.7"
+    "@types/express" "4.17.14"
+    "@types/node-fetch" "2.6.2"
+    camelcase-keys "6.2.2"
+    cookie "0.5.0"
+    snakecase-keys "3.2.1"
+    tslib "2.4.1"
+
+"@clerk/clerk-sdk-node@^4.8.8":
+  version "4.8.8"
+  resolved "https://registry.yarnpkg.com/@clerk/clerk-sdk-node/-/clerk-sdk-node-4.8.8.tgz#a05b80ea9e17209c2197e87085c2dff4e51a07b3"
+  integrity sha512-G8/2AcXz8AT/ij0km/5fYa2O0jVjDoyo4tSVAOCP60nxqPOYLo/78LB37avjlMWU4MWX1ShDhwnJSAz5kup3Ig==
+  dependencies:
+    "@clerk/backend" "^0.18.1"
+    "@clerk/types" "^3.36.1"
     "@types/cookies" "0.7.7"
     "@types/express" "4.17.14"
     "@types/node-fetch" "2.6.2"
@@ -1173,15 +1211,39 @@
     path-to-regexp "6.2.1"
     tslib "2.4.1"
 
+"@clerk/nextjs@^4.17.3":
+  version "4.17.4"
+  resolved "https://registry.yarnpkg.com/@clerk/nextjs/-/nextjs-4.17.4.tgz#e974cd6535e154f39e1a72d4c1680c3975b6fc02"
+  integrity sha512-pIJ26P73zgwM7RP5EiIgIha/sHJUPf9nHTh4djSpJd1E19xqFsiSrnJG7ycuzqtwgQXDC6Vi47jzrqUMR59tfA==
+  dependencies:
+    "@clerk/backend" "^0.18.1"
+    "@clerk/clerk-react" "^4.15.5"
+    "@clerk/clerk-sdk-node" "^4.8.8"
+    "@clerk/types" "^3.36.1"
+    path-to-regexp "6.2.1"
+    tslib "2.4.1"
+
 "@clerk/shared@^0.15.7":
   version "0.15.7"
   resolved "https://registry.yarnpkg.com/@clerk/shared/-/shared-0.15.7.tgz#8e324cc8b03a00a2ea28f33be3ba312d918552db"
   integrity sha512-8kinCWFF28K8N/OCqfZYIEzxpyH8+HFZ1BmfloQLDSsiy8kpUljk3qbKkBRoHAxJKohSjZL6ax+IpBzt2FmkZw==
 
+"@clerk/shared@^0.15.8":
+  version "0.15.8"
+  resolved "https://registry.yarnpkg.com/@clerk/shared/-/shared-0.15.8.tgz#b0134ea6810a176cf7355a7912104c7585b4abf9"
+  integrity sha512-wbZ52k+udAeLpGMV0f9gm9S7xiiv3vtHgt6zJFuS2if9UGokpMlZDcqhBu+BxSxKn1TQSpXzmN5XP9bZ+lg5jg==
+
 "@clerk/types@^3.36.0":
   version "3.36.0"
   resolved "https://registry.yarnpkg.com/@clerk/types/-/types-3.36.0.tgz#bc7c87b478ba6b945f0e68f644c23c96fe690814"
   integrity sha512-bsOIud1h3Tkvd9F0CGTqqD7NicvAF3O0hFQ2lGjuETFrNqV8houorrGM9d0ZMU72vsyzwTQ/Jw8vB4mIHIXHMQ==
+  dependencies:
+    csstype "3.1.1"
+
+"@clerk/types@^3.36.1":
+  version "3.36.1"
+  resolved "https://registry.yarnpkg.com/@clerk/types/-/types-3.36.1.tgz#1bc613473c199b086800ac98424afc4d596147b5"
+  integrity sha512-4uCGMS8GrRA+Ag1NvAxEeGgFkxrxJQvr7Hrw4j/iANX89uUfj6fxt/J5SCpITNqm73XUaAyFvTQ72vDEk01fwA==
   dependencies:
     csstype "3.1.1"
 
@@ -2499,6 +2561,13 @@
   version "0.0.29"
   resolved "https://registry.npmjs.org/@types/json5/-/json5-0.0.29.tgz"
   integrity sha512-dRLjCWHYg4oaA77cxO64oO+7JwCwnIzkZPdrrC71jQmQtlhM556pwKo5bUzqvZndkVbeFLIIi+9TC40JNF5hNQ==
+
+"@types/jsonwebtoken@^9.0.2":
+  version "9.0.2"
+  resolved "https://registry.yarnpkg.com/@types/jsonwebtoken/-/jsonwebtoken-9.0.2.tgz#9eeb56c76dd555039be2a3972218de5bd3b8d83e"
+  integrity sha512-drE6uz7QBKq1fYqqoFKTDRdFCPHd5TCub75BM+D+cMx7NU9hUz7SESLfC2fSCXVFMO5Yj8sOWHuGqPgjc+fz0Q==
+  dependencies:
+    "@types/node" "*"
 
 "@types/keygrip@*":
   version "1.0.2"
