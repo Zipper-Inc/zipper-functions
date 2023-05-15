@@ -126,16 +126,9 @@ export async function relayRequest(
   const version =
     _version || app.lastDeploymentVersion || Date.now().toString(32);
 
-  const requiredAuthUserId = userAuthConnectors.find(
-    (c) => c.isUserAuthRequired,
-  )
-    ? auth.userId || tempUserId
-    : undefined;
-
   const deploymentId = formatDeploymentId({
     appId: app.id,
     version,
-    userId: requiredAuthUserId,
   });
 
   let relayUrl = getPatchedUrl(request);
@@ -152,6 +145,9 @@ export async function relayRequest(
       slug: app.slug,
       version,
       url: `https://${getAppLink(app.slug)}`,
+      connectorsWithUserAuth: userAuthConnectors
+        .filter((uac) => uac.isUserAuthRequired)
+        .map((uac) => uac.type),
     },
     inputs:
       request.method === 'GET'

@@ -310,6 +310,7 @@ declare namespace Zipper {
     slug: string;
     version: string;
     url: string;
+    connectorsWithUserAuth: string[];
   };
 
   /**

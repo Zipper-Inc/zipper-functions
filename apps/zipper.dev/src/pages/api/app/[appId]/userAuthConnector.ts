@@ -1,14 +1,13 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '~/server/prisma';
-import { Prisma } from '@prisma/client';
-import { JSONObject } from 'superjson/dist/types';
 import { verifyHmac } from '~/utils/verify-hmac';
+import { decryptFromBase64 } from '@zipper/utils';
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
-  const { body, method, query, headers } = req;
+  const { body, query, headers } = req;
 
   const jsonBody = body ? JSON.parse(body) : {};
 
@@ -42,51 +41,29 @@ export default async function handler(
     },
   });
 
-  let datastore = app.datastore as JSONObject;
+  const missingConnectorAuths = app.connectors.filter((connector) => {
+    if (
+      connector.isUserAuthRequired &&
+      connector.appConnectorUserAuths.length === 0
+    ) {
+      return true;
+    }
+  });
 
-  switch (method) {
-    case 'GET': {
-      const k = query.key as string;
-      if (k && datastore) {
-        res.send({ key: k, value: datastore[k] || '' });
-        break;
-      }
-      res.send(datastore || {});
-      break;
-    }
-    case 'POST': {
-      if (jsonBody.key) {
-        datastore = datastore || {};
-        datastore[jsonBody.key] = jsonBody.value;
+  const authTokens: Record<string, string> = {};
 
-        await prisma.app.update({
-          where: { id: appId as string },
-          data: { datastore: datastore as Prisma.InputJsonValue },
-        });
+  app.connectors.forEach((connector) => {
+    connector.appConnectorUserAuths.forEach((auth) => {
+      authTokens[`${auth.connectorType.toUpperCase()}_USER_TOKEN`] =
+        decryptFromBase64(
+          auth.encryptedAccessToken,
+          process.env.ENCRYPTION_KEY,
+        );
+    });
+  });
 
-        res.send({ key: jsonBody.key, value: datastore[jsonBody.key] });
-        break;
-      }
-      res.status(400).send({ error: 'Missing key' });
-      break;
-    }
-    case 'DELETE': {
-      if (query.key) {
-        delete datastore[query.key as string];
-        await prisma.app.update({
-          where: { id: appId as string },
-          data: { datastore: datastore as Prisma.InputJsonValue },
-        });
-        res.send(true);
-        break;
-      }
-      res.status(400).send({ error: 'Missing key' });
-      break;
-    }
-    default: {
-      res
-        .status(400)
-        .send({ error: 'Unsupported method: use GET, POST, or DELETE' });
-    }
-  }
+  return {
+    missingConnectorAuths,
+    authTokens,
+  };
 }
