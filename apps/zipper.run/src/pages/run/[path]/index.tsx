@@ -6,10 +6,10 @@ import {
 import { GetServerSideProps } from 'next';
 import { getInputValuesFromUrl } from '~/utils/get-input-values-from-url';
 import getValidSubdomain from '~/utils/get-valid-subdomain';
-import type { AppPageProps } from '~/components/app';
+import type { AppPageProps } from '~/components/applet';
 import getAppInfo from '~/utils/get-app-info';
 import { InputParams } from '@zipper/types';
-export { default } from '~/components/app';
+export { default } from '~/components/applet';
 
 export const getServerSideProps: GetServerSideProps = async ({
   req,
