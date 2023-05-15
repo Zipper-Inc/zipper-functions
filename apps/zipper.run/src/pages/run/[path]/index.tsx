@@ -79,7 +79,7 @@ export const getServerSideProps: GetServerSideProps = async ({
     const filename = query['path'] as string | undefined;
     return `${proto}://${slug}.${
       process.env.NEXT_PUBLIC_OUTPUT_SERVER_HOSTNAME
-    }/${filename || 'main'}/call`;
+    }/${filename || 'main'}/relay`;
   };
 
   const result = await fetch(getRunUrl(), {
