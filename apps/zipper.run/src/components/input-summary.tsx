@@ -19,7 +19,7 @@ const complexTypes = [InputType.any, InputType.array, InputType.object];
  * @param formContext the formContext holding input values
  * @returns a string representing the summary of the inputs
  */
-const getInputSummary = (
+export const getInputSummary = (
   inputs: InputSummaryProps['inputs'],
   formContext: InputSummaryProps['formContext'],
 ) => {
@@ -46,8 +46,8 @@ const getInputSummary = (
         }
         return 0;
       })
-      .map(({ key, fieldName, type, optional }) => {
-        let value = inputValues[fieldName];
+      .map(({ key, fieldName, type, optional, value: inputValue }) => {
+        let value = inputValue || inputValues[fieldName];
         // make filtering optional null and undefined values possible
         if ((value === undefined || value === null) && optional) {
           return undefined;

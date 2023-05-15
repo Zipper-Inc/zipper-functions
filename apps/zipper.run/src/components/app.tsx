@@ -15,7 +15,7 @@ import {
 import getAppInfo from '~/utils/get-app-info';
 import getValidSubdomain from '~/utils/get-valid-subdomain';
 import { getFilenameAndVersionFromPath } from '~/utils/get-values-from-url';
-import { Heading, Progress, VStack, Divider } from '@chakra-ui/react';
+import { Heading, Progress, VStack } from '@chakra-ui/react';
 import Head from 'next/head';
 import { useForm } from 'react-hook-form';
 import { getInputValuesFromUrl } from '../utils/get-input-values-from-url';
@@ -37,7 +37,7 @@ import { getConnectorsAuthUrl } from '~/utils/get-connectors-auth-url';
 
 const { __DEBUG__ } = process.env;
 
-type Screen = 'initial' | 'run' | 'edit';
+type Screen = 'initial' | 'output';
 
 export type AppPageProps = {
   app?: AppInfo;
@@ -77,10 +77,11 @@ export function AppPage({
   const [result, setResult] = useState('');
   const [loading, setLoading] = useState(false);
   const { user } = useUser();
-  const [screen, setScreen] = useState<Screen>(paramResult ? 'run' : 'initial');
+  const [screen, setScreen] = useState<Screen>(
+    paramResult ? 'output' : 'initial',
+  );
   const [latestRunId, setLatestRunId] = useState<string>();
-  const [expandInputsSection, setExpandInputsSection] = useState(true);
-  const [inputValues, setInputValues] = useState<Record<string, any>>({});
+  const [expandInputsSection, setExpandInputsSection] = useState(false);
   const previousRouteRef = useRef(asPath);
 
   // We have to do this so that the results aren't SSRed
@@ -88,16 +89,19 @@ export function AppPage({
   useEffect(() => {
     if (paramResult) {
       setResult(paramResult);
-      setScreen('run');
+      setScreen('output');
     }
   }, [paramResult]);
 
   useEffect(() => {
     if (
-      router.pathname !== '/run/[runId]' &&
+      router.pathname !== '/run/[path]' &&
       asPath !== previousRouteRef.current
     ) {
       setScreen('initial');
+
+      const defaultValues = getInputValuesFromUrl(inputs, asPath);
+      formContext.reset(defaultValues);
       setResult('');
     }
     previousRouteRef.current = asPath;
@@ -128,8 +132,6 @@ export function AppPage({
       setLoading(true);
       const rawValues = formContext.getValues();
       const values = getInputsFromFormData(rawValues, inputs);
-      setInputValues(values);
-
       const url = filename ? `/${filename}/call` : '/call';
 
       const res = await fetch(url, {
@@ -142,12 +144,16 @@ export function AppPage({
       if (runId) {
         const shortRunId = getShortRunId(runId);
         setLatestRunId(shortRunId);
-        router.push(`/run/${shortRunId}`, undefined, {
-          shallow: true,
-        });
+        router.push(
+          { pathname: `/run/${filename}`, query: values },
+          undefined,
+          {
+            shallow: true,
+          },
+        );
       }
       if (result) setResult(result);
-      setScreen('run');
+      setScreen('output');
       setLoading(false);
     }
   };
@@ -212,8 +218,7 @@ export function AppPage({
     };
   };
 
-  const showInput = (['initial', 'edit'] as Screen[]).includes(screen);
-  const showRunOutput = (['edit', 'run'] as Screen[]).includes(screen);
+  const showRunOutput = (['output'] as Screen[]).includes(screen);
 
   const output = useMemo(() => {
     if (!app?.slug) return <></>;
@@ -253,9 +258,10 @@ export function AppPage({
           entryPoint={entryPoint}
           runnableScripts={runnableScripts}
           runId={latestRunId}
+          setScreen={setScreen}
         />
         <VStack as="main" flex={1} spacing={4} position="relative" px={10}>
-          {showInput && metadata && (
+          {metadata && Object.keys(metadata).length > 0 && (
             <VStack mb="10">
               {metadata.h1 && <Heading as="h1">{metadata.h1}</Heading>}
               {metadata.h2 && (
@@ -270,9 +276,9 @@ export function AppPage({
               )}
             </VStack>
           )}
-          {showInput && (
+          {screen === 'initial' && (
             <ConnectorsAuthInputsSection
-              isCollapsible={screen === 'edit'}
+              isCollapsible={false}
               expandByDefault={expandInputsSection}
               toggleIsExpanded={setExpandInputsSection}
               userAuthProps={{
@@ -283,7 +289,7 @@ export function AppPage({
               userInputsProps={{
                 canRunApp,
                 formContext,
-                hasResult: Boolean(result),
+                hasResult: false,
                 inputs,
                 runApp,
               }}
@@ -291,16 +297,20 @@ export function AppPage({
           )}
           {showRunOutput && (
             <VStack w="full" align="stretch" spacing={6}>
-              {screen === 'run' && (
-                <InputSummary
-                  inputs={inputs}
-                  formContext={formContext}
-                  onEditAndRerun={() => {
-                    setScreen('edit');
-                  }}
-                />
-              )}
-              <Divider color="gray.300" borderColor="currentcolor" />
+              <InputSummary
+                inputs={inputs}
+                formContext={formContext}
+                onEditAndRerun={() => {
+                  const query = router.query;
+                  delete query.path;
+
+                  router.push({
+                    pathname: `/${filename}`,
+                    query,
+                  });
+                  setScreen('initial');
+                }}
+              />
               {output}
             </VStack>
           )}

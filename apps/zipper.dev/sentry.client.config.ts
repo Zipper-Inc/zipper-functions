@@ -26,5 +26,8 @@ Sentry.init({
       maskAllText: true,
       blockAllMedia: true,
     }),
+    new Sentry.Integrations.Breadcrumbs({
+      console: false,
+    }),
   ],
 });
