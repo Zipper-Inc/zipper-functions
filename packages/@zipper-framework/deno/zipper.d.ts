@@ -328,6 +328,7 @@ declare namespace Zipper {
       runId: string;
       inputs: Inputs;
       userInfo?: UserInfo;
+      originalRequest: { url: string; method: string };
       path?: string;
     };
   }
