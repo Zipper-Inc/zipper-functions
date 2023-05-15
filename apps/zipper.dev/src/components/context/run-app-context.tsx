@@ -32,6 +32,7 @@ export type RunAppContextType = {
   setResults: (results: Record<string, string>) => void;
   run: (isCurrentFileAsEntryPoint?: boolean) => void;
   boot: () => void;
+  configs: Zipper.BootPayload['configs'];
 };
 
 export const RunAppContext = createContext<RunAppContextType>({
@@ -44,6 +45,7 @@ export const RunAppContext = createContext<RunAppContextType>({
   setResults: noop,
   run: noop,
   boot: noop,
+  configs: {},
 });
 
 export function RunAppProvider({
@@ -80,6 +82,7 @@ export function RunAppProvider({
   const formMethods = useForm();
   const [isRunning, setIsRunning] = useState(false);
   const [results, setResults] = useState<Record<string, string>>({});
+  const [configs, setConfigs] = useState<Zipper.BootPayload['configs']>({});
   const utils = trpc.useContext();
 
   const runAppMutation = trpc.useMutation('app.run', {
@@ -129,9 +132,11 @@ export function RunAppProvider({
     };
     pollLogs();
 
-    await bootAppMutation.mutateAsync({
+    const { configs } = await bootAppMutation.mutateAsync({
       appId: id,
     });
+
+    if (configs) setConfigs(configs);
 
     // stop polling and do one last update
     // do it once more just time
@@ -257,6 +262,7 @@ export function RunAppProvider({
         setResults,
         run,
         boot,
+        configs,
       }}
     >
       {children}

@@ -578,7 +578,7 @@ export const appRouter = createRouter()
 
         return bootPayload;
       } catch (e: any) {
-        return { ok: false, error: e.toString() };
+        return { ok: false, error: e.toString(), configs: {} };
       }
     },
   })
