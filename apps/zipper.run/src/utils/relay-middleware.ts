@@ -131,6 +131,7 @@ export async function relayRequest(
   )
     ? auth.userId || tempUserId
     : undefined;
+
   const deploymentId = formatDeploymentId({
     appId: app.id,
     version,
