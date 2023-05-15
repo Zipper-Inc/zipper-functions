@@ -4,6 +4,7 @@ import { files } from './generated/index.gen.ts';
 import { BOOT_PATH, ENV_BLOCKLIST, MAIN_PATH } from './constants.ts';
 import { ZipperStorage } from './storage.ts';
 import { sendLog, methods } from './console.ts';
+import { getUserConnectorAuths } from './userAuthConnectors';
 
 const app = new Application();
 
@@ -142,6 +143,8 @@ app.use(async ({ request, response }) => {
 
   // Run the handler
   try {
+    // const authInfo = await getUserConnectorAuths();
+    // console.log(authInfo);
     const output = await handler(body.inputs, context);
     response.status = 200;
     response.body = output || '';
