@@ -549,15 +549,26 @@ export const appRouter = createRouter()
 
       console.log('Boot version: ', version);
 
-      const result = await fetch(getBootUrl(app.slug, version), {
-        method: 'POST',
-        body: '{}',
-        headers: {
-          authorization: `Bearer ${await getToken()}`,
-        },
-      }).then((r) => r.status);
+      try {
+        const bootPayload: Zipper.BootPayload = await fetch(
+          getBootUrl(app.slug, version),
+          {
+            method: 'POST',
+            body: '{}',
+            headers: {
+              authorization: `Bearer ${await getToken()}`,
+            },
+          },
+        ).then((r) => r.json());
 
-      if (result === 200) {
+        if (!bootPayload.ok || bootPayload.version !== version) {
+          throw new Error(
+            `Boot not ok${
+              bootPayload.version === version && ': version mismatch'
+            }`,
+          );
+        }
+
         await prisma.app.update({
           where: { id: app.id },
           data: {
@@ -565,10 +576,10 @@ export const appRouter = createRouter()
           },
         });
 
-        return { ok: true, version };
+        return bootPayload;
+      } catch (e: any) {
+        return { ok: false, error: e.toString() };
       }
-
-      return { ok: false };
     },
   })
   .mutation('run', {

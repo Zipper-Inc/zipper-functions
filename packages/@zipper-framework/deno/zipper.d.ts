@@ -141,6 +141,15 @@ declare namespace Zipper {
     };
   }>;
 
+  export type BootPayload = {
+    ok: true;
+    slug: string;
+    version: string;
+    appId: string;
+    deploymentId: string;
+    configs: { [path: string]: HandlerConfig };
+  };
+
   /**
    * These are special objects we can return such as Actions
    * You must pass a string type to it, i.e. `Zipper.Action`

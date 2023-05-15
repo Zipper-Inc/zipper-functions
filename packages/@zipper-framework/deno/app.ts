@@ -8,26 +8,6 @@ import { sendLog, methods } from './console.ts';
 const app = new Application();
 
 app.use(async ({ request, response }) => {
-  // Handle booting seperately
-  // This way, we can deploy without running Applet code
-  if (request.url.pathname === `/${BOOT_PATH}`) {
-    const configMap: Record<string, Zipper.HandlerConfig> = Object.entries(
-      files,
-    ).reduce(
-      (map, [path, { config }]) =>
-        config
-          ? {
-              ...map,
-              [path]: config,
-            }
-          : map,
-      {},
-    );
-    response.status = 200;
-    response.body = JSON.stringify({ ok: true, configs: configMap });
-    return;
-  }
-
   let body;
   let error;
 
@@ -56,6 +36,36 @@ app.use(async ({ request, response }) => {
   });
 
   const { appInfo, userInfo, runId } = body;
+
+  // Handle booting seperately
+  // This way, we can deploy without running Applet code
+  if (request.url.pathname === `/${BOOT_PATH}`) {
+    const { id, slug, version } = appInfo;
+
+    const configs = Object.entries(files).reduce(
+      (map, [path, { config }]) =>
+        config
+          ? {
+              ...map,
+              [path]: config,
+            }
+          : map,
+      {},
+    );
+
+    const bootPayload: Zipper.BootPayload = {
+      ok: true,
+      slug,
+      version,
+      appId: id,
+      deploymentId: `${id}@${version}`,
+      configs,
+    };
+
+    response.status = 200;
+    response.body = JSON.stringify(bootPayload);
+    return;
+  }
 
   // Attach ZipperGlobal
   window.Zipper = {
