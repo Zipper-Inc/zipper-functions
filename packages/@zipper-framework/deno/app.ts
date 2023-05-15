@@ -11,8 +11,20 @@ app.use(async ({ request, response }) => {
   // Handle booting seperately
   // This way, we can deploy without running Applet code
   if (request.url.pathname === `/${BOOT_PATH}`) {
+    const configMap: Record<string, Zipper.HandlerConfig> = Object.entries(
+      files,
+    ).reduce(
+      (map, [path, { config }]) =>
+        config
+          ? {
+              ...map,
+              [path]: config,
+            }
+          : map,
+      {},
+    );
     response.status = 200;
-    response.body = 'OK';
+    response.body = JSON.stringify({ ok: true, configs: configMap });
     return;
   }
 
