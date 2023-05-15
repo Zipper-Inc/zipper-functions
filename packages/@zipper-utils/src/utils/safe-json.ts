@@ -8,8 +8,14 @@ export function safeJSONParse(
   try {
     parsed = JSON.parse(json, reviver);
   } catch (e) {
-    if (verbose) console.error('Not vaild JSON', json);
-    parsed = fallback;
+    try {
+      if (typeof json === 'object') {
+        return JSON.parse(JSON.stringify(json), reviver);
+      }
+    } catch (error) {
+      if (verbose) console.error('Not vaild JSON', json);
+      parsed = fallback;
+    }
   }
   return parsed;
 }
