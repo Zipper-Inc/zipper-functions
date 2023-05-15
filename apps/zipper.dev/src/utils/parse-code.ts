@@ -8,6 +8,8 @@ import {
   SyntaxKind,
   ts,
   SourceFile,
+  FunctionDeclaration,
+  ArrowFunction,
 } from 'ts-morph';
 
 // Strip the Deno-style file extension since TS-Morph can't handle it
@@ -73,34 +75,35 @@ export function parseInputForTypes({
   try {
     const src = srcPassedIn || getSourceFileFromCode(code);
 
-    const handlerFn = src.getFunction('handler');
+    // Determine if there's a function handler
+    let handlerFn: FunctionDeclaration | ArrowFunction | undefined =
+      src.getFunction('handler');
 
-    if (!handlerFn) {
+    // If not, determine if there's a variable that's a handler arrow function
+    const handlerNode = handlerFn || src.getVariableDeclaration('handler');
+    handlerFn =
+      handlerFn || handlerNode?.getFirstChildByKind(SyntaxKind.ArrowFunction);
+
+    // All good, this is a lib file!
+    if (!handlerNode || !handlerFn) {
       return undefined;
     }
 
-    if (!handlerFn.hasExportKeyword() && throwErrors) {
+    // Now make sure it gets exported and is not the default
+    if (!handlerNode.hasExportKeyword() && throwErrors) {
       throw new Error('The handler function must be exported.');
     }
-
-    if (handlerFn.hasDefaultKeyword() && throwErrors) {
+    if (handlerNode.hasDefaultKeyword() && throwErrors) {
       throw new Error('The handler function cannot be the default export.');
     }
 
     const inputs = handlerFn.getParameters();
-    if (inputs.length !== 1 && inputs.length > 0) {
-      if (throwErrors)
-        throw new Error(
-          'The handler function can only have a single object parameter.',
-        );
-      console.error(
-        'The handler function can only have a single object parameter',
-      );
-    }
     const params = inputs[0] as ParameterDeclaration;
+
     if (!params) {
       return [];
     }
+
     const typeNode = params.getTypeNode();
 
     if (typeNode?.isKind(SyntaxKind.AnyKeyword)) {
@@ -114,6 +117,7 @@ export function parseInputForTypes({
     }
 
     let props: PropertySignature[] = [];
+
     try {
       props = typeNode?.isKind(SyntaxKind.TypeLiteral)
         ? // A type literal, like `params: { foo: string, bar: string }`

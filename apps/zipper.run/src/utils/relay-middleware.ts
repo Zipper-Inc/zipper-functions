@@ -152,11 +152,11 @@ export async function relayRequest(
       version,
       url: `https://${getAppLink(app.slug)}`,
     },
-    originalRequest: { method: request.method, url: request.url },
     inputs:
       request.method === 'GET'
         ? Object.fromEntries(relayUrl.searchParams.entries())
         : JSON.parse(await request.text()),
+    originalRequest: { url: request.url, method: request.method },
     runId,
   };
 
@@ -196,7 +196,7 @@ export default async function serveRelay({
 }) {
   const { version, filename } = getFilenameAndVersionFromPath(
     request.nextUrl.pathname,
-    bootOnly ? ['boot'] : ['call'],
+    bootOnly ? ['boot'] : ['relay'],
   );
 
   console.log('version: ', version);

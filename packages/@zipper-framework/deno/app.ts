@@ -1,6 +1,6 @@
 import './zipper.d.ts';
 import { Application } from 'https://deno.land/x/oak@v12.1.0/mod.ts';
-import { handlers } from './generated/handlers.gen.ts';
+import { files } from './generated/index.gen.ts';
 import { BOOT_PATH, ENV_BLOCKLIST, MAIN_PATH } from './constants.ts';
 import { ZipperStorage } from './storage.ts';
 import { sendLog, methods } from './console.ts';
@@ -8,14 +8,6 @@ import { sendLog, methods } from './console.ts';
 const app = new Application();
 
 app.use(async ({ request, response }) => {
-  // Handle booting seperately
-  // This way, we can deploy without running Applet code
-  if (request.url.pathname === `/${BOOT_PATH}`) {
-    response.status = 200;
-    response.body = 'OK';
-    return;
-  }
-
   let body;
   let error;
 
@@ -43,21 +35,49 @@ app.use(async ({ request, response }) => {
     delete env[key];
   });
 
-  const { appInfo, userInfo, originalRequest, runId } = body;
+  const { appInfo, userInfo, runId } = body;
+
+  // Handle booting seperately
+  // This way, we can deploy without running Applet code
+  if (request.url.pathname === `/${BOOT_PATH}`) {
+    const { id, slug, version } = appInfo;
+
+    const configs = Object.entries(files).reduce(
+      (map, [path, { config }]) =>
+        config
+          ? {
+              ...map,
+              [path]: config,
+            }
+          : map,
+      {},
+    );
+
+    const bootPayload: Zipper.BootPayload = {
+      ok: true,
+      slug,
+      version,
+      appId: id,
+      deploymentId: `${id}@${version}`,
+      configs,
+    };
+
+    response.status = 200;
+    response.body = JSON.stringify(bootPayload);
+    return;
+  }
 
   // Attach ZipperGlobal
   window.Zipper = {
     env,
     storage: new ZipperStorage(appInfo.id),
-    userInfo,
-    appInfo,
-    originalRequest,
-    runId,
     Action: {
-      create: (action) => ({
-        $zipperType: 'Zipper.Action',
-        ...action,
-      }),
+      create: (action) =>
+        ({
+          $zipperType: 'Zipper.Action',
+          ...action,
+          // deno-lint-ignore no-explicit-any
+        } as any),
     },
     Router: {
       redirect: (url) => ({
@@ -103,17 +123,26 @@ app.use(async ({ request, response }) => {
   // Grab the handler
   let path: string = body.path || MAIN_PATH;
   if (!path.endsWith('.ts')) path = `${path}.ts`;
-  const handler = handlers[path];
+  const { handler } = files[path];
 
   // Handle missing paths
   if (!handler) {
     response.status = 404;
     response.body = `Zipper Error 404: Path not found`;
+    return;
   }
+
+  const context: Zipper.HandlerContext = {
+    userInfo,
+    appInfo,
+    runId,
+    request,
+    response,
+  };
 
   // Run the handler
   try {
-    const output = await handler(body.inputs);
+    const output = await handler(body.inputs, context);
     response.status = 200;
     response.body = output || '';
   } catch (e) {

@@ -1,6 +1,6 @@
 import * as eszip from '@deno/eszip';
 import { App, Script } from '@prisma/client';
-import { generateHandlersForFramework } from '@zipper/utils';
+import { generateIndexForFramework } from '@zipper/utils';
 import { getLogger } from './app-console';
 import { prettyLog } from './pretty-log';
 import { BuildCache, getModule } from './eszip-build-cache';
@@ -13,7 +13,7 @@ import { readFrameworkFile } from './read-file';
  */
 
 export const FRAMEWORK_ENTRYPOINT = 'app.ts';
-export const HANDLERS_PATH = 'generated/handlers.gen.ts';
+export const APPLET_INDEX_PATH = 'generated/index.gen.ts';
 export const TYPESCRIPT_CONTENT_HEADERS = {
   'content-type': 'text/typescript',
 };
@@ -78,7 +78,7 @@ export async function build({
      */
     if (specifier.startsWith(baseUrl)) {
       const filename = specifier.replace(`${baseUrl}/`, '');
-      const isHandlersPath = filename === HANDLERS_PATH;
+      const isAppletIndex = filename === APPLET_INDEX_PATH;
 
       let content = await readFrameworkFile(filename);
 
@@ -90,8 +90,8 @@ export async function build({
         );
       });
 
-      if (isHandlersPath) {
-        content = generateHandlersForFramework({
+      if (isAppletIndex) {
+        content = generateIndexForFramework({
           code: content,
           filenames: app.scripts.map((s) => s.filename),
         });

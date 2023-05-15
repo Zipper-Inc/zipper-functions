@@ -132,7 +132,7 @@ export function AppPage({
       setLoading(true);
       const rawValues = formContext.getValues();
       const values = getInputsFromFormData(rawValues, inputs);
-      const url = filename ? `/${filename}/call` : '/call';
+      const url = filename ? `/${filename}/relay` : '/relay';
 
       const res = await fetch(url, {
         method: 'POST',
@@ -168,7 +168,7 @@ export function AppPage({
   );
 
   function getRunUrl(scriptName: string) {
-    return `/${scriptName}/call`;
+    return `/${scriptName}/relay`;
   }
 
   const connectorActions = (appId: string) => {
@@ -233,7 +233,7 @@ export function AppPage({
         appSlug={app.slug}
       />
     );
-  }, [mainApplet.updatedAt]);
+  }, [app, mainApplet.updatedAt]);
 
   const canRunApp = useMemo(() => {
     return (userAuthConnectors || []).every((connector) => {
