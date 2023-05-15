@@ -139,11 +139,7 @@ async function originBoot({
   id: string;
 }) {
   // eslint-disable-next-line prefer-const
-  const {
-    appId,
-    userId,
-    version: deploymentVersion,
-  } = parseDeploymentId(deploymentId);
+  const { appId, version: deploymentVersion } = parseDeploymentId(deploymentId);
 
   if (!appId || !deploymentVersion) {
     console.error('Missing appId and version');
@@ -158,11 +154,7 @@ async function originBoot({
       scripts: true,
       scriptMain: true,
       secrets: true,
-      connectors: {
-        include: {
-          appConnectorUserAuths: { where: { userIdOrTempId: userId } },
-        },
-      },
+      connectors: true,
     },
   });
 
@@ -174,23 +166,6 @@ async function originBoot({
     deploymentVersion === 'latest'
       ? app.lastDeploymentVersion || getAppVersionFromHash(getAppHash(app))
       : deploymentVersion;
-
-  const missingUserAuths = app.connectors.filter((connector) => {
-    if (
-      connector.isUserAuthRequired &&
-      connector.appConnectorUserAuths.length === 0
-    ) {
-      return true;
-    }
-  });
-
-  if (missingUserAuths.length > 0) {
-    return errorResponse(
-      `You need to auth the following integrations: ${missingUserAuths
-        .map((c) => c.type)
-        .join(', ')}`,
-    );
-  }
 
   const baseUrl = `file://${app.slug}/v${version}`;
 
@@ -215,16 +190,6 @@ async function originBoot({
       secret.encryptedValue,
       process.env.ENCRYPTION_KEY,
     );
-  });
-
-  app.connectors.forEach((connector) => {
-    connector.appConnectorUserAuths.forEach((auth) => {
-      secretsMap[`${auth.connectorType.toUpperCase()}_USER_TOKEN`] =
-        decryptFromBase64(
-          auth.encryptedAccessToken,
-          process.env.ENCRYPTION_KEY,
-        );
-    });
   });
 
   // Boot metadata
