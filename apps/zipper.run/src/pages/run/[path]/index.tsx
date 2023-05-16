@@ -82,7 +82,7 @@ export const getServerSideProps: GetServerSideProps = async ({
       credentials: 'include',
     },
   )
-    .then((r) => r.json())
+    .then((r) => r.text())
     .catch((e) => {
       console.log(e);
       return { ok: false, error: e.message };
