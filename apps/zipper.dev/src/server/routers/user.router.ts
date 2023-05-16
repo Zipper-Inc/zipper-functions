@@ -28,6 +28,7 @@ export const userRouter = createProtectedRouter()
       id: z.string(),
     }),
     async resolve({ input }) {
+      if (input.id.startsWith('temp_')) return;
       const user = await clerk.users.getUser(input.id);
       return {
         id: user.id,
