@@ -59,7 +59,7 @@ export const getServerSideProps: GetServerSideProps = async ({
   });
 
   const inputParamsWithValues = inputParams.map((i) => {
-    i.value = inputs[i.key];
+    if (inputs[i.key]) i.value = inputs[i.key];
     return i;
   });
 
