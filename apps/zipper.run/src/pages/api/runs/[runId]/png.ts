@@ -8,7 +8,7 @@ export default async function handler(
   const host = req.headers['x-forwarded-host'] || req.headers.host;
   const proto = process.env.NODE_ENV === 'production' ? 'https' : 'http';
   const { runId } = req.query;
-  const path = `/run/${runId}`;
+  const path = `/run/history/${runId}`;
   console.log(path);
 
   const runUrl = `${proto}://${host}${path}`;

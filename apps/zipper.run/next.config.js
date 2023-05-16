@@ -73,7 +73,7 @@ module.exports = getConfig({
         }://${process.env.NEXT_PUBLIC_ZIPPER_HOST}/api/app/info/:appSlug`,
       },
       {
-        source: '/run/:runId.png',
+        source: '/run/history/:runId.png',
         destination: '/api/runs/:runId/png'
       }
     ];
