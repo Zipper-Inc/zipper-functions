@@ -24,14 +24,8 @@ import {
   DrawerCloseButton,
   DrawerBody,
 } from '@chakra-ui/react';
-import { Avatar } from '../avatar';
 import { useRouter } from 'next/router';
-import {
-  HiExclamationTriangle,
-  HiCheck,
-  HiMagnifyingGlass,
-  HiMagnifyingGlassPlus,
-} from 'react-icons/hi2';
+import { HiExclamationTriangle, HiCheck } from 'react-icons/hi2';
 import { TbClockPlay } from 'react-icons/tb';
 import {
   createColumnHelper,
@@ -121,18 +115,8 @@ const HistoryTab: React.FC<HistoryTabProps> = ({ appId }) => {
         id: 'user',
         size: 100,
         header: 'Run by',
-        cell: ({
-          getValue,
-          row: {
-            original: { userId },
-          },
-        }) => {
-          return (
-            <HStack>
-              {userId && <Avatar userId={userId} size="xs" />}
-              <Text>{getValue()}</Text>
-            </HStack>
-          );
+        cell: ({ getValue }) => {
+          return <Text>{getValue()}</Text>;
         },
       },
     ),
