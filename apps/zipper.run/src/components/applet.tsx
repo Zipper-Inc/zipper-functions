@@ -56,6 +56,7 @@ export type AppPageProps = {
   result?: string;
   runnableScripts?: string[];
   metadata?: Record<string, string | undefined>;
+  handlerConfigs?: Record<string, Zipper.HandlerConfig>;
 };
 
 export function AppPage({
@@ -72,6 +73,7 @@ export function AppPage({
   result: paramResult,
   runnableScripts,
   metadata,
+  handlerConfigs,
 }: AppPageProps) {
   const router = useRouter();
   const { asPath } = router;
@@ -87,6 +89,9 @@ export function AppPage({
   );
   const [latestRunId] = useState<string | undefined>(metadata?.runId);
   const [expandInputsSection, setExpandInputsSection] = useState(false);
+  const [currentFileConfig, setCurrentFileConfig] = useState<
+    Zipper.HandlerConfig | undefined
+  >();
   const previousRouteRef = useRef(asPath);
 
   // We have to do this so that the results aren't SSRed
@@ -108,9 +113,8 @@ export function AppPage({
       const defaultValues = getInputValuesFromUrl(inputs, asPath);
       formContext.reset(defaultValues);
       setResult('');
-    } else {
-      setLoading(false);
     }
+    setLoading(false);
     previousRouteRef.current = asPath;
   }, [asPath]);
 
@@ -131,8 +135,15 @@ export function AppPage({
         data: result || '',
         inputsUsed: inputParamsWithValues || [],
       },
+      path: filename,
     });
   }, [result]);
+
+  useEffect(() => {
+    if (handlerConfigs && filename) {
+      setCurrentFileConfig(handlerConfigs[filename]);
+    }
+  }, [handlerConfigs, filename]);
 
   const runApp = async () => {
     if (!loading && canRunApp) {
@@ -210,6 +221,7 @@ export function AppPage({
     return (
       <FunctionOutput
         applet={mainApplet}
+        handlerConfigs={handlerConfigs}
         getRunUrl={(scriptName: string) => {
           return getRunUrl(scriptName);
         }}
@@ -232,6 +244,28 @@ export function AppPage({
     return <Unauthorized />;
   }
 
+  const appletDescription = () => {
+    if (!currentFileConfig || !currentFileConfig.description) {
+      return <></>;
+    }
+
+    const { title, subtitle } = currentFileConfig.description;
+    if (!title && !subtitle) {
+      return <></>;
+    }
+
+    return (
+      <VStack mb="10">
+        {title && <Heading as="h1">{title}</Heading>}
+        {subtitle && (
+          <Heading as="h2" fontSize="lg" fontWeight="semibold" color="gray.600">
+            {subtitle}
+          </Heading>
+        )}
+      </VStack>
+    );
+  };
+
   return (
     <>
       <Head>
@@ -244,41 +278,31 @@ export function AppPage({
           runnableScripts={runnableScripts}
           runId={latestRunId}
           setScreen={setScreen}
+          setLoading={setLoading}
         />
         <VStack as="main" flex={1} spacing={4} position="relative" px={10}>
-          {metadata && Object.keys(metadata).length > 0 && (
-            <VStack mb="10">
-              {metadata.h1 && <Heading as="h1">{metadata.h1}</Heading>}
-              {metadata.h2 && (
-                <Heading
-                  as="h2"
-                  fontSize="lg"
-                  fontWeight="semibold"
-                  color="gray.600"
-                >
-                  {metadata.h2}
-                </Heading>
-              )}
-            </VStack>
-          )}
+          {appletDescription()}
           {screen === 'initial' && (
-            <ConnectorsAuthInputsSection
-              isCollapsible={false}
-              expandByDefault={expandInputsSection}
-              toggleIsExpanded={setExpandInputsSection}
-              userAuthProps={{
-                actions: connectorActions(app.id),
-                appTitle,
-                userAuthConnectors,
-              }}
-              userInputsProps={{
-                canRunApp,
-                formContext,
-                hasResult: false,
-                inputs,
-                runApp,
-              }}
-            />
+            <>
+              <ConnectorsAuthInputsSection
+                isCollapsible={false}
+                expandByDefault={expandInputsSection}
+                toggleIsExpanded={setExpandInputsSection}
+                userAuthProps={{
+                  actions: connectorActions(app.id),
+                  appTitle,
+                  userAuthConnectors,
+                }}
+                userInputsProps={{
+                  isLoading: loading,
+                  canRunApp,
+                  formContext,
+                  hasResult: false,
+                  inputs,
+                  runApp,
+                }}
+              />
+            </>
           )}
           {showRunOutput && (
             <VStack w="full" align="stretch" spacing={6}>

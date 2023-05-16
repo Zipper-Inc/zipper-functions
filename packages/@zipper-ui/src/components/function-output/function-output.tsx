@@ -14,6 +14,7 @@ import {
   Spinner,
   Icon,
   Divider,
+  Heading,
 } from '@chakra-ui/react';
 import { FunctionOutputProps } from './types';
 import { RawFunctionOutput } from './raw-function-output';
@@ -21,11 +22,15 @@ import { SmartFunctionOutput } from './smart-function-output';
 import { ErrorBoundary } from '../error-boundary';
 import FunctionOutputProvider from './function-output-context';
 import { HiChevronLeft } from 'react-icons/hi';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { getInputsFromFormData } from '@zipper/utils';
 import { FunctionInputs } from '../function-inputs';
 import { useForm } from 'react-hook-form';
-import { InputParam, InputParams } from '@zipper/types';
+import {
+  AppletContentReturnType,
+  InputParam,
+  InputParams,
+} from '@zipper/types';
 import { useAppletContent } from '../../hooks/use-applet-content';
 import SmartFunctionOutputProvider from './smart-function-output-context';
 
@@ -38,6 +43,7 @@ export function FunctionOutput({
   applet,
   currentContext,
   appSlug,
+  handlerConfigs,
 }: FunctionOutputProps) {
   const { isOpen, onOpen, onClose } = useDisclosure();
 
@@ -287,6 +293,7 @@ export function FunctionOutput({
             appInfoUrl={appInfoUrl}
             currentContext="modal"
             appSlug={appSlug}
+            handlerConfigs={handlerConfigs}
           />
         )}
       </>
