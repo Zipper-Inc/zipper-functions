@@ -1,11 +1,16 @@
-import { Tab, ChakraProps, UseTabOptions } from '@chakra-ui/react';
+import { Tab, ChakraProps, UseTabOptions, Badge } from '@chakra-ui/react';
 
 type TabButtonProps = UseTabOptions &
   ChakraProps & {
     title: string;
+    badge?: number;
   };
 
-export const TabButton: React.FC<TabButtonProps> = ({ title, ...props }) => {
+export const TabButton: React.FC<TabButtonProps> = ({
+  title,
+  badge,
+  ...props
+}) => {
   return (
     <Tab
       px={6}
@@ -25,6 +30,11 @@ export const TabButton: React.FC<TabButtonProps> = ({ title, ...props }) => {
       {...props}
     >
       {title}
+      {badge && (
+        <Badge ml={2} colorScheme="purple">
+          {badge}
+        </Badge>
+      )}
     </Tab>
   );
 };
