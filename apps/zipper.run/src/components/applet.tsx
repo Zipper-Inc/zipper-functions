@@ -221,13 +221,13 @@ export function AppPage({
     return (
       <FunctionOutput
         applet={mainApplet}
-        handlerConfigs={handlerConfigs}
         getRunUrl={(scriptName: string) => {
           return getRunUrl(scriptName);
         }}
         appInfoUrl={`/_zipper/app/info/${app?.slug}`}
         currentContext={'main'}
         appSlug={app.slug}
+        showTabs={false}
       />
     );
   }, [app, mainApplet.updatedAt]);

@@ -2,7 +2,7 @@ import { FunctionOutputContextType } from './function-output-context';
 
 export type FunctionOutputProps = {
   level?: number;
-  handlerConfigs?: Record<string, Zipper.HandlerConfig>;
+  showTabs: boolean;
 } & Omit<FunctionOutputContextType, 'showSecondaryOutput' | 'modalApplet'>;
 
 export interface RawOutputProps {
