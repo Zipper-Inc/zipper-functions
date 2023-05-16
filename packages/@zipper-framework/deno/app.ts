@@ -4,6 +4,7 @@ import { files } from './generated/index.gen.ts';
 import { BOOT_PATH, ENV_BLOCKLIST, MAIN_PATH } from './constants.ts';
 import { ZipperStorage } from './storage.ts';
 import { sendLog, methods } from './console.ts';
+import { getUserConnectorAuths } from './userAuthConnectors.ts';
 
 const app = new Application();
 
@@ -35,7 +36,7 @@ app.use(async ({ request, response }) => {
     delete env[key];
   });
 
-  const { appInfo, userInfo, runId } = body;
+  const { appInfo, userInfo, runId, userId } = body;
 
   // Handle booting seperately
   // This way, we can deploy without running Applet code
@@ -132,6 +133,19 @@ app.use(async ({ request, response }) => {
     return;
   }
 
+  const fetchUserAuthConnectorInfo = async () => {
+    const authInfo = await getUserConnectorAuths(appInfo.id, userId);
+    if (authInfo.missingConnectorAuths.length > 0) {
+      const missingAuths = authInfo.missingConnectorAuths.join(', ');
+      throw new Error(`Missing the following connector auths: ${missingAuths}`);
+    }
+    if (Object.keys(authInfo.authTokens).length > 0) {
+      Object.keys(authInfo.authTokens).forEach((key) => {
+        env[key] = authInfo.authTokens[key];
+      });
+    }
+  };
+
   const context: Zipper.HandlerContext = {
     userInfo,
     appInfo,
@@ -142,6 +156,10 @@ app.use(async ({ request, response }) => {
 
   // Run the handler
   try {
+    if (appInfo.connectorsWithUserAuth.length > 0) {
+      await fetchUserAuthConnectorInfo();
+    }
+
     const output = await handler(body.inputs, context);
     response.status = 200;
     response.body = output || '';

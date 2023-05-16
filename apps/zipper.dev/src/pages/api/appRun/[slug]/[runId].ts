@@ -122,7 +122,7 @@ export default async function handler(
 
   let result: any = appRun.result;
 
-  if (appRun.userId) {
+  if (appRun.userId && appRun.app.requiresAuthToRun) {
     // return 401 if there's no token or no user was found by getUserInfo()
     if (!token || !userInfo.clerkUserId) {
       return res.status(401).send({ ok: false, error: 'UNAUTHORIZED' });

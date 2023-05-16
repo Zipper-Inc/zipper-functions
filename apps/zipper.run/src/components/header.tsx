@@ -52,7 +52,7 @@ const Header: React.FC<HeaderProps> = ({
   useEffect(() => {
     const baseUrl = `${protocol}://${getAppLink(slug)}`;
     if (runId) {
-      setValue(`${baseUrl}/run/${runId}`);
+      setValue(`${baseUrl}/run/history/${runId}`);
     } else {
       setValue(baseUrl);
     }

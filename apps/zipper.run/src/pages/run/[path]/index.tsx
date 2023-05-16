@@ -8,7 +8,7 @@ import { getInputValuesFromUrl } from '~/utils/get-input-values-from-url';
 import getValidSubdomain from '~/utils/get-valid-subdomain';
 import type { AppPageProps } from '~/components/app';
 import getAppInfo from '~/utils/get-app-info';
-import { InputParams } from '@zipper/types';
+import { getShortRunId } from '~/utils/run-id';
 export { default } from '~/components/app';
 
 export const getServerSideProps: GetServerSideProps = async ({
@@ -23,11 +23,12 @@ export const getServerSideProps: GetServerSideProps = async ({
 
   const auth = getAuth(req);
   const token = await auth.getToken({ template: 'incl_orgs' });
+  const tempUserId = req.cookies[ZIPPER_TEMP_USER_ID_COOKIE_NAME];
 
   // grab the app if it exists
   const appInfoResult = await getAppInfo({
     subdomain,
-    tempUserId: req.cookies[ZIPPER_TEMP_USER_ID_COOKIE_NAME],
+    tempUserId,
     filename: (query['path'] as string | undefined) || 'main.ts',
     token,
   });
@@ -44,8 +45,9 @@ export const getServerSideProps: GetServerSideProps = async ({
     userAuthConnectors,
     entryPoint,
     runnableScripts,
-    metadata,
   } = appInfoResult.data;
+
+  const metadata = appInfoResult.data.metadata || {};
 
   const urlInputs = getInputValuesFromUrl(inputParams, req.url);
 
@@ -67,8 +69,6 @@ export const getServerSideProps: GetServerSideProps = async ({
     Authorization: `Bearer ${token || ''}`,
   };
 
-  const tempUserId = req.cookies[ZIPPER_TEMP_USER_ID_COOKIE_NAME];
-
   if (tempUserId) {
     headers[ZIPPER_TEMP_USER_ID_HEADER] = tempUserId;
   }
@@ -88,7 +88,13 @@ export const getServerSideProps: GetServerSideProps = async ({
     body: JSON.stringify(inputs),
     credentials: 'include',
   })
-    .then((r) => r.json())
+    .then((r) => {
+      const runId = r.headers.get('x-zipper-run-id');
+      if (runId) {
+        metadata.runId = getShortRunId(runId);
+      }
+      return r.text();
+    })
     .catch((e) => {
       console.log(e);
       return { ok: false, error: e.message };
@@ -108,4 +114,8 @@ export const getServerSideProps: GetServerSideProps = async ({
       metadata,
     } as AppPageProps,
   };
+};
+
+export const config = {
+  runtime: 'nodejs',
 };

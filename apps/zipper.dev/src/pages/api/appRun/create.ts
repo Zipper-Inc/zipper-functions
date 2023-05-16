@@ -21,7 +21,7 @@ export default async function handler(
         originalRequestUrl: rpcBody.originalRequest.url,
         originalRequestMethod: rpcBody.originalRequest.method,
         version: rpcBody.appInfo.version,
-        userId: rpcBody.userInfo?.userId,
+        userId: rpcBody.userId.startsWith('temp_') ? undefined : rpcBody.userId,
         success,
         result,
       },
