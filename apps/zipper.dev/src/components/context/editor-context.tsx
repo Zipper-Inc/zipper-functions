@@ -56,9 +56,11 @@ export type EditorContextType = {
   inputError?: string;
   monacoRef?: MutableRefObject<Monaco | undefined>;
   logs: Zipper.Log.Message[];
+  lastReadLogsTimestamp: number;
   preserveLogs: boolean;
   setPreserveLogs: (v: boolean) => void;
   addLog: (method: Zipper.Log.Method, data: Zipper.Serializable[]) => void;
+  markLogsAsRead: () => void;
   setLogStore: (
     cb: (
       n: Record<string, Zipper.Log.Message[]>,
@@ -90,8 +92,10 @@ export const EditorContext = createContext<EditorContextType>({
   monacoRef: undefined,
   logs: [],
   preserveLogs: true,
+  lastReadLogsTimestamp: 0,
   setPreserveLogs: noop,
   addLog: noop,
+  markLogsAsRead: noop,
   setLogStore: noop,
 });
 
@@ -396,9 +400,11 @@ const EditorContextProvider = ({
   const [logStore, setLogStore] = useState<
     Record<string, Zipper.Log.Message[]>
   >({});
+  const [lastReadLogsTimestamp, setLastReadLogsTimestamp] = useState<number>(0);
 
   useEffect(() => {
     const newLogs: Zipper.Log.Message[] = [];
+    // add a timestamp for the last time the logs was read
     setLogs(
       newLogs
         .concat(...Object.values(logStore))
@@ -420,7 +426,10 @@ const EditorContextProvider = ({
       return { ...prev, local };
     });
   };
-  // END LOGS
+
+  const markLogsAsRead = () => {
+    setLastReadLogsTimestamp(Date.now());
+  };
 
   const replaceCurrentScriptCode = (code: string) => {
     if (currentScript) {
@@ -568,8 +577,10 @@ const EditorContextProvider = ({
         logs,
         addLog,
         setLogStore,
+        markLogsAsRead,
         preserveLogs,
         setPreserveLogs,
+        lastReadLogsTimestamp,
       }}
     >
       {children}

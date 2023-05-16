@@ -40,13 +40,29 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
   const toast = useToast();
   const [tabIndex, setTabIndex] = useState(0);
 
+  const consoleTabIndex = tips ? 2 : 1;
+
   const handleTabsChange = (index: number) => {
     setTabIndex(index);
+    if (index === consoleTabIndex) {
+      markLogsAsRead();
+    }
   };
 
   const { isRunning, run, formMethods } = useRunAppContext();
 
-  const { currentScript, inputParams, inputError, logs } = useEditorContext();
+  const {
+    currentScript,
+    inputParams,
+    inputError,
+    logs,
+    markLogsAsRead,
+    lastReadLogsTimestamp,
+  } = useEditorContext();
+
+  const unreadLogs = logs.filter(
+    (log) => log.timestamp > lastReadLogsTimestamp,
+  ).length;
 
   const [inputs, setInputs] = useState<Record<string, any>>({});
 
@@ -197,7 +213,10 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
           <HStack spacing={2}>
             {showInputForm && <TabButton title="Preview" />}
             {tips && <TabButton title="Tips" />}
-            <TabButton title="Console" />
+            <TabButton
+              title="Console"
+              badge={unreadLogs > 0 ? unreadLogs : undefined}
+            />
           </HStack>
         </TabList>
         <TabPanels
