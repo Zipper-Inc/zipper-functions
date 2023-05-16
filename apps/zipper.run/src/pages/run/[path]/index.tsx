@@ -8,6 +8,7 @@ import { getInputValuesFromUrl } from '~/utils/get-input-values-from-url';
 import getValidSubdomain from '~/utils/get-valid-subdomain';
 import type { AppPageProps } from '~/components/app';
 import getAppInfo from '~/utils/get-app-info';
+import { getShortRunId } from '~/utils/run-id';
 export { default } from '~/components/app';
 
 export const getServerSideProps: GetServerSideProps = async ({
@@ -44,8 +45,9 @@ export const getServerSideProps: GetServerSideProps = async ({
     userAuthConnectors,
     entryPoint,
     runnableScripts,
-    metadata,
   } = appInfoResult.data;
+
+  const metadata = appInfoResult.data.metadata || {};
 
   const urlInputs = getInputValuesFromUrl(inputParams, req.url);
 
@@ -87,6 +89,10 @@ export const getServerSideProps: GetServerSideProps = async ({
     credentials: 'include',
   })
     .then((r) => {
+      const runId = r.headers.get('x-zipper-run-id');
+      if (runId) {
+        metadata.runId = getShortRunId(runId);
+      }
       return r.text();
     })
     .catch((e) => {

@@ -31,7 +31,6 @@ import Unauthorized from './unauthorized';
 import removeAppConnectorUserAuth from '~/utils/remove-app-connector-user-auth';
 import Header from './header';
 import InputSummary from './input-summary';
-import { getShortRunId } from '~/utils/run-id';
 import ConnectorsAuthInputsSection from './connectors-auth-inputs-section';
 import { getConnectorsAuthUrl } from '~/utils/get-connectors-auth-url';
 
@@ -80,7 +79,7 @@ export function AppPage({
   const [screen, setScreen] = useState<Screen>(
     paramResult ? 'output' : 'initial',
   );
-  const [latestRunId, setLatestRunId] = useState<string>();
+  const [latestRunId] = useState<string | undefined>(metadata?.runId);
   const [expandInputsSection, setExpandInputsSection] = useState(false);
   const previousRouteRef = useRef(asPath);
 
@@ -103,6 +102,8 @@ export function AppPage({
       const defaultValues = getInputValuesFromUrl(inputs, asPath);
       formContext.reset(defaultValues);
       setResult('');
+    } else {
+      setLoading(false);
     }
     previousRouteRef.current = asPath;
   }, [asPath]);
@@ -132,29 +133,7 @@ export function AppPage({
       setLoading(true);
       const rawValues = formContext.getValues();
       const values = getInputsFromFormData(rawValues, inputs);
-      const url = filename ? `/${filename}/relay` : '/relay';
-
-      const res = await fetch(url, {
-        method: 'POST',
-        body: JSON.stringify(values),
-      });
-
-      const result = await res.text();
-      const runId = res.headers.get('x-zipper-run-id');
-      if (runId) {
-        const shortRunId = getShortRunId(runId);
-        setLatestRunId(shortRunId);
-        router.push(
-          { pathname: `/run/${filename}`, query: values },
-          undefined,
-          {
-            shallow: true,
-          },
-        );
-      }
-      if (result) setResult(result);
-      setScreen('output');
-      setLoading(false);
+      router.push({ pathname: `/run/${filename}`, query: values });
     }
   };
 
