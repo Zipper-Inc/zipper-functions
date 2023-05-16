@@ -18,7 +18,10 @@ import { getFilenameAndVersionFromPath } from '~/utils/get-values-from-url';
 import { Heading, Progress, VStack } from '@chakra-ui/react';
 import Head from 'next/head';
 import { useForm } from 'react-hook-form';
-import { getInputValuesFromUrl } from '../utils/get-input-values-from-url';
+import {
+  getInputValuesFromConfig,
+  getInputValuesFromUrl,
+} from '../utils/get-input-values-from-url';
 import { useRouter } from 'next/router';
 import {
   getInputsFromFormData,
@@ -33,6 +36,7 @@ import Header from './header';
 import InputSummary from './input-summary';
 import ConnectorsAuthInputsSection from './connectors-auth-inputs-section';
 import { getConnectorsAuthUrl } from '~/utils/get-connectors-auth-url';
+import { getBootUrl } from '~/utils/get-relay-url';
 
 const { __DEBUG__ } = process.env;
 
@@ -72,7 +76,9 @@ export function AppPage({
   const router = useRouter();
   const { asPath } = router;
   const appTitle = app?.name || app?.slug || 'Zipper';
-  const formContext = useForm({ defaultValues });
+  const formContext = useForm({
+    defaultValues,
+  });
   const [result, setResult] = useState('');
   const [loading, setLoading] = useState(false);
   const { user } = useUser();
@@ -322,25 +328,27 @@ export const getServerSideProps: GetServerSideProps = async ({
   if (__DEBUG__) console.log('getValidSubdomain', { subdomain, host });
   if (!subdomain) return { notFound: true };
 
-  const { version: versionFromUrl, filename } = getFilenameAndVersionFromPath(
-    ((query.versionAndFilename as string[]) || []).join('/'),
-    [],
-  );
-  if (__DEBUG__) console.log({ versionFromUrl, filename });
+  const { version: versionFromUrl, filename: filenameFromUrl } =
+    getFilenameAndVersionFromPath(
+      ((query.versionAndFilename as string[]) || []).join('/'),
+      [],
+    );
+  if (__DEBUG__) console.log({ versionFromUrl, filename: filenameFromUrl });
 
   const auth = getAuth(req);
 
   // grab the app if it exists
-  const result = await getAppInfo({
+  const appInfoResult = await getAppInfo({
     subdomain,
     tempUserId: req.cookies[ZIPPER_TEMP_USER_ID_COOKIE_NAME],
-    filename,
+    filename: filenameFromUrl,
     token: await auth.getToken({ template: 'incl_orgs' }),
   });
 
-  if (__DEBUG__) console.log('getAppInfo', { result });
-  if (!result.ok) {
-    if (result.error === 'UNAUTHORIZED') return { props: { statusCode: 401 } };
+  if (__DEBUG__) console.log('getAppInfo', { result: appInfoResult });
+  if (!appInfoResult.ok) {
+    if (appInfoResult.error === 'UNAUTHORIZED')
+      return { props: { statusCode: 401 } };
     return { notFound: true };
   }
 
@@ -351,11 +359,37 @@ export const getServerSideProps: GetServerSideProps = async ({
     entryPoint,
     runnableScripts,
     metadata,
-  } = result.data;
+  } = appInfoResult.data;
 
   const version = versionFromUrl || 'latest';
+  const filename = filenameFromUrl || 'main.ts';
 
-  const defaultValues = getInputValuesFromUrl(inputs, req.url);
+  // boot it up
+  // todo cache this
+  const bootUrl = getBootUrl({ slug: appInfoResult.data.app.slug });
+  const { configs: handlerConfigs }: Zipper.BootPayload = await fetch(
+    bootUrl,
+  ).then((r) => r.json());
+
+  /**
+   * @todo not sure if redirect is appropriate but whatever
+   */
+  if (handlerConfigs[filename]?.run) {
+    const runUrl = new URL(req.url || '', bootUrl);
+    runUrl.pathname = `/run/${filename}`;
+    return {
+      redirect: {
+        destination: runUrl.toString(),
+        permanent: false,
+      },
+    };
+  }
+
+  const defaultValues = {
+    ...getInputValuesFromConfig(inputs, handlerConfigs[filename]),
+    ...getInputValuesFromUrl(inputs, req.url),
+  };
+
   if (__DEBUG__) console.log({ defaultValues });
 
   const propsToReturn = {
@@ -368,7 +402,8 @@ export const getServerSideProps: GetServerSideProps = async ({
       entryPoint,
       runnableScripts,
       metadata,
-      filename: filename || 'main.ts',
+      filename,
+      handlerConfigs,
     },
   };
 

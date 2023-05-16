@@ -6,10 +6,11 @@ import {
 import { GetServerSideProps } from 'next';
 import { getInputValuesFromUrl } from '~/utils/get-input-values-from-url';
 import getValidSubdomain from '~/utils/get-valid-subdomain';
-import type { AppPageProps } from '~/components/app';
+import type { AppPageProps } from '~/components/applet';
 import getAppInfo from '~/utils/get-app-info';
+import { getRelayUrl } from '~/utils/get-relay-url';
 import { getShortRunId } from '~/utils/run-id';
-export { default } from '~/components/app';
+export { default } from '~/components/applet';
 
 export const getServerSideProps: GetServerSideProps = async ({
   req,
@@ -61,7 +62,7 @@ export const getServerSideProps: GetServerSideProps = async ({
   });
 
   const inputParamsWithValues = inputParams.map((i) => {
-    i.value = inputs[i.key];
+    if (inputs[i.key]) i.value = inputs[i.key];
     return i;
   });
 
@@ -73,21 +74,15 @@ export const getServerSideProps: GetServerSideProps = async ({
     headers[ZIPPER_TEMP_USER_ID_HEADER] = tempUserId;
   }
 
-  const getRunUrl = () => {
-    const proto = process.env.NODE_ENV === 'development' ? 'http' : 'https';
-    const slug = app.slug;
-    const filename = query['path'] as string | undefined;
-    return `${proto}://${slug}.${
-      process.env.NEXT_PUBLIC_OUTPUT_SERVER_HOSTNAME
-    }/${filename || 'main'}/relay`;
-  };
-
-  const result = await fetch(getRunUrl(), {
-    method: 'POST',
-    headers,
-    body: JSON.stringify(inputs),
-    credentials: 'include',
-  })
+  const result = await fetch(
+    getRelayUrl({ slug: app.slug, path: query.path as string | undefined }),
+    {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(inputs),
+      credentials: 'include',
+    },
+  )
     .then((r) => {
       const runId = r.headers.get('x-zipper-run-id');
       if (runId) {
