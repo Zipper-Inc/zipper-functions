@@ -8,7 +8,7 @@ import { getInputValuesFromUrl } from '~/utils/get-input-values-from-url';
 import getValidSubdomain from '~/utils/get-valid-subdomain';
 import type { AppPageProps } from '~/components/applet';
 import getAppInfo from '~/utils/get-app-info';
-import { getRelayUrl } from '~/utils/get-relay-url';
+import { getBootUrl, getRelayUrl } from '~/utils/get-relay-url';
 import { getShortRunId } from '~/utils/run-id';
 export { default } from '~/components/applet';
 
@@ -73,6 +73,10 @@ export const getServerSideProps: GetServerSideProps = async ({
   if (tempUserId) {
     headers[ZIPPER_TEMP_USER_ID_HEADER] = tempUserId;
   }
+  const bootUrl = getBootUrl({ slug: appInfoResult.data.app.slug });
+  const { configs: handlerConfigs }: Zipper.BootPayload = await fetch(
+    bootUrl,
+  ).then((r) => r.json());
 
   const result = await fetch(
     getRelayUrl({ slug: app.slug, path: query.path as string | undefined }),
@@ -107,6 +111,7 @@ export const getServerSideProps: GetServerSideProps = async ({
       hideRun: true,
       runnableScripts,
       metadata,
+      handlerConfigs,
     } as AppPageProps,
   };
 };

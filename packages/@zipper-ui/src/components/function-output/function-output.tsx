@@ -80,6 +80,7 @@ export function FunctionOutput({
   applet,
   currentContext,
   appSlug,
+  showTabs,
 }: FunctionOutputProps) {
   const [isExpandedResultOpen, setIsExpandedResultOpen] = useState(true);
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -250,7 +251,7 @@ export function FunctionOutput({
         )}
         {applet.expandedContent.output?.data && (
           <Tabs colorScheme="purple" variant="enclosed" {...tabsStyles}>
-            <TabList {...tablistStyles}>
+            <TabList {...tablistStyles} display={showTabs ? 'flex' : 'none'}>
               <Tab {...tabButtonStyles}>Results</Tab>
               <Tab {...tabButtonStyles}>Raw Output</Tab>
             </TabList>
@@ -339,6 +340,7 @@ export function FunctionOutput({
             appInfoUrl={appInfoUrl}
             currentContext="modal"
             appSlug={appSlug}
+            showTabs={showTabs}
           />
         )}
       </>
@@ -388,7 +390,7 @@ export function FunctionOutput({
         <>
           <Tabs colorScheme="purple" variant="enclosed" {...tabsStyles}>
             <Box {...(stickyTabs ? stickyTabsStyles : undefined)}>
-              <TabList {...tablistStyles}>
+              <TabList {...tablistStyles} display={showTabs ? 'flex' : 'none'}>
                 <Tab {...tabButtonStyles}>Results</Tab>
                 <Tab {...tabButtonStyles}>Raw Output</Tab>
               </TabList>

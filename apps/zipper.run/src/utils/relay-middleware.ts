@@ -147,8 +147,10 @@ export async function relayRequest(
     .filter((uac) => uac.isUserAuthRequired)
     .map((uac) => uac.type);
 
-  if (connectorsWithUserAuth.length > 0 && !userInfo.userId && !tempUserId) {
-    throw new Error('missing user ID');
+  if (!bootOnly) {
+    if (connectorsWithUserAuth.length > 0 && !userInfo.userId && !tempUserId) {
+      throw new Error('missing user ID');
+    }
   }
 
   const relayBody: Zipper.Relay.RequestBody = {

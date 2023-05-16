@@ -33,6 +33,7 @@ export type HeaderProps = AppInfo & {
   runnableScripts?: string[];
   runId?: string;
   setScreen: (screen: 'initial' | 'output') => void;
+  setLoading: (value: boolean) => void;
 };
 
 const Header: React.FC<HeaderProps> = ({
@@ -43,6 +44,7 @@ const Header: React.FC<HeaderProps> = ({
   runnableScripts = [],
   runId,
   setScreen,
+  setLoading,
 }) => {
   const router = useRouter();
   const toast = useToast();
@@ -142,7 +144,7 @@ const Header: React.FC<HeaderProps> = ({
                           fontWeight="medium"
                           onClick={() => {
                             onClose();
-                            setScreen('initial');
+                            setLoading(true);
                             router.push(`/${entryPoint.filename}`);
                           }}
                           _hover={{ background: 'none' }}
@@ -171,7 +173,7 @@ const Header: React.FC<HeaderProps> = ({
                               key={`${s}-${i}`}
                               onClick={() => {
                                 onClose();
-                                setScreen('initial');
+                                setLoading(true);
                                 router.push(`/${s}`);
                               }}
                               backgroundColor="gray.50"

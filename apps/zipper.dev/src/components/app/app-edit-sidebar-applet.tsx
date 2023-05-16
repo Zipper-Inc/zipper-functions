@@ -64,6 +64,7 @@ export const AppEditSidebarApplet = ({
         appInfoUrl={`/api/app/info/${appSlug}`}
         currentContext={'main'}
         appSlug={appInfo.slug}
+        showTabs
       />
     );
   }, [mainApplet.updatedAt]);

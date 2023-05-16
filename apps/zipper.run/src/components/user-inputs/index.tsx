@@ -10,6 +10,7 @@ export type UserInputsProps = {
   formContext: UseFormReturn<FieldValues, any>;
   canRunApp: boolean;
   runApp: () => void;
+  isLoading: boolean;
 };
 
 export default function UserInputs({
@@ -18,6 +19,7 @@ export default function UserInputs({
   canRunApp,
   runApp,
   hasResult,
+  isLoading,
 }: UserInputsProps) {
   return (
     <VStack
@@ -42,7 +44,7 @@ export default function UserInputs({
           colorScheme="purple"
           onClick={runApp}
           width="full"
-          isDisabled={!canRunApp}
+          isDisabled={!canRunApp || isLoading}
         >
           <HiOutlinePlay />
           <Text marginLeft={2}>Run</Text>
