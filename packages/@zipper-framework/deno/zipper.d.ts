@@ -298,7 +298,6 @@ declare namespace Zipper {
    */
   export type UserInfo = {
     email?: string;
-    userId?: string;
   };
 
   /**
@@ -331,6 +330,7 @@ declare namespace Zipper {
       userInfo?: UserInfo;
       originalRequest: { url: string; method: string };
       path?: string;
+      userId: string;
     };
   }
 

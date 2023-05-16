@@ -19,12 +19,15 @@ function generateHmac(
   };
 }
 
-export const getUserConnectorAuths = async () => {
-  let path = `/api/app/${this.appId}/userAuthConnectors`;
-  const { hmac, timestamp } = generateHmac('GET', path);
+export const getUserConnectorAuths = async (appId: string, userId: string) => {
+  let path = `/api/app/${appId}/userAuthConnectors`;
+  const body = { userId };
+  const { hmac, timestamp } = generateHmac('POST', path, body);
 
   const res = await fetch(Deno.env.get('RPC_HOST') + path, {
+    method: 'POST',
     headers: { 'x-zipper-hmac': hmac, 'x-timestamp': timestamp },
+    body: JSON.stringify(body),
   });
 
   return res.json();
