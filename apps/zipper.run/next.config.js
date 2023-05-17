@@ -72,6 +72,10 @@ module.exports = getConfig({
           process.env.NODE_ENV === 'production' ? 'https' : 'http'
         }://${process.env.NEXT_PUBLIC_ZIPPER_HOST}/api/app/info/:appSlug`,
       },
+      {
+        source: '/run/history/:runId.png',
+        destination: '/api/runs/:runId/png'
+      }
     ];
   },
 });
