@@ -1,7 +1,6 @@
 // middleware.ts
 import { getAuth, withClerkMiddleware } from '@clerk/nextjs/server';
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import serveRelay from './utils/relay-middleware';
 import jsonHandler from './api-handlers/json.handler';
 import yamlHandler from './api-handlers/yaml.handler';
@@ -9,59 +8,70 @@ import { ZIPPER_TEMP_USER_ID_COOKIE_NAME } from '@zipper/utils';
 
 const { __DEBUG__ } = process.env;
 
-export default withClerkMiddleware(async (request: NextRequest) => {
-  const appRoute = request.nextUrl.pathname;
-  const auth = getAuth(request);
-  if (__DEBUG__) console.log('middleware', { appRoute });
-
-  let res: NextResponse = NextResponse.next();
+/**
+ * We use middleware as router to support our custom URLs
+ * These urls *end with* a special string, like
+ *  - https://my-applet.zipper.run/my-path/api/json
+ *  - https://my-applet.zipper.run/@latest/relay
+ *
+ * If it matches these routes it will take over the request
+ * And generate its own response
+ */
+async function maybeGetCustomResponse(
+  appRoute: string,
+  request: NextRequest,
+): Promise<NextResponse | void> {
   switch (true) {
     case /\/api(\/?)$/.test(appRoute):
     case /\/api\/json(\/?)$/.test(appRoute): {
       console.log('matching json api route');
-      res = await jsonHandler(request);
-      break;
+      return jsonHandler(request);
     }
 
     case /\/api\/yaml(\/?)$/.test(appRoute): {
       console.log('matching yaml api route');
-      res = await yamlHandler(request);
-      break;
+      return await yamlHandler(request);
     }
 
     case /\/relay(\/?)$/.test(appRoute): {
       console.log('matching relay route');
-      res = await serveRelay({ request, bootOnly: false });
-      break;
+      return serveRelay({ request, bootOnly: false });
     }
 
     case /\/boot(\/?)$/.test(appRoute): {
       console.log('matching boot route (it rhymes)');
-      res = await serveRelay({ request, bootOnly: true });
-      break;
+      return serveRelay({ request, bootOnly: true });
     }
 
     case /^\/$/.test(appRoute): {
       if (request.method === 'GET') {
         const url = new URL('/main.ts', request.url);
-        res = NextResponse.rewrite(url);
+        return NextResponse.rewrite(url);
       }
       if (request.method === 'POST') {
         const url = new URL('/relay', request.url);
-        res = NextResponse.rewrite(url);
+        return NextResponse.rewrite(url);
       }
-      break;
     }
   }
+}
+
+export default withClerkMiddleware(async (request) => {
+  const appRoute = request.nextUrl.pathname;
+  const auth = getAuth(request);
+  if (__DEBUG__) console.log('middleware', { appRoute });
+
+  const customResponse = await maybeGetCustomResponse(appRoute, request);
+  const response = customResponse || NextResponse.next();
 
   if (!auth.userId && !request.cookies.get(ZIPPER_TEMP_USER_ID_COOKIE_NAME)) {
-    res.cookies.set(
+    response.cookies.set(
       ZIPPER_TEMP_USER_ID_COOKIE_NAME,
       `temp__${crypto.randomUUID()}`,
     );
   }
 
-  return res;
+  return response;
 });
 
 export const config = {
