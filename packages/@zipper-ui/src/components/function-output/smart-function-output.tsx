@@ -12,6 +12,7 @@ import {
   Flex,
   Stack,
   StackDivider,
+  Link,
 } from '@chakra-ui/react';
 import { OutputType } from '@zipper/types';
 import styled from '@emotion/styled';
@@ -251,6 +252,18 @@ export function SmartFunctionOutput({
                 return <SmartFunctionOutput result={child} level={level + 1} />;
               })}
             </Stack>
+          );
+        }
+        case 'link': {
+          component.props.target = component.props.target || '_blank';
+          return (
+            <Link
+              {...component.props}
+              textDecoration="underline"
+              color="purple"
+            >
+              {component.children}
+            </Link>
           );
         }
         default:

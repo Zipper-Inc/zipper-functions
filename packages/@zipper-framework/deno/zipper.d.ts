@@ -218,7 +218,8 @@ declare namespace Zipper {
   export type Action<I = Inputs> = SpecialOutput<'Zipper.Action'> &
     (RefreshAction<I> | PathAction<I>);
 
-  export type Component = SpecialOutput<'Zipper.Component'> & StackComponent;
+  export type Component = SpecialOutput<'Zipper.Component'> &
+    (StackComponent | LinkComponent);
 
   export interface ComponentBase {
     type: string;
@@ -245,11 +246,22 @@ declare namespace Zipper {
     children: Array<Serializable | Component>;
   }
 
+  export interface LinkComponent extends ComponentBase {
+    type: 'link';
+    props: {
+      href: string;
+      target?: '_blank' | '_self';
+    };
+    children: string;
+  }
+
   export namespace Component {
     /**
      * Creates an action
      */
-    export function create(component: StackComponent): Component;
+    export function create(
+      component: StackComponent | LinkComponent,
+    ): Component;
   }
 
   export namespace Action {
