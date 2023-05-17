@@ -262,7 +262,7 @@ export function FunctionOutput({
             >
               <TabPanel>
                 <Box overflow="auto">
-                  <Box width="max-content" data-function-output="smart">
+                  <Box data-function-output="smart">
                     <SmartFunctionOutputProvider outputSection="expanded">
                       <SmartFunctionOutput
                         result={applet.expandedContent.output.data}
