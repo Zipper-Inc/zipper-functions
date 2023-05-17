@@ -13,7 +13,7 @@ export function getFilenameAndVersionFromPath(
     }
   });
 
-  let filename: string | undefined = undefined;
+  let filename = 'main.ts';
   let version: string | undefined = undefined;
 
   // split the path without endings on / - remove any empty parts
@@ -26,7 +26,11 @@ export function getFilenameAndVersionFromPath(
     else filename = part;
   });
 
-  if (version === 'latest') version = undefined;
+  if (version === 'latest') {
+    version = undefined;
+  }
+
+  if (!filename.endsWith('.ts')) filename = `${filename}.ts`;
 
   return { filename, version };
 }

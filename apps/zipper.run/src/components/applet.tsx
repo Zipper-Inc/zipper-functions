@@ -18,7 +18,10 @@ import { getFilenameAndVersionFromPath } from '~/utils/get-values-from-url';
 import { Heading, Progress, VStack } from '@chakra-ui/react';
 import Head from 'next/head';
 import { useForm } from 'react-hook-form';
-import { getInputValuesFromUrl } from '../utils/get-input-values-from-url';
+import {
+  getInputValuesFromConfig,
+  getInputValuesFromUrl,
+} from '../utils/get-input-values-from-url';
 import { useRouter } from 'next/router';
 import {
   getInputsFromFormData,
@@ -31,9 +34,9 @@ import Unauthorized from './unauthorized';
 import removeAppConnectorUserAuth from '~/utils/remove-app-connector-user-auth';
 import Header from './header';
 import InputSummary from './input-summary';
-import { getShortRunId } from '~/utils/run-id';
 import ConnectorsAuthInputsSection from './connectors-auth-inputs-section';
 import { getConnectorsAuthUrl } from '~/utils/get-connectors-auth-url';
+import { getBootUrl } from '~/utils/get-relay-url';
 
 const { __DEBUG__ } = process.env;
 
@@ -53,6 +56,7 @@ export type AppPageProps = {
   result?: string;
   runnableScripts?: string[];
   metadata?: Record<string, string | undefined>;
+  handlerConfigs?: Record<string, Zipper.HandlerConfig>;
 };
 
 export function AppPage({
@@ -69,19 +73,25 @@ export function AppPage({
   result: paramResult,
   runnableScripts,
   metadata,
+  handlerConfigs,
 }: AppPageProps) {
   const router = useRouter();
   const { asPath } = router;
   const appTitle = app?.name || app?.slug || 'Zipper';
-  const formContext = useForm({ defaultValues });
+  const formContext = useForm({
+    defaultValues,
+  });
   const [result, setResult] = useState('');
   const [loading, setLoading] = useState(false);
   const { user } = useUser();
   const [screen, setScreen] = useState<Screen>(
     paramResult ? 'output' : 'initial',
   );
-  const [latestRunId, setLatestRunId] = useState<string>();
+  const [latestRunId] = useState<string | undefined>(metadata?.runId);
   const [expandInputsSection, setExpandInputsSection] = useState(false);
+  const [currentFileConfig, setCurrentFileConfig] = useState<
+    Zipper.HandlerConfig | undefined
+  >();
   const previousRouteRef = useRef(asPath);
 
   // We have to do this so that the results aren't SSRed
@@ -104,6 +114,7 @@ export function AppPage({
       formContext.reset(defaultValues);
       setResult('');
     }
+    setLoading(false);
     previousRouteRef.current = asPath;
   }, [asPath]);
 
@@ -124,37 +135,22 @@ export function AppPage({
         data: result || '',
         inputsUsed: inputParamsWithValues || [],
       },
+      path: filename,
     });
   }, [result]);
+
+  useEffect(() => {
+    if (handlerConfigs && filename) {
+      setCurrentFileConfig(handlerConfigs[filename]);
+    }
+  }, [handlerConfigs, filename]);
 
   const runApp = async () => {
     if (!loading && canRunApp) {
       setLoading(true);
       const rawValues = formContext.getValues();
       const values = getInputsFromFormData(rawValues, inputs);
-      const url = filename ? `/${filename}/relay` : '/relay';
-
-      const res = await fetch(url, {
-        method: 'POST',
-        body: JSON.stringify(values),
-      });
-
-      const result = await res.text();
-      const runId = res.headers.get('x-zipper-run-id');
-      if (runId) {
-        const shortRunId = getShortRunId(runId);
-        setLatestRunId(shortRunId);
-        router.push(
-          { pathname: `/run/${filename}`, query: values },
-          undefined,
-          {
-            shallow: true,
-          },
-        );
-      }
-      if (result) setResult(result);
-      setScreen('output');
-      setLoading(false);
+      router.push({ pathname: `/run/${filename}`, query: values });
     }
   };
 
@@ -231,6 +227,7 @@ export function AppPage({
         appInfoUrl={`/_zipper/app/info/${app?.slug}`}
         currentContext={'main'}
         appSlug={app.slug}
+        showTabs={false}
       />
     );
   }, [app, mainApplet.updatedAt]);
@@ -247,6 +244,28 @@ export function AppPage({
     return <Unauthorized />;
   }
 
+  const appletDescription = () => {
+    if (!currentFileConfig || !currentFileConfig.description) {
+      return <></>;
+    }
+
+    const { title, subtitle } = currentFileConfig.description;
+    if (!title && !subtitle) {
+      return <></>;
+    }
+
+    return (
+      <VStack mb="10">
+        {title && <Heading as="h1">{title}</Heading>}
+        {subtitle && (
+          <Heading as="h2" fontSize="lg" fontWeight="semibold" color="gray.600">
+            {subtitle}
+          </Heading>
+        )}
+      </VStack>
+    );
+  };
+
   return (
     <>
       <Head>
@@ -259,41 +278,31 @@ export function AppPage({
           runnableScripts={runnableScripts}
           runId={latestRunId}
           setScreen={setScreen}
+          setLoading={setLoading}
         />
         <VStack as="main" flex={1} spacing={4} position="relative" px={10}>
-          {metadata && Object.keys(metadata).length > 0 && (
-            <VStack mb="10">
-              {metadata.h1 && <Heading as="h1">{metadata.h1}</Heading>}
-              {metadata.h2 && (
-                <Heading
-                  as="h2"
-                  fontSize="lg"
-                  fontWeight="semibold"
-                  color="gray.600"
-                >
-                  {metadata.h2}
-                </Heading>
-              )}
-            </VStack>
-          )}
+          {appletDescription()}
           {screen === 'initial' && (
-            <ConnectorsAuthInputsSection
-              isCollapsible={false}
-              expandByDefault={expandInputsSection}
-              toggleIsExpanded={setExpandInputsSection}
-              userAuthProps={{
-                actions: connectorActions(app.id),
-                appTitle,
-                userAuthConnectors,
-              }}
-              userInputsProps={{
-                canRunApp,
-                formContext,
-                hasResult: false,
-                inputs,
-                runApp,
-              }}
-            />
+            <>
+              <ConnectorsAuthInputsSection
+                isCollapsible={false}
+                expandByDefault={expandInputsSection}
+                toggleIsExpanded={setExpandInputsSection}
+                userAuthProps={{
+                  actions: connectorActions(app.id),
+                  appTitle,
+                  userAuthConnectors,
+                }}
+                userInputsProps={{
+                  isLoading: loading,
+                  canRunApp,
+                  formContext,
+                  hasResult: false,
+                  inputs,
+                  runApp,
+                }}
+              />
+            </>
           )}
           {showRunOutput && (
             <VStack w="full" align="stretch" spacing={6}>
@@ -343,25 +352,27 @@ export const getServerSideProps: GetServerSideProps = async ({
   if (__DEBUG__) console.log('getValidSubdomain', { subdomain, host });
   if (!subdomain) return { notFound: true };
 
-  const { version: versionFromUrl, filename } = getFilenameAndVersionFromPath(
-    ((query.versionAndFilename as string[]) || []).join('/'),
-    [],
-  );
-  if (__DEBUG__) console.log({ versionFromUrl, filename });
+  const { version: versionFromUrl, filename: filenameFromUrl } =
+    getFilenameAndVersionFromPath(
+      ((query.versionAndFilename as string[]) || []).join('/'),
+      [],
+    );
+  if (__DEBUG__) console.log({ versionFromUrl, filename: filenameFromUrl });
 
   const auth = getAuth(req);
 
   // grab the app if it exists
-  const result = await getAppInfo({
+  const appInfoResult = await getAppInfo({
     subdomain,
     tempUserId: req.cookies[ZIPPER_TEMP_USER_ID_COOKIE_NAME],
-    filename,
+    filename: filenameFromUrl,
     token: await auth.getToken({ template: 'incl_orgs' }),
   });
 
-  if (__DEBUG__) console.log('getAppInfo', { result });
-  if (!result.ok) {
-    if (result.error === 'UNAUTHORIZED') return { props: { statusCode: 401 } };
+  if (__DEBUG__) console.log('getAppInfo', { result: appInfoResult });
+  if (!appInfoResult.ok) {
+    if (appInfoResult.error === 'UNAUTHORIZED')
+      return { props: { statusCode: 401 } };
     return { notFound: true };
   }
 
@@ -372,11 +383,37 @@ export const getServerSideProps: GetServerSideProps = async ({
     entryPoint,
     runnableScripts,
     metadata,
-  } = result.data;
+  } = appInfoResult.data;
 
   const version = versionFromUrl || 'latest';
+  const filename = filenameFromUrl || 'main.ts';
 
-  const defaultValues = getInputValuesFromUrl(inputs, req.url);
+  // boot it up
+  // todo cache this
+  const bootUrl = getBootUrl({ slug: appInfoResult.data.app.slug });
+  const { configs: handlerConfigs }: Zipper.BootPayload = await fetch(
+    bootUrl,
+  ).then((r) => r.json());
+
+  /**
+   * @todo not sure if redirect is appropriate but whatever
+   */
+  if (handlerConfigs[filename]?.run) {
+    const runUrl = new URL(req.url || '', bootUrl);
+    runUrl.pathname = `/run/${filename}`;
+    return {
+      redirect: {
+        destination: runUrl.toString(),
+        permanent: false,
+      },
+    };
+  }
+
+  const defaultValues = {
+    ...getInputValuesFromConfig(inputs, handlerConfigs[filename]),
+    ...getInputValuesFromUrl(inputs, req.url),
+  };
+
   if (__DEBUG__) console.log({ defaultValues });
 
   const propsToReturn = {
@@ -389,7 +426,8 @@ export const getServerSideProps: GetServerSideProps = async ({
       entryPoint,
       runnableScripts,
       metadata,
-      filename: filename || 'main.ts',
+      filename,
+      handlerConfigs,
     },
   };
 

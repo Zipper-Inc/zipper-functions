@@ -6,10 +6,11 @@ import {
 import { GetServerSideProps } from 'next';
 import { getInputValuesFromUrl } from '~/utils/get-input-values-from-url';
 import getValidSubdomain from '~/utils/get-valid-subdomain';
-import type { AppPageProps } from '~/components/app';
+import type { AppPageProps } from '~/components/applet';
 import getAppInfo from '~/utils/get-app-info';
-import { InputParams } from '@zipper/types';
-export { default } from '~/components/app';
+import { getBootUrl, getRelayUrl } from '~/utils/get-relay-url';
+import { getShortRunId } from '~/utils/run-id';
+export { default } from '~/components/applet';
 
 export const getServerSideProps: GetServerSideProps = async ({
   req,
@@ -23,11 +24,12 @@ export const getServerSideProps: GetServerSideProps = async ({
 
   const auth = getAuth(req);
   const token = await auth.getToken({ template: 'incl_orgs' });
+  const tempUserId = req.cookies[ZIPPER_TEMP_USER_ID_COOKIE_NAME];
 
   // grab the app if it exists
   const appInfoResult = await getAppInfo({
     subdomain,
-    tempUserId: req.cookies[ZIPPER_TEMP_USER_ID_COOKIE_NAME],
+    tempUserId,
     filename: (query['path'] as string | undefined) || 'main.ts',
     token,
   });
@@ -44,8 +46,9 @@ export const getServerSideProps: GetServerSideProps = async ({
     userAuthConnectors,
     entryPoint,
     runnableScripts,
-    metadata,
   } = appInfoResult.data;
+
+  const metadata = appInfoResult.data.metadata || {};
 
   const urlInputs = getInputValuesFromUrl(inputParams, req.url);
 
@@ -59,7 +62,7 @@ export const getServerSideProps: GetServerSideProps = async ({
   });
 
   const inputParamsWithValues = inputParams.map((i) => {
-    i.value = inputs[i.key];
+    if (inputs[i.key]) i.value = inputs[i.key];
     return i;
   });
 
@@ -67,28 +70,30 @@ export const getServerSideProps: GetServerSideProps = async ({
     Authorization: `Bearer ${token || ''}`,
   };
 
-  const tempUserId = req.cookies[ZIPPER_TEMP_USER_ID_COOKIE_NAME];
-
   if (tempUserId) {
     headers[ZIPPER_TEMP_USER_ID_HEADER] = tempUserId;
   }
+  const bootUrl = getBootUrl({ slug: appInfoResult.data.app.slug });
+  const { configs: handlerConfigs }: Zipper.BootPayload = await fetch(
+    bootUrl,
+  ).then((r) => r.json());
 
-  const getRunUrl = () => {
-    const proto = process.env.NODE_ENV === 'development' ? 'http' : 'https';
-    const slug = app.slug;
-    const filename = query['path'] as string | undefined;
-    return `${proto}://${slug}.${
-      process.env.NEXT_PUBLIC_OUTPUT_SERVER_HOSTNAME
-    }/${filename || 'main'}/relay`;
-  };
-
-  const result = await fetch(getRunUrl(), {
-    method: 'POST',
-    headers,
-    body: JSON.stringify(inputs),
-    credentials: 'include',
-  })
-    .then((r) => r.json())
+  const result = await fetch(
+    getRelayUrl({ slug: app.slug, path: query.path as string | undefined }),
+    {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(inputs),
+      credentials: 'include',
+    },
+  )
+    .then((r) => {
+      const runId = r.headers.get('x-zipper-run-id');
+      if (runId) {
+        metadata.runId = getShortRunId(runId);
+      }
+      return r.text();
+    })
     .catch((e) => {
       console.log(e);
       return { ok: false, error: e.message };
@@ -106,6 +111,11 @@ export const getServerSideProps: GetServerSideProps = async ({
       hideRun: true,
       runnableScripts,
       metadata,
+      handlerConfigs,
     } as AppPageProps,
   };
+};
+
+export const config = {
+  runtime: 'nodejs',
 };

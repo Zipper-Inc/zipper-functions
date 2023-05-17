@@ -11,6 +11,7 @@ import {
   getAppLink,
   ZIPPER_TEMP_USER_ID_COOKIE_NAME,
   uuid,
+  ZIPPER_TEMP_USER_ID_HEADER,
 } from '@zipper/utils';
 import Zipper from '@zipper/framework';
 
@@ -95,11 +96,14 @@ export async function relayRequest(
 
   // Get the user's JWT token from the session if there is one
   const auth = getAuth(request);
-  const token = await auth.getToken({ template: 'incl_orgs' });
+  let token = request.headers.get('Authorization')?.replace('Bearer ', '');
+  token =
+    token || (await auth.getToken({ template: 'incl_orgs' })) || undefined;
 
-  const tempUserId = request.cookies
-    .get(ZIPPER_TEMP_USER_ID_COOKIE_NAME)
-    ?.value.toString();
+  let tempUserId = request.headers.get(ZIPPER_TEMP_USER_ID_HEADER) || undefined;
+  tempUserId =
+    tempUserId ||
+    request.cookies.get(ZIPPER_TEMP_USER_ID_COOKIE_NAME)?.value.toString();
 
   let filename = _filename || 'main.ts';
   if (!filename.endsWith('.ts')) {
@@ -126,16 +130,9 @@ export async function relayRequest(
   const version =
     _version || app.lastDeploymentVersion || Date.now().toString(32);
 
-  const requiredAuthUserId = userAuthConnectors.find(
-    (c) => c.isUserAuthRequired,
-  )
-    ? auth.userId || tempUserId
-    : undefined;
-
   const deploymentId = formatDeploymentId({
     appId: app.id,
     version,
-    userId: requiredAuthUserId,
   });
 
   let relayUrl = getPatchedUrl(request);
@@ -146,12 +143,23 @@ export async function relayRequest(
 
   const runId = request.headers.get('x-zipper-run-id') || uuid();
 
+  const connectorsWithUserAuth = userAuthConnectors
+    .filter((uac) => uac.isUserAuthRequired)
+    .map((uac) => uac.type);
+
+  if (!bootOnly) {
+    if (connectorsWithUserAuth.length > 0 && !userInfo.userId && !tempUserId) {
+      throw new Error('missing user ID');
+    }
+  }
+
   const relayBody: Zipper.Relay.RequestBody = {
     appInfo: {
       id: app.id,
       slug: app.slug,
       version,
       url: `https://${getAppLink(app.slug)}`,
+      connectorsWithUserAuth,
     },
     inputs:
       request.method === 'GET'
@@ -159,9 +167,12 @@ export async function relayRequest(
         : JSON.parse(await request.text()),
     originalRequest: { url: request.url, method: request.method },
     runId,
+    userId: userInfo.userId || tempUserId || '',
   };
 
-  relayBody.userInfo = userInfo;
+  relayBody.userInfo = {
+    email: userInfo.email,
+  };
 
   relayBody.path = filename;
 

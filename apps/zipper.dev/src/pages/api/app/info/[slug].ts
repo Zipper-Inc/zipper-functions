@@ -182,7 +182,7 @@ export default async function handler(
       ) as UserAuthConnector[],
       userInfo: {
         email: appFound.requiresAuthToRun ? userInfo.email : undefined,
-        userId: appFound.requiresAuthToRun ? userInfo.clerkUserId : undefined,
+        userId: userInfo.clerkUserId,
       },
       entryPoint: {
         filename: entryPoint.filename,

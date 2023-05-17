@@ -43,7 +43,7 @@ export default withClerkMiddleware(async (request: NextRequest) => {
 
     case /^\/$/.test(appRoute): {
       if (request.method === 'GET') {
-        const url = new URL('/app', request.url);
+        const url = new URL('/main.ts', request.url);
         res = NextResponse.rewrite(url);
       }
       if (request.method === 'POST') {
