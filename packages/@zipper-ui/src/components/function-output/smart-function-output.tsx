@@ -10,6 +10,8 @@ import {
   Box,
   Text,
   Flex,
+  Stack,
+  StackDivider,
 } from '@chakra-ui/react';
 import { OutputType } from '@zipper/types';
 import styled from '@emotion/styled';
@@ -21,7 +23,6 @@ import { RawFunctionOutput } from './raw-function-output';
 import { HiCheck, HiX } from 'react-icons/hi';
 import { ActionComponent } from './action-component';
 import { RouterComponent } from './router-component';
-import SmartFunctionOutputProvider from './smart-function-output-context';
 
 const StyledTr = styled(Tr)`
   &:last-of-type td {
@@ -63,7 +64,7 @@ function TableArray(props: { data: Array<any> }) {
   }
 
   return (
-    <TableContainer>
+    <TableContainer w="full">
       <Table {...getTableProps()}>
         <Thead>
           <Tr>
@@ -135,7 +136,7 @@ function TableCollection(props: { data: Array<any> }) {
     useTable({ columns, data }, useSortBy);
 
   return (
-    <TableContainer>
+    <TableContainer w="full">
       <Table {...getTableProps()}>
         <Thead>
           <Tr>
@@ -229,6 +230,32 @@ export function SmartFunctionOutput({
     case OutputType.Action: {
       if (data.run === undefined) data.run = true;
       return <ActionComponent action={data} />;
+    }
+
+    case OutputType.Component: {
+      const component = data as Zipper.Component;
+
+      switch (component.type) {
+        case 'stack': {
+          return (
+            <Stack
+              {...component.props}
+              divider={
+                component.props.divider ? (
+                  <StackDivider borderColor="gray.200" />
+                ) : undefined
+              }
+              spacing={component.props.direction === 'row' ? 6 : 4}
+            >
+              {component.children.map((child) => {
+                return <SmartFunctionOutput result={child} level={level + 1} />;
+              })}
+            </Stack>
+          );
+        }
+        default:
+          break;
+      }
     }
 
     case OutputType.Router:

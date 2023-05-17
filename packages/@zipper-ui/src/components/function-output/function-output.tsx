@@ -262,7 +262,7 @@ export function FunctionOutput({
             >
               <TabPanel>
                 <Box overflow="auto">
-                  <Box width="max-content" data-function-output="smart">
+                  <Box width="full" data-function-output="smart">
                     <SmartFunctionOutputProvider outputSection="expanded">
                       <SmartFunctionOutput
                         result={applet.expandedContent.output.data}
@@ -416,7 +416,7 @@ export function FunctionOutput({
                         <Divider />
                       </>
                     )}
-                    <Box width="max-content" data-function-output="smart">
+                    <Box width="full" data-function-output="smart">
                       <SmartFunctionOutputProvider outputSection="main">
                         <SmartFunctionOutput
                           result={applet?.mainContent.output?.data}
