@@ -22,6 +22,8 @@ import { HiCheck, HiX } from 'react-icons/hi';
 import { ActionComponent } from './action-component';
 import { RouterComponent } from './router-component';
 import SmartFunctionOutputProvider from './smart-function-output-context';
+import Collection from './collection';
+import Array from './array';
 
 const StyledTr = styled(Tr)`
   &:last-of-type td {
@@ -117,84 +119,6 @@ function TableArray(props: { data: Array<any> }) {
     </TableContainer>
   );
 }
-
-function TableCollection(props: { data: Array<any> }) {
-  const columns = useMemo(() => {
-    const keys: Array<string> = [];
-    props.data.forEach((record) => {
-      Object.keys(record).forEach((key) => {
-        if (!keys.includes(key)) keys.push(key);
-      });
-    });
-    return keys.map((key) => ({ Header: key, accessor: key }));
-  }, [props.data]);
-
-  const data = useMemo(() => props.data, [props.data]);
-
-  const { getTableProps, getTableBodyProps, headers, rows, prepareRow } =
-    useTable({ columns, data }, useSortBy);
-
-  return (
-    <TableContainer>
-      <Table {...getTableProps()}>
-        <Thead>
-          <Tr>
-            {headers.map((column: any) => {
-              return (
-                <Th {...column.getHeaderProps(column.getSortByToggleProps())}>
-                  {column.render('Header')}
-                  {
-                    <Text
-                      as="span"
-                      fontSize="xx-small"
-                      textAlign="center"
-                      height="full"
-                      pl={2}
-                    >
-                      {column.isSorted ? (column.isSortedDesc ? '▼' : '▲') : ''}
-                    </Text>
-                  }
-                </Th>
-              );
-            })}
-          </Tr>
-        </Thead>
-        <Tbody {...getTableBodyProps()}>
-          {rows.map((row) => {
-            prepareRow(row);
-            return (
-              <StyledTr {...row.getRowProps()}>
-                {row.cells.map((cell) => {
-                  if (isPrimitive(cell.value)) {
-                    if (typeof cell.value === 'boolean') {
-                      return (
-                        <Td {...cell.getCellProps()}>
-                          {cell.value ? <HiCheck /> : <HiX />}
-                        </Td>
-                      );
-                    }
-                    return (
-                      <Td {...cell.getCellProps()}>{cell.render('Cell')}</Td>
-                    );
-                  }
-                  if (cell.value === null) {
-                    <Td {...cell.getCellProps()}></Td>;
-                  }
-                  return (
-                    <Td {...cell.getCellProps()}>
-                      <SmartFunctionOutput result={cell.value} />
-                    </Td>
-                  );
-                })}
-              </StyledTr>
-            );
-          })}
-        </Tbody>
-      </Table>
-    </TableContainer>
-  );
-}
-
 export function SmartFunctionOutput({
   result,
   level = 0,
@@ -211,10 +135,10 @@ export function SmartFunctionOutput({
       return <Text fontSize="2xl">{data.toString()}</Text>;
 
     case OutputType.Array:
-      return <TableArray data={data} />;
+      return <Array data={data} />;
 
     case OutputType.Collection:
-      return <TableCollection data={data} />;
+      return <Collection data={data} />;
 
     case OutputType.Html:
       return (
