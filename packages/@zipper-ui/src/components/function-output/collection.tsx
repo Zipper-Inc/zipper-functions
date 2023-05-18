@@ -66,8 +66,6 @@ const StyledTr = styled(Tr)`
 `;
 
 function TableCollection(props: { data: Array<any> }) {
-  console.log('Rendering TableCollection');
-
   const columns = useMemo(() => {
     const keys: Array<string> = [];
     props.data.forEach((record) => {
@@ -145,9 +143,8 @@ function TableCollection(props: { data: Array<any> }) {
 }
 
 function CardCollection(props: { data: Array<any> }) {
-  console.log(props.data);
   return (
-    <SimpleGrid columns={3} spacing={10}>
+    <SimpleGrid columns={4} spacing={10}>
       {props.data.map((item, index) => (
         <Card
           key={index}
@@ -170,8 +167,9 @@ function CardCollection(props: { data: Array<any> }) {
                 <Text>Creator, Chakra UI</Text>
               </Box>
             </Flex>
-          </CardHeader> */}
+          </CardHeader> 
           <Divider color="neutral.200" />
+          */}
           <CardBody px="0">
             <SimpleGrid columns={2} spacing={2}>
               {Object.entries(item).map(([key, value], i) => (

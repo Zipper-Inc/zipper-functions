@@ -412,7 +412,7 @@ export function FunctionOutput({
                         <Divider />
                       </>
                     )}
-                    <Box width="max-content" data-function-output="smart">
+                    <Box width="full" data-function-output="smart">
                       <SmartFunctionOutputProvider outputSection="main">
                         <SmartFunctionOutput
                           result={applet?.mainContent.output?.data}
