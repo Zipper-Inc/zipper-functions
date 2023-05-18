@@ -6,11 +6,11 @@ import {
 import { GetServerSideProps } from 'next';
 import { getInputValuesFromUrl } from '~/utils/get-input-values-from-url';
 import getValidSubdomain from '~/utils/get-valid-subdomain';
-import type { AppPageProps } from '~/components/applet';
+import type { AppPageProps } from '~/components/app';
 import getAppInfo from '~/utils/get-app-info';
 import { getBootUrl, getRelayUrl } from '~/utils/get-relay-url';
 import { getShortRunId } from '~/utils/run-id';
-export { default } from '~/components/applet';
+export { default } from '~/components/app';
 
 export const getServerSideProps: GetServerSideProps = async ({
   req,
