@@ -1,1 +1,3 @@
-export { default, getServerSideProps } from '~/components/app';
+export { default } from '~/components/app';
+
+export { getServerSideProps } from './app';
