@@ -158,7 +158,8 @@ function CardCollection(props: { data: Array<any> }) {
           py={6}
           maxW="sm"
         >
-          {/* <CardHeader px={0}>
+          {/* Example of Header, need to figure out how to make it dynamic 
+           <CardHeader px={0}>
             {item.header}
             <Flex flex="1" gap="4" alignItems="center" flexWrap="wrap">
               <Avatar name="Segun Adebayo" src="https://bit.ly/sage-adebayo" />
