@@ -104,6 +104,8 @@ export default async function handler(
     },
   });
 
+  /// <uncomment-this-later>
+  /*
   if (appFound.requiresAuthToRun) {
     // return 401 if there's no token or no user was found by getUserInfo()
     if (!token || !userInfo.clerkUserId) {
@@ -113,6 +115,8 @@ export default async function handler(
       });
     }
   }
+  */
+  /// </uncomment-this-later>
 
   const {
     id,
