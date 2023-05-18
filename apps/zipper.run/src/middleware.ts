@@ -5,10 +5,6 @@ import type { NextRequest } from 'next/server';
 import serveRelay from './utils/relay-middleware';
 import jsonHandler from './api-handlers/json.handler';
 import yamlHandler from './api-handlers/yaml.handler';
-// import { ZIPPER_TEMP_USER_ID_COOKIE_NAME } from '@zipper/utils';
-// import { withClerkMiddleware } from '@clerk/nextjs';
-
-// const { __DEBUG__ } = process.env;
 
 export default authMiddleware({
   async afterAuth(_auth, request: NextRequest) {
