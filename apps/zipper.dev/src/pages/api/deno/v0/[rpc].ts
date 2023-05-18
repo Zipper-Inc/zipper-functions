@@ -7,177 +7,9 @@ import intoStream from 'into-stream';
 import { decryptFromBase64, parseDeploymentId } from '@zipper/utils';
 import { prisma } from '~/server/prisma';
 import { build, FRAMEWORK_ENTRYPOINT } from '~/utils/build-zipper-app';
-import { getAppLink } from '@zipper/utils';
 import { getAppHash, getAppVersionFromHash } from '~/utils/hashing';
 
 const X_DENO_CONFIG = 'x-deno-config';
-
-const DEFAULT_CONTENT_TYPE = 'application/octet-stream';
-
-/**
- * Assuming the user has defined a function called `main`
- * This wrapper injects some code that:
- *  - gets inputs from the request
- *  - calls the user's main function
- *  - handles standardizing output and errors
- */
-export const _wrapMainFunction = ({
-  code,
-  slug,
-  appId,
-  version = Date.now().toString(),
-}: {
-  code: string;
-  slug: string;
-  appId: string;
-  version: string;
-}) => `
-${code}
-
-/*****************************************************************/
-
-import { hmac as __zipper_hmac } from "https://deno.land/x/hmac@v2.0.1/mod.ts";
-
-const __generateHmac = (
-  method: 'GET' | 'POST' | 'DELETE',
-  path: string,
-  body: Record<string, unknown> = {},
-  ) => {
-    const timestamp = Date.now().toString();
-
-    return {
-      hmac: __zipper_hmac(
-        "sha256",
-        "${process.env.HMAC_SIGNING_SECRET}",
-        method + '__' + path + '__' + JSON.stringify(body) + '__' + timestamp,
-        "utf8",
-        "hex"
-      ),
-      timestamp,
-    }
-  }
-
-const __storage = {
-  get: async (key?: string) => {
-    let path = '/api/app/${appId}/storage';
-    if (key) path += '?key=' + key;
-    const {hmac, timestamp} = __generateHmac('GET', path);
-
-    const res = await fetch('${
-      process.env.RPC_HOST
-    }' + path, { headers: {'x-zipper-hmac': hmac, 'x-timestamp': timestamp} } );
-
-    const result = await res.json();
-    return key ? result.value : result;
-  },
-  set: async (key: string, value: unknown) => {
-    let path = '/api/app/${appId}/storage';
-    const {hmac, timestamp} = __generateHmac('POST', path, {key, value});
-
-    const res = await fetch('${process.env.RPC_HOST}' + path, {
-      headers: { 'x-zipper-hmac': hmac, 'x-timestamp': timestamp },
-      method: 'POST',
-      body: JSON.stringify({ key, value }),
-    });
-
-    return res.json();
-  },
-  delete: async (key: string) => {
-    let path = '/api/app/${appId}/storage?key=' + key;
-    const {hmac, timestamp} = __generateHmac('DELETE', path);
-
-    const res = await fetch('${process.env.RPC_HOST}' + path, {
-      headers: { 'x-zipper-hmac': hmac, 'x-timestamp': timestamp },
-      method: 'DELETE',
-    });
-
-    return res.json();
-  },
-}
-
-/**
- * Makes sure JSON objects are not too big for headers
- * Headers should be capped under 8000 bytes
- */
-const jsonHeader = (json, fallback = "JSON too big") => {
-  try {
-    const str = JSON.stringify(json);
-    if (str.length < 2000) return str;
-  } catch (e) {}
-  return fallback;
-}
-
-const Zipper = {
-  env: Deno.env,
-  storage: __storage,
-  appInfo: {
-    id: '${appId}',
-    slug: '${slug}',
-    version: '${version}',
-    url: 'https://${getAppLink(slug)}',
-  },
-  userInfo: {}
-};
-
-let fn: Function | undefined = undefined;
-if(typeof main === 'function') fn = main;
-if(!fn && typeof handler === 'function') fn = handler;
-
-if(typeof fn === 'function') {
-  addEventListener('fetch', async (event) => {
-    const body = event.request.body ? await event.request.json() : {};
-    Zipper.userInfo = body.userInfo;
-
-    const xZipperHeaders = {
-      'X-Zipper-Deployment-Id': '${appId}@${version}',
-      'X-Zipper-App-Slug': '${slug}',
-      'X-Zipper-Req-Url': event.request.url,
-      'X-Zipper-Req-Method': event.request.method,
-      'X-Zipper-App-Run-Input': jsonHeader(body.inputs, "See original request body"),
-    };
-
-    try {
-      const output = await fn(body.inputs);
-
-      if (output instanceof Response) {
-        if (!output.headers.get('Content-Type'))
-          output.headers.set('Content-Type', '${DEFAULT_CONTENT_TYPE}')
-        Object.keys(xZipperHeaders).forEach((h) => {
-          output.headers.set(h, xZipperHeaders[h]);
-        });
-        event.respondWith(output);
-      } else if (typeof output === 'function') {
-        throw new Error('Function output cannot be a function.');
-      } else {
-        const isObject = typeof output === 'object';
-        event.respondWith(
-          new Response(isObject ? JSON.stringify(output) : output, {
-            status: 200,
-            headers: {
-              ...xZipperHeaders,
-              ${/** @todo maybe better inference here, yolo */ ''}
-              'Content-Type': isObject ? 'application/json' : 'text/plain',
-            },
-          }),
-        );
-      }
-    } catch(error) {
-      const response = {
-        ok: false,
-        error,
-      };
-
-      console.error(error);
-
-      event.respondWith(
-        new Response(JSON.stringify(response), {
-          status: 500,
-        }),
-      );
-    }
-  });
-};
-`;
 
 export default async function handler(
   req: NextApiRequest,
@@ -307,11 +139,7 @@ async function originBoot({
   id: string;
 }) {
   // eslint-disable-next-line prefer-const
-  const {
-    appId,
-    userId,
-    version: deploymentVersion,
-  } = parseDeploymentId(deploymentId);
+  const { appId, version: deploymentVersion } = parseDeploymentId(deploymentId);
 
   if (!appId || !deploymentVersion) {
     console.error('Missing appId and version');
@@ -326,11 +154,7 @@ async function originBoot({
       scripts: true,
       scriptMain: true,
       secrets: true,
-      connectors: {
-        include: {
-          appConnectorUserAuths: { where: { userIdOrTempId: userId } },
-        },
-      },
+      connectors: true,
     },
   });
 
@@ -342,23 +166,6 @@ async function originBoot({
     deploymentVersion === 'latest'
       ? app.lastDeploymentVersion || getAppVersionFromHash(getAppHash(app))
       : deploymentVersion;
-
-  const missingUserAuths = app.connectors.filter((connector) => {
-    if (
-      connector.isUserAuthRequired &&
-      connector.appConnectorUserAuths.length === 0
-    ) {
-      return true;
-    }
-  });
-
-  if (missingUserAuths.length > 0) {
-    return errorResponse(
-      `You need to auth the following integrations: ${missingUserAuths
-        .map((c) => c.type)
-        .join(', ')}`,
-    );
-  }
 
   const baseUrl = `file://${app.slug}/v${version}`;
 
@@ -383,16 +190,6 @@ async function originBoot({
       secret.encryptedValue,
       process.env.ENCRYPTION_KEY,
     );
-  });
-
-  app.connectors.forEach((connector) => {
-    connector.appConnectorUserAuths.forEach((auth) => {
-      secretsMap[`${auth.connectorType.toUpperCase()}_USER_TOKEN`] =
-        decryptFromBase64(
-          auth.encryptedAccessToken,
-          process.env.ENCRYPTION_KEY,
-        );
-    });
   });
 
   // Boot metadata

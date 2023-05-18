@@ -162,13 +162,13 @@ export const theme = extendTheme({
       },
       // overrides some stuff in the AppConsole component
       '#app-console': {
-        '[data-method]:first-child': {
+        '[data-method]:first-of-type': {
           borderTop: 'none',
         },
         '[data-method]': {
           paddingY: '4px',
         },
-        '[data-method]:last-child': {
+        '[data-method]:last-of-type': {
           borderBottom: 'none',
         },
       },

@@ -1,8 +1,8 @@
 #!/bin/deno
-import { generateHandlersForFramework } from '../../@zipper-utils/src/utils/generate-handlers-for-framework.ts';
+import { generateIndexForFramework } from '../../@zipper-utils/src/utils/generate-index-for-framework.ts';
 
 export const SRC_DIR = './deno/src';
-export const GEN_FILE_PATH = './deno/generated/handlers.gen.ts';
+export const GEN_FILE_PATH = './deno/generated/index.gen.ts';
 
 export function generate() {
   const filenames = Array.from(Deno.readDirSync(SRC_DIR))
@@ -12,7 +12,7 @@ export function generate() {
 
   Deno.writeTextFileSync(
     GEN_FILE_PATH,
-    generateHandlersForFramework({ code, filenames }),
+    generateIndexForFramework({ code, filenames }),
   );
 
   Deno.run({

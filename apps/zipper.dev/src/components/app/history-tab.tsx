@@ -24,14 +24,8 @@ import {
   DrawerCloseButton,
   DrawerBody,
 } from '@chakra-ui/react';
-import { Avatar } from '../avatar';
 import { useRouter } from 'next/router';
-import {
-  HiExclamationTriangle,
-  HiCheck,
-  HiMagnifyingGlass,
-  HiMagnifyingGlassPlus,
-} from 'react-icons/hi2';
+import { HiExclamationTriangle, HiCheck } from 'react-icons/hi2';
 import { TbClockPlay } from 'react-icons/tb';
 import {
   createColumnHelper,
@@ -96,7 +90,7 @@ const HistoryTab: React.FC<HistoryTabProps> = ({ appId }) => {
                   process.env.NODE_ENV === 'development' ? 'http' : 'https'
                 }://${router.query['app-slug']}.${
                   process.env.NEXT_PUBLIC_OUTPUT_SERVER_HOSTNAME
-                }/run/${id.split('-')[0]}`}
+                }/run/history/${id.split('-')[0]}`}
               >
                 {getValue()}
               </Link>
@@ -121,18 +115,8 @@ const HistoryTab: React.FC<HistoryTabProps> = ({ appId }) => {
         id: 'user',
         size: 100,
         header: 'Run by',
-        cell: ({
-          getValue,
-          row: {
-            original: { userId },
-          },
-        }) => {
-          return (
-            <HStack>
-              {userId && <Avatar userId={userId} size="xs" />}
-              <Text>{getValue()}</Text>
-            </HStack>
-          );
+        cell: ({ getValue }) => {
+          return <Text>{getValue()}</Text>;
         },
       },
     ),
@@ -194,7 +178,7 @@ const HistoryTab: React.FC<HistoryTabProps> = ({ appId }) => {
           process.env.NODE_ENV === 'development' ? 'http' : 'https'
         }://${router.query['app-slug']}.${
           process.env.NEXT_PUBLIC_OUTPUT_SERVER_HOSTNAME
-        }/run/${row.id.split('-')[0]}`;
+        }/run/history/${row.id.split('-')[0]}`;
       },
       {
         id: 'runUrl',

@@ -104,6 +104,8 @@ export default async function handler(
     },
   });
 
+  /// <uncomment-this-later>
+  /*
   if (appFound.requiresAuthToRun) {
     // return 401 if there's no token or no user was found by getUserInfo()
     if (!token || !userInfo.clerkUserId) {
@@ -113,6 +115,8 @@ export default async function handler(
       });
     }
   }
+  */
+  /// </uncomment-this-later>
 
   const {
     id,
@@ -182,7 +186,7 @@ export default async function handler(
       ) as UserAuthConnector[],
       userInfo: {
         email: appFound.requiresAuthToRun ? userInfo.email : undefined,
-        userId: appFound.requiresAuthToRun ? userInfo.clerkUserId : undefined,
+        userId: userInfo.clerkUserId,
       },
       entryPoint: {
         filename: entryPoint.filename,

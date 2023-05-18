@@ -25,10 +25,10 @@ import Unauthorized from './unauthorized';
 import removeAppConnectorUserAuth from '~/utils/remove-app-connector-user-auth';
 import Header from './header';
 import InputSummary from './input-summary';
-import { getShortRunId } from '~/utils/run-id';
 import ConnectorsAuthInputsSection from './connectors-auth-inputs-section';
+import { getInputValuesFromUrl } from '~/utils/get-input-values-from-url';
 
-type Screen = 'initial' | 'run' | 'edit';
+type Screen = 'initial' | 'output';
 
 export type AppPageProps = {
   app?: AppInfo;
@@ -44,6 +44,7 @@ export type AppPageProps = {
   result?: string;
   runnableScripts?: string[];
   metadata?: Record<string, string | undefined>;
+  handlerConfigs?: Record<string, Zipper.HandlerConfig>;
 };
 
 export function AppPage({
@@ -60,18 +61,25 @@ export function AppPage({
   result: paramResult,
   runnableScripts,
   metadata,
+  handlerConfigs,
 }: AppPageProps) {
   const router = useRouter();
   const { asPath } = router;
   const appTitle = app?.name || app?.slug || 'Zipper';
-  const formContext = useForm({ defaultValues });
+  const formContext = useForm({
+    defaultValues,
+  });
   const [result, setResult] = useState('');
   const [loading, setLoading] = useState(false);
   const { user } = useUser();
-  const [screen, setScreen] = useState<Screen>(paramResult ? 'run' : 'initial');
-  const [latestRunId, setLatestRunId] = useState<string>();
-  const [expandInputsSection, setExpandInputsSection] = useState(true);
-  const [inputValues, setInputValues] = useState<Record<string, any>>({});
+  const [screen, setScreen] = useState<Screen>(
+    paramResult ? 'output' : 'initial',
+  );
+  const [latestRunId] = useState<string | undefined>(metadata?.runId);
+  const [expandInputsSection, setExpandInputsSection] = useState(false);
+  const [currentFileConfig, setCurrentFileConfig] = useState<
+    Zipper.HandlerConfig | undefined
+  >();
   const previousRouteRef = useRef(asPath);
 
   // We have to do this so that the results aren't SSRed
@@ -79,57 +87,58 @@ export function AppPage({
   useEffect(() => {
     if (paramResult) {
       setResult(paramResult);
-      setScreen('run');
+      setScreen('output');
     }
   }, [paramResult]);
 
   useEffect(() => {
     if (
-      router.pathname !== '/run/[runId]' &&
+      router.pathname !== '/run/[path]' &&
       asPath !== previousRouteRef.current
     ) {
       setScreen('initial');
+
+      const defaultValues = getInputValuesFromUrl(inputs, asPath);
+      formContext.reset(defaultValues);
       setResult('');
     }
+    setLoading(false);
     previousRouteRef.current = asPath;
   }, [asPath]);
 
   const mainApplet = useAppletContent();
 
   useEffect(() => {
-    mainApplet.expandedContent.set({
-      inputs: undefined,
-      output: undefined,
+    mainApplet.reset();
+    const inputParamsWithValues = inputs?.map((i) => {
+      if (defaultValues) {
+        i.value = defaultValues[`${i.key}:${i.type}`];
+      }
+      return i;
     });
-    mainApplet.mainContent.set({ inputs, output: result });
+
+    mainApplet.mainContent.set({
+      inputs,
+      output: {
+        data: result || '',
+        inputsUsed: inputParamsWithValues || [],
+      },
+      path: filename,
+    });
   }, [result]);
+
+  useEffect(() => {
+    if (handlerConfigs && filename) {
+      setCurrentFileConfig(handlerConfigs[filename]);
+    }
+  }, [handlerConfigs, filename]);
 
   const runApp = async () => {
     if (!loading && canRunApp) {
       setLoading(true);
       const rawValues = formContext.getValues();
       const values = getInputsFromFormData(rawValues, inputs);
-      setInputValues(values);
-
-      const url = filename ? `/${filename}/call` : '/call';
-
-      const res = await fetch(url, {
-        method: 'POST',
-        body: JSON.stringify(values),
-      });
-
-      const result = await res.text();
-      const runId = res.headers.get('x-zipper-run-id');
-      if (runId) {
-        const shortRunId = getShortRunId(runId);
-        setLatestRunId(shortRunId);
-        router.push(`/run/${shortRunId}`, undefined, {
-          shallow: true,
-        });
-      }
-      if (result) setResult(result);
-      setScreen('run');
-      setLoading(false);
+      router.push({ pathname: `/run/${filename}`, query: values });
     }
   };
 
@@ -143,7 +152,7 @@ export function AppPage({
   );
 
   function getRunUrl(scriptName: string) {
-    return `/${scriptName}/call`;
+    return `/${scriptName}/relay`;
   }
 
   const connectorActions = (appId: string) => {
@@ -193,13 +202,9 @@ export function AppPage({
     };
   };
 
-  const showInput = (['initial', 'edit'] as Screen[]).includes(screen);
-  const showRunOutput = (['edit', 'run'] as Screen[]).includes(screen);
+  const showRunOutput = (['output'] as Screen[]).includes(screen);
 
   const output = useMemo(() => {
-    mainApplet.mainContent.set({
-      path: filename,
-    });
     if (!app?.slug) return <></>;
     return (
       <FunctionOutput
@@ -210,9 +215,10 @@ export function AppPage({
         appInfoUrl={`/_zipper/app/info/${app?.slug}`}
         currentContext={'main'}
         appSlug={app.slug}
+        showTabs={false}
       />
     );
-  }, [mainApplet.updatedAt]);
+  }, [app, mainApplet.updatedAt]);
 
   const canRunApp = useMemo(() => {
     return (userAuthConnectors || []).every((connector) => {
@@ -226,6 +232,28 @@ export function AppPage({
     return <Unauthorized />;
   }
 
+  const appletDescription = () => {
+    if (!currentFileConfig || !currentFileConfig.description) {
+      return <></>;
+    }
+
+    const { title, subtitle } = currentFileConfig.description;
+    if (!title && !subtitle) {
+      return <></>;
+    }
+
+    return (
+      <VStack mb="10">
+        {title && <Heading as="h1">{title}</Heading>}
+        {subtitle && (
+          <Heading as="h2" fontSize="lg" fontWeight="semibold" color="gray.600">
+            {subtitle}
+          </Heading>
+        )}
+      </VStack>
+    );
+  };
+
   return (
     <>
       <Head>
@@ -237,54 +265,49 @@ export function AppPage({
           entryPoint={entryPoint}
           runnableScripts={runnableScripts}
           runId={latestRunId}
+          setScreen={setScreen}
+          setLoading={setLoading}
         />
         <VStack as="main" flex={1} spacing={4} position="relative" px={10}>
-          {showInput && metadata && (
-            <VStack mb="10">
-              {metadata.h1 && <Heading as="h1">{metadata.h1}</Heading>}
-              {metadata.h2 && (
-                <Heading
-                  as="h2"
-                  fontSize="lg"
-                  fontWeight="semibold"
-                  color="gray.600"
-                >
-                  {metadata.h2}
-                </Heading>
-              )}
-            </VStack>
-          )}
-          {showInput && (
-            <ConnectorsAuthInputsSection
-              isCollapsible={screen === 'edit'}
-              expandByDefault={expandInputsSection}
-              toggleIsExpanded={setExpandInputsSection}
-              userAuthProps={{
-                actions: connectorActions(app.id),
-                appTitle,
-                userAuthConnectors,
-              }}
-              userInputsProps={{
-                canRunApp,
-                formContext,
-                hasResult: Boolean(result),
-                inputs,
-                runApp,
-              }}
-            />
+          {appletDescription()}
+          {screen === 'initial' && (
+            <>
+              <ConnectorsAuthInputsSection
+                isCollapsible={false}
+                expandByDefault={expandInputsSection}
+                toggleIsExpanded={setExpandInputsSection}
+                userAuthProps={{
+                  actions: connectorActions(app.id),
+                  appTitle,
+                  userAuthConnectors,
+                }}
+                userInputsProps={{
+                  isLoading: loading,
+                  canRunApp,
+                  formContext,
+                  hasResult: false,
+                  inputs,
+                  runApp,
+                }}
+              />
+            </>
           )}
           {showRunOutput && (
             <VStack w="full" align="stretch" spacing={6}>
-              {screen === 'run' && (
-                <InputSummary
-                  inputs={inputs}
-                  formContext={formContext}
-                  onEditAndRerun={() => {
-                    setScreen('edit');
-                  }}
-                />
-              )}
-              <Divider color="gray.300" borderColor="currentcolor" />
+              <InputSummary
+                inputs={inputs}
+                formContext={formContext}
+                onEditAndRerun={() => {
+                  const query = router.query;
+                  delete query.path;
+
+                  router.push({
+                    pathname: `/${filename}`,
+                    query,
+                  });
+                  setScreen('initial');
+                }}
+              />
               {output}
             </VStack>
           )}

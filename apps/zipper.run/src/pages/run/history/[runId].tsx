@@ -5,8 +5,8 @@ import { getConnectorsAuthUrl } from '~/utils/get-connectors-auth-url';
 import { getInputValuesFromAppRun } from '~/utils/get-input-values-from-url';
 import getRunInfo from '~/utils/get-run-info';
 import getValidSubdomain from '~/utils/get-valid-subdomain';
-import type { AppPageProps } from '~/components/app';
-export { default } from '~/components/app';
+import type { AppPageProps } from '~/components/applet';
+export { default } from '~/components/applet';
 
 export const getServerSideProps: GetServerSideProps = async ({
   req,

@@ -3,12 +3,15 @@
 export * from '../src/components/function-output/action-button';
 export * from '../src/components/function-output/action-component';
 export * from '../src/components/function-output/action-dropdown';
+export * from '../src/components/function-output/action-link';
 export * from '../src/components/function-output/function-output-context';
 export { default as FunctionOutputProvider } from '../src/components/function-output/function-output-context';
 export * from '../src/components/function-output/function-output';
 export * from '../src/components/function-output/object-explorer';
 export * from '../src/components/function-output/raw-function-output';
 export * from '../src/components/function-output/router-component';
+export * from '../src/components/function-output/smart-function-output-context';
+export { default as SmartFunctionOutputProvider } from '../src/components/function-output/smart-function-output-context';
 export * from '../src/components/function-output/smart-function-output';
 export * from '../src/components/function-output/types';
 export * from '../src/components/function-output/utils';

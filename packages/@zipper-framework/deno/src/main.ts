@@ -9,3 +9,7 @@ export function handler({
 }) {
   return hello(helloString, worldString);
 }
+
+export const config = {
+  run: true,
+};

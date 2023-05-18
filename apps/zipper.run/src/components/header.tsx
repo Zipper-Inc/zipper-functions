@@ -32,6 +32,8 @@ export type HeaderProps = AppInfo & {
   entryPoint?: EntryPointInfo;
   runnableScripts?: string[];
   runId?: string;
+  setScreen: (screen: 'initial' | 'output') => void;
+  setLoading: (value: boolean) => void;
 };
 
 const Header: React.FC<HeaderProps> = ({
@@ -41,6 +43,8 @@ const Header: React.FC<HeaderProps> = ({
   entryPoint,
   runnableScripts = [],
   runId,
+  setScreen,
+  setLoading,
 }) => {
   const router = useRouter();
   const toast = useToast();
@@ -50,7 +54,7 @@ const Header: React.FC<HeaderProps> = ({
   useEffect(() => {
     const baseUrl = `${protocol}://${getAppLink(slug)}`;
     if (runId) {
-      setValue(`${baseUrl}/run/${runId}`);
+      setValue(`${baseUrl}/run/history/${runId}`);
     } else {
       setValue(baseUrl);
     }
@@ -140,6 +144,7 @@ const Header: React.FC<HeaderProps> = ({
                           fontWeight="medium"
                           onClick={() => {
                             onClose();
+                            setLoading(true);
                             router.push(`/${entryPoint.filename}`);
                           }}
                           _hover={{ background: 'none' }}
@@ -166,7 +171,11 @@ const Header: React.FC<HeaderProps> = ({
                           return (
                             <MenuItem
                               key={`${s}-${i}`}
-                              onClick={() => router.push(`/${s}`)}
+                              onClick={() => {
+                                onClose();
+                                setLoading(true);
+                                router.push(`/${s}`);
+                              }}
                               backgroundColor="gray.50"
                               px="4"
                               pt="2"

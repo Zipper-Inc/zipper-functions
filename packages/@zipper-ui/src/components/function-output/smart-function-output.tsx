@@ -9,6 +9,7 @@ import {
   Td,
   Box,
   Text,
+  Flex,
 } from '@chakra-ui/react';
 import { OutputType } from '@zipper/types';
 import styled from '@emotion/styled';
@@ -20,6 +21,7 @@ import { RawFunctionOutput } from './raw-function-output';
 import { HiCheck, HiX } from 'react-icons/hi';
 import { ActionComponent } from './action-component';
 import { RouterComponent } from './router-component';
+import SmartFunctionOutputProvider from './smart-function-output-context';
 
 const StyledTr = styled(Tr)`
   &:last-of-type td {
@@ -233,7 +235,13 @@ export function SmartFunctionOutput({
       return <RouterComponent route={data} />;
 
     case OutputType.ActionArray:
-      return data.map((action: any) => <ActionComponent action={action} />);
+      return (
+        <Flex direction="row">
+          {data.map((action: any) => (
+            <ActionComponent action={action} />
+          ))}
+        </Flex>
+      );
 
     default:
       return <RawFunctionOutput result={result} />;
