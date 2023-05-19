@@ -160,20 +160,33 @@ async function runApplet({ request, respondWith }: Deno.RequestEvent) {
       await fetchUserAuthConnectorInfo();
     }
 
+    /**
+     * A blank slate for a response object
+     * Can be written to from inside a handler
+     */
+    const response: Zipper.HandlerContext['response'] = {};
+
     const context: Zipper.HandlerContext = {
       userInfo,
       appInfo,
       runId,
       request,
-      // Todo - not this
-      response: { respondWith },
+      response,
     };
 
     const output = await handler(body.inputs, context);
-    return new Response(
-      typeof output === 'string' ? output : JSON.stringify(output),
-      { status: 200 },
-    );
+
+    // Apply response if the response is not overwritten
+    if (!response.body) {
+      response.body =
+        typeof output === 'string' ? output : JSON.stringify(output);
+    }
+
+    if (!response.status) {
+      response.status = 200;
+    }
+
+    return new Response(response.body, response);
   } catch (e) {
     const errorString = e ? `\n${e.toString()}` : '';
     return new Response(
