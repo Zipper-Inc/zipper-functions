@@ -394,11 +394,7 @@ export function FunctionOutput({
                 <Tab {...tabButtonStyles}>Results</Tab>
                 <Tab {...tabButtonStyles}>Raw Output</Tab>
               </TabList>
-              <TabPanels
-                border="1px solid"
-                borderColor="gray.200"
-                borderBottomRadius={'md'}
-              >
+              <TabPanels borderBottomRadius={'md'}>
                 <TabPanel>
                   <Box overflow="auto">
                     {applet.showGoBackLink() && (

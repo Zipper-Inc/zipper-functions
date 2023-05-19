@@ -4,6 +4,8 @@ export * from '../src/components/function-output/action-button';
 export * from '../src/components/function-output/action-component';
 export * from '../src/components/function-output/action-dropdown';
 export * from '../src/components/function-output/action-link';
+export { default as Array } from '../src/components/function-output/array';
+export { default as Collection } from '../src/components/function-output/collection';
 export * from '../src/components/function-output/function-output-context';
 export { default as FunctionOutputProvider } from '../src/components/function-output/function-output-context';
 export * from '../src/components/function-output/function-output';
