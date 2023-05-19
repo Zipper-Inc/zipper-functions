@@ -18,25 +18,10 @@ import { requiredUserAuthConnectorFilter } from '~/utils/user-auth-connector-fil
 import { ZIPPER_TEMP_USER_ID_HEADER } from '@zipper/utils';
 import * as Sentry from '@sentry/nextjs';
 
-/**
- * @todo
- * - security of some sort (control access for users)
- * - restrict endpoint to run server or something
- */
-
-// convert the CLERK_JWT_KEY to a public key
-const splitPem = process.env.CLERK_JWT_KEY?.match(/.{1,64}/g);
-const publicKey =
-  '-----BEGIN PUBLIC KEY-----\n' +
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  splitPem!.join('\n') +
-  '\n-----END PUBLIC KEY-----';
-
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
-  if (!process.env.CLERK_JWT_KEY) throw new Error('Missing Clerk JWT key');
   const slugFromUrl = req.query.slug as string;
   const body = JSON.parse(req.body);
 
@@ -223,18 +208,23 @@ async function getUserInfo(token: string, appSlug: string) {
     //if there's no token, there's no authed user
     if (!token) throw new Error('No token');
 
-    const tokenType = token?.startsWith('zaat') ? 'zipper' : 'clerk';
+    const tokenType = token?.startsWith('zaat')
+      ? 'app_access_token'
+      : 'user_access_token';
 
-    if (tokenType === 'clerk') {
-      const auth = jwt.verify(token, publicKey) as JwtPayload;
+    if (tokenType === 'user_access_token') {
+      const auth = jwt.verify(
+        token,
+        process.env.JWT_SIGNING_SECRET!,
+      ) as JwtPayload;
 
       // if there's an auth object, but no user, then there's no authed user
       if (!auth || !auth.sub) {
-        throw new Error('No Clerk user');
+        throw new Error('No Zipper user');
       }
 
       return {
-        email: auth.primary_email,
+        email: auth.primaryEmail,
         clerkUserId: auth.sub,
         organizations: auth.organizations,
       };

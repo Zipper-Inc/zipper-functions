@@ -28,8 +28,6 @@ import {
   ZIPPER_TEMP_USER_ID_COOKIE_NAME,
 } from '@zipper/utils';
 import { deleteCookie } from 'cookies-next';
-import { getAuth } from '@clerk/nextjs/server';
-import { useUser } from '@clerk/nextjs';
 import Unauthorized from './unauthorized';
 import removeAppConnectorUserAuth from '~/utils/remove-app-connector-user-auth';
 import Header from './header';
@@ -37,6 +35,7 @@ import InputSummary from './input-summary';
 import ConnectorsAuthInputsSection from './connectors-auth-inputs-section';
 import { getConnectorsAuthUrl } from '~/utils/get-connectors-auth-url';
 import { getBootUrl } from '~/utils/get-relay-url';
+import { getZipperAuth } from '~/utils/get-zipper-auth';
 
 const { __DEBUG__ } = process.env;
 
@@ -83,7 +82,6 @@ export function AppPage({
   });
   const [result, setResult] = useState('');
   const [loading, setLoading] = useState(false);
-  const { user } = useUser();
   const [screen, setScreen] = useState<Screen>(
     paramResult ? 'output' : 'initial',
   );
@@ -172,42 +170,42 @@ export function AppPage({
       github: {
         authUrl: githubAuthUrl || '#',
         onDelete: async () => {
-          if (user) {
-            await removeAppConnectorUserAuth({
-              appId,
-              type: 'github',
-            });
-          } else {
-            deleteCookie(ZIPPER_TEMP_USER_ID_COOKIE_NAME);
-          }
+          // if (user) {
+          //   await removeAppConnectorUserAuth({
+          //     appId,
+          //     type: 'github',
+          //   });
+          // } else {
+          //   deleteCookie(ZIPPER_TEMP_USER_ID_COOKIE_NAME);
+          // }
           router.reload();
         },
       },
       slack: {
         authUrl: slackAuthUrl || '#',
         onDelete: async () => {
-          if (user) {
-            await removeAppConnectorUserAuth({
-              appId,
-              type: 'slack',
-            });
-          } else {
-            deleteCookie(ZIPPER_TEMP_USER_ID_COOKIE_NAME);
-          }
+          // if (user) {
+          //   await removeAppConnectorUserAuth({
+          //     appId,
+          //     type: 'slack',
+          //   });
+          // } else {
+          //   deleteCookie(ZIPPER_TEMP_USER_ID_COOKIE_NAME);
+          // }
           router.reload();
         },
       },
       openai: {
         authUrl: '#',
         onDelete: async () => {
-          if (user) {
-            await removeAppConnectorUserAuth({
-              appId,
-              type: 'openai',
-            });
-          } else {
-            deleteCookie(ZIPPER_TEMP_USER_ID_COOKIE_NAME);
-          }
+          // if (user) {
+          //   await removeAppConnectorUserAuth({
+          //     appId,
+          //     type: 'openai',
+          //   });
+          // } else {
+          //   deleteCookie(ZIPPER_TEMP_USER_ID_COOKIE_NAME);
+          // }
           router.reload();
         },
       },
@@ -359,12 +357,7 @@ export const getServerSideProps: GetServerSideProps = async ({
     );
   if (__DEBUG__) console.log({ versionFromUrl, filename: filenameFromUrl });
 
-  console.log(
-    'REQ: ',
-    req.headers.cookie?.split('; ').find((c) => c.startsWith('__zipper')),
-  );
-  const auth = getAuth(req);
-  const token = await auth.getToken({ template: 'incl_orgs' });
+  const { token, userId } = await getZipperAuth(req);
 
   // grab the app if it exists
   const appInfoResult = await getAppInfo({
@@ -443,8 +436,7 @@ export const getServerSideProps: GetServerSideProps = async ({
 
   const { githubAuthUrl, slackAuthUrl } = getConnectorsAuthUrl({
     userAuthConnectors,
-    userId:
-      auth.userId || (req.cookies[ZIPPER_TEMP_USER_ID_COOKIE_NAME] as string),
+    userId: userId || (req.cookies[ZIPPER_TEMP_USER_ID_COOKIE_NAME] as string),
     appId: app.id,
     host: req.headers.host,
   });

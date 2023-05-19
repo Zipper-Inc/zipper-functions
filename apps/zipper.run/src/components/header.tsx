@@ -18,7 +18,6 @@ import { getAppLink } from '@zipper/utils';
 import { ZipperSymbol } from '@zipper/ui';
 import { HiOutlineUpload, HiOutlinePencilAlt } from 'react-icons/hi';
 import { AppInfo, EntryPointInfo } from '@zipper/types';
-import { UserButton, useUser } from '@clerk/nextjs';
 import React, { useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { FiChevronDown, FiChevronUp } from 'react-icons/fi';
@@ -43,12 +42,10 @@ const Header: React.FC<HeaderProps> = ({
   entryPoint,
   runnableScripts = [],
   runId,
-  setScreen,
   setLoading,
 }) => {
   const router = useRouter();
   const toast = useToast();
-  const { user } = useUser();
   const { onCopy, setValue } = useClipboard('');
 
   useEffect(() => {
@@ -236,21 +233,6 @@ const Header: React.FC<HeaderProps> = ({
               <Text>Edit App</Text>
             </Button>
           )}
-
-          {!user && (
-            <Button
-              colorScheme="gray"
-              variant="ghost"
-              display="flex"
-              fontWeight="medium"
-              onClick={() => {
-                router.push(`/sign-in`);
-              }}
-            >
-              <Text>Sign In</Text>
-            </Button>
-          )}
-          <UserButton afterSignOutUrl="/" />
         </HStack>
       </Flex>
     </>

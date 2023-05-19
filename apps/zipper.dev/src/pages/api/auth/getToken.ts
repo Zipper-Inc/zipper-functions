@@ -27,6 +27,9 @@ export default async function handler(
     });
 
     const user = await clerkClient.users.getUser(zipperAuthCode.userId);
+    const orgs = await clerkClient.users.getOrganizationMembershipList({
+      userId: zipperAuthCode.userId,
+    });
 
     const accessToken = jwt.sign(
       {
@@ -35,6 +38,9 @@ export default async function handler(
         lastName: user.lastName,
         primaryEmail: user.emailAddresses.find((e) => {
           e.id === user.primaryEmailAddressId;
+        }),
+        organizations: orgs.map((o) => {
+          return { [o.id]: o.role };
         }),
       },
       process.env.JWT_SIGNING_SECRET!,

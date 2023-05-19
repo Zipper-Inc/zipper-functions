@@ -14,6 +14,7 @@ import {
   ZIPPER_TEMP_USER_ID_HEADER,
 } from '@zipper/utils';
 import Zipper from '@zipper/framework';
+import { getZipperAuth } from './get-zipper-auth';
 
 const { __DEBUG__, SHARED_SECRET: DENO_SHARED_SECRET, RPC_HOST } = process.env;
 
@@ -95,10 +96,9 @@ export async function relayRequest(
   if (!subdomain) return { status: 404 };
 
   // Get the user's JWT token from the session if there is one
-  const auth = getAuth(request);
+  const zipperAuth = await getZipperAuth(request as any);
   let token = request.headers.get('Authorization')?.replace('Bearer ', '');
-  token =
-    token || (await auth.getToken({ template: 'incl_orgs' })) || undefined;
+  token = token || zipperAuth.token || undefined;
 
   let tempUserId = request.headers.get(ZIPPER_TEMP_USER_ID_HEADER) || undefined;
   tempUserId =
