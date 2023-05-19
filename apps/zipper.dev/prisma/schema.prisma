@@ -244,3 +244,12 @@ model ScriptMain {
 
   @@map("script_main")
 }
+
+model ZipperAuthCode {
+  code        String    @id @default(uuid())
+  userId      String
+  used        Boolean   @default(false)
+  expiresAt   BigInt
+
+  @@map("zipper_auth_code")
+}

@@ -359,6 +359,10 @@ export const getServerSideProps: GetServerSideProps = async ({
     );
   if (__DEBUG__) console.log({ versionFromUrl, filename: filenameFromUrl });
 
+  console.log(
+    'REQ: ',
+    req.headers.cookie?.split('; ').find((c) => c.startsWith('__zipper')),
+  );
   const auth = getAuth(req);
   const token = await auth.getToken({ template: 'incl_orgs' });
 

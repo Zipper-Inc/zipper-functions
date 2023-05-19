@@ -2,6 +2,9 @@ import { z } from 'zod';
 import clerk from '@clerk/clerk-sdk-node';
 import { createProtectedRouter } from '../createRouter';
 import { TRPCError } from '@trpc/server';
+import { prisma } from '../prisma';
+import { encrypt, encryptToBase64, encryptToHex } from '@zipper/utils';
+import { getAuth } from '@clerk/nextjs/server';
 
 export const userRouter = createProtectedRouter()
   .query('profilesForUserIds', {
@@ -91,5 +94,20 @@ export const userRouter = createProtectedRouter()
           message: e.toString(),
         });
       }
+    },
+  })
+  .mutation('addZipperAuthCode', {
+    async resolve({ ctx }) {
+      if (!ctx.userId) throw new TRPCError({ code: 'UNAUTHORIZED' });
+      if (!ctx.req) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+
+      const result = await prisma.zipperAuthCode.create({
+        data: {
+          userId: ctx.userId,
+          expiresAt: Date.now() + 30 * 1000,
+        },
+      });
+
+      return encryptToHex(result.code, process.env.ENCRYPTION_KEY);
     },
   });
