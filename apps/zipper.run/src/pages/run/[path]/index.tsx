@@ -73,10 +73,15 @@ export const getServerSideProps: GetServerSideProps = async ({
   if (tempUserId) {
     headers[ZIPPER_TEMP_USER_ID_HEADER] = tempUserId;
   }
+  // boot it up
+  // todo cache this
   const bootUrl = getBootUrl({ slug: appInfoResult.data.app.slug });
-  const { configs: handlerConfigs }: Zipper.BootPayload = await fetch(
-    bootUrl,
-  ).then((r) => r.json());
+  const payload = await fetch(bootUrl, {
+    headers,
+  }).then((r) => r.text());
+
+  if (payload === 'UNAUTHORIZED') return { props: { statusCode: 401 } };
+  const { configs: handlerConfigs } = JSON.parse(payload) as Zipper.BootPayload;
 
   const result = await fetch(
     getRelayUrl({ slug: app.slug, path: query.path as string | undefined }),

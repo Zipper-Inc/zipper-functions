@@ -72,6 +72,14 @@ app.use(async ({ request, response }) => {
   window.Zipper = {
     env,
     storage: new ZipperStorage(appInfo.id),
+    Component: {
+      create: (component) =>
+        ({
+          $zipperType: 'Zipper.Component',
+          ...component,
+          // deno-lint-ignore no-explicit-any
+        } as any),
+    },
     Action: {
       create: (action) =>
         ({

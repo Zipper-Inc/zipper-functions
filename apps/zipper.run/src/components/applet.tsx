@@ -360,13 +360,14 @@ export const getServerSideProps: GetServerSideProps = async ({
   if (__DEBUG__) console.log({ versionFromUrl, filename: filenameFromUrl });
 
   const auth = getAuth(req);
+  const token = await auth.getToken({ template: 'incl_orgs' });
 
   // grab the app if it exists
   const appInfoResult = await getAppInfo({
     subdomain,
     tempUserId: req.cookies[ZIPPER_TEMP_USER_ID_COOKIE_NAME],
     filename: filenameFromUrl,
-    token: await auth.getToken({ template: 'incl_orgs' }),
+    token,
   });
 
   if (__DEBUG__) console.log('getAppInfo', { result: appInfoResult });
@@ -391,9 +392,14 @@ export const getServerSideProps: GetServerSideProps = async ({
   // boot it up
   // todo cache this
   const bootUrl = getBootUrl({ slug: appInfoResult.data.app.slug });
-  const { configs: handlerConfigs }: Zipper.BootPayload = await fetch(
-    bootUrl,
-  ).then((r) => r.json());
+  const payload = await fetch(bootUrl, {
+    headers: {
+      Authorization: `Bearer ${token || ''}`,
+    },
+  }).then((r) => r.text());
+
+  if (payload === 'UNAUTHORIZED') return { props: { statusCode: 401 } };
+  const { configs: handlerConfigs } = JSON.parse(payload) as Zipper.BootPayload;
 
   /**
    * @todo not sure if redirect is appropriate but whatever
