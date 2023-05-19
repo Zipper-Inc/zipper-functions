@@ -38,13 +38,13 @@ export default function Collection(props: { data: Array<any> }) {
           aria-label="Table view"
           icon={<HiTable />}
           onClick={() => setView('table')}
-          colorScheme={view === 'table' ? 'blue' : 'gray'}
+          colorScheme={view === 'table' ? 'purple' : 'gray'}
         />
         <IconButton
           aria-label="Card view"
           icon={<HiViewGrid />}
           onClick={() => setView('cards')}
-          colorScheme={view === 'cards' ? 'blue' : 'gray'}
+          colorScheme={view === 'cards' ? 'purple' : 'gray'}
           ml={2}
         />
       </Box>
