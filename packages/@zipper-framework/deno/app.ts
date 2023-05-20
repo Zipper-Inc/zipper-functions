@@ -64,10 +64,7 @@ async function runApplet({ request, respondWith }: Deno.RequestEvent) {
       configs,
     };
 
-    // Handle parsing errors
-    if (!body || error) {
-      return new Response(JSON.stringify(bootPayload), { status: 200 });
-    }
+    return new Response(JSON.stringify(bootPayload), { status: 200 });
   }
 
   // Attach ZipperGlobal
