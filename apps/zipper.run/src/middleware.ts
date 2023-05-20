@@ -37,12 +37,18 @@ async function maybeGetCustomResponse(
 
     case /\/relay(\/?)$/.test(appRoute): {
       console.log('matching relay route');
-      return serveRelay({ request, bootOnly: false });
+      return serveRelay({
+        request,
+        bootOnly: false,
+      });
     }
 
     case /\/boot(\/?)$/.test(appRoute): {
       console.log('matching boot route (it rhymes)');
-      return serveRelay({ request, bootOnly: true });
+      return serveRelay({
+        request,
+        bootOnly: true,
+      });
     }
 
     case /^\/$/.test(appRoute): {
