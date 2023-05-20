@@ -28,7 +28,7 @@ export default function Unauthorized() {
             p="2"
             borderRadius={4}
           >
-            <UserButton showName />
+            {/* <UserButton showName /> */}
           </VStack>
         )}
       </Flex>
@@ -64,7 +64,7 @@ export default function Unauthorized() {
             )}
             {user && (
               <Button colorScheme={'purple'} variant="outline">
-                <SignOutButton />
+                {/* <SignOutButton /> */}
               </Button>
             )}
           </VStack>

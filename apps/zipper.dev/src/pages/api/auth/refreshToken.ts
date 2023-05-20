@@ -15,7 +15,6 @@ export default async function handler(
 
     const refreshToken = req.body.refreshToken;
 
-    console.log('REFRESH TOKEN RECEIVED: ', refreshToken);
     // Verify and decode the refresh token
     try {
       const decodedToken = jwt.verify(

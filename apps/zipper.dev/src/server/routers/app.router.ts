@@ -550,7 +550,7 @@ export const appRouter = createRouter()
           sub: ctx.userId,
         },
         process.env.JWT_SIGNING_SECRET!,
-        { expiresIn: '1m' },
+        { expiresIn: '30s' },
       );
       const version = getAppVersionFromHash(app.hash || getAppHash(app));
 
@@ -625,7 +625,7 @@ export const appRouter = createRouter()
           sub: ctx.userId,
         },
         process.env.JWT_SIGNING_SECRET!,
-        { expiresIn: '1m' },
+        { expiresIn: '30s' },
       );
 
       const result = await fetch(

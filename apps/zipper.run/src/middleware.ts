@@ -120,7 +120,8 @@ export const middleware = async (request: NextRequest) => {
     requestHeaders,
   );
   const response =
-    customResponse || NextResponse.next({ headers: requestHeaders });
+    customResponse ||
+    NextResponse.next({ request: { headers: requestHeaders } });
 
   if (accessToken) {
     response.cookies.set({
