@@ -16,7 +16,7 @@ export default async function handler(
   try {
     const code = decryptFromHex(encryptedCode, process.env.ENCRYPTION_KEY);
     const zipperAuthCode = await prisma.zipperAuthCode.findFirstOrThrow({
-      where: { code, used: false },
+      where: { code, used: false, expiresAt: { lte: Date.now() } },
     });
 
     await prisma.zipperAuthCode.update({

@@ -27,7 +27,6 @@ import { deleteCookie } from 'cookies-next';
 const duration = 1500;
 
 const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
-const zipperWorksUrl = `${protocol}://${process.env.NEXT_PUBLIC_ZIPPER_HOST}`;
 
 export type HeaderProps = AppInfo & {
   entryPoint?: EntryPointInfo;
@@ -87,7 +86,7 @@ const Header: React.FC<HeaderProps> = ({
     <>
       <Flex as="header" pt="20px" maxW="full" minW="md" paddingX={10}>
         <HStack spacing={3} alignItems="center" flex={1} minW={0}>
-          <Link height={4} href={zipperWorksUrl}>
+          <Link height={4} href={process.env.NEXT_PUBLIC_ZIPPER_DOT_DEV_URL}>
             <ZipperSymbol style={{ maxHeight: '100%' }} />
           </Link>
 
@@ -261,7 +260,9 @@ const Header: React.FC<HeaderProps> = ({
               Sign out
             </Button>
           ) : (
-            <Link href={`http://localhost:3000/auth/from/${slug}`}>
+            <Link
+              href={`${process.env.NEXT_PUBLIC_ZIPPER_DOT_DEV_URL}/auth/from/${slug}`}
+            >
               Sign in
             </Link>
           )}
