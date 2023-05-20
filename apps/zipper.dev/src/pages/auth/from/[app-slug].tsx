@@ -1,8 +1,10 @@
 import { useRouter } from 'next/router';
 import { useEffect } from 'react';
+import Header from '~/components/header';
+import { NextPageWithLayout } from '~/pages/_app';
 import { trpc } from '~/utils/trpc';
 
-const AuthorizePage = () => {
+const AuthorizePage: NextPageWithLayout = () => {
   const router = useRouter();
   const slug = router.query['app-slug'] as string;
   const generateCodeMutation = trpc.useMutation('user.addZipperAuthCode', {
@@ -20,6 +22,10 @@ const AuthorizePage = () => {
   useEffect(() => {
     generateCodeMutation.mutateAsync();
   }, []);
+
+  return <></>;
 };
+
+AuthorizePage.header = () => <Header showNav={false}></Header>;
 
 export default AuthorizePage;

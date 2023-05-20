@@ -1,4 +1,3 @@
-import { getCookie } from 'cookies-next';
 import { IncomingMessage } from 'http';
 import { jwtVerify } from 'jose';
 
@@ -9,18 +8,23 @@ export const getZipperAuth = async (
     }>;
   },
 ) => {
-  const zipperAccessToken = getCookie('__zipper_token', { req: request }) as
-    | string
-    | undefined;
+  const zipperAccessToken = request.headers['x-zipper-access-token'];
 
   if (zipperAccessToken) {
     const { payload } = await jwtVerify(
-      zipperAccessToken,
+      zipperAccessToken as string,
       new TextEncoder().encode(process.env.JWT_SIGNING_SECRET!),
     );
 
-    return { userId: payload.sub, token: zipperAccessToken };
+    return {
+      userId: payload.sub,
+      token: zipperAccessToken ? (zipperAccessToken as string) : undefined,
+    };
   }
 
   return { userId: undefined, token: undefined };
+};
+
+export const readJWT = (token: string) => {
+  return JSON.parse(Buffer.from(token.split('.')[1]!, 'base64').toString());
 };

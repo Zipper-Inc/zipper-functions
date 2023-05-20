@@ -27,7 +27,7 @@ export default async function handler(
     });
 
     const user = await clerkClient.users.getUser(zipperAuthCode.userId);
-    const orgs = await clerkClient.users.getOrganizationMembershipList({
+    const orgMems = await clerkClient.users.getOrganizationMembershipList({
       userId: zipperAuthCode.userId,
     });
 
@@ -39,12 +39,12 @@ export default async function handler(
         primaryEmail: user.emailAddresses.find((e) => {
           e.id === user.primaryEmailAddressId;
         }),
-        organizations: orgs.map((o) => {
-          return { [o.id]: o.role };
+        organizations: orgMems.map((om) => {
+          return { [om.organization.id]: om.role };
         }),
       },
       process.env.JWT_SIGNING_SECRET!,
-      { expiresIn: '1h' },
+      { expiresIn: '1m' },
     );
 
     const refreshToken = jwt.sign(

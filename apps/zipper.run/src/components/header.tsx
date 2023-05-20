@@ -15,12 +15,14 @@ import {
   Divider,
 } from '@chakra-ui/react';
 import { getAppLink } from '@zipper/utils';
-import { ZipperSymbol } from '@zipper/ui';
+import { useEffectOnce, ZipperSymbol } from '@zipper/ui';
 import { HiOutlineUpload, HiOutlinePencilAlt } from 'react-icons/hi';
 import { AppInfo, EntryPointInfo } from '@zipper/types';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { FiChevronDown, FiChevronUp } from 'react-icons/fi';
+import { readJWT } from '~/utils/get-zipper-auth';
+import { deleteCookie } from 'cookies-next';
 
 const duration = 1500;
 
@@ -47,6 +49,16 @@ const Header: React.FC<HeaderProps> = ({
   const router = useRouter();
   const toast = useToast();
   const { onCopy, setValue } = useClipboard('');
+  const [user, setUser] = useState<Record<string, string> | undefined>();
+
+  useEffectOnce(() => {
+    const token = document.cookie
+      .split('; ')
+      .find((c) => c.startsWith('__zipper_token'));
+    if (token) {
+      setUser(readJWT(token));
+    }
+  });
 
   useEffect(() => {
     const baseUrl = `${protocol}://${getAppLink(slug)}`;
@@ -232,6 +244,22 @@ const Header: React.FC<HeaderProps> = ({
               <HiOutlinePencilAlt />
               <Text>Edit App</Text>
             </Button>
+          )}
+          {user ? (
+            <Button
+              variant="link"
+              onClick={() => {
+                deleteCookie('__zipper_token');
+                deleteCookie('__zipper_refresh');
+                window.location.reload();
+              }}
+            >
+              Sign out
+            </Button>
+          ) : (
+            <Link href={`http://localhost:3000/auth/from/${slug}`}>
+              Sign in
+            </Link>
           )}
         </HStack>
       </Flex>

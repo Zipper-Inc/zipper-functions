@@ -27,7 +27,6 @@ import {
   getInputsFromFormData,
   ZIPPER_TEMP_USER_ID_COOKIE_NAME,
 } from '@zipper/utils';
-import { deleteCookie } from 'cookies-next';
 import Unauthorized from './unauthorized';
 import removeAppConnectorUserAuth from '~/utils/remove-app-connector-user-auth';
 import Header from './header';

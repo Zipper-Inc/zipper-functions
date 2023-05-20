@@ -1,10 +1,21 @@
 import { Flex, VStack, Text, Center, Button, Box } from '@chakra-ui/react';
-import { UserButton, SignOutButton, useUser } from '@clerk/nextjs';
-import { ZipperLogo, ZipperSymbol } from '@zipper/ui';
+import { UserButton, SignOutButton } from '@clerk/nextjs';
+import { useEffectOnce, ZipperLogo, ZipperSymbol } from '@zipper/ui';
 import router from 'next/router';
+import { useState } from 'react';
+import { readJWT } from '~/utils/get-zipper-auth';
 
 export default function Unauthorized() {
-  const { user } = useUser();
+  const [user, setUser] = useState<Record<string, string> | undefined>();
+
+  useEffectOnce(() => {
+    const token = document.cookie
+      .split('; ')
+      .find((c) => c.startsWith('__zipper_token'));
+    if (token) {
+      setUser(readJWT(token));
+    }
+  });
 
   return (
     <Box as="main">

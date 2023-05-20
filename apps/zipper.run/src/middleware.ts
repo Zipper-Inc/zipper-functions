@@ -21,6 +21,7 @@ const { __DEBUG__ } = process.env;
 async function maybeGetCustomResponse(
   appRoute: string,
   request: NextRequest,
+  headers: Headers,
 ): Promise<NextResponse | void> {
   switch (true) {
     case /\/api(\/?)$/.test(appRoute):
@@ -47,43 +48,92 @@ async function maybeGetCustomResponse(
     case /^\/$/.test(appRoute): {
       if (request.method === 'GET') {
         const url = new URL('/main.ts', request.url);
-        return NextResponse.rewrite(url);
+        return NextResponse.rewrite(url, { request: { headers } });
       }
       if (request.method === 'POST') {
         const url = new URL('/relay', request.url);
-        return NextResponse.rewrite(url);
+        return NextResponse.rewrite(url, { request: { headers } });
       }
     }
   }
 }
 
-export const middleware = async (request: NextRequest) => {
-  const zipperAccessToken = getCookie('__zipper_token') as string | undefined;
-  const zipperRefreshToken = getCookie('__zipper_refresh') as
-    | string
-    | undefined;
-
+const checkAuthCookies = async (request: NextRequest) => {
+  const zipperAccessToken = request.cookies.get('__zipper_token')?.value;
+  let userId: string | undefined = undefined;
   if (zipperAccessToken) {
-    const { payload } = await jwtVerify(
-      zipperAccessToken,
-      new TextEncoder().encode(process.env.JWT_SIGNING_SECRET!),
-    );
+    try {
+      const { payload } = await jwtVerify(
+        zipperAccessToken,
+        new TextEncoder().encode(process.env.JWT_SIGNING_SECRET!),
+      );
+      userId = payload.sub;
+    } catch (e) {
+      const refreshToken = request.cookies.get('__zipper_refresh')?.value;
 
-    console.log(payload);
+      if (refreshToken) {
+        const { payload } = await jwtVerify(
+          refreshToken,
+          new TextEncoder().encode(process.env.JWT_REFRESH_SIGNING_SECRET!),
+        );
+        userId = payload.sub;
+        try {
+          const result = await fetch(
+            `${process.env.NEXT_PUBLIC_ZIPPER_API_URL}/auth/refreshToken`,
+            {
+              method: 'POST',
+              headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                refreshToken,
+              }),
+            },
+          );
+          if (result.status === 200) {
+            const json = await result.json();
+            return { userId, accessToken: json.accessToken };
+          } else {
+            return { userId, accessToken: undefined };
+          }
+        } catch (e) {
+          console.log(e);
+          return { userId, accessToken: undefined };
+        }
+      }
+    }
   }
+  return { userId, accessToken: zipperAccessToken };
+};
 
+export const middleware = async (request: NextRequest) => {
   const appRoute = request.nextUrl.pathname;
   if (__DEBUG__) console.log('middleware', { appRoute });
 
-  const customResponse = await maybeGetCustomResponse(appRoute, request);
-  const response = customResponse || NextResponse.next();
+  const { userId, accessToken } = await checkAuthCookies(request);
+  const requestHeaders = new Headers(request.headers);
+  if (accessToken) requestHeaders.set('x-zipper-access-token', accessToken);
+  const customResponse = await maybeGetCustomResponse(
+    appRoute,
+    request,
+    requestHeaders,
+  );
+  const response =
+    customResponse || NextResponse.next({ headers: requestHeaders });
 
-  // if (!auth.userId && !request.cookies.get(ZIPPER_TEMP_USER_ID_COOKIE_NAME)) {
-  //   response.cookies.set(
-  //     ZIPPER_TEMP_USER_ID_COOKIE_NAME,
-  //     `temp__${crypto.randomUUID()}`,
-  //   );
-  // }
+  if (accessToken) {
+    response.cookies.set({
+      name: '__zipper_token',
+      value: accessToken,
+      path: '/',
+    });
+  }
+
+  if (!userId && !request.cookies.get(ZIPPER_TEMP_USER_ID_COOKIE_NAME)) {
+    const tempId = `temp__${crypto.randomUUID()}`;
+    response.cookies.set(ZIPPER_TEMP_USER_ID_COOKIE_NAME, tempId);
+  }
 
   return response;
 };
