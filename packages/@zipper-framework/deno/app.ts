@@ -1,32 +1,33 @@
 import './zipper.d.ts';
-import { Application } from 'https://deno.land/x/oak@v12.1.0/mod.ts';
 import { files } from './generated/index.gen.ts';
 import { BOOT_PATH, ENV_BLOCKLIST, MAIN_PATH } from './constants.ts';
 import { ZipperStorage } from './storage.ts';
 import { sendLog, methods } from './console.ts';
 import { getUserConnectorAuths } from './userAuthConnectors.ts';
 
-const app = new Application();
+const PORT = 8888;
 
-app.use(async ({ request, response }) => {
+/**
+ * Run the applet with the given RequestEvent
+ */
+async function runApplet({ request, respondWith }: Deno.RequestEvent) {
   let body;
   let error;
 
   // Parse the body
   try {
-    body = (await request.body({ type: 'json' })
-      .value) as Zipper.Relay.RequestBody;
+    body = (await request.json()) as Zipper.Relay.RequestBody;
   } catch (e) {
     error = e;
   }
 
   // Handle parsing errors
   if (!body || error) {
-    response.status = 400;
-    response.body = `Zipper Error 400: ${
-      error ? error.toString() : 'Missing body'
-    }`;
-    return;
+    const errorString = error ? `\n${error.toString()}` : '';
+    return new Response(
+      `Zipper Error 400: Missing body ${errorString}`.trim(),
+      { status: 400 },
+    );
   }
 
   // Clean up env object
@@ -40,7 +41,7 @@ app.use(async ({ request, response }) => {
 
   // Handle booting seperately
   // This way, we can deploy without running Applet code
-  if (request.url.pathname === `/${BOOT_PATH}`) {
+  if (new URL(request.url).pathname === `/${BOOT_PATH}`) {
     const { id, slug, version } = appInfo;
 
     const configs = Object.entries(files).reduce(
@@ -63,9 +64,10 @@ app.use(async ({ request, response }) => {
       configs,
     };
 
-    response.status = 200;
-    response.body = JSON.stringify(bootPayload);
-    return;
+    // Handle parsing errors
+    if (!body || error) {
+      return new Response(JSON.stringify(bootPayload), { status: 200 });
+    }
   }
 
   // Attach ZipperGlobal
@@ -136,9 +138,7 @@ app.use(async ({ request, response }) => {
 
   // Handle missing paths
   if (!handler) {
-    response.status = 404;
-    response.body = `Zipper Error 404: Path not found`;
-    return;
+    return new Response(`Zipper Error 404: Path not found`, { status: 404 });
   }
 
   const fetchUserAuthConnectorInfo = async () => {
@@ -154,33 +154,73 @@ app.use(async ({ request, response }) => {
     }
   };
 
-  const context: Zipper.HandlerContext = {
-    userInfo,
-    appInfo,
-    runId,
-    request,
-    response,
-  };
-
   // Run the handler
   try {
     if (appInfo.connectorsWithUserAuth.length > 0) {
       await fetchUserAuthConnectorInfo();
     }
 
+    /**
+     * A blank slate for a response object
+     * Can be written to from inside a handler
+     */
+    const response: Zipper.HandlerContext['response'] = {};
+
+    const context: Zipper.HandlerContext = {
+      userInfo,
+      appInfo,
+      runId,
+      request,
+      response,
+    };
+
     const output = await handler(body.inputs, context);
-    response.status = 200;
-    response.body = output || '';
+
+    // Apply response if the response is not overwritten
+    if (!response.body) {
+      response.body =
+        typeof output === 'string' ? output : JSON.stringify(output);
+    }
+
+    if (!response.status) {
+      response.status = 200;
+    }
+
+    return new Response(response.body, response);
   } catch (e) {
-    response.status = 500;
-    response.body = `Zipper Error 500: ${
-      e.toString() || 'Internal server error'
-    }`;
+    const errorString = e ? `\n${e.toString()}` : '';
+    return new Response(
+      `Zipper Error 500: Error running handler ${errorString}`.trim(),
+      { status: 500 },
+    );
   }
+}
 
-  // TODO
-  // - Headers
-  // -
-});
+async function serveHttp(httpConn: Deno.HttpConn) {
+  // Each request sent over the HTTP connection will be yielded as an async
+  // iterator from the HTTP connection.
+  for await (const requestEvent of httpConn) {
+    const response = runApplet(requestEvent);
+    /**
+     * @todo log stuff
+     */
+    requestEvent.respondWith(response);
+  }
+}
 
-await app.listen({ port: 8888 });
+/**
+ * This is the entry point to all applets
+ * @see https://deno.com/manual@v1.33.4/examples/http_server
+ */
+const server = Deno.listen({ port: PORT });
+console.log(`Zipper Applet Framework is running at http://localhost:${PORT}`);
+
+/**
+ * Handle every connection
+ * Right now, we upgrade all connections to HTTP connections
+ */
+for await (const conn of server) {
+  // In order to not be blocking, we need to handle each connection individually
+  // without awaiting the function
+  serveHttp(Deno.serveHttp(conn));
+}

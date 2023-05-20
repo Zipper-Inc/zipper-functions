@@ -68,16 +68,15 @@ declare namespace Zipper {
    */
   export type HandlerContext = {
     /**
-     * The request object
-     * @todo figure out how to get Oak request in here
+     * The request object sent to this handler
      */
-    request: any;
+    request: Request;
 
     /**
-     * The response object
-     * @todo figure out how to get Oak response in here
+     * An editable response object
+     * Changes made to these properties will overwrite the default response
      */
-    response: any;
+    response: Partial<ResponseInit & { body: BodyInit }>;
 
     /**
      * Information about the user who called this app
