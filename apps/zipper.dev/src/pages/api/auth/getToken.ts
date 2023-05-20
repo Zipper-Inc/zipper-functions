@@ -1,8 +1,8 @@
 import { decryptFromHex } from '@zipper/utils';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '~/server/prisma';
-import * as jwt from 'jsonwebtoken';
 import clerkClient from '@clerk/clerk-sdk-node';
+import { generateAccessToken, generateRefreshToken } from '~/utils/jwt-utils';
 
 export default async function handler(
   req: NextApiRequest,
@@ -31,27 +31,13 @@ export default async function handler(
       userId: zipperAuthCode.userId,
     });
 
-    const accessToken = jwt.sign(
-      {
-        sub: zipperAuthCode.userId,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        primaryEmail: user.emailAddresses.find((e) => {
-          e.id === user.primaryEmailAddressId;
-        }),
-        organizations: orgMems.map((om) => {
-          return { [om.organization.id]: om.role };
-        }),
-      },
-      process.env.JWT_SIGNING_SECRET!,
-      { expiresIn: '1m' },
-    );
+    const accessToken = generateAccessToken({
+      userId: zipperAuthCode.userId,
+      profile: user,
+      orgMemberships: orgMems,
+    });
 
-    const refreshToken = jwt.sign(
-      { sub: zipperAuthCode.userId },
-      process.env.JWT_REFRESH_SIGNING_SECRET!,
-      { expiresIn: '7d' },
-    );
+    const refreshToken = generateRefreshToken(zipperAuthCode.userId);
 
     res.send({ accessToken, refreshToken });
   } catch (e) {

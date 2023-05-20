@@ -1,6 +1,7 @@
 import { JwtPayload, verify } from 'jsonwebtoken';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '~/server/prisma';
+import { verifyAccessToken } from '~/utils/jwt-utils';
 
 export default async function handler(
   req: NextApiRequest,
@@ -13,7 +14,7 @@ export default async function handler(
   }
 
   try {
-    const auth = verify(token, process.env.JWT_SIGNING_SECRET!) as JwtPayload;
+    const auth = verifyAccessToken(token);
 
     if (!auth || !auth.sub) {
       res.status(500).send({ ok: false });

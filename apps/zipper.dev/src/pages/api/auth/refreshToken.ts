@@ -1,7 +1,8 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import jwt from 'jsonwebtoken';
 import clerkClient from '@clerk/clerk-sdk-node';
-import { verifyHmac } from '~/utils/verify-hmac';
+import { generateAccessToken } from '~/utils/jwt-utils';
+// import { verifyHmac } from '~/utils/verify-hmac';
 
 export default async function handler(
   req: NextApiRequest,
@@ -28,22 +29,11 @@ export default async function handler(
       });
 
       // Generate a new JWT token
-      const newToken = jwt.sign(
-        {
-          sub: decodedToken.sub,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          primaryEmail: user.emailAddresses.find((e) => {
-            e.id === user.primaryEmailAddressId;
-          }),
-
-          organizations: orgMems.map((om) => {
-            return { [om.organization.id]: om.role };
-          }),
-        },
-        process.env.JWT_SIGNING_SECRET!,
-        { expiresIn: '1m' },
-      );
+      const newToken = generateAccessToken({
+        userId: decodedToken.sub,
+        profile: user,
+        orgMemberships: orgMems,
+      });
 
       // Send the new token in the response
       res.status(200).json({ accessToken: newToken });

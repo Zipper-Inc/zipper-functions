@@ -17,6 +17,7 @@ import { canUserEdit } from '~/server/routers/app.router';
 import { requiredUserAuthConnectorFilter } from '~/utils/user-auth-connector-filter';
 import { ZIPPER_TEMP_USER_ID_HEADER } from '@zipper/utils';
 import * as Sentry from '@sentry/nextjs';
+import { verifyAccessToken } from '~/utils/jwt-utils';
 
 export default async function handler(
   req: NextApiRequest,
@@ -209,10 +210,7 @@ async function getUserInfo(token: string, appSlug: string) {
       : 'user_access_token';
 
     if (tokenType === 'user_access_token') {
-      const auth = jwt.verify(
-        token,
-        process.env.JWT_SIGNING_SECRET!,
-      ) as JwtPayload;
+      const auth = verifyAccessToken(token);
 
       // if there's an auth object, but no user, then there's no authed user
       if (!auth || !auth.sub) {

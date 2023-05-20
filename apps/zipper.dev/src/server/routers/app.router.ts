@@ -31,6 +31,7 @@ import fetch from 'node-fetch';
 import { getAuth } from '@clerk/nextjs/server';
 import isCodeRunnable from '~/utils/is-code-runnable';
 import { sign } from 'jsonwebtoken';
+import { generateAccessToken } from '~/utils/jwt-utils';
 
 const defaultSelect = Prisma.validator<Prisma.AppSelect>()({
   id: true,
@@ -545,13 +546,9 @@ export const appRouter = createRouter()
         include: { scripts: true, scriptMain: true },
       });
 
-      const token = sign(
-        {
-          sub: ctx.userId,
-        },
-        process.env.JWT_SIGNING_SECRET!,
-        { expiresIn: '30s' },
-      );
+      const token = ctx.userId
+        ? generateAccessToken({ userId: ctx.userId }, { expiresIn: '30s' })
+        : undefined;
       const version = getAppVersionFromHash(app.hash || getAppHash(app));
 
       console.log('Boot version: ', version);
@@ -563,7 +560,7 @@ export const appRouter = createRouter()
             method: 'POST',
             body: '{}',
             headers: {
-              authorization: `Bearer ${token}`,
+              authorization: token ? `Bearer ${token}` : '',
             },
           },
         ).then((r) => r.json());
@@ -620,13 +617,9 @@ export const appRouter = createRouter()
 
       const inputs = getInputsFromFormData(input.formData, inputParams);
 
-      const token = sign(
-        {
-          sub: ctx.userId,
-        },
-        process.env.JWT_SIGNING_SECRET!,
-        { expiresIn: '30s' },
-      );
+      const token = ctx.userId
+        ? generateAccessToken({ userId: ctx.userId }, { expiresIn: '30s' })
+        : undefined;
 
       const result = await fetch(
         getRunUrl(app.slug, version, script.filename),
@@ -634,7 +627,7 @@ export const appRouter = createRouter()
           method: 'POST',
           body: JSON.stringify(inputs),
           headers: {
-            authorization: `Bearer ${token}`,
+            authorization: token ? `Bearer ${token}` : '',
             'x-zipper-run-id': input.runId,
           },
         },
