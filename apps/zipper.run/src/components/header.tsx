@@ -212,6 +212,10 @@ const Header: React.FC<HeaderProps> = ({
                 whiteSpace="nowrap"
                 fontWeight="semibold"
                 color="gray.800"
+                _hover={{ cursor: 'pointer' }}
+                onClick={() => {
+                  window.location.replace('/');
+                }}
               >
                 {entryPoint.filename.replace(/\.ts$/, '')}
               </Heading>

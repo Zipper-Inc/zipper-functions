@@ -1137,19 +1137,6 @@
     snakecase-keys "5.4.4"
     tslib "2.4.1"
 
-"@clerk/backend@^0.13.5":
-  version "0.13.5"
-  resolved "https://registry.npmjs.org/@clerk/backend/-/backend-0.13.5.tgz"
-  integrity sha512-Jrbs2G/CalixMxL0BCK74dnBoMVZn+iyXa/jyO9YXI77tfvzG8BON6KlEJLU7UKt4IS7xBIfYB3Qxu0kF0yVPQ==
-  dependencies:
-    "@clerk/types" "^3.31.1"
-    "@peculiar/webcrypto" "1.4.1"
-    "@types/node" "16.18.6"
-    deepmerge "4.2.2"
-    node-fetch-native "1.0.1"
-    snakecase-keys "5.4.4"
-    tslib "2.4.1"
-
 "@clerk/backend@^0.5.0":
   version "0.5.0"
   resolved "https://registry.npmjs.org/@clerk/backend/-/backend-0.5.0.tgz"
@@ -1171,16 +1158,6 @@
   dependencies:
     "@clerk/shared" "^0.13.1"
     "@clerk/types" "^3.30.1"
-    swr "1.3.0"
-    tslib "2.4.1"
-
-"@clerk/clerk-react@^4.12.8":
-  version "4.12.8"
-  resolved "https://registry.npmjs.org/@clerk/clerk-react/-/clerk-react-4.12.8.tgz"
-  integrity sha512-1cou6ZQ8OGb1wc0M3nwTxvSVFqt8ZCgI+mBDy4+BBYhKaP5INenmg6HmEMCswq3YzsHTiHFTIYMAcM8oGkku4Q==
-  dependencies:
-    "@clerk/shared" "^0.13.5"
-    "@clerk/types" "^3.31.1"
     swr "1.3.0"
     tslib "2.4.1"
 
@@ -1215,21 +1192,6 @@
     snakecase-keys "3.2.1"
     tslib "2.4.1"
 
-"@clerk/clerk-sdk-node@^4.7.16":
-  version "4.7.16"
-  resolved "https://registry.npmjs.org/@clerk/clerk-sdk-node/-/clerk-sdk-node-4.7.16.tgz"
-  integrity sha512-Z0xjoPGIOmrKL1XYh6Gh90e6ZI8mtnaADMm3U255KteQNe7CqGri3y8X9Rk6FmhNtk+857NIXM8mVblZz4c4cA==
-  dependencies:
-    "@clerk/backend" "^0.13.5"
-    "@clerk/types" "^3.31.1"
-    "@types/cookies" "0.7.7"
-    "@types/express" "4.17.14"
-    "@types/node-fetch" "2.6.2"
-    camelcase-keys "6.2.2"
-    cookie "0.5.0"
-    snakecase-keys "3.2.1"
-    tslib "2.4.1"
-
 "@clerk/nextjs@^4.11.0":
   version "4.11.7"
   resolved "https://registry.npmjs.org/@clerk/nextjs/-/nextjs-4.11.7.tgz"
@@ -1241,26 +1203,10 @@
     "@clerk/types" "^3.30.1"
     tslib "2.4.1"
 
-"@clerk/nextjs@^4.11.13":
-  version "4.11.13"
-  resolved "https://registry.npmjs.org/@clerk/nextjs/-/nextjs-4.11.13.tgz"
-  integrity sha512-G1+KnYk0bQUQuwKwylMHmuUzFCnqe43cSLce8kRo3ETve4t4Tl8MZP5TCM5lDLGM+MnWZlcx9ksuOq3nqdVWLw==
-  dependencies:
-    "@clerk/backend" "^0.13.5"
-    "@clerk/clerk-react" "^4.12.8"
-    "@clerk/clerk-sdk-node" "^4.7.16"
-    "@clerk/types" "^3.31.1"
-    tslib "2.4.1"
-
 "@clerk/shared@^0.13.1":
   version "0.13.1"
   resolved "https://registry.npmjs.org/@clerk/shared/-/shared-0.13.1.tgz"
   integrity sha512-Dr613euSB0rg1xFNAXGQK1vUe4lsyUpt0ql6Fbj2S7pt1RJVSTu1p7vsDCMTs6HjPvm/hk4rMjIDLol1H5dgIw==
-
-"@clerk/shared@^0.13.5":
-  version "0.13.5"
-  resolved "https://registry.npmjs.org/@clerk/shared/-/shared-0.13.5.tgz"
-  integrity sha512-AMh9FqoBr7YIRwmAC0FwWHLIqbbqICOWrxuPOr93WXe3Cm3HZVwIpXkaS7Qc+yMKJaaeFj+M7GkVNX7NohsRsQ==
 
 "@clerk/types@^3.25.0":
   version "3.25.0"
@@ -1273,13 +1219,6 @@
   version "3.30.1"
   resolved "https://registry.npmjs.org/@clerk/types/-/types-3.30.1.tgz"
   integrity sha512-2YaNnm6urOP8nnMRaYBhG9cob7KIqU75Fl5HvX4cE4clf3yQ3cv/SSpMbHVyNbbGxuuuT4/rmqBkYpguIAGnVw==
-  dependencies:
-    csstype "3.1.1"
-
-"@clerk/types@^3.31.1":
-  version "3.31.1"
-  resolved "https://registry.npmjs.org/@clerk/types/-/types-3.31.1.tgz"
-  integrity sha512-7xQtN1vUKq5kTdIwcbypiL2Qu9OU+1zS8LtIRFKgxAWt7lO2RW3yZMRVJvoPaTXyGnszyDcOla5lAHVHmKt6aQ==
   dependencies:
     csstype "3.1.1"
 

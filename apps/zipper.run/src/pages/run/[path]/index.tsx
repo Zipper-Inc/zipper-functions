@@ -25,7 +25,6 @@ export const getServerSideProps: GetServerSideProps = async ({
   const tempUserId = req.cookies[ZIPPER_TEMP_USER_ID_COOKIE_NAME];
 
   const { token } = await getZipperAuth(req);
-  console.log(req.headers);
 
   // grab the app if it exists
   const appInfoResult = await getAppInfo({

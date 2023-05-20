@@ -50,11 +50,10 @@ export default function Unauthorized() {
                 <Button
                   colorScheme="purple"
                   onClick={() => {
-                    router.push(
-                      `/sign-in?redirect=${encodeURIComponent(
-                        window.location.toString(),
-                      )}`,
-                    );
+                    window.location.href = `${process.env
+                      .NEXT_PUBLIC_ZIPPER_DOT_DEV_URL!}/auth/from/${
+                      window.location.host.split('.')[0]
+                    }`;
                   }}
                 >
                   <ZipperSymbol fill="white" height={16} />

@@ -5,6 +5,7 @@ import {
   FunctionOutput,
   useCmdOrCtrl,
   useAppletContent,
+  useEffectOnce,
 } from '@zipper/ui';
 import {
   AppInfo,
@@ -34,7 +35,8 @@ import InputSummary from './input-summary';
 import ConnectorsAuthInputsSection from './connectors-auth-inputs-section';
 import { getConnectorsAuthUrl } from '~/utils/get-connectors-auth-url';
 import { getBootUrl } from '~/utils/get-relay-url';
-import { getZipperAuth } from '~/utils/get-zipper-auth';
+import { getZipperAuth, readJWT } from '~/utils/get-zipper-auth';
+import { deleteCookie } from 'cookies-next';
 
 const { __DEBUG__ } = process.env;
 
@@ -55,6 +57,7 @@ export type AppPageProps = {
   runnableScripts?: string[];
   metadata?: Record<string, string | undefined>;
   handlerConfigs?: Record<string, Zipper.HandlerConfig>;
+  token?: string;
 };
 
 export function AppPage({
@@ -72,6 +75,7 @@ export function AppPage({
   runnableScripts,
   metadata,
   handlerConfigs,
+  token,
 }: AppPageProps) {
   const router = useRouter();
   const { asPath } = router;
@@ -169,42 +173,45 @@ export function AppPage({
       github: {
         authUrl: githubAuthUrl || '#',
         onDelete: async () => {
-          // if (user) {
-          //   await removeAppConnectorUserAuth({
-          //     appId,
-          //     type: 'github',
-          //   });
-          // } else {
-          //   deleteCookie(ZIPPER_TEMP_USER_ID_COOKIE_NAME);
-          // }
+          if (token) {
+            await removeAppConnectorUserAuth({
+              appId,
+              type: 'github',
+              token,
+            });
+          } else {
+            deleteCookie(ZIPPER_TEMP_USER_ID_COOKIE_NAME);
+          }
           router.reload();
         },
       },
       slack: {
         authUrl: slackAuthUrl || '#',
         onDelete: async () => {
-          // if (user) {
-          //   await removeAppConnectorUserAuth({
-          //     appId,
-          //     type: 'slack',
-          //   });
-          // } else {
-          //   deleteCookie(ZIPPER_TEMP_USER_ID_COOKIE_NAME);
-          // }
+          if (token) {
+            await removeAppConnectorUserAuth({
+              appId,
+              type: 'slack',
+              token,
+            });
+          } else {
+            deleteCookie(ZIPPER_TEMP_USER_ID_COOKIE_NAME);
+          }
           router.reload();
         },
       },
       openai: {
         authUrl: '#',
         onDelete: async () => {
-          // if (user) {
-          //   await removeAppConnectorUserAuth({
-          //     appId,
-          //     type: 'openai',
-          //   });
-          // } else {
-          //   deleteCookie(ZIPPER_TEMP_USER_ID_COOKIE_NAME);
-          // }
+          if (token) {
+            await removeAppConnectorUserAuth({
+              appId,
+              type: 'openai',
+              token,
+            });
+          } else {
+            deleteCookie(ZIPPER_TEMP_USER_ID_COOKIE_NAME);
+          }
           router.reload();
         },
       },
@@ -430,6 +437,7 @@ export const getServerSideProps: GetServerSideProps = async ({
       metadata,
       filename,
       handlerConfigs,
+      token: req.headers['x-zipper-access-token'],
     },
   };
 
