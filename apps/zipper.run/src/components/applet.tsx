@@ -437,7 +437,7 @@ export const getServerSideProps: GetServerSideProps = async ({
       metadata,
       filename,
       handlerConfigs,
-      token: req.headers['x-zipper-access-token'],
+      token: req.headers['x-zipper-access-token'] || null,
     },
   };
 

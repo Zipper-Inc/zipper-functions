@@ -31,7 +31,7 @@ export const getServerSideProps: GetServerSideProps = async ({
     subdomain,
     tempUserId,
     filename: (query['path'] as string | undefined) || 'main.ts',
-    token,
+    token: token || null,
   });
 
   if (!appInfoResult.ok) {
