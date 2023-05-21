@@ -214,8 +214,6 @@ export default async function serveRelay({
   console.log('version: ', version);
   console.log('filename: ', filename);
 
-  console.log('boot token: ', request.headers.get('Authorization'));
-
   const { result, status, headers } = await relayRequest(
     {
       request,

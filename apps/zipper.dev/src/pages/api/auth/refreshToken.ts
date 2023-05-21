@@ -2,18 +2,43 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import jwt from 'jsonwebtoken';
 import clerkClient from '@clerk/clerk-sdk-node';
 import { generateAccessToken } from '~/utils/jwt-utils';
-// import { verifyHmac } from '~/utils/verify-hmac';
+import * as crypto from 'crypto';
+
+//verifyHMAC doesn't return the same value as the crypto web API and I can't figure out why
+const generateHMAC = async (req: NextApiRequest) => {
+  const data = new TextEncoder().encode(
+    `${req.method}__${req.url}__${
+      typeof req.body !== 'string' ? JSON.stringify(req.body || {}) : req.body
+    }__${req.headers['x-timestamp']}`,
+  );
+
+  const importedKey = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(process.env.HMAC_SIGNING_SECRET),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  );
+
+  const buffer = await crypto.subtle.sign('HMAC', importedKey, data);
+
+  const digestArray = Array.from(new Uint8Array(buffer));
+  const digestHex = digestArray
+    .map((byte) => byte.toString(16).padStart(2, '0'))
+    .join('');
+
+  return digestHex;
+};
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
   if (req.method === 'POST') {
-    // if (!verifyHmac(req, process.env.HMAC_SIGNING_SECRET!)) {
-    //   res.status(500).send({ error: 'Invalid HMAC' });
-    //   return;
-    // }
-
+    const calculatedHMAC = await generateHMAC(req);
+    if (calculatedHMAC !== req.headers['x-zipper-hmac']) {
+      return res.status(500).send({ error: 'invalid HMAC' });
+    }
     const refreshToken = req.body.refreshToken;
 
     // Verify and decode the refresh token

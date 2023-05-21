@@ -4,7 +4,6 @@ import serveRelay from './utils/relay-middleware';
 import jsonHandler from './api-handlers/json.handler';
 import yamlHandler from './api-handlers/yaml.handler';
 import { ZIPPER_TEMP_USER_ID_COOKIE_NAME } from '@zipper/utils';
-import { getCookie } from 'cookies-next';
 import { jwtVerify } from 'jose';
 
 const { __DEBUG__ } = process.env;
@@ -64,6 +63,31 @@ async function maybeGetCustomResponse(
   }
 }
 
+const generateHMAC = async (input: string) => {
+  const encoder = new TextEncoder();
+  const timestamp = Date.now().toString();
+  const data = encoder.encode(
+    `POST__/api/auth/refreshToken__${input}__${timestamp}`,
+  );
+
+  const importedKey = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(process.env.HMAC_SIGNING_SECRET),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  );
+
+  const buffer = await crypto.subtle.sign('HMAC', importedKey, data);
+
+  const digestArray = Array.from(new Uint8Array(buffer));
+  const digestHex = digestArray
+    .map((byte) => byte.toString(16).padStart(2, '0'))
+    .join('');
+
+  return { hmac: digestHex, timestamp };
+};
+
 const checkAuthCookies = async (request: NextRequest) => {
   const zipperAccessToken = request.cookies.get('__zipper_token')?.value;
   let userId: string | undefined = undefined;
@@ -78,12 +102,16 @@ const checkAuthCookies = async (request: NextRequest) => {
       const refreshToken = request.cookies.get('__zipper_refresh')?.value;
 
       if (refreshToken) {
-        const { payload } = await jwtVerify(
-          refreshToken,
-          new TextEncoder().encode(process.env.JWT_REFRESH_SIGNING_SECRET!),
-        );
-        userId = payload.sub;
         try {
+          const { payload } = await jwtVerify(
+            refreshToken,
+            new TextEncoder().encode(process.env.JWT_REFRESH_SIGNING_SECRET!),
+          );
+          userId = payload.sub;
+          const body = JSON.stringify({
+            refreshToken,
+          });
+          const { hmac, timestamp } = await generateHMAC(body);
           const result = await fetch(
             `${process.env.NEXT_PUBLIC_ZIPPER_API_URL}/auth/refreshToken`,
             {
@@ -91,10 +119,10 @@ const checkAuthCookies = async (request: NextRequest) => {
               headers: {
                 Accept: 'application/json',
                 'Content-Type': 'application/json',
+                'x-timestamp': timestamp,
+                'x-zipper-hmac': hmac,
               },
-              body: JSON.stringify({
-                refreshToken,
-              }),
+              body,
             },
           );
           if (result.status === 200) {

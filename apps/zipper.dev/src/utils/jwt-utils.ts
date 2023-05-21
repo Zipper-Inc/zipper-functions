@@ -1,7 +1,7 @@
 import { OrganizationMembership, User } from '@clerk/clerk-sdk-node';
 import { JwtPayload, sign, verify } from 'jsonwebtoken';
 
-const JWT_ACCESS_TOKEN_EXPIRY = '1m';
+const JWT_ACCESS_TOKEN_EXPIRY = '15m';
 const JWT_REFRESH_TOKEN_EXPIRY = '7d';
 
 export const generateAccessToken = (
