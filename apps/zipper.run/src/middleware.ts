@@ -5,7 +5,6 @@ import jsonHandler from './api-handlers/json.handler';
 import yamlHandler from './api-handlers/yaml.handler';
 import { ZIPPER_TEMP_USER_ID_COOKIE_NAME } from '@zipper/utils';
 import { jwtVerify } from 'jose';
-import { deleteCookie } from 'cookies-next';
 
 const { __DEBUG__ } = process.env;
 
@@ -134,8 +133,6 @@ const checkAuthCookies = async (request: NextRequest) => {
           }
         } catch (e) {
           console.log(e);
-          deleteCookie('__zipper_token');
-          deleteCookie('__zipper_refresh');
           return { userId, accessToken: undefined };
         }
       }
@@ -165,6 +162,13 @@ export const middleware = async (request: NextRequest) => {
       name: '__zipper_token',
       value: accessToken,
       path: '/',
+    });
+  } else {
+    response.cookies.set('__zipper_token', '', {
+      expires: new Date(Date.now()),
+    });
+    response.cookies.set('__zipper_refresh', '', {
+      expires: new Date(Date.now()),
     });
   }
 
