@@ -1,4 +1,3 @@
-import { getAuth } from '@clerk/nextjs/server';
 import {
   ZIPPER_TEMP_USER_ID_COOKIE_NAME,
   ZIPPER_TEMP_USER_ID_HEADER,
@@ -10,6 +9,7 @@ import type { AppPageProps } from '~/components/applet';
 import getAppInfo from '~/utils/get-app-info';
 import { getBootUrl, getRelayUrl } from '~/utils/get-relay-url';
 import { getShortRunId } from '~/utils/run-id';
+import { getZipperAuth } from '~/utils/get-zipper-auth';
 export { default } from '~/components/applet';
 
 export const getServerSideProps: GetServerSideProps = async ({
@@ -22,16 +22,16 @@ export const getServerSideProps: GetServerSideProps = async ({
   const subdomain = getValidSubdomain(host);
   if (!subdomain) return { notFound: true };
 
-  const auth = getAuth(req);
-  const token = await auth.getToken({ template: 'incl_orgs' });
   const tempUserId = req.cookies[ZIPPER_TEMP_USER_ID_COOKIE_NAME];
+
+  const { token } = await getZipperAuth(req);
 
   // grab the app if it exists
   const appInfoResult = await getAppInfo({
     subdomain,
     tempUserId,
     filename: (query['path'] as string | undefined) || 'main.ts',
-    token,
+    token: token || null,
   });
 
   if (!appInfoResult.ok) {

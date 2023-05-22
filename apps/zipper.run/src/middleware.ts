@@ -1,10 +1,10 @@
 // middleware.ts
-import { getAuth, withClerkMiddleware } from '@clerk/nextjs/server';
 import { NextRequest, NextResponse } from 'next/server';
 import serveRelay from './utils/relay-middleware';
 import jsonHandler from './api-handlers/json.handler';
 import yamlHandler from './api-handlers/yaml.handler';
 import { ZIPPER_TEMP_USER_ID_COOKIE_NAME } from '@zipper/utils';
+import { jwtVerify } from 'jose';
 
 const { __DEBUG__ } = process.env;
 
@@ -20,6 +20,7 @@ const { __DEBUG__ } = process.env;
 async function maybeGetCustomResponse(
   appRoute: string,
   request: NextRequest,
+  headers: Headers,
 ): Promise<NextResponse | void> {
   switch (true) {
     case /\/api(\/?)$/.test(appRoute):
@@ -35,45 +36,152 @@ async function maybeGetCustomResponse(
 
     case /\/relay(\/?)$/.test(appRoute): {
       console.log('matching relay route');
-      return serveRelay({ request, bootOnly: false });
+      return serveRelay({
+        request,
+        bootOnly: false,
+      });
     }
 
     case /\/boot(\/?)$/.test(appRoute): {
       console.log('matching boot route (it rhymes)');
-      return serveRelay({ request, bootOnly: true });
+      return serveRelay({
+        request,
+        bootOnly: true,
+      });
     }
 
     case /^\/$/.test(appRoute): {
       if (request.method === 'GET') {
         const url = new URL('/main.ts', request.url);
-        return NextResponse.rewrite(url);
+        return NextResponse.rewrite(url, { request: { headers } });
       }
       if (request.method === 'POST') {
         const url = new URL('/relay', request.url);
-        return NextResponse.rewrite(url);
+        return NextResponse.rewrite(url, { request: { headers } });
       }
     }
   }
 }
 
-export default withClerkMiddleware(async (request) => {
+const generateHMAC = async (input: string) => {
+  const encoder = new TextEncoder();
+  const timestamp = Date.now().toString();
+  const data = encoder.encode(
+    `POST__/api/auth/refreshToken__${input}__${timestamp}`,
+  );
+
+  const importedKey = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(process.env.HMAC_SIGNING_SECRET),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  );
+
+  const buffer = await crypto.subtle.sign('HMAC', importedKey, data);
+
+  const digestArray = Array.from(new Uint8Array(buffer));
+  const digestHex = digestArray
+    .map((byte) => byte.toString(16).padStart(2, '0'))
+    .join('');
+
+  return { hmac: digestHex, timestamp };
+};
+
+const checkAuthCookies = async (request: NextRequest) => {
+  const zipperAccessToken = request.cookies.get('__zipper_token')?.value;
+  let userId: string | undefined = undefined;
+  if (zipperAccessToken) {
+    try {
+      const { payload } = await jwtVerify(
+        zipperAccessToken,
+        new TextEncoder().encode(process.env.JWT_SIGNING_SECRET!),
+      );
+      userId = payload.sub;
+    } catch (e) {
+      const refreshToken = request.cookies.get('__zipper_refresh')?.value;
+
+      if (refreshToken) {
+        try {
+          const { payload } = await jwtVerify(
+            refreshToken,
+            new TextEncoder().encode(process.env.JWT_REFRESH_SIGNING_SECRET!),
+          );
+          userId = payload.sub;
+          const body = JSON.stringify({
+            refreshToken,
+          });
+          const { hmac, timestamp } = await generateHMAC(body);
+          const result = await fetch(
+            `${process.env.NEXT_PUBLIC_ZIPPER_API_URL}/auth/refreshToken`,
+            {
+              method: 'POST',
+              headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+                'x-timestamp': timestamp,
+                'x-zipper-hmac': hmac,
+              },
+              body,
+            },
+          );
+          if (result.status === 200) {
+            const json = await result.json();
+            return { userId, accessToken: json.accessToken };
+          } else {
+            return { userId, accessToken: undefined };
+          }
+        } catch (e) {
+          console.log(e);
+          return { userId, accessToken: undefined };
+        }
+      }
+    }
+  }
+  return { userId, accessToken: zipperAccessToken };
+};
+
+export const middleware = async (request: NextRequest) => {
   const appRoute = request.nextUrl.pathname;
-  const auth = getAuth(request);
   if (__DEBUG__) console.log('middleware', { appRoute });
 
-  const customResponse = await maybeGetCustomResponse(appRoute, request);
-  const response = customResponse || NextResponse.next();
+  const { userId, accessToken } = await checkAuthCookies(request);
+  const requestHeaders = new Headers(request.headers);
+  if (accessToken) requestHeaders.set('x-zipper-access-token', accessToken);
+  const customResponse = await maybeGetCustomResponse(
+    appRoute,
+    request,
+    requestHeaders,
+  );
+  const response =
+    customResponse ||
+    NextResponse.next({ request: { headers: requestHeaders } });
 
-  if (!auth.userId && !request.cookies.get(ZIPPER_TEMP_USER_ID_COOKIE_NAME)) {
-    response.cookies.set(
-      ZIPPER_TEMP_USER_ID_COOKIE_NAME,
-      `temp__${crypto.randomUUID()}`,
-    );
+  if (accessToken) {
+    response.cookies.set({
+      name: '__zipper_token',
+      value: accessToken,
+      path: '/',
+    });
+  } else {
+    response.cookies.set('__zipper_token', '', {
+      expires: new Date(Date.now()),
+    });
+    response.cookies.set('__zipper_refresh', '', {
+      expires: new Date(Date.now()),
+    });
+  }
+
+  if (!userId && !request.cookies.get(ZIPPER_TEMP_USER_ID_COOKIE_NAME)) {
+    const tempId = `temp__${crypto.randomUUID()}`;
+    response.cookies.set(ZIPPER_TEMP_USER_ID_COOKIE_NAME, tempId);
   }
 
   return response;
-});
+};
 
 export const config = {
-  matcher: '/((?!_next/image|_next/static|favicon.ico).*)',
+  matcher: '/((?!_next/image|_next/static|favicon.ico|auth).*)',
 };
+
+export default middleware;

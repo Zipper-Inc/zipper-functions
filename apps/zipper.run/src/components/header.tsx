@@ -15,18 +15,18 @@ import {
   Divider,
 } from '@chakra-ui/react';
 import { getAppLink } from '@zipper/utils';
-import { ZipperSymbol } from '@zipper/ui';
+import { useEffectOnce, ZipperSymbol } from '@zipper/ui';
 import { HiOutlineUpload, HiOutlinePencilAlt } from 'react-icons/hi';
 import { AppInfo, EntryPointInfo } from '@zipper/types';
-import { UserButton, useUser } from '@clerk/nextjs';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { FiChevronDown, FiChevronUp } from 'react-icons/fi';
+import { readJWT } from '~/utils/get-zipper-auth';
+import { deleteCookie } from 'cookies-next';
 
 const duration = 1500;
 
 const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
-const zipperWorksUrl = `${protocol}://${process.env.NEXT_PUBLIC_ZIPPER_HOST}`;
 
 export type HeaderProps = AppInfo & {
   entryPoint?: EntryPointInfo;
@@ -43,13 +43,21 @@ const Header: React.FC<HeaderProps> = ({
   entryPoint,
   runnableScripts = [],
   runId,
-  setScreen,
   setLoading,
 }) => {
   const router = useRouter();
   const toast = useToast();
-  const { user } = useUser();
   const { onCopy, setValue } = useClipboard('');
+  const [user, setUser] = useState<Record<string, string> | undefined>();
+
+  useEffectOnce(() => {
+    const token = document.cookie
+      .split('; ')
+      .find((c) => c.startsWith('__zipper_token'));
+    if (token) {
+      setUser(readJWT(token));
+    }
+  });
 
   useEffect(() => {
     const baseUrl = `${protocol}://${getAppLink(slug)}`;
@@ -78,7 +86,7 @@ const Header: React.FC<HeaderProps> = ({
     <>
       <Flex as="header" pt="20px" maxW="full" minW="md" paddingX={10}>
         <HStack spacing={3} alignItems="center" flex={1} minW={0}>
-          <Link height={4} href={zipperWorksUrl}>
+          <Link height={4} href={process.env.NEXT_PUBLIC_ZIPPER_DOT_DEV_URL}>
             <ZipperSymbol style={{ maxHeight: '100%' }} />
           </Link>
 
@@ -203,6 +211,10 @@ const Header: React.FC<HeaderProps> = ({
                 whiteSpace="nowrap"
                 fontWeight="semibold"
                 color="gray.800"
+                _hover={{ cursor: 'pointer' }}
+                onClick={() => {
+                  window.location.replace('/');
+                }}
               >
                 {entryPoint.filename.replace(/\.ts$/, '')}
               </Heading>
@@ -236,21 +248,24 @@ const Header: React.FC<HeaderProps> = ({
               <Text>Edit App</Text>
             </Button>
           )}
-
-          {!user && (
+          {user ? (
             <Button
-              colorScheme="gray"
-              variant="ghost"
-              display="flex"
-              fontWeight="medium"
+              variant="link"
               onClick={() => {
-                router.push(`/sign-in`);
+                deleteCookie('__zipper_token');
+                deleteCookie('__zipper_refresh');
+                window.location.reload();
               }}
             >
-              <Text>Sign In</Text>
+              Sign out
             </Button>
+          ) : (
+            <Link
+              href={`${process.env.NEXT_PUBLIC_ZIPPER_DOT_DEV_URL}/auth/from/${slug}`}
+            >
+              Sign in
+            </Link>
           )}
-          <UserButton afterSignOutUrl="/" />
         </HStack>
       </Flex>
     </>
