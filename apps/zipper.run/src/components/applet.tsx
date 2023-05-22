@@ -5,7 +5,6 @@ import {
   FunctionOutput,
   useCmdOrCtrl,
   useAppletContent,
-  useEffectOnce,
 } from '@zipper/ui';
 import {
   AppInfo,
@@ -35,7 +34,7 @@ import InputSummary from './input-summary';
 import ConnectorsAuthInputsSection from './connectors-auth-inputs-section';
 import { getConnectorsAuthUrl } from '~/utils/get-connectors-auth-url';
 import { getBootUrl } from '~/utils/get-relay-url';
-import { getZipperAuth, readJWT } from '~/utils/get-zipper-auth';
+import { getZipperAuth } from '~/utils/get-zipper-auth';
 import { deleteCookie } from 'cookies-next';
 
 const { __DEBUG__ } = process.env;
