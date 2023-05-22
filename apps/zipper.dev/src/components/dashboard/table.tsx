@@ -119,7 +119,12 @@ const TableRow: React.FC<{ row: Row<any> }> = ({ row }) => {
         const meta: any = cell.column.columnDef.meta;
         if (i < 2 || !isHovering) {
           return (
-            <Td key={cell.id} isNumeric={meta?.isNumeric} _first={{ pl: 2 }}>
+            <Td
+              key={cell.id}
+              isNumeric={meta?.isNumeric}
+              _last={{ minW: '207px' }}
+              _first={{ pl: 2 }}
+            >
               {flexRender(cell.column.columnDef.cell, cell.getContext())}
             </Td>
           );
