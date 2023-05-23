@@ -22,7 +22,8 @@
     "db-nuke": "docker-compose down --volumes --remove-orphans",
     "ts-node": "ts-node -T",
     "deno:dev": "yarn dotenv -c .env.local ts-node --compiler-options \"{\\\"module\\\":\\\"commonjs\\\"}\" ./bin/ts/deno-dev.ts",
-    "deno:deploy": "yarn dotenv -c .env.local ts-node --compiler-options \"{\\\"module\\\":\\\"commonjs\\\"}\" ./bin/ts/deno-deploy.ts"
+    "deno:deploy": "yarn dotenv -c .env.local ts-node --compiler-options \"{\\\"module\\\":\\\"commonjs\\\"}\" ./bin/ts/deno-deploy.ts",
+    "postinstall": "npx playwright install"
   },
   "dependencies": {},
   "devDependencies": {
