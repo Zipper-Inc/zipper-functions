@@ -67,6 +67,7 @@ export const getServerSideProps: GetServerSideProps = async ({
       runnableScripts,
       githubAuthUrl,
       slackAuthUrl,
+      token: req.headers['x-zipper-access-token'] || null,
     } as AppPageProps,
   };
 };

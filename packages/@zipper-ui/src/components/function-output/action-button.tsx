@@ -10,20 +10,27 @@ import { SmartFunctionOutputContext } from './smart-function-output-context';
 import Zipper from '../../../../@zipper-framework';
 
 export function ActionButton({ action }: { action: Zipper.ButtonAction }) {
-  const { showSecondaryOutput, getRunUrl, appInfoUrl, applet } = useContext(
-    FunctionOutputContext,
-  ) as FunctionOutputContextType;
+  const {
+    showSecondaryOutput,
+    getRunUrl,
+    appInfoUrl,
+    applet,
+    generateUserToken,
+  } = useContext(FunctionOutputContext) as FunctionOutputContextType;
 
   const { outputSection } = useContext(SmartFunctionOutputContext);
 
   async function getScript() {
     const actionInputs = action.inputs || {};
+    const userToken = generateUserToken();
     const res = await fetch(appInfoUrl, {
       method: 'POST',
       body: JSON.stringify({
         filename: action.path,
       }),
-      credentials: 'include',
+      headers: {
+        Authorization: `Bearer ${userToken}`,
+      },
     });
 
     const json = await res.json();
@@ -52,6 +59,8 @@ export function ActionButton({ action }: { action: Zipper.ButtonAction }) {
   async function runScript() {
     const runPath = action.path;
     const actionInputs: Zipper.Inputs = action.inputs || {};
+    const userToken = generateUserToken();
+    console.log(userToken);
     let inputParamsWithValues: InputParams = [];
 
     const appInfoRes = await fetch(appInfoUrl, {
@@ -59,7 +68,9 @@ export function ActionButton({ action }: { action: Zipper.ButtonAction }) {
       body: JSON.stringify({
         filename: action.path,
       }),
-      credentials: 'include',
+      headers: {
+        Authorization: `Bearer ${userToken}`,
+      },
     });
 
     const appInfo = (await appInfoRes.json()) as AppInfoResult;
@@ -73,7 +84,9 @@ export function ActionButton({ action }: { action: Zipper.ButtonAction }) {
     const res = await fetch(getRunUrl(runPath || 'main.ts'), {
       method: 'POST',
       body: JSON.stringify(actionInputs),
-      credentials: 'include',
+      headers: {
+        Authorization: `Bearer ${userToken}`,
+      },
     });
     const text = await res.text();
 
@@ -94,7 +107,9 @@ export function ActionButton({ action }: { action: Zipper.ButtonAction }) {
       const refreshRes = await fetch(getRunUrl(refreshPath || 'main.ts'), {
         method: 'POST',
         body: JSON.stringify(originalInputs),
-        credentials: 'include',
+        headers: {
+          Authorization: `Bearer ${userToken}`,
+        },
       });
       const text = await refreshRes.text();
 

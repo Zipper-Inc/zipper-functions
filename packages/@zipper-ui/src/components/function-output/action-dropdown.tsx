@@ -9,20 +9,27 @@ import { AppInfoResult, InputParam, InputParams } from '@zipper/types';
 import { SmartFunctionOutputContext } from './smart-function-output-context';
 
 export function ActionDropdown({ action }: { action: Zipper.DropdownAction }) {
-  const { getRunUrl, showSecondaryOutput, appInfoUrl, applet } = useContext(
-    FunctionOutputContext,
-  ) as FunctionOutputContextType;
+  const {
+    getRunUrl,
+    showSecondaryOutput,
+    appInfoUrl,
+    applet,
+    generateUserToken,
+  } = useContext(FunctionOutputContext) as FunctionOutputContextType;
 
   const { outputSection } = useContext(SmartFunctionOutputContext);
 
   async function getScript() {
     const actionInputs: Zipper.Inputs = inputs || {};
+    const userToken = generateUserToken();
     const res = await fetch(appInfoUrl, {
       method: 'POST',
       body: JSON.stringify({
         filename: action.path,
       }),
-      credentials: 'include',
+      headers: {
+        Authorization: `Bearer ${userToken}`,
+      },
     });
     const json = await res.json();
 
@@ -53,6 +60,7 @@ export function ActionDropdown({ action }: { action: Zipper.DropdownAction }) {
 
   async function runScript() {
     const runPath = action.path;
+    const userToken = generateUserToken();
     const actionInputs: Zipper.Inputs = inputs || {};
     let inputParamsWithValues: InputParams = [];
 
@@ -61,7 +69,9 @@ export function ActionDropdown({ action }: { action: Zipper.DropdownAction }) {
       body: JSON.stringify({
         filename: action.path,
       }),
-      credentials: 'include',
+      headers: {
+        Authorization: `Bearer ${userToken}`,
+      },
     });
 
     const appInfo = (await appInfoRes.json()) as AppInfoResult;
@@ -75,7 +85,9 @@ export function ActionDropdown({ action }: { action: Zipper.DropdownAction }) {
     const res = await fetch(getRunUrl(runPath || 'main.ts'), {
       method: 'POST',
       body: JSON.stringify(actionInputs),
-      credentials: 'include',
+      headers: {
+        Authorization: `Bearer ${userToken}`,
+      },
     });
     const text = await res.text();
 
@@ -96,7 +108,9 @@ export function ActionDropdown({ action }: { action: Zipper.DropdownAction }) {
       const refreshRes = await fetch(getRunUrl(refreshPath || 'main.ts'), {
         method: 'POST',
         body: JSON.stringify(originalInputs),
-        credentials: 'include',
+        headers: {
+          Authorization: `Bearer ${userToken}`,
+        },
       });
       const text = await refreshRes.text();
 
@@ -124,6 +138,7 @@ export function ActionDropdown({ action }: { action: Zipper.DropdownAction }) {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedValue, setSelectedValue] = useState<string>();
   const [inputs, setInputs] = useState<Zipper.Inputs | undefined>();
+  console.log(action);
 
   return (
     <Flex justifyContent="end" mt="4">

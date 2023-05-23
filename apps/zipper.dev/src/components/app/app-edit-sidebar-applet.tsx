@@ -1,7 +1,9 @@
 import { Box, Heading, VStack, Button, Progress, Text } from '@chakra-ui/react';
+import { useUser } from '@clerk/nextjs';
 import { FunctionInputs, FunctionOutput, useAppletContent } from '@zipper/ui';
 import { useEffect, useMemo } from 'react';
 import getRunUrl from '~/utils/get-run-url';
+import { generateAccessToken } from '~/utils/jwt-utils';
 import { addParamToCode } from '~/utils/parse-code';
 import { useEditorContext } from '../context/editor-context';
 import { useRunAppContext } from '../context/run-app-context';
@@ -16,6 +18,8 @@ export const AppEditSidebarApplet = ({
 }) => {
   const { formMethods, isRunning, results, userAuthConnectors, appInfo } =
     useRunAppContext();
+
+  const { user } = useUser();
 
   const {
     currentScript,
@@ -64,6 +68,9 @@ export const AppEditSidebarApplet = ({
         appInfoUrl={`/api/app/info/${appSlug}`}
         currentContext={'main'}
         appSlug={appInfo.slug}
+        generateUserToken={() => {
+          return user ? generateAccessToken({ userId: user?.id }) : undefined;
+        }}
         showTabs
       />
     );

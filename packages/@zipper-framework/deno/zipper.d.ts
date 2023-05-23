@@ -160,7 +160,7 @@ declare namespace Zipper {
   /**
    * Actions
    */
-  interface ActionBase {
+  interface ActionBase<I> {
     /**
      * Determines how we should show the input
      */
@@ -178,9 +178,11 @@ declare namespace Zipper {
      * default = true
      */
     run?: boolean;
+
+    inputs?: I | ((selected: string) => I);
   }
 
-  interface ButtonAction<I = Inputs> extends ActionBase {
+  interface ButtonAction<I = Inputs> extends ActionBase<I> {
     /**
      * The type of action this is
      */
@@ -191,7 +193,7 @@ declare namespace Zipper {
     inputs?: I;
   }
 
-  interface DropdownAction<I = Inputs> extends ActionBase {
+  interface DropdownAction<I = Inputs> extends ActionBase<I> {
     /**
      * The type of action this is
      */
