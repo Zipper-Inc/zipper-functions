@@ -416,7 +416,8 @@ export const getServerSideProps: GetServerSideProps = async ({
   const urlValues = getInputValuesFromUrl(inputParams, req.url);
 
   // Handle running
-  const isRunUrl = req.url?.startsWith('/run/');
+  const normalizedUrl = `${req.url}/`;
+  const isRunUrl = normalizedUrl.startsWith('/run/');
   const shouldRun = isRunUrl || config?.run;
   let hideRun = false;
   let result = null;
@@ -427,7 +428,7 @@ export const getServerSideProps: GetServerSideProps = async ({
      * not sure if redirect is appropriate but whatever
      * redirect to run page if not on it already
      */
-    if (!isRunUrl) {
+    if (!isRunUrl || normalizedUrl === '/run/') {
       const runUrl = new URL(req.url || '', bootUrl);
       runUrl.pathname = `/run/${filename}`;
       return {
