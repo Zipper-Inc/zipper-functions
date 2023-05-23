@@ -156,7 +156,10 @@ export function ActionDropdown({ action }: { action: Zipper.DropdownAction }) {
         onChange={(e) => {
           setSelectedValue(e.target.value);
           if (optionKey) {
-            setInputs({ ...action.inputs, [optionKey]: e.target.value });
+            setInputs({
+              ...action.inputs,
+              [optionKey]: e.target.value || (action.inputs || {})[optionKey],
+            });
           }
         }}
       >
