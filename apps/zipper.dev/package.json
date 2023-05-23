@@ -9,7 +9,7 @@
     "build": "run-s build:*",
     "db-seed": "prisma db seed",
     "db-migrate-dev": "yarn prisma migrate dev",
-    "dev": "yarn nodemon -x \"yarn ts-node ./src/server.ts || touch ./src/server.ts\" --watch ./src/server.ts",
+    "dev": "yarn db-migrate-dev; yarn nodemon -x \"yarn ts-node ./src/server.ts || touch ./src/server.ts\" --watch ./src/server.ts",
     "dev:relay": "yarn deno:dev ./src/workers/subhosting-relay.deno.ts port=3001",
     "dx": "run-s db-up db-migrate-dev db-seed dev",
     "start": "run-s db-migrate-dev db-seed dev",
