@@ -1,6 +1,8 @@
 import {
   getFieldName,
   getSearchParams,
+  parseFieldName,
+  parseFieldNamesOnObject,
   safeJSONParse,
   safeJSONStringify,
 } from '@zipper/utils';
@@ -60,6 +62,22 @@ export function getDefaultInputValuesFromConfig(
   }, {});
 
   return defaultValues;
+}
+
+export function getRunValues(
+  inputs: InputParam[],
+  url?: string,
+  config?: Zipper.HandlerConfig,
+) {
+  const runValues: Zipper.Inputs =
+    typeof config?.run === 'object' ? config.run : {};
+
+  const defaultValues = parseFieldNamesOnObject(
+    getDefaultInputValuesFromConfig(inputs, config),
+  );
+  const urlValues = parseFieldNamesOnObject(getInputValuesFromUrl(inputs, url));
+
+  return { ...defaultValues, ...runValues, ...urlValues };
 }
 
 export function getInputValuesFromAppRun(
