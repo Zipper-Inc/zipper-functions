@@ -19,7 +19,7 @@ import { Heading, Progress, VStack } from '@chakra-ui/react';
 import Head from 'next/head';
 import { useForm } from 'react-hook-form';
 import {
-  getInputValuesFromConfig,
+  getDefaultInputValuesFromConfig,
   getInputValuesFromUrl,
 } from '../utils/get-input-values-from-url';
 import { useRouter } from 'next/router';
@@ -418,7 +418,7 @@ export const getServerSideProps: GetServerSideProps = async ({
   }
 
   const defaultValues = {
-    ...getInputValuesFromConfig(inputs, handlerConfigs[filename]),
+    ...getDefaultInputValuesFromConfig(inputs, handlerConfigs[filename]),
     ...getInputValuesFromUrl(inputs, req.url),
   };
 

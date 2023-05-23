@@ -45,7 +45,7 @@ export function getInputValuesFromUrl(inputs: InputParam[], url?: string) {
   return defaultValues;
 }
 
-export function getInputValuesFromConfig(
+export function getDefaultInputValuesFromConfig(
   inputs: InputParam[],
   config?: Zipper.HandlerConfig,
 ) {
