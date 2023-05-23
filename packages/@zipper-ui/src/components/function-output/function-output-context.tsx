@@ -21,6 +21,7 @@ export type FunctionOutputContextType = {
   appSlug: string;
   applet: AppletContentReturnType;
   modalApplet: AppletContentReturnType;
+  generateUserToken: () => string | undefined | Promise<string | undefined>;
 };
 
 export const FunctionOutputContext = createContext<
@@ -36,6 +37,7 @@ const FunctionOutputProvider = ({
   appSlug,
   applet,
   modalApplet,
+  generateUserToken,
 }: FunctionOutputContextType & { children: any }) => {
   return (
     <FunctionOutputContext.Provider
@@ -47,6 +49,7 @@ const FunctionOutputProvider = ({
         appSlug,
         applet,
         modalApplet,
+        generateUserToken,
       }}
     >
       {children}

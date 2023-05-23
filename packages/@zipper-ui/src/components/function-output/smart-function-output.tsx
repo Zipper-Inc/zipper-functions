@@ -1,30 +1,11 @@
-import { useMemo } from 'react';
-import {
-  TableContainer,
-  Table,
-  Thead,
-  Th,
-  Tbody,
-  Tr,
-  Td,
-  Box,
-  Text,
-  Flex,
-  Stack,
-  StackDivider,
-  Link,
-} from '@chakra-ui/react';
+import { Box, Text, Flex, Stack, StackDivider, Link } from '@chakra-ui/react';
 import { OutputType } from '@zipper/types';
-import styled from '@emotion/styled';
 
-import { useTable, useSortBy } from 'react-table';
 import { ObjectExplorer } from './object-explorer';
-import { isPrimitive, parseResult } from './utils';
+import { parseResult } from './utils';
 import { RawFunctionOutput } from './raw-function-output';
-import { HiCheck, HiX } from 'react-icons/hi';
 import { ActionComponent } from './action-component';
 import { RouterComponent } from './router-component';
-import SmartFunctionOutputProvider from './smart-function-output-context';
 import Collection from './collection';
 import Array from './array';
 
