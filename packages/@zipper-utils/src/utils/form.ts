@@ -22,7 +22,7 @@ export const parseFieldName = (fieldName: string) => {
 };
 
 export const parseFieldNamesOnObject = (obj: {
-  [fieldName: string]: Zipper.InputParam;
+  [fieldName: string]: Zipper.InputValue;
 }) =>
   Object.entries(obj).reduce(
     (_obj, [fieldName, inputParam]) => ({

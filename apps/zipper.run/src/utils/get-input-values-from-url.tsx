@@ -52,7 +52,7 @@ export function getDefaultInputValuesFromConfig(
   config?: Zipper.HandlerConfig,
 ) {
   const defaultValues = inputs.reduce<{
-    [inputName: string]: Zipper.InputParam;
+    [inputName: string]: Zipper.InputValue;
   }>((values, input) => {
     const name = getFieldName(input.key, input.type);
     const value = config?.inputs?.[input.key]?.defaultValue;
