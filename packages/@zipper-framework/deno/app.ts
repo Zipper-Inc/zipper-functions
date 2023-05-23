@@ -131,7 +131,7 @@ async function runApplet({ request, respondWith }: Deno.RequestEvent) {
   // Grab the handler
   let path: string = body.path || MAIN_PATH;
   if (!path.endsWith('.ts')) path = `${path}.ts`;
-  const { handler } = files[path];
+  const { handler, config } = files[path];
 
   // Handle missing paths
   if (!handler) {
@@ -171,7 +171,18 @@ async function runApplet({ request, respondWith }: Deno.RequestEvent) {
       response,
     };
 
-    const output = await handler(body.inputs, context);
+    const defaultInputs: Zipper.Inputs = config?.inputs
+      ? Object.entries(config.inputs).reduce(
+          (values, [name, { defaultValue }]) => ({
+            ...values,
+            [name]: defaultValue,
+          }),
+          {},
+        )
+      : {};
+    const runInputs: Zipper.Inputs = config?.run === 'object' ? config.run : {};
+    const inputs = { ...defaultInputs, ...runInputs, ...body.inputs };
+    const output = await handler(inputs, context);
 
     // Apply response if the response is not overwritten
     if (!response.body) {
