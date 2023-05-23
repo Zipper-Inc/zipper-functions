@@ -5,6 +5,7 @@ import { useEffect, useMemo } from 'react';
 import getRunUrl from '~/utils/get-run-url';
 import { generateAccessToken } from '~/utils/jwt-utils';
 import { addParamToCode } from '~/utils/parse-code';
+import { trpc } from '~/utils/trpc';
 import { useEditorContext } from '../context/editor-context';
 import { useRunAppContext } from '../context/run-app-context';
 import { AppEditSidebarAppletConnectors } from './app-edit-sidebar-applet-connectors';
@@ -18,6 +19,10 @@ export const AppEditSidebarApplet = ({
 }) => {
   const { formMethods, isRunning, results, userAuthConnectors, appInfo } =
     useRunAppContext();
+
+  const generateAccessTokenMutation = trpc.useMutation(
+    'user.generateAccessToken',
+  );
 
   const { user } = useUser();
 
@@ -56,6 +61,14 @@ export const AppEditSidebarApplet = ({
     mainApplet.mainContent.set({ inputs: inputParams });
   }, [inputParams]);
 
+  const generateAccessToken = async () => {
+    const result = await generateAccessTokenMutation.mutateAsync({});
+    if (typeof result === 'string') {
+      return result;
+    }
+    return undefined;
+  };
+
   const isHandler = inputParams || inputError;
 
   const output = useMemo(() => {
@@ -68,8 +81,8 @@ export const AppEditSidebarApplet = ({
         appInfoUrl={`/api/app/info/${appSlug}`}
         currentContext={'main'}
         appSlug={appInfo.slug}
-        generateUserToken={() => {
-          return user ? generateAccessToken({ userId: user?.id }) : undefined;
+        generateUserToken={async () => {
+          return user ? await generateAccessToken() : undefined;
         }}
         showTabs
       />

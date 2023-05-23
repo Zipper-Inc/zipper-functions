@@ -1,5 +1,5 @@
 import { Flex, Spinner, Select, Button } from '@chakra-ui/react';
-import { useContext, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { normalizeAppPath } from '@zipper/utils';
 import {
   FunctionOutputContext,
@@ -17,11 +17,21 @@ export function ActionDropdown({ action }: { action: Zipper.DropdownAction }) {
     generateUserToken,
   } = useContext(FunctionOutputContext) as FunctionOutputContextType;
 
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedValue, setSelectedValue] = useState<string>();
+  const [inputs, setInputs] = useState<Zipper.Inputs | undefined>(
+    action.inputs,
+  );
+  const [optionKey, setOptionKey] = useState<string>();
+  useEffect(() => {
+    setOptionKey(Object.keys(action.options)[0]);
+  }, [action]);
+
   const { outputSection } = useContext(SmartFunctionOutputContext);
 
   async function getScript() {
     const actionInputs: Zipper.Inputs = inputs || {};
-    const userToken = generateUserToken();
+    const userToken = await generateUserToken();
     const res = await fetch(appInfoUrl, {
       method: 'POST',
       body: JSON.stringify({
@@ -60,7 +70,7 @@ export function ActionDropdown({ action }: { action: Zipper.DropdownAction }) {
 
   async function runScript() {
     const runPath = action.path;
-    const userToken = generateUserToken();
+    const userToken = await generateUserToken();
     const actionInputs: Zipper.Inputs = inputs || {};
     let inputParamsWithValues: InputParams = [];
 
@@ -135,10 +145,6 @@ export function ActionDropdown({ action }: { action: Zipper.DropdownAction }) {
       });
     }
   }
-  const [isLoading, setIsLoading] = useState(false);
-  const [selectedValue, setSelectedValue] = useState<string>();
-  const [inputs, setInputs] = useState<Zipper.Inputs | undefined>();
-  console.log(action);
 
   return (
     <Flex justifyContent="end" mt="4">
@@ -149,18 +155,22 @@ export function ActionDropdown({ action }: { action: Zipper.DropdownAction }) {
         value={selectedValue}
         onChange={(e) => {
           setSelectedValue(e.target.value);
-          if (action.inputs && selectedValue) {
-            setInputs(action.inputs(selectedValue));
+          if (optionKey) {
+            setInputs({ ...action.inputs, [optionKey]: e.target.value });
           }
         }}
       >
-        {action.options.map((option: { label: string; value: string }, i) => {
-          return (
-            <option key={`${option.value}-${i}`} value={option.value}>
-              {option.label}
-            </option>
-          );
-        })}
+        {optionKey &&
+          action.options[optionKey]?.map((option, i) => {
+            return (
+              <option
+                key={`${option.value}-${i}`}
+                value={option.value?.toString()}
+              >
+                {option.label}
+              </option>
+            );
+          })}
       </Select>
 
       <Button

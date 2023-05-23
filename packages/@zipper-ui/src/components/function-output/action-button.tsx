@@ -22,7 +22,7 @@ export function ActionButton({ action }: { action: Zipper.ButtonAction }) {
 
   async function getScript() {
     const actionInputs = action.inputs || {};
-    const userToken = generateUserToken();
+    const userToken = await generateUserToken();
     const res = await fetch(appInfoUrl, {
       method: 'POST',
       body: JSON.stringify({
@@ -59,7 +59,7 @@ export function ActionButton({ action }: { action: Zipper.ButtonAction }) {
   async function runScript() {
     const runPath = action.path;
     const actionInputs: Zipper.Inputs = action.inputs || {};
-    const userToken = generateUserToken();
+    const userToken = await generateUserToken();
     console.log(userToken);
     let inputParamsWithValues: InputParams = [];
 

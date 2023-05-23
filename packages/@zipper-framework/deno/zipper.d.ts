@@ -178,8 +178,10 @@ declare namespace Zipper {
      * default = true
      */
     run?: boolean;
-
-    inputs?: I | ((selected: string) => I);
+    /**
+     * The inputs to run the function with
+     */
+    inputs?: I;
   }
 
   interface ButtonAction<I = Inputs> extends ActionBase<I> {
@@ -187,10 +189,6 @@ declare namespace Zipper {
      * The type of action this is
      */
     actionType: 'button';
-    /**
-     * The inputs to run the function with
-     */
-    inputs?: I;
   }
 
   interface DropdownAction<I = Inputs> extends ActionBase<I> {
@@ -202,11 +200,12 @@ declare namespace Zipper {
      * Array of options in the dropdown.
      * Selected value is sent to the inputs function
      */
-    options: { value: string; label: string }[];
-    /**
-     * The inputs to run the function with
-     */
-    inputs?: (selectedValue: string) => I;
+    options: Partial<{
+      [Property in keyof I]: {
+        label: string;
+        value: I[Property];
+      }[];
+    }>;
   }
 
   export type Action<I = Inputs> = SpecialOutput<'Zipper.Action'> &
