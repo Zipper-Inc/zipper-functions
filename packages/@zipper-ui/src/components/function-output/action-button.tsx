@@ -9,7 +9,7 @@ import { AppInfoResult, InputParam, InputParams } from '@zipper/types';
 import { SmartFunctionOutputContext } from './smart-function-output-context';
 import Zipper from '../../../../@zipper-framework';
 
-export function ActionButton({ action }: { action: Zipper.Action }) {
+export function ActionButton({ action }: { action: Zipper.ButtonAction }) {
   const { showSecondaryOutput, getRunUrl, appInfoUrl, applet } = useContext(
     FunctionOutputContext,
   ) as FunctionOutputContextType;
@@ -17,6 +17,7 @@ export function ActionButton({ action }: { action: Zipper.Action }) {
   const { outputSection } = useContext(SmartFunctionOutputContext);
 
   async function getScript() {
+    const actionInputs = action.inputs || {};
     const res = await fetch(appInfoUrl, {
       method: 'POST',
       body: JSON.stringify({
@@ -29,24 +30,22 @@ export function ActionButton({ action }: { action: Zipper.Action }) {
 
     const defaultValues: Record<string, any> = {};
 
-    if (action.inputs) {
-      Object.keys(action.inputs).forEach((k) => {
-        const input = json.data.inputs.find((i: InputParam) => i.key == k);
-        if (input) defaultValues[`${k}:${input.type}`] = action.inputs![k];
-      });
-    }
+    Object.keys(actionInputs).forEach((k) => {
+      const input = json.data.inputs.find((i: InputParam) => i.key == k);
+      if (input) defaultValues[`${k}:${input.type}`] = actionInputs[k];
+    });
 
     showSecondaryOutput({
       actionShowAs: action.showAs,
       actionSection: outputSection,
       inputs: {
         inputParams: json.data.inputs.map((i: InputParam) => {
-          i.defaultValue = action.inputs![i.key];
+          i.defaultValue = actionInputs[i.key];
           return i;
         }),
         defaultValues,
       },
-      path: action.path!,
+      path: action.path,
     });
   }
 

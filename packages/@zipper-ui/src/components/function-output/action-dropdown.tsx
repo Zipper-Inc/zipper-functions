@@ -8,7 +8,7 @@ import {
 import { AppInfoResult, InputParam, InputParams } from '@zipper/types';
 import { SmartFunctionOutputContext } from './smart-function-output-context';
 
-export function ActionDropdown({ action }: { action: Zipper.Action }) {
+export function ActionDropdown({ action }: { action: Zipper.DropdownAction }) {
   const { getRunUrl, showSecondaryOutput, appInfoUrl, applet } = useContext(
     FunctionOutputContext,
   ) as FunctionOutputContextType;
@@ -16,6 +16,7 @@ export function ActionDropdown({ action }: { action: Zipper.Action }) {
   const { outputSection } = useContext(SmartFunctionOutputContext);
 
   async function getScript() {
+    const actionInputs: Zipper.Inputs = inputs || {};
     const res = await fetch(appInfoUrl, {
       method: 'POST',
       body: JSON.stringify({
@@ -30,7 +31,7 @@ export function ActionDropdown({ action }: { action: Zipper.Action }) {
     if (action.inputs) {
       Object.keys(action.inputs).forEach((k) => {
         const input = json.data.inputs.find((i: InputParam) => i.key == k);
-        if (input) defaultValues[`${k}:${input.type}`] = action.inputs![k];
+        if (input) defaultValues[`${k}:${input.type}`] = actionInputs[k];
       });
     }
 
@@ -39,20 +40,21 @@ export function ActionDropdown({ action }: { action: Zipper.Action }) {
       actionSection: outputSection,
       inputs: {
         inputParams: json.data.inputs.map((i: InputParam) => {
-          i.defaultValue = action.inputs![i.key];
-          return i;
+          if (action.inputs && actionInputs[i.key]) {
+            i.defaultValue = actionInputs[i.key];
+            return i;
+          }
         }),
         defaultValues,
       },
-      path: action.path!,
+      path: action.path,
     });
   }
 
-  async function runScript(selectedValue: string) {
+  async function runScript() {
     const runPath = action.path;
-
+    const actionInputs: Zipper.Inputs = inputs || {};
     let inputParamsWithValues: InputParams = [];
-    const paramName = action.inputs?.paramName as string;
 
     const appInfoRes = await fetch(appInfoUrl, {
       method: 'POST',
@@ -64,16 +66,15 @@ export function ActionDropdown({ action }: { action: Zipper.Action }) {
 
     const appInfo = (await appInfoRes.json()) as AppInfoResult;
     if (appInfo.ok) {
-      const inputParam = appInfo.data.inputs.find((i) => i.key === paramName);
-      if (inputParam) {
-        inputParam.value = selectedValue;
-        inputParamsWithValues = [inputParam];
-      }
+      inputParamsWithValues = appInfo.data.inputs.map((i) => {
+        i.value = actionInputs[i.key];
+        return i;
+      });
     }
 
     const res = await fetch(getRunUrl(runPath || 'main.ts'), {
       method: 'POST',
-      body: JSON.stringify({ [paramName]: selectedValue }),
+      body: JSON.stringify(actionInputs),
       credentials: 'include',
     });
     const text = await res.text();
@@ -120,9 +121,9 @@ export function ActionDropdown({ action }: { action: Zipper.Action }) {
       });
     }
   }
-
   const [isLoading, setIsLoading] = useState(false);
   const [selectedValue, setSelectedValue] = useState<string>();
+  const [inputs, setInputs] = useState<Zipper.Inputs | undefined>();
 
   return (
     <Flex justifyContent="end" mt="4">
@@ -131,17 +132,20 @@ export function ActionDropdown({ action }: { action: Zipper.Action }) {
         variant="outline"
         placeholder="Select option"
         value={selectedValue}
-        onChange={(e) => setSelectedValue(e.target.value)}
+        onChange={(e) => {
+          setSelectedValue(e.target.value);
+          if (action.inputs && selectedValue) {
+            setInputs(action.inputs(selectedValue));
+          }
+        }}
       >
-        {action.inputs?.values &&
-          Array.isArray(action.inputs.values) &&
-          action.inputs.values.map((input: any) => {
-            return (
-              <option key={input.id} value={input.value}>
-                {input.value}
-              </option>
-            );
-          })}
+        {action.options.map((option: { label: string; value: string }, i) => {
+          return (
+            <option key={`${option.value}-${i}`} value={option.value}>
+              {option.label}
+            </option>
+          );
+        })}
       </Select>
 
       <Button
@@ -151,7 +155,7 @@ export function ActionDropdown({ action }: { action: Zipper.Action }) {
         onClick={async () => {
           setIsLoading(true);
           action.run
-            ? await runScript(selectedValue ?? '').catch(console.error)
+            ? await runScript().catch(console.error)
             : await getScript().catch(console.error);
           setIsLoading(false);
         }}
