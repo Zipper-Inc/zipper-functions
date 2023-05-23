@@ -171,6 +171,7 @@ async function runApplet({ request, respondWith }: Deno.RequestEvent) {
       response,
     };
 
+    // Collect any default inputs
     const defaultInputs: Zipper.Inputs = config?.inputs
       ? Object.entries(config.inputs).reduce(
           (values, [name, { defaultValue }]) => ({
@@ -180,8 +181,26 @@ async function runApplet({ request, respondWith }: Deno.RequestEvent) {
           {},
         )
       : {};
-    const runInputs: Zipper.Inputs = config?.run === 'object' ? config.run : {};
-    const inputs = { ...defaultInputs, ...runInputs, ...body.inputs };
+
+    // Collect any run inputs
+    const runInputs: Zipper.Inputs =
+      typeof config?.run === 'object' ? config.run : {};
+
+    // Apply defaults and run inputs to any missing inputs in the body
+    // Default is overidden by run config
+    // Run config is overidden by whats passed in the body
+    const inputs = Object.entries(body.inputs).reduce(
+      (_inputs, [inputName, inputValue]) => ({
+        ..._inputs,
+        [inputName]:
+          inputValue !== ''
+            ? inputValue
+            : runInputs[inputName] || defaultInputs[inputName],
+      }),
+      body.inputs,
+    );
+
+    //
     const output = await handler(inputs, context);
 
     // Apply response if the response is not overwritten
