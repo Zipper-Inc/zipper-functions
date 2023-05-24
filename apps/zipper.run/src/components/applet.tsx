@@ -315,7 +315,7 @@ export function AppPage({
                 formContext={formContext}
                 onEditAndRerun={async () => {
                   const query = router.query;
-                  delete query.path;
+                  delete query.versionAndFilename;
 
                   await router.push({
                     pathname: `/${filename}`,
@@ -354,6 +354,7 @@ export const getServerSideProps: GetServerSideProps = async ({
 
   const { host } = req.headers;
   const isRunUrl = /^\/run(\/|\?|$)/.test(resolvedUrl);
+  const isInitialServerSideProps = !req.url?.startsWith('/_next');
 
   // validate subdomain
   const subdomain = getValidSubdomain(host);
@@ -417,8 +418,7 @@ export const getServerSideProps: GetServerSideProps = async ({
 
   const urlValues = getInputValuesFromUrl(inputParams, req.url);
 
-  const isAutoRun = config?.run && !isRunUrl;
-
+  const isAutoRun = config?.run && !isRunUrl && isInitialServerSideProps;
   const isRunPathMissing = isRunUrl && !query.versionAndFilename;
   const shouldRedirect = isAutoRun || isRunPathMissing;
 
