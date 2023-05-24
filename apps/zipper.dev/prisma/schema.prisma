@@ -56,7 +56,6 @@ model AppAccessToken {
   appId           String
   userId          String
   description     String?
-  scheduleId      String?
 
   app         App       @relation(fields: [appId], references: [id])
 

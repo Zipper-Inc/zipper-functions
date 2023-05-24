@@ -228,21 +228,6 @@ async function getUserInfo(token: string, appSlug: string) {
       // compare the hashed secret with a hash of the secret portion of the token
       const validSecret = await compare(secret, appAccessToken.hashedSecret);
 
-      // app access tokens with a schedule ID should be deleted after being used
-      if (appAccessToken.scheduleId) {
-        await prisma.appAccessToken.update({
-          where: {
-            identifier_appId: {
-              identifier: appAccessToken.identifier,
-              appId: appAccessToken.appId,
-            },
-          },
-          data: {
-            deletedAt: new Date(Date.now()),
-          },
-        });
-      }
-
       if (!validSecret) throw new Error();
 
       const [user, orgs] = await Promise.all([
