@@ -1,6 +1,7 @@
 import {
   getFieldName,
   getSearchParams,
+  parseFieldNamesOnObject,
   safeJSONParse,
   safeJSONStringify,
 } from '@zipper/utils';
@@ -45,12 +46,12 @@ export function getInputValuesFromUrl(inputs: InputParam[], url?: string) {
   return defaultValues;
 }
 
-export function getInputValuesFromConfig(
-  inputs: InputParam[],
+export function getDefaultInputValuesFromConfig(
+  inputParams: InputParam[],
   config?: Zipper.HandlerConfig,
 ) {
-  const defaultValues = inputs.reduce<{
-    [inputName: string]: Zipper.InputParam;
+  const defaultValues = inputParams.reduce<{
+    [inputName: string]: Zipper.InputValue;
   }>((values, input) => {
     const name = getFieldName(input.key, input.type);
     const value = config?.inputs?.[input.key]?.defaultValue;
@@ -62,11 +63,30 @@ export function getInputValuesFromConfig(
   return defaultValues;
 }
 
+export function getRunValues(
+  inputParams: InputParam[],
+  url?: string,
+  config?: Zipper.HandlerConfig,
+) {
+  const runValues: Zipper.Inputs =
+    typeof config?.run === 'object' ? config.run : {};
+
+  const defaultValues = parseFieldNamesOnObject(
+    getDefaultInputValuesFromConfig(inputParams, config),
+  );
+
+  const urlValues = parseFieldNamesOnObject(
+    getInputValuesFromUrl(inputParams, url),
+  );
+
+  return { ...defaultValues, ...runValues, ...urlValues };
+}
+
 export function getInputValuesFromAppRun(
-  inputs: InputParam[],
+  inputParams: InputParam[],
   appRunInputs: Record<string, string>,
 ) {
-  const defaultValues = inputs.reduce<
+  const defaultValues = inputParams.reduce<
     Record<string, Zipper.Primitive | undefined>
   >((values, input) => {
     const name = getFieldName(input.key, input.type);

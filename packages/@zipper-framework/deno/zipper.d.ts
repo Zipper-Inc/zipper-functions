@@ -44,7 +44,7 @@ declare namespace Zipper {
    * @see Inputs
    * @see Handler
    */
-  export type InputParam = undefined | Serializable;
+  export type InputValue = undefined | Serializable;
 
   /**
    * The inputs for a Handler function
@@ -52,7 +52,7 @@ declare namespace Zipper {
    * @category Handler
    * @see Handler
    */
-  export type Inputs = { [key: string]: InputParam };
+  export type Inputs = { [key: string]: InputValue };
 
   /**
    * The output result of a Handler function

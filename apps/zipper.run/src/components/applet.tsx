@@ -19,8 +19,9 @@ import { Heading, Progress, VStack } from '@chakra-ui/react';
 import Head from 'next/head';
 import { useForm } from 'react-hook-form';
 import {
-  getInputValuesFromConfig,
+  getDefaultInputValuesFromConfig,
   getInputValuesFromUrl,
+  getRunValues,
 } from '../utils/get-input-values-from-url';
 import { useRouter } from 'next/router';
 import {
@@ -33,13 +34,16 @@ import Header from './header';
 import InputSummary from './input-summary';
 import ConnectorsAuthInputsSection from './connectors-auth-inputs-section';
 import { getConnectorsAuthUrl } from '~/utils/get-connectors-auth-url';
-import { getBootUrl } from '~/utils/get-relay-url';
+import { getBootUrl, getRelayUrl } from '~/utils/get-relay-url';
 import { getZipperAuth } from '~/utils/get-zipper-auth';
 import { deleteCookie } from 'cookies-next';
+import { getShortRunId } from '~/utils/run-id';
 
 const { __DEBUG__ } = process.env;
 
 type Screen = 'initial' | 'output';
+
+const RUN_PATH_NAME = '/run/[[...versionAndFilename]]';
 
 export type AppPageProps = {
   app?: AppInfo;
@@ -79,10 +83,8 @@ export function AppPage({
   const router = useRouter();
   const { asPath } = router;
   const appTitle = app?.name || app?.slug || 'Zipper';
-  const formContext = useForm({
-    defaultValues,
-  });
-  const [result, setResult] = useState('');
+  const formContext = useForm({ defaultValues });
+  const [result, setResult] = useState(paramResult);
   const [loading, setLoading] = useState(false);
   const [screen, setScreen] = useState<Screen>(
     paramResult ? 'output' : 'initial',
@@ -105,11 +107,10 @@ export function AppPage({
 
   useEffect(() => {
     if (
-      router.pathname !== '/run/[path]' &&
+      router.pathname !== RUN_PATH_NAME &&
       asPath !== previousRouteRef.current
     ) {
       setScreen('initial');
-
       const defaultValues = getInputValuesFromUrl(inputs, asPath);
       formContext.reset(defaultValues);
       setResult('');
@@ -315,11 +316,11 @@ export function AppPage({
               <InputSummary
                 inputs={inputs}
                 formContext={formContext}
-                onEditAndRerun={() => {
+                onEditAndRerun={async () => {
                   const query = router.query;
-                  delete query.path;
+                  delete query.versionAndFilename;
 
-                  router.push({
+                  await router.push({
                     pathname: `/${filename}`,
                     query,
                   });
@@ -350,8 +351,13 @@ export function AppPage({
 export const getServerSideProps: GetServerSideProps = async ({
   req,
   query,
+  resolvedUrl,
 }) => {
+  console.log({ url: req.url, resolvedUrl });
+
   const { host } = req.headers;
+  const isRunUrl = /^\/run(\/|\?|$)/.test(resolvedUrl);
+  const isInitialServerSideProps = !req.url?.startsWith('/_next');
 
   // validate subdomain
   const subdomain = getValidSubdomain(host);
@@ -384,12 +390,17 @@ export const getServerSideProps: GetServerSideProps = async ({
 
   const {
     app,
-    inputs,
+    inputs: inputParams,
     userAuthConnectors,
     entryPoint,
     runnableScripts,
-    metadata,
   } = appInfoResult.data;
+
+  const metadata = appInfoResult.data.metadata || {};
+
+  const headers: Record<string, string> = {
+    Authorization: `Bearer ${token || ''}`,
+  };
 
   const version = versionFromUrl || 'latest';
   const filename = filenameFromUrl || 'main.ts';
@@ -406,12 +417,32 @@ export const getServerSideProps: GetServerSideProps = async ({
   if (payload === 'UNAUTHORIZED') return { props: { statusCode: 401 } };
   const { configs: handlerConfigs } = JSON.parse(payload) as Zipper.BootPayload;
 
-  /**
-   * @todo not sure if redirect is appropriate but whatever
-   */
-  if (handlerConfigs[filename]?.run) {
-    const runUrl = new URL(req.url || '', bootUrl);
+  const config = handlerConfigs[filename];
+
+  const urlValues = getInputValuesFromUrl(inputParams, req.url);
+
+  const isAutoRun = config?.run && !isRunUrl && isInitialServerSideProps;
+  const isRunPathMissing = isRunUrl && !query.versionAndFilename;
+  const shouldRedirect = isAutoRun || isRunPathMissing;
+
+  if (shouldRedirect) {
+    const runUrl = new URL(resolvedUrl || '', bootUrl);
     runUrl.pathname = `/run/${filename}`;
+
+    if (isAutoRun) {
+      const runValues = getRunValues(inputParams, req.url, config);
+
+      // Add default and run values to the run url before redirecting
+      Object.entries(runValues).forEach(([inputName, inputValue]) => {
+        runUrl.searchParams.set(
+          inputName,
+          typeof inputValue === 'string'
+            ? inputValue
+            : JSON.stringify(inputValue),
+        );
+      });
+    }
+
     return {
       redirect: {
         destination: runUrl.toString(),
@@ -420,9 +451,40 @@ export const getServerSideProps: GetServerSideProps = async ({
     };
   }
 
+  let hideRun = false;
+  let result = null;
+
+  if (isRunUrl) {
+    // now that we're on a run URL, run it!
+    const inputs = getRunValues(inputParams, req.url);
+
+    result = await fetch(
+      getRelayUrl({ slug: app.slug, path: query.path as string | undefined }),
+      {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(inputs),
+        credentials: 'include',
+      },
+    )
+      .then((r) => {
+        const runId = r.headers.get('x-zipper-run-id');
+        if (runId) {
+          metadata.runId = getShortRunId(runId);
+        }
+        return r.text();
+      })
+      .catch((e) => {
+        console.log(e);
+        return { ok: false, error: e.message };
+      });
+
+    hideRun = true;
+  }
+
   const defaultValues = {
-    ...getInputValuesFromConfig(inputs, handlerConfigs[filename]),
-    ...getInputValuesFromUrl(inputs, req.url),
+    ...getDefaultInputValuesFromConfig(inputParams, config),
+    ...urlValues,
   };
 
   if (__DEBUG__) console.log({ defaultValues });
@@ -430,16 +492,19 @@ export const getServerSideProps: GetServerSideProps = async ({
   const propsToReturn = {
     props: {
       app,
-      inputs,
+      inputs: inputParams,
       version,
-      defaultValues,
+      defaultValues: isRunUrl ? urlValues : defaultValues,
       userAuthConnectors,
       entryPoint,
       runnableScripts,
       metadata,
       filename,
       handlerConfigs,
+      hideRun,
+      result,
       token: req.headers['x-zipper-access-token'] || null,
+      key: resolvedUrl,
     },
   };
 
