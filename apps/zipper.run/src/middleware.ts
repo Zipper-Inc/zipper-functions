@@ -148,6 +148,7 @@ export const middleware = async (request: NextRequest) => {
   const { userId, accessToken } = await checkAuthCookies(request);
   const requestHeaders = new Headers(request.headers);
   if (accessToken) requestHeaders.set('x-zipper-access-token', accessToken);
+
   const customResponse = await maybeGetCustomResponse(
     appRoute,
     request,

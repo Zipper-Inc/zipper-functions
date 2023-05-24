@@ -10,7 +10,6 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '~/server/prisma';
 import { AppInfoResult, UserAuthConnector } from '@zipper/types';
 import { parseCode } from '~/utils/parse-code';
-import jwt, { JwtPayload } from 'jsonwebtoken';
 import clerkClient from '@clerk/clerk-sdk-node';
 import { compare } from 'bcryptjs';
 import { canUserEdit } from '~/server/routers/app.router';
@@ -31,7 +30,6 @@ export default async function handler(
     email?: string;
     organizations: Record<string, string>[];
   } = {
-    email: undefined,
     organizations: [],
   };
 
@@ -241,21 +239,6 @@ async function getUserInfo(token: string, appSlug: string) {
       // compare the hashed secret with a hash of the secret portion of the token
       const validSecret = await compare(secret, appAccessToken.hashedSecret);
 
-      // app access tokens with a schedule ID should be deleted after being used
-      if (appAccessToken.scheduleId) {
-        await prisma.appAccessToken.update({
-          where: {
-            identifier_appId: {
-              identifier: appAccessToken.identifier,
-              appId: appAccessToken.appId,
-            },
-          },
-          data: {
-            deletedAt: new Date(Date.now()),
-          },
-        });
-      }
-
       if (!validSecret) throw new Error();
 
       const [user, orgs] = await Promise.all([
@@ -276,6 +259,7 @@ async function getUserInfo(token: string, appSlug: string) {
       };
     }
   } catch (e) {
+    console.log(e);
     Sentry.captureException(e);
     return { email: undefined, organizations: [] };
   }

@@ -37,7 +37,6 @@ export const generateAccessToken = (
     });
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   return sign(payload, process.env.JWT_SIGNING_SECRET!, {
     expiresIn: options?.expiresIn || JWT_ACCESS_TOKEN_EXPIRY,
   });

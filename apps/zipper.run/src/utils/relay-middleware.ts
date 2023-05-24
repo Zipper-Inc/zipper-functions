@@ -5,7 +5,6 @@ import addAppRun from './add-app-run';
 import getAppInfo from './get-app-info';
 import getValidSubdomain from './get-valid-subdomain';
 import { getFilenameAndVersionFromPath } from './get-values-from-url';
-import { getAuth } from '@clerk/nextjs/server';
 import {
   formatDeploymentId,
   getAppLink,
