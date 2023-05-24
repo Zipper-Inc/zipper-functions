@@ -1,4 +1,4 @@
-import { InputParam, InputType } from '@zipper/types';
+import { InputType } from '@zipper/types';
 
 /**
  * `getFieldName` gets the field name used to access a specific field value of the form context
@@ -29,5 +29,5 @@ export const parseFieldNamesOnObject = (obj: {
       ..._obj,
       [parseFieldName(fieldName).name]: inputParam,
     }),
-    obj,
+    {},
   );

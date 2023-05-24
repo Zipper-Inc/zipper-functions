@@ -82,9 +82,7 @@ export function AppPage({
   const router = useRouter();
   const { asPath } = router;
   const appTitle = app?.name || app?.slug || 'Zipper';
-  const formContext = useForm({
-    defaultValues,
-  });
+  const formContext = useForm({ defaultValues });
   const [result, setResult] = useState('');
   const [loading, setLoading] = useState(false);
   const [screen, setScreen] = useState<Screen>(
@@ -315,11 +313,12 @@ export function AppPage({
               <InputSummary
                 inputs={inputs}
                 formContext={formContext}
-                onEditAndRerun={() => {
+                onEditAndRerun={async () => {
+                  debugger;
                   const query = router.query;
                   delete query.path;
 
-                  router.push({
+                  await router.push({
                     pathname: `/${filename}`,
                     query,
                   });
@@ -350,8 +349,10 @@ export function AppPage({
 export const getServerSideProps: GetServerSideProps = async ({
   req,
   query,
+  resolvedUrl,
 }) => {
   const { host } = req.headers;
+  const isRunUrl = /^\/run(\/|\?|$)/.test(resolvedUrl);
 
   // validate subdomain
   const subdomain = getValidSubdomain(host);
@@ -415,32 +416,43 @@ export const getServerSideProps: GetServerSideProps = async ({
 
   const urlValues = getInputValuesFromUrl(inputParams, req.url);
 
-  // Handle running
-  const normalizedUrl = `${req.url}/`;
-  const isRunUrl = normalizedUrl.startsWith('/run/');
-  const shouldRun = isRunUrl || config?.run;
-  let hideRun = false;
-  let result = null;
-  if (shouldRun) {
-    console.log('SHOULLD RUN', { isRunUrl, configRun: config?.run });
-    /**
-     * @todo
-     * not sure if redirect is appropriate but whatever
-     * redirect to run page if not on it already
-     */
-    if (!isRunUrl || normalizedUrl === '/run/') {
-      const runUrl = new URL(req.url || '', bootUrl);
-      runUrl.pathname = `/run/${filename}`;
-      return {
-        redirect: {
-          destination: runUrl.toString(),
-          permanent: false,
-        },
-      };
+  const isAutoRun = config?.run && !isRunUrl;
+
+  const isRunPathMissing = isRunUrl && !query.versionAndFilename;
+  const shouldRedirect = isAutoRun || isRunPathMissing;
+
+  if (shouldRedirect) {
+    const runUrl = new URL(resolvedUrl || '', bootUrl);
+    runUrl.pathname = `/run/${filename}`;
+
+    if (isAutoRun) {
+      const runValues = getRunValues(inputParams, req.url, config);
+
+      // Add default and run values to the run url before redirecting
+      Object.entries(runValues).forEach(([inputName, inputValue]) => {
+        runUrl.searchParams.set(
+          inputName,
+          typeof inputValue === 'string'
+            ? inputValue
+            : JSON.stringify(inputValue),
+        );
+      });
     }
 
+    return {
+      redirect: {
+        destination: runUrl.toString(),
+        permanent: false,
+      },
+    };
+  }
+
+  let hideRun = false;
+  let result = null;
+
+  if (isRunUrl) {
     // now that we're on a run URL, run it!
-    const inputs = getRunValues(inputParams, req.url, config);
+    const inputs = getRunValues(inputParams, req.url);
 
     result = await fetch(
       getRelayUrl({ slug: app.slug, path: query.path as string | undefined }),
@@ -463,12 +475,6 @@ export const getServerSideProps: GetServerSideProps = async ({
         return { ok: false, error: e.message };
       });
 
-    inputParams.forEach((i) => {
-      if (!i.name) return;
-      const value = inputs[i.name];
-      if (value) i.value = value;
-    });
-
     hideRun = true;
   }
 
@@ -477,13 +483,6 @@ export const getServerSideProps: GetServerSideProps = async ({
     ...urlValues,
   };
 
-  inputParams.forEach((i) => {
-    if (!i.key || !i.type) return;
-    const name = getFieldName(i.key, i.type);
-    const defaultValue = defaultValues[name];
-    if (defaultValue) i.defaultValue = defaultValue;
-  });
-
   if (__DEBUG__) console.log({ defaultValues });
 
   const propsToReturn = {
@@ -491,7 +490,7 @@ export const getServerSideProps: GetServerSideProps = async ({
       app,
       inputs: inputParams,
       version,
-      defaultValues,
+      defaultValues: isRunUrl ? urlValues : defaultValues,
       userAuthConnectors,
       entryPoint,
       runnableScripts,
