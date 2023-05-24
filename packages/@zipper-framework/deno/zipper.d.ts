@@ -160,62 +160,56 @@ declare namespace Zipper {
   /**
    * Actions
    */
-  interface ActionBase<I = Inputs> {
+  interface ActionBase<I> {
     /**
-     *
+     * Determines how we should show the input
      */
+    showAs: 'modal' | 'expanded' | 'replace_all' | 'refresh';
     /**
-     * The type of action this is
+     * The path to the handler for this action
      */
-    actionType: 'button' | 'dropdown' | 'link';
+    path: string;
     /**
      * The visible text for the Action
      */
     text?: string;
     /**
-     * The inputs to run the function with
-     */
-    inputs?: I;
-    /**
      * Run the path with provided inputs and show the output
      * default = true
      */
     run?: boolean;
+    /**
+     * The inputs to run the function with
+     */
+    inputs?: I;
   }
 
-  interface RefreshAction<I = Inputs> extends ActionBase<I> {
+  interface ButtonAction<I = Inputs> extends ActionBase<I> {
     /**
-     * Determines how we should show the input
+     * The type of action this is
      */
-    showAs: 'refresh';
-    /**
-     * The path to the handler for this action
-     */
-    path?: string;
+    actionType: 'button';
   }
 
-  interface PathAction<I = Inputs> extends ActionBase<I> {
+  interface DropdownAction<I = Inputs> extends ActionBase<I> {
     /**
-     * Determines how we should show the input
+     * The type of action this is
      */
-    showAs: 'modal' | 'expanded' | 'replace_all';
+    actionType: 'dropdown';
     /**
-     * The path to the handler for this action
+     * Array of options in the dropdown.
+     * Selected value is sent to the inputs function
      */
-    path: string;
-  }
-
-  interface LinkAction extends ActionBase {
-    target?: string;
-    /**
-     * The path to link (href)
-     * Can also be external
-     */
-    path: string;
+    options: Partial<{
+      [Property in keyof I]: {
+        label: string;
+        value: I[Property];
+      }[];
+    }>;
   }
 
   export type Action<I = Inputs> = SpecialOutput<'Zipper.Action'> &
-    (RefreshAction<I> | PathAction<I>);
+    (ButtonAction<I> | DropdownAction<I>);
 
   export type Component = SpecialOutput<'Zipper.Component'> &
     (StackComponent | LinkComponent);
@@ -268,7 +262,7 @@ declare namespace Zipper {
      * Creates an action
      */
     export function create<I = Inputs>(
-      action: RefreshAction<I> | PathAction<I> | LinkAction,
+      action: ButtonAction<I> | DropdownAction<I>,
     ): Action<I>;
   }
 

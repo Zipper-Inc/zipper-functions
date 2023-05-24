@@ -81,6 +81,7 @@ export function FunctionOutput({
   currentContext,
   appSlug,
   showTabs,
+  generateUserToken,
 }: FunctionOutputProps) {
   const [isExpandedResultOpen, setIsExpandedResultOpen] = useState(true);
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -341,6 +342,7 @@ export function FunctionOutput({
             currentContext="modal"
             appSlug={appSlug}
             showTabs={showTabs}
+            generateUserToken={generateUserToken}
           />
         )}
       </>
@@ -366,6 +368,7 @@ export function FunctionOutput({
       modalApplet={modalApplet}
       currentContext={currentContext}
       appSlug={appSlug}
+      generateUserToken={generateUserToken}
     >
       <ErrorBoundary
         // this makes sure we render a new boundary with a new result set

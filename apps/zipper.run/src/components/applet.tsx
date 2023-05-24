@@ -232,6 +232,9 @@ export function AppPage({
         currentContext={'main'}
         appSlug={app.slug}
         showTabs={false}
+        generateUserToken={() => {
+          return token;
+        }}
       />
     );
   }, [app, mainApplet.updatedAt]);
