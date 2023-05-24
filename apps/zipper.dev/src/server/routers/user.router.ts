@@ -3,8 +3,8 @@ import clerk from '@clerk/clerk-sdk-node';
 import { createProtectedRouter } from '../createRouter';
 import { TRPCError } from '@trpc/server';
 import { prisma } from '../prisma';
-import { encrypt, encryptToBase64, encryptToHex } from '@zipper/utils';
-import { getAuth } from '@clerk/nextjs/server';
+import { generateAccessToken } from '~/utils/jwt-utils';
+import { encryptToHex } from '@zipper/utils';
 
 export const userRouter = createProtectedRouter()
   .query('profilesForUserIds', {
@@ -109,5 +109,17 @@ export const userRouter = createProtectedRouter()
       });
 
       return encryptToHex(result.code, process.env.ENCRYPTION_KEY);
+    },
+  })
+  .mutation('generateAccessToken', {
+    input: z.object({
+      expiresIn: z.string().default('30s'),
+    }),
+    async resolve({ ctx, input }) {
+      if (!ctx.userId) return new TRPCError({ code: 'UNAUTHORIZED' });
+      return generateAccessToken(
+        { userId: ctx.userId },
+        { expiresIn: input.expiresIn },
+      );
     },
   });

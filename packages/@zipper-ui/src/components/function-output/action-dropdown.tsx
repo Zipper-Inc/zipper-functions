@@ -1,5 +1,5 @@
 import { Flex, Spinner, Select, Button } from '@chakra-ui/react';
-import { useContext, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { normalizeAppPath } from '@zipper/utils';
 import {
   FunctionOutputContext,
@@ -8,20 +8,38 @@ import {
 import { AppInfoResult, InputParam, InputParams } from '@zipper/types';
 import { SmartFunctionOutputContext } from './smart-function-output-context';
 
-export function ActionDropdown({ action }: { action: Zipper.Action }) {
-  const { getRunUrl, showSecondaryOutput, appInfoUrl, applet } = useContext(
-    FunctionOutputContext,
-  ) as FunctionOutputContextType;
+export function ActionDropdown({ action }: { action: Zipper.DropdownAction }) {
+  const {
+    getRunUrl,
+    showSecondaryOutput,
+    appInfoUrl,
+    applet,
+    generateUserToken,
+  } = useContext(FunctionOutputContext) as FunctionOutputContextType;
+
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedValue, setSelectedValue] = useState<string>();
+  const [inputs, setInputs] = useState<Zipper.Inputs | undefined>(
+    action.inputs,
+  );
+  const [optionKey, setOptionKey] = useState<string>();
+  useEffect(() => {
+    setOptionKey(Object.keys(action.options)[0]);
+  }, [action]);
 
   const { outputSection } = useContext(SmartFunctionOutputContext);
 
   async function getScript() {
+    const actionInputs: Zipper.Inputs = inputs || {};
+    const userToken = await generateUserToken();
     const res = await fetch(appInfoUrl, {
       method: 'POST',
       body: JSON.stringify({
         filename: action.path,
       }),
-      credentials: 'include',
+      headers: {
+        Authorization: `Bearer ${userToken}`,
+      },
     });
     const json = await res.json();
 
@@ -30,7 +48,7 @@ export function ActionDropdown({ action }: { action: Zipper.Action }) {
     if (action.inputs) {
       Object.keys(action.inputs).forEach((k) => {
         const input = json.data.inputs.find((i: InputParam) => i.key == k);
-        if (input) defaultValues[`${k}:${input.type}`] = action.inputs![k];
+        if (input) defaultValues[`${k}:${input.type}`] = actionInputs[k];
       });
     }
 
@@ -39,42 +57,47 @@ export function ActionDropdown({ action }: { action: Zipper.Action }) {
       actionSection: outputSection,
       inputs: {
         inputParams: json.data.inputs.map((i: InputParam) => {
-          i.defaultValue = action.inputs![i.key];
-          return i;
+          if (action.inputs && actionInputs[i.key]) {
+            i.defaultValue = actionInputs[i.key];
+            return i;
+          }
         }),
         defaultValues,
       },
-      path: action.path!,
+      path: action.path,
     });
   }
 
-  async function runScript(selectedValue: string) {
+  async function runScript() {
     const runPath = action.path;
-
+    const userToken = await generateUserToken();
+    const actionInputs: Zipper.Inputs = inputs || {};
     let inputParamsWithValues: InputParams = [];
-    const paramName = action.inputs?.paramName as string;
 
     const appInfoRes = await fetch(appInfoUrl, {
       method: 'POST',
       body: JSON.stringify({
         filename: action.path,
       }),
-      credentials: 'include',
+      headers: {
+        Authorization: `Bearer ${userToken}`,
+      },
     });
 
     const appInfo = (await appInfoRes.json()) as AppInfoResult;
     if (appInfo.ok) {
-      const inputParam = appInfo.data.inputs.find((i) => i.key === paramName);
-      if (inputParam) {
-        inputParam.value = selectedValue;
-        inputParamsWithValues = [inputParam];
-      }
+      inputParamsWithValues = appInfo.data.inputs.map((i) => {
+        i.value = actionInputs[i.key];
+        return i;
+      });
     }
 
     const res = await fetch(getRunUrl(runPath || 'main.ts'), {
       method: 'POST',
-      body: JSON.stringify({ [paramName]: selectedValue }),
-      credentials: 'include',
+      body: JSON.stringify(actionInputs),
+      headers: {
+        Authorization: `Bearer ${userToken}`,
+      },
     });
     const text = await res.text();
 
@@ -95,7 +118,9 @@ export function ActionDropdown({ action }: { action: Zipper.Action }) {
       const refreshRes = await fetch(getRunUrl(refreshPath || 'main.ts'), {
         method: 'POST',
         body: JSON.stringify(originalInputs),
-        credentials: 'include',
+        headers: {
+          Authorization: `Bearer ${userToken}`,
+        },
       });
       const text = await refreshRes.text();
 
@@ -121,9 +146,6 @@ export function ActionDropdown({ action }: { action: Zipper.Action }) {
     }
   }
 
-  const [isLoading, setIsLoading] = useState(false);
-  const [selectedValue, setSelectedValue] = useState<string>();
-
   return (
     <Flex justifyContent="end" mt="4">
       <Select
@@ -131,14 +153,24 @@ export function ActionDropdown({ action }: { action: Zipper.Action }) {
         variant="outline"
         placeholder="Select option"
         value={selectedValue}
-        onChange={(e) => setSelectedValue(e.target.value)}
+        onChange={(e) => {
+          setSelectedValue(e.target.value);
+          if (optionKey) {
+            setInputs({
+              ...action.inputs,
+              [optionKey]: e.target.value || (action.inputs || {})[optionKey],
+            });
+          }
+        }}
       >
-        {action.inputs?.values &&
-          Array.isArray(action.inputs.values) &&
-          action.inputs.values.map((input: any) => {
+        {optionKey &&
+          action.options[optionKey]?.map((option, i) => {
             return (
-              <option key={input.id} value={input.value}>
-                {input.value}
+              <option
+                key={`${option.value}-${i}`}
+                value={option.value?.toString()}
+              >
+                {option.label}
               </option>
             );
           })}
@@ -151,7 +183,7 @@ export function ActionDropdown({ action }: { action: Zipper.Action }) {
         onClick={async () => {
           setIsLoading(true);
           action.run
-            ? await runScript(selectedValue ?? '').catch(console.error)
+            ? await runScript().catch(console.error)
             : await getScript().catch(console.error);
           setIsLoading(false);
         }}
