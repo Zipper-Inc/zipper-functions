@@ -1,7 +1,5 @@
 import { Flex, VStack, Text, Center, Button, Box } from '@chakra-ui/react';
-import { UserButton, SignOutButton } from '@clerk/nextjs';
 import { useEffectOnce, ZipperLogo, ZipperSymbol } from '@zipper/ui';
-import router from 'next/router';
 import { useState } from 'react';
 import { readJWT } from '~/utils/get-zipper-auth';
 
