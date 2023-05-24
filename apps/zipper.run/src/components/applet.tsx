@@ -25,7 +25,6 @@ import {
 } from '../utils/get-input-values-from-url';
 import { useRouter } from 'next/router';
 import {
-  getFieldName,
   getInputsFromFormData,
   ZIPPER_TEMP_USER_ID_COOKIE_NAME,
 } from '@zipper/utils';
@@ -43,6 +42,8 @@ import { getShortRunId } from '~/utils/run-id';
 const { __DEBUG__ } = process.env;
 
 type Screen = 'initial' | 'output';
+
+const RUN_PATH_NAME = '/run/[[...versionAndFilename]]';
 
 export type AppPageProps = {
   app?: AppInfo;
@@ -83,7 +84,7 @@ export function AppPage({
   const { asPath } = router;
   const appTitle = app?.name || app?.slug || 'Zipper';
   const formContext = useForm({ defaultValues });
-  const [result, setResult] = useState('');
+  const [result, setResult] = useState(paramResult);
   const [loading, setLoading] = useState(false);
   const [screen, setScreen] = useState<Screen>(
     paramResult ? 'output' : 'initial',
@@ -106,11 +107,10 @@ export function AppPage({
 
   useEffect(() => {
     if (
-      router.pathname !== '/run/[path]' &&
+      router.pathname !== RUN_PATH_NAME &&
       asPath !== previousRouteRef.current
     ) {
       setScreen('initial');
-
       const defaultValues = getInputValuesFromUrl(inputs, asPath);
       formContext.reset(defaultValues);
       setResult('');
@@ -314,7 +314,6 @@ export function AppPage({
                 inputs={inputs}
                 formContext={formContext}
                 onEditAndRerun={async () => {
-                  debugger;
                   const query = router.query;
                   delete query.path;
 
@@ -351,6 +350,8 @@ export const getServerSideProps: GetServerSideProps = async ({
   query,
   resolvedUrl,
 }) => {
+  console.log({ url: req.url, resolvedUrl });
+
   const { host } = req.headers;
   const isRunUrl = /^\/run(\/|\?|$)/.test(resolvedUrl);
 
@@ -500,6 +501,7 @@ export const getServerSideProps: GetServerSideProps = async ({
       hideRun,
       result,
       token: req.headers['x-zipper-access-token'] || null,
+      key: resolvedUrl,
     },
   };
 
