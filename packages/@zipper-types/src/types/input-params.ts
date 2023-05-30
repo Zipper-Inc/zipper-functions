@@ -5,6 +5,8 @@ export interface InputParam {
   type: InputType;
   optional: boolean;
   name?: string;
+  label?: string;
+  placeholder?: string;
   description?: string;
   defaultValue?: any;
   value?: any;
