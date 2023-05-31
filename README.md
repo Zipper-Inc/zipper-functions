@@ -65,13 +65,32 @@ Tests should live in the same folder as the code that's being tested.
 # Getting started
 
 1. Make sure you have Docker, Node (we're using v18.x LTS), [Ngrok](https://ngrok.com/download), and [Deno](https://deno.com/manual@v1.34.1/getting_started/installation) installed
-2. Clone this repo (`git clone https://github.com/Zipper-Inc/zipper-functions`)
-3. Start ngrok (`ngrok http 3000 --domain [yourname].zipper.ngrok.app`) - chat to Sachin or Ibu to get you access to ngrok.
-4. Copy `.env.example` to `.env.local` (`cp .env.example .env.local`) - you'll be missing some environment variables so ping either Sachin or Ibu for them
+2. Clone this repo
+```
+git clone https://github.com/Zipper-Inc/zipper-functions
+```
+3. Start ngrok - chat to Sachin or Ibu to get you access to ngrok
+```
+ngrok http 3000 --domain [yourname].zipper.ngrok.app
+```
+4. Copy `.env.example` to `.env.local` - you'll be missing some environment variables so ping either Sachin or Ibu for them
+```
+cp .env.example .env.local
+```
 5. Create `.env` in the root directory and copy the DATABASE_URL from `.env.local`
-6. Start the databases using Docker Compose (`docker-compose up`)
-7. Get your database migrated and seeded (`yarn workspace zipper.dev db-migrate-dev` and `yarn workspace zipper.dev db-seed`)
-8. Run `yarn install` to install dependencies
+6. Start the databases using Docker Compose
+```
+docker-compose up
+```
+7. Run `yarn install` to install dependencies
+```
+yarn install
+```
+8. Get your database migrated and seeded
+```
+yarn workspace zipper.dev db-migrate-dev
+yarn workspace zipper.dev db-seed
+```
 9. Run `yarn dev` to start both apps
 
 If you hit any problems, let us know in #engineering
