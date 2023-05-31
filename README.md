@@ -6,15 +6,17 @@ First off, some terminology:
 
 1. **Zipper** is the name of the company and the product
 2. **Zipper Functions** is the name of the repo. We've pivoted the company and already had a repo named Zipper.
-3. **Apps** are the things people create on Zipper - they have a URL, inputs, and outputs. They are made up of multiple files. Files have functions.
+3. **Applets** are the things people create on Zipper - they have a URL, inputs, and outputs. They are made up of multiple files. Files have functions.
 4. **Internal tools** refers to software that's written and used within a company to automate processes, share information, or codify some part of their culture.
+
+Also, here is [Zipper's Product Manual](https://www.notion.so/zipper-inc/Documentation-f1c584a926c74fbfa70850f2a461c7d4#ef8d434a16844e18bf25d8704ac60413).
 
 ## Motivation
 
 We want to empower people to write simple, creative software that makes their work lives better. We're doing this by removing a lot of the cruft around writing and deploying modern software (frontend frameworks, complex integrations, and authz/authn) so that people can focus on the problem they want to solve.
 
-## Our stack
-
+## Architecture
+### Stack
 - Database: Postgres accessed via Prisma
 - KV store: Redis
 - Frontend/Backend: Next.js
@@ -24,6 +26,10 @@ We want to empower people to write simple, creative software that makes their wo
 - UI components: Chakra
 - Testing: Jest
 - Code runner: Deno subhosting (SaaS service)
+
+### Diagram
+![image](https://github.com/Zipper-Inc/zipper-functions/assets/1039639/86f3688d-6ff1-4dca-912c-e3c9fbaecb4e)
+
 
 ## What's inside?
 
@@ -56,9 +62,9 @@ Have we made some money yet? If not, it's probably not worth it unless:
 
 Tests should live in the same folder as the code that's being tested.
 
-## Getting started
+# Getting started
 
-1. Make sure you have Docker, Node (we're using v18.x LTS), and ngrok installed
+1. Make sure you have Docker, Node (we're using v18.x LTS), [Ngrok](https://ngrok.com/download), and [Deno](https://deno.com/manual@v1.34.1/getting_started/installation) installed
 2. Clone this repo (`git clone https://github.com/Zipper-Inc/zipper-functions`)
 3. Start ngrok (`ngrok http 3000 --domain [yourname].zipper.ngrok.app`) - chat to Sachin or Ibu to get you access to ngrok.
 4. Copy `.env.example` to `.env.local` (`cp .env.example .env.local`) - you'll be missing some environment variables so ping either Sachin or Ibu for them

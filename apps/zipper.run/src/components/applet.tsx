@@ -489,6 +489,13 @@ export const getServerSideProps: GetServerSideProps = async ({
 
   if (__DEBUG__) console.log({ defaultValues });
 
+  inputParams.forEach((i) => {
+    const inputConfig = config?.inputs?.[i.key];
+    if (inputConfig?.label) i.label = inputConfig.label;
+    if (inputConfig?.placeholder) i.placeholder = inputConfig.placeholder;
+    if (inputConfig?.description) i.description = inputConfig.description;
+  });
+
   const propsToReturn = {
     props: {
       app,

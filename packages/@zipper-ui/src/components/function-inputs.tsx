@@ -51,6 +51,7 @@ function FunctionParamInput({
   type,
   optional,
   formContext,
+  placeholder,
   isDisabled,
 }: {
   inputKey: string;
@@ -58,6 +59,7 @@ function FunctionParamInput({
   optional: boolean;
   value: any;
   formContext: Props['formContext'];
+  placeholder?: string;
   isDisabled?: boolean;
 }) {
   const { register } = formContext;
@@ -90,6 +92,7 @@ function FunctionParamInput({
           minHeight={14}
           isDisabled={isDisabled}
           {...formProps}
+          placeholder={placeholder}
         />
       );
     }
@@ -118,6 +121,7 @@ function FunctionParamInput({
           type="date"
           {...formProps}
           isDisabled={isDisabled}
+          placeholder={placeholder}
         />
       );
     }
@@ -137,6 +141,7 @@ function FunctionParamInput({
             defaultValue={type === InputType.array ? '[]' : '{}'}
             {...formProps}
             isDisabled={isDisabled}
+            placeholder={placeholder}
             onChange={(e) => {
               try {
                 JSON.parse(e.target.value);
@@ -162,6 +167,7 @@ function SingleInput({
   name,
   label,
   description,
+  placeholder,
   type,
   optional,
   formContext,
@@ -171,6 +177,7 @@ function SingleInput({
   name: string;
   label?: string;
   description?: string;
+  placeholder?: string;
   type: InputType;
   optional: boolean;
   formContext: UseFormReturn<FieldValues, any>;
@@ -245,6 +252,7 @@ function SingleInput({
                   optional={optional}
                   formContext={formContext}
                   isDisabled={isDisabled}
+                  placeholder={placeholder}
                 />
               </Flex>
 
@@ -302,19 +310,22 @@ export function FunctionInputs({
   isDisabled,
   hasResult = true,
 }: Props) {
-  const inputs = params.map(({ key, name, description, type, optional }, i) => (
-    <SingleInput
-      key={`${key}--${i}`}
-      name={key}
-      label={name}
-      description={description}
-      type={type}
-      optional={optional}
-      formContext={formContext}
-      isDisabled={isDisabled}
-      hasResult={hasResult}
-    />
-  ));
+  const inputs = params.map(
+    ({ key, name, label, description, type, optional, placeholder }, i) => (
+      <SingleInput
+        key={`${key}--${i}`}
+        name={key}
+        label={label || name}
+        placeholder={placeholder}
+        description={description}
+        type={type}
+        optional={optional}
+        formContext={formContext}
+        isDisabled={isDisabled}
+        hasResult={hasResult}
+      />
+    ),
+  );
 
   return inputs.length ? <VStack spacing={1}>{inputs}</VStack> : <></>;
 }
