@@ -462,18 +462,21 @@ const EditorContextProvider = ({
   };
 
   const saveOpenModels = async () => {
-    if (appId && currentScript) {
-      setIsSaving(true);
-      const version = getAppVersionFromHash(app.hash || '');
-      addLog(
-        'info',
-        prettyLog({
-          topic: 'Save',
-          subtopic: `${appSlug}@${version}`,
-          badge: 'Pending',
-        }),
-      );
+    if (!appId || !currentScript)
+      throw new Error('Something went wrong while saving');
 
+    setIsSaving(true);
+    const version = getAppVersionFromHash(app.hash || '');
+    addLog(
+      'info',
+      prettyLog({
+        topic: 'Save',
+        subtopic: `${appSlug}@${version}`,
+        badge: 'Pending',
+      }),
+    );
+
+    try {
       const formatPromises = editor
         ?.getEditors()
         .map((e) => e.getAction('editor.action.formatDocument')?.run());
@@ -512,11 +515,14 @@ const EditorContextProvider = ({
           })),
         },
       });
-
       refetchApp();
       setIsSaving(false);
 
-      const newVersion = getAppVersionFromHash(newApp.hash || '');
+      if (!newApp.hash) {
+        throw new Error('Something went wrong while saving the applet');
+      }
+
+      const newVersion = getAppVersionFromHash(newApp.hash);
       addLog(
         'info',
         prettyLog({
@@ -531,6 +537,18 @@ const EditorContextProvider = ({
       );
 
       return newApp.hash;
+    } catch (e: any) {
+      setIsSaving(false);
+      addLog(
+        'error',
+        prettyLog({
+          topic: 'SAVE',
+          subtopic: `${appSlug}@${version}`,
+          badge: 'ERROR',
+          msg: e.toString(),
+        }),
+      );
+      throw new Error(e);
     }
   };
 

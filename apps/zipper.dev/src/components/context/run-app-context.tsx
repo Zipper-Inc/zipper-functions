@@ -59,7 +59,7 @@ export function RunAppProvider({
 }: {
   app: AppQueryOutput;
   children: any;
-  saveAppBeforeRun: () => Promise<string | null | void | undefined>;
+  saveAppBeforeRun: () => Promise<string>;
   onAfterRun: () => Promise<void>;
   addLog: (method: Zipper.Log.Method, data: Zipper.Serializable[]) => void;
   setLogStore: (
@@ -106,8 +106,9 @@ export function RunAppProvider({
   const { currentScript, inputParams } = useEditorContext();
 
   const boot = async () => {
-    const hash = (await saveAppBeforeRun()) || (app.hash as string);
+    const hash = await saveAppBeforeRun();
     const version = getAppVersionFromHash(hash);
+
     const logger = getLogger({ appId: app.id, version });
 
     const logsToIgnore = await logger.fetch();
@@ -149,8 +150,21 @@ export function RunAppProvider({
     if (!preserveLogs) setLogStore(() => ({}));
     setIsRunning(true);
 
-    const hash = (await saveAppBeforeRun()) || (app.hash as string);
-    const version = getAppVersionFromHash(hash);
+    let version: string | undefined = undefined;
+
+    try {
+      const hash = await saveAppBeforeRun();
+      version = getAppVersionFromHash(hash);
+    } catch (e: any) {
+      setResults({
+        ...results,
+        [isCurrentFileTheEntryPoint
+          ? currentScript?.filename || 'main.ts'
+          : 'main.ts']: 'Something went wrong. Check the console for errors.',
+      });
+      setIsRunning(false);
+      return;
+    }
 
     const runId = uuid();
 
