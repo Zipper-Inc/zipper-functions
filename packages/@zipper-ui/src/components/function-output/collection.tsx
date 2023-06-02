@@ -19,6 +19,7 @@ import {
   Heading,
   Flex,
   Divider,
+  CardFooter,
 } from '@chakra-ui/react';
 import React, { useMemo, useState } from 'react';
 import { useSortBy, useTable } from 'react-table';
@@ -145,45 +146,45 @@ function TableCollection(props: { data: Array<any> }) {
 function CardCollection(props: { data: Array<any> }) {
   return (
     <SimpleGrid columns={4} spacing={10}>
-      {props.data.map((item, index) => (
-        <Card
-          key={index}
-          bgColor="neutral.50"
-          borderRadius="xl"
-          overflow="hidden"
-          px={8}
-          py={6}
-          maxW="sm"
-        >
-          {/* Example of Header, need to figure out how to make it dynamic 
-           <CardHeader px={0}>
-            {item.header}
-            <Flex flex="1" gap="4" alignItems="center" flexWrap="wrap">
-              <Avatar name="Segun Adebayo" src="https://bit.ly/sage-adebayo" />
-              <Box>
-                <Heading color="neutral.800" size="sm">
-                  Segun Adebayo
-                </Heading>
-                <Text>Creator, Chakra UI</Text>
-              </Box>
-            </Flex>
-          </CardHeader> 
-          <Divider color="neutral.200" />
-          */}
-          <CardBody px="0">
-            <SimpleGrid columns={2} spacing={2}>
-              {Object.entries(item).map(([key, value], i) => (
-                <React.Fragment key={i}>
-                  <Text color="neutral.500">{key}</Text>
-                  <Text fontWeight={600} color="neutral.900">
-                    {value as string}
-                  </Text>
-                </React.Fragment>
-              ))}
-            </SimpleGrid>
-          </CardBody>
-        </Card>
-      ))}
+      {props.data.map((item, index) => {
+        const isComplexData =
+          item.hasOwnProperty('action') && item.hasOwnProperty('item');
+
+        const displayItem = isComplexData ? item.item : item;
+
+        return (
+          <Card
+            key={index}
+            bgColor="neutral.50"
+            borderRadius="xl"
+            overflow="hidden"
+            px={8}
+            py={6}
+            maxW="sm"
+          >
+            <CardBody px="0">
+              <SimpleGrid columns={2} spacing={2}>
+                {Object.entries(displayItem).map(([key, value], i) => (
+                  <React.Fragment key={i}>
+                    <Text color="neutral.500">{key}</Text>
+                    <Text fontWeight={600} color="neutral.900">
+                      {value as string}
+                    </Text>
+                  </React.Fragment>
+                ))}
+              </SimpleGrid>
+            </CardBody>
+            <CardFooter p={0}>
+              <Flex justifyContent="space-between" alignItems="center">
+                {item.action &&
+                  item.action.map((action: any) => (
+                    <SmartFunctionOutput result={action} />
+                  ))}
+              </Flex>
+            </CardFooter>
+          </Card>
+        );
+      })}
     </SimpleGrid>
   );
 }
