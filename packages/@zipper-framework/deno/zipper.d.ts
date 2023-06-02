@@ -246,6 +246,7 @@ declare namespace Zipper {
       target?: '_blank' | '_self';
     };
     children: string;
+    text?: string;
   }
 
   export namespace Component {
