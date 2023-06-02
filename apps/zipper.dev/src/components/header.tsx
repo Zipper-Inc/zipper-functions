@@ -27,7 +27,7 @@ type HeaderProps = {
 const navRoutes = [
   { href: '/gallery', text: 'Gallery' },
   { href: '#', text: 'Changelog' },
-  { href: '#', text: 'Docs' },
+  { href: '/docs', text: 'Docs' },
 ];
 
 const Header: React.FC<HeaderProps> = ({

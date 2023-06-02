@@ -79,6 +79,17 @@ module.exports = getConfig({
     return config;
   },
 
+  async redirects() {
+    return [
+      {
+        source: '/docs',
+        destination:
+          'https://zipper-inc.notion.site/Documentation-f1c584a926c74fbfa70850f2a461c7d4',
+        permanent: true,
+      },
+    ];
+  },
+
   async rewrites() {
     return [
       {
