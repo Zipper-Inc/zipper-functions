@@ -73,7 +73,7 @@ export function SmartFunctionOutput({
               textDecoration="underline"
               color="purple"
             >
-              {component.children}
+              {component.text || component.children}
             </Link>
           );
         }

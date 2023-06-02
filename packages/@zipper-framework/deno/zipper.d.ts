@@ -127,7 +127,6 @@ declare namespace Zipper {
     description: Partial<{
       title: string;
       subtitle: string;
-      body: string;
     }>;
     inputs: {
       [Property in keyof I]: Partial<{
@@ -135,7 +134,6 @@ declare namespace Zipper {
         description: string;
         defaultValue: I[Property];
         placeholder: string;
-        helpText: string;
       }>;
     };
   }>;
@@ -246,6 +244,7 @@ declare namespace Zipper {
       target?: '_blank' | '_self';
     };
     children: string;
+    text?: string;
   }
 
   export namespace Component {
