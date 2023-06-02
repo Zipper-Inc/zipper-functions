@@ -12,20 +12,15 @@ import {
   SimpleGrid,
   IconButton,
   Card,
-  CardHeader,
   CardBody,
-  StackDivider,
-  Avatar,
-  Heading,
+  CardFooter,
   Flex,
-  Divider,
 } from '@chakra-ui/react';
 import React, { useMemo, useState } from 'react';
 import { useSortBy, useTable } from 'react-table';
 import styled from '@emotion/styled';
-import { isPrimitive } from './utils';
+import { HiTable, HiViewGrid } from 'react-icons/hi';
 import { SmartFunctionOutput } from './smart-function-output';
-import { HiCheck, HiX, HiTable, HiViewGrid } from 'react-icons/hi';
 
 export default function Array(props: { data: Array<any> }) {
   // Define the state to keep track of the selected view
@@ -155,7 +150,6 @@ function TableArray(props: { data: Array<any> }) {
 }
 
 function CardCollection(props: { data: Array<any> }) {
-  console.log(props.data);
   return (
     <SimpleGrid columns={4} spacing={10}>
       {props.data.map((item, index) => (
@@ -168,19 +162,6 @@ function CardCollection(props: { data: Array<any> }) {
           py={6}
           maxW="sm"
         >
-          {/* <CardHeader px={0}>
-            {item.header}
-            <Flex flex="1" gap="4" alignItems="center" flexWrap="wrap">
-              <Avatar name="Segun Adebayo" src="https://bit.ly/sage-adebayo" />
-              <Box>
-                <Heading color="neutral.800" size="sm">
-                  Segun Adebayo
-                </Heading>
-                <Text>Creator, Chakra UI</Text>
-              </Box>
-            </Flex>
-          </CardHeader>
-          <Divider color="neutral.200" /> */}
           <CardBody px="0">
             <SimpleGrid spacing={2}>
               <React.Fragment key={index}>
@@ -191,6 +172,14 @@ function CardCollection(props: { data: Array<any> }) {
               </React.Fragment>
             </SimpleGrid>
           </CardBody>
+          <CardFooter p={0}>
+            <Flex justifyContent="space-between" alignItems="center">
+              {item.action &&
+                item.action.map((action: any) => (
+                  <SmartFunctionOutput result={action} />
+                ))}
+            </Flex>
+          </CardFooter>
         </Card>
       ))}
     </SimpleGrid>
