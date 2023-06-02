@@ -181,9 +181,17 @@ export function FunctionOutput({
         // refresh replaces the existing content without adding a panel
         if (actionSection === 'expanded') {
           applet.mainContent.set(applet.mainContent);
-          applet.expandedContent.set(content);
+          applet.expandedContent.set({
+            output: content.output,
+            inputs: applet.expandedContent.inputs,
+            path: applet.expandedContent.path,
+          });
         } else {
-          applet.mainContent.set(content);
+          applet.mainContent.set({
+            output: content.output,
+            inputs: applet.mainContent.inputs,
+            path: applet.mainContent.path,
+          });
         }
         break;
       }
