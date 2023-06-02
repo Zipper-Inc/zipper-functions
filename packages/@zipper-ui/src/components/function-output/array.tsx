@@ -150,7 +150,6 @@ function TableArray(props: { data: Array<any> }) {
 }
 
 function CardCollection(props: { data: Array<any> }) {
-  console.log(props.data);
   return (
     <SimpleGrid columns={4} spacing={10}>
       {props.data.map((item, index) => (
