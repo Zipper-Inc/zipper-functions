@@ -41,7 +41,6 @@ export function SmartFunctionOutput({
       return <ObjectExplorer data={data} level={level} />;
 
     case OutputType.Action: {
-      if (data.run === undefined) data.run = true;
       return <ActionComponent action={data} />;
     }
 

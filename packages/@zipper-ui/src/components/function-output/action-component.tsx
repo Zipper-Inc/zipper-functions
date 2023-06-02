@@ -1,7 +1,14 @@
 import { ActionButton } from './action-button';
 import { ActionDropdown } from './action-dropdown';
 
-export function ActionComponent({ action }: { action: Zipper.Action }) {
+export function ActionComponent({
+  action: _action,
+}: {
+  action: Zipper.Action;
+}) {
+  const action = _action;
+  if (action.run === undefined) action.run = true;
+
   switch (action.actionType) {
     case 'dropdown':
       return <ActionDropdown action={action} />;
