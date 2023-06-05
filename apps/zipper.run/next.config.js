@@ -60,17 +60,12 @@ module.exports = getConfig({
     return [
       {
         source: '/_zipper/removeConnector/:appId/:connectorType/:path*',
-        destination: `${
-          process.env.NODE_ENV === 'production' ? 'https' : 'http'
-        }://${
-          process.env.NEXT_PUBLIC_ZIPPER_HOST
-        }/api/app/:appId/removeConnector/:connectorType`,
+        destination: `${process.env.NEXT_PUBLIC_ZIPPER_DOT_DEV_URL
+          }/api/app/:appId/removeConnector/:connectorType`,
       },
       {
         source: '/_zipper/app/info/:appSlug/:path*',
-        destination: `${
-          process.env.NODE_ENV === 'production' ? 'https' : 'http'
-        }://${process.env.NEXT_PUBLIC_ZIPPER_HOST}/api/app/info/:appSlug`,
+        destination: `${process.env.NEXT_PUBLIC_ZIPPER_DOT_DEV_URL}/api/app/info/:appSlug`,
       },
       {
         source: '/run/history/:runId.png',
