@@ -60,7 +60,6 @@ export function ActionButton({ action }: { action: Zipper.ButtonAction }) {
     const runPath = action.path;
     const actionInputs: Zipper.Inputs = action.inputs || {};
     const userToken = await generateUserToken();
-    console.log(userToken);
     let inputParamsWithValues: InputParams = [];
 
     const appInfoRes = await fetch(appInfoUrl, {
