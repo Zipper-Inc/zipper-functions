@@ -23,14 +23,17 @@ export function ActionButton({ action }: { action: Zipper.ButtonAction }) {
   async function getScript() {
     const actionInputs = action.inputs || {};
     const userToken = await generateUserToken();
+
+    const headers = {
+      Authorization: `Bearer ${userToken || ''}`,
+    };
+
     const res = await fetch(appInfoUrl, {
       method: 'POST',
       body: JSON.stringify({
         filename: action.path,
       }),
-      headers: {
-        Authorization: `Bearer ${userToken}`,
-      },
+      headers,
     });
 
     const json = await res.json();
@@ -62,14 +65,16 @@ export function ActionButton({ action }: { action: Zipper.ButtonAction }) {
     const userToken = await generateUserToken();
     let inputParamsWithValues: InputParams = [];
 
+    const headers = {
+      Authorization: `Bearer ${userToken || ''}`,
+    };
+
     const appInfoRes = await fetch(appInfoUrl, {
       method: 'POST',
       body: JSON.stringify({
         filename: action.path,
       }),
-      headers: {
-        Authorization: `Bearer ${userToken}`,
-      },
+      headers,
     });
 
     const appInfo = (await appInfoRes.json()) as AppInfoResult;
@@ -83,9 +88,7 @@ export function ActionButton({ action }: { action: Zipper.ButtonAction }) {
     const res = await fetch(getRunUrl(runPath || 'main.ts'), {
       method: 'POST',
       body: JSON.stringify(actionInputs),
-      headers: {
-        Authorization: `Bearer ${userToken}`,
-      },
+      headers,
     });
     const text = await res.text();
 
@@ -106,9 +109,7 @@ export function ActionButton({ action }: { action: Zipper.ButtonAction }) {
       const refreshRes = await fetch(getRunUrl(refreshPath || 'main.ts'), {
         method: 'POST',
         body: JSON.stringify(originalInputs),
-        headers: {
-          Authorization: `Bearer ${userToken}`,
-        },
+        headers,
       });
       const text = await refreshRes.text();
 

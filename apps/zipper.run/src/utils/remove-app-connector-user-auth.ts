@@ -10,7 +10,7 @@ export default async function removeAppConnectorUserAuth({
   const res = await fetch(`/_zipper/removeConnector/${appId}/${type}`, {
     method: 'POST',
     headers: {
-      authorization: `Bearer ${token}`,
+      authorization: `Bearer ${token || ''}`,
     },
   });
 

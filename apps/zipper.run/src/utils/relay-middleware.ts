@@ -74,12 +74,10 @@ export async function relayRequest(
     request,
     version: _version,
     filename: _filename,
-    bearerToken,
   }: {
     request: NextRequest;
     version?: string;
     filename?: string;
-    bearerToken?: string;
   },
   bootOnly = false,
 ) {
@@ -96,7 +94,10 @@ export async function relayRequest(
 
   // Get the user's JWT token from the session if there is one
   const zipperAuth = await getZipperAuth(request as any);
-  let token = request.headers.get('Authorization')?.replace('Bearer ', '');
+  let token = request.headers
+    .get('Authorization')
+    ?.replace('Bearer', '')
+    .trim();
   token = token || zipperAuth.token || undefined;
 
   let tempUserId = request.headers.get(ZIPPER_TEMP_USER_ID_HEADER) || undefined;
@@ -113,7 +114,7 @@ export async function relayRequest(
     subdomain,
     tempUserId,
     filename,
-    token: token || bearerToken,
+    token,
   });
   if (__DEBUG__) console.log('getAppInfo', { result: appInfoResult });
 
@@ -218,7 +219,6 @@ export default async function serveRelay({
       request,
       version,
       filename,
-      bearerToken: request.headers.get('Authorization')?.replace('Bearer ', ''),
     },
     bootOnly,
   );
