@@ -20,7 +20,6 @@ const envSchema = z.object({
   NEXT_PUBLIC_CLERK_FRONTEND_API: z.string(),
   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string(),
   NEXT_PUBLIC_HOST: z.string(),
-  NEXT_PUBLIC_LSP: z.string(),
   NEXT_PUBLIC_OUTPUT_SERVER_HOSTNAME: z.string(),
   NEXT_PUBLIC_SLACK_CLIENT_ID: z.string(),
   NEXT_PUBLIC_ZIPPER_API_URL: z.string(),
