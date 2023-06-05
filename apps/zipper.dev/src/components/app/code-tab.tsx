@@ -1,4 +1,11 @@
-import { FormControl, Text, Code, HStack, VStack } from '@chakra-ui/react';
+import {
+  FormControl,
+  Text,
+  Code,
+  HStack,
+  VStack,
+  useToast,
+} from '@chakra-ui/react';
 import { AppEditSidebar } from '~/components/app/app-edit-sidebar';
 import { useCmdOrCtrl } from '@zipper/ui';
 import { ConnectorForm } from './connector-form';
@@ -54,12 +61,23 @@ export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
   >({});
 
   const [inputs, setInputs] = useState<AppEditSidebarContextType['inputs']>({});
+  const toast = useToast();
 
   useCmdOrCtrl(
     'S',
     async (e: Event) => {
       e.preventDefault();
-      await saveAndBoot();
+      try {
+        await saveAndBoot();
+      } catch (e: any) {
+        toast({
+          title: 'There was an error while saving',
+          description: 'Check the console for errors.',
+          status: 'error',
+          duration: 3 * 1000,
+          isClosable: true,
+        });
+      }
     },
     [],
   );

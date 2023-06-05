@@ -59,7 +59,7 @@ export function RunAppProvider({
 }: {
   app: AppQueryOutput;
   children: any;
-  saveAppBeforeRun: () => Promise<string | null | void | undefined>;
+  saveAppBeforeRun: () => Promise<string>;
   onAfterRun: () => Promise<void>;
   addLog: (method: Zipper.Log.Method, data: Zipper.Serializable[]) => void;
   setLogStore: (
@@ -106,42 +106,47 @@ export function RunAppProvider({
   const { currentScript, inputParams } = useEditorContext();
 
   const boot = async () => {
-    const hash = (await saveAppBeforeRun()) || (app.hash as string);
-    const version = getAppVersionFromHash(hash);
-    const logger = getLogger({ appId: app.id, version });
+    try {
+      const hash = await saveAppBeforeRun();
+      const version = getAppVersionFromHash(hash);
 
-    const logsToIgnore = await logger.fetch();
+      const logger = getLogger({ appId: app.id, version });
 
-    const updateLogs = async () => {
-      const logs = await logger.fetch();
-      if (!logs.length) return;
-      if (logsToIgnore.length) logs.splice(0, logsToIgnore.length);
+      const logsToIgnore = await logger.fetch();
 
-      setLogStore((prev) => {
-        const prevLogs = prev[logger.url] || [];
-        const newLogs = prevLogs.length > logs.length ? prevLogs : logs;
-        return { ...prev, [logger.url]: newLogs };
+      const updateLogs = async () => {
+        const logs = await logger.fetch();
+        if (!logs.length) return;
+        if (logsToIgnore.length) logs.splice(0, logsToIgnore.length);
+
+        setLogStore((prev) => {
+          const prevLogs = prev[logger.url] || [];
+          const newLogs = prevLogs.length > logs.length ? prevLogs : logs;
+          return { ...prev, [logger.url]: newLogs };
+        });
+      };
+
+      // Start polling for logs
+      let currentPoll;
+      const pollLogs = async () => {
+        await updateLogs();
+        currentPoll = setTimeout(() => pollLogs, 500);
+      };
+      pollLogs();
+
+      const { configs } = await bootAppMutation.mutateAsync({
+        appId: id,
       });
-    };
 
-    // Start polling for logs
-    let currentPoll;
-    const pollLogs = async () => {
-      await updateLogs();
-      currentPoll = setTimeout(() => pollLogs, 500);
-    };
-    pollLogs();
+      if (configs) setConfigs(configs);
 
-    const { configs } = await bootAppMutation.mutateAsync({
-      appId: id,
-    });
-
-    if (configs) setConfigs(configs);
-
-    // stop polling and do one last update
-    // do it once more just time
-    clearTimeout(currentPoll);
-    updateLogs();
+      // stop polling and do one last update
+      // do it once more just time
+      clearTimeout(currentPoll);
+      updateLogs();
+    } catch (e) {
+      return;
+    }
   };
 
   const run = async (isCurrentFileTheEntryPoint?: boolean) => {
@@ -149,8 +154,21 @@ export function RunAppProvider({
     if (!preserveLogs) setLogStore(() => ({}));
     setIsRunning(true);
 
-    const hash = (await saveAppBeforeRun()) || (app.hash as string);
-    const version = getAppVersionFromHash(hash);
+    let version: string | undefined = undefined;
+
+    try {
+      const hash = await saveAppBeforeRun();
+      version = getAppVersionFromHash(hash);
+    } catch (e: any) {
+      setResults({
+        ...results,
+        [isCurrentFileTheEntryPoint
+          ? currentScript?.filename || 'main.ts'
+          : 'main.ts']: 'Something went wrong. Check the console for errors.',
+      });
+      setIsRunning(false);
+      return;
+    }
 
     const runId = uuid();
 
