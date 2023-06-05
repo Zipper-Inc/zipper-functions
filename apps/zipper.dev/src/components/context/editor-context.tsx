@@ -48,7 +48,7 @@ export type EditorContextType = {
   isEditorDirty: () => boolean;
   isSaving: boolean;
   setIsSaving: (isSaving: boolean) => void;
-  save: () => Promise<void | string | null | undefined>;
+  save: () => Promise<string>;
   refetchApp: VoidFunction;
   replaceCurrentScriptCode: (code: string) => void;
   inputParams?: InputParam[];
@@ -83,7 +83,9 @@ export const EditorContext = createContext<EditorContextType>({
   isEditorDirty: () => false,
   isSaving: false,
   setIsSaving: noop,
-  save: asyncNoop,
+  save: async () => {
+    return '';
+  },
   refetchApp: noop,
   replaceCurrentScriptCode: noop,
   inputParams: undefined,
