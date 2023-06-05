@@ -34,8 +34,9 @@ export default async function handler(
   };
 
   // get the token from the request headers. Could be a Clerk session token or a Zipper access token
-  const token = req.headers.authorization?.replace('Bearer ', '');
-  if (token) {
+  let token = req.headers.authorization;
+  token = token?.replace('Bearer', '').trim();
+  if (token && token.length > 0) {
     userInfo = await getUserInfo(token, slugFromUrl);
   }
   const tempUserId = req.headers[ZIPPER_TEMP_USER_ID_HEADER] as
