@@ -34,8 +34,9 @@ export default async function handler(
   };
 
   // get the token from the request headers. Could be a Clerk session token or a Zipper access token
-  const token = req.headers.authorization?.replace('Bearer ', '');
-  if (token) {
+  let token = req.headers.authorization;
+  token = token?.replace('Bearer', '').trim();
+  if (token && token.length > 0) {
     userInfo = await getUserInfo(token, slugFromUrl);
   }
   const tempUserId = req.headers[ZIPPER_TEMP_USER_ID_HEADER] as
@@ -170,11 +171,7 @@ export default async function handler(
       },
       entryPoint: {
         filename: entryPoint.filename,
-        editUrl: `${
-          process.env.NODE_ENV === 'development' ? 'http' : 'https'
-        }://${process.env.NEXT_PUBLIC_HOST}${
-          process.env.NODE_ENV === 'development' ? ':3000' : ''
-        }/${resourceOwner?.slug}/${appFound.slug}/edit/${entryPoint.filename}`,
+        editUrl: `${process.env.NEXT_PUBLIC_ZIPPER_DOT_DEV_URL}/${resourceOwner?.slug}/${appFound.slug}/edit/${entryPoint.filename}`,
       },
     },
   };

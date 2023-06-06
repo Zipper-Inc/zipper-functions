@@ -1,4 +1,3 @@
-import { JwtPayload, verify } from 'jsonwebtoken';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '~/server/prisma';
 import { verifyAccessToken } from '~/utils/jwt-utils';

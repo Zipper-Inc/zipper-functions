@@ -73,6 +73,7 @@ export function Playground({
     if (app.canUserEdit) {
       return save();
     }
+    throw new Error('You do not have permission to edit this applet.');
   };
 
   return (
