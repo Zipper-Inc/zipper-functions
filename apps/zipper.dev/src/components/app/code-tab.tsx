@@ -54,7 +54,7 @@ type CodeTabProps = {
 };
 
 export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
-  const { currentScript, onChange } = useEditorContext();
+  const { currentScript, onChange, onValidate } = useEditorContext();
   const { isRunning, run, boot: saveAndBoot } = useRunAppContext();
   const [expandedResult, setExpandedResult] = useState<
     AppEditSidebarContextType['expandedResult']
@@ -143,6 +143,7 @@ export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
             <PlaygroundEditor
               key={app.id}
               onChange={onChange}
+              onValidate={onValidate}
               appName={app.slug}
             />
           )}

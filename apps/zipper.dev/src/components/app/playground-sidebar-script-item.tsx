@@ -38,7 +38,11 @@ export const ScriptItem: React.FC<ScriptItemProps> = ({
   onStartRenaming,
   onEndRenaming,
 }) => {
-  const { currentScript, setCurrentScript, isModelDirty } = useEditorContext();
+  const { currentScript, setCurrentScript, isModelDirty, modelHasErrors } =
+    useEditorContext();
+
+  const isDirty = isModelDirty(`/${script.filename}`);
+  const hasErrors = modelHasErrors(script.filename);
 
   return (
     <HStack
@@ -90,11 +94,10 @@ export const ScriptItem: React.FC<ScriptItemProps> = ({
         >
           <Flex grow={1} cursor="pointer">
             <Text
-              fontWeight={
-                isModelDirty(`/${script.filename}`) ? 'bold' : 'medium'
-              }
+              fontWeight={isDirty || hasErrors ? 'bold' : 'medium'}
               fontSize="xs"
               fontFamily="mono"
+              color={hasErrors ? 'red.400' : 'inherit'}
             >
               {script.filename}
             </Text>

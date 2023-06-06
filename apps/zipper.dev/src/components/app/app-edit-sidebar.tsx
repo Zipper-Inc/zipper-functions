@@ -14,6 +14,8 @@ import {
   IconButton,
   Heading,
   useClipboard,
+  ListItem,
+  UnorderedList,
 } from '@chakra-ui/react';
 import { TabButton } from '@zipper/ui';
 import { useState } from 'react';
@@ -58,6 +60,8 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
     logs,
     markLogsAsRead,
     lastReadLogsTimestamp,
+    editorHasErrors,
+    getErrorFiles,
   } = useEditorContext();
 
   const unreadLogs = logs.filter(
@@ -87,6 +91,18 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
 
   const isLibrary = !inputParams && !inputError;
   const isHandler = inputParams || inputError;
+  const errorTooltip =
+    inputError ||
+    (editorHasErrors() && (
+      <>
+        Fix errors in the following files before running:
+        <UnorderedList>
+          {getErrorFiles().map((f) => (
+            <ListItem>{f}</ListItem>
+          ))}
+        </UnorderedList>
+      </>
+    ));
 
   const setInputsAtTimeOfRun = () => {
     const formValues = formMethods.getValues();
@@ -144,7 +160,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
               </IconButton>
             </Tooltip>
           </HStack>
-          <Tooltip label={inputError}>
+          <Tooltip label={errorTooltip || inputError}>
             <span>
               <Button
                 colorScheme="purple"
@@ -158,7 +174,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
                 display="flex"
                 gap={2}
                 fontWeight="medium"
-                isDisabled={isRunning || !inputParams}
+                isDisabled={isRunning || !inputParams || editorHasErrors()}
               >
                 <HiOutlinePlay />
                 <Text>{`Run${
