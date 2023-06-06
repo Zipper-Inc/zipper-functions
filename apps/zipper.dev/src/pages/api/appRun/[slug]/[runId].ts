@@ -159,11 +159,7 @@ export default async function handler(
       },
       entryPoint: {
         filename: appRun.path,
-        editUrl: `${
-          process.env.NODE_ENV === 'development' ? 'http' : 'https'
-        }://${process.env.NEXT_PUBLIC_HOST}${
-          process.env.NODE_ENV === 'development' ? ':3000' : ''
-        }/${resourceOwner?.slug}/${appRun.app.slug}/edit/${appRun.path}`,
+        editUrl: `${process.env.NEXT_PUBLIC_ZIPPER_DOT_DEV_URL}/${resourceOwner?.slug}/${appRun.app.slug}/edit/${appRun.path}`,
       },
     },
   };

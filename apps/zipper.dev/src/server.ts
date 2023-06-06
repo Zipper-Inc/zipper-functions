@@ -21,7 +21,7 @@ app.prepare().then(() => {
   }).listen(port);
 
   console.log(
-    `> Server listening at http://localhost:${port} as ${
+    `> Server listening at ${process.env.NEXT_PUBLIC_ZIPPER_DOT_DEV_URL} as ${
       dev ? 'development' : process.env.NODE_ENV
     }`,
   );

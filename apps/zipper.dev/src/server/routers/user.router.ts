@@ -80,11 +80,7 @@ export const userRouter = createProtectedRouter()
             organizationId: input.organizationId,
             inviterUserId: ctx.userId,
             role: input.role,
-            redirectUrl: `${
-              process.env.NODE_ENV === 'development'
-                ? 'http://localhost:3000'
-                : 'https://' + process.env.NEXT_PUBLIC_HOST
-            }/${signInOrSignUp}`,
+            redirectUrl: `${process.env.NEXT_PUBLIC_ZIPPER_DOT_DEV_URL}/${signInOrSignUp}`,
           });
 
         return invitation;

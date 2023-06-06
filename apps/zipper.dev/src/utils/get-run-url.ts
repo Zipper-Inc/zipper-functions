@@ -14,7 +14,5 @@ export function getBootUrl(
 }
 
 function buildUrl(path: string) {
-  return `${process.env.NODE_ENV === 'production' ? 'https' : 'http'}://${
-    process.env.NEXT_PUBLIC_HOST
-  }${process.env.NODE_ENV === 'production' ? '' : ':3000'}/${path}`;
+  return `${process.env.NEXT_PUBLIC_ZIPPER_DOT_DEV_URL}/${path}`;
 }
