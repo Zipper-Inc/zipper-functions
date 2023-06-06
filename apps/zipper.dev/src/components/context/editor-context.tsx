@@ -50,6 +50,7 @@ export type EditorContextType = {
   modelHasErrors: (path: string) => boolean;
   setModelHasErrors: (path: string, isErroring: boolean) => void;
   editorHasErrors: () => boolean;
+  getErrorFiles: () => string[];
   isSaving: boolean;
   setIsSaving: (isSaving: boolean) => void;
   save: () => Promise<void | string | null | undefined>;
@@ -89,6 +90,7 @@ export const EditorContext = createContext<EditorContextType>({
   modelHasErrors: () => false,
   setModelHasErrors: () => false,
   editorHasErrors: () => false,
+  getErrorFiles: () => [],
   isSaving: false,
   setIsSaving: noop,
   save: asyncNoop,
@@ -586,6 +588,11 @@ const EditorContextProvider = ({
     return !!Object.values(modelsErrorState).find((state) => state);
   };
 
+  const getErrorFiles = () =>
+    Object.entries(modelsErrorState)
+      .filter(([, value]) => value)
+      .map(([filename]) => filename);
+
   return (
     <EditorContext.Provider
       value={{
@@ -605,6 +612,7 @@ const EditorContextProvider = ({
         modelHasErrors,
         setModelHasErrors,
         editorHasErrors,
+        getErrorFiles,
         isSaving,
         setIsSaving,
         save: saveOpenModels,
