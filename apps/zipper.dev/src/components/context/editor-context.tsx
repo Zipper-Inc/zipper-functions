@@ -38,6 +38,7 @@ export type EditorContextType = {
     lastConnectionId: number;
   };
   onChange: EditorProps['onChange'];
+  onValidate: EditorProps['onValidate'];
   connectionId?: number;
   scripts: Script[];
   setScripts: (scripts: Script[]) => void;
@@ -46,6 +47,9 @@ export type EditorContextType = {
   isModelDirty: (path: string) => boolean;
   setModelIsDirty: (path: string, isDirty: boolean) => void;
   isEditorDirty: () => boolean;
+  modelHasErrors: (path: string) => boolean;
+  setModelHasErrors: (path: string, isErroring: boolean) => void;
+  editorHasErrors: () => boolean;
   isSaving: boolean;
   setIsSaving: (isSaving: boolean) => void;
   save: () => Promise<void | string | null | undefined>;
@@ -73,6 +77,7 @@ export const EditorContext = createContext<EditorContextType>({
   setCurrentScript: noop,
   currentScriptLive: undefined,
   onChange: noop,
+  onValidate: noop,
   connectionId: undefined,
   scripts: [],
   setScripts: noop,
@@ -81,6 +86,9 @@ export const EditorContext = createContext<EditorContextType>({
   isModelDirty: () => false,
   setModelIsDirty: noop,
   isEditorDirty: () => false,
+  modelHasErrors: () => false,
+  setModelHasErrors: () => false,
+  editorHasErrors: () => false,
   isSaving: false,
   setIsSaving: noop,
   save: asyncNoop,
@@ -264,6 +272,10 @@ const EditorContextProvider = ({
     Record<string, boolean>
   >({});
 
+  const [modelsErrorState, setModelsErrorState] = useState<
+    Record<string, boolean>
+  >({});
+
   const currentScriptLive: any = useLiveStorage(
     (root) => root[`script-${currentScript?.id}`],
   );
@@ -324,6 +336,14 @@ const EditorContextProvider = ({
     } catch (e) {
       console.error('Caught error from mutateLive:', e);
     }
+  };
+
+  const onValidate: EditorProps['onValidate'] = (markers) => {
+    if (!currentScript) return;
+    const errorMarker = markers?.find(
+      (m) => m.severity === monacoRef.current?.MarkerSeverity.Error,
+    );
+    setModelHasErrors(currentScript.filename, !!errorMarker);
   };
 
   useEffect(() => {
@@ -550,6 +570,22 @@ const EditorContextProvider = ({
     return !!Object.values(modelsDirtyState).find((state) => state);
   };
 
+  const modelHasErrors = (path: string) => {
+    return modelsErrorState[path] || false;
+  };
+
+  const setModelHasErrors = (path: string, hasErrors: boolean) => {
+    setModelsErrorState((previousModelErrorState) => {
+      const newModelState = { ...previousModelErrorState };
+      newModelState[path] = hasErrors;
+      return newModelState;
+    });
+  };
+
+  const editorHasErrors = () => {
+    return !!Object.values(modelsErrorState).find((state) => state);
+  };
+
   return (
     <EditorContext.Provider
       value={{
@@ -557,6 +593,7 @@ const EditorContextProvider = ({
         setCurrentScript,
         currentScriptLive,
         onChange,
+        onValidate,
         connectionId: self?.connectionId,
         scripts,
         setScripts,
@@ -565,6 +602,9 @@ const EditorContextProvider = ({
         isModelDirty,
         setModelIsDirty,
         isEditorDirty,
+        modelHasErrors,
+        setModelHasErrors,
+        editorHasErrors,
         isSaving,
         setIsSaving,
         save: saveOpenModels,
