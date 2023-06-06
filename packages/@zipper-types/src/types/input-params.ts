@@ -10,6 +10,7 @@ export interface InputParam {
   description?: string;
   defaultValue?: any;
   value?: any;
+  details?: any;
 }
 
 export interface ParseInputResponse {
@@ -23,3 +24,13 @@ export interface ParseInputError {
   code: string;
   error: any;
 }
+
+export type InputParamDetail = {
+  properties: {
+    key: string;
+    details: {
+      type: InputType;
+      // any additional details...
+    };
+  }[];
+};

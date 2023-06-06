@@ -20,17 +20,92 @@ function removeTsExtension(moduleName: string) {
 }
 
 // Determine the Zipper type from the Typescript type
-function parseTypeNode(type: any) {
+function parseTypeNode(type: any, src: SourceFile): any {
   const text = type.getText();
-  if (text.toLowerCase() === 'boolean') return InputType.boolean;
-  if (text.toLowerCase() === 'number') return InputType.number;
-  if (text.toLowerCase() === 'string') return InputType.string;
-  if (text.toLowerCase() === 'date') return InputType.date;
+  if (text.toLowerCase() === 'boolean') return { type: InputType.boolean };
+  if (text.toLowerCase() === 'number') return { type: InputType.number };
+  if (text.toLowerCase() === 'string') return { type: InputType.string };
+  if (text.toLowerCase() === 'date') return { type: InputType.date };
   if (type.isKind(SyntaxKind.ArrayType) || text.startsWith('Array'))
-    return InputType.array;
-  if (type.isKind(SyntaxKind.TypeLiteral) || text.startsWith('Record'))
-    return InputType.object;
-  return InputType.any;
+    return { type: InputType.array };
+
+  // Check for enum types
+  if (type.getType().isEnum()) {
+    return {
+      type: InputType.enum,
+      details: {
+        values: type
+          .getType()
+          .getSymbol()
+          .getMembers()
+          .map((member: any) => member.getName()),
+      },
+    };
+  }
+
+  // Check for type reference
+  if (type.isKind(SyntaxKind.TypeReference)) {
+    const typeReference = type.getType();
+    const typeProperties = typeReference.getApparentProperties();
+    if (typeProperties) {
+      const propDetails = typeProperties.map((prop: any) => {
+        const name = prop.getName();
+        const propertyType = prop.getValueDeclaration().getType().getText();
+        // Return the details for each property
+        return {
+          key: name,
+          details: { type: propertyType },
+        };
+      });
+
+      // Update the return statement to include the name of the type
+      return {
+        type: InputType.object,
+        name: type.getText(),
+        details: { properties: propDetails },
+      };
+    }
+  }
+
+  // Check for object/record types
+  if (type.isKind(SyntaxKind.TypeLiteral) || text.startsWith('Record')) {
+    const alias = src.getTypeAlias(type.getText());
+    if (alias) {
+      const properties = (alias.getTypeNode() as any).getProperties();
+      const propDetails = properties.map((prop: any) => {
+        return {
+          key: prop.getName(),
+          details: parseTypeNode(prop.getTypeNode(), src),
+        };
+      });
+      return {
+        type: InputType.object,
+        details: { properties: propDetails },
+      };
+    }
+    return { type: InputType.object };
+  }
+
+  // Handle keyof typeof Category type
+  if (type.isKind(SyntaxKind.TypeOperator)) {
+    const typeText = type.getText();
+    const match = typeText.match(/keyof typeof (\w+)/);
+    if (match && match[1]) {
+      const enumName = match[1];
+      const enumDeclaration = src.getEnum(enumName);
+      if (enumDeclaration) {
+        return {
+          type: InputType.enum,
+          details: {
+            values: enumDeclaration
+              .getMembers()
+              .map((member: any) => member.getName()),
+          },
+        };
+      }
+    }
+  }
+  return { type: InputType.any };
 }
 
 function getSourceFileFromCode(code: string) {
@@ -121,14 +196,14 @@ export function parseInputForTypes({
     try {
       props = typeNode?.isKind(SyntaxKind.TypeLiteral)
         ? // A type literal, like `params: { foo: string, bar: string }`
-          (typeNode as any)?.getProperties()
+        (typeNode as any)?.getProperties()
         : // A type reference, like `params: Params`
-          // Finds the type alias by its name and grabs the node from there
-          (
-            src
-              .getTypeAlias(typeNode?.getText() as string)
-              ?.getTypeNode() as any
-          )?.getProperties();
+        // Finds the type alias by its name and grabs the node from there
+        (
+          src
+            .getTypeAlias(typeNode?.getText() as string)
+            ?.getTypeNode() as any
+        )?.getProperties();
     } catch (e) {
       if (throwErrors) {
         throw new Error('Cannot get the properties of the object parameter.');
@@ -142,9 +217,12 @@ export function parseInputForTypes({
 
     return props.map((prop) => {
       const typeNode = prop.getTypeNode();
+      const typeDetails = parseTypeNode(typeNode, src);
+
       return {
         key: prop.getName(),
-        type: parseTypeNode(typeNode),
+        type: typeDetails.type,
+        details: typeDetails.details,
         optional: prop.hasQuestionToken(),
       };
     });
@@ -221,9 +299,9 @@ export function addParamToCode({
   const inputs = handler.getParameters();
   if (!inputs.length) {
     // Create a new input object with the desired parameter
-    const newParamString = `{ ${paramName} } : { ${paramName}${
-      paramType ? `: ${paramType}` : ''
-    } }`;
+    const newParamString = `{ ${paramName} } : { ${paramName}
+      ${paramType ? `: ${paramType}` : ''}
+    }`;
 
     handler.replaceWithText(
       handler.getText().replace(/\(\)/, `(${newParamString})`),

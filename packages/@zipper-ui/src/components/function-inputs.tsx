@@ -1,3 +1,4 @@
+import { Select } from '@chakra-ui/react';
 import { useRef, useState } from 'react';
 import {
   Box,
@@ -53,6 +54,7 @@ function FunctionParamInput({
   formContext,
   placeholder,
   isDisabled,
+  details,
 }: {
   inputKey: string;
   type: InputType;
@@ -61,6 +63,7 @@ function FunctionParamInput({
   formContext: Props['formContext'];
   placeholder?: string;
   isDisabled?: boolean;
+  details?: any;
 }) {
   const { register } = formContext;
   const name = getFieldName(inputKey, type);
@@ -74,7 +77,7 @@ function FunctionParamInput({
     formFieldOptions.valueAsDate = true;
   }
 
-  const formProps = register(name, formFieldOptions);
+    const formProps = register(name, formFieldOptions);
 
   switch (type) {
     case InputType.boolean: {
@@ -126,8 +129,25 @@ function FunctionParamInput({
       );
     }
 
+    case InputType.enum: {
+      return (
+        <Select
+          backgroundColor="white"
+          isDisabled={isDisabled}
+          {...formProps}
+          placeholder={placeholder}
+        >
+          {details.values.map((value: any, index: number) => (
+            <option key={index} value={value}>
+              {value}
+            </option>
+          ))}
+        </Select>
+      );
+    }
+
     case InputType.array:
-    case InputType.object:
+    case InputType.object: 
     case InputType.any:
     default: {
       const [error, setError] = useState<string | undefined>();
@@ -172,6 +192,7 @@ function SingleInput({
   optional,
   formContext,
   isDisabled,
+  details,
   hasResult = true,
 }: {
   name: string;
@@ -183,8 +204,10 @@ function SingleInput({
   formContext: UseFormReturn<FieldValues, any>;
   isDisabled?: boolean;
   hasResult?: boolean;
+  details?: any;
 }): JSX.Element {
   const formName = getFieldName(name, type);
+
   const { isOpen, onOpen, onClose } = useDisclosure({
     defaultIsOpen: !optional,
   });
@@ -253,6 +276,7 @@ function SingleInput({
                   formContext={formContext}
                   isDisabled={isDisabled}
                   placeholder={placeholder}
+                  details={details}
                 />
               </Flex>
 
@@ -311,7 +335,10 @@ export function FunctionInputs({
   hasResult = true,
 }: Props) {
   const inputs = params.map(
-    ({ key, name, label, description, type, optional, placeholder }, i) => (
+    (
+      { key, name, label, description, type, optional, placeholder, details },
+      i,
+    ) => (
       <SingleInput
         key={`${key}--${i}`}
         name={key}
@@ -323,6 +350,7 @@ export function FunctionInputs({
         formContext={formContext}
         isDisabled={isDisabled}
         hasResult={hasResult}
+        details={details}
       />
     ),
   );
