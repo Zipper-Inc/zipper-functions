@@ -164,7 +164,7 @@ export async function relayRequest(
     inputs:
       request.method === 'GET'
         ? Object.fromEntries(relayUrl.searchParams.entries())
-        : JSON.parse(await request.text()),
+        : JSON.parse((await request.text()) || '{}'),
     originalRequest: { url: request.url, method: request.method },
     runId,
     userId: userInfo.userId || tempUserId || '',
