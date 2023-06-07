@@ -13,42 +13,59 @@ import {
   IconButton,
   Card,
   CardBody,
-  CardFooter,
-  Flex,
+  InputGroup,
+  Icon,
+  Input,
+  InputLeftAddon,
 } from '@chakra-ui/react';
 import React, { useMemo, useState } from 'react';
 import { useSortBy, useTable } from 'react-table';
 import styled from '@emotion/styled';
 import { HiTable, HiViewGrid } from 'react-icons/hi';
-import { SmartFunctionOutput } from './smart-function-output';
+import { FiSearch } from 'react-icons/fi';
+import { useSmartFunctionOutputContext } from './smart-function-output-context';
 
-export default function Array(props: { data: Array<any> }) {
+type Props = {
+  data: Array<any>;
+  tableLevel: number;
+};
+
+export default function Array(props: Props) {
   // Define the state to keep track of the selected view
   const [view, setView] = useState<'table' | 'cards'>('table');
+  const { setSearchQuery } = useSmartFunctionOutputContext();
 
   return (
     <Stack>
-      <Box display="flex" justifyContent="flex-end" mb={4}>
-        <IconButton
-          aria-label="Table view"
-          icon={<HiTable />}
-          onClick={() => setView('table')}
-          colorScheme={view === 'table' ? 'blue' : 'gray'}
-        />
-        <IconButton
-          aria-label="Card view"
-          icon={<HiViewGrid />}
-          onClick={() => setView('cards')}
-          colorScheme={view === 'cards' ? 'blue' : 'gray'}
-          ml={2}
-        />
-      </Box>
+      {props.tableLevel === 0 && (
+        <Box display="flex" justifyContent="flex-end" gap="2">
+          <InputGroup w="md">
+            <InputLeftAddon>
+              <Icon as={FiSearch} />
+            </InputLeftAddon>
+            <Input onChange={(e) => setSearchQuery(e.target.value)} />
+          </InputGroup>
+          <IconButton
+            aria-label="Table view"
+            icon={<HiTable />}
+            onClick={() => setView('table')}
+            colorScheme={view === 'table' ? 'blue' : 'gray'}
+          />
+          <IconButton
+            aria-label="Card view"
+            icon={<HiViewGrid />}
+            onClick={() => setView('cards')}
+            colorScheme={view === 'cards' ? 'blue' : 'gray'}
+            ml={2}
+          />
+        </Box>
+      )}
 
       {/* Render the appropriate component based on the selected view */}
       {view === 'table' ? (
-        <TableArray data={props.data} />
+        <TableArray {...props} />
       ) : (
-        <CardCollection data={props.data} />
+        <CardCollection {...props} />
       )}
     </Stack>
   );
@@ -60,7 +77,9 @@ const StyledTr = styled(Tr)`
   }
 `;
 
-function TableArray(props: { data: Array<any> }) {
+function TableArray(props: Props) {
+  const { searchQuery } = useSmartFunctionOutputContext();
+
   const columns = useMemo(
     () =>
       [
@@ -71,8 +90,14 @@ function TableArray(props: { data: Array<any> }) {
   );
 
   const data = useMemo(
-    () => props.data.map((value, index) => ({ index, value })),
-    [props.data],
+    () =>
+      props.data
+        .filter((d) => {
+          if (searchQuery === '') return true;
+          return d.toString().toLowerCase().includes(searchQuery);
+        })
+        .map((value, index) => ({ index, value })),
+    [props.data, searchQuery],
   );
 
   const { getTableProps, getTableBodyProps, headers, rows, prepareRow } =
@@ -149,10 +174,22 @@ function TableArray(props: { data: Array<any> }) {
   );
 }
 
-function CardCollection(props: { data: Array<any> }) {
+function CardCollection(props: Props) {
+  const { searchQuery } = useSmartFunctionOutputContext();
+  const data = useMemo(
+    () =>
+      props.data
+        .filter((d) => {
+          if (searchQuery === '') return true;
+          return d.toString().toLowerCase().includes(searchQuery);
+        })
+        .map((value, index) => ({ index, value })),
+    [props.data, searchQuery],
+  );
+
   return (
     <SimpleGrid columns={4} spacing={10}>
-      {props.data.map((item, index) => (
+      {data.map((item, index) => (
         <Card
           key={index}
           bgColor="neutral.50"
@@ -165,21 +202,12 @@ function CardCollection(props: { data: Array<any> }) {
           <CardBody px="0">
             <SimpleGrid spacing={2}>
               <React.Fragment key={index}>
-                <Text color="neutral.500">{index}</Text>
                 <Text fontWeight={600} color="neutral.900">
                   {item.value as string}
                 </Text>
               </React.Fragment>
             </SimpleGrid>
           </CardBody>
-          <CardFooter p={0}>
-            <Flex justifyContent="space-between" alignItems="center">
-              {item.action &&
-                item.action.map((action: any) => (
-                  <SmartFunctionOutput result={action} />
-                ))}
-            </Flex>
-          </CardFooter>
         </Card>
       ))}
     </SimpleGrid>

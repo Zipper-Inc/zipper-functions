@@ -12,14 +12,13 @@ import {
   SimpleGrid,
   IconButton,
   Card,
-  CardHeader,
   CardBody,
-  StackDivider,
-  Avatar,
-  Heading,
   Flex,
-  Divider,
   CardFooter,
+  Input,
+  InputGroup,
+  InputLeftAddon,
+  Icon,
 } from '@chakra-ui/react';
 import React, { useMemo, useState } from 'react';
 import { useSortBy, useTable } from 'react-table';
@@ -27,34 +26,50 @@ import styled from '@emotion/styled';
 import { isPrimitive } from './utils';
 import { SmartFunctionOutput } from './smart-function-output';
 import { HiCheck, HiX, HiTable, HiViewGrid } from 'react-icons/hi';
+import { FiSearch } from 'react-icons/fi';
+import { useSmartFunctionOutputContext } from './smart-function-output-context';
 
-export default function Collection(props: { data: Array<any> }) {
+type Props = {
+  data: Array<any>;
+  tableLevel: number;
+  level: number;
+};
+
+export default function Collection(props: Props) {
   // Define the state to keep track of the selected view
   const [view, setView] = useState<'table' | 'cards'>('table');
+  const { setSearchQuery } = useSmartFunctionOutputContext();
 
   return (
-    <Stack>
-      <Box display="flex" justifyContent="flex-end" mb={4}>
-        <IconButton
-          aria-label="Table view"
-          icon={<HiTable />}
-          onClick={() => setView('table')}
-          colorScheme={view === 'table' ? 'purple' : 'gray'}
-        />
-        <IconButton
-          aria-label="Card view"
-          icon={<HiViewGrid />}
-          onClick={() => setView('cards')}
-          colorScheme={view === 'cards' ? 'purple' : 'gray'}
-          ml={2}
-        />
-      </Box>
+    <Stack border="1px solid" borderColor="gray.200" p="2" borderRadius="md">
+      {props.tableLevel === 0 && (
+        <Box display="flex" justifyContent="flex-end" gap="2">
+          <InputGroup w="md">
+            <InputLeftAddon>
+              <Icon as={FiSearch} />
+            </InputLeftAddon>
+            <Input onChange={(e) => setSearchQuery(e.target.value)} />
+          </InputGroup>
+          <IconButton
+            aria-label="Table view"
+            icon={<HiTable />}
+            onClick={() => setView('table')}
+            colorScheme={view === 'table' ? 'purple' : 'gray'}
+          />
+          <IconButton
+            aria-label="Card view"
+            icon={<HiViewGrid />}
+            onClick={() => setView('cards')}
+            colorScheme={view === 'cards' ? 'purple' : 'gray'}
+          />
+        </Box>
+      )}
 
       {/* Render the appropriate component based on the selected view */}
       {view === 'table' ? (
-        <TableCollection data={props.data} />
+        <TableCollection {...props} />
       ) : (
-        <CardCollection data={props.data} />
+        <CardCollection {...props} />
       )}
     </Stack>
   );
@@ -66,7 +81,26 @@ const StyledTr = styled(Tr)`
   }
 `;
 
-function TableCollection(props: { data: Array<any> }) {
+function filterData(data: Array<any>, searchQuery: string) {
+  return data.filter((d) => {
+    if (!searchQuery || searchQuery.length === 0) return true;
+
+    if (!d) return false;
+
+    if (isPrimitive(d)) {
+      return d.toString().toLowerCase().includes(searchQuery.toLowerCase());
+    }
+
+    if (typeof d === 'object') {
+      return JSON.stringify(d)
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase());
+    }
+  });
+}
+
+function TableCollection(props: Props) {
+  const { searchQuery } = useSmartFunctionOutputContext();
   const columns = useMemo(() => {
     const keys: Array<string> = [];
     props.data.forEach((record) => {
@@ -77,7 +111,11 @@ function TableCollection(props: { data: Array<any> }) {
     return keys.map((key) => ({ Header: key, accessor: key }));
   }, [props.data]);
 
-  const data = useMemo(() => props.data, [props.data]);
+  const data = useMemo(
+    () =>
+      props.tableLevel === 0 ? filterData(props.data, searchQuery) : props.data,
+    [props.data, searchQuery],
+  );
 
   const { getTableProps, getTableBodyProps, headers, rows, prepareRow } =
     useTable({ columns, data }, useSortBy);
@@ -130,7 +168,11 @@ function TableCollection(props: { data: Array<any> }) {
                   }
                   return (
                     <Td {...cell.getCellProps()}>
-                      <SmartFunctionOutput result={cell.value} />
+                      <SmartFunctionOutput
+                        result={cell.value}
+                        tableLevel={props.tableLevel + 1}
+                        level={props.level + 1}
+                      />
                     </Td>
                   );
                 })}
@@ -143,10 +185,18 @@ function TableCollection(props: { data: Array<any> }) {
   );
 }
 
-function CardCollection(props: { data: Array<any> }) {
+function CardCollection(props: Props) {
+  const { searchQuery } = useSmartFunctionOutputContext();
+
+  const data = useMemo(
+    () =>
+      props.tableLevel === 0 ? filterData(props.data, searchQuery) : props.data,
+    [props.data, searchQuery],
+  );
+
   return (
     <SimpleGrid columns={4} spacing={10}>
-      {props.data.map((item, index) => {
+      {data.map((item, index) => {
         const isComplexData =
           item.hasOwnProperty('action') && item.hasOwnProperty('item');
 
@@ -178,7 +228,11 @@ function CardCollection(props: { data: Array<any> }) {
               <Flex justifyContent="space-between" alignItems="center">
                 {item.action &&
                   item.action.map((action: any) => (
-                    <SmartFunctionOutput result={action} />
+                    <SmartFunctionOutput
+                      result={action}
+                      level={props.level + 1}
+                      tableLevel={props.tableLevel + 1}
+                    />
                   ))}
               </Flex>
             </CardFooter>

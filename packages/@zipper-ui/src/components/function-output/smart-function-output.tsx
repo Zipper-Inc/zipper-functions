@@ -14,9 +14,11 @@ import ChakraUIRenderer from '../../utils/chakra-markdown-renderer';
 export function SmartFunctionOutput({
   result,
   level = 0,
+  tableLevel = 0,
 }: {
   result: any;
-  level?: number;
+  level: number;
+  tableLevel: number;
 }) {
   if (!result) return null;
 
@@ -32,10 +34,10 @@ export function SmartFunctionOutput({
       );
 
     case OutputType.Array:
-      return <Array data={data} />;
+      return <Array data={data} tableLevel={tableLevel} />;
 
     case OutputType.Collection:
-      return <Collection data={data} />;
+      return <Collection data={data} level={level} tableLevel={tableLevel} />;
 
     case OutputType.Html:
       return (
@@ -45,7 +47,9 @@ export function SmartFunctionOutput({
       );
 
     case OutputType.Object:
-      return <ObjectExplorer data={data} level={level} />;
+      return (
+        <ObjectExplorer data={data} level={level} tableLevel={tableLevel} />
+      );
 
     case OutputType.Action: {
       return <ActionComponent action={data} />;
@@ -67,7 +71,13 @@ export function SmartFunctionOutput({
               spacing={component.props.direction === 'row' ? 6 : 4}
             >
               {component.children.map((child) => {
-                return <SmartFunctionOutput result={child} level={level + 1} />;
+                return (
+                  <SmartFunctionOutput
+                    result={child}
+                    level={level + 1}
+                    tableLevel={tableLevel}
+                  />
+                );
               })}
             </Stack>
           );
