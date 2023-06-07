@@ -81,8 +81,18 @@ const StyledTr = styled(Tr)`
   }
 `;
 
-function filterData(data: Array<any>, searchQuery: string) {
-  return data.filter((d) => {
+function filterData(
+  data: Array<any>,
+  searchQuery: string,
+  tableLevel: number,
+  column?: string,
+) {
+  if (tableLevel > 0) {
+    if (data.length === 0) return [{ [column || 'value']: 'No data' }];
+    return data;
+  }
+
+  const filteredData = data.filter((d) => {
     if (!searchQuery || searchQuery.length === 0) return true;
 
     if (!d) return false;
@@ -97,6 +107,10 @@ function filterData(data: Array<any>, searchQuery: string) {
         .includes(searchQuery.toLowerCase());
     }
   });
+
+  if (filteredData.length === 0) return [{ [column || 'value']: 'No data' }];
+
+  return filteredData;
 }
 
 function TableCollection(props: Props) {
@@ -113,7 +127,7 @@ function TableCollection(props: Props) {
 
   const data = useMemo(
     () =>
-      props.tableLevel === 0 ? filterData(props.data, searchQuery) : props.data,
+      filterData(props.data, searchQuery, props.tableLevel, columns[0]?.Header),
     [props.data, searchQuery],
   );
 
@@ -189,8 +203,7 @@ function CardCollection(props: Props) {
   const { searchQuery } = useSmartFunctionOutputContext();
 
   const data = useMemo(
-    () =>
-      props.tableLevel === 0 ? filterData(props.data, searchQuery) : props.data,
+    () => filterData(props.data, searchQuery, props.tableLevel),
     [props.data, searchQuery],
   );
 

@@ -89,34 +89,19 @@ function TableArray(props: Props) {
     [],
   );
 
-  const data = useMemo(
-    () =>
-      props.data
-        .filter((d) => {
-          if (searchQuery === '') return true;
-          return d.toString().toLowerCase().includes(searchQuery);
-        })
-        .map((value, index) => ({ index, value })),
-    [props.data, searchQuery],
-  );
+  const data = useMemo(() => {
+    const filteredData = props.data
+      .filter((d) => {
+        if (searchQuery === '') return true;
+        return d.toString().toLowerCase().includes(searchQuery);
+      })
+      .map((value, index) => ({ index, value }));
+    if (filteredData.length === 0) return [{ index: 0, value: 'No results' }];
+    return filteredData;
+  }, [props.data, searchQuery]);
 
   const { getTableProps, getTableBodyProps, headers, rows, prepareRow } =
     useTable({ columns, data }, useSortBy);
-
-  if (data.length === 0) {
-    return (
-      <Text
-        py={6}
-        size="sm"
-        color={'gray.500'}
-        alignItems={'end'}
-        flex={1}
-        noOfLines={1}
-      >
-        Empty array
-      </Text>
-    );
-  }
 
   return (
     <TableContainer>
