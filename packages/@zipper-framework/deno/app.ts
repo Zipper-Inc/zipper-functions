@@ -1,5 +1,5 @@
 import './zipper.d.ts';
-import { files } from './generated/index.gen.ts';
+import { files } from './applet/generated/index.gen.ts';
 import { BOOT_PATH, ENV_BLOCKLIST, MAIN_PATH } from './constants.ts';
 import { ZipperStorage } from './storage.ts';
 import { sendLog, methods } from './console.ts';
