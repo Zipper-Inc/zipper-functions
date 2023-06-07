@@ -459,7 +459,12 @@ export const getServerSideProps: GetServerSideProps = async ({
     const inputs = getRunValues(inputParams, req.url);
 
     result = await fetch(
-      getRelayUrl({ slug: app.slug, path: query.path as string | undefined }),
+      getRelayUrl({
+        slug: app.slug,
+        path: Array.isArray(query.versionAndFilename)
+          ? query.versionAndFilename[0]
+          : query.versionAndFilename,
+      }),
       {
         method: 'POST',
         headers,
