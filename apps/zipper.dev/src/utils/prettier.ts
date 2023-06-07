@@ -1,9 +1,9 @@
 import prettier from 'prettier/standalone';
-import babelParser from 'prettier/parser-babel';
+import typescript from 'prettier/parser-typescript';
 
 export function format(source: string) {
   return prettier.format(source, {
-    parser: 'babel',
-    plugins: [babelParser],
+    parser: 'typescript',
+    plugins: [typescript],
   });
 }
