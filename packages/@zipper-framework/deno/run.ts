@@ -1,9 +1,9 @@
 import './zipper.d.ts';
-import { files } from './generated/index.gen.ts';
-import { BOOT_PATH, ENV_BLOCKLIST, MAIN_PATH } from './constants.ts';
-import { ZipperStorage } from './storage.ts';
-import { sendLog, methods } from './console.ts';
-import { getUserConnectorAuths } from './userAuthConnectors.ts';
+import { files } from './applet/generated/index.gen.ts';
+import { BOOT_PATH, ENV_BLOCKLIST, MAIN_PATH } from './lib/constants.ts';
+import { ZipperStorage } from './lib/storage.ts';
+import { sendLog, methods } from './lib/console.ts';
+import { getUserConnectorAuths } from './lib/user-auth-connectors.ts';
 
 const PORT = 8888;
 

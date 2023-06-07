@@ -1,14 +1,10 @@
 // *
 // * 🛑 DO NOT IMPORT ANYTHING INTO THIS FILE
-// * It needs to be readable as is from the Monaco editor
-// * Block comments in namespace will show up in editor
+// * 💾 It needs to be readable as is from the Monaco editor
+// * 🗣️ Block comments in namespace will show up in editor
 // *
 
 // deno-lint-ignore-file no-explicit-any
-
-/**
- * Copy pasta from 'https://deno.land/x/oak@v12.1.0/types.d.ts';
- */
 
 /**
  * ✨

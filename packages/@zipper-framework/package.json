@@ -6,6 +6,6 @@
   "scripts": {
     "build:deno": "deno run -A ./bin/generate.ts",
     "build:watch": "deno run -A ./bin/generate-watch.ts",
-    "dev": "yarn build:watch & yarn --cwd=\"../..\" deno:dev ./packages/@zipper-framework/deno/app.ts port=8888"
+    "dev": "yarn build:watch & yarn --cwd=\"../..\" deno:dev ./packages/@zipper-framework/deno/run.ts port=8888"
   }
 }
