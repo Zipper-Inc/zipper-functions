@@ -26,6 +26,20 @@ buildWorkerDefinition(
   false,
 );
 
+const TYPESCRIPT_ERRORS_TO_IGNORE = [
+  // Ignore this error so we can import Deno URLs
+  // TS2691: An import path cannot end with a '.ts' extension.
+  2691,
+  // Ignore this error so we can import Deno and Zipper URLs
+  // TS2792: Cannot find module.
+  2792,
+  /** @todo fix this error */
+  // Ignore this error because we don't know how to import from web correctly yet
+  // For example, this url https://esm.sh/lodash/unescape should work but it
+  // TS2307: Cannot find module or it's corresponding type declarations.
+  2307,
+];
+
 const isExternalResource = (resource: string | monaco.Uri) =>
   /^https?/.test(resource.toString());
 
@@ -116,14 +130,7 @@ export default function PlaygroundEditor(
 
       const diagnosticOptions: monaco.languages.typescript.DiagnosticsOptions =
         {
-          diagnosticCodesToIgnore: [
-            // Ignore this error so we can import Deno URLs
-            // TS2691: An import path cannot end with a '.ts' extension.
-            2691,
-            // Ignore this error so we can import Deno and Zipper URLs
-            // TS2792: Cannot find module.
-            2792,
-          ],
+          diagnosticCodesToIgnore: TYPESCRIPT_ERRORS_TO_IGNORE,
         };
 
       monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions(
