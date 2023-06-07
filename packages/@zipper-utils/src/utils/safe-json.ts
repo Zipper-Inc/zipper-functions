@@ -4,18 +4,18 @@ export function safeJSONParse(
   fallback?: any,
   verbose = false,
 ): any {
+  // Handle trying to parse JSON that's already an object
+  if (typeof json === 'object') {
+    return JSON.parse(JSON.stringify(json), reviver);
+  }
+
+  // Everything else
   let parsed;
   try {
     parsed = JSON.parse(json, reviver);
   } catch (e) {
-    try {
-      if (typeof json === 'object') {
-        return JSON.parse(JSON.stringify(json), reviver);
-      }
-    } catch (error) {
-      if (verbose) console.error('Not vaild JSON', json);
-      parsed = fallback;
-    }
+    if (verbose) console.error('Not vaild JSON', json);
+    parsed = fallback;
   }
   return parsed;
 }
