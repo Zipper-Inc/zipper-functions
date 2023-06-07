@@ -1,6 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
 
-import { MAIN_PATH } from '../../constants.ts';
+import { MAIN_PATH } from '../../lib/constants.ts';
 import * as main from '../src/main.ts';
 
 /// <generated-imports>
