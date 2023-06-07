@@ -1,5 +1,6 @@
-import { Box, Text, Flex, Stack, StackDivider, Link } from '@chakra-ui/react';
+import { Box, Flex, Stack, StackDivider, Link } from '@chakra-ui/react';
 import { OutputType } from '@zipper/types';
+import ReactMarkdown from 'react-markdown';
 
 import { ObjectExplorer } from './object-explorer';
 import { parseResult } from './utils';
@@ -8,6 +9,7 @@ import { ActionComponent } from './action-component';
 import { RouterComponent } from './router-component';
 import Collection from './collection';
 import Array from './array';
+import ChakraUIRenderer from '../../utils/chakra-markdown-renderer';
 
 export function SmartFunctionOutput({
   result,
@@ -22,7 +24,12 @@ export function SmartFunctionOutput({
 
   switch (type) {
     case OutputType.String:
-      return <Text fontSize="2xl">{data.toString()}</Text>;
+      return (
+        <ReactMarkdown
+          components={ChakraUIRenderer()}
+          children={data.toString()}
+        />
+      );
 
     case OutputType.Array:
       return <Array data={data} />;

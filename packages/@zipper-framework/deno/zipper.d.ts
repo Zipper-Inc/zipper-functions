@@ -16,7 +16,7 @@ declare namespace Zipper {
    * The most atomic unit of data in Zipper
    * @category Primitive
    */
-  export type Primitive = string | number | boolean | null;
+  export type Primitive = string | number | boolean | Date | null;
 
   /**
    * Zipper objects can only be keyed by string or number
@@ -211,7 +211,7 @@ declare namespace Zipper {
   export interface ComponentBase {
     type: string;
     props: Record<string, Serializable>;
-    children?: Serializable | Component | Array<Serializable | Component>;
+    children?: Serializable | Component | Array<any>;
   }
 
   type SelfPosition =
@@ -225,12 +225,14 @@ declare namespace Zipper {
 
   export interface StackComponent extends ComponentBase {
     type: 'stack';
-    props: {
-      direction: 'row' | 'column';
-      divider?: boolean;
-      align?: SelfPosition | 'baseline' | 'normal' | 'stretch';
-    };
-    children: Array<Serializable | Component>;
+    props:
+      | {
+          direction: 'row' | 'column';
+          divider?: boolean;
+          align?: SelfPosition | 'baseline' | 'normal' | 'stretch';
+        }
+      | Record<string, any>;
+    children: Array<any>;
   }
 
   export interface LinkComponent extends ComponentBase {
