@@ -6,15 +6,18 @@ type EditorNavProps = {
 };
 
 export const EditorPreviewNav: React.FC<EditorNavProps> = ({ app }) => {
+  const scriptMain = app.scripts.find(
+    (script) => script.filename === 'main.ts',
+  );
   return (
     <>
       <Heading as="h2" fontSize="xl" color="white">
         {app.name}
       </Heading>
       <VStack spacing={1} alignItems="start">
-        {app.scripts.map((script) => (
+        {scriptMain && (
           <Tag
-            key={script.id}
+            key={scriptMain.id}
             colorScheme="blackAlpha"
             color="white"
             fontWeight={600}
@@ -23,12 +26,35 @@ export const EditorPreviewNav: React.FC<EditorNavProps> = ({ app }) => {
             _hover={{ transform: 'scale(1.05)' }}
             onClick={(e) => {
               e.preventDefault();
-              window.location.href = `/${app.resourceOwner.slug}/${app.slug}/edit/${script.filename}`;
+              window.location.href = `/${app.resourceOwner.slug}/${app.slug}/edit/${scriptMain.filename}`;
             }}
           >
-            {script.filename}
+            {scriptMain.filename}
           </Tag>
-        ))}
+        )}
+
+        {app.scripts
+          .filter((script) => script.filename !== 'main.ts')
+          .sort((a, b) => {
+            return ('' + a.filename).localeCompare(b.filename);
+          })
+          .map((script) => (
+            <Tag
+              key={script.id}
+              colorScheme="blackAlpha"
+              color="white"
+              fontWeight={600}
+              paddingX={3}
+              paddingY={2}
+              _hover={{ transform: 'scale(1.05)' }}
+              onClick={(e) => {
+                e.preventDefault();
+                window.location.href = `/${app.resourceOwner.slug}/${app.slug}/edit/${script.filename}`;
+              }}
+            >
+              {script.filename}
+            </Tag>
+          ))}
       </VStack>
     </>
   );

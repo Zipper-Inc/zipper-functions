@@ -27,7 +27,6 @@ const MIN_CODE_PREVIEW_HEIGHT = 500;
 const AppPage: NextPageWithLayout = () => {
   const router = useRouter();
   const { getAppOwner } = useAppOwner();
-  const headline = 'Turn a meeting into a task list';
 
   const resourceOwnerSlug = router.query['resource-owner'] as string;
   const appSlug = router.query['app-slug'] as string;
@@ -56,8 +55,14 @@ const AppPage: NextPageWithLayout = () => {
   return (
     <HStack gap={4} pl={10} mr={0} alignItems="stretch" flex={1}>
       <VStack flex={2} gap={4} alignItems="start">
-        <Heading as="h1" size="xl" fontWeight="bold" overflowWrap="normal">
-          {headline}
+        <Heading
+          as="h1"
+          size="xl"
+          fontWeight="bold"
+          overflowWrap="normal"
+          textTransform="capitalize"
+        >
+          {data.slug.replace(/-/g, ' ')}
         </Heading>
         <Heading
           as={Link}
@@ -109,6 +114,32 @@ const AppPage: NextPageWithLayout = () => {
                 {new Intl.DateTimeFormat('en-GB', {
                   dateStyle: 'short',
                 }).format(data?.updatedAt || undefined)}
+              </Text>
+            </HStack>
+            <HStack overflow="hidden" minWidth={0}>
+              <Text flex={1} color="gray.700">
+                Code
+              </Text>
+              <Text
+                flex={1}
+                color="purple.600"
+                overflow="auto"
+                whiteSpace="nowrap"
+              >
+                {data.isPrivate ? 'Private' : 'Public'}
+              </Text>
+            </HStack>
+            <HStack overflow="hidden" minWidth={0}>
+              <Text flex={1} color="gray.700">
+                Output
+              </Text>
+              <Text
+                flex={1}
+                color="purple.600"
+                overflow="auto"
+                whiteSpace="nowrap"
+              >
+                {data.requiresAuthToRun ? 'Requires auth' : 'Public'}
               </Text>
             </HStack>
           </VStack>

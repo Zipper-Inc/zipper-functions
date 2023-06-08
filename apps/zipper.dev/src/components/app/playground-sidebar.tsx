@@ -177,6 +177,7 @@ export function PlaygroundSidebar({
               onDelete={requestDelete}
               onDuplicate={onDuplicate}
               onStartRenaming={startRenaming}
+              canUserEdit={app.canUserEdit}
             />
           ))}
         </VStack>

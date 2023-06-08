@@ -22,6 +22,8 @@ import { PlaygroundAvatars } from './playground-avatars';
 import { useAppEditors } from '~/hooks/use-app-editors';
 import { TabButton } from '@zipper/ui';
 import HistoryTab from './history-tab';
+import { getAppVersionFromHash } from '~/utils/hashing';
+import { randomUUID } from 'crypto';
 
 const tabPanelStyles: ChakraProps = {
   flex: 1,
@@ -72,8 +74,9 @@ export function Playground({
   const saveAppBeforeRun = async () => {
     if (app.canUserEdit) {
       return save();
+    } else {
+      return app.lastDeploymentVersion || randomUUID();
     }
-    throw new Error('You do not have permission to edit this applet.');
   };
 
   return (
