@@ -176,6 +176,20 @@ export const resourceOwnerSlugRouter = createRouter()
     }),
     async resolve({ input }) {
       try {
+        const existingUserSlug = await prisma.resourceOwnerSlug.findFirst({
+          where: {
+            resourceOwnerId: input.id,
+            resourceOwnerType: ResourceOwnerType.User,
+          },
+        });
+        if (existingUserSlug) {
+          await clerkClient.users.updateUser(input.id, {
+            username: existingUserSlug.slug,
+            publicMetadata: { username: existingUserSlug.slug },
+          });
+          return existingUserSlug.slug;
+        }
+
         const { firstName, lastName, email, clerkUsername } = input;
         let possibleSlugs: string[] = clerkUsername ? [clerkUsername] : [];
         if (email) {
