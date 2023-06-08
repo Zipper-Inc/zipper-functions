@@ -28,9 +28,7 @@ import {
 import getRunUrl, { getBootUrl } from '~/utils/get-run-url';
 import { randomUUID } from 'crypto';
 import fetch from 'node-fetch';
-import { getAuth } from '@clerk/nextjs/server';
 import isCodeRunnable from '~/utils/is-code-runnable';
-import { sign } from 'jsonwebtoken';
 import { generateAccessToken } from '~/utils/jwt-utils';
 
 const defaultSelect = Prisma.validator<Prisma.AppSelect>()({
