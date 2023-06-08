@@ -81,8 +81,10 @@ export function FunctionOutput({
   appSlug,
   showTabs,
   generateUserToken,
+  reloadOnClose: _reloadOnClose = false,
 }: FunctionOutputProps) {
   const [isExpandedResultOpen, setIsExpandedResultOpen] = useState(true);
+  const [reloadOnClose, setReloadOnClose] = useState(_reloadOnClose);
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   const modalApplet = useAppletContent();
@@ -334,6 +336,7 @@ export function FunctionOutput({
                 modalApplet.mainContent.set({
                   output: { data: text, inputsUsed: inputsWithValues || [] },
                 });
+                setReloadOnClose(true);
                 modalApplet.mainContent.setIsLoading(false);
               }}
             >
@@ -351,15 +354,48 @@ export function FunctionOutput({
             appSlug={appSlug}
             showTabs={showTabs}
             generateUserToken={generateUserToken}
+            reloadOnClose={reloadOnClose}
           />
         )}
       </>
     );
   };
 
-  function closeModal() {
+  async function closeModal() {
     modalApplet.reset();
     onClose();
+    if (reloadOnClose) {
+      const originalInputs: Zipper.Inputs = {};
+
+      const refreshPath = applet?.mainContent.path;
+      const refreshInputParams = applet?.mainContent.output?.inputsUsed || [];
+
+      refreshInputParams.forEach((i) => (originalInputs[i.key] = i.value));
+
+      const userToken = await generateUserToken();
+
+      const headers = {
+        Authorization: `Bearer ${userToken || ''}`,
+      };
+
+      const refreshRes = await fetch(getRunUrl(refreshPath || 'main.ts'), {
+        method: 'POST',
+        body: JSON.stringify(originalInputs),
+        headers,
+      });
+      const text = await refreshRes.text();
+
+      showSecondaryOutput({
+        actionShowAs: 'refresh',
+        actionSection: 'main',
+        output: {
+          data: text,
+          inputsUsed: refreshInputParams,
+        },
+        path: refreshPath || 'main.ts',
+      });
+      setReloadOnClose(false);
+    }
   }
 
   const [stickyTabs, setStickyTabs] = useState(false);
@@ -474,7 +510,13 @@ export function FunctionOutput({
             </Box>
           </Tabs>
           {currentContext === 'main' && (
-            <Modal isOpen={isOpen} onClose={closeModal} size="5xl">
+            <Modal
+              isOpen={isOpen}
+              onClose={async () => {
+                await closeModal();
+              }}
+              size="5xl"
+            >
               <ModalOverlay />
               <ModalContent maxH="2xl">
                 <ModalHeader>{modalApplet.mainContent.path}</ModalHeader>
