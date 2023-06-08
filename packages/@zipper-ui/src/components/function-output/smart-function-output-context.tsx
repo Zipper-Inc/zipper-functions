@@ -1,8 +1,16 @@
-import { createContext, useContext } from 'react';
+import { createContext, useContext, useState } from 'react';
 
 export const SmartFunctionOutputContext = createContext<{
   outputSection: 'main' | 'expanded';
-}>({ outputSection: 'main' });
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
+}>({
+  outputSection: 'main',
+  searchQuery: '',
+  setSearchQuery: () => {
+    return;
+  },
+});
 
 const SmartFunctionOutputProvider = ({
   children,
@@ -11,10 +19,13 @@ const SmartFunctionOutputProvider = ({
   outputSection: 'main' | 'expanded';
   children: any;
 }) => {
+  const [searchQuery, setSearchQuery] = useState('');
   return (
     <SmartFunctionOutputContext.Provider
       value={{
         outputSection,
+        searchQuery,
+        setSearchQuery,
       }}
     >
       {children}

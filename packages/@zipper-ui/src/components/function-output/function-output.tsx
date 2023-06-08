@@ -74,7 +74,6 @@ const tabButtonStyles: ChakraProps = {
 };
 
 export function FunctionOutput({
-  level = 0,
   getRunUrl,
   appInfoUrl,
   applet,
@@ -276,6 +275,7 @@ export function FunctionOutput({
                       <SmartFunctionOutput
                         result={applet.expandedContent.output.data}
                         level={0}
+                        tableLevel={0}
                       />
                     </SmartFunctionOutputProvider>
                   </Box>
@@ -427,7 +427,8 @@ export function FunctionOutput({
                       <SmartFunctionOutputProvider outputSection="main">
                         <SmartFunctionOutput
                           result={applet?.mainContent.output?.data}
-                          level={level}
+                          level={0}
+                          tableLevel={0}
                         />
                       </SmartFunctionOutputProvider>
                     </Box>
