@@ -105,7 +105,7 @@ export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
       spacing={0}
       alignItems="stretch"
       pb={3}
-      maxH={MAX_CODE_TAB_HEIGHT}
+      maxH={app.canUserEdit ? MAX_CODE_TAB_HEIGHT : MAX_CODE_TAB_HEIGHT + 50}
       minH="350px"
       overflow="hidden"
     >

@@ -25,6 +25,7 @@ export type ScriptItemProps = {
   onDuplicate: (id: string) => void;
   onStartRenaming: (id: string) => void;
   onEndRenaming: VoidFunction;
+  canUserEdit: boolean;
 };
 
 export const ScriptItem: React.FC<ScriptItemProps> = ({
@@ -37,6 +38,7 @@ export const ScriptItem: React.FC<ScriptItemProps> = ({
   onDuplicate,
   onStartRenaming,
   onEndRenaming,
+  canUserEdit,
 }) => {
   const { currentScript, setCurrentScript, isModelDirty, modelHasErrors } =
     useEditorContext();
@@ -104,30 +106,36 @@ export const ScriptItem: React.FC<ScriptItemProps> = ({
           </Flex>
         </Link>
       )}
-      <Menu>
-        <MenuButton as={Text}>
-          <Icon
-            as={HiDotsVertical}
-            fontSize="xs"
-            stroke="0"
-            visibility={currentScript?.id === script.id ? 'visible' : 'hidden'}
-            _groupHover={{
-              visibility: 'visible',
-            }}
-          />
-        </MenuButton>
-        <MenuList color="chakra-body-text">
-          <MenuItem onClick={() => onDuplicate(script.id)}>Duplicate</MenuItem>
-          {isEditable && (
-            <>
-              <MenuItem onClick={() => onStartRenaming(script.id)}>
-                Rename
-              </MenuItem>
-              <MenuItem onClick={() => onDelete(script.id)}>Delete</MenuItem>
-            </>
-          )}
-        </MenuList>
-      </Menu>
+      {canUserEdit && (
+        <Menu>
+          <MenuButton as={Text}>
+            <Icon
+              as={HiDotsVertical}
+              fontSize="xs"
+              stroke="0"
+              visibility={
+                currentScript?.id === script.id ? 'visible' : 'hidden'
+              }
+              _groupHover={{
+                visibility: 'visible',
+              }}
+            />
+          </MenuButton>
+          <MenuList color="chakra-body-text">
+            <MenuItem onClick={() => onDuplicate(script.id)}>
+              Duplicate
+            </MenuItem>
+            {isEditable && (
+              <>
+                <MenuItem onClick={() => onStartRenaming(script.id)}>
+                  Rename
+                </MenuItem>
+                <MenuItem onClick={() => onDelete(script.id)}>Delete</MenuItem>
+              </>
+            )}
+          </MenuList>
+        </Menu>
+      )}
     </HStack>
   );
 };
