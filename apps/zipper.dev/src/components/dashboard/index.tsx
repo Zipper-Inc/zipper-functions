@@ -46,6 +46,7 @@ import ManageMembers from './members';
 import OrganizationSettings from './organization-settings';
 import UserSettings from './user-settings';
 import AppAvatar from '../app-avatar';
+import { useRouter } from 'next/router';
 
 type _App = Unpack<inferQueryOutput<'app.byAuthedUser'>>;
 type App = _App & {
@@ -182,6 +183,7 @@ const columns = [
 const emptyApps: App[] = [];
 
 export function Dashboard() {
+  const router = useRouter();
   const { user } = useUser();
   const [tabIndex, setTabIndex] = useState(0);
   const { organization } = useOrganization();
@@ -193,6 +195,11 @@ export function Dashboard() {
 
   const generateSlug = trpc.useMutation(
     'resourceOwnerSlug.createGeneratedUserSlug',
+    {
+      onSuccess: () => {
+        router.reload();
+      },
+    },
   );
 
   const { onOpen, isOpen, onClose } = useDisclosure();
@@ -219,18 +226,14 @@ export function Dashboard() {
     console.log('validating username');
     if (user && !user.publicMetadata.username) {
       console.log('missing username');
-      clerkClient.users.getUser(user.id).then((user) => {
-        if (!user.publicMetadata.username) {
-          generateSlug.mutateAsync({
-            email: user.emailAddresses.find(
-              (e) => e.id === user.primaryEmailAddressId,
-            )?.emailAddress,
-            firstName: user.firstName || undefined,
-            lastName: user.lastName || undefined,
-            clerkUsername: user.username || undefined,
-            id: user.id,
-          });
-        }
+      generateSlug.mutateAsync({
+        email: user.emailAddresses.find(
+          (e) => e.id === user.primaryEmailAddressId,
+        )?.emailAddress,
+        firstName: user.firstName || undefined,
+        lastName: user.lastName || undefined,
+        clerkUsername: user.username || undefined,
+        id: user.id,
       });
     } else {
       console.log('valid username');
