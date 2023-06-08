@@ -16,7 +16,7 @@ declare namespace Zipper {
    * The most atomic unit of data in Zipper
    * @category Primitive
    */
-  export type Primitive = string | number | boolean | Date | null;
+  export type Primitive = string | number | boolean | null;
 
   /**
    * Zipper objects can only be keyed by string or number
