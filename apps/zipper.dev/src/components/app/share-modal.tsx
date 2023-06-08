@@ -57,7 +57,7 @@ const ShareTab: React.FC<Props> = ({ isOpen, onClose, appId }) => {
   const invitationForm = useForm();
 
   const { onCopy, hasCopied } = useClipboard(
-    `${window.location.origin}/app/${appId}`,
+    `${window.location.origin}/${router.query['resource-owner']}/${router.query['app-slug']}`,
   );
 
   const inviteEditor = trpc.useMutation('appEditor.invite', {
