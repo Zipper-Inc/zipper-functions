@@ -357,9 +357,39 @@ export function FunctionOutput({
     );
   };
 
-  function closeModal() {
+  async function closeModal() {
     modalApplet.reset();
     onClose();
+
+    const originalInputs: Zipper.Inputs = {};
+
+    const refreshPath = applet?.mainContent.path;
+    const refreshInputParams = applet?.mainContent.output?.inputsUsed || [];
+
+    refreshInputParams.forEach((i) => (originalInputs[i.key] = i.value));
+
+    const userToken = await generateUserToken();
+
+    const headers = {
+      Authorization: `Bearer ${userToken || ''}`,
+    };
+
+    const refreshRes = await fetch(getRunUrl(refreshPath || 'main.ts'), {
+      method: 'POST',
+      body: JSON.stringify(originalInputs),
+      headers,
+    });
+    const text = await refreshRes.text();
+
+    showSecondaryOutput({
+      actionShowAs: 'refresh',
+      actionSection: 'main',
+      output: {
+        data: text,
+        inputsUsed: refreshInputParams,
+      },
+      path: refreshPath || 'main.ts',
+    });
   }
 
   const [stickyTabs, setStickyTabs] = useState(false);
@@ -474,7 +504,13 @@ export function FunctionOutput({
             </Box>
           </Tabs>
           {currentContext === 'main' && (
-            <Modal isOpen={isOpen} onClose={closeModal} size="5xl">
+            <Modal
+              isOpen={isOpen}
+              onClose={async () => {
+                await closeModal();
+              }}
+              size="5xl"
+            >
               <ModalOverlay />
               <ModalContent maxH="2xl">
                 <ModalHeader>{modalApplet.mainContent.path}</ModalHeader>
