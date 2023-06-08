@@ -21,7 +21,7 @@ import {
   useDisclosure,
 } from '@chakra-ui/react';
 import React, { useEffect, useMemo, useState } from 'react';
-import { useOrganization } from '@clerk/nextjs';
+import { useOrganization, useUser } from '@clerk/nextjs';
 import { CreateAppForm } from './create-app-form';
 
 import { FiPlus } from 'react-icons/fi';
@@ -41,11 +41,12 @@ import {
 import { AppOwner, useAppOwner } from '~/hooks/use-app-owner';
 import { EmptySlate } from './empty-slate';
 import { ResourceOwnerType } from '@zipper/types';
-import { TabButton } from '@zipper/ui';
+import { TabButton, useEffectOnce } from '@zipper/ui';
 import ManageMembers from './members';
 import OrganizationSettings from './organization-settings';
 import UserSettings from './user-settings';
 import AppAvatar from '../app-avatar';
+import { useRouter } from 'next/router';
 
 type _App = Unpack<inferQueryOutput<'app.byAuthedUser'>>;
 type App = _App & {
@@ -182,6 +183,8 @@ const columns = [
 const emptyApps: App[] = [];
 
 export function Dashboard() {
+  const router = useRouter();
+  const { user } = useUser();
   const [tabIndex, setTabIndex] = useState(0);
   const { organization } = useOrganization();
   const [appSearchTerm, setAppSearchTerm] = useState('');
@@ -189,6 +192,16 @@ export function Dashboard() {
     'app.byAuthedUser',
     { filterByOrganization: !appSearchTerm },
   ]);
+
+  const generateSlug = trpc.useMutation(
+    'resourceOwnerSlug.createGeneratedUserSlug',
+    {
+      onSuccess: () => {
+        router.reload();
+      },
+    },
+  );
+
   const { onOpen, isOpen, onClose } = useDisclosure();
   const [columnVisibility, setColumnVisibility] = useState<
     Record<string, boolean>
@@ -208,6 +221,24 @@ export function Dashboard() {
       appQuery.data ? prepareAppsData(appQuery.data, getAppOwner) : emptyApps,
     [appQuery.data],
   );
+
+  useEffectOnce(() => {
+    console.log('validating username');
+    if (user && !user.publicMetadata.username) {
+      console.log('missing username');
+      generateSlug.mutateAsync({
+        email: user.emailAddresses.find(
+          (e) => e.id === user.primaryEmailAddressId,
+        )?.emailAddress,
+        firstName: user.firstName || undefined,
+        lastName: user.lastName || undefined,
+        clerkUsername: user.username || undefined,
+        id: user.id,
+      });
+    } else {
+      console.log('valid username');
+    }
+  });
 
   useEffect(() => {
     appQuery.refetch();
