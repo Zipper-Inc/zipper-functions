@@ -12,7 +12,7 @@ import { readFrameworkFile } from './read-file';
  * Totally possible that the directory structure cannot be guaranteed
  */
 export const FRAMEWORK_ENTRYPOINT = 'run.ts';
-export const APPLET_INDEX_PATH = './applet/generated/index.gen.ts';
+export const APPLET_INDEX_PATH = 'applet/generated/index.gen.ts';
 export const TYPESCRIPT_CONTENT_HEADERS = {
   'content-type': 'text/typescript',
 };
