@@ -64,11 +64,11 @@ export function SmartFunctionOutput({
             <Stack
               {...component.props}
               divider={
-                component.props.divider ? (
+                component.props?.divider ? (
                   <StackDivider borderColor="gray.200" />
                 ) : undefined
               }
-              spacing={component.props.direction === 'row' ? 6 : 4}
+              spacing={component.props?.direction === 'row' ? 6 : 4}
             >
               {(component.children as Zipper.Serializable[]).map((child) => {
                 return (
