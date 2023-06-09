@@ -5,6 +5,8 @@ import { ZipperStorage } from './lib/storage.ts';
 import { sendLog, methods } from './lib/console.ts';
 import { getUserConnectorAuths } from './lib/user-auth-connectors.ts';
 
+import './lib/components/stack.ts';
+
 const PORT = 8888;
 
 /**
@@ -107,6 +109,22 @@ async function runApplet({ request, respondWith }: Deno.RequestEvent) {
           .join(' '),
       }),
     },
+    JSX: {
+      createElement: (tag, props, ...children) => {
+        if (typeof tag === 'function') {
+          return tag({ ...props, children });
+        } else {
+          const type = tag.toLowerCase();
+          return Zipper.Component.create({
+            type,
+            props,
+            children,
+            // deno-lint-ignore no-explicit-any
+          } as any);
+        }
+      },
+      Fragment: (fragment) => fragment,
+    },
   };
 
   // Take over console.* methods
@@ -129,8 +147,7 @@ async function runApplet({ request, respondWith }: Deno.RequestEvent) {
   });
 
   // Grab the handler
-  let path: string = body.path || MAIN_PATH;
-  if (!path.endsWith('.ts')) path = `${path}.ts`;
+  const path: string = (body.path || MAIN_PATH).replace(/\.(ts|tsx)$|$/, '.ts');
   const { handler } = files[path];
 
   // Handle missing paths
@@ -153,7 +170,7 @@ async function runApplet({ request, respondWith }: Deno.RequestEvent) {
 
   // Run the handler
   try {
-    if (appInfo.connectorsWithUserAuth.length > 0) {
+    if (appInfo.connectorsWithUserAuth?.length > 0) {
       await fetchUserAuthConnectorInfo();
     }
 

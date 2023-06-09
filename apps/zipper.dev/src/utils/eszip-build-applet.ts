@@ -64,9 +64,13 @@ export async function build({
       const script = app.scripts.find((s) => s.filename === filename);
 
       return {
-        specifier,
+        // Add TSX to all files so they support JSX
+        specifier: specifier.replace(/\.(ts|tsx)$|$/, '.tsx'),
         headers: TYPESCRIPT_CONTENT_HEADERS,
-        content: script?.code || '/* missing code */',
+        content:
+          // Add the JSX pragma to all files automatically
+          script?.code?.replace(/^/, '/** @jsx Zipper.JSX.createElement */') ||
+          '/* 🤷🏽‍♂️ missing code */',
         kind: 'module',
         version,
       };

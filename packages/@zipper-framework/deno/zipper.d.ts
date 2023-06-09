@@ -4,7 +4,7 @@
 // * 🗣️ Block comments in namespace will show up in editor
 // *
 
-// deno-lint-ignore-file no-explicit-any
+// deno-lint-ignore-file no-explicit-any no-empty-interface
 
 /**
  * ✨
@@ -16,7 +16,7 @@ declare namespace Zipper {
    * The most atomic unit of data in Zipper
    * @category Primitive
    */
-  export type Primitive = string | number | boolean | null;
+  export type Primitive = string | Date | number | boolean | null;
 
   /**
    * Zipper objects can only be keyed by string or number
@@ -210,8 +210,8 @@ declare namespace Zipper {
 
   export interface ComponentBase {
     type: string;
-    props: Record<string, Serializable>;
-    children?: Serializable | Component | Array<any>;
+    props?: Record<string, Serializable>;
+    children?: Component.Children;
   }
 
   type SelfPosition =
@@ -232,7 +232,7 @@ declare namespace Zipper {
           align?: SelfPosition | 'baseline' | 'normal' | 'stretch';
         }
       | Record<string, any>;
-    children: Array<any>;
+    children: Serializable | Component;
   }
 
   export interface LinkComponent extends ComponentBase {
@@ -246,6 +246,7 @@ declare namespace Zipper {
   }
 
   export namespace Component {
+    export type Children = Component['children'];
     /**
      * Creates an action
      */
@@ -370,6 +371,16 @@ declare namespace Zipper {
     };
   }
 
+  export namespace JSX {
+    type Props = Record<string, unknown>;
+    export function createElement(
+      tag: string | ((props?: Props) => Component),
+      props?: Props,
+      ...children: Component['children'][]
+    ): Component;
+    export function Fragment(fragment: Serializable): Serializable;
+  }
+
   // *
   // * Zipper Global Properties
   // *
@@ -398,4 +409,11 @@ declare namespace Zipper {
    * await Zipper.storage.delete('another-store-key');
    */
   export const storage: Storage;
+}
+
+declare namespace JSX {
+  // eslint-disable-next-line @typescript-eslint/no-empty-interface
+  interface IntrinsicElements {
+    /** @todo support HTML eventually */
+  }
 }
