@@ -30,6 +30,8 @@ declare namespace Zipper {
    * @category Primitive
    */
   export type Serializable =
+    | Action
+    | Component
     | Primitive
     | Serializable[]
     | { [key: PrimitiveKey]: Serializable };
@@ -147,7 +149,7 @@ declare namespace Zipper {
    * These are special objects we can return such as Actions
    * You must pass a string type to it, i.e. `Zipper.Action`
    */
-  interface SpecialOutput<zipperType> {
+  interface SpecialOutput<zipperType extends string> {
     $zipperType: zipperType;
   }
 
@@ -231,8 +233,8 @@ declare namespace Zipper {
           divider?: boolean;
           align?: SelfPosition | 'baseline' | 'normal' | 'stretch';
         }
-      | Record<string, any>;
-    children: Serializable | Component;
+      | Record<string, Serializable>;
+    children: Serializable;
   }
 
   export interface LinkComponent extends ComponentBase {
@@ -283,7 +285,7 @@ declare namespace Zipper {
       // The log method
       method: Method;
       // The arguments passed to console API
-      data: Zipper.Serializable[];
+      data: Serializable[];
       // Time of log
       timestamp: number;
     }
