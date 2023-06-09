@@ -420,13 +420,26 @@ declare namespace JSX {
   }
 }
 
+// Global components
+
 declare function Stack(
   props: Partial<Zipper.StackComponent['props']>,
 ): Zipper.Component;
+
 declare function Row(
   props?: Partial<Zipper.StackComponent['props']>,
 ): Zipper.Component;
+
 declare function Column(
   props?: Partial<Zipper.StackComponent['props']>,
 ): Zipper.Component;
+
 declare function Link(props: Zipper.LinkComponent['props']): Zipper.Component;
+
+declare function Button<I = Zipper.Inputs>(
+  props: Omit<Zipper.ButtonAction<I>, 'actionType'>,
+): Zipper.Action;
+
+declare function Dropdown<I = Zipper.Inputs>(
+  props: Omit<Zipper.DropdownAction<I>, 'actionType'>,
+): Zipper.Action;
