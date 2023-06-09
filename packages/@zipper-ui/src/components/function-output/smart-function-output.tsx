@@ -70,7 +70,7 @@ export function SmartFunctionOutput({
               }
               spacing={component.props.direction === 'row' ? 6 : 4}
             >
-              {component.children.map((child) => {
+              {(component.children as Zipper.Serializable[]).map((child) => {
                 return (
                   <SmartFunctionOutput
                     result={child}
