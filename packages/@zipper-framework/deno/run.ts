@@ -5,14 +5,14 @@ import { ZipperStorage } from './lib/storage.ts';
 import { sendLog, methods } from './lib/console.ts';
 import { getUserConnectorAuths } from './lib/user-auth-connectors.ts';
 
-import './lib/components/index.ts';
+import './lib/global-components.ts';
 
 const PORT = 8888;
 
 /**
  * Run the applet with the given RequestEvent
  */
-async function runApplet({ request, respondWith }: Deno.RequestEvent) {
+async function runApplet({ request }: Deno.RequestEvent) {
   let body;
   let error;
 

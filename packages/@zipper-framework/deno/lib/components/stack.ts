@@ -1,25 +1,18 @@
-export const Stack = ({ children, ...props }: Props | undefined) =>
+// deno-lint-ignore-file no-explicit-any
+
+export const Stack = ({ children, ...props }: any) =>
   Zipper.Component.create({ type: 'stack', props, children });
 
-export const Row = ({ children, ...props }: Props | undefined) =>
+export const Row = ({ children, ...props }: any) =>
   Zipper.Component.create({
     type: 'stack',
     props: { ...props, direction: 'row' },
     children,
   });
 
-export const Column = ({
-  children,
-  ...props
-}: Zipper.StackComponent['props'] & {
-  children: Zipper.StackComponent['children'];
-}) =>
+export const Column = ({ children, ...props }: any) =>
   Zipper.Component.create({
     type: 'stack',
     props: { ...props, direction: 'column' },
     children,
   });
-
-window.Stack = Stack;
-window.Row = Row;
-window.Column = Column;

@@ -1,13 +1,8 @@
-export const Link = ({
-  children,
-  ...props
-}: Zipper.LinkComponent['props'] & {
-  children: Zipper.LinkComponent['children'];
-}) =>
+// deno-lint-ignore-file no-explicit-any
+
+export const Link = ({ children, ...props }: any) =>
   Zipper.Component.create({
     type: 'link',
     props,
     children,
   });
-
-window.Link = Link;
