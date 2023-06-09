@@ -5,8 +5,7 @@ import { ZipperStorage } from './lib/storage.ts';
 import { sendLog, methods } from './lib/console.ts';
 import { getUserConnectorAuths } from './lib/user-auth-connectors.ts';
 
-import './lib/components/stack.ts';
-import './lib/components/link.ts';
+import './lib/components/index.ts';
 
 const PORT = 8888;
 
@@ -75,20 +74,16 @@ async function runApplet({ request, respondWith }: Deno.RequestEvent) {
     env,
     storage: new ZipperStorage(appInfo.id),
     Component: {
-      create: (component) =>
-        ({
-          $zipperType: 'Zipper.Component',
-          ...component,
-          // deno-lint-ignore no-explicit-any
-        } as any),
+      create: (component) => ({
+        $zipperType: 'Zipper.Component',
+        ...component,
+      }),
     },
     Action: {
-      create: (action) =>
-        ({
-          $zipperType: 'Zipper.Action',
-          ...action,
-          // deno-lint-ignore no-explicit-any
-        } as any),
+      create: (action) => ({
+        $zipperType: 'Zipper.Action',
+        ...action,
+      }),
     },
     Router: {
       redirect: (url) => ({
@@ -115,13 +110,12 @@ async function runApplet({ request, respondWith }: Deno.RequestEvent) {
         if (typeof tag === 'function') {
           return tag({ ...props, children });
         } else {
-          const type = tag.toLowerCase();
           return Zipper.Component.create({
-            type,
+            // deno-lint-ignore no-explicit-any
+            type: tag.toLowerCase() as any,
             props,
             children,
-            // deno-lint-ignore no-explicit-any
-          } as any);
+          });
         }
       },
       Fragment: (fragment) => fragment,

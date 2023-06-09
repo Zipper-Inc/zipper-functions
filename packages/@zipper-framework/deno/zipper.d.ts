@@ -212,8 +212,8 @@ declare namespace Zipper {
 
   export interface ComponentBase {
     type: string;
-    props?: Record<string, Serializable>;
-    children?: Component.Children;
+    props?: JSX.Props;
+    children?: Component['children'];
   }
 
   type SelfPosition =
@@ -227,13 +227,13 @@ declare namespace Zipper {
 
   export interface StackComponent extends ComponentBase {
     type: 'stack';
-    props:
+    props?:
       | {
           direction: 'row' | 'column';
           divider?: boolean;
           align?: SelfPosition | 'baseline' | 'normal' | 'stretch';
         }
-      | Record<string, Serializable>;
+      | JSX.Props;
     children: Serializable;
   }
 
@@ -248,7 +248,6 @@ declare namespace Zipper {
   }
 
   export namespace Component {
-    export type Children = Component['children'];
     /**
      * Creates an action
      */
@@ -374,11 +373,12 @@ declare namespace Zipper {
   }
 
   export namespace JSX {
-    type Props = Record<string, unknown>;
+    export type Props = Record<string, Serializable>;
+    export type Children = Component['children'][];
     export function createElement(
       tag: string | ((props?: Props) => Component),
       props?: Props,
-      ...children: Component['children'][]
+      ...children: Children
     ): Component;
     export function Fragment(fragment: Serializable): Serializable;
   }
