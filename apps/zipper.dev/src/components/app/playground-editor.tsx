@@ -15,6 +15,9 @@ import { PlaygroundCollabCursor } from './playground-collab-cursor';
 import { format } from '~/utils/prettier';
 import { useRunAppContext } from '../context/run-app-context';
 import { getPathFromUri, getUriFromPath } from '~/utils/model-uri';
+import { parse } from '@babel/parser';
+import traverse from '@babel/traverse';
+import MonacoJSXHighlighter from 'monaco-jsx-highlighter';
 
 type MonacoEditor = monaco.editor.IStandaloneCodeEditor;
 
@@ -70,6 +73,18 @@ export default function PlaygroundEditor(
 
   const handleEditorDidMount = (editor: MonacoEditor, monaco: Monaco) => {
     console.log('editor mounted');
+
+    const monacoJSXHighlighter = new MonacoJSXHighlighter(
+      monaco,
+      parse,
+      traverse,
+      editor,
+    );
+
+    // Activate highlighting (debounceTime default: 100ms)s
+    monacoJSXHighlighter.highlightOnDidChangeModelContent(100);
+    // Activate JSX commenting
+    monacoJSXHighlighter.addJSXCommentCommand();
 
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     monacoRef!.current = monaco;
