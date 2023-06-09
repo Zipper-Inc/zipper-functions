@@ -419,13 +419,11 @@ declare namespace JSX {
 }
 
 export declare global {
-  type StackProps = Partial<
-    Zipper.StackComponent['props'] & {
-      children: Zipper.StackComponent['children'];
-    }
-  >;
+  type StackProps = Partial<Zipper.StackComponent['props']>;
 
   export function Stack(props: StackProps): Zipper.Component;
   export function Row(props?: StackProps): Zipper.Component;
   export function Column(props?: StackProps): Zipper.Component;
+
+  export function Link(props: Zipper.LinkComponent['props']): Zipper.Component;
 }

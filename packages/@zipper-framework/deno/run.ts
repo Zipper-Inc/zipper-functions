@@ -6,6 +6,7 @@ import { sendLog, methods } from './lib/console.ts';
 import { getUserConnectorAuths } from './lib/user-auth-connectors.ts';
 
 import './lib/components/stack.ts';
+import './lib/components/link.ts';
 
 const PORT = 8888;
 
