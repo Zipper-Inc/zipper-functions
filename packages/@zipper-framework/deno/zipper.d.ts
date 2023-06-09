@@ -417,3 +417,15 @@ declare namespace JSX {
     /** @todo support HTML eventually */
   }
 }
+
+export declare global {
+  type StackProps = Partial<
+    Zipper.StackComponent['props'] & {
+      children: Zipper.StackComponent['children'];
+    }
+  >;
+
+  export function Stack(props: StackProps): Zipper.Component;
+  export function Row(props?: StackProps): Zipper.Component;
+  export function Column(props?: StackProps): Zipper.Component;
+}

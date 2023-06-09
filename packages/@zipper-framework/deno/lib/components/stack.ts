@@ -1,13 +1,3 @@
-type Props = Zipper.StackComponent['props'] & {
-  children: Zipper.StackComponent['children'];
-};
-
-declare global {
-  export function Stack(props: Props): Zipper.Component;
-  export function Row(props?: Props): Zipper.Component;
-  export function Column(props?: Props): Zipper.Component;
-}
-
 export const Stack = ({ children, ...props }: Props | undefined) =>
   Zipper.Component.create({ type: 'stack', props, children });
 

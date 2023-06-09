@@ -162,6 +162,7 @@ export default function PlaygroundEditor(
           monaco.languages.typescript.ModuleResolutionKind.NodeJs,
         lib: ['esnext', 'dom', 'deno.ns'],
         noResolve: true,
+        jsx: monaco.languages.typescript.JsxEmit.Preserve,
       });
 
       monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
@@ -171,6 +172,7 @@ export default function PlaygroundEditor(
         moduleResolution:
           monaco.languages.typescript.ModuleResolutionKind.NodeJs,
         lib: ['esnext', 'dom', 'deno.ns'],
+        jsx: monaco.languages.typescript.JsxEmit.Preserve,
       });
 
       // Fallback formatter
