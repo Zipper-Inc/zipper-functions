@@ -9,7 +9,9 @@ import { ActionComponent } from './action-component';
 import { RouterComponent } from './router-component';
 import Collection from './collection';
 import Array from './array';
-import ChakraUIRenderer from '../../utils/chakra-markdown-renderer';
+import ChakraUIRenderer, {
+  defaults as defaultElements,
+} from '../../utils/chakra-markdown-renderer';
 import React from 'react';
 
 export function SmartFunctionOutput({
@@ -27,6 +29,9 @@ export function SmartFunctionOutput({
 
   switch (type) {
     case OutputType.String:
+      // Pass through if its not the top level
+      if (level > 0) return data.toString();
+
       return (
         <ReactMarkdown
           components={ChakraUIRenderer()}
@@ -102,11 +107,16 @@ export function SmartFunctionOutput({
           );
         }
         default:
-          // Only handle undefined 'html.' components
+          // Only handle defined 'html' components
           if (!component.type.startsWith('html.')) break;
 
           // Make HTML components React-friendly
-          const type = component.type.replace(/^html\./, '');
+          let element: any = component.type.replace(/^html\./, '');
+          const props: Record<string, any> = {
+            ['data-generated-by-zipper']: true,
+            ...component.props,
+          };
+
           const children = (component.children as Zipper.Serializable[]).map(
             (child) => {
               return (
@@ -119,9 +129,23 @@ export function SmartFunctionOutput({
             },
           );
 
+          // Translate h1-h6 into the format expected by ChakraMarkdownRenderer
+          const matchesHeading = element.match(/^h([1-6])$/);
+          if (matchesHeading) {
+            element = 'heading';
+            props.level = parseInt(matchesHeading[1], 10);
+          }
+
+          // Grab the default styled element (same as markdown)
+          const defaultElement = (
+            defaultElements as {
+              [k: string]: (props: Record<string, any>) => JSX.Element;
+            }
+          )[element];
+
           return React.createElement(
-            type,
-            { ['data-generated-by-zipper']: true, ...component.props },
+            defaultElement || element,
+            props,
             children,
           );
       }
