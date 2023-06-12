@@ -80,6 +80,7 @@ export const defaults = {
   },
   ul: (props: any) => {
     const { ordered, children, depth } = props;
+
     const attrs = getCoreProps(props);
     let Element = UnorderedList;
     let styleType = 'disc';
@@ -88,6 +89,7 @@ export const defaults = {
       styleType = 'decimal';
     }
     if (depth === 1) styleType = 'circle';
+
     return (
       <Element
         spacing={2}
@@ -135,7 +137,7 @@ export const defaults = {
     return (
       <ListItem
         {...getCoreProps(props)}
-        listStyleType={checked !== null ? 'none' : 'inherit'}
+        listStyleType={checkbox !== null ? 'none' : 'inherit'}
       >
         {checkbox || children}
       </ListItem>

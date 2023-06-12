@@ -111,14 +111,13 @@ async function runApplet({ request }: Deno.RequestEvent) {
           return tag({ ...props, children });
         } else {
           return Zipper.Component.create({
-            // deno-lint-ignore no-explicit-any
-            type: tag.toLowerCase() as any,
+            type: `html.${tag}` as Zipper.HtmlElement['type'],
             props,
             children,
           });
         }
       },
-      Fragment: (fragment) => fragment,
+      Fragment: ({ children }) => children,
     },
   };
 
