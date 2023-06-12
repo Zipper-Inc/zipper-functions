@@ -1,9 +1,9 @@
-import { Box, Flex, Stack, StackDivider, Link } from '@chakra-ui/react';
+import { Box, Stack, StackDivider, Link } from '@chakra-ui/react';
 import { OutputType } from '@zipper/types';
 import ReactMarkdown from 'react-markdown';
 
 import { ObjectExplorer } from './object-explorer';
-import { isComponent, parseResult } from './utils';
+import { parseResult } from './utils';
 import { RawFunctionOutput } from './raw-function-output';
 import { ActionComponent } from './action-component';
 import { RouterComponent } from './router-component';
@@ -104,6 +104,18 @@ export function SmartFunctionOutput({
             >
               {component.text || component.children}
             </Link>
+          );
+        }
+        case 'markdown': {
+          const children = window.Array.isArray(data.children)
+            ? data.children.join('\n')
+            : data.children;
+
+          return (
+            <ReactMarkdown
+              components={ChakraUIRenderer()}
+              children={children}
+            />
           );
         }
         default:

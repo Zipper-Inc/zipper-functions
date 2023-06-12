@@ -8,4 +8,5 @@ export enum OutputType {
   SpecialOutputArray = 'special_output_array',
   Router = 'router',
   Component = 'component',
+  Markdown = 'markdown',
 }

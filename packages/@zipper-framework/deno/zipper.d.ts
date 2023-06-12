@@ -4,6 +4,8 @@
 // * 🗣️ Block comments in namespace will show up in editor
 // *
 
+// deno-lint-ignore-file no-explicit-any
+
 /**
  * ✨
  * The global namespace where Zipper-specific, non-standard APIs are located.
@@ -206,7 +208,7 @@ declare namespace Zipper {
     (ButtonAction<I> | DropdownAction<I>);
 
   export type Component = SpecialOutput<'Zipper.Component'> &
-    (StackComponent | LinkComponent | HtmlElement);
+    (StackComponent | LinkComponent | MarkdownComponent | HtmlElement);
 
   export interface ComponentBase {
     type: string;
@@ -245,6 +247,11 @@ declare namespace Zipper {
     text?: string;
   }
 
+  export interface MarkdownComponent extends ComponentBase {
+    type: 'markdown';
+    children: string;
+  }
+
   export interface HtmlElement extends ComponentBase {
     type: `html.${HtmlTag}`;
   }
@@ -254,7 +261,11 @@ declare namespace Zipper {
      * Creates an action
      */
     export function create(
-      component: StackComponent | LinkComponent | HtmlElement,
+      component:
+        | StackComponent
+        | LinkComponent
+        | MarkdownComponent
+        | HtmlElement,
     ): Component;
   }
 
@@ -446,6 +457,13 @@ type ButtonProps<I> = Omit<Zipper.ButtonAction<I>, 'actionType' | 'text'>;
 declare function Button<I = Zipper.Inputs>(
   props: ButtonProps<I>,
 ): Zipper.Action;
+
+type MarkdownProps = { text?: string };
+declare function Markdown(props: MarkdownProps): Zipper.Component;
+declare function md(
+  strings: TemplateStringsArray,
+  ...expr: string[]
+): Zipper.Component;
 
 type DropdownProps<I> = Omit<Zipper.DropdownAction<I>, 'actionType'>;
 declare function Dropdown<I = Zipper.Inputs>(
