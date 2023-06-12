@@ -380,7 +380,11 @@ declare namespace Zipper {
       props?: Props,
       ...children: Children
     ): Component;
-    export function Fragment(fragment: Serializable): Serializable;
+    export function Fragment({
+      children,
+    }: {
+      children: Serializable;
+    }): typeof children;
   }
 
   // *

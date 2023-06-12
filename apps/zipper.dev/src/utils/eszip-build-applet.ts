@@ -69,8 +69,10 @@ export async function build({
         headers: TYPESCRIPT_CONTENT_HEADERS,
         content:
           // Add the JSX pragma to all files automatically
-          script?.code?.replace(/^/, '/** @jsx Zipper.JSX.createElement */') ||
-          '/* 🤷🏽‍♂️ missing code */',
+          script?.code?.replace(
+            /^/,
+            '/** @jsx Zipper.JSX.createElement @jsxFrag Zipper.JSX.Fragment */',
+          ) || '/* 🤷🏽‍♂️ missing code */',
         kind: 'module',
         version,
       };

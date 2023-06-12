@@ -118,7 +118,7 @@ async function runApplet({ request }: Deno.RequestEvent) {
           });
         }
       },
-      Fragment: (fragment) => fragment,
+      Fragment: ({ children }) => children,
     },
   };
 
