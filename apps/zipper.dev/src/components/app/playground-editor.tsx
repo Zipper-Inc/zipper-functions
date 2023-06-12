@@ -159,7 +159,7 @@ export default function PlaygroundEditor(
       const extraLibs =
         monaco.languages.typescript.typescriptDefaults.getExtraLibs();
 
-      ['deno.d.ts', 'zipper.d.ts'].forEach(async (filename) => {
+      ['deno.d.ts', 'zipper.d.ts', 'jsx.d.ts'].forEach(async (filename) => {
         const path = `types/${filename}`;
 
         if (!extraLibs[path]) {

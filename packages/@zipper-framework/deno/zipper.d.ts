@@ -435,14 +435,6 @@ declare namespace Zipper {
   export const storage: Storage;
 }
 
-declare namespace JSX {
-  // eslint-disable-next-line @typescript-eslint/no-empty-interface
-  type IntrinsicElements = {
-    /** @todo write out types here */
-    [key in HtmlTag]: any;
-  };
-}
-
 // Global components
 
 type StackProps = Partial<Zipper.StackComponent['props']>;
