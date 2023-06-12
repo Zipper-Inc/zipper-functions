@@ -3,13 +3,14 @@ import { OutputType } from '@zipper/types';
 import ReactMarkdown from 'react-markdown';
 
 import { ObjectExplorer } from './object-explorer';
-import { parseResult } from './utils';
+import { isComponent, parseResult } from './utils';
 import { RawFunctionOutput } from './raw-function-output';
 import { ActionComponent } from './action-component';
 import { RouterComponent } from './router-component';
 import Collection from './collection';
 import Array from './array';
 import ChakraUIRenderer from '../../utils/chakra-markdown-renderer';
+import React from 'react';
 
 export function SmartFunctionOutput({
   result,
@@ -55,6 +56,12 @@ export function SmartFunctionOutput({
       return <ActionComponent action={data} />;
     }
 
+    case OutputType.SpecialOutputArray: {
+      return data.map((d: Zipper.SpecialOutput<`Zipper.${string}`>) => (
+        <SmartFunctionOutput result={d} level={level} tableLevel={tableLevel} />
+      ));
+    }
+
     case OutputType.Component: {
       const component = data as Zipper.Component;
 
@@ -95,21 +102,33 @@ export function SmartFunctionOutput({
           );
         }
         default:
-          break;
+          // Only handle undefined 'html.' components
+          if (!component.type.startsWith('html.')) break;
+
+          // Make HTML components React-friendly
+          const type = component.type.replace(/^html\./, '');
+          const children = (component.children as Zipper.Serializable[]).map(
+            (child) => {
+              return (
+                <SmartFunctionOutput
+                  result={child}
+                  level={level + 1}
+                  tableLevel={tableLevel}
+                />
+              );
+            },
+          );
+
+          return React.createElement(
+            type,
+            { ['data-generated-by-zipper']: true, ...component.props },
+            children,
+          );
       }
     }
 
     case OutputType.Router:
       return <RouterComponent route={data} />;
-
-    case OutputType.ActionArray:
-      return (
-        <Flex direction="row">
-          {data.map((action: any) => (
-            <ActionComponent action={action} />
-          ))}
-        </Flex>
-      );
 
     default:
       return <RawFunctionOutput result={result} />;

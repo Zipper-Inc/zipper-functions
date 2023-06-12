@@ -19,6 +19,10 @@ export const isRouter = (value: Zipper.Router.Route) =>
 export const isComponent = (value: Zipper.Component) =>
   value?.$zipperType === 'Zipper.Component';
 
+export const isSpecialOutput = (
+  value: Zipper.SpecialOutput<`Zipper.${string}`>,
+) => value?.$zipperType?.startsWith('Zipper.');
+
 export function parseResult(result: any): { type: OutputType; data: any } {
   const data = isString(result) ? safeJSONParse(result) : result;
   if (!data || isPrimitive(data))
@@ -37,8 +41,8 @@ export function parseResult(result: any): { type: OutputType; data: any } {
     type = OutputType.Router;
   } else if (Array.isArray(data)) {
     if (data.every(isPrimitive)) type = OutputType.Array;
-    else if (data.every((item) => isAction(item)))
-      type = OutputType.ActionArray;
+    else if (data.every((item) => isSpecialOutput(item)))
+      type = OutputType.SpecialOutputArray;
     else type = OutputType.Collection;
   }
 

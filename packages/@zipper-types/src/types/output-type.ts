@@ -5,7 +5,7 @@ export enum OutputType {
   Collection = 'collection',
   Html = 'html',
   Action = 'action',
-  ActionArray = 'action_array',
+  SpecialOutputArray = 'special_output_array',
   Router = 'router',
   Component = 'component',
 }
