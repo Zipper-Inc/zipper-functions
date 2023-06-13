@@ -24,7 +24,7 @@ import {
 import React, { useMemo, useState, useRef, useEffect } from 'react';
 import { useSortBy, useTable } from 'react-table';
 import styled from '@emotion/styled';
-import { isPrimitive } from './utils';
+import { isAction, isPrimitive } from './utils';
 import { SmartFunctionOutput } from './smart-function-output';
 import { HiCheck, HiX, HiTable, HiViewGrid } from 'react-icons/hi';
 import { FiSearch } from 'react-icons/fi';
@@ -42,7 +42,7 @@ export default function Collection(props: Props) {
   const { setSearchQuery } = useSmartFunctionOutputContext();
 
   return (
-    <Stack border="1px solid" borderColor="gray.200" p="2" borderRadius="md">
+    <Stack width="100%" border="1px solid" borderColor="gray.200" p="2" borderRadius="md">
       {props.tableLevel === 0 && (
         <Box display="flex" justifyContent="flex-end" gap="2">
           <InputGroup w="md">
@@ -209,57 +209,60 @@ function CardCollection(props: Props) {
   );
 
   return (
-    <SimpleGrid minChildWidth="150px" spacing={10}>
-      {props.data.map((item, index) => {
-        const hasAction = item.hasOwnProperty('action');
-
+    <SimpleGrid minChildWidth="200px" spacing={10}>
+      {data.map((record, index) => {
         return (
-          <Card
-            key={index}
+          <Card 
+            key={index} 
             bgColor="gray.50"
             borderRadius="xl"
             overflow="hidden"
-            p={8}
-            px={4}
+            p={6}
           >
-            <CardBody px="0">
-              {Object.entries(item).map(([key, value], i) => (
-                key !== 'action' && (
-                  <Flex flexDirection={{base:'row', sm: 'column'}} justify="space-between" key={i}>
-                    <Text color="neutral.500">{key}</Text>
-                    <RenderItem item={value} />
-                  </Flex>
-                )
-              ))}
+            <CardBody p={0}>
+              {Object.entries(record).map(([key, value]) => {
+                if (isPrimitive(value)) {
+                  if (typeof value === 'boolean') {
+                    return (
+                      <Flex align="center" key={key} justifyContent="space-between">
+                        <Text mr="2">{key}:</Text>
+                        {value ? <HiCheck /> : <HiX />}
+                      </Flex>
+                    );
+                  }
+                  return (
+                    <Flex align="start" key={key} justifyContent="space-between">
+                      <Text color="neutral.500" mr={2}>{key}</Text>
+                      <Text fontWeight={600} color="neutral.900">{value as string}</Text>
+                    </Flex>
+                  );
+                }
+                return (
+                  <CardFooter key={key} p={0} pt={5}>
+                    {Array.isArray(value) && isAction(value[0]) ? (
+                      <SmartFunctionOutput
+                        result={value}
+                        tableLevel={props.tableLevel + 1}
+                        level={props.level + 1}
+                      />
+                    ) : (
+                      <Flex direction="column">
+                        <Text color="neutral.500" mr={2}>{key}</Text>
+
+                        <SmartFunctionOutput
+                          result={value}
+                          tableLevel={props.tableLevel + 1}
+                          level={props.level + 1}
+                          />
+                      </Flex>
+                    )}
+                  </CardFooter>
+                );
+              })}
             </CardBody>
-            {hasAction && (
-              <CardFooter p={0}>
-                <Flex flexDirection={{base:'row', sm: 'column'}} justifyContent="space-between" alignItems="center">
-                  {item.action.map((action: any) => (
-                    <SmartFunctionOutput level={1} tableLevel={1} result={action} />
-                  ))}
-                </Flex>
-              </CardFooter>
-            )}
           </Card>
         );
       })}
     </SimpleGrid>
   );
 }
-
-const RenderItem: React.FC<{ item: any }> = ({ item }) => {
-  if (typeof item === 'object' && item !== null) {
-    return (
-      <Stack>
-        {Object.entries(item).map(([key, value], i) => (
-          <React.Fragment key={i}>
-            <Text color="neutral.500">{key}</Text>
-            <RenderItem item={value} />
-          </React.Fragment>
-        ))}
-      </Stack>
-    );
-  }
-  return <Text fontWeight={600} color="neutral.900">{item}</Text>;
-};

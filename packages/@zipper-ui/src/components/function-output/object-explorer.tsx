@@ -35,7 +35,7 @@ function ObjectExplorerRow({
       <HStack
         flex={1}
         flexBasis={'auto'}
-        minW="200px"
+        minW="100px"
         overflow="auto"
         whiteSpace="nowrap"
         justifyContent="space-between"
