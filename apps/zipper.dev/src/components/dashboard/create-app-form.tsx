@@ -34,6 +34,7 @@ import { OrganizationSelector } from './organization-selector';
 import { useAppSlug, MIN_SLUG_LENGTH } from '~/hooks/use-app-slug';
 import { VscCode } from 'react-icons/vsc';
 import { useToast } from '@chakra-ui/react';
+import { useRouter } from 'next/router';
 
 const getDefaultCreateAppFormValues = () => ({
   name: generateDefaultSlug(),
@@ -49,10 +50,18 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
   const { user } = useUser();
   const { setActive } = useOrganizationList();
   const utils = trpc.useContext();
+  const router = useRouter();
+
   const addApp = trpc.useMutation('app.add', {
     async onSuccess() {
       // refetches posts after a post is added
       await utils.invalidateQueries(['app.byAuthedUser']);
+      if (router.query['resource-owner']) {
+        await utils.invalidateQueries([
+          'app.byResourceOwner',
+          { resourceOwnerSlug: router.query['resource-owner'] as string },
+        ]);
+      }
     },
   });
   const [selectedOrganizationId, setSelectedOrganizationId] = useState<
