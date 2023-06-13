@@ -142,6 +142,7 @@ export function ActionButton({ action }: { action: Zipper.ButtonAction }) {
       colorScheme={'purple'}
       variant="outline"
       isDisabled={isLoading}
+      mr="2"
       onClick={async () => {
         setIsLoading(true);
         action.run
