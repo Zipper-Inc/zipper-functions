@@ -166,7 +166,7 @@ export default async function handler(
         requiredUserAuthConnectorFilter,
       ) as UserAuthConnector[],
       userInfo: {
-        email: appFound.requiresAuthToRun ? userInfo.email : undefined,
+        email: userInfo?.email,
         userId: userInfo.clerkUserId,
       },
       entryPoint: {
