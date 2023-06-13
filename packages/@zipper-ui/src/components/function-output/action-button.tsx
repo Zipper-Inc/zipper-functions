@@ -138,24 +138,22 @@ export function ActionButton({ action }: { action: Zipper.ButtonAction }) {
   const [isLoading, setIsLoading] = useState(false);
 
   return (
-    <Flex justifyContent="end" mt="4">
-      <Button
-        colorScheme={'purple'}
-        variant="outline"
-        isDisabled={isLoading}
-        onClick={async () => {
-          setIsLoading(true);
-          action.run
-            ? await runScript().catch(console.error)
-            : await getScript().catch(console.error);
+    <Button
+      colorScheme={'purple'}
+      variant="outline"
+      isDisabled={isLoading}
+      mr="2"
+      onClick={async () => {
+        setIsLoading(true);
+        action.run
+          ? await runScript().catch(console.error)
+          : await getScript().catch(console.error);
 
-          setIsLoading(false);
-        }}
-        mr={2}
-      >
-        {isLoading && <Spinner />}
-        {!isLoading && (action.text || `Run ${normalizeAppPath(action.path)}`)}
-      </Button>
-    </Flex>
+        setIsLoading(false);
+      }}
+    >
+      {isLoading && <Spinner />}
+      {!isLoading && (action.text || `Run ${normalizeAppPath(action.path)}`)}
+    </Button>
   );
 }
