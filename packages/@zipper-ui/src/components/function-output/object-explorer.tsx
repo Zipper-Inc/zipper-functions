@@ -55,7 +55,7 @@ function ObjectExplorerRow({
         )}
       </HStack>
       {shouldCollapse ? (
-        <Box flex={5}>
+        <Box flex={5} alignSelf="center">
           {!isOpen && (
             <Text py={6} color="gray.400">
               {Object.keys(data).join(', ')}
