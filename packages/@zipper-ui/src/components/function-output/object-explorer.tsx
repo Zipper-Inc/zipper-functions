@@ -1,13 +1,17 @@
 import {
   useDisclosure,
-  Heading,
   Button,
   Collapse,
   Box,
   Text,
   HStack,
-  Grid,
-  GridItem,
+  TableContainer,
+  Thead,
+  Tr,
+  Th,
+  Tbody,
+  Table,
+  Td,
 } from '@chakra-ui/react';
 import { HiChevronRight } from 'react-icons/hi';
 import { SmartFunctionOutput } from './smart-function-output';
@@ -27,8 +31,12 @@ function ObjectExplorerRow({
   const { isOpen, onToggle } = useDisclosure({ defaultIsOpen: true });
   const shouldCollapse = !isPrimitive(data);
   return (
-    <>
-      <GridItem borderBottom="1px" borderColor="gray.200" px="4">
+    <Tr
+      borderBottom="1px"
+      borderColor="gray.200"
+      _last={{ borderBottom: 'none' }}
+    >
+      <Td border={'none'} p="0">
         <HStack
           flex={1}
           flexBasis={'auto'}
@@ -37,9 +45,9 @@ function ObjectExplorerRow({
           whiteSpace="nowrap"
           justifyContent="space-between"
         >
-          <Heading py={6} size="sm" color="gray.600" fontWeight={300}>
+          <Text py={6} size="sm" color="gray.600" fontWeight={300}>
             {heading}
-          </Heading>
+          </Text>
           {shouldCollapse && (
             <Button
               variant="ghost"
@@ -56,8 +64,8 @@ function ObjectExplorerRow({
             </Button>
           )}
         </HStack>
-      </GridItem>
-      <GridItem borderBottom="1px" borderColor="gray.200" p="4">
+      </Td>
+      <Td>
         {shouldCollapse ? (
           <Box flex={5}>
             {!isOpen && (
@@ -80,8 +88,8 @@ function ObjectExplorerRow({
             </Text>
           </Box>
         )}
-      </GridItem>
-    </>
+      </Td>
+    </Tr>
   );
 }
 
@@ -95,16 +103,26 @@ export function ObjectExplorer({
   tableLevel: number;
 }) {
   return (
-    <Grid templateColumns={'max-content 1fr'}>
-      {Object.keys(data).map((key) => (
-        <ObjectExplorerRow
-          key={key}
-          heading={key}
-          data={data[key]}
-          level={level}
-          tableLevel={tableLevel}
-        />
-      ))}
-    </Grid>
+    <TableContainer w="full">
+      <Table>
+        <Thead display="none">
+          <Tr>
+            <Th width="max-content"></Th>
+            <Th width="auto"></Th>
+          </Tr>
+        </Thead>
+        <Tbody>
+          {Object.keys(data).map((key) => (
+            <ObjectExplorerRow
+              key={key}
+              heading={key}
+              data={data[key]}
+              level={level}
+              tableLevel={tableLevel}
+            />
+          ))}
+        </Tbody>
+      </Table>
+    </TableContainer>
   );
 }
