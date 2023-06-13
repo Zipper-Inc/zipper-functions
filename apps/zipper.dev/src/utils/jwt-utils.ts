@@ -9,12 +9,19 @@ export const generateAccessToken = (
     userId,
     profile,
     orgMemberships,
+    sessionClaims,
   }: {
     userId: string;
     profile?: Pick<
       User,
-      'firstName' | 'lastName' | 'emailAddresses' | 'primaryEmailAddressId'
+      | 'firstName'
+      | 'lastName'
+      | 'emailAddresses'
+      | 'primaryEmailAddressId'
+      | 'profileImageUrl'
+      | 'username'
     >;
+    sessionClaims?: JwtPayload | null;
     orgMemberships?: OrganizationMembership[];
   },
   options?: { expiresIn?: string },
@@ -24,11 +31,22 @@ export const generateAccessToken = (
   };
 
   if (profile) {
+    console.log('profile', profile);
     payload.firstName = profile.firstName;
     payload.lastName = profile.lastName;
     payload.primaryEmail = profile.emailAddresses.find((e) => {
-      e.id === profile.primaryEmailAddressId;
+      return e.id === profile.primaryEmailAddressId;
     })?.emailAddress;
+    payload.imageUrl = profile.profileImageUrl;
+    payload.username = profile.username;
+  }
+
+  if (sessionClaims) {
+    payload.firstName = sessionClaims.first_name as string;
+    payload.lastName = sessionClaims.last_name as string;
+    payload.primaryEmail = sessionClaims.primary_email_address as string;
+    payload.imageUrl = sessionClaims.image_url as string;
+    payload.username = sessionClaims.username as string;
   }
 
   if (orgMemberships) {

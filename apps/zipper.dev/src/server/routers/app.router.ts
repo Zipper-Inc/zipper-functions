@@ -30,6 +30,7 @@ import { randomUUID } from 'crypto';
 import fetch from 'node-fetch';
 import isCodeRunnable from '~/utils/is-code-runnable';
 import { generateAccessToken } from '~/utils/jwt-utils';
+import { getAuth } from '@clerk/nextjs/server';
 
 const defaultSelect = Prisma.validator<Prisma.AppSelect>()({
   id: true,
@@ -544,8 +545,13 @@ export const appRouter = createRouter()
         include: { scripts: true, scriptMain: true },
       });
 
+      const sessionClaims = ctx.req ? getAuth(ctx.req).sessionClaims : null;
+
       const token = ctx.userId
-        ? generateAccessToken({ userId: ctx.userId }, { expiresIn: '30s' })
+        ? generateAccessToken(
+            { userId: ctx.userId, sessionClaims },
+            { expiresIn: '30s' },
+          )
         : undefined;
       const version = getAppVersionFromHash(app.hash || getAppHash(app));
 
@@ -615,8 +621,13 @@ export const appRouter = createRouter()
 
       const inputs = getInputsFromFormData(input.formData, inputParams);
 
+      const sessionClaims = ctx.req ? getAuth(ctx.req).sessionClaims : null;
+
       const token = ctx.userId
-        ? generateAccessToken({ userId: ctx.userId }, { expiresIn: '30s' })
+        ? generateAccessToken(
+            { userId: ctx.userId, sessionClaims },
+            { expiresIn: '30s' },
+          )
         : undefined;
 
       const result = await fetch(

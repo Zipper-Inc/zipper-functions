@@ -5,6 +5,7 @@ import { prisma } from './prisma';
 import fetch from 'node-fetch';
 import getRunUrl from '../utils/get-run-url';
 import { generateAccessToken } from '../utils/jwt-utils';
+import clerkClient from '@clerk/clerk-sdk-node';
 
 const connection = new IORedis(+env.REDIS_PORT, env.REDIS_HOST, {
   maxRetriesPerRequest: null,
@@ -38,8 +39,10 @@ const initializeWorkers = () => {
 
           let token: undefined | string = undefined;
           if (schedule.userId) {
+            const user = await clerkClient.users.getUser(schedule.userId);
+
             token = generateAccessToken(
-              { userId: schedule.userId },
+              { userId: schedule.userId, profile: user },
               { expiresIn: '30s' },
             );
           }
