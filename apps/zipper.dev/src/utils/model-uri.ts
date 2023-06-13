@@ -4,11 +4,11 @@ import { type Uri } from 'monaco-editor/esm/vs/editor/editor.api';
  * In Deno, imports look like `import { foo } from './foo.ts'`
  * In regular Typescript, they look like `import { foo } from './foo'`
  *
- * In order to make intellisense work and let you write file extensions,
- * we append another `.ts` to so that internally, Monaco thinks its `foo.ts.ts`
+ * In order to make intellisense work, enable JSX, and allow file extension imports
+ * we append `.tsx` to so that internally, Monaco thinks its `foo.ts.tsx`
  * Super weird, but its the only way to have cake and eat it too. 🍰
  */
-const DENO_FRIENDLY_SUFFIX = '.ts';
+const DENO_FRIENDLY_SUFFIX = '.tsx';
 
 /**
  * Create a Monaco-friendly model URI from a Deno import path

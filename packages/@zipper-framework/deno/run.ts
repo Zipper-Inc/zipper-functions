@@ -1,16 +1,18 @@
 import './zipper.d.ts';
-import { files } from './generated/index.gen.ts';
-import { BOOT_PATH, ENV_BLOCKLIST, MAIN_PATH } from './constants.ts';
-import { ZipperStorage } from './storage.ts';
-import { sendLog, methods } from './console.ts';
-import { getUserConnectorAuths } from './userAuthConnectors.ts';
+import { files } from './applet/generated/index.gen.ts';
+import { BOOT_PATH, ENV_BLOCKLIST, MAIN_PATH } from './lib/constants.ts';
+import { ZipperStorage } from './lib/storage.ts';
+import { sendLog, methods } from './lib/console.ts';
+import { getUserConnectorAuths } from './lib/user-auth-connectors.ts';
+
+import './lib/global-components.ts';
 
 const PORT = 8888;
 
 /**
  * Run the applet with the given RequestEvent
  */
-async function runApplet({ request, respondWith }: Deno.RequestEvent) {
+async function runApplet({ request }: Deno.RequestEvent) {
   let body;
   let error;
 
@@ -72,20 +74,16 @@ async function runApplet({ request, respondWith }: Deno.RequestEvent) {
     env,
     storage: new ZipperStorage(appInfo.id),
     Component: {
-      create: (component) =>
-        ({
-          $zipperType: 'Zipper.Component',
-          ...component,
-          // deno-lint-ignore no-explicit-any
-        } as any),
+      create: (component) => ({
+        $zipperType: 'Zipper.Component',
+        ...component,
+      }),
     },
     Action: {
-      create: (action) =>
-        ({
-          $zipperType: 'Zipper.Action',
-          ...action,
-          // deno-lint-ignore no-explicit-any
-        } as any),
+      create: (action) => ({
+        $zipperType: 'Zipper.Action',
+        ...action,
+      }),
     },
     Router: {
       redirect: (url) => ({
@@ -106,6 +104,20 @@ async function runApplet({ request, respondWith }: Deno.RequestEvent) {
           )
           .join(' '),
       }),
+    },
+    JSX: {
+      createElement: (tag, props, ...children) => {
+        if (typeof tag === 'function') {
+          return tag({ ...props, children });
+        } else {
+          return Zipper.Component.create({
+            type: `html.${tag}` as Zipper.HtmlElement['type'],
+            props,
+            children,
+          });
+        }
+      },
+      Fragment: ({ children }) => children,
     },
   };
 
@@ -129,8 +141,7 @@ async function runApplet({ request, respondWith }: Deno.RequestEvent) {
   });
 
   // Grab the handler
-  let path: string = body.path || MAIN_PATH;
-  if (!path.endsWith('.ts')) path = `${path}.ts`;
+  const path: string = (body.path || MAIN_PATH).replace(/\.(ts|tsx)$|$/, '.ts');
   const { handler } = files[path];
 
   // Handle missing paths
@@ -153,7 +164,7 @@ async function runApplet({ request, respondWith }: Deno.RequestEvent) {
 
   // Run the handler
   try {
-    if (appInfo.connectorsWithUserAuth.length > 0) {
+    if (appInfo.connectorsWithUserAuth?.length > 0) {
       await fetchUserAuthConnectorInfo();
     }
 

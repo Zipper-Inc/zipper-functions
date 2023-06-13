@@ -15,10 +15,12 @@ function ObjectExplorerRow({
   heading,
   data,
   level,
+  tableLevel,
 }: {
   heading: string;
   data: any;
   level: number;
+  tableLevel: number;
 }) {
   const { isOpen, onToggle } = useDisclosure({ defaultIsOpen: true });
   const shouldCollapse = !isPrimitive(data);
@@ -60,7 +62,11 @@ function ObjectExplorerRow({
             </Text>
           )}
           <Collapse in={isOpen}>
-            <SmartFunctionOutput result={data} level={level + 1} />
+            <SmartFunctionOutput
+              result={data}
+              level={level + 1}
+              tableLevel={tableLevel + 1}
+            />
           </Collapse>
         </Box>
       ) : (
@@ -83,9 +89,11 @@ function ObjectExplorerRow({
 export function ObjectExplorer({
   data,
   level,
+  tableLevel,
 }: {
   data: Record<string, any>;
   level: number;
+  tableLevel: number;
 }) {
   return (
     <Box>
@@ -95,6 +103,7 @@ export function ObjectExplorer({
           heading={key}
           data={data[key]}
           level={level}
+          tableLevel={tableLevel}
         />
       ))}
     </Box>

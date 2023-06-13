@@ -1,14 +1,10 @@
 // *
 // * 🛑 DO NOT IMPORT ANYTHING INTO THIS FILE
-// * It needs to be readable as is from the Monaco editor
-// * Block comments in namespace will show up in editor
+// * 💾 It needs to be readable as is from the Monaco editor
+// * 🗣️ Block comments in namespace will show up in editor
 // *
 
 // deno-lint-ignore-file no-explicit-any
-
-/**
- * Copy pasta from 'https://deno.land/x/oak@v12.1.0/types.d.ts';
- */
 
 /**
  * ✨
@@ -20,7 +16,7 @@ declare namespace Zipper {
    * The most atomic unit of data in Zipper
    * @category Primitive
    */
-  export type Primitive = string | number | boolean | null;
+  export type Primitive = string | Date | number | boolean | null | undefined;
 
   /**
    * Zipper objects can only be keyed by string or number
@@ -34,6 +30,8 @@ declare namespace Zipper {
    * @category Primitive
    */
   export type Serializable =
+    | Action
+    | Component
     | Primitive
     | Serializable[]
     | { [key: PrimitiveKey]: Serializable };
@@ -151,7 +149,7 @@ declare namespace Zipper {
    * These are special objects we can return such as Actions
    * You must pass a string type to it, i.e. `Zipper.Action`
    */
-  interface SpecialOutput<zipperType> {
+  interface SpecialOutput<zipperType extends `Zipper.${string}`> {
     $zipperType: zipperType;
   }
 
@@ -210,12 +208,12 @@ declare namespace Zipper {
     (ButtonAction<I> | DropdownAction<I>);
 
   export type Component = SpecialOutput<'Zipper.Component'> &
-    (StackComponent | LinkComponent);
+    (StackComponent | LinkComponent | MarkdownComponent | HtmlElement);
 
   export interface ComponentBase {
     type: string;
-    props: Record<string, Serializable>;
-    children?: Serializable | Component | Array<Serializable | Component>;
+    props?: JSX.Props;
+    children?: Serializable;
   }
 
   type SelfPosition =
@@ -229,12 +227,14 @@ declare namespace Zipper {
 
   export interface StackComponent extends ComponentBase {
     type: 'stack';
-    props: {
-      direction: 'row' | 'column';
-      divider?: boolean;
-      align?: SelfPosition | 'baseline' | 'normal' | 'stretch';
-    };
-    children: Array<Serializable | Component>;
+    props?:
+      | {
+          direction: 'row' | 'column';
+          divider?: boolean;
+          align?: SelfPosition | 'baseline' | 'normal' | 'stretch';
+        }
+      | JSX.Props;
+    children: Serializable;
   }
 
   export interface LinkComponent extends ComponentBase {
@@ -247,12 +247,25 @@ declare namespace Zipper {
     text?: string;
   }
 
+  export interface MarkdownComponent extends ComponentBase {
+    type: 'markdown';
+    children: string;
+  }
+
+  export interface HtmlElement extends ComponentBase {
+    type: `html.${HtmlTag}`;
+  }
+
   export namespace Component {
     /**
      * Creates an action
      */
     export function create(
-      component: StackComponent | LinkComponent,
+      component:
+        | StackComponent
+        | LinkComponent
+        | MarkdownComponent
+        | HtmlElement,
     ): Component;
   }
 
@@ -284,7 +297,7 @@ declare namespace Zipper {
       // The log method
       method: Method;
       // The arguments passed to console API
-      data: Zipper.Serializable[];
+      data: Serializable[];
       // Time of log
       timestamp: number;
     }
@@ -372,6 +385,26 @@ declare namespace Zipper {
     };
   }
 
+  export namespace JSX {
+    export type Props = Record<string, Serializable>;
+    export type Children = Component['children'][];
+    export function createElement(
+      component: (props?: Props) => Component,
+      props?: Props,
+      ...children: Children
+    ): Component;
+    export function createElement(
+      tag: Zipper.HtmlElement['type'],
+      props?: Props,
+      ...children: Children
+    ): Component;
+    export function Fragment({
+      children,
+    }: {
+      children: Serializable;
+    }): typeof children;
+  }
+
   // *
   // * Zipper Global Properties
   // *
@@ -401,3 +434,169 @@ declare namespace Zipper {
    */
   export const storage: Storage;
 }
+
+// Global components
+
+type StackProps = Partial<Zipper.StackComponent['props']>;
+declare function Stack(props: StackProps): Zipper.Component;
+declare function Row(props?: StackProps): Zipper.Component;
+declare function Column(props?: StackProps): Zipper.Component;
+
+type LinkProps = Zipper.LinkComponent['props'];
+declare function Link(props: LinkProps): Zipper.Component;
+
+type ButtonProps<I> = Omit<Zipper.ButtonAction<I>, 'actionType' | 'text'>;
+declare function Button<I = Zipper.Inputs>(
+  props: ButtonProps<I>,
+): Zipper.Action;
+
+type MarkdownProps = { text?: string };
+declare function Markdown(props: MarkdownProps): Zipper.Component;
+declare function md(
+  strings: TemplateStringsArray,
+  ...expr: string[]
+): Zipper.Component;
+
+type DropdownProps<I> = Omit<Zipper.DropdownAction<I>, 'actionType'>;
+declare function Dropdown<I = Zipper.Inputs>(
+  props: DropdownProps<I>,
+): Zipper.Action;
+
+// All HTML Tags
+type HtmlTag =
+  | 'a'
+  | 'abbr'
+  | 'acronym'
+  | 'address'
+  | 'applet'
+  | 'area'
+  | 'article'
+  | 'aside'
+  | 'audio'
+  | 'b'
+  | 'base'
+  | 'basefont'
+  | 'bdi'
+  | 'bdo'
+  | 'bgsound'
+  | 'big'
+  | 'blink'
+  | 'blockquote'
+  | 'body'
+  | 'br'
+  | 'button'
+  | 'canvas'
+  | 'caption'
+  | 'center'
+  | 'cite'
+  | 'code'
+  | 'col'
+  | 'colgroup'
+  | 'content'
+  | 'data'
+  | 'datalist'
+  | 'dd'
+  | 'decorator'
+  | 'del'
+  | 'details'
+  | 'dfn'
+  | 'dir'
+  | 'div'
+  | 'dl'
+  | 'dt'
+  | 'element'
+  | 'em'
+  | 'embed'
+  | 'fieldset'
+  | 'figcaption'
+  | 'figure'
+  | 'font'
+  | 'footer'
+  | 'form'
+  | 'frame'
+  | 'frameset'
+  | 'h1'
+  | 'h2'
+  | 'h3'
+  | 'h4'
+  | 'h5'
+  | 'h6'
+  | 'head'
+  | 'header'
+  | 'hgroup'
+  | 'hr'
+  | 'html'
+  | 'i'
+  | 'iframe'
+  | 'img'
+  | 'input'
+  | 'ins'
+  | 'isindex'
+  | 'kbd'
+  | 'keygen'
+  | 'label'
+  | 'legend'
+  | 'li'
+  | 'link'
+  | 'listing'
+  | 'main'
+  | 'map'
+  | 'mark'
+  | 'marquee'
+  | 'menu'
+  | 'menuitem'
+  | 'meta'
+  | 'meter'
+  | 'nav'
+  | 'nobr'
+  | 'noframes'
+  | 'noscript'
+  | 'object'
+  | 'ol'
+  | 'optgroup'
+  | 'option'
+  | 'output'
+  | 'p'
+  | 'param'
+  | 'plaintext'
+  | 'pre'
+  | 'progress'
+  | 'q'
+  | 'rp'
+  | 'rt'
+  | 'ruby'
+  | 's'
+  | 'samp'
+  | 'script'
+  | 'section'
+  | 'select'
+  | 'shadow'
+  | 'small'
+  | 'source'
+  | 'spacer'
+  | 'span'
+  | 'strike'
+  | 'strong'
+  | 'style'
+  | 'sub'
+  | 'summary'
+  | 'sup'
+  | 'table'
+  | 'tbody'
+  | 'td'
+  | 'template'
+  | 'textarea'
+  | 'tfoot'
+  | 'th'
+  | 'thead'
+  | 'time'
+  | 'title'
+  | 'tr'
+  | 'track'
+  | 'tt'
+  | 'u'
+  | 'ul'
+  | 'var'
+  | 'video'
+  | 'wbr'
+  | 'xmp';

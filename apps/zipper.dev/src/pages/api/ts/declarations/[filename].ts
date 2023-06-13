@@ -3,6 +3,7 @@ import { readDenoTypes, readFrameworkFile } from '~/utils/read-file';
 
 const DENO = 'deno.d.ts';
 const ZIPPER = 'zipper.d.ts';
+const JSX = 'jsx.d.ts';
 
 export default async function handler(
   req: NextApiRequest,
@@ -15,6 +16,10 @@ export default async function handler(
     }
     case ZIPPER: {
       const src = await readFrameworkFile('zipper.d.ts');
+      return res.setHeader('Content-Type', 'text/typescript').send(src);
+    }
+    case JSX: {
+      const src = await readFrameworkFile('jsx.d.ts');
       return res.setHeader('Content-Type', 'text/typescript').send(src);
     }
     default: {

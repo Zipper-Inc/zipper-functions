@@ -5,6 +5,7 @@ import { TRPCError } from '@trpc/server';
 import { prisma } from '../prisma';
 import { generateAccessToken } from '~/utils/jwt-utils';
 import { encryptToHex } from '@zipper/utils';
+import { getAuth } from '@clerk/nextjs/server';
 
 export const userRouter = createProtectedRouter()
   .query('profilesForUserIds', {
@@ -113,8 +114,13 @@ export const userRouter = createProtectedRouter()
     }),
     async resolve({ ctx, input }) {
       if (!ctx.userId) return new TRPCError({ code: 'UNAUTHORIZED' });
+      const sessionClaims = ctx.req ? getAuth(ctx.req).sessionClaims : null;
+
       return generateAccessToken(
-        { userId: ctx.userId },
+        {
+          userId: ctx.userId,
+          sessionClaims,
+        },
         { expiresIn: input.expiresIn },
       );
     },

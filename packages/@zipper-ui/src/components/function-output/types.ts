@@ -1,8 +1,8 @@
 import { FunctionOutputContextType } from './function-output-context';
 
 export type FunctionOutputProps = {
-  level?: number;
   showTabs: boolean;
+  reloadOnClose?: boolean;
 } & Omit<FunctionOutputContextType, 'showSecondaryOutput' | 'modalApplet'>;
 
 export interface RawOutputProps {

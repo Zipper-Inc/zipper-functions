@@ -11,9 +11,8 @@ import { readFrameworkFile } from './read-file';
  * Bundle this up or put this source somewhere else
  * Totally possible that the directory structure cannot be guaranteed
  */
-
-export const FRAMEWORK_ENTRYPOINT = 'app.ts';
-export const APPLET_INDEX_PATH = 'generated/index.gen.ts';
+export const FRAMEWORK_ENTRYPOINT = 'run.ts';
+export const APPLET_INDEX_PATH = 'applet/generated/index.gen.ts';
 export const TYPESCRIPT_CONTENT_HEADERS = {
   'content-type': 'text/typescript',
 };
@@ -47,7 +46,7 @@ export async function build({
     ),
   );
 
-  const appFilesBaseUrl = `${baseUrl}/src`;
+  const appFilesBaseUrl = `${baseUrl}/applet/src`;
   const frameworkEntrypointUrl = `${baseUrl}/${FRAMEWORK_ENTRYPOINT}`;
   const appFileUrls = app.scripts.map(
     ({ filename }) => `${appFilesBaseUrl}/${filename}`,
@@ -65,9 +64,15 @@ export async function build({
       const script = app.scripts.find((s) => s.filename === filename);
 
       return {
-        specifier,
+        // Add TSX to all files so they support JSX
+        specifier: specifier.replace(/\.(ts|tsx)$|$/, '.tsx'),
         headers: TYPESCRIPT_CONTENT_HEADERS,
-        content: script?.code || '/* missing code */',
+        content:
+          // Add the JSX pragma to all files automatically
+          script?.code?.replace(
+            /^/,
+            '/** @jsx Zipper.JSX.createElement @jsxFrag Zipper.JSX.Fragment */',
+          ) || '/* 🤷🏽‍♂️ missing code */',
         kind: 'module',
         version,
       };

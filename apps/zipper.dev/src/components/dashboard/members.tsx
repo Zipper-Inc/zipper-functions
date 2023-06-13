@@ -224,9 +224,9 @@ function MemberList() {
                           m.isInvite
                         }
                         onChange={async (e) => {
-                          const member = membershipList?.find(
-                            (member) => m.id === member.id,
-                          );
+                          const member = membershipList?.find((member) => {
+                            return m.id === member.publicUserData.userId;
+                          });
                           if (member) {
                             await member.update({
                               role: e.target.value as MembershipRole,

@@ -16,7 +16,7 @@ export default async function handler(
         appId,
         deploymentId,
         scheduleId,
-        inputs: rpcBody.inputs,
+        inputs: rpcBody.inputs as any,
         path: rpcBody.path,
         originalRequestUrl: rpcBody.originalRequest.url,
         originalRequestMethod: rpcBody.originalRequest.method,

@@ -1,5 +1,6 @@
-import { Box, Text, Flex, Stack, StackDivider, Link } from '@chakra-ui/react';
+import { Box, Stack, StackDivider, Link } from '@chakra-ui/react';
 import { OutputType } from '@zipper/types';
+import ReactMarkdown from 'react-markdown';
 
 import { ObjectExplorer } from './object-explorer';
 import { parseResult } from './utils';
@@ -8,13 +9,19 @@ import { ActionComponent } from './action-component';
 import { RouterComponent } from './router-component';
 import Collection from './collection';
 import Array from './array';
+import ChakraUIRenderer, {
+  defaults as defaultElements,
+} from '../../utils/chakra-markdown-renderer';
+import React from 'react';
 
 export function SmartFunctionOutput({
   result,
   level = 0,
+  tableLevel = 0,
 }: {
   result: any;
-  level?: number;
+  level: number;
+  tableLevel: number;
 }) {
   if (!result) return null;
 
@@ -22,13 +29,21 @@ export function SmartFunctionOutput({
 
   switch (type) {
     case OutputType.String:
-      return <Text fontSize="2xl">{data.toString()}</Text>;
+      // Pass through if its not the top level
+      if (level > 0) return data.toString();
+
+      return (
+        <ReactMarkdown
+          components={ChakraUIRenderer()}
+          children={data.toString()}
+        />
+      );
 
     case OutputType.Array:
-      return <Array data={data} />;
+      return <Array data={data} tableLevel={tableLevel} />;
 
     case OutputType.Collection:
-      return <Collection data={data} />;
+      return <Collection data={data} level={level} tableLevel={tableLevel} />;
 
     case OutputType.Html:
       return (
@@ -38,10 +53,18 @@ export function SmartFunctionOutput({
       );
 
     case OutputType.Object:
-      return <ObjectExplorer data={data} level={level} />;
+      return (
+        <ObjectExplorer data={data} level={level} tableLevel={tableLevel} />
+      );
 
     case OutputType.Action: {
       return <ActionComponent action={data} />;
+    }
+
+    case OutputType.SpecialOutputArray: {
+      return data.map((d: Zipper.SpecialOutput<`Zipper.${string}`>) => (
+        <SmartFunctionOutput result={d} level={level} tableLevel={tableLevel} />
+      ));
     }
 
     case OutputType.Component: {
@@ -53,14 +76,20 @@ export function SmartFunctionOutput({
             <Stack
               {...component.props}
               divider={
-                component.props.divider ? (
+                component.props?.divider ? (
                   <StackDivider borderColor="gray.200" />
                 ) : undefined
               }
-              spacing={component.props.direction === 'row' ? 6 : 4}
+              spacing={component.props?.direction === 'row' ? 6 : 4}
             >
-              {component.children.map((child) => {
-                return <SmartFunctionOutput result={child} level={level + 1} />;
+              {(component.children as Zipper.Serializable[]).map((child) => {
+                return (
+                  <SmartFunctionOutput
+                    result={child}
+                    level={level + 1}
+                    tableLevel={tableLevel}
+                  />
+                );
               })}
             </Stack>
           );
@@ -77,22 +106,65 @@ export function SmartFunctionOutput({
             </Link>
           );
         }
+        case 'markdown': {
+          const children = window.Array.isArray(data.children)
+            ? data.children.join('\n')
+            : data.children;
+
+          return (
+            <ReactMarkdown
+              components={ChakraUIRenderer()}
+              children={children}
+            />
+          );
+        }
         default:
-          break;
+          // Only handle defined 'html' components
+          if (!component.type.startsWith('html.')) break;
+
+          // Make HTML components React-friendly
+          let element: any = component.type.replace(/^html\./, '');
+          const props: Record<string, any> = {
+            ['data-generated-by-zipper']: true,
+            ...component.props,
+          };
+
+          const children = (component.children as Zipper.Serializable[]).map(
+            (child) => {
+              return (
+                <SmartFunctionOutput
+                  result={child}
+                  level={level + 1}
+                  tableLevel={tableLevel}
+                />
+              );
+            },
+          );
+
+          // Translate h1-h6 into the format expected by ChakraMarkdownRenderer
+          const matchesHeading = element.match(/^h([1-6])$/);
+          if (matchesHeading) {
+            element = 'heading';
+            props.level = parseInt(matchesHeading[1], 10);
+          }
+
+          // Grab the default styled element (same as markdown)
+          const defaultElement = (
+            defaultElements as {
+              [k: string]: (props: Record<string, any>) => JSX.Element;
+            }
+          )[element];
+
+          return React.createElement(
+            defaultElement || element,
+            props,
+            children,
+          );
       }
     }
 
     case OutputType.Router:
       return <RouterComponent route={data} />;
-
-    case OutputType.ActionArray:
-      return (
-        <Flex direction="row">
-          {data.map((action: any) => (
-            <ActionComponent action={action} />
-          ))}
-        </Flex>
-      );
 
     default:
       return <RawFunctionOutput result={result} />;

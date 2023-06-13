@@ -1,12 +1,15 @@
 #!/bin/deno
 import { generateIndexForFramework } from '../../@zipper-utils/src/utils/generate-index-for-framework.ts';
 
-export const SRC_DIR = './deno/src';
-export const GEN_FILE_PATH = './deno/generated/index.gen.ts';
+export const APPLET_ROOT = './deno/applet';
+export const SRC_DIR = `${APPLET_ROOT}/src`;
+export const GEN_FILE_PATH = `${APPLET_ROOT}/generated/index.gen.ts`;
 
 export function generate() {
   const filenames = Array.from(Deno.readDirSync(SRC_DIR))
-    .filter((f) => f.isFile && f.name !== 'main.ts' && f.name.endsWith('.ts'))
+    .filter(
+      (f) => f.isFile && f.name !== 'main.ts' && /\.(ts|tsx)$/.test(f.name),
+    )
     .map((f) => f.name);
   const code = Deno.readTextFileSync(GEN_FILE_PATH);
 
