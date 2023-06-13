@@ -20,8 +20,8 @@ const GalleryPage: NextPageWithLayout = () => {
     return (
       <Gallery
         apps={galleryApps.data}
-        heading={'Popular Apps'}
-        subheading="Browse through popular apps on Zipper"
+        heading={'Popular Applets'}
+        subheading="Browse through popular applets on Zipper"
       />
     );
   }
