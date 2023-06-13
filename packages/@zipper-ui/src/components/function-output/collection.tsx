@@ -20,8 +20,9 @@ import {
   Flex,
   Divider,
   CardFooter,
+  HStack,
 } from '@chakra-ui/react';
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useRef, useEffect } from 'react';
 import { useSortBy, useTable } from 'react-table';
 import styled from '@emotion/styled';
 import { isPrimitive } from './utils';
@@ -145,46 +146,57 @@ function TableCollection(props: { data: Array<any> }) {
 
 function CardCollection(props: { data: Array<any> }) {
   return (
-    <SimpleGrid columns={4} spacing={10}>
+    <SimpleGrid minChildWidth="150px" spacing={10}>
       {props.data.map((item, index) => {
-        const isComplexData =
-          item.hasOwnProperty('action') && item.hasOwnProperty('item');
-
-        const displayItem = isComplexData ? item.item : item;
+        const hasAction = item.hasOwnProperty('action');
 
         return (
           <Card
             key={index}
-            bgColor="neutral.50"
+            bgColor="gray.50"
             borderRadius="xl"
             overflow="hidden"
-            px={8}
-            py={6}
-            maxW="sm"
+            p={8}
+            px={4}
           >
             <CardBody px="0">
-              <SimpleGrid columns={2} spacing={2}>
-                {Object.entries(displayItem).map(([key, value], i) => (
-                  <React.Fragment key={i}>
+              {Object.entries(item).map(([key, value], i) => (
+                key !== 'action' && (
+                  <Flex flexDirection={{base:'row', sm: 'column'}} justify="space-between" key={i}>
                     <Text color="neutral.500">{key}</Text>
-                    <Text fontWeight={600} color="neutral.900">
-                      {value as string}
-                    </Text>
-                  </React.Fragment>
-                ))}
-              </SimpleGrid>
+                    <RenderItem item={value} />
+                  </Flex>
+                )
+              ))}
             </CardBody>
-            <CardFooter p={0}>
-              <Flex justifyContent="space-between" alignItems="center">
-                {item.action &&
-                  item.action.map((action: any) => (
+            {hasAction && (
+              <CardFooter p={0}>
+                <Flex flexDirection={{base:'row', sm: 'column'}} justifyContent="space-between" alignItems="center">
+                  {item.action.map((action: any) => (
                     <SmartFunctionOutput result={action} />
                   ))}
-              </Flex>
-            </CardFooter>
+                </Flex>
+              </CardFooter>
+            )}
           </Card>
         );
       })}
     </SimpleGrid>
   );
 }
+
+const RenderItem: React.FC<{ item: any }> = ({ item }) => {
+  if (typeof item === 'object' && item !== null) {
+    return (
+      <Stack>
+        {Object.entries(item).map(([key, value], i) => (
+          <React.Fragment key={i}>
+            <Text color="neutral.500">{key}</Text>
+            <RenderItem item={value} />
+          </React.Fragment>
+        ))}
+      </Stack>
+    );
+  }
+  return <Text fontWeight={600} color="neutral.900">{item}</Text>;
+};
