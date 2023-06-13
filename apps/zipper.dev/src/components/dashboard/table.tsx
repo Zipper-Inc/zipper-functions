@@ -95,7 +95,9 @@ export function DataTable<Data extends Record<string, unknown>>({
         ))}
         {isEmpty && (
           <Tr pl="0">
-            <Td>You're all out of apps. Probably a good time to create one.</Td>
+            <Td>
+              You're all out of applets. Probably a good time to create one.
+            </Td>
             <Td />
           </Tr>
         )}

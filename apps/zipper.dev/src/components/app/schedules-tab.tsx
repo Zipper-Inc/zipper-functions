@@ -121,8 +121,8 @@ const SchedulesTab: React.FC<SchedulesTabProps> = ({ appId }) => {
           Schedules
         </Heading>
         <Text mb="4">
-          Apps can be run on an automatic schedule. You can add scheduled runs
-          using cron syntax.
+          Applets can be run on an automatic schedule. You can add scheduled
+          runs using cron syntax.
         </Text>
       </VStack>
       <VStack flex={3} alignItems="stretch" spacing={0} overflow="auto">

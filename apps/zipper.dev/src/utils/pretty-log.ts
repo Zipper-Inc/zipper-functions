@@ -44,9 +44,9 @@ export const prettyLog = (
   } = { topicStyle: {}, subtopicStyle: {}, badgeStyle: {} },
 ) => {
   const data: Zipper.Serializable[] = [];
-  const titleParts = [topic, subtopic, badge];
+  const titleParts = [topic, subtopic, badge].filter((truthy) => !!truthy);
 
-  if (titleParts.filter((truthy) => !!truthy).length) {
+  if (titleParts.length) {
     const title = titleParts.map((part) => `%c ${part}`).join(' ');
     data.push(title);
 
