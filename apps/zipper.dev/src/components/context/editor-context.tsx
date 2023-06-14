@@ -28,6 +28,7 @@ import { uuid } from '@zipper/utils';
 import { prettyLog } from '~/utils/pretty-log';
 import { AppQueryOutput } from '~/types/trpc';
 import { getAppVersionFromHash } from '~/utils/hashing';
+import Fuse from 'fuse.js';
 
 /** This string indicates which errors we own in the editor */
 const ZIPPER_LINT = 'zipper-lint';
@@ -353,9 +354,21 @@ const EditorContextProvider = ({
               monacoRef.current!.Uri.parse,
             );
             const currentModel = editor!.getModel(currentUri);
-            const message = `Cannot find module '${i.specifier}\'.`;
+            let message = `Cannot find module '${i.specifier}\'.`;
 
-            // TODO: try to make a suggestion
+            const localModelUris = editor!
+              .getModels()
+              .map((m) => m.uri)
+              .filter((u) => u.scheme === 'file' && u.path !== currentUri.path);
+
+            const fuse = new Fuse(localModelUris.map((u) => u.path));
+            const [topSuggestion] = fuse.search(i.specifier);
+            const suggestedUri =
+              topSuggestion && localModelUris[topSuggestion.refIndex];
+            if (suggestedUri) {
+              const path = getPathFromUri(suggestedUri);
+              message = `${message} Did you mean '.${path}'?`;
+            }
 
             editor!.setModelMarkers(currentModel!, ZIPPER_LINT, [
               {
@@ -388,7 +401,6 @@ const EditorContextProvider = ({
 
   const onValidate: EditorProps['onValidate'] = (markers) => {
     if (!currentScript) return;
-    console.log('error markers', { markers });
     const errorMarker = markers?.find(
       (m) => m.severity === monacoRef.current?.MarkerSeverity.Error,
     );
