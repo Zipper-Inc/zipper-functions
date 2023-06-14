@@ -254,7 +254,7 @@ export function RunAppProvider({
         },
         { topicStyle: { background: brandColors.brandPurple } },
       ),
-      safeJSONParse(result.result) || null,
+      safeJSONParse(result.result, undefined, result.result) || undefined,
     ]);
 
     setIsRunning(false);
