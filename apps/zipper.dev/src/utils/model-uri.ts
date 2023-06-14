@@ -20,6 +20,6 @@ export const getUriFromPath = (path: string, parseFn: (path: string) => Uri) =>
 /**
  * Get a Deno-friendly import path from a Monaco model URI
  */
-export const getPathFromUri = (uri: Uri) => {
+export const getPathFromUri = (uri: Uri): string => {
   return uri.path.replace(new RegExp(`${DENO_FRIENDLY_SUFFIX}$`), '');
 };
