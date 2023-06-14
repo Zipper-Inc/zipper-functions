@@ -128,7 +128,7 @@ export function Gallery({
           // bgColor="gray.50"
           rounded={40}
         >
-          {apps.map((app) => {
+          {(apps || []).map((app) => {
             return <GalleryItem app={app} key={app.id} />;
           })}
         </Grid>

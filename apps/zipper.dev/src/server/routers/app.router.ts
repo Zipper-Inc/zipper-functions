@@ -467,11 +467,13 @@ export const appRouter = createRouter()
     }),
     async resolve({ input, ctx }) {
       //find resouce owner (org or user) based on slug
-      const resourceOwner = await prisma.resourceOwnerSlug.findFirstOrThrow({
+      const resourceOwner = await prisma.resourceOwnerSlug.findFirst({
         where: {
           slug: input.resourceOwnerSlug,
         },
       });
+
+      if (!resourceOwner) return undefined;
 
       if (!resourceOwner.resourceOwnerId) return [];
 
