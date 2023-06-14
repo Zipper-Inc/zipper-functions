@@ -12,6 +12,9 @@ import {
   ArrowFunction,
 } from 'ts-morph';
 
+const isExternalImport = (specifier: string) => /^https?:\/\//.test(specifier);
+const endsWithTs = (specifier: string) => /\.ts$/.test(specifier);
+
 // Strip the Deno-style file extension since TS-Morph can't handle it
 function removeTsExtension(moduleName: string) {
   if (moduleName.slice(-3).toLowerCase() === '.ts')
@@ -196,14 +199,14 @@ export function parseInputForTypes({
     try {
       props = typeNode?.isKind(SyntaxKind.TypeLiteral)
         ? // A type literal, like `params: { foo: string, bar: string }`
-        (typeNode as any)?.getProperties()
+          (typeNode as any)?.getProperties()
         : // A type reference, like `params: Params`
-        // Finds the type alias by its name and grabs the node from there
-        (
-          src
-            .getTypeAlias(typeNode?.getText() as string)
-            ?.getTypeNode() as any
-        )?.getProperties();
+          // Finds the type alias by its name and grabs the node from there
+          (
+            src
+              .getTypeAlias(typeNode?.getText() as string)
+              ?.getTypeNode() as any
+          )?.getProperties();
     } catch (e) {
       if (throwErrors) {
         throw new Error('Cannot get the properties of the object parameter.');
@@ -247,12 +250,9 @@ export function parseImports({
   return src
     .getImportDeclarations()
     .map((i) => i.getModuleSpecifierValue())
-    .filter((specifier) => {
-      if (!externalOnly) return true;
-      return (
-        specifier.startsWith('http://') || specifier.startsWith('https://')
-      );
-    });
+    .filter((specifier) =>
+      !externalOnly ? true : isExternalImport(specifier),
+    );
 }
 
 export function parseCode({
