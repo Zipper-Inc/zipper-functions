@@ -1,13 +1,14 @@
 import { Center, Text, VStack } from '@chakra-ui/react';
 import { ZipperLogo } from '@zipper/ui';
 import { useRouter } from 'next/router';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { NextPageWithLayout } from '~/pages/_app';
 import { trpc } from '~/utils/trpc';
 
 const SlackAuth: NextPageWithLayout = () => {
   const router = useRouter();
   const { code, state, error, error_description } = router.query;
+  const [errorMessage, setErrorMessage] = useState<string | undefined>();
 
   const exchangeMutation = trpc.useMutation(
     'slackConnector.exchangeCodeForToken',
@@ -19,15 +20,18 @@ const SlackAuth: NextPageWithLayout = () => {
           router.push(data.redirectTo || `/app/${data.appId}/edit/main.ts`);
         }
       },
+      onError: (error) => {
+        setErrorMessage(error.message);
+      },
     },
   );
 
-  if (error) {
+  if (error || errorMessage) {
     return (
       <Center w="100%" h="100vh">
         <VStack spacing="12">
           <ZipperLogo />
-          <Text>{error_description}</Text>
+          <Text>{error_description || errorMessage}</Text>
         </VStack>
       </Center>
     );

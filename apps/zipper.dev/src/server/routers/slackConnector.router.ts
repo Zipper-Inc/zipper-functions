@@ -196,14 +196,16 @@ export const slackConnectorRouter = createRouter()
         },
       });
 
-      const clientId =
-        appConnector?.clientId || process.env.NEXT_PUBLIC_SLACK_CLIENT_ID!;
-      const clientSecret = clientSecretRecord
-        ? decryptFromBase64(
-            clientSecretRecord.encryptedValue,
-            process.env.ENCRYPTION_KEY,
-          )
-        : process.env.SLACK_CLIENT_SECRET!;
+      let clientId = process.env.NEXT_PUBLIC_SLACK_CLIENT_ID!;
+      let clientSecret = process.env.SLACK_CLIENT_SECRET!;
+
+      if (appConnector?.clientId && clientSecretRecord) {
+        clientId = appConnector?.clientId;
+        clientSecret = decryptFromBase64(
+          clientSecretRecord.encryptedValue,
+          process.env.ENCRYPTION_KEY,
+        );
+      }
 
       const res = await fetch('https://slack.com/api/oauth.v2.access', {
         method: 'POST',
@@ -222,7 +224,7 @@ export const slackConnectorRouter = createRouter()
       if (!json.ok) {
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
-          message: json.error,
+          message: `Something went wrong while exchanging the code for a token: ${json.error}`,
         });
       }
 
