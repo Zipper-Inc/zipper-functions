@@ -337,6 +337,7 @@ declare namespace Zipper {
    */
   export interface Storage<Value extends Serializable> {
     appId: string;
+    getAll(): Promise<any[]>;
     get(key: string): Promise<any>;
     set(key: string, value: Value): Promise<{key: string, value: any}>;
     delete(key: string): Promise<true>;
@@ -421,7 +422,7 @@ declare namespace Zipper {
    *
    * @example
    * // get all values in storage
-   * const allValues = await Zipper.storage.get();
+   * const allValues = await Zipper.storage.getAll();
    *
    * // get a single valueby key
    * const singleValue = await Zipper.storage.get('my-storage-key');
@@ -432,7 +433,7 @@ declare namespace Zipper {
    * // delete a value by key
    * await Zipper.storage.delete('another-store-key');
    */
-  export const storage: Storage;
+  export const storage: Storage<Serializable>;
 }
 
 // Global components

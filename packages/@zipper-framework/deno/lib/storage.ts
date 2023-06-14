@@ -26,9 +26,8 @@ export class ZipperStorage<Value extends Zipper.Serializable> implements Zipper.
     this.appId = appId;
   }
 
-  async get(key?: string) {
-    let path = `/api/app/${this.appId}/storage`;
-    if (key) path += '?key=' + key;
+  async getAll() {
+    const path = `/api/app/${this.appId}/storage`;
     const { hmac, timestamp } = generateHmac('GET', path);
 
     const res = await fetch(Deno.env.get('RPC_HOST') + path, {
@@ -36,10 +35,22 @@ export class ZipperStorage<Value extends Zipper.Serializable> implements Zipper.
     });
 
     const result = await res.json();
-    return key ? result.value : result;
+    return result;
   }
 
-  async set(key: string, value: unknown) {
+  async get(key: string) {
+    const path = `/api/app/${this.appId}/storage?key=${key}`;
+    const { hmac, timestamp } = generateHmac('GET', path);
+
+    const res = await fetch(Deno.env.get('RPC_HOST') + path, {
+      headers: { 'x-zipper-hmac': hmac, 'x-timestamp': timestamp },
+    });
+
+    const result = await res.json();
+    return result.value
+  }
+
+  async set(key: string, value: Value) {
     const path = `/api/app/${this.appId}/storage`;
     const { hmac, timestamp } = generateHmac('POST', path, { key, value });
 
