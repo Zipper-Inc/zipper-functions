@@ -1,27 +1,16 @@
 import { Box, Stack, StackDivider, Link } from '@chakra-ui/react';
 import { OutputType } from '@zipper/types';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
 
 import { ObjectExplorer } from './object-explorer';
 import { parseResult } from './utils';
 import { RawFunctionOutput } from './raw-function-output';
 import { ActionComponent } from './action-component';
 import { RouterComponent } from './router-component';
+import { Markdown } from './markdown';
 import Collection from './collection';
 import Array from './array';
-import ChakraUIRenderer, {
-  defaults as defaultElements,
-} from '../../utils/chakra-markdown-renderer';
+import { defaults as defaultElements } from '../../utils/chakra-markdown-renderer';
 import React from 'react';
-
-const Markdown = ({ children }: { children: string }) => (
-  <ReactMarkdown
-    components={ChakraUIRenderer()}
-    children={children}
-    remarkPlugins={[remarkGfm]}
-  />
-);
 
 export function SmartFunctionOutput({
   result,
