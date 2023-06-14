@@ -8,7 +8,7 @@ import { AppConnectorUserAuth } from '@prisma/client';
 import { getAppVersionFromHash } from '~/utils/hashing';
 import { useEditorContext } from './editor-context';
 import { requiredUserAuthConnectorFilter } from '~/utils/user-auth-connector-filter';
-import { getInputsFromFormData, uuid } from '@zipper/utils';
+import { getInputsFromFormData, safeJSONParse, uuid } from '@zipper/utils';
 import { getLogger } from '~/utils/app-console';
 import { prettyLog } from '~/utils/pretty-log';
 import { brandColors } from '@zipper/ui';
@@ -216,12 +216,20 @@ export function RunAppProvider({
     const runStart = performance.now();
     const formValues = formMethods.getValues();
 
+    const inputs = getInputsFromFormData(formValues, inputParams);
+    const hasInputs = inputs && Object.values(inputs).length;
+
     addLog('info', [
       ...prettyLog(
-        { topic: 'Run', subtopic: runId, badge: 'Pending' },
+        {
+          topic: 'Run',
+          subtopic: runId,
+          badge: 'Pending',
+          msg: hasInputs ? 'Running with inputs' : undefined,
+        },
         { topicStyle: { background: brandColors.brandPurple } },
       ),
-      { inputs: getInputsFromFormData(formValues, inputParams) },
+      ...(hasInputs ? [inputs] : []),
     ]);
 
     const result = await runAppMutation.mutateAsync({
@@ -242,12 +250,13 @@ export function RunAppProvider({
           topic: 'Run',
           subtopic: runId,
           badge: 'Done',
-          msg: `Completed in ${Math.round(runElapsed)}ms`,
+          msg: `Got output in ${Math.round(runElapsed)}ms`,
         },
         { topicStyle: { background: brandColors.brandPurple } },
       ),
-      { output: result.result || null },
+      safeJSONParse(result.result, undefined, result.result) || undefined,
     ]);
+
     setIsRunning(false);
 
     // stop polling and do one last update

@@ -54,7 +54,7 @@ const ResourceOwnerPage: NextPageWithLayout = () => {
           resourceOwnerType={clerkQuery.data?.resourceOwnerType}
           preheading={heading !== slug ? heading : undefined}
           heading={slug}
-          subheading={'Recent Apps'}
+          subheading={'Recent Applets'}
         />
       </>
     );
