@@ -41,7 +41,7 @@ const ResourceOwnerPage: NextPageWithLayout = () => {
     if (clerkQuery.data) setHeading(clerkQuery.data.name as string);
   }, [clerkQuery.data]);
 
-  if (appsByResourceOwnerQuery.error) {
+  if (appsByResourceOwnerQuery.error || !appsByResourceOwnerQuery.data) {
     return <NextError statusCode={404} />;
   }
 

@@ -47,14 +47,8 @@ export async function createContext(opts: {
   try {
     return getAuthAndCreateContext();
   } catch (e) {
-    try {
-      // we're seeing transient errors so try again;
-      captureException(e);
-      return getAuthAndCreateContext();
-    } catch (e: any) {
-      captureException(e);
-      return createContextInner({ req: opts.req });
-    }
+    captureException(e);
+    return createContextInner({ req: opts.req });
   }
 }
 
