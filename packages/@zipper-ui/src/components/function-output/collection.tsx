@@ -15,15 +15,16 @@ import {
   CardBody,
   Flex,
   CardFooter,
-  Input,
+  HStack,
   InputGroup,
   InputLeftAddon,
   Icon,
+  Input,
 } from '@chakra-ui/react';
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useRef, useEffect } from 'react';
 import { useSortBy, useTable } from 'react-table';
 import styled from '@emotion/styled';
-import { isPrimitive } from './utils';
+import { isAction, isPrimitive } from './utils';
 import { SmartFunctionOutput } from './smart-function-output';
 import { HiCheck, HiX, HiTable, HiViewGrid } from 'react-icons/hi';
 import { FiSearch } from 'react-icons/fi';
@@ -41,7 +42,7 @@ export default function Collection(props: Props) {
   const { setSearchQuery } = useSmartFunctionOutputContext();
 
   return (
-    <Stack border="1px solid" borderColor="gray.200" p="2" borderRadius="md">
+    <Stack width="100%" border="1px solid" borderColor="gray.200" p="2" borderRadius="md">
       {props.tableLevel === 0 && (
         <Box display="flex" justifyContent="flex-end" gap="2">
           <InputGroup w="md">
@@ -208,47 +209,57 @@ function CardCollection(props: Props) {
   );
 
   return (
-    <SimpleGrid columns={4} spacing={10}>
-      {data.map((item, index) => {
-        const isComplexData =
-          item.hasOwnProperty('action') && item.hasOwnProperty('item');
-
-        const displayItem = isComplexData ? item.item : item;
-
+    <SimpleGrid minChildWidth="200px" spacing={10}>
+      {data.map((record, index) => {
         return (
-          <Card
-            key={index}
-            bgColor="neutral.50"
+          <Card 
+            key={index} 
+            bgColor="gray.50"
             borderRadius="xl"
             overflow="hidden"
-            px={8}
-            py={6}
-            maxW="sm"
+            p={4}
           >
-            <CardBody px="0">
-              <SimpleGrid columns={2} spacing={2}>
-                {Object.entries(displayItem).map(([key, value], i) => (
-                  <React.Fragment key={i}>
-                    <Text color="neutral.500">{key}</Text>
-                    <Text fontWeight={600} color="neutral.900">
-                      {value as string}
-                    </Text>
-                  </React.Fragment>
-                ))}
-              </SimpleGrid>
+            <CardBody p={0}>
+              {Object.entries(record).map(([key, value]) => {
+                if (isPrimitive(value)) {
+                  if (typeof value === 'boolean') {
+                    return (
+                      <Flex align="center" key={key} justifyContent="space-between">
+                        <Text mr="2">{key}:</Text>
+                        {value ? <HiCheck /> : <HiX />}
+                      </Flex>
+                    );
+                  }
+                  return (
+                    <Flex align="start" key={key} justifyContent="space-between">
+                      <Text color="neutral.500" mr={2}>{key}</Text>
+                      <Text fontWeight={600} color="neutral.900">{value as string}</Text>
+                    </Flex>
+                  );
+                }
+                return (
+                  <CardFooter key={key} p={0} pt={5} width="full" display="block">
+                    {Array.isArray(value) && isAction(value[0]) ? (
+                      <SmartFunctionOutput
+                        result={value}
+                        tableLevel={props.tableLevel + 1}
+                        level={props.level + 1}
+                      />
+                    ) : (
+                      <Flex direction="column">
+                        <Text color="neutral.500" mr={2}>{key}</Text>
+
+                        <SmartFunctionOutput
+                          result={value}
+                          tableLevel={props.tableLevel + 1}
+                          level={props.level + 1}
+                          />
+                      </Flex>
+                    )}
+                  </CardFooter>
+                );
+              })}
             </CardBody>
-            <CardFooter p={0}>
-              <Flex justifyContent="space-between" alignItems="center">
-                {item.action &&
-                  item.action.map((action: any) => (
-                    <SmartFunctionOutput
-                      result={action}
-                      level={props.level + 1}
-                      tableLevel={props.tableLevel + 1}
-                    />
-                  ))}
-              </Flex>
-            </CardFooter>
           </Card>
         );
       })}
