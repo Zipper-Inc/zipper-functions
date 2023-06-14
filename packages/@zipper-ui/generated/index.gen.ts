@@ -8,6 +8,7 @@ export { default as Collection } from '../src/components/function-output/collect
 export * from '../src/components/function-output/function-output-context';
 export { default as FunctionOutputProvider } from '../src/components/function-output/function-output-context';
 export * from '../src/components/function-output/function-output';
+export * from '../src/components/function-output/markdown';
 export * from '../src/components/function-output/object-explorer';
 export * from '../src/components/function-output/raw-function-output';
 export * from '../src/components/function-output/router-component';

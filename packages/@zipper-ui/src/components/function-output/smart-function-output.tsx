@@ -1,17 +1,15 @@
 import { Box, Stack, StackDivider, Link } from '@chakra-ui/react';
 import { OutputType } from '@zipper/types';
-import ReactMarkdown from 'react-markdown';
 
 import { ObjectExplorer } from './object-explorer';
 import { parseResult } from './utils';
 import { RawFunctionOutput } from './raw-function-output';
 import { ActionComponent } from './action-component';
 import { RouterComponent } from './router-component';
+import { Markdown } from './markdown';
 import Collection from './collection';
 import Array from './array';
-import ChakraUIRenderer, {
-  defaults as defaultElements,
-} from '../../utils/chakra-markdown-renderer';
+import { defaults as defaultElements } from '../../utils/chakra-markdown-renderer';
 import React from 'react';
 
 export function SmartFunctionOutput({
@@ -32,12 +30,7 @@ export function SmartFunctionOutput({
       // Pass through if its not the top level
       if (level > 0) return data.toString();
 
-      return (
-        <ReactMarkdown
-          components={ChakraUIRenderer()}
-          children={data.toString()}
-        />
-      );
+      return <Markdown children={data.toString()} />;
 
     case OutputType.Array:
       return <Array data={data} tableLevel={tableLevel} />;
@@ -111,12 +104,7 @@ export function SmartFunctionOutput({
             ? data.children.join('\n')
             : data.children;
 
-          return (
-            <ReactMarkdown
-              components={ChakraUIRenderer()}
-              children={children}
-            />
-          );
+          return <Markdown children={children} />;
         }
         default:
           // Only handle defined 'html' components
