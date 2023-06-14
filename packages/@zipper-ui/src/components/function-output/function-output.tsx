@@ -239,12 +239,19 @@ export function FunctionOutput({
                     return i;
                   },
                 );
+
+                const userToken = await generateUserToken();
+
+                const headers = {
+                  Authorization: `Bearer ${userToken || ''}`,
+                };
+
                 const res = await fetch(
                   getRunUrl(applet.expandedContent.path),
                   {
                     method: 'POST',
                     body: JSON.stringify(values),
-                    credentials: 'include',
+                    headers,
                   },
                 );
                 const text = await res.text();
@@ -319,12 +326,18 @@ export function FunctionOutput({
                   },
                 );
 
+                const userToken = await generateUserToken();
+
+                const headers = {
+                  Authorization: `Bearer ${userToken || ''}`,
+                };
+
                 const res = await fetch(
                   getRunUrl(modalApplet.mainContent.path || 'main.ts'),
                   {
                     method: 'POST',
                     body: JSON.stringify(values),
-                    credentials: 'include',
+                    headers,
                   },
                 );
                 const text = await res.text();
