@@ -13,6 +13,7 @@ const envSchema = z.object({
   DATABASE_URL: z.string().url(),
   DENO_DEPLOY_TOKEN: z.string(),
   ENCRYPTION_KEY: z.string(),
+  FEEDBACK_TRACKER_API_KEY: z.string(),
   HMAC_SIGNING_SECRET: z.string(),
   JWT_REFRESH_SIGNING_SECRET: z.string(),
   JWT_SIGNING_SECRET: z.string(),
