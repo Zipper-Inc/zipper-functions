@@ -20,6 +20,7 @@ type GalleryItemProps = {
 const badges: string[] = [];
 
 export const GalleryItem: React.FC<GalleryItemProps> = ({ app }) => {
+  if (!app) return <></>;
   const nameOrSlug = app.name || app.slug;
 
   return (
