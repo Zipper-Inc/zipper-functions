@@ -236,7 +236,7 @@ export function parseInputForTypes({
   return [];
 }
 
-export function parseImports({
+export function parseExternalImportUrls({
   code = '',
   srcPassedIn,
   externalOnly = true,
@@ -260,7 +260,10 @@ export function parseCode({
 }: { code?: string; throwErrors?: boolean; srcPassedIn?: SourceFile } = {}) {
   const src = srcPassedIn || (code ? getSourceFileFromCode(code) : undefined);
   let inputs = parseInputForTypes({ code, throwErrors, srcPassedIn: src });
-  const imports = parseImports({ code, srcPassedIn: src });
+  const externalImportUrls = parseExternalImportUrls({
+    code,
+    srcPassedIn: src,
+  });
   const comments = parseComments({ code, srcPassedIn: src });
   if (comments) {
     inputs = inputs?.map((i) => {
@@ -274,7 +277,7 @@ export function parseCode({
       return { ...i, name, description };
     });
   }
-  return { inputs, imports, comments };
+  return { inputs, externalImportUrls, comments };
 }
 
 export function addParamToCode({

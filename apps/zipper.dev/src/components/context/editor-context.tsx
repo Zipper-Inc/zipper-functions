@@ -319,7 +319,7 @@ const EditorContextProvider = ({
       mutateLive(value, event.versionId);
 
       try {
-        const { inputs, imports } = parseCode({
+        const { inputs, externalImportUrls } = parseCode({
           code: value,
           throwErrors: true,
         });
@@ -328,7 +328,7 @@ const EditorContextProvider = ({
         setInputError(undefined);
 
         handleExternalImportsDebounced({
-          imports,
+          imports: externalImportUrls,
           monacoRef,
           externalImportModelsRef,
           invalidImportUrlsRef,
