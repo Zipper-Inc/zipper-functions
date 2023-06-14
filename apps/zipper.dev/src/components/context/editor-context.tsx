@@ -189,17 +189,22 @@ function handleExternalImports({
   monacoRef,
   externalImportModelsRef,
   invalidImportUrlsRef,
+  currentScript,
 }: {
   imports: string[];
   monacoRef: MutableRefObject<typeof monaco | undefined>;
-  externalImportModelsRef: MutableRefObject<string[]>;
+  externalImportModelsRef: MutableRefObject<Record<string, string[]>>;
   invalidImportUrlsRef: MutableRefObject<{ [url: string]: number }>;
+  currentScript?: Script;
 }) {
-  if (!monacoRef?.current) return;
+  if (!monacoRef?.current || !currentScript || !externalImportModelsRef.current)
+    return;
 
   const uriParser = monacoRef.current.Uri.parse;
 
-  const oldImportModels = externalImportModelsRef.current;
+  const externalImportsForThisFile =
+    externalImportModelsRef.current[currentScript.filename] || [];
+  const oldImportModels = externalImportsForThisFile;
   const newImportModels: string[] = [];
 
   // First, let's cleanup anything removed from the code
@@ -226,7 +231,7 @@ function handleExternalImports({
 
     // If this is net new and not already invalid, let's download it
     if (
-      !externalImportModelsRef.current.includes(importUrl) &&
+      !externalImportsForThisFile.includes(importUrl) &&
       (invalidImportUrlsRef.current[importUrl] || 0) <
         MAX_RETRIES_FOR_EXTERNAL_IMPORT
     ) {
@@ -239,7 +244,7 @@ function handleExternalImports({
     }
   });
 
-  externalImportModelsRef.current = newImportModels;
+  externalImportModelsRef.current[currentScript.filename] = newImportModels;
 }
 
 const handleExternalImportsDebounced = debounce(
@@ -278,7 +283,7 @@ const EditorContextProvider = ({
   const monacoRef = useRef<Monaco>();
 
   const invalidImportUrlsRef = useRef<{ [url: string]: number }>({});
-  const externalImportModelsRef = useRef<string[]>([]);
+  const externalImportModelsRef = useRef<Record<string, string[]>>({});
 
   const [modelsDirtyState, setModelsDirtyState] = useState<
     Record<string, boolean>
@@ -393,6 +398,7 @@ const EditorContextProvider = ({
           monacoRef,
           externalImportModelsRef,
           invalidImportUrlsRef,
+          currentScript,
         });
       } catch (e: any) {
         setInputParams(undefined);
