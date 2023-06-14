@@ -1,6 +1,7 @@
 import { Box, Stack, StackDivider, Link } from '@chakra-ui/react';
 import { OutputType } from '@zipper/types';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 import { ObjectExplorer } from './object-explorer';
 import { parseResult } from './utils';
@@ -13,6 +14,14 @@ import ChakraUIRenderer, {
   defaults as defaultElements,
 } from '../../utils/chakra-markdown-renderer';
 import React from 'react';
+
+const Markdown = ({ children }: { children: string }) => (
+  <ReactMarkdown
+    components={ChakraUIRenderer()}
+    children={children}
+    remarkPlugins={[remarkGfm]}
+  />
+);
 
 export function SmartFunctionOutput({
   result,
@@ -32,12 +41,7 @@ export function SmartFunctionOutput({
       // Pass through if its not the top level
       if (level > 0) return data.toString();
 
-      return (
-        <ReactMarkdown
-          components={ChakraUIRenderer()}
-          children={data.toString()}
-        />
-      );
+      return <Markdown children={data.toString()} />;
 
     case OutputType.Array:
       return <Array data={data} tableLevel={tableLevel} />;
@@ -111,12 +115,7 @@ export function SmartFunctionOutput({
             ? data.children.join('\n')
             : data.children;
 
-          return (
-            <ReactMarkdown
-              components={ChakraUIRenderer()}
-              children={children}
-            />
-          );
+          return <Markdown children={children} />;
         }
         default:
           // Only handle defined 'html' components
