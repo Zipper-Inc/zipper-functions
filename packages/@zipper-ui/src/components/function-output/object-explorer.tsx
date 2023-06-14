@@ -65,7 +65,7 @@ function ObjectExplorerRow({
           )}
         </HStack>
       </Td>
-      <Td>
+      <Td border="none">
         {shouldCollapse ? (
           <Box flex={5}>
             {!isOpen && (
