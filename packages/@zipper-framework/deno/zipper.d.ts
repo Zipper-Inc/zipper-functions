@@ -335,11 +335,11 @@ declare namespace Zipper {
    * Simple async key value store, one per app
    * @category Storage
    */
-  export interface Storage {
+  export interface Storage<Value extends Serializable> {
     appId: string;
-    get(key?: string): Promise<any>;
-    set(key: string, value: unknown): Promise<any>;
-    delete(key: string): Promise<any>;
+    get(key: string): Promise<any>;
+    set(key: string, value: Value): Promise<{key: string, value: any}>;
+    delete(key: string): Promise<true>;
   }
 
   /**

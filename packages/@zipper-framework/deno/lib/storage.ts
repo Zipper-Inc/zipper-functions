@@ -19,7 +19,7 @@ function generateHmac(
   };
 }
 
-export class ZipperStorage implements Zipper.Storage {
+export class ZipperStorage<Value extends Zipper.Serializable> implements Zipper.Storage<Value> {
   public appId: string;
 
   constructor(appId: string) {
