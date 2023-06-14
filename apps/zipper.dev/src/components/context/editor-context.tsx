@@ -29,6 +29,13 @@ import { prettyLog } from '~/utils/pretty-log';
 import { AppQueryOutput } from '~/types/trpc';
 import { getAppVersionFromHash } from '~/utils/hashing';
 
+/** This string indicates which errors we own in the editor */
+const ZIPPER_LINT = 'zipper-lint';
+/** Some error codes for Zipper Linting */
+enum ZipperLintCode {
+  CannotFindModule = 'Z001',
+}
+
 export type EditorContextType = {
   currentScript?: Script;
   setCurrentScript: (script: Script) => void;
@@ -319,13 +326,50 @@ const EditorContextProvider = ({
       mutateLive(value, event.versionId);
 
       try {
-        const { inputs, externalImportUrls } = parseCode({
+        const { inputs, externalImportUrls, localImports } = parseCode({
           code: value,
           throwErrors: true,
         });
 
         setInputParams(inputs);
         setInputError(undefined);
+
+        editor?.removeAllMarkers(ZIPPER_LINT);
+
+        // Handle imports and check to make sure they are valid
+
+        localImports.forEach((i) => {
+          const foundUri = getUriFromPath(
+            // Remove the first two characters, which should be `./`
+            // The relative path is required by Deno/Zipper
+            i.specifier.substring(2),
+            monacoRef.current!.Uri.parse,
+          );
+          const foundModel = editor!.getModel(foundUri);
+
+          if (!foundModel) {
+            const currentUri = getUriFromPath(
+              currentScript!.filename,
+              monacoRef.current!.Uri.parse,
+            );
+            const currentModel = editor!.getModel(currentUri);
+            const message = `Cannot find module '${i.specifier}\'.`;
+
+            // TODO: try to make a suggestion
+
+            editor!.setModelMarkers(currentModel!, ZIPPER_LINT, [
+              {
+                startLineNumber: i.startLine,
+                startColumn: i.startColumn,
+                endLineNumber: i.endLine,
+                endColumn: i.endColumn,
+                severity: monacoRef.current!.MarkerSeverity.Error,
+                message,
+                code: ZipperLintCode.CannotFindModule,
+              },
+            ]);
+          }
+        });
 
         handleExternalImportsDebounced({
           imports: externalImportUrls,
@@ -344,6 +388,7 @@ const EditorContextProvider = ({
 
   const onValidate: EditorProps['onValidate'] = (markers) => {
     if (!currentScript) return;
+    console.log('error markers', { markers });
     const errorMarker = markers?.find(
       (m) => m.severity === monacoRef.current?.MarkerSeverity.Error,
     );
