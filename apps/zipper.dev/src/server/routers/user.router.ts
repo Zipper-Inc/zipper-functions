@@ -6,6 +6,7 @@ import { prisma } from '../prisma';
 import { generateAccessToken } from '~/utils/jwt-utils';
 import { encryptToHex } from '@zipper/utils';
 import { getAuth } from '@clerk/nextjs/server';
+import fetch from 'node-fetch';
 
 export const userRouter = createProtectedRouter()
   .query('profilesForUserIds', {
@@ -123,5 +124,33 @@ export const userRouter = createProtectedRouter()
         },
         { expiresIn: input.expiresIn },
       );
+    },
+  })
+  .mutation('submitFeedback', {
+    input: z.object({
+      feedback: z.string(),
+      url: z.string(),
+    }),
+    async resolve({ ctx, input }) {
+      if (ctx.userId && ctx.req && process.env.FEEDBACK_TRACKER_API_KEY) {
+        const res = await fetch(
+          'https://feedback-tracker.zipper.run/create.ts/api/json',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${process.env.FEEDBACK_TRACKER_API_KEY}`,
+              Accept: 'application/json',
+            },
+            body: JSON.stringify({
+              email: getAuth(ctx.req).sessionClaims?.primary_email_address,
+              url: input.url,
+              feedback: input.feedback,
+            }),
+          },
+        );
+
+        return res.status;
+      }
     },
   });

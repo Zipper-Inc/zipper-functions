@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Box,
   HStack,
@@ -7,6 +7,20 @@ import {
   useBreakpointValue,
   Divider,
   Button,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalCloseButton,
+  ModalBody,
+  ModalFooter,
+  useDisclosure,
+  FormControl,
+  FormHelperText,
+  FormLabel,
+  Input,
+  ModalOverlay,
+  Textarea,
+  Spinner,
 } from '@chakra-ui/react';
 import { useRouter } from 'next/router';
 import NextLink from 'next/link';
@@ -17,6 +31,8 @@ import OrganizationSwitcher from './auth/organizationSwitcher';
 import { MobileMenu } from './header-mobile-menu';
 import { ZipperSymbol } from '@zipper/ui';
 import SignInButton from './auth/signInButton';
+import { trpc } from '~/utils/trpc';
+import { set } from 'zod';
 
 type HeaderProps = {
   showNav?: boolean;
@@ -41,6 +57,11 @@ const Header: React.FC<HeaderProps> = ({
 
   const { reload } = router.query;
   const { user } = useUser();
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [feedback, setFeedback] = useState('');
+  const [submittingFeedback, setSubmittingFeedback] = useState(false);
+
+  const feedbackMutation = trpc.useMutation('user.submitFeedback');
 
   useEffect(() => {
     if (reload) {
@@ -132,9 +153,56 @@ const Header: React.FC<HeaderProps> = ({
             )}
             <HStack spacing="4" justifyContent="end">
               {user && (
-                <Button size="sm" variant={'outline'} color="gray.600">
-                  Feedback
-                </Button>
+                <>
+                  <Button
+                    size="sm"
+                    variant={'outline'}
+                    color="gray.600"
+                    onClick={onOpen}
+                  >
+                    Feedback
+                  </Button>
+
+                  <Modal
+                    isOpen={isOpen}
+                    onClose={() => {
+                      setSubmittingFeedback(false);
+                      onClose();
+                    }}
+                    size="xl"
+                  >
+                    <ModalOverlay />
+                    <ModalContent>
+                      <ModalHeader>What's going on?</ModalHeader>
+                      <ModalCloseButton />
+                      <ModalBody>
+                        <FormControl>
+                          <FormLabel>Share your feedback</FormLabel>
+                          <Textarea
+                            onChange={(e) => setFeedback(e.target.value)}
+                          />
+                        </FormControl>
+                      </ModalBody>
+                      <ModalFooter>
+                        <Button
+                          colorScheme="purple"
+                          isDisabled={submittingFeedback}
+                          onClick={async () => {
+                            setSubmittingFeedback(true);
+                            await feedbackMutation.mutateAsync({
+                              feedback,
+                              url: window.location.href,
+                            });
+                            setSubmittingFeedback(false);
+                            onClose();
+                          }}
+                        >
+                          {submittingFeedback ? <Spinner /> : 'Submit'}
+                        </Button>
+                      </ModalFooter>
+                    </ModalContent>
+                  </Modal>
+                </>
               )}
               <SignedIn>
                 <UserButton afterSignOutUrl="/" />
