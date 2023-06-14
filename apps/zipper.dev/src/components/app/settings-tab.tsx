@@ -40,7 +40,12 @@ import { HiExclamationTriangle } from 'react-icons/hi2';
 import slugify from 'slugify';
 import { MIN_SLUG_LENGTH, useAppSlug } from '~/hooks/use-app-slug';
 import { useRouter } from 'next/router';
-import { HiGlobe, HiOutlineClipboard, HiOutlineTrash } from 'react-icons/hi';
+import {
+  HiLockOpen,
+  HiLockClosed,
+  HiOutlineClipboard,
+  HiOutlineTrash,
+} from 'react-icons/hi';
 import { VscCode } from 'react-icons/vsc';
 import { getAppLink } from '@zipper/utils';
 
@@ -87,7 +92,7 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
       name: app.name ?? '',
       slug: app.slug,
       description: app.description,
-      canAnyoneRun: !app.requiresAuthToRun,
+      requiresAuthToRun: app.requiresAuthToRun,
       isPublic: !app.isPrivate,
     },
   });
@@ -107,7 +112,7 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
       slug !== appQuery.data.slug ||
       model.name !== appQuery.data.name ||
       model.description !== appQuery.data.description ||
-      model.canAnyoneRun !== !appQuery.data.requiresAuthToRun ||
+      model.requiresAuthToRun !== appQuery.data.requiresAuthToRun ||
       model.isPublic !== !appQuery.data.isPrivate
     );
   };
@@ -122,7 +127,7 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
           slug: data.slug,
           name: data.name,
           description: data.description,
-          requiresAuthToRun: !data.canAnyoneRun,
+          requiresAuthToRun: data.requiresAuthToRun,
           isPrivate: !data.isPublic,
         },
       },
@@ -296,17 +301,21 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
                 <VStack w="full" p="4" align="start">
                   <VStack align="start" w="full">
                     <HStack w="full">
-                      <HiGlobe />
-                      <Text>Is the output public?</Text>
+                      {settingsForm.watch('requiresAuthToRun') ? (
+                        <HiLockClosed />
+                      ) : (
+                        <HiLockOpen />
+                      )}
+                      <Text>Require auth to run?</Text>
                       <Spacer flexGrow={1} />
-                      <Switch {...settingsForm.register('canAnyoneRun')} />
+                      <Switch {...settingsForm.register('requiresAuthToRun')} />
                     </HStack>
                   </VStack>
 
                   <FormHelperText maxW="xl">{`With this field ${
-                    settingsForm.watch('canAnyoneRun')
-                      ? 'checked, anyone on the internet will be able to run your app and see the output.'
-                      : 'unchecked, users will be asked to authenticate before running your app. You will be able to use the information in Zipper.userInfo to determine who sees the output.'
+                    settingsForm.watch('requiresAuthToRun')
+                      ? 'checked, users will be asked to authenticate before running your applet. You will be able to use the information in Zipper.userInfo to determine who sees the output.'
+                      : 'unchecked, anyone on the internet will be able to run your applet and see the output.'
                   }`}</FormHelperText>
                 </VStack>
               </VStack>
