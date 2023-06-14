@@ -31,6 +31,7 @@ import fetch from 'node-fetch';
 import isCodeRunnable from '~/utils/is-code-runnable';
 import { generateAccessToken } from '~/utils/jwt-utils';
 import { getAuth } from '@clerk/nextjs/server';
+import { captureException } from '@sentry/nextjs';
 
 const defaultSelect = Prisma.validator<Prisma.AppSelect>()({
   id: true,
@@ -521,6 +522,7 @@ export const appRouter = createRouter()
     }),
     async resolve({ ctx, input }) {
       if (!ctx.userId) {
+        captureException('probably the clerk FE bug?', { extra: ctx });
         throw new TRPCError({ code: 'UNAUTHORIZED' });
       }
       const deniedSlug = denyList.find((d) => d === input.slug);
