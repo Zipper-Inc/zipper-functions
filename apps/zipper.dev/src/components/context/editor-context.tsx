@@ -348,6 +348,7 @@ const EditorContextProvider = ({
           );
           const foundModel = editor!.getModel(foundUri);
 
+          // If we can't find a model, this is an error
           if (!foundModel) {
             const currentUri = getUriFromPath(
               currentScript!.filename,
@@ -361,11 +362,14 @@ const EditorContextProvider = ({
               .map((m) => m.uri)
               .filter((u) => u.scheme === 'file' && u.path !== currentUri.path);
 
+            // Search through paths to see if there's somethign similar to the broken path
             const fuse = new Fuse(localModelUris.map((u) => u.path));
             const [topSuggestion] = fuse.search(i.specifier);
+            // If there is, lets grab the full URI based on the original index
             const suggestedUri =
               topSuggestion && localModelUris[topSuggestion.refIndex];
             if (suggestedUri) {
+              // Cool, now we can make it into a relative file path
               const path = getPathFromUri(suggestedUri);
               message = `${message} Did you mean '.${path}'?`;
             }
