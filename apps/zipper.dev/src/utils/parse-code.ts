@@ -250,9 +250,7 @@ export function parseImports({
   return src
     .getImportDeclarations()
     .map((i) => i.getModuleSpecifierValue())
-    .filter((specifier) =>
-      !externalOnly ? true : isExternalImport(specifier),
-    );
+    .filter((s) => (externalOnly ? isExternalImport(s) : true));
 }
 
 export function parseCode({
