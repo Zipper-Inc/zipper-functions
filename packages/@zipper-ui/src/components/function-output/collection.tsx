@@ -217,7 +217,7 @@ function CardCollection(props: Props) {
             bgColor="gray.50"
             borderRadius="xl"
             overflow="hidden"
-            p={6}
+            p={4}
           >
             <CardBody p={0}>
               {Object.entries(record).map(([key, value]) => {
@@ -238,7 +238,7 @@ function CardCollection(props: Props) {
                   );
                 }
                 return (
-                  <CardFooter key={key} p={0} pt={5}>
+                  <CardFooter key={key} p={0} pt={5} width="full" display="block">
                     {Array.isArray(value) && isAction(value[0]) ? (
                       <SmartFunctionOutput
                         result={value}

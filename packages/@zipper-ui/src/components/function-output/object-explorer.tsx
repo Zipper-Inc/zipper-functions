@@ -40,7 +40,7 @@ function ObjectExplorerRow({
         <HStack
           flex={1}
           flexBasis={'auto'}
-          minW="200px"
+          width="100%"
           overflow="auto"
           whiteSpace="nowrap"
           justifyContent="space-between"
@@ -103,7 +103,7 @@ export function ObjectExplorer({
   tableLevel: number;
 }) {
   return (
-    <TableContainer w="full">
+    <TableContainer w="100%">
       <Table>
         <Thead display="none">
           <Tr>
