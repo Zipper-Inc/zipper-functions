@@ -53,7 +53,7 @@ export class ZipperStorage implements Zipper.Storage {
   }
 
   async delete(key: string) {
-    const path = '/api/app/${appId}/storage?key=' + key;
+    const path = `/api/app/${this.appId}/storage?key=${key}`;
     const { hmac, timestamp } = generateHmac('DELETE', path);
 
     const res = await fetch(Deno.env.get('RPC_HOST') + path, {
