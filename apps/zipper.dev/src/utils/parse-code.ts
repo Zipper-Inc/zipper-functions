@@ -10,6 +10,7 @@ import {
   SourceFile,
   FunctionDeclaration,
   ArrowFunction,
+  EnumMember,
 } from 'ts-morph';
 
 const isExternalImport = (specifier: string) => /^https?:\/\//.test(specifier);
@@ -31,62 +32,65 @@ function parseTypeNode(type: any, src: SourceFile): any {
   if (text.toLowerCase() === 'date') return { type: InputType.date };
   if (type.isKind(SyntaxKind.ArrayType) || text.startsWith('Array'))
     return { type: InputType.array };
+  
 
-  // Check for enum types
-  if (type.getType().isEnum()) {
-    return {
-      type: InputType.enum,
-      details: {
-        values: type
-          .getType()
-          .getSymbol()
-          .getMembers()
-          .map((member: any) => member.getName()),
-      },
-    };
-  }
+  if(type.isKind(SyntaxKind.TypeReference)) {
+    // we have a type reference
+    const typeReference = type.getTypeName();
+    const typeReferenceText = typeReference.getText();
 
-  // Check for type reference
-  if (type.isKind(SyntaxKind.TypeReference)) {
-    const typeReference = type.getType();
-    const typeProperties = typeReference.getApparentProperties();
-    if (typeProperties) {
-      const propDetails = typeProperties.map((prop: any) => {
-        const name = prop.getName();
-        const propertyType = prop.getValueDeclaration().getType().getText();
-        // Return the details for each property
+    // find in the code the declaration of the typeReferenceText, this can be a type, a interface, a enum, etc.
+    const typeReferenceDeclaration = src.getTypeAlias(typeReferenceText) || src.getInterface(typeReferenceText) || src.getEnum(typeReferenceText);
+
+    //we have the declaration, we need to know if it's a type, interface or enum
+    if(typeReferenceDeclaration) {
+      if(typeReferenceDeclaration.isKind(SyntaxKind.TypeAliasDeclaration)) {
+        // we have a type
+        const typeReferenceDeclarationType = typeReferenceDeclaration.getTypeNode();
+        return parseTypeNode(typeReferenceDeclarationType, src);
+      }
+      if(typeReferenceDeclaration.isKind(SyntaxKind.InterfaceDeclaration)) {
+        // we have a interface
+        const typeReferenceDeclarationProperties = typeReferenceDeclaration.getProperties();
+        const propDetails = typeReferenceDeclarationProperties.map((prop: any) => {
+          return {
+            key: prop.getName(),
+            details: parseTypeNode(prop.getTypeNode(), src),
+          };
+        }
+        );
         return {
-          key: name,
-          details: { type: propertyType },
+          type: InputType.object,
+          details: { properties: propDetails },
         };
-      });
-
-      // Update the return statement to include the name of the type
-      return {
-        type: InputType.object,
-        name: type.getText(),
-        details: { properties: propDetails },
-      };
-    }
-  }
-
-  // Check for object/record types
-  if (type.isKind(SyntaxKind.TypeLiteral) || text.startsWith('Record')) {
-    const alias = src.getTypeAlias(type.getText());
-    if (alias) {
-      const properties = (alias.getTypeNode() as any).getProperties();
-      const propDetails = properties.map((prop: any) => {
+      }
+      if(typeReferenceDeclaration.isKind(SyntaxKind.EnumDeclaration)) {
+        // we have a enum
         return {
-          key: prop.getName(),
-          details: parseTypeNode(prop.getTypeNode(), src),
-        };
-      });
-      return {
-        type: InputType.object,
-        details: { properties: propDetails },
-      };
+          type: InputType.enum,
+          details: {
+            values: typeReferenceDeclaration
+              .getMembers()
+              .map((member: EnumMember) => {
+                const memberText = member.getFullText().trim();
+
+                // check if the memberText has a value by checking if it has a '='
+                const hasValue = memberText.includes('=');
+                if(!hasValue) {
+                  return memberText.trim();
+                }
+
+                // if it has a value, we need to extract it
+                const memberValue = memberText.split('=')[1]?.replace(/['"]+/g, '').trim();
+                return {
+                  key: memberText.split('=')[0]?.trim(),
+                  value: memberValue,
+                };
+              }),
+          },
+        }
+      }
     }
-    return { type: InputType.object };
   }
 
   // Handle keyof typeof Category type
