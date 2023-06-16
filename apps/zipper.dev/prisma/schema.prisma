@@ -308,6 +308,7 @@ model Organization {
   name         String
 
   organizationMemberships OrganizationMembership[]
+  organizationInvitations OrganizationInvitation[]
   @@map("organizations")
 }
 
@@ -320,4 +321,17 @@ model OrganizationMembership {
   organization Organization @relation(fields: [organizationId], references: [id])
   user         User         @relation(fields: [userId], references: [id])
   @@map("organization_memberships")
+}
+
+model OrganizationInvitation {
+  organizationId         String
+  email                  String
+  role                   String
+  redirectUrl            String?
+  token                  String    @unique
+
+  organization           Organization   @relation(fields: [organizationId], references: [id])
+
+  @@id([organizationId, email])
+  @@map("organization_invitations")
 }
