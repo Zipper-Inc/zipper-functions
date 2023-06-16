@@ -96,6 +96,8 @@ export const authOptions = {
         // validate and update the list of organizations
       }
 
+      if (!account?.refresh_token) return token;
+
       if (account) {
         // Save the access token and refresh token in the JWT on the initial login
         return {
