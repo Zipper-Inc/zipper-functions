@@ -49,7 +49,6 @@ import { useAppSlug, MIN_SLUG_LENGTH } from '~/hooks/use-app-slug';
 import { trpc } from '~/utils/trpc';
 import { generateDefaultSlug } from '~/utils/generate-default';
 import { useRouter } from 'next/router';
-import SignInButton from '../auth/signInButton';
 import ShareModal from './share-modal';
 
 const getDefaultCreateAppFormValues = () => ({

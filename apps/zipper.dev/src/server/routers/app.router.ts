@@ -675,6 +675,7 @@ export const appRouter = createRouter()
       const fork = await prisma.app.create({
         data: {
           slug: input.name || generateDefaultSlug(),
+          name: input.name || app.name,
           description: app.description,
           parentId: app.id,
           organizationId: ctx.orgId,
