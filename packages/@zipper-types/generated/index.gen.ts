@@ -14,4 +14,5 @@ export * from '../src/types/resource-owner-type';
 export * from '../src/types/run-info';
 export * from '../src/types/slack-connector';
 export * from '../src/types/user-auth-connector';
+export * from '../src/types/user-roles';
 export * from '../src/types/zipper-location';

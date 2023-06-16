@@ -9,6 +9,7 @@ import { getAuth } from '@clerk/nextjs/server';
 import fetch from 'node-fetch';
 
 export const userRouter = createProtectedRouter()
+  // Remove - we can now include user profiles when getting app runs
   .query('profilesForUserIds', {
     input: z.object({
       ids: z.array(z.string()),
@@ -28,6 +29,7 @@ export const userRouter = createProtectedRouter()
       }));
     },
   })
+  // Remove - everything we need to show the profile should be in the jwt
   .query('profileForUserId', {
     input: z.object({
       id: z.string(),
@@ -48,6 +50,7 @@ export const userRouter = createProtectedRouter()
       };
     },
   })
+  // Remove - moved to the organization router
   .mutation('sendOrganizationInvitation', {
     input: z.object({
       organizationId: z.string(),

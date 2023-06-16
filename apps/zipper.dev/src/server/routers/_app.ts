@@ -16,6 +16,7 @@ import { resourceOwnerSlugRouter } from './resourceOwnerSlug.router';
 import { slackConnectorRouter } from './slackConnector.router';
 import { githubConnectorRouter } from './githubConnector.router';
 import { appAccessTokenRouter } from './appAccessToken.router';
+import { organizationRouter } from './organization.router';
 
 /**
  * Create your application's root router
@@ -54,6 +55,7 @@ export const trpcRouter = createRouter()
   .merge('secret.', secretRouter)
   .merge('script.', scriptRouter)
   .merge('schedule.', scheduleRouter)
-  .merge('user.', userRouter);
+  .merge('user.', userRouter)
+  .merge('organization.', organizationRouter);
 
 export type AppRouter = typeof trpcRouter;
