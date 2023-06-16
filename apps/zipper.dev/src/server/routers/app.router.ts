@@ -748,7 +748,7 @@ export const appRouter = createRouter()
     input: z.object({
       id: z.string().uuid(),
       data: z.object({
-        name: z.string().min(3).max(255).optional(),
+        name: z.string().max(255).optional(),
         slug: z
           .string()
           .min(5)
