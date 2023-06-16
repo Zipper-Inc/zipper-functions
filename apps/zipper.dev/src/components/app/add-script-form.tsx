@@ -83,7 +83,9 @@ export default function AddScriptForm({
               <Text fontWeight="medium" fontSize="sm" color="gray.700">
                 Press return to add{' '}
                 <Text fontFamily="mono" as="span">
-                  {slugifiedScriptFilename}.ts
+                  {slugifiedScriptFilename.endsWith('.ts')
+                    ? slugifiedScriptFilename
+                    : `${slugifiedScriptFilename}.ts`}
                 </Text>
               </Text>
             )}

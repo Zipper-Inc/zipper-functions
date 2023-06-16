@@ -1,4 +1,4 @@
-export const code = `import { Octokit } from "https://cdn.skypack.dev/octokit?dts";
+export const code = `import { Octokit } from "https://cdn.skypack.dev/octokit@2.0.14?dts";
 
 const client = new Octokit({
   auth: Deno.env.get("GITHUB_TOKEN"),
