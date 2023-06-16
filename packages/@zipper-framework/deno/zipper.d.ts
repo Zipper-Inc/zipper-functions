@@ -4,8 +4,6 @@
 // * 🗣️ Block comments in namespace will show up in editor
 // *
 
-// deno-lint-ignore-file no-explicit-any
-
 /**
  * ✨
  * The global namespace where Zipper-specific, non-standard APIs are located.
@@ -335,11 +333,14 @@ declare namespace Zipper {
    * Simple async key value store, one per app
    * @category Storage
    */
-  export interface Storage<Value extends Serializable> {
+  export interface Storage<Value extends Serializable = Serializable> {
     appId: string;
-    getAll(): Promise<any[]>;
-    get(key: string): Promise<any>;
-    set(key: string, value: Value): Promise<{key: string, value: any}>;
+    getAll<V extends Value = Value>(): Promise<{ [k: string]: V }>;
+    get<V extends Value = Value>(key: string): Promise<V>;
+    set<V extends Value = Value>(
+      key: string,
+      value: V,
+    ): Promise<{ key: string; value: V }>;
     delete(key: string): Promise<true>;
   }
 
