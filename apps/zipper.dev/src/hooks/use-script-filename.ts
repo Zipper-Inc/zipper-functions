@@ -5,7 +5,8 @@ import { trpc } from '~/utils/trpc';
 export const MIN_SLUG_LENGTH = 5;
 
 export const useScriptFilename = (filename: string, appId: string) => {
-  const [debouncedFilename] = useDebounce(filename, 500);
+  const filenameWithoutTs = filename.replace(/\.ts$/, '');
+  const [debouncedFilename] = useDebounce(filenameWithoutTs, 500);
 
   const validateFilenameQuery = trpc.useQuery(
     [
