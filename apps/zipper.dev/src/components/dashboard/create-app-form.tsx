@@ -18,7 +18,6 @@ import {
   Spacer,
   Breadcrumb,
   BreadcrumbItem,
-  BreadcrumbSeparator,
   BreadcrumbLink,
   Heading,
 } from '@chakra-ui/react';
@@ -28,9 +27,8 @@ import { HiExclamationTriangle } from 'react-icons/hi2';
 import slugify from '~/utils/slugify';
 import { trpc } from '~/utils/trpc';
 import { generateDefaultSlug } from '~/utils/generate-default';
-import { HiGlobe } from 'react-icons/hi';
+import { HiLockOpen, HiLockClosed } from 'react-icons/hi';
 import { useOrganization, useOrganizationList, useUser } from '@clerk/nextjs';
-import { OrganizationSelector } from './organization-selector';
 import { useAppSlug, MIN_SLUG_LENGTH } from '~/hooks/use-app-slug';
 import { VscCode } from 'react-icons/vsc';
 import { useToast } from '@chakra-ui/react';
@@ -40,7 +38,7 @@ const getDefaultCreateAppFormValues = () => ({
   name: generateDefaultSlug(),
   description: '',
   isPublic: false,
-  canAnyoneRun: true,
+  requiresAuthToRun: false,
 });
 
 export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
@@ -193,15 +191,19 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
 
             <VStack align="start" w="full" p="4">
               <HStack w="full">
-                <HiGlobe />
-                <Text>Is the output of the app public?</Text>
+                {createAppForm.watch('requiresAuthToRun') ? (
+                  <HiLockClosed />
+                ) : (
+                  <HiLockOpen />
+                )}
+                <Text>Require sign in to run?</Text>
                 <Spacer flexGrow={1} />
-                <Switch {...createAppForm.register('canAnyoneRun')} />
+                <Switch {...createAppForm.register('requiresAuthToRun')} />
               </HStack>
-              {!createAppForm.watch('canAnyoneRun') && (
+              {createAppForm.watch('requiresAuthToRun') && (
                 <FormHelperText>
                   Users will be asked to authenticate against Zipper before
-                  they're able to run your app. You can use the user's email
+                  they're able to run your applet. You can use the user's email
                   address to determine if they have access.
                 </FormHelperText>
               )}
@@ -216,13 +218,13 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
             type="submit"
             isDisabled={isDisabled || addApp.isLoading}
             onClick={createAppForm.handleSubmit(
-              async ({ description, isPublic, canAnyoneRun, name }) => {
+              async ({ description, isPublic, requiresAuthToRun, name }) => {
                 await addApp.mutateAsync(
                   {
                     description,
                     name,
                     isPrivate: !isPublic,
-                    requiresAuthToRun: !canAnyoneRun,
+                    requiresAuthToRun,
                     organizationId: selectedOrganizationId,
                   },
                   {

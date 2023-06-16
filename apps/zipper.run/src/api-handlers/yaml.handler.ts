@@ -28,6 +28,14 @@ export default async function handler(request: NextRequest) {
     }
 
     headers?.set('Content-Type', 'text/yaml');
+
+    headers?.set('Access-Control-Allow-Origin', '*');
+    headers?.set(
+      'Access-Control-Allow-Methods',
+      'GET, POST, PUT, DELETE, OPTIONS',
+    );
+    headers?.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
     return new NextResponse(
       YAML.stringify({
         ok: true,

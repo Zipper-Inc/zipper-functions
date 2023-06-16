@@ -28,6 +28,14 @@ import { uuid } from '@zipper/utils';
 import { prettyLog } from '~/utils/pretty-log';
 import { AppQueryOutput } from '~/types/trpc';
 import { getAppVersionFromHash } from '~/utils/hashing';
+import Fuse from 'fuse.js';
+
+/** This string indicates which errors we own in the editor */
+const ZIPPER_LINT = 'zipper-lint';
+/** Some error codes for Zipper Linting */
+enum ZipperLintCode {
+  CannotFindModule = 'Z001',
+}
 
 export type EditorContextType = {
   currentScript?: Script;
@@ -181,17 +189,22 @@ function handleExternalImports({
   monacoRef,
   externalImportModelsRef,
   invalidImportUrlsRef,
+  currentScript,
 }: {
   imports: string[];
   monacoRef: MutableRefObject<typeof monaco | undefined>;
-  externalImportModelsRef: MutableRefObject<string[]>;
+  externalImportModelsRef: MutableRefObject<Record<string, string[]>>;
   invalidImportUrlsRef: MutableRefObject<{ [url: string]: number }>;
+  currentScript?: Script;
 }) {
-  if (!monacoRef?.current) return;
+  if (!monacoRef?.current || !currentScript || !externalImportModelsRef.current)
+    return;
 
   const uriParser = monacoRef.current.Uri.parse;
 
-  const oldImportModels = externalImportModelsRef.current;
+  const externalImportsForThisFile =
+    externalImportModelsRef.current[currentScript.filename] || [];
+  const oldImportModels = externalImportsForThisFile;
   const newImportModels: string[] = [];
 
   // First, let's cleanup anything removed from the code
@@ -218,7 +231,7 @@ function handleExternalImports({
 
     // If this is net new and not already invalid, let's download it
     if (
-      !externalImportModelsRef.current.includes(importUrl) &&
+      !externalImportsForThisFile.includes(importUrl) &&
       (invalidImportUrlsRef.current[importUrl] || 0) <
         MAX_RETRIES_FOR_EXTERNAL_IMPORT
     ) {
@@ -231,7 +244,7 @@ function handleExternalImports({
     }
   });
 
-  externalImportModelsRef.current = newImportModels;
+  externalImportModelsRef.current[currentScript.filename] = newImportModels;
 }
 
 const handleExternalImportsDebounced = debounce(
@@ -270,7 +283,7 @@ const EditorContextProvider = ({
   const monacoRef = useRef<Monaco>();
 
   const invalidImportUrlsRef = useRef<{ [url: string]: number }>({});
-  const externalImportModelsRef = useRef<string[]>([]);
+  const externalImportModelsRef = useRef<Record<string, string[]>>({});
 
   const [modelsDirtyState, setModelsDirtyState] = useState<
     Record<string, boolean>
@@ -319,7 +332,7 @@ const EditorContextProvider = ({
       mutateLive(value, event.versionId);
 
       try {
-        const { inputs, imports } = parseCode({
+        const { inputs, externalImportUrls, localImports } = parseCode({
           code: value,
           throwErrors: true,
         });
@@ -327,11 +340,65 @@ const EditorContextProvider = ({
         setInputParams(inputs);
         setInputError(undefined);
 
+        editor?.removeAllMarkers(ZIPPER_LINT);
+
+        // Handle imports and check to make sure they are valid
+
+        localImports.forEach((i) => {
+          const foundUri = getUriFromPath(
+            // Remove the first two characters, which should be `./`
+            // The relative path is required by Deno/Zipper
+            i.specifier.substring(2),
+            monacoRef.current!.Uri.parse,
+          );
+          const foundModel = editor!.getModel(foundUri);
+
+          // If we can't find a model, this is an error
+          if (!foundModel) {
+            const currentUri = getUriFromPath(
+              currentScript!.filename,
+              monacoRef.current!.Uri.parse,
+            );
+            const currentModel = editor!.getModel(currentUri);
+            let message = `Cannot find module '${i.specifier}\'.`;
+
+            const localModelUris = editor!
+              .getModels()
+              .map((m) => m.uri)
+              .filter((u) => u.scheme === 'file' && u.path !== currentUri.path);
+
+            // Search through paths to see if there's somethign similar to the broken path
+            const fuse = new Fuse(localModelUris.map((u) => u.path));
+            const [topSuggestion] = fuse.search(i.specifier);
+            // If there is, lets grab the full URI based on the original index
+            const suggestedUri =
+              topSuggestion && localModelUris[topSuggestion.refIndex];
+            if (suggestedUri) {
+              // Cool, now we can make it into a relative file path
+              const path = getPathFromUri(suggestedUri);
+              message = `${message} Did you mean '.${path}'?`;
+            }
+
+            editor!.setModelMarkers(currentModel!, ZIPPER_LINT, [
+              {
+                startLineNumber: i.startLine,
+                startColumn: i.startColumn,
+                endLineNumber: i.endLine,
+                endColumn: i.endColumn,
+                severity: monacoRef.current!.MarkerSeverity.Error,
+                message,
+                code: ZipperLintCode.CannotFindModule,
+              },
+            ]);
+          }
+        });
+
         handleExternalImportsDebounced({
-          imports,
+          imports: externalImportUrls,
           monacoRef,
           externalImportModelsRef,
           invalidImportUrlsRef,
+          currentScript,
         });
       } catch (e: any) {
         setInputParams(undefined);

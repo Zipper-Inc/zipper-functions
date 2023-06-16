@@ -12,6 +12,9 @@ import {
   ArrowFunction,
 } from 'ts-morph';
 
+const isExternalImport = (specifier: string) => /^https?:\/\//.test(specifier);
+const endsWithTs = (specifier: string) => /\.ts$/.test(specifier);
+
 // Strip the Deno-style file extension since TS-Morph can't handle it
 function removeTsExtension(moduleName: string) {
   if (moduleName.slice(-3).toLowerCase() === '.ts')
@@ -196,14 +199,14 @@ export function parseInputForTypes({
     try {
       props = typeNode?.isKind(SyntaxKind.TypeLiteral)
         ? // A type literal, like `params: { foo: string, bar: string }`
-        (typeNode as any)?.getProperties()
+          (typeNode as any)?.getProperties()
         : // A type reference, like `params: Params`
-        // Finds the type alias by its name and grabs the node from there
-        (
-          src
-            .getTypeAlias(typeNode?.getText() as string)
-            ?.getTypeNode() as any
-        )?.getProperties();
+          // Finds the type alias by its name and grabs the node from there
+          (
+            src
+              .getTypeAlias(typeNode?.getText() as string)
+              ?.getTypeNode() as any
+          )?.getProperties();
     } catch (e) {
       if (throwErrors) {
         throw new Error('Cannot get the properties of the object parameter.');
@@ -233,7 +236,7 @@ export function parseInputForTypes({
   return [];
 }
 
-export function parseImports({
+export function parseExternalImportUrls({
   code = '',
   srcPassedIn,
   externalOnly = true,
@@ -247,11 +250,39 @@ export function parseImports({
   return src
     .getImportDeclarations()
     .map((i) => i.getModuleSpecifierValue())
-    .filter((specifier) => {
-      if (!externalOnly) return true;
-      return (
-        specifier.startsWith('http://') || specifier.startsWith('https://')
-      );
+    .filter((s) => (externalOnly ? isExternalImport(s) : true));
+}
+
+export function parseLocalImports({
+  code = '',
+  srcPassedIn,
+  externalOnly = true,
+}: {
+  code?: string;
+  srcPassedIn?: SourceFile;
+  externalOnly?: boolean;
+} = {}) {
+  if (!code) return [];
+  const src = srcPassedIn || getSourceFileFromCode(code);
+  return src
+    .getImportDeclarations()
+    .filter((i) => !isExternalImport(i.getModuleSpecifierValue()))
+    .map((i) => {
+      const startPos = i.getStart();
+      const endPos = i.getEnd();
+      const { column: startColumn, line: startLine } =
+        src.getLineAndColumnAtPos(startPos);
+      const { column: endColumn, line: endLine } =
+        src.getLineAndColumnAtPos(endPos);
+      return {
+        specifier: i.getModuleSpecifierValue(),
+        startLine,
+        startColumn,
+        startPos,
+        endLine,
+        endColumn,
+        endPos,
+      };
     });
 }
 
@@ -262,7 +293,13 @@ export function parseCode({
 }: { code?: string; throwErrors?: boolean; srcPassedIn?: SourceFile } = {}) {
   const src = srcPassedIn || (code ? getSourceFileFromCode(code) : undefined);
   let inputs = parseInputForTypes({ code, throwErrors, srcPassedIn: src });
-  const imports = parseImports({ code, srcPassedIn: src });
+  const externalImportUrls = parseExternalImportUrls({
+    code,
+    srcPassedIn: src,
+  });
+
+  const localImports = parseLocalImports({ code, srcPassedIn: src });
+
   const comments = parseComments({ code, srcPassedIn: src });
   if (comments) {
     inputs = inputs?.map((i) => {
@@ -276,7 +313,7 @@ export function parseCode({
       return { ...i, name, description };
     });
   }
-  return { inputs, imports, comments };
+  return { inputs, externalImportUrls, comments, localImports };
 }
 
 export function addParamToCode({
