@@ -11,6 +11,7 @@ import {
   FunctionDeclaration,
   ArrowFunction,
   EnumMember,
+  TypeNode,
 } from 'ts-morph';
 
 const isExternalImport = (specifier: string) => /^https?:\/\//.test(specifier);
@@ -42,11 +43,31 @@ function parseTypeNode(type: any, src: SourceFile): any {
     // find in the code the declaration of the typeReferenceText, this can be a type, a interface, a enum, etc.
     const typeReferenceDeclaration = src.getTypeAlias(typeReferenceText) || src.getInterface(typeReferenceText) || src.getEnum(typeReferenceText);
 
+
+
     //we have the declaration, we need to know if it's a type, interface or enum
     if(typeReferenceDeclaration) {
       if(typeReferenceDeclaration.isKind(SyntaxKind.TypeAliasDeclaration)) {
         // we have a type
         const typeReferenceDeclarationType = typeReferenceDeclaration.getTypeNode();
+
+        // check if type is a string literal
+        if(typeReferenceDeclarationType && typeReferenceDeclarationType.isKind(SyntaxKind.UnionType)) {
+
+          const unionTypes = typeReferenceDeclarationType.getTypeNodes();
+          const unionTypesDetails = unionTypes.map((unionType: TypeNode) => {
+            return unionType.getText().replace(/['"]+/g, '').trim();
+          });
+
+          console.log('unionTypeDetails', unionTypesDetails)
+
+          return {
+            type: InputType.enum,
+            details: {
+              values: unionTypesDetails,
+            },
+          };
+        }
         return parseTypeNode(typeReferenceDeclarationType, src);
       }
       if(typeReferenceDeclaration.isKind(SyntaxKind.InterfaceDeclaration)) {
@@ -217,6 +238,9 @@ export function parseInputForTypes({
       }
       return [];
     }
+
+    console.log('props', props);
+
 
     if (!typeNode || !props) {
       console.error('No types, treating input as any');
