@@ -12,6 +12,7 @@ import {
   SignedIn,
   SignedOut,
 } from '@clerk/nextjs';
+import { SessionProvider } from 'next-auth/react';
 
 import { DefaultLayout } from '~/components/default-layout';
 import { AppRouter } from '~/server/routers/_app';
@@ -19,6 +20,7 @@ import '@fontsource/inter/variable.css';
 import Header from '~/components/header';
 import { useEffectOnce } from '@zipper/ui';
 import { ZipperLocation } from '@zipper/types';
+import { Session } from 'inspector';
 
 export type NextPageWithLayout<P = Record<string, unknown>, IP = P> = NextPage<
   P,
@@ -52,27 +54,29 @@ const MyApp = (({ Component, pageProps }: AppPropsWithLayout) => {
   });
   return (
     <>
-      <ClerkProvider
-        {...pageProps}
-        appearance={{
-          variables: {
-            borderRadius: '0.175',
-            fontFamily: 'Inter',
-            colorPrimary: '#9B2FB4',
-          },
-        }}
-      >
-        {Component.skipAuth ? (
-          getLayout(<Component {...pageProps} />)
-        ) : (
-          <>
-            <SignedIn>{getLayout(<Component {...pageProps} />)}</SignedIn>
-            <SignedOut>
-              <RedirectToSignIn />
-            </SignedOut>
-          </>
-        )}
-      </ClerkProvider>
+      <SessionProvider session={pageProps.session}>
+        <ClerkProvider
+          {...pageProps}
+          appearance={{
+            variables: {
+              borderRadius: '0.175',
+              fontFamily: 'Inter',
+              colorPrimary: '#9B2FB4',
+            },
+          }}
+        >
+          {Component.skipAuth ? (
+            getLayout(<Component {...pageProps} />)
+          ) : (
+            <>
+              <SignedIn>{getLayout(<Component {...pageProps} />)}</SignedIn>
+              <SignedOut>
+                <RedirectToSignIn />
+              </SignedOut>
+            </>
+          )}
+        </ClerkProvider>
+      </SessionProvider>
     </>
   );
 }) as AppType;
