@@ -9,10 +9,10 @@ import {
   Icon,
   Text,
 } from '@chakra-ui/react';
-import { useOrganizationList } from '@clerk/nextjs';
 import { useState } from 'react';
 import { HiSwitchHorizontal } from 'react-icons/hi';
 import { HiOutlineChevronUpDown } from 'react-icons/hi2';
+import { useOrganizationList } from '~/hooks/use-organization-list';
 
 export const OrganizationSelector: React.FC<{
   selectedOrganizationId?: string | null;

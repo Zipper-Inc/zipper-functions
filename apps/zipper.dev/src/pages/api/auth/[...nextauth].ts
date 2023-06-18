@@ -1,14 +1,63 @@
-import NextAuth, { SessionStrategy, AuthOptions, TokenSet } from 'next-auth';
+import NextAuth, { AuthOptions, TokenSet } from 'next-auth';
 import GithubProvider from 'next-auth/providers/github';
 import GoogleProvider from 'next-auth/providers/google';
 import { prisma } from '~/server/prisma';
 import { PrismaClient } from '@prisma/client';
 import { Adapter, AdapterAccount } from 'next-auth/adapters';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime';
+import slugify from '~/utils/slugify';
+import { ResourceOwnerType } from '@zipper/types';
+import crypto from 'crypto';
 
 export function PrismaAdapter(p: PrismaClient): Adapter {
   return {
-    createUser: (data) => p.user.create({ data }),
+    createUser: async (data) => {
+      const possibleSlugs: string[] = [];
+      const emailUserPart = data.email.split('@')[0];
+
+      if (emailUserPart && emailUserPart.length >= 3) {
+        possibleSlugs.push(slugify(emailUserPart));
+        possibleSlugs.push(
+          `${slugify(emailUserPart)}-${Math.floor(Math.random() * 100)}`,
+        );
+      }
+      if (data.name) {
+        possibleSlugs.push(slugify(data.name));
+        possibleSlugs.push(
+          `${slugify(data.name)}-${Math.floor(Math.random() * 100)}`,
+        );
+      }
+      possibleSlugs.push(slugify(data.email));
+      possibleSlugs.push(
+        `${slugify(data.email)}-${Math.floor(Math.random() * 100)}`,
+      );
+
+      const existingResourceOwnerSlugs = await p.resourceOwnerSlug.findMany({
+        where: { slug: { in: possibleSlugs } },
+      });
+
+      const existingSlugs = existingResourceOwnerSlugs.map((s) => s.slug);
+
+      const validSlugs = possibleSlugs.filter((s) => {
+        return !existingSlugs.includes(s);
+      });
+
+      const slug = validSlugs[0] || crypto.randomBytes(4).toString('hex');
+
+      const user = await p.user.create({
+        data: { ...data, slug },
+      });
+
+      p.resourceOwnerSlug.create({
+        data: {
+          slug,
+          resourceOwnerType: ResourceOwnerType.User,
+          resourceOwnerId: user.id,
+        },
+      });
+
+      return user;
+    },
     getUser: (id) => p.user.findUnique({ where: { id } }),
     getUserByEmail: (email) => p.user.findUnique({ where: { email } }),
     async getUserByAccount(provider_providerAccountId) {
@@ -140,14 +189,46 @@ export const authOptions = {
           organizationMemberships: await prisma.organizationMembership.findMany(
             {
               where: { userId: user.id },
+              select: {
+                organization: {
+                  select: { name: true, id: true, slug: true },
+                },
+                role: true,
+              },
             },
           ),
         };
       }
 
-      if (trigger === 'update' && session) {
-        console.log('update session', session);
-        // validate and update the list of organizations
+      if (trigger === 'update') {
+        console.log('update triggered: ', session);
+
+        if (session.updateOrganizationList) {
+          token.organizationMemberships =
+            await prisma.organizationMembership.findMany({
+              where: { userId: user.id },
+              select: {
+                organization: {
+                  select: { name: true, id: true, slug: true },
+                },
+                role: true,
+              },
+            });
+        }
+
+        if (session.currentOrganizationId === null) {
+          token.currentOrganizationId = undefined;
+        }
+
+        if (session.currentOrganizationId) {
+          if (
+            token.organizationMemberships?.find(
+              (m) => m.organization.id === session.currentOrganizationId,
+            )
+          ) {
+            token.currentOrganizationId = session.currentOrganizationId;
+          }
+        }
       }
 
       if (!token.expires_at) return token;
@@ -182,7 +263,10 @@ export default NextAuth(authOptions);
 declare module 'next-auth' {
   interface Session {
     error?: 'RefreshAccessTokenError';
-    organizationMemberships: { organizationId: string; role: string }[];
+    organizationMemberships: {
+      organization: { id: string; name: string; slug: string };
+      role: string;
+    }[];
     currentOrganizationId?: string;
   }
 }
@@ -193,7 +277,10 @@ declare module 'next-auth/jwt' {
     expires_at: number;
     refresh_token?: string;
     error?: 'RefreshAccessTokenError';
-    organizationMemberships: { organizationId: string; role: string }[];
+    organizationMemberships: {
+      organization: { id: string; name: string; slug: string };
+      role: string;
+    }[];
     currentOrganizationId?: string;
   }
 }

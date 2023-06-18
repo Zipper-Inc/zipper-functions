@@ -1,4 +1,4 @@
-import { useOrganizationList } from '@clerk/nextjs';
+// import { useOrganizationList } from '@clerk/nextjs';
 import {
   Modal,
   ModalOverlay,
@@ -25,7 +25,8 @@ import { useDebounce } from 'use-debounce';
 import { FormEventHandler, useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { HiExclamationTriangle } from 'react-icons/hi2';
-import { ResourceOwnerType } from '@zipper/types';
+// import { ResourceOwnerType } from '@zipper/types';
+import { useOrganizationList } from '~/hooks/use-organization-list';
 
 const MIN_SLUG_LENGTH = 3;
 const MAX_SLUG_LENGTH = 50;
@@ -51,7 +52,7 @@ export const CreateOrganizationModal = ({
     { enabled: !!(debouncedSlug.length >= MIN_SLUG_LENGTH) },
   );
 
-  const createOrganizationSlug = trpc.useMutation('resourceOwnerSlug.add');
+  // const createOrganizationSlug = trpc.useMutation('resourceOwnerSlug.add');
 
   useEffect(() => {
     setSlugExists(!!resourceOwnerSlugQuery.data);
@@ -67,20 +68,20 @@ export const CreateOrganizationModal = ({
   ) => {
     e.preventDefault();
     if (!createOrganization) return;
-    const newOrg = await createOrganization({ name: organizationName, slug });
-    await createOrganizationSlug.mutateAsync(
-      {
-        slug,
-        resourceOwnerId: newOrg.id,
-        resourceOwnerType: ResourceOwnerType.Organization,
-      },
-      {
-        onError: (e) => {
-          console.error(e);
-        },
-      },
-    );
-    setActive && setActive({ organization: newOrg.id });
+    const newOrg = await createOrganization(organizationName);
+    // await createOrganizationSlug.mutateAsync(
+    //   {
+    //     slug,
+    //     resourceOwnerId: newOrg.id,
+    //     resourceOwnerType: ResourceOwnerType.Organization,
+    //   },
+    //   {
+    //     onError: (e) => {
+    //       console.error(e);
+    //     },
+    //   },
+    // );
+    setActive && setActive(newOrg.id);
     router.push(`${router.pathname}?reload=true`);
   };
 

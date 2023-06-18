@@ -287,6 +287,7 @@ model User {
   email         String   @unique
   emailVerified DateTime?
   image         String?
+  slug          String
   accounts      Account[]
   sessions      Session[]
 
@@ -306,6 +307,7 @@ model VerificationToken {
 model Organization {
   id           String    @id @default(cuid())
   name         String
+  slug         String
 
   organizationMemberships OrganizationMembership[]
   organizationInvitations OrganizationInvitation[]
