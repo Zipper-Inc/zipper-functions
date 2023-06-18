@@ -6,6 +6,9 @@ import * as trpc from '@trpc/server';
 import * as trpcNext from '@trpc/server/adapters/next';
 import { ServerResponse } from 'http';
 import { NextApiResponse } from 'next';
+import { getServerSession } from 'next-auth';
+import { getToken } from 'next-auth/jwt';
+import { authOptions } from '~/pages/api/auth/[...nextauth]';
 
 /**
  * Inner function for `createContext` where we create the context.
@@ -13,16 +16,18 @@ import { NextApiResponse } from 'next';
  */
 export const createContextInner = ({
   userId,
+  nextAuthUserId,
   orgId,
   organizations,
   req,
 }: {
   userId?: string;
+  nextAuthUserId?: string;
   orgId?: string;
   organizations?: Record<string, string>[];
   req?: RequestLike;
 }) => {
-  return { userId, orgId, organizations, req };
+  return { userId, nextAuthUserId, orgId, organizations, req };
 };
 
 /**
@@ -33,12 +38,14 @@ export async function createContext(opts: {
   req: RequestLike;
   res: NextApiResponse | ServerResponse;
 }) {
-  const getAuthAndCreateContext = () => {
+  const getAuthAndCreateContext = async () => {
     const { userId, orgId, sessionClaims } = getAuth(opts.req);
+    const token = await getToken({ req: opts.req });
 
     return createContextInner({
       userId: userId || undefined,
       orgId: orgId || undefined,
+      nextAuthUserId: token?.sub || undefined,
       organizations: sessionClaims?.organizations as Record<string, string>[],
       req: opts.req,
     });

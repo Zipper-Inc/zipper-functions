@@ -1,4 +1,4 @@
-import { useOrganization, useOrganizationList, useUser } from '@clerk/nextjs';
+import { useOrganization, useUser } from '@clerk/nextjs';
 import {
   Box,
   Button,
@@ -17,14 +17,13 @@ import { HiOutlineChevronUpDown, HiPlus } from 'react-icons/hi2';
 import { HiEye, HiSwitchHorizontal } from 'react-icons/hi';
 import { useState } from 'react';
 import { CreateOrganizationModal } from './createOrganizationModal';
-import Link from 'next/link';
 import { useRouter } from 'next/router';
+import { useOrganizationList } from '~/hooks/use-organization-list';
 
 export const OrganizationSwitcher: React.FC<ButtonProps> = (props) => {
   // get the authed user's organizations from Clerk
   const { setActive, organizationList, isLoaded } = useOrganizationList();
   const { user } = useUser();
-  if (!isLoaded) return <></>;
 
   const { organization, membership } = useOrganization();
 
@@ -48,6 +47,8 @@ export const OrganizationSwitcher: React.FC<ButtonProps> = (props) => {
   } = useDisclosure();
 
   const router = useRouter();
+
+  if (!isLoaded) return <></>;
 
   return (
     <Box>
@@ -122,7 +123,7 @@ export const OrganizationSwitcher: React.FC<ButtonProps> = (props) => {
               <MenuItem
                 key={org.organization.id}
                 onClick={() => {
-                  setActive && setActive({ organization: org.organization.id });
+                  setActive && setActive(org.organization.id);
                 }}
                 backgroundColor="gray.50"
                 px="4"
