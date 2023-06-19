@@ -166,10 +166,18 @@ export const authOptions: AuthOptions = {
     GithubProvider({
       clientId: process.env.NEXTAUTH_GITHUB_CLIENT_ID!,
       clientSecret: process.env.NEXTAUTH_GITHUB_CLIENT_SECRET!,
+      // IMPORTANT
+      // allowDangerousEmailAccountLinking should only be used with providers
+      // that verify email addresses. See https://github.com/nextauthjs/next-auth/issues/519#issuecomment-696673600
+      allowDangerousEmailAccountLinking: true,
     }),
     GoogleProvider({
       clientId: process.env.NEXTAUTH_GOOGLE_CLIENT_ID!,
       clientSecret: process.env.NEXTAUTH_GOOGLE_CLIENT_SECRET!,
+      // IMPORTANT
+      // allowDangerousEmailAccountLinking should only be used with providers
+      // that verify email addresses. See https://github.com/nextauthjs/next-auth/issues/519#issuecomment-696673600
+      allowDangerousEmailAccountLinking: true,
       authorization: {
         params: {
           access_type: 'offline',
