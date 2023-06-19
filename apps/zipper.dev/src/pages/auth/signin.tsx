@@ -6,6 +6,25 @@ import { getProviders, signIn } from 'next-auth/react';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../api/auth/[...nextauth]';
 import { getCsrfToken } from 'next-auth/react';
+import { Box, Button, Card, CardBody, CardFooter, CardHeader, Center, Flex, FormControl, FormLabel, Heading, HStack, Icon, Input, Stack, Text, VStack } from '@chakra-ui/react';
+import { ZipperLogo } from '@zipper/ui';
+import Link from 'next/link';
+import { SiGithub, SiTwitter } from 'react-icons/si';
+import { FcGoogle } from 'react-icons/fc';
+
+
+export const renderIcon = (providerName: string) => {
+  switch (providerName) {
+    case 'GitHub':
+      return <SiGithub size={24}/>;
+    case 'Google':
+      return <FcGoogle size={24}/>;
+    case 'Twitter':
+      return <SiTwitter />;
+    default:
+      return null;
+  }
+}
 
 export default function SignIn({
   providers,
@@ -13,21 +32,92 @@ export default function SignIn({
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
   return (
     <>
-      {/* <form method="post" action="/api/auth/signin/email">
-        <input name="csrfToken" type="hidden" defaultValue={csrfToken} />
-        <label>
-          Email address
-          <input type="email" id="email" name="email" />
-        </label>
-        <button type="submit">Sign in with Email</button>
-      </form> */}
-      {Object.values(providers).map((provider) => (
-        <div key={provider.name}>
-          <button onClick={() => signIn(provider.id)}>
-            Sign in with {provider.name}
-          </button>
-        </div>
-      ))}
+      <Center w="100%" h="100vh">
+        <VStack spacing="12">
+          <ZipperLogo />
+          <Card pt={10} shadow="xl" rounded="md" display="flex" flexDirection="column" gap={4} width="sm">
+            <CardHeader py={0}>
+              <Stack>
+                <Heading
+                  as="h1"
+                  size="md"
+                  whiteSpace="nowrap"
+                  fontWeight="600"
+                >
+                  Sign in
+                </Heading>
+                <Text fontSize="md" color="gray.600">
+                  to continue to Zipper
+                </Text>
+              </Stack>
+            </CardHeader>
+            <CardBody pb={4}>
+                <Stack gap={4}>
+                  <VStack>
+                    {Object.values(providers).map((provider) => (
+                      <Button
+                        key={provider.name}
+                        justifyContent="start" 
+                        width="full" 
+                        gap={4} 
+                        variant="ghost" 
+                        border="1px" 
+                        borderColor="gray.200" 
+                        borderRadius="none" 
+                        onClick={() => signIn(provider.id)}
+                      >
+                        <Icon>
+                          {renderIcon(provider.name)}
+                        </Icon>
+                        <Text fontWeight={'normal'}>
+                          Continue with {provider.name}
+                        </Text>
+                      </Button>
+                    ))}
+                  </VStack>
+                  <HStack gap={2}>
+                    <Box w="50%" borderBottom="1px solid" borderColor="gray.300"  />
+                    <Text>or</Text>
+                    <Box w="50%" borderBottom="1px solid" borderColor="gray.300" />
+                  </HStack>
+
+                  <Stack width="full" gap={2}>
+                    <form>
+                      <input name="csrfToken" type="hidden" defaultValue={csrfToken} />
+                      <FormControl>
+                        <FormLabel>
+                          <Text fontSize="sm" fontWeight="medium" color="gray.600">
+                            Email address
+                          </Text>
+                        </FormLabel>
+                        <Input
+                          name="email"
+                          type="email"
+                          placeholder=""
+                          autoComplete="email"
+                          rounded="none"
+                        />
+                      </FormControl>
+                      <Button mt={4} type="submit" width="full" variant="solid" colorScheme="purple" rounded="none">
+                        Continue
+                      </Button>
+                    </form>
+                  </Stack>
+                </Stack>
+
+            </CardBody>
+            <CardFooter pt={0}>
+              <Text fontSize="sm">
+                No account?
+              </Text>
+              <Link href="/sign-up">
+                <Text color="purple" fontSize="sm">&nbsp;Sign up</Text>
+              </Link>              
+            </CardFooter>
+          </Card>
+        </VStack>
+      </Center>
+      
     </>
   );
 }
