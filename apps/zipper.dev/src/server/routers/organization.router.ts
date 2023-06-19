@@ -5,7 +5,6 @@ import * as trpc from '@trpc/server';
 import { prisma } from '../prisma';
 import crypto from 'crypto';
 import { createRouter } from '../createRouter';
-import { getServerSession } from 'next-auth';
 import denyList from '../utils/slugDenyList';
 import slugify from '~/utils/slugify';
 
@@ -19,6 +18,17 @@ export const organizationRouter = createRouter()
         where: {
           organizationId: ctx.orgId,
         },
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              image: true,
+              slug: true,
+            },
+          },
+        },
       });
     },
   })
@@ -30,6 +40,12 @@ export const organizationRouter = createRouter()
       return prisma.organizationInvitation.findMany({
         where: {
           organizationId: ctx.orgId,
+        },
+        select: {
+          organizationId: true,
+          email: true,
+          role: true,
+          createdAt: true,
         },
       });
     },

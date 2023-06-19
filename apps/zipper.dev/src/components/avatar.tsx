@@ -9,8 +9,8 @@ export function AvatarForUserId({
   const userQuery = trpc.useQuery(['user.profileForUserId', { id: userId }]);
   return (
     <BaseAvatar
-      name={userQuery?.data?.fullName || ''}
-      src={userQuery?.data?.profileImageUrl}
+      name={userQuery?.data?.name || ''}
+      src={userQuery?.data?.image || undefined}
       {...props}
     />
   );

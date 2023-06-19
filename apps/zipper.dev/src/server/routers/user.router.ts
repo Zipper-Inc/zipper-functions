@@ -7,6 +7,15 @@ import { generateAccessToken } from '~/utils/jwt-utils';
 import { encryptToHex } from '@zipper/utils';
 import { getAuth } from '@clerk/nextjs/server';
 import fetch from 'node-fetch';
+import { Prisma } from '@prisma/client';
+
+const defaultSelect = Prisma.validator<Prisma.UserSelect>()({
+  id: true,
+  name: true,
+  email: true,
+  image: true,
+  slug: true,
+});
 
 export const userRouter = createProtectedRouter()
   // Remove - we can now include user profiles when getting app runs
@@ -15,18 +24,12 @@ export const userRouter = createProtectedRouter()
       ids: z.array(z.string()),
     }),
     async resolve({ input }) {
-      const users = await clerk.users.getUserList({ userId: input.ids });
-      return users.map((user) => ({
-        id: user.id,
-        fullName:
-          user.firstName && user.lastName
-            ? `${user.firstName} ${user.lastName}`
-            : null,
-        primaryEmailAddress: user.emailAddresses.find(
-          (clerkEmail) => clerkEmail.id === user.primaryEmailAddressId,
-        )?.emailAddress,
-        profileImageUrl: user.profileImageUrl,
-      }));
+      return prisma.user.findMany({
+        where: {
+          id: { in: input.ids },
+        },
+        select: defaultSelect,
+      });
     },
   })
   // Remove - everything we need to show the profile should be in the jwt
@@ -36,18 +39,12 @@ export const userRouter = createProtectedRouter()
     }),
     async resolve({ input }) {
       if (input.id.startsWith('temp_')) return;
-      const user = await clerk.users.getUser(input.id);
-      return {
-        id: user.id,
-        fullName:
-          user.firstName && user.lastName
-            ? `${user.firstName} ${user.lastName}`
-            : null,
-        primaryEmailAddress: user.emailAddresses.find(
-          (clerkEmail) => clerkEmail.id === user.primaryEmailAddressId,
-        )?.emailAddress,
-        profileImageUrl: user.profileImageUrl,
-      };
+      return prisma.user.findUnique({
+        where: {
+          id: input.id,
+        },
+        select: defaultSelect,
+      });
     },
   })
   // Remove - moved to the organization router
