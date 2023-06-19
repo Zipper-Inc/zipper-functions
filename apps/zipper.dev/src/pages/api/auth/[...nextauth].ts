@@ -6,6 +6,9 @@ import NextAuth, {
 } from 'next-auth';
 import GithubProvider from 'next-auth/providers/github';
 import GoogleProvider from 'next-auth/providers/google';
+import EmailProvider, {
+  SendVerificationRequestParams,
+} from 'next-auth/providers/email';
 import { prisma } from '~/server/prisma';
 import { PrismaClient } from '@prisma/client';
 import { Adapter, AdapterAccount } from 'next-auth/adapters';
@@ -13,6 +16,9 @@ import { PrismaClientKnownRequestError } from '@prisma/client/runtime';
 import slugify from '~/utils/slugify';
 import { ResourceOwnerType } from '@zipper/types';
 import crypto from 'crypto';
+import { Resend } from 'resend';
+import EmailTemplate from 'emails';
+export const resend = new Resend(process.env.RESEND_API_KEY!);
 
 export function PrismaAdapter(p: PrismaClient): Adapter {
   return {
@@ -163,6 +169,26 @@ export const authOptions: AuthOptions = {
   },
   adapter: PrismaAdapter(prisma),
   providers: [
+    EmailProvider({
+      name: 'Email',
+      server: '',
+      from: 'Zipper Team',
+      sendVerificationRequest: async (
+        params: SendVerificationRequestParams,
+      ) => {
+        try {
+          const { identifier, url } = params;
+          await resend.emails.send({
+            to: identifier,
+            from: 'noreply@zipper.dev',
+            subject: 'Login into Zipper!',
+            react: EmailTemplate({ loginUrl: url }),
+          });
+        } catch (error) {
+          console.error(error);
+        }
+      },
+    }),
     GithubProvider({
       clientId: process.env.NEXTAUTH_GITHUB_CLIENT_ID!,
       clientSecret: process.env.NEXTAUTH_GITHUB_CLIENT_SECRET!,
