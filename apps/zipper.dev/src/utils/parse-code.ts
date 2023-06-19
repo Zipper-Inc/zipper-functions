@@ -43,8 +43,6 @@ function parseTypeNode(type: any, src: SourceFile): any {
     // find in the code the declaration of the typeReferenceText, this can be a type, a interface, a enum, etc.
     const typeReferenceDeclaration = src.getTypeAlias(typeReferenceText) || src.getInterface(typeReferenceText) || src.getEnum(typeReferenceText);
 
-
-
     //we have the declaration, we need to know if it's a type, interface or enum
     if(typeReferenceDeclaration) {
       if(typeReferenceDeclaration.isKind(SyntaxKind.TypeAliasDeclaration)) {
@@ -58,8 +56,6 @@ function parseTypeNode(type: any, src: SourceFile): any {
           const unionTypesDetails = unionTypes.map((unionType: TypeNode) => {
             return unionType.getText().replace(/['"]+/g, '').trim();
           });
-
-          console.log('unionTypeDetails', unionTypesDetails)
 
           return {
             type: InputType.enum,
