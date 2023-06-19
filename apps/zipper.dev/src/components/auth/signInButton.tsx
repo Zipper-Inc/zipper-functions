@@ -8,7 +8,9 @@ export const SignInButton = () => {
       colorScheme="purple"
       onClick={() => {
         router.push(
-          `/sign-in?redirect=${encodeURIComponent(window.location.toString())}`,
+          `/auth/signin?redirect=${encodeURIComponent(
+            window.location.toString(),
+          )}`,
         );
       }}
     >

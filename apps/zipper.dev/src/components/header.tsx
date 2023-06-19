@@ -57,7 +57,6 @@ const Header: React.FC<HeaderProps> = ({
 
   const { reload } = router.query;
   const { user } = useUser();
-  console.log('user: ', user);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [feedback, setFeedback] = useState('');
   const [submittingFeedback, setSubmittingFeedback] = useState(false);
@@ -207,6 +206,7 @@ const Header: React.FC<HeaderProps> = ({
               )}
               <SignedIn>
                 {user?.username}
+                <Link href="/api/auth/signout">Sign out</Link>
                 <UserButton afterSignOutUrl="/" />
               </SignedIn>
               <SignedOut>
