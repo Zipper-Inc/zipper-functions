@@ -21,7 +21,7 @@ export const createContextInner = ({
 }: {
   userId?: string;
   orgId?: string;
-  organizations?: Record<string, string>[];
+  organizations?: Record<string, string>;
   req?: RequestLike;
 }) => {
   return { userId, orgId, organizations, req };
@@ -37,13 +37,15 @@ export async function createContext(opts: {
 }) {
   const getAuthAndCreateContext = async () => {
     const token = await getToken({ req: opts.req });
+    const orgMems: Record<string, string> = {};
+    token?.organizationMemberships?.forEach((m) => {
+      orgMems[m.organization.id] = m.role;
+    });
 
     return createContextInner({
       orgId: token?.currentOrganizationId || undefined,
       userId: token?.sub || undefined,
-      organizations: token?.organizationMemberships?.map((m) => ({
-        [m.organization.id]: m.role,
-      })),
+      organizations: orgMems,
       req: opts.req,
     });
   };
