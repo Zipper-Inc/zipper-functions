@@ -14,13 +14,14 @@
   },
   "scripts": {
     "build": "yarn link-env && turbo run build",
-    "dev": "yarn install; yarn link-env && turbo run dev --parallel",
+    "dev": "yarn install; yarn link-env; yarn migrate; turbo run dev --parallel",
     "link-env": "sh ./bin/link-env-files.sh",
     "lint": "turbo run lint",
     "test": "turbo run test",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "db-nuke": "docker-compose down --volumes --remove-orphans",
     "ts-node": "ts-node -T",
+    "migrate": "yarn workspace zipper.dev db-migrate-dev",
     "deno:dev": "yarn dotenv -c .env.local ts-node --compiler-options \"{\\\"module\\\":\\\"commonjs\\\"}\" ./bin/ts/deno-dev.ts",
     "deno:deploy": "yarn dotenv -c .env.local ts-node --compiler-options \"{\\\"module\\\":\\\"commonjs\\\"}\" ./bin/ts/deno-deploy.ts"
   },
