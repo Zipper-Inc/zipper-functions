@@ -1,13 +1,12 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { RequestLike } from '@clerk/nextjs/dist/server/types';
-import { getAuth } from '@clerk/nextjs/server';
 import { captureException } from '@sentry/nextjs';
 import * as trpc from '@trpc/server';
-import * as trpcNext from '@trpc/server/adapters/next';
 import { ServerResponse } from 'http';
 import { NextApiResponse } from 'next';
 import { getServerSession } from 'next-auth';
 import { getToken } from 'next-auth/jwt';
+import { getSession } from 'next-auth/react';
 import { authOptions } from '~/pages/api/auth/[...nextauth]';
 
 /**
@@ -16,18 +15,16 @@ import { authOptions } from '~/pages/api/auth/[...nextauth]';
  */
 export const createContextInner = ({
   userId,
-  nextAuthUserId,
   orgId,
   organizations,
   req,
 }: {
   userId?: string;
-  nextAuthUserId?: string;
   orgId?: string;
   organizations?: Record<string, string>[];
   req?: RequestLike;
 }) => {
-  return { userId, nextAuthUserId, orgId, organizations, req };
+  return { userId, orgId, organizations, req };
 };
 
 /**
@@ -39,14 +36,14 @@ export async function createContext(opts: {
   res: NextApiResponse | ServerResponse;
 }) {
   const getAuthAndCreateContext = async () => {
-    const { userId, orgId, sessionClaims } = getAuth(opts.req);
     const token = await getToken({ req: opts.req });
 
     return createContextInner({
-      userId: userId || undefined,
-      orgId: orgId || undefined,
-      nextAuthUserId: token?.sub || undefined,
-      organizations: sessionClaims?.organizations as Record<string, string>[],
+      orgId: token?.currentOrganizationId || undefined,
+      userId: token?.sub || undefined,
+      organizations: token?.organizationMemberships?.map((m) => ({
+        [m.organization.id]: m.role,
+      })),
       req: opts.req,
     });
   };

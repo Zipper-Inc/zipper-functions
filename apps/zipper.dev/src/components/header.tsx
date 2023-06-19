@@ -15,9 +15,7 @@ import {
   ModalFooter,
   useDisclosure,
   FormControl,
-  FormHelperText,
   FormLabel,
-  Input,
   ModalOverlay,
   Textarea,
   Spinner,
@@ -26,13 +24,15 @@ import { useRouter } from 'next/router';
 import NextLink from 'next/link';
 
 import { ZipperLogo } from '@zipper/ui';
-import { SignedIn, SignedOut, UserButton, useUser } from '@clerk/nextjs';
+import { UserButton } from '@clerk/nextjs';
 import OrganizationSwitcher from './auth/organizationSwitcher';
 import { MobileMenu } from './header-mobile-menu';
 import { ZipperSymbol } from '@zipper/ui';
 import SignInButton from './auth/signInButton';
 import { trpc } from '~/utils/trpc';
-import { set } from 'zod';
+import { useUser } from '~/hooks/use-user';
+import SignedIn from './auth/signed-in';
+import SignedOut from './auth/signed-out';
 
 type HeaderProps = {
   showNav?: boolean;
@@ -57,6 +57,7 @@ const Header: React.FC<HeaderProps> = ({
 
   const { reload } = router.query;
   const { user } = useUser();
+  console.log('user: ', user);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [feedback, setFeedback] = useState('');
   const [submittingFeedback, setSubmittingFeedback] = useState(false);
@@ -205,6 +206,7 @@ const Header: React.FC<HeaderProps> = ({
                 </>
               )}
               <SignedIn>
+                {user?.username}
                 <UserButton afterSignOutUrl="/" />
               </SignedIn>
               <SignedOut>

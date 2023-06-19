@@ -39,8 +39,7 @@ export const organizationRouter = createRouter()
       name: z.string().min(3).max(50),
     }),
     async resolve({ input, ctx }) {
-      if (!ctx.nextAuthUserId)
-        throw new trpc.TRPCError({ code: 'UNAUTHORIZED' });
+      if (!ctx.userId) throw new trpc.TRPCError({ code: 'UNAUTHORIZED' });
       const slug = slugify(input.name);
 
       const deniedSlug = denyList.find((d) => d === slug);
@@ -56,14 +55,14 @@ export const organizationRouter = createRouter()
           slug,
           organizationMemberships: {
             create: {
-              userId: ctx.nextAuthUserId,
+              userId: ctx.userId,
               role: UserRole.Admin,
             },
           },
         },
       });
 
-      prisma.resourceOwnerSlug.create({
+      await prisma.resourceOwnerSlug.create({
         data: {
           slug,
           resourceOwnerId: org.id,

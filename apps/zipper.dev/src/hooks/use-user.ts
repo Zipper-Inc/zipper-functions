@@ -1,19 +1,16 @@
 import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
+import { SessionUser } from '~/pages/api/auth/[...nextauth]';
 
-export const useOrganizationList = () => {
+export const useUser = () => {
   const session = useSession();
 
   const [isLoaded, setIsLoaded] = useState(false);
   const [isSignedIn, setIsSignedIn] = useState(false);
-  const [user, setUser] = useState<
-    | { name?: string | null; email?: string | null; image?: string | null }
-    | undefined
-  >();
+  const [user, setUser] = useState<SessionUser | undefined>();
 
   useEffect(() => {
     if (session.status === 'authenticated') {
-      console.log(session.data);
       setIsSignedIn(true);
       setUser(session.data.user);
     }

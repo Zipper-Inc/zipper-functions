@@ -1,15 +1,13 @@
 import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
+import { SessionOrganizationMembership } from '~/pages/api/auth/[...nextauth]';
 import { trpc } from '~/utils/trpc';
 
 export const useOrganizationList = () => {
   const session = useSession();
 
   const [organizationList, setOrganizationList] = useState<
-    {
-      organization: { id: string; name: string; slug: string };
-      role: string;
-    }[]
+    SessionOrganizationMembership[]
   >([]);
   const [currentOrganizationId, setCurrentOrganizationId] = useState<
     string | undefined
@@ -19,9 +17,8 @@ export const useOrganizationList = () => {
 
   useEffect(() => {
     if (session.status === 'authenticated') {
-      console.log(session.data);
       setIsAuthed(true);
-      setOrganizationList(session.data.organizationMemberships);
+      setOrganizationList(session.data.organizationMemberships || []);
       setCurrentOrganizationId(session.data.currentOrganizationId);
     }
 
@@ -31,8 +28,11 @@ export const useOrganizationList = () => {
   }, [session.status, session.data]);
 
   const createOrganization = trpc.useMutation('organization.add', {
-    onSuccess: () => {
-      session.update({ updateOrganizationList: true });
+    onSuccess: (data) => {
+      session.update({
+        updateOrganizationList: true,
+        currentOrganizationId: data.id,
+      });
     },
   });
 

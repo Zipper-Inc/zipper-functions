@@ -1,9 +1,10 @@
 import { Box, Button, Stack, Text, VStack, useToken } from '@chakra-ui/react';
 import { ZipperSymbol } from '@zipper/ui';
 import type { OrganizationResource } from '@clerk/types';
+import { SessionOrganization } from '~/pages/api/auth/[...nextauth]';
 
 interface EmptySlateProps {
-  organization: OrganizationResource | undefined | null;
+  organization: SessionOrganization | undefined | null;
   onCreateButtonClick: () => void;
 }
 
