@@ -82,15 +82,10 @@ cp .env.example .env.local
 ```
 docker-compose up
 ```
-7. Run `yarn install` to install dependencies
+7. Run `yarn onboard` to install dependencies, set up the env files, and get your databae migrated and seeded
 ```
-yarn install
+yarn onboard
 ```
-8. Get your database migrated and seeded
-```
-yarn workspace zipper.dev db-migrate-dev
-yarn workspace zipper.dev db-seed
-```
-9. Run `yarn dev` to start both apps
+8. Run `yarn dev` to start both apps
 
 If you hit any problems, let us know in #engineering
