@@ -31,6 +31,7 @@ import {
   VStack,
   Flex,
   Box,
+  useToast,
 } from '@chakra-ui/react';
 import { useEffect, useRef, useState } from 'react';
 import { HiTrash, HiUserAdd } from 'react-icons/hi';
@@ -40,6 +41,16 @@ import { Avatar } from '../avatar';
 import { useOrganization } from '~/hooks/use-organization';
 import { UserRole } from '@zipper/types';
 import { useUser } from '~/hooks/use-user';
+
+type UserListItem = {
+  id?: string;
+  role: string;
+  name?: string | null;
+  email: string;
+  username?: string | null;
+  createdAt?: Date;
+  isInvite: boolean;
+};
 
 const ManageMembers = () => {
   return (
@@ -65,6 +76,7 @@ const ManageMembers = () => {
 };
 
 function MemberList() {
+  const context = trpc.useContext();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const cancelRef = useRef() as React.MutableRefObject<HTMLButtonElement>;
   const { membershipList, role, invitationList } = useOrganization({
@@ -77,15 +89,11 @@ function MemberList() {
   >();
   const [userList, setUserList] = useState<UserListItem[]>([]);
 
-  type UserListItem = {
-    id?: string;
-    role: string;
-    name?: string | null;
-    identifier: string;
-    username?: string | null;
-    createdAt?: Date;
-    isInvite: boolean;
-  };
+  const updateMemberMutation = trpc.useMutation('organization.updateMember', {
+    onSuccess: () => {
+      context.invalidateQueries(['organization.getMemberships']);
+    },
+  });
 
   const [peopleSearchTerm, setPeopleSearchTerm] = useState('');
 
@@ -97,7 +105,7 @@ function MemberList() {
         return {
           name: m.user.name,
           username: m.user.slug,
-          identifier: m.user.slug,
+          email: m.user.email,
           isInvite: false,
           id: m.user.id,
           createdAt: m.createdAt,
@@ -109,7 +117,7 @@ function MemberList() {
     if (invitationList) {
       invites = invitationList.map((i) => {
         return {
-          identifier: i.email,
+          email: i.email,
           role: i.role,
           isInvite: true,
         };
@@ -122,7 +130,8 @@ function MemberList() {
         .filter(
           (m) =>
             m.name?.includes(peopleSearchTerm) ||
-            m.identifier.includes(peopleSearchTerm),
+            m.username?.includes(peopleSearchTerm) ||
+            m.email.includes(peopleSearchTerm),
         ),
     );
   }, [membershipList, invitationList, peopleSearchTerm]);
@@ -135,10 +144,17 @@ function MemberList() {
 
   const isCurrentUserAdmin = role === UserRole.Admin;
 
+  const inviteMember = trpc.useMutation('organization.inviteMember');
+  const toast = useToast();
+
   return (
     <>
       {showInviteForm ? (
-        <InviteMember setShowInviteForm={setShowInviteForm} />
+        <InviteMember
+          setShowInviteForm={setShowInviteForm}
+          setUserList={setUserList}
+          userList={userList}
+        />
       ) : (
         <VStack align="stretch">
           <HStack pb="4">
@@ -187,10 +203,13 @@ function MemberList() {
                         <VStack alignItems="start" spacing={1}>
                           <HStack>
                             {m.isInvite && (
-                              <Icon as={HiEnvelope} fill="gray.500" />
+                              <>
+                                <Icon as={HiEnvelope} fill="gray.500" />
+                                <Text>{m.email}</Text>
+                              </>
                             )}
-                            <Text>{m.identifier}</Text>
-                            {m.identifier === user?.username && (
+                            <Text>{m.name || m.username}</Text>
+                            {m.username === user?.username && (
                               <Badge
                                 variant="subtle"
                                 colorScheme="purple"
@@ -201,7 +220,7 @@ function MemberList() {
                             )}
                           </HStack>
                           <Text color="gray.500" fontSize="sm">
-                            {m.name || m.username || m.identifier}
+                            {m.email}
                           </Text>
                         </VStack>
                       </HStack>
@@ -216,19 +235,41 @@ function MemberList() {
                         fontSize="sm"
                         isDisabled={
                           !isCurrentUserAdmin ||
-                          m.identifier === user?.username ||
+                          m.username === user?.username ||
                           m.isInvite
                         }
                         onChange={async (e) => {
-                          alert('not implemented');
-                          // const member = membershipList?.find((member) => {
-                          //   return m.id === member.publicUserData.userId;
-                          // });
-                          // if (member) {
-                          //   await member.update({
-                          //     role: e.target.value as MembershipRole,
-                          //   });
-                          // }
+                          const member = membershipList?.find((member) => {
+                            return m.id === member.user.id;
+                          });
+                          if (member) {
+                            await updateMemberMutation.mutateAsync(
+                              {
+                                userId: member.userId,
+                                data: {
+                                  role: e.target.value as UserRole,
+                                },
+                              },
+                              {
+                                onSuccess: () => {
+                                  toast({
+                                    title: 'Member updated',
+                                    description: `${member.user.name}'s role has been updated`,
+                                    status: 'success',
+                                    duration: 5000,
+                                  });
+                                },
+                                onError: (e) => {
+                                  toast({
+                                    title: 'Error',
+                                    description: e.message,
+                                    status: 'error',
+                                    duration: 5000,
+                                  });
+                                },
+                              },
+                            );
+                          }
                         }}
                       >
                         <option
@@ -243,25 +284,73 @@ function MemberList() {
                       </Select>
                     </Td>
                     <Td textAlign={'end'}>
-                      {isCurrentUserAdmin &&
-                        m.identifier !== user?.username && (
-                          <IconButton
-                            aria-label="remove user"
-                            variant="outline"
-                            colorScheme="red"
-                            onClick={() => {
-                              setMemberToDestroy(m);
-                              onOpen();
-                            }}
-                          >
-                            <Icon as={HiTrash} />
-                          </IconButton>
-                        )}
+                      {isCurrentUserAdmin && m.username !== user?.username && (
+                        <IconButton
+                          aria-label="remove user"
+                          variant="outline"
+                          colorScheme="red"
+                          onClick={() => {
+                            setMemberToDestroy(m);
+                            onOpen();
+                          }}
+                        >
+                          <Icon as={HiTrash} />
+                        </IconButton>
+                      )}
                     </Td>
                   </Tr>
                 ))}
               </Tbody>
             </Table>
+
+            {userList.length === 0 && peopleSearchTerm.length > 0 && (
+              <Button
+                m="2"
+                variant={'unstyled'}
+                onClick={async () => {
+                  await inviteMember.mutateAsync(
+                    {
+                      email: peopleSearchTerm,
+                      role: UserRole.Member,
+                    },
+                    {
+                      onSuccess: () => {
+                        setPeopleSearchTerm('');
+                        setUserList([
+                          ...userList,
+                          {
+                            email: peopleSearchTerm,
+                            role: UserRole.Member,
+                            isInvite: true,
+                          },
+                        ]);
+                      },
+                      onError: () => {
+                        toast({
+                          title: 'Error inviting user',
+                          description:
+                            'There was an error inviting the user. Please try again.',
+                          status: 'error',
+                          duration: 5000,
+                        });
+                        setPeopleSearchTerm('');
+                      },
+                    },
+                  );
+                }}
+              >
+                <HStack>
+                  <Icon as={HiUserAdd} />
+                  <Text fontWeight={'normal'}>
+                    Invite{' '}
+                    <Text
+                      as="span"
+                      fontWeight="semibold"
+                    >{`${peopleSearchTerm}`}</Text>
+                  </Text>
+                </HStack>
+              </Button>
+            )}
             <AlertDialog
               isOpen={isOpen}
               leastDestructiveRef={cancelRef}
@@ -284,27 +373,24 @@ function MemberList() {
                     <Button
                       colorScheme="red"
                       onClick={async () => {
-                        alert('not implemented');
-                        // if (memberToDestroy) {
-                        //   if (memberToDestroy.isInvite) {
-                        //     invitationList
-                        //       ?.find(
-                        //         (i) =>
-                        //           i.emailAddress === memberToDestroy.identifier,
-                        //       )
-                        //       ?.revoke();
-                        //   } else {
-                        //     membershipList
-                        //       ?.find((m) => m.id === memberToDestroy.id)
-                        //       ?.destroy();
-                        //     delete userList[
-                        //       userList.findIndex(
-                        //         (u) => u.id === memberToDestroy.id,
-                        //       )
-                        //     ];
-                        //   }
-                        //   setMemberToDestroy(undefined);
-                        // }
+                        if (memberToDestroy) {
+                          if (memberToDestroy.isInvite) {
+                            await invitationList
+                              ?.find((i) => i.email === memberToDestroy.email)
+                              ?.revoke();
+                          } else {
+                            await membershipList
+                              ?.find((m) => m.userId === memberToDestroy.id)
+                              ?.destroy();
+                          }
+
+                          delete userList[
+                            userList.findIndex(
+                              (u) => u.email === memberToDestroy.email,
+                            )
+                          ];
+                          setMemberToDestroy(undefined);
+                        }
                         onClose();
                       }}
                       ml={3}
@@ -324,30 +410,42 @@ function MemberList() {
 
 function InviteMember({
   setShowInviteForm,
+  setUserList,
+  userList,
 }: {
   setShowInviteForm: (state: boolean) => void;
+  setUserList: (userList: UserListItem[]) => void;
+  userList: UserListItem[];
 }) {
-  const { organization } = useOrganization({});
   const [emailAddress, setEmailAddress] = useState('');
-  const [role, setRole] = useState<'admin' | 'basic_member'>('basic_member');
+  const [role, setRole] = useState<UserRole>(UserRole.Member);
   const [disabled, setDisabled] = useState(false);
-  const inviteMember = trpc.useMutation('user.sendOrganizationInvitation');
+  const inviteMember = trpc.useMutation('organization.inviteMember');
+
+  const toast = useToast();
 
   const onSubmit = async (e: any) => {
     e.preventDefault();
     setDisabled(true);
 
-    // await organization?.inviteMember({ emailAddress, role });
-    if (organization) {
-      await inviteMember.mutateAsync({
-        email: emailAddress,
-        role,
-        organizationId: organization.id,
-      });
-    }
+    await inviteMember.mutateAsync(
+      { email: emailAddress, role },
+      {
+        onError: (err) => {
+          setDisabled(false);
+          toast({
+            title: 'Error',
+            description: err.message,
+            status: 'error',
+            duration: 9000,
+          });
+        },
+      },
+    );
+    setUserList([...userList, { email: emailAddress, role, isInvite: true }]);
     setShowInviteForm(false);
     setEmailAddress('');
-    setRole('basic_member');
+    setRole(UserRole.Member);
     setDisabled(false);
   };
 
@@ -387,7 +485,9 @@ function InviteMember({
             <FormLabel fontSize="sm">Role</FormLabel>
             <Select
               onChange={(e) => {
-                setRole(e.target.value === 'admin' ? 'admin' : 'basic_member');
+                setRole(
+                  e.target.value === 'admin' ? UserRole.Admin : UserRole.Member,
+                );
               }}
             >
               <option value="basic_member">Member</option>

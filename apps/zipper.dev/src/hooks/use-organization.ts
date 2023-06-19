@@ -38,24 +38,48 @@ export const useOrganization = (props?: Props) => {
   const [membershipList, setMembershipList] = useState<
     | (OrganizationMembership & {
         user: Omit<User, 'emailVerified' | 'createdAt' | 'updatedAt'>;
+        destroy: () => Promise<boolean>;
       })[]
     | undefined
   >();
   const [invitationList, setInvitationList] = useState<
-    Omit<OrganizationInvitation, 'token' | 'redirectUrl'>[] | undefined
+    | (Omit<OrganizationInvitation, 'token' | 'redirectUrl'> & {
+        revoke: () => Promise<boolean>;
+      })[]
+    | undefined
   >();
+  const removeMembership = trpc.useMutation('organization.removeMember');
+  const revokeInvitation = trpc.useMutation('organization.revokeInvitation');
 
   trpc.useQuery(['organization.getMemberships'], {
     enabled: !!membershipListProps && session.status === 'authenticated',
     onSuccess: (data) => {
-      setMembershipList(data);
+      setMembershipList(
+        data.map((m) => ({
+          ...m,
+          destroy: async () => {
+            return removeMembership.mutateAsync({
+              userId: m.userId,
+            });
+          },
+        })),
+      );
     },
   });
 
   trpc.useQuery(['organization.getPendingInvitations'], {
     enabled: !!invitationListProps && session.status === 'authenticated',
     onSuccess: (data) => {
-      setInvitationList(data);
+      setInvitationList(
+        data.map((i) => ({
+          ...i,
+          revoke: async () => {
+            return revokeInvitation.mutateAsync({
+              email: i.email,
+            });
+          },
+        })),
+      );
     },
   });
 

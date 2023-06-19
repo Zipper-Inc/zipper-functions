@@ -167,7 +167,7 @@ export const organizationRouter = createRouter()
         }
       }
 
-      return prisma.organizationMembership.delete({
+      const orgMem = await prisma.organizationMembership.delete({
         where: {
           organizationId_userId: {
             organizationId: ctx.orgId!,
@@ -175,6 +175,8 @@ export const organizationRouter = createRouter()
           },
         },
       });
+
+      return !!orgMem;
     },
   })
   // revisit using https://uploadthing.com
@@ -197,7 +199,23 @@ export const organizationRouter = createRouter()
         where: {
           email: input.email,
         },
+        include: {
+          organizationMemberships: true,
+        },
       });
+
+      if (existingUser) {
+        const existingMembership = existingUser.organizationMemberships.find(
+          (m) => m.organizationId === ctx.orgId,
+        );
+
+        if (existingMembership) {
+          throw new trpc.TRPCError({
+            code: 'BAD_REQUEST',
+            message: 'User is already a member of this organization',
+          });
+        }
+      }
 
       const signInOrSignUp = existingUser ? 'signin' : 'signup';
 
@@ -214,5 +232,31 @@ export const organizationRouter = createRouter()
       // await sendEmail({})
 
       return invite;
+    },
+  })
+  .mutation('revokeInvitation', {
+    input: z.object({
+      email: z.string().email(),
+    }),
+    async resolve({ input, ctx }) {
+      if (!hasOrgAdminPermission(ctx))
+        throw new trpc.TRPCError({ code: 'UNAUTHORIZED' });
+
+      try {
+        const invite = await prisma.organizationInvitation.delete({
+          where: {
+            organizationId_email: {
+              organizationId: ctx.orgId!,
+              email: input.email,
+            },
+          },
+        });
+        return !!invite;
+      } catch (e) {
+        throw new trpc.TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Invitation not found',
+        });
+      }
     },
   });
