@@ -1,4 +1,3 @@
-import { useOrganization, useUser } from '@clerk/nextjs';
 import {
   Box,
   Button,
@@ -19,13 +18,16 @@ import { useState } from 'react';
 import { CreateOrganizationModal } from './createOrganizationModal';
 import { useRouter } from 'next/router';
 import { useOrganizationList } from '~/hooks/use-organization-list';
+import { useUser } from '~/hooks/use-user';
+import { useOrganization } from '~/hooks/use-organization';
 
 export const OrganizationSwitcher: React.FC<ButtonProps> = (props) => {
   // get the authed user's organizations from Clerk
-  const { setActive, organizationList, isLoaded } = useOrganizationList();
-  const { user } = useUser();
+  const { setActive, organizationList, isLoaded, currentOrganizationId } =
+    useOrganizationList();
+  const { organization, role } = useOrganization();
 
-  const { organization, membership } = useOrganization();
+  const { user } = useUser();
 
   const [hoverOrg, setHoverOrg] = useState<string | undefined | null>(
     undefined,
@@ -37,7 +39,7 @@ export const OrganizationSwitcher: React.FC<ButtonProps> = (props) => {
   ];
 
   const workspacesExcludingCurrent = allWorkspaces.filter((o) => {
-    return o.organization.id !== (organization?.id || null);
+    return o.organization.id !== (currentOrganizationId || null);
   });
 
   const {
@@ -65,7 +67,7 @@ export const OrganizationSwitcher: React.FC<ButtonProps> = (props) => {
           <HStack>
             <Text>
               {organization?.name ||
-                (user?.publicMetadata.username as string) ||
+                (user?.username as string) ||
                 'Personal Workspace'}
             </Text>
             <Icon as={HiOutlineChevronUpDown} fontSize="md" />
@@ -84,20 +86,15 @@ export const OrganizationSwitcher: React.FC<ButtonProps> = (props) => {
               <Text fontWeight="medium">
                 {organization?.name || 'Personal Workspace'}
               </Text>
-              {!organization && (
-                <Text>{user?.publicMetadata.username as string}</Text>
-              )}
-              {membership && (
-                <Text>{membership.role === 'admin' ? 'Admin' : 'Member'}</Text>
+              {!organization && <Text>{user?.username as string}</Text>}
+              {organization && (
+                <Text>{role === 'admin' ? 'Admin' : 'Member'}</Text>
               )}
             </VStack>
             <Button
               onClick={() => {
                 router.push(
-                  `/${
-                    organization?.slug ||
-                    (user?.publicMetadata.username as string)
-                  }`,
+                  `/${organization?.slug || (user?.username as string)}`,
                 );
               }}
               size="xs"

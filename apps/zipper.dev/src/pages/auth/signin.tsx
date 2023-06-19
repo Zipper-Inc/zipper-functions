@@ -50,3 +50,6 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
     props: { providers: providers ?? [], csrfToken },
   };
 }
+
+SignIn.skipAuth = true;
+SignIn.header = () => <></>;

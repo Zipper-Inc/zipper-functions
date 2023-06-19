@@ -1,4 +1,9 @@
-import NextAuth, { AuthOptions, TokenSet } from 'next-auth';
+import NextAuth, {
+  AuthOptions,
+  TokenSet,
+  SessionStrategy,
+  DefaultSession,
+} from 'next-auth';
 import GithubProvider from 'next-auth/providers/github';
 import GoogleProvider from 'next-auth/providers/google';
 import { prisma } from '~/server/prisma';
@@ -48,7 +53,7 @@ export function PrismaAdapter(p: PrismaClient): Adapter {
         data: { ...data, slug },
       });
 
-      p.resourceOwnerSlug.create({
+      await p.resourceOwnerSlug.create({
         data: {
           slug,
           resourceOwnerType: ResourceOwnerType.User,
@@ -151,10 +156,10 @@ async function refreshAccessToken(token: TokenSet) {
   }
 }
 
-export const authOptions = {
+export const authOptions: AuthOptions = {
   // Configure one or more authentication providers
   session: {
-    strategy: 'jwt',
+    strategy: 'jwt' as SessionStrategy,
   },
   adapter: PrismaAdapter(prisma),
   providers: [
@@ -186,6 +191,7 @@ export const authOptions = {
           access_token: account.access_token,
           expires_at: account.expires_at,
           refresh_token: account.refresh_token,
+          slug: user.slug,
           organizationMemberships: await prisma.organizationMembership.findMany(
             {
               where: { userId: user.id },
@@ -206,7 +212,7 @@ export const authOptions = {
         if (session.updateOrganizationList) {
           token.organizationMemberships =
             await prisma.organizationMembership.findMany({
-              where: { userId: user.id },
+              where: { userId: token.sub },
               select: {
                 organization: {
                   select: { name: true, id: true, slug: true },
@@ -243,44 +249,72 @@ export const authOptions = {
       // If the access token has expired, try to refresh it
       return refreshAccessToken(token);
     },
-    async session({ session, token }) {
-      session.error = token.error;
-      session.user = {
-        name: token.name,
-        email: token.email,
-        image: token.picture,
-      };
-      session.currentOrganizationId = token.currentOrganizationId;
-      session.organizationMemberships = token.organizationMemberships;
+    async session({ session, token, trigger }) {
+      try {
+        session.error = token.error;
+        session.user = {
+          name: token.name,
+          email: token.email,
+          image: token.picture,
+          username: token.slug,
+        };
 
-      return session;
+        if (trigger !== 'update') {
+          session.organizationMemberships = token.organizationMemberships;
+          session.currentOrganizationId = token.currentOrganizationId;
+        }
+
+        return session;
+      } catch (e) {
+        console.error(e);
+        return session;
+      }
     },
   },
-} as AuthOptions;
+};
 
 export default NextAuth(authOptions);
 
 declare module 'next-auth' {
   interface Session {
     error?: 'RefreshAccessTokenError';
-    organizationMemberships: {
-      organization: { id: string; name: string; slug: string };
-      role: string;
-    }[];
+    username?: string;
+    organizationMemberships?: SessionOrganizationMembership[];
     currentOrganizationId?: string;
+    user?: SessionUser;
   }
+
+  interface User {
+    slug?: string;
+  }
+}
+
+export interface SessionUser {
+  name?: string | null;
+  email?: string | null;
+  image?: string | null;
+  username?: string | null;
 }
 
 declare module 'next-auth/jwt' {
   interface JWT {
-    access_token: string;
-    expires_at: number;
+    access_token?: string;
+    expires_at?: number;
     refresh_token?: string;
     error?: 'RefreshAccessTokenError';
-    organizationMemberships: {
-      organization: { id: string; name: string; slug: string };
-      role: string;
-    }[];
+    organizationMemberships?: SessionOrganizationMembership[];
     currentOrganizationId?: string;
+    slug?: string;
   }
+}
+
+export interface SessionOrganizationMembership {
+  organization: SessionOrganization;
+  role: string;
+}
+
+export interface SessionOrganization {
+  id: string;
+  name: string;
+  slug: string;
 }

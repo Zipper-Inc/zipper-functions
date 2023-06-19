@@ -6,12 +6,7 @@ import { AppProps } from 'next/app';
 import { AppType } from 'next/dist/shared/lib/utils';
 import { ReactElement, ReactNode } from 'react';
 import superjson from 'superjson';
-import {
-  ClerkProvider,
-  RedirectToSignIn,
-  SignedIn,
-  SignedOut,
-} from '@clerk/nextjs';
+import { ClerkProvider } from '@clerk/nextjs';
 import { SessionProvider } from 'next-auth/react';
 
 import { DefaultLayout } from '~/components/default-layout';
@@ -21,6 +16,9 @@ import Header from '~/components/header';
 import { useEffectOnce } from '@zipper/ui';
 import { ZipperLocation } from '@zipper/types';
 import { Session } from 'inspector';
+import SignedIn from '~/components/auth/signed-in';
+import SignedOut from '~/components/auth/signed-out';
+import RedirectToSignIn from '~/components/auth/redirect-to-signin';
 
 export type NextPageWithLayout<P = Record<string, unknown>, IP = P> = NextPage<
   P,

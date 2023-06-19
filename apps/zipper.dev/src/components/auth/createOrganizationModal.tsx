@@ -68,21 +68,8 @@ export const CreateOrganizationModal = ({
   ) => {
     e.preventDefault();
     if (!createOrganization) return;
-    const newOrg = await createOrganization(organizationName);
-    // await createOrganizationSlug.mutateAsync(
-    //   {
-    //     slug,
-    //     resourceOwnerId: newOrg.id,
-    //     resourceOwnerType: ResourceOwnerType.Organization,
-    //   },
-    //   {
-    //     onError: (e) => {
-    //       console.error(e);
-    //     },
-    //   },
-    // );
-    setActive && setActive(newOrg.id);
-    router.push(`${router.pathname}?reload=true`);
+    await createOrganization(organizationName);
+    onClose();
   };
 
   return (

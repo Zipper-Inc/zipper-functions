@@ -1,5 +1,4 @@
 import { createSSGHelpers } from '@trpc/react/ssg';
-import { useUser } from '@clerk/nextjs';
 import { GetServerSideProps } from 'next';
 import { Gallery } from '~/components/gallery';
 import { createContext } from '~/server/context';
@@ -11,6 +10,7 @@ import SuperJSON from 'superjson';
 import { getAuth } from '@clerk/nextjs/server';
 import { useRouter } from 'next/router';
 import Header from '~/components/header';
+import { useUser } from '~/hooks/use-user';
 
 export type GalleryAppQueryOutput = inferQueryOutput<
   'app.allApproved' | 'app.byResourceOwner'
