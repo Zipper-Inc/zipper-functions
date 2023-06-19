@@ -1,4 +1,5 @@
 import {
+  Img,
   Body,
   Container,
   Head,
@@ -22,7 +23,7 @@ export const NotionMagicLinkEmail = ({
     <Preview>Log in with this magic link</Preview>
     <Body style={main}>
       <Container style={container}>
-
+        <Img src="https://zipper.dev/zipper-logo.png" alt="Zipper" />
         <Heading style={h1}>Continue to Zipper</Heading>
         <Link
           href={loginUrl}
