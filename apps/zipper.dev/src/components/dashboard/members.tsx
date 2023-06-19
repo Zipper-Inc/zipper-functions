@@ -32,12 +32,14 @@ import {
   Flex,
   Box,
 } from '@chakra-ui/react';
-import { useOrganization } from '@clerk/nextjs';
 import { useEffect, useRef, useState } from 'react';
 import { HiTrash, HiUserAdd } from 'react-icons/hi';
 import { trpc } from '~/utils/trpc';
 import { HiEnvelope } from 'react-icons/hi2';
 import { Avatar } from '../avatar';
+import { useOrganization } from '~/hooks/use-organization';
+import { UserRole } from '@zipper/types';
+import { useUser } from '~/hooks/use-user';
 
 const ManageMembers = () => {
   return (
@@ -65,10 +67,11 @@ const ManageMembers = () => {
 function MemberList() {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const cancelRef = useRef() as React.MutableRefObject<HTMLButtonElement>;
-  const { membershipList, membership, invitationList } = useOrganization({
+  const { membershipList, role, invitationList } = useOrganization({
     invitationList: {},
     membershipList: {},
   });
+  const { user } = useUser();
   const [memberToDestroy, setMemberToDestroy] = useState<
     UserListItem | undefined
   >();
@@ -77,8 +80,7 @@ function MemberList() {
   type UserListItem = {
     id?: string;
     role: string;
-    firstName?: string | null;
-    lastName?: string | null;
+    name?: string | null;
     identifier: string;
     username?: string | null;
     createdAt?: Date;
@@ -93,12 +95,11 @@ function MemberList() {
     if (membershipList) {
       members = membershipList?.map((m) => {
         return {
-          firstName: m.publicUserData.firstName,
-          lastName: m.publicUserData.lastName,
-          username: m.publicMetadata.username as string | undefined,
-          identifier: m.publicUserData.identifier,
+          name: m.user.name,
+          username: m.user.slug,
+          identifier: m.user.slug,
           isInvite: false,
-          id: m.publicUserData.userId,
+          id: m.user.id,
           createdAt: m.createdAt,
           role: m.role,
         };
@@ -108,7 +109,7 @@ function MemberList() {
     if (invitationList) {
       invites = invitationList.map((i) => {
         return {
-          identifier: i.emailAddress,
+          identifier: i.email,
           role: i.role,
           isInvite: true,
         };
@@ -120,8 +121,7 @@ function MemberList() {
         .concat(invites)
         .filter(
           (m) =>
-            m.firstName?.includes(peopleSearchTerm) ||
-            m.lastName?.includes(peopleSearchTerm) ||
+            m.name?.includes(peopleSearchTerm) ||
             m.identifier.includes(peopleSearchTerm),
         ),
     );
@@ -133,7 +133,7 @@ function MemberList() {
 
   const [showInviteForm, setShowInviteForm] = useState(false);
 
-  const isCurrentUserAdmin = membership?.role === 'admin';
+  const isCurrentUserAdmin = role === UserRole.Admin;
 
   return (
     <>
@@ -147,7 +147,7 @@ function MemberList() {
               value={peopleSearchTerm}
               onChange={(e) => setPeopleSearchTerm(e.target.value)}
             />
-            {membership?.role === 'admin' && (
+            {role === UserRole.Admin && (
               <Button
                 type="button"
                 pl={4}
@@ -190,7 +190,7 @@ function MemberList() {
                               <Icon as={HiEnvelope} fill="gray.500" />
                             )}
                             <Text>{m.identifier}</Text>
-                            {m.id === membership?.id && (
+                            {m.identifier === user?.username && (
                               <Badge
                                 variant="subtle"
                                 colorScheme="purple"
@@ -200,13 +200,9 @@ function MemberList() {
                               </Badge>
                             )}
                           </HStack>
-                          {(m.firstName || m.lastName) && (
-                            <Text color="gray.500" fontSize="sm">
-                              {m.firstName || m.lastName
-                                ? `${m.firstName} ${m.lastName}`
-                                : `${m.username || m.identifier}`}
-                            </Text>
-                          )}
+                          <Text color="gray.500" fontSize="sm">
+                            {m.name || m.username || m.identifier}
+                          </Text>
                         </VStack>
                       </HStack>
                     </Td>
@@ -220,18 +216,19 @@ function MemberList() {
                         fontSize="sm"
                         isDisabled={
                           !isCurrentUserAdmin ||
-                          m.id === membership?.id ||
+                          m.identifier === user?.username ||
                           m.isInvite
                         }
                         onChange={async (e) => {
-                          const member = membershipList?.find((member) => {
-                            return m.id === member.publicUserData.userId;
-                          });
-                          if (member) {
-                            await member.update({
-                              role: e.target.value as MembershipRole,
-                            });
-                          }
+                          alert('not implemented');
+                          // const member = membershipList?.find((member) => {
+                          //   return m.id === member.publicUserData.userId;
+                          // });
+                          // if (member) {
+                          //   await member.update({
+                          //     role: e.target.value as MembershipRole,
+                          //   });
+                          // }
                         }}
                       >
                         <option
@@ -246,19 +243,20 @@ function MemberList() {
                       </Select>
                     </Td>
                     <Td textAlign={'end'}>
-                      {isCurrentUserAdmin && m.id !== membership.id && (
-                        <IconButton
-                          aria-label="remove user"
-                          variant="outline"
-                          colorScheme="red"
-                          onClick={() => {
-                            setMemberToDestroy(m);
-                            onOpen();
-                          }}
-                        >
-                          <Icon as={HiTrash} />
-                        </IconButton>
-                      )}
+                      {isCurrentUserAdmin &&
+                        m.identifier !== user?.username && (
+                          <IconButton
+                            aria-label="remove user"
+                            variant="outline"
+                            colorScheme="red"
+                            onClick={() => {
+                              setMemberToDestroy(m);
+                              onOpen();
+                            }}
+                          >
+                            <Icon as={HiTrash} />
+                          </IconButton>
+                        )}
                     </Td>
                   </Tr>
                 ))}
@@ -286,26 +284,27 @@ function MemberList() {
                     <Button
                       colorScheme="red"
                       onClick={async () => {
-                        if (memberToDestroy) {
-                          if (memberToDestroy.isInvite) {
-                            invitationList
-                              ?.find(
-                                (i) =>
-                                  i.emailAddress === memberToDestroy.identifier,
-                              )
-                              ?.revoke();
-                          } else {
-                            membershipList
-                              ?.find((m) => m.id === memberToDestroy.id)
-                              ?.destroy();
-                            delete userList[
-                              userList.findIndex(
-                                (u) => u.id === memberToDestroy.id,
-                              )
-                            ];
-                          }
-                          setMemberToDestroy(undefined);
-                        }
+                        alert('not implemented');
+                        // if (memberToDestroy) {
+                        //   if (memberToDestroy.isInvite) {
+                        //     invitationList
+                        //       ?.find(
+                        //         (i) =>
+                        //           i.emailAddress === memberToDestroy.identifier,
+                        //       )
+                        //       ?.revoke();
+                        //   } else {
+                        //     membershipList
+                        //       ?.find((m) => m.id === memberToDestroy.id)
+                        //       ?.destroy();
+                        //     delete userList[
+                        //       userList.findIndex(
+                        //         (u) => u.id === memberToDestroy.id,
+                        //       )
+                        //     ];
+                        //   }
+                        //   setMemberToDestroy(undefined);
+                        // }
                         onClose();
                       }}
                       ml={3}
@@ -328,7 +327,7 @@ function InviteMember({
 }: {
   setShowInviteForm: (state: boolean) => void;
 }) {
-  const { organization } = useOrganization();
+  const { organization } = useOrganization({});
   const [emailAddress, setEmailAddress] = useState('');
   const [role, setRole] = useState<'admin' | 'basic_member'>('basic_member');
   const [disabled, setDisabled] = useState(false);
