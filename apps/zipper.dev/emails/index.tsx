@@ -11,13 +11,11 @@ import {
 } from '@react-email/components';
 import * as React from 'react';
 
-interface NotionMagicLinkEmailProps {
+interface MagicLinkEmailProps {
   loginUrl?: string;
 }
 
-export const NotionMagicLinkEmail = ({
-  loginUrl,
-}: NotionMagicLinkEmailProps) => (
+export const MagicLinkEmail = ({ loginUrl }: MagicLinkEmailProps) => (
   <Html>
     <Head />
     <Preview>Log in with this magic link</Preview>
@@ -55,7 +53,57 @@ export const NotionMagicLinkEmail = ({
   </Html>
 );
 
-export default NotionMagicLinkEmail;
+export const OrgInvitationEmail = ({
+  loginUrl,
+  organizationName,
+}: {
+  loginUrl: string;
+  organizationName: string;
+}) => (
+  <Html>
+    <Head />
+    <Preview>{`You've been invited to join ${organizationName}`}</Preview>
+    <Body style={main}>
+      <Container style={container}>
+        <Img src="https://zipper.dev/zipper-logo.png" alt="Zipper" />
+        <Heading style={h1}>Your invitation</Heading>
+
+        <Text style={{ ...text, marginBottom: '14px' }}>
+          {`You've been invited to join ${organizationName} on Zipper.`}
+        </Text>
+
+        <Link
+          href={loginUrl}
+          target="_blank"
+          style={{
+            ...link,
+            display: 'block',
+            marginBottom: '16px',
+          }}
+        >
+          Accept invitation
+        </Link>
+        <Text style={{ ...text, marginBottom: '14px' }}>
+          Or, copy and paste the url below into your browser:
+        </Text>
+        <code style={code}>{loginUrl}</code>
+        <Text
+          style={{
+            ...text,
+            color: '#ababab',
+            marginTop: '14px',
+            marginBottom: '16px',
+          }}
+        >
+          If you don&apos;t want to join this organization, you can safely
+          ignore this email.
+        </Text>
+      </Container>
+    </Body>
+  </Html>
+);
+
+export default { MagicLinkEmail, OrgInvitationEmail };
 
 const main = {
   backgroundColor: '#ffffff',

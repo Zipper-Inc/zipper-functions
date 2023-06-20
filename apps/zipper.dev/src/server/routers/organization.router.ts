@@ -7,6 +7,13 @@ import crypto from 'crypto';
 import { createRouter } from '../createRouter';
 import denyList from '../utils/slugDenyList';
 import slugify from '~/utils/slugify';
+import { Resend } from 'resend';
+import { OrgInvitationEmail } from 'emails';
+import { hashToken } from 'next-auth/core/lib/utils';
+import EmailProvider from 'next-auth/providers/email';
+import { authOptions } from '~/pages/api/auth/[...nextauth]';
+
+export const resend = new Resend(process.env.RESEND_API_KEY!);
 
 export const organizationRouter = createRouter()
   .query('getMemberships', {
@@ -229,7 +236,44 @@ export const organizationRouter = createRouter()
         },
       });
 
-      // await sendEmail({})
+      const org = await prisma.organization.findUnique({
+        where: {
+          id: ctx.orgId!,
+        },
+      });
+
+      if (invite && org) {
+        const token = crypto.randomBytes(16).toString('hex');
+
+        const hash = crypto
+          .createHash('sha256')
+          // Prefer provider specific secret, but use default secret if none specified
+          .update(`${token}${process.env.NEXTAUTH_EMAIL_PROVIDER_SECRET}`)
+          .digest('hex');
+
+        await prisma.verificationToken.create({
+          data: {
+            token: hash,
+            identifier: input.email,
+            expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
+          },
+        });
+        await resend.emails.send({
+          to: input.email,
+          from: 'noreply@zipper.dev',
+          subject: `You've been invited to join ${org.name} on Zipper`,
+          react: OrgInvitationEmail({
+            loginUrl: `${
+              process.env.NEXT_PUBLIC_ZIPPER_DOT_DEV_URL
+            }/api/auth/callback/email?${new URLSearchParams({
+              token: token,
+              email: input.email,
+              callbackUrl: `${process.env.NEXT_PUBLIC_ZIPPER_DOT_DEV_URL}/auth/accept-invitation/${invite.token}`,
+            })}`,
+            organizationName: org.name,
+          }),
+        });
+      }
 
       return invite;
     },
@@ -258,5 +302,65 @@ export const organizationRouter = createRouter()
           message: 'Invitation not found',
         });
       }
+    },
+  })
+  .mutation('acceptInvitation', {
+    input: z.object({
+      token: z.string(),
+    }),
+    async resolve({ input, ctx }) {
+      if (!ctx.userId) throw new trpc.TRPCError({ code: 'UNAUTHORIZED' });
+      const user = await prisma.user.findUnique({
+        where: {
+          id: ctx.userId,
+        },
+        select: {
+          email: true,
+        },
+      });
+
+      const invite = await prisma.organizationInvitation.findFirst({
+        where: {
+          token: input.token,
+          email: user?.email,
+        },
+      });
+
+      if (!invite) {
+        throw new trpc.TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Invitation not found',
+        });
+      }
+
+      const existingMembership = await prisma.organizationMembership.findFirst({
+        where: {
+          organizationId: invite.organizationId,
+          userId: ctx.userId,
+        },
+      });
+
+      if (existingMembership) {
+        throw new trpc.TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'User is already a member of this organization',
+        });
+      }
+
+      await prisma.organizationMembership.create({
+        data: {
+          organizationId: invite.organizationId,
+          userId: ctx.userId,
+          role: invite.role,
+        },
+      });
+
+      await prisma.organizationInvitation.delete({
+        where: {
+          token: input.token,
+        },
+      });
+
+      return invite.organizationId;
     },
   });

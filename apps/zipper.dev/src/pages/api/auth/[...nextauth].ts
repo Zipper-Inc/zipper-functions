@@ -17,7 +17,7 @@ import slugify from '~/utils/slugify';
 import { ResourceOwnerType } from '@zipper/types';
 import crypto from 'crypto';
 import { Resend } from 'resend';
-import EmailTemplate from 'emails';
+import { MagicLinkEmail } from 'emails';
 export const resend = new Resend(process.env.RESEND_API_KEY!);
 
 export function PrismaAdapter(p: PrismaClient): Adapter {
@@ -108,6 +108,7 @@ export function PrismaAdapter(p: PrismaClient): Adapter {
       return verificationToken;
     },
     async useVerificationToken(identifier_token) {
+      console.log(identifier_token);
       try {
         const verificationToken = await p.verificationToken.delete({
           where: { identifier_token },
@@ -173,6 +174,7 @@ export const authOptions: AuthOptions = {
       name: 'Email',
       server: '',
       from: 'Zipper Team',
+      secret: process.env.NEXTAUTH_EMAIL_PROVIDER_SECRET,
       sendVerificationRequest: async (
         params: SendVerificationRequestParams,
       ) => {
@@ -182,7 +184,7 @@ export const authOptions: AuthOptions = {
             to: identifier,
             from: 'noreply@zipper.dev',
             subject: 'Login into Zipper!',
-            react: EmailTemplate({ loginUrl: url }),
+            react: MagicLinkEmail({ loginUrl: url }),
           });
         } catch (error) {
           console.error(error);
