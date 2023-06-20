@@ -248,7 +248,7 @@ export const organizationRouter = createRouter()
         const hash = crypto
           .createHash('sha256')
           // Prefer provider specific secret, but use default secret if none specified
-          .update(`${token}${process.env.NEXTAUTH_EMAIL_PROVIDER_SECRET}`)
+          .update(`${token}${process.env.NEXTAUTH_SECRET}`)
           .digest('hex');
 
         await prisma.verificationToken.create({

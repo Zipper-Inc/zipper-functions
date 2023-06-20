@@ -15,47 +15,23 @@ import { Adapter, AdapterAccount } from 'next-auth/adapters';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime';
 import slugify from '~/utils/slugify';
 import { ResourceOwnerType, UserRole } from '@zipper/types';
-import crypto from 'crypto';
 import { Resend } from 'resend';
 import { MagicLinkEmail } from 'emails';
 import fetch from 'node-fetch';
+import { createUserSlug } from '~/utils/create-user-slug';
 
 export const resend = new Resend(process.env.RESEND_API_KEY!);
 
 export function PrismaAdapter(p: PrismaClient): Adapter {
   return {
     createUser: async (data) => {
-      const possibleSlugs: string[] = [];
-      const emailUserPart = data.email.split('@')[0];
-
-      if (emailUserPart && emailUserPart.length >= 3) {
-        possibleSlugs.push(slugify(emailUserPart));
-      }
-      if (data.name) {
-        possibleSlugs.push(slugify(data.name));
-      }
-
-      const alternativeSlugs = possibleSlugs.map(
-        (s) => `${s}-${Math.floor(Math.random() * 100)}`,
-      );
-      alternativeSlugs.push(slugify(data.email));
-
-      const existingResourceOwnerSlugs = await p.resourceOwnerSlug.findMany({
-        where: { slug: { in: [...possibleSlugs, ...alternativeSlugs] } },
-      });
-
-      const existingSlugs = existingResourceOwnerSlugs.map((s) => s.slug);
-
-      const validSlugs = [...possibleSlugs, ...alternativeSlugs].filter((s) => {
-        return !existingSlugs.includes(s);
-      });
-
-      const slug = validSlugs[0] || crypto.randomBytes(4).toString('hex');
-
+      const slug = await createUserSlug({ name: data.name, email: data.email });
       const user = await p.user.create({
         data: { ...data, slug },
       });
 
+      // create a resource owner slug for the user - this makes sure that slugs
+      // are unique across all resource owners (users and organizations)
       await p.resourceOwnerSlug.create({
         data: {
           slug,
@@ -64,6 +40,8 @@ export function PrismaAdapter(p: PrismaClient): Adapter {
         },
       });
 
+      // add the user to the default organization if one is set in the allow list
+      // NOTE: this doesn't handle blocking users from signing up - that happens in the signIn callback
       const domain = data.email.split('@')[1];
       if (domain) {
         const allowListIdentifier = await p.allowListIdentifier.findFirst({
@@ -220,7 +198,6 @@ export const authOptions: AuthOptions = {
       name: 'Email',
       server: '',
       from: 'Zipper Team',
-      secret: process.env.NEXTAUTH_EMAIL_PROVIDER_SECRET,
       sendVerificationRequest: async (
         params: SendVerificationRequestParams,
       ) => {
@@ -263,11 +240,14 @@ export const authOptions: AuthOptions = {
     // ...add more providers here
   ],
   callbacks: {
-    async signIn({ user, email }) {
+    async signIn({ user }) {
+      if (process.env.IGNORE_ALLOW_LIST) return true;
+      // every user signing in should have an email address
       if (!user.email) return false;
       const emailDomain = user.email.split('@')[1];
       if (!emailDomain) return false;
 
+      // check if the user is allowed to sign in
       const allowed = await prisma.allowListIdentifier.findFirst({
         where: { value: { in: [user.email, emailDomain] } },
       });

@@ -323,7 +323,7 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
                           (organization?.id ?? null) &&
                         setActive
                       ) {
-                        await setActive(selectedOrganizationId || null);
+                        setActive(selectedOrganizationId || null);
                       }
                       forkApp.mutateAsync(
                         { id: app.id, name },
