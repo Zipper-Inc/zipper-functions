@@ -1,4 +1,3 @@
-import { MembershipRole } from '@clerk/types';
 import {
   HStack,
   Heading,
@@ -79,7 +78,7 @@ function MemberList() {
   const context = trpc.useContext();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const cancelRef = useRef() as React.MutableRefObject<HTMLButtonElement>;
-  const { membershipList, role, invitationList } = useOrganization({
+  const { membershipList, role, invitationList, invite } = useOrganization({
     invitationList: {},
     membershipList: {},
   });
@@ -144,7 +143,6 @@ function MemberList() {
 
   const isCurrentUserAdmin = role === UserRole.Admin;
 
-  const inviteMember = trpc.useMutation('organization.inviteMember');
   const toast = useToast();
 
   return (
@@ -152,8 +150,7 @@ function MemberList() {
       {showInviteForm ? (
         <InviteMember
           setShowInviteForm={setShowInviteForm}
-          setUserList={setUserList}
-          userList={userList}
+          inviteMember={invite}
         />
       ) : (
         <VStack align="stretch">
@@ -308,35 +305,8 @@ function MemberList() {
                 m="2"
                 variant={'unstyled'}
                 onClick={async () => {
-                  await inviteMember.mutateAsync(
-                    {
-                      email: peopleSearchTerm,
-                      role: UserRole.Member,
-                    },
-                    {
-                      onSuccess: () => {
-                        setPeopleSearchTerm('');
-                        setUserList([
-                          ...userList,
-                          {
-                            email: peopleSearchTerm,
-                            role: UserRole.Member,
-                            isInvite: true,
-                          },
-                        ]);
-                      },
-                      onError: () => {
-                        toast({
-                          title: 'Error inviting user',
-                          description:
-                            'There was an error inviting the user. Please try again.',
-                          status: 'error',
-                          duration: 5000,
-                        });
-                        setPeopleSearchTerm('');
-                      },
-                    },
-                  );
+                  await invite(peopleSearchTerm, UserRole.Member);
+                  setPeopleSearchTerm('');
                 }}
               >
                 <HStack>
@@ -384,11 +354,6 @@ function MemberList() {
                               ?.destroy();
                           }
 
-                          delete userList[
-                            userList.findIndex(
-                              (u) => u.email === memberToDestroy.email,
-                            )
-                          ];
                           setMemberToDestroy(undefined);
                         }
                         onClose();
@@ -410,17 +375,14 @@ function MemberList() {
 
 function InviteMember({
   setShowInviteForm,
-  setUserList,
-  userList,
+  inviteMember,
 }: {
   setShowInviteForm: (state: boolean) => void;
-  setUserList: (userList: UserListItem[]) => void;
-  userList: UserListItem[];
+  inviteMember: (email: string, role: UserRole) => Promise<void>;
 }) {
   const [emailAddress, setEmailAddress] = useState('');
   const [role, setRole] = useState<UserRole>(UserRole.Member);
   const [disabled, setDisabled] = useState(false);
-  const inviteMember = trpc.useMutation('organization.inviteMember');
 
   const toast = useToast();
 
@@ -428,21 +390,8 @@ function InviteMember({
     e.preventDefault();
     setDisabled(true);
 
-    await inviteMember.mutateAsync(
-      { email: emailAddress, role },
-      {
-        onError: (err) => {
-          setDisabled(false);
-          toast({
-            title: 'Error',
-            description: err.message,
-            status: 'error',
-            duration: 9000,
-          });
-        },
-      },
-    );
-    setUserList([...userList, { email: emailAddress, role, isInvite: true }]);
+    await inviteMember(emailAddress, role);
+
     setShowInviteForm(false);
     setEmailAddress('');
     setRole(UserRole.Member);
