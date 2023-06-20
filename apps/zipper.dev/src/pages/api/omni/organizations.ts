@@ -10,7 +10,6 @@ import {
   getOmniContext,
 } from '~/server/utils/omni.utils';
 import { HttpMethod as Method, HttpStatusCode as Status } from '@zipper/types';
-import slugify from '~/utils/slugify';
 
 export default createOmniApiHandler(async (req, res) => {
   switch (req.method) {
@@ -20,19 +19,16 @@ export default createOmniApiHandler(async (req, res) => {
     case Method.PUT: {
       const errors: OmniApiError[] = [];
 
-      if (!req.body) {
-        errors.push({ message: 'Missing body' });
-      }
-
-      const orgsToCreate: { name: string }[] = req.body?.organizations;
+      const orgsToCreate: { name: string }[] = req.body.organizations;
 
       // Make sure there are orgs
-      if (!Array.isArray(orgsToCreate) || !orgsToCreate.length) {
-        errors.push({ message: 'Missing organizations' });
+      const noOrgs = !Array.isArray(orgsToCreate) || !orgsToCreate.length;
+      if (noOrgs) {
+        errors.push({ message: 'Missing or empty array of organizations' });
       }
 
       // Make sure each org has at least a name
-      if (orgsToCreate.find((org) => !org.name)) {
+      if (noOrgs || orgsToCreate.find((org) => !org.name)) {
         errors.push({ message: 'Each organization must have a name' });
       }
 
@@ -53,7 +49,7 @@ export default createOmniApiHandler(async (req, res) => {
         orgsToCreate.map((org) => caller.mutation('add', org)),
       );
 
-      successResponse({
+      return successResponse({
         res,
         body: {
           ok: true,

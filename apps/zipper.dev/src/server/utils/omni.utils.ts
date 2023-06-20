@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse, NextApiHandler } from 'next';
-import { HttpStatusCode as Status } from '@zipper/types';
+import { HttpMethod as Method, HttpStatusCode as Status } from '@zipper/types';
 import { safeJSONParse } from '@zipper/utils';
 import { Context } from '../context';
 
@@ -61,6 +61,24 @@ export const errorResponse: OmniResponder<ErrorBody> = ({
     .status(status)
     .end(smartStringify(body));
 
+export const simpleErrorResponse = ({
+  res,
+  status = Status.INTERNAL_SERVER_ERROR,
+  message = 'Internal server error',
+}: {
+  res: NextApiResponse;
+  status: Status;
+  message: string;
+}) =>
+  errorResponse({
+    res,
+    status,
+    body: {
+      ok: false,
+      errors: [{ message, code: status }],
+    },
+  });
+
 /** Error when using an unsupported HTTP method */
 export const methodNotAllowed = ({
   method = 'method',
@@ -114,11 +132,23 @@ export const internalServerError = ({
     },
   });
 
+export const methodNeedsBody = (method: unknown) =>
+  [Method.PATCH, Method.POST, Method.PUT].includes(method as Method);
+
 /** Wraps an omni handler with auth and stuff */
 export const createOmniApiHandler =
   (handler: OmniHandler): NextApiHandler =>
   (req, res) => {
     try {
+      // Assert existance of body if trying to make an update
+      if (methodNeedsBody(req.method) && !req.body) {
+        return simpleErrorResponse({
+          res,
+          status: Status.BAD_REQUEST,
+          message: 'Missing body',
+        });
+      }
+
       req.body = req.body && safeJSONParse(req.body, undefined, req.body);
       return handler(req, res);
     } catch (e) {
