@@ -8,7 +8,7 @@ import {
 import { HttpMethod as Method, HttpStatusCode as Status } from '@zipper/types';
 
 export default createOmniApiHandler(async (req, res) => {
-  const userId: string = req.query.userId as string;
+  const userId = req.query.userId as string;
 
   if (!userId) {
     return simpleErrorResponse({
