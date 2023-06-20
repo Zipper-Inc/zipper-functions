@@ -1,5 +1,5 @@
 import { prisma } from '~/server/prisma';
-import { PrismaAdapter } from '../auth/[...nextauth]';
+import { PrismaAdapter } from '../../auth/[...nextauth]';
 import {
   successResponse,
   errorResponse,
