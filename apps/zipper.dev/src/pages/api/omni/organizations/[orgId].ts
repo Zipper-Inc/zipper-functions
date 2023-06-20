@@ -1,5 +1,4 @@
 import { prisma } from '~/server/prisma';
-import { organizationRouter } from '~/server/routers/organization.router';
 
 import {
   successResponse,
@@ -7,13 +6,9 @@ import {
   methodNotAllowed,
   createOmniApiHandler,
   OmniApiError,
-  getOmniContext,
   simpleErrorResponse,
 } from '~/server/utils/omni.utils';
 import { HttpMethod as Method, HttpStatusCode as Status } from '@zipper/types';
-import { keys } from 'lodash';
-
-const ALLOWED_KEYS_TO_UPDATE = ['name', 'slug'];
 
 export default createOmniApiHandler(async (req, res) => {
   const orgId: string = req.query.orgId as string;
