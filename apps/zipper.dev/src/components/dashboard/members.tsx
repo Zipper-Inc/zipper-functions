@@ -40,6 +40,7 @@ import { Avatar } from '../avatar';
 import { useOrganization } from '~/hooks/use-organization';
 import { UserRole } from '@zipper/types';
 import { useUser } from '~/hooks/use-user';
+import { OrganizationInvitation } from '@prisma/client';
 
 type UserListItem = {
   id?: string;
@@ -378,7 +379,10 @@ function InviteMember({
   inviteMember,
 }: {
   setShowInviteForm: (state: boolean) => void;
-  inviteMember: (email: string, role: UserRole) => Promise<void>;
+  inviteMember: (
+    email: string,
+    role: UserRole,
+  ) => Promise<OrganizationInvitation>;
 }) {
   const [emailAddress, setEmailAddress] = useState('');
   const [role, setRole] = useState<UserRole>(UserRole.Member);
