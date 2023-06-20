@@ -306,10 +306,17 @@ export const organizationRouter = createRouter()
   })
   .mutation('acceptInvitation', {
     input: z.object({
-      token: z.string(),
+      token: z.string().optional(),
+      organizationId: z.string().optional(),
     }),
     async resolve({ input, ctx }) {
+      if (!input.token && !input.organizationId)
+        throw new trpc.TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Must provide either token or organizationId',
+        });
       if (!ctx.userId) throw new trpc.TRPCError({ code: 'UNAUTHORIZED' });
+
       const user = await prisma.user.findUnique({
         where: {
           id: ctx.userId,
@@ -321,8 +328,17 @@ export const organizationRouter = createRouter()
 
       const invite = await prisma.organizationInvitation.findFirst({
         where: {
-          token: input.token,
-          email: user?.email,
+          OR: [
+            {
+              token: input.token,
+              email: user?.email,
+            },
+
+            {
+              organizationId: input.organizationId,
+              email: user?.email,
+            },
+          ],
         },
       });
 
@@ -357,7 +373,10 @@ export const organizationRouter = createRouter()
 
       await prisma.organizationInvitation.delete({
         where: {
-          token: input.token,
+          organizationId_email: {
+            organizationId: invite.organizationId,
+            email: invite.email,
+          },
         },
       });
 

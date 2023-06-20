@@ -20,12 +20,18 @@ import { useRouter } from 'next/router';
 import { useOrganizationList } from '~/hooks/use-organization-list';
 import { useUser } from '~/hooks/use-user';
 import { useOrganization } from '~/hooks/use-organization';
+import { trpc } from '~/utils/trpc';
+import { useSession } from 'next-auth/react';
 
 export const OrganizationSwitcher: React.FC<ButtonProps> = (props) => {
   // get the authed user's organizations from Clerk
   const { setActive, organizationList, isLoaded, currentOrganizationId } =
     useOrganizationList();
   const { organization, role } = useOrganization();
+
+  const session = useSession();
+
+  const acceptInvitation = trpc.useMutation('organization.acceptInvitation');
 
   const { user } = useUser();
 
@@ -34,7 +40,7 @@ export const OrganizationSwitcher: React.FC<ButtonProps> = (props) => {
   );
 
   const allWorkspaces = [
-    { organization: { id: null, name: 'Personal Workspace' } },
+    { organization: { id: null, name: 'Personal Workspace' }, pending: false },
     ...(organizationList || []),
   ];
 
@@ -137,13 +143,32 @@ export const OrganizationSwitcher: React.FC<ButtonProps> = (props) => {
                     >
                       {org.organization.name}
                     </Text>
-                    <Icon
-                      as={HiSwitchHorizontal}
-                      color={'gray.400'}
-                      visibility={
-                        hoverOrg === org.organization.id ? 'visible' : 'hidden'
-                      }
-                    ></Icon>
+                    {org.pending ? (
+                      <Button
+                        size="xs"
+                        onClick={async () => {
+                          await acceptInvitation.mutateAsync({
+                            organizationId: org.organization.id!,
+                          });
+                          session.update({
+                            updateOrganizationList: true,
+                            setCurrentOrganizationId: org.organization.id!,
+                          });
+                        }}
+                      >
+                        Join
+                      </Button>
+                    ) : (
+                      <Icon
+                        as={HiSwitchHorizontal}
+                        color={'gray.400'}
+                        visibility={
+                          hoverOrg === org.organization.id
+                            ? 'visible'
+                            : 'hidden'
+                        }
+                      ></Icon>
+                    )}
                   </HStack>
                 </Box>
               </MenuItem>

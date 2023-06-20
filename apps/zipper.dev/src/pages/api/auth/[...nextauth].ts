@@ -163,6 +163,39 @@ async function refreshAccessToken(token: TokenSet) {
   }
 }
 
+const getOrganizationMemberships = async (
+  userId?: string,
+  email?: string | null,
+) => {
+  if (!userId) return [];
+  const orgMemberships = await prisma.organizationMembership.findMany({
+    where: { userId },
+    select: {
+      organization: {
+        select: { name: true, id: true, slug: true },
+      },
+      role: true,
+    },
+  });
+
+  const pendingOrgMemberships = email
+    ? await prisma.organizationInvitation.findMany({
+        where: { email },
+        select: {
+          organization: {
+            select: { name: true, id: true, slug: true },
+          },
+          role: true,
+        },
+      })
+    : [];
+
+  return [
+    ...orgMemberships.map((m) => ({ ...m, pending: false })),
+    ...pendingOrgMemberships.map((m) => ({ ...m, pending: true })),
+  ];
+};
+
 export const authOptions: AuthOptions = {
   // Configure one or more authentication providers
   session: {
@@ -228,16 +261,9 @@ export const authOptions: AuthOptions = {
           expires_at: account.expires_at,
           refresh_token: account.refresh_token,
           slug: user.slug,
-          organizationMemberships: await prisma.organizationMembership.findMany(
-            {
-              where: { userId: user.id },
-              select: {
-                organization: {
-                  select: { name: true, id: true, slug: true },
-                },
-                role: true,
-              },
-            },
+          organizationMemberships: await getOrganizationMemberships(
+            user.id,
+            user.email,
           ),
         };
       }
@@ -246,16 +272,10 @@ export const authOptions: AuthOptions = {
         console.log('update triggered: ', session);
 
         if (session.updateOrganizationList) {
-          token.organizationMemberships =
-            await prisma.organizationMembership.findMany({
-              where: { userId: token.sub },
-              select: {
-                organization: {
-                  select: { name: true, id: true, slug: true },
-                },
-                role: true,
-              },
-            });
+          token.organizationMemberships = await getOrganizationMemberships(
+            token.sub,
+            token.email,
+          );
         }
 
         if (session.currentOrganizationId === null) {
@@ -347,6 +367,7 @@ declare module 'next-auth/jwt' {
 export interface SessionOrganizationMembership {
   organization: SessionOrganization;
   role: string;
+  pending: boolean;
 }
 
 export interface SessionOrganization {
