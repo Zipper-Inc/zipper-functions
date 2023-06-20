@@ -3,7 +3,6 @@ import {
   successResponse,
   methodNotAllowed,
   createOmniApiHandler,
-  OmniApiError,
   simpleErrorResponse,
 } from '~/server/utils/omni.utils';
 import { HttpMethod as Method, HttpStatusCode as Status } from '@zipper/types';

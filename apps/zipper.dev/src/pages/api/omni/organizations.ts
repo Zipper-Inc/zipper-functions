@@ -1,6 +1,5 @@
 import { prisma } from '~/server/prisma';
 import { organizationRouter } from '~/server/routers/organization.router';
-
 import {
   successResponse,
   errorResponse,
