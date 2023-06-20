@@ -146,7 +146,10 @@ export default function SignIn({
                       variant="solid"
                       colorScheme="purple"
                       rounded="none"
-                      onClick={() => signIn('email', { email })}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        signIn('email', { email });
+                      }}
                     >
                       Continue
                     </Button>
