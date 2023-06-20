@@ -33,7 +33,10 @@ export const useOrganization = (props?: Props) => {
   const inviteMember = trpc.useMutation('organization.inviteMember');
 
   const [organization, setOrganization] = useState<
-    SessionOrganization | undefined
+    | (SessionOrganization & {
+        update: ({}: { name: string }) => Promise<void>;
+      })
+    | undefined
   >();
   const [role, setRole] = useState<string | undefined>();
   const [isLoaded, setIsLoaded] = useState(false);
@@ -52,6 +55,7 @@ export const useOrganization = (props?: Props) => {
   >();
   const removeMembership = trpc.useMutation('organization.removeMember');
   const revokeInvitation = trpc.useMutation('organization.revokeInvitation');
+  const updateOrganization = trpc.useMutation('organization.update');
 
   trpc.useQuery(['organization.getMemberships'], {
     enabled: !!membershipListProps && session.status === 'authenticated',
@@ -123,6 +127,19 @@ export const useOrganization = (props?: Props) => {
     );
   };
 
+  const update = async ({ name }: { name: string }) => {
+    await updateOrganization.mutateAsync(
+      {
+        name,
+      },
+      {
+        onSuccess: () => {
+          session.update({ updateOrganizationList: true });
+        },
+      },
+    );
+  };
+
   useEffect(() => {
     if (session.status === 'authenticated') {
       const orgMembership = session.data.currentOrganizationId
@@ -130,7 +147,9 @@ export const useOrganization = (props?: Props) => {
             (om) => om.organization.id === session.data.currentOrganizationId,
           )
         : undefined;
-      setOrganization(orgMembership?.organization);
+      setOrganization(
+        orgMembership ? { ...orgMembership?.organization, update } : undefined,
+      );
       setRole(orgMembership?.role);
     }
 
