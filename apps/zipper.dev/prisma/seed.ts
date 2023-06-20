@@ -103,7 +103,7 @@ export async function handler({ text }: { text: string }) {
               filename: 'main.ts',
               description: 'entry point for the app',
               code: `export async function handler({ text }: { text: string }) {
-  return Math.floor(Math.random() * max);
+  return Math.floor(Math.random() * 100);
 }`,
               order: 0,
             },

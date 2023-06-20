@@ -14,7 +14,7 @@ import { PrismaClient } from '@prisma/client';
 import { Adapter, AdapterAccount } from 'next-auth/adapters';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime';
 import slugify from '~/utils/slugify';
-import { ResourceOwnerType } from '@zipper/types';
+import { ResourceOwnerType, UserRole } from '@zipper/types';
 import crypto from 'crypto';
 import { Resend } from 'resend';
 import { MagicLinkEmail } from 'emails';
@@ -28,28 +28,23 @@ export function PrismaAdapter(p: PrismaClient): Adapter {
 
       if (emailUserPart && emailUserPart.length >= 3) {
         possibleSlugs.push(slugify(emailUserPart));
-        possibleSlugs.push(
-          `${slugify(emailUserPart)}-${Math.floor(Math.random() * 100)}`,
-        );
       }
       if (data.name) {
         possibleSlugs.push(slugify(data.name));
-        possibleSlugs.push(
-          `${slugify(data.name)}-${Math.floor(Math.random() * 100)}`,
-        );
       }
-      possibleSlugs.push(slugify(data.email));
-      possibleSlugs.push(
-        `${slugify(data.email)}-${Math.floor(Math.random() * 100)}`,
+
+      const alternativeSlugs = possibleSlugs.map(
+        (s) => `${s}-${Math.floor(Math.random() * 100)}`,
       );
+      alternativeSlugs.push(slugify(data.email));
 
       const existingResourceOwnerSlugs = await p.resourceOwnerSlug.findMany({
-        where: { slug: { in: possibleSlugs } },
+        where: { slug: { in: [...possibleSlugs, ...alternativeSlugs] } },
       });
 
       const existingSlugs = existingResourceOwnerSlugs.map((s) => s.slug);
 
-      const validSlugs = possibleSlugs.filter((s) => {
+      const validSlugs = [...possibleSlugs, ...alternativeSlugs].filter((s) => {
         return !existingSlugs.includes(s);
       });
 
@@ -66,6 +61,23 @@ export function PrismaAdapter(p: PrismaClient): Adapter {
           resourceOwnerId: user.id,
         },
       });
+
+      const domain = data.email.split('@')[1];
+      if (domain) {
+        const allowListIdentifier = await p.allowListIdentifier.findFirst({
+          where: { value: { in: [data.email, domain] } },
+        });
+
+        if (allowListIdentifier && allowListIdentifier.defaultOrganizationId) {
+          await p.organizationMembership.create({
+            data: {
+              organizationId: allowListIdentifier.defaultOrganizationId,
+              userId: user.id,
+              role: UserRole.Member,
+            },
+          });
+        }
+      }
 
       return user;
     },
@@ -108,7 +120,6 @@ export function PrismaAdapter(p: PrismaClient): Adapter {
       return verificationToken;
     },
     async useVerificationToken(identifier_token) {
-      console.log(identifier_token);
       try {
         const verificationToken = await p.verificationToken.delete({
           where: { identifier_token },
@@ -250,6 +261,17 @@ export const authOptions: AuthOptions = {
     // ...add more providers here
   ],
   callbacks: {
+    async signIn({ user, email }) {
+      if (!user.email) return false;
+      const emailDomain = user.email.split('@')[1];
+      if (!emailDomain) return false;
+
+      const allowed = await prisma.allowListIdentifier.findFirst({
+        where: { value: { in: [user.email, emailDomain] } },
+      });
+
+      return !!allowed;
+    },
     async jwt({ token: _token, user, account, trigger, session }) {
       const token = { ..._token };
       // Initial sign in (only time account is not null)
