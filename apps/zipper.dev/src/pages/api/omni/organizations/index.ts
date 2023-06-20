@@ -20,18 +20,15 @@ export default createOmniApiHandler(async (req, res) => {
 
       const orgsToCreate: { name: string }[] = req.body.organizations;
 
-      // Make sure there are orgs
       const noOrgs = !Array.isArray(orgsToCreate) || !orgsToCreate.length;
       if (noOrgs) {
         errors.push({ message: 'Missing or empty array of organizations' });
       }
 
-      // Make sure each org has at least a name
       if (noOrgs || orgsToCreate.find((org) => !org.name)) {
         errors.push({ message: 'Each organization must have a name' });
       }
 
-      // Return if there are any errors
       if (errors.length) {
         return errorResponse({
           res,

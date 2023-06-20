@@ -21,18 +21,15 @@ export default createOmniApiHandler(async (req, res) => {
       const usersToCreate: { email: string; emailVerified?: Date | null }[] =
         req.body.users;
 
-      // Make sure there are orgs
       const noUsers = !Array.isArray(usersToCreate) || !usersToCreate.length;
       if (noUsers) {
         errors.push({ message: 'Missing or empty array of users' });
       }
 
-      // Make sure each org has at least a name
       if (noUsers || usersToCreate.find((user) => !user.email)) {
         errors.push({ message: 'Each user must have an email' });
       }
 
-      // Return if there are any errors
       if (errors.length) {
         return errorResponse({
           res,
