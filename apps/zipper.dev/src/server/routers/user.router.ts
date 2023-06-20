@@ -8,6 +8,7 @@ import { encryptToHex } from '@zipper/utils';
 import { getAuth } from '@clerk/nextjs/server';
 import fetch from 'node-fetch';
 import { Prisma } from '@prisma/client';
+import { getToken } from 'next-auth/jwt';
 
 const defaultSelect = Prisma.validator<Prisma.UserSelect>()({
   id: true,
@@ -115,12 +116,12 @@ export const userRouter = createProtectedRouter()
     }),
     async resolve({ ctx, input }) {
       if (!ctx.userId) return new TRPCError({ code: 'UNAUTHORIZED' });
-      const sessionClaims = ctx.req ? getAuth(ctx.req).sessionClaims : null;
+      const token = await getToken({ req: ctx.req! });
 
       return generateAccessToken(
         {
           userId: ctx.userId,
-          sessionClaims,
+          authToken: token,
         },
         { expiresIn: input.expiresIn },
       );

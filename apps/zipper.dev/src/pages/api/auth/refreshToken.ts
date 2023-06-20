@@ -1,8 +1,8 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import jwt from 'jsonwebtoken';
-import clerkClient from '@clerk/clerk-sdk-node';
 import { generateAccessToken } from '~/utils/jwt-utils';
 import * as crypto from 'crypto';
+import { prisma } from '~/server/prisma';
 
 //verifyHMAC doesn't return the same value as the crypto web API and I can't figure out why
 const generateHMAC = async (req: NextApiRequest) => {
@@ -48,16 +48,31 @@ export default async function handler(
         process.env.JWT_REFRESH_SIGNING_SECRET!,
       ) as any;
 
-      const user = await clerkClient.users.getUser(decodedToken.sub);
-      const orgMems = await clerkClient.users.getOrganizationMembershipList({
-        userId: decodedToken.sub,
+      const user = await prisma.user.findUniqueOrThrow({
+        where: { id: decodedToken.sub },
+        include: {
+          organizationMemberships: {
+            include: {
+              organization: true,
+            },
+          },
+        },
       });
 
       // Generate a new JWT token
       const newToken = generateAccessToken({
         userId: decodedToken.sub,
         profile: user,
-        orgMemberships: orgMems,
+        orgMemberships: user.organizationMemberships.map((mem) => ({
+          organizationId: mem.organizationId,
+          organization: {
+            name: mem.organization.name,
+            id: mem.organization.id,
+            slug: mem.organization.slug,
+          },
+          pending: false,
+          role: mem.role,
+        })),
       });
 
       // Send the new token in the response

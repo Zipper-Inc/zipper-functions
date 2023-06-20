@@ -10,13 +10,13 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '~/server/prisma';
 import { AppInfoResult, UserAuthConnector } from '@zipper/types';
 import { parseCode } from '~/utils/parse-code';
-import clerkClient from '@clerk/clerk-sdk-node';
 import { compare } from 'bcryptjs';
 import { canUserEdit } from '~/server/routers/app.router';
 import { requiredUserAuthConnectorFilter } from '~/utils/user-auth-connector-filter';
 import { ZIPPER_TEMP_USER_ID_HEADER } from '@zipper/utils';
 import * as Sentry from '@sentry/nextjs';
 import { verifyAccessToken } from '~/utils/jwt-utils';
+import { SessionOrganizationMembership } from '../../auth/[...nextauth]';
 
 export default async function handler(
   req: NextApiRequest,
@@ -25,11 +25,7 @@ export default async function handler(
   const slugFromUrl = req.query.slug as string;
   const body = JSON.parse(req.body);
 
-  let userInfo: {
-    clerkUserId?: string;
-    email?: string;
-    organizations: Record<string, string>[];
-  } = {
+  let userInfo: UserInfoReturnType = {
     organizations: [],
   };
 
@@ -65,7 +61,7 @@ export default async function handler(
           include: {
             appConnectorUserAuths: {
               where: {
-                userIdOrTempId: userInfo.clerkUserId || tempUserId || '',
+                userIdOrTempId: userInfo.userId || tempUserId || '',
               },
             },
           },
@@ -91,7 +87,7 @@ export default async function handler(
 
   if (appFound.requiresAuthToRun) {
     // return 401 if there's no token or no user was found by getUserInfo()
-    if (!token || !userInfo.clerkUserId) {
+    if (!token || !userInfo.userId) {
       return res.status(401).send({
         ok: false,
         error: 'UNAUTHORIZED',
@@ -132,6 +128,12 @@ export default async function handler(
   }
   const parsedCode = parseCode({ code: entryPoint.code });
 
+  const organizations: Record<string, string> = {};
+
+  userInfo?.organizations?.forEach((mem) => {
+    organizations[mem.organization.id] = mem.role;
+  });
+
   const result: AppInfoResult = {
     ok: true,
     data: {
@@ -144,9 +146,9 @@ export default async function handler(
         updatedAt,
         canUserEdit: canUserEdit(appFound, {
           req,
-          userId: userInfo.clerkUserId,
+          userId: userInfo.userId,
           orgId: undefined,
-          organizations: userInfo.organizations,
+          organizations: organizations,
         }),
         hash,
       },
@@ -167,7 +169,7 @@ export default async function handler(
       ) as UserAuthConnector[],
       userInfo: {
         email: userInfo?.email,
-        userId: userInfo.clerkUserId,
+        userId: userInfo.userId,
       },
       entryPoint: {
         filename: entryPoint.filename,
@@ -195,7 +197,16 @@ that to find the hashed secret. We compare the hashed secret with a hash
 of the third part of the token.
 */
 
-async function getUserInfo(token: string, appSlug: string) {
+type UserInfoReturnType = {
+  email?: string;
+  userId?: string;
+  organizations?: SessionOrganizationMembership[];
+};
+
+async function getUserInfo(
+  token: string,
+  appSlug: string,
+): Promise<UserInfoReturnType> {
   try {
     //if there's no token, there's no authed user
     if (!token) throw new Error('No token');
@@ -213,8 +224,8 @@ async function getUserInfo(token: string, appSlug: string) {
       }
 
       return {
-        email: auth.primaryEmail,
-        clerkUserId: auth.sub,
+        email: auth.email,
+        userId: auth.sub,
         organizations: auth.organizations,
       };
     } else {
@@ -238,21 +249,35 @@ async function getUserInfo(token: string, appSlug: string) {
 
       if (!validSecret) throw new Error();
 
-      const [user, orgs] = await Promise.all([
-        clerkClient.users.getUser(appAccessToken.userId),
-        clerkClient.users.getOrganizationMembershipList({
-          userId: appAccessToken.userId,
-        }),
-      ]);
+      const user = await prisma.user.findUnique({
+        where: {
+          id: appAccessToken.userId,
+        },
+        include: {
+          organizationMemberships: {
+            include: {
+              organization: true,
+            },
+          },
+        },
+      });
 
-      if (!user) throw new Error('No Clerk user');
+      if (!user) throw new Error('No user');
 
       return {
-        email: user.emailAddresses.find(
-          (e) => e.id === user.primaryEmailAddressId,
-        ),
-        clerkUserId: user.id,
-        organizations: orgs || [],
+        email: user.email,
+        userId: user.id,
+        organizations: user.organizationMemberships.map((mem) => {
+          return {
+            organization: {
+              id: mem.organization.id,
+              name: mem.organization.name,
+              slug: mem.organization.slug,
+            },
+            role: mem.role,
+            pending: false,
+          };
+        }),
       };
     }
   } catch (e) {

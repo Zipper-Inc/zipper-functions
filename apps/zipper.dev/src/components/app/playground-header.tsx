@@ -30,14 +30,6 @@ import React, { useEffect, useState } from 'react';
 import ForkIcon from '~/components/svg/forkIcon';
 import { ZipperLogo, ZipperSymbol } from '@zipper/ui';
 import { HiOutlineUpload, HiPencilAlt } from 'react-icons/hi';
-import {
-  useUser,
-  SignedIn,
-  SignedOut,
-  useOrganization,
-  useOrganizationList,
-  UserButton,
-} from '@clerk/nextjs';
 import { AppQueryOutput } from '~/types/trpc';
 import { EditAppSlugForm } from './edit-app-slug-form';
 import { useAppEditors } from '~/hooks/use-app-editors';
@@ -50,6 +42,11 @@ import { trpc } from '~/utils/trpc';
 import { generateDefaultSlug } from '~/utils/generate-default';
 import { useRouter } from 'next/router';
 import ShareModal from './share-modal';
+import { useUser } from '~/hooks/use-user';
+import { useOrganization } from '~/hooks/use-organization';
+import { useOrganizationList } from '~/hooks/use-organization-list';
+import SignedIn from '../auth/signed-in';
+import SignedOut from '../auth/signed-out';
 
 const getDefaultCreateAppFormValues = () => ({
   name: generateDefaultSlug(),
@@ -237,7 +234,7 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
             <HiOutlineUpload />
             <Text>Share</Text>
           </Button>
-          <UserButton afterSignOutUrl="/" />
+          {/* <UserButton afterSignOutUrl="/" /> */}
         </SignedIn>
         {!app.canUserEdit && isLoaded && (
           <Button
@@ -326,9 +323,7 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
                           (organization?.id ?? null) &&
                         setActive
                       ) {
-                        await setActive({
-                          organization: selectedOrganizationId,
-                        });
+                        await setActive(selectedOrganizationId || null);
                       }
                       forkApp.mutateAsync(
                         { id: app.id, name },

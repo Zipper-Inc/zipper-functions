@@ -18,6 +18,8 @@ import { ResourceOwnerType, UserRole } from '@zipper/types';
 import crypto from 'crypto';
 import { Resend } from 'resend';
 import { MagicLinkEmail } from 'emails';
+import fetch from 'node-fetch';
+
 export const resend = new Resend(process.env.RESEND_API_KEY!);
 
 export function PrismaAdapter(p: PrismaClient): Adapter {

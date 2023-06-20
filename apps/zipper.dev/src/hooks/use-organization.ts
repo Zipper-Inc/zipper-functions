@@ -42,7 +42,10 @@ export const useOrganization = (props?: Props) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [membershipList, setMembershipList] = useState<
     | (OrganizationMembership & {
-        user: Omit<User, 'emailVerified' | 'createdAt' | 'updatedAt'>;
+        user: Omit<
+          User,
+          'emailVerified' | 'createdAt' | 'updatedAt' | 'deletedAt'
+        >;
         destroy: () => Promise<boolean>;
       })[]
     | undefined
