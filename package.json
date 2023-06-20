@@ -24,7 +24,7 @@
     "ts-node": "ts-node -T",
     "migrate": "yarn workspace zipper.dev db-migrate-dev",
     "seed": "yarn workspace zipper.dev db-seed",
-    "studio": "yarn worspace zipper.dev prisma studio",
+    "studio": "yarn workspace zipper.dev prisma studio",
     "deno:dev": "yarn dotenv -c .env.local ts-node --compiler-options \"{\\\"module\\\":\\\"commonjs\\\"}\" ./bin/ts/deno-dev.ts",
     "deno:deploy": "yarn dotenv -c .env.local ts-node --compiler-options \"{\\\"module\\\":\\\"commonjs\\\"}\" ./bin/ts/deno-deploy.ts"
   },
