@@ -30,6 +30,7 @@ import Link from 'next/link';
 import { SiGithub, SiTwitter } from 'react-icons/si';
 import { FcGoogle } from 'react-icons/fc';
 import { useState } from 'react';
+import { useRouter } from 'next/router';
 
 export const renderIcon = (providerName: string) => {
   switch (providerName) {
@@ -49,6 +50,10 @@ export default function SignIn({
   csrfToken,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
   const [email, setEmail] = useState<string>('');
+  const router = useRouter();
+  const { error } = router.query;
+
+  const emailError = error === 'EmailSignin';
 
   return (
     <>
@@ -130,6 +135,7 @@ export default function SignIn({
                         </Text>
                       </FormLabel>
                       <Input
+                        borderColor={emailError ? 'red.500' : 'gray.200'}
                         name="email"
                         type="email"
                         placeholder=""
@@ -138,6 +144,11 @@ export default function SignIn({
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                       />
+                      {emailError && (
+                        <Text fontSize="sm" color="red.500">
+                          Invalid email address
+                        </Text>
+                      )}
                     </FormControl>
                     <Button
                       mt={4}
@@ -148,7 +159,11 @@ export default function SignIn({
                       rounded="none"
                       onClick={(e) => {
                         e.preventDefault();
-                        signIn('email', { email });
+                        signIn('email', {
+                          email,
+                          redirect: false,
+                        });
+                        router.push(`/auth/verify-request?email=${email}`);
                       }}
                     >
                       Continue
