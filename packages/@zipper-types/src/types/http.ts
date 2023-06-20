@@ -1,7 +1,7 @@
 /**
  * Copy pasta from zipper.d.ts
  * Typescript plays funny with declared vs exported enums
- * Yolo
+ * Yolo 🤷🏽‍♂️
  */
 
 /**
