@@ -1,17 +1,15 @@
 import { prisma } from '~/server/prisma';
-
 import {
   successResponse,
-  errorResponse,
   methodNotAllowed,
   createOmniApiHandler,
-  OmniApiError,
   simpleErrorResponse,
 } from '~/server/utils/omni.utils';
 import { HttpMethod as Method, HttpStatusCode as Status } from '@zipper/types';
 
 export default createOmniApiHandler(async (req, res) => {
   const orgId: string = req.query.orgId as string;
+
   if (!orgId) {
     return simpleErrorResponse({
       res,
@@ -40,21 +38,11 @@ export default createOmniApiHandler(async (req, res) => {
     case Method.PATCH:
     case Method.POST:
     case Method.PUT: {
-      const errors: OmniApiError[] = [];
-
       if (!req.body.organization) {
-        errors.push({ message: 'Missing organization' });
-      }
-
-      // Return if there are any errors
-      if (errors.length) {
-        return errorResponse({
+        return simpleErrorResponse({
           res,
-          body: {
-            ok: false,
-            errors,
-          },
           status: Status.BAD_REQUEST,
+          message: 'Missing organization',
         });
       }
 
