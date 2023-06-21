@@ -21,6 +21,7 @@ export function AvatarForCurrentUser(props: AvatarProps) {
   return (
     <BaseAvatar
       name={user?.fullName || ''}
+      referrerPolicy="no-referrer"
       {...props}
       src={user?.profileImageUrl || ''}
     />

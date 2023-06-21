@@ -511,7 +511,10 @@ export const appRouter = createRouter()
         },
       });
 
-      return apps.map((app) => ({ ...app, resourceOwner }));
+      return apps.map((app) => ({
+        ...app,
+        resourceOwner,
+      }));
     },
   })
   .query('validateSlug', {

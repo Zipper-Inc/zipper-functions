@@ -11,6 +11,7 @@ import {
   VStack,
   useDisclosure,
   ButtonProps,
+  Badge,
 } from '@chakra-ui/react';
 import { HiOutlineChevronUpDown, HiPlus } from 'react-icons/hi2';
 import { HiEye, HiSwitchHorizontal } from 'react-icons/hi';
@@ -40,7 +41,14 @@ export const OrganizationSwitcher: React.FC<ButtonProps> = (props) => {
   );
 
   const allWorkspaces = [
-    { organization: { id: null, name: 'Personal Workspace' }, pending: false },
+    {
+      organization: {
+        id: null,
+        name: 'Personal Workspace',
+        slug: user?.username,
+      },
+      pending: false,
+    },
     ...(organizationList || []),
   ];
 
@@ -125,8 +133,12 @@ export const OrganizationSwitcher: React.FC<ButtonProps> = (props) => {
             return (
               <MenuItem
                 key={org.organization.id}
-                onClick={() => {
-                  setActive && setActive(org.organization.id);
+                onClick={async () => {
+                  if (org.pending) {
+                    router.push(`/${org.organization.slug}`);
+                  } else {
+                    setActive && setActive(org.organization.id);
+                  }
                 }}
                 backgroundColor="gray.50"
                 px="4"
@@ -144,20 +156,17 @@ export const OrganizationSwitcher: React.FC<ButtonProps> = (props) => {
                       {org.organization.name}
                     </Text>
                     {org.pending ? (
-                      <Button
+                      <Badge
                         size="xs"
-                        onClick={async () => {
-                          await acceptInvitation.mutateAsync({
-                            organizationId: org.organization.id!,
-                          });
-                          session.update({
-                            updateOrganizationList: true,
-                            setCurrentOrganizationId: org.organization.id!,
-                          });
-                        }}
+                        textTransform="capitalize"
+                        px="2"
+                        py="1"
+                        fontWeight="semibold"
+                        variant="outline"
+                        borderRadius="md"
                       >
-                        Join
-                      </Button>
+                        Invited
+                      </Badge>
                     ) : (
                       <Icon
                         as={HiSwitchHorizontal}

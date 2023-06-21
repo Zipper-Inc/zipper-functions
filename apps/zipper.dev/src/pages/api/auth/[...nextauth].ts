@@ -13,7 +13,6 @@ import { prisma } from '~/server/prisma';
 import { PrismaClient } from '@prisma/client';
 import { Adapter, AdapterAccount } from 'next-auth/adapters';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime';
-import slugify from '~/utils/slugify';
 import { ResourceOwnerType, UserRole } from '@zipper/types';
 import { Resend } from 'resend';
 import { MagicLinkEmail } from 'emails';
@@ -49,12 +48,28 @@ export function PrismaAdapter(p: PrismaClient): Adapter {
         });
 
         if (allowListIdentifier && allowListIdentifier.defaultOrganizationId) {
-          await p.organizationMembership.create({
-            data: {
+          const existingMemberCount = await p.organizationMembership.count({
+            where: {
+              organizationId: allowListIdentifier?.defaultOrganizationId,
+            },
+          });
+
+          const role =
+            existingMemberCount === 0 ? UserRole.Admin : UserRole.Member;
+
+          await p.organizationMembership.upsert({
+            where: {
+              organizationId_userId: {
+                organizationId: allowListIdentifier.defaultOrganizationId,
+                userId: user.id,
+              },
+            },
+            create: {
               organizationId: allowListIdentifier.defaultOrganizationId,
               userId: user.id,
-              role: UserRole.Member,
+              role,
             },
+            update: {},
           });
         }
       }
@@ -335,6 +350,29 @@ export const authOptions: AuthOptions = {
     signIn: '/auth/signin',
     error: '/auth/signin',
     verifyRequest: '/auth/verify-request',
+  },
+  events: {
+    async signIn({ user }) {
+      const pending = await prisma.pendingAppEditor.findMany({
+        where: {
+          email: user.email!,
+        },
+      });
+
+      await prisma.pendingAppEditor.deleteMany({
+        where: {
+          email: user.email!,
+        },
+      });
+
+      await prisma.appEditor.createMany({
+        data: pending.map((pendingAppEditor) => ({
+          appId: pendingAppEditor.appId,
+          isOwner: pendingAppEditor.isOwner,
+          userId: user.id,
+        })),
+      });
+    },
   },
 };
 
