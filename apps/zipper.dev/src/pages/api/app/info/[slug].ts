@@ -197,13 +197,13 @@ that to find the hashed secret. We compare the hashed secret with a hash
 of the third part of the token.
 */
 
-type UserInfoReturnType = {
+export type UserInfoReturnType = {
   email?: string;
   userId?: string;
   organizations?: SessionOrganizationMembership[];
 };
 
-async function getUserInfo(
+export async function getUserInfo(
   token: string,
   appSlug: string,
 ): Promise<UserInfoReturnType> {
