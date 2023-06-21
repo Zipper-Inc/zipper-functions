@@ -273,10 +273,24 @@ export function AppPage({
     );
   };
 
+  const [runUrl, setRunUrl] = useState('');
+  useEffect(() => {
+    if (typeof window !== 'undefined') setRunUrl(window.location.href);
+  }, []);
+
+  const imagePreviewUrl = `${runUrl}.png`;
+
   return (
     <>
       <Head>
         <title>{appTitle}</title>
+        <meta name="description" content="The Description" />
+        <meta property="og:title" content={appTitle} />
+        <meta property="og:description" content="The Description" />
+        <meta property="og:site_name" content="Zipper" />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={runUrl} />
+        <meta property="og:image" content={imagePreviewUrl} />
       </Head>
       <VStack flex={1} alignItems="stretch" spacing={14}>
         <Header
