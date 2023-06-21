@@ -22,14 +22,20 @@ import {
   InputRightElement,
   Text,
   VStack,
+  Tooltip,
 } from '@chakra-ui/react';
 
 import NextLink from 'next/link';
-import { CheckIcon, LockIcon, UnlockIcon } from '@chakra-ui/icons';
+import { CheckIcon } from '@chakra-ui/icons';
 import React, { useEffect, useState } from 'react';
-import ForkIcon from '~/components/svg/forkIcon';
 import { ZipperLogo, ZipperSymbol } from '@zipper/ui';
-import { HiOutlineUpload, HiPencilAlt } from 'react-icons/hi';
+import {
+  HiOutlineUpload,
+  HiPencilAlt,
+  HiLockOpen,
+  HiLockClosed,
+} from 'react-icons/hi';
+import { CgGitFork } from 'react-icons/cg';
 import { AppQueryOutput } from '~/types/trpc';
 import { EditAppSlugForm } from './edit-app-slug-form';
 import { useAppEditors } from '~/hooks/use-app-editors';
@@ -72,6 +78,9 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
     }
   }, [router.isReady]);
 
+  const parentApp = trpc.useQuery(['app.byId', { id: app.parentId! }], {
+    enabled: !!app.parentId,
+  });
   const { organization } = useOrganization();
   const { setActive } = useOrganizationList();
   const forkApp = trpc.useMutation('app.fork', {
@@ -163,19 +172,21 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
           </Heading>
 
           <HStack spacing={2} alignItems="center" minW={0}>
-            <Box>
-              {app.isPrivate ? (
-                <Icon as={LockIcon} color={'gray.500'} boxSize={4} mb={1} />
-              ) : (
-                <Icon as={UnlockIcon} color={'gray.400'} boxSize={4} mb={1} />
-              )}
-            </Box>
-            {app.parentId && (
-              <Box>
+            {app.isPrivate ? (
+              <HiLockClosed color="gray.500" />
+            ) : (
+              <HiLockOpen color="gray.400" />
+            )}
+            {app.parentId && parentApp.data && (
+              <Tooltip
+                label={`Forked from ${
+                  parentApp.data.name || parentApp.data.slug
+                }`}
+              >
                 <Link href={`/app/${app.parentId}/edit`} target="_blank">
-                  <Icon as={ForkIcon} color={'gray.400'} size={16} />
+                  <CgGitFork />
                 </Link>
-              </Box>
+              </Tooltip>
             )}
           </HStack>
           {editSlug ? (
@@ -206,10 +217,33 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
         </HStack>
       </HStack>
       <HStack justifyContent="end">
+        {isLoaded && (
+          <Button
+            colorScheme="purple"
+            variant="ghost"
+            display="flex"
+            gap={2}
+            fontWeight="medium"
+            onClick={() => {
+              if (user) {
+                onOpen();
+              } else {
+                router.push(
+                  `/sign-in?redirect=${window.location.pathname}?fork=1`,
+                );
+              }
+            }}
+          >
+            <CgGitFork />
+            Fork
+          </Button>
+        )}
         {!user && (
           <Button
-            variant="link"
             colorScheme="purple"
+            display="flex"
+            gap={2}
+            fontWeight="medium"
             mr="3"
             onClick={() => {
               router.push(
@@ -236,25 +270,6 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
           </Button>
           {/* <UserButton afterSignOutUrl="/" /> */}
         </SignedIn>
-        {!app.canUserEdit && isLoaded && (
-          <Button
-            type="button"
-            paddingX={6}
-            variant="outline"
-            colorScheme="purple"
-            onClick={() => {
-              if (user) {
-                onOpen();
-              } else {
-                router.push(
-                  `/sign-in?redirect=${window.location.pathname}?fork=1`,
-                );
-              }
-            }}
-          >
-            Fork
-          </Button>
-        )}
       </HStack>
       <ShareModal
         isOpen={isShareModalOpen}

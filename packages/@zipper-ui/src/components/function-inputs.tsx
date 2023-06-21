@@ -77,7 +77,7 @@ function FunctionParamInput({
     formFieldOptions.valueAsDate = true;
   }
 
-    const formProps = register(name, formFieldOptions);
+  const formProps = register(name, formFieldOptions);
 
   switch (type) {
     case InputType.boolean: {
@@ -137,11 +137,15 @@ function FunctionParamInput({
           {...formProps}
           placeholder={placeholder}
         >
-          {details.values.map((value: any, index: number) => (
-            <option key={index} value={value}>
-              {value}
-            </option>
-          ))}
+          {details.values.map((value: any, index: number) => {
+            const optionLabel = typeof value === 'object' ? value.key : value;
+            const optionValue = typeof value === 'object' ? value.value : value;
+            return (
+              <option key={index} value={optionValue}>
+                {optionLabel}
+              </option>
+            );
+          })}
         </Select>
       );
     }

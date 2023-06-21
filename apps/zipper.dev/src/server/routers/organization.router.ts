@@ -7,8 +7,9 @@ import crypto from 'crypto';
 import { createRouter } from '../createRouter';
 import denyList from '../utils/slugDenyList';
 import slugify from '~/utils/slugify';
+import { OMNI_USER_ID } from '../utils/omni.utils';
 import { Resend } from 'resend';
-import { OrgInvitationEmail } from 'emails';
+import { OrgInvitationEmail } from '~/../emails';
 
 export const resend = new Resend(process.env.RESEND_API_KEY!);
 
@@ -69,16 +70,22 @@ export const organizationRouter = createRouter()
           code: 'INTERNAL_SERVER_ERROR',
         });
 
+      // Only OMNI can create orgs without adding itself as admin
+      const organizationMemberships =
+        ctx.userId === OMNI_USER_ID
+          ? undefined
+          : {
+              create: {
+                userId: ctx.userId,
+                role: UserRole.Admin,
+              },
+            };
+
       const org = await prisma.organization.create({
         data: {
           name: input.name,
           slug,
-          organizationMemberships: {
-            create: {
-              userId: ctx.userId,
-              role: UserRole.Admin,
-            },
-          },
+          organizationMemberships,
         },
       });
 
