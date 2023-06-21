@@ -15,12 +15,13 @@ import {
   ModalContent,
   ModalOverlay,
 } from '@chakra-ui/react';
-import { useOrganizationList, useUser } from '@clerk/nextjs';
 import { ResourceOwnerSlug } from '@prisma/client';
 import { ResourceOwnerType } from '@zipper/types';
 import { useSession } from 'next-auth/react';
 import React, { useEffect, useState } from 'react';
 import { HiCog, HiPlus } from 'react-icons/hi';
+import { useOrganizationList } from '~/hooks/use-organization-list';
+import { useUser } from '~/hooks/use-user';
 import { GalleryAppQueryOutput } from '~/pages';
 import { trpc } from '~/utils/trpc';
 import { CreateAppForm } from '../dashboard/create-app-form';
@@ -115,13 +116,12 @@ export function Gallery({
                     isDisabled={isNavigating}
                     p="4"
                     onClick={async () => {
-                      await setActive({
-                        organization:
-                          resourceOwner?.resourceOwnerType ===
+                      await setActive(
+                        resourceOwner?.resourceOwnerType ===
                           ResourceOwnerType.Organization
-                            ? resourceOwner?.resourceOwnerId
-                            : null,
-                      });
+                          ? resourceOwner?.resourceOwnerId
+                          : null,
+                      );
                       onOpen();
                     }}
                   >
@@ -136,13 +136,12 @@ export function Gallery({
                     p="4"
                     onClick={async () => {
                       setIsNavigating(true);
-                      await setActive({
-                        organization:
-                          resourceOwner?.resourceOwnerType ===
+                      await setActive(
+                        resourceOwner?.resourceOwnerType ===
                           ResourceOwnerType.Organization
-                            ? resourceOwner?.resourceOwnerId
-                            : null,
-                      });
+                          ? resourceOwner?.resourceOwnerId
+                          : null,
+                      );
                       setIsNavigating(false);
                       window.location.replace('../dashboard');
                     }}

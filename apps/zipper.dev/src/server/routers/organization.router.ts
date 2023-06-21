@@ -8,10 +8,7 @@ import { createRouter } from '../createRouter';
 import denyList from '../utils/slugDenyList';
 import slugify from '~/utils/slugify';
 import { OMNI_USER_ID } from '../utils/omni.utils';
-import { Resend } from 'resend';
-import { OrgInvitationEmail } from '~/../emails';
-
-export const resend = new Resend(process.env.RESEND_API_KEY!);
+import { sendInvitationEmail } from '../utils/invitation.utils';
 
 export const organizationRouter = createRouter()
   .query('getMemberships', {
@@ -247,35 +244,11 @@ export const organizationRouter = createRouter()
       });
 
       if (invite && org) {
-        const token = crypto.randomBytes(16).toString('hex');
-
-        const hash = crypto
-          .createHash('sha256')
-          // Prefer provider specific secret, but use default secret if none specified
-          .update(`${token}${process.env.NEXTAUTH_SECRET}`)
-          .digest('hex');
-
-        await prisma.verificationToken.create({
-          data: {
-            token: hash,
-            identifier: input.email,
-            expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
-          },
-        });
-        await resend.emails.send({
-          to: input.email,
-          from: 'noreply@zipper.dev',
-          subject: `You've been invited to join ${org.name} on Zipper`,
-          react: OrgInvitationEmail({
-            loginUrl: `${
-              process.env.NEXT_PUBLIC_ZIPPER_DOT_DEV_URL
-            }/api/auth/callback/email?${new URLSearchParams({
-              token: token,
-              email: input.email,
-              callbackUrl: `${process.env.NEXT_PUBLIC_ZIPPER_DOT_DEV_URL}/auth/accept-invitation/${invite.token}`,
-            })}`,
-            organizationName: org.name,
-          }),
+        const callbackUrl = `${process.env.NEXT_PUBLIC_ZIPPER_DOT_DEV_URL}/auth/accept-invitation/${invite.token}`;
+        sendInvitationEmail({
+          email: input.email,
+          callbackUrl,
+          resourceToJoinName: org.name,
         });
       }
 

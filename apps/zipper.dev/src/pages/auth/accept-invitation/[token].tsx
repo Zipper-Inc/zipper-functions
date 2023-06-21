@@ -1,4 +1,3 @@
-import { useOrganizationList } from '@clerk/nextjs';
 import { useEffectOnce } from '@zipper/ui';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';

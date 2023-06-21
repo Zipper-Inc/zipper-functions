@@ -24,7 +24,6 @@ import { useRouter } from 'next/router';
 import NextLink from 'next/link';
 
 import { ZipperLogo } from '@zipper/ui';
-import { UserButton } from '@clerk/nextjs';
 import OrganizationSwitcher from './auth/organizationSwitcher';
 import { MobileMenu } from './header-mobile-menu';
 import { ZipperSymbol } from '@zipper/ui';
@@ -207,7 +206,7 @@ const Header: React.FC<HeaderProps> = ({
               <SignedIn>
                 {user?.username}
                 <Link href="/api/auth/signout">Sign out</Link>
-                <UserButton afterSignOutUrl="/" />
+                {/* <UserButton afterSignOutUrl="/" /> */}
               </SignedIn>
               <SignedOut>
                 <SignInButton />

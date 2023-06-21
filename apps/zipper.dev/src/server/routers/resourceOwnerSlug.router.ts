@@ -5,9 +5,6 @@ import { prisma } from '~/server/prisma';
 import { createRouter } from '../createRouter';
 import denyList from '../utils/slugDenyList';
 import { ResourceOwnerType } from '@zipper/types';
-import clerkClient from '@clerk/clerk-sdk-node';
-import slugify from '~/utils/slugify';
-import * as Sentry from '@sentry/nextjs';
 
 const defaultSelect = Prisma.validator<Prisma.ResourceOwnerSlugSelect>()({
   slug: true,

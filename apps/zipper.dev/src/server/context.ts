@@ -1,13 +1,16 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { RequestLike } from '@clerk/nextjs/dist/server/types';
 import { captureException } from '@sentry/nextjs';
 import * as trpc from '@trpc/server';
 import { ServerResponse } from 'http';
-import { NextApiResponse } from 'next';
-import { getServerSession } from 'next-auth';
+import {
+  GetServerSidePropsContext,
+  NextApiRequest,
+  NextApiResponse,
+} from 'next';
 import { getToken } from 'next-auth/jwt';
-import { getSession } from 'next-auth/react';
-import { authOptions } from '~/pages/api/auth/[...nextauth]';
+
+type RequestLike = GetServerSidePropsContext['req'] | NextApiRequest;
+type ResponseLike = NextApiResponse | ServerResponse;
 
 /**
  * Inner function for `createContext` where we create the context.
@@ -33,7 +36,7 @@ export const createContextInner = ({
  */
 export async function createContext(opts: {
   req: RequestLike;
-  res: NextApiResponse | ServerResponse;
+  res: ResponseLike;
 }) {
   const getAuthAndCreateContext = async () => {
     const token = await getToken({ req: opts.req });

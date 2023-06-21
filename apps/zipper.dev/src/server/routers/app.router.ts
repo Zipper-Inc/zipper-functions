@@ -30,7 +30,6 @@ import { randomUUID } from 'crypto';
 import fetch from 'node-fetch';
 import isCodeRunnable from '~/utils/is-code-runnable';
 import { generateAccessToken } from '~/utils/jwt-utils';
-import { getAuth } from '@clerk/nextjs/server';
 import { getToken } from 'next-auth/jwt';
 
 const defaultSelect = Prisma.validator<Prisma.AppSelect>()({
