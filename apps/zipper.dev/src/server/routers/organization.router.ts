@@ -9,7 +9,7 @@ import denyList from '../utils/slugDenyList';
 import slugify from '~/utils/slugify';
 import { OMNI_USER_ID } from '../utils/omni.utils';
 import { Resend } from 'resend';
-import { OrgInvitationEmail } from 'emails';
+import { OrgInvitationEmail } from '~/../emails';
 
 export const resend = new Resend(process.env.RESEND_API_KEY!);
 
