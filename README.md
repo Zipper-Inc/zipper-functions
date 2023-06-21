@@ -82,7 +82,7 @@ cp .env.example .env.local
 ```
 docker-compose up
 ```
-7. Run `yarn onboard` to install dependencies, set up the env files, and get your databae migrated and seeded
+7. Run `yarn onboard` to install dependencies, set up the env files, and get your database migrated and seeded
 ```
 yarn onboard
 ```
