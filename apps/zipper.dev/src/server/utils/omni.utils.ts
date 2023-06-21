@@ -138,7 +138,7 @@ export const methodNeedsBody = (method: unknown) =>
 /** Wraps an omni handler with auth and stuff */
 export const createOmniApiHandler =
   (handler: OmniHandler): NextApiHandler =>
-  (req, res) => {
+  async (req, res) => {
     try {
       // Assert existance of body if trying to make an update
       if (methodNeedsBody(req.method) && !req.body) {
@@ -150,7 +150,7 @@ export const createOmniApiHandler =
       }
 
       req.body = req.body && safeJSONParse(req.body, undefined, req.body);
-      return handler(req, res);
+      return await handler(req, res);
     } catch (e) {
       return internalServerError({ req, res, e });
     }
