@@ -46,6 +46,20 @@ export const userRouter = createProtectedRouter()
       });
     },
   })
+  .query('getAccounts', {
+    async resolve({ ctx }) {
+      if (!ctx.userId) throw new TRPCError({ code: 'UNAUTHORIZED' });
+      return prisma.account.findMany({
+        where: {
+          id: ctx.userId,
+        },
+        select: {
+          provider: true,
+          providerAccountId: true,
+        },
+      });
+    },
+  })
   .mutation('addZipperAuthCode', {
     async resolve({ ctx }) {
       if (!ctx.userId) throw new TRPCError({ code: 'UNAUTHORIZED' });
