@@ -122,29 +122,24 @@ export const appEditorRouter = createRouter()
         },
         select: { email: true },
       });
-
       let users: {
         id: string;
-        fullName: string | null;
-        primaryEmailAddress: string | undefined;
-        profileImageUrl: string;
-      }[] = [];
+        name: string | null;
+        email: string;
+        image: string | null;
+      }[];
       if (input.includeUsers) {
-        const clerkUsers = await clerk.users.getUserList({
-          userId: appEditors.map((appEditor) => appEditor.userId),
+        users = await prisma.user.findMany({
+          where: {
+            id: { in: appEditors.map((appEditor) => appEditor.userId) },
+          },
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            image: true,
+          },
         });
-
-        users = clerkUsers.map((clerkUser) => ({
-          id: clerkUser.id,
-          fullName:
-            clerkUser.firstName && clerkUser.lastName
-              ? `${clerkUser.firstName} ${clerkUser.lastName}`
-              : null,
-          primaryEmailAddress: clerkUser.emailAddresses.find(
-            (clerkEmail) => clerkEmail.id === clerkUser.primaryEmailAddressId,
-          )?.emailAddress,
-          profileImageUrl: clerkUser.profileImageUrl,
-        }));
       }
 
       const withUser = appEditors.map((appEditor) => {

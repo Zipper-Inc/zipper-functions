@@ -8,12 +8,12 @@ import { withLiveBlocks } from '~/hocs/withLiveBlocks';
 
 import { Playground } from '~/components/app/playground';
 import { LiveObject } from '@liveblocks/client';
-import { SignedIn } from '@clerk/nextjs';
 import EditorContextProvider from '~/components/context/editor-context';
 import { Box } from '@chakra-ui/react';
 import Head from 'next/head';
 import { GetServerSideProps, GetServerSidePropsContext } from 'next';
 import { getValidSubdomain, removeSubdomains } from '~/utils/subdomains';
+import SignedIn from '~/components/auth/signed-in';
 
 const PlaygroundPage: NextPageWithLayout = () => {
   const { query } = useRouter();

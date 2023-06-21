@@ -9,9 +9,6 @@ import denyList from '../utils/slugDenyList';
 import slugify from '~/utils/slugify';
 import { Resend } from 'resend';
 import { OrgInvitationEmail } from 'emails';
-import { hashToken } from 'next-auth/core/lib/utils';
-import EmailProvider from 'next-auth/providers/email';
-import { authOptions } from '~/pages/api/auth/[...nextauth]';
 
 export const resend = new Resend(process.env.RESEND_API_KEY!);
 
