@@ -8,6 +8,10 @@ import { createRouter } from '../createRouter';
 import denyList from '../utils/slugDenyList';
 import slugify from '~/utils/slugify';
 import { OMNI_USER_ID } from '../utils/omni.utils';
+import { Resend } from 'resend';
+import { OrgInvitationEmail } from 'emails';
+
+export const resend = new Resend(process.env.RESEND_API_KEY!);
 
 export const organizationRouter = createRouter()
   .query('getMemberships', {
@@ -174,7 +178,7 @@ export const organizationRouter = createRouter()
         }
       }
 
-      return prisma.organizationMembership.delete({
+      const orgMem = await prisma.organizationMembership.delete({
         where: {
           organizationId_userId: {
             organizationId: ctx.orgId!,
@@ -182,6 +186,8 @@ export const organizationRouter = createRouter()
           },
         },
       });
+
+      return !!orgMem;
     },
   })
   // revisit using https://uploadthing.com
@@ -204,7 +210,23 @@ export const organizationRouter = createRouter()
         where: {
           email: input.email,
         },
+        include: {
+          organizationMemberships: true,
+        },
       });
+
+      if (existingUser) {
+        const existingMembership = existingUser.organizationMemberships.find(
+          (m) => m.organizationId === ctx.orgId,
+        );
+
+        if (existingMembership) {
+          throw new trpc.TRPCError({
+            code: 'BAD_REQUEST',
+            message: 'User is already a member of this organization',
+          });
+        }
+      }
 
       const signInOrSignUp = existingUser ? 'signin' : 'signup';
 
@@ -218,8 +240,150 @@ export const organizationRouter = createRouter()
         },
       });
 
-      // await sendEmail({})
+      const org = await prisma.organization.findUnique({
+        where: {
+          id: ctx.orgId!,
+        },
+      });
+
+      if (invite && org) {
+        const token = crypto.randomBytes(16).toString('hex');
+
+        const hash = crypto
+          .createHash('sha256')
+          // Prefer provider specific secret, but use default secret if none specified
+          .update(`${token}${process.env.NEXTAUTH_SECRET}`)
+          .digest('hex');
+
+        await prisma.verificationToken.create({
+          data: {
+            token: hash,
+            identifier: input.email,
+            expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
+          },
+        });
+        await resend.emails.send({
+          to: input.email,
+          from: 'noreply@zipper.dev',
+          subject: `You've been invited to join ${org.name} on Zipper`,
+          react: OrgInvitationEmail({
+            loginUrl: `${
+              process.env.NEXT_PUBLIC_ZIPPER_DOT_DEV_URL
+            }/api/auth/callback/email?${new URLSearchParams({
+              token: token,
+              email: input.email,
+              callbackUrl: `${process.env.NEXT_PUBLIC_ZIPPER_DOT_DEV_URL}/auth/accept-invitation/${invite.token}`,
+            })}`,
+            organizationName: org.name,
+          }),
+        });
+      }
 
       return invite;
+    },
+  })
+  .mutation('revokeInvitation', {
+    input: z.object({
+      email: z.string().email(),
+    }),
+    async resolve({ input, ctx }) {
+      if (!hasOrgAdminPermission(ctx))
+        throw new trpc.TRPCError({ code: 'UNAUTHORIZED' });
+
+      try {
+        const invite = await prisma.organizationInvitation.delete({
+          where: {
+            organizationId_email: {
+              organizationId: ctx.orgId!,
+              email: input.email,
+            },
+          },
+        });
+        return !!invite;
+      } catch (e) {
+        throw new trpc.TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Invitation not found',
+        });
+      }
+    },
+  })
+  .mutation('acceptInvitation', {
+    input: z.object({
+      token: z.string().optional(),
+      organizationId: z.string().optional(),
+    }),
+    async resolve({ input, ctx }) {
+      if (!input.token && !input.organizationId)
+        throw new trpc.TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Must provide either token or organizationId',
+        });
+      if (!ctx.userId) throw new trpc.TRPCError({ code: 'UNAUTHORIZED' });
+
+      const user = await prisma.user.findUnique({
+        where: {
+          id: ctx.userId,
+        },
+        select: {
+          email: true,
+        },
+      });
+
+      const invite = await prisma.organizationInvitation.findFirst({
+        where: {
+          OR: [
+            {
+              token: input.token,
+              email: user?.email,
+            },
+
+            {
+              organizationId: input.organizationId,
+              email: user?.email,
+            },
+          ],
+        },
+      });
+
+      if (!invite) {
+        throw new trpc.TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Invitation not found',
+        });
+      }
+
+      const existingMembership = await prisma.organizationMembership.findFirst({
+        where: {
+          organizationId: invite.organizationId,
+          userId: ctx.userId,
+        },
+      });
+
+      if (existingMembership) {
+        throw new trpc.TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'User is already a member of this organization',
+        });
+      }
+
+      await prisma.organizationMembership.create({
+        data: {
+          organizationId: invite.organizationId,
+          userId: ctx.userId,
+          role: invite.role,
+        },
+      });
+
+      await prisma.organizationInvitation.delete({
+        where: {
+          organizationId_email: {
+            organizationId: invite.organizationId,
+            email: invite.email,
+          },
+        },
+      });
+
+      return invite.organizationId;
     },
   });

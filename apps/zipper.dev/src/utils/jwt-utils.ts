@@ -1,5 +1,7 @@
-import { OrganizationMembership, User } from '@clerk/clerk-sdk-node';
-import { JwtPayload, sign, verify } from 'jsonwebtoken';
+import { OrganizationMembership, User } from '@prisma/client';
+import { Jwt, JwtPayload, sign, verify } from 'jsonwebtoken';
+import { JWT } from 'next-auth/jwt';
+import { SessionOrganizationMembership } from '~/pages/api/auth/[...nextauth]';
 
 const JWT_ACCESS_TOKEN_EXPIRY = '15m';
 const JWT_REFRESH_TOKEN_EXPIRY = '7d';
@@ -9,20 +11,12 @@ export const generateAccessToken = (
     userId,
     profile,
     orgMemberships,
-    sessionClaims,
+    authToken,
   }: {
     userId: string;
-    profile?: Pick<
-      User,
-      | 'firstName'
-      | 'lastName'
-      | 'emailAddresses'
-      | 'primaryEmailAddressId'
-      | 'profileImageUrl'
-      | 'username'
-    >;
-    sessionClaims?: JwtPayload | null;
-    orgMemberships?: OrganizationMembership[];
+    profile?: Pick<User, 'name' | 'email' | 'image' | 'slug'>;
+    orgMemberships?: SessionOrganizationMembership[];
+    authToken?: JWT | null;
   },
   options?: { expiresIn?: string },
 ) => {
@@ -32,27 +26,22 @@ export const generateAccessToken = (
 
   if (profile) {
     console.log('profile', profile);
-    payload.firstName = profile.firstName;
-    payload.lastName = profile.lastName;
-    payload.primaryEmail = profile.emailAddresses.find((e) => {
-      return e.id === profile.primaryEmailAddressId;
-    })?.emailAddress;
-    payload.imageUrl = profile.profileImageUrl;
-    payload.username = profile.username;
+    payload.name = profile.name;
+    payload.email = profile.email;
+    payload.image = profile.image;
+    payload.username = profile.slug;
   }
 
-  if (sessionClaims) {
-    payload.firstName = sessionClaims.first_name as string;
-    payload.lastName = sessionClaims.last_name as string;
-    payload.primaryEmail = sessionClaims.primary_email_address as string;
-    payload.imageUrl = sessionClaims.image_url as string;
-    payload.username = sessionClaims.username as string;
+  if (authToken) {
+    payload.email = authToken.email!;
+    payload.image = authToken.picture || null;
+    payload.name = authToken.name || null;
+    payload.username = authToken.slug!;
+    payload.organizations = authToken.organizationMemberhips;
   }
 
   if (orgMemberships) {
-    payload.organizations = orgMemberships.map((om) => {
-      return { [om.organization.id]: om.role };
-    });
+    payload.organizations = orgMemberships;
   }
 
   return sign(payload, process.env.JWT_SIGNING_SECRET!, {

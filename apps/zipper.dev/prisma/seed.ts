@@ -3,39 +3,56 @@
  *
  * @link https://www.prisma.io/docs/guides/database/seed-database
  */
-import clerkClient from '@clerk/clerk-sdk-node';
-import { Prisma, PrismaClient } from '@prisma/client';
-import { ResourceOwnerType } from '@zipper/types';
+import { PrismaClient } from '@prisma/client';
 import { generateSlug } from 'random-word-slugs';
-import slugify from 'slugify';
+import crypto from 'crypto';
 
 const prisma = new PrismaClient();
 
 async function main() {
-  const id = '5c03994c-fc16-47e0-bd02-d218a370a078';
-  const mainScriptId = '1b39a70c-c37c-4167-9429-9d9196a710fd';
-  const otherScriptId = '66b731b0-04e8-454c-8988-b2385d9d3a64';
-  const resourceOwnerId = '587056a8-90f0-4b0f-ab35-99a071a4d6f5';
+  const defaultOrgId = crypto.randomUUID();
+  const readOnlyOrgId = crypto.randomUUID();
+  const readOnlySlug = generateSlug(2, { format: 'kebab' }).toLowerCase();
+  const mainScriptId = crypto.randomUUID();
+  const mainScriptId2 = crypto.randomUUID();
 
-  await prisma.resourceOwnerSlug.create({
-    data: {
-      slug: generateSlug(2, { format: 'kebab' }).toLowerCase(),
-      resourceOwnerId,
-      resourceOwnerType: 0,
-    },
+  await prisma.organization.createMany({
+    data: [
+      {
+        id: defaultOrgId,
+        name: 'Zipper',
+        slug: 'zipper',
+      },
+      {
+        id: readOnlyOrgId,
+        name: readOnlySlug,
+        slug: readOnlySlug,
+      },
+    ],
   });
 
-  await prisma.app.upsert({
-    where: {
-      id,
-    },
-    create: {
-      id,
-      slug: 'zoom-meeting-notes',
-      description:
-        'Post meeting notes to Slack in multiple languages using Google Cloud Functions',
+  await prisma.resourceOwnerSlug.createMany({
+    data: [
+      {
+        slug: 'zipper',
+        resourceOwnerId: defaultOrgId,
+        resourceOwnerType: 0,
+      },
+
+      {
+        slug: readOnlySlug,
+        resourceOwnerId: readOnlyOrgId,
+        resourceOwnerType: 0,
+      },
+    ],
+  });
+
+  await prisma.app.create({
+    data: {
+      slug: 'word-counter',
+      description: 'Counts words in a text. This is a demo app for Zipper.',
       isPrivate: false,
-      organizationId: resourceOwnerId,
+      organizationId: defaultOrgId,
       submissionState: 3,
       scripts: {
         createMany: {
@@ -45,25 +62,20 @@ async function main() {
               name: 'main',
               filename: 'main.ts',
               description: 'entry point for the app',
-              code: `import { joinMeeting } from './join-the-current-meeting.ts';
-              export default async function main() {
-                if (joinMeeting()) {
-                  return 'Joined the meeting';
-                }
-              }
-              `,
+              code: `import { countWords } from './count-words.ts';
+
+export async function handler({ text }: { text: string }) {
+  return countWords(text);
+}`,
               order: 0,
             },
             {
-              id: otherScriptId,
-              name: 'Join the current meeting',
-              filename: 'join-the-current-meeting.ts',
-              description:
-                'Looks at a users meetings and joins the current or upcoming one',
-              code: `export const joinMeeting = () => {
-                console.log("Joining the meeting");
-                return true;
-              };`,
+              name: 'count-words',
+              filename: 'count-words.ts',
+              code: `export const countWords = (text: string) => {
+  console.log("Counting the words...");
+  return text.split(" ").length;
+};`,
               order: 1,
             },
           ],
@@ -73,37 +85,42 @@ async function main() {
         create: { script: { connect: { id: mainScriptId } } },
       },
     },
-    update: {},
   });
 
-  const clerkUsers = await clerkClient.users.getUserList();
-  const clerkOrgs = await clerkClient.organizations.getOrganizationList();
+  await prisma.app.create({
+    data: {
+      slug: 'ai-word-counter',
+      description: 'Counts words using AI.',
+      isPrivate: false,
+      organizationId: readOnlyOrgId,
+      submissionState: 3,
+      scripts: {
+        createMany: {
+          data: [
+            {
+              id: mainScriptId2,
+              name: 'main',
+              filename: 'main.ts',
+              description: 'entry point for the app',
+              code: `export async function handler({ text }: { text: string }) {
+  return Math.floor(Math.random() * 100);
+}`,
+              order: 0,
+            },
+          ],
+        },
+      },
+      scriptMain: {
+        create: { script: { connect: { id: mainScriptId2 } } },
+      },
+    },
+  });
 
-  const userSlugData: Prisma.ResourceOwnerSlugCreateInput[] = clerkUsers.map(
-    (user) => ({
-      resourceOwnerId: user.id,
-      resourceOwnerType: ResourceOwnerType.User,
-      slug:
-        (user.publicMetadata.username as string) ||
-        user.username ||
-        `${user.firstName}-${user.lastName}-${Math.floor(Math.random() * 100)}`,
-    }),
-  );
-
-  const orgSlugData: Prisma.ResourceOwnerSlugCreateInput[] = clerkOrgs.map(
-    (org) => ({
-      resourceOwnerId: org.id,
-      resourceOwnerType: ResourceOwnerType.Organization,
-      slug: slugify(org.name, {
-        lower: true,
-        remove: /[*+~.()'"!:@]/g,
-      }),
-    }),
-  );
-
-  await prisma.resourceOwnerSlug.createMany({
-    data: [...userSlugData, ...orgSlugData],
-    skipDuplicates: true,
+  await prisma.allowListIdentifier.create({
+    data: {
+      value: 'zipper.works',
+      defaultOrganizationId: defaultOrgId,
+    },
   });
 }
 

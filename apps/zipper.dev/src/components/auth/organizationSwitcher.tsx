@@ -11,6 +11,7 @@ import {
   VStack,
   useDisclosure,
   ButtonProps,
+  Badge,
 } from '@chakra-ui/react';
 import { HiOutlineChevronUpDown, HiPlus } from 'react-icons/hi2';
 import { HiEye, HiSwitchHorizontal } from 'react-icons/hi';
@@ -20,12 +21,18 @@ import { useRouter } from 'next/router';
 import { useOrganizationList } from '~/hooks/use-organization-list';
 import { useUser } from '~/hooks/use-user';
 import { useOrganization } from '~/hooks/use-organization';
+import { trpc } from '~/utils/trpc';
+import { useSession } from 'next-auth/react';
 
 export const OrganizationSwitcher: React.FC<ButtonProps> = (props) => {
   // get the authed user's organizations from Clerk
   const { setActive, organizationList, isLoaded, currentOrganizationId } =
     useOrganizationList();
   const { organization, role } = useOrganization();
+
+  const session = useSession();
+
+  const acceptInvitation = trpc.useMutation('organization.acceptInvitation');
 
   const { user } = useUser();
 
@@ -34,7 +41,14 @@ export const OrganizationSwitcher: React.FC<ButtonProps> = (props) => {
   );
 
   const allWorkspaces = [
-    { organization: { id: null, name: 'Personal Workspace' } },
+    {
+      organization: {
+        id: null,
+        name: 'Personal Workspace',
+        slug: user?.username,
+      },
+      pending: false,
+    },
     ...(organizationList || []),
   ];
 
@@ -119,8 +133,12 @@ export const OrganizationSwitcher: React.FC<ButtonProps> = (props) => {
             return (
               <MenuItem
                 key={org.organization.id}
-                onClick={() => {
-                  setActive && setActive(org.organization.id);
+                onClick={async () => {
+                  if (org.pending) {
+                    router.push(`/${org.organization.slug}`);
+                  } else {
+                    setActive && setActive(org.organization.id);
+                  }
                 }}
                 backgroundColor="gray.50"
                 px="4"
@@ -137,13 +155,29 @@ export const OrganizationSwitcher: React.FC<ButtonProps> = (props) => {
                     >
                       {org.organization.name}
                     </Text>
-                    <Icon
-                      as={HiSwitchHorizontal}
-                      color={'gray.400'}
-                      visibility={
-                        hoverOrg === org.organization.id ? 'visible' : 'hidden'
-                      }
-                    ></Icon>
+                    {org.pending ? (
+                      <Badge
+                        size="xs"
+                        textTransform="capitalize"
+                        px="2"
+                        py="1"
+                        fontWeight="semibold"
+                        variant="outline"
+                        borderRadius="md"
+                      >
+                        Invited
+                      </Badge>
+                    ) : (
+                      <Icon
+                        as={HiSwitchHorizontal}
+                        color={'gray.400'}
+                        visibility={
+                          hoverOrg === org.organization.id
+                            ? 'visible'
+                            : 'hidden'
+                        }
+                      ></Icon>
+                    )}
                   </HStack>
                 </Box>
               </MenuItem>

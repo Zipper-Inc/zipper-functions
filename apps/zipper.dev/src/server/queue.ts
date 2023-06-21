@@ -39,12 +39,16 @@ const initializeWorkers = () => {
 
           let token: undefined | string = undefined;
           if (schedule.userId) {
-            const user = await clerkClient.users.getUser(schedule.userId);
+            const user = await prisma.user.findUnique({
+              where: { id: schedule.userId },
+            });
 
-            token = generateAccessToken(
-              { userId: schedule.userId, profile: user },
-              { expiresIn: '30s' },
-            );
+            if (user) {
+              token = generateAccessToken(
+                { userId: schedule.userId, profile: user },
+                { expiresIn: '30s' },
+              );
+            }
           }
 
           /**

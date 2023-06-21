@@ -1,7 +1,6 @@
 import { decryptFromHex } from '@zipper/utils';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '~/server/prisma';
-import clerkClient from '@clerk/clerk-sdk-node';
 import { generateAccessToken, generateRefreshToken } from '~/utils/jwt-utils';
 
 export default async function handler(
@@ -26,15 +25,30 @@ export default async function handler(
       },
     });
 
-    const user = await clerkClient.users.getUser(zipperAuthCode.userId);
-    const orgMems = await clerkClient.users.getOrganizationMembershipList({
-      userId: zipperAuthCode.userId,
+    const user = await prisma.user.findUniqueOrThrow({
+      where: { id: zipperAuthCode.userId },
+      include: {
+        organizationMemberships: {
+          include: {
+            organization: true,
+          },
+        },
+      },
     });
 
     const accessToken = generateAccessToken({
       userId: zipperAuthCode.userId,
       profile: user,
-      orgMemberships: orgMems,
+      orgMemberships: user.organizationMemberships.map((mem) => ({
+        organizationId: mem.organizationId,
+        organization: {
+          name: mem.organization.name,
+          id: mem.organization.id,
+          slug: mem.organization.slug,
+        },
+        pending: false,
+        role: mem.role,
+      })),
     });
 
     const refreshToken = generateRefreshToken(zipperAuthCode.userId);

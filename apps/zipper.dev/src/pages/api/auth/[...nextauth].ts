@@ -6,53 +6,31 @@ import NextAuth, {
 } from 'next-auth';
 import GithubProvider from 'next-auth/providers/github';
 import GoogleProvider from 'next-auth/providers/google';
+import EmailProvider, {
+  SendVerificationRequestParams,
+} from 'next-auth/providers/email';
 import { prisma } from '~/server/prisma';
 import { PrismaClient } from '@prisma/client';
 import { Adapter, AdapterAccount } from 'next-auth/adapters';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime';
-import slugify from '~/utils/slugify';
-import { ResourceOwnerType } from '@zipper/types';
-import crypto from 'crypto';
+import { ResourceOwnerType, UserRole } from '@zipper/types';
+import { Resend } from 'resend';
+import { MagicLinkEmail } from 'emails';
+import fetch from 'node-fetch';
+import { createUserSlug } from '~/utils/create-user-slug';
+
+export const resend = new Resend(process.env.RESEND_API_KEY!);
 
 export function PrismaAdapter(p: PrismaClient): Adapter {
   return {
     createUser: async (data) => {
-      const possibleSlugs: string[] = [];
-      const emailUserPart = data.email.split('@')[0];
-
-      if (emailUserPart && emailUserPart.length >= 3) {
-        possibleSlugs.push(slugify(emailUserPart));
-        possibleSlugs.push(
-          `${slugify(emailUserPart)}-${Math.floor(Math.random() * 100)}`,
-        );
-      }
-      if (data.name) {
-        possibleSlugs.push(slugify(data.name));
-        possibleSlugs.push(
-          `${slugify(data.name)}-${Math.floor(Math.random() * 100)}`,
-        );
-      }
-      possibleSlugs.push(slugify(data.email));
-      possibleSlugs.push(
-        `${slugify(data.email)}-${Math.floor(Math.random() * 100)}`,
-      );
-
-      const existingResourceOwnerSlugs = await p.resourceOwnerSlug.findMany({
-        where: { slug: { in: possibleSlugs } },
-      });
-
-      const existingSlugs = existingResourceOwnerSlugs.map((s) => s.slug);
-
-      const validSlugs = possibleSlugs.filter((s) => {
-        return !existingSlugs.includes(s);
-      });
-
-      const slug = validSlugs[0] || crypto.randomBytes(4).toString('hex');
-
+      const slug = await createUserSlug({ name: data.name, email: data.email });
       const user = await p.user.create({
         data: { ...data, slug },
       });
 
+      // create a resource owner slug for the user - this makes sure that slugs
+      // are unique across all resource owners (users and organizations)
       await p.resourceOwnerSlug.create({
         data: {
           slug,
@@ -60,6 +38,41 @@ export function PrismaAdapter(p: PrismaClient): Adapter {
           resourceOwnerId: user.id,
         },
       });
+
+      // add the user to the default organization if one is set in the allow list
+      // NOTE: this doesn't handle blocking users from signing up - that happens in the signIn callback
+      const domain = data.email.split('@')[1];
+      if (domain) {
+        const allowListIdentifier = await p.allowListIdentifier.findFirst({
+          where: { value: { in: [data.email, domain] } },
+        });
+
+        if (allowListIdentifier && allowListIdentifier.defaultOrganizationId) {
+          const existingMemberCount = await p.organizationMembership.count({
+            where: {
+              organizationId: allowListIdentifier?.defaultOrganizationId,
+            },
+          });
+
+          const role =
+            existingMemberCount === 0 ? UserRole.Admin : UserRole.Member;
+
+          await p.organizationMembership.upsert({
+            where: {
+              organizationId_userId: {
+                organizationId: allowListIdentifier.defaultOrganizationId,
+                userId: user.id,
+              },
+            },
+            create: {
+              organizationId: allowListIdentifier.defaultOrganizationId,
+              userId: user.id,
+              role,
+            },
+            update: {},
+          });
+        }
+      }
 
       return user;
     },
@@ -156,6 +169,39 @@ async function refreshAccessToken(token: TokenSet) {
   }
 }
 
+const getOrganizationMemberships = async (
+  userId?: string,
+  email?: string | null,
+) => {
+  if (!userId) return [];
+  const orgMemberships = await prisma.organizationMembership.findMany({
+    where: { userId },
+    select: {
+      organization: {
+        select: { name: true, id: true, slug: true },
+      },
+      role: true,
+    },
+  });
+
+  const pendingOrgMemberships = email
+    ? await prisma.organizationInvitation.findMany({
+        where: { email },
+        select: {
+          organization: {
+            select: { name: true, id: true, slug: true },
+          },
+          role: true,
+        },
+      })
+    : [];
+
+  return [
+    ...orgMemberships.map((m) => ({ ...m, pending: false })),
+    ...pendingOrgMemberships.map((m) => ({ ...m, pending: true })),
+  ];
+};
+
 export const authOptions: AuthOptions = {
   // Configure one or more authentication providers
   session: {
@@ -163,6 +209,26 @@ export const authOptions: AuthOptions = {
   },
   adapter: PrismaAdapter(prisma),
   providers: [
+    EmailProvider({
+      name: 'Email',
+      server: '',
+      from: 'Zipper Team',
+      sendVerificationRequest: async (
+        params: SendVerificationRequestParams,
+      ) => {
+        try {
+          const { identifier, url } = params;
+          await resend.emails.send({
+            to: identifier,
+            from: 'noreply@zipper.dev',
+            subject: 'Login into Zipper!',
+            react: MagicLinkEmail({ loginUrl: url }),
+          });
+        } catch (error) {
+          console.error(error);
+        }
+      },
+    }),
     GithubProvider({
       clientId: process.env.NEXTAUTH_GITHUB_CLIENT_ID!,
       clientSecret: process.env.NEXTAUTH_GITHUB_CLIENT_SECRET!,
@@ -189,6 +255,20 @@ export const authOptions: AuthOptions = {
     // ...add more providers here
   ],
   callbacks: {
+    async signIn({ user }) {
+      if (process.env.IGNORE_ALLOW_LIST) return true;
+      // every user signing in should have an email address
+      if (!user.email) return false;
+      const emailDomain = user.email.split('@')[1];
+      if (!emailDomain) return false;
+
+      // check if the user is allowed to sign in
+      const allowed = await prisma.allowListIdentifier.findFirst({
+        where: { value: { in: [user.email, emailDomain] } },
+      });
+
+      return !!allowed;
+    },
     async jwt({ token: _token, user, account, trigger, session }) {
       const token = { ..._token };
       // Initial sign in (only time account is not null)
@@ -200,16 +280,9 @@ export const authOptions: AuthOptions = {
           expires_at: account.expires_at,
           refresh_token: account.refresh_token,
           slug: user.slug,
-          organizationMemberships: await prisma.organizationMembership.findMany(
-            {
-              where: { userId: user.id },
-              select: {
-                organization: {
-                  select: { name: true, id: true, slug: true },
-                },
-                role: true,
-              },
-            },
+          organizationMemberships: await getOrganizationMemberships(
+            user.id,
+            user.email,
           ),
         };
       }
@@ -218,16 +291,10 @@ export const authOptions: AuthOptions = {
         console.log('update triggered: ', session);
 
         if (session.updateOrganizationList) {
-          token.organizationMemberships =
-            await prisma.organizationMembership.findMany({
-              where: { userId: token.sub },
-              select: {
-                organization: {
-                  select: { name: true, id: true, slug: true },
-                },
-                role: true,
-              },
-            });
+          token.organizationMemberships = await getOrganizationMemberships(
+            token.sub,
+            token.email,
+          );
         }
 
         if (session.currentOrganizationId === null) {
@@ -279,6 +346,34 @@ export const authOptions: AuthOptions = {
       }
     },
   },
+  pages: {
+    signIn: '/auth/signin',
+    error: '/auth/signin',
+    verifyRequest: '/auth/verify-request',
+  },
+  events: {
+    async signIn({ user }) {
+      const pending = await prisma.pendingAppEditor.findMany({
+        where: {
+          email: user.email!,
+        },
+      });
+
+      await prisma.pendingAppEditor.deleteMany({
+        where: {
+          email: user.email!,
+        },
+      });
+
+      await prisma.appEditor.createMany({
+        data: pending.map((pendingAppEditor) => ({
+          appId: pendingAppEditor.appId,
+          isOwner: pendingAppEditor.isOwner,
+          userId: user.id,
+        })),
+      });
+    },
+  },
 };
 
 export default NextAuth(authOptions);
@@ -319,6 +414,7 @@ declare module 'next-auth/jwt' {
 export interface SessionOrganizationMembership {
   organization: SessionOrganization;
   role: string;
+  pending: boolean;
 }
 
 export interface SessionOrganization {
