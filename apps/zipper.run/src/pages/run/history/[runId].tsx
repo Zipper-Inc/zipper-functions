@@ -53,6 +53,9 @@ export const getServerSideProps: GetServerSideProps = async ({
     host: req.headers.host,
   });
 
+  const proto = process.env.NODE_ENV === 'development' ? 'http' : 'https';
+  const runUrl = `${proto}://${host}${req.url}`;
+
   return {
     props: {
       app,
@@ -68,6 +71,7 @@ export const getServerSideProps: GetServerSideProps = async ({
       githubAuthUrl,
       slackAuthUrl,
       token: req.headers['x-zipper-access-token'] || null,
+      runUrl,
     } as AppPageProps,
   };
 };
