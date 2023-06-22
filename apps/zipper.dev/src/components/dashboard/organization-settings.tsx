@@ -11,8 +11,8 @@ import {
   Box,
   Divider,
 } from '@chakra-ui/react';
-import { useOrganization } from '@clerk/nextjs';
 import { useState, useEffect } from 'react';
+import { useOrganization } from '~/hooks/use-organization';
 import { trpc } from '~/utils/trpc';
 
 function OrganizationSettings() {

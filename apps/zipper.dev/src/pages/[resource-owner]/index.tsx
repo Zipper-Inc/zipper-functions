@@ -12,9 +12,6 @@ import { useRouter } from 'next/router';
 
 const ResourceOwnerPage: NextPageWithLayout = () => {
   const router = useRouter();
-  const [heading, setHeading] = React.useState<string>(
-    router.query['resource-owner'] as string,
-  );
 
   const slug = router.query['resource-owner'] as string;
 
@@ -30,17 +27,6 @@ const ResourceOwnerPage: NextPageWithLayout = () => {
     },
   );
 
-  const clerkQuery = trpc.useQuery([
-    'resourceOwnerSlug.lookupOnClerk',
-    {
-      slug,
-    },
-  ]);
-
-  useEffect(() => {
-    if (clerkQuery.data) setHeading(clerkQuery.data.name as string);
-  }, [clerkQuery.data]);
-
   if (appsByResourceOwnerQuery.error || !appsByResourceOwnerQuery.data) {
     return <NextError statusCode={404} />;
   }
@@ -50,10 +36,6 @@ const ResourceOwnerPage: NextPageWithLayout = () => {
       <>
         <Gallery
           apps={appsByResourceOwnerQuery.data || []}
-          resourceOwnerId={clerkQuery.data?.id}
-          resourceOwnerType={clerkQuery.data?.resourceOwnerType}
-          preheading={heading !== slug ? heading : undefined}
-          heading={slug}
           subheading={'Recent Applets'}
         />
       </>

@@ -33,8 +33,7 @@ import {
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { AppRun } from '@prisma/client';
-import { User } from '@clerk/clerk-sdk-node';
+import { AppRun, User } from '@prisma/client';
 import { JSONViewer } from '../json-editor';
 
 type HistoryTabProps = {
@@ -109,7 +108,7 @@ const HistoryTab: React.FC<HistoryTabProps> = ({ appId }) => {
     //run by
     columnHelper.accessor(
       (row) => {
-        return `${row.user?.firstName || ''} ${row.user?.lastName || ''}`;
+        return `${row.user?.name || ''}`;
       },
       {
         id: 'user',

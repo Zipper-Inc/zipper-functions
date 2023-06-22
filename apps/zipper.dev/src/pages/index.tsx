@@ -1,5 +1,4 @@
 import { createSSGHelpers } from '@trpc/react/ssg';
-import { useUser } from '@clerk/nextjs';
 import { GetServerSideProps } from 'next';
 import { Gallery } from '~/components/gallery';
 import { createContext } from '~/server/context';
@@ -8,9 +7,12 @@ import { NextPageWithLayout } from './_app';
 import { trpcRouter } from '~/server/routers/_app';
 import { inferQueryOutput, trpc } from '~/utils/trpc';
 import SuperJSON from 'superjson';
-import { getAuth } from '@clerk/nextjs/server';
 import { useRouter } from 'next/router';
 import Header from '~/components/header';
+import { useUser } from '~/hooks/use-user';
+import { getToken } from 'next-auth/jwt';
+import { authOptions } from './api/auth/[...nextauth]';
+import { getServerSession } from 'next-auth';
 
 export type GalleryAppQueryOutput = inferQueryOutput<
   'app.allApproved' | 'app.byResourceOwner'
@@ -56,7 +58,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
 
   // validate subdomain
   const subdomain = getValidSubdomain(host);
-  const { userId } = getAuth(req);
+  const session = await getServerSession(req, res, authOptions);
 
   const ssg = createSSGHelpers({
     router: trpcRouter,
@@ -88,7 +90,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
     };
   }
 
-  if (userId) {
+  if (session?.user) {
     await ssg.fetchQuery('app.byAuthedUser');
 
     return {
