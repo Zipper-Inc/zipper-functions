@@ -31,6 +31,7 @@ import {
 import Unauthorized from './unauthorized';
 import removeAppConnectorUserAuth from '~/utils/remove-app-connector-user-auth';
 import Header from './header';
+import { OpenGraph } from './open-graph';
 import InputSummary from './input-summary';
 import ConnectorsAuthInputsSection from './connectors-auth-inputs-section';
 import { getConnectorsAuthUrl } from '~/utils/get-connectors-auth-url';
@@ -61,6 +62,7 @@ export type AppPageProps = {
   metadata?: Record<string, string | undefined>;
   handlerConfigs?: Record<string, Zipper.HandlerConfig>;
   token?: string;
+  runUrl?: string;
 };
 
 export function AppPage({
@@ -79,6 +81,7 @@ export function AppPage({
   metadata,
   handlerConfigs,
   token,
+  runUrl,
 }: AppPageProps) {
   const router = useRouter();
   const { asPath } = router;
@@ -284,13 +287,7 @@ export function AppPage({
     <>
       <Head>
         <title>{appTitle}</title>
-        <meta name="description" content="The Description" />
-        <meta property="og:title" content={appTitle} />
-        <meta property="og:description" content="The Description" />
-        <meta property="og:site_name" content="Zipper" />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content={runUrl} />
-        <meta property="og:image" content={imagePreviewUrl} />
+        <OpenGraph appTitle={appTitle} runUrl={runUrl} />
       </Head>
       <VStack flex={1} alignItems="stretch" spacing={14}>
         <Header
@@ -367,6 +364,7 @@ export const getServerSideProps: GetServerSideProps = async ({
   query,
   resolvedUrl,
 }) => {
+  console.log('foo');
   console.log({ url: req.url, resolvedUrl });
 
   const { host } = req.headers;

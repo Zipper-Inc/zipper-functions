@@ -29,13 +29,16 @@ import NextLink from 'next/link';
 import { CheckIcon } from '@chakra-ui/icons';
 import React, { useEffect, useState } from 'react';
 import { ZipperLogo, ZipperSymbol } from '@zipper/ui';
+
 import {
   HiOutlineUpload,
   HiPencilAlt,
   HiLockOpen,
   HiLockClosed,
 } from 'react-icons/hi';
+
 import { CgGitFork } from 'react-icons/cg';
+
 import { AppQueryOutput } from '~/types/trpc';
 import { EditAppSlugForm } from './edit-app-slug-form';
 import { useAppEditors } from '~/hooks/use-app-editors';
