@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse, NextApiHandler } from 'next';
 import { HttpMethod as Method, HttpStatusCode as Status } from '@zipper/types';
 import { safeJSONParse } from '@zipper/utils';
 import { Context } from '../context';
+import { verifyHmac } from '~/utils/verify-hmac';
 
 type BaseBody = { ok: boolean; meta?: Record<string, Zipper.Serializable> };
 export type OmniApiError = {
@@ -135,11 +136,27 @@ export const internalServerError = ({
 export const methodNeedsBody = (method: unknown) =>
   [Method.PATCH, Method.POST, Method.PUT].includes(method as Method);
 
+export const unauthorizedError = ({ res }: { res: NextApiResponse }) =>
+  simpleErrorResponse({
+    res,
+    status: Status.UNAUTHORIZED,
+    message: 'Unauthorized',
+  });
+
 /** Wraps an omni handler with auth and stuff */
 export const createOmniApiHandler =
   (handler: OmniHandler): NextApiHandler =>
-  (req, res) => {
+  async (req, res) => {
     try {
+      const hmac = req.headers['x-zipper-hmac'] as string;
+      if (
+        !hmac ||
+        !process.env.HMAC_SIGNING_SECRET ||
+        !verifyHmac(req, process.env.HMAC_SIGNING_SECRET)
+      ) {
+        return unauthorizedError({ res });
+      }
+
       // Assert existance of body if trying to make an update
       if (methodNeedsBody(req.method) && !req.body) {
         return simpleErrorResponse({
@@ -150,7 +167,7 @@ export const createOmniApiHandler =
       }
 
       req.body = req.body && safeJSONParse(req.body, undefined, req.body);
-      return handler(req, res);
+      return await handler(req, res);
     } catch (e) {
       return internalServerError({ req, res, e });
     }
