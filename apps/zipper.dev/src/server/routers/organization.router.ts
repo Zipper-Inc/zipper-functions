@@ -55,10 +55,11 @@ export const organizationRouter = createRouter()
   .mutation('add', {
     input: z.object({
       name: z.string().min(3).max(50),
+      slug: z.string().min(3).max(50).optional(),
     }),
     async resolve({ input, ctx }) {
       if (!ctx.userId) throw new trpc.TRPCError({ code: 'UNAUTHORIZED' });
-      const slug = slugify(input.name);
+      const slug = input.slug || slugify(input.name);
 
       const deniedSlug = denyList.find((d) => d === slug);
       if (deniedSlug)
