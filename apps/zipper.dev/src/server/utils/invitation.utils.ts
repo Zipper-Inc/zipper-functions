@@ -2,8 +2,7 @@ import crypto from 'crypto';
 import { prisma } from '../prisma';
 import { Resend } from 'resend';
 import { InvitationEmail } from '~/../emails';
-
-export const resend = new Resend(process.env.RESEND_API_KEY!);
+import { resend } from '../resend';
 
 /**
  * Only sends the email - does not create the org invitation or pending app editor
@@ -35,8 +34,8 @@ export async function sendInvitationEmail({
   });
   await resend.emails.send({
     to: email,
-    from: 'noreply@zipper.dev',
-    subject: `You've been invited to join ${resourceToJoinName} on Zipper`,
+    from: 'Zipper <yourfriends@zipper.dev>',
+    subject: `[Zipper] You've been invited to join ${resourceToJoinName}`,
     react: InvitationEmail({
       loginUrl: `${
         process.env.NEXT_PUBLIC_ZIPPER_DOT_DEV_URL

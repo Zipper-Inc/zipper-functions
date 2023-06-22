@@ -1,4 +1,5 @@
 import {
+  Button,
   Img,
   Body,
   Container,
@@ -8,36 +9,48 @@ import {
   Link,
   Preview,
   Text,
+  Section,
 } from '@react-email/components';
 import * as React from 'react';
 
 interface MagicLinkEmailProps {
-  loginUrl?: string;
+  loginUrl: string;
+  token: string;
 }
 
-export const MagicLinkEmail = ({ loginUrl }: MagicLinkEmailProps) => (
+export const Logo = () => (
+  <Img
+    src={`${process.env.NEXT_PUBLIC_ZIPPER_DOT_DEV_URL}/static/zipper-logomark.png`}
+    alt="Zipper"
+    width="42"
+    height="42"
+  />
+);
+
+export const MagicLinkEmail = ({ loginUrl, token }: MagicLinkEmailProps) => (
   <Html>
     <Head />
-    <Preview>Log in with this magic link</Preview>
+    <Preview>A magic link to log in to Zipper</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Img src="https://zipper.dev/zipper-logo.png" alt="Zipper" />
-        <Heading style={h1}>Continue to Zipper</Heading>
-        <Link
-          href={loginUrl}
-          target="_blank"
-          style={{
-            ...link,
-            display: 'block',
-            marginBottom: '16px',
-          }}
-        >
-          Click here to log in with this magic link
-        </Link>
-        <Text style={{ ...text, marginBottom: '14px' }}>
-          Or, copy and paste the url below into your browser:
+        <Logo />
+        <Heading style={h1}>Your login link for Zipper</Heading>
+        <Section style={buttonContainer}>
+          <Button
+            href={loginUrl}
+            target="_blank"
+            style={button}
+            pY={11}
+            pX={23}
+          >
+            Login to Zipper
+          </Button>
+        </Section>
+        <Text style={paragraph}>
+          This link and code will only be valid for the next 5 minutes. If the
+          link does not work, you can use the login verification code directly:
         </Text>
-        <code style={code}>{loginUrl}</code>
+        <code style={magicLinkCode}>{token}</code>
         <Text
           style={{
             ...text,
@@ -65,24 +78,25 @@ export const InvitationEmail = ({
     <Preview>{`You've been invited to join ${resourceToJoinName}`}</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Img src="https://zipper.dev/zipper-logo.png" alt="Zipper" />
+        <Logo />
         <Heading style={h1}>Your invitation</Heading>
 
         <Text style={{ ...text, marginBottom: '14px' }}>
           {`You've been invited to join ${resourceToJoinName} on Zipper.`}
         </Text>
 
-        <Link
-          href={loginUrl}
-          target="_blank"
-          style={{
-            ...link,
-            display: 'block',
-            marginBottom: '16px',
-          }}
-        >
-          Accept invitation
-        </Link>
+        <Section style={buttonContainer}>
+          <Button
+            href={loginUrl}
+            target="_blank"
+            style={button}
+            pY={11}
+            pX={23}
+          >
+            Accept invitation
+          </Button>
+        </Section>
+
         <Text style={{ ...text, marginBottom: '14px' }}>
           Or, copy and paste the url below into your browser:
         </Text>
@@ -107,36 +121,33 @@ export default { MagicLinkEmail, InvitationEmail };
 
 const main = {
   backgroundColor: '#ffffff',
+  fontFamily:
+    "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif",
 };
 
 const container = {
-  paddingLeft: '12px',
-  paddingRight: '12px',
   margin: '0 auto',
+  padding: '20px 0 48px',
+  width: '560px',
 };
 
 const h1 = {
-  color: '#333',
-  fontFamily:
-    "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif",
   fontSize: '24px',
-  fontWeight: 'bold',
-  margin: '40px 0',
-  padding: '0',
+  letterSpacing: '-0.5px',
+  lineHeight: '1.3',
+  fontWeight: '400',
+  color: '#484848',
+  padding: '17px 0 0',
 };
 
 const link = {
   color: '#2754C5',
-  fontFamily:
-    "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif",
   fontSize: '14px',
   textDecoration: 'underline',
 };
 
 const text = {
   color: '#333',
-  fontFamily:
-    "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif",
   fontSize: '14px',
   margin: '24px 0',
 };
@@ -149,4 +160,37 @@ const code = {
   borderRadius: '5px',
   border: '1px solid #eee',
   color: '#333',
+};
+
+const button = {
+  backgroundColor: '#BA47C2',
+  borderRadius: '3px',
+  fontWeight: '600',
+  color: '#fff',
+  fontSize: '15px',
+  textDecoration: 'none',
+  textAlign: 'center' as const,
+  display: 'block',
+};
+
+const buttonContainer = {
+  padding: '27px 0 27px',
+};
+
+const paragraph = {
+  margin: '0 0 15px',
+  fontSize: '15px',
+  lineHeight: '1.4',
+  color: '#3c4149',
+};
+
+const magicLinkCode = {
+  fontFamily: 'monospace',
+  fontWeight: '700',
+  padding: '1px 4px',
+  backgroundColor: '#dfe1e4',
+  letterSpacing: '-0.3px',
+  fontSize: '21px',
+  borderRadius: '4px',
+  color: '#3c4149',
 };

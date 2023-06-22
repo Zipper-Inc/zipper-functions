@@ -14,12 +14,11 @@ import { PrismaClient } from '@prisma/client';
 import { Adapter, AdapterAccount } from 'next-auth/adapters';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime';
 import { ResourceOwnerType, UserRole } from '@zipper/types';
-import { Resend } from 'resend';
 import { MagicLinkEmail } from '~/../emails';
 import fetch from 'node-fetch';
 import { createUserSlug } from '~/utils/create-user-slug';
-
-export const resend = new Resend(process.env.RESEND_API_KEY!);
+import { resend } from '~/server/resend';
+import crypto from 'crypto';
 
 export function PrismaAdapter(p: PrismaClient): Adapter {
   return {
@@ -118,8 +117,14 @@ export function PrismaAdapter(p: PrismaClient): Adapter {
     },
     async useVerificationToken(identifier_token) {
       try {
-        const verificationToken = await p.verificationToken.delete({
-          where: { identifier_token },
+        // we're not deleting these tokens in case email servers and/or clients
+        // make GET requests to the magic link url
+        const verificationToken = await p.verificationToken.findFirst({
+          where: {
+            identifier: identifier_token.identifier,
+            token: identifier_token.token,
+            expires: { gt: new Date() },
+          },
         });
         // @ts-expect-errors // MongoDB needs an ID, but we don't
         if (verificationToken.id) delete verificationToken.id;
@@ -214,17 +219,23 @@ export const authOptions: AuthOptions = {
     EmailProvider({
       name: 'Email',
       server: '',
-      from: 'Zipper Team',
+      from: 'Zipper<yourfriends@zipper.dev>',
+      maxAge: 600, // 10 minutes
+      generateVerificationToken() {
+        const s = crypto.randomBytes(16).toString('hex');
+
+        return `${s.substring(0, 5)}-${s.substring(6, 11)}`;
+      },
       sendVerificationRequest: async (
         params: SendVerificationRequestParams,
       ) => {
         try {
-          const { identifier, url } = params;
+          const { identifier, url, token } = params;
           await resend.emails.send({
             to: identifier,
-            from: 'noreply@zipper.dev',
-            subject: 'Login into Zipper!',
-            react: MagicLinkEmail({ loginUrl: url }),
+            from: 'Zipper <yourfriends@zipper.dev>',
+            subject: '[Zipper] Your login link',
+            react: MagicLinkEmail({ loginUrl: url, token }),
           });
         } catch (error) {
           console.error(error);
