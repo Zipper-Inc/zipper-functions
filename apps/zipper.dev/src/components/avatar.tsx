@@ -1,6 +1,6 @@
 import { trpc } from '~/utils/trpc';
 import { Avatar as BaseAvatar, AvatarProps } from '@chakra-ui/react';
-import { useUser } from '@clerk/nextjs';
+import { useUser } from '~/hooks/use-user';
 
 export function AvatarForUserId({
   userId,
@@ -9,8 +9,8 @@ export function AvatarForUserId({
   const userQuery = trpc.useQuery(['user.profileForUserId', { id: userId }]);
   return (
     <BaseAvatar
-      name={userQuery?.data?.fullName || ''}
-      src={userQuery?.data?.profileImageUrl}
+      name={userQuery?.data?.name || ''}
+      src={userQuery?.data?.image || undefined}
       {...props}
     />
   );
@@ -20,9 +20,10 @@ export function AvatarForCurrentUser(props: AvatarProps) {
   const { user } = useUser();
   return (
     <BaseAvatar
-      name={user?.fullName || ''}
+      name={user?.name || ''}
+      referrerPolicy="no-referrer"
       {...props}
-      src={user?.profileImageUrl || ''}
+      src={user?.image || ''}
     />
   );
 }

@@ -1,7 +1,7 @@
 import { Box, Heading, VStack, Button, Progress, Text } from '@chakra-ui/react';
-import { useUser } from '@clerk/nextjs';
 import { FunctionInputs, FunctionOutput, useAppletContent } from '@zipper/ui';
 import { useEffect, useMemo } from 'react';
+import { useUser } from '~/hooks/use-user';
 import getRunUrl from '~/utils/get-run-url';
 import { addParamToCode } from '~/utils/parse-code';
 import { trpc } from '~/utils/trpc';

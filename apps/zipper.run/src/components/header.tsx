@@ -54,6 +54,7 @@ const Header: React.FC<HeaderProps> = ({
     const token = document.cookie
       .split('; ')
       .find((c) => c.startsWith('__zipper_token'));
+
     if (token) {
       setUser(readJWT(token));
     }

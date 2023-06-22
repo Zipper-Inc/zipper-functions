@@ -22,7 +22,6 @@ import { PlaygroundAvatars } from './playground-avatars';
 import { useAppEditors } from '~/hooks/use-app-editors';
 import { TabButton } from '@zipper/ui';
 import HistoryTab from './history-tab';
-import { getAppVersionFromHash } from '~/utils/hashing';
 import { randomUUID } from 'crypto';
 
 const tabPanelStyles: ChakraProps = {

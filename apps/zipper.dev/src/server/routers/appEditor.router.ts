@@ -1,9 +1,9 @@
-import clerk from '@clerk/clerk-sdk-node';
 import { Prisma } from '@prisma/client';
 import { z } from 'zod';
 import { prisma } from '~/server/prisma';
 import { createRouter } from '../createRouter';
 import { hasAppEditPermission } from '../utils/authz.utils';
+import { sendInvitationEmail } from '../utils/invitation.utils';
 
 const defaultSelect = Prisma.validator<Prisma.AppEditorSelect>()({
   app: true,
@@ -44,11 +44,13 @@ export const appEditorRouter = createRouter()
         appId: input.appId,
       });
 
-      const users = await clerk.users.getUserList({
-        emailAddress: [input.email],
+      const user = await prisma.user.findFirst({
+        where: {
+          email: input.email,
+        },
       });
 
-      const userId = users[0]?.id;
+      const userId = user?.id;
 
       //if there's an existing user, add them as an app editor
       if (userId) {
@@ -75,13 +77,10 @@ export const appEditorRouter = createRouter()
 
       // if there's no existing user, create an invitation and add them to pending
       try {
-        await clerk.invitations.createInvitation({
-          emailAddress: input.email,
-          redirectUrl: `${
-            process.env.NODE_ENV === 'production' ? 'https' : 'http'
-          }://${process.env.NEXT_PUBLIC_HOST}${
-            process.env.NODE_ENV === 'production' ? '' : ':3000'
-          }/sign-up`,
+        const app = await prisma.app.findUniqueOrThrow({
+          where: {
+            id: input.appId,
+          },
         });
 
         await prisma.pendingAppEditor.create({
@@ -89,6 +88,12 @@ export const appEditorRouter = createRouter()
             inviterUserId: ctx.userId!,
             ...input,
           },
+        });
+
+        sendInvitationEmail({
+          email: input.email,
+          resourceToJoinName: app?.name || app?.slug,
+          callbackUrl: `${process.env.NEXT_PUBLIC_ZIPPER_DOT_DEV_URL}/app/${app?.id}`,
         });
 
         return 'pending';
@@ -122,29 +127,24 @@ export const appEditorRouter = createRouter()
         },
         select: { email: true },
       });
-
       let users: {
         id: string;
-        fullName: string | null;
-        primaryEmailAddress: string | undefined;
-        profileImageUrl: string;
-      }[] = [];
+        name: string | null;
+        email: string;
+        image: string | null;
+      }[];
       if (input.includeUsers) {
-        const clerkUsers = await clerk.users.getUserList({
-          userId: appEditors.map((appEditor) => appEditor.userId),
+        users = await prisma.user.findMany({
+          where: {
+            id: { in: appEditors.map((appEditor) => appEditor.userId) },
+          },
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            image: true,
+          },
         });
-
-        users = clerkUsers.map((clerkUser) => ({
-          id: clerkUser.id,
-          fullName:
-            clerkUser.firstName && clerkUser.lastName
-              ? `${clerkUser.firstName} ${clerkUser.lastName}`
-              : null,
-          primaryEmailAddress: clerkUser.emailAddresses.find(
-            (clerkEmail) => clerkEmail.id === clerkUser.primaryEmailAddressId,
-          )?.emailAddress,
-          profileImageUrl: clerkUser.profileImageUrl,
-        }));
       }
 
       const withUser = appEditors.map((appEditor) => {
@@ -156,34 +156,6 @@ export const appEditorRouter = createRouter()
       });
 
       return { appEditors: withUser, pending };
-    },
-  })
-  .mutation('acceptPendingInvitations', {
-    async resolve({ ctx }) {
-      if (!ctx.userId) return;
-
-      const user = await clerk.users.getUser(ctx.userId!);
-      if (!user) return;
-
-      const pending = await prisma.pendingAppEditor.findMany({
-        where: {
-          email: { in: user.emailAddresses.map((email) => email.emailAddress) },
-        },
-      });
-
-      await prisma.pendingAppEditor.deleteMany({
-        where: {
-          email: { in: user.emailAddresses.map((email) => email.emailAddress) },
-        },
-      });
-
-      return prisma.appEditor.createMany({
-        data: pending.map((pendingAppEditor) => ({
-          appId: pendingAppEditor.appId,
-          isOwner: pendingAppEditor.isOwner,
-          userId: ctx.userId!,
-        })),
-      });
     },
   })
   .mutation('deletePendingInvitation', {

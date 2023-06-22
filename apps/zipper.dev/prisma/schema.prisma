@@ -11,36 +11,36 @@ generator client {
 }
 
 model App {
-  id              String    @id @default(uuid())
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime? @default(now())
-  slug            String    @db.VarChar(60) @unique
-  name            String?
-  description     String?
-  datastore       Json?     @db.JsonB
-  isPrivate       Boolean   @default(true)
-  submissionState Int       @default(0)
-  categories      String[]
-  parentId        String?
+  id                    String    @id @default(uuid())
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime? @default(now())
+  slug                  String    @unique @db.VarChar(60)
+  name                  String?
+  description           String?
+  datastore             Json?     @db.JsonB
+  isPrivate             Boolean   @default(true)
+  submissionState       Int       @default(0)
+  categories            String[]
+  parentId              String?
   lastDeploymentVersion String?
-  hash            String?
-  organizationId  String?
-  createdById     String?
-  requiresAuthToRun   Boolean   @default(false)
+  hash                  String?
+  organizationId        String?
+  createdById           String?
+  requiresAuthToRun     Boolean   @default(false)
 
   scriptMain ScriptMain?
 
-  scripts   Script[]
-  secrets   Secret[]
-  schedules Schedule[]
-  runs      AppRun[]
-  editors   AppEditor[]
+  scripts        Script[]
+  secrets        Secret[]
+  schedules      Schedule[]
+  runs           AppRun[]
+  editors        AppEditor[]
   pendingEditors PendingAppEditor[]
 
-  parent  App?  @relation("AppForks", fields: [parentId], references: [id])
-  forks   App[] @relation("AppForks")
-  settings AppSetting[]
-  connectors AppConnector[]
+  parent       App?             @relation("AppForks", fields: [parentId], references: [id])
+  forks        App[]            @relation("AppForks")
+  settings     AppSetting[]
+  connectors   AppConnector[]
   accessTokens AppAccessToken[]
 
   @@map("apps")
@@ -48,16 +48,16 @@ model App {
 
 // token will be zaat.identier.secret
 model AppAccessToken {
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime? @default(now())
-  deletedAt       DateTime? @db.Timestamp(6)
-  identifier      String    @unique
-  hashedSecret    String    @unique
-  appId           String
-  userId          String
-  description     String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime? @default(now())
+  deletedAt    DateTime? @db.Timestamp(6)
+  identifier   String    @unique
+  hashedSecret String    @unique
+  appId        String
+  userId       String
+  description  String?
 
-  app         App       @relation(fields: [appId], references: [id])
+  app App @relation(fields: [appId], references: [id])
 
   @@id([identifier, appId])
   @@map("app_access_tokens")
@@ -71,7 +71,7 @@ model AppSetting {
   updatedAt    DateTime  @default(now()) @updatedAt @db.Timestamp(6)
   appId        String
 
-  app          App       @relation(fields: [appId], references: [id])
+  app App @relation(fields: [appId], references: [id])
 
   @@id([settingName, appId])
   @@unique([appId, settingName])
@@ -79,14 +79,14 @@ model AppSetting {
 }
 
 model AppEditor {
-  userId        String
-  appId         String
-  isOwner       Boolean
+  userId  String
+  appId   String
+  isOwner Boolean
 
-  app           App         @relation(fields: [appId], references: [id])
+  app App @relation(fields: [appId], references: [id])
 
-  @@map("app_editors")
   @@id([userId, appId])
+  @@map("app_editors")
 }
 
 model PendingAppEditor {
@@ -95,10 +95,10 @@ model PendingAppEditor {
   isOwner       Boolean
   inviterUserId String
 
-  app           App         @relation(fields: [appId], references: [id])
+  app App @relation(fields: [appId], references: [id])
 
-  @@map("pending_app_editors")
   @@id([email, appId])
+  @@map("pending_app_editors")
 }
 
 model AppEvent {
@@ -112,41 +112,41 @@ model AppEvent {
 }
 
 model AppRun {
-  id           String    @id @default(uuid())
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime? @default(now())
-  success      Boolean
-  deploymentId String
-  scheduleId   String?
-  path         String    @default("main.ts")
-  result       Json?
-  inputs       Json?
-  userId       String?
-  originalRequestUrl     String?
-  originalRequestMethod  String?
-  appId        String
-  version      String?
+  id                    String    @id @default(uuid())
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime? @default(now())
+  success               Boolean
+  deploymentId          String
+  scheduleId            String?
+  path                  String    @default("main.ts")
+  result                Json?
+  inputs                Json?
+  userId                String?
+  originalRequestUrl    String?
+  originalRequestMethod String?
+  appId                 String
+  version               String?
 
-  app       App?          @relation(fields: [appId], references: [id])
-  schedule  Schedule?     @relation(fields: [scheduleId], references: [id])
+  app      App?      @relation(fields: [appId], references: [id])
+  schedule Schedule? @relation(fields: [scheduleId], references: [id])
 
   @@map("apps_runs")
 }
 
 model AppConnector {
-  id        String    @id @default(uuid())
-  createdAt DateTime  @default(now())
-  updatedAt DateTime? @default(now())
-  deletedAt DateTime? @db.Timestamp(6)
-  type      String
-  appId     String
-  clientId  String?
-  metadata  Json?
-  isUserAuthRequired   Boolean  @default(false)
-  userScopes           String[]
-  workspaceScopes      String[]
+  id                 String    @id @default(uuid())
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime? @default(now())
+  deletedAt          DateTime? @db.Timestamp(6)
+  type               String
+  appId              String
+  clientId           String?
+  metadata           Json?
+  isUserAuthRequired Boolean   @default(false)
+  userScopes         String[]
+  workspaceScopes    String[]
 
-  app       App      @relation(fields: [appId], references: [id])
+  app                   App                    @relation(fields: [appId], references: [id])
   appConnectorUserAuths AppConnectorUserAuth[]
 
   @@unique([appId, type])
@@ -154,29 +154,29 @@ model AppConnector {
 }
 
 model AppConnectorUserAuth {
-  id                String    @id @default(uuid())
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime? @default(now())
-  deletedAt         DateTime? @db.Timestamp(6)
+  id                   String    @id @default(uuid())
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime? @default(now())
+  deletedAt            DateTime? @db.Timestamp(6)
   encryptedAccessToken String
-  appId             String
-  connectorType     String
-  userIdOrTempId    String
-  metadata          Json
+  appId                String
+  connectorType        String
+  userIdOrTempId       String
+  metadata             Json
 
-  connector   AppConnector @relation(fields: [appId, connectorType], references: [appId, type], onDelete: Cascade)
+  connector AppConnector @relation(fields: [appId, connectorType], references: [appId, type], onDelete: Cascade)
 
   @@unique([appId, connectorType, userIdOrTempId])
   @@map("app_connector_user_auth")
 }
 
 model ResourceOwnerSlug {
-  slug                String    @id @unique()
-  resourceOwnerType   Int
-  resourceOwnerId     String?
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime? @default(now())
-  deletedAt           DateTime? @db.Timestamp(6)
+  slug              String    @id @unique()
+  resourceOwnerType Int
+  resourceOwnerId   String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime? @default(now())
+  deletedAt         DateTime? @db.Timestamp(6)
 
   @@map("resource_owner_slugs")
 }
@@ -204,34 +204,34 @@ model Schedule {
   inputs    Json?
   userId    String?
 
-  appId     String
-  app       App?      @relation(fields: [appId], references: [id])
-  appRuns   AppRun[]
+  appId   String
+  app     App?     @relation(fields: [appId], references: [id])
+  appRuns AppRun[]
 
   @@map("schedules")
 }
 
 model Script {
-  id            String    @id @default(uuid())
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime? @default(now())
-  name          String
-  filename      String
-  description   String?
-  code          String
-  order         Int?      @default(0)
-  appId         String
-  inputSchema   Json?
-  outputSchema  Json?
-  connectorId   String?
-  hash          String?
-  isRunnable    Boolean   @default(false)
+  id           String    @id @default(uuid())
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime? @default(now())
+  name         String
+  filename     String
+  description  String?
+  code         String
+  order        Int?      @default(0)
+  appId        String
+  inputSchema  Json?
+  outputSchema Json?
+  connectorId  String?
+  hash         String?
+  isRunnable   Boolean   @default(false)
 
   app        App         @relation(fields: [appId], references: [id])
   scriptMain ScriptMain?
 
-  @@map("scripts")
   @@unique([appId, filename])
+  @@map("scripts")
 }
 
 model ScriptMain {
@@ -245,10 +245,119 @@ model ScriptMain {
 }
 
 model ZipperAuthCode {
-  code        String    @id @default(uuid())
-  userId      String
-  used        Boolean   @default(false)
-  expiresAt   BigInt
+  code      String  @id @default(uuid())
+  userId    String
+  used      Boolean @default(false)
+  expiresAt BigInt
 
   @@map("zipper_auth_code")
+}
+
+model Account {
+  id                String  @id @default(uuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(uuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model User {
+  id            String    @id @default(uuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  slug          String    @unique
+  accounts      Account[]
+  sessions      Session[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @default(now()) @updatedAt
+  deletedAt DateTime?
+
+  organizationMemberships OrganizationMembership[]
+
+  @@map("users")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+model Organization {
+  id        String    @id @default(uuid())
+  name      String
+  slug      String    @unique
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @default(now()) @updatedAt
+  deletedAt DateTime?
+
+  organizationMemberships OrganizationMembership[]
+  organizationInvitations OrganizationInvitation[]
+
+  @@map("organizations")
+}
+
+model OrganizationMembership {
+  organizationId String
+  userId         String
+  role           String
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  user         User         @relation(fields: [userId], references: [id])
+
+  @@id([organizationId, userId])
+  @@map("organization_memberships")
+}
+
+model OrganizationInvitation {
+  organizationId String
+  email          String
+  role           String
+  redirectUrl    String?
+  token          String   @unique
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  @@id([organizationId, email])
+  @@map("organization_invitations")
+}
+
+model AllowListIdentifier {
+  id                    String   @id @default(uuid())
+  createdAt             DateTime @default(now())
+  value                 String
+  defaultOrganizationId String?
+  inviterName           String?
+
+  @@map("allow_list_identifiers")
 }

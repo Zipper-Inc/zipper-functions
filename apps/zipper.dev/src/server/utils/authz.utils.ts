@@ -75,3 +75,28 @@ export const hasAppReadPermission = async ({
     });
   }
 };
+
+export const hasOrgAdminPermission = async (ctx: Context) => {
+  try {
+    if (!ctx.userId || !ctx.orgId) {
+      return false;
+    }
+
+    const orgMem = await prisma.organizationMembership.findUniqueOrThrow({
+      where: {
+        organizationId_userId: {
+          organizationId: ctx.orgId,
+          userId: ctx.userId,
+        },
+      },
+    });
+
+    if (orgMem.role === 'ADMIN') {
+      return true;
+    }
+
+    return false;
+  } catch (error) {
+    return false;
+  }
+};

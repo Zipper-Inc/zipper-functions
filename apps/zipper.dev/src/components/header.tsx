@@ -15,24 +15,34 @@ import {
   ModalFooter,
   useDisclosure,
   FormControl,
-  FormHelperText,
   FormLabel,
-  Input,
   ModalOverlay,
   Textarea,
   Spinner,
+  Avatar,
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuGroup,
+  MenuItem,
+  Stack,
+  Text,
 } from '@chakra-ui/react';
 import { useRouter } from 'next/router';
 import NextLink from 'next/link';
 
 import { ZipperLogo } from '@zipper/ui';
-import { SignedIn, SignedOut, UserButton, useUser } from '@clerk/nextjs';
 import OrganizationSwitcher from './auth/organizationSwitcher';
 import { MobileMenu } from './header-mobile-menu';
 import { ZipperSymbol } from '@zipper/ui';
 import SignInButton from './auth/signInButton';
 import { trpc } from '~/utils/trpc';
-import { set } from 'zod';
+import { useUser } from '~/hooks/use-user';
+import SignedIn from './auth/signed-in';
+import SignedOut from './auth/signed-out';
+import UserProfile from './auth/userProfile';
+import { HiLogout, HiOutlineCog } from 'react-icons/hi';
+import { signOut } from 'next-auth/react';
 
 type HeaderProps = {
   showNav?: boolean;
@@ -57,7 +67,10 @@ const Header: React.FC<HeaderProps> = ({
 
   const { reload } = router.query;
   const { user } = useUser();
-  const { isOpen, onOpen, onClose } = useDisclosure();
+
+  const feedbackModal = useDisclosure();
+  const userSettingsModal = useDisclosure();
+
   const [feedback, setFeedback] = useState('');
   const [submittingFeedback, setSubmittingFeedback] = useState(false);
 
@@ -158,16 +171,16 @@ const Header: React.FC<HeaderProps> = ({
                     size="sm"
                     variant={'outline'}
                     color="gray.600"
-                    onClick={onOpen}
+                    onClick={feedbackModal.onOpen}
                   >
                     Feedback
                   </Button>
 
                   <Modal
-                    isOpen={isOpen}
+                    isOpen={feedbackModal.isOpen}
                     onClose={() => {
                       setSubmittingFeedback(false);
-                      onClose();
+                      feedbackModal.onClose();
                     }}
                     size="xl"
                   >
@@ -194,7 +207,7 @@ const Header: React.FC<HeaderProps> = ({
                               url: window.location.href,
                             });
                             setSubmittingFeedback(false);
-                            onClose();
+                            feedbackModal.onClose();
                           }}
                         >
                           {submittingFeedback ? <Spinner /> : 'Submit'}
@@ -202,10 +215,52 @@ const Header: React.FC<HeaderProps> = ({
                       </ModalFooter>
                     </ModalContent>
                   </Modal>
+
+                  <Modal
+                    isOpen={userSettingsModal.isOpen}
+                    onClose={() => {
+                      userSettingsModal.onClose();
+                    }}
+                    size="xl"
+                  >
+                    <ModalOverlay />
+                    <ModalContent>
+                      <ModalHeader>User Settings</ModalHeader>
+                      <ModalCloseButton />
+                      <Stack p={8}>
+                        <UserProfile />
+                      </Stack>
+                    </ModalContent>
+                  </Modal>
                 </>
               )}
               <SignedIn>
-                <UserButton afterSignOutUrl="/" />
+                <Menu>
+                  <MenuButton>
+                    <Avatar
+                      name={user?.name || ''}
+                      referrerPolicy="no-referrer"
+                      src={user?.image || ''}
+                      size="sm"
+                    />
+                  </MenuButton>
+                  <MenuList>
+                    <MenuGroup title="Profile">
+                      <MenuItem onClick={userSettingsModal.onOpen}>
+                        <Stack gap={1} direction="row" alignItems="center">
+                          <HiOutlineCog />
+                          <Text>Manage account</Text>
+                        </Stack>
+                      </MenuItem>
+                      <MenuItem onClick={() => signOut()}>
+                        <Stack gap={1} direction="row" alignItems="center">
+                          <HiLogout />
+                          <Text>Sign out</Text>
+                        </Stack>
+                      </MenuItem>
+                    </MenuGroup>
+                  </MenuList>
+                </Menu>
               </SignedIn>
               <SignedOut>
                 <SignInButton />

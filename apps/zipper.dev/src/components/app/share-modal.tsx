@@ -28,8 +28,9 @@ import { FieldValues, FormProvider, useForm } from 'react-hook-form';
 import { trpc } from '~/utils/trpc';
 import { useEffect, useState } from 'react';
 import { VscCode } from 'react-icons/vsc';
-import { useOrganizations, useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/router';
+import { useUser } from '~/hooks/use-user';
+import { ResourceOwnerType } from '@zipper/types';
 
 type Props = {
   isOpen: boolean;
@@ -47,12 +48,21 @@ const ShareTab: React.FC<Props> = ({ isOpen, onClose, appId }) => {
       appSlug: router.query['app-slug'] as string,
     },
   ]);
+  const resourceOwnerNameQuery = trpc.useQuery(
+    [
+      'resourceOwnerSlug.getName',
+      { slug: router.query['resource-owner'] as string },
+    ],
+    {
+      enabled:
+        appQuery.data?.resourceOwner.resourceOwnerType ===
+        ResourceOwnerType.Organization,
+    },
+  );
   const editorQuery = trpc.useQuery(
     ['appEditor.all', { appId, includeUsers: true }],
     { enabled: !!user },
   );
-
-  const [org, setOrg] = useState<any>();
 
   const invitationForm = useForm();
 
@@ -78,13 +88,8 @@ const ShareTab: React.FC<Props> = ({ isOpen, onClose, appId }) => {
 
   const [isPrivate, setIsPrivate] = useState(appQuery.data?.isPrivate);
 
-  const { getOrganization } = useOrganizations();
-
   useEffect(() => {
     setIsPrivate(appQuery.data?.isPrivate);
-    if (appQuery.data?.organizationId && getOrganization) {
-      getOrganization(appQuery.data.organizationId).then((o) => setOrg(o));
-    }
   }, [appQuery.data]);
 
   const toast = useToast();
@@ -174,11 +179,16 @@ const ShareTab: React.FC<Props> = ({ isOpen, onClose, appId }) => {
                           </Text>
                           <Box p="2" pb="0">
                             <>
-                              {org && (
+                              {resourceOwnerNameQuery.data && (
                                 <Box fontSize="sm" pb="2">
                                   <HStack>
-                                    <Avatar size="xs" name={org.name} />
-                                    <Text>Everyone at {org.name}</Text>
+                                    <Avatar
+                                      size="xs"
+                                      name={resourceOwnerNameQuery.data}
+                                    />
+                                    <Text>
+                                      Everyone at {resourceOwnerNameQuery.data}
+                                    </Text>
                                   </HStack>
                                 </Box>
                               )}
@@ -192,21 +202,16 @@ const ShareTab: React.FC<Props> = ({ isOpen, onClose, appId }) => {
                                     <HStack>
                                       <Avatar
                                         size="xs"
-                                        src={
-                                          editor.user?.profileImageUrl ||
-                                          undefined
-                                        }
+                                        src={editor.user?.image || undefined}
                                         name={
-                                          editor.user?.fullName ||
-                                          editor.user?.primaryEmailAddress
+                                          editor.user?.name ||
+                                          editor.user?.email
                                         }
                                       />
-                                      <Tooltip
-                                        label={editor.user?.primaryEmailAddress}
-                                      >
+                                      <Tooltip label={editor.user?.email}>
                                         <Text>
-                                          {editor.user?.fullName ||
-                                            editor.user?.primaryEmailAddress}
+                                          {editor.user?.name ||
+                                            editor.user?.email}
                                         </Text>
                                       </Tooltip>
                                     </HStack>

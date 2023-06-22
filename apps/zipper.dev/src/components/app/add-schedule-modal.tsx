@@ -14,17 +14,14 @@ import {
   Button,
   Text,
   Select,
-  CardBody,
-  Card,
-  Divider,
   HStack,
 } from '@chakra-ui/react';
-import { useUser } from '@clerk/nextjs';
 import { InputParam } from '@zipper/types';
 import { FunctionInputs } from '@zipper/ui';
 import cronstrue from 'cronstrue';
 import { useEffect, useState } from 'react';
 import { FieldValues, useForm } from 'react-hook-form';
+import { useUser } from '~/hooks/use-user';
 import { parseInputForTypes } from '~/utils/parse-code';
 import { useEditorContext } from '../context/editor-context';
 import { useRunAppContext } from '../context/run-app-context';
@@ -82,7 +79,6 @@ export const AddScheduleModal: React.FC<AddScheduleModalProps> = ({
   }, [isOpen]);
 
   const user = useUser();
-  const { appInfo } = useRunAppContext();
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
@@ -120,9 +116,11 @@ export const AddScheduleModal: React.FC<AddScheduleModalProps> = ({
                 },
               })}
             >
-              {scripts.map((script) => (
-                <option key={script.id}>{script.filename}</option>
-              ))}
+              {scripts
+                .filter((s) => s.isRunnable)
+                .map((script) => (
+                  <option key={script.id}>{script.filename}</option>
+                ))}
             </Select>
           </FormControl>
           <FormControl flex={1} display="flex" flexDirection="column">
@@ -172,7 +170,7 @@ export const AddScheduleModal: React.FC<AddScheduleModalProps> = ({
           )}
           <HStack border="1px solid" borderColor={'gray.100'} p="2">
             <Text>This job will be run as </Text>
-            <Text fontWeight={'medium'}>{user.user?.fullName || 'You'}</Text>
+            <Text fontWeight={'medium'}>{user.user?.name || 'You'}</Text>
           </HStack>
         </ModalBody>
         <ModalFooter justifyContent="space-between">

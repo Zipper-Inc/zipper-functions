@@ -1,11 +1,16 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { RequestLike } from '@clerk/nextjs/dist/server/types';
-import { getAuth } from '@clerk/nextjs/server';
 import { captureException } from '@sentry/nextjs';
 import * as trpc from '@trpc/server';
-import * as trpcNext from '@trpc/server/adapters/next';
 import { ServerResponse } from 'http';
-import { NextApiResponse } from 'next';
+import {
+  GetServerSidePropsContext,
+  NextApiRequest,
+  NextApiResponse,
+} from 'next';
+import { getToken } from 'next-auth/jwt';
+
+type RequestLike = GetServerSidePropsContext['req'] | NextApiRequest;
+type ResponseLike = NextApiResponse | ServerResponse;
 
 /**
  * Inner function for `createContext` where we create the context.
@@ -19,7 +24,7 @@ export const createContextInner = ({
 }: {
   userId?: string;
   orgId?: string;
-  organizations?: Record<string, string>[];
+  organizations?: Record<string, string>;
   req?: RequestLike;
 }) => {
   return { userId, orgId, organizations, req };
@@ -31,15 +36,19 @@ export const createContextInner = ({
  */
 export async function createContext(opts: {
   req: RequestLike;
-  res: NextApiResponse | ServerResponse;
+  res: ResponseLike;
 }) {
-  const getAuthAndCreateContext = () => {
-    const { userId, orgId, sessionClaims } = getAuth(opts.req);
+  const getAuthAndCreateContext = async () => {
+    const token = await getToken({ req: opts.req });
+    const orgMems: Record<string, string> = {};
+    token?.organizationMemberships?.forEach((m) => {
+      orgMems[m.organization.id] = m.role;
+    });
 
     return createContextInner({
-      userId: userId || undefined,
-      orgId: orgId || undefined,
-      organizations: sessionClaims?.organizations as Record<string, string>[],
+      orgId: token?.currentOrganizationId || undefined,
+      userId: token?.sub || undefined,
+      organizations: orgMems,
       req: opts.req,
     });
   };

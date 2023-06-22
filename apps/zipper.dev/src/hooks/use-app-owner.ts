@@ -1,6 +1,7 @@
-import { useUser, useOrganizationList } from '@clerk/nextjs';
 import { ResourceOwnerType } from '@zipper/types';
 import { inferQueryOutput } from '~/utils/trpc';
+import { useOrganizationList } from './use-organization-list';
+import { useUser } from './use-user';
 
 type _App = Unpack<inferQueryOutput<'app.byAuthedUser'>>;
 export type AppOwner = {
@@ -24,7 +25,7 @@ export const useAppOwner = () => {
     const getResourceOwnerName = () => {
       // app was created by currently authed user in personal workspace
       if (app.createdById === user?.id && !app.organizationId) {
-        return user?.fullName || 'You';
+        return user?.name || 'You';
       }
 
       // app was created by currently authed user within an organization

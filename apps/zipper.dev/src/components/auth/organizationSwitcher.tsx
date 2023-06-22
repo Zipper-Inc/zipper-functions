@@ -1,4 +1,3 @@
-import { useOrganization, useOrganizationList, useUser } from '@clerk/nextjs';
 import {
   Box,
   Button,
@@ -12,33 +11,49 @@ import {
   VStack,
   useDisclosure,
   ButtonProps,
+  Badge,
 } from '@chakra-ui/react';
 import { HiOutlineChevronUpDown, HiPlus } from 'react-icons/hi2';
 import { HiEye, HiSwitchHorizontal } from 'react-icons/hi';
 import { useState } from 'react';
 import { CreateOrganizationModal } from './createOrganizationModal';
-import Link from 'next/link';
 import { useRouter } from 'next/router';
+import { useOrganizationList } from '~/hooks/use-organization-list';
+import { useUser } from '~/hooks/use-user';
+import { useOrganization } from '~/hooks/use-organization';
+import { trpc } from '~/utils/trpc';
+import { useSession } from 'next-auth/react';
 
 export const OrganizationSwitcher: React.FC<ButtonProps> = (props) => {
   // get the authed user's organizations from Clerk
-  const { setActive, organizationList, isLoaded } = useOrganizationList();
-  const { user } = useUser();
-  if (!isLoaded) return <></>;
+  const { setActive, organizationList, isLoaded, currentOrganizationId } =
+    useOrganizationList();
+  const { organization, role } = useOrganization();
 
-  const { organization, membership } = useOrganization();
+  const session = useSession();
+
+  const acceptInvitation = trpc.useMutation('organization.acceptInvitation');
+
+  const { user } = useUser();
 
   const [hoverOrg, setHoverOrg] = useState<string | undefined | null>(
     undefined,
   );
 
   const allWorkspaces = [
-    { organization: { id: null, name: 'Personal Workspace' } },
+    {
+      organization: {
+        id: null,
+        name: 'Personal Workspace',
+        slug: user?.username,
+      },
+      pending: false,
+    },
     ...(organizationList || []),
   ];
 
   const workspacesExcludingCurrent = allWorkspaces.filter((o) => {
-    return o.organization.id !== (organization?.id || null);
+    return o.organization.id !== (currentOrganizationId || null);
   });
 
   const {
@@ -48,6 +63,8 @@ export const OrganizationSwitcher: React.FC<ButtonProps> = (props) => {
   } = useDisclosure();
 
   const router = useRouter();
+
+  if (!isLoaded) return <></>;
 
   return (
     <Box>
@@ -64,7 +81,7 @@ export const OrganizationSwitcher: React.FC<ButtonProps> = (props) => {
           <HStack>
             <Text>
               {organization?.name ||
-                (user?.publicMetadata.username as string) ||
+                (user?.username as string) ||
                 'Personal Workspace'}
             </Text>
             <Icon as={HiOutlineChevronUpDown} fontSize="md" />
@@ -83,20 +100,15 @@ export const OrganizationSwitcher: React.FC<ButtonProps> = (props) => {
               <Text fontWeight="medium">
                 {organization?.name || 'Personal Workspace'}
               </Text>
-              {!organization && (
-                <Text>{user?.publicMetadata.username as string}</Text>
-              )}
-              {membership && (
-                <Text>{membership.role === 'admin' ? 'Admin' : 'Member'}</Text>
+              {!organization && <Text>{user?.username as string}</Text>}
+              {organization && (
+                <Text>{role === 'admin' ? 'Admin' : 'Member'}</Text>
               )}
             </VStack>
             <Button
               onClick={() => {
                 router.push(
-                  `/${
-                    organization?.slug ||
-                    (user?.publicMetadata.username as string)
-                  }`,
+                  `/${organization?.slug || (user?.username as string)}`,
                 );
               }}
               size="xs"
@@ -121,8 +133,12 @@ export const OrganizationSwitcher: React.FC<ButtonProps> = (props) => {
             return (
               <MenuItem
                 key={org.organization.id}
-                onClick={() => {
-                  setActive && setActive({ organization: org.organization.id });
+                onClick={async () => {
+                  if (org.pending) {
+                    router.push(`/${org.organization.slug}`);
+                  } else {
+                    setActive && setActive(org.organization.id);
+                  }
                 }}
                 backgroundColor="gray.50"
                 px="4"
@@ -139,13 +155,29 @@ export const OrganizationSwitcher: React.FC<ButtonProps> = (props) => {
                     >
                       {org.organization.name}
                     </Text>
-                    <Icon
-                      as={HiSwitchHorizontal}
-                      color={'gray.400'}
-                      visibility={
-                        hoverOrg === org.organization.id ? 'visible' : 'hidden'
-                      }
-                    ></Icon>
+                    {org.pending ? (
+                      <Badge
+                        size="xs"
+                        textTransform="capitalize"
+                        px="2"
+                        py="1"
+                        fontWeight="semibold"
+                        variant="outline"
+                        borderRadius="md"
+                      >
+                        Invited
+                      </Badge>
+                    ) : (
+                      <Icon
+                        as={HiSwitchHorizontal}
+                        color={'gray.400'}
+                        visibility={
+                          hoverOrg === org.organization.id
+                            ? 'visible'
+                            : 'hidden'
+                        }
+                      ></Icon>
+                    )}
                   </HStack>
                 </Box>
               </MenuItem>
