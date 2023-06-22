@@ -9,6 +9,18 @@ import {
   getOmniContext,
 } from '~/server/utils/omni.utils';
 import { HttpMethod as Method, HttpStatusCode as Status } from '@zipper/types';
+import { Organization, ResourceOwnerSlug } from '@prisma/client';
+
+type OrgToCreate = { name: string; slug?: string };
+type CreateOrgsRequest = {
+  organizations: OrgToCreate[];
+  shouldCreateResourceOwnerSlug?: boolean;
+};
+type CreateOrgsData = {
+  created: true;
+  organizations: Organization[];
+  resourceOwnerSlugs?: ResourceOwnerSlug[];
+};
 
 export default createOmniApiHandler(async (req, res) => {
   switch (req.method) {
@@ -18,7 +30,10 @@ export default createOmniApiHandler(async (req, res) => {
     case Method.PUT: {
       const errors: OmniApiError[] = [];
 
-      const orgsToCreate: { name: string }[] = req.body.organizations;
+      const {
+        organizations: orgsToCreate,
+        shouldCreateResourceOwnerSlug = true,
+      }: CreateOrgsRequest = req.body.organizations;
 
       const noOrgs = !Array.isArray(orgsToCreate) || !orgsToCreate.length;
       if (noOrgs) {
@@ -41,19 +56,33 @@ export default createOmniApiHandler(async (req, res) => {
       }
 
       const caller = organizationRouter.createCaller(getOmniContext(req));
-      const createdOrgs = await Promise.all(
-        orgsToCreate.map((org) => caller.mutation('add', org)),
-      );
+      const createdOrgs = (await Promise.all(
+        orgsToCreate.map((org) =>
+          caller.mutation('add', {
+            ...org,
+            shouldCreateResourceOwnerSlug,
+            // The API should never assign itself as an admin
+            shouldAssignAdmin: false,
+          }),
+        ),
+      )) as Organization[];
+
+      const data: CreateOrgsData = {
+        created: true,
+        organizations: createdOrgs,
+      };
+
+      if (shouldCreateResourceOwnerSlug) {
+        data.resourceOwnerSlugs = await prisma.resourceOwnerSlug.findMany({
+          where: {
+            OR: createdOrgs.map((org) => ({ resourceOwnerId: org.id })),
+          },
+        });
+      }
 
       return successResponse({
         res,
-        body: {
-          ok: true,
-          data: {
-            created: true,
-            organizations: createdOrgs,
-          },
-        },
+        body: { ok: true, data },
       });
     }
 

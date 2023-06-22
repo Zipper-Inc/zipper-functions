@@ -7,8 +7,8 @@ import crypto from 'crypto';
 import { createRouter } from '../createRouter';
 import denyList from '../utils/slugDenyList';
 import slugify from '~/utils/slugify';
-import { OMNI_USER_ID } from '../utils/omni.utils';
 import { sendInvitationEmail } from '../utils/invitation.utils';
+import { OMNI_USER_ID } from '../utils/omni.utils';
 
 export const organizationRouter = createRouter()
   .query('getMemberships', {
@@ -55,10 +55,13 @@ export const organizationRouter = createRouter()
   .mutation('add', {
     input: z.object({
       name: z.string().min(3).max(50),
+      slug: z.string().min(3).max(50).optional(),
+      shouldCreateResourceOwnerSlug: z.boolean().optional().default(true),
+      shouldAssignAdmin: z.boolean().optional().default(true),
     }),
     async resolve({ input, ctx }) {
       if (!ctx.userId) throw new trpc.TRPCError({ code: 'UNAUTHORIZED' });
-      const slug = slugify(input.name);
+      const slug = input.slug || slugify(input.name);
 
       const deniedSlug = denyList.find((d) => d === slug);
       if (deniedSlug)
@@ -67,32 +70,31 @@ export const organizationRouter = createRouter()
           code: 'INTERNAL_SERVER_ERROR',
         });
 
-      // Only OMNI can create orgs without adding itself as admin
-      const organizationMemberships =
-        ctx.userId === OMNI_USER_ID
-          ? undefined
-          : {
-              create: {
-                userId: ctx.userId,
-                role: UserRole.Admin,
-              },
-            };
+      const data: Parameters<typeof prisma.organization.create>[0]['data'] = {
+        name: input.name,
+        slug,
+      };
 
-      const org = await prisma.organization.create({
-        data: {
-          name: input.name,
-          slug,
-          organizationMemberships,
-        },
-      });
+      if (input.shouldAssignAdmin && ctx.userId !== OMNI_USER_ID) {
+        data.organizationMemberships = {
+          create: {
+            userId: ctx.userId,
+            role: UserRole.Admin,
+          },
+        };
+      }
 
-      await prisma.resourceOwnerSlug.create({
-        data: {
-          slug,
-          resourceOwnerId: org.id,
-          resourceOwnerType: ResourceOwnerType.Organization,
-        },
-      });
+      const org = await prisma.organization.create({ data });
+
+      if (input.shouldCreateResourceOwnerSlug) {
+        await prisma.resourceOwnerSlug.create({
+          data: {
+            slug,
+            resourceOwnerId: org.id,
+            resourceOwnerType: ResourceOwnerType.Organization,
+          },
+        });
+      }
 
       return org;
     },
