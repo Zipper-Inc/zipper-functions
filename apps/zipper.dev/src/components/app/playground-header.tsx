@@ -29,13 +29,16 @@ import NextLink from 'next/link';
 import { CheckIcon } from '@chakra-ui/icons';
 import React, { useEffect, useState } from 'react';
 import { ZipperLogo, ZipperSymbol } from '@zipper/ui';
+
 import {
   HiOutlineUpload,
   HiPencilAlt,
   HiLockOpen,
   HiLockClosed,
 } from 'react-icons/hi';
+
 import { CgGitFork } from 'react-icons/cg';
+
 import { AppQueryOutput } from '~/types/trpc';
 import { EditAppSlugForm } from './edit-app-slug-form';
 import { useAppEditors } from '~/hooks/use-app-editors';
@@ -53,6 +56,7 @@ import { useOrganization } from '~/hooks/use-organization';
 import { useOrganizationList } from '~/hooks/use-organization-list';
 import SignedIn from '../auth/signed-in';
 import SignedOut from '../auth/signed-out';
+import { signIn } from 'next-auth/react';
 
 const getDefaultCreateAppFormValues = () => ({
   name: generateDefaultSlug(),
@@ -228,9 +232,9 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
               if (user) {
                 onOpen();
               } else {
-                router.push(
-                  `/sign-in?redirect=${window.location.pathname}?fork=1`,
-                );
+                signIn(undefined, {
+                  callbackUrl: `${window.location.pathname}?fork=1`,
+                });
               }
             }}
           >
@@ -246,11 +250,7 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
             fontWeight="medium"
             mr="3"
             onClick={() => {
-              router.push(
-                `/sign-in?redirect=${encodeURIComponent(
-                  window.location.toString(),
-                )}`,
-              );
+              signIn();
             }}
           >
             Sign In

@@ -11,7 +11,6 @@ import {
   Button,
   Card,
   CardBody,
-  CardFooter,
   CardHeader,
   Center,
   FormControl,
@@ -47,7 +46,11 @@ export default function SignIn({
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
   const [email, setEmail] = useState<string>('');
   const router = useRouter();
-  const { error } = router.query;
+  const { error, callbackUrl } = router.query;
+
+  const callbackURIComponent = callbackUrl
+    ? `&callbackUrl=${encodeURIComponent(callbackUrl as string)}`
+    : '';
 
   const emailError = error === 'EmailSignin';
 
@@ -159,7 +162,11 @@ export default function SignIn({
                           email,
                           redirect: false,
                         });
-                        router.push(`/auth/verify-request?email=${email}`);
+                        router.push(
+                          `/auth/verify-request?email=${encodeURIComponent(
+                            email,
+                          )}${callbackURIComponent}`,
+                        );
                       }}
                     >
                       Continue
