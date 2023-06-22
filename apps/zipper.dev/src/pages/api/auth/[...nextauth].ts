@@ -23,21 +23,23 @@ export const resend = new Resend(process.env.RESEND_API_KEY!);
 
 export function PrismaAdapter(p: PrismaClient): Adapter {
   return {
-    createUser: async (data) => {
+    createUser: async (data, { shouldCreateResourceOwnerSlug = true } = {}) => {
       const slug = await createUserSlug({ name: data.name, email: data.email });
       const user = await p.user.create({
         data: { ...data, slug },
       });
 
-      // create a resource owner slug for the user - this makes sure that slugs
-      // are unique across all resource owners (users and organizations)
-      await p.resourceOwnerSlug.create({
-        data: {
-          slug,
-          resourceOwnerType: ResourceOwnerType.User,
-          resourceOwnerId: user.id,
-        },
-      });
+      if (shouldCreateResourceOwnerSlug) {
+        // create a resource owner slug for the user - this makes sure that slugs
+        // are unique across all resource owners (users and organizations)
+        await p.resourceOwnerSlug.create({
+          data: {
+            slug,
+            resourceOwnerType: ResourceOwnerType.User,
+            resourceOwnerId: user.id,
+          },
+        });
+      }
 
       // add the user to the default organization if one is set in the allow list
       // NOTE: this doesn't handle blocking users from signing up - that happens in the signIn callback

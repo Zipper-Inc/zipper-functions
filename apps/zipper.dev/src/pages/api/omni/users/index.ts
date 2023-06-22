@@ -10,6 +10,16 @@ import {
 import { HttpMethod as Method, HttpStatusCode as Status } from '@zipper/types';
 import { User } from '@prisma/client';
 
+type UserToCreate = Partial<Omit<User, 'id'>> & { email: string };
+type CreateUserRequest = {
+  users: UserToCreate[];
+  shouldCreateResourceOwnerSlug?: boolean;
+};
+type CreateUserAdapter = (
+  data: UserToCreate,
+  options?: { shouldCreateResourceOwnerSlug: boolean },
+) => Promise<User>;
+
 export default createOmniApiHandler(async (req, res) => {
   switch (req.method) {
     // CREATE
@@ -18,8 +28,10 @@ export default createOmniApiHandler(async (req, res) => {
     case Method.PUT: {
       const errors: OmniApiError[] = [];
 
-      const usersToCreate: { email: string; emailVerified?: Date | null }[] =
-        req.body.users;
+      const {
+        users: usersToCreate,
+        shouldCreateResourceOwnerSlug = false,
+      }: CreateUserRequest = req.body;
 
       const noUsers = !Array.isArray(usersToCreate) || !usersToCreate.length;
       if (noUsers) {
@@ -44,12 +56,14 @@ export default createOmniApiHandler(async (req, res) => {
       const { createUser } = PrismaAdapter(prisma);
 
       const createdUsers = await Promise.all(
-        usersToCreate.map(
-          (user) =>
-            createUser({
+        usersToCreate.map((user) =>
+          (createUser as CreateUserAdapter)(
+            {
               ...user,
               emailVerified: user.emailVerified || null,
-            }) as User,
+            },
+            { shouldCreateResourceOwnerSlug },
+          ),
         ),
       );
 
