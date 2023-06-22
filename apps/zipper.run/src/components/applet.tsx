@@ -276,13 +276,6 @@ export function AppPage({
     );
   };
 
-  const [runUrl, setRunUrl] = useState('');
-  useEffect(() => {
-    if (typeof window !== 'undefined') setRunUrl(window.location.href);
-  }, []);
-
-  const imagePreviewUrl = `${runUrl}.png`;
-
   return (
     <>
       <Head>
@@ -364,7 +357,6 @@ export const getServerSideProps: GetServerSideProps = async ({
   query,
   resolvedUrl,
 }) => {
-  console.log('foo');
   console.log({ url: req.url, resolvedUrl });
 
   const { host } = req.headers;
