@@ -14,7 +14,6 @@ import {
   CardFooter,
   CardHeader,
   Center,
-  Flex,
   FormControl,
   FormLabel,
   Heading,
@@ -26,8 +25,7 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { ZipperLogo } from '@zipper/ui';
-import Link from 'next/link';
-import { SiGithub, SiTwitter } from 'react-icons/si';
+import { SiGithub } from 'react-icons/si';
 import { FcGoogle } from 'react-icons/fc';
 import { useState } from 'react';
 import { useRouter } from 'next/router';
@@ -38,8 +36,6 @@ export const renderIcon = (providerName: string) => {
       return <SiGithub size={24} />;
     case 'Google':
       return <FcGoogle size={24} />;
-    case 'Twitter':
-      return <SiTwitter />;
     default:
       return null;
   }

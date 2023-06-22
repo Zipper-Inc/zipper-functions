@@ -116,11 +116,14 @@ export async function handler({ text }: { text: string }) {
     },
   });
 
-  await prisma.allowListIdentifier.create({
-    data: {
-      value: 'zipper.works',
-      defaultOrganizationId: defaultOrgId,
-    },
+  await prisma.allowListIdentifier.createMany({
+    data: [
+      {
+        value: 'zipper.works',
+        defaultOrganizationId: defaultOrgId,
+      },
+      { value: 'arielconti10@gmail.com', defaultOrganizationId: defaultOrgId },
+    ],
   });
 }
 
