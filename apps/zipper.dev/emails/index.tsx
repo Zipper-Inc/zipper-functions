@@ -53,23 +53,23 @@ export const MagicLinkEmail = ({ loginUrl }: MagicLinkEmailProps) => (
   </Html>
 );
 
-export const OrgInvitationEmail = ({
+export const InvitationEmail = ({
   loginUrl,
-  organizationName,
+  resourceToJoinName,
 }: {
   loginUrl: string;
-  organizationName: string;
+  resourceToJoinName: string;
 }) => (
   <Html>
     <Head />
-    <Preview>{`You've been invited to join ${organizationName}`}</Preview>
+    <Preview>{`You've been invited to join ${resourceToJoinName}`}</Preview>
     <Body style={main}>
       <Container style={container}>
         <Img src="https://zipper.dev/zipper-logo.png" alt="Zipper" />
         <Heading style={h1}>Your invitation</Heading>
 
         <Text style={{ ...text, marginBottom: '14px' }}>
-          {`You've been invited to join ${organizationName} on Zipper.`}
+          {`You've been invited to join ${resourceToJoinName} on Zipper.`}
         </Text>
 
         <Link
@@ -103,7 +103,7 @@ export const OrgInvitationEmail = ({
   </Html>
 );
 
-export default { MagicLinkEmail, OrgInvitationEmail };
+export default { MagicLinkEmail, InvitationEmail };
 
 const main = {
   backgroundColor: '#ffffff',

@@ -5,7 +5,6 @@ import { prisma } from './prisma';
 import fetch from 'node-fetch';
 import getRunUrl from '../utils/get-run-url';
 import { generateAccessToken } from '../utils/jwt-utils';
-import clerkClient from '@clerk/clerk-sdk-node';
 
 const connection = new IORedis(+env.REDIS_PORT, env.REDIS_HOST, {
   maxRetriesPerRequest: null,

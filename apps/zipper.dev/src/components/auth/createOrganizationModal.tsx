@@ -1,4 +1,3 @@
-// import { useOrganizationList } from '@clerk/nextjs';
 import {
   Modal,
   ModalOverlay,

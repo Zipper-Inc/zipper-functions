@@ -1,5 +1,4 @@
-import clerkClient from '@clerk/clerk-sdk-node';
-import { Prisma } from '@prisma/client';
+import { AppRun, Prisma } from '@prisma/client';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { prisma } from '~/server/prisma';
@@ -91,14 +90,20 @@ export const appRunRouter = createRouter()
         select: defaultSelect,
       });
 
-      const userIds = appRuns.filter((r) => !!r.userId).map((r) => r.userId);
-
-      const clerkUsers = await clerkClient.users.getUserList({
-        userId: userIds as string[],
+      const users = await prisma.user.findMany({
+        where: {
+          id: {
+            in: appRuns
+              .filter((appRun) => !!appRun.userId)
+              .map((appRun) => appRun.userId) as string[],
+          },
+        },
       });
 
+      console.log(appRuns.filter((appRun) => !!appRun.userId));
+
       return appRuns.map((r) => {
-        return { ...r, user: clerkUsers.find((u) => u.id === r.userId) };
+        return { ...r, user: users.find((u) => u.id === r.userId) };
       });
     },
   });

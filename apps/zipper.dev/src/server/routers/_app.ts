@@ -5,7 +5,6 @@ import { createRouter } from '../createRouter';
 import superjson from 'superjson';
 import { appRouter } from './app.router';
 import { scriptRouter } from './script.router';
-import { appEventRouter } from './appEvent.router';
 import { secretRouter } from './secret.router';
 import { scheduleRouter } from './schedule.router';
 import { appRunRouter } from './appRun.router';
@@ -47,7 +46,6 @@ export const trpcRouter = createRouter()
   .merge('appAccessToken.', appAccessTokenRouter)
   .merge('appConnector.', appConnectorRouter)
   .merge('appEditor.', appEditorRouter)
-  .merge('appEvent.', appEventRouter)
   .merge('appRun.', appRunRouter)
   .merge('slackConnector.', slackConnectorRouter)
   .merge('githubConnector.', githubConnectorRouter)

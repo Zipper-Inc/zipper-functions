@@ -328,6 +328,7 @@ export const authOptions: AuthOptions = {
       try {
         session.error = token.error;
         session.user = {
+          id: token.sub,
           name: token.name,
           email: token.email,
           image: token.picture,
@@ -397,6 +398,7 @@ export interface SessionUser {
   email?: string | null;
   image?: string | null;
   username?: string | null;
+  id?: string | null;
 }
 
 declare module 'next-auth/jwt' {
