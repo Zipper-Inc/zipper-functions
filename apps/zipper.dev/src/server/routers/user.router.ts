@@ -51,9 +51,10 @@ export const userRouter = createProtectedRouter()
       if (!ctx.userId) throw new TRPCError({ code: 'UNAUTHORIZED' });
       return prisma.account.findMany({
         where: {
-          id: ctx.userId,
+          userId: ctx.userId,
         },
         select: {
+          id: true,
           provider: true,
           providerAccountId: true,
         },

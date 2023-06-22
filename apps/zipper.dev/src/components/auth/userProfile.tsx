@@ -2,16 +2,16 @@ import { useUser } from '~/hooks/use-user';
 import { Text, Box, Stack, Avatar, Divider } from '@chakra-ui/react';
 import { SiGithub } from 'react-icons/si';
 import { FcGoogle } from 'react-icons/fc';
-import { useSession } from 'next-auth/react';
+import { trpc } from '~/utils/trpc';
 
 export default function UserProfile() {
-  const { user } = useUser();
-  const session = useSession();
-  const accounts = session?.data?.accounts;
+  const { user, isLoaded } = useUser();
+  const { data: accounts } = trpc.useQuery(['user.getAccounts'], {
+    enabled: isLoaded,
+  });
 
   return (
     <>
-      {/** we are going to recreate UserProfile component from clerk */}
       {user && (
         <Box gap={4} display="flex" flexDirection="column" mb={8}>
           <Stack gap={2}>
@@ -46,8 +46,8 @@ export default function UserProfile() {
         Connected Accounts
       </Text>
       <Divider mb="4" mt={2} />
-      {accounts?.map((account) => (
-        <Box key={account.id} mt="4">
+      {accounts && accounts.map((account) => (
+        <Box key={account.provider} mt="4">
           <Text fontSize="sm" fontWeight="bold">
             {account.provider === 'github' && (
               <Stack direction="row" alignItems="center" gap={2}>
