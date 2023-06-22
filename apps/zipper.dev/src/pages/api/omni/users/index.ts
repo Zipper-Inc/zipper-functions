@@ -8,7 +8,23 @@ import {
   OmniApiError,
 } from '~/server/utils/omni.utils';
 import { HttpMethod as Method, HttpStatusCode as Status } from '@zipper/types';
-import { User } from '@prisma/client';
+import { ResourceOwnerSlug, User } from '@prisma/client';
+
+type UserToCreate = Partial<Omit<User, 'id'>> & { email: string };
+type CreateUsersRequest = {
+  users: UserToCreate[];
+  shouldCreateResourceOwnerSlug?: boolean;
+};
+type CreateUserAdapter = (
+  data: UserToCreate,
+  options?: { shouldCreateResourceOwnerSlug: boolean },
+) => Promise<User>;
+
+type CreateUsersData = {
+  created: true;
+  users: User[];
+  resourceOwnerSlugs?: ResourceOwnerSlug[];
+};
 
 export default createOmniApiHandler(async (req, res) => {
   switch (req.method) {
@@ -18,8 +34,10 @@ export default createOmniApiHandler(async (req, res) => {
     case Method.PUT: {
       const errors: OmniApiError[] = [];
 
-      const usersToCreate: { email: string; emailVerified?: Date | null }[] =
-        req.body.users;
+      const {
+        users: usersToCreate,
+        shouldCreateResourceOwnerSlug = true,
+      }: CreateUsersRequest = req.body;
 
       const noUsers = !Array.isArray(usersToCreate) || !usersToCreate.length;
       if (noUsers) {
@@ -44,23 +62,35 @@ export default createOmniApiHandler(async (req, res) => {
       const { createUser } = PrismaAdapter(prisma);
 
       const createdUsers = await Promise.all(
-        usersToCreate.map(
-          (user) =>
-            createUser({
+        usersToCreate.map((user) =>
+          (createUser as CreateUserAdapter)(
+            {
               ...user,
               emailVerified: user.emailVerified || null,
-            }) as User,
+            },
+            { shouldCreateResourceOwnerSlug },
+          ),
         ),
       );
+
+      const data: CreateUsersData = {
+        created: true,
+        users: createdUsers,
+      };
+
+      if (shouldCreateResourceOwnerSlug) {
+        data.resourceOwnerSlugs = await prisma.resourceOwnerSlug.findMany({
+          where: {
+            OR: createdUsers.map((u) => ({ resourceOwnerId: u.id })),
+          },
+        });
+      }
 
       return successResponse({
         res,
         body: {
           ok: true,
-          data: {
-            created: true,
-            users: createdUsers,
-          },
+          data,
         },
       });
     }

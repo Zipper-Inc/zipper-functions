@@ -28,7 +28,11 @@ export const createUserSlug = async ({
     where: { slug: { in: [...possibleSlugs, ...alternativeSlugs] } },
   });
 
-  const existingSlugs = existingResourceOwnerSlugs.map((s) => s.slug);
+  const existingUserSlugs = (await prisma.user.findMany()).map((u) => u.slug);
+
+  const existingSlugs = existingResourceOwnerSlugs
+    .map((s) => s.slug)
+    .concat(existingUserSlugs);
 
   const validSlugs = [...possibleSlugs, ...alternativeSlugs].filter((s) => {
     return !existingSlugs.includes(s);
