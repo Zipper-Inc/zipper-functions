@@ -185,16 +185,18 @@ export async function relayRequest(
   const { status, headers } = response;
   const result = await response.text();
 
-  const appRunRes = await addAppRun({
-    id: runId,
-    appId: app.id,
-    deploymentId,
-    success: response.status === 200,
-    scheduleId: request.headers.get('x-zipper-schedule-id') || undefined,
-    rpcBody: relayBody,
-    result,
-  });
-  headers.set('x-zipper-run-id', await appRunRes.text());
+  if (!bootOnly) {
+    const appRunRes = await addAppRun({
+      id: runId,
+      appId: app.id,
+      deploymentId,
+      success: response.status === 200,
+      scheduleId: request.headers.get('x-zipper-schedule-id') || undefined,
+      rpcBody: relayBody,
+      result,
+    });
+    headers.set('x-zipper-run-id', await appRunRes.text());
+  }
 
   return { result, status, headers };
 }

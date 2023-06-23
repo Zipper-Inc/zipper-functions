@@ -357,7 +357,6 @@ export const getServerSideProps: GetServerSideProps = async ({
   query,
   resolvedUrl,
 }) => {
-  console.log('foo');
   console.log({ url: req.url, resolvedUrl });
 
   const { host } = req.headers;
