@@ -138,7 +138,11 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
               <Link
                 href={`${
                   process.env.NODE_ENV === 'development' ? 'http' : 'https'
-                }://${appLink}`}
+                }://${appLink}${
+                  currentScript?.filename === 'main.ts'
+                    ? ''
+                    : `/${currentScript?.filename.slice(0, -3)}`
+                }`}
                 target="_blank"
               >
                 {currentScript?.filename === 'main.ts' ? (
