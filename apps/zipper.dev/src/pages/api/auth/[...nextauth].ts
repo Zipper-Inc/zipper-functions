@@ -317,7 +317,7 @@ export const authOptions: AuthOptions = {
         if (session.updateProfile) {
           const userUpdated = await prisma.user.findUnique({
             where: { id: token.sub },
-          })
+          });
 
           token.picture = userUpdated?.image;
           token.name = userUpdated?.name;

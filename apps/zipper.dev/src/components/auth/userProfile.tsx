@@ -88,8 +88,8 @@ export default function UserProfile() {
                     </Text>
                   </HStack>
                   <Box>
-                    <Fade in={isHovered} >
-                      <HiArrowRight color="gray.400"/>
+                    <Fade in={isHovered}>
+                      <HiArrowRight color="gray.400" />
                     </Fade>
                   </Box>
                 </Stack>
