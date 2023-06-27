@@ -247,7 +247,7 @@ export function Dashboard() {
         >
           <TabList
             borderBottom="1px solid"
-            borderColor={'gray.100'}
+            borderColor={'tertiarySurface'}
             p={1}
             pb={4}
             mb={2}
@@ -301,6 +301,7 @@ export function Dashboard() {
                         pr={6}
                         variant="solid"
                         colorScheme="purple"
+                        bgColor="primaryAction"
                         textColor="gray.100"
                         fontSize="sm"
                         onClick={onOpen}

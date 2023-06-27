@@ -1,4 +1,4 @@
-import { extendTheme } from '@chakra-ui/react';
+import { extendTheme, ThemeConfig } from '@chakra-ui/react';
 import multiSelectTheme from './multiSelectTheme';
 
 /**
@@ -140,9 +140,73 @@ export const fonts = {
   mono: 'Monaco, "Monaco", monospace',
 };
 
+const config: ThemeConfig = {
+  initialColorMode: 'dark',
+  useSystemColorMode: true,
+};
+
 export const theme = extendTheme({
+  config,
+  semanticTokens: {
+    colors: {
+      primaryText: {
+        default: 'gray.800',
+        _dark: 'whiteAlpha.900',
+      },
+      secondaryText: {
+        default: 'gray.600',
+        _dark: 'gray.300',
+      },
+      tertiaryText: {
+        default: 'gray.500',
+        _dark: 'gray.400',
+      },
+      highlightText: {
+        default: 'purple.500',
+        _dark: 'purple.300',
+      },
+
+      primaryAction: {
+        default: 'purple.500',
+        _dark: 'purple.600',
+      },
+      secondaryAction: {
+        default: '',
+        _dark: '',
+      },
+      tertiaryAction: {
+        default: '',
+        _dark: '',
+      },
+
+      highlightSurface: {
+        default: 'purple.50',
+        _dark: 'whiteAlpha.200',
+      },
+
+      primarySurface: {
+        default: '',
+        _dark: '',
+      },
+      secondarySurface: {
+        default: 'gray.50',
+        _dark: 'whiteAlpha.50',
+      },
+      tertiarySurface: {
+        default: 'gray.100',
+        _dark: 'whiteAlpha.100',
+      },
+    },
+  },
   components: {
     MultiSelect: multiSelectTheme,
+    Text: {
+      baseStyle: {
+        _dark: {
+          color: 'gray.300',
+        },
+      },
+    },
   },
   styles: {
     global: {
