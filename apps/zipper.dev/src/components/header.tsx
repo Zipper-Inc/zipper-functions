@@ -27,6 +27,7 @@ import {
   MenuItem,
   Stack,
   Text,
+  useColorMode,
 } from '@chakra-ui/react';
 import { useRouter } from 'next/router';
 import NextLink from 'next/link';
@@ -75,6 +76,7 @@ const Header: React.FC<HeaderProps> = ({
   const [submittingFeedback, setSubmittingFeedback] = useState(false);
 
   const feedbackMutation = trpc.useMutation('user.submitFeedback');
+  const { colorMode, toggleColorMode } = useColorMode();
 
   useEffect(() => {
     if (reload) {
@@ -98,7 +100,10 @@ const Header: React.FC<HeaderProps> = ({
             <NextLink href="/">
               <SignedIn>
                 {showNav && showOrgSwitcher ? (
-                  <ZipperSymbol style={{ maxHeight: '100%' }} />
+                  <ZipperSymbol
+                    style={{ maxHeight: '100%' }}
+                    fill="var(--chakra-colors-primaryText)"
+                  />
                 ) : (
                   <ZipperLogo style={{ maxHeight: '100%' }} />
                 )}
@@ -129,6 +134,9 @@ const Header: React.FC<HeaderProps> = ({
             </>
           )}
         </HStack>
+        <Button onClick={toggleColorMode}>
+          Toggle {colorMode === 'light' ? 'Dark' : 'Light'}
+        </Button>
 
         {showNav && (
           <Flex
@@ -157,6 +165,7 @@ const Header: React.FC<HeaderProps> = ({
                       textUnderlineOffset={12}
                       textDecoration={textDecoration}
                       fontSize="sm"
+                      color="tertiaryText"
                     >
                       {r.text}
                     </Link>
@@ -170,7 +179,7 @@ const Header: React.FC<HeaderProps> = ({
                   <Button
                     size="sm"
                     variant={'outline'}
-                    color="gray.600"
+                    color="tertiary"
                     onClick={feedbackModal.onOpen}
                   >
                     Feedback

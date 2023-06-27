@@ -112,7 +112,9 @@ const TableRow: React.FC<{ row: Row<any> }> = ({ row }) => {
   return (
     <Tr
       key={row.id}
-      backgroundColor={isHovering ? 'gray.50' : 'white'}
+      backgroundColor={
+        isHovering ? 'secondarySurface' : 'var(--chakra-body-bg)'
+      }
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => setIsHovering(false)}
     >

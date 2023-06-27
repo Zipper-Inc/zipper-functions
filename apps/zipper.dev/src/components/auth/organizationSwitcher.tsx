@@ -120,7 +120,7 @@ export const OrganizationSwitcher: React.FC<ButtonProps> = (props) => {
           {workspacesExcludingCurrent.length > 0 && (
             <Box
               w="full"
-              backgroundColor={'gray.50'}
+              backgroundColor="secondarySurface"
               backdropFilter="blur(10px)"
               pl="4"
               pt="6"
@@ -140,7 +140,7 @@ export const OrganizationSwitcher: React.FC<ButtonProps> = (props) => {
                     setActive && setActive(org.organization.id);
                   }
                 }}
-                backgroundColor="gray.50"
+                backgroundColor="secondarySurface"
                 px="4"
                 pt="2"
               >
@@ -184,7 +184,7 @@ export const OrganizationSwitcher: React.FC<ButtonProps> = (props) => {
             );
           })}
           <MenuItem
-            backgroundColor="gray.50"
+            backgroundColor="secondarySurface"
             color="gray.600"
             borderEndRadius={8}
             borderBottomLeftRadius={8}
@@ -194,7 +194,7 @@ export const OrganizationSwitcher: React.FC<ButtonProps> = (props) => {
             onClick={onOpenCreateOrg}
           >
             <HStack>
-              <Icon as={HiPlus}></Icon>
+              <Icon as={HiPlus} color="primaryText"></Icon>
               <Text>Create Organization</Text>
             </HStack>
           </MenuItem>

@@ -18,6 +18,7 @@ import { getPathFromUri, getUriFromPath } from '~/utils/model-uri';
 import { parse } from '@babel/parser';
 import traverse from '@babel/traverse';
 import MonacoJSXHighlighter from 'monaco-jsx-highlighter';
+import { useColorMode } from '@chakra-ui/react';
 
 type MonacoEditor = monaco.editor.IStandaloneCodeEditor;
 
@@ -337,11 +338,13 @@ export default function PlaygroundEditor(
     editorRef.current.pushUndoStop();
   }, [connectionId, currentScriptLive?.code, editorRef.current]);
 
+  const { colorMode } = useColorMode();
+
   return (
     <>
       <Editor
         defaultLanguage="typescript"
-        theme="vs-light"
+        theme={colorMode === 'light' ? 'vs-light' : 'vs-dark'}
         options={{
           fontSize: 13,
           minimap: { enabled: false },

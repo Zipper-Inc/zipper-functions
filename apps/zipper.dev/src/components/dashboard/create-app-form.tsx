@@ -128,7 +128,6 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
             <Text>/</Text>
             <InputGroup>
               <Input
-                backgroundColor="white"
                 maxLength={60}
                 {...createAppForm.register('name')}
                 onChange={(e) => {
@@ -160,10 +159,7 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
         </FormControl>
         <FormControl>
           <FormLabel textColor="gray.600">Description</FormLabel>
-          <Textarea
-            backgroundColor="white"
-            {...createAppForm.register('description')}
-          />
+          <Textarea {...createAppForm.register('description')} />
         </FormControl>
         <FormControl>
           <FormLabel>Visibility</FormLabel>
