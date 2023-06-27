@@ -243,7 +243,16 @@ export function parseInputForTypes({
 
     return props.map((prop) => {
       const typeNode = prop.getTypeNode();
-      if (!typeNode) throw new Error('No type node found for property');
+      if (!typeNode) {
+        // Typescript defaults to any if it can't find the type
+        // type Input = { foo } // foo is any
+        return {
+          key: prop.getName(),
+          type: InputType.any,
+          optional: prop.hasQuestionToken(),
+        };
+      }
+      
       const typeDetails = parseTypeNode(typeNode, src);
 
       return {
