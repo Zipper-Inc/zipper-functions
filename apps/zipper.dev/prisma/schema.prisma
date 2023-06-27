@@ -29,9 +29,6 @@ model App {
   requiresAuthToRun     Boolean   @default(false)
   branchId              String
 
-  scriptMain ScriptMain?
-
-  scripts        Script[]
   secrets        Secret[]
   schedules      Schedule[]
   runs           AppRun[]
@@ -55,6 +52,7 @@ model Branch {
   createdAt DateTime  @default(now())
 
   app       App       @relation(fields: [appId], references: [id])
+  scripts   Script[]
 
   @@map("branches")
 }
@@ -233,29 +231,17 @@ model Script {
   description  String?
   code         String
   order        Int?      @default(0)
-  appId        String
   inputSchema  Json?
   outputSchema Json?
   connectorId  String?
   hash         String?
   isRunnable   Boolean   @default(false)
-  branchId     String?
+  branchId     String
 
-  app        App         @relation(fields: [appId], references: [id])
-  scriptMain ScriptMain?
+  branch     Branch      @relation(fields: [branchId], references: [id])
 
-  @@unique([appId, filename])
+  @@unique([branchId, filename])
   @@map("scripts")
-}
-
-model ScriptMain {
-  appId    String @id
-  scriptId String @unique
-
-  app    App    @relation(fields: [appId], references: [id])
-  script Script @relation(fields: [scriptId], references: [id])
-
-  @@map("script_main")
 }
 
 model ZipperAuthCode {
