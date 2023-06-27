@@ -330,7 +330,6 @@ const EditorContextProvider = ({
 
   const onChange: EditorProps['onChange'] = (value = '', event) => {
     try {
-      localStorage.setItem(`script-${currentScript?.id}`, value);
       mutateLive(value, event.versionId);
 
       try {
@@ -538,16 +537,12 @@ const EditorContextProvider = ({
             model.getValue() !== currentScript.code
           ) {
             model.setValue(currentScript.code);
-            // Call mutateLive and localStorage.setItem when the currentScript is updated
+            // Call mutateLive when the currentScript is updated
             try {
               mutateLive(currentScript.code, model.getVersionId());
             } catch (e) {
               console.error('Caught error from mutateLive:', e);
             }
-            localStorage.setItem(
-              `script-${currentScript.id}`,
-              currentScript.code,
-            );
           }
         });
       }

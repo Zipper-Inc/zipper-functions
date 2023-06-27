@@ -222,9 +222,8 @@ export default function PlaygroundEditor(
       scripts.forEach((script) => {
         const uri = getUriFromPath(script.filename, monaco.Uri.parse);
         const model = monaco.editor.getModel(uri);
-        const code = localStorage.getItem(`script-${script.id}`) || script.code;
         if (!model) {
-          monaco.editor.createModel(code, 'typescript', uri);
+          monaco.editor.createModel(script.code, 'typescript', uri);
         }
       });
 
@@ -240,6 +239,9 @@ export default function PlaygroundEditor(
       });
 
       setEditor(monaco.editor);
+
+      if (process.env.NODE_ENV === 'development')
+        (window as any).monaco = monaco;
     }
   }, [monacoEditor]);
 
@@ -250,6 +252,7 @@ export default function PlaygroundEditor(
       if (model) {
         editorRef.current.setModel(model);
       }
+      /*
       if (!model && currentScript) {
         const newModel = monacoEditor.editor.createModel(
           currentScript.code,
@@ -264,6 +267,7 @@ export default function PlaygroundEditor(
         });
         editorRef.current.setModel(newModel);
       }
+      */
     }
   }, [currentScript, editorRef.current, isEditorReady]);
 
