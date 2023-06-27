@@ -1,4 +1,4 @@
-import { App, Script } from '@prisma/client';
+import { App, Branch, Script } from '@prisma/client';
 import hash from 'object-hash';
 
 export function getScriptHash(
@@ -13,13 +13,15 @@ export function getScriptHash(
   );
 }
 
-export function getAppHash(
-  app: Pick<App, 'id' | 'name'> & {
-    scripts: Pick<Script, 'id' | 'hash'>[];
-  },
-) {
-  const scripts = JSON.stringify(
-    app.scripts
+export function getAppHash({
+  app,
+  scripts,
+}: {
+  app: Pick<App, 'id' | 'name'>;
+  scripts: Pick<Script, 'id' | 'hash'>[];
+}) {
+  const sortedScripts = JSON.stringify(
+    scripts
       .map(({ id, hash }) => ({
         id,
         hash,
@@ -28,7 +30,7 @@ export function getAppHash(
   );
 
   return hash(
-    { id: app.id, name: app.name, scripts },
+    { id: app.id, name: app.name, sortedScripts },
     {
       algorithm: 'sha1',
     },

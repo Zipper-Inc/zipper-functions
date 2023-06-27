@@ -1,6 +1,7 @@
 import {
   App,
   AppEditor,
+  Branch,
   Prisma,
   ResourceOwnerSlug,
   Script,
@@ -183,30 +184,30 @@ export const appRouter = createRouter()
 
       if (!app) return;
 
-      const scriptMain = await prisma.scriptMain.create({
+      const scriptMain = await prisma.script.create({
         data: {
-          app: { connect: { id: app.id } },
-          script: {
+          branch: {
             create: {
-              code: defaultCode,
-              name: defaultMainFile,
-              filename: defaultMainFilename,
-              isRunnable: true,
+              name: 'main',
               appId: app.id,
-              order: 0,
             },
           },
+          code: defaultCode,
+          name: defaultMainFile,
+          filename: defaultMainFilename,
+          isRunnable: true,
+          order: 0,
         },
       });
       // get a hash of main script and update the script
       const scriptHash = getScriptHash({
         code: defaultCode,
         filename: defaultMainFilename,
-        id: scriptMain.scriptId,
+        id: scriptMain.id,
       });
       await prisma.script.update({
         where: {
-          id: scriptMain.scriptId,
+          id: scriptMain.id,
         },
         data: {
           hash: scriptHash,
@@ -215,8 +216,8 @@ export const appRouter = createRouter()
 
       // get a hash of app and update the app
       const appHash = getAppHash({
-        ...app,
-        scripts: [{ id: scriptMain.scriptId, hash: scriptHash }],
+        app,
+        scripts: [{ id: scriptMain.id, hash: scriptHash }],
       });
       const appVersion = getAppVersionFromHash(appHash);
       await prisma.app.update({
@@ -229,7 +230,7 @@ export const appRouter = createRouter()
         },
       });
 
-      return { ...app, scriptMain };
+      return { ...app };
     },
   })
   // read
@@ -356,6 +357,7 @@ export const appRouter = createRouter()
   .query('byId', {
     input: z.object({
       id: z.string(),
+      branchName: z.string().optional(),
     }),
     async resolve({ ctx, input }) {
       const app = await prisma.app.findFirstOrThrow({
@@ -377,8 +379,14 @@ export const appRouter = createRouter()
         },
         select: {
           ...defaultSelect,
-          scripts: true,
-          scriptMain: { include: { script: true } },
+          branches: {
+            where: {
+              name: input.branchName || 'main',
+            },
+            include: {
+              scripts: true,
+            },
+          },
           editors: true,
           settings: true,
           connectors: true,
@@ -403,6 +411,7 @@ export const appRouter = createRouter()
     input: z.object({
       resourceOwnerSlug: z.string(),
       appSlug: z.string(),
+      branchName: z.string().optional(),
     }),
     async resolve({ ctx, input }) {
       //find resouce owner (org or user) based on slug
@@ -431,8 +440,14 @@ export const appRouter = createRouter()
         where,
         select: {
           ...defaultSelect,
-          scripts: true,
-          scriptMain: { include: { script: true } },
+          branches: {
+            where: {
+              name: input.branchName || 'main',
+            },
+            include: {
+              scripts: true,
+            },
+          },
           editors: true,
           settings: true,
           connectors: {
@@ -458,12 +473,18 @@ export const appRouter = createRouter()
       if (app.isPrivate && !canEdit)
         throw new TRPCError({ code: 'UNAUTHORIZED' });
       // return the app
-      return { ...app, resourceOwner, canUserEdit: canEdit };
+      return {
+        ...app,
+        scripts: app.branches.map((b) => b.scripts).flat(),
+        resourceOwner,
+        canUserEdit: canEdit,
+      };
     },
   })
   .query('byResourceOwner', {
     input: z.object({
       resourceOwnerSlug: z.string(),
+      branchName: z.string().optional(),
     }),
     async resolve({ input, ctx }) {
       //find resouce owner (org or user) based on slug
@@ -502,8 +523,14 @@ export const appRouter = createRouter()
         orderBy: { updatedAt: 'desc' },
         select: {
           ...defaultSelect,
-          scripts: true,
-          scriptMain: { include: { script: true } },
+          branches: {
+            where: {
+              name: input.branchName || 'main',
+            },
+            include: {
+              scripts: true,
+            },
+          },
           editors: true,
           settings: true,
           connectors: true,
@@ -512,6 +539,7 @@ export const appRouter = createRouter()
 
       return apps.map((app) => ({
         ...app,
+        scripts: app.branches.map((b) => b.scripts).flat(),
         resourceOwner,
       }));
     },
@@ -543,11 +571,21 @@ export const appRouter = createRouter()
   .mutation('boot', {
     input: z.object({
       appId: z.string().uuid(),
+      branchName: z.string().optional(),
     }),
     async resolve({ input, ctx }) {
       const app = await prisma.app.findFirstOrThrow({
         where: { id: input.appId },
-        include: { scripts: true, scriptMain: true },
+        include: {
+          branches: {
+            where: {
+              name: input.branchName || 'main',
+            },
+            include: {
+              scripts: true,
+            },
+          },
+        },
       });
 
       const authToken = await getToken({ req: ctx.req! });
@@ -561,7 +599,10 @@ export const appRouter = createRouter()
             { expiresIn: '30s' },
           )
         : undefined;
-      const version = getAppVersionFromHash(app.hash || getAppHash(app));
+      const version = getAppVersionFromHash(
+        app.hash ||
+          getAppHash({ app, scripts: app.branches[0]?.scripts || [] }),
+      );
 
       console.log('Boot version: ', version);
 
@@ -573,6 +614,7 @@ export const appRouter = createRouter()
             body: '{}',
             headers: {
               authorization: token ? `Bearer ${token}` : '',
+              'x-zipper-branch-override': 'main',
             },
           },
         ).then((r) => r.json());
@@ -604,21 +646,35 @@ export const appRouter = createRouter()
       formData: z.record(z.any()),
       scriptId: z.string().uuid().optional(),
       runId: z.string().uuid(),
+      branchName: z.string().optional(),
     }),
     async resolve({ input, ctx }) {
-      const app = await prisma.app.findFirstOrThrow({
-        where: { id: input.appId },
-        include: { scripts: true, scriptMain: true },
-      });
+      const app: App & { branches: (Branch & { scripts: Script[] })[] } =
+        await prisma.app.findFirstOrThrow({
+          where: { id: input.appId },
+          include: {
+            branches: {
+              where: {
+                name: input.branchName || 'main',
+              },
+              include: {
+                scripts: true,
+              },
+            },
+          },
+        });
 
-      const version = getAppVersionFromHash(app.hash || getAppHash(app));
+      const version = getAppVersionFromHash(
+        app.hash ||
+          getAppHash({ app, scripts: app.branches[0]?.scripts || [] }),
+      );
 
       console.log('Run version: ', version);
 
       // Find the intended script, or mainScript if we can't find it
-      const script =
-        app.scripts.find((s) => s.id === input.scriptId) ||
-        app.scripts.find((s) => s.id === app.scriptMain?.scriptId);
+      const script = app.branches[0]?.scripts.find(
+        (s) => s.id === input.scriptId || s.filename === 'main.ts',
+      );
 
       if (!script) {
         throw new TRPCError({ code: 'NOT_FOUND' });
@@ -649,6 +705,7 @@ export const appRouter = createRouter()
           headers: {
             authorization: token ? `Bearer ${token}` : '',
             'x-zipper-run-id': input.runId,
+            'x-zipper-branch-override': 'main',
           },
         },
       ).then((r) => r.text());
@@ -678,7 +735,16 @@ export const appRouter = createRouter()
 
       const app = await prisma.app.findFirstOrThrow({
         where: { id },
-        include: { scripts: true, scriptMain: true },
+        include: {
+          branches: {
+            where: {
+              name: 'main',
+            },
+            include: {
+              scripts: true,
+            },
+          },
+        },
       });
 
       const fork = await prisma.app.create({
@@ -689,6 +755,11 @@ export const appRouter = createRouter()
           parentId: app.id,
           organizationId: ctx.orgId,
           createdById: ctx.userId,
+          branches: {
+            create: {
+              name: 'main',
+            },
+          },
           editors: {
             create: {
               userId: ctx.userId,
@@ -696,13 +767,17 @@ export const appRouter = createRouter()
             },
           },
         },
-        select: defaultSelect,
+        include: {
+          branches: true,
+        },
       });
+
+      const forkBranchId = fork.branches[0]!.id;
 
       const forkScripts: Script[] = [];
 
       await Promise.all(
-        app.scripts.map(async (script, i) => {
+        (app.branches[0]?.scripts || []).map(async (script, i) => {
           const newId = randomUUID();
           const forkScript = await prisma.script.create({
             data: {
@@ -710,28 +785,21 @@ export const appRouter = createRouter()
               id: newId,
               inputSchema: JSON.stringify(script.inputSchema),
               outputSchema: JSON.stringify(script.outputSchema),
-              appId: fork.id,
+              branchId: forkBranchId,
               order: i,
               hash: getScriptHash({ ...script, id: newId }),
             },
           });
 
           forkScripts.push(forkScript);
-
-          if (script.id === app.scriptMain?.scriptId) {
-            await prisma.scriptMain.create({
-              data: {
-                app: { connect: { id: fork.id } },
-                script: { connect: { id: forkScript.id } },
-              },
-            });
-          }
         }),
       );
 
       const appHash = getAppHash({
-        id: fork.id,
-        name: fork.name,
+        app: {
+          id: fork.id,
+          name: fork.name,
+        },
         scripts: forkScripts,
       });
 
@@ -768,17 +836,20 @@ export const appRouter = createRouter()
         isPrivate: z.boolean().optional(),
         lastDeploymentVersion: z.string().optional(),
         requiresAuthToRun: z.boolean().optional(),
-        scripts: z
-          .array(
-            z.object({
-              id: z.string().uuid(),
-              data: z.object({
-                name: z.string().min(3).max(255).optional(),
-                description: z.string().optional().nullable(),
-                code: z.string().optional(),
+        branch: z
+          .object({
+            name: z.string().optional(),
+            scripts: z.array(
+              z.object({
+                id: z.string().uuid(),
+                data: z.object({
+                  name: z.string().min(3).max(255).optional(),
+                  description: z.string().optional().nullable(),
+                  code: z.string().optional(),
+                }),
               }),
-            }),
-          )
+            ),
+          })
           .optional(),
       }),
     }),
@@ -789,7 +860,7 @@ export const appRouter = createRouter()
       });
 
       const { id, data } = input;
-      const { scripts, ...rest } = data;
+      const { branch, ...rest } = data;
 
       // if slug is provided, check if it's valid
       if (data.slug) {
@@ -814,7 +885,7 @@ export const appRouter = createRouter()
       const app = await prisma.app.update({
         where: { id },
         data: { updatedAt: new Date(), ...rest },
-        include: { scripts: true },
+        include: { branches: { include: { scripts: true } } },
       });
 
       const resourceOwner = await prisma.resourceOwnerSlug.findFirst({
@@ -827,14 +898,17 @@ export const appRouter = createRouter()
         throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
 
       const filenames: Record<string, string> = {};
-      app.scripts.map((s) => {
-        filenames[s.id] = s.filename;
-      });
+      app.branches
+        .map((b) => b.scripts)
+        .flat()
+        .map((s) => {
+          filenames[s.id] = s.filename;
+        });
 
       const updatedScripts: Script[] = [];
-      if (scripts) {
+      if (branch?.scripts) {
         await Promise.all(
-          scripts.map(async (script) => {
+          branch.scripts.map(async (script) => {
             const { id, data } = script;
             let isRunnable: boolean | undefined = undefined;
             if (data.code) {
@@ -864,8 +938,8 @@ export const appRouter = createRouter()
         },
         data: {
           hash: getAppHash({
-            id: app.id,
-            name: app.name,
+            app: { id: app.id, name: app.name },
+
             scripts: updatedScripts,
           }),
         },

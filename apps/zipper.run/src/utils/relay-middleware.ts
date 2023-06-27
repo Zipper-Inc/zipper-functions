@@ -115,6 +115,7 @@ export async function relayRequest(
     tempUserId,
     filename,
     token,
+    branch: request.headers.get('x-zipper-branch-override'),
   });
   if (__DEBUG__) console.log('getAppInfo', { result: appInfoResult });
 

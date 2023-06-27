@@ -598,14 +598,17 @@ const EditorContextProvider = ({
       const newApp = await editAppMutation.mutateAsync({
         id: appId,
         data: {
-          scripts: scripts.map((script: any) => ({
-            id: script.id,
-            data: {
-              name: script.name,
-              description: script.description || '',
-              code: fileValues[`/${script.filename}`],
-            },
-          })),
+          branch: {
+            name: 'main',
+            scripts: scripts.map((script: any) => ({
+              id: script.id,
+              data: {
+                name: script.name,
+                description: script.description || '',
+                code: fileValues[`/${script.filename}`],
+              },
+            })),
+          },
         },
       });
       refetchApp();

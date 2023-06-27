@@ -4,6 +4,7 @@ import {
   AppConnectorUserAuth,
   AppEditor,
   AppRun,
+  Branch,
   Script,
 } from '@prisma/client';
 import type { NextApiRequest, NextApiResponse } from 'next';
@@ -34,7 +35,9 @@ export default async function handler(
         app:
           | (App & {
               editors: AppEditor[];
-              scripts: Script[];
+              branches: (Branch & {
+                scripts: Script[];
+              })[];
               connectors: (AppConnector & {
                 appConnectorUserAuths: AppConnectorUserAuth[];
               })[];
@@ -62,7 +65,14 @@ export default async function handler(
         app: {
           include: {
             editors: true,
-            scripts: true,
+            branches: {
+              where: {
+                name: (req.query.branchName as string) || 'prod',
+              },
+              include: {
+                scripts: true,
+              },
+            },
             connectors: {
               include: {
                 appConnectorUserAuths: {
@@ -93,10 +103,12 @@ export default async function handler(
     },
   });
 
-  let entryPoint = appRun.app.scripts.find((s) => s.filename === appRun?.path);
+  const appScripts = appRun.app.branches[0]?.scripts || [];
+
+  let entryPoint = appScripts.find((s) => s.filename === appRun?.path);
 
   if (!entryPoint) {
-    entryPoint = appRun.app.scripts.find((s) => s.filename === 'main.ts');
+    entryPoint = appScripts.find((s) => s.filename === 'main.ts');
   }
 
   let result: any = appRun.result;
@@ -113,7 +125,7 @@ export default async function handler(
     }
   }
 
-  const { id, name, slug, description, updatedAt, scripts, hash } = appRun.app;
+  const { id, name, slug, description, updatedAt, hash } = appRun.app;
 
   const organizations: Record<string, string> = {};
 
@@ -146,7 +158,7 @@ export default async function handler(
         hash,
       },
       inputs: parseInputForTypes({ code: entryPoint?.code }) || [],
-      runnableScripts: scripts
+      runnableScripts: appScripts
         .filter((s) => s.isRunnable)
         .map((s) => s.filename),
       userAuthConnectors: appRun.app.connectors.filter(

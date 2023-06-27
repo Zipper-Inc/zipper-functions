@@ -12,11 +12,13 @@ export default async function getAppInfo({
   tempUserId,
   filename,
   token,
+  branch,
 }: {
   subdomain: string;
   tempUserId?: string;
   filename?: string;
   token?: string | null;
+  branch?: string | null;
 }): Promise<AppInfoResult> {
   const headers: Record<string, string> = {
     Authorization: `Bearer ${token || ''}`,
@@ -26,7 +28,7 @@ export default async function getAppInfo({
   }
   return fetch(`${APP_INFO_URL}/${subdomain}`, {
     method: 'POST',
-    body: JSON.stringify({ filename }),
+    body: JSON.stringify({ filename, branchName: branch || 'prod' }),
     headers,
   })
     .then((r) => r.json())

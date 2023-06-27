@@ -55,7 +55,7 @@ export function Playground({
   } = useEditorContext();
 
   const mainScript = app.scripts.find(
-    (script) => script.id === app.scriptMain?.scriptId,
+    (script) => script.filename === 'main.ts',
   ) as Script;
 
   useEffect(() => {

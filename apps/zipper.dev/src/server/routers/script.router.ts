@@ -77,33 +77,6 @@ export const scriptRouter = createRouter()
       return script;
     },
   })
-  .query('byAppId', {
-    input: z.object({
-      appId: z.string().uuid(),
-    }),
-    async resolve({ input }) {
-      return prisma.script.findMany({
-        where: {
-          appId: input.appId,
-        },
-        orderBy: { order: 'asc' },
-        select: defaultSelect,
-      });
-    },
-  })
-  .query('byId', {
-    input: z.object({
-      id: z.string(),
-    }),
-    async resolve({ input }) {
-      return prisma.script.findFirstOrThrow({
-        where: {
-          id: input.id,
-        },
-        select: defaultSelect,
-      });
-    },
-  })
   // edit
   .mutation('edit', {
     input: z.object({

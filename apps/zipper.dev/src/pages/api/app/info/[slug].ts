@@ -4,7 +4,6 @@ import {
   AppConnectorUserAuth,
   AppEditor,
   Script,
-  ScriptMain,
 } from '@prisma/client';
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '~/server/prisma';
@@ -41,8 +40,7 @@ export default async function handler(
 
   let appFound:
     | (App & {
-        scriptMain: ScriptMain | null;
-        scripts: Script[];
+        branches: { name: string; scripts: Script[] }[];
         editors: AppEditor[];
         connectors: (AppConnector & {
           appConnectorUserAuths: AppConnectorUserAuth[];
@@ -55,8 +53,14 @@ export default async function handler(
       where: { slug: slugFromUrl },
       include: {
         editors: true,
-        scripts: true,
-        scriptMain: true,
+        branches: {
+          where: {
+            name: body.branchName || 'prod',
+          },
+          include: {
+            scripts: true,
+          },
+        },
         connectors: {
           include: {
             appConnectorUserAuths: {
@@ -102,10 +106,11 @@ export default async function handler(
     description,
     updatedAt,
     lastDeploymentVersion,
-    scriptMain,
-    scripts,
+    branches,
     hash,
   } = appFound;
+
+  const scripts = branches[0]?.scripts || [];
 
   let entryPoint: Script | undefined = undefined;
 
@@ -117,7 +122,7 @@ export default async function handler(
   }
 
   if (!entryPoint) {
-    entryPoint = scripts.find((s) => s.id === scriptMain?.scriptId);
+    entryPoint = scripts.find((s) => s.filename === 'main.ts');
   }
 
   if (!entryPoint || !entryPoint.code) {

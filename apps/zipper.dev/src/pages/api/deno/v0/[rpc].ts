@@ -139,7 +139,11 @@ async function originBoot({
   id: string;
 }) {
   // eslint-disable-next-line prefer-const
-  const { appId, version: deploymentVersion } = parseDeploymentId(deploymentId);
+  const {
+    appId,
+    version: deploymentVersion,
+    branch,
+  } = parseDeploymentId(deploymentId);
 
   if (!appId || !deploymentVersion) {
     console.error('Missing appId and version');
@@ -151,8 +155,14 @@ async function originBoot({
       id: appId,
     },
     include: {
-      scripts: true,
-      scriptMain: true,
+      branches: {
+        where: {
+          name: branch,
+        },
+        include: {
+          scripts: true,
+        },
+      },
       secrets: true,
       connectors: true,
     },
@@ -164,12 +174,19 @@ async function originBoot({
 
   const version =
     deploymentVersion === 'latest'
-      ? app.lastDeploymentVersion || getAppVersionFromHash(getAppHash(app))
+      ? app.lastDeploymentVersion ||
+        getAppVersionFromHash(
+          getAppHash({ app, scripts: app.branches[0]?.scripts || [] }),
+        )
       : deploymentVersion;
 
   const baseUrl = `file://${app.slug}/v${version}`;
 
-  const eszip = await build({ baseUrl, app, version });
+  const eszip = await build({
+    baseUrl,
+    app: { ...app, scripts: app.branches[0]?.scripts || [] },
+    version,
+  });
 
   /**const old = await createEsZip({
     baseUrl,
