@@ -69,7 +69,8 @@ function parseTypeNode(type: TypeNode, src: SourceFile): ParsedNode {
             },
           };
         }
-        if (typeReferenceDeclarationType) return parseTypeNode(typeReferenceDeclarationType, src);
+        if (typeReferenceDeclarationType)
+          return parseTypeNode(typeReferenceDeclarationType, src);
       }
       if (typeReferenceDeclaration.isKind(SyntaxKind.InterfaceDeclaration)) {
         // we have a interface
@@ -260,7 +261,7 @@ export function parseInputForTypes({
           optional: prop.hasQuestionToken(),
         };
       }
-      
+
       const typeDetails = parseTypeNode(typeNode, src);
 
       return {
