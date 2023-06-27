@@ -46,6 +46,18 @@ model App {
   @@map("apps")
 }
 
+model Branch {
+  id        String    @id @default(uuid())
+  appId     String
+  name      String    @default("main")
+  createdAt DateTime  @default(now())
+
+  // app       App       @relation(fields: [appId], references: [id])
+  // scripts   Script[]
+
+  @@map("branches")
+}
+
 // token will be zaat.identier.secret
 model AppAccessToken {
   createdAt    DateTime  @default(now())
