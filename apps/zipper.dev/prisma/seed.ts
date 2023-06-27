@@ -54,35 +54,37 @@ async function main() {
       isPrivate: false,
       organizationId: defaultOrgId,
       submissionState: 3,
-      scripts: {
-        createMany: {
-          data: [
-            {
-              id: mainScriptId,
-              name: 'main',
-              filename: 'main.ts',
-              description: 'entry point for the app',
-              code: `import { countWords } from './count-words.ts';
+      branches: {
+        create: {
+          name: 'main',
+          scripts: {
+            createMany: {
+              data: [
+                {
+                  id: mainScriptId,
+                  name: 'main',
+                  filename: 'main.ts',
+                  description: 'entry point for the app',
+                  code: `import { countWords } from './count-words.ts';
 
 export async function handler({ text }: { text: string }) {
   return countWords(text);
 }`,
-              order: 0,
-            },
-            {
-              name: 'count-words',
-              filename: 'count-words.ts',
-              code: `export const countWords = (text: string) => {
+                  order: 0,
+                },
+                {
+                  name: 'count-words',
+                  filename: 'count-words.ts',
+                  code: `export const countWords = (text: string) => {
   console.log("Counting the words...");
   return text.split(" ").length;
 };`,
-              order: 1,
+                  order: 1,
+                },
+              ],
             },
-          ],
+          },
         },
-      },
-      scriptMain: {
-        create: { script: { connect: { id: mainScriptId } } },
       },
     },
   });
@@ -94,24 +96,26 @@ export async function handler({ text }: { text: string }) {
       isPrivate: false,
       organizationId: readOnlyOrgId,
       submissionState: 3,
-      scripts: {
-        createMany: {
-          data: [
-            {
-              id: mainScriptId2,
-              name: 'main',
-              filename: 'main.ts',
-              description: 'entry point for the app',
-              code: `export async function handler({ text }: { text: string }) {
+      branches: {
+        create: {
+          name: 'main',
+          scripts: {
+            createMany: {
+              data: [
+                {
+                  id: mainScriptId2,
+                  name: 'main',
+                  filename: 'main.ts',
+                  description: 'entry point for the app',
+                  code: `export async function handler({ text }: { text: string }) {
   return Math.floor(Math.random() * 100);
 }`,
-              order: 0,
+                  order: 0,
+                },
+              ],
             },
-          ],
+          },
         },
-      },
-      scriptMain: {
-        create: { script: { connect: { id: mainScriptId2 } } },
       },
     },
   });

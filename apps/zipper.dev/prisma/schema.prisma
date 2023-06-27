@@ -27,7 +27,6 @@ model App {
   organizationId        String?
   createdById           String?
   requiresAuthToRun     Boolean   @default(false)
-  branchId              String
 
   secrets        Secret[]
   schedules      Schedule[]
