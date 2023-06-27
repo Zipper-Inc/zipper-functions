@@ -46,6 +46,7 @@ import OrganizationSettings from './organization-settings';
 import UserSettings from './user-settings';
 import AppAvatar from '../app-avatar';
 import { useOrganization } from '~/hooks/use-organization';
+import { getEditAppletLink } from '@zipper/utils';
 
 type _App = Unpack<inferQueryOutput<'app.byAuthedUser'>>;
 type App = _App & {
@@ -91,7 +92,7 @@ const columns = [
               <Link
                 fontSize={'lg'}
                 fontWeight={600}
-                href={`/${resourceOwner.slug}/${slug}/edit/main.ts`}
+                href={getEditAppletLink(resourceOwner.slug, slug)}
               >
                 {getValue()}
               </Link>
