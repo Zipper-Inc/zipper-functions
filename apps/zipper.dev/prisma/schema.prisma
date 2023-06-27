@@ -27,6 +27,7 @@ model App {
   organizationId        String?
   createdById           String?
   requiresAuthToRun     Boolean   @default(false)
+  branchId              String?
 
   scriptMain ScriptMain?
 
@@ -42,6 +43,7 @@ model App {
   settings     AppSetting[]
   connectors   AppConnector[]
   accessTokens AppAccessToken[]
+  branches     Branch[]
 
   @@map("apps")
 }
@@ -52,8 +54,7 @@ model Branch {
   name      String    @default("main")
   createdAt DateTime  @default(now())
 
-  // app       App       @relation(fields: [appId], references: [id])
-  // scripts   Script[]
+  app       App       @relation(fields: [appId], references: [id])
 
   @@map("branches")
 }
