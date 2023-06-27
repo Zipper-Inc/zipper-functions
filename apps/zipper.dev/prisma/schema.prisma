@@ -22,8 +22,6 @@ model App {
   submissionState       Int       @default(0)
   categories            String[]
   parentId              String?
-  lastDeploymentVersion String?
-  hash                  String?
   organizationId        String?
   createdById           String?
   requiresAuthToRun     Boolean   @default(false)
@@ -49,11 +47,13 @@ model Branch {
   appId     String
   name      String    @default("main")
   createdAt DateTime  @default(now())
+  hash      String?
 
   app       App       @relation(fields: [appId], references: [id])
   scripts   Script[]
 
   @@map("branches")
+  @@unique([appId, name])
 }
 
 // token will be zaat.identier.secret

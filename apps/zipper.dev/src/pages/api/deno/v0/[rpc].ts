@@ -7,7 +7,7 @@ import intoStream from 'into-stream';
 import { decryptFromBase64, parseDeploymentId } from '@zipper/utils';
 import { prisma } from '~/server/prisma';
 import { build, FRAMEWORK_ENTRYPOINT } from '~/utils/eszip-build-applet';
-import { getAppHash, getAppVersionFromHash } from '~/utils/hashing';
+import { getBranchHash, getAppVersionFromHash } from '~/utils/hashing';
 
 const X_DENO_CONFIG = 'x-deno-config';
 
@@ -174,9 +174,9 @@ async function originBoot({
 
   const version =
     deploymentVersion === 'latest'
-      ? app.lastDeploymentVersion ||
-        getAppVersionFromHash(
-          getAppHash({ app, scripts: app.branches[0]?.scripts || [] }),
+      ? getAppVersionFromHash(
+          app.branches[0]?.hash ||
+            getBranchHash({ app, scripts: app.branches[0]?.scripts || [] }),
         )
       : deploymentVersion;
 

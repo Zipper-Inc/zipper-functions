@@ -12,11 +12,11 @@ const defaultSelect = Prisma.validator<Prisma.ScriptSelect>()({
   name: true,
   filename: true,
   description: true,
-  appId: true,
   code: true,
   createdAt: true,
   updatedAt: true,
   connectorId: true,
+  branchId: true,
 });
 
 const DEFAULT_CODE = `export async function handler({ world }: { world: string }) {
@@ -41,16 +41,27 @@ export const scriptRouter = createRouter()
 
       const sluggifiedName = slugifyAllowDot(data.name);
 
+      const branch = await prisma.branch.findUniqueOrThrow({
+        where: {
+          appId_name: {
+            appId,
+            name: 'main',
+          },
+        },
+      });
+
       const script = await prisma.script.create({
         data: {
-          ...data,
           isRunnable: isCodeRunnable(data.code),
-          app: {
-            connect: { id: appId },
-          },
           filename: sluggifiedName.endsWith('.ts')
             ? sluggifiedName
             : `${sluggifiedName}.ts`,
+          branch: {
+            connect: {
+              id: branch.id,
+            },
+          },
+          ...data,
         },
         select: defaultSelect,
       });
@@ -91,12 +102,17 @@ export const scriptRouter = createRouter()
 
       const script = await prisma.script.findFirstOrThrow({
         where: { id },
-        select: { appId: true, id: true, code: true, filename: true },
+        select: {
+          id: true,
+          code: true,
+          filename: true,
+          branch: true,
+        },
       });
 
       await hasAppEditPermission({
         ctx,
-        appId: script.appId,
+        appId: script.branch.appId,
       });
 
       const filename = data.name
@@ -137,7 +153,9 @@ export const scriptRouter = createRouter()
 
       const scripts = await prisma.script.findMany({
         where: {
-          appId,
+          branch: {
+            appId,
+          },
           filename: `${newFilename}.ts`,
         },
         select: {

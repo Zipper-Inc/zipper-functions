@@ -13,7 +13,7 @@ export function getScriptHash(
   );
 }
 
-export function getAppHash({
+export function getBranchHash({
   app,
   scripts,
 }: {

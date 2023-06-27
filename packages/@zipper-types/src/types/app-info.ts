@@ -6,10 +6,11 @@ export type AppInfo = {
   slug: string;
   name: string | null;
   description: string | null;
-  lastDeploymentVersion: string | null;
   updatedAt: Date | null;
   canUserEdit: boolean;
-  hash: string | null;
+  branch: {
+    hash: string | null;
+  };
 };
 
 export type InputParams = InputParam[];

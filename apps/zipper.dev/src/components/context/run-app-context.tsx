@@ -69,16 +69,7 @@ export function RunAppProvider({
   ) => void;
   preserveLogs: boolean;
 }) {
-  const {
-    id,
-    name,
-    description,
-    slug,
-    updatedAt,
-    lastDeploymentVersion,
-    canUserEdit,
-    hash,
-  } = app;
+  const { id, name, description, slug, updatedAt, canUserEdit } = app;
   const formMethods = useForm();
   const [isRunning, setIsRunning] = useState(false);
   const [results, setResults] = useState<Record<string, string>>({});
@@ -276,9 +267,10 @@ export function RunAppProvider({
           description,
           slug,
           updatedAt,
-          lastDeploymentVersion,
           canUserEdit,
-          hash,
+          branch: {
+            hash: app.branches[0]?.hash || null,
+          },
         },
         formMethods,
         isRunning,

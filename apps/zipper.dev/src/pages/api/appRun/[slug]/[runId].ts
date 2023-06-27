@@ -125,7 +125,7 @@ export default async function handler(
     }
   }
 
-  const { id, name, slug, description, updatedAt, hash } = appRun.app;
+  const { id, name, slug, description, updatedAt } = appRun.app;
 
   const organizations: Record<string, string> = {};
 
@@ -147,7 +147,6 @@ export default async function handler(
         name,
         slug,
         description,
-        lastDeploymentVersion: appRun.version,
         updatedAt,
         canUserEdit: canUserEdit(appRun.app, {
           req,
@@ -155,7 +154,9 @@ export default async function handler(
           orgId: undefined,
           organizations,
         }),
-        hash,
+        branch: {
+          hash: appRun.app.branches[0]?.hash || null,
+        },
       },
       inputs: parseInputForTypes({ code: entryPoint?.code }) || [],
       runnableScripts: appScripts

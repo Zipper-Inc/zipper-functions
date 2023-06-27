@@ -3,6 +3,7 @@ import {
   AppConnector,
   AppConnectorUserAuth,
   AppEditor,
+  Branch,
   Script,
 } from '@prisma/client';
 import type { NextApiRequest, NextApiResponse } from 'next';
@@ -16,6 +17,7 @@ import { ZIPPER_TEMP_USER_ID_HEADER } from '@zipper/utils';
 import * as Sentry from '@sentry/nextjs';
 import { verifyAccessToken } from '~/utils/jwt-utils';
 import { SessionOrganizationMembership } from '../../auth/[...nextauth]';
+import { getAppVersionFromHash } from '~/utils/hashing';
 
 export default async function handler(
   req: NextApiRequest,
@@ -40,7 +42,7 @@ export default async function handler(
 
   let appFound:
     | (App & {
-        branches: { name: string; scripts: Script[] }[];
+        branches: (Branch & { scripts: Script[] })[];
         editors: AppEditor[];
         connectors: (AppConnector & {
           appConnectorUserAuths: AppConnectorUserAuth[];
@@ -83,6 +85,13 @@ export default async function handler(
     });
   }
 
+  if (!appFound.branches[0]) {
+    return res.status(404).send({
+      ok: false,
+      error: `There are no branches with name: ${body.branchName}`,
+    });
+  }
+
   const resourceOwner = await prisma.resourceOwnerSlug.findFirst({
     where: {
       resourceOwnerId: appFound.organizationId || appFound.createdById,
@@ -99,18 +108,9 @@ export default async function handler(
     }
   }
 
-  const {
-    id,
-    name,
-    slug,
-    description,
-    updatedAt,
-    lastDeploymentVersion,
-    branches,
-    hash,
-  } = appFound;
+  const { id, name, slug, description, updatedAt, branches } = appFound;
 
-  const scripts = branches[0]?.scripts || [];
+  const scripts = branches[0]!.scripts;
 
   let entryPoint: Script | undefined = undefined;
 
@@ -147,7 +147,6 @@ export default async function handler(
         name,
         slug,
         description,
-        lastDeploymentVersion,
         updatedAt,
         canUserEdit: canUserEdit(appFound, {
           req,
@@ -155,7 +154,9 @@ export default async function handler(
           orgId: undefined,
           organizations: organizations,
         }),
-        hash,
+        branch: {
+          hash: branches[0]!.hash,
+        },
       },
       inputs: parsedCode.inputs || [],
       metadata: {

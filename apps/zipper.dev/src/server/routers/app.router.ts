@@ -17,7 +17,7 @@ import denyList from '../utils/slugDenyList';
 import { appSubmissionState, ResourceOwnerType } from '@zipper/types';
 import { Context } from '../context';
 import {
-  getAppHash,
+  getBranchHash,
   getAppVersionFromHash,
   getScriptHash,
 } from '~/utils/hashing';
@@ -39,7 +39,6 @@ const defaultSelect = Prisma.validator<Prisma.AppSelect>()({
   slug: true,
   description: true,
   isPrivate: true,
-  lastDeploymentVersion: true,
   parentId: true,
   submissionState: true,
   createdAt: true,
@@ -47,7 +46,6 @@ const defaultSelect = Prisma.validator<Prisma.AppSelect>()({
   organizationId: true,
   createdById: true,
   requiresAuthToRun: true,
-  hash: true,
 });
 
 export const defaultCode = [
@@ -215,18 +213,17 @@ export const appRouter = createRouter()
       });
 
       // get a hash of app and update the app
-      const appHash = getAppHash({
+      const appHash = getBranchHash({
         app,
         scripts: [{ id: scriptMain.id, hash: scriptHash }],
       });
-      const appVersion = getAppVersionFromHash(appHash);
-      await prisma.app.update({
+
+      await prisma.branch.update({
         where: {
-          id: app.id,
+          id: scriptMain.branchId,
         },
         data: {
           hash: appHash,
-          lastDeploymentVersion: appVersion,
         },
       });
 
@@ -588,6 +585,8 @@ export const appRouter = createRouter()
         },
       });
 
+      const branch = app.branches[0];
+
       const authToken = await getToken({ req: ctx.req! });
 
       const token = ctx.userId
@@ -599,10 +598,10 @@ export const appRouter = createRouter()
             { expiresIn: '30s' },
           )
         : undefined;
-      const version = getAppVersionFromHash(
-        app.hash ||
-          getAppHash({ app, scripts: app.branches[0]?.scripts || [] }),
-      );
+
+      const hash =
+        branch?.hash || getBranchHash({ app, scripts: branch?.scripts || [] });
+      const version = getAppVersionFromHash(hash);
 
       console.log('Boot version: ', version);
 
@@ -627,12 +626,14 @@ export const appRouter = createRouter()
           );
         }
 
-        await prisma.app.update({
-          where: { id: app.id },
-          data: {
-            lastDeploymentVersion: version,
-          },
-        });
+        if (branch && !branch.hash) {
+          await prisma.branch.update({
+            where: { id: branch.id },
+            data: {
+              hash,
+            },
+          });
+        }
 
         return bootPayload;
       } catch (e: any) {
@@ -664,15 +665,15 @@ export const appRouter = createRouter()
           },
         });
 
-      const version = getAppVersionFromHash(
-        app.hash ||
-          getAppHash({ app, scripts: app.branches[0]?.scripts || [] }),
-      );
+      const branch = app.branches[0];
+      const hash =
+        branch?.hash || getBranchHash({ app, scripts: branch?.scripts || [] });
+      const version = getAppVersionFromHash(hash);
 
       console.log('Run version: ', version);
 
       // Find the intended script, or mainScript if we can't find it
-      const script = app.branches[0]?.scripts.find(
+      const script = branch?.scripts.find(
         (s) => s.id === input.scriptId || s.filename === 'main.ts',
       );
 
@@ -710,12 +711,14 @@ export const appRouter = createRouter()
         },
       ).then((r) => r.text());
 
-      await prisma.app.update({
-        where: { id: app.id },
-        data: {
-          lastDeploymentVersion: version,
-        },
-      });
+      if (branch && !branch.hash) {
+        await prisma.branch.update({
+          where: { id: branch.id },
+          data: {
+            hash,
+          },
+        });
+      }
 
       return { ok: true, filename: script.filename, version, result };
     },
@@ -795,7 +798,7 @@ export const appRouter = createRouter()
         }),
       );
 
-      const appHash = getAppHash({
+      const appHash = getBranchHash({
         app: {
           id: fork.id,
           name: fork.name,
@@ -805,10 +808,19 @@ export const appRouter = createRouter()
 
       const appWithScripts = await prisma.app.update({
         where: { id: fork.id },
-        data: {
-          hash: appHash,
-        },
         select: defaultSelect,
+        data: {
+          branches: {
+            update: {
+              where: {
+                id: forkBranchId,
+              },
+              data: {
+                hash: appHash,
+              },
+            },
+          },
+        },
       });
 
       const resourceOwner = await prisma.resourceOwnerSlug.findFirstOrThrow({
@@ -936,14 +948,22 @@ export const appRouter = createRouter()
         where: {
           id,
         },
+        select: { ...defaultSelect, branches: { where: { name: 'main' } } },
         data: {
-          hash: getAppHash({
-            app: { id: app.id, name: app.name },
-
-            scripts: updatedScripts,
-          }),
+          branches: {
+            update: {
+              where: {
+                id: app.branches[0]!.id,
+              },
+              data: {
+                hash: getBranchHash({
+                  app: { id: app.id, name: app.name },
+                  scripts: updatedScripts,
+                }),
+              },
+            },
+          },
         },
-        select: defaultSelect,
       });
 
       return { ...appWithUpdatedHash, resourceOwner };

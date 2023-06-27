@@ -559,7 +559,7 @@ const EditorContextProvider = ({
       throw new Error('Something went wrong while saving');
 
     setIsSaving(true);
-    const version = getAppVersionFromHash(app.hash || '');
+    const version = getAppVersionFromHash(app.branches[0]?.hash || '');
     addLog(
       'info',
       prettyLog({
@@ -614,11 +614,11 @@ const EditorContextProvider = ({
       refetchApp();
       setIsSaving(false);
 
-      if (!newApp.hash) {
+      if (!newApp.branches[0]?.hash) {
         throw new Error('Something went wrong while saving the applet');
       }
 
-      const newVersion = getAppVersionFromHash(newApp.hash);
+      const newVersion = getAppVersionFromHash(newApp.branches[0].hash);
       addLog(
         'info',
         prettyLog({
@@ -632,7 +632,7 @@ const EditorContextProvider = ({
         }),
       );
 
-      return newApp.hash;
+      return newApp.branches[0].hash;
     } catch (e: any) {
       setIsSaving(false);
       addLog(

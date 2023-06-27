@@ -50,15 +50,7 @@ const initializeWorkers = () => {
             }
           }
 
-          /**
-           * @todo
-           * this should be the version of the app specific to the cron
-           */
-          const url = getRunUrl(
-            schedule.app.slug,
-            schedule.app.lastDeploymentVersion,
-            schedule.filename,
-          );
+          const url = getRunUrl(schedule.app.slug, 'latest', schedule.filename);
 
           try {
             await fetch(url, {
