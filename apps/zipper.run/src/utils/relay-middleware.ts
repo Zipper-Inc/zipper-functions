@@ -128,8 +128,7 @@ export async function relayRequest(
   const { app, userAuthConnectors, userInfo } = appInfoResult.data;
 
   // Get a version from URL or use the latest
-  const version =
-    _version || app.lastDeploymentVersion || Date.now().toString(32);
+  const version = _version || app.branch.hash || Date.now().toString(32);
 
   const deploymentId = formatDeploymentId({
     appId: app.id,
