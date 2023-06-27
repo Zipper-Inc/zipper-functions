@@ -1,4 +1,4 @@
-import { InputParam, InputType } from '@zipper/types';
+import { InputParam, InputType, ParsedNode } from '@zipper/types';
 import { parse } from 'comment-parser';
 
 import {
@@ -25,7 +25,7 @@ function removeTsExtension(moduleName: string) {
 }
 
 // Determine the Zipper type from the Typescript type
-function parseTypeNode(type: any, src: SourceFile): any {
+function parseTypeNode(type: TypeNode, src: SourceFile): ParsedNode {
   const text = type.getText();
   if (text.toLowerCase() === 'boolean') return { type: InputType.boolean };
   if (text.toLowerCase() === 'number') return { type: InputType.number };
@@ -66,7 +66,7 @@ function parseTypeNode(type: any, src: SourceFile): any {
             },
           };
         }
-        return parseTypeNode(typeReferenceDeclarationType, src);
+        if (typeReferenceDeclarationType) return parseTypeNode(typeReferenceDeclarationType, src);
       }
       if(typeReferenceDeclaration.isKind(SyntaxKind.InterfaceDeclaration)) {
         // we have a interface
@@ -243,13 +243,14 @@ export function parseInputForTypes({
 
     return props.map((prop) => {
       const typeNode = prop.getTypeNode();
+      if (!typeNode) throw new Error('No type node found for property');
       const typeDetails = parseTypeNode(typeNode, src);
 
       return {
         key: prop.getName(),
         type: typeDetails.type,
-        details: typeDetails.details,
         optional: prop.hasQuestionToken(),
+        ...('details' in typeDetails && { details: typeDetails.details }),
       };
     });
   } catch (e) {
