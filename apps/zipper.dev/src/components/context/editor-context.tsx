@@ -37,6 +37,11 @@ enum ZipperLintCode {
   CannotFindModule = 'Z001',
 }
 
+type OnValidate = AddParameters<
+  Required<EditorProps>['onValidate'],
+  [filename?: string]
+>;
+
 export type EditorContextType = {
   currentScript?: Script;
   setCurrentScript: (script: Script) => void;
@@ -46,7 +51,7 @@ export type EditorContextType = {
     lastConnectionId: number;
   };
   onChange: EditorProps['onChange'];
-  onValidate: EditorProps['onValidate'];
+  onValidate: OnValidate;
   connectionId?: number;
   scripts: Script[];
   setScripts: (scripts: Script[]) => void;
@@ -410,12 +415,15 @@ const EditorContextProvider = ({
     }
   };
 
-  const onValidate: EditorProps['onValidate'] = (markers) => {
-    if (!currentScript) return;
+  const onValidate: EditorProps['onValidate'] = (
+    markers,
+    filename = currentScript?.filename,
+  ) => {
+    if (!filename) return;
     const errorMarker = markers?.find(
       (m) => m.severity === monacoRef.current?.MarkerSeverity.Error,
     );
-    setModelHasErrors(currentScript.filename, !!errorMarker);
+    setModelHasErrors(filename, !!errorMarker);
   };
 
   useEffect(() => {
