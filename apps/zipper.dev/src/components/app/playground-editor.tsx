@@ -252,7 +252,6 @@ export default function PlaygroundEditor(
       if (model) {
         editorRef.current.setModel(model);
       }
-      /*
       if (!model && currentScript) {
         const newModel = monacoEditor.editor.createModel(
           currentScript.code,
@@ -267,7 +266,6 @@ export default function PlaygroundEditor(
         });
         editorRef.current.setModel(newModel);
       }
-      */
     }
   }, [currentScript, editorRef.current, isEditorReady]);
 
