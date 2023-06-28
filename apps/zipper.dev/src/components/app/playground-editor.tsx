@@ -221,7 +221,7 @@ export default function PlaygroundEditor(
       );
 
       scripts.forEach((script) => {
-        const uri = getUriFromPath(script.filename, monaco.Uri.parse);
+        const uri = getUriFromPath(script.filename, monaco.Uri.parse, 'tsx');
         const model = monaco.editor.getModel(uri);
         if (!model) {
           monaco.editor.createModel(script.code, 'typescript', uri);
@@ -271,7 +271,11 @@ export default function PlaygroundEditor(
 
   useEffect(() => {
     if (monacoEditor && editorRef.current && isEditorReady && currentScript) {
-      const uri = getUriFromPath(currentScript.filename, monaco.Uri.parse);
+      const uri = getUriFromPath(
+        currentScript.filename,
+        monaco.Uri.parse,
+        'tsx',
+      );
       const model = monacoEditor.editor.getModel(uri);
       if (model) {
         editorRef.current.setModel(model);
@@ -347,7 +351,9 @@ export default function PlaygroundEditor(
         overrideServices={{
           openerService: {
             open: function (url: string) {
-              const resource = getUriFromPath(url, monaco.Uri.parse);
+              const ext =
+                isExternalResource(url) && !url.endsWith('tsx') ? 'ts' : 'tsx';
+              const resource = getUriFromPath(url, monaco.Uri.parse, ext);
               // Don't try to open URLs that have models
               // They will open from the defintion code
               if (

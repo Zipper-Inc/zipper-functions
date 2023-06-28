@@ -160,7 +160,11 @@ async function fetchImport({
     Object.keys(bundle).forEach((url) => {
       console.log('[IMPORTS]', `(${importUrl})`, `Handling ${url}`);
       const src = bundle[url];
-      const uri = getUriFromPath(url, uriParser);
+      const uri = getUriFromPath(
+        url,
+        uriParser,
+        url.endsWith('tsx') ? 'tsx' : 'ts',
+      );
       if (!monacoRef?.current?.editor.getModel(uri)) {
         monacoRef?.current?.editor.createModel(src, 'typescript', uri);
       }
@@ -218,7 +222,13 @@ function handleExternalImports({
   oldImportModels.forEach((importUrl) => {
     const modelToDelete =
       !imports.includes(importUrl) &&
-      monacoRef?.current?.editor.getModel(getUriFromPath(importUrl, uriParser));
+      monacoRef?.current?.editor.getModel(
+        getUriFromPath(
+          importUrl,
+          uriParser,
+          importUrl.endsWith('tsx') ? 'tsx' : 'ts',
+        ),
+      );
 
     // @todo figure out how to remove other models in the bundle
     // Here we're just removing the root one
@@ -356,6 +366,7 @@ const EditorContextProvider = ({
             // The relative path is required by Deno/Zipper
             i.specifier.substring(2),
             monacoRef.current!.Uri.parse,
+            'tsx',
           );
           const foundModel = editor!.getModel(foundUri);
 
@@ -364,6 +375,7 @@ const EditorContextProvider = ({
             const currentUri = getUriFromPath(
               currentScript!.filename,
               monacoRef.current!.Uri.parse,
+              'tsx',
             );
             const currentModel = editor!.getModel(currentUri);
             let message = `Cannot find module '${i.specifier}\'.`;
