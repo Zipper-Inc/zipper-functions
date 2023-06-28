@@ -37,11 +37,6 @@ enum ZipperLintCode {
   CannotFindModule = 'Z001',
 }
 
-type OnValidate = AddParameters<
-  Required<EditorProps>['onValidate'],
-  [filename?: string]
->;
-
 export type EditorContextType = {
   currentScript?: Script;
   setCurrentScript: (script: Script) => void;
@@ -51,7 +46,7 @@ export type EditorContextType = {
     lastConnectionId: number;
   };
   onChange: EditorProps['onChange'];
-  onValidate: OnValidate;
+  onValidate: EditorProps['onValidate'];
   connectionId?: number;
   scripts: Script[];
   setScripts: (scripts: Script[]) => void;
@@ -160,11 +155,7 @@ async function fetchImport({
     Object.keys(bundle).forEach((url) => {
       console.log('[IMPORTS]', `(${importUrl})`, `Handling ${url}`);
       const src = bundle[url];
-      const uri = getUriFromPath(
-        url,
-        uriParser,
-        url.endsWith('tsx') ? 'tsx' : 'ts',
-      );
+      const uri = getUriFromPath(url, uriParser);
       if (!monacoRef?.current?.editor.getModel(uri)) {
         monacoRef?.current?.editor.createModel(src, 'typescript', uri);
       }
@@ -222,13 +213,7 @@ function handleExternalImports({
   oldImportModels.forEach((importUrl) => {
     const modelToDelete =
       !imports.includes(importUrl) &&
-      monacoRef?.current?.editor.getModel(
-        getUriFromPath(
-          importUrl,
-          uriParser,
-          importUrl.endsWith('tsx') ? 'tsx' : 'ts',
-        ),
-      );
+      monacoRef?.current?.editor.getModel(getUriFromPath(importUrl, uriParser));
 
     // @todo figure out how to remove other models in the bundle
     // Here we're just removing the root one
@@ -345,6 +330,7 @@ const EditorContextProvider = ({
 
   const onChange: EditorProps['onChange'] = (value = '', event) => {
     try {
+      localStorage.setItem(`script-${currentScript?.id}`, value);
       mutateLive(value, event.versionId);
 
       try {
@@ -366,7 +352,6 @@ const EditorContextProvider = ({
             // The relative path is required by Deno/Zipper
             i.specifier.substring(2),
             monacoRef.current!.Uri.parse,
-            'tsx',
           );
           const foundModel = editor!.getModel(foundUri);
 
@@ -375,7 +360,6 @@ const EditorContextProvider = ({
             const currentUri = getUriFromPath(
               currentScript!.filename,
               monacoRef.current!.Uri.parse,
-              'tsx',
             );
             const currentModel = editor!.getModel(currentUri);
             let message = `Cannot find module '${i.specifier}\'.`;
@@ -427,15 +411,12 @@ const EditorContextProvider = ({
     }
   };
 
-  const onValidate: EditorProps['onValidate'] = (
-    markers,
-    filename = currentScript?.filename,
-  ) => {
-    if (!filename) return;
+  const onValidate: EditorProps['onValidate'] = (markers) => {
+    if (!currentScript) return;
     const errorMarker = markers?.find(
       (m) => m.severity === monacoRef.current?.MarkerSeverity.Error,
     );
-    setModelHasErrors(filename, !!errorMarker);
+    setModelHasErrors(currentScript.filename, !!errorMarker);
   };
 
   useEffect(() => {
@@ -557,12 +538,16 @@ const EditorContextProvider = ({
             model.getValue() !== currentScript.code
           ) {
             model.setValue(currentScript.code);
-            // Call mutateLive when the currentScript is updated
+            // Call mutateLive and localStorage.setItem when the currentScript is updated
             try {
               mutateLive(currentScript.code, model.getVersionId());
             } catch (e) {
               console.error('Caught error from mutateLive:', e);
             }
+            localStorage.setItem(
+              `script-${currentScript.id}`,
+              currentScript.code,
+            );
           }
         });
       }
