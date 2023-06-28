@@ -97,8 +97,8 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
       <>
         Fix errors in the following files before running:
         <UnorderedList>
-          {getErrorFiles().map((f, i) => (
-            <ListItem key={`[${i}] ${f}`}>{f}</ListItem>
+          {getErrorFiles().map((f) => (
+            <ListItem>{f}</ListItem>
           ))}
         </UnorderedList>
       </>

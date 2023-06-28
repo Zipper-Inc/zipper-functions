@@ -25,7 +25,7 @@ export default function AddScriptForm({
 }: {
   appId: string;
   connectors: Pick<AppConnector, 'type'>[];
-  onCreate: (script: Script) => void;
+  onCreate: VoidFunction;
 }) {
   const { register, handleSubmit, reset, watch } = useForm();
   const { setCurrentScript, scripts, refetchApp } = useEditorContext();
@@ -36,7 +36,7 @@ export default function AddScriptForm({
       await refetchApp();
       setCurrentScript(script as Script);
       reset();
-      onCreate(script as Script);
+      onCreate();
     },
   });
 
