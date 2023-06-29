@@ -155,7 +155,10 @@ export function PlaygroundSidebar({
                       <AddScriptForm
                         connectors={app.connectors}
                         appId={app.id}
-                        onCreate={onClose}
+                        onCreate={(script) => {
+                          onClose();
+                          setCurrentScript(script);
+                        }}
                       />
                     </PopoverBody>
                   </PopoverContent>

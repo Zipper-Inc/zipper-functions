@@ -13,3 +13,11 @@ declare module 'monaco-jsx-highlighter' {
     addJSXCommentCommand(): void;
   }
 }
+
+// Utility type for adding parameters to an existing function type
+declare type AddParameters<
+  TFunction extends (...args: any) => any,
+  TParameters extends [...args: any],
+> = (
+  ...args: [...Parameters<TFunction>, ...TParameters]
+) => ReturnType<TFunction>;
