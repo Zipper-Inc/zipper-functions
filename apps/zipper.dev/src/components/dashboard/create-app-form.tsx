@@ -35,6 +35,7 @@ import { useRouter } from 'next/router';
 import { useOrganization } from '~/hooks/use-organization';
 import { useUser } from '~/hooks/use-user';
 import { useOrganizationList } from '~/hooks/use-organization-list';
+import { getEditAppletLink } from '@zipper/utils';
 
 const getDefaultCreateAppFormValues = () => ({
   name: generateDefaultSlug(),
@@ -230,7 +231,7 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
                     organizationId: selectedOrganizationId,
                   },
                   {
-                    onSuccess: () => {
+                    onSuccess: (applet) => {
                       resetForm();
                       if (
                         (selectedOrganizationId ?? null) !==
@@ -242,10 +243,16 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
                       toast({
                         title: 'Applet created',
                         status: 'success',
-                        duration,
-                        isClosable: true,
+                        duration: 9999,
+                        isClosable: false,
                       });
-                      onClose();
+
+                      router.push(
+                        getEditAppletLink(
+                          applet!.resourceOwner!.slug,
+                          applet!.slug,
+                        ),
+                      );
                     },
                   },
                 );
