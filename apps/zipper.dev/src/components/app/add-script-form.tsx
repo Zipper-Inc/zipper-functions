@@ -33,7 +33,7 @@ export default function AddScriptForm({
   const addScript = trpc.useMutation('script.add', {
     async onSuccess(script) {
       // refetches posts after a post is added
-      refetchApp();
+      await refetchApp();
       setCurrentScript(script as Script);
       reset();
       onCreate();

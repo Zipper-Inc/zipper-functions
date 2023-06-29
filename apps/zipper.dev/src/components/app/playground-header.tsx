@@ -331,7 +331,6 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
                   type="submit"
                   isDisabled={isDisabled}
                   onClick={forkAppForm.handleSubmit(async ({ name }) => {
-                    if (app.canUserEdit) return;
                     if (user) {
                       if (
                         (selectedOrganizationId ?? null) !==

@@ -22,14 +22,16 @@ function ObjectExplorerRow({
   data,
   level,
   tableLevel,
+  collapse,
 }: {
   heading: string;
   data: any;
   level: number;
   tableLevel: number;
+  collapse: boolean;
 }) {
-  const { isOpen, onToggle } = useDisclosure({ defaultIsOpen: true });
-  const shouldCollapse = !isPrimitive(data);
+  const { isOpen, onToggle } = useDisclosure({ defaultIsOpen: !collapse });
+  const shouldCollapse = !isPrimitive(data) && data;
   return (
     <Tr
       borderBottom="1px"
@@ -70,7 +72,11 @@ function ObjectExplorerRow({
           <Box flex={5}>
             {!isOpen && (
               <Text py={6} color="gray.400">
-                {Object.keys(data).join(', ')}
+                {Array.isArray(data)
+                  ? data.length === 1
+                    ? `${data.length} item`
+                    : `${data.length} items`
+                  : Object.keys(data).join(', ')}
               </Text>
             )}
             <Collapse in={isOpen}>
@@ -84,7 +90,7 @@ function ObjectExplorerRow({
         ) : (
           <Box flex={5}>
             <Text size="sm" whiteSpace="normal" textAlign="right">
-              {data.toString()}
+              {data?.toString() || 'null'}
             </Text>
           </Box>
         )}
@@ -119,6 +125,7 @@ export function ObjectExplorer({
               data={data[key]}
               level={level}
               tableLevel={tableLevel}
+              collapse={Object.keys(data).length > 1}
             />
           ))}
         </Tbody>
