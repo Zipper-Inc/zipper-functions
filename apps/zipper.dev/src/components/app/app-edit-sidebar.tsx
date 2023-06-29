@@ -8,23 +8,11 @@ import {
   Flex,
   Text,
   HStack,
-  Button,
-  Tooltip,
-  useToast,
-  IconButton,
   Heading,
-  useClipboard,
-  ListItem,
-  UnorderedList,
 } from '@chakra-ui/react';
 import { TabButton } from '@zipper/ui';
 import { useState } from 'react';
-import { useRunAppContext } from '../context/run-app-context';
-
-import { HiOutlineClipboard, HiOutlinePlay } from 'react-icons/hi2';
 import { useEditorContext } from '../context/editor-context';
-import Link from 'next/link';
-import { getAppLink } from '@zipper/utils';
 import AppEditSidebarApplet from './app-edit-sidebar-applet';
 import { AppConsole } from './app-console';
 
@@ -39,7 +27,6 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
   tips,
   appSlug,
 }) => {
-  const toast = useToast();
   const [tabIndex, setTabIndex] = useState(0);
 
   const consoleTabIndex = tips ? 2 : 1;
@@ -51,145 +38,22 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
     }
   };
 
-  const { isRunning, run, formMethods } = useRunAppContext();
-
   const {
-    currentScript,
     inputParams,
     inputError,
     logs,
     markLogsAsRead,
     lastReadLogsTimestamp,
-    editorHasErrors,
-    getErrorFiles,
   } = useEditorContext();
 
   const unreadLogs = logs.filter(
     (log) => log.timestamp > lastReadLogsTimestamp,
   ).length;
 
-  const [inputs, setInputs] = useState<Record<string, any>>({});
-
-  const appLink = getAppLink(appSlug);
-  const { onCopy } = useClipboard(
-    `${appLink}${
-      currentScript?.filename === 'main.ts'
-        ? ''
-        : `/${currentScript?.filename.slice(0, -3)}`
-    }`,
-  );
-
-  const copyLink = async () => {
-    onCopy();
-    toast({
-      title: 'App link copied',
-      status: 'info',
-      duration: 1500,
-      isClosable: true,
-    });
-  };
-
   const isLibrary = !inputParams && !inputError;
-  const isHandler = inputParams || inputError;
-  const errorTooltip =
-    inputError ||
-    (editorHasErrors() && (
-      <>
-        Fix errors in the following files before running:
-        <UnorderedList>
-          {getErrorFiles().map((f) => (
-            <ListItem>{f}</ListItem>
-          ))}
-        </UnorderedList>
-      </>
-    ));
-
-  const setInputsAtTimeOfRun = () => {
-    const formValues = formMethods.getValues();
-    const formKeys = inputParams?.map((param) => `${param.key}:${param.type}`);
-    const inputs: Record<string, any> = {};
-    formKeys?.map((k) => {
-      const key = k.split(':')[0] as string;
-      inputs[key] = formValues[k];
-    });
-    setInputs(inputs);
-  };
 
   return (
     <VStack h="full" w="full">
-      {isHandler && (
-        <HStack w="full" mb="2">
-          <HStack
-            color="purple.700"
-            px={4}
-            py={2}
-            rounded="lg"
-            justifyContent="space-between"
-            border="1px"
-            borderColor="gray.200"
-            w="full"
-          >
-            <Text
-              fontWeight="semibold"
-              fontSize="xs"
-              whiteSpace="nowrap"
-              flex={1}
-            >
-              <Link
-                href={`${
-                  process.env.NODE_ENV === 'development' ? 'http' : 'https'
-                }://${appLink}${
-                  currentScript?.filename === 'main.ts'
-                    ? ''
-                    : `/${currentScript?.filename.slice(0, -3)}`
-                }`}
-                target="_blank"
-              >
-                {currentScript?.filename === 'main.ts' ? (
-                  <>{appLink}</>
-                ) : (
-                  <>{`${appLink}/${currentScript?.filename.slice(0, -3)}`}</>
-                )}
-              </Link>
-            </Text>
-            <Tooltip label="Copy" bgColor="purple.500" textColor="gray.100">
-              <IconButton
-                aria-label="copy"
-                colorScheme="purple"
-                variant="ghost"
-                size="xs"
-                onClick={copyLink}
-              >
-                <HiOutlineClipboard />
-              </IconButton>
-            </Tooltip>
-          </HStack>
-          <Tooltip label={errorTooltip || inputError}>
-            <span>
-              <Button
-                colorScheme="purple"
-                variant={
-                  currentScript?.filename === 'main.ts' ? 'solid' : 'ghost'
-                }
-                onClick={() => {
-                  setInputsAtTimeOfRun();
-                  run(true);
-                }}
-                display="flex"
-                gap={2}
-                fontWeight="medium"
-                isDisabled={isRunning || !inputParams || editorHasErrors()}
-              >
-                <HiOutlinePlay />
-                <Text>{`Run${
-                  currentScript?.filename !== 'main.ts' ? ' this file' : ''
-                }`}</Text>
-              </Button>
-            </span>
-          </Tooltip>
-        </HStack>
-      )}
-
       {isLibrary && (
         <Box
           p={4}
@@ -258,10 +122,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
               overflow="auto"
               w="full"
             >
-              <AppEditSidebarApplet
-                appSlug={appSlug}
-                inputValuesAtRun={inputs}
-              />
+              <AppEditSidebarApplet appSlug={appSlug} />
             </TabPanel>
           )}
 

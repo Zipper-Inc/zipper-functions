@@ -31,7 +31,7 @@ export type RunAppContextType = {
   userAuthConnectors: UserAuthConnector[];
   setResults: (results: Record<string, string>) => void;
   run: (isCurrentFileAsEntryPoint?: boolean) => void;
-  boot: () => void;
+  boot: (branchName?: string) => void;
   configs: Zipper.BootPayload['configs'];
 };
 
@@ -96,7 +96,7 @@ export function RunAppProvider({
 
   const { currentScript, inputParams } = useEditorContext();
 
-  const boot = async () => {
+  const boot = async (branchName?: string) => {
     try {
       const hash = await saveAppBeforeRun();
       const version = getAppVersionFromHash(hash);
@@ -127,6 +127,7 @@ export function RunAppProvider({
 
       const { configs } = await bootAppMutation.mutateAsync({
         appId: id,
+        branchName,
       });
 
       if (configs) setConfigs(configs);

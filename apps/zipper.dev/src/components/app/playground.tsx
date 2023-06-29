@@ -7,6 +7,16 @@ import {
   Progress,
   VStack,
   ChakraProps,
+  Spacer,
+  IconButton,
+  Link,
+  Text,
+  Tooltip,
+  useClipboard,
+  useToast,
+  Button,
+  UnorderedList,
+  ListItem,
 } from '@chakra-ui/react';
 import React, { useState, useEffect } from 'react';
 import SecretsTab from '~/components/app/secrets-tab';
@@ -23,6 +33,7 @@ import { useAppEditors } from '~/hooks/use-app-editors';
 import { TabButton } from '@zipper/ui';
 import HistoryTab from './history-tab';
 import { randomUUID } from 'crypto';
+import { PlaygroundPublishButton } from './playground-publish-button';
 
 const tabPanelStyles: ChakraProps = {
   flex: 1,
@@ -125,6 +136,7 @@ export function Playground({
               <TabButton title="Settings" />
             </HStack>
             <HStack justifySelf="start">
+              <PlaygroundPublishButton app={app} />
               {editorIds.length > 1 && (
                 <PlaygroundAvatars
                   editorIds={editorIds}

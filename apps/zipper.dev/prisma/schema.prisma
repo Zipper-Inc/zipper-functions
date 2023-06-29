@@ -230,14 +230,12 @@ model Script {
   description  String?
   code         String
   order        Int?      @default(0)
-  inputSchema  Json?
-  outputSchema Json?
   connectorId  String?
   hash         String?
   isRunnable   Boolean   @default(false)
   branchId     String
 
-  branch     Branch      @relation(fields: [branchId], references: [id])
+  branch     Branch      @relation(fields: [branchId], references: [id], onDelete: Cascade)
 
   @@unique([branchId, filename])
   @@map("scripts")

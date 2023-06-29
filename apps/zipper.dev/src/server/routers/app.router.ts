@@ -641,6 +641,75 @@ export const appRouter = createRouter()
       }
     },
   })
+  .mutation('publish', {
+    input: z.object({
+      id: z.string().uuid(),
+    }),
+    async resolve({ input, ctx }) {
+      await hasAppEditPermission({
+        ctx,
+        appId: input.id,
+      });
+
+      const branch = await prisma.branch.findUniqueOrThrow({
+        where: {
+          appId_name: {
+            appId: input.id,
+            name: 'main',
+          },
+        },
+        include: {
+          scripts: true,
+        },
+      });
+
+      try {
+        await prisma.branch.delete({
+          where: {
+            appId_name: {
+              appId: input.id,
+              name: 'prod',
+            },
+          },
+        });
+      } catch (e) {
+        console.log(e);
+        console.log('No prod branch found');
+      }
+
+      const prod = await prisma.branch.create({
+        data: {
+          appId: input.id,
+          name: 'prod',
+          scripts: {
+            createMany: {
+              data: branch.scripts.map((s) => ({
+                ...s,
+                id: undefined,
+                branchId: undefined,
+              })),
+            },
+          },
+        },
+        include: {
+          scripts: true,
+          app: true,
+        },
+      });
+
+      return prisma.branch.update({
+        where: {
+          id: prod.id,
+        },
+        data: {
+          hash: getBranchHash({
+            app: { id: input.id, name: prod.app.name },
+            scripts: prod.scripts,
+          }),
+        },
+      });
+    },
+  })
   .mutation('run', {
     input: z.object({
       appId: z.string().uuid(),
@@ -786,8 +855,6 @@ export const appRouter = createRouter()
             data: {
               ...script,
               id: newId,
-              inputSchema: JSON.stringify(script.inputSchema),
-              outputSchema: JSON.stringify(script.outputSchema),
               branchId: forkBranchId,
               order: i,
               hash: getScriptHash({ ...script, id: newId }),

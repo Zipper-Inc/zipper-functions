@@ -1,6 +1,18 @@
-import { Box, Heading, VStack, Button, Progress, Text } from '@chakra-ui/react';
+import {
+  Box,
+  Heading,
+  VStack,
+  Button,
+  Progress,
+  Text,
+  HStack,
+  Tooltip,
+  UnorderedList,
+  ListItem,
+} from '@chakra-ui/react';
 import { FunctionInputs, FunctionOutput, useAppletContent } from '@zipper/ui';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { HiOutlinePlay } from 'react-icons/hi2';
 import { useUser } from '~/hooks/use-user';
 import getRunUrl from '~/utils/get-run-url';
 import { getAppVersionFromHash } from '~/utils/hashing';
@@ -10,14 +22,11 @@ import { useEditorContext } from '../context/editor-context';
 import { useRunAppContext } from '../context/run-app-context';
 import { AppEditSidebarAppletConnectors } from './app-edit-sidebar-applet-connectors';
 
-export const AppEditSidebarApplet = ({
-  appSlug,
-  inputValuesAtRun,
-}: {
-  appSlug: string;
-  inputValuesAtRun: Record<string, any>;
-}) => {
-  const { formMethods, isRunning, results, userAuthConnectors, appInfo } =
+export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
+  const [inputValuesAtRun, setInputValuesAtRun] = useState<Record<string, any>>(
+    {},
+  );
+  const { run, formMethods, isRunning, results, userAuthConnectors, appInfo } =
     useRunAppContext();
 
   const generateAccessTokenMutation = trpc.useMutation(
@@ -32,6 +41,8 @@ export const AppEditSidebarApplet = ({
     replaceCurrentScriptCode,
     inputParams,
     inputError,
+    editorHasErrors,
+    getErrorFiles,
   } = useEditorContext();
 
   const mainApplet = useAppletContent();
@@ -71,6 +82,19 @@ export const AppEditSidebarApplet = ({
 
   const isHandler = inputParams || inputError;
 
+  const errorTooltip =
+    inputError ||
+    (editorHasErrors() && (
+      <>
+        Fix errors in the following files before running:
+        <UnorderedList>
+          {getErrorFiles().map((f) => (
+            <ListItem>{f}</ListItem>
+          ))}
+        </UnorderedList>
+      </>
+    ));
+
   const output = useMemo(() => {
     return (
       <FunctionOutput
@@ -100,6 +124,17 @@ export const AppEditSidebarApplet = ({
       });
       replaceCurrentScriptCode(codeWithInputAdded);
     }
+  };
+
+  const setInputsAtTimeOfRun = () => {
+    const formValues = formMethods.getValues();
+    const formKeys = inputParams?.map((param) => `${param.key}:${param.type}`);
+    const inputs: Record<string, any> = {};
+    formKeys?.map((k) => {
+      const key = k.split(':')[0] as string;
+      inputs[key] = formValues[k];
+    });
+    setInputValuesAtRun(inputs);
   };
 
   return (
@@ -168,6 +203,37 @@ export const AppEditSidebarApplet = ({
             </>
           )}{' '}
         </>
+
+        {isHandler && (
+          <HStack w="full" mb="2">
+            <Tooltip label={errorTooltip || inputError}>
+              <span style={{ width: '100%' }}>
+                <Button
+                  w="full"
+                  mt="4"
+                  colorScheme="purple"
+                  variant={
+                    currentScript?.filename === 'main.ts' ? 'solid' : 'ghost'
+                  }
+                  onClick={() => {
+                    setInputsAtTimeOfRun();
+                    run(true);
+                  }}
+                  display="flex"
+                  gap={2}
+                  fontWeight="medium"
+                  isDisabled={isRunning || !inputParams || editorHasErrors()}
+                >
+                  <HiOutlinePlay />
+                  <Text>{`Run${
+                    currentScript?.filename !== 'main.ts' ? ' this file' : ''
+                  }`}</Text>
+                </Button>
+              </span>
+            </Tooltip>
+          </HStack>
+        )}
+
         {isRunning && (
           <Progress
             colorScheme="purple"

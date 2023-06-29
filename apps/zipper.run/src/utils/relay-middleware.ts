@@ -133,6 +133,7 @@ export async function relayRequest(
   const deploymentId = formatDeploymentId({
     appId: app.id,
     version,
+    branch: request.headers.get('x-zipper-branch-override') || 'prod',
   });
 
   let relayUrl = getPatchedUrl(request);
