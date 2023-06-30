@@ -24,6 +24,8 @@ const RPC_ROOT = `${RPC_HOST}/api/deno/v0/`;
 const X_FORWARDED_HOST = 'x-forwarded-host';
 const X_DENO_SUBHOST = 'x-deno-subhost';
 
+const HEALTH_CHECK_SLUG = 'healthcheck';
+
 function getPatchedUrl(req: NextRequest) {
   // preserve path and querystring)
   const url = new URL(req.url);
@@ -133,6 +135,8 @@ export async function relayRequest(
   const deploymentId = formatDeploymentId({
     appId: app.id,
     version,
+    uniqueOverride:
+      app.slug === HEALTH_CHECK_SLUG ? Date.now().toString(32) : undefined,
   });
 
   let relayUrl = getPatchedUrl(request);
