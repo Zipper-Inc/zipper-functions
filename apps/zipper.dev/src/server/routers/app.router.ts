@@ -227,7 +227,11 @@ export const appRouter = createRouter()
         },
       });
 
-      return { ...app };
+      const resourceOwner = await prisma.resourceOwnerSlug.findFirst({
+        where: { resourceOwnerId: app.createdById || app.organizationId },
+      });
+
+      return { ...app, resourceOwner };
     },
   })
   // read
