@@ -33,7 +33,7 @@ export default createOmniApiHandler(async (req, res) => {
       const {
         organizations: orgsToCreate,
         shouldCreateResourceOwnerSlug = true,
-      }: CreateOrgsRequest = req.body.organizations;
+      }: CreateOrgsRequest = req.body;
 
       const noOrgs = !Array.isArray(orgsToCreate) || !orgsToCreate.length;
       if (noOrgs) {
