@@ -8,7 +8,7 @@ import {
 } from '@chakra-ui/react';
 import { LogMessage } from '@zipper/types';
 import { useCmdOrCtrl } from '@zipper/ui';
-import { Console } from 'console-feed';
+import { Console } from '@nicksrandall/console-feed';
 import { useEffect, useState } from 'react';
 import { useEditorContext } from '../context/editor-context';
 
@@ -107,7 +107,7 @@ export function AppConsole({ logs }: { logs: LogMessage[] }) {
             BASE_LINE_HEIGHT: 'inherit',
             TREENODE_LINE_HEIGHT: 'inherit',
             LOG_ICON_HEIGHT: '22px',
-            /** 
+            /**
              * @TODO replace icons with better zipper-y ones
              *
             LOG_ICON: '',
