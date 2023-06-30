@@ -3,7 +3,7 @@ import { AppRouter, trpcRouter } from './_app';
 import { inferProcedureInput } from '@trpc/server';
 import { prismaMock } from '../../../jestSetup';
 import { randomUUID } from 'crypto';
-import { App, Script, ScriptMain } from '@prisma/client';
+import { App, Script } from '@prisma/client';
 import { defaultCode } from './app.router';
 
 let userId: string;
@@ -118,67 +118,6 @@ describe('when calling app.add', () => {
         }),
       }),
     );
-  });
-
-  it('creates a main.ts file and sets it as the entry point', async () => {
-    prismaMock.app.findMany.mockResolvedValue([{ slug: 'test' } as App]);
-
-    const ctx = createContextInner({ userId, orgId });
-    const caller = trpcRouter.createCaller(ctx);
-
-    const input: inferProcedureInput<
-      AppRouter['_def']['mutations']['app.add']
-    > = {
-      name: 'test',
-      description: 'test',
-      slug: 'test',
-    };
-
-    const scriptId = randomUUID();
-
-    prismaMock.app.create.mockResolvedValue({ id: appId } as App);
-    prismaMock.scriptMain.create.mockResolvedValue({
-      appId,
-      scriptId: scriptId,
-      scripts: [
-        {
-          id: scriptId,
-        },
-      ],
-    } as ScriptMain & { scripts: Script[] });
-
-    const output = await caller.mutation('app.add', input);
-
-    expect(prismaMock.scriptMain.create).toBeCalledWith(
-      expect.objectContaining({
-        data: {
-          app: { connect: { id: appId } },
-          script: expect.objectContaining({
-            create: {
-              name: 'main',
-              filename: 'main.ts',
-              code: defaultCode,
-              appId,
-              order: 0,
-              isRunnable: true,
-            },
-          }),
-        },
-      }),
-    );
-
-    expect(output).toEqual({
-      id: appId,
-      scriptMain: {
-        appId: appId,
-        scriptId,
-        scripts: [
-          {
-            id: scriptId,
-          },
-        ],
-      },
-    });
   });
 
   it('fails if the user is not authed', async () => {
