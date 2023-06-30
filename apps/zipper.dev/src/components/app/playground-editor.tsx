@@ -254,13 +254,15 @@ export default function PlaygroundEditor(
     if (isEditorReady) {
       const changeMarkersListener =
         monacoRef?.current!.editor.onDidChangeMarkers((uris) => {
-          uris.forEach((uri) => {
-            const markers = monacoRef?.current!.editor.getModelMarkers({
-              resource: uri,
+          uris
+            .filter((uri) => uri.scheme === 'file')
+            .forEach((uri) => {
+              const markers = monacoRef?.current!.editor.getModelMarkers({
+                resource: uri,
+              });
+              const filename = getPathFromUri(uri).replace(/^\//, '');
+              onValidate(markers, filename);
             });
-            const filename = getPathFromUri(uri).replace(/^\//, '');
-            onValidate(markers, filename);
-          });
         });
 
       return () => {
