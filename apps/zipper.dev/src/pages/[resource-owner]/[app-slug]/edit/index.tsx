@@ -16,9 +16,7 @@ const EditPage: NextPageWithLayout = () => {
 
   useEffect(() => {
     if (appQuery.data) {
-      router.replace(
-        `/${resourceOwnerSlug}/${appSlug}/edit/${appQuery.data.scriptMain?.script.filename}`,
-      );
+      router.replace(`/${resourceOwnerSlug}/${appSlug}/edit/main.ts`);
     }
   }, [appQuery.data]);
 

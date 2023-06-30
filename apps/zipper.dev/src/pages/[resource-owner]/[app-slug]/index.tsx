@@ -66,9 +66,7 @@ const AppPage: NextPageWithLayout = () => {
         </Heading>
         <Heading
           as={Link}
-          href={`/${resourceOwnerSlug}/${appSlug}/edit/${
-            appQuery.data.scriptMain?.script.filename || 'main.ts'
-          }`}
+          href={`/${resourceOwnerSlug}/${appSlug}/edit/main.ts`}
           color="purple.700"
           fontSize="2xl"
         >
@@ -158,9 +156,7 @@ const AppPage: NextPageWithLayout = () => {
       </VStack>
       <HStack position="relative" flex={3}>
         <Link
-          href={`/${resourceOwnerSlug}/${appSlug}/edit/${
-            appQuery.data.scriptMain?.script.filename || 'main.ts'
-          }`}
+          href={`/${resourceOwnerSlug}/${appSlug}/edit/main.ts`}
           _hover={{ textDecoration: 'none' }}
           flex={1}
         >
@@ -186,7 +182,10 @@ const AppPage: NextPageWithLayout = () => {
               <Box width="full" paddingTop={6}>
                 <Editor
                   defaultLanguage="typescript"
-                  defaultValue={data.scriptMain?.script.code}
+                  defaultValue={
+                    data.scripts.find((s) => s.filename === 'main.ts')?.code ||
+                    ''
+                  }
                   theme="vs-light"
                   options={{
                     minimap: { enabled: false },
@@ -211,9 +210,7 @@ const AppPage: NextPageWithLayout = () => {
             colorScheme="blue"
             as={Link}
             paddingX={6}
-            href={`/${resourceOwnerSlug}/${appSlug}/edit/${
-              appQuery.data.scriptMain?.script.filename || 'main.ts'
-            }`}
+            href={`/${resourceOwnerSlug}/${appSlug}/edit/main.ts`}
             _hover={{ transform: 'scale(1.1)', textDecoration: 'none' }}
           >
             Explore This App
