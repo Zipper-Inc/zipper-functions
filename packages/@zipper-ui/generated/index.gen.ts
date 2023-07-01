@@ -19,6 +19,7 @@ export * from '../src/components/function-output/types';
 export * from '../src/components/function-output/utils';
 export * from '../src/components/user-connector-inputs/github-user-connector-input';
 export * from '../src/components/user-connector-inputs';
+export * from '../src/components/user-connector-inputs/notion-user-connector-input';
 export * from '../src/components/user-connector-inputs/openai-user-connector-input';
 export * from '../src/components/user-connector-inputs/slack-user-connector-input';
 export * from '../src/components/user-connector-inputs/types';

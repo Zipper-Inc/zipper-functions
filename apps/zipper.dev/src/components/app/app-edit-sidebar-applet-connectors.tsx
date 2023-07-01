@@ -87,7 +87,25 @@ export const AppEditSidebarAppletConnectors = () => {
         },
       ]);
       toast({
-        title: 'OpenAI user auth revoked.',
+        title: 'OpenAI secret revoked.',
+        status: 'success',
+        duration,
+        isClosable: true,
+      });
+    },
+  });
+
+  const deleteNotionSecret = trpc.useMutation('secret.delete', {
+    onSuccess: () => {
+      context.invalidateQueries([
+        'app.byResourceOwnerAndAppSlugs',
+        {
+          appSlug: router.query['app-slug'] as string,
+          resourceOwnerSlug: router.query['resource-owner'] as string,
+        },
+      ]);
+      toast({
+        title: 'Notion secret revoked.',
         status: 'success',
         duration,
         isClosable: true,
@@ -165,6 +183,16 @@ export const AppEditSidebarAppletConnectors = () => {
             deleteOpenAISecret.mutateAsync({
               appId,
               key: 'OPENAI_API_KEY',
+            });
+          },
+        },
+        notion: {
+          // TODO: does notion need an auth url?
+          authUrl: '#',
+          onDelete: () => {
+            deleteNotionSecret.mutateAsync({
+              appId,
+              key: 'NOTION_API_KEY',
             });
           },
         },
