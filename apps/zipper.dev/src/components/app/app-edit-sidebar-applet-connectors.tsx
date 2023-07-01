@@ -187,7 +187,6 @@ export const AppEditSidebarAppletConnectors = () => {
           },
         },
         notion: {
-          // TODO: does notion need an auth url?
           authUrl: '#',
           onDelete: () => {
             deleteNotionSecret.mutateAsync({

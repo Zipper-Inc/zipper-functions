@@ -218,6 +218,21 @@ export function AppPage({
           router.reload();
         },
       },
+      notion: {
+        authUrl: '#',
+        onDelete: async () => {
+          if (token) {
+            await removeAppConnectorUserAuth({
+              appId,
+              type: 'notion',
+              token,
+            });
+          } else {
+            deleteCookie(ZIPPER_TEMP_USER_ID_COOKIE_NAME);
+          }
+          router.reload();
+        },
+      },
     };
   };
 
