@@ -155,8 +155,18 @@ async function originBoot({
       scriptMain: true,
       secrets: true,
       connectors: true,
+      versions: {
+        where: {
+          hash: { startsWith: deploymentVersion },
+        },
+        take: 1,
+      },
     },
   });
+
+  if (!app?.versions.length) {
+    return errorResponse(`Invalid app version`);
+  }
 
   if (!app) {
     return errorResponse(`Missing app ID`);
@@ -164,12 +174,16 @@ async function originBoot({
 
   const version =
     deploymentVersion === 'latest'
-      ? app.lastDeploymentVersion || getAppVersionFromHash(getAppHash(app))
+      ? app.publishedVersionHash
       : deploymentVersion;
+
+  if (!version) {
+    return errorResponse(`Missing version - app might not be published yet`);
+  }
 
   const baseUrl = `file://${app.slug}/v${version}`;
 
-  const eszip = await build({ baseUrl, app, version });
+  // const eszip = await build({ baseUrl, app, version });
 
   /**const old = await createEsZip({
     baseUrl,
@@ -216,7 +230,7 @@ async function originBoot({
     [X_DENO_CONFIG]: JSON.stringify(isolateConfig),
   };
 
-  return { body: eszip, headers, status: 200 };
+  return { body: app.versions[0]?.buildFile, headers, status: 200 };
 }
 
 function originReadBlob(_deploymentId: string, hash?: string) {

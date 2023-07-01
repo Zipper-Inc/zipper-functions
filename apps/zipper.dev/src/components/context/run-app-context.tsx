@@ -75,9 +75,8 @@ export function RunAppProvider({
     description,
     slug,
     updatedAt,
-    lastDeploymentVersion,
+    playgroundVersionHash,
     canUserEdit,
-    hash,
   } = app;
   const formMethods = useForm();
   const [isRunning, setIsRunning] = useState(false);
@@ -276,9 +275,8 @@ export function RunAppProvider({
           description,
           slug,
           updatedAt,
-          lastDeploymentVersion,
+          playgroundVersionHash,
           canUserEdit,
-          hash,
         },
         formMethods,
         isRunning,

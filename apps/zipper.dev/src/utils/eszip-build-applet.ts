@@ -25,7 +25,7 @@ export async function build({
   version,
 }: {
   baseUrl: string;
-  app: App & { scripts: Script[] };
+  app: Omit<App, 'datastore' | 'categories'> & { scripts: Script[] };
   version: string;
 }) {
   const startMs = performance.now();
