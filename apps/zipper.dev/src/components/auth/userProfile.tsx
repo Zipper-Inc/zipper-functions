@@ -1,4 +1,5 @@
 import { useUser } from '~/hooks/use-user';
+import { useEffect, useState } from 'react';
 import {
   Text,
   Button,
@@ -10,6 +11,10 @@ import {
   Avatar,
   Divider,
   HStack,
+  Input,
+  InputRightElement,
+  Icon,
+  InputGroup,
   VStack,
   Fade,
   Collapse,
@@ -17,7 +22,11 @@ import {
 import { SiGithub } from 'react-icons/si';
 import { FcGoogle } from 'react-icons/fc';
 import { trpc } from '~/utils/trpc';
-import { useState } from 'react';
+import { HiPencil } from 'react-icons/hi';
+import { MIN_SLUG_LENGTH, useAppSlug } from '~/hooks/use-app-slug';
+import { HiExclamationTriangle } from 'react-icons/hi2';
+import { CheckIcon } from '@chakra-ui/icons';
+
 import { UploadDropzone } from '../uploadthing';
 import { useSession } from 'next-auth/react';
 import { HiArrowRight } from 'react-icons/hi';
@@ -35,6 +44,34 @@ export default function UserProfile() {
     enabled: isLoaded,
   });
 
+  const [isEditingUsername, setIsEditingUsername] = useState(false);
+  const [username, setUsername] = useState('');
+  useEffect(() => {
+    if (isLoaded && user?.username) {
+      setUsername(user.username);
+    }
+  }, [user]);
+  const { slugExists: _slugExists, appSlugQuery } = useAppSlug(username);
+  const isSlugValid =
+    appSlugQuery.isFetched && username && username.length >= MIN_SLUG_LENGTH;
+
+  const slugExists = username === user?.username ? false : _slugExists;
+  const disableSave =
+    slugExists ||
+    username === user?.username ||
+    username.length < MIN_SLUG_LENGTH;
+
+  const updateUsername = trpc.useMutation('user.updateUserSlug', {
+    async onSuccess() {
+      // need to refresh user
+    },
+  });
+  const handleSaveUsername = async () => {
+    if (username.length < MIN_SLUG_LENGTH) {
+      return;
+    }
+    await updateUsername.mutateAsync({ username });
+  };
   const session = useSession();
 
   return (
@@ -100,9 +137,68 @@ export default function UserProfile() {
                 </Text>
                 <Text fontSize="sm">{user.email}</Text>
               </Stack>
+              <Stack>
+                <Text fontSize="md" fontWeight="bold">
+                  Username
+                </Text>
+                <Stack>
+                  {!isEditingUsername ? (
+                    <HStack
+                      _hover={{ cursor: 'pointer' }}
+                      onClick={() => {
+                        setIsEditingUsername(true);
+                      }}
+                    >
+                      <Text fontSize="sm">{user.username}</Text>
+                      <HiPencil />
+                    </HStack>
+                  ) : (
+                    <HStack maxW={200}>
+                      <InputGroup>
+                        <Input
+                          size="sm"
+                          placeholder="Username"
+                          value={username}
+                          onChange={(e) => {
+                            setUsername(e.target.value);
+                          }}
+                        />
+
+                        {isSlugValid && !updateUsername.isLoading && (
+                          <InputRightElement
+                            children={
+                              slugExists ? (
+                                <Icon
+                                  as={HiExclamationTriangle}
+                                  color="red.500"
+                                />
+                              ) : (
+                                <CheckIcon color="green.500" />
+                              )
+                            }
+                          />
+                        )}
+                      </InputGroup>
+                      <Button
+                        size="sm"
+                        variant="link"
+                        colorScheme="purple"
+                        isDisabled={disableSave}
+                        onClick={() => {
+                          handleSaveUsername();
+                          setIsEditingUsername(false);
+                        }}
+                      >
+                        Save
+                      </Button>
+                    </HStack>
+                  )}
+                </Stack>
+              </Stack>
               <Text fontSize={'xl'} mt="8">
                 Connected Accounts
               </Text>
+
               <Divider mb="4" mt={2} />
               {accounts &&
                 accounts.map((account: Account) => (
