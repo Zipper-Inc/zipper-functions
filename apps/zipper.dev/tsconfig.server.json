@@ -4,9 +4,10 @@
     "module": "commonjs",
     "outDir": "dist",
     "lib": [
-      "es2019"
+      "ES2021",
+      "DOM"
     ],
-    "target": "es2019",
+    "target": "ES2021",
     "isolatedModules": false,
     "noEmit": false,
   },
