@@ -36,6 +36,7 @@ export function getAppHash(
 }
 
 const APP_VERSION_LENGTH = 7;
-export const getAppVersionFromHash = (hash: string) => {
+export const getAppVersionFromHash = (hash?: string | null) => {
+  if (!hash) return undefined;
   return hash.slice(0, APP_VERSION_LENGTH);
 };

@@ -76,6 +76,7 @@ export function RunAppProvider({
     slug,
     updatedAt,
     playgroundVersionHash,
+    publishedVersionHash,
     canUserEdit,
   } = app;
   const formMethods = useForm();
@@ -108,6 +109,7 @@ export function RunAppProvider({
     try {
       const hash = await saveAppBeforeRun();
       const version = getAppVersionFromHash(hash);
+      if (!version) throw new Error('No version found');
 
       const logger = getLogger({ appId: app.id, version });
 
@@ -158,6 +160,8 @@ export function RunAppProvider({
     try {
       const hash = await saveAppBeforeRun();
       version = getAppVersionFromHash(hash);
+
+      if (!version) throw new Error('No version found');
     } catch (e: any) {
       setResults({
         ...results,
@@ -276,6 +280,7 @@ export function RunAppProvider({
           slug,
           updatedAt,
           playgroundVersionHash,
+          publishedVersionHash,
           canUserEdit,
         },
         formMethods,

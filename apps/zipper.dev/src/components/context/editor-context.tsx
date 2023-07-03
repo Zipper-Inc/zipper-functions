@@ -574,7 +574,7 @@ const EditorContextProvider = ({
       throw new Error('Something went wrong while saving');
 
     setIsSaving(true);
-    const version = getAppVersionFromHash(app.playgroundVersionHash || '');
+    const version = getAppVersionFromHash(app.playgroundVersionHash);
     addLog(
       'info',
       prettyLog({

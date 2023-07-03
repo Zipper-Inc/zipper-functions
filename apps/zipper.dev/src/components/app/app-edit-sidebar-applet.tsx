@@ -3,6 +3,7 @@ import { FunctionInputs, FunctionOutput, useAppletContent } from '@zipper/ui';
 import { useEffect, useMemo } from 'react';
 import { useUser } from '~/hooks/use-user';
 import getRunUrl from '~/utils/get-run-url';
+import { getAppVersionFromHash } from '~/utils/hashing';
 import { addParamToCode } from '~/utils/parse-code';
 import { trpc } from '~/utils/trpc';
 import { useEditorContext } from '../context/editor-context';
@@ -75,7 +76,11 @@ export const AppEditSidebarApplet = ({
       <FunctionOutput
         applet={mainApplet}
         getRunUrl={(scriptName: string) => {
-          return getRunUrl(appSlug, appInfo.lastDeploymentVersion, scriptName);
+          return getRunUrl(
+            appSlug,
+            getAppVersionFromHash(appInfo.playgroundVersionHash),
+            scriptName,
+          );
         }}
         appInfoUrl={`/api/app/info/${appSlug}`}
         currentContext={'main'}

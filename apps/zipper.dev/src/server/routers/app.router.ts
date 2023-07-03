@@ -219,7 +219,7 @@ export const appRouter = createRouter()
         scripts: [{ id: scriptMain.scriptId, hash: scriptHash }],
       });
 
-      const version = getAppVersionFromHash(appHash);
+      const version = getAppVersionFromHash(appHash)!;
 
       const baseUrl = `file://${app.slug}/v${version}`;
       const eszip = await build({
@@ -760,7 +760,7 @@ export const appRouter = createRouter()
         scripts: forkScripts,
       });
 
-      const version = getAppVersionFromHash(hash);
+      const version = getAppVersionFromHash(hash)!;
 
       const baseUrl = `file://${fork.slug}/v${version}`;
       const eszip = await build({
@@ -810,7 +810,6 @@ export const appRouter = createRouter()
           .optional(),
         description: z.string().optional().nullable(),
         isPrivate: z.boolean().optional(),
-        lastDeploymentVersion: z.string().optional(),
         requiresAuthToRun: z.boolean().optional(),
         scripts: z
           .array(
@@ -908,7 +907,7 @@ export const appRouter = createRouter()
         scripts: updatedScripts,
       });
 
-      const version = getAppVersionFromHash(hash);
+      const version = getAppVersionFromHash(hash)!;
 
       const baseUrl = `file://${app.slug}/v${version}`;
       const eszip = await build({
@@ -987,7 +986,7 @@ export const appRouter = createRouter()
         });
 
       const getBuild = async () => {
-        const version = getAppVersionFromHash(hash);
+        const version = getAppVersionFromHash(hash)!;
 
         const baseUrl = `file://${app.slug}/v${version}`;
         const eszip = await build({

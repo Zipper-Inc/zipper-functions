@@ -74,7 +74,7 @@ export function Playground({
     if (app.canUserEdit) {
       return save();
     } else {
-      return app.lastDeploymentVersion || randomUUID();
+      return app.publishedVersionHash || randomUUID();
     }
   };
 
