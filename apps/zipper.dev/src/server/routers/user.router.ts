@@ -129,4 +129,21 @@ export const userRouter = createProtectedRouter()
         return res.status;
       }
     },
-  });
+  })
+  .mutation('updateUserSlug', {
+    input: z.object({
+      slug: z.string(),
+    }),
+    async resolve({ ctx, input }) {
+      if (!ctx.userId) throw new TRPCError({ code: 'UNAUTHORIZED' });
+      return prisma.user.update({
+        where: {
+          id: ctx.userId,
+        },
+        data: {
+          slug: input.slug,
+        },
+      });
+    },
+  })
+  ;

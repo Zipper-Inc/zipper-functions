@@ -63,14 +63,14 @@ export default function UserProfile() {
 
   const updateUsername = trpc.useMutation('user.updateUserSlug', {
     async onSuccess() {
-      // need to refresh user
+      session.update({ updateProfile: true });
     },
   });
   const handleSaveUsername = async () => {
     if (username.length < MIN_SLUG_LENGTH) {
       return;
     }
-    await updateUsername.mutateAsync({ username });
+    await updateUsername.mutateAsync({ slug: username });
   };
   const session = useSession();
 

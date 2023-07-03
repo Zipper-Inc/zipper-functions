@@ -322,6 +322,7 @@ export const authOptions: AuthOptions = {
           token.picture = userUpdated?.image;
           token.name = userUpdated?.name;
           token.email = userUpdated?.email;
+          token.slug = userUpdated?.slug;
         }
 
         if (session.currentOrganizationId) {
