@@ -456,6 +456,12 @@ export const appRouter = createRouter()
           scriptMain: { include: { script: true } },
           editors: true,
           settings: true,
+          publishedVersion: {
+            select: {
+              hash: true,
+              createdAt: true,
+            },
+          },
           connectors: {
             select: {
               appId: true,

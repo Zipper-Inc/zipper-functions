@@ -242,6 +242,7 @@ model Version {
   appId         String
   buildFile     Bytes
   isPublished   Boolean  @default(false)
+  createdAt     DateTime @default(now())
 
   app App @relation(fields: [appId], references: [id])
 
