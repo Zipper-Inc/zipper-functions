@@ -171,6 +171,7 @@ export default function PlaygroundEditor(
       });
 
       monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
+        strict: true,
         isolatedModules: true,
         target: monaco.languages.typescript.ScriptTarget.ES2020,
         allowNonTsExtensions: true,
@@ -182,6 +183,7 @@ export default function PlaygroundEditor(
       });
 
       monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
+        strict: true,
         isolatedModules: true,
         target: monaco.languages.typescript.ScriptTarget.ES2020,
         allowNonTsExtensions: true,

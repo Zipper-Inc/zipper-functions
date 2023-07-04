@@ -1,24 +1,13 @@
 import { InputType } from './input-type';
 
 export type ParsedNode =
-  | {
-      type: InputType.boolean;
-    }
-  | {
-      type: InputType.number;
-    }
-  | {
-      type: InputType.string;
-    }
-  | {
-      type: InputType.date;
-    }
-  | {
-      type: InputType.array;
-    }
-  | {
-      type: InputType.any;
-    }
+  | { type: InputType.boolean }
+  | { type: InputType.number }
+  | { type: InputType.string }
+  | { type: InputType.date }
+  | { type: InputType.array }
+  | { type: InputType.any }
+  | { type: InputType.unknown }
   | {
       type: InputType.enum;
       details: {
