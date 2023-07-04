@@ -31,6 +31,9 @@ function parseTypeNode(type: any, src: SourceFile): any {
   if (text.toLowerCase() === 'number') return { type: InputType.number };
   if (text.toLowerCase() === 'string') return { type: InputType.string };
   if (text.toLowerCase() === 'date') return { type: InputType.date };
+  if (text.toLowerCase() === 'unknown') return { type: InputType.unkonwn };
+  if (text.toLowerCase() === 'any') return { type: InputType.any };
+
   if (type.isKind(SyntaxKind.ArrayType) || text.startsWith('Array'))
     return { type: InputType.array };
   
@@ -131,7 +134,7 @@ function parseTypeNode(type: any, src: SourceFile): any {
       }
     }
   }
-  return { type: InputType.any };
+  return { type: InputType.unkonwn };
 }
 
 function getSourceFileFromCode(code: string) {
