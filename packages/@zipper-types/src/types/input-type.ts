@@ -7,7 +7,7 @@ export enum InputType {
   object = 'object',
   any = 'any',
   enum = 'enum',
-  unknown = 'unknown',
+  unkonwn = 'unknown',
 }
 
 export const JSONEditorInputTypes = [
