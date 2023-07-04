@@ -11,6 +11,7 @@ export * from '../src/types/input-params';
 export * from '../src/types/input-type';
 export * from '../src/types/logs';
 export * from '../src/types/output-type';
+export * from '../src/types/parsed-types';
 export * from '../src/types/resource-owner-type';
 export * from '../src/types/run-info';
 export * from '../src/types/slack-connector';

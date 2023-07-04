@@ -46,7 +46,7 @@ export default async function handler(
         id: args.deployment_id || '',
       });
       if (headers) {
-        Object.keys(headers as any).forEach((key) => {
+        Object.keys(headers).forEach((key) => {
           res.setHeader(key, headers[key] || '');
         });
       }
