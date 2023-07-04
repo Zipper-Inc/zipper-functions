@@ -93,8 +93,6 @@ export async function handler({ text }: { text: string }) {
   });
 
   const hash = getAppHash(seedApp1);
-  const version = getAppVersionFromHash(hash)!;
-  const baseUrl = `file://${seedApp1.slug}/v${version}`;
 
   await prisma.version.create({
     data: {
@@ -145,8 +143,6 @@ export async function handler({ text }: { text: string }) {
   });
 
   const hash2 = getAppHash(seedApp2);
-  const version2 = getAppVersionFromHash(hash2)!;
-  const baseUrl2 = `file://${seedApp2.slug}/v${version2}`;
 
   await prisma.version.create({
     data: {
