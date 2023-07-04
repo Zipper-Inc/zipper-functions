@@ -1,4 +1,4 @@
-import { InputParam, InputType } from '@zipper/types';
+import { InputParam, InputType, ParsedNode } from '@zipper/types';
 import { parse } from 'comment-parser';
 
 import {
@@ -10,6 +10,8 @@ import {
   SourceFile,
   FunctionDeclaration,
   ArrowFunction,
+  EnumMember,
+  TypeNode,
 } from 'ts-morph';
 
 const isExternalImport = (specifier: string) => /^https?:\/\//.test(specifier);
@@ -23,70 +25,95 @@ function removeTsExtension(moduleName: string) {
 }
 
 // Determine the Zipper type from the Typescript type
-function parseTypeNode(type: any, src: SourceFile): any {
+function parseTypeNode(type: TypeNode, src: SourceFile): ParsedNode {
   const text = type.getText();
   if (text.toLowerCase() === 'boolean') return { type: InputType.boolean };
   if (text.toLowerCase() === 'number') return { type: InputType.number };
   if (text.toLowerCase() === 'string') return { type: InputType.string };
   if (text.toLowerCase() === 'date') return { type: InputType.date };
+  if (text.toLowerCase() === 'unknown') return { type: InputType.unkonwn };
+  if (text.toLowerCase() === 'any') return { type: InputType.any };
+
   if (type.isKind(SyntaxKind.ArrayType) || text.startsWith('Array'))
     return { type: InputType.array };
+  
 
-  // Check for enum types
-  if (type.getType().isEnum()) {
-    return {
-      type: InputType.enum,
-      details: {
-        values: type
-          .getType()
-          .getSymbol()
-          .getMembers()
-          .map((member: any) => member.getName()),
-      },
-    };
-  }
+  if(type.isKind(SyntaxKind.TypeReference)) {
+    // we have a type reference
+    const typeReference = type.getTypeName();
+    const typeReferenceText = typeReference.getText();
 
-  // Check for type reference
-  if (type.isKind(SyntaxKind.TypeReference)) {
-    const typeReference = type.getType();
-    const typeProperties = typeReference.getApparentProperties();
-    if (typeProperties) {
-      const propDetails = typeProperties.map((prop: any) => {
-        const name = prop.getName();
-        const propertyType = prop.getValueDeclaration().getType().getText();
-        // Return the details for each property
+    // find in the code the declaration of the typeReferenceText, this can be a type, a interface, a enum, etc.
+    const typeReferenceDeclaration = src.getTypeAlias(typeReferenceText) || src.getInterface(typeReferenceText) || src.getEnum(typeReferenceText);
+
+
+
+    //we have the declaration, we need to know if it's a type, interface or enum
+    if(typeReferenceDeclaration) {
+      if(typeReferenceDeclaration.isKind(SyntaxKind.TypeAliasDeclaration)) {
+        // we have a type
+        const typeReferenceDeclarationType = typeReferenceDeclaration.getTypeNode();
+
+        // check if type is a string literal
+        if(typeReferenceDeclarationType && typeReferenceDeclarationType.isKind(SyntaxKind.UnionType)) {
+
+          const unionTypes = typeReferenceDeclarationType.getTypeNodes();
+          const unionTypesDetails = unionTypes.map((unionType: TypeNode) => {
+            return unionType.getText().replace(/['"]+/g, '').trim();
+          });
+
+          return {
+            type: InputType.enum,
+            details: {
+              values: unionTypesDetails,
+            },
+          };
+        }
+        if (typeReferenceDeclarationType)
+          return parseTypeNode(typeReferenceDeclarationType, src);
+      }
+      if(typeReferenceDeclaration.isKind(SyntaxKind.InterfaceDeclaration)) {
+        // we have a interface
+        const typeReferenceDeclarationProperties = typeReferenceDeclaration.getProperties();
+        const propDetails = typeReferenceDeclarationProperties.map((prop: any) => {
+          return {
+            key: prop.getName(),
+            details: parseTypeNode(prop.getTypeNode(), src),
+          };
+        }
+        );
         return {
-          key: name,
-          details: { type: propertyType },
+          type: InputType.object,
+          details: { properties: propDetails },
         };
-      });
-
-      // Update the return statement to include the name of the type
-      return {
-        type: InputType.object,
-        name: type.getText(),
-        details: { properties: propDetails },
-      };
-    }
-  }
-
-  // Check for object/record types
-  if (type.isKind(SyntaxKind.TypeLiteral) || text.startsWith('Record')) {
-    const alias = src.getTypeAlias(type.getText());
-    if (alias) {
-      const properties = (alias.getTypeNode() as any).getProperties();
-      const propDetails = properties.map((prop: any) => {
+      }
+      if(typeReferenceDeclaration.isKind(SyntaxKind.EnumDeclaration)) {
+        // we have a enum
         return {
-          key: prop.getName(),
-          details: parseTypeNode(prop.getTypeNode(), src),
-        };
-      });
-      return {
-        type: InputType.object,
-        details: { properties: propDetails },
-      };
+          type: InputType.enum,
+          details: {
+            values: typeReferenceDeclaration
+              .getMembers()
+              .map((member: EnumMember) => {
+                const memberText = member.getFullText().trim();
+
+                // check if the memberText has a value by checking if it has a '='
+                const hasValue = memberText.includes('=');
+                if(!hasValue) {
+                  return memberText.trim();
+                }
+
+                // if it has a value, we need to extract it
+                const memberValue = memberText.split('=')[1]?.replace(/['"]+/g, '').trim();
+                return {
+                  key: memberText.split('=')[0]?.trim(),
+                  value: memberValue,
+                };
+              }),
+          },
+        }
+      }
     }
-    return { type: InputType.object };
   }
 
   // Handle keyof typeof Category type
@@ -108,7 +135,7 @@ function parseTypeNode(type: any, src: SourceFile): any {
       }
     }
   }
-  return { type: InputType.any };
+  return { type: InputType.unkonwn };
 }
 
 function getSourceFileFromCode(code: string) {
@@ -220,13 +247,23 @@ export function parseInputForTypes({
 
     return props.map((prop) => {
       const typeNode = prop.getTypeNode();
+      if (!typeNode) {
+        // Typescript defaults to any if it can't find the type
+        // type Input = { foo } // foo is any
+        return {
+          key: prop.getName(),
+          type: InputType.any,
+          optional: prop.hasQuestionToken(),
+        };
+      }
+
       const typeDetails = parseTypeNode(typeNode, src);
 
       return {
         key: prop.getName(),
         type: typeDetails.type,
-        details: typeDetails.details,
         optional: prop.hasQuestionToken(),
+        ...('details' in typeDetails && { details: typeDetails.details }),
       };
     });
   } catch (e) {
@@ -253,6 +290,39 @@ export function parseExternalImportUrls({
     .filter((s) => (externalOnly ? isExternalImport(s) : true));
 }
 
+export function parseLocalImports({
+  code = '',
+  srcPassedIn,
+  externalOnly = true,
+}: {
+  code?: string;
+  srcPassedIn?: SourceFile;
+  externalOnly?: boolean;
+} = {}) {
+  if (!code) return [];
+  const src = srcPassedIn || getSourceFileFromCode(code);
+  return src
+    .getImportDeclarations()
+    .filter((i) => !isExternalImport(i.getModuleSpecifierValue()))
+    .map((i) => {
+      const startPos = i.getStart();
+      const endPos = i.getEnd();
+      const { column: startColumn, line: startLine } =
+        src.getLineAndColumnAtPos(startPos);
+      const { column: endColumn, line: endLine } =
+        src.getLineAndColumnAtPos(endPos);
+      return {
+        specifier: i.getModuleSpecifierValue(),
+        startLine,
+        startColumn,
+        startPos,
+        endLine,
+        endColumn,
+        endPos,
+      };
+    });
+}
+
 export function parseCode({
   code = '',
   throwErrors = false,
@@ -264,6 +334,9 @@ export function parseCode({
     code,
     srcPassedIn: src,
   });
+
+  const localImports = parseLocalImports({ code, srcPassedIn: src });
+
   const comments = parseComments({ code, srcPassedIn: src });
   if (comments) {
     inputs = inputs?.map((i) => {
@@ -277,7 +350,7 @@ export function parseCode({
       return { ...i, name, description };
     });
   }
-  return { inputs, externalImportUrls, comments };
+  return { inputs, externalImportUrls, comments, localImports };
 }
 
 export function addParamToCode({

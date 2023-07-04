@@ -14,11 +14,10 @@ declare module 'monaco-jsx-highlighter' {
   }
 }
 
-declare module 'next-auth' {
-  import type { DefaultUser } from 'next-auth';
-  interface Session {
-    user?: DefaultUser & {
-      id: string;
-    };
-  }
-}
+// Utility type for adding parameters to an existing function type
+declare type AddParameters<
+  TFunction extends (...args: any) => any,
+  TParameters extends [...args: any],
+> = (
+  ...args: [...Parameters<TFunction>, ...TParameters]
+) => ReturnType<TFunction>;

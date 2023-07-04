@@ -97,8 +97,8 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
       <>
         Fix errors in the following files before running:
         <UnorderedList>
-          {getErrorFiles().map((f) => (
-            <ListItem key={f}>{f}</ListItem>
+          {getErrorFiles().map((f, i) => (
+            <ListItem key={`[${i}] ${f}`}>{f}</ListItem>
           ))}
         </UnorderedList>
       </>
@@ -138,7 +138,11 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
               <Link
                 href={`${
                   process.env.NODE_ENV === 'development' ? 'http' : 'https'
-                }://${appLink}`}
+                }://${appLink}${
+                  currentScript?.filename === 'main.ts'
+                    ? ''
+                    : `/${currentScript?.filename.slice(0, -3)}`
+                }`}
                 target="_blank"
               >
                 {currentScript?.filename === 'main.ts' ? (

@@ -1,6 +1,6 @@
-import { useUser } from '@clerk/nextjs';
 import { useDebounce } from 'use-debounce';
 import { trpc } from '~/utils/trpc';
+import { useUser } from './use-user';
 
 export const MIN_SLUG_LENGTH = 5;
 

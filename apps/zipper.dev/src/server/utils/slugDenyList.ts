@@ -10,6 +10,7 @@ const denyList = [
   'blog',
   'connectors',
   'dashboard',
+  'docs',
   'gallery',
   'help',
   'index',

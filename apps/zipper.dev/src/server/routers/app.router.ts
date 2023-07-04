@@ -30,7 +30,7 @@ import { randomUUID } from 'crypto';
 import fetch from 'node-fetch';
 import isCodeRunnable from '~/utils/is-code-runnable';
 import { generateAccessToken } from '~/utils/jwt-utils';
-import { getAuth } from '@clerk/nextjs/server';
+import { getToken } from 'next-auth/jwt';
 
 const defaultSelect = Prisma.validator<Prisma.AppSelect>()({
   id: true,
@@ -229,7 +229,11 @@ export const appRouter = createRouter()
         },
       });
 
-      return { ...app, scriptMain };
+      const resourceOwner = await prisma.resourceOwnerSlug.findFirst({
+        where: { resourceOwnerId: app.createdById || app.organizationId },
+      });
+
+      return { ...app, scriptMain, resourceOwner };
     },
   })
   // read
@@ -510,7 +514,10 @@ export const appRouter = createRouter()
         },
       });
 
-      return apps.map((app) => ({ ...app, resourceOwner }));
+      return apps.map((app) => ({
+        ...app,
+        resourceOwner,
+      }));
     },
   })
   .query('validateSlug', {
@@ -547,11 +554,14 @@ export const appRouter = createRouter()
         include: { scripts: true, scriptMain: true },
       });
 
-      const sessionClaims = ctx.req ? getAuth(ctx.req).sessionClaims : null;
+      const authToken = await getToken({ req: ctx.req! });
 
       const token = ctx.userId
         ? generateAccessToken(
-            { userId: ctx.userId, sessionClaims },
+            {
+              userId: ctx.userId,
+              authToken,
+            },
             { expiresIn: '30s' },
           )
         : undefined;
@@ -623,11 +633,14 @@ export const appRouter = createRouter()
 
       const inputs = getInputsFromFormData(input.formData, inputParams);
 
-      const sessionClaims = ctx.req ? getAuth(ctx.req).sessionClaims : null;
+      const authToken = await getToken({ req: ctx.req! });
 
       const token = ctx.userId
         ? generateAccessToken(
-            { userId: ctx.userId, sessionClaims },
+            {
+              userId: ctx.userId,
+              authToken,
+            },
             { expiresIn: '30s' },
           )
         : undefined;
@@ -658,7 +671,7 @@ export const appRouter = createRouter()
   .mutation('fork', {
     input: z.object({
       id: z.string().uuid(),
-      name: z.string().min(3).max(50).optional(),
+      name: z.string().min(3).max(50),
     }),
     async resolve({ input, ctx }) {
       if (!ctx.userId) {
@@ -674,7 +687,8 @@ export const appRouter = createRouter()
 
       const fork = await prisma.app.create({
         data: {
-          slug: input.name || generateDefaultSlug(),
+          slug: slugify(input.name),
+          name: input.name,
           description: app.description,
           parentId: app.id,
           organizationId: ctx.orgId,
@@ -747,7 +761,7 @@ export const appRouter = createRouter()
     input: z.object({
       id: z.string().uuid(),
       data: z.object({
-        name: z.string().min(3).max(255).optional(),
+        name: z.string().max(255).optional(),
         slug: z
           .string()
           .min(5)

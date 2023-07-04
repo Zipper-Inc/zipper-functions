@@ -22,22 +22,23 @@ import {
   InputRightElement,
   Text,
   VStack,
+  Tooltip,
 } from '@chakra-ui/react';
 
 import NextLink from 'next/link';
-import { CheckIcon, LockIcon, UnlockIcon } from '@chakra-ui/icons';
+import { CheckIcon } from '@chakra-ui/icons';
 import React, { useEffect, useState } from 'react';
-import ForkIcon from '~/components/svg/forkIcon';
 import { ZipperLogo, ZipperSymbol } from '@zipper/ui';
-import { HiOutlineUpload, HiPencilAlt } from 'react-icons/hi';
+
 import {
-  useUser,
-  SignedIn,
-  SignedOut,
-  useOrganization,
-  useOrganizationList,
-  UserButton,
-} from '@clerk/nextjs';
+  HiOutlineUpload,
+  HiPencilAlt,
+  HiLockOpen,
+  HiLockClosed,
+} from 'react-icons/hi';
+
+import { CgGitFork } from 'react-icons/cg';
+
 import { AppQueryOutput } from '~/types/trpc';
 import { EditAppSlugForm } from './edit-app-slug-form';
 import { useAppEditors } from '~/hooks/use-app-editors';
@@ -49,8 +50,13 @@ import { useAppSlug, MIN_SLUG_LENGTH } from '~/hooks/use-app-slug';
 import { trpc } from '~/utils/trpc';
 import { generateDefaultSlug } from '~/utils/generate-default';
 import { useRouter } from 'next/router';
-import SignInButton from '../auth/signInButton';
 import ShareModal from './share-modal';
+import { useUser } from '~/hooks/use-user';
+import { useOrganization } from '~/hooks/use-organization';
+import { useOrganizationList } from '~/hooks/use-organization-list';
+import SignedIn from '../auth/signed-in';
+import SignedOut from '../auth/signed-out';
+import { signIn } from 'next-auth/react';
 
 const getDefaultCreateAppFormValues = () => ({
   name: generateDefaultSlug(),
@@ -76,6 +82,9 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
     }
   }, [router.isReady]);
 
+  const parentApp = trpc.useQuery(['app.byId', { id: app.parentId! }], {
+    enabled: !!app.parentId,
+  });
   const { organization } = useOrganization();
   const { setActive } = useOrganizationList();
   const forkApp = trpc.useMutation('app.fork', {
@@ -167,19 +176,21 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
           </Heading>
 
           <HStack spacing={2} alignItems="center" minW={0}>
-            <Box>
-              {app.isPrivate ? (
-                <Icon as={LockIcon} color={'gray.500'} boxSize={4} mb={1} />
-              ) : (
-                <Icon as={UnlockIcon} color={'gray.400'} boxSize={4} mb={1} />
-              )}
-            </Box>
-            {app.parentId && (
-              <Box>
+            {app.isPrivate ? (
+              <HiLockClosed color="gray.500" />
+            ) : (
+              <HiLockOpen color="gray.400" />
+            )}
+            {app.parentId && parentApp.data && (
+              <Tooltip
+                label={`Forked from ${
+                  parentApp.data.name || parentApp.data.slug
+                }`}
+              >
                 <Link href={`/app/${app.parentId}/edit`} target="_blank">
-                  <Icon as={ForkIcon} color={'gray.400'} size={16} />
+                  <CgGitFork />
                 </Link>
-              </Box>
+              </Tooltip>
             )}
           </HStack>
           {editSlug ? (
@@ -210,17 +221,36 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
         </HStack>
       </HStack>
       <HStack justifyContent="end">
+        {isLoaded && (
+          <Button
+            colorScheme="purple"
+            variant="ghost"
+            display="flex"
+            gap={2}
+            fontWeight="medium"
+            onClick={() => {
+              if (user) {
+                onOpen();
+              } else {
+                signIn(undefined, {
+                  callbackUrl: `${window.location.pathname}?fork=1`,
+                });
+              }
+            }}
+          >
+            <CgGitFork />
+            Fork
+          </Button>
+        )}
         {!user && (
           <Button
-            variant="link"
             colorScheme="purple"
+            display="flex"
+            gap={2}
+            fontWeight="medium"
             mr="3"
             onClick={() => {
-              router.push(
-                `/sign-in?redirect=${encodeURIComponent(
-                  window.location.toString(),
-                )}`,
-              );
+              signIn();
             }}
           >
             Sign In
@@ -238,27 +268,8 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
             <HiOutlineUpload />
             <Text>Share</Text>
           </Button>
-          <UserButton afterSignOutUrl="/" />
+          {/* <UserButton afterSignOutUrl="/" /> */}
         </SignedIn>
-        {!app.canUserEdit && isLoaded && (
-          <Button
-            type="button"
-            paddingX={6}
-            variant="outline"
-            colorScheme="purple"
-            onClick={() => {
-              if (user) {
-                onOpen();
-              } else {
-                router.push(
-                  `/sign-in?redirect=${window.location.pathname}?fork=1`,
-                );
-              }
-            }}
-          >
-            Fork
-          </Button>
-        )}
       </HStack>
       <ShareModal
         isOpen={isShareModalOpen}
@@ -320,16 +331,13 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
                   type="submit"
                   isDisabled={isDisabled}
                   onClick={forkAppForm.handleSubmit(async ({ name }) => {
-                    if (app.canUserEdit) return;
                     if (user) {
                       if (
                         (selectedOrganizationId ?? null) !==
                           (organization?.id ?? null) &&
                         setActive
                       ) {
-                        await setActive({
-                          organization: selectedOrganizationId,
-                        });
+                        setActive(selectedOrganizationId || null);
                       }
                       forkApp.mutateAsync(
                         { id: app.id, name },

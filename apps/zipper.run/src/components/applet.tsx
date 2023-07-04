@@ -31,6 +31,7 @@ import {
 import Unauthorized from './unauthorized';
 import removeAppConnectorUserAuth from '~/utils/remove-app-connector-user-auth';
 import Header from './header';
+import { OpenGraph } from './open-graph';
 import InputSummary from './input-summary';
 import ConnectorsAuthInputsSection from './connectors-auth-inputs-section';
 import { getConnectorsAuthUrl } from '~/utils/get-connectors-auth-url';
@@ -61,6 +62,7 @@ export type AppPageProps = {
   metadata?: Record<string, string | undefined>;
   handlerConfigs?: Record<string, Zipper.HandlerConfig>;
   token?: string;
+  runUrl?: string;
 };
 
 export function AppPage({
@@ -79,6 +81,7 @@ export function AppPage({
   metadata,
   handlerConfigs,
   token,
+  runUrl,
 }: AppPageProps) {
   const router = useRouter();
   const { asPath } = router;
@@ -277,6 +280,7 @@ export function AppPage({
     <>
       <Head>
         <title>{appTitle}</title>
+        <OpenGraph appTitle={appTitle} runUrl={runUrl} />
       </Head>
       <VStack flex={1} alignItems="stretch" spacing={14}>
         <Header

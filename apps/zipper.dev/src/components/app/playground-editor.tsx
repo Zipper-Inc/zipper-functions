@@ -61,6 +61,7 @@ export default function PlaygroundEditor(
     isEditorDirty,
     connectionId,
     monacoRef,
+    onValidate,
   } = useEditorContext();
   const { appInfo } = useRunAppContext();
   const editorRef = useRef<MonacoEditor>();
@@ -222,11 +223,10 @@ export default function PlaygroundEditor(
       );
 
       scripts.forEach((script) => {
-        const uri = getUriFromPath(script.filename, monaco.Uri.parse);
+        const uri = getUriFromPath(script.filename, monaco.Uri.parse, 'tsx');
         const model = monaco.editor.getModel(uri);
-        const code = localStorage.getItem(`script-${script.id}`) || script.code;
         if (!model) {
-          monaco.editor.createModel(code, 'typescript', uri);
+          monaco.editor.createModel(script.code, 'typescript', uri);
         }
       });
 
@@ -242,12 +242,44 @@ export default function PlaygroundEditor(
       });
 
       setEditor(monaco.editor);
+
+      if (process.env.NODE_ENV === 'development')
+        (window as any).monaco = monaco;
     }
   }, [monacoEditor]);
 
+  /**
+   * Copy pasted/edited from react-monaco code
+   * Runs the validation on start of editor for each file
+   */
+  useEffect(() => {
+    if (isEditorReady) {
+      const changeMarkersListener =
+        monacoRef?.current!.editor.onDidChangeMarkers((uris) => {
+          uris
+            .filter((uri) => uri.scheme === 'file')
+            .forEach((uri) => {
+              const markers = monacoRef?.current!.editor.getModelMarkers({
+                resource: uri,
+              });
+              const filename = getPathFromUri(uri).replace(/^\//, '');
+              onValidate(markers, filename);
+            });
+        });
+
+      return () => {
+        changeMarkersListener?.dispose();
+      };
+    }
+  }, [isEditorReady]);
+
   useEffect(() => {
     if (monacoEditor && editorRef.current && isEditorReady && currentScript) {
-      const uri = getUriFromPath(currentScript.filename, monaco.Uri.parse);
+      const uri = getUriFromPath(
+        currentScript.filename,
+        monaco.Uri.parse,
+        'tsx',
+      );
       const model = monacoEditor.editor.getModel(uri);
       if (model) {
         editorRef.current.setModel(model);
@@ -323,7 +355,9 @@ export default function PlaygroundEditor(
         overrideServices={{
           openerService: {
             open: function (url: string) {
-              const resource = getUriFromPath(url, monaco.Uri.parse);
+              const ext =
+                isExternalResource(url) && !url.endsWith('tsx') ? 'ts' : 'tsx';
+              const resource = getUriFromPath(url, monaco.Uri.parse, ext);
               // Don't try to open URLs that have models
               // They will open from the defintion code
               if (

@@ -54,6 +54,7 @@ const Header: React.FC<HeaderProps> = ({
     const token = document.cookie
       .split('; ')
       .find((c) => c.startsWith('__zipper_token'));
+
     if (token) {
       setUser(readJWT(token));
     }
@@ -114,7 +115,7 @@ const Header: React.FC<HeaderProps> = ({
                 fontWeight="semibold"
                 color="gray.800"
               >
-                {name}
+                {name || slug}
               </Heading>
             </Link>
           </Box>

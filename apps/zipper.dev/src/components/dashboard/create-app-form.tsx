@@ -28,11 +28,14 @@ import slugify from '~/utils/slugify';
 import { trpc } from '~/utils/trpc';
 import { generateDefaultSlug } from '~/utils/generate-default';
 import { HiLockOpen, HiLockClosed } from 'react-icons/hi';
-import { useOrganization, useOrganizationList, useUser } from '@clerk/nextjs';
 import { useAppSlug, MIN_SLUG_LENGTH } from '~/hooks/use-app-slug';
 import { VscCode } from 'react-icons/vsc';
 import { useToast } from '@chakra-ui/react';
 import { useRouter } from 'next/router';
+import { useOrganization } from '~/hooks/use-organization';
+import { useUser } from '~/hooks/use-user';
+import { useOrganizationList } from '~/hooks/use-organization-list';
+import { getEditAppletLink } from '@zipper/utils';
 
 const getDefaultCreateAppFormValues = () => ({
   name: generateDefaultSlug(),
@@ -119,7 +122,7 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
           <HStack spacing={1}>
             <Text fontWeight="medium" fontSize="lg" color="gray.600">
               {organization?.name ||
-                (user?.publicMetadata.username as string) ||
+                (user?.username as string) ||
                 'Personal workspace'}
             </Text>
             <Text>/</Text>
@@ -228,24 +231,28 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
                     organizationId: selectedOrganizationId,
                   },
                   {
-                    onSuccess: () => {
+                    onSuccess: (applet) => {
                       resetForm();
                       if (
                         (selectedOrganizationId ?? null) !==
                           (organization?.id ?? null) &&
                         setActive
                       ) {
-                        setActive({
-                          organization: selectedOrganizationId,
-                        });
+                        setActive(selectedOrganizationId || null);
                       }
                       toast({
                         title: 'Applet created',
                         status: 'success',
-                        duration,
-                        isClosable: true,
+                        duration: 9999,
+                        isClosable: false,
                       });
-                      onClose();
+
+                      router.push(
+                        getEditAppletLink(
+                          applet!.resourceOwner!.slug,
+                          applet!.slug,
+                        ),
+                      );
                     },
                   },
                 );

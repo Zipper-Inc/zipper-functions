@@ -67,6 +67,15 @@ module.exports = getConfig({
     '@zipper/utils',
     'monaco-languageclient',
   ],
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com',
+      },
+      
+    ],
+  },
   webpack: (config) => {
     if (!config.module.noParse)
       config.module.noParse = [

@@ -9,7 +9,7 @@ export const hasAppEditPermission = async ({
   ctx: Context;
   appId: string;
 }) => {
-  const { userId, orgId } = ctx;
+  const { userId, organizations } = ctx;
   if (!userId) {
     throw new TRPCError({ code: 'UNAUTHORIZED' });
   }
@@ -23,7 +23,7 @@ export const hasAppEditPermission = async ({
             editors: { some: { userId } },
           },
           {
-            organizationId: orgId,
+            organizationId: { in: Object.keys(organizations || {}) },
           },
         ],
       },
@@ -59,7 +59,7 @@ export const hasAppReadPermission = async ({
                 },
               },
               {
-                organizationId: ctx.orgId,
+                organizationId: { in: Object.keys(ctx.organizations || {}) },
               },
             ],
           },
@@ -73,5 +73,30 @@ export const hasAppReadPermission = async ({
       code: 'UNAUTHORIZED',
       message: `You do not have access to read ${appId}`,
     });
+  }
+};
+
+export const hasOrgAdminPermission = async (ctx: Context) => {
+  try {
+    if (!ctx.userId || !ctx.orgId) {
+      return false;
+    }
+
+    const orgMem = await prisma.organizationMembership.findUniqueOrThrow({
+      where: {
+        organizationId_userId: {
+          organizationId: ctx.orgId,
+          userId: ctx.userId,
+        },
+      },
+    });
+
+    if (orgMem.role === 'ADMIN') {
+      return true;
+    }
+
+    return false;
+  } catch (error) {
+    return false;
   }
 };

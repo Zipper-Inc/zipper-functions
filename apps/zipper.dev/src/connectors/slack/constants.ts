@@ -3,9 +3,6 @@ export const code = `import { WebClient } from "https://deno.land/x/slack_web_ap
 const client = new WebClient(Deno.env.get('SLACK_BOT_TOKEN'));
 
 client.sendToChannel = async (text, channelName) => {
-  const conversations = await client.conversations.list();
-  const channel = conversations.channels.find((c) => c.name == channelName);
-
   return await client.chat.postMessage({
     channel: channelName,
     text,

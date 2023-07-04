@@ -25,7 +25,7 @@ export default function AddScriptForm({
 }: {
   appId: string;
   connectors: Pick<AppConnector, 'type'>[];
-  onCreate: VoidFunction;
+  onCreate: (script: Script) => void;
 }) {
   const { register, handleSubmit, reset, watch } = useForm();
   const { setCurrentScript, scripts, refetchApp } = useEditorContext();
@@ -33,10 +33,10 @@ export default function AddScriptForm({
   const addScript = trpc.useMutation('script.add', {
     async onSuccess(script) {
       // refetches posts after a post is added
-      refetchApp();
+      await refetchApp();
       setCurrentScript(script as Script);
       reset();
-      onCreate();
+      onCreate(script as Script);
     },
   });
 
@@ -83,7 +83,9 @@ export default function AddScriptForm({
               <Text fontWeight="medium" fontSize="sm" color="gray.700">
                 Press return to add{' '}
                 <Text fontFamily="mono" as="span">
-                  {slugifiedScriptFilename}.ts
+                  {slugifiedScriptFilename.endsWith('.ts')
+                    ? slugifiedScriptFilename
+                    : `${slugifiedScriptFilename}.ts`}
                 </Text>
               </Text>
             )}

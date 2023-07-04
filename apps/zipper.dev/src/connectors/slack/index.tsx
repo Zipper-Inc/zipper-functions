@@ -10,7 +10,6 @@ import {
   Button,
   Card,
   CardBody,
-  CardHeader,
   Code,
   Collapse,
   FormControl,
@@ -40,7 +39,7 @@ import { MultiSelect, SelectOnChange, useMultiSelect } from '@zipper/ui';
 import { useRouter } from 'next/router';
 import { code, userScopes, workspaceScopes } from './constants';
 import { useRunAppContext } from '~/components/context/run-app-context';
-import { useUser } from '@clerk/nextjs';
+import { useUser } from '~/hooks/use-user';
 
 // configure the Slack connector
 export const slackConnector = createConnector({

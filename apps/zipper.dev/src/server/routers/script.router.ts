@@ -39,6 +39,8 @@ export const scriptRouter = createRouter()
       const { appId, ...data } = input;
       await hasAppEditPermission({ ctx, appId });
 
+      const sluggifiedName = slugifyAllowDot(data.name);
+
       const script = await prisma.script.create({
         data: {
           ...data,
@@ -46,7 +48,9 @@ export const scriptRouter = createRouter()
           app: {
             connect: { id: appId },
           },
-          filename: `${slugifyAllowDot(data.name)}.ts`,
+          filename: sluggifiedName.endsWith('.ts')
+            ? sluggifiedName
+            : `${sluggifiedName}.ts`,
         },
         select: defaultSelect,
       });

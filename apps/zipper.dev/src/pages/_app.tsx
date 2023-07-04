@@ -6,12 +6,7 @@ import { AppProps } from 'next/app';
 import { AppType } from 'next/dist/shared/lib/utils';
 import { ReactElement, ReactNode } from 'react';
 import superjson from 'superjson';
-import {
-  ClerkProvider,
-  RedirectToSignIn,
-  SignedIn,
-  SignedOut,
-} from '@clerk/nextjs';
+import { SessionProvider } from 'next-auth/react';
 
 import { DefaultLayout } from '~/components/default-layout';
 import { AppRouter } from '~/server/routers/_app';
@@ -19,6 +14,9 @@ import '@fontsource/inter/variable.css';
 import Header from '~/components/header';
 import { useEffectOnce } from '@zipper/ui';
 import { ZipperLocation } from '@zipper/types';
+import SignedIn from '~/components/auth/signed-in';
+import SignedOut from '~/components/auth/signed-out';
+import RedirectToSignIn from '~/components/auth/redirect-to-signin';
 
 export type NextPageWithLayout<P = Record<string, unknown>, IP = P> = NextPage<
   P,
@@ -52,16 +50,7 @@ const MyApp = (({ Component, pageProps }: AppPropsWithLayout) => {
   });
   return (
     <>
-      <ClerkProvider
-        {...pageProps}
-        appearance={{
-          variables: {
-            borderRadius: '0.175',
-            fontFamily: 'Inter',
-            colorPrimary: '#9B2FB4',
-          },
-        }}
-      >
+      <SessionProvider session={pageProps.session}>
         {Component.skipAuth ? (
           getLayout(<Component {...pageProps} />)
         ) : (
@@ -72,7 +61,7 @@ const MyApp = (({ Component, pageProps }: AppPropsWithLayout) => {
             </SignedOut>
           </>
         )}
-      </ClerkProvider>
+      </SessionProvider>
     </>
   );
 }) as AppType;
