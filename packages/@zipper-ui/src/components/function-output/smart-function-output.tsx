@@ -137,11 +137,8 @@ export function SmartFunctionOutput({
           }
 
           // Grab the default styled element (same as markdown)
-          const defaultElement = (
-            defaultElements as {
-              [k: string]: (props: Record<string, any>) => JSX.Element;
-            }
-          )[element];
+          const defaultElement =
+            defaultElements[element as keyof typeof defaultElements];
 
           return React.createElement(
             defaultElement || element,
