@@ -23,7 +23,6 @@ import { useAppEditors } from '~/hooks/use-app-editors';
 import { TabButton } from '@zipper/ui';
 import HistoryTab from './history-tab';
 import { randomUUID } from 'crypto';
-import { PlaygroundPublishInfo } from './playground-publish-button';
 
 const tabPanelStyles: ChakraProps = {
   flex: 1,
@@ -75,7 +74,7 @@ export function Playground({
     if (app.canUserEdit) {
       return save();
     } else {
-      return app.publishedVersionHash || randomUUID();
+      return app.playgroundVersionHash || app.publishedVersionHash || '';
     }
   };
 

@@ -240,7 +240,7 @@ model Script {
 model Version {
   hash          String   @id
   appId         String
-  buildFile     Bytes
+  buildFile     Bytes?
   isPublished   Boolean  @default(false)
   createdAt     DateTime @default(now())
 

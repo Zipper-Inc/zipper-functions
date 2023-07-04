@@ -245,21 +245,6 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
             Fork
           </Button>
         )}
-
-        {!user && (
-          <Button
-            colorScheme="purple"
-            display="flex"
-            gap={2}
-            fontWeight="medium"
-            mr="3"
-            onClick={() => {
-              signIn();
-            }}
-          >
-            Sign In
-          </Button>
-        )}
         <SignedIn>
           <Button
             colorScheme="purple"
@@ -293,6 +278,21 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
         <SignedIn>
           <PlaygroundPublishInfo app={app} />
         </SignedIn>
+
+        {!user && (
+          <Button
+            colorScheme="purple"
+            display="flex"
+            gap={2}
+            fontWeight="medium"
+            mr="3"
+            onClick={() => {
+              signIn();
+            }}
+          >
+            Sign In
+          </Button>
+        )}
       </HStack>
       <ShareModal
         isOpen={isShareModalOpen}

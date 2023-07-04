@@ -183,7 +183,10 @@ async function originBoot({
 
   const baseUrl = `file://${app.slug}/v${version}`;
 
-  // const eszip = await build({ baseUrl, app, version });
+  let eszip = app.versions[0]?.buildFile;
+  if (!eszip) {
+    eszip = Buffer.from(await build({ baseUrl, app, version }));
+  }
 
   /**const old = await createEsZip({
     baseUrl,
@@ -230,7 +233,7 @@ async function originBoot({
     [X_DENO_CONFIG]: JSON.stringify(isolateConfig),
   };
 
-  return { body: app.versions[0]?.buildFile, headers, status: 200 };
+  return { body: eszip, headers, status: 200 };
 }
 
 function originReadBlob(_deploymentId: string, hash?: string) {

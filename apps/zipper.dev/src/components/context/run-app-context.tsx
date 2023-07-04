@@ -163,6 +163,7 @@ export function RunAppProvider({
 
       if (!version) throw new Error('No version found');
     } catch (e: any) {
+      console.log(e);
       setResults({
         ...results,
         [isCurrentFileTheEntryPoint
