@@ -23,6 +23,7 @@ import {
   Text,
   VStack,
   Tooltip,
+  background,
 } from '@chakra-ui/react';
 
 import NextLink from 'next/link';
@@ -259,18 +260,17 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
           </Button>
         </SignedIn>
         <Button
+          as={Link}
           colorScheme="purple"
           variant="ghost"
-          onClick={() =>
-            window.location.replace(
-              `${
-                process.env.NODE_ENV === 'production' ? 'https://' : 'http://'
-              }${getAppLink(app.slug)}`,
-            )
-          }
+          href={`${
+            process.env.NODE_ENV === 'production' ? 'https://' : 'http://'
+          }${getAppLink(app.slug)}`}
+          target="_blank"
           display="flex"
           gap={2}
           fontWeight="medium"
+          _hover={{ textDecoration: 'none', backgroundColor: 'purple.50' }}
         >
           <HiGlobeAlt />
           <Text>Visit</Text>

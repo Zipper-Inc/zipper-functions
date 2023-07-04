@@ -164,9 +164,9 @@ async function originBoot({
     },
   });
 
-  if (!app?.versions.length) {
-    return errorResponse(`INVALID_VERSION`);
-  }
+  // if (!app?.versions.length) {
+  //   return errorResponse(`INVALID_VERSION`);
+  // }
 
   if (!app) {
     return errorResponse(`Missing app ID`);
@@ -174,12 +174,8 @@ async function originBoot({
 
   const version =
     deploymentVersion === 'latest'
-      ? app.publishedVersionHash
+      ? app.publishedVersionHash || Date.now().toString()
       : deploymentVersion;
-
-  if (!version) {
-    return errorResponse(`Missing version - app might not be published yet`);
-  }
 
   const baseUrl = `file://${app.slug}/v${version}`;
 
