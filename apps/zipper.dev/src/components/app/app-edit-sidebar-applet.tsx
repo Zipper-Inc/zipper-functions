@@ -26,6 +26,9 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
   const [inputValuesAtRun, setInputValuesAtRun] = useState<Record<string, any>>(
     {},
   );
+
+  const [runId, setRunId] = useState<string | undefined>(undefined);
+
   const { run, formMethods, isRunning, results, userAuthConnectors, appInfo } =
     useRunAppContext();
 
@@ -100,6 +103,7 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
           return user ? await generateAccessToken() : undefined;
         }}
         showTabs
+        runId={runId}
       />
     );
   }, [mainApplet.updatedAt]);
@@ -215,9 +219,9 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
                   variant={
                     currentScript?.filename === 'main.ts' ? 'solid' : 'outline'
                   }
-                  onClick={() => {
+                  onClick={async () => {
                     setInputsAtTimeOfRun();
-                    run(true);
+                    setRunId(await run(true));
                   }}
                   display="flex"
                   gap={2}

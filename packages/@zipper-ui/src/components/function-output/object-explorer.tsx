@@ -31,7 +31,7 @@ function ObjectExplorerRow({
   collapse: boolean;
 }) {
   const { isOpen, onToggle } = useDisclosure({ defaultIsOpen: !collapse });
-  const shouldCollapse = !isPrimitive(data) && data;
+  const shouldCollapse = !isPrimitive(data) && data && !data['$zipperType'];
   return (
     <Tr
       borderBottom="1px"
@@ -89,9 +89,14 @@ function ObjectExplorerRow({
           </Box>
         ) : (
           <Box flex={5}>
-            <Text size="sm" whiteSpace="normal" textAlign="right">
+            <SmartFunctionOutput
+              result={data}
+              level={level + 1}
+              tableLevel={tableLevel + 1}
+            />
+            {/* <Text size="sm" whiteSpace="normal" textAlign="right">
               {data?.toString() || 'null'}
-            </Text>
+            </Text> */}
           </Box>
         )}
       </Td>

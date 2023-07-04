@@ -22,6 +22,9 @@ import {
   Spinner,
   Icon,
   Divider,
+  Text,
+  Spacer,
+  Link,
 } from '@chakra-ui/react';
 import { FunctionOutputProps } from './types';
 import { RawFunctionOutput } from './raw-function-output';
@@ -32,9 +35,11 @@ import {
   HiOutlineChevronUp,
   HiOutlineChevronDown,
   HiChevronLeft,
+  HiOutlineLink,
 } from 'react-icons/hi';
+import { HiArrowTopRightOnSquare } from 'react-icons/hi2';
 import { useEffect, useState } from 'react';
-import { getInputsFromFormData } from '@zipper/utils';
+import { getAppLink, getInputsFromFormData } from '@zipper/utils';
 import { FunctionInputs } from '../function-inputs';
 import { useForm } from 'react-hook-form';
 import { InputParam, InputParams } from '@zipper/types';
@@ -81,6 +86,7 @@ export function FunctionOutput({
   appSlug,
   showTabs,
   generateUserToken,
+  runId,
   reloadOnClose: _reloadOnClose = false,
 }: FunctionOutputProps) {
   const [isExpandedResultOpen, setIsExpandedResultOpen] = useState(true);
@@ -453,8 +459,24 @@ export function FunctionOutput({
               <TabList {...tablistStyles} display={showTabs ? 'flex' : 'none'}>
                 <Tab {...tabButtonStyles}>Results</Tab>
                 <Tab {...tabButtonStyles}>Raw Output</Tab>
+                <Spacer />
+                <Link
+                  href={`${
+                    process.env.NODE_ENV === 'production'
+                      ? 'https://'
+                      : 'http://'
+                  }${getAppLink(appSlug)}/run/history/${runId?.split('-')[0]}`}
+                  target="_blank"
+                  p={2}
+                >
+                  <HiArrowTopRightOnSquare />
+                </Link>
               </TabList>
-              <TabPanels borderBottomRadius={'md'}>
+              <TabPanels
+                borderBottomRadius={'md'}
+                border={showTabs ? '1px solid' : 'none'}
+                borderColor="gray.200"
+              >
                 <TabPanel>
                   <Box overflow="auto">
                     {applet.showGoBackLink() && (

@@ -23,6 +23,7 @@ import { useRunAppContext } from '../context/run-app-context';
 import SignedIn from '../auth/signed-in';
 import { useState } from 'react';
 import TimeAgo from 'timeago-react';
+import { HiGlobeAlt } from 'react-icons/hi2';
 
 export const PlaygroundPublishInfo = ({ app }: { app: AppQueryOutput }) => {
   const appLink = getAppLink(app.slug);
@@ -109,7 +110,7 @@ export const PlaygroundPublishInfo = ({ app }: { app: AppQueryOutput }) => {
           <PopoverContent p={4} mr={8}>
             <VStack alignItems="start">
               <HStack alignItems="start" mb="2">
-                <Icon as={HiGlobe} />
+                <Icon as={HiGlobeAlt} mt={1} />
                 <VStack alignItems="flex-start" spacing={1}>
                   <Text fontWeight="semibold" fontSize="xs">
                     <Link

@@ -165,7 +165,7 @@ async function originBoot({
   });
 
   if (!app?.versions.length) {
-    return errorResponse(`Invalid app version`);
+    return errorResponse(`INVALID_VERSION`);
   }
 
   if (!app) {

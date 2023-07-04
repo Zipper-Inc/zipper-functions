@@ -30,7 +30,7 @@ export type RunAppContextType = {
   results: Record<string, string>;
   userAuthConnectors: UserAuthConnector[];
   setResults: (results: Record<string, string>) => void;
-  run: (isCurrentFileAsEntryPoint?: boolean) => void;
+  run: (isCurrentFileAsEntryPoint?: boolean) => Promise<string | undefined>;
   boot: () => void;
   configs: Zipper.BootPayload['configs'];
 };
@@ -43,7 +43,7 @@ export const RunAppContext = createContext<RunAppContextType>({
   results: {},
   userAuthConnectors: [],
   setResults: noop,
-  run: noop,
+  run: () => Promise.resolve(''),
   boot: noop,
   configs: {},
 });
@@ -268,6 +268,8 @@ export function RunAppProvider({
     updateLogs();
 
     await onAfterRun();
+
+    return runId;
   };
 
   return (
