@@ -16,67 +16,59 @@ export async function POST(req: Request) {
   const frameworkFile = await readFrameworkFile('zipper.d.ts');
 
   const { stream, handlers } = LangChainStream();
-  const { body } = await req.json(); 
+  const { prompt: initialPrompt } = await req.json(); 
 
-  const appletLLM = new OpenAI({ temperature: 0, openAIApiKey: "", modelName: "gpt-3.5-turbo", streaming: true });
-  const appletTemplate = `As a TypeScript developer, your task is to create asynchronous functions called handler based on my applet requests. 
-  Your responses must exclusively contain TypeScript code, without any additional text or explanation. 
-  You may include necessary imports from esm.sh. Each handler function is an applet, and I will specify the requirements for these applets. 
-  Remember that this applets will be deployed into a Deno oak server, so you can use the oak library for handling requests and responses and this is a Deno environment so only use things that can run in this environment. eg: react is not available in this environment.
-  Example: If I ask for an applet that greets a user by their name, you should reply only with the code, like this: 
-  "async function handler(username: string): Promise<string> &#123; return "Hello &#36;&#123;username&#125;" &#125;"
-  Note that are some special characters in the code above, like &#36;&#123; and &#125; that are used to interpolate the username variable. You need to replace them with the correct characters.
-  Applet Request: {request}.
-  `;
-
-  const appletPromptTemplate = new PromptTemplate({
-    template: appletTemplate,
-    inputVariables: ["request"],
-  });
-
-  const appletChain = new LLMChain({
-    llm: appletLLM,
-    prompt: appletPromptTemplate,
-    outputKey: "code",
-  });
-
-  const llm = new OpenAI({ temperature: 0, openAIApiKey: "", modelName: "gpt-3.5-turbo", streaming: true });
+  const llm = new OpenAI({ temperature: 0, openAIApiKey: process.env.OPENAI, modelName: "gpt-3.5-turbo", streaming: true });
 
   const fullPrompt = PromptTemplate.fromTemplate(`
   {introduction}
 
   {example}
   {frameworkFile}
-
-  {zipperNamespacePrompt}`);
-
-  const introductionPrompt = PromptTemplate.fromTemplate(`
-  You are a Zipper Applet specialist working with TypeScript and Deno.
-  Your task is to take the generated application code and transform it into an applet that conforms to Zipper's conventions and standards. You have the zipper.d.ts file available to you for referencing types from the Zipper namespace.
-  
-  Note the following:
-  - The Zipper namespace is globally available in the environment where the applet runs. Do NOT import anything from 'zipper', as it's already available.
-  - You should use types from the Zipper namespace to structure the applet code correctly.
-  - Use the 'HandlerContext' type from the Zipper namespace for accessing additional contextual information like user information, app information, and request/response objects.
-  - The applet code should not include the zipper.d.ts file or modify it.
-  - The applet should not import nothing from 'zipper' because it is already available in the environment and in the global namespace of Zipper applets.
-  - You can import external packages via URLs, for instance from esm.sh, if needed.
-  - We are also providing you with the framework file of Zipper, which contains the code that is used to generate the applet code. You can use it as a reference.
+  {requestPrompt}
   `);
 
+  const introductionPrompt = PromptTemplate.fromTemplate(`
+  You are Typescript developer, high skilled with Deno creating Zipper Applets.
+  Your responses must exclusively contain TypeScript code, without any additional text or explanation. 
+
+  Your task is to take the generated application code and transform it into an applet that conforms to Zipper's conventions. 
+  We are also providing you with the framework file of Zipper, which contains the code that is used to generate the applet code. You can use it as a reference.
+  
+  Note the following:
+  - Each export function handler handler is an applet
+  - Do not annotate the handler function with Zipper.Handler type, instead annotate they using async function handler(input: Input)
+  - The Zipper namespace is globally available in the environment where the applet runs. Do NOT import anything from 'zipper', as it's already available.
+  - The applet code should not include the zipper.d.ts file or modify it.
+  - You can return JSX/html from the handler function if you want to return a UI component.
+  - You can call Zipper Components using JSX syntax.
+  - You may include necessary imports from esm.sh. 
+  - You can use emoji in UI components.
+  - Applets run in Deno environment, only use things that can run in this environment.
+  - The applet should not import nothing from 'zipper' because it is already available in the environment and in the global namespace of Zipper applets.
+  - You can import external packages via URLs, for instance from esm.sh, if needed.
+  - If the request needs some additional contextual information like user information, app information, and request/response objects, use the 'HandlerContext' type from the Zipper namespace to access it.
+  `);
+
+
   const examplePrompt = PromptTemplate.fromTemplate(`
-    Here is the raw typescript code generated to the applet: {code}
+    Here is an example of an applet that greets a user by their name:
+
+    export function handler(input: BRACE_OPEN username : string BRACE_CLOSE) BRACE_OPEN
+      return \`Hello, &#36;&#123;input.username&#125;!\`;
+    BRACE_CLOSE
+
+    Note that are some special characters in the code above, like BRACE_OPEN, BRACE_CLOSE, &#36;&#123; and &#125; that are used to create block and interpolate the username variable. You need to replace them with the correct characters.
   `);
 
 
   const frameworkPrompt = PromptTemplate.fromTemplate(`
-    Here is the zipper framework file for your reference, you can use everything from here without importing: {frameworkFile}
+    Here is the Zipper framework file for your reference, you can use everything from here without importing: {frameworkFile}
   `);
-  
-
-  const zipperNamespacePrompt = PromptTemplate.fromTemplate(`
-    Here is the applet code with the Zipper namespace:
-  `);
+    
+  const requestPromptTemplate = PromptTemplate.fromTemplate(`
+    Applet Request: {request}.
+  `)
 
   const composedPrompt = new PipelinePromptTemplate({
     pipelinePrompts: [
@@ -85,38 +77,38 @@ export async function POST(req: Request) {
         prompt: introductionPrompt,
       },
       {
-        name: "framework",
-        prompt: frameworkPrompt,
-      },
-      {
         name: "example",
         prompt: examplePrompt,
       },
       {
-        name: "zipperNamespacePrompt",
-        prompt: zipperNamespacePrompt,
+        name: "framework",
+        prompt: frameworkPrompt,
       },
+      {
+        name: "requestPrompt",
+        prompt: requestPromptTemplate,
+      }
     ],
     finalPrompt: fullPrompt,
   });
 
-  const reviewChain = new LLMChain({
-    llm: llm,
+  const createCodeChain = new LLMChain({
     prompt: composedPrompt,
-    outputKey: "zipperVersion",
+    outputKey: "zipperCode",
+    llm,
   })
   
   const zipperChain = new SequentialChain({
-    chains: [appletChain, reviewChain],
+    chains: [createCodeChain],
     inputVariables: ["request", "frameworkFile"],
-    outputVariables: ["code", "zipperVersion"],
+    outputVariables: ["zipperCode"],
     verbose: true,
   });
 
   const chainExecutionCall = await zipperChain.call({
-    request: body,
+    request: initialPrompt,
     frameworkFile: frameworkFile,
   })
 
-  return new StreamingTextResponse(chainExecutionCall.zipperVersion)
+  return new StreamingTextResponse(chainExecutionCall.zipperCode)
 }
