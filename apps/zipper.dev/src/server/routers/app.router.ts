@@ -17,6 +17,7 @@ import { appSubmissionState, ResourceOwnerType } from '@zipper/types';
 import { Context } from '../context';
 import {
   getAppHash,
+  getAppHashAndVersion,
   getAppVersionFromHash,
   getScriptHash,
 } from '~/utils/hashing';
@@ -214,16 +215,12 @@ export const appRouter = createRouter()
       });
 
       // get a hash of app and update the app
-      const appHash = getAppHash({
+      const { hash, version } = getAppHashAndVersion({
         ...app,
         scripts: [{ id: scriptMain.scriptId, hash: scriptHash }],
       });
 
-      const version = getAppVersionFromHash(appHash)!;
-
-      const baseUrl = `file://${app.slug}/v${version}`;
       const eszip = await build({
-        baseUrl,
         app: { ...app, scripts: [script] },
         version,
       });
@@ -231,7 +228,7 @@ export const appRouter = createRouter()
       await prisma.version.create({
         data: {
           app: { connect: { id: app.id } },
-          hash: appHash,
+          hash,
           buildFile: Buffer.from(eszip),
           isPublished: true,
         },
@@ -242,8 +239,8 @@ export const appRouter = createRouter()
           id: app.id,
         },
         data: {
-          publishedVersionHash: appHash,
-          playgroundVersionHash: appHash,
+          publishedVersionHash: hash,
+          playgroundVersionHash: hash,
         },
       });
 
@@ -760,17 +757,13 @@ export const appRouter = createRouter()
         }),
       );
 
-      const hash = getAppHash({
+      const { hash, version } = getAppHashAndVersion({
         id: fork.id,
         name: fork.name,
         scripts: forkScripts,
       });
 
-      const version = getAppVersionFromHash(hash)!;
-
-      const baseUrl = `file://${fork.slug}/v${version}`;
       const eszip = await build({
-        baseUrl,
         app: { ...fork, scripts: forkScripts },
         version,
       });
@@ -907,17 +900,13 @@ export const appRouter = createRouter()
         );
       }
 
-      const hash = getAppHash({
+      const { hash, version } = getAppHashAndVersion({
         id: app.id,
         name: app.name,
         scripts: updatedScripts,
       });
 
-      const version = getAppVersionFromHash(hash)!;
-
-      const baseUrl = `file://${app.slug}/v${version}`;
       const eszip = await build({
-        baseUrl,
         app: { ...app, scripts: updatedScripts },
         version,
       });
@@ -994,9 +983,7 @@ export const appRouter = createRouter()
       const getBuild = async () => {
         const version = getAppVersionFromHash(hash)!;
 
-        const baseUrl = `file://${app.slug}/v${version}`;
         const eszip = await build({
-          baseUrl,
           app,
           version,
         });
