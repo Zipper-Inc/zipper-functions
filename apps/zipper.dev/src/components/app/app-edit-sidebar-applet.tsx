@@ -9,10 +9,11 @@ import {
   UnorderedList,
   ListItem,
   HStack,
+  Icon,
 } from '@chakra-ui/react';
 import { FunctionInputs, FunctionOutput, useAppletContent } from '@zipper/ui';
 import { useEffect, useMemo, useState } from 'react';
-import { HiOutlinePlay } from 'react-icons/hi2';
+import { HiInformationCircle, HiOutlinePlay } from 'react-icons/hi2';
 import { useUser } from '~/hooks/use-user';
 import getRunUrl from '~/utils/get-run-url';
 import { getAppVersionFromHash } from '~/utils/hashing';
@@ -176,32 +177,53 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
                   <Heading size="sm" mb="4">
                     Inputs
                   </Heading>
-                  {inputError ? (
-                    <VStack align="start">
-                      <Text>
-                        There was an error while parsing your handler function.
-                      </Text>
-                      <Text color="red.500">{inputError}</Text>
-                    </VStack>
-                  ) : (
-                    <Text>
-                      Add an object parameter to your handler function if your
-                      applet has inputs. The properties of the parameter will be
-                      used to generate a form to collect information from users.
-                    </Text>
-                  )}
-                  {!inputError && appInfo.canUserEdit && (
-                    <Button
-                      color={'gray.700'}
-                      bg="white"
-                      mt={6}
-                      variant="outline"
-                      fontWeight="500"
-                      onClick={handleAddInput}
-                    >
-                      Add an input
-                    </Button>
-                  )}
+                  <VStack
+                    align="start"
+                    border="1px solid"
+                    p="4"
+                    borderColor="purple.200"
+                    borderRadius="md"
+                    backgroundColor="white"
+                    boxShadow="sm"
+                  >
+                    {inputError ? (
+                      <VStack align="start">
+                        <Text>
+                          There was an error while parsing your handler
+                          function.
+                        </Text>
+                        <Text color="red.500">{inputError}</Text>
+                      </VStack>
+                    ) : (
+                      <HStack>
+                        <Icon
+                          as={HiInformationCircle}
+                          color="purple.500"
+                          m="2"
+                        />
+                        <Text>
+                          Add an object parameter to your handler function if
+                          your applet has inputs. The properties of the
+                          parameter will be used to generate a form to collect
+                          information from users.
+                        </Text>
+                      </HStack>
+                    )}
+                    {!inputError && appInfo.canUserEdit && (
+                      <Button
+                        colorScheme="purple"
+                        bg="purple.50"
+                        _hover={{ bg: 'purple.100' }}
+                        w="full"
+                        mt={6}
+                        variant="ghost"
+                        fontWeight="500"
+                        onClick={handleAddInput}
+                      >
+                        Add an input
+                      </Button>
+                    )}
+                  </VStack>
                 </>
               )}
             </>
