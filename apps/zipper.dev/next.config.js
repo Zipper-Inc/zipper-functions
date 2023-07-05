@@ -58,6 +58,7 @@ module.exports = getConfig({
   experimental: {
     webpackBuildWorker: true,
     esmExternals: false,
+    appDir: true,
   },
   publicRuntimeConfig: {
     NODE_ENV: env.NODE_ENV,
@@ -77,6 +78,11 @@ module.exports = getConfig({
     ],
   },
   webpack: (config) => {
+    config.module.rules.push({
+      test: /\.txt$/,
+      use: 'raw-loader',
+    });
+
     if (!config.module.noParse)
       config.module.noParse = [
         require.resolve('@ts-morph/common/dist/typescript.js'),
