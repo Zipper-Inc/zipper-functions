@@ -5,6 +5,7 @@ import { getLogger } from './app-console';
 import { prettyLog } from './pretty-log';
 import { BuildCache, getModule } from './eszip-build-cache';
 import { readFrameworkFile } from './read-file';
+import { getAppHash, getAppVersionFromHash } from './hashing';
 
 /**
  * @todo
@@ -20,16 +21,17 @@ export const TYPESCRIPT_CONTENT_HEADERS = {
 const buildCache = new BuildCache();
 
 export async function build({
-  baseUrl,
+  baseUrl: _baseUrl,
   app,
   version,
 }: {
-  baseUrl: string;
-  app: App & { scripts: Script[] };
+  baseUrl?: string;
+  app: Omit<App, 'datastore' | 'categories'> & { scripts: Script[] };
   version: string;
 }) {
   const startMs = performance.now();
   const appName = `${app.slug}@${version}`;
+  const baseUrl = _baseUrl || `file://${app.slug}/v${version}`;
 
   const logger = getLogger({ appId: app.id, version });
   logger.info(

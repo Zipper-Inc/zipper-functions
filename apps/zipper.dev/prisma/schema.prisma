@@ -22,8 +22,8 @@ model App {
   submissionState       Int       @default(0)
   categories            String[]
   parentId              String?
-  lastDeploymentVersion String?
-  hash                  String?
+  publishedVersionHash  String?   @unique
+  playgroundVersionHash String?   @unique
   organizationId        String?
   createdById           String?
   requiresAuthToRun     Boolean   @default(false)
@@ -42,6 +42,9 @@ model App {
   settings     AppSetting[]
   connectors   AppConnector[]
   accessTokens AppAccessToken[]
+  versions     Version[]
+  publishedVersion Version? @relation("PublishedVersion", fields: [publishedVersionHash], references: [hash])
+  playgroundVersion Version? @relation("PlaygroundVersion", fields: [playgroundVersionHash], references: [hash])
 
   @@map("apps")
 }
@@ -232,6 +235,22 @@ model Script {
 
   @@unique([appId, filename])
   @@map("scripts")
+}
+
+model Version {
+  hash          String   @id
+  appId         String
+  buildFile     Bytes?
+  isPublished   Boolean  @default(false)
+  createdAt     DateTime @default(now())
+
+  app App @relation(fields: [appId], references: [id])
+
+  publishedForApp App? @relation("PublishedVersion")
+  playgroundForApp App? @relation("PlaygroundVersion")
+
+  @@map("versions")
+  @@unique([appId, hash])
 }
 
 model ScriptMain {

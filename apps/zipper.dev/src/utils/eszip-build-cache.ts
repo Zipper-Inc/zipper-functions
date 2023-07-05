@@ -1,5 +1,6 @@
 import Redis from 'ioredis';
 import { LoadResponseModule } from '@deno/eszip/types/loader';
+import fetch from 'node-fetch';
 
 export type CacheRecord = {
   module: LoadResponseModule;

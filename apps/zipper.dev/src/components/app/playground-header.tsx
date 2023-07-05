@@ -23,6 +23,7 @@ import {
   Text,
   VStack,
   Tooltip,
+  background,
 } from '@chakra-ui/react';
 
 import NextLink from 'next/link';
@@ -31,11 +32,12 @@ import React, { useEffect, useState } from 'react';
 import { ZipperLogo, ZipperSymbol } from '@zipper/ui';
 
 import {
-  HiOutlineUpload,
-  HiPencilAlt,
+  HiShare,
   HiLockOpen,
   HiLockClosed,
-} from 'react-icons/hi';
+  HiPencilSquare,
+  HiGlobeAlt,
+} from 'react-icons/hi2';
 
 import { CgGitFork } from 'react-icons/cg';
 
@@ -57,6 +59,8 @@ import { useOrganizationList } from '~/hooks/use-organization-list';
 import SignedIn from '../auth/signed-in';
 import SignedOut from '../auth/signed-out';
 import { signIn } from 'next-auth/react';
+import { PlaygroundPublishInfo } from './playground-publish-button';
+import { getAppLink } from '@zipper/utils';
 
 const getDefaultCreateAppFormValues = () => ({
   name: generateDefaultSlug(),
@@ -212,7 +216,7 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
                   }}
                 >
                   <Box>
-                    <HiPencilAlt />
+                    <HiPencilSquare />
                   </Box>
                 </Button>
               )}
@@ -242,6 +246,39 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
             Fork
           </Button>
         )}
+        <SignedIn>
+          <Button
+            colorScheme="purple"
+            variant="ghost"
+            onClick={() => setShareModalOpen(true)}
+            display="flex"
+            gap={2}
+            fontWeight="medium"
+          >
+            <HiShare />
+            <Text>Share</Text>
+          </Button>
+        </SignedIn>
+        <Button
+          as={Link}
+          colorScheme="purple"
+          variant="ghost"
+          href={`${
+            process.env.NODE_ENV === 'production' ? 'https://' : 'http://'
+          }${getAppLink(app.slug)}`}
+          target="_blank"
+          display="flex"
+          gap={2}
+          fontWeight="medium"
+          _hover={{ textDecoration: 'none', backgroundColor: 'purple.50' }}
+        >
+          <HiGlobeAlt />
+          <Text>Visit</Text>
+        </Button>
+        <SignedIn>
+          <PlaygroundPublishInfo app={app} />
+        </SignedIn>
+
         {!user && (
           <Button
             colorScheme="purple"
@@ -256,20 +293,6 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
             Sign In
           </Button>
         )}
-        <SignedIn>
-          <Button
-            colorScheme="purple"
-            variant="ghost"
-            onClick={() => setShareModalOpen(true)}
-            display="flex"
-            gap={2}
-            fontWeight="medium"
-          >
-            <HiOutlineUpload />
-            <Text>Share</Text>
-          </Button>
-          {/* <UserButton afterSignOutUrl="/" /> */}
-        </SignedIn>
       </HStack>
       <ShareModal
         isOpen={isShareModalOpen}

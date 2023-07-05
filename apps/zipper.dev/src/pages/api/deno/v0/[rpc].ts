@@ -155,8 +155,18 @@ async function originBoot({
       scriptMain: true,
       secrets: true,
       connectors: true,
+      versions: {
+        where: {
+          hash: { startsWith: deploymentVersion },
+        },
+        take: 1,
+      },
     },
   });
+
+  // if (!app?.versions.length) {
+  //   return errorResponse(`INVALID_VERSION`);
+  // }
 
   if (!app) {
     return errorResponse(`Missing app ID`);
@@ -164,12 +174,15 @@ async function originBoot({
 
   const version =
     deploymentVersion === 'latest'
-      ? app.lastDeploymentVersion || getAppVersionFromHash(getAppHash(app))
+      ? app.publishedVersionHash || Date.now().toString()
       : deploymentVersion;
 
   const baseUrl = `file://${app.slug}/v${version}`;
 
-  const eszip = await build({ baseUrl, app, version });
+  let eszip = app.versions[0]?.buildFile;
+  if (!eszip) {
+    eszip = Buffer.from(await build({ baseUrl, app, version }));
+  }
 
   /**const old = await createEsZip({
     baseUrl,

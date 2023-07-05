@@ -39,6 +39,7 @@ import { getBootUrl, getRelayUrl } from '~/utils/get-relay-url';
 import { getZipperAuth } from '~/utils/get-zipper-auth';
 import { deleteCookie } from 'cookies-next';
 import { getShortRunId } from '~/utils/run-id';
+import Error from 'next/error';
 
 const { __DEBUG__ } = process.env;
 
@@ -55,7 +56,7 @@ export type AppPageProps = {
   defaultValues?: Record<string, any>;
   slackAuthUrl?: string;
   githubAuthUrl?: string;
-  statusCode?: number;
+  errorCode?: string;
   entryPoint?: EntryPointInfo;
   result?: string;
   runnableScripts?: string[];
@@ -74,7 +75,7 @@ export function AppPage({
   defaultValues,
   slackAuthUrl,
   githubAuthUrl,
-  statusCode,
+  errorCode,
   entryPoint,
   result: paramResult,
   runnableScripts,
@@ -250,8 +251,16 @@ export function AppPage({
     });
   }, [userAuthConnectors]);
 
-  if (statusCode === 401 || !app) {
+  if (errorCode === 'UNAUTHORIZED') {
     return <Unauthorized />;
+  }
+
+  if (errorCode === 'INVALID_VERSION') {
+    return <Error statusCode={404} title={'App not published yet'} />;
+  }
+
+  if (errorCode === 'NOT_FOUND' || !app) {
+    return <Error statusCode={404} />;
   }
 
   const appletDescription = () => {
@@ -387,9 +396,7 @@ export const getServerSideProps: GetServerSideProps = async ({
 
   if (__DEBUG__) console.log('getAppInfo', { result: appInfoResult });
   if (!appInfoResult.ok) {
-    if (appInfoResult.error === 'UNAUTHORIZED')
-      return { props: { statusCode: 401 } };
-    return { notFound: true };
+    return { props: { errorCode: appInfoResult.error } };
   }
 
   const {
@@ -418,7 +425,8 @@ export const getServerSideProps: GetServerSideProps = async ({
     },
   }).then((r) => r.text());
 
-  if (payload === 'UNAUTHORIZED') return { props: { statusCode: 401 } };
+  if (payload === 'UNAUTHORIZED' || payload === 'INVALID_VERSION')
+    return { props: { errorCode: payload } };
   const { configs: handlerConfigs } = JSON.parse(payload) as Zipper.BootPayload;
 
   const config = handlerConfigs[filename];
