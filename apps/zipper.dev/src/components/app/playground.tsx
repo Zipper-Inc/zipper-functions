@@ -23,6 +23,7 @@ import { useAppEditors } from '~/hooks/use-app-editors';
 import { TabButton } from '@zipper/ui';
 import HistoryTab from './history-tab';
 import { randomUUID } from 'crypto';
+import VersionsTab from './versions-tab';
 
 const tabPanelStyles: ChakraProps = {
   flex: 1,
@@ -107,7 +108,7 @@ export function Playground({
             mb={2}
             pt={3}
             color="gray.500"
-            gap={4}
+            gap={2}
             justifyContent="space-between"
             overflowX="auto"
             hidden={!app.canUserEdit}
@@ -119,8 +120,10 @@ export function Playground({
               <TabButton title="Schedules" />
               {/* SECRETS */}
               <TabButton title="Secrets" />
-              {/* HISTORY */}
-              <TabButton title="History" />
+              {/* RUNS */}
+              <TabButton title="Runs" />
+              {/* VERSIONS */}
+              <TabButton title="Versions" />
               {/* SETTINGS */}
               <TabButton title="Settings" />
             </HStack>
@@ -161,9 +164,14 @@ export function Playground({
               <SecretsTab editable={app.canUserEdit} appId={id} />
             </TabPanel>
 
-            {/* HISTORY */}
+            {/* RUNS */}
             <TabPanel {...tabPanelStyles}>
               <HistoryTab appId={id} />
+            </TabPanel>
+
+            {/* VERSIONS */}
+            <TabPanel {...tabPanelStyles}>
+              <VersionsTab appId={id} slug={app.slug} />
             </TabPanel>
 
             {/* SETTINGS */}

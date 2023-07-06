@@ -13,8 +13,8 @@ export const TabButton: React.FC<TabButtonProps> = ({
 }) => {
   return (
     <Tab
-      px={6}
-      py={3}
+      px={4}
+      py={2}
       rounded="md"
       _selected={{
         backgroundColor: 'purple.50',

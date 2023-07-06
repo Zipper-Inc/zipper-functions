@@ -15,12 +15,7 @@ import { TRPCError } from '@trpc/server';
 import denyList from '../utils/slugDenyList';
 import { appSubmissionState, ResourceOwnerType } from '@zipper/types';
 import { Context } from '../context';
-import {
-  getAppHash,
-  getAppHashAndVersion,
-  getAppVersionFromHash,
-  getScriptHash,
-} from '~/utils/hashing';
+import { getAppVersionFromHash, getScriptHash } from '~/utils/hashing';
 import { parseInputForTypes } from '~/utils/parse-code';
 import {
   getInputsFromFormData,
@@ -32,7 +27,10 @@ import fetch from 'node-fetch';
 import isCodeRunnable from '~/utils/is-code-runnable';
 import { generateAccessToken } from '~/utils/jwt-utils';
 import { getToken } from 'next-auth/jwt';
-import { build } from '~/utils/eszip-build-applet';
+import { buildAndStoreApplet } from '~/utils/eszip-build-applet';
+import s3Client from '../s3';
+import JSZip from 'jszip';
+import { PutObjectCommand } from '@aws-sdk/client-s3';
 
 const defaultSelect = Prisma.validator<Prisma.AppSelect>()({
   id: true,
@@ -214,24 +212,10 @@ export const appRouter = createRouter()
         },
       });
 
-      // get a hash of app and update the app
-      const { hash, version } = getAppHashAndVersion({
-        ...app,
-        scripts: [{ id: scriptMain.scriptId, hash: scriptHash }],
-      });
-
-      const eszip = await build({
+      const { hash } = await buildAndStoreApplet({
         app: { ...app, scripts: [script] },
-        version,
-      });
-
-      await prisma.version.create({
-        data: {
-          app: { connect: { id: app.id } },
-          hash,
-          buildFile: Buffer.from(eszip),
-          isPublished: true,
-        },
+        isPublished: true,
+        userId: ctx.userId,
       });
 
       await prisma.app.update({
@@ -736,8 +720,6 @@ export const appRouter = createRouter()
             data: {
               ...script,
               id: newId,
-              inputSchema: JSON.stringify(script.inputSchema),
-              outputSchema: JSON.stringify(script.outputSchema),
               appId: fork.id,
               order: i,
               hash: getScriptHash({ ...script, id: newId }),
@@ -757,24 +739,10 @@ export const appRouter = createRouter()
         }),
       );
 
-      const { hash, version } = getAppHashAndVersion({
-        id: fork.id,
-        name: fork.name,
-        scripts: forkScripts,
-      });
-
-      const eszip = await build({
+      const { hash } = await buildAndStoreApplet({
         app: { ...fork, scripts: forkScripts },
-        version,
-      });
-
-      await prisma.version.create({
-        data: {
-          app: { connect: { id: fork.id } },
-          hash,
-          buildFile: Buffer.from(eszip),
-          isPublished: true,
-        },
+        isPublished: true,
+        userId: ctx.userId,
       });
 
       const updatedFork = await prisma.app.update({
@@ -816,7 +784,6 @@ export const appRouter = createRouter()
               id: z.string().uuid(),
               data: z.object({
                 name: z.string().min(3).max(255).optional(),
-                description: z.string().optional().nullable(),
                 code: z.string().optional(),
               }),
             }),
@@ -900,29 +867,28 @@ export const appRouter = createRouter()
         );
       }
 
-      const { hash, version } = getAppHashAndVersion({
-        id: app.id,
-        name: app.name,
-        scripts: updatedScripts,
-      });
-
-      const eszip = await build({
+      const { hash } = await buildAndStoreApplet({
         app: { ...app, scripts: updatedScripts },
-        version,
+        userId: ctx.userId,
       });
 
-      await prisma.version.upsert({
-        where: {
-          hash,
-        },
-        create: {
-          app: { connect: { id: app.id } },
-          hash: hash,
-          buildFile: Buffer.from(eszip),
-          isPublished: false,
-        },
-        update: {},
-      });
+      if (hash !== app.playgroundVersionHash) {
+        //backup previous scripts to R2
+        const zip = new JSZip();
+        updatedScripts.map((s) => {
+          zip.file(s.filename, JSON.stringify(s));
+        });
+
+        zip.generateAsync({ type: 'uint8array' }).then((content) => {
+          s3Client.send(
+            new PutObjectCommand({
+              Bucket: process.env.CLOUDFLARE_APPLET_SRC_BUCKET_NAME,
+              Key: `${app.id}/${getAppVersionFromHash(hash)}.zip`,
+              Body: content,
+            }),
+          );
+        });
+      }
 
       const appWithUpdatedHash = await prisma.app.update({
         where: {
@@ -970,38 +936,15 @@ export const appRouter = createRouter()
         include: { scripts: true },
       });
 
-      const { playgroundVersionHash } = app;
+      const { hash } = await buildAndStoreApplet({ app, isPublished: true });
 
-      const hash =
-        playgroundVersionHash ||
-        getAppHash({
-          id: app.id,
-          name: app.name,
-          scripts: app.scripts,
-        });
-
-      const getBuild = async () => {
-        const version = getAppVersionFromHash(hash)!;
-
-        const eszip = await build({
-          app,
-          version,
-        });
-        return Buffer.from(eszip);
-      };
-
-      await prisma.version.upsert({
+      await prisma.version.updateMany({
         where: {
-          hash,
+          appId: input.id,
+          hash: { not: hash },
         },
-        create: {
-          app: { connect: { id: app.id } },
-          hash: hash,
-          buildFile: await getBuild(),
-          isPublished: true,
-        },
-        update: {
-          isPublished: true,
+        data: {
+          buildFile: null,
         },
       });
 
@@ -1010,8 +953,8 @@ export const appRouter = createRouter()
           id: input.id,
         },
         data: {
-          publishedVersionHash: playgroundVersionHash,
-          playgroundVersionHash: playgroundVersionHash,
+          publishedVersionHash: hash,
+          playgroundVersionHash: hash,
         },
       });
     },

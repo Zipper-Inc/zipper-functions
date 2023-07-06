@@ -63,7 +63,6 @@ async function main() {
               id: mainScriptId,
               name: 'main',
               filename: 'main.ts',
-              description: 'entry point for the app',
               code: `import { countWords } from './count-words.ts';
 
 export async function handler({ text }: { text: string }) {
@@ -124,7 +123,6 @@ export async function handler({ text }: { text: string }) {
               id: mainScriptId2,
               name: 'main',
               filename: 'main.ts',
-              description: 'entry point for the app',
               code: `export async function handler({ text }: { text: string }) {
   return Math.floor(Math.random() * 100);
 }`,

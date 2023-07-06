@@ -155,7 +155,14 @@ export function AppPage({
       setLoading(true);
       const rawValues = formContext.getValues();
       const values = getInputsFromFormData(rawValues, inputs);
-      router.push({ pathname: `/run/${filename}`, query: values });
+      if (version !== 'latest') {
+        router.push({
+          pathname: `/run/${filename}/@${version}`,
+          query: values,
+        });
+      } else {
+        router.push({ pathname: `/run/${filename}`, query: values });
+      }
     }
   };
 
@@ -474,7 +481,7 @@ export const getServerSideProps: GetServerSideProps = async ({
       getRelayUrl({
         slug: app.slug,
         path: Array.isArray(query.versionAndFilename)
-          ? query.versionAndFilename[0]
+          ? query.versionAndFilename.join('/')
           : query.versionAndFilename,
       }),
       {

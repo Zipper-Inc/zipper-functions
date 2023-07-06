@@ -23,7 +23,7 @@ import {
   Text,
   VStack,
   Tooltip,
-  background,
+  Spacer,
 } from '@chakra-ui/react';
 
 import NextLink from 'next/link';
@@ -61,6 +61,7 @@ import SignedOut from '../auth/signed-out';
 import { signIn } from 'next-auth/react';
 import { PlaygroundPublishInfo } from './playground-publish-button';
 import { getAppLink } from '@zipper/utils';
+import { Avatar, AvatarForCurrentUser } from '../avatar';
 
 const getDefaultCreateAppFormValues = () => ({
   name: generateDefaultSlug(),
@@ -227,8 +228,10 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
       <HStack justifyContent="end">
         {isLoaded && (
           <Button
-            colorScheme="purple"
-            variant="ghost"
+            size="sm"
+            colorScheme="gray"
+            variant="outline"
+            color="gray.600"
             display="flex"
             gap={2}
             fontWeight="medium"
@@ -248,8 +251,10 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
         )}
         <SignedIn>
           <Button
-            colorScheme="purple"
-            variant="ghost"
+            size="sm"
+            colorScheme="gray"
+            color="gray.600"
+            variant="outline"
             onClick={() => setShareModalOpen(true)}
             display="flex"
             gap={2}
@@ -261,8 +266,10 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
         </SignedIn>
         <Button
           as={Link}
-          colorScheme="purple"
-          variant="ghost"
+          size="sm"
+          colorScheme="gray"
+          color="gray.600"
+          variant="outline"
           href={`${
             process.env.NODE_ENV === 'production' ? 'https://' : 'http://'
           }${getAppLink(app.slug)}`}
@@ -270,13 +277,15 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
           display="flex"
           gap={2}
           fontWeight="medium"
-          _hover={{ textDecoration: 'none', backgroundColor: 'purple.50' }}
+          _hover={{ textDecoration: 'none', backgroundColor: 'gray.100'}}
         >
-          <HiGlobeAlt />
-          <Text>Visit</Text>
+          <Icon as={HiGlobeAlt} />
+          <Text>View</Text>
         </Button>
         <SignedIn>
           <PlaygroundPublishInfo app={app} />
+          <Spacer />
+          <AvatarForCurrentUser size="sm" />
         </SignedIn>
 
         {!user && (

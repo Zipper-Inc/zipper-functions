@@ -16,6 +16,7 @@ import { slackConnectorRouter } from './slackConnector.router';
 import { githubConnectorRouter } from './githubConnector.router';
 import { appAccessTokenRouter } from './appAccessToken.router';
 import { organizationRouter } from './organization.router';
+import { versionRouter } from './version.router';
 
 /**
  * Create your application's root router
@@ -54,6 +55,7 @@ export const trpcRouter = createRouter()
   .merge('script.', scriptRouter)
   .merge('schedule.', scheduleRouter)
   .merge('user.', userRouter)
-  .merge('organization.', organizationRouter);
+  .merge('organization.', organizationRouter)
+  .merge('version.', versionRouter);
 
 export type AppRouter = typeof trpcRouter;

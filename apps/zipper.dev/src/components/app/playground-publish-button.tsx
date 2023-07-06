@@ -94,6 +94,8 @@ export const PlaygroundPublishInfo = ({ app }: { app: AppQueryOutput }) => {
             <PopoverTrigger>
               <span>
                 <Button
+                  fontSize="sm"
+                  size="sm"
                   colorScheme="purple"
                   variant="outline"
                   display="flex"
@@ -148,9 +150,6 @@ export const PlaygroundPublishInfo = ({ app }: { app: AppQueryOutput }) => {
                 isDisabled={isPublishing}
               >
                 {buttonText}
-              </Button>
-              <Button w="full" variant="link" fontSize="sm">
-                Previous versions
               </Button>
             </VStack>
           </PopoverContent>

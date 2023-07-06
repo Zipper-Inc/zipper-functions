@@ -10,10 +10,22 @@ import {
   ListItem,
   HStack,
   Icon,
+  PopoverTrigger,
+  Popover,
+  PopoverArrow,
+  PopoverBody,
+  PopoverCloseButton,
+  PopoverContent,
+  PopoverHeader,
 } from '@chakra-ui/react';
 import { FunctionInputs, FunctionOutput, useAppletContent } from '@zipper/ui';
 import { useEffect, useMemo, useState } from 'react';
-import { HiInformationCircle, HiOutlinePlay } from 'react-icons/hi2';
+import {
+  HiExclamationCircle,
+  HiInformationCircle,
+  HiOutlineLightBulb,
+  HiOutlinePlay,
+} from 'react-icons/hi2';
 import { useUser } from '~/hooks/use-user';
 import getRunUrl from '~/utils/get-run-url';
 import { getAppVersionFromHash } from '~/utils/hashing';
@@ -177,16 +189,17 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
                   <Heading size="sm" mb="4">
                     Inputs
                   </Heading>
-                  <VStack
-                    align="start"
-                    border="1px solid"
-                    p="4"
-                    borderColor="purple.200"
-                    borderRadius="md"
-                    backgroundColor="white"
-                    boxShadow="sm"
-                  >
-                    {inputError ? (
+                  {inputError && (
+                    <HStack
+                      border="1px solid"
+                      p="4"
+                      borderColor="red.200"
+                      borderRadius="md"
+                      backgroundColor="white"
+                      boxShadow="sm"
+                      alignItems="start"
+                    >
+                      <Icon as={HiExclamationCircle} color="red.500" m="2" />
                       <VStack align="start">
                         <Text>
                           There was an error while parsing your handler
@@ -194,36 +207,41 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
                         </Text>
                         <Text color="red.500">{inputError}</Text>
                       </VStack>
-                    ) : (
-                      <HStack>
-                        <Icon
-                          as={HiInformationCircle}
-                          color="purple.500"
-                          m="2"
-                        />
-                        <Text>
-                          Add an object parameter to your handler function if
-                          your applet has inputs. The properties of the
-                          parameter will be used to generate a form to collect
-                          information from users.
-                        </Text>
-                      </HStack>
-                    )}
-                    {!inputError && appInfo.canUserEdit && (
-                      <Button
-                        colorScheme="purple"
-                        bg="purple.50"
-                        _hover={{ bg: 'purple.100' }}
-                        w="full"
-                        mt={6}
-                        variant="ghost"
-                        fontWeight="500"
-                        onClick={handleAddInput}
-                      >
-                        Add an input
-                      </Button>
-                    )}
-                  </VStack>
+                    </HStack>
+                  )}
+                  {!inputError && appInfo.canUserEdit && (
+                    <Popover trigger="hover" openDelay={600}>
+                      <PopoverTrigger>
+                        <Button
+                          colorScheme="purple"
+                          bg="white"
+                          border="1px solid"
+                          borderColor="purple.100"
+                          _hover={{ bg: 'purple.100' }}
+                          w="full"
+                          variant="ghost"
+                          fontWeight="500"
+                          onClick={handleAddInput}
+                        >
+                          Add an input
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent>
+                        <PopoverHeader fontWeight="semibold">
+                          <HStack>
+                            <Icon as={HiOutlineLightBulb} />
+                            <Text>Add an input</Text>
+                          </HStack>
+                        </PopoverHeader>
+                        <PopoverArrow />
+                        <PopoverBody>
+                          Need to collect inputs from your users? Add an object
+                          parameter to your handler function and we'll
+                          automatically generate a form for you.
+                        </PopoverBody>
+                      </PopoverContent>
+                    </Popover>
+                  )}
                 </>
               )}
             </>
