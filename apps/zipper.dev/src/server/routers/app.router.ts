@@ -28,6 +28,9 @@ import isCodeRunnable from '~/utils/is-code-runnable';
 import { generateAccessToken } from '~/utils/jwt-utils';
 import { getToken } from 'next-auth/jwt';
 import { buildAndStoreApplet } from '~/utils/eszip-build-applet';
+import s3Client from '../s3';
+import JSZip from 'jszip';
+import { GetObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
 
 const defaultSelect = Prisma.validator<Prisma.AppSelect>()({
   id: true,
@@ -869,6 +872,24 @@ export const appRouter = createRouter()
         app: { ...app, scripts: updatedScripts },
       });
 
+      if (hash !== app.playgroundVersionHash) {
+        //backup previous scripts to R2
+        const zip = new JSZip();
+        app.scripts.map((s) => {
+          zip.file(s.filename, JSON.stringify(s));
+        });
+
+        zip.generateAsync({ type: 'uint8array' }).then((content) => {
+          s3Client.send(
+            new PutObjectCommand({
+              Bucket: process.env.CLOUDFLARE_APPLET_SRC_BUCKET_NAME,
+              Key: `${app.id}/${app.playgroundVersionHash}.zip`,
+              Body: content,
+            }),
+          );
+        });
+      }
+
       const appWithUpdatedHash = await prisma.app.update({
         where: {
           id,
@@ -934,6 +955,101 @@ export const appRouter = createRouter()
         data: {
           publishedVersionHash: hash,
           playgroundVersionHash: hash,
+        },
+      });
+    },
+  })
+  .mutation('restore', {
+    input: z.object({
+      appId: z.string(),
+      hash: z.string(),
+    }),
+    async resolve({ ctx, input }) {
+      await hasAppEditPermission({ ctx, appId: input.appId });
+
+      await prisma.version.findFirstOrThrow({
+        where: {
+          appId: input.appId,
+          hash: input.hash,
+        },
+      });
+
+      const zipFile = await s3Client.send(
+        new GetObjectCommand({
+          Bucket: process.env.CLOUDFLARE_APPLET_SRC_BUCKET_NAME,
+          Key: `${input.appId}/${input.hash}.zip`,
+        }),
+      );
+
+      if (!zipFile || !zipFile.Body) {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+      }
+
+      // await prisma.scriptMain.delete({
+      //   where: {
+      //     appId: input.appId,
+      //   },
+      // });
+
+      // await prisma.script.deleteMany({
+      //   where: {
+      //     appId: input.appId,
+      //   },
+      // });
+
+      const versionScripts: Prisma.ScriptCreateManyInput[] = [];
+      const versionZip = new JSZip();
+
+      await versionZip.loadAsync(zipFile.Body.transformToByteArray());
+
+      const promises: Promise<string | void>[] = [];
+
+      // you now have every files contained in the loaded zip
+      versionZip.forEach(async function (relativePath, zipEntry) {
+        promises.push(
+          zipEntry.async('string').then(function (content) {
+            const jsonContent = JSON.parse(content);
+
+            versionScripts.push({
+              appId: input.appId,
+              filename: jsonContent.filename,
+              code: jsonContent.code,
+              hash: jsonContent.hash,
+              isRunnable: jsonContent.isRunnable,
+              createdAt: jsonContent.createdAt,
+              updatedAt: jsonContent.updatedAt,
+              name: jsonContent.name,
+            });
+          }),
+        );
+      });
+
+      await Promise.all(promises);
+
+      await prisma.script.createMany({
+        data: versionScripts,
+      });
+
+      const scriptMain = await prisma.script.findFirst({
+        where: {
+          appId: input.appId,
+          filename: 'main.ts',
+        },
+      });
+
+      await prisma.scriptMain.create({
+        data: {
+          appId: input.appId,
+          scriptId: scriptMain!.id,
+        },
+      });
+
+      await prisma.app.update({
+        where: {
+          id: input.appId,
+        },
+        data: {
+          playgroundVersionHash: input.hash,
         },
       });
     },

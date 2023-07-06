@@ -23,7 +23,6 @@ import {
   Text,
   VStack,
   Tooltip,
-  background,
 } from '@chakra-ui/react';
 
 import NextLink from 'next/link';

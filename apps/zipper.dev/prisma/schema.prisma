@@ -220,12 +220,9 @@ model Script {
   updatedAt    DateTime? @default(now())
   name         String
   filename     String
-  description  String?
   code         String
   order        Int?      @default(0)
   appId        String
-  inputSchema  Json?
-  outputSchema Json?
   connectorId  String?
   hash         String?
   isRunnable   Boolean   @default(false)
