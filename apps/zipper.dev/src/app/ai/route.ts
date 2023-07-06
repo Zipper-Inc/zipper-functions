@@ -2,15 +2,9 @@ import { StreamingTextResponse, LangChainStream } from 'ai';
 import { SequentialChain, LLMChain } from 'langchain/chains';
 import { OpenAI } from 'langchain/llms/openai';
 import { PipelinePromptTemplate, PromptTemplate } from 'langchain/prompts';
-
-import fs from 'fs/promises';
-import path from 'path';
+import { readFrameworkFile } from '~/utils/read-file';
 
 export const runtime = "nodejs";
-
-export async function readFrameworkFile(filename: string) {
-  return await fs.readFile(path.resolve('./src/app/ai/', filename), 'utf8');
-}
 
 export async function POST(req: Request) {
   const frameworkFile = await readFrameworkFile('zipper.d.ts');
@@ -18,7 +12,7 @@ export async function POST(req: Request) {
   const { stream, handlers } = LangChainStream();
   const { prompt: initialPrompt } = await req.json(); 
 
-  const llm = new OpenAI({ temperature: 0, openAIApiKey: process.env.OPENAI, modelName: "gpt-3.5-turbo", streaming: true });
+  const llm = new OpenAI({ temperature: 0, openAIApiKey: process.env.OPENAI, modelName: "gpt-3.5-turbo-16k-0613", streaming: true });
 
   const fullPrompt = PromptTemplate.fromTemplate(`
   {introduction}
@@ -32,7 +26,8 @@ export async function POST(req: Request) {
   You are Typescript developer, high skilled with Deno creating Zipper Applets.
   Your responses must exclusively contain TypeScript code, without any additional text or explanation. 
 
-  Your task is to take the generated application code and transform it into an applet that conforms to Zipper's conventions. 
+  Your first task is to take the request sent by the user and generate typescript code that can be used to create a Zipper applet.
+  Your second task is to take the generated application code and transform it into an applet that conforms to Zipper's conventions. 
   We are also providing you with the framework file of Zipper, which contains the code that is used to generate the applet code. You can use it as a reference.
   
   Note the following:
