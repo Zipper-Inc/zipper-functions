@@ -28,6 +28,8 @@ import {
   Stack,
   Text,
   Icon,
+  useColorMode,
+  MenuDivider,
 } from '@chakra-ui/react';
 import { useRouter } from 'next/router';
 import NextLink from 'next/link';
@@ -42,7 +44,12 @@ import { useUser } from '~/hooks/use-user';
 import SignedIn from './auth/signed-in';
 import SignedOut from './auth/signed-out';
 import UserProfile from './auth/userProfile';
-import { HiArrowLeft, HiLogout, HiOutlineCog } from 'react-icons/hi';
+import {
+  HiLogout,
+  HiOutlineCog,
+  HiOutlineMoon,
+  HiOutlineSun,
+} from 'react-icons/hi';
 import { signOut } from 'next-auth/react';
 import { HiChevronLeft } from 'react-icons/hi2';
 
@@ -69,6 +76,8 @@ const Header: React.FC<HeaderProps> = ({
 
   const { reload } = router.query;
   const { user, isLoaded } = useUser();
+
+  const { colorMode, toggleColorMode } = useColorMode();
 
   const feedbackModal = useDisclosure();
   const userSettingsModal = useDisclosure();
@@ -131,7 +140,7 @@ const Header: React.FC<HeaderProps> = ({
                       overflow="auto"
                       whiteSpace="nowrap"
                       fontWeight="medium"
-                      color="gray.600"
+                      color="textAlt"
                     />
                   </HStack>
                 </SignedIn>
@@ -151,7 +160,7 @@ const Header: React.FC<HeaderProps> = ({
                 height="100%"
                 spacing={4}
                 fontSize="lg"
-                color={user ? 'gray.600' : 'purple'}
+                color={user ? 'textAlt' : 'purple'}
                 textDecorationColor="purple"
                 textDecoration="none"
               >
@@ -180,7 +189,7 @@ const Header: React.FC<HeaderProps> = ({
                   <Button
                     size="sm"
                     variant={'outline'}
-                    color="gray.600"
+                    color="textAlt"
                     onClick={feedbackModal.onOpen}
                   >
                     Feedback
@@ -262,6 +271,25 @@ const Header: React.FC<HeaderProps> = ({
                           <Text>Manage account</Text>
                         </Stack>
                       </MenuItem>
+                    </MenuGroup>
+                    <MenuDivider />
+                    <MenuGroup title="Settings">
+                      <MenuItem onClick={toggleColorMode}>
+                        <Stack gap={1} direction="row" alignItems="center">
+                          {colorMode === 'dark' ? (
+                            <HiOutlineSun />
+                          ) : (
+                            <HiOutlineMoon />
+                          )}
+                          <Text>
+                            Switch to {colorMode === 'dark' ? 'light' : 'dark'}{' '}
+                            mode
+                          </Text>
+                        </Stack>
+                      </MenuItem>
+                    </MenuGroup>
+                    <MenuDivider />
+                    <MenuGroup>
                       <MenuItem onClick={() => signOut()}>
                         <Stack gap={1} direction="row" alignItems="center">
                           <HiLogout />
