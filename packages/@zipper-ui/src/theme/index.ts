@@ -134,6 +134,28 @@ export const brandColors = {
   default: baseColors.gray[600],
 };
 
+export const semanticTokens = {
+  colors: {
+    error: 'red.500',
+    textColor: {
+      default: 'gray.900',
+      _dark: 'gray.50',
+    },
+    textColorAlt: {
+      default: 'gray.600',
+      _dark: 'gray.400',
+    },
+    lineColor: {
+      default: 'gray.100',
+      _dark: 'gray.700',
+    },
+    lineColorAlt: {
+      default: 'gray.50',
+      _dark: 'gray.800',
+    },
+  },
+};
+
 export const fonts = {
   body: '"InterVariable", sans-serif',
   heading: '"InterVariable", sans-serif',
@@ -141,6 +163,7 @@ export const fonts = {
 };
 
 export const theme = extendTheme({
+  initialColorMode: 'system',
   components: {
     MultiSelect: multiSelectTheme,
   },
@@ -178,5 +201,6 @@ export const theme = extendTheme({
     ...brandColors,
     ...baseColors,
   },
+  semanticTokens,
   fonts,
 });
