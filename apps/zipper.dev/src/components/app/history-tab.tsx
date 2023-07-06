@@ -23,6 +23,8 @@ import {
   DrawerHeader,
   DrawerCloseButton,
   DrawerBody,
+  AvatarBadge,
+  Avatar,
 } from '@chakra-ui/react';
 import { useRouter } from 'next/router';
 import { HiExclamationTriangle, HiCheck } from 'react-icons/hi2';
@@ -108,14 +110,24 @@ const HistoryTab: React.FC<HistoryTabProps> = ({ appId }) => {
     //run by
     columnHelper.accessor(
       (row) => {
-        return `${row.user?.name || ''}`;
+        return `${row.user?.name || 'Anonymous user'}`;
       },
       {
         id: 'user',
         size: 100,
         header: 'Run by',
-        cell: ({ getValue }) => {
-          return <Text>{getValue()}</Text>;
+        cell: ({
+          getValue,
+          row: {
+            original: { user },
+          },
+        }) => {
+          return (
+            <HStack>
+              {user?.image && <Avatar src={user?.image} size="xs" />}
+              <Text color={user ? 'gray.600' : 'gray.400'}>{getValue()}</Text>;
+            </HStack>
+          );
         },
       },
     ),
@@ -232,7 +244,7 @@ const HistoryTab: React.FC<HistoryTabProps> = ({ appId }) => {
     <HStack spacing={0} flex={1} alignItems="start" gap={16}>
       <VStack flex={1} alignItems="stretch" spacing={0} gap={4}>
         <Heading as="h6" fontWeight={400} flex={1}>
-          History
+          Run History
         </Heading>
         <Text display="inline">
           A log of the previous times this app has been run.

@@ -210,7 +210,7 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
                     </HStack>
                   )}
                   {!inputError && appInfo.canUserEdit && (
-                    <Popover trigger="hover">
+                    <Popover trigger="hover" openDelay={600}>
                       <PopoverTrigger>
                         <Button
                           colorScheme="purple"
@@ -234,7 +234,6 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
                           </HStack>
                         </PopoverHeader>
                         <PopoverArrow />
-                        <PopoverCloseButton />
                         <PopoverBody>
                           Need to collect inputs from your users? Add an object
                           parameter to your handler function and we'll

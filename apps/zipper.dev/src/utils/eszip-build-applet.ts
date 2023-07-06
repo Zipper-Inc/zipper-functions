@@ -5,11 +5,7 @@ import { getLogger } from './app-console';
 import { prettyLog } from './pretty-log';
 import { BuildCache, getModule } from './eszip-build-cache';
 import { readFrameworkFile } from './read-file';
-import {
-  getAppHash,
-  getAppHashAndVersion,
-  getAppVersionFromHash,
-} from './hashing';
+import { getAppHashAndVersion } from './hashing';
 import { prisma } from '~/server/prisma';
 import s3Client from '~/server/s3';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
@@ -144,9 +140,11 @@ export async function build({
 export async function buildAndStoreApplet({
   app,
   isPublished,
+  userId,
 }: {
   app: Omit<App, 'datastore' | 'categories'> & { scripts: Script[] };
   isPublished?: boolean;
+  userId?: string;
 }) {
   const { hash, version } = getAppHashAndVersion({
     id: app.id,
@@ -172,6 +170,7 @@ export async function buildAndStoreApplet({
       hash: hash,
       buildFile: await buildBuffer(),
       isPublished: !!isPublished,
+      userId,
     },
     update: {
       isPublished, // Only updates this if it's passed in - undefined will not update (which is good)

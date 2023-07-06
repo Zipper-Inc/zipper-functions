@@ -272,7 +272,7 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
           _hover={{ textDecoration: 'none', backgroundColor: 'purple.50' }}
         >
           <HiGlobeAlt />
-          <Text>Visit</Text>
+          <Text>View</Text>
         </Button>
         <SignedIn>
           <PlaygroundPublishInfo app={app} />

@@ -240,6 +240,7 @@ model Version {
   buildFile     Bytes?
   isPublished   Boolean  @default(false)
   createdAt     DateTime @default(now())
+  userId        String?
 
   app App @relation(fields: [appId], references: [id])
 

@@ -37,8 +37,6 @@ export const PlaygroundPublishInfo = ({ app }: { app: AppQueryOutput }) => {
 
   const { boot } = useRunAppContext();
 
-  const restoreVersion = trpc.useMutation('app.restore');
-
   const errorTooltip = editorHasErrors() && (
     <>
       Fix errors in the following files before running:
@@ -150,19 +148,6 @@ export const PlaygroundPublishInfo = ({ app }: { app: AppQueryOutput }) => {
                 isDisabled={isPublishing}
               >
                 {buttonText}
-              </Button>
-              <Button
-                w="full"
-                variant="link"
-                fontSize="sm"
-                onClick={() => {
-                  restoreVersion.mutate({
-                    appId: app.id,
-                    hash: 'f03a1519c7ca2a590f43919858bc4d45bd7dbc12',
-                  });
-                }}
-              >
-                Previous versions
               </Button>
             </VStack>
           </PopoverContent>
