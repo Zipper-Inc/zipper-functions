@@ -58,8 +58,8 @@ const ConnectorsAuthInputsSection: React.FC<
         >
           <AccordionItem border="none">
             <AccordionButton
-              _hover={{ bgColor: 'gray.50' }}
-              color="gray.700"
+              _hover={{ bgColor: 'fg50' }}
+              color="fg700"
               rounded="xl"
             >
               <Box as="span" flex="1" textAlign="left">

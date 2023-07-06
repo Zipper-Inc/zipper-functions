@@ -47,7 +47,7 @@ export const SlackUserConnectorInput: React.FC<ConnectorInputProps> = ({
               </Box>
               {!c.isUserAuthRequired && (
                 <Box mt={1}>
-                  <Badge variant="subtle" color="gray.400" fontSize=".6rem">
+                  <Badge variant="subtle" color="fg400" fontSize=".6rem">
                     Optional
                   </Badge>
                 </Box>
@@ -61,7 +61,7 @@ export const SlackUserConnectorInput: React.FC<ConnectorInputProps> = ({
                 variant="outline"
                 bgColor="white"
                 colorScheme="purple"
-                borderColor="gray.300"
+                borderColor="fg300"
                 fontSize="sm"
                 minW="3xs"
               >

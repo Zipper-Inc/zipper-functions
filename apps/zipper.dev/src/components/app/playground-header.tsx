@@ -163,7 +163,7 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
               overflow="auto"
               whiteSpace="nowrap"
               fontWeight="medium"
-              color="gray.600"
+              color="fg600"
             >
               {app.resourceOwner.slug}
             </Heading>
@@ -175,16 +175,16 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
             overflow="auto"
             whiteSpace="nowrap"
             fontWeight="medium"
-            color="gray.400"
+            color="fg400"
           >
             /
           </Heading>
 
           <HStack spacing={2} alignItems="center" minW={0}>
             {app.isPrivate ? (
-              <HiLockClosed color="gray.500" />
+              <HiLockClosed color="fg500" />
             ) : (
-              <HiLockOpen color="gray.400" />
+              <HiLockOpen color="fg400" />
             )}
             {app.parentId && parentApp.data && (
               <Tooltip
@@ -231,7 +231,7 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
             size="sm"
             colorScheme="gray"
             variant="outline"
-            color="gray.600"
+            color="fg600"
             display="flex"
             gap={2}
             fontWeight="medium"
@@ -253,7 +253,7 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
           <Button
             size="sm"
             colorScheme="gray"
-            color="gray.600"
+            color="fg600"
             variant="outline"
             onClick={() => setShareModalOpen(true)}
             display="flex"
@@ -268,7 +268,7 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
           as={Link}
           size="sm"
           colorScheme="gray"
-          color="gray.600"
+          color="fg600"
           variant="outline"
           href={`${
             process.env.NODE_ENV === 'production' ? 'https://' : 'http://'
@@ -277,7 +277,7 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
           display="flex"
           gap={2}
           fontWeight="medium"
-          _hover={{ textDecoration: 'none', backgroundColor: 'gray.100'}}
+          _hover={{ textDecoration: 'none', backgroundColor: 'fg100' }}
         >
           <Icon as={HiGlobeAlt} />
           <Text>View</Text>

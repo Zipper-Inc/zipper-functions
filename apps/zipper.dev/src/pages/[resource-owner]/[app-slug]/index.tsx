@@ -86,7 +86,7 @@ const AppPage: NextPageWithLayout = () => {
         <HStack alignSelf="stretch" alignItems="start" mt={5}>
           <VStack alignItems="stretch" flex={1}>
             <HStack alignItems="start">
-              <Text flex={1} color="gray.700">
+              <Text flex={1} color="fg700">
                 Built by
               </Text>
               <Link
@@ -101,7 +101,7 @@ const AppPage: NextPageWithLayout = () => {
               </Link>
             </HStack>
             <HStack overflow="hidden" minWidth={0}>
-              <Text flex={1} color="gray.700">
+              <Text flex={1} color="fg700">
                 Updated
               </Text>
               <Text
@@ -117,7 +117,7 @@ const AppPage: NextPageWithLayout = () => {
               </Text>
             </HStack>
             <HStack overflow="hidden" minWidth={0}>
-              <Text flex={1} color="gray.700">
+              <Text flex={1} color="fg700">
                 Code
               </Text>
               <Text
@@ -130,7 +130,7 @@ const AppPage: NextPageWithLayout = () => {
               </Text>
             </HStack>
             <HStack overflow="hidden" minWidth={0}>
-              <Text flex={1} color="gray.700">
+              <Text flex={1} color="fg700">
                 Output
               </Text>
               <Text
@@ -145,7 +145,7 @@ const AppPage: NextPageWithLayout = () => {
           </VStack>
           <HStack flex={1} alignItems="stretch">
             {/* TODO get categories from app metadata */}
-            {/* <Text color="gray.700" flex={1}>
+            {/* <Text color="fg700" flex={1}>
               Categories
             </Text>
             <VStack flex={2} alignItems="stretch">

@@ -158,11 +158,11 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
     <>
       <Box
         p={4}
-        backgroundColor="gray.100"
+        backgroundColor="fg100"
         position="relative"
         rounded="md"
         border="1px"
-        borderColor="gray.200"
+        borderColor="fg200"
         w="full"
       >
         <>

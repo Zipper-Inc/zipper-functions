@@ -45,7 +45,7 @@ export const OrganizationSelector: React.FC<{
         rightIcon={<HiOutlineChevronUpDown />}
         backgroundColor="transparent"
         border="1px"
-        borderColor="gray.100"
+        borderColor="fg100"
         maxW={'33%'}
         minW="max-content"
       >
@@ -63,10 +63,10 @@ export const OrganizationSelector: React.FC<{
               onClick={() => {
                 setSelectedOrganizationId(org.organization.id);
               }}
-              backgroundColor="gray.50"
+              backgroundColor="fg50"
               px="4"
               pt="2"
-              _hover={{ backgroundColor: 'gray.200' }}
+              _hover={{ backgroundColor: 'fg200' }}
             >
               <HStack w="full">
                 <Text w="full" fontWeight="medium" flexGrow={1}>
@@ -77,7 +77,7 @@ export const OrganizationSelector: React.FC<{
                 ) : (
                   <Icon
                     as={HiSwitchHorizontal}
-                    color={'gray.500'}
+                    color={'fg500'}
                     visibility={
                       hoverOrg === org.organization.id ? 'visible' : 'hidden'
                     }

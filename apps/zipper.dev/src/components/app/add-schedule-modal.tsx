@@ -99,7 +99,7 @@ export const AddScheduleModal: React.FC<AddScheduleModalProps> = ({
             <FormLabel>Script to run</FormLabel>
             <Select
               size="md"
-              color="gray.900"
+              color="fg900"
               {...addModalForm.register('filename', {
                 onChange: (e) => {
                   addModalForm.setValue('filename', e.target.value);
@@ -128,10 +128,10 @@ export const AddScheduleModal: React.FC<AddScheduleModalProps> = ({
             <Input
               size="md"
               type="text"
-              color="gray.900"
+              color="fg900"
               {...addModalForm.register('crontab')}
             />
-            <FormHelperText color="gray.900" fontWeight="semibold">
+            <FormHelperText color="fg900" fontWeight="semibold">
               {cronString}
             </FormHelperText>
           </FormControl>
@@ -148,7 +148,7 @@ export const AddScheduleModal: React.FC<AddScheduleModalProps> = ({
                 <FormLabel mb="0">Inputs for this scheduled run:</FormLabel>
                 <VStack
                   flex={1}
-                  background="gray.100"
+                  background="fg100"
                   p="4"
                   borderRadius="12"
                   alignItems="stretch"
@@ -168,7 +168,7 @@ export const AddScheduleModal: React.FC<AddScheduleModalProps> = ({
               This script does not have a main or handler function defined
             </Text>
           )}
-          <HStack border="1px solid" borderColor={'gray.100'} p="2">
+          <HStack border="1px solid" borderColor={'fg100'} p="2">
             <Text>This job will be run as </Text>
             <Text fontWeight={'medium'}>{user.user?.name || 'You'}</Text>
           </HStack>

@@ -71,7 +71,7 @@ export function SmartFunctionOutput({
               {...component.props}
               divider={
                 component.props?.divider ? (
-                  <StackDivider borderColor="gray.200" />
+                  <StackDivider borderColor="fg200" />
                 ) : undefined
               }
             >

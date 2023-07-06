@@ -260,7 +260,7 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
               </FormErrorMessage>
             </FormControl>
             <FormControl>
-              <FormLabel textColor="gray.600">Description</FormLabel>
+              <FormLabel textColor="fg600">Description</FormLabel>
               <Textarea
                 backgroundColor="white"
                 {...settingsForm.register('description')}
@@ -271,7 +271,7 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
               <VStack
                 w="full"
                 border="1px solid"
-                borderColor="gray.200"
+                borderColor="fg200"
                 rounded="md"
                 align={'stretch'}
                 spacing="0"
@@ -280,7 +280,7 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
                   w="full"
                   p="4"
                   borderBottom="1px solid"
-                  borderColor={'gray.200'}
+                  borderColor={'fg200'}
                 >
                   <Flex flexGrow={'1'}>
                     <VStack align="start">
@@ -347,11 +347,11 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
             appAccessTokenQuery.data.length === 0 && (
               <VStack
                 border="1px solid"
-                borderColor="gray.100"
+                borderColor="fg100"
                 borderRadius={'lg'}
-                backgroundColor="gray.50"
+                backgroundColor="fg50"
                 py="10"
-                color={'gray.500'}
+                color={'fg500'}
               >
                 <Center verticalAlign={'center'}>
                   You don't have any access tokens yet. Generate one to access
@@ -364,13 +364,13 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
               <VStack
                 align={'stretch'}
                 border="1px solid"
-                borderColor="gray.100"
+                borderColor="fg100"
                 borderRadius={'lg'}
               >
                 {appAccessTokenQuery.data.map((token) => (
                   <HStack
                     borderBottom={'1px solid'}
-                    borderColor="gray.100"
+                    borderColor="fg100"
                     _last={{ borderBottom: 'none' }}
                     p="4"
                   >
@@ -380,7 +380,7 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
                     <IconButton
                       aria-label="Delete token"
                       variant="ghost"
-                      icon={<Icon as={HiOutlineTrash} color="gray.400" />}
+                      icon={<Icon as={HiOutlineTrash} color="fg400" />}
                       onClick={() => {
                         appAccessTokenDeleteMutation.mutateAsync(
                           { identifier: token.identifier },
@@ -436,7 +436,7 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
                     <Tooltip
                       label="Copy"
                       bgColor="purple.500"
-                      textColor="gray.100"
+                      textColor="fg100"
                     >
                       <IconButton
                         aria-label="copy"

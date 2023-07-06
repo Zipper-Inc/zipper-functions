@@ -112,7 +112,7 @@ export const EditAppSlugForm: React.FC<EditAppSlugFormProps> = ({
               p={0}
               onClick={onClose}
             >
-              <Box transform="rotate(45deg)" color="gray.600">
+              <Box transform="rotate(45deg)" color="fg600">
                 <HiPlus />
               </Box>
             </Button>
@@ -127,7 +127,7 @@ export const EditAppSlugForm: React.FC<EditAppSlugFormProps> = ({
             padding="8px"
             zIndex={1}
             border="1px solid"
-            borderColor="gray.300"
+            borderColor="fg300"
             rounded="md"
           >
             {'Your app will now be available at '}

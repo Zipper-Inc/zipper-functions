@@ -42,7 +42,13 @@ export default function Collection(props: Props) {
   const { setSearchQuery } = useSmartFunctionOutputContext();
 
   return (
-    <Stack width="100%" border="1px solid" borderColor="gray.200" p="2" borderRadius="md">
+    <Stack
+      width="100%"
+      border="1px solid"
+      borderColor="fg200"
+      p="2"
+      borderRadius="md"
+    >
       {props.tableLevel === 0 && (
         <Box display="flex" justifyContent="flex-end" gap="2">
           <InputGroup w="md">
@@ -212,9 +218,9 @@ function CardCollection(props: Props) {
     <SimpleGrid minChildWidth="200px" spacing={10}>
       {data.map((record, index) => {
         return (
-          <Card 
-            key={index} 
-            bgColor="gray.50"
+          <Card
+            key={index}
+            bgColor="fg50"
             borderRadius="xl"
             overflow="hidden"
             p={4}
@@ -224,21 +230,39 @@ function CardCollection(props: Props) {
                 if (isPrimitive(value)) {
                   if (typeof value === 'boolean') {
                     return (
-                      <Flex align="center" key={key} justifyContent="space-between">
+                      <Flex
+                        align="center"
+                        key={key}
+                        justifyContent="space-between"
+                      >
                         <Text mr="2">{key}:</Text>
                         {value ? <HiCheck /> : <HiX />}
                       </Flex>
                     );
                   }
                   return (
-                    <Flex align="start" key={key} justifyContent="space-between">
-                      <Text color="neutral.500" mr={2}>{key}</Text>
-                      <Text fontWeight={600} color="neutral.900">{value as string}</Text>
+                    <Flex
+                      align="start"
+                      key={key}
+                      justifyContent="space-between"
+                    >
+                      <Text color="neutral.500" mr={2}>
+                        {key}
+                      </Text>
+                      <Text fontWeight={600} color="neutral.900">
+                        {value as string}
+                      </Text>
                     </Flex>
                   );
                 }
                 return (
-                  <CardFooter key={key} p={0} pt={5} width="full" display="block">
+                  <CardFooter
+                    key={key}
+                    p={0}
+                    pt={5}
+                    width="full"
+                    display="block"
+                  >
                     {Array.isArray(value) && isAction(value[0]) ? (
                       <SmartFunctionOutput
                         result={value}
@@ -247,13 +271,15 @@ function CardCollection(props: Props) {
                       />
                     ) : (
                       <Flex direction="column">
-                        <Text color="neutral.500" mr={2}>{key}</Text>
+                        <Text color="neutral.500" mr={2}>
+                          {key}
+                        </Text>
 
                         <SmartFunctionOutput
                           result={value}
                           tableLevel={props.tableLevel + 1}
                           level={props.level + 1}
-                          />
+                        />
                       </Flex>
                     )}
                   </CardFooter>

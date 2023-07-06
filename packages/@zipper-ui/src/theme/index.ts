@@ -134,12 +134,67 @@ export const brandColors = {
   default: baseColors.gray[600],
 };
 
+export const foregroundColors = {
+  fg25: {
+    default: 'gray.25',
+    _dark: 'gray.900',
+  },
+  fg50: {
+    default: 'gray.50',
+    _dark: 'gray.800',
+  },
+  fg100: {
+    default: 'gray.100',
+    _dark: 'gray.700',
+  },
+  fg200: {
+    default: 'gray.200',
+    _dark: 'gray.600',
+  },
+  fg300: {
+    default: 'gray.300',
+    _dark: 'gray.500',
+  },
+  fg400: {
+    default: 'gray.400',
+    _dark: 'gray.400',
+  },
+  fg500: {
+    default: 'gray.500',
+    _dark: 'gray.300',
+  },
+  fg600: {
+    default: 'gray.600',
+    _dark: 'gray.200',
+  },
+  fg700: {
+    default: 'gray.700',
+    _dark: 'gray.100',
+  },
+  fg800: {
+    default: 'fg.800',
+    _dark: 'gray.50',
+  },
+  fg900: {
+    default: 'fg.900',
+    _dark: 'gray.25',
+  },
+};
+
 export const semanticTokens = {
   colors: {
     error: 'red.500',
-    textColor: {
+    fg900: {
       default: 'gray.900',
       _dark: 'gray.50',
+    },
+    fg100: {
+      default: 'gray.100',
+      _dark: 'gray.700',
+    },
+    fg25: {
+      default: 'gray.25',
+      _dark: 'gray.900',
     },
     textColorAlt: {
       default: 'gray.600',

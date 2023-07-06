@@ -96,7 +96,7 @@ const Header: React.FC<HeaderProps> = ({
             size="md"
             whiteSpace="nowrap"
             fontWeight="light"
-            color="gray.400"
+            color="fg400"
           >
             /
           </Heading>
@@ -113,7 +113,7 @@ const Header: React.FC<HeaderProps> = ({
                 overflow="auto"
                 whiteSpace="nowrap"
                 fontWeight="semibold"
-                color="gray.800"
+                color="fg800"
               >
                 {name || slug}
               </Heading>
@@ -124,7 +124,7 @@ const Header: React.FC<HeaderProps> = ({
             size="md"
             whiteSpace="nowrap"
             fontWeight="light"
-            color="gray.400"
+            color="fg400"
           >
             /
           </Heading>
@@ -139,7 +139,7 @@ const Header: React.FC<HeaderProps> = ({
                           fontFamily="heading"
                           fontSize="xl"
                           fontWeight="semibold"
-                          color="gray.800"
+                          color="fg800"
                         >
                           {entryPoint.filename.slice(0, -3)}
                         </Text>
@@ -165,7 +165,7 @@ const Header: React.FC<HeaderProps> = ({
                       <Divider />
                       <Box
                         w="full"
-                        backgroundColor={'gray.50'}
+                        backgroundColor={'fg50'}
                         backdropFilter="blur(10px)"
                         pl="4"
                         pt="5"
@@ -185,7 +185,7 @@ const Header: React.FC<HeaderProps> = ({
                                 setLoading(true);
                                 router.push(`/${s}`);
                               }}
-                              backgroundColor="gray.50"
+                              backgroundColor="fg50"
                               px="4"
                               pt="2"
                               fontWeight="medium"
@@ -211,7 +211,7 @@ const Header: React.FC<HeaderProps> = ({
                 overflow="auto"
                 whiteSpace="nowrap"
                 fontWeight="semibold"
-                color="gray.800"
+                color="fg800"
                 _hover={{ cursor: 'pointer' }}
                 onClick={() => {
                   window.location.replace('/');

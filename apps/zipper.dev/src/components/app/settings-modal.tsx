@@ -137,7 +137,7 @@ const SettingsTab: React.FC<Props> = ({ isOpen, onClose, appId }) => {
                   </FormErrorMessage>
                 </FormControl>
                 <FormControl>
-                  <FormLabel textColor="gray.600">Description</FormLabel>
+                  <FormLabel textColor="fg600">Description</FormLabel>
                   <Textarea
                     backgroundColor="white"
                     {...settingsForm.register('description')}

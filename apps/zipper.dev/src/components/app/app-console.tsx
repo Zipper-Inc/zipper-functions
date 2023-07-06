@@ -45,8 +45,8 @@ export function AppConsole({ logs }: { logs: LogMessage[] }) {
           padding={4}
           width="100%"
           border="solid 1px"
-          backgroundColor="gray.100"
-          borderColor="gray.200"
+          backgroundColor="fg100"
+          borderColor="fg200"
           borderTopRadius="md"
         >
           <FormControl display="flex" alignItems="center" height={6}>
@@ -79,8 +79,8 @@ export function AppConsole({ logs }: { logs: LogMessage[] }) {
         </Flex>
       </Box>
       <Box
-        color="gray.200"
-        borderColor="gray.200"
+        color="fg200"
+        borderColor="fg200"
         borderBottomRadius="md"
         px={2}
         border="solid 1px"

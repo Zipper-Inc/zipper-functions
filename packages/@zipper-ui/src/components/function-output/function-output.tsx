@@ -58,9 +58,9 @@ const tabsStyles: ChakraProps = { display: 'flex', flexDir: 'column', gap: 0 };
 const tablistStyles: ChakraProps = {
   gap: 1,
   border: '1px',
-  color: 'gray.500',
-  bg: 'gray.100',
-  borderColor: 'gray.200',
+  color: 'fg500',
+  bg: 'fg100',
+  borderColor: 'fg200',
   p: 2,
   w: 'full',
   borderTopRadius: 'md',
@@ -71,10 +71,10 @@ const tabButtonStyles: ChakraProps = {
   px: 2,
   _selected: {
     fontWeight: 'bold',
-    textColor: 'gray.800',
+    textColor: 'fg800',
   },
   _hover: {
-    backgroundColor: 'gray.200',
+    backgroundColor: 'fg200',
   },
 };
 
@@ -280,7 +280,7 @@ export function FunctionOutput({
             </TabList>
             <TabPanels
               border="1px solid"
-              borderColor="gray.200"
+              borderColor="fg200"
               borderBottomRadius={'md'}
             >
               <TabPanel>
@@ -296,7 +296,7 @@ export function FunctionOutput({
                   </Box>
                 </Box>
               </TabPanel>
-              <TabPanel backgroundColor="gray.100">
+              <TabPanel backgroundColor="fg100">
                 <RawFunctionOutput result={applet?.mainContent.output?.data} />
               </TabPanel>
             </TabPanels>
@@ -443,10 +443,10 @@ export function FunctionOutput({
             </TabList>
             <TabPanels
               border="1px solid"
-              borderColor="gray.200"
+              borderColor="fg200"
               borderBottomRadius={'md'}
             >
-              <TabPanel backgroundColor="gray.100">
+              <TabPanel backgroundColor="fg100">
                 <RawFunctionOutput result={applet?.mainContent.output?.data} />
               </TabPanel>
             </TabPanels>
@@ -475,7 +475,7 @@ export function FunctionOutput({
               <TabPanels
                 borderBottomRadius={'md'}
                 border={showTabs ? '1px solid' : 'none'}
-                borderColor="gray.200"
+                borderColor="fg200"
               >
                 <TabPanel>
                   <Box overflow="auto">
@@ -484,7 +484,7 @@ export function FunctionOutput({
                         <Button
                           variant="Link"
                           fontSize="sm"
-                          color="gray.600"
+                          color="fg600"
                           pl="0"
                           onClick={() => applet.goBack()}
                         >
@@ -536,7 +536,7 @@ export function FunctionOutput({
                     </Box>
                   )}
                 </TabPanel>
-                <TabPanel backgroundColor="gray.100">
+                <TabPanel backgroundColor="fg100">
                   <RawFunctionOutput
                     result={applet?.mainContent.output?.data}
                   />

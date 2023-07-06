@@ -33,11 +33,7 @@ function ObjectExplorerRow({
   const { isOpen, onToggle } = useDisclosure({ defaultIsOpen: !collapse });
   const shouldCollapse = !isPrimitive(data) && data && !data['$zipperType'];
   return (
-    <Tr
-      borderBottom="1px"
-      borderColor="gray.200"
-      _last={{ borderBottom: 'none' }}
-    >
+    <Tr borderBottom="1px" borderColor="fg200" _last={{ borderBottom: 'none' }}>
       <Td border={'none'} p="0">
         <HStack
           flex={1}
@@ -47,7 +43,7 @@ function ObjectExplorerRow({
           whiteSpace="nowrap"
           justifyContent="space-between"
         >
-          <Text py={6} size="sm" color="gray.600" fontWeight={300}>
+          <Text py={6} size="sm" color="fg600" fontWeight={300}>
             {heading}
           </Text>
           {shouldCollapse && (
@@ -71,7 +67,7 @@ function ObjectExplorerRow({
         {shouldCollapse ? (
           <Box flex={5}>
             {!isOpen && (
-              <Text py={6} color="gray.400">
+              <Text py={6} color="fg400">
                 {Array.isArray(data)
                   ? data.length === 1
                     ? `${data.length} item`

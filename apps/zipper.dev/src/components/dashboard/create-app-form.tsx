@@ -120,7 +120,7 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
         <FormControl isRequired>
           <FormLabel>Name</FormLabel>
           <HStack spacing={1}>
-            <Text fontWeight="medium" fontSize="lg" color="gray.600">
+            <Text fontWeight="medium" fontSize="lg" color="fg600">
               {organization?.name ||
                 (user?.username as string) ||
                 'Personal workspace'}
@@ -159,7 +159,7 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
           </FormErrorMessage>
         </FormControl>
         <FormControl>
-          <FormLabel textColor="gray.600">Description</FormLabel>
+          <FormLabel textColor="fg600">Description</FormLabel>
           <Textarea
             backgroundColor="white"
             {...createAppForm.register('description')}
@@ -170,7 +170,7 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
           <VStack
             w="full"
             border="1px solid"
-            borderColor="gray.200"
+            borderColor="fg200"
             rounded="md"
             align={'stretch'}
             spacing="0"
@@ -179,7 +179,7 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
               w="full"
               p="4"
               borderBottom="1px solid"
-              borderColor={'gray.200'}
+              borderColor={'fg200'}
             >
               <Flex flexGrow={'1'}>
                 <VStack align="start">

@@ -73,7 +73,7 @@ export default function SignIn({
                 <Heading as="h1" size="md" whiteSpace="nowrap" fontWeight="600">
                   Create your account
                 </Heading>
-                <Text fontSize="md" color="gray.600">
+                <Text fontSize="md" color="fg600">
                   to continue to Zipper
                 </Text>
               </Stack>
@@ -91,7 +91,7 @@ export default function SignIn({
                         gap={4}
                         variant="ghost"
                         border="1px"
-                        borderColor="gray.200"
+                        borderColor="fg200"
                         borderRadius="none"
                         onClick={() => signIn(provider.id)}
                       >
@@ -103,17 +103,9 @@ export default function SignIn({
                     ))}
                 </VStack>
                 <HStack gap={2}>
-                  <Box
-                    w="50%"
-                    borderBottom="1px solid"
-                    borderColor="gray.300"
-                  />
+                  <Box w="50%" borderBottom="1px solid" borderColor="fg300" />
                   <Text>or</Text>
-                  <Box
-                    w="50%"
-                    borderBottom="1px solid"
-                    borderColor="gray.300"
-                  />
+                  <Box w="50%" borderBottom="1px solid" borderColor="fg300" />
                 </HStack>
 
                 <Stack width="full" gap={2}>
@@ -125,16 +117,12 @@ export default function SignIn({
                     />
                     <FormControl>
                       <FormLabel>
-                        <Text
-                          fontSize="sm"
-                          fontWeight="medium"
-                          color="gray.600"
-                        >
+                        <Text fontSize="sm" fontWeight="medium" color="fg600">
                           Email address
                         </Text>
                       </FormLabel>
                       <Input
-                        borderColor={emailError ? 'red.500' : 'gray.200'}
+                        borderColor={emailError ? 'red.500' : 'fg200'}
                         name="email"
                         type="email"
                         placeholder=""

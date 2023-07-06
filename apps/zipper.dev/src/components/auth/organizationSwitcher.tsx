@@ -73,7 +73,7 @@ export const OrganizationSwitcher: React.FC<ButtonProps> = (props) => {
           as={Button}
           backgroundColor="transparent"
           border="1px"
-          borderColor="gray.100"
+          borderColor="fg100"
           fontSize="sm"
           fontWeight="medium"
           {...props}
@@ -90,7 +90,7 @@ export const OrganizationSwitcher: React.FC<ButtonProps> = (props) => {
         <MenuList p={0} fontSize="sm" boxShadow={'xl'} minWidth="xs">
           <HStack
             borderBottom="1px"
-            borderColor="gray.300"
+            borderColor="fg300"
             px={4}
             py={6}
             w="full"
@@ -120,7 +120,7 @@ export const OrganizationSwitcher: React.FC<ButtonProps> = (props) => {
           {workspacesExcludingCurrent.length > 0 && (
             <Box
               w="full"
-              backgroundColor={'gray.50'}
+              backgroundColor={'fg50'}
               backdropFilter="blur(10px)"
               pl="4"
               pt="6"
@@ -140,7 +140,7 @@ export const OrganizationSwitcher: React.FC<ButtonProps> = (props) => {
                     setActive && setActive(org.organization.id);
                   }
                 }}
-                backgroundColor="gray.50"
+                backgroundColor="fg50"
                 px="4"
                 pt="2"
               >
@@ -170,7 +170,7 @@ export const OrganizationSwitcher: React.FC<ButtonProps> = (props) => {
                     ) : (
                       <Icon
                         as={HiSwitchHorizontal}
-                        color={'gray.400'}
+                        color={'fg400'}
                         visibility={
                           hoverOrg === org.organization.id
                             ? 'visible'
@@ -184,8 +184,8 @@ export const OrganizationSwitcher: React.FC<ButtonProps> = (props) => {
             );
           })}
           <MenuItem
-            backgroundColor="gray.50"
-            color="gray.600"
+            backgroundColor="fg50"
+            color="fg600"
             borderEndRadius={8}
             borderBottomLeftRadius={8}
             pt={4}

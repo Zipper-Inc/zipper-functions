@@ -47,7 +47,7 @@ export default function AddScriptForm({
   return (
     <VStack alignItems="stretch" spacing={0} gap={4} minW={0}>
       <VStack alignItems="stretch">
-        <Text size="sm" color="gray.700" fontWeight="medium">
+        <Text size="sm" color="fg700" fontWeight="medium">
           Create a script
         </Text>
         <form
@@ -80,7 +80,7 @@ export default function AddScriptForm({
               />
             </FormControl>
             {scriptFilename && isFilenameValid && (
-              <Text fontWeight="medium" fontSize="sm" color="gray.700">
+              <Text fontWeight="medium" fontSize="sm" color="fg700">
                 Press return to add{' '}
                 <Text fontFamily="mono" as="span">
                   {slugifiedScriptFilename.endsWith('.ts')
@@ -101,7 +101,7 @@ export default function AddScriptForm({
       </VStack>
       <Divider />
       <VStack alignItems="stretch">
-        <Text size="sm" color="gray.700" fontWeight="medium">
+        <Text size="sm" color="fg700" fontWeight="medium">
           Add a pre-built connector
         </Text>
         <VStack align="stretch">
@@ -137,7 +137,7 @@ export default function AddScriptForm({
                     {connector.icon}
                     <Text>{connector.name}</Text>
                   </HStack>
-                  <HStack color="gray.400" spacing={1} fontSize="xs">
+                  <HStack color="fg400" spacing={1} fontSize="xs">
                     <Text>CONNECTED</Text>
                     <HiCheck />
                   </HStack>

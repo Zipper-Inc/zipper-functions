@@ -21,7 +21,7 @@ enum LogLevel {
 const LOG_COLORS = {
   [LogLevel.Info]: {
     bg: 'transparent',
-    color: 'gray.600',
+    color: 'fg600',
   },
   [LogLevel.Warning]: {
     bg: 'yellow.100',
@@ -36,8 +36,8 @@ const LOG_COLORS = {
     color: 'green.800',
   },
   [LogLevel.Default]: {
-    bg: 'gray.800',
-    color: 'gray.200',
+    bg: 'fg800',
+    color: 'fg200',
   },
 };
 

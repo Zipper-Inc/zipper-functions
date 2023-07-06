@@ -66,7 +66,7 @@ export default function VerifyRequest() {
             </CardHeader>
             <CardBody>
               <Stack gap={4} alignContent="start" alignItems="start">
-                <Text color="gray.600">
+                <Text color="fg600">
                   {email ? (
                     <>
                       We sent a magic link to <b>{email}</b>
@@ -87,7 +87,7 @@ export default function VerifyRequest() {
                     }
                   }}
                 ></Input>
-                <Text fontSize="sm" color="gray.500">
+                <Text fontSize="sm" color="fg500">
                   Didn't receive it? Check your spam folder or{' '}
                   <Button
                     variant="link"
@@ -109,7 +109,7 @@ export default function VerifyRequest() {
                   </Button>
                 </Text>
 
-                <Text color="gray.500" fontSize="sm">
+                <Text color="fg500" fontSize="sm">
                   Didn't work?{' '}
                   <Button
                     variant="link"
