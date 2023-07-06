@@ -176,7 +176,7 @@ const VersionsTab: React.FC<VersionsTabProps> = ({ appId, slug }) => {
           return (
             <>
               <HStack spacing="5">
-                <Tooltip label="Publish">
+                <Tooltip label={isCurrentlyPublished ? "Currently Published" : "Publish"}>
                   <IconButton
                     aria-label="publish"
                     variant="outline"
@@ -192,7 +192,7 @@ const VersionsTab: React.FC<VersionsTabProps> = ({ appId, slug }) => {
                     }
                   />
                 </Tooltip>
-                <Tooltip label="Restore to code">
+                <Tooltip label={isCurrentlyPlayground ? "Currently editing" : "Restore code"}>
                   <IconButton
                     aria-label="restore"
                     colorScheme="red"

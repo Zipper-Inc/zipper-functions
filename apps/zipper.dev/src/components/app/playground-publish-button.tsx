@@ -94,6 +94,8 @@ export const PlaygroundPublishInfo = ({ app }: { app: AppQueryOutput }) => {
             <PopoverTrigger>
               <span>
                 <Button
+                  fontSize="sm"
+                  size="sm"
                   colorScheme="purple"
                   variant="outline"
                   display="flex"

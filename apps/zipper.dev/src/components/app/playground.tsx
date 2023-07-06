@@ -108,7 +108,7 @@ export function Playground({
             mb={2}
             pt={3}
             color="gray.500"
-            gap={4}
+            gap={2}
             justifyContent="space-between"
             overflowX="auto"
             hidden={!app.canUserEdit}
