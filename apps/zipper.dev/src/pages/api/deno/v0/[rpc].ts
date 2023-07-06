@@ -7,7 +7,7 @@ import intoStream from 'into-stream';
 import { decryptFromBase64, parseDeploymentId } from '@zipper/utils';
 import { prisma } from '~/server/prisma';
 import {
-  buildAndStore,
+  buildAndStoreApplet,
   FRAMEWORK_ENTRYPOINT,
 } from '~/utils/eszip-build-applet';
 import { getAppVersionFromHash } from '~/utils/hashing';
@@ -214,7 +214,7 @@ async function originBoot({
   if (!eszip) {
     // still not found? Just build it off the latest code
     console.log(`building ${deploymentId} from scratch`);
-    const buildInfo = await buildAndStore({
+    const buildInfo = await buildAndStoreApplet({
       app,
       isPublished: false,
     });

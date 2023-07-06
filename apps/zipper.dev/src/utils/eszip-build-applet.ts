@@ -141,7 +141,7 @@ export async function build({
   return bundle;
 }
 
-export async function buildAndStore({
+export async function buildAndStoreApplet({
   app,
   isPublished,
 }: {

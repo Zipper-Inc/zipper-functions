@@ -27,7 +27,7 @@ import fetch from 'node-fetch';
 import isCodeRunnable from '~/utils/is-code-runnable';
 import { generateAccessToken } from '~/utils/jwt-utils';
 import { getToken } from 'next-auth/jwt';
-import { buildAndStore } from '~/utils/eszip-build-applet';
+import { buildAndStoreApplet } from '~/utils/eszip-build-applet';
 
 const defaultSelect = Prisma.validator<Prisma.AppSelect>()({
   id: true,
@@ -209,7 +209,7 @@ export const appRouter = createRouter()
         },
       });
 
-      const { hash } = await buildAndStore({
+      const { hash } = await buildAndStoreApplet({
         app: { ...app, scripts: [script] },
         isPublished: true,
       });
@@ -737,7 +737,7 @@ export const appRouter = createRouter()
         }),
       );
 
-      const { hash } = await buildAndStore({
+      const { hash } = await buildAndStoreApplet({
         app: { ...fork, scripts: forkScripts },
         isPublished: true,
       });
@@ -865,7 +865,7 @@ export const appRouter = createRouter()
         );
       }
 
-      const { hash } = await buildAndStore({
+      const { hash } = await buildAndStoreApplet({
         app: { ...app, scripts: updatedScripts },
       });
 
@@ -915,7 +915,7 @@ export const appRouter = createRouter()
         include: { scripts: true },
       });
 
-      const { hash } = await buildAndStore({ app, isPublished: true });
+      const { hash } = await buildAndStoreApplet({ app, isPublished: true });
 
       await prisma.version.updateMany({
         where: {
