@@ -27,6 +27,7 @@ import {
   MenuItem,
   Stack,
   Text,
+  Icon,
 } from '@chakra-ui/react';
 import { useRouter } from 'next/router';
 import NextLink from 'next/link';
@@ -41,8 +42,9 @@ import { useUser } from '~/hooks/use-user';
 import SignedIn from './auth/signed-in';
 import SignedOut from './auth/signed-out';
 import UserProfile from './auth/userProfile';
-import { HiLogout, HiOutlineCog } from 'react-icons/hi';
+import { HiArrowLeft, HiLogout, HiOutlineCog } from 'react-icons/hi';
 import { signOut } from 'next-auth/react';
+import { HiChevronLeft } from 'react-icons/hi2';
 
 type HeaderProps = {
   showNav?: boolean;
@@ -66,7 +68,7 @@ const Header: React.FC<HeaderProps> = ({
   const baseRoute = router.pathname.split('/')[1];
 
   const { reload } = router.query;
-  const { user } = useUser();
+  const { user, isLoaded } = useUser();
 
   const feedbackModal = useDisclosure();
   const userSettingsModal = useDisclosure();
@@ -95,18 +97,26 @@ const Header: React.FC<HeaderProps> = ({
       >
         <HStack spacing={3} alignItems="start" alignContent={'center'}>
           <Box my={3} height={4}>
-            <NextLink href="/">
-              <SignedIn>
-                {showNav && showOrgSwitcher ? (
-                  <ZipperSymbol style={{ maxHeight: '100%' }} />
-                ) : (
+            {isLoaded && (
+              <NextLink href="/">
+                <SignedIn>
+                  {showNav && showOrgSwitcher ? (
+                    <ZipperSymbol style={{ maxHeight: '100%' }} />
+                  ) : (
+                    <HStack spacing={5}>
+                      <ZipperLogo style={{ maxHeight: '20px' }} />
+                      <HStack spacing={1}>
+                        <Icon as={HiChevronLeft} />
+                        <Text fontSize="sm">Dashboard</Text>
+                      </HStack>
+                    </HStack>
+                  )}
+                </SignedIn>
+                <SignedOut>
                   <ZipperLogo style={{ maxHeight: '100%' }} />
-                )}
-              </SignedIn>
-              <SignedOut>
-                <ZipperLogo style={{ maxHeight: '100%' }} />
-              </SignedOut>
-            </NextLink>
+                </SignedOut>
+              </NextLink>
+            )}
           </Box>
 
           {showOrgSwitcher && (
@@ -130,7 +140,7 @@ const Header: React.FC<HeaderProps> = ({
           )}
         </HStack>
 
-        {showNav && (
+        {showNav && isLoaded && (
           <Flex
             flex={1}
             justifyContent={isTablet && !user ? 'space-between' : 'end'}

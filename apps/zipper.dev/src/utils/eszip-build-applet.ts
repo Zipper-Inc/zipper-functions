@@ -5,7 +5,14 @@ import { getLogger } from './app-console';
 import { prettyLog } from './pretty-log';
 import { BuildCache, getModule } from './eszip-build-cache';
 import { readFrameworkFile } from './read-file';
-import { getAppHash, getAppVersionFromHash } from './hashing';
+import {
+  getAppHash,
+  getAppHashAndVersion,
+  getAppVersionFromHash,
+} from './hashing';
+import { prisma } from '~/server/prisma';
+import s3Client from '~/server/s3';
+import { PutObjectCommand } from '@aws-sdk/client-s3';
 
 /**
  * @todo
@@ -132,4 +139,54 @@ export async function build({
   );
 
   return bundle;
+}
+
+export async function buildAndStore({
+  app,
+  isPublished,
+}: {
+  app: Omit<App, 'datastore' | 'categories'> & { scripts: Script[] };
+  isPublished?: boolean;
+}) {
+  const { hash, version } = getAppHashAndVersion({
+    id: app.id,
+    name: app.name,
+    scripts: app.scripts,
+  });
+
+  const buildBuffer = async () => {
+    return Buffer.from(
+      await build({
+        app,
+        version,
+      }),
+    );
+  };
+
+  const savedVersion = await prisma.version.upsert({
+    where: {
+      hash,
+    },
+    create: {
+      app: { connect: { id: app.id } },
+      hash: hash,
+      buildFile: await buildBuffer(),
+      isPublished: !!isPublished,
+    },
+    update: {
+      isPublished, // Only updates this if it's passed in - undefined will not update (which is good)
+    },
+  });
+
+  if (savedVersion.buildFile) {
+    s3Client.send(
+      new PutObjectCommand({
+        Bucket: process.env.CLOUDFLARE_BUILD_FILE_BUCKET_NAME,
+        Key: `${savedVersion.appId}/${version}`,
+        Body: savedVersion.buildFile,
+      }),
+    );
+  }
+
+  return { hash, eszip: savedVersion.buildFile };
 }

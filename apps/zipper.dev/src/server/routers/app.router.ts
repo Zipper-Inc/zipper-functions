@@ -15,12 +15,7 @@ import { TRPCError } from '@trpc/server';
 import denyList from '../utils/slugDenyList';
 import { appSubmissionState, ResourceOwnerType } from '@zipper/types';
 import { Context } from '../context';
-import {
-  getAppHash,
-  getAppHashAndVersion,
-  getAppVersionFromHash,
-  getScriptHash,
-} from '~/utils/hashing';
+import { getAppVersionFromHash, getScriptHash } from '~/utils/hashing';
 import { parseInputForTypes } from '~/utils/parse-code';
 import {
   getInputsFromFormData,
@@ -32,7 +27,7 @@ import fetch from 'node-fetch';
 import isCodeRunnable from '~/utils/is-code-runnable';
 import { generateAccessToken } from '~/utils/jwt-utils';
 import { getToken } from 'next-auth/jwt';
-import { build } from '~/utils/eszip-build-applet';
+import { buildAndStore } from '~/utils/eszip-build-applet';
 
 const defaultSelect = Prisma.validator<Prisma.AppSelect>()({
   id: true,
@@ -214,24 +209,9 @@ export const appRouter = createRouter()
         },
       });
 
-      // get a hash of app and update the app
-      const { hash, version } = getAppHashAndVersion({
-        ...app,
-        scripts: [{ id: scriptMain.scriptId, hash: scriptHash }],
-      });
-
-      const eszip = await build({
+      const { hash } = await buildAndStore({
         app: { ...app, scripts: [script] },
-        version,
-      });
-
-      await prisma.version.create({
-        data: {
-          app: { connect: { id: app.id } },
-          hash,
-          buildFile: Buffer.from(eszip),
-          isPublished: true,
-        },
+        isPublished: true,
       });
 
       await prisma.app.update({
@@ -757,24 +737,9 @@ export const appRouter = createRouter()
         }),
       );
 
-      const { hash, version } = getAppHashAndVersion({
-        id: fork.id,
-        name: fork.name,
-        scripts: forkScripts,
-      });
-
-      const eszip = await build({
+      const { hash } = await buildAndStore({
         app: { ...fork, scripts: forkScripts },
-        version,
-      });
-
-      await prisma.version.create({
-        data: {
-          app: { connect: { id: fork.id } },
-          hash,
-          buildFile: Buffer.from(eszip),
-          isPublished: true,
-        },
+        isPublished: true,
       });
 
       const updatedFork = await prisma.app.update({
@@ -900,28 +865,8 @@ export const appRouter = createRouter()
         );
       }
 
-      const { hash, version } = getAppHashAndVersion({
-        id: app.id,
-        name: app.name,
-        scripts: updatedScripts,
-      });
-
-      const eszip = await build({
+      const { hash } = await buildAndStore({
         app: { ...app, scripts: updatedScripts },
-        version,
-      });
-
-      await prisma.version.upsert({
-        where: {
-          hash,
-        },
-        create: {
-          app: { connect: { id: app.id } },
-          hash: hash,
-          buildFile: Buffer.from(eszip),
-          isPublished: false,
-        },
-        update: {},
       });
 
       const appWithUpdatedHash = await prisma.app.update({
@@ -970,38 +915,15 @@ export const appRouter = createRouter()
         include: { scripts: true },
       });
 
-      const { playgroundVersionHash } = app;
+      const { hash } = await buildAndStore({ app, isPublished: true });
 
-      const hash =
-        playgroundVersionHash ||
-        getAppHash({
-          id: app.id,
-          name: app.name,
-          scripts: app.scripts,
-        });
-
-      const getBuild = async () => {
-        const version = getAppVersionFromHash(hash)!;
-
-        const eszip = await build({
-          app,
-          version,
-        });
-        return Buffer.from(eszip);
-      };
-
-      await prisma.version.upsert({
+      await prisma.version.updateMany({
         where: {
-          hash,
+          appId: input.id,
+          hash: { not: hash },
         },
-        create: {
-          app: { connect: { id: app.id } },
-          hash: hash,
-          buildFile: await getBuild(),
-          isPublished: true,
-        },
-        update: {
-          isPublished: true,
+        data: {
+          buildFile: null,
         },
       });
 
@@ -1010,8 +932,8 @@ export const appRouter = createRouter()
           id: input.id,
         },
         data: {
-          publishedVersionHash: playgroundVersionHash,
-          playgroundVersionHash: playgroundVersionHash,
+          publishedVersionHash: hash,
+          playgroundVersionHash: hash,
         },
       });
     },

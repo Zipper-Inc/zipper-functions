@@ -6,8 +6,13 @@ import ndjson from 'ndjson';
 import intoStream from 'into-stream';
 import { decryptFromBase64, parseDeploymentId } from '@zipper/utils';
 import { prisma } from '~/server/prisma';
-import { build, FRAMEWORK_ENTRYPOINT } from '~/utils/eszip-build-applet';
-import { getAppHash, getAppVersionFromHash } from '~/utils/hashing';
+import {
+  buildAndStore,
+  FRAMEWORK_ENTRYPOINT,
+} from '~/utils/eszip-build-applet';
+import { getAppVersionFromHash } from '~/utils/hashing';
+import s3Client from '~/server/s3';
+import { GetObjectCommand } from '@aws-sdk/client-s3';
 
 const X_DENO_CONFIG = 'x-deno-config';
 
@@ -155,33 +160,67 @@ async function originBoot({
       scriptMain: true,
       secrets: true,
       connectors: true,
-      versions: {
-        where: {
-          hash: { startsWith: deploymentVersion },
-        },
-        take: 1,
-      },
     },
   });
-
-  // if (!app?.versions.length) {
-  //   return errorResponse(`INVALID_VERSION`);
-  // }
 
   if (!app) {
     return errorResponse(`Missing app ID`);
   }
 
-  const version =
+  const versionToRun =
     deploymentVersion === 'latest'
-      ? app.publishedVersionHash || Date.now().toString()
+      ? app.publishedVersionHash || app.publishedVersionHash
       : deploymentVersion;
 
-  const baseUrl = `file://${app.slug}/v${version}`;
+  const storedVersion = versionToRun
+    ? await prisma.version.findFirst({
+        where: {
+          appId,
+          hash: {
+            startsWith: versionToRun,
+          },
+        },
+        take: 1,
+        orderBy: {
+          createdAt: 'desc',
+        },
+      })
+    : null;
 
-  let eszip = app.versions[0]?.buildFile;
+  let eszip = storedVersion?.buildFile;
+  let hash = storedVersion?.hash;
+
+  if (hash && !eszip) {
+    // check for object on Cloudflare R2
+    console.log(versionToRun);
+    try {
+      const foundFile = await s3Client.send(
+        new GetObjectCommand({
+          Bucket: process.env.CLOUDFLARE_BUILD_FILE_BUCKET_NAME,
+          Key: `${app.id}/${versionToRun}`,
+        }),
+      );
+      const byteArray = await foundFile.Body?.transformToByteArray();
+
+      if (byteArray) {
+        console.log('found file on cloudflare');
+        eszip = Buffer.from(byteArray);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
   if (!eszip) {
-    eszip = Buffer.from(await build({ baseUrl, app, version }));
+    // still not found? Just build it off the latest code
+    console.log(`building ${deploymentId} from scratch`);
+    const buildInfo = await buildAndStore({
+      app,
+      isPublished: false,
+    });
+
+    eszip = buildInfo.eszip;
+    hash = buildInfo.hash;
   }
 
   /**const old = await createEsZip({
@@ -204,6 +243,8 @@ async function originBoot({
       process.env.ENCRYPTION_KEY,
     );
   });
+
+  const baseUrl = `file://${app.slug}/v${getAppVersionFromHash(hash)}`;
 
   // Boot metadata
   const isolateConfig = {
