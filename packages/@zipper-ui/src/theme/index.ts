@@ -183,31 +183,7 @@ export const foregroundColors = {
 
 export const semanticTokens = {
   colors: {
-    error: 'red.500',
-    fg900: {
-      default: 'gray.900',
-      _dark: 'gray.50',
-    },
-    fg100: {
-      default: 'gray.100',
-      _dark: 'gray.700',
-    },
-    fg25: {
-      default: 'gray.25',
-      _dark: 'gray.900',
-    },
-    textColorAlt: {
-      default: 'gray.600',
-      _dark: 'gray.400',
-    },
-    lineColor: {
-      default: 'gray.100',
-      _dark: 'gray.700',
-    },
-    lineColorAlt: {
-      default: 'gray.50',
-      _dark: 'gray.800',
-    },
+    ...foregroundColors,
   },
 };
 
