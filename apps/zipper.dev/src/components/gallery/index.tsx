@@ -14,9 +14,13 @@ import {
   ModalCloseButton,
   ModalContent,
   ModalOverlay,
+  Box,
+  Stack,
+  useToken,
 } from '@chakra-ui/react';
 import { ResourceOwnerSlug } from '@prisma/client';
 import { ResourceOwnerType } from '@zipper/types';
+import { ZipperSymbol } from '@zipper/ui';
 import { useSession } from 'next-auth/react';
 import React, { useEffect, useState } from 'react';
 import { HiCog, HiPlus } from 'react-icons/hi';
@@ -67,6 +71,34 @@ export function Gallery({
   useEffect(() => {
     if (!heading) setResourceOwner(apps?.[0]?.resourceOwner);
   }, [heading, apps]);
+
+  const [gray200] = useToken('colors', ['neutral.200']);
+
+  if (!apps?.length) {
+    return (
+      <Center>
+        <VStack paddingY={20} bg={'gray.50'} w="90%">
+          <Box bg={'white'} boxShadow="2xl" padding={5} rounded="2xl" mb={6}>
+            <ZipperSymbol style={{ maxHeight: '100%' }} fill={gray200} />
+          </Box>
+          <Stack alignContent="center" gap={2} maxW={500} textAlign="center">
+            <Text fontWeight="600" fontSize="2xl">
+              There's nothing to see here yet
+            </Text>
+            <Text
+              color={'neutral.600'}
+              fontSize="sm"
+              lineHeight="20px"
+              fontWeight="400"
+            >
+              As users and organizations create public apps, they automatically
+              appear on their profile pages.
+            </Text>
+          </Stack>
+        </VStack>
+      </Center>
+    );
+  }
 
   return (
     <>

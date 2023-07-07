@@ -246,6 +246,7 @@ export const appRouter = createRouter()
         where: {
           isPrivate: false,
           submissionState: appSubmissionState.approved,
+          deletedAt: null,
         },
         select: defaultSelect,
       });
@@ -288,6 +289,7 @@ export const appRouter = createRouter()
       if (!ctx.userId) throw new TRPCError({ code: 'UNAUTHORIZED' });
       const where: Prisma.AppWhereInput = {
         parentId: input?.parentId,
+        deletedAt: null,
       };
 
       if (ctx.orgId && (!input || input.filterByOrganization)) {
@@ -363,6 +365,7 @@ export const appRouter = createRouter()
       const app = await prisma.app.findFirstOrThrow({
         where: {
           id: input.id,
+          deletedAt: null,
           OR: [
             { isPrivate: false },
             {
@@ -414,9 +417,13 @@ export const appRouter = createRouter()
         },
       });
 
+      if (!resourceOwner.resourceOwnerId)
+        throw new TRPCError({ code: 'NOT_FOUND' });
+
       // start building the where clause for the app query
       const where: Prisma.AppWhereInput = {
         slug: input.appSlug,
+        deletedAt: null,
       };
 
       // if the resource owner we found above is an organization, add the organization id to the where clause
@@ -481,12 +488,13 @@ export const appRouter = createRouter()
         },
       });
 
-      if (!resourceOwner) return undefined;
+      if (!resourceOwner) return [];
 
       if (!resourceOwner.resourceOwnerId) return [];
 
       const where: Prisma.AppWhereInput = {
         isPrivate: false,
+        deletedAt: null,
       };
 
       if (
@@ -555,7 +563,7 @@ export const appRouter = createRouter()
     }),
     async resolve({ input, ctx }) {
       const app = await prisma.app.findFirstOrThrow({
-        where: { id: input.appId },
+        where: { id: input.appId, deletedAt: null },
         include: { scripts: true, scriptMain: true },
       });
 
@@ -619,7 +627,7 @@ export const appRouter = createRouter()
     }),
     async resolve({ input, ctx }) {
       const app = await prisma.app.findFirstOrThrow({
-        where: { id: input.appId },
+        where: { id: input.appId, deletedAt: null },
         include: { scripts: true, scriptMain: true },
       });
 
@@ -689,7 +697,7 @@ export const appRouter = createRouter()
       const { id } = input;
 
       const app = await prisma.app.findFirstOrThrow({
-        where: { id },
+        where: { id, deletedAt: null },
         include: { scripts: true, scriptMain: true },
       });
 
@@ -908,14 +916,14 @@ export const appRouter = createRouter()
       id: z.string(),
     }),
     async resolve({ ctx, input }) {
-      if (!ctx.userId) {
-        throw new TRPCError({ code: 'UNAUTHORIZED' });
-      }
+      await hasAppEditPermission({ ctx, appId: input.id });
 
-      await prisma.app.deleteMany({
+      await prisma.app.update({
         where: {
           id: input.id,
-          editors: { some: { userId: ctx.userId } },
+        },
+        data: {
+          deletedAt: new Date(),
         },
       });
 
@@ -932,7 +940,7 @@ export const appRouter = createRouter()
       await hasAppEditPermission({ ctx, appId: input.id });
 
       const app = await prisma.app.findFirstOrThrow({
-        where: { id: input.id },
+        where: { id: input.id, deletedAt: null },
         include: { scripts: true },
       });
 

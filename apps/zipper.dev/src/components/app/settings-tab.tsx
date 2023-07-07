@@ -30,10 +30,18 @@ import {
   Tooltip,
   Flex,
   Spacer,
+  AlertDialog,
+  AlertDialogBody,
+  AlertDialogContent,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogOverlay,
+  Code,
+  AlertDialogCloseButton,
 } from '@chakra-ui/react';
 import { CheckIcon } from '@chakra-ui/icons';
 import { FormProvider, useForm } from 'react-hook-form';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { inferQueryOutput, trpc } from '~/utils/trpc';
 import { HiExclamationTriangle } from 'react-icons/hi2';
@@ -58,10 +66,22 @@ type Props = {
 
 const SettingsTab: React.FC<Props> = ({ app }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const {
+    isOpen: isOpenDeleteConfirmation,
+    onOpen: onOpenDeleteConfirmation,
+    onClose: onCloseDeleteConfirmation,
+  } = useDisclosure();
+  const cancelRef = useRef() as React.MutableRefObject<HTMLButtonElement>;
   const appQuery = trpc.useQuery(['app.byId', { id: app.id }]);
   const appEditMutation = trpc.useMutation('app.edit', {
     onSuccess() {
       appQuery.refetch();
+    },
+  });
+
+  const appDeleteMutation = trpc.useMutation('app.delete', {
+    onSuccess() {
+      router.push('/');
     },
   });
   const appAccessTokenQuery = trpc.useQuery([
@@ -412,6 +432,32 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
             </>
           )}
         </Box>
+
+        <Box w="100%" pt={10}>
+          <HStack>
+            <Text fontSize={'xl'} flexGrow={1}>
+              Here Be Dragons
+            </Text>
+          </HStack>
+          <Divider mb="4" mt={2} />
+          <VStack border="1px solid" borderColor="red.100" borderRadius={'lg'}>
+            <VStack w="full" p="4" align="start">
+              <VStack align="start" w="full">
+                <HStack w="full">
+                  <Text>Delete this applet</Text>
+                  <Spacer flexGrow={1} />
+                  <Button
+                    variant="solid"
+                    colorScheme="red"
+                    onClick={onOpenDeleteConfirmation}
+                  >
+                    Delete applet
+                  </Button>
+                </HStack>
+              </VStack>
+            </VStack>
+          </VStack>
+        </Box>
       </VStack>
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
@@ -484,6 +530,49 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
           </form>
         </ModalContent>
       </Modal>
+      <AlertDialog
+        isOpen={isOpenDeleteConfirmation}
+        leastDestructiveRef={cancelRef}
+        onClose={onCloseDeleteConfirmation}
+      >
+        <AlertDialogOverlay>
+          <AlertDialogContent>
+            <AlertDialogHeader fontSize="lg" fontWeight="bold">
+              Delete Applet
+            </AlertDialogHeader>
+            <AlertDialogCloseButton />
+
+            <AlertDialogBody>
+              <Box>
+                You're about to delete this applet. Are you sure?
+                <Flex
+                  pt="5"
+                  fontSize="lg"
+                  fontWeight="bold"
+                  justifyContent="center"
+                >
+                  {app.slug}
+                </Flex>
+              </Box>
+            </AlertDialogBody>
+
+            <AlertDialogFooter>
+              <Button
+                colorScheme="gray"
+                _hover={{ bg: 'red.500', color: 'white' }}
+                onClick={() =>
+                  appDeleteMutation.mutateAsync({
+                    id: app.id,
+                  })
+                }
+                w="full"
+              >
+                {`Delete ${app.slug}`}
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogOverlay>
+      </AlertDialog>
     </HStack>
   );
 };

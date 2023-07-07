@@ -57,6 +57,7 @@ module.exports = getConfig({
    */
   experimental: {
     webpackBuildWorker: true,
+    esmExternals: false,
   },
   publicRuntimeConfig: {
     NODE_ENV: env.NODE_ENV,
@@ -73,7 +74,6 @@ module.exports = getConfig({
         protocol: 'https',
         hostname: 'lh3.googleusercontent.com',
       },
-      
     ],
   },
   webpack: (config) => {

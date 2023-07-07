@@ -14,6 +14,7 @@ model App {
   id                    String    @id @default(uuid())
   createdAt             DateTime  @default(now())
   updatedAt             DateTime? @default(now())
+  deletedAt             DateTime?
   slug                  String    @unique @db.VarChar(60)
   name                  String?
   description           String?

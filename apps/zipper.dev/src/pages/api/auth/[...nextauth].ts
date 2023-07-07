@@ -314,6 +314,17 @@ export const authOptions: AuthOptions = {
           token.currentOrganizationId = undefined;
         }
 
+        if (session.updateProfile) {
+          const userUpdated = await prisma.user.findUnique({
+            where: { id: token.sub },
+          });
+
+          token.picture = userUpdated?.image;
+          token.name = userUpdated?.name;
+          token.email = userUpdated?.email;
+          token.slug = userUpdated?.slug;
+        }
+
         if (session.currentOrganizationId) {
           if (
             token.organizationMemberships?.find(

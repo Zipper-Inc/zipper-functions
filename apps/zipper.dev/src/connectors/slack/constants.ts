@@ -1,8 +1,9 @@
 export const code = `import { WebClient } from "https://deno.land/x/slack_web_api@6.7.2/mod.js";
 
 const client = new WebClient(Deno.env.get('SLACK_BOT_TOKEN'));
+//const client = new WebClient(Deno.env.get('SLACK_USER_TOKEN'));
 
-client.sendToChannel = async (text, channelName) => {
+client.sendToChannel = async (text: string, channelName: string) => {
   return await client.chat.postMessage({
     channel: channelName,
     text,

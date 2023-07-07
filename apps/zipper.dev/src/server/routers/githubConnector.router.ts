@@ -233,19 +233,24 @@ export const githubConnectorRouter = createRouter()
         },
       });
 
+      const isCustomApp = connector.clientId && connector.app.secrets[0];
+
+      const clientId = connector.clientId || process.env.GITHUB_CLIENT_ID!;
+      const clientSecret = isCustomApp
+        ? decryptFromBase64(
+            connector.app.secrets[0]!.encryptedValue,
+            process.env.ENCRYPTION_KEY!,
+          )
+        : process.env.GITHUB_CLIENT_SECRET!;
+
       const res = await fetch('https://github.com/login/oauth/access_token', {
         method: 'POST',
         headers: {
           Accept: 'application/json',
         },
         body: new URLSearchParams({
-          client_id: connector.clientId || process.env.GITHUB_CLIENT_ID!,
-          client_secret: connector.app.secrets[0]
-            ? decryptFromBase64(
-                connector.app.secrets[0].encryptedValue,
-                process.env.ENCRYPTION_KEY!,
-              )
-            : process.env.GITHUB_CLIENT_SECRET!,
+          client_id: clientId,
+          client_secret: clientSecret,
           code: input.code,
           state: input.state,
         }),
@@ -265,27 +270,13 @@ export const githubConnectorRouter = createRouter()
       const userIdOrTempId: string =
         userId || ctx.userId || (ctx.req?.cookies as any)['__zipper_user_id'];
       if (appId && json.access_token && userIdOrTempId) {
-        const githubClientId =
-          connector.clientId || process.env.GITHUB_CLIENT_ID;
-
-        const githubClientSecret = connector.app.secrets.find(
-          (s) => s.key === 'GITHUB_CLIENT_SECRET',
-        );
-
-        const clientSecret = githubClientSecret?.encryptedValue
-          ? decryptFromBase64(
-              githubClientSecret?.encryptedValue,
-              process.env.ENCRYPTION_KEY!,
-            )
-          : undefined;
-
         const base64Credentials = getBase64Credentials({
-          clientId: githubClientId,
+          clientId,
           clientSecret,
         });
 
         const userInfoRes = await fetch(
-          `https://api.github.com/applications/${githubClientId}/token`,
+          `https://api.github.com/applications/${clientId}/token`,
           {
             method: 'POST',
             headers: {

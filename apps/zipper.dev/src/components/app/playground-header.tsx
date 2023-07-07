@@ -61,7 +61,7 @@ import SignedOut from '../auth/signed-out';
 import { signIn } from 'next-auth/react';
 import { PlaygroundPublishInfo } from './playground-publish-button';
 import { getAppLink } from '@zipper/utils';
-import { UserAvatarMenu } from '../user-avatar-menu';
+import { UserProfileButton } from '../auth/user-profile-button';
 
 const getDefaultCreateAppFormValues = () => ({
   name: generateDefaultSlug(),
@@ -277,7 +277,7 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
           display="flex"
           gap={2}
           fontWeight="medium"
-          _hover={{ textDecoration: 'none', backgroundColor: 'fg.100' }}
+          _hover={{ textDecoration: 'none', backgroundColor: 'gray.100' }}
         >
           <Icon as={HiGlobeAlt} />
           <Text>View</Text>
@@ -285,7 +285,7 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
         <SignedIn>
           <PlaygroundPublishInfo app={app} />
           <Spacer />
-          <UserAvatarMenu />
+          <UserProfileButton showAdditionalOptions />
         </SignedIn>
 
         {!user && (

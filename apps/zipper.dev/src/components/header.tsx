@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import {
   Box,
   HStack,
@@ -7,18 +7,7 @@ import {
   useBreakpointValue,
   Divider,
   Button,
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalCloseButton,
-  ModalBody,
-  ModalFooter,
   useDisclosure,
-  FormControl,
-  FormLabel,
-  ModalOverlay,
-  Textarea,
-  Spinner,
   Text,
   Icon,
 } from '@chakra-ui/react';
@@ -29,13 +18,13 @@ import { ZipperLogo } from '@zipper/ui';
 import OrganizationSwitcher from './auth/organizationSwitcher';
 import { MobileMenu } from './header-mobile-menu';
 import { ZipperSymbol } from '@zipper/ui';
-import SignInButton from './auth/signInButton';
 import { trpc } from '~/utils/trpc';
 import { useUser } from '~/hooks/use-user';
 import SignedIn from './auth/signed-in';
 import SignedOut from './auth/signed-out';
-import { HiChevronLeft } from 'react-icons/hi2';
-import { UserAvatarMenu } from './user-avatar-menu';
+import { HiHome } from 'react-icons/hi2';
+import { UserProfileButton } from './auth/user-profile-button';
+import { FeedbackModal } from './auth/feedback-modal';
 
 type HeaderProps = {
   showNav?: boolean;
@@ -62,11 +51,6 @@ const Header: React.FC<HeaderProps> = ({
   const { user, isLoaded } = useUser();
 
   const feedbackModal = useDisclosure();
-
-  const [feedback, setFeedback] = useState('');
-  const [submittingFeedback, setSubmittingFeedback] = useState(false);
-
-  const feedbackMutation = trpc.useMutation('user.submitFeedback');
 
   useEffect(() => {
     if (reload) {
@@ -101,10 +85,12 @@ const Header: React.FC<HeaderProps> = ({
                         fill="currentColor"
                         style={{ maxHeight: '20px' }}
                       />
-                      <HStack spacing={1}>
-                        <Icon as={HiChevronLeft} />
-                        <Text fontSize="sm">Dashboard</Text>
-                      </HStack>
+                      {showNav && (
+                        <HStack spacing={1}>
+                          <Icon as={HiHome} />
+                          <Text fontSize="sm">Dashboard</Text>
+                        </HStack>
+                      )}
                     </HStack>
                   )}
                 </SignedIn>
@@ -184,54 +170,10 @@ const Header: React.FC<HeaderProps> = ({
                   >
                     Feedback
                   </Button>
-
-                  <Modal
-                    isOpen={feedbackModal.isOpen}
-                    onClose={() => {
-                      setSubmittingFeedback(false);
-                      feedbackModal.onClose();
-                    }}
-                    size="xl"
-                  >
-                    <ModalOverlay />
-                    <ModalContent>
-                      <ModalHeader>What's going on?</ModalHeader>
-                      <ModalCloseButton />
-                      <ModalBody>
-                        <FormControl>
-                          <FormLabel>Share your feedback</FormLabel>
-                          <Textarea
-                            onChange={(e) => setFeedback(e.target.value)}
-                          />
-                        </FormControl>
-                      </ModalBody>
-                      <ModalFooter>
-                        <Button
-                          colorScheme="purple"
-                          isDisabled={submittingFeedback}
-                          onClick={async () => {
-                            setSubmittingFeedback(true);
-                            await feedbackMutation.mutateAsync({
-                              feedback,
-                              url: window.location.href,
-                            });
-                            setSubmittingFeedback(false);
-                            feedbackModal.onClose();
-                          }}
-                        >
-                          {submittingFeedback ? <Spinner /> : 'Submit'}
-                        </Button>
-                      </ModalFooter>
-                    </ModalContent>
-                  </Modal>
+                  <FeedbackModal {...feedbackModal} />
                 </>
               )}
-              <SignedIn>
-                <UserAvatarMenu />
-              </SignedIn>
-              <SignedOut>
-                <SignInButton />
-              </SignedOut>
+              <UserProfileButton />
             </HStack>
             {!isTablet && <MobileMenu navRoutes={navRoutes} />}
           </Flex>
