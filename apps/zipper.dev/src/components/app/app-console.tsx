@@ -40,7 +40,7 @@ export function AppConsole({ logs }: { logs: LogMessage[] }) {
 
   return (
     <Box id="app-console">
-      <Box position="sticky" top="0" pt={4} zIndex="docked" background="white">
+      <Box position="sticky" top="0" pt={4} zIndex="docked" background="bgColor">
         <Flex
           padding={4}
           width="100%"
@@ -69,7 +69,7 @@ export function AppConsole({ logs }: { logs: LogMessage[] }) {
             </FormLabel>
           </FormControl>
           <Input
-            backgroundColor="white"
+            backgroundColor="bgColor"
             fontFamily="monospace"
             fontSize="xs"
             onChange={(e) => setLogFilter(e.target.value)}

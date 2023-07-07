@@ -52,7 +52,7 @@ const stickyTabsStyles: ChakraProps = {
   top: -4,
   position: 'sticky',
   pt: 4,
-  background: 'white',
+  background: 'bgColor',
 };
 const tabsStyles: ChakraProps = { display: 'flex', flexDir: 'column', gap: 0 };
 const tablistStyles: ChakraProps = {

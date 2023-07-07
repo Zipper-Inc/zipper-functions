@@ -302,7 +302,6 @@ export function Dashboard() {
                         pr={6}
                         variant="solid"
                         colorScheme="purple"
-                        textColor="fg100"
                         fontSize="sm"
                         onClick={onOpen}
                       >

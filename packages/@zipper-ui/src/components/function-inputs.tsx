@@ -89,7 +89,7 @@ function FunctionParamInput({
     case InputType.string: {
       return (
         <Textarea
-          backgroundColor="white"
+          backgroundColor="bgColor"
           fontFamily="monospace"
           fontSize="smaller"
           minHeight={14}
@@ -104,7 +104,7 @@ function FunctionParamInput({
       return (
         <NumberInput width="full" isDisabled={isDisabled}>
           <NumberInputField
-            backgroundColor="white"
+            backgroundColor="bgColor"
             fontFamily="monospace"
             fontSize="smaller"
             {...formProps}
@@ -120,7 +120,7 @@ function FunctionParamInput({
     case InputType.date: {
       return (
         <Input
-          backgroundColor="white"
+          backgroundColor="bgColor"
           type="date"
           {...formProps}
           isDisabled={isDisabled}
@@ -132,7 +132,7 @@ function FunctionParamInput({
     case InputType.enum: {
       return (
         <Select
-          backgroundColor="white"
+          backgroundColor="bgColor"
           isDisabled={isDisabled}
           {...formProps}
           placeholder={placeholder}
@@ -155,7 +155,7 @@ function FunctionParamInput({
       return (
         <VStack align="start" w="full">
           <Textarea
-            backgroundColor="white"
+            backgroundColor="bgColor"
             fontFamily="monospace"
             fontSize="smaller"
             minHeight={14}
@@ -187,7 +187,7 @@ function FunctionParamInput({
       return (
         <VStack align="start" w="full">
           <Textarea
-            backgroundColor="white"
+            backgroundColor="bgColor"
             fontFamily="monospace"
             fontSize="smaller"
             minHeight={90}
@@ -218,7 +218,7 @@ function FunctionParamInput({
       return (
         <VStack align="start" w="full">
           <Textarea
-            backgroundColor="white"
+            backgroundColor="bgColor"
             fontFamily="monospace"
             fontSize="smaller"
             minHeight={14}
@@ -235,7 +235,7 @@ function FunctionParamInput({
     default: {
       return (
         <Textarea
-          backgroundColor="white"
+          backgroundColor="bgColor"
           fontFamily="monospace"
           fontSize="smaller"
           minHeight={14}

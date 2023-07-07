@@ -60,7 +60,7 @@ export const GitHubUserConnectorInput: React.FC<ConnectorInputProps> = ({
                   window.location.replace(authUrl);
                 }}
                 variant="outline"
-                bgColor="white"
+                bgColor="bgColor"
                 colorScheme="purple"
                 borderColor="fg300"
                 fontSize="sm"

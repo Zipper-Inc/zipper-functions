@@ -136,7 +136,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
             flex="1 1 auto"
             overflow="auto"
             p={0}
-            background="white"
+            background="bgColor"
           >
             <AppConsole logs={logs} />
           </TabPanel>

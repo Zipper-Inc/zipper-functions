@@ -54,7 +54,7 @@ export default function Unauthorized() {
                     }`;
                   }}
                 >
-                  <ZipperSymbol fill="white" height={16} />
+                  <ZipperSymbol fill="bgColor" height={16} />
                   Sign In to Zipper
                 </Button>
               </>

@@ -26,7 +26,7 @@ export const GalleryItem: React.FC<GalleryItemProps> = ({ app }) => {
   return (
     <GridItem>
       <NextLink href={`/${app.resourceOwner.slug}/${app.slug}`}>
-        <Card background="white" borderRadius={10} height="100%">
+        <Card background="bgColor" borderRadius={10} height="100%">
           <CardBody
             padding={0}
             as={HStack}

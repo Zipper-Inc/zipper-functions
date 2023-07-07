@@ -121,7 +121,7 @@ export const EditAppSlugForm: React.FC<EditAppSlugFormProps> = ({
         {!disableSave && (
           <FormHelperText
             position="absolute"
-            backgroundColor="white"
+            backgroundColor="bgColor"
             width="fit-content"
             whiteSpace="nowrap"
             padding="8px"

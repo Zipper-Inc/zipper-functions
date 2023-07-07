@@ -325,7 +325,7 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
                   <Text>/</Text>
                   <InputGroup>
                     <Input
-                      backgroundColor="white"
+                      backgroundColor="bgColor"
                       maxLength={60}
                       {...forkAppForm.register('name')}
                       onChange={(e) => {

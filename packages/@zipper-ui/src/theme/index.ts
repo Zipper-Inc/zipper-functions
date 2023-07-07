@@ -137,47 +137,55 @@ export const brandColors = {
 export const foregroundColors = {
   fg25: {
     default: 'gray.25',
-    _dark: 'gray.900',
+    _dark: 'whiteAlpha.50',
   },
   fg50: {
     default: 'gray.50',
-    _dark: 'gray.800',
+    _dark: 'whiteAlpha.100',
   },
   fg100: {
     default: 'gray.100',
-    _dark: 'gray.700',
+    _dark: 'whiteAlpha.200',
   },
   fg200: {
     default: 'gray.200',
-    _dark: 'gray.600',
+    _dark: 'whiteAlpha.300',
   },
   fg300: {
     default: 'gray.300',
-    _dark: 'gray.500',
+    _dark: 'whiteAlpha.400',
   },
   fg400: {
     default: 'gray.400',
-    _dark: 'gray.400',
+    _dark: 'whiteAlpha.500',
   },
   fg500: {
     default: 'gray.500',
-    _dark: 'gray.300',
+    _dark: 'whiteAlpha.600',
   },
   fg600: {
     default: 'gray.600',
-    _dark: 'gray.200',
+    _dark: 'whiteAlpha.700',
   },
   fg700: {
     default: 'gray.700',
-    _dark: 'gray.100',
+    _dark: 'whiteAlpha.800',
   },
   fg800: {
-    default: 'fg.800',
-    _dark: 'gray.50',
+    default: 'gray.800',
+    _dark: 'whiteAlpha.900',
   },
   fg900: {
-    default: 'fg.900',
-    _dark: 'gray.25',
+    default: 'gray.900',
+    _dark: 'white',
+  },
+  fgText: {
+    default: 'gray.800',
+    _dark: 'whiteAlpha.900',
+  },
+  bgColor: {
+    default: 'white',
+    _dark: 'gray.800',
   },
 };
 

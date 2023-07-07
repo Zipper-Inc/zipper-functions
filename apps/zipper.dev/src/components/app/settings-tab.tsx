@@ -222,7 +222,7 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
               <FormLabel>Slug</FormLabel>
               <InputGroup>
                 <Input
-                  backgroundColor="white"
+                  backgroundColor="bgColor"
                   maxLength={60}
                   {...settingsForm.register('slug')}
                 />
@@ -251,7 +251,7 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
             <FormControl>
               <FormLabel>Name</FormLabel>
               <Input
-                backgroundColor="white"
+                backgroundColor="bgColor"
                 maxLength={60}
                 {...settingsForm.register('name')}
               />
@@ -262,7 +262,7 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
             <FormControl>
               <FormLabel textColor="fg600">Description</FormLabel>
               <Textarea
-                backgroundColor="white"
+                backgroundColor="bgColor"
                 {...settingsForm.register('description')}
               />
             </FormControl>
@@ -454,7 +454,7 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
                 <FormControl isRequired>
                   <FormLabel>Description</FormLabel>
                   <Input
-                    backgroundColor="white"
+                    backgroundColor="bgColor"
                     {...appAccessTokenForm.register('description')}
                   />
                   <FormErrorMessage>

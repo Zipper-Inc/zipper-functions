@@ -94,7 +94,7 @@ const SettingsTab: React.FC<Props> = ({ isOpen, onClose, appId }) => {
                   <FormLabel>Slug</FormLabel>
                   <InputGroup>
                     <Input
-                      backgroundColor="white"
+                      backgroundColor="bgColor"
                       maxLength={60}
                       {...settingsForm.register('slug')}
                       onChange={(e) => {
@@ -128,7 +128,7 @@ const SettingsTab: React.FC<Props> = ({ isOpen, onClose, appId }) => {
                 <FormControl>
                   <FormLabel>Name</FormLabel>
                   <Input
-                    backgroundColor="white"
+                    backgroundColor="bgColor"
                     maxLength={60}
                     {...settingsForm.register('name')}
                   />
@@ -139,7 +139,7 @@ const SettingsTab: React.FC<Props> = ({ isOpen, onClose, appId }) => {
                 <FormControl>
                   <FormLabel textColor="fg600">Description</FormLabel>
                   <Textarea
-                    backgroundColor="white"
+                    backgroundColor="bgColor"
                     {...settingsForm.register('description')}
                   />
                 </FormControl>

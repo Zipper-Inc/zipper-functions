@@ -76,7 +76,7 @@ export const ScriptItem: React.FC<ScriptItemProps> = ({
               outline="none"
               variant="flushed"
               w="full"
-              backgroundColor="white"
+              backgroundColor="bgColor"
               color="purple.900"
               autoFocus
               onKeyDown={(e) => {

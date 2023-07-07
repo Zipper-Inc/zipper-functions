@@ -8,7 +8,7 @@ const getStringFromObject = (obj: StyleObject) =>
 
 const DEFAULT_TOPIC_STYLE = {
   'font-weight': 800,
-  color: 'white',
+  color: 'bgColor',
   background: brandColors.brandBlue,
   'text-transform': 'uppercase',
 };
