@@ -8,8 +8,11 @@ const { z } = require('zod');
 
 /*eslint sort-keys: "error"*/
 const envSchema = z.object({
-  CLERK_JWT_KEY: z.string(),
-  CLERK_SECRET_KEY: z.string(),
+  CLOUDFLARE_ACCESS_KEY_ID: z.string(),
+  CLOUDFLARE_ACCESS_KEY_SECRET: z.string(),
+  CLOUDFLARE_ACCOUNT_ID: z.string(),
+  CLOUDFLARE_APPLET_SRC_BUCKET_NAME: z.string(),
+  CLOUDFLARE_BUILD_FILE_BUCKET_NAME: z.string(),
   DATABASE_URL: z.string().url(),
   DENO_DEPLOY_TOKEN: z.string(),
   ENCRYPTION_KEY: z.string(),

@@ -101,10 +101,10 @@ export default async function handler(
     slug,
     description,
     updatedAt,
-    lastDeploymentVersion,
+    publishedVersionHash,
+    playgroundVersionHash,
     scriptMain,
     scripts,
-    hash,
   } = appFound;
 
   let entryPoint: Script | undefined = undefined;
@@ -142,7 +142,8 @@ export default async function handler(
         name,
         slug,
         description,
-        lastDeploymentVersion,
+        playgroundVersionHash,
+        publishedVersionHash,
         updatedAt,
         canUserEdit: canUserEdit(appFound, {
           req,
@@ -150,7 +151,6 @@ export default async function handler(
           orgId: undefined,
           organizations: organizations,
         }),
-        hash,
       },
       inputs: parsedCode.inputs || [],
       metadata: {

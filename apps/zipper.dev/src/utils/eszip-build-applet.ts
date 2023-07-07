@@ -5,6 +5,10 @@ import { getLogger } from './app-console';
 import { prettyLog } from './pretty-log';
 import { BuildCache, getModule } from './eszip-build-cache';
 import { readFrameworkFile } from './read-file';
+import { getAppHashAndVersion } from './hashing';
+import { prisma } from '~/server/prisma';
+import s3Client from '~/server/s3';
+import { PutObjectCommand } from '@aws-sdk/client-s3';
 
 /**
  * @todo
@@ -20,16 +24,19 @@ export const TYPESCRIPT_CONTENT_HEADERS = {
 const buildCache = new BuildCache();
 
 export async function build({
-  baseUrl,
+  baseUrl: _baseUrl,
   app,
   version,
 }: {
-  baseUrl: string;
-  app: App & { scripts: Script[] };
+  baseUrl?: string;
+  app: Omit<App, 'datastore' | 'categories' | 'deletedAt'> & {
+    scripts: Script[];
+  };
   version: string;
 }) {
   const startMs = performance.now();
   const appName = `${app.slug}@${version}`;
+  const baseUrl = _baseUrl || `file://${app.slug}/v${version}`;
 
   const logger = getLogger({ appId: app.id, version });
   logger.info(
@@ -130,4 +137,59 @@ export async function build({
   );
 
   return bundle;
+}
+
+export async function buildAndStoreApplet({
+  app,
+  isPublished,
+  userId,
+}: {
+  app: Omit<App, 'datastore' | 'categories' | 'deletedAt'> & {
+    scripts: Script[];
+  };
+  isPublished?: boolean;
+  userId?: string;
+}) {
+  const { hash, version } = getAppHashAndVersion({
+    id: app.id,
+    name: app.name,
+    scripts: app.scripts,
+  });
+
+  const buildBuffer = async () => {
+    return Buffer.from(
+      await build({
+        app,
+        version,
+      }),
+    );
+  };
+
+  const savedVersion = await prisma.version.upsert({
+    where: {
+      hash,
+    },
+    create: {
+      app: { connect: { id: app.id } },
+      hash: hash,
+      buildFile: await buildBuffer(),
+      isPublished: !!isPublished,
+      userId,
+    },
+    update: {
+      isPublished, // Only updates this if it's passed in - undefined will not update (which is good)
+    },
+  });
+
+  if (savedVersion.buildFile) {
+    s3Client.send(
+      new PutObjectCommand({
+        Bucket: process.env.CLOUDFLARE_BUILD_FILE_BUCKET_NAME,
+        Key: `${savedVersion.appId}/${version}`,
+        Body: savedVersion.buildFile,
+      }),
+    );
+  }
+
+  return { hash, eszip: savedVersion.buildFile };
 }

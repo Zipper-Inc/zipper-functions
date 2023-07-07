@@ -1,4 +1,4 @@
-import { InputParam, InputType } from '@zipper/types';
+import { InputParam, InputType, ParsedNode } from '@zipper/types';
 import { parse } from 'comment-parser';
 
 import {
@@ -25,12 +25,15 @@ function removeTsExtension(moduleName: string) {
 }
 
 // Determine the Zipper type from the Typescript type
-function parseTypeNode(type: any, src: SourceFile): any {
+function parseTypeNode(type: TypeNode, src: SourceFile): ParsedNode {
   const text = type.getText();
   if (text.toLowerCase() === 'boolean') return { type: InputType.boolean };
   if (text.toLowerCase() === 'number') return { type: InputType.number };
   if (text.toLowerCase() === 'string') return { type: InputType.string };
   if (text.toLowerCase() === 'date') return { type: InputType.date };
+  if (text.toLowerCase() === 'unknown') return { type: InputType.unknown };
+  if (text.toLowerCase() === 'any') return { type: InputType.any };
+
   if (type.isKind(SyntaxKind.ArrayType) || text.startsWith('Array'))
     return { type: InputType.array };
   
@@ -66,7 +69,8 @@ function parseTypeNode(type: any, src: SourceFile): any {
             },
           };
         }
-        return parseTypeNode(typeReferenceDeclarationType, src);
+        if (typeReferenceDeclarationType)
+          return parseTypeNode(typeReferenceDeclarationType, src);
       }
       if(typeReferenceDeclaration.isKind(SyntaxKind.InterfaceDeclaration)) {
         // we have a interface
@@ -131,7 +135,7 @@ function parseTypeNode(type: any, src: SourceFile): any {
       }
     }
   }
-  return { type: InputType.any };
+  return { type: InputType.unknown };
 }
 
 function getSourceFileFromCode(code: string) {
@@ -243,13 +247,23 @@ export function parseInputForTypes({
 
     return props.map((prop) => {
       const typeNode = prop.getTypeNode();
+      if (!typeNode) {
+        // Typescript defaults to any if it can't find the type
+        // type Input = { foo } // foo is any
+        return {
+          key: prop.getName(),
+          type: InputType.any,
+          optional: prop.hasQuestionToken(),
+        };
+      }
+
       const typeDetails = parseTypeNode(typeNode, src);
 
       return {
         key: prop.getName(),
         type: typeDetails.type,
-        details: typeDetails.details,
         optional: prop.hasQuestionToken(),
+        ...('details' in typeDetails && { details: typeDetails.details }),
       };
     });
   } catch (e) {

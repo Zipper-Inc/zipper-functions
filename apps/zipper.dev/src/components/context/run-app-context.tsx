@@ -30,7 +30,7 @@ export type RunAppContextType = {
   results: Record<string, string>;
   userAuthConnectors: UserAuthConnector[];
   setResults: (results: Record<string, string>) => void;
-  run: (isCurrentFileAsEntryPoint?: boolean) => void;
+  run: (isCurrentFileAsEntryPoint?: boolean) => Promise<string | undefined>;
   boot: () => void;
   configs: Zipper.BootPayload['configs'];
 };
@@ -43,7 +43,7 @@ export const RunAppContext = createContext<RunAppContextType>({
   results: {},
   userAuthConnectors: [],
   setResults: noop,
-  run: noop,
+  run: () => Promise.resolve(''),
   boot: noop,
   configs: {},
 });
@@ -75,9 +75,9 @@ export function RunAppProvider({
     description,
     slug,
     updatedAt,
-    lastDeploymentVersion,
+    playgroundVersionHash,
+    publishedVersionHash,
     canUserEdit,
-    hash,
   } = app;
   const formMethods = useForm();
   const [isRunning, setIsRunning] = useState(false);
@@ -109,6 +109,7 @@ export function RunAppProvider({
     try {
       const hash = await saveAppBeforeRun();
       const version = getAppVersionFromHash(hash);
+      if (!version) throw new Error('No version found');
 
       const logger = getLogger({ appId: app.id, version });
 
@@ -159,7 +160,10 @@ export function RunAppProvider({
     try {
       const hash = await saveAppBeforeRun();
       version = getAppVersionFromHash(hash);
+
+      if (!version) throw new Error('No version found');
     } catch (e: any) {
+      console.log(e);
       setResults({
         ...results,
         [isCurrentFileTheEntryPoint
@@ -265,6 +269,8 @@ export function RunAppProvider({
     updateLogs();
 
     await onAfterRun();
+
+    return runId;
   };
 
   return (
@@ -276,9 +282,9 @@ export function RunAppProvider({
           description,
           slug,
           updatedAt,
-          lastDeploymentVersion,
+          playgroundVersionHash,
+          publishedVersionHash,
           canUserEdit,
-          hash,
         },
         formMethods,
         isRunning,

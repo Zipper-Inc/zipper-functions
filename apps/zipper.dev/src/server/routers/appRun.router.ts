@@ -100,8 +100,6 @@ export const appRunRouter = createRouter()
         },
       });
 
-      console.log(appRuns.filter((appRun) => !!appRun.userId));
-
       return appRuns.map((r) => {
         return { ...r, user: users.find((u) => u.id === r.userId) };
       });

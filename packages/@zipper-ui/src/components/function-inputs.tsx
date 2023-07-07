@@ -150,10 +150,7 @@ function FunctionParamInput({
       );
     }
 
-    case InputType.array:
-    case InputType.object: 
-    case InputType.any:
-    default: {
+    case InputType.array: {
       const [error, setError] = useState<string | undefined>();
       return (
         <VStack align="start" w="full">
@@ -161,12 +158,13 @@ function FunctionParamInput({
             backgroundColor="white"
             fontFamily="monospace"
             fontSize="smaller"
-            minHeight={90}
-            defaultValue={type === InputType.array ? '[]' : '{}'}
+            minHeight={14}
+            defaultValue="[]"
             {...formProps}
             isDisabled={isDisabled}
             placeholder={placeholder}
             onChange={(e) => {
+              // TODO: validate obj with zod array schema got from `parseCode`
               try {
                 JSON.parse(e.target.value);
                 formContext.setValue(name, e.target.value);
@@ -182,6 +180,69 @@ function FunctionParamInput({
             </Text>
           )}
         </VStack>
+      );
+    }
+    case InputType.object: {
+      const [error, setError] = useState<string | undefined>();
+      return (
+        <VStack align="start" w="full">
+          <Textarea
+            backgroundColor="white"
+            fontFamily="monospace"
+            fontSize="smaller"
+            minHeight={90}
+            defaultValue="{}"
+            {...formProps}
+            isDisabled={isDisabled}
+            placeholder={placeholder}
+            onChange={(e) => {
+              // TODO: validate obj with zod object schema got from `parseCode`
+              try {
+                JSON.parse(e.target.value);
+                formContext.setValue(name, e.target.value);
+                setError(undefined);
+              } catch (e: any) {
+                setError(`Error parsing value: ${e.message}`);
+              }
+            }}
+          />
+          {error && (
+            <Text color="gray.600" fontWeight="light" fontSize="sm" pl={1}>
+              {error}
+            </Text>
+          )}
+        </VStack>
+      );
+    }
+    case InputType.any: {
+      return (
+        <VStack align="start" w="full">
+          <Textarea
+            backgroundColor="white"
+            fontFamily="monospace"
+            fontSize="smaller"
+            minHeight={14}
+            {...formProps}
+            isDisabled={isDisabled}
+            placeholder=""
+            onChange={(e) => {
+              formContext.setValue(name, e.target.value);
+            }}
+          />
+        </VStack>
+      );
+    }
+    default: {
+      return (
+        <Textarea
+          backgroundColor="white"
+          fontFamily="monospace"
+          fontSize="smaller"
+          minHeight={14}
+          isDisabled={isDisabled}
+          {...formProps}
+          placeholder={placeholder}
+        />
       );
     }
   }

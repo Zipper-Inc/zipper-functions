@@ -6,6 +6,8 @@
 import { PrismaClient } from '@prisma/client';
 import { generateSlug } from 'random-word-slugs';
 import crypto from 'crypto';
+import { getAppHash, getAppVersionFromHash } from '../src/utils/hashing';
+import { build } from '../src/utils/eszip-build-applet';
 
 const prisma = new PrismaClient();
 
@@ -47,7 +49,7 @@ async function main() {
     ],
   });
 
-  await prisma.app.create({
+  const seedApp1 = await prisma.app.create({
     data: {
       slug: 'word-counter',
       description: 'Counts words in a text. This is a demo app for Zipper.',
@@ -61,7 +63,6 @@ async function main() {
               id: mainScriptId,
               name: 'main',
               filename: 'main.ts',
-              description: 'entry point for the app',
               code: `import { countWords } from './count-words.ts';
 
 export async function handler({ text }: { text: string }) {
@@ -85,9 +86,30 @@ export async function handler({ text }: { text: string }) {
         create: { script: { connect: { id: mainScriptId } } },
       },
     },
+    include: {
+      scripts: true,
+    },
   });
 
-  await prisma.app.create({
+  const hash = getAppHash(seedApp1);
+
+  await prisma.version.create({
+    data: {
+      appId: seedApp1.id,
+      hash,
+      isPublished: true,
+    },
+  });
+
+  await prisma.app.update({
+    where: { id: seedApp1.id },
+    data: {
+      playgroundVersionHash: hash,
+      publishedVersionHash: hash,
+    },
+  });
+
+  const seedApp2 = await prisma.app.create({
     data: {
       slug: 'ai-word-counter',
       description: 'Counts words using AI.',
@@ -101,7 +123,6 @@ export async function handler({ text }: { text: string }) {
               id: mainScriptId2,
               name: 'main',
               filename: 'main.ts',
-              description: 'entry point for the app',
               code: `export async function handler({ text }: { text: string }) {
   return Math.floor(Math.random() * 100);
 }`,
@@ -113,6 +134,27 @@ export async function handler({ text }: { text: string }) {
       scriptMain: {
         create: { script: { connect: { id: mainScriptId2 } } },
       },
+    },
+    include: {
+      scripts: true,
+    },
+  });
+
+  const hash2 = getAppHash(seedApp2);
+
+  await prisma.version.create({
+    data: {
+      appId: seedApp2.id,
+      hash: hash2,
+      isPublished: true,
+    },
+  });
+
+  await prisma.app.update({
+    where: { id: seedApp2.id },
+    data: {
+      playgroundVersionHash: hash2,
+      publishedVersionHash: hash2,
     },
   });
 

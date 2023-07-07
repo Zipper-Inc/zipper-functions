@@ -5,6 +5,7 @@ import {
   LogMethod,
 } from '@zipper/types';
 import { safeJSONStringify, uuid } from '@zipper/utils';
+import fetch from 'node-fetch';
 
 export type LoggerParams = {
   appId: string;

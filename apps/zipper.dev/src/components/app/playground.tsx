@@ -23,6 +23,7 @@ import { useAppEditors } from '~/hooks/use-app-editors';
 import { TabButton } from '@zipper/ui';
 import HistoryTab from './history-tab';
 import { randomUUID } from 'crypto';
+import VersionsTab from './versions-tab';
 
 const tabPanelStyles: ChakraProps = {
   flex: 1,
@@ -74,7 +75,7 @@ export function Playground({
     if (app.canUserEdit) {
       return save();
     } else {
-      return app.lastDeploymentVersion || randomUUID();
+      return app.playgroundVersionHash || app.publishedVersionHash || '';
     }
   };
 
@@ -107,32 +108,32 @@ export function Playground({
             mb={2}
             pt={3}
             color="gray.500"
-            gap={4}
+            gap={2}
             justifyContent="space-between"
             overflowX="auto"
             hidden={!app.canUserEdit}
           >
-            <HStack spacing={2}>
+            <HStack spacing={2} flex={4}>
               {/* CODE */}
               <TabButton title="Code" />
               {/* SCHEDULES */}
               <TabButton title="Schedules" />
               {/* SECRETS */}
               <TabButton title="Secrets" />
-              {/* HISTORY */}
-              <TabButton title="History" />
+              {/* RUNS */}
+              <TabButton title="Runs" />
+              {/* VERSIONS */}
+              <TabButton title="Versions" />
               {/* SETTINGS */}
               <TabButton title="Settings" />
             </HStack>
-            <HStack justifySelf="start">
-              {editorIds.length > 1 && (
-                <PlaygroundAvatars
-                  editorIds={editorIds}
-                  onlineEditorIds={onlineEditorIds}
-                  selfId={selfId}
-                />
-              )}
-            </HStack>
+            {editorIds.length > 1 && (
+              <PlaygroundAvatars
+                editorIds={editorIds}
+                onlineEditorIds={onlineEditorIds}
+                selfId={selfId}
+              />
+            )}
           </TabList>
           {/* TAB PANELS */}
           <TabPanels as={VStack} alignItems="stretch" h="full" spacing={0}>
@@ -163,9 +164,14 @@ export function Playground({
               <SecretsTab editable={app.canUserEdit} appId={id} />
             </TabPanel>
 
-            {/* HISTORY */}
+            {/* RUNS */}
             <TabPanel {...tabPanelStyles}>
               <HistoryTab appId={id} />
+            </TabPanel>
+
+            {/* VERSIONS */}
+            <TabPanel {...tabPanelStyles}>
+              <VersionsTab appId={id} slug={app.slug} />
             </TabPanel>
 
             {/* SETTINGS */}

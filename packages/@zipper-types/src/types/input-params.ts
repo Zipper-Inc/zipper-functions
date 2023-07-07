@@ -8,9 +8,9 @@ export interface InputParam {
   label?: string;
   placeholder?: string;
   description?: string;
-  defaultValue?: any;
-  value?: any;
-  details?: any;
+  defaultValue?: Zipper.Serializable;
+  value?: Zipper.Serializable;
+  details?: Zipper.Serializable;
 }
 
 export interface ParseInputResponse {
