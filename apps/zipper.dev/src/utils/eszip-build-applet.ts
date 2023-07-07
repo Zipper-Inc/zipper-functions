@@ -29,7 +29,9 @@ export async function build({
   version,
 }: {
   baseUrl?: string;
-  app: Omit<App, 'datastore' | 'categories'> & { scripts: Script[] };
+  app: Omit<App, 'datastore' | 'categories' | 'deletedAt'> & {
+    scripts: Script[];
+  };
   version: string;
 }) {
   const startMs = performance.now();
@@ -142,7 +144,9 @@ export async function buildAndStoreApplet({
   isPublished,
   userId,
 }: {
-  app: Omit<App, 'datastore' | 'categories' | 'deletedAt'> & { scripts: Script[] };
+  app: Omit<App, 'datastore' | 'categories' | 'deletedAt'> & {
+    scripts: Script[];
+  };
   isPublished?: boolean;
   userId?: string;
 }) {
