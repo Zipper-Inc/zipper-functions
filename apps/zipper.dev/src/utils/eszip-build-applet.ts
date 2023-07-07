@@ -142,7 +142,7 @@ export async function buildAndStoreApplet({
   isPublished,
   userId,
 }: {
-  app: Omit<App, 'datastore' | 'categories'> & { scripts: Script[] };
+  app: Omit<App, 'datastore' | 'categories' | 'deletedAt'> & { scripts: Script[] };
   isPublished?: boolean;
   userId?: string;
 }) {

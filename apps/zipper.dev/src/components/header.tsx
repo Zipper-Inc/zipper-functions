@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import {
   Box,
   HStack,
@@ -7,25 +7,7 @@ import {
   useBreakpointValue,
   Divider,
   Button,
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalCloseButton,
-  ModalBody,
-  ModalFooter,
   useDisclosure,
-  FormControl,
-  FormLabel,
-  ModalOverlay,
-  Textarea,
-  Spinner,
-  Avatar,
-  Menu,
-  MenuButton,
-  MenuList,
-  MenuGroup,
-  MenuItem,
-  Stack,
   Text,
   Icon,
 } from '@chakra-ui/react';
@@ -36,15 +18,13 @@ import { ZipperLogo } from '@zipper/ui';
 import OrganizationSwitcher from './auth/organizationSwitcher';
 import { MobileMenu } from './header-mobile-menu';
 import { ZipperSymbol } from '@zipper/ui';
-import SignInButton from './auth/signInButton';
 import { trpc } from '~/utils/trpc';
 import { useUser } from '~/hooks/use-user';
 import SignedIn from './auth/signed-in';
 import SignedOut from './auth/signed-out';
-import UserProfile from './auth/userProfile';
-import { HiArrowLeft, HiLogout, HiOutlineCog } from 'react-icons/hi';
-import { signOut } from 'next-auth/react';
-import { HiChevronLeft } from 'react-icons/hi2';
+import { HiHome } from 'react-icons/hi2';
+import { UserProfileButton } from './auth/user-profile-button';
+import { FeedbackModal } from './auth/feedback-modal';
 
 type HeaderProps = {
   showNav?: boolean;
@@ -71,12 +51,6 @@ const Header: React.FC<HeaderProps> = ({
   const { user, isLoaded } = useUser();
 
   const feedbackModal = useDisclosure();
-  const userSettingsModal = useDisclosure();
-
-  const [feedback, setFeedback] = useState('');
-  const [submittingFeedback, setSubmittingFeedback] = useState(false);
-
-  const feedbackMutation = trpc.useMutation('user.submitFeedback');
 
   useEffect(() => {
     if (reload) {
@@ -106,7 +80,7 @@ const Header: React.FC<HeaderProps> = ({
                     <HStack spacing={5}>
                       <ZipperLogo style={{ maxHeight: '20px' }} />
                       <HStack spacing={1}>
-                        <Icon as={HiChevronLeft} />
+                        <Icon as={HiHome} />
                         <Text fontSize="sm">Dashboard</Text>
                       </HStack>
                     </HStack>
@@ -185,96 +159,10 @@ const Header: React.FC<HeaderProps> = ({
                   >
                     Feedback
                   </Button>
-
-                  <Modal
-                    isOpen={feedbackModal.isOpen}
-                    onClose={() => {
-                      setSubmittingFeedback(false);
-                      feedbackModal.onClose();
-                    }}
-                    size="xl"
-                  >
-                    <ModalOverlay />
-                    <ModalContent>
-                      <ModalHeader>What's going on?</ModalHeader>
-                      <ModalCloseButton />
-                      <ModalBody>
-                        <FormControl>
-                          <FormLabel>Share your feedback</FormLabel>
-                          <Textarea
-                            onChange={(e) => setFeedback(e.target.value)}
-                          />
-                        </FormControl>
-                      </ModalBody>
-                      <ModalFooter>
-                        <Button
-                          colorScheme="purple"
-                          isDisabled={submittingFeedback}
-                          onClick={async () => {
-                            setSubmittingFeedback(true);
-                            await feedbackMutation.mutateAsync({
-                              feedback,
-                              url: window.location.href,
-                            });
-                            setSubmittingFeedback(false);
-                            feedbackModal.onClose();
-                          }}
-                        >
-                          {submittingFeedback ? <Spinner /> : 'Submit'}
-                        </Button>
-                      </ModalFooter>
-                    </ModalContent>
-                  </Modal>
-
-                  <Modal
-                    isOpen={userSettingsModal.isOpen}
-                    onClose={() => {
-                      userSettingsModal.onClose();
-                    }}
-                    size="xl"
-                  >
-                    <ModalOverlay />
-                    <ModalContent>
-                      <ModalHeader>User Settings</ModalHeader>
-                      <ModalCloseButton />
-                      <Stack p={8}>
-                        <UserProfile />
-                      </Stack>
-                    </ModalContent>
-                  </Modal>
+                  <FeedbackModal {...feedbackModal} />
                 </>
               )}
-              <SignedIn>
-                <Menu>
-                  <MenuButton>
-                    <Avatar
-                      name={user?.name || ''}
-                      referrerPolicy="no-referrer"
-                      src={user?.image || ''}
-                      size="sm"
-                    />
-                  </MenuButton>
-                  <MenuList>
-                    <MenuGroup title="Profile">
-                      <MenuItem onClick={userSettingsModal.onOpen}>
-                        <Stack gap={1} direction="row" alignItems="center">
-                          <HiOutlineCog />
-                          <Text>Manage account</Text>
-                        </Stack>
-                      </MenuItem>
-                      <MenuItem onClick={() => signOut()}>
-                        <Stack gap={1} direction="row" alignItems="center">
-                          <HiLogout />
-                          <Text>Sign out</Text>
-                        </Stack>
-                      </MenuItem>
-                    </MenuGroup>
-                  </MenuList>
-                </Menu>
-              </SignedIn>
-              <SignedOut>
-                <SignInButton />
-              </SignedOut>
+              <UserProfileButton />
             </HStack>
             {!isTablet && <MobileMenu navRoutes={navRoutes} />}
           </Flex>
