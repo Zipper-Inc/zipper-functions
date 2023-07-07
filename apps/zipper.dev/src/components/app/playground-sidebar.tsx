@@ -141,7 +141,7 @@ export function PlaygroundSidebar({
         mr={2}
       >
         <HStack px={3}>
-          <Text size="sm" flexGrow={1}>
+          <Text size="sm" flexGrow={1} fontWeight="medium">
             Files
           </Text>
           {app.canUserEdit && (
