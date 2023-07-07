@@ -5,12 +5,55 @@ import {
   Switch,
   Input,
   Box,
+  useColorModeValue,
 } from '@chakra-ui/react';
 import { LogMessage } from '@zipper/types';
-import { useCmdOrCtrl } from '@zipper/ui';
+import { baseColors, foregroundColors, useCmdOrCtrl } from '@zipper/ui';
 import { Console } from '@nicksrandall/console-feed';
 import { useEffect, useState } from 'react';
 import { useEditorContext } from '../context/editor-context';
+import { PRETTY_LOG_TOKENS } from '~/utils/pretty-log';
+
+const prettyLogColors: Record<string, Record<'default' | '_dark', string>> = {
+  blue: {
+    default: baseColors.blue[600],
+    _dark: baseColors.blue[300],
+  },
+  purple: {
+    default: baseColors.purple[600],
+    _dark: baseColors.purple[200],
+  },
+  purpleAlt: {
+    default: baseColors.purple[900],
+    _dark: baseColors.purple[300],
+  },
+  'fg.50': {
+    default: baseColors.gray[50],
+    _dark: baseColors.gray[700],
+  },
+  'fg.600': {
+    default: baseColors.gray[600],
+    _dark: baseColors.gray[100],
+  },
+  fgText: {
+    default: baseColors.gray[800],
+    _dark: baseColors.gray[25],
+  },
+  bgColor: {
+    default: 'white',
+    _dark: baseColors.gray[800],
+  },
+};
+
+const applyPrettyColors = (mode: 'default' | '_dark') => (msg: string) =>
+  Object.keys(PRETTY_LOG_TOKENS).reduce(
+    (logMessage, colorKey) =>
+      logMessage.replace(
+        PRETTY_LOG_TOKENS[colorKey]!,
+        prettyLogColors[colorKey]?.[mode] || PRETTY_LOG_TOKENS[colorKey]!,
+      ),
+    msg,
+  );
 
 export function AppConsole({ logs }: { logs: LogMessage[] }) {
   const [logCounter, setLogCounter] = useState(0);
@@ -37,6 +80,8 @@ export function AppConsole({ logs }: { logs: LogMessage[] }) {
   const filteredLogs = revealedLogs.filter((log) =>
     JSON.stringify(log.data).toLowerCase().includes(logFilter.toLowerCase()),
   );
+
+  const colorMode = useColorModeValue('default', '_dark');
 
   return (
     <Box id="app-console">
@@ -95,7 +140,14 @@ export function AppConsole({ logs }: { logs: LogMessage[] }) {
         <Console
           logs={
             filteredLogs.length
-              ? filteredLogs.map(({ timestamp: _ignore, ...log }) => log)
+              ? filteredLogs.map(({ timestamp: _ignore, ...log }) => ({
+                  ...log,
+                  data: log.data.map((datum) => {
+                    if (typeof datum === 'string')
+                      return applyPrettyColors(colorMode)(datum);
+                    return datum;
+                  }),
+                }))
               : [
                   {
                     id: 'PLACEHOLDER',

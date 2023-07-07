@@ -225,10 +225,21 @@ export const theme = extendTheme({
           borderTop: 'none',
         },
         '[data-method]': {
+          color: semanticTokens.colors.fgText.default,
           paddingY: '4px',
         },
         '[data-method]:last-of-type': {
           borderBottom: 'none',
+        },
+        '[role="tree"]': {
+          li: { paddingLeft: '8px', paddingRight: '8px' },
+        },
+      },
+      '[data-theme="dark"]': {
+        '#app-console': {
+          '[data-method]': {
+            color: semanticTokens.colors.fgText._dark,
+          },
         },
       },
     },

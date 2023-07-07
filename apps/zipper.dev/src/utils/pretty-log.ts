@@ -1,27 +1,38 @@
-import { baseColors, brandColors } from '@zipper/ui';
-
 type StyleObject = Record<string, string | number>;
-const getStringFromObject = (obj: StyleObject) =>
+
+const makeToken = (color: string) => `$__PRETTY_LOG_COLOR(${color})`;
+
+export const PRETTY_LOG_TOKENS: Record<string, string> = {
+  blue: makeToken('blue'),
+  purple: makeToken('purple'),
+  purpleAlt: makeToken('purpleAlt'),
+  'fg.50': makeToken('fg.50'),
+  'fg.600': makeToken('fg.600'),
+  fgText: makeToken('fgText'),
+  bgColor: makeToken('bgColor'),
+};
+
+const getStringFromStyleObject = (obj: StyleObject) =>
   Object.entries(obj)
     .map((pair) => pair.join(': '))
     .join('; ');
 
-const DEFAULT_TOPIC_STYLE = {
+const DEFAULT_BADGE_STYLE = {
   'font-weight': 800,
-  color: 'bgColor',
-  background: brandColors.brandBlue,
+  color: PRETTY_LOG_TOKENS.bgColor,
+  background: PRETTY_LOG_TOKENS.blue,
   'text-transform': 'uppercase',
 };
 
-const DEFAULT_SUBTOPIC_STYLE = {
+const DEFAULT_TOPIC_STYLE = {
   'font-weight': 500,
-  color: baseColors.gray[600],
-  background: baseColors.gray[50],
+  color: PRETTY_LOG_TOKENS['fg.600'],
+  background: PRETTY_LOG_TOKENS['fg.50'],
 };
 
-const DEFAULT_BADGE_STYLES = {
+const DEFAULT_SUBTOPIC_STYLE = {
   'font-weight': 200,
-  color: brandColors.brandDarkPurple,
+  color: PRETTY_LOG_TOKENS.purpleAlt,
   'text-transform': 'uppercase',
 };
 
@@ -32,41 +43,47 @@ export const prettyLog = (
     badge,
     msg,
   }: {
+    badge?: string;
     topic?: string;
     subtopic?: string;
-    badge?: string;
     msg?: string;
   },
   styles: {
-    topicStyle: StyleObject;
+    badgeStyle: StyleObject;
+    topicStyle?: StyleObject;
     subtopicStyle?: StyleObject;
-    badgeStyle?: StyleObject;
-  } = { topicStyle: {}, subtopicStyle: {}, badgeStyle: {} },
+  } = { badgeStyle: {}, topicStyle: {}, subtopicStyle: {} },
 ) => {
   const data: Zipper.Serializable[] = [];
-  const titleParts = [topic, subtopic, badge].filter((truthy) => !!truthy);
+  const titleParts = [badge, topic, subtopic].filter((truthy) => !!truthy);
 
   if (titleParts.length) {
     const title = titleParts.map((part) => `%c ${part}`).join(' ');
     data.push(title);
 
     // Add any styles for each part
+    if (badge)
+      data.push(
+        getStringFromStyleObject({
+          ...DEFAULT_BADGE_STYLE,
+          ...styles.badgeStyle,
+        } as StyleObject),
+      );
+
     if (topic)
       data.push(
-        getStringFromObject({ ...DEFAULT_TOPIC_STYLE, ...styles.topicStyle }),
+        getStringFromStyleObject({
+          ...DEFAULT_TOPIC_STYLE,
+          ...styles.topicStyle,
+        } as StyleObject),
       );
 
     if (subtopic)
       data.push(
-        getStringFromObject({
+        getStringFromStyleObject({
           ...DEFAULT_SUBTOPIC_STYLE,
           ...styles.subtopicStyle,
-        }),
-      );
-
-    if (badge)
-      data.push(
-        getStringFromObject({ ...DEFAULT_BADGE_STYLES, ...styles.badgeStyle }),
+        } as StyleObject),
       );
   }
 

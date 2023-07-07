@@ -578,9 +578,9 @@ const EditorContextProvider = ({
     addLog(
       'info',
       prettyLog({
-        topic: 'Save',
-        subtopic: `${appSlug}@${version}`,
-        badge: 'Pending',
+        badge: 'Save',
+        topic: `${appSlug}@${version}`,
+        subtopic: 'Pending',
       }),
     );
 
@@ -634,9 +634,9 @@ const EditorContextProvider = ({
       addLog(
         'info',
         prettyLog({
-          topic: 'Save',
-          subtopic: `${appSlug}@${newVersion}`,
-          badge: 'Done',
+          badge: 'Save',
+          topic: `${appSlug}@${newVersion}`,
+          subtopic: 'Done',
           msg:
             newVersion !== version
               ? 'You saved a new version.'
@@ -650,9 +650,9 @@ const EditorContextProvider = ({
       addLog(
         'error',
         prettyLog({
-          topic: 'SAVE',
-          subtopic: `${appSlug}@${version}`,
-          badge: 'ERROR',
+          badge: 'SAVE',
+          topic: `${appSlug}@${version}`,
+          subtopic: 'ERROR',
           msg: e.toString(),
         }),
       );
