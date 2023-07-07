@@ -7,6 +7,7 @@ import {
   VStack,
   Box,
   Flex,
+  useColorModeValue,
 } from '@chakra-ui/react';
 import Editor from '@monaco-editor/react';
 import { GetServerSideProps } from 'next';
@@ -35,6 +36,11 @@ const AppPage: NextPageWithLayout = () => {
     'app.byResourceOwnerAndAppSlugs',
     { resourceOwnerSlug, appSlug },
   ]);
+
+  const bgGradient = useColorModeValue(
+    'linear-gradient(326.37deg, rgba(62, 28, 150, 0.5) 8.28%, rgba(62, 28, 150, 0) 100.06%), #89279B',
+    'linear-gradient(326.37deg, rgba(86, 60, 150, 0.5) 8.28%, rgba(86, 60, 150, 0) 100.06%), #E5BEEB',
+  );
 
   if (appQuery.error) {
     return (
@@ -174,7 +180,7 @@ const AppPage: NextPageWithLayout = () => {
           >
             <VStack
               flex={1}
-              background="linear-gradient(326.37deg, #3E1C96 8.28%, rgba(62, 28, 150, 0) 100.06%), #89279B;"
+              background={bgGradient}
               borderTopLeftRadius={12}
               padding={6}
               spacing={6}
