@@ -99,8 +99,6 @@ const columns = [
               <Tooltip
                 placement="top"
                 label={isPrivate ? 'Private code' : 'Public code'}
-                textColor="fg.100"
-                backgroundColor="purple.500"
               >
                 <span>
                   {isPrivate ? (

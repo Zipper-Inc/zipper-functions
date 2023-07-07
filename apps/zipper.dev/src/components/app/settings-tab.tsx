@@ -433,11 +433,7 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
                       isDisabled={true}
                       value={showAppAccessToken}
                     ></Input>
-                    <Tooltip
-                      label="Copy"
-                      bgColor="purple.500"
-                      textColor="fg.100"
-                    >
+                    <Tooltip label="Copy">
                       <IconButton
                         aria-label="copy"
                         colorScheme="purple"
