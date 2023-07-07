@@ -79,10 +79,12 @@ const Header: React.FC<HeaderProps> = ({
                   ) : (
                     <HStack spacing={5}>
                       <ZipperLogo style={{ maxHeight: '20px' }} />
-                      <HStack spacing={1}>
-                        <Icon as={HiHome} />
-                        <Text fontSize="sm">Dashboard</Text>
-                      </HStack>
+                      {showNav && (
+                        <HStack spacing={1}>
+                          <Icon as={HiHome} />
+                          <Text fontSize="sm">Dashboard</Text>
+                        </HStack>
+                      )}
                     </HStack>
                   )}
                 </SignedIn>
