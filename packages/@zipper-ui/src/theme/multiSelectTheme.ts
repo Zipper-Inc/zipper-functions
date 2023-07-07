@@ -19,7 +19,7 @@ const parts = [
 
 function baseStyleList(props: Record<string, any>) {
   return {
-    bg: mode(`#fff`, `fg700`)(props),
+    bg: mode(`#fff`, `gray.700`)(props),
     boxShadow: mode(`sm`, `dark-lg`)(props),
     color: 'inherit',
     w: 'full',
@@ -57,17 +57,17 @@ function baseStyleItem(props: Record<string, any>) {
     cursor: 'pointer',
     transition: 'background 50ms ease-out',
     _focus: {
-      bg: mode(`fg50`, `whiteAlpha.100`)(props),
+      bg: mode(`gray.50`, `whiteAlpha.100`)(props),
       boxShadow: 'outline',
     },
     _active: {
-      bg: mode(`fg50`, `whiteAlpha.100`)(props),
+      bg: mode(`gray.50`, `whiteAlpha.100`)(props),
     },
     _expanded: {
-      bg: mode(`fg50`, `whiteAlpha.100`)(props),
+      bg: mode(`gray.50`, `whiteAlpha.100`)(props),
     },
     _selected: {
-      bg: mode(`fg100`, `whiteAlpha.300`)(props),
+      bg: mode(`gray.100`, `whiteAlpha.300`)(props),
     },
     _disabled: {
       opacity: 0.4,
@@ -88,14 +88,14 @@ function baseStyleButton(props: Record<string, any>) {
   return {
     variant: 'ghost',
     _hover: {
-      bg: mode(`fg200`, `whiteAlpha.300`)(props),
+      bg: mode(`gray.200`, `whiteAlpha.300`)(props),
     },
     _focus: {
-      bg: mode(`fg200`, `whiteAlpha.300`)(props),
+      bg: mode(`gray.200`, `whiteAlpha.300`)(props),
       boxShadow: 'outline',
     },
     _active: {
-      bg: mode(`fg100`, `whiteAlpha.100`)(props),
+      bg: mode(`gray.100`, `whiteAlpha.100`)(props),
     },
     colorscheme: props.colorscheme,
   };
