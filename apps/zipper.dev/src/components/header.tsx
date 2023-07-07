@@ -105,15 +105,21 @@ const Header: React.FC<HeaderProps> = ({
         justifyContent="center"
       >
         <HStack spacing={3} alignItems="start" alignContent={'center'}>
-          <Box my={3} height={4}>
+          <Box my={3} height={4} color="fgText">
             {isLoaded && (
               <NextLink href="/">
                 <SignedIn>
                   {showNav && showOrgSwitcher ? (
-                    <ZipperSymbol style={{ maxHeight: '100%' }} />
+                    <ZipperSymbol
+                      fill="currentColor"
+                      style={{ maxHeight: '100%' }}
+                    />
                   ) : (
                     <HStack spacing={5}>
-                      <ZipperLogo style={{ maxHeight: '20px' }} />
+                      <ZipperLogo
+                        fill="currentColor"
+                        style={{ maxHeight: '20px' }}
+                      />
                       <HStack spacing={1}>
                         <Icon as={HiChevronLeft} />
                         <Text fontSize="sm">Dashboard</Text>
