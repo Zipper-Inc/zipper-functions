@@ -111,9 +111,16 @@ const columns = [
                 </span>
               </Tooltip>
             </HStack>
-            <Text color="gray.500" fontSize="sm">
-              {description}
-            </Text>
+            <Tooltip label={description} openDelay={800}>
+              <Text
+                color="gray.500"
+                fontSize="sm"
+                noOfLines={1}
+                whiteSpace="pre-line"
+              >
+                {description}
+              </Text>
+            </Tooltip>
           </VStack>
         </HStack>
       );
