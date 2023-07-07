@@ -11,7 +11,6 @@ import { requiredUserAuthConnectorFilter } from '~/utils/user-auth-connector-fil
 import { getInputsFromFormData, safeJSONParse, uuid } from '@zipper/utils';
 import { getLogger } from '~/utils/app-console';
 import { prettyLog, PRETTY_LOG_TOKENS } from '~/utils/pretty-log';
-import { brandColors } from '@zipper/ui';
 
 type UserAuthConnector = {
   type: ConnectorType;
