@@ -128,7 +128,10 @@ const Header: React.FC<HeaderProps> = ({
                   )}
                 </SignedIn>
                 <SignedOut>
-                  <ZipperLogo style={{ maxHeight: '100%' }} />
+                  <ZipperLogo
+                    fill="currentColor"
+                    style={{ maxHeight: '100%' }}
+                  />
                 </SignedOut>
               </NextLink>
             )}

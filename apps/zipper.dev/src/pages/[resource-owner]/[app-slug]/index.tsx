@@ -20,6 +20,7 @@ import { NextPageWithLayout } from '~/pages/_app';
 import { getValidSubdomain } from '~/utils/subdomains';
 import { trpc } from '~/utils/trpc';
 import NextLink from 'next/link';
+import { baseColors } from '@zipper/ui';
 
 const APPROXIMATE_HEADER_HEIGHT_PX = '116px';
 const CODE_PREVIEW_HEIGHT = `calc(100vh - ${APPROXIMATE_HEADER_HEIGHT_PX})`;
@@ -41,6 +42,8 @@ const AppPage: NextPageWithLayout = () => {
     'linear-gradient(326.37deg, rgba(62, 28, 150, 0.5) 8.28%, rgba(62, 28, 150, 0) 100.06%), #89279B',
     'linear-gradient(326.37deg, rgba(86, 60, 150, 0.5) 8.28%, rgba(86, 60, 150, 0) 100.06%), #E5BEEB',
   );
+
+  const theme = useColorModeValue('vs', 'vs-dark');
 
   if (appQuery.error) {
     return (
@@ -193,11 +196,21 @@ const AppPage: NextPageWithLayout = () => {
                 <Editor
                   defaultLanguage="typescript"
                   defaultValue={data.scriptMain?.script.code}
-                  theme="vs-light"
+                  theme={theme}
                   options={{
                     minimap: { enabled: false },
                     automaticLayout: true,
                     readOnly: true,
+                  }}
+                  onMount={(_, monaco) => {
+                    monaco.editor.defineTheme('vs-dark', {
+                      base: 'vs',
+                      inherit: true,
+                      rules: [],
+                      colors: {
+                        'editor.background': baseColors.gray[800],
+                      },
+                    });
                   }}
                   width="99%"
                 />
