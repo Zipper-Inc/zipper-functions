@@ -19,17 +19,8 @@ import {
   ModalOverlay,
   Textarea,
   Spinner,
-  Avatar,
-  Menu,
-  MenuButton,
-  MenuList,
-  MenuGroup,
-  MenuItem,
-  Stack,
   Text,
   Icon,
-  useColorMode,
-  MenuDivider,
 } from '@chakra-ui/react';
 import { useRouter } from 'next/router';
 import NextLink from 'next/link';
@@ -43,15 +34,8 @@ import { trpc } from '~/utils/trpc';
 import { useUser } from '~/hooks/use-user';
 import SignedIn from './auth/signed-in';
 import SignedOut from './auth/signed-out';
-import UserProfile from './auth/userProfile';
-import {
-  HiLogout,
-  HiOutlineCog,
-  HiOutlineMoon,
-  HiOutlineSun,
-} from 'react-icons/hi';
-import { signOut } from 'next-auth/react';
 import { HiChevronLeft } from 'react-icons/hi2';
+import { UserAvatarMenu } from './user-avatar-menu';
 
 type HeaderProps = {
   showNav?: boolean;
@@ -77,10 +61,7 @@ const Header: React.FC<HeaderProps> = ({
   const { reload } = router.query;
   const { user, isLoaded } = useUser();
 
-  const { colorMode, toggleColorMode } = useColorMode();
-
   const feedbackModal = useDisclosure();
-  const userSettingsModal = useDisclosure();
 
   const [feedback, setFeedback] = useState('');
   const [submittingFeedback, setSubmittingFeedback] = useState(false);
@@ -243,71 +224,10 @@ const Header: React.FC<HeaderProps> = ({
                       </ModalFooter>
                     </ModalContent>
                   </Modal>
-
-                  <Modal
-                    isOpen={userSettingsModal.isOpen}
-                    onClose={() => {
-                      userSettingsModal.onClose();
-                    }}
-                    size="xl"
-                  >
-                    <ModalOverlay />
-                    <ModalContent>
-                      <ModalHeader>User Settings</ModalHeader>
-                      <ModalCloseButton />
-                      <Stack p={8}>
-                        <UserProfile />
-                      </Stack>
-                    </ModalContent>
-                  </Modal>
                 </>
               )}
               <SignedIn>
-                <Menu>
-                  <MenuButton>
-                    <Avatar
-                      name={user?.name || ''}
-                      referrerPolicy="no-referrer"
-                      src={user?.image || ''}
-                      size="sm"
-                    />
-                  </MenuButton>
-                  <MenuList>
-                    <MenuGroup title="Profile">
-                      <MenuItem onClick={userSettingsModal.onOpen}>
-                        <Stack gap={1} direction="row" alignItems="center">
-                          <HiOutlineCog />
-                          <Text>Manage account</Text>
-                        </Stack>
-                      </MenuItem>
-                    </MenuGroup>
-                    <MenuDivider />
-                    <MenuGroup title="Settings">
-                      <MenuItem onClick={toggleColorMode}>
-                        <Stack gap={1} direction="row" alignItems="center">
-                          {colorMode === 'dark' ? (
-                            <HiOutlineSun />
-                          ) : (
-                            <HiOutlineMoon />
-                          )}
-                          <Text>
-                            Switch to {colorMode === 'dark' ? 'light' : 'dark'}{' '}
-                            mode
-                          </Text>
-                        </Stack>
-                      </MenuItem>
-                    </MenuGroup>
-                    <MenuDivider />
-                    <MenuGroup>
-                      <MenuItem onClick={() => signOut()}>
-                        <Stack gap={1} direction="row" alignItems="center">
-                          <HiLogout />
-                          <Text>Sign out</Text>
-                        </Stack>
-                      </MenuItem>
-                    </MenuGroup>
-                  </MenuList>
-                </Menu>
+                <UserAvatarMenu />
               </SignedIn>
               <SignedOut>
                 <SignInButton />

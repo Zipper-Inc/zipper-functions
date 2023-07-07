@@ -61,7 +61,7 @@ import SignedOut from '../auth/signed-out';
 import { signIn } from 'next-auth/react';
 import { PlaygroundPublishInfo } from './playground-publish-button';
 import { getAppLink } from '@zipper/utils';
-import { Avatar, AvatarForCurrentUser } from '../avatar';
+import { UserAvatarMenu } from '../user-avatar-menu';
 
 const getDefaultCreateAppFormValues = () => ({
   name: generateDefaultSlug(),
@@ -285,7 +285,7 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
         <SignedIn>
           <PlaygroundPublishInfo app={app} />
           <Spacer />
-          <AvatarForCurrentUser size="sm" />
+          <UserAvatarMenu />
         </SignedIn>
 
         {!user && (
