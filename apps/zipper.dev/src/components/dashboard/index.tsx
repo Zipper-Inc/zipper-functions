@@ -99,7 +99,7 @@ const columns = [
               <Tooltip
                 placement="top"
                 label={isPrivate ? 'Private code' : 'Public code'}
-                textColor="fg100"
+                textColor="fg.100"
                 backgroundColor="purple.500"
               >
                 <span>
@@ -111,7 +111,7 @@ const columns = [
                 </span>
               </Tooltip>
             </HStack>
-            <Text color="fg500" fontSize="sm">
+            <Text color="fg.500" fontSize="sm">
               {description}
             </Text>
           </VStack>
@@ -248,12 +248,12 @@ export function Dashboard() {
         >
           <TabList
             borderBottom="1px solid"
-            borderColor={'fg100'}
+            borderColor={'fg.100'}
             p={1}
             pb={4}
             mb={2}
             pt={3}
-            color="fg500"
+            color="fg.500"
             gap={4}
             justifyContent="space-between"
             overflowX="auto"
@@ -278,7 +278,7 @@ export function Dashboard() {
                       Applets
                     </Heading>
                   </HStack>
-                  <Text color="fg600" mb="4">
+                  <Text color="fg.600" mb="4">
                     {organization
                       ? 'Applets that you and other organization members have created within this workspace.'
                       : "Applets that you've created or that have been shared with you outside an organization workspace."}

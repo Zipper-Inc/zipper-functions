@@ -32,7 +32,7 @@ export const EditSecret: React.FC<EditSecretProps> = (props) => {
     const { index, register, remove } = props;
     return (
       <HStack>
-        <Box color="fg400">
+        <Box color="fg.400">
           <HiOutlineLockClosed />
         </Box>
         <Input placeholder="Key" {...register(`secrets.${index}.key`, {})} />
@@ -59,7 +59,7 @@ export const EditSecret: React.FC<EditSecretProps> = (props) => {
 
   return (
     <HStack>
-      <Box color="fg400">
+      <Box color="fg.400">
         <HiOutlineLockClosed />
       </Box>
       <Input placeholder="Key" disabled value={existingSecret.key} />

@@ -138,7 +138,7 @@ const SchedulesTab: React.FC<SchedulesTabProps> = ({ appId }) => {
                 <Th {...tableHeaderStyles} w={0} pr={0}></Th>
               </Tr>
             </Thead>
-            <Tbody color="fg900" fontSize="sm">
+            <Tbody color="fg.900" fontSize="sm">
               {(existingSchedules.data?.length ?? 0) > 0 ? (
                 existingSchedules.data?.map((s) => {
                   const lastRunAt = new Intl.DateTimeFormat('en-GB', {
@@ -160,7 +160,7 @@ const SchedulesTab: React.FC<SchedulesTabProps> = ({ appId }) => {
                       <Td {...tableDataStyles}>
                         {s.appRuns.length > 0 ? (
                           <HStack>
-                            <Text color="fg600" fontSize="xs">
+                            <Text color="fg.600" fontSize="xs">
                               {lastRunAt}
                             </Text>
                             <Badge
@@ -172,7 +172,7 @@ const SchedulesTab: React.FC<SchedulesTabProps> = ({ appId }) => {
                             </Badge>
                           </HStack>
                         ) : (
-                          <Text color="fg600" fontSize="xs">
+                          <Text color="fg.600" fontSize="xs">
                             Not run yet
                           </Text>
                         )}
@@ -183,7 +183,7 @@ const SchedulesTab: React.FC<SchedulesTabProps> = ({ appId }) => {
                             size="xs"
                             aria-label="delete"
                             variant="ghost"
-                            color="fg500"
+                            color="fg.500"
                             _hover={{ color: 'red.600', bgColor: 'red.100' }}
                             onClick={() => {
                               if (s.id) {

@@ -246,7 +246,7 @@ function SlackConnectorForm({ appId }: { appId: string }) {
 
           <Collapse in={isOwnClientIdRequired} animateOpacity>
             <FormControl>
-              <FormLabel color={'fg500'}>Client ID</FormLabel>
+              <FormLabel color={'fg.500'}>Client ID</FormLabel>
               <Input
                 autoComplete="new-password"
                 value={clientId}
@@ -255,12 +255,12 @@ function SlackConnectorForm({ appId }: { appId: string }) {
             </FormControl>
 
             <FormControl pt="2">
-              <FormLabel color={'fg500'}>
+              <FormLabel color={'fg.500'}>
                 Client Secret
                 <Text
                   as="span"
                   fontFamily="mono"
-                  color="fg400"
+                  color="fg.400"
                   fontSize="sm"
                   ml="2"
                 >
@@ -306,7 +306,7 @@ function SlackConnectorForm({ appId }: { appId: string }) {
                 {existingInstallation ? (
                   <>
                     <Card w="full">
-                      <CardBody color="fg600">
+                      <CardBody color="fg.600">
                         <VStack align="stretch">
                           <Heading size="sm">Configuration</Heading>
                           <HStack w="full" pt="2" spacing="1">
@@ -317,7 +317,7 @@ function SlackConnectorForm({ appId }: { appId: string }) {
                                   cursor="context-menu"
                                   textDecor="underline"
                                   textDecorationStyle="dotted"
-                                  color={'fg900'}
+                                  color={'fg.900'}
                                 >
                                   {
                                     (connector.data?.metadata as any)['team'][
@@ -451,7 +451,7 @@ function SlackConnectorForm({ appId }: { appId: string }) {
                   </>
                 ) : (
                   <Card w="full">
-                    <CardBody color="fg600">
+                    <CardBody color="fg.600">
                       <VStack align="start" w="full" overflow="visible">
                         <Heading size="sm">Configuration</Heading>
                         <FormControl>
@@ -564,7 +564,7 @@ function SlackConnectorForm({ appId }: { appId: string }) {
               </VStack>
             )}
           </VStack>
-          <Text mt="10" color="fg600">
+          <Text mt="10" color="fg.600">
             Connector code:
           </Text>
         </>

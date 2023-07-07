@@ -40,13 +40,19 @@ export function AppConsole({ logs }: { logs: LogMessage[] }) {
 
   return (
     <Box id="app-console">
-      <Box position="sticky" top="0" pt={4} zIndex="docked" background="bgColor">
+      <Box
+        position="sticky"
+        top="0"
+        pt={4}
+        zIndex="docked"
+        background="bgColor"
+      >
         <Flex
           padding={4}
           width="100%"
           border="solid 1px"
-          backgroundColor="fg100"
-          borderColor="fg200"
+          backgroundColor="fg.100"
+          borderColor="fg.200"
           borderTopRadius="md"
         >
           <FormControl display="flex" alignItems="center" height={6}>
@@ -79,8 +85,8 @@ export function AppConsole({ logs }: { logs: LogMessage[] }) {
         </Flex>
       </Box>
       <Box
-        color="fg200"
-        borderColor="fg200"
+        color="fg.200"
+        borderColor="fg.200"
         borderBottomRadius="md"
         px={2}
         border="solid 1px"

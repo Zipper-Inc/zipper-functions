@@ -25,7 +25,7 @@ export default function UserInputs({
     <VStack
       p={6}
       alignItems="stretch"
-      bgColor="fg50"
+      bgColor="fg.50"
       rounded="2xl"
       spacing="2.5"
     >

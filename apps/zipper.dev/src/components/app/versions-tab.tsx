@@ -136,7 +136,9 @@ const VersionsTab: React.FC<VersionsTabProps> = ({ appId, slug }) => {
               {version.user?.image && (
                 <Avatar src={version.user?.image} size="xs" />
               )}
-              <Text color={version.user ? 'fg600' : 'fg400'}>{getValue()}</Text>
+              <Text color={version.user ? 'fg.600' : 'fg.400'}>
+                {getValue()}
+              </Text>
               ;
             </HStack>
           );
@@ -303,7 +305,7 @@ const VersionsTab: React.FC<VersionsTabProps> = ({ appId, slug }) => {
               </Tr>
             ))}
           </Thead>
-          <Tbody color="fg600" fontSize="sm">
+          <Tbody color="fg.600" fontSize="sm">
             {versions.data && versions.data.length > 0 ? (
               rows.map((row, i) => {
                 return (

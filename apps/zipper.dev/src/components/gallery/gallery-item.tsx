@@ -42,7 +42,7 @@ export const GalleryItem: React.FC<GalleryItemProps> = ({ app }) => {
               <Heading as="h2" size="md" fontWeight="semibold">
                 {nameOrSlug}
               </Heading>
-              <Heading as="h3" size="sm" color="fg800" fontWeight="normal">
+              <Heading as="h3" size="sm" color="fg.800" fontWeight="normal">
                 {app.resourceOwner.slug}
               </Heading>
               <VStack alignItems="stretch" pt="2">
@@ -52,7 +52,7 @@ export const GalleryItem: React.FC<GalleryItemProps> = ({ app }) => {
                       colorScheme="blackAlpha"
                       rounded="xl"
                       paddingX={2}
-                      color="fg600"
+                      color="fg.600"
                     >
                       Private
                     </Badge>

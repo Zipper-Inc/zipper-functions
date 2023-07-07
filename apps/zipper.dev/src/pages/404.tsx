@@ -19,7 +19,7 @@ const NotFound: NextPageWithLayout = () => {
         >
           Whoop there it isn't.
         </Heading>
-        <Text color={'fg500'} maxW={'3xl'}>
+        <Text color={'fg.500'} maxW={'3xl'}>
           Looks like the page you're looking for doesn't exist or isn't
           accessible to you.
         </Text>

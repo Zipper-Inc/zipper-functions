@@ -45,7 +45,7 @@ export default function Collection(props: Props) {
     <Stack
       width="100%"
       border="1px solid"
-      borderColor="fg200"
+      borderColor="fg.200"
       p="2"
       borderRadius="md"
     >
@@ -220,7 +220,7 @@ function CardCollection(props: Props) {
         return (
           <Card
             key={index}
-            bgColor="fg50"
+            bgColor="fg.50"
             borderRadius="xl"
             overflow="hidden"
             p={4}

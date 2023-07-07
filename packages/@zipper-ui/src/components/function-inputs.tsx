@@ -175,7 +175,7 @@ function FunctionParamInput({
             }}
           />
           {error && (
-            <Text color="fg600" fontWeight="light" fontSize="sm" pl={1}>
+            <Text color="fg.600" fontWeight="light" fontSize="sm" pl={1}>
               {error}
             </Text>
           )}
@@ -207,7 +207,7 @@ function FunctionParamInput({
             }}
           />
           {error && (
-            <Text color="fg600" fontWeight="light" fontSize="sm" pl={1}>
+            <Text color="fg.600" fontWeight="light" fontSize="sm" pl={1}>
               {error}
             </Text>
           )}
@@ -301,7 +301,7 @@ function SingleInput({
               mr={2}
               alignSelf="center"
               opacity={!isOpen ? '50%' : '100%'}
-              color={isDisabled ? 'fg400' : 'fg700'}
+              color={isDisabled ? 'fg.400' : 'fg.700'}
             >
               {label || name}
             </Heading>
@@ -323,7 +323,7 @@ function SingleInput({
             {optional && (
               <>
                 <Box mt={1}>
-                  <Badge variant="subtle" color="fg400" fontSize=".6rem">
+                  <Badge variant="subtle" color="fg.400" fontSize=".6rem">
                     {!isOpen ? 'Optional' : 'Included'}
                   </Badge>
                 </Box>
@@ -346,7 +346,7 @@ function SingleInput({
               </Flex>
 
               {description && (
-                <Text fontSize="sm" fontWeight="normal" color="fg600">
+                <Text fontSize="sm" fontWeight="normal" color="fg.600">
                   {description}
                 </Text>
               )}

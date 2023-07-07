@@ -253,7 +253,7 @@ function GitHubConnectorForm({ appId }: { appId: string }) {
 
           <Collapse in={isOwnClientIdRequired} animateOpacity>
             <FormControl>
-              <FormLabel color={'fg500'}>Client ID</FormLabel>
+              <FormLabel color={'fg.500'}>Client ID</FormLabel>
               <Input
                 autoComplete="new-password"
                 value={clientId}
@@ -262,12 +262,12 @@ function GitHubConnectorForm({ appId }: { appId: string }) {
             </FormControl>
 
             <FormControl pt="2">
-              <FormLabel color={'fg500'}>
+              <FormLabel color={'fg.500'}>
                 Client Secret{' '}
                 <Text
                   fontFamily="mono"
                   as="span"
-                  color="fg400"
+                  color="fg.400"
                   ml="2"
                   fontSize="sm"
                 >
@@ -301,7 +301,7 @@ function GitHubConnectorForm({ appId }: { appId: string }) {
                 {existingInstallation ? (
                   <>
                     <Card w="full">
-                      <CardBody color="fg600">
+                      <CardBody color="fg.600">
                         <VStack align="stretch">
                           <Heading size="sm">Configuration</Heading>
                           <HStack w="full" pt="2" spacing="1">
@@ -312,7 +312,7 @@ function GitHubConnectorForm({ appId }: { appId: string }) {
                                   cursor="context-menu"
                                   textDecor="underline"
                                   textDecorationStyle="dotted"
-                                  color={'fg900'}
+                                  color={'fg.900'}
                                 >
                                   {
                                     (
@@ -436,14 +436,14 @@ function GitHubConnectorForm({ appId }: { appId: string }) {
                   </>
                 ) : (
                   <Card w="full">
-                    <CardBody color="fg600">
+                    <CardBody color="fg.600">
                       <FormProvider {...connectorForm}>
                         <form
                           onSubmit={connectorForm.handleSubmit(saveConnector)}
                         >
                           <VStack align="start" w="full">
                             <FormControl>
-                              <FormLabel color={'fg500'}>Scopes</FormLabel>
+                              <FormLabel color={'fg.500'}>Scopes</FormLabel>
                               <MultiSelect
                                 options={scopesOptions}
                                 value={scopesValue}

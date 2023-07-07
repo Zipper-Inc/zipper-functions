@@ -168,7 +168,7 @@ function MemberList() {
                 pr={6}
                 variant="solid"
                 colorScheme="purple"
-                textColor="fg100"
+                textColor="fg.100"
                 fontSize="sm"
                 onClick={() => setShowInviteForm(true)}
               >
@@ -183,7 +183,7 @@ function MemberList() {
                 py="3"
                 fontSize="xs"
                 textTransform="uppercase"
-                color="fg600"
+                color="fg.600"
               >
                 <Tr>
                   <Td pl="2">User</Td>
@@ -202,7 +202,7 @@ function MemberList() {
                           <HStack>
                             {m.isInvite && (
                               <>
-                                <Icon as={HiEnvelope} fill="fg500" />
+                                <Icon as={HiEnvelope} fill="fg.500" />
                                 <Text>{m.email}</Text>
                               </>
                             )}
@@ -217,7 +217,7 @@ function MemberList() {
                               </Badge>
                             )}
                           </HStack>
-                          <Text color="fg500" fontSize="sm">
+                          <Text color="fg.500" fontSize="sm">
                             {m.email}
                           </Text>
                         </VStack>

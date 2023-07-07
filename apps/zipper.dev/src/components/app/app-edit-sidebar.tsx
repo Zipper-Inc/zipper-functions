@@ -57,11 +57,11 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
       {isLibrary && (
         <Box
           p={4}
-          backgroundColor="fg100"
+          backgroundColor="fg.100"
           position="relative"
           rounded="md"
           border="1px"
-          borderColor="fg200"
+          borderColor="fg.200"
         >
           <Heading size="sm" mb="4">
             Library file
@@ -88,8 +88,8 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
         <TabList
           border="none"
           borderBottom="1px solid"
-          borderColor={'fg100'}
-          color="fg500"
+          borderColor={'fg.100'}
+          color="fg.500"
           gap={4}
           justifyContent="space-between"
           pb={4}

@@ -17,12 +17,12 @@ export default function Unauthorized() {
 
   return (
     <Box as="main">
-      <Flex as="header" mx={8} my={4} justifyContent="end" color="fg600">
+      <Flex as="header" mx={8} my={4} justifyContent="end" color="fg.600">
         {user && (
           <VStack
             align={'start'}
             spacing="0"
-            background={'fg100'}
+            background={'fg.100'}
             p="2"
             borderRadius={4}
           >
@@ -30,14 +30,14 @@ export default function Unauthorized() {
           </VStack>
         )}
       </Flex>
-      <Center h="lg" bg="fg100" m="20" rounded="2xl">
+      <Center h="lg" bg="fg.100" m="20" rounded="2xl">
         <VStack spacing="20" w="md">
-          <Box as={ZipperLogo} fill={'fg400'} h="2em" />
+          <Box as={ZipperLogo} fill={'fg.400'} h="2em" />
           <VStack spacing="6" w="md">
             {!user && (
               <>
                 <Text
-                  color="fg900"
+                  color="fg.900"
                   fontSize={'lg'}
                   textAlign="center"
                   fontWeight={'medium'}

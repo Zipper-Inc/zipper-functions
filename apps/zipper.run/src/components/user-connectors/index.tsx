@@ -28,7 +28,7 @@ const AuthUserConnectors: React.FC<AuthUserConnectorsProps> = ({
     <VStack
       as="ul"
       alignItems="stretch"
-      bgColor="fg50"
+      bgColor="fg.50"
       p={6}
       rounded="2xl"
       spacing="2.5"
@@ -36,7 +36,7 @@ const AuthUserConnectors: React.FC<AuthUserConnectorsProps> = ({
     >
       {unauthorizedConnectors.length > 0 && (
         <li>
-          <Text color="fg700" fontWeight="semibold" fontSize="lg">
+          <Text color="fg.700" fontWeight="semibold" fontSize="lg">
             Sign in to use {appTitle}
           </Text>
         </li>

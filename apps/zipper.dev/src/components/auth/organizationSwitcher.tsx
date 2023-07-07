@@ -73,7 +73,7 @@ export const OrganizationSwitcher: React.FC<ButtonProps> = (props) => {
           as={Button}
           backgroundColor="transparent"
           border="1px"
-          borderColor="fg100"
+          borderColor="fg.100"
           fontSize="sm"
           fontWeight="medium"
           {...props}
@@ -90,7 +90,7 @@ export const OrganizationSwitcher: React.FC<ButtonProps> = (props) => {
         <MenuList p={0} fontSize="sm" boxShadow={'xl'} minWidth="xs">
           <HStack
             borderBottom="1px"
-            borderColor="fg300"
+            borderColor="fg.300"
             px={4}
             py={6}
             w="full"
@@ -120,7 +120,7 @@ export const OrganizationSwitcher: React.FC<ButtonProps> = (props) => {
           {workspacesExcludingCurrent.length > 0 && (
             <Box
               w="full"
-              backgroundColor={'fg50'}
+              backgroundColor={'fg.50'}
               backdropFilter="blur(10px)"
               pl="4"
               pt="6"
@@ -140,7 +140,7 @@ export const OrganizationSwitcher: React.FC<ButtonProps> = (props) => {
                     setActive && setActive(org.organization.id);
                   }
                 }}
-                backgroundColor="fg50"
+                backgroundColor="fg.50"
                 px="4"
                 pt="2"
               >
@@ -170,7 +170,7 @@ export const OrganizationSwitcher: React.FC<ButtonProps> = (props) => {
                     ) : (
                       <Icon
                         as={HiSwitchHorizontal}
-                        color={'fg400'}
+                        color={'fg.400'}
                         visibility={
                           hoverOrg === org.organization.id
                             ? 'visible'
@@ -184,8 +184,8 @@ export const OrganizationSwitcher: React.FC<ButtonProps> = (props) => {
             );
           })}
           <MenuItem
-            backgroundColor="fg50"
-            color="fg600"
+            backgroundColor="fg.50"
+            color="fg.600"
             borderEndRadius={8}
             borderBottomLeftRadius={8}
             pt={4}
