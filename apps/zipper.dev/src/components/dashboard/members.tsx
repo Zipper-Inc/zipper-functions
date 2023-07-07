@@ -168,7 +168,6 @@ function MemberList() {
                 pr={6}
                 variant="solid"
                 colorScheme="purple"
-                textColor="fg.100"
                 fontSize="sm"
                 onClick={() => setShowInviteForm(true)}
               >
