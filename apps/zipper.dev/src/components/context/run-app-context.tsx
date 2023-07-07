@@ -10,8 +10,7 @@ import { useEditorContext } from './editor-context';
 import { requiredUserAuthConnectorFilter } from '~/utils/user-auth-connector-filter';
 import { getInputsFromFormData, safeJSONParse, uuid } from '@zipper/utils';
 import { getLogger } from '~/utils/app-console';
-import { prettyLog } from '~/utils/pretty-log';
-import { brandColors } from '@zipper/ui';
+import { prettyLog, PRETTY_LOG_TOKENS } from '~/utils/pretty-log';
 
 type UserAuthConnector = {
   type: ConnectorType;
@@ -226,12 +225,12 @@ export function RunAppProvider({
     addLog('info', [
       ...prettyLog(
         {
-          topic: 'Run',
-          subtopic: runId,
-          badge: 'Pending',
+          badge: 'Run',
+          topic: runId,
+          subtopic: 'Pending',
           msg: hasInputs ? 'Running with inputs' : undefined,
         },
-        { topicStyle: { background: brandColors.brandPurple } },
+        { badgeStyle: { background: PRETTY_LOG_TOKENS['purple']! } },
       ),
       ...(hasInputs ? [inputs] : []),
     ]);
@@ -251,12 +250,12 @@ export function RunAppProvider({
     addLog('info', [
       ...prettyLog(
         {
-          topic: 'Run',
-          subtopic: runId,
-          badge: 'Done',
+          badge: 'Run',
+          topic: runId,
+          subtopic: 'Done',
           msg: `Got output in ${Math.round(runElapsed)}ms`,
         },
-        { topicStyle: { background: brandColors.brandPurple } },
+        { badgeStyle: { background: PRETTY_LOG_TOKENS['purple']! } },
       ),
       safeJSONParse(result.result, undefined, result.result) || undefined,
     ]);

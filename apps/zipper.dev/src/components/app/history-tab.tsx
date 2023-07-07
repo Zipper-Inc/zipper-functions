@@ -125,7 +125,7 @@ const HistoryTab: React.FC<HistoryTabProps> = ({ appId }) => {
           return (
             <HStack>
               {user?.image && <Avatar src={user?.image} size="xs" />}
-              <Text color={user ? 'gray.600' : 'gray.400'}>{getValue()}</Text>;
+              <Text color={user ? 'fg.600' : 'fg.400'}>{getValue()}</Text>;
             </HStack>
           );
         },
@@ -274,7 +274,7 @@ const HistoryTab: React.FC<HistoryTabProps> = ({ appId }) => {
               </Tr>
             ))}
           </Thead>
-          <Tbody color="gray.600" fontSize="sm">
+          <Tbody color="fg.600" fontSize="sm">
             {appRuns.data && appRuns.data.length > 0 ? (
               rows.map((row, i) => {
                 return (

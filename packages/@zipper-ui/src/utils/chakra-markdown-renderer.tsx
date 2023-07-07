@@ -151,7 +151,7 @@ export const defaults: Components & { heading: Components['h1'] } = {
       <Heading
         {...getCoreProps(props)}
         mb={level > 3 ? 1 : 4}
-        color={`gray.${Math.min(4 + level, 9)}00`}
+        color={`fg${Math.min(4 + level, 9)}00`}
         as={`h${level}`}
         size={sizes[`${level - 1}`]}
       >

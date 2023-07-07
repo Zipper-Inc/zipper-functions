@@ -102,12 +102,12 @@ export function Playground({
         >
           <TabList
             borderBottom="1px solid"
-            borderColor={'gray.100'}
+            borderColor={'fg.100'}
             p={1}
             pb={4}
             mb={2}
             pt={3}
-            color="gray.500"
+            color="fg.500"
             gap={2}
             justifyContent="space-between"
             overflowX="auto"

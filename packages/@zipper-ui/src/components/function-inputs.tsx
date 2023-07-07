@@ -89,7 +89,7 @@ function FunctionParamInput({
     case InputType.string: {
       return (
         <Textarea
-          backgroundColor="white"
+          backgroundColor="bgColor"
           fontFamily="monospace"
           fontSize="smaller"
           minHeight={14}
@@ -104,7 +104,7 @@ function FunctionParamInput({
       return (
         <NumberInput width="full" isDisabled={isDisabled}>
           <NumberInputField
-            backgroundColor="white"
+            backgroundColor="bgColor"
             fontFamily="monospace"
             fontSize="smaller"
             {...formProps}
@@ -120,7 +120,7 @@ function FunctionParamInput({
     case InputType.date: {
       return (
         <Input
-          backgroundColor="white"
+          backgroundColor="bgColor"
           type="date"
           {...formProps}
           isDisabled={isDisabled}
@@ -132,7 +132,7 @@ function FunctionParamInput({
     case InputType.enum: {
       return (
         <Select
-          backgroundColor="white"
+          backgroundColor="bgColor"
           isDisabled={isDisabled}
           {...formProps}
           placeholder={placeholder}
@@ -155,7 +155,7 @@ function FunctionParamInput({
       return (
         <VStack align="start" w="full">
           <Textarea
-            backgroundColor="white"
+            backgroundColor="bgColor"
             fontFamily="monospace"
             fontSize="smaller"
             minHeight={14}
@@ -175,7 +175,7 @@ function FunctionParamInput({
             }}
           />
           {error && (
-            <Text color="gray.600" fontWeight="light" fontSize="sm" pl={1}>
+            <Text color="fg.600" fontWeight="light" fontSize="sm" pl={1}>
               {error}
             </Text>
           )}
@@ -187,7 +187,7 @@ function FunctionParamInput({
       return (
         <VStack align="start" w="full">
           <Textarea
-            backgroundColor="white"
+            backgroundColor="bgColor"
             fontFamily="monospace"
             fontSize="smaller"
             minHeight={90}
@@ -207,7 +207,7 @@ function FunctionParamInput({
             }}
           />
           {error && (
-            <Text color="gray.600" fontWeight="light" fontSize="sm" pl={1}>
+            <Text color="fg.600" fontWeight="light" fontSize="sm" pl={1}>
               {error}
             </Text>
           )}
@@ -218,7 +218,7 @@ function FunctionParamInput({
       return (
         <VStack align="start" w="full">
           <Textarea
-            backgroundColor="white"
+            backgroundColor="bgColor"
             fontFamily="monospace"
             fontSize="smaller"
             minHeight={14}
@@ -235,7 +235,7 @@ function FunctionParamInput({
     default: {
       return (
         <Textarea
-          backgroundColor="white"
+          backgroundColor="bgColor"
           fontFamily="monospace"
           fontSize="smaller"
           minHeight={14}
@@ -301,7 +301,7 @@ function SingleInput({
               mr={2}
               alignSelf="center"
               opacity={!isOpen ? '50%' : '100%'}
-              color={isDisabled ? 'gray.400' : 'gray.700'}
+              color={isDisabled ? 'fg.400' : 'fg.700'}
             >
               {label || name}
             </Heading>
@@ -323,7 +323,7 @@ function SingleInput({
             {optional && (
               <>
                 <Box mt={1}>
-                  <Badge variant="subtle" color="gray.400" fontSize=".6rem">
+                  <Badge variant="subtle" color="fg.400" fontSize=".6rem">
                     {!isOpen ? 'Optional' : 'Included'}
                   </Badge>
                 </Box>
@@ -346,7 +346,7 @@ function SingleInput({
               </Flex>
 
               {description && (
-                <Text fontSize="sm" fontWeight="normal" color="gray.600">
+                <Text fontSize="sm" fontWeight="normal" color="fg.600">
                   {description}
                 </Text>
               )}

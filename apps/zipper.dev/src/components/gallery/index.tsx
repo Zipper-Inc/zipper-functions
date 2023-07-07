@@ -104,7 +104,7 @@ export function Gallery({
     <>
       <Center>
         <VStack flex={1} maxW="container.xl" py={6} align="stretch">
-          {preheading && <Text color={'gray.500'}>{preheading}</Text>}
+          {preheading && <Text color={'fg.500'}>{preheading}</Text>}
           <HStack w="full" pb="6" spacing={4}>
             <Heading>
               {heading || resourceOwnerNameQuery.data || resourceOwner?.slug}
@@ -197,7 +197,7 @@ export function Gallery({
               'repeat(3, 1fr)',
             ]}
             gridGap={6}
-            // bgColor="gray.50"
+            // bgColor="fg.50"
             rounded={40}
           >
             {(apps || []).map((app) => {

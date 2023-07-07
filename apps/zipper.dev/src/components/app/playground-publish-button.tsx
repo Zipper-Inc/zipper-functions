@@ -134,7 +134,7 @@ export const PlaygroundPublishInfo = ({ app }: { app: AppQueryOutput }) => {
                     </Link>
                   </Text>
                   {app.publishedVersion && (
-                    <Text fontSize="xs" color="gray.500">
+                    <Text fontSize="xs" color="fg.500">
                       <>
                         Last published{' '}
                         <TimeAgo datetime={app.publishedVersion?.createdAt} />

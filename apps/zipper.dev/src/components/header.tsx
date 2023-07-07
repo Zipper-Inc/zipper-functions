@@ -75,10 +75,16 @@ const Header: React.FC<HeaderProps> = ({
               <NextLink href="/">
                 <SignedIn>
                   {showNav && showOrgSwitcher ? (
-                    <ZipperSymbol style={{ maxHeight: '100%' }} />
+                    <ZipperSymbol
+                      fill="currentColor"
+                      style={{ maxHeight: '100%' }}
+                    />
                   ) : (
                     <HStack spacing={5}>
-                      <ZipperLogo style={{ maxHeight: '20px' }} />
+                      <ZipperLogo
+                        fill="currentColor"
+                        style={{ maxHeight: '20px' }}
+                      />
                       {showNav && (
                         <HStack spacing={1}>
                           <Icon as={HiHome} />
@@ -89,7 +95,10 @@ const Header: React.FC<HeaderProps> = ({
                   )}
                 </SignedIn>
                 <SignedOut>
-                  <ZipperLogo style={{ maxHeight: '100%' }} />
+                  <ZipperLogo
+                    fill="currentColor"
+                    style={{ maxHeight: '100%' }}
+                  />
                 </SignedOut>
               </NextLink>
             )}
@@ -107,7 +116,7 @@ const Header: React.FC<HeaderProps> = ({
                       overflow="auto"
                       whiteSpace="nowrap"
                       fontWeight="medium"
-                      color="gray.600"
+                      color="textAlt"
                     />
                   </HStack>
                 </SignedIn>
@@ -127,7 +136,7 @@ const Header: React.FC<HeaderProps> = ({
                 height="100%"
                 spacing={4}
                 fontSize="lg"
-                color={user ? 'gray.600' : 'purple'}
+                color={user ? 'textAlt' : 'purple'}
                 textDecorationColor="purple"
                 textDecoration="none"
               >
@@ -156,7 +165,7 @@ const Header: React.FC<HeaderProps> = ({
                   <Button
                     size="sm"
                     variant={'outline'}
-                    color="gray.600"
+                    color="textAlt"
                     onClick={feedbackModal.onOpen}
                   >
                     Feedback

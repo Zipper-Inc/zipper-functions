@@ -13,10 +13,17 @@ import {
   ModalHeader,
   ModalOverlay,
   Link,
+  MenuDivider,
+  useColorMode,
 } from '@chakra-ui/react';
 import { signOut } from 'next-auth/react';
-import { useRouter } from 'next/router';
-import { HiOutlineCog, HiLogout, HiOutlineSpeakerphone } from 'react-icons/hi';
+import {
+  HiOutlineCog,
+  HiLogout,
+  HiOutlineSpeakerphone,
+  HiOutlineSun,
+  HiMoon,
+} from 'react-icons/hi';
 import { IoHelpBuoySharp } from 'react-icons/io5';
 import { AvatarForCurrentUser } from '../avatar';
 import { FeedbackModal } from './feedback-modal';
@@ -28,6 +35,7 @@ import UserProfile from './userProfile';
 export function UserProfileButton(props: { showAdditionalOptions?: boolean }) {
   const userSettingsModal = useDisclosure();
   const feedbackModal = useDisclosure();
+  const { colorMode, toggleColorMode } = useColorMode();
   return (
     <>
       <SignedIn>
@@ -36,17 +44,19 @@ export function UserProfileButton(props: { showAdditionalOptions?: boolean }) {
             <AvatarForCurrentUser size="sm" referrerPolicy="no-referrer" />
           </MenuButton>
           <MenuList>
-            <MenuGroup title="Profile">
+            <MenuGroup title="Settings">
               <MenuItem onClick={userSettingsModal.onOpen}>
                 <Stack gap={1} direction="row" alignItems="center">
                   <HiOutlineCog />
-                  <Text>Manage account</Text>
+                  <Text>Manage profile</Text>
                 </Stack>
               </MenuItem>
-              <MenuItem onClick={() => signOut()}>
+              <MenuItem onClick={toggleColorMode}>
                 <Stack gap={1} direction="row" alignItems="center">
-                  <HiLogout />
-                  <Text>Sign out</Text>
+                  {colorMode === 'dark' ? <HiOutlineSun /> : <HiMoon />}
+                  <Text>
+                    Switch to {colorMode === 'dark' ? 'light' : 'dark'} mode
+                  </Text>
                 </Stack>
               </MenuItem>
             </MenuGroup>
@@ -72,6 +82,15 @@ export function UserProfileButton(props: { showAdditionalOptions?: boolean }) {
                 </MenuItem>
               </MenuGroup>
             )}
+            <MenuDivider />
+            <MenuGroup>
+              <MenuItem onClick={() => signOut()}>
+                <Stack gap={1} direction="row" alignItems="center">
+                  <HiLogout />
+                  <Text>Sign out</Text>
+                </Stack>
+              </MenuItem>
+            </MenuGroup>
           </MenuList>
         </Menu>
       </SignedIn>

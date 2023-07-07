@@ -242,7 +242,7 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
               <FormLabel>Slug</FormLabel>
               <InputGroup>
                 <Input
-                  backgroundColor="white"
+                  backgroundColor="bgColor"
                   maxLength={60}
                   {...settingsForm.register('slug')}
                 />
@@ -271,7 +271,7 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
             <FormControl>
               <FormLabel>Name</FormLabel>
               <Input
-                backgroundColor="white"
+                backgroundColor="bgColor"
                 maxLength={60}
                 {...settingsForm.register('name')}
               />
@@ -280,9 +280,9 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
               </FormErrorMessage>
             </FormControl>
             <FormControl>
-              <FormLabel textColor="gray.600">Description</FormLabel>
+              <FormLabel textColor="fg.600">Description</FormLabel>
               <Textarea
-                backgroundColor="white"
+                backgroundColor="bgColor"
                 {...settingsForm.register('description')}
               />
             </FormControl>
@@ -291,7 +291,7 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
               <VStack
                 w="full"
                 border="1px solid"
-                borderColor="gray.200"
+                borderColor="fg.200"
                 rounded="md"
                 align={'stretch'}
                 spacing="0"
@@ -300,7 +300,7 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
                   w="full"
                   p="4"
                   borderBottom="1px solid"
-                  borderColor={'gray.200'}
+                  borderColor={'fg.200'}
                 >
                   <Flex flexGrow={'1'}>
                     <VStack align="start">
@@ -367,11 +367,11 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
             appAccessTokenQuery.data.length === 0 && (
               <VStack
                 border="1px solid"
-                borderColor="gray.100"
+                borderColor="fg.100"
                 borderRadius={'lg'}
-                backgroundColor="gray.50"
+                backgroundColor="fg.50"
                 py="10"
-                color={'gray.500'}
+                color={'fg.500'}
               >
                 <Center verticalAlign={'center'}>
                   You don't have any access tokens yet. Generate one to access
@@ -384,13 +384,13 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
               <VStack
                 align={'stretch'}
                 border="1px solid"
-                borderColor="gray.100"
+                borderColor="fg.100"
                 borderRadius={'lg'}
               >
                 {appAccessTokenQuery.data.map((token) => (
                   <HStack
                     borderBottom={'1px solid'}
-                    borderColor="gray.100"
+                    borderColor="fg.100"
                     _last={{ borderBottom: 'none' }}
                     p="4"
                   >
@@ -400,7 +400,7 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
                     <IconButton
                       aria-label="Delete token"
                       variant="ghost"
-                      icon={<Icon as={HiOutlineTrash} color="gray.400" />}
+                      icon={<Icon as={HiOutlineTrash} color="fg.400" />}
                       onClick={() => {
                         appAccessTokenDeleteMutation.mutateAsync(
                           { identifier: token.identifier },
@@ -479,11 +479,7 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
                       isDisabled={true}
                       value={showAppAccessToken}
                     ></Input>
-                    <Tooltip
-                      label="Copy"
-                      bgColor="purple.500"
-                      textColor="gray.100"
-                    >
+                    <Tooltip label="Copy">
                       <IconButton
                         aria-label="copy"
                         colorScheme="purple"
@@ -500,7 +496,7 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
                 <FormControl isRequired>
                   <FormLabel>Description</FormLabel>
                   <Input
-                    backgroundColor="white"
+                    backgroundColor="bgColor"
                     {...appAccessTokenForm.register('description')}
                   />
                   <FormErrorMessage>

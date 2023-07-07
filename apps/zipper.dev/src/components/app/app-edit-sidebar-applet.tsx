@@ -158,11 +158,11 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
     <>
       <Box
         p={4}
-        backgroundColor="gray.100"
+        backgroundColor="fg.100"
         position="relative"
         rounded="md"
         border="1px"
-        borderColor="gray.200"
+        borderColor="fg.200"
         w="full"
       >
         <>
@@ -195,7 +195,7 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
                       p="4"
                       borderColor="red.200"
                       borderRadius="md"
-                      backgroundColor="white"
+                      backgroundColor="bgColor"
                       boxShadow="sm"
                       alignItems="start"
                     >
@@ -214,7 +214,7 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
                       <PopoverTrigger>
                         <Button
                           colorScheme="purple"
-                          bg="white"
+                          bg="bgColor"
                           border="1px solid"
                           borderColor="purple.100"
                           _hover={{ bg: 'purple.100' }}

@@ -116,7 +116,7 @@ export default function UserProfile() {
                   onClick={() => setCurrentPage('profileImage')}
                   _hover={{
                     cursor: 'pointer',
-                    backgroundColor: 'gray.100',
+                    backgroundColor: 'fg.100',
                   }}
                   onMouseEnter={() => setIsHovered(true)}
                   onMouseLeave={() => setIsHovered(false)}
@@ -133,7 +133,7 @@ export default function UserProfile() {
                   </HStack>
                   <Box>
                     <Fade in={isHovered}>
-                      <HiArrowRight color="gray.400" />
+                      <HiArrowRight color="fg.400" />
                     </Fade>
                   </Box>
                 </Stack>
@@ -214,13 +214,13 @@ export default function UserProfile() {
                     <Text fontSize="sm" fontWeight="bold">
                       {account.provider === 'github' && (
                         <Stack direction="row" alignItems="center" gap={2}>
-                          <SiGithub size={24} color="#181717" />
+                          <SiGithub size={24} color="currentColor" />
                           <Text>GitHub</Text>
                         </Stack>
                       )}
                       {account.provider === 'google' && (
                         <Stack direction="row" alignItems="center" gap={2}>
-                          <FcGoogle size={24} />
+                          <FcGoogle size={24} color="currentColor" />
                           <Text>Google</Text>
                         </Stack>
                       )}

@@ -61,7 +61,6 @@ import SignedOut from '../auth/signed-out';
 import { signIn } from 'next-auth/react';
 import { PlaygroundPublishInfo } from './playground-publish-button';
 import { getAppLink } from '@zipper/utils';
-import { Avatar, AvatarForCurrentUser } from '../avatar';
 import { UserProfileButton } from '../auth/user-profile-button';
 
 const getDefaultCreateAppFormValues = () => ({
@@ -149,10 +148,10 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
         <Box height={4}>
           <NextLink href="/">
             <SignedIn>
-              <ZipperSymbol style={{ maxHeight: '100%' }} />
+              <ZipperSymbol fill="currentColor" style={{ maxHeight: '100%' }} />
             </SignedIn>
             <SignedOut>
-              <ZipperLogo style={{ maxHeight: '100%' }} />
+              <ZipperLogo fill="currentColor" style={{ maxHeight: '100%' }} />
             </SignedOut>
           </NextLink>
         </Box>
@@ -164,7 +163,7 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
               overflow="auto"
               whiteSpace="nowrap"
               fontWeight="medium"
-              color="gray.600"
+              color="fg.600"
             >
               {app.resourceOwner.slug}
             </Heading>
@@ -176,16 +175,16 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
             overflow="auto"
             whiteSpace="nowrap"
             fontWeight="medium"
-            color="gray.400"
+            color="fg.400"
           >
             /
           </Heading>
 
           <HStack spacing={2} alignItems="center" minW={0}>
             {app.isPrivate ? (
-              <HiLockClosed color="gray.500" />
+              <HiLockClosed color="fg.500" />
             ) : (
-              <HiLockOpen color="gray.400" />
+              <HiLockOpen color="fg.400" />
             )}
             {app.parentId && parentApp.data && (
               <Tooltip
@@ -232,7 +231,7 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
             size="sm"
             colorScheme="gray"
             variant="outline"
-            color="gray.600"
+            color="fg.600"
             display="flex"
             gap={2}
             fontWeight="medium"
@@ -254,7 +253,7 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
           <Button
             size="sm"
             colorScheme="gray"
-            color="gray.600"
+            color="fg.600"
             variant="outline"
             onClick={() => setShareModalOpen(true)}
             display="flex"
@@ -269,7 +268,7 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
           as={Link}
           size="sm"
           colorScheme="gray"
-          color="gray.600"
+          color="fg.600"
           variant="outline"
           href={`${
             process.env.NODE_ENV === 'production' ? 'https://' : 'http://'
@@ -326,7 +325,7 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
                   <Text>/</Text>
                   <InputGroup>
                     <Input
-                      backgroundColor="white"
+                      backgroundColor="bgColor"
                       maxLength={60}
                       {...forkAppForm.register('name')}
                       onChange={(e) => {

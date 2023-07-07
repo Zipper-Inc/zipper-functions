@@ -9,7 +9,7 @@ export function RawFunctionOutput({ result = '' }: RawOutputProps) {
   rawOutput = parsed ? JSON.stringify(parsed, null, 2) : result.toString();
 
   return (
-    <Code as="pre" backgroundColor="gray.100" width="full">
+    <Code as="pre" backgroundColor="fg.100" width="full">
       {rawOutput}
     </Code>
   );

@@ -81,9 +81,9 @@ const UserConnector: React.FC<UserConnectorProps> = ({
 
   return (
     <HStack justify="space-between">
-      <HStack fontSize="sm" fontWeight="normal" color="gray.900">
+      <HStack fontSize="sm" fontWeight="normal" color="fg.900">
         <Icon {...iconStyles} />
-        <Text color="gray.700">
+        <Text color="fg.700">
           <Text as="span" fontWeight="semibold">
             Signed in to {connectorName}
           </Text>{' '}

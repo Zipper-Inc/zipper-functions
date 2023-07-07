@@ -102,7 +102,7 @@ function OpenAIConnectorForm({ appId }: { appId: string }) {
                 {existingSecret.data ? (
                   <>
                     <Card w="full" gap={2}>
-                      <CardBody color="gray.600">
+                      <CardBody color="fg.600">
                         <VStack align="start">
                           <Heading size="sm">Configuration</Heading>
                           <HStack w="full" pt="2" spacing="1">
@@ -166,7 +166,7 @@ function OpenAIConnectorForm({ appId }: { appId: string }) {
                 ) : (
                   <VStack align="start" w="full">
                     <Card w="full">
-                      <CardBody color="gray.600">
+                      <CardBody color="fg.600">
                         <VStack
                           align="start"
                           w="full"
@@ -190,7 +190,7 @@ function OpenAIConnectorForm({ appId }: { appId: string }) {
                           >
                             Save & Install
                           </Button>
-                          <Text mt="10" color="gray.600">
+                          <Text mt="10" color="fg.600">
                             After saving the API key, you can use the OpenAI
                             connector in your app.
                           </Text>

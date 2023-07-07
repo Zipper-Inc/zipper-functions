@@ -5,12 +5,55 @@ import {
   Switch,
   Input,
   Box,
+  useColorModeValue,
 } from '@chakra-ui/react';
 import { LogMessage } from '@zipper/types';
-import { useCmdOrCtrl } from '@zipper/ui';
+import { baseColors, foregroundColors, useCmdOrCtrl } from '@zipper/ui';
 import { Console } from '@nicksrandall/console-feed';
 import { useEffect, useState } from 'react';
 import { useEditorContext } from '../context/editor-context';
+import { PRETTY_LOG_TOKENS } from '~/utils/pretty-log';
+
+const prettyLogColors: Record<string, Record<'default' | '_dark', string>> = {
+  blue: {
+    default: baseColors.blue[600],
+    _dark: baseColors.blue[300],
+  },
+  purple: {
+    default: baseColors.purple[600],
+    _dark: baseColors.purple[200],
+  },
+  purpleAlt: {
+    default: baseColors.purple[900],
+    _dark: baseColors.purple[300],
+  },
+  'fg.50': {
+    default: baseColors.gray[50],
+    _dark: baseColors.gray[700],
+  },
+  'fg.600': {
+    default: baseColors.gray[600],
+    _dark: baseColors.gray[100],
+  },
+  fgText: {
+    default: baseColors.gray[800],
+    _dark: baseColors.gray[25],
+  },
+  bgColor: {
+    default: 'white',
+    _dark: baseColors.gray[800],
+  },
+};
+
+const applyPrettyColors = (mode: 'default' | '_dark') => (msg: string) =>
+  Object.keys(PRETTY_LOG_TOKENS).reduce(
+    (logMessage, colorKey) =>
+      logMessage.replace(
+        PRETTY_LOG_TOKENS[colorKey]!,
+        prettyLogColors[colorKey]?.[mode] || PRETTY_LOG_TOKENS[colorKey]!,
+      ),
+    msg,
+  );
 
 export function AppConsole({ logs }: { logs: LogMessage[] }) {
   const [logCounter, setLogCounter] = useState(0);
@@ -38,15 +81,23 @@ export function AppConsole({ logs }: { logs: LogMessage[] }) {
     JSON.stringify(log.data).toLowerCase().includes(logFilter.toLowerCase()),
   );
 
+  const colorMode = useColorModeValue('default', '_dark');
+
   return (
     <Box id="app-console">
-      <Box position="sticky" top="0" pt={4} zIndex="docked" background="white">
+      <Box
+        position="sticky"
+        top="0"
+        pt={4}
+        zIndex="docked"
+        background="bgColor"
+      >
         <Flex
           padding={4}
           width="100%"
           border="solid 1px"
-          backgroundColor="gray.100"
-          borderColor="gray.200"
+          backgroundColor="fg.100"
+          borderColor="fg.200"
           borderTopRadius="md"
         >
           <FormControl display="flex" alignItems="center" height={6}>
@@ -69,7 +120,7 @@ export function AppConsole({ logs }: { logs: LogMessage[] }) {
             </FormLabel>
           </FormControl>
           <Input
-            backgroundColor="white"
+            backgroundColor="bgColor"
             fontFamily="monospace"
             fontSize="xs"
             onChange={(e) => setLogFilter(e.target.value)}
@@ -79,8 +130,8 @@ export function AppConsole({ logs }: { logs: LogMessage[] }) {
         </Flex>
       </Box>
       <Box
-        color="gray.200"
-        borderColor="gray.200"
+        color="fg.200"
+        borderColor="fg.200"
         borderBottomRadius="md"
         px={2}
         border="solid 1px"
@@ -89,7 +140,14 @@ export function AppConsole({ logs }: { logs: LogMessage[] }) {
         <Console
           logs={
             filteredLogs.length
-              ? filteredLogs.map(({ timestamp: _ignore, ...log }) => log)
+              ? filteredLogs.map(({ timestamp: _ignore, ...log }) => ({
+                  ...log,
+                  data: log.data.map((datum) => {
+                    if (typeof datum === 'string')
+                      return applyPrettyColors(colorMode)(datum);
+                    return datum;
+                  }),
+                }))
               : [
                   {
                     id: 'PLACEHOLDER',

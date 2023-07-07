@@ -16,6 +16,7 @@ import {
   AlertDialogBody,
   AlertDialogFooter,
   Button,
+  useColorModeValue,
 } from '@chakra-ui/react';
 import React, { useEffect, useRef, useState } from 'react';
 import AddScriptForm from '~/components/app/add-script-form';
@@ -95,6 +96,11 @@ export function PlaygroundSidebar({
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const cancelRef = useRef() as React.MutableRefObject<HTMLButtonElement>;
 
+  const bgGradient = useColorModeValue(
+    'linear-gradient(326.37deg, rgba(62, 28, 150, 0.5) 8.28%, rgba(62, 28, 150, 0) 100.06%), #89279B',
+    'linear-gradient(326.37deg, rgba(86, 60, 150, 0.5) 8.28%, rgba(86, 60, 150, 0) 100.06%), #E5BEEB',
+  );
+
   const onDuplicate: ScriptItemProps['onDuplicate'] = (scriptId) => {
     const toDupe = app.scripts.find((script: Script) => script.id === scriptId);
 
@@ -124,8 +130,8 @@ export function PlaygroundSidebar({
     <>
       <VStack
         alignItems="stretch"
-        background="linear-gradient(326.37deg, rgba(62, 28, 150, 0.5) 8.28%, rgba(62, 28, 150, 0) 100.06%), #89279B;"
-        color="white"
+        background={bgGradient}
+        color="bgColor"
         flex={1}
         rounded="2xl"
         paddingX={2}
@@ -135,7 +141,7 @@ export function PlaygroundSidebar({
         mr={2}
       >
         <HStack px={3}>
-          <Text size="sm" flexGrow={1}>
+          <Text size="sm" flexGrow={1} fontWeight="medium">
             Files
           </Text>
           {app.canUserEdit && (

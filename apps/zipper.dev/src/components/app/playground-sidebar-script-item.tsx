@@ -9,6 +9,7 @@ import {
   Text,
   Link,
   Icon,
+  useColorModeValue,
 } from '@chakra-ui/react';
 import { Script } from '@prisma/client';
 import { UseFormReturn } from 'react-hook-form';
@@ -46,16 +47,19 @@ export const ScriptItem: React.FC<ScriptItemProps> = ({
   const isDirty = isModelDirty(`/${script.filename}`);
   const hasErrors = modelHasErrors(script.filename);
 
+  const highlightColor = useColorModeValue('blackAlpha.400', 'whiteAlpha.400');
+  const errorColor = useColorModeValue('red.400', 'red.600');
+
   return (
     <HStack
       rounded="md"
       px={3}
       py={isRenaming ? 0 : 1}
       background={
-        currentScript?.id === script.id ? 'blackAlpha.400' : 'transparent'
+        currentScript?.id === script.id ? highlightColor : 'transparent'
       }
       _hover={{
-        background: 'blackAlpha.400',
+        background: highlightColor,
       }}
       role="group"
     >
@@ -99,7 +103,7 @@ export const ScriptItem: React.FC<ScriptItemProps> = ({
               fontWeight={isDirty || hasErrors ? 'bold' : 'medium'}
               fontSize="xs"
               fontFamily="mono"
-              color={hasErrors ? 'red.400' : 'inherit'}
+              color={hasErrors ? errorColor : 'inherit'}
             >
               {script.filename}
             </Text>

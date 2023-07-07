@@ -1,4 +1,10 @@
-import { Tab, ChakraProps, UseTabOptions, Badge } from '@chakra-ui/react';
+import {
+  Tab,
+  ChakraProps,
+  UseTabOptions,
+  Badge,
+  useColorModeValue,
+} from '@chakra-ui/react';
 
 type TabButtonProps = UseTabOptions &
   ChakraProps & {
@@ -11,20 +17,22 @@ export const TabButton: React.FC<TabButtonProps> = ({
   badge,
   ...props
 }) => {
+  const backgroundColor = useColorModeValue('purple.50', 'whiteAlpha.100');
+  const textColor = useColorModeValue('purple.700', 'purple.300');
   return (
     <Tab
       px={4}
       py={2}
       rounded="md"
       _selected={{
-        backgroundColor: 'purple.50',
+        backgroundColor,
         fontWeight: 'bold',
-        textColor: 'purple.700',
+        textColor,
         _hover: { transform: 'none' },
       }}
       _hover={{
-        backgroundColor: 'purple.50',
-        textColor: 'purple.700',
+        backgroundColor,
+        textColor,
         transform: 'scale(1.05)',
       }}
       {...props}

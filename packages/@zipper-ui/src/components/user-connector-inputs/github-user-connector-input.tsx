@@ -48,7 +48,7 @@ export const GitHubUserConnectorInput: React.FC<ConnectorInputProps> = ({
               </Box>
               {!c.isUserAuthRequired && (
                 <Box mt={1}>
-                  <Badge variant="subtle" color="gray.400" fontSize=".6rem">
+                  <Badge variant="subtle" color="fg.400" fontSize=".6rem">
                     Optional
                   </Badge>
                 </Box>
@@ -60,9 +60,9 @@ export const GitHubUserConnectorInput: React.FC<ConnectorInputProps> = ({
                   window.location.replace(authUrl);
                 }}
                 variant="outline"
-                bgColor="white"
+                bgColor="bgColor"
                 colorScheme="purple"
-                borderColor="gray.300"
+                borderColor="fg.300"
                 fontSize="sm"
                 minW="3xs"
               >

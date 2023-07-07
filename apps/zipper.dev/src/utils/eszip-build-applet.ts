@@ -2,7 +2,7 @@ import * as eszip from '@deno/eszip';
 import { App, Script } from '@prisma/client';
 import { generateIndexForFramework } from '@zipper/utils';
 import { getLogger } from './app-console';
-import { prettyLog } from './pretty-log';
+import { prettyLog, PRETTY_LOG_TOKENS } from './pretty-log';
 import { BuildCache, getModule } from './eszip-build-cache';
 import { readFrameworkFile } from './read-file';
 import { getAppHashAndVersion } from './hashing';
@@ -42,13 +42,13 @@ export async function build({
   logger.info(
     ...prettyLog(
       {
-        topic: 'Deploy',
-        subtopic: appName,
-        badge: 'Pending',
+        badge: 'Deploy',
+        topic: appName,
+        subtopic: 'Pending',
         msg: `Starting build for deploy`,
       },
       {
-        topicStyle: { background: 'black' },
+        badgeStyle: { background: PRETTY_LOG_TOKENS['fgText']! },
       },
     ),
   );
@@ -127,12 +127,12 @@ export async function build({
   logger.info(
     ...prettyLog(
       {
-        topic: 'Deploy',
-        subtopic: appName,
-        badge: 'Done',
+        badge: 'Deploy',
+        topic: appName,
+        subtopic: 'Done',
         msg: `Completed in ${Math.round(elapsedMs)}ms`,
       },
-      { topicStyle: { background: 'black' } },
+      { badgeStyle: { background: PRETTY_LOG_TOKENS['fgText']! } },
     ),
   );
 

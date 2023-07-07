@@ -35,7 +35,7 @@ function ObjectExplorerRow({
   return (
     <Tr
       borderBottom="1px"
-      borderColor="gray.200"
+      borderColor="fg.200"
       _last={{ borderBottom: 'none' }}
     >
       <Td border={'none'} p="0">
@@ -47,7 +47,7 @@ function ObjectExplorerRow({
           whiteSpace="nowrap"
           justifyContent="space-between"
         >
-          <Text py={6} size="sm" color="gray.600" fontWeight={300}>
+          <Text py={6} size="sm" color="fg.600" fontWeight={300}>
             {heading}
           </Text>
           {shouldCollapse && (
@@ -71,7 +71,7 @@ function ObjectExplorerRow({
         {shouldCollapse ? (
           <Box flex={5}>
             {!isOpen && (
-              <Text py={6} color="gray.400">
+              <Text py={6} color="fg.400">
                 {Array.isArray(data)
                   ? data.length === 1
                     ? `${data.length} item`

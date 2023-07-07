@@ -144,7 +144,7 @@ function TableArray(props: Props) {
                     <Td
                       {...cell.getCellProps()}
                       isNumeric={isIndex}
-                      color={isIndex ? 'gray.400' : undefined}
+                      color={isIndex ? 'fg.400' : undefined}
                     >
                       {cell.render('Cell')}
                     </Td>

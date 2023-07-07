@@ -136,7 +136,7 @@ const VersionsTab: React.FC<VersionsTabProps> = ({ appId, slug }) => {
               {version.user?.image && (
                 <Avatar src={version.user?.image} size="xs" />
               )}
-              <Text color={version.user ? 'gray.600' : 'gray.400'}>
+              <Text color={version.user ? 'fg.600' : 'fg.400'}>
                 {getValue()}
               </Text>
               ;
@@ -176,7 +176,11 @@ const VersionsTab: React.FC<VersionsTabProps> = ({ appId, slug }) => {
           return (
             <>
               <HStack spacing="5">
-                <Tooltip label={isCurrentlyPublished ? "Currently Published" : "Publish"}>
+                <Tooltip
+                  label={
+                    isCurrentlyPublished ? 'Currently Published' : 'Publish'
+                  }
+                >
                   <IconButton
                     aria-label="publish"
                     variant="outline"
@@ -192,7 +196,11 @@ const VersionsTab: React.FC<VersionsTabProps> = ({ appId, slug }) => {
                     }
                   />
                 </Tooltip>
-                <Tooltip label={isCurrentlyPlayground ? "Currently editing" : "Restore code"}>
+                <Tooltip
+                  label={
+                    isCurrentlyPlayground ? 'Currently editing' : 'Restore code'
+                  }
+                >
                   <IconButton
                     aria-label="restore"
                     colorScheme="red"
@@ -297,7 +305,7 @@ const VersionsTab: React.FC<VersionsTabProps> = ({ appId, slug }) => {
               </Tr>
             ))}
           </Thead>
-          <Tbody color="gray.600" fontSize="sm">
+          <Tbody color="fg.600" fontSize="sm">
             {versions.data && versions.data.length > 0 ? (
               rows.map((row, i) => {
                 return (
