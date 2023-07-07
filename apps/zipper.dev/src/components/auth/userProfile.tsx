@@ -51,15 +51,22 @@ export default function UserProfile() {
       setUsername(user.username);
     }
   }, [user]);
-  const { slugExists: _slugExists, appSlugQuery } = useAppSlug(username);
-  const isSlugValid =
-    appSlugQuery.isFetched && username && username.length >= MIN_SLUG_LENGTH;
 
-  const slugExists = username === user?.username ? false : _slugExists;
+  const isSlugValid = !!username && username.length >= MIN_SLUG_LENGTH;
+
+  const isSlugAvailableQuery = trpc.useQuery(
+    ['user.isSlugAvailable', { slug: username }],
+    {
+      enabled: isSlugValid && isEditingUsername,
+    },
+  );
+
   const disableSave =
-    slugExists ||
     username === user?.username ||
-    username.length < MIN_SLUG_LENGTH;
+    username.length < MIN_SLUG_LENGTH ||
+    (isEditingUsername &&
+      isSlugAvailableQuery.isSuccess &&
+      !isSlugAvailableQuery.data);
 
   const updateUsername = trpc.useMutation('user.updateUserSlug', {
     async onSuccess() {
@@ -137,7 +144,7 @@ export default function UserProfile() {
                 </Text>
                 <Text fontSize="sm">{user.email}</Text>
               </Stack>
-              <Stack>
+              <Stack p={4}>
                 <Text fontSize="md" fontWeight="bold">
                   Username
                 </Text>
@@ -167,13 +174,14 @@ export default function UserProfile() {
                         {isSlugValid && !updateUsername.isLoading && (
                           <InputRightElement
                             children={
-                              slugExists ? (
+                              isSlugAvailableQuery.data ||
+                              username === user.username ? (
+                                <CheckIcon color="green.500" />
+                              ) : (
                                 <Icon
                                   as={HiExclamationTriangle}
                                   color="red.500"
                                 />
-                              ) : (
-                                <CheckIcon color="green.500" />
                               )
                             }
                           />

@@ -7,6 +7,8 @@ import {
   VStack,
   Box,
   Flex,
+  Center,
+  LinkBox,
 } from '@chakra-ui/react';
 import Editor from '@monaco-editor/react';
 import { GetServerSideProps } from 'next';
@@ -31,17 +33,21 @@ const AppPage: NextPageWithLayout = () => {
   const resourceOwnerSlug = router.query['resource-owner'] as string;
   const appSlug = router.query['app-slug'] as string;
 
-  const appQuery = trpc.useQuery([
-    'app.byResourceOwnerAndAppSlugs',
-    { resourceOwnerSlug, appSlug },
-  ]);
+  const appQuery = trpc.useQuery(
+    ['app.byResourceOwnerAndAppSlugs', { resourceOwnerSlug, appSlug }],
+    { retry: false },
+  );
 
-  if (appQuery.error) {
+  if (appQuery.isError) {
     return (
-      <NextError
-        title={appQuery.error.message}
-        statusCode={appQuery.error.data?.httpStatus ?? 404}
-      />
+      <Center>
+        <VStack spacing={10}>
+          <Heading>Looks like this applet doesn't exist</Heading>
+          <Button as={Link} href={'/'} colorScheme="purple">
+            Go back home
+          </Button>
+        </VStack>
+      </Center>
     );
   }
 

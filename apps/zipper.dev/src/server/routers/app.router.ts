@@ -417,6 +417,9 @@ export const appRouter = createRouter()
         },
       });
 
+      if (!resourceOwner.resourceOwnerId)
+        throw new TRPCError({ code: 'NOT_FOUND' });
+
       // start building the where clause for the app query
       const where: Prisma.AppWhereInput = {
         slug: input.appSlug,
@@ -485,7 +488,7 @@ export const appRouter = createRouter()
         },
       });
 
-      if (!resourceOwner) return undefined;
+      if (!resourceOwner) return [];
 
       if (!resourceOwner.resourceOwnerId) return [];
 
@@ -921,7 +924,7 @@ export const appRouter = createRouter()
         },
         data: {
           deletedAt: new Date(),
-        }
+        },
       });
 
       return {

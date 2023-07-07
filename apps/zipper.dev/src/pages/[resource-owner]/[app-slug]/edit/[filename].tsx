@@ -9,11 +9,12 @@ import { withLiveBlocks } from '~/hocs/withLiveBlocks';
 import { Playground } from '~/components/app/playground';
 import { LiveObject } from '@liveblocks/client';
 import EditorContextProvider from '~/components/context/editor-context';
-import { Box } from '@chakra-ui/react';
+import { Box, Button, Center, Heading, Link, VStack } from '@chakra-ui/react';
 import Head from 'next/head';
 import { GetServerSideProps, GetServerSidePropsContext } from 'next';
 import { getValidSubdomain, removeSubdomains } from '~/utils/subdomains';
 import SignedIn from '~/components/auth/signed-in';
+import Header from '~/components/header';
 
 const PlaygroundPage: NextPageWithLayout = () => {
   const { query } = useRouter();
@@ -22,18 +23,25 @@ const PlaygroundPage: NextPageWithLayout = () => {
   const appSlug = query['app-slug'] as string;
   const filename = query.filename as string;
 
-  const appQuery = trpc.useQuery([
-    'app.byResourceOwnerAndAppSlugs',
-    { resourceOwnerSlug, appSlug },
-  ]);
+  const appQuery = trpc.useQuery(
+    ['app.byResourceOwnerAndAppSlugs', { resourceOwnerSlug, appSlug }],
+    { retry: false },
+  );
   const utils = trpc.useContext();
 
   if (appQuery.error) {
     return (
-      <NextError
-        title={appQuery.error.message}
-        statusCode={appQuery.error.data?.httpStatus ?? 404}
-      />
+      <>
+        <Header />
+        <Center>
+          <VStack spacing={10}>
+            <Heading>Looks like this applet doesn't exist</Heading>
+            <Button as={Link} href={'/'} colorScheme="purple">
+              Go back home
+            </Button>
+          </VStack>
+        </Center>
+      </>
     );
   }
 
