@@ -105,7 +105,7 @@ const Header: React.FC<HeaderProps> = ({
         justifyContent="center"
       >
         <HStack spacing={3} alignItems="start" alignContent={'center'}>
-          <Box my={3} height={4} color="fgText">
+          <Box my={3} height={4}>
             {isLoaded && (
               <NextLink href="/">
                 <SignedIn>

@@ -148,10 +148,10 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
         <Box height={4}>
           <NextLink href="/">
             <SignedIn>
-              <ZipperSymbol style={{ maxHeight: '100%' }} />
+              <ZipperSymbol fill="currentColor" style={{ maxHeight: '100%' }} />
             </SignedIn>
             <SignedOut>
-              <ZipperLogo style={{ maxHeight: '100%' }} />
+              <ZipperLogo fill="currentColor" style={{ maxHeight: '100%' }} />
             </SignedOut>
           </NextLink>
         </Box>
