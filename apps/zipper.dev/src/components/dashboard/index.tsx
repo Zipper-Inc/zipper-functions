@@ -99,8 +99,6 @@ const columns = [
               <Tooltip
                 placement="top"
                 label={isPrivate ? 'Private code' : 'Public code'}
-                textColor="gray.100"
-                backgroundColor="purple.500"
               >
                 <span>
                   {isPrivate ? (
@@ -111,9 +109,16 @@ const columns = [
                 </span>
               </Tooltip>
             </HStack>
-            <Text color="gray.500" fontSize="sm">
-              {description}
-            </Text>
+            <Tooltip label={description} openDelay={800}>
+              <Text
+                color="fg.500"
+                fontSize="sm"
+                noOfLines={1}
+                whiteSpace="pre-line"
+              >
+                {description}
+              </Text>
+            </Tooltip>
           </VStack>
         </HStack>
       );
@@ -248,12 +253,12 @@ export function Dashboard() {
         >
           <TabList
             borderBottom="1px solid"
-            borderColor={'gray.100'}
+            borderColor={'fg.100'}
             p={1}
             pb={4}
             mb={2}
             pt={3}
-            color="gray.500"
+            color="fg.500"
             gap={4}
             justifyContent="space-between"
             overflowX="auto"
@@ -278,7 +283,7 @@ export function Dashboard() {
                       Applets
                     </Heading>
                   </HStack>
-                  <Text color="gray.600" mb="4">
+                  <Text color="fg.600" mb="4">
                     {organization
                       ? 'Applets that you and other organization members have created within this workspace.'
                       : "Applets that you've created or that have been shared with you outside an organization workspace."}
@@ -302,7 +307,6 @@ export function Dashboard() {
                         pr={6}
                         variant="solid"
                         colorScheme="purple"
-                        textColor="gray.100"
                         fontSize="sm"
                         onClick={onOpen}
                       >

@@ -21,7 +21,7 @@ enum LogLevel {
 const LOG_COLORS = {
   [LogLevel.Info]: {
     bg: 'transparent',
-    color: 'gray.600',
+    color: 'fg.600',
   },
   [LogLevel.Warning]: {
     bg: 'yellow.100',
@@ -36,8 +36,8 @@ const LOG_COLORS = {
     color: 'green.800',
   },
   [LogLevel.Default]: {
-    bg: 'gray.800',
-    color: 'gray.200',
+    bg: 'fg.800',
+    color: 'fg.200',
   },
 };
 
@@ -69,7 +69,7 @@ export function LogLine({ log }: { log: any }) {
     if (!level || !msg) console.log('?', log);
     console.log(
       '%c Z ' + `%c  ${appInfo.slug}  ` + `%c ${level} `,
-      `fontWeight: 800; color: white; background: ${brandColors.brandPurple};`,
+      `fontWeight: 800; color: bgColor; background: ${brandColors.brandPurple};`,
       `fontWeight: 500; color: ${baseColors.gray[600]}; background: ${baseColors.gray[50]};`,
       `fontWeight: 200; font-size: smaller; height: 100%; color: ${brandColors.brandDarkPurple}; text-transform: uppercase;`,
       msg,

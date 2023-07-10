@@ -23,6 +23,7 @@ import {
   Text,
   VStack,
   Tooltip,
+  Spacer,
 } from '@chakra-ui/react';
 
 import NextLink from 'next/link';
@@ -31,11 +32,12 @@ import React, { useEffect, useState } from 'react';
 import { ZipperLogo, ZipperSymbol } from '@zipper/ui';
 
 import {
-  HiOutlineUpload,
-  HiPencilAlt,
+  HiShare,
   HiLockOpen,
   HiLockClosed,
-} from 'react-icons/hi';
+  HiPencilSquare,
+  HiGlobeAlt,
+} from 'react-icons/hi2';
 
 import { CgGitFork } from 'react-icons/cg';
 
@@ -57,6 +59,9 @@ import { useOrganizationList } from '~/hooks/use-organization-list';
 import SignedIn from '../auth/signed-in';
 import SignedOut from '../auth/signed-out';
 import { signIn } from 'next-auth/react';
+import { PlaygroundPublishInfo } from './playground-publish-button';
+import { getAppLink } from '@zipper/utils';
+import { UserProfileButton } from '../auth/user-profile-button';
 
 const getDefaultCreateAppFormValues = () => ({
   name: generateDefaultSlug(),
@@ -143,10 +148,10 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
         <Box height={4}>
           <NextLink href="/">
             <SignedIn>
-              <ZipperSymbol style={{ maxHeight: '100%' }} />
+              <ZipperSymbol fill="currentColor" style={{ maxHeight: '100%' }} />
             </SignedIn>
             <SignedOut>
-              <ZipperLogo style={{ maxHeight: '100%' }} />
+              <ZipperLogo fill="currentColor" style={{ maxHeight: '100%' }} />
             </SignedOut>
           </NextLink>
         </Box>
@@ -158,7 +163,7 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
               overflow="auto"
               whiteSpace="nowrap"
               fontWeight="medium"
-              color="gray.600"
+              color="fg.600"
             >
               {app.resourceOwner.slug}
             </Heading>
@@ -170,16 +175,16 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
             overflow="auto"
             whiteSpace="nowrap"
             fontWeight="medium"
-            color="gray.400"
+            color="fg.400"
           >
             /
           </Heading>
 
           <HStack spacing={2} alignItems="center" minW={0}>
             {app.isPrivate ? (
-              <HiLockClosed color="gray.500" />
+              <HiLockClosed color="fg.500" />
             ) : (
-              <HiLockOpen color="gray.400" />
+              <HiLockOpen color="fg.400" />
             )}
             {app.parentId && parentApp.data && (
               <Tooltip
@@ -212,7 +217,7 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
                   }}
                 >
                   <Box>
-                    <HiPencilAlt />
+                    <HiPencilSquare />
                   </Box>
                 </Button>
               )}
@@ -223,8 +228,10 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
       <HStack justifyContent="end">
         {isLoaded && (
           <Button
-            colorScheme="purple"
-            variant="ghost"
+            size="sm"
+            colorScheme="gray"
+            variant="outline"
+            color="fg.600"
             display="flex"
             gap={2}
             fontWeight="medium"
@@ -242,6 +249,45 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
             Fork
           </Button>
         )}
+        <SignedIn>
+          <Button
+            size="sm"
+            colorScheme="gray"
+            color="fg.600"
+            variant="outline"
+            onClick={() => setShareModalOpen(true)}
+            display="flex"
+            gap={2}
+            fontWeight="medium"
+          >
+            <HiShare />
+            <Text>Share</Text>
+          </Button>
+        </SignedIn>
+        <Button
+          as={Link}
+          size="sm"
+          colorScheme="gray"
+          color="fg.600"
+          variant="outline"
+          href={`${
+            process.env.NODE_ENV === 'production' ? 'https://' : 'http://'
+          }${getAppLink(app.slug)}`}
+          target="_blank"
+          display="flex"
+          gap={2}
+          fontWeight="medium"
+          _hover={{ textDecoration: 'none', backgroundColor: 'gray.100' }}
+        >
+          <Icon as={HiGlobeAlt} />
+          <Text>View</Text>
+        </Button>
+        <SignedIn>
+          <PlaygroundPublishInfo app={app} />
+          <Spacer />
+          <UserProfileButton showAdditionalOptions />
+        </SignedIn>
+
         {!user && (
           <Button
             colorScheme="purple"
@@ -256,20 +302,6 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
             Sign In
           </Button>
         )}
-        <SignedIn>
-          <Button
-            colorScheme="purple"
-            variant="ghost"
-            onClick={() => setShareModalOpen(true)}
-            display="flex"
-            gap={2}
-            fontWeight="medium"
-          >
-            <HiOutlineUpload />
-            <Text>Share</Text>
-          </Button>
-          {/* <UserButton afterSignOutUrl="/" /> */}
-        </SignedIn>
       </HStack>
       <ShareModal
         isOpen={isShareModalOpen}
@@ -293,7 +325,7 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
                   <Text>/</Text>
                   <InputGroup>
                     <Input
-                      backgroundColor="white"
+                      backgroundColor="bgColor"
                       maxLength={60}
                       {...forkAppForm.register('name')}
                       onChange={(e) => {

@@ -18,6 +18,8 @@ import { getPathFromUri, getUriFromPath } from '~/utils/model-uri';
 import { parse } from '@babel/parser';
 import traverse from '@babel/traverse';
 import MonacoJSXHighlighter from 'monaco-jsx-highlighter';
+import { useColorModeValue } from '@chakra-ui/react';
+import { baseColors } from '@zipper/ui';
 
 type MonacoEditor = monaco.editor.IStandaloneCodeEditor;
 
@@ -70,10 +72,24 @@ export default function PlaygroundEditor(
   const [, updateMyPresence] = useMyPresence();
   const connectionIds = useOthersConnectionIds();
 
+  const theme = useColorModeValue('vs', 'vs-dark');
+
   useExitConfirmation({ enable: isEditorDirty(), ignorePaths: ['/edit/'] });
 
   const handleEditorDidMount = (editor: MonacoEditor, monaco: Monaco) => {
     console.log('editor mounted');
+
+    monaco.editor.defineTheme('vs-dark', {
+      inherit: true,
+      base: 'vs-dark',
+      rules: [],
+      colors: {
+        'editor.background': baseColors.gray[800],
+        'dropdown.background': baseColors.gray[800],
+        'editorWidget.background': baseColors.gray[800],
+        'input.background': baseColors.gray[800],
+      },
+    });
 
     const monacoJSXHighlighter = new MonacoJSXHighlighter(
       monaco,
@@ -171,6 +187,7 @@ export default function PlaygroundEditor(
       });
 
       monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
+        strict: true,
         isolatedModules: true,
         target: monaco.languages.typescript.ScriptTarget.ES2020,
         allowNonTsExtensions: true,
@@ -182,6 +199,7 @@ export default function PlaygroundEditor(
       });
 
       monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
+        strict: true,
         isolatedModules: true,
         target: monaco.languages.typescript.ScriptTarget.ES2020,
         allowNonTsExtensions: true,
@@ -339,7 +357,7 @@ export default function PlaygroundEditor(
     <>
       <Editor
         defaultLanguage="typescript"
-        theme="vs-light"
+        theme={theme}
         options={{
           fontSize: 13,
           minimap: { enabled: false },

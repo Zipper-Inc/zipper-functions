@@ -10,8 +10,7 @@ import { useEditorContext } from './editor-context';
 import { requiredUserAuthConnectorFilter } from '~/utils/user-auth-connector-filter';
 import { getInputsFromFormData, safeJSONParse, uuid } from '@zipper/utils';
 import { getLogger } from '~/utils/app-console';
-import { prettyLog } from '~/utils/pretty-log';
-import { brandColors } from '@zipper/ui';
+import { prettyLog, PRETTY_LOG_TOKENS } from '~/utils/pretty-log';
 
 type UserAuthConnector = {
   type: ConnectorType;
@@ -30,7 +29,7 @@ export type RunAppContextType = {
   results: Record<string, string>;
   userAuthConnectors: UserAuthConnector[];
   setResults: (results: Record<string, string>) => void;
-  run: (isCurrentFileAsEntryPoint?: boolean) => void;
+  run: (isCurrentFileAsEntryPoint?: boolean) => Promise<string | undefined>;
   boot: () => void;
   configs: Zipper.BootPayload['configs'];
 };
@@ -43,7 +42,7 @@ export const RunAppContext = createContext<RunAppContextType>({
   results: {},
   userAuthConnectors: [],
   setResults: noop,
-  run: noop,
+  run: () => Promise.resolve(''),
   boot: noop,
   configs: {},
 });
@@ -75,9 +74,9 @@ export function RunAppProvider({
     description,
     slug,
     updatedAt,
-    lastDeploymentVersion,
+    playgroundVersionHash,
+    publishedVersionHash,
     canUserEdit,
-    hash,
   } = app;
   const formMethods = useForm();
   const [isRunning, setIsRunning] = useState(false);
@@ -109,6 +108,7 @@ export function RunAppProvider({
     try {
       const hash = await saveAppBeforeRun();
       const version = getAppVersionFromHash(hash);
+      if (!version) throw new Error('No version found');
 
       const logger = getLogger({ appId: app.id, version });
 
@@ -159,7 +159,10 @@ export function RunAppProvider({
     try {
       const hash = await saveAppBeforeRun();
       version = getAppVersionFromHash(hash);
+
+      if (!version) throw new Error('No version found');
     } catch (e: any) {
+      console.log(e);
       setResults({
         ...results,
         [isCurrentFileTheEntryPoint
@@ -222,12 +225,12 @@ export function RunAppProvider({
     addLog('info', [
       ...prettyLog(
         {
-          topic: 'Run',
-          subtopic: runId,
-          badge: 'Pending',
+          badge: 'Run',
+          topic: runId,
+          subtopic: 'Pending',
           msg: hasInputs ? 'Running with inputs' : undefined,
         },
-        { topicStyle: { background: brandColors.brandPurple } },
+        { badgeStyle: { background: PRETTY_LOG_TOKENS['purple']! } },
       ),
       ...(hasInputs ? [inputs] : []),
     ]);
@@ -247,12 +250,12 @@ export function RunAppProvider({
     addLog('info', [
       ...prettyLog(
         {
-          topic: 'Run',
-          subtopic: runId,
-          badge: 'Done',
+          badge: 'Run',
+          topic: runId,
+          subtopic: 'Done',
           msg: `Got output in ${Math.round(runElapsed)}ms`,
         },
-        { topicStyle: { background: brandColors.brandPurple } },
+        { badgeStyle: { background: PRETTY_LOG_TOKENS['purple']! } },
       ),
       safeJSONParse(result.result, undefined, result.result) || undefined,
     ]);
@@ -265,6 +268,8 @@ export function RunAppProvider({
     updateLogs();
 
     await onAfterRun();
+
+    return runId;
   };
 
   return (
@@ -276,9 +281,9 @@ export function RunAppProvider({
           description,
           slug,
           updatedAt,
-          lastDeploymentVersion,
+          playgroundVersionHash,
+          publishedVersionHash,
           canUserEdit,
-          hash,
         },
         formMethods,
         isRunning,

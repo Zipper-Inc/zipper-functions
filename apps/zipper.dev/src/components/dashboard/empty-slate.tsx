@@ -14,9 +14,9 @@ export function EmptySlate({
   const [gray200] = useToken('colors', ['neutral.200']);
 
   return (
-    <Box bg={'gray.50'} w="full" p="4">
+    <Box bg={'fg.50'} w="full" p="4">
       <VStack paddingY={20}>
-        <Box bg={'white'} boxShadow="2xl" padding={5} rounded="2xl" mb={6}>
+        <Box bg={'bgColor'} boxShadow="2xl" padding={5} rounded="2xl" mb={6}>
           <ZipperSymbol style={{ maxHeight: '100%' }} fill={gray200} />
         </Box>
         <Stack alignContent="center" gap={2} maxW={500} textAlign="center">
@@ -37,8 +37,8 @@ export function EmptySlate({
         </Stack>
         <Stack>
           <Button
-            color={'gray.700'}
-            bg="white"
+            color={'fg.700'}
+            bg="bgColor"
             mt={6}
             variant="outline"
             fontWeight="500"

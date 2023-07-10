@@ -170,7 +170,7 @@ const ShareTab: React.FC<Props> = ({ isOpen, onClose, appId }) => {
                       <Box w="full" px="7" pb="2">
                         <VStack align="start">
                           <Text
-                            color="gray.500"
+                            color="fg.500"
                             fontSize="sm"
                             pt="4"
                             fontWeight="medium"
@@ -224,7 +224,7 @@ const ShareTab: React.FC<Props> = ({ isOpen, onClose, appId }) => {
                             editorQuery.data.pending.length > 0 && (
                               <VStack align="stretch" w="full">
                                 <Text
-                                  color="gray.500"
+                                  color="fg.500"
                                   fontSize="sm"
                                   pt="4"
                                   fontWeight="medium"
@@ -285,12 +285,12 @@ const ShareTab: React.FC<Props> = ({ isOpen, onClose, appId }) => {
                           )}
                         </HStack>
                         {isPrivate ? (
-                          <Text fontSize={'sm'} color="gray.600">
+                          <Text fontSize={'sm'} color="fg.600">
                             When unchecked, the code is only visible to
                             organization members and people invited to edit
                           </Text>
                         ) : (
-                          <Text fontSize={'sm'} color="gray.600">
+                          <Text fontSize={'sm'} color="fg.600">
                             When checked, the code is visible to anyone on the
                             internet with the link.
                           </Text>

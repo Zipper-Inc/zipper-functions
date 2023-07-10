@@ -11,7 +11,7 @@ export const EditorPreviewNav: React.FC<EditorNavProps> = ({ app }) => {
   );
   return (
     <>
-      <Heading as="h2" fontSize="xl" color="white">
+      <Heading as="h2" fontSize="xl" color="bgColor">
         {app.name}
       </Heading>
       <VStack spacing={1} alignItems="start">
@@ -19,7 +19,7 @@ export const EditorPreviewNav: React.FC<EditorNavProps> = ({ app }) => {
           <Tag
             key={scriptMain.id}
             colorScheme="blackAlpha"
-            color="white"
+            color="bgColor"
             fontWeight={600}
             paddingX={3}
             paddingY={2}
@@ -42,7 +42,7 @@ export const EditorPreviewNav: React.FC<EditorNavProps> = ({ app }) => {
             <Tag
               key={script.id}
               colorScheme="blackAlpha"
-              color="white"
+              color="bgColor"
               fontWeight={600}
               paddingX={3}
               paddingY={2}

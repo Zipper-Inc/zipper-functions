@@ -24,7 +24,7 @@ import UserProfile from '../auth/userProfile';
 
 function UserSettings() {
   const [hash, setHash] = useState<string | undefined>();
-  
+
   const { organizationList, setActive, isLoaded } = useOrganizationList();
   const {
     isOpen: isOpenCreateOrg,
@@ -72,7 +72,6 @@ function UserSettings() {
                 pr={6}
                 variant="solid"
                 colorScheme="purple"
-                textColor="gray.100"
                 fontSize="sm"
                 onClick={onOpenCreateOrg}
               >
@@ -82,7 +81,7 @@ function UserSettings() {
             </HStack>
             <Divider mb="4" mt={2} />
             {isLoaded && (
-              <TableContainer border="1px" borderColor="gray.200"> 
+              <TableContainer border="1px" borderColor="fg.200">
                 <Table fontSize="sm">
                   <Tbody>
                     {organizationList.length > 0 ? (

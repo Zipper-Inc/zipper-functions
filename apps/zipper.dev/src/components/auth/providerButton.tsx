@@ -14,9 +14,9 @@ export const ProviderButton = ({
     <Button
       w={'full'}
       variant={primary ? 'solid' : 'outline'}
-      color={primary ? 'white' : 'purple.600'}
+      color={primary ? 'bgColor' : 'purple.600'}
       _hover={{ backgroundColor: primary ? 'purple.500' : 'purple.50' }}
-      backgroundColor={primary ? 'purple.600' : 'white'}
+      backgroundColor={primary ? 'purple.600' : 'bgColor'}
       borderColor={'purple.600'}
     >
       <HStack gap={4}>

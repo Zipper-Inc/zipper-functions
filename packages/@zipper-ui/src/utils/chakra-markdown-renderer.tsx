@@ -14,6 +14,7 @@ import { Image } from '@chakra-ui/image';
 import { Checkbox } from '@chakra-ui/checkbox';
 import { Table, Tbody, Td, Th, Thead, Tr } from '@chakra-ui/table';
 import { chakra } from '@chakra-ui/system';
+import { Components } from 'react-markdown/src/ast-to-react';
 
 type GetCoreProps = {
   children?: React.ReactNode;
@@ -26,8 +27,8 @@ function getCoreProps(props: GetCoreProps): any {
     : {};
 }
 
-export const defaults = {
-  p: (props: any) => {
+export const defaults: Components & { heading: Components['h1'] } = {
+  p: (props) => {
     const { children } = props;
     return (
       <Text mb={2} mt={1} whiteSpace={'pre-wrap'}>
@@ -35,11 +36,11 @@ export const defaults = {
       </Text>
     );
   },
-  em: (props: any) => {
+  em: (props) => {
     const { children } = props;
     return <Text as="em">{children}</Text>;
   },
-  blockquote: (props: any) => {
+  blockquote: (props) => {
     const { children } = props;
     return (
       <Code as="blockquote" p={2}>
@@ -47,7 +48,7 @@ export const defaults = {
       </Code>
     );
   },
-  code: (props: any) => {
+  code: (props) => {
     const { inline, children, className } = props;
 
     if (inline) {
@@ -65,20 +66,20 @@ export const defaults = {
       />
     );
   },
-  del: (props: any) => {
+  del: (props) => {
     const { children } = props;
     return <Text as="del">{children}</Text>;
   },
-  hr: (props: any) => {
+  hr: () => {
     return <Divider />;
   },
   a: Link,
   img: Image,
-  text: (props: any) => {
+  text: (props) => {
     const { children } = props;
     return <Text as="span">{children}</Text>;
   },
-  ul: (props: any) => {
+  ul: (props) => {
     const { ordered, children, depth } = props;
 
     const attrs = getCoreProps(props);
@@ -102,7 +103,7 @@ export const defaults = {
       </Element>
     );
   },
-  ol: (props: any) => {
+  ol: (props) => {
     const { ordered, children, depth } = props;
     const attrs = getCoreProps(props);
     let Element = UnorderedList;
@@ -124,7 +125,7 @@ export const defaults = {
       </Element>
     );
   },
-  li: (props: any) => {
+  li: (props) => {
     const { children, checked } = props;
     let checkbox = null;
     if (checked !== null && checked !== undefined) {
@@ -143,14 +144,14 @@ export const defaults = {
       </ListItem>
     );
   },
-  heading: (props: any) => {
+  heading: (props) => {
     const { level, children } = props;
     const sizes = ['xl', 'lg', 'md', 'sm', 'xs', '2xs'];
     return (
       <Heading
         {...getCoreProps(props)}
         mb={level > 3 ? 1 : 4}
-        color={`gray.${Math.min(4 + level, 9)}00`}
+        color={`fg${Math.min(4 + level, 9)}00`}
         as={`h${level}`}
         size={sizes[`${level - 1}`]}
       >
@@ -158,19 +159,19 @@ export const defaults = {
       </Heading>
     );
   },
-  pre: (props: any) => {
+  pre: (props) => {
     const { children } = props;
     return <chakra.pre {...getCoreProps(props)}>{children}</chakra.pre>;
   },
   table: Table,
   thead: Thead,
   tbody: Tbody,
-  tr: (props: any) => <Tr>{props.children}</Tr>,
-  td: (props: any) => <Td>{props.children}</Td>,
-  th: (props: any) => <Th>{props.children}</Th>,
+  tr: (props) => <Tr>{props.children}</Tr>,
+  td: (props) => <Td>{props.children}</Td>,
+  th: (props) => <Th>{props.children}</Th>,
 };
 
-function ChakraUIRenderer(theme?: any, merge = true): any {
+function ChakraUIRenderer(theme?: unknown, merge = true) {
   const elements = {
     p: defaults.p,
     em: defaults.em,

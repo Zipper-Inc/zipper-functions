@@ -574,13 +574,13 @@ const EditorContextProvider = ({
       throw new Error('Something went wrong while saving');
 
     setIsSaving(true);
-    const version = getAppVersionFromHash(app.hash || '');
+    const version = getAppVersionFromHash(app.playgroundVersionHash);
     addLog(
       'info',
       prettyLog({
-        topic: 'Save',
-        subtopic: `${appSlug}@${version}`,
-        badge: 'Pending',
+        badge: 'Save',
+        topic: `${appSlug}@${version}`,
+        subtopic: 'Pending',
       }),
     );
 
@@ -626,17 +626,17 @@ const EditorContextProvider = ({
       refetchApp();
       setIsSaving(false);
 
-      if (!newApp.hash) {
+      if (!newApp.playgroundVersionHash) {
         throw new Error('Something went wrong while saving the applet');
       }
 
-      const newVersion = getAppVersionFromHash(newApp.hash);
+      const newVersion = getAppVersionFromHash(newApp.playgroundVersionHash);
       addLog(
         'info',
         prettyLog({
-          topic: 'Save',
-          subtopic: `${appSlug}@${newVersion}`,
-          badge: 'Done',
+          badge: 'Save',
+          topic: `${appSlug}@${newVersion}`,
+          subtopic: 'Done',
           msg:
             newVersion !== version
               ? 'You saved a new version.'
@@ -644,15 +644,15 @@ const EditorContextProvider = ({
         }),
       );
 
-      return newApp.hash;
+      return newApp.playgroundVersionHash;
     } catch (e: any) {
       setIsSaving(false);
       addLog(
         'error',
         prettyLog({
-          topic: 'SAVE',
-          subtopic: `${appSlug}@${version}`,
-          badge: 'ERROR',
+          badge: 'SAVE',
+          topic: `${appSlug}@${version}`,
+          subtopic: 'ERROR',
           msg: e.toString(),
         }),
       );

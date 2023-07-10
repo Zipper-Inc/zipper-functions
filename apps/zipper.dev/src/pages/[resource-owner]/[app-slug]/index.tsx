@@ -7,6 +7,9 @@ import {
   VStack,
   Box,
   Flex,
+  useColorModeValue,
+  Center,
+  LinkBox,
 } from '@chakra-ui/react';
 import Editor from '@monaco-editor/react';
 import { GetServerSideProps } from 'next';
@@ -19,6 +22,7 @@ import { NextPageWithLayout } from '~/pages/_app';
 import { getValidSubdomain } from '~/utils/subdomains';
 import { trpc } from '~/utils/trpc';
 import NextLink from 'next/link';
+import { baseColors } from '@zipper/ui';
 
 const APPROXIMATE_HEADER_HEIGHT_PX = '116px';
 const CODE_PREVIEW_HEIGHT = `calc(100vh - ${APPROXIMATE_HEADER_HEIGHT_PX})`;
@@ -31,17 +35,28 @@ const AppPage: NextPageWithLayout = () => {
   const resourceOwnerSlug = router.query['resource-owner'] as string;
   const appSlug = router.query['app-slug'] as string;
 
-  const appQuery = trpc.useQuery([
-    'app.byResourceOwnerAndAppSlugs',
-    { resourceOwnerSlug, appSlug },
-  ]);
+  const appQuery = trpc.useQuery(
+    ['app.byResourceOwnerAndAppSlugs', { resourceOwnerSlug, appSlug }],
+    { retry: false },
+  );
 
-  if (appQuery.error) {
+  const bgGradient = useColorModeValue(
+    'linear-gradient(326.37deg, rgba(62, 28, 150, 0.5) 8.28%, rgba(62, 28, 150, 0) 100.06%), #89279B',
+    'linear-gradient(326.37deg, rgba(86, 60, 150, 0.5) 8.28%, rgba(86, 60, 150, 0) 100.06%), #E5BEEB',
+  );
+
+  const theme = useColorModeValue('vs', 'vs-dark');
+
+  if (appQuery.isError) {
     return (
-      <NextError
-        title={appQuery.error.message}
-        statusCode={appQuery.error.data?.httpStatus ?? 404}
-      />
+      <Center>
+        <VStack spacing={10}>
+          <Heading>Looks like this applet doesn't exist</Heading>
+          <Button as={Link} href={'/'} colorScheme="purple">
+            Go back home
+          </Button>
+        </VStack>
+      </Center>
     );
   }
 
@@ -86,7 +101,7 @@ const AppPage: NextPageWithLayout = () => {
         <HStack alignSelf="stretch" alignItems="start" mt={5}>
           <VStack alignItems="stretch" flex={1}>
             <HStack alignItems="start">
-              <Text flex={1} color="gray.700">
+              <Text flex={1} color="fg.700">
                 Built by
               </Text>
               <Link
@@ -101,7 +116,7 @@ const AppPage: NextPageWithLayout = () => {
               </Link>
             </HStack>
             <HStack overflow="hidden" minWidth={0}>
-              <Text flex={1} color="gray.700">
+              <Text flex={1} color="fg.700">
                 Updated
               </Text>
               <Text
@@ -117,7 +132,7 @@ const AppPage: NextPageWithLayout = () => {
               </Text>
             </HStack>
             <HStack overflow="hidden" minWidth={0}>
-              <Text flex={1} color="gray.700">
+              <Text flex={1} color="fg.700">
                 Code
               </Text>
               <Text
@@ -130,7 +145,7 @@ const AppPage: NextPageWithLayout = () => {
               </Text>
             </HStack>
             <HStack overflow="hidden" minWidth={0}>
-              <Text flex={1} color="gray.700">
+              <Text flex={1} color="fg.700">
                 Output
               </Text>
               <Text
@@ -145,7 +160,7 @@ const AppPage: NextPageWithLayout = () => {
           </VStack>
           <HStack flex={1} alignItems="stretch">
             {/* TODO get categories from app metadata */}
-            {/* <Text color="gray.700" flex={1}>
+            {/* <Text color="fg.700" flex={1}>
               Categories
             </Text>
             <VStack flex={2} alignItems="stretch">
@@ -174,7 +189,7 @@ const AppPage: NextPageWithLayout = () => {
           >
             <VStack
               flex={1}
-              background="linear-gradient(326.37deg, #3E1C96 8.28%, rgba(62, 28, 150, 0) 100.06%), #89279B;"
+              background={bgGradient}
               borderTopLeftRadius={12}
               padding={6}
               spacing={6}
@@ -187,11 +202,21 @@ const AppPage: NextPageWithLayout = () => {
                 <Editor
                   defaultLanguage="typescript"
                   defaultValue={data.scriptMain?.script.code}
-                  theme="vs-light"
+                  theme={theme}
                   options={{
                     minimap: { enabled: false },
                     automaticLayout: true,
                     readOnly: true,
+                  }}
+                  onMount={(_, monaco) => {
+                    monaco.editor.defineTheme('vs-dark', {
+                      base: 'vs',
+                      inherit: true,
+                      rules: [],
+                      colors: {
+                        'editor.background': baseColors.gray[800],
+                      },
+                    });
                   }}
                   width="99%"
                 />

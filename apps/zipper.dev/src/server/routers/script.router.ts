@@ -11,7 +11,6 @@ const defaultSelect = Prisma.validator<Prisma.ScriptSelect>()({
   id: true,
   name: true,
   filename: true,
-  description: true,
   appId: true,
   code: true,
   createdAt: true,

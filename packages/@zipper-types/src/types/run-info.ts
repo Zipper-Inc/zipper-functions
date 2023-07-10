@@ -4,7 +4,7 @@ export type RunInfo = AppInfoAndInputParams & {
   appRun: {
     path: string;
     version: string;
-    result: any;
+    result: Zipper.Serializable;
     inputs: Record<string, string>;
   };
 };

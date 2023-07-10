@@ -1,6 +1,8 @@
 import { App, Script } from '@prisma/client';
 import hash from 'object-hash';
 
+const APP_VERSION_LENGTH = 7;
+
 export function getScriptHash(
   script: Pick<Script, 'id' | 'filename' | 'code'>,
 ) {
@@ -35,7 +37,17 @@ export function getAppHash(
   );
 }
 
-const APP_VERSION_LENGTH = 7;
-export const getAppVersionFromHash = (hash: string) => {
+export function getAppHashAndVersion(
+  app: Pick<App, 'id' | 'name'> & {
+    scripts: Pick<Script, 'id' | 'hash'>[];
+  },
+) {
+  const hash = getAppHash(app);
+  const version = hash.slice(0, APP_VERSION_LENGTH);
+  return { hash, version };
+}
+
+export const getAppVersionFromHash = (hash?: string | null) => {
+  if (!hash) return undefined;
   return hash.slice(0, APP_VERSION_LENGTH);
 };

@@ -1,20 +1,28 @@
 import Avatar from 'boring-avatars';
-import { baseColors } from '@zipper/ui';
+import { brandColors, baseColors } from '@zipper/ui';
+import { useColorModeValue } from '@chakra-ui/react';
 
-const avatarColors = [
-  // brand purple 600: #9B2FB4
-  baseColors.purple['600'],
-  // brand purple 900: #3D1353
-  baseColors.purple['900'],
-  // orange 500: #F74441
-  '#F74441',
-  // brand gray warm 200: #E3E2E1
+const defaultAvatarColors = [
+  brandColors.brandPurple,
+  brandColors.brandDarkPurple,
+  brandColors.brandOrange,
   baseColors.neutral['200'],
-  // white: #FFFFFF
   'white',
 ];
 
+const darkModeAvatarColors = [
+  baseColors.purple['200'],
+  brandColors.brandPurple,
+  brandColors.brandOrange,
+  baseColors.neutral['600'],
+  baseColors.gray['800'],
+];
+
 function AppAvatar({ nameOrSlug }: { nameOrSlug: string }) {
+  const avatarColors = useColorModeValue(
+    defaultAvatarColors,
+    darkModeAvatarColors,
+  );
   return (
     <Avatar
       size="100%"

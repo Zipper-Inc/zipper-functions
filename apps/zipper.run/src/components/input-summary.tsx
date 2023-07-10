@@ -89,7 +89,7 @@ const InputSummary: React.FC<InputSummaryProps> = ({
   const inputSummary = getInputSummary(inputs, formContext);
 
   return (
-    <HStack spacing={4} color="gray.600" fontSize="sm">
+    <HStack spacing={4} color="fg.600" fontSize="sm">
       <Container
         m={0}
         overflow="hidden"

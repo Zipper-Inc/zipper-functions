@@ -30,10 +30,18 @@ import {
   Tooltip,
   Flex,
   Spacer,
+  AlertDialog,
+  AlertDialogBody,
+  AlertDialogContent,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogOverlay,
+  Code,
+  AlertDialogCloseButton,
 } from '@chakra-ui/react';
 import { CheckIcon } from '@chakra-ui/icons';
 import { FormProvider, useForm } from 'react-hook-form';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { inferQueryOutput, trpc } from '~/utils/trpc';
 import { HiExclamationTriangle } from 'react-icons/hi2';
@@ -58,10 +66,22 @@ type Props = {
 
 const SettingsTab: React.FC<Props> = ({ app }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const {
+    isOpen: isOpenDeleteConfirmation,
+    onOpen: onOpenDeleteConfirmation,
+    onClose: onCloseDeleteConfirmation,
+  } = useDisclosure();
+  const cancelRef = useRef() as React.MutableRefObject<HTMLButtonElement>;
   const appQuery = trpc.useQuery(['app.byId', { id: app.id }]);
   const appEditMutation = trpc.useMutation('app.edit', {
     onSuccess() {
       appQuery.refetch();
+    },
+  });
+
+  const appDeleteMutation = trpc.useMutation('app.delete', {
+    onSuccess() {
+      router.push('/');
     },
   });
   const appAccessTokenQuery = trpc.useQuery([
@@ -222,7 +242,7 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
               <FormLabel>Slug</FormLabel>
               <InputGroup>
                 <Input
-                  backgroundColor="white"
+                  backgroundColor="bgColor"
                   maxLength={60}
                   {...settingsForm.register('slug')}
                 />
@@ -251,7 +271,7 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
             <FormControl>
               <FormLabel>Name</FormLabel>
               <Input
-                backgroundColor="white"
+                backgroundColor="bgColor"
                 maxLength={60}
                 {...settingsForm.register('name')}
               />
@@ -260,9 +280,9 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
               </FormErrorMessage>
             </FormControl>
             <FormControl>
-              <FormLabel textColor="gray.600">Description</FormLabel>
+              <FormLabel textColor="fg.600">Description</FormLabel>
               <Textarea
-                backgroundColor="white"
+                backgroundColor="bgColor"
                 {...settingsForm.register('description')}
               />
             </FormControl>
@@ -271,7 +291,7 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
               <VStack
                 w="full"
                 border="1px solid"
-                borderColor="gray.200"
+                borderColor="fg.200"
                 rounded="md"
                 align={'stretch'}
                 spacing="0"
@@ -280,7 +300,7 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
                   w="full"
                   p="4"
                   borderBottom="1px solid"
-                  borderColor={'gray.200'}
+                  borderColor={'fg.200'}
                 >
                   <Flex flexGrow={'1'}>
                     <VStack align="start">
@@ -347,11 +367,11 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
             appAccessTokenQuery.data.length === 0 && (
               <VStack
                 border="1px solid"
-                borderColor="gray.100"
+                borderColor="fg.100"
                 borderRadius={'lg'}
-                backgroundColor="gray.50"
+                backgroundColor="fg.50"
                 py="10"
-                color={'gray.500'}
+                color={'fg.500'}
               >
                 <Center verticalAlign={'center'}>
                   You don't have any access tokens yet. Generate one to access
@@ -364,13 +384,13 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
               <VStack
                 align={'stretch'}
                 border="1px solid"
-                borderColor="gray.100"
+                borderColor="fg.100"
                 borderRadius={'lg'}
               >
                 {appAccessTokenQuery.data.map((token) => (
                   <HStack
                     borderBottom={'1px solid'}
-                    borderColor="gray.100"
+                    borderColor="fg.100"
                     _last={{ borderBottom: 'none' }}
                     p="4"
                   >
@@ -380,7 +400,7 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
                     <IconButton
                       aria-label="Delete token"
                       variant="ghost"
-                      icon={<Icon as={HiOutlineTrash} color="gray.400" />}
+                      icon={<Icon as={HiOutlineTrash} color="fg.400" />}
                       onClick={() => {
                         appAccessTokenDeleteMutation.mutateAsync(
                           { identifier: token.identifier },
@@ -412,6 +432,32 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
             </>
           )}
         </Box>
+
+        <Box w="100%" pt={10}>
+          <HStack>
+            <Text fontSize={'xl'} flexGrow={1}>
+              Here Be Dragons
+            </Text>
+          </HStack>
+          <Divider mb="4" mt={2} />
+          <VStack border="1px solid" borderColor="red.100" borderRadius={'lg'}>
+            <VStack w="full" p="4" align="start">
+              <VStack align="start" w="full">
+                <HStack w="full">
+                  <Text>Delete this applet</Text>
+                  <Spacer flexGrow={1} />
+                  <Button
+                    variant="solid"
+                    colorScheme="red"
+                    onClick={onOpenDeleteConfirmation}
+                  >
+                    Delete applet
+                  </Button>
+                </HStack>
+              </VStack>
+            </VStack>
+          </VStack>
+        </Box>
       </VStack>
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
@@ -433,11 +479,7 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
                       isDisabled={true}
                       value={showAppAccessToken}
                     ></Input>
-                    <Tooltip
-                      label="Copy"
-                      bgColor="purple.500"
-                      textColor="gray.100"
-                    >
+                    <Tooltip label="Copy">
                       <IconButton
                         aria-label="copy"
                         colorScheme="purple"
@@ -454,7 +496,7 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
                 <FormControl isRequired>
                   <FormLabel>Description</FormLabel>
                   <Input
-                    backgroundColor="white"
+                    backgroundColor="bgColor"
                     {...appAccessTokenForm.register('description')}
                   />
                   <FormErrorMessage>
@@ -488,6 +530,49 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
           </form>
         </ModalContent>
       </Modal>
+      <AlertDialog
+        isOpen={isOpenDeleteConfirmation}
+        leastDestructiveRef={cancelRef}
+        onClose={onCloseDeleteConfirmation}
+      >
+        <AlertDialogOverlay>
+          <AlertDialogContent>
+            <AlertDialogHeader fontSize="lg" fontWeight="bold">
+              Delete Applet
+            </AlertDialogHeader>
+            <AlertDialogCloseButton />
+
+            <AlertDialogBody>
+              <Box>
+                You're about to delete this applet. Are you sure?
+                <Flex
+                  pt="5"
+                  fontSize="lg"
+                  fontWeight="bold"
+                  justifyContent="center"
+                >
+                  {app.slug}
+                </Flex>
+              </Box>
+            </AlertDialogBody>
+
+            <AlertDialogFooter>
+              <Button
+                colorScheme="gray"
+                _hover={{ bg: 'red.500', color: 'white' }}
+                onClick={() =>
+                  appDeleteMutation.mutateAsync({
+                    id: app.id,
+                  })
+                }
+                w="full"
+              >
+                {`Delete ${app.slug}`}
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogOverlay>
+      </AlertDialog>
     </HStack>
   );
 };

@@ -7,6 +7,9 @@ import { encryptToHex } from '@zipper/utils';
 import fetch from 'node-fetch';
 import { Prisma } from '@prisma/client';
 import { getToken } from 'next-auth/jwt';
+import denyList from '../utils/slugDenyList';
+import slugify from '~/utils/slugify';
+import { ResourceOwnerType } from '@zipper/types';
 
 const defaultSelect = Prisma.validator<Prisma.UserSelect>()({
   id: true,
@@ -130,12 +133,56 @@ export const userRouter = createProtectedRouter()
       }
     },
   })
+  .query('isSlugAvailable', {
+    input: z.object({
+      slug: z.string().transform((s) => slugify(s)),
+    }),
+    async resolve({ input }) {
+      const deniedSlug = denyList.find((d) => d === input.slug);
+      if (deniedSlug)
+        return new TRPCError({
+          message: 'Invalid slug',
+          code: 'INTERNAL_SERVER_ERROR',
+        });
+      const slug = await prisma.resourceOwnerSlug.findUnique({
+        where: {
+          slug: input.slug,
+        },
+      });
+
+      return !slug;
+    },
+  })
   .mutation('updateUserSlug', {
     input: z.object({
-      slug: z.string(),
+      slug: z.string().transform((s) => slugify(s)),
     }),
     async resolve({ ctx, input }) {
       if (!ctx.userId) throw new TRPCError({ code: 'UNAUTHORIZED' });
+
+      const user = await prisma.user.findUniqueOrThrow({
+        where: {
+          id: ctx.userId,
+        },
+      });
+
+      await prisma.resourceOwnerSlug.update({
+        where: {
+          slug: user.slug,
+        },
+        data: {
+          resourceOwnerId: null,
+        },
+      });
+
+      await prisma.resourceOwnerSlug.create({
+        data: {
+          slug: input.slug,
+          resourceOwnerType: ResourceOwnerType.User,
+          resourceOwnerId: ctx.userId,
+        },
+      });
+
       return prisma.user.update({
         where: {
           id: ctx.userId,
@@ -145,5 +192,4 @@ export const userRouter = createProtectedRouter()
         },
       });
     },
-  })
-  ;
+  });

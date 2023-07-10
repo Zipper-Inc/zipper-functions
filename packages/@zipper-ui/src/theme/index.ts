@@ -134,6 +134,64 @@ export const brandColors = {
   default: baseColors.gray[600],
 };
 
+export const foregroundColors = {
+  'fg.25': {
+    default: 'gray.25',
+    _dark: 'whiteAlpha.50',
+  },
+  'fg.50': {
+    default: 'gray.50',
+    _dark: 'whiteAlpha.100',
+  },
+  'fg.100': {
+    default: 'gray.100',
+    _dark: 'whiteAlpha.200',
+  },
+  'fg.200': {
+    default: 'gray.200',
+    _dark: 'whiteAlpha.300',
+  },
+  'fg.300': {
+    default: 'gray.300',
+    _dark: 'whiteAlpha.400',
+  },
+  'fg.400': {
+    default: 'gray.400',
+    _dark: 'whiteAlpha.500',
+  },
+  'fg.500': {
+    default: 'gray.500',
+    _dark: 'whiteAlpha.600',
+  },
+  'fg.600': {
+    default: 'gray.600',
+    _dark: 'whiteAlpha.700',
+  },
+  'fg.700': {
+    default: 'gray.700',
+    _dark: 'whiteAlpha.800',
+  },
+  'fg.800': {
+    default: 'gray.800',
+    _dark: 'whiteAlpha.900',
+  },
+  'fg.900': {
+    default: 'gray.900',
+    _dark: 'white',
+  },
+};
+
+export const semanticTokens = {
+  colors: {
+    ...foregroundColors,
+    fgText: foregroundColors['fg.800'],
+    bgColor: {
+      default: 'white',
+      _dark: 'gray.800',
+    },
+  },
+};
+
 export const fonts = {
   body: '"InterVariable", sans-serif',
   heading: '"InterVariable", sans-serif',
@@ -141,6 +199,7 @@ export const fonts = {
 };
 
 export const theme = extendTheme({
+  initialColorMode: 'system',
   components: {
     MultiSelect: multiSelectTheme,
   },
@@ -166,10 +225,21 @@ export const theme = extendTheme({
           borderTop: 'none',
         },
         '[data-method]': {
+          color: semanticTokens.colors.fgText.default,
           paddingY: '4px',
         },
         '[data-method]:last-of-type': {
           borderBottom: 'none',
+        },
+        '[role="tree"]': {
+          li: { paddingLeft: '8px', paddingRight: '8px' },
+        },
+      },
+      '[data-theme="dark"]': {
+        '#app-console': {
+          '[data-method]': {
+            color: semanticTokens.colors.fgText._dark,
+          },
         },
       },
     },
@@ -178,5 +248,6 @@ export const theme = extendTheme({
     ...brandColors,
     ...baseColors,
   },
+  semanticTokens,
   fonts,
 });

@@ -39,6 +39,7 @@ import { getBootUrl, getRelayUrl } from '~/utils/get-relay-url';
 import { getZipperAuth } from '~/utils/get-zipper-auth';
 import { deleteCookie } from 'cookies-next';
 import { getShortRunId } from '~/utils/run-id';
+import Error from 'next/error';
 
 const { __DEBUG__ } = process.env;
 
@@ -55,7 +56,7 @@ export type AppPageProps = {
   defaultValues?: Record<string, any>;
   slackAuthUrl?: string;
   githubAuthUrl?: string;
-  statusCode?: number;
+  errorCode?: string;
   entryPoint?: EntryPointInfo;
   result?: string;
   runnableScripts?: string[];
@@ -74,7 +75,7 @@ export function AppPage({
   defaultValues,
   slackAuthUrl,
   githubAuthUrl,
-  statusCode,
+  errorCode,
   entryPoint,
   result: paramResult,
   runnableScripts,
@@ -154,7 +155,14 @@ export function AppPage({
       setLoading(true);
       const rawValues = formContext.getValues();
       const values = getInputsFromFormData(rawValues, inputs);
-      router.push({ pathname: `/run/${filename}`, query: values });
+      if (version !== 'latest') {
+        router.push({
+          pathname: `/run/${filename}/@${version}`,
+          query: values,
+        });
+      } else {
+        router.push({ pathname: `/run/${filename}`, query: values });
+      }
     }
   };
 
@@ -250,8 +258,16 @@ export function AppPage({
     });
   }, [userAuthConnectors]);
 
-  if (statusCode === 401 || !app) {
+  if (errorCode === 'UNAUTHORIZED') {
     return <Unauthorized />;
+  }
+
+  if (errorCode === 'INVALID_VERSION') {
+    return <Error statusCode={404} title={'App not published yet'} />;
+  }
+
+  if (errorCode === 'NOT_FOUND' || !app) {
+    return <Error statusCode={404} />;
   }
 
   const appletDescription = () => {
@@ -268,7 +284,7 @@ export function AppPage({
       <VStack mb="10">
         {title && <Heading as="h1">{title}</Heading>}
         {subtitle && (
-          <Heading as="h2" fontSize="lg" fontWeight="semibold" color="gray.600">
+          <Heading as="h2" fontSize="lg" fontWeight="semibold" color="fg.600">
             {subtitle}
           </Heading>
         )}
@@ -387,9 +403,7 @@ export const getServerSideProps: GetServerSideProps = async ({
 
   if (__DEBUG__) console.log('getAppInfo', { result: appInfoResult });
   if (!appInfoResult.ok) {
-    if (appInfoResult.error === 'UNAUTHORIZED')
-      return { props: { statusCode: 401 } };
-    return { notFound: true };
+    return { props: { errorCode: appInfoResult.error } };
   }
 
   const {
@@ -418,7 +432,8 @@ export const getServerSideProps: GetServerSideProps = async ({
     },
   }).then((r) => r.text());
 
-  if (payload === 'UNAUTHORIZED') return { props: { statusCode: 401 } };
+  if (payload === 'UNAUTHORIZED' || payload === 'INVALID_VERSION')
+    return { props: { errorCode: payload } };
   const { configs: handlerConfigs } = JSON.parse(payload) as Zipper.BootPayload;
 
   const config = handlerConfigs[filename];
@@ -466,7 +481,7 @@ export const getServerSideProps: GetServerSideProps = async ({
       getRelayUrl({
         slug: app.slug,
         path: Array.isArray(query.versionAndFilename)
-          ? query.versionAndFilename[0]
+          ? query.versionAndFilename.join('/')
           : query.versionAndFilename,
       }),
       {

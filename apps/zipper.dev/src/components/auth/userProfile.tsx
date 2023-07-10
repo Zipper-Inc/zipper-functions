@@ -51,15 +51,22 @@ export default function UserProfile() {
       setUsername(user.username);
     }
   }, [user]);
-  const { slugExists: _slugExists, appSlugQuery } = useAppSlug(username);
-  const isSlugValid =
-    appSlugQuery.isFetched && username && username.length >= MIN_SLUG_LENGTH;
 
-  const slugExists = username === user?.username ? false : _slugExists;
+  const isSlugValid = !!username && username.length >= MIN_SLUG_LENGTH;
+
+  const isSlugAvailableQuery = trpc.useQuery(
+    ['user.isSlugAvailable', { slug: username }],
+    {
+      enabled: isSlugValid && isEditingUsername,
+    },
+  );
+
   const disableSave =
-    slugExists ||
     username === user?.username ||
-    username.length < MIN_SLUG_LENGTH;
+    username.length < MIN_SLUG_LENGTH ||
+    (isEditingUsername &&
+      isSlugAvailableQuery.isSuccess &&
+      !isSlugAvailableQuery.data);
 
   const updateUsername = trpc.useMutation('user.updateUserSlug', {
     async onSuccess() {
@@ -109,7 +116,7 @@ export default function UserProfile() {
                   onClick={() => setCurrentPage('profileImage')}
                   _hover={{
                     cursor: 'pointer',
-                    backgroundColor: 'gray.100',
+                    backgroundColor: 'fg.100',
                   }}
                   onMouseEnter={() => setIsHovered(true)}
                   onMouseLeave={() => setIsHovered(false)}
@@ -126,7 +133,7 @@ export default function UserProfile() {
                   </HStack>
                   <Box>
                     <Fade in={isHovered}>
-                      <HiArrowRight color="gray.400" />
+                      <HiArrowRight color="fg.400" />
                     </Fade>
                   </Box>
                 </Stack>
@@ -137,7 +144,7 @@ export default function UserProfile() {
                 </Text>
                 <Text fontSize="sm">{user.email}</Text>
               </Stack>
-              <Stack>
+              <Stack p={4}>
                 <Text fontSize="md" fontWeight="bold">
                   Username
                 </Text>
@@ -167,13 +174,14 @@ export default function UserProfile() {
                         {isSlugValid && !updateUsername.isLoading && (
                           <InputRightElement
                             children={
-                              slugExists ? (
+                              isSlugAvailableQuery.data ||
+                              username === user.username ? (
+                                <CheckIcon color="green.500" />
+                              ) : (
                                 <Icon
                                   as={HiExclamationTriangle}
                                   color="red.500"
                                 />
-                              ) : (
-                                <CheckIcon color="green.500" />
                               )
                             }
                           />
@@ -206,13 +214,13 @@ export default function UserProfile() {
                     <Text fontSize="sm" fontWeight="bold">
                       {account.provider === 'github' && (
                         <Stack direction="row" alignItems="center" gap={2}>
-                          <SiGithub size={24} color="#181717" />
+                          <SiGithub size={24} color="currentColor" />
                           <Text>GitHub</Text>
                         </Stack>
                       )}
                       {account.provider === 'google' && (
                         <Stack direction="row" alignItems="center" gap={2}>
-                          <FcGoogle size={24} />
+                          <FcGoogle size={24} color="currentColor" />
                           <Text>Google</Text>
                         </Stack>
                       )}

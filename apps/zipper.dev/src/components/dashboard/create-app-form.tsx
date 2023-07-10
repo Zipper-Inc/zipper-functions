@@ -122,7 +122,7 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
         <FormControl isRequired>
           <FormLabel>Name</FormLabel>
           <HStack spacing={1}>
-            <Text fontWeight="medium" fontSize="lg" color="gray.600">
+            <Text fontWeight="medium" fontSize="lg" color="fg.600">
               {organization?.name ||
                 (user?.username as string) ||
                 'Personal workspace'}
@@ -130,7 +130,7 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
             <Text>/</Text>
             <InputGroup>
               <Input
-                backgroundColor="white"
+                backgroundColor="bgColor"
                 maxLength={60}
                 {...createAppForm.register('name')}
                 onChange={(e) => {
@@ -166,7 +166,7 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
             {`Zipper wil use the magic of AI to autogenerate some code to get you started`}
           </FormHelperText>
           <Textarea
-            backgroundColor="white"
+            backgroundColor="bgColor"
             {...createAppForm.register('description')}
           />
         </FormControl>
@@ -175,7 +175,7 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
           <VStack
             w="full"
             border="1px solid"
-            borderColor="gray.200"
+            borderColor="fg.200"
             rounded="md"
             align={'stretch'}
             spacing="0"
@@ -184,7 +184,7 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
               w="full"
               p="4"
               borderBottom="1px solid"
-              borderColor={'gray.200'}
+              borderColor={'fg.200'}
             >
               <Flex flexGrow={'1'}>
                 <VStack align="start">
@@ -227,8 +227,6 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
             isDisabled={isDisabled || addApp.isLoading}
             onClick={createAppForm.handleSubmit(
               async ({ description, isPublic, requiresAuthToRun, name }) => {
-                // need to check if it have a description and use the /api/ai endpoint
-                // to generate the applet
                 let ai = '';
                 if (description) {
                   const aiCode = await fetch('/ai', {
@@ -242,7 +240,6 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
                   }).then((res) => res.text());
                   ai = aiCode;
                 }
-
 
                 await addApp.mutateAsync(
                   {
