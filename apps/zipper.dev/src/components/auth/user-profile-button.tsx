@@ -43,7 +43,7 @@ export function UserProfileButton(props: { showAdditionalOptions?: boolean }) {
           <MenuButton>
             <AvatarForCurrentUser size="sm" referrerPolicy="no-referrer" />
           </MenuButton>
-          <MenuList>
+          <MenuList zIndex="popover">
             <MenuGroup title="Settings">
               <MenuItem onClick={userSettingsModal.onOpen}>
                 <Stack gap={1} direction="row" alignItems="center">
