@@ -65,6 +65,7 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
       }
     },
   });
+
   const [selectedOrganizationId, setSelectedOrganizationId] = useState<
     string | null | undefined
   >(organization?.id);
@@ -82,6 +83,7 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
   useEffect(() => {
     setSelectedOrganizationId(organization?.id);
   }, [organization?.id]);
+
 
   const resetForm = () => {
     const defaultValue = getDefaultCreateAppFormValues();
@@ -159,7 +161,10 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
           </FormErrorMessage>
         </FormControl>
         <FormControl>
-          <FormLabel textColor="gray.600">Description</FormLabel>
+          <FormLabel textColor="gray.600">What is your applet about?</FormLabel>
+          <FormHelperText mb={2}>
+            {`Zipper wil use the magic of AI to autogenerate some code to get you started`}
+          </FormHelperText>
           <Textarea
             backgroundColor="white"
             {...createAppForm.register('description')}
@@ -222,6 +227,23 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
             isDisabled={isDisabled || addApp.isLoading}
             onClick={createAppForm.handleSubmit(
               async ({ description, isPublic, requiresAuthToRun, name }) => {
+                // need to check if it have a description and use the /api/ai endpoint
+                // to generate the applet
+                let ai = '';
+                if (description) {
+                  const aiCode = await fetch('/ai', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                      prompt: description,
+                    }),
+                  }).then((res) => res.text());
+                  ai = aiCode;
+                }
+
+
                 await addApp.mutateAsync(
                   {
                     description,
@@ -229,9 +251,11 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
                     isPrivate: !isPublic,
                     requiresAuthToRun,
                     organizationId: selectedOrganizationId,
+                    aiCode: ai
                   },
                   {
                     onSuccess: (applet) => {
+                      console.log(applet)
                       resetForm();
                       if (
                         (selectedOrganizationId ?? null) !==
@@ -259,7 +283,7 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
               },
             )}
           >
-            Create
+            {createAppForm.watch('description') ? 'Generate ✨' : 'Create'}
           </Button>
         </HStack>
       </VStack>

@@ -43,6 +43,19 @@ export async function POST(req: Request) {
   - The applet should not import nothing from 'zipper' because it is already available in the environment and in the global namespace of Zipper applets.
   - You can import external packages via URLs, for instance from esm.sh, if needed.
   - If the request needs some additional contextual information like user information, app information, and request/response objects, use the 'HandlerContext' type from the Zipper namespace to access it.
+  - Buttons always needs to be the 'Button' component from the Zipper namespace, and they must have all the required props.
+  - Avoid using divs, you can use the 'Stack' component from the Zipper namespace instead.
+  - html inputs are not supported yet, if you want to have a input you need to do something like this example 
+  BRACE_OPEN
+    name: Zipper.Action.create(BRACE_OPEN
+      actionType: "button",
+      showAs: "modal",
+      text: "✨ Create a new flag",
+      inputs: BRACE_OPEN name: "flag_" BRACE_CLOSE,
+      path: "set.ts",
+      run: false,
+    BRACE_CLOSE),
+  BRACE_CLOSE,.
   `);
 
 
