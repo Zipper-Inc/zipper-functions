@@ -78,11 +78,6 @@ module.exports = getConfig({
     ],
   },
   webpack: (config) => {
-    config.module.rules.push({
-      test: /\.txt$/,
-      use: 'raw-loader',
-    });
-
     if (!config.module.noParse)
       config.module.noParse = [
         require.resolve('@ts-morph/common/dist/typescript.js'),
