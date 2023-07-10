@@ -5,10 +5,10 @@ import {
   Switch,
   Input,
   Box,
-  useColorModeValue,
+  useColorMode,
 } from '@chakra-ui/react';
 import { LogMessage } from '@zipper/types';
-import { baseColors, foregroundColors, useCmdOrCtrl } from '@zipper/ui';
+import { baseColors, useCmdOrCtrl } from '@zipper/ui';
 import { Console } from '@nicksrandall/console-feed';
 import { useEffect, useState } from 'react';
 import { useEditorContext } from '../context/editor-context';
@@ -45,12 +45,12 @@ const prettyLogColors: Record<string, Record<'default' | '_dark', string>> = {
   },
 };
 
-const applyPrettyColors = (mode: 'default' | '_dark') => (msg: string) =>
+const applyPrettyColors = (colorToken: 'default' | '_dark') => (msg: string) =>
   Object.keys(PRETTY_LOG_TOKENS).reduce(
     (logMessage, colorKey) =>
       logMessage.replace(
         PRETTY_LOG_TOKENS[colorKey]!,
-        prettyLogColors[colorKey]?.[mode] || PRETTY_LOG_TOKENS[colorKey]!,
+        prettyLogColors[colorKey]?.[colorToken] || PRETTY_LOG_TOKENS[colorKey]!,
       ),
     msg,
   );
@@ -81,7 +81,8 @@ export function AppConsole({ logs }: { logs: LogMessage[] }) {
     JSON.stringify(log.data).toLowerCase().includes(logFilter.toLowerCase()),
   );
 
-  const colorMode = useColorModeValue('default', '_dark');
+  const { colorMode } = useColorMode();
+  const colorToken = colorMode === 'light' ? 'default' : '_dark';
 
   return (
     <Box id="app-console">
@@ -138,13 +139,14 @@ export function AppConsole({ logs }: { logs: LogMessage[] }) {
         borderTop="none"
       >
         <Console
+          variant={colorMode}
           logs={
             filteredLogs.length
               ? filteredLogs.map(({ timestamp: _ignore, ...log }) => ({
                   ...log,
                   data: log.data.map((datum) => {
                     if (typeof datum === 'string')
-                      return applyPrettyColors(colorMode)(datum);
+                      return applyPrettyColors(colorToken)(datum);
                     return datum;
                   }),
                 }))
