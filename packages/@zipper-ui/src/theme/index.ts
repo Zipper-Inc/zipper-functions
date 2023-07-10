@@ -1,4 +1,4 @@
-import { extendTheme } from '@chakra-ui/react';
+import { extendTheme, theme as defaultTheme } from '@chakra-ui/react';
 import multiSelectTheme from './multiSelectTheme';
 
 /**
@@ -228,6 +228,9 @@ export const theme = extendTheme({
           color: semanticTokens.colors.fgText.default,
           paddingY: '4px',
         },
+        '[data-method]:not([data-method="warn"]):not([data-method="error"])': {
+          borderColor: semanticTokens.colors['fg.200'].default,
+        },
         '[data-method]:last-of-type': {
           borderBottom: 'none',
         },
@@ -240,6 +243,10 @@ export const theme = extendTheme({
           '[data-method]': {
             color: semanticTokens.colors.fgText._dark,
           },
+          '[data-method]:not([data-method="warn"]):not([data-method="error"])':
+            {
+              borderColor: semanticTokens.colors['fg.100']._dark,
+            },
         },
       },
     },
