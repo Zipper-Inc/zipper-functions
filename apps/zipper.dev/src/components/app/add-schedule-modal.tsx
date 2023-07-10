@@ -189,10 +189,17 @@ export const AddScheduleModal: React.FC<AddScheduleModalProps> = ({
             flex={1}
             fontWeight="medium"
             isDisabled={!inputParams}
-            onClick={addModalForm.handleSubmit(
-              ({ crontab, filename, ...inputs }) =>
-                onCreate({ filename, crontab, inputs }, addModalForm.reset),
-            )}
+            onClick={() => {
+              const { filename, crontab, ...inputs } = addModalForm.getValues();
+              onCreate(
+                {
+                  filename,
+                  crontab,
+                  inputs,
+                },
+                addModalForm.reset,
+              );
+            }}
           >
             Save
           </Button>
