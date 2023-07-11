@@ -32,6 +32,7 @@ const envSchema = z.object({
   NEXT_PUBLIC_ZIPPER_API_URL: z.string(),
   NEXT_PUBLIC_ZIPPER_DOT_DEV_URL: z.string(),
   NODE_ENV: z.enum(['development', 'test', 'production']),
+  PUBLICLY_ACCESSIBLE_RPC_HOST: z.string(),
   REDIS_HOST: z.string(),
   REDIS_PORT: z.string(),
   RESEND_API_KEY: z.string(),

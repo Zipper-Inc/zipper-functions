@@ -15,11 +15,15 @@ import {
 import Zipper from '@zipper/framework';
 import { getZipperAuth } from './get-zipper-auth';
 
-const { __DEBUG__, SHARED_SECRET: DENO_SHARED_SECRET, RPC_HOST } = process.env;
+const {
+  __DEBUG__,
+  SHARED_SECRET: DENO_SHARED_SECRET,
+  PUBLICLY_ACCESSIBLE_RPC_HOST,
+} = process.env;
 
 const DEPLOY_KID = 'zipper';
 const DENO_ORIGIN = new URL(`https://subhosting-v1.deno-aws.net`);
-const RPC_ROOT = `${RPC_HOST}/api/deno/v0/`;
+const RPC_ROOT = `https://${PUBLICLY_ACCESSIBLE_RPC_HOST}/api/deno/v0/`;
 
 const X_FORWARDED_HOST = 'x-forwarded-host';
 const X_DENO_SUBHOST = 'x-deno-subhost';
@@ -83,7 +87,7 @@ export async function relayRequest(
   },
   bootOnly = false,
 ) {
-  if (!DENO_SHARED_SECRET || !RPC_HOST)
+  if (!DENO_SHARED_SECRET || !PUBLICLY_ACCESSIBLE_RPC_HOST)
     return {
       status: 500,
       result: 'Missing environment variables',

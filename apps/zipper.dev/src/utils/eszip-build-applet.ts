@@ -95,7 +95,7 @@ export async function build({
       let content = await readFrameworkFile(filename);
 
       // Inject Env vars
-      ['RPC_HOST', 'HMAC_SIGNING_SECRET'].forEach((key) => {
+      ['PUBLICLY_ACCESSIBLE_RPC_HOST', 'HMAC_SIGNING_SECRET'].forEach((key) => {
         content = content.replaceAll(
           `Deno.env.get('${key}')`,
           `'${process.env[key]}'`,
