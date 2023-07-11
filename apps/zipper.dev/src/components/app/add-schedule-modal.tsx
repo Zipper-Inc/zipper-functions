@@ -24,7 +24,6 @@ import { FieldValues, useForm } from 'react-hook-form';
 import { useUser } from '~/hooks/use-user';
 import { parseInputForTypes } from '~/utils/parse-code';
 import { useEditorContext } from '../context/editor-context';
-import { useRunAppContext } from '../context/run-app-context';
 
 export type NewSchedule = {
   filename: string;
@@ -88,7 +87,6 @@ export const AddScheduleModal: React.FC<AddScheduleModalProps> = ({
         <ModalCloseButton />
         <ModalBody
           fontSize="sm"
-          color="neutral.700"
           flex={1}
           display="flex"
           flexDirection="column"
@@ -100,6 +98,7 @@ export const AddScheduleModal: React.FC<AddScheduleModalProps> = ({
             <Select
               size="md"
               color="fg.900"
+              bgColor="bgColor"
               {...addModalForm.register('filename', {
                 onChange: (e) => {
                   addModalForm.setValue('filename', e.target.value);
@@ -129,6 +128,7 @@ export const AddScheduleModal: React.FC<AddScheduleModalProps> = ({
               size="md"
               type="text"
               color="fg.900"
+              bgColor="bgColor"
               {...addModalForm.register('crontab')}
             />
             <FormHelperText color="fg.900" fontWeight="semibold">
@@ -185,14 +185,12 @@ export const AddScheduleModal: React.FC<AddScheduleModalProps> = ({
           </Button>
           <Button
             colorScheme="purple"
-            type="submit"
             flex={1}
             fontWeight="medium"
-            isDisabled={!inputParams}
-            onClick={addModalForm.handleSubmit(
-              ({ crontab, filename, ...inputs }) =>
-                onCreate({ filename, crontab, inputs }, addModalForm.reset),
-            )}
+            onClick={() => {
+              const { filename, crontab, ...inputs } = addModalForm.getValues();
+              onCreate({ filename, crontab, inputs }, addModalForm.reset);
+            }}
           >
             Save
           </Button>
