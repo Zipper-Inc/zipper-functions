@@ -36,7 +36,7 @@ const envSchema = z.object({
   REDIS_HOST: z.string(),
   REDIS_PORT: z.string(),
   RESEND_API_KEY: z.string(),
-  SHARED_SECRET: z.string(),
+  DENO_DEPLOY_SECRET: z.string(),
   SLACK_CLIENT_SECRET: z.string(),
 });
 
