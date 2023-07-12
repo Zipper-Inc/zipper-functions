@@ -7,8 +7,8 @@ services:
     name: zipper.dev--preview
     runtime: node
     # # #
-    plan: free
-    previewPlan: standard
+    plan: starter
+    previewPlan: starter
     # # #
     rootDir: apps/zipper.dev
     buildFilter:
@@ -59,8 +59,8 @@ services:
     name: zipper.run--preview
     runtime: node
     # # #
-    plan: free
-    previewPlan: standard
+    plan: starter
+    previewPlan: starter
     # # #
     rootDir: apps/zipper.run
     buildFilter:
@@ -108,11 +108,11 @@ services:
   # # # REDIS # # #
   - type: redis
     name: zipper-redis--preview
-    plan: free
-    previewPlan: standard
+    plan: starter
+    previewPlan: starter
     ipAllowList: []
 
 databases:
   - name: zipper-db--preview
-    plan: free
-    previewPlan: standard
+    plan: starter
+    previewPlan: starter
