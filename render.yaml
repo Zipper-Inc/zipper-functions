@@ -4,7 +4,7 @@ previewsExpireAfterDays: 3
 services:
   # # # ZIPPER.DEV # # #
   - type: web
-    name: 'zipper.dev--preview'
+    name: zipper.dev--preview
     runtime: node
     # # #
     plan: free
@@ -41,7 +41,7 @@ services:
         fromService: zipper.dev--preview
         property: hostport
       - key: NEXT_PUBLIC_ZIPPER_DOT_DEV_HOST
-        fromService: ziper.dev--preview
+        fromService: zipper.dev--preview
         property: hostport
       - key: NEXT_PUBLIC_ZIPPER_DOT_RUN_HOST
         fromService: zipper.run--preview
@@ -49,7 +49,7 @@ services:
 
   # # # ZIPPER.RUN # # #
   - type: web
-    name: 'zipper.run--preview'
+    name: zipper.run--preview
     runtime: node
     # # #
     plan: free
@@ -86,7 +86,7 @@ services:
         fromService: zipper.dev--preview
         property: hostport
       - key: NEXT_PUBLIC_ZIPPER_DOT_DEV_HOST
-        fromService: ziper.dev--preview
+        fromService: zipper.dev--preview
         property: hostport
       - key: NEXT_PUBLIC_ZIPPER_DOT_RUN_HOST
         fromService: zipper.run--preview
