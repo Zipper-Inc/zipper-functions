@@ -43,15 +43,15 @@ services:
           type: web
           property: hostport
       - key: NEXT_PUBLIC_ZIPPER_DOT_DEV_HOST
-          fromService:
-            name: zipper.dev--preview
-            type: web
-            property: hostport
+        fromService:
+          name: zipper.dev--preview
+          type: web
+          property: hostport
       - key: NEXT_PUBLIC_ZIPPER_DOT_RUN_HOST
-          fromService:
-            name: zipper.run--preview
-            type: web
-            property: hostport
+        fromService:
+          name: zipper.run--preview
+          type: web
+          property: hostport
 
   # # # ZIPPER.RUN # # #
   - type: web
@@ -94,15 +94,15 @@ services:
           type: web
           property: hostport
       - key: NEXT_PUBLIC_ZIPPER_DOT_DEV_HOST
-          fromService:
-            name: zipper.dev--preview
-            type: web
-            property: hostport
+        fromService:
+          name: zipper.dev--preview
+          type: web
+          property: hostport
       - key: NEXT_PUBLIC_ZIPPER_DOT_RUN_HOST
-          fromService:
-            name: zipper.run--preview
-            type: web
-            property: hostport
+        fromService:
+          name: zipper.run--preview
+          type: web
+          property: hostport
 
   # # # REDIS # # #
   - type: redis
