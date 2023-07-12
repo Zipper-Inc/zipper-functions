@@ -96,6 +96,7 @@ services:
   - type: redis
     name: zipper-redis--preview
     plan: free
+    previewPlan: free
 
 databases:
   - name: zipper-db--preview
