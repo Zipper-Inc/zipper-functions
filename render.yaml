@@ -1,0 +1,103 @@
+previewsEnabled: true
+previewsExpireAfterDays: 3
+
+services:
+  # # # ZIPPER.DEV # # #
+  - type: web
+    name: 'zipper.dev--preview'
+    runtime: node
+    # # #
+    plan: free
+    previewPlan: free
+    # # #
+    rootDir: apps/zipper.dev
+    buildFilter:
+      paths:
+        - apps/zipper.dev/**/*
+        - packages/**/*
+      ignoredPaths:
+        - '**/*.test.ts'
+        - '**/*.test.tsx'
+    buildCommand: 'yarn install; yarn build'
+    startCommand: 'yarn start:production'
+    # # #
+    envVars:
+      - fromGroup: zipper-env-group--preview
+      - key: DATABASE_URL
+        fromDatabase:
+          name: zipper-db--preview
+          property: connectionString
+      - key: REDIS_HOST
+        fromService:
+          type: redis
+          name: zipper-redis--preview
+          property: host
+      - key: REDIS_PORT
+        fromService:
+          type: redis
+          name: zipper-redis--preview
+          property: port
+      - key: PUBLICLY_ACCESSIBLE_RPC_HOST
+        fromService: zipper.dev--preview
+        property: hostport
+      - key: NEXT_PUBLIC_ZIPPER_DOT_DEV_HOST
+        fromService: ziper.dev--preview
+        property: hostport
+      - key: NEXT_PUBLIC_ZIPPER_DOT_RUN_HOST
+        fromService: zipper.run--preview
+        property: hostport
+
+  # # # ZIPPER.RUN # # #
+  - type: web
+    name: 'zipper.run--preview'
+    runtime: node
+    # # #
+    plan: free
+    previewPlan: free
+    # # #
+    rootDir: apps/zipper.run
+    buildFilter:
+      paths:
+        - apps/zipper.run/**/*
+        - packages/**/*
+      ignoredPaths:
+        - '**/*.test.ts'
+        - '**/*.test.tsx'
+    buildCommand: 'yarn install; yarn build'
+    startCommand: 'yarn start'
+    # # #
+    envVars:
+      - fromGroup: zipper-env-group--preview
+      - key: DATABASE_URL
+        fromDatabase:
+          name: zipper-db--preview
+          property: connectionString
+      - key: REDIS_HOST
+        fromService:
+          type: redis
+          name: zipper-redis--preview
+          property: host
+      - key: REDIS_PORT
+        fromService:
+          type: redis
+          name: zipper-redis--preview
+          property: port
+      - key: PUBLICLY_ACCESSIBLE_RPC_HOST
+        fromService: zipper.dev--preview
+        property: hostport
+      - key: NEXT_PUBLIC_ZIPPER_DOT_DEV_HOST
+        fromService: ziper.dev--preview
+        property: hostport
+      - key: NEXT_PUBLIC_ZIPPER_DOT_RUN_HOST
+        fromService: zipper.run--preview
+        property: hostport
+
+  # # # REDIS # # #
+  - type: redis
+    name: zipper-redis--preview
+    plan: free
+
+databases:
+  - name: zipper-db--preview
+    plan: free
+    previewPlan: free
