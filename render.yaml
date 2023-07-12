@@ -18,6 +18,7 @@ services:
       ignoredPaths:
         - '**/*.test.ts'
         - '**/*.test.tsx'
+    initialDeployHook: 'yarn db-migrate-dev; yarn db-seed'
     buildCommand: 'yarn install; yarn build'
     startCommand: 'yarn start:production'
     # # #
