@@ -5,9 +5,11 @@ import { loadEnvConfig } from '@next/env';
 
 loadEnvConfig('./../../', process.env.NODE_ENV !== 'production');
 
-const port = parseInt(process.env.PORT || '3000', 10);
 const dev = process.env.NODE_ENV !== 'production';
-const app = next({ dev, hostname: process.env.NEXT_PUBLIC_HOST, port });
+const [hostname, portString] =
+  process.env.NEXT_PUBLIC_ZUPPER_DOT_DEV_HOST?.split(':') || [];
+const port = parseInt(process.env.PORT || portString || '3000', 10);
+const app = next({ dev, hostname, port });
 const handle = app.getRequestHandler();
 
 // Load environment variables from .env, .env.local, etc. This explicit call
