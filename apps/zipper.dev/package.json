@@ -75,7 +75,6 @@
     "cronstrue": "^2.14.0",
     "framer-motion": "^9.0.0",
     "fuse.js": "^6.6.2",
-    "hnswlib-node": "^2.0.0",
     "into-stream": "^6.0.0",
     "ioredis": "^5.2.2",
     "jose": "^4.11.4",

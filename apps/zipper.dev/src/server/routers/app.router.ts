@@ -201,7 +201,7 @@ export const appRouter = createRouter()
       });
       // get a hash of main script and update the script
       const scriptHash = getScriptHash({
-        code: aiCode ? aiCode : defaultCode,
+        code: aiCode ?? defaultCode,
         filename: defaultMainFilename,
         id: scriptMain.scriptId,
       });
