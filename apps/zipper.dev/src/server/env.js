@@ -27,7 +27,7 @@ const envSchema = z.object({
   NEXTAUTH_GOOGLE_CLIENT_SECRET: z.string(),
   NEXTAUTH_URL: z.string().url(),
   NEXT_PUBLIC_ZIPPER_DOT_DEV_HOST: z.string(),
-  NEXT_PUBLIC_OUTPUT_SERVER_HOSTNAME: z.string(),
+  NEXT_PUBLIC_ZIPPER_DOT_RUN_HOST: z.string(),
   NEXT_PUBLIC_SLACK_CLIENT_ID: z.string(),
   NODE_ENV: z.enum(['development', 'test', 'production']),
   PUBLICLY_ACCESSIBLE_RPC_HOST: z.string(),

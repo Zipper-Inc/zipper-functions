@@ -106,7 +106,7 @@ module.exports = getConfig({
         destination: `${
           process.env.NODE_ENV === 'production' ? 'https' : 'http'
         }://:slug.${
-          process.env.NEXT_PUBLIC_OUTPUT_SERVER_HOSTNAME
+          process.env.NEXT_PUBLIC_ZIPPER_DOT_RUN_HOST
         }/@:version/:filename/relay`,
       },
       {
@@ -114,7 +114,7 @@ module.exports = getConfig({
         destination: `${
           process.env.NODE_ENV === 'production' ? 'https' : 'http'
         }://:slug.${
-          process.env.NEXT_PUBLIC_OUTPUT_SERVER_HOSTNAME
+          process.env.NEXT_PUBLIC_ZIPPER_DOT_RUN_HOST
         }/@:version/boot`,
       },
     ];
