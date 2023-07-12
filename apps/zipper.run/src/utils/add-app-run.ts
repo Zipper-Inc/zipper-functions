@@ -1,11 +1,12 @@
 import { AddAppRun } from '@zipper/types';
+import { getZipperApiUrl } from '@zipper/utils';
 
 /**
  * Add app run via API endpoint
  * @see /apps/zipper.dev/pages/api/appRun/create
  */
 export default async function addAppRun(params: AddAppRun): Promise<Response> {
-  const url = `${process.env.NEXT_PUBLIC_ZIPPER_API_URL}/appRun/create`;
+  const url = `${getZipperApiUrl()}/appRun/create`;
   return fetch(url, {
     method: 'POST',
     headers: {

@@ -21,3 +21,23 @@ export function getHost(url?: string) {
     return null;
   }
 }
+
+export function isLocalhost(
+  host = process.env.NEXT_PUBLIC_ZIPPER_DOT_DEV_HOST || '',
+  env = process.env.NODE_ENV || 'development',
+) {
+  return env === 'development' && /^localhost/.test(host as string);
+}
+
+export function getZipperDotDevUrl() {
+  const protocol = isLocalhost() ? 'http' : 'https';
+  return new URL(
+    `${protocol}://${process.env.NEXT_PUBLIC_ZIPPER_DOT_DEV_HOST}`,
+  );
+}
+
+export function getZipperApiUrl() {
+  const url = getZipperDotDevUrl();
+  url.pathname = '/api';
+  return url;
+}
