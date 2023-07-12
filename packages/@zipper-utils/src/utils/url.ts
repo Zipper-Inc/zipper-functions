@@ -26,7 +26,9 @@ export function isLocalhost(
   host = process.env.NEXT_PUBLIC_ZIPPER_DOT_DEV_HOST || '',
   env = process.env.NODE_ENV || 'development',
 ) {
-  return env === 'development' && /^localhost/.test(host as string);
+  return (
+    env === 'development' && /^(localhost|127\.0\.0\.1)/.test(host as string)
+  );
 }
 
 export function getZipperDotDevUrl() {
