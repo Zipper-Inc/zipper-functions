@@ -3,6 +3,11 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 const { withSentryConfig } = require('@sentry/nextjs');
 
+const ZIPPER_DOT_DEV_PROTOCOL =
+  process.env.NODE_ENV === 'development' &&
+  /^localhost/.test(process.env.NEXT_PUBLIC_ZIPPER_DOT_DEV_HOST || '');
+const ZIPPER_DOT_DEV_URL = `${ZIPPER_DOT_DEV_PROTOCOL}://${process.env.NEXT_PUBLIC_ZIPPER_DOT_DEV_HOST}`;
+
 /**
  * Don't be scared of the generics here.
  * All they do is to give us autocompletion when using this.
@@ -60,11 +65,11 @@ module.exports = getConfig({
     return [
       {
         source: '/_zipper/removeConnector/:appId/:connectorType/:path*',
-        destination: `${process.env.NEXT_PUBLIC_ZIPPER_DOT_DEV_URL}/api/app/:appId/removeConnector/:connectorType`,
+        destination: `${ZIPPER_DOT_DEV_URL}/api/app/:appId/removeConnector/:connectorType`,
       },
       {
         source: '/_zipper/app/info/:appSlug/:path*',
-        destination: `${process.env.NEXT_PUBLIC_ZIPPER_DOT_DEV_URL}/api/app/info/:appSlug`,
+        destination: `${ZIPPER_DOT_DEV_URL}/api/app/info/:appSlug`,
       },
       {
         source: '/run/history/:runId.png',

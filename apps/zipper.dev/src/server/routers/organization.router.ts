@@ -9,6 +9,7 @@ import denyList from '../utils/slugDenyList';
 import slugify from '~/utils/slugify';
 import { sendInvitationEmail } from '../utils/invitation.utils';
 import { OMNI_USER_ID } from '../utils/omni.utils';
+import { getZipperDotDevUrl } from '@zipper/utils';
 
 export const organizationRouter = createRouter()
   .query('getMemberships', {
@@ -235,7 +236,7 @@ export const organizationRouter = createRouter()
           organizationId: ctx.orgId!,
           role: input.role,
           token: crypto.randomBytes(4).toString('hex'),
-          redirectUrl: `${process.env.NEXT_PUBLIC_ZIPPER_DOT_DEV_URL}/${signInOrSignUp}`,
+          redirectUrl: `${getZipperDotDevUrl().origin}/${signInOrSignUp}`,
         },
       });
 
@@ -246,7 +247,9 @@ export const organizationRouter = createRouter()
       });
 
       if (invite && org) {
-        const callbackUrl = `${process.env.NEXT_PUBLIC_ZIPPER_DOT_DEV_URL}/auth/accept-invitation/${invite.token}`;
+        const callbackUrl = `${
+          getZipperDotDevUrl().origin
+        }/auth/accept-invitation/${invite.token}`;
         sendInvitationEmail({
           email: input.email,
           callbackUrl,

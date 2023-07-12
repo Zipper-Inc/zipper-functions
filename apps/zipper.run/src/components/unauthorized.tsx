@@ -1,5 +1,6 @@
 import { Flex, VStack, Text, Center, Button, Box } from '@chakra-ui/react';
 import { useEffectOnce, ZipperLogo, ZipperSymbol } from '@zipper/ui';
+import { getZipperDotDevUrl } from '@zipper/utils';
 import { useState } from 'react';
 import { readJWT } from '~/utils/get-zipper-auth';
 
@@ -48,10 +49,9 @@ export default function Unauthorized() {
                 <Button
                   colorScheme="purple"
                   onClick={() => {
-                    window.location.href = `${process.env
-                      .NEXT_PUBLIC_ZIPPER_DOT_DEV_URL!}/auth/from/${
-                      window.location.host.split('.')[0]
-                    }`;
+                    window.location.href = `${
+                      getZipperDotDevUrl().origin
+                    }/auth/from/${window.location.host.split('.')[0]}`;
                   }}
                 >
                   <ZipperSymbol fill="bgColor" height={16} />

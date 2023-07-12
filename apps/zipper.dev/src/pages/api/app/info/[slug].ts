@@ -13,7 +13,7 @@ import { parseCode } from '~/utils/parse-code';
 import { compare } from 'bcryptjs';
 import { canUserEdit } from '~/server/routers/app.router';
 import { requiredUserAuthConnectorFilter } from '~/utils/user-auth-connector-filter';
-import { ZIPPER_TEMP_USER_ID_HEADER } from '@zipper/utils';
+import { getZipperDotDevUrl, ZIPPER_TEMP_USER_ID_HEADER } from '@zipper/utils';
 import * as Sentry from '@sentry/nextjs';
 import { verifyAccessToken } from '~/utils/jwt-utils';
 import { SessionOrganizationMembership } from '../../auth/[...nextauth]';
@@ -173,7 +173,9 @@ export default async function handler(
       },
       entryPoint: {
         filename: entryPoint.filename,
-        editUrl: `${process.env.NEXT_PUBLIC_ZIPPER_DOT_DEV_URL}/${resourceOwner?.slug}/${appFound.slug}/edit/${entryPoint.filename}`,
+        editUrl: `${getZipperDotDevUrl().origin}/${resourceOwner?.slug}/${
+          appFound.slug
+        }/edit/${entryPoint.filename}`,
       },
     },
   };

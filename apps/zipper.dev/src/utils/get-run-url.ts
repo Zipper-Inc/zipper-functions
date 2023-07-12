@@ -1,3 +1,5 @@
+import { getZipperDotDevUrl } from '@zipper/utils';
+
 export default function getRunUrl(
   slug: string,
   version: string | null | undefined = 'latest',
@@ -14,5 +16,7 @@ export function getBootUrl(
 }
 
 function buildUrl(path: string) {
-  return `${process.env.NEXT_PUBLIC_ZIPPER_DOT_DEV_URL}/${path}`;
+  const url = getZipperDotDevUrl();
+  url.pathname = path;
+  return url.toString();
 }

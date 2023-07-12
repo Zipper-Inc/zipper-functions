@@ -1,4 +1,5 @@
 import { Prisma } from '@prisma/client';
+import { getZipperDotDevUrl } from '@zipper/utils';
 import { z } from 'zod';
 import { prisma } from '~/server/prisma';
 import { createRouter } from '../createRouter';
@@ -93,7 +94,7 @@ export const appEditorRouter = createRouter()
         sendInvitationEmail({
           email: input.email,
           resourceToJoinName: app?.name || app?.slug,
-          callbackUrl: `${process.env.NEXT_PUBLIC_ZIPPER_DOT_DEV_URL}/app/${app?.id}`,
+          callbackUrl: `${getZipperDotDevUrl().origin}/app/${app?.id}`,
         });
 
         return 'pending';

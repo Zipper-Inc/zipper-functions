@@ -11,6 +11,7 @@ import {
   Text,
   Section,
 } from '@react-email/components';
+import { getZipperDotDevUrl } from '@zipper/utils';
 import * as React from 'react';
 
 interface MagicLinkEmailProps {
@@ -20,7 +21,7 @@ interface MagicLinkEmailProps {
 
 export const Logo = () => (
   <Img
-    src={`${process.env.NEXT_PUBLIC_ZIPPER_DOT_DEV_URL}/static/zipper-logomark.png`}
+    src={`${getZipperDotDevUrl().origin}/static/zipper-logomark.png`}
     alt="Zipper"
     width="42"
     height="42"
