@@ -20,6 +20,14 @@ import {
   BreadcrumbItem,
   BreadcrumbLink,
   Heading,
+  Box,
+  AbsoluteCenter,
+  Image,
+  ModalOverlay,
+  Modal,
+  ModalContent,
+  Center,
+  Fade,
 } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
@@ -118,181 +126,200 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
     },
   );
 
+  // Gif center above/ modal
   return (
-    <FormProvider {...createAppForm}>
-      <Breadcrumb>
-        <Breadcrumb fontSize="sm">
-          <BreadcrumbItem>
-            <BreadcrumbLink href="#" onClick={onClose}>
-              Applets
-            </BreadcrumbLink>
-          </BreadcrumbItem>
+    <Box position="relative">
+      <Fade in={isAILoading}>
+        <Box
+          position="fixed"
+          top={0}
+          left={0}
+          zIndex={100}
+          w="100vw"
+          h="100vh"
+          backgroundColor="blackAlpha.600"
+        />
+        <AbsoluteCenter axis="both" zIndex={110}>
+          <Image src="/static/spinner-dark@1x.gif" />
+        </AbsoluteCenter>
+      </Fade>
+      <FormProvider {...createAppForm}>
+        <Breadcrumb>
+          <Breadcrumb fontSize="sm">
+            <BreadcrumbItem>
+              <BreadcrumbLink href="#" onClick={onClose}>
+                Applets
+              </BreadcrumbLink>
+            </BreadcrumbItem>
 
-          <BreadcrumbItem isCurrentPage>
-            <Text>Create</Text>
-          </BreadcrumbItem>
+            <BreadcrumbItem isCurrentPage>
+              <Text>Create</Text>
+            </BreadcrumbItem>
+          </Breadcrumb>
         </Breadcrumb>
-      </Breadcrumb>
-      <VStack align={'start'} gap={2} w="full">
-        <Heading as={'h1'} fontWeight="md" mb="2" mt="4" fontSize="3xl">
-          Create Applet
-        </Heading>
-        <FormControl isRequired>
-          <FormLabel>Name</FormLabel>
-          <HStack spacing={1}>
-            <Text fontWeight="medium" fontSize="lg" color="fg.600">
-              {organization?.name ||
-                (user?.username as string) ||
-                'Personal workspace'}
-            </Text>
-            <Text>/</Text>
-            <InputGroup>
-              <Input
-                backgroundColor="bgColor"
-                maxLength={60}
-                {...createAppForm.register('name')}
-                onChange={(e) => {
-                  setSlug(slugify(e.target.value));
-                }}
-              />
-              {isSlugValid && (
-                <InputRightElement
-                  children={
-                    slugExists ? (
-                      <Icon as={HiExclamationTriangle} color="red.500" />
-                    ) : (
-                      <CheckIcon color="green.500" />
-                    )
-                  }
+        <VStack align={'start'} gap={2} w="full">
+          <Heading as={'h1'} fontWeight="md" mb="2" mt="4" fontSize="3xl">
+            Create Applet
+          </Heading>
+          <FormControl isRequired>
+            <FormLabel>Name</FormLabel>
+            <HStack spacing={1}>
+              <Text fontWeight="medium" fontSize="lg" color="fg.600">
+                {organization?.name ||
+                  (user?.username as string) ||
+                  'Personal workspace'}
+              </Text>
+              <Text>/</Text>
+              <InputGroup>
+                <Input
+                  backgroundColor="bgColor"
+                  maxLength={60}
+                  {...createAppForm.register('name')}
+                  onChange={(e) => {
+                    setSlug(slugify(e.target.value));
+                  }}
                 />
-              )}
-            </InputGroup>
-          </HStack>
-          {createAppForm.watch('name') && (
-            <FormHelperText>
-              {`Your app will be available at
-                            ${slug}.${process.env.NEXT_PUBLIC_OUTPUT_SERVER_HOSTNAME}`}
-            </FormHelperText>
-          )}
-          <FormErrorMessage>
-            {createAppForm.formState.errors.name?.message}
-          </FormErrorMessage>
-        </FormControl>
-        <FormControl>
-          <FormLabel textColor="gray.600">What is your applet about?</FormLabel>
-          <FormHelperText mb={2}>
-            {`Zipper wil use the magic of AI to autogenerate some code to get you started`}
-          </FormHelperText>
-          <Textarea
-            backgroundColor="bgColor"
-            {...createAppForm.register('description')}
-          />
-        </FormControl>
-        <FormControl>
-          <FormLabel>Visibility</FormLabel>
-          <VStack
-            w="full"
-            border="1px solid"
-            borderColor="fg.200"
-            rounded="md"
-            align={'stretch'}
-            spacing="0"
-          >
-            <HStack
-              w="full"
-              p="4"
-              borderBottom="1px solid"
-              borderColor={'fg.200'}
-            >
-              <Flex flexGrow={'1'}>
-                <VStack align="start">
-                  <HStack>
-                    <VscCode />
-                    <Text>Is the code public?</Text>
-                  </HStack>
-                </VStack>
-              </Flex>
-              <Switch {...createAppForm.register('isPublic')} ml="auto" />
-            </HStack>
-
-            <VStack align="start" w="full" p="4">
-              <HStack w="full">
-                {createAppForm.watch('requiresAuthToRun') ? (
-                  <HiLockClosed />
-                ) : (
-                  <HiLockOpen />
+                {isSlugValid && (
+                  <InputRightElement
+                    children={
+                      slugExists ? (
+                        <Icon as={HiExclamationTriangle} color="red.500" />
+                      ) : (
+                        <CheckIcon color="green.500" />
+                      )
+                    }
+                  />
                 )}
-                <Text>Require sign in to run?</Text>
-                <Spacer flexGrow={1} />
-                <Switch {...createAppForm.register('requiresAuthToRun')} />
-              </HStack>
-              {createAppForm.watch('requiresAuthToRun') && (
-                <FormHelperText>
-                  Users will be asked to authenticate against Zipper before
-                  they're able to run your applet. You can use the user's email
-                  address to determine if they have access.
-                </FormHelperText>
-              )}
-            </VStack>
-          </VStack>
-        </FormControl>
-        <HStack w="full" justifyContent="end">
-          <Button onClick={onClose}>Cancel</Button>
-          <Button
-            display="block"
-            colorScheme="purple"
-            type="submit"
-            isDisabled={isDisabled || addApp.isLoading || isAILoading}
-            onClick={createAppForm.handleSubmit(
-              async ({ description, isPublic, requiresAuthToRun, name }) => {
-                let ai = '';
-                if (description) {
-                  ai = await getAICode(description);
-                }
-
-                await addApp.mutateAsync(
-                  {
-                    description,
-                    name,
-                    isPrivate: !isPublic,
-                    requiresAuthToRun,
-                    organizationId: selectedOrganizationId,
-                    aiCode: ai,
-                  },
-                  {
-                    onSuccess: (applet) => {
-                      console.log(applet);
-                      resetForm();
-                      if (
-                        (selectedOrganizationId ?? null) !==
-                          (organization?.id ?? null) &&
-                        setActive
-                      ) {
-                        setActive(selectedOrganizationId || null);
-                      }
-                      toast({
-                        title: 'Applet created',
-                        status: 'success',
-                        duration: 9999,
-                        isClosable: false,
-                      });
-
-                      router.push(
-                        getEditAppletLink(
-                          applet!.resourceOwner!.slug,
-                          applet!.slug,
-                        ),
-                      );
-                    },
-                  },
-                );
-              },
+              </InputGroup>
+            </HStack>
+            {createAppForm.watch('name') && (
+              <FormHelperText>
+                {`Your app will be available at
+                            ${slug}.${process.env.NEXT_PUBLIC_OUTPUT_SERVER_HOSTNAME}`}
+              </FormHelperText>
             )}
-          >
-            {createAppForm.watch('description') ? 'Generate ✨' : 'Create'}
-          </Button>
-        </HStack>
-      </VStack>
-    </FormProvider>
+            <FormErrorMessage>
+              {createAppForm.formState.errors.name?.message}
+            </FormErrorMessage>
+          </FormControl>
+          <FormControl>
+            <FormLabel textColor="gray.600">
+              What is your applet about?
+            </FormLabel>
+            <FormHelperText mb={2}>
+              {`Zipper wil use the magic of AI to autogenerate some code to get you started`}
+            </FormHelperText>
+            <Textarea
+              backgroundColor="bgColor"
+              {...createAppForm.register('description')}
+            />
+          </FormControl>
+          <FormControl>
+            <FormLabel>Visibility</FormLabel>
+            <VStack
+              w="full"
+              border="1px solid"
+              borderColor="fg.200"
+              rounded="md"
+              align={'stretch'}
+              spacing="0"
+            >
+              <HStack
+                w="full"
+                p="4"
+                borderBottom="1px solid"
+                borderColor={'fg.200'}
+              >
+                <Flex flexGrow={'1'}>
+                  <VStack align="start">
+                    <HStack>
+                      <VscCode />
+                      <Text>Is the code public?</Text>
+                    </HStack>
+                  </VStack>
+                </Flex>
+                <Switch {...createAppForm.register('isPublic')} ml="auto" />
+              </HStack>
+
+              <VStack align="start" w="full" p="4">
+                <HStack w="full">
+                  {createAppForm.watch('requiresAuthToRun') ? (
+                    <HiLockClosed />
+                  ) : (
+                    <HiLockOpen />
+                  )}
+                  <Text>Require sign in to run?</Text>
+                  <Spacer flexGrow={1} />
+                  <Switch {...createAppForm.register('requiresAuthToRun')} />
+                </HStack>
+                {createAppForm.watch('requiresAuthToRun') && (
+                  <FormHelperText>
+                    Users will be asked to authenticate against Zipper before
+                    they're able to run your applet. You can use the user's
+                    email address to determine if they have access.
+                  </FormHelperText>
+                )}
+              </VStack>
+            </VStack>
+          </FormControl>
+          <HStack w="full" justifyContent="end">
+            <Button onClick={onClose}>Cancel</Button>
+            <Button
+              display="block"
+              colorScheme="purple"
+              type="submit"
+              isDisabled={isDisabled || addApp.isLoading || isAILoading}
+              onClick={createAppForm.handleSubmit(
+                async ({ description, isPublic, requiresAuthToRun, name }) => {
+                  let ai = '';
+                  if (description) {
+                    ai = await getAICode(description);
+                  }
+
+                  await addApp.mutateAsync(
+                    {
+                      description,
+                      name,
+                      isPrivate: !isPublic,
+                      requiresAuthToRun,
+                      organizationId: selectedOrganizationId,
+                      aiCode: ai,
+                    },
+                    {
+                      onSuccess: (applet) => {
+                        console.log(applet);
+                        resetForm();
+                        if (
+                          (selectedOrganizationId ?? null) !==
+                            (organization?.id ?? null) &&
+                          setActive
+                        ) {
+                          setActive(selectedOrganizationId || null);
+                        }
+                        toast({
+                          title: 'Applet created',
+                          status: 'success',
+                          duration: 9999,
+                          isClosable: false,
+                        });
+
+                        router.push(
+                          getEditAppletLink(
+                            applet!.resourceOwner!.slug,
+                            applet!.slug,
+                          ),
+                        );
+                      },
+                    },
+                  );
+                },
+              )}
+            >
+              {createAppForm.watch('description') ? 'Generate ✨' : 'Create'}
+            </Button>
+          </HStack>
+        </VStack>
+      </FormProvider>
+    </Box>
   );
 };
