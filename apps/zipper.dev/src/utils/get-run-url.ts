@@ -1,4 +1,4 @@
-import { getZipperDotDevUrl } from '@zipper/utils';
+import { getZipperDotDevUrlForServer } from '../server/utils/server-url.utils';
 
 export default function getRunUrl(
   slug: string,
@@ -16,7 +16,7 @@ export function getBootUrl(
 }
 
 function buildUrl(path: string) {
-  const url = getZipperDotDevUrl();
+  const url = getZipperDotDevUrlForServer();
   url.pathname = path;
   return url.toString();
 }

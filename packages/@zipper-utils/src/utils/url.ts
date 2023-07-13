@@ -27,7 +27,8 @@ export function isLocalhost(
   env = process.env.NODE_ENV || 'development',
 ) {
   return (
-    env === 'development' && /^(localhost|127\.0\.0\.1)/.test(host as string)
+    env === 'development' &&
+    /^(localhost|127\.0\.0\.1|localdev\.me)/.test(host as string)
   );
 }
 

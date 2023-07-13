@@ -2,7 +2,7 @@ import { createServer } from 'http';
 import { parse } from 'url';
 import next from 'next';
 import { loadEnvConfig } from '@next/env';
-import { getZipperDotDevUrl } from '@zipper/utils';
+import { getZipperDotDevUrlForServer } from './server/utils/server-url.utils';
 
 loadEnvConfig('./../../', process.env.NODE_ENV !== 'production');
 
@@ -24,7 +24,7 @@ app.prepare().then(() => {
   }).listen(port);
 
   console.log(
-    `> Server listening at ${getZipperDotDevUrl()} as ${
+    `> Server listening at ${getZipperDotDevUrlForServer()} as ${
       dev ? 'development' : process.env.NODE_ENV
     }`,
   );
