@@ -36,6 +36,7 @@ import { useOrganization } from '~/hooks/use-organization';
 import { useUser } from '~/hooks/use-user';
 import { useOrganizationList } from '~/hooks/use-organization-list';
 import { getEditAppletLink } from '@zipper/utils';
+import { useMutation } from 'react-query';
 
 const getDefaultCreateAppFormValues = () => ({
   name: generateDefaultSlug(),
@@ -84,7 +85,6 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
     setSelectedOrganizationId(organization?.id);
   }, [organization?.id]);
 
-
   const resetForm = () => {
     const defaultValue = getDefaultCreateAppFormValues();
     createAppForm.reset(defaultValue);
@@ -99,6 +99,24 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
 
   const duration = 1500;
   const toast = useToast();
+
+  const { mutateAsync: getAICode, isLoading: isAILoading } = useMutation(
+    ['app.ai'],
+    async (description: string) => {
+      return fetch('/ai', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prompt: description,
+        }),
+      }).then((res) => {
+        if (!res.ok) Promise.reject();
+        return res.text();
+      });
+    },
+  );
 
   return (
     <FormProvider {...createAppForm}>
@@ -224,21 +242,12 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
             display="block"
             colorScheme="purple"
             type="submit"
-            isDisabled={isDisabled || addApp.isLoading}
+            isDisabled={isDisabled || addApp.isLoading || isAILoading}
             onClick={createAppForm.handleSubmit(
               async ({ description, isPublic, requiresAuthToRun, name }) => {
                 let ai = '';
                 if (description) {
-                  const aiCode = await fetch('/ai', {
-                    method: 'POST',
-                    headers: {
-                      'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                      prompt: description,
-                    }),
-                  }).then((res) => res.text());
-                  ai = aiCode;
+                  ai = await getAICode(description);
                 }
 
                 await addApp.mutateAsync(
@@ -248,11 +257,11 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
                     isPrivate: !isPublic,
                     requiresAuthToRun,
                     organizationId: selectedOrganizationId,
-                    aiCode: ai
+                    aiCode: ai,
                   },
                   {
                     onSuccess: (applet) => {
-                      console.log(applet)
+                      console.log(applet);
                       resetForm();
                       if (
                         (selectedOrganizationId ?? null) !==
