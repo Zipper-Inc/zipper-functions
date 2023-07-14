@@ -119,7 +119,7 @@ export const CreateOrganizationModal = ({
                         <FormHelperText>
                           This will be your account name on Zipper.
                         </FormHelperText>
-                        <FormHelperText>{`The url for your organization will be: ${process.env.NEXT_PUBLIC_HOST}/${slug}`}</FormHelperText>
+                        <FormHelperText>{`The url for your organization will be: ${process.env.NEXT_PUBLIC_ZIPPER_DOT_DEV_HOST}/${slug}`}</FormHelperText>
                       </>
                     )}
 

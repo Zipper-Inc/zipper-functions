@@ -26,5 +26,5 @@ export const normalizeAppPath = (appPath: string = DEFAULT_PATH) =>
  * Gets the zipper.run link for a given app slug
  */
 export const getAppLink = (slug: string) => {
-  return `${slug}.${process.env.NEXT_PUBLIC_OUTPUT_SERVER_HOSTNAME}`;
+  return `${slug}.${process.env.NEXT_PUBLIC_ZIPPER_DOT_RUN_HOST}`;
 };

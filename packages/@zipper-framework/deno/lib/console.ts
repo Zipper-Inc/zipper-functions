@@ -9,7 +9,9 @@ export function sendLog({
   runId?: string;
   log: Zipper.Log.Message;
 }) {
-  const url = new URL(Deno.env.get('RPC_HOST') as string);
+  const url = new URL(
+    `https://${Deno.env.get('PUBLICLY_ACCESSIBLE_RPC_HOST')}`,
+  );
   url.pathname = `/api/app/${appId}/${version}/logs`;
   if (runId) url.pathname = `${url.pathname}/${runId}`;
   let promise: unknown = fetch(url, {

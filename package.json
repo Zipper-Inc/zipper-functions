@@ -16,6 +16,7 @@
     "onboard": "yarn install; yarn link-env; yarn migrate; yarn seed",
     "build": "yarn install; yarn link-env; turbo run build",
     "dev": "yarn install; yarn link-env; yarn migrate; turbo run dev --parallel",
+    "update-env": "yarn dotenv -c .env.local ts-node --compiler-options \"{\\\"module\\\":\\\"commonjs\\\"}\" ./bin/ts/update-env.ts",
     "link-env": "sh ./bin/link-env-files.sh",
     "lint": "turbo run lint",
     "test": "turbo run test",

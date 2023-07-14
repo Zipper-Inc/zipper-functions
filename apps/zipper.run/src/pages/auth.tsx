@@ -1,3 +1,4 @@
+import { getZipperApiUrl } from '@zipper/utils';
 import { GetServerSideProps } from 'next';
 
 export const AuthPage = () => {
@@ -8,10 +9,10 @@ export const getServerSideProps: GetServerSideProps = async ({
   query,
   res,
 }) => {
-  const result = await fetch(
-    `${process.env.NEXT_PUBLIC_ZIPPER_API_URL}/auth/getToken`,
-    { method: 'POST', body: JSON.stringify({ code: query.code }) },
-  );
+  const result = await fetch(`${getZipperApiUrl()}/auth/getToken`, {
+    method: 'POST',
+    body: JSON.stringify({ code: query.code }),
+  });
 
   const json = await result.json();
 

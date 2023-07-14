@@ -106,7 +106,7 @@ async function decodeAuthHeader(req: NextApiRequest) {
   }
 
   const encoder = new TextEncoder();
-  const secretKey = encoder.encode(process.env.SHARED_SECRET);
+  const secretKey = encoder.encode(process.env.DENO_DEPLOY_SECRET);
   try {
     const verified = await jose.jwtVerify(token, secretKey);
     return verified.payload;

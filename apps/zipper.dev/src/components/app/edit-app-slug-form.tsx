@@ -134,7 +134,7 @@ export const EditAppSlugForm: React.FC<EditAppSlugFormProps> = ({
             <Text display="inline" fontWeight="semibold">
               {slug}
             </Text>
-            .{process.env.NEXT_PUBLIC_OUTPUT_SERVER_HOSTNAME}
+            .{process.env.NEXT_PUBLIC_ZIPPER_DOT_RUN_HOST}
           </FormHelperText>
         )}
       </FormControl>

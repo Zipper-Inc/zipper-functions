@@ -4,7 +4,7 @@ import {
   ConsoleLogger,
   LogMethod,
 } from '@zipper/types';
-import { safeJSONStringify, uuid } from '@zipper/utils';
+import { getZipperApiUrl, safeJSONStringify, uuid } from '@zipper/utils';
 import fetch from 'node-fetch';
 
 export type LoggerParams = {
@@ -17,7 +17,7 @@ export type LoggerParams = {
  * Get the URL to send/recieve logs
  */
 export function getLogsApiUrl({ appId, version, runId }: LoggerParams) {
-  const url = new URL(process.env.NEXT_PUBLIC_ZIPPER_API_URL as string);
+  const url = getZipperApiUrl();
   url.pathname = `/api/app/${appId}/${version}/logs`;
   if (runId) url.pathname = `${url.pathname}/${runId}`;
   return url;

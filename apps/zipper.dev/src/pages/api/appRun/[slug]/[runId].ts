@@ -12,7 +12,7 @@ import { RunInfoResult, UserAuthConnector } from '@zipper/types';
 import { canUserEdit } from '~/server/routers/app.router';
 import { parseInputForTypes } from '~/utils/parse-code';
 import { requiredUserAuthConnectorFilter } from '~/utils/user-auth-connector-filter';
-import { ZIPPER_TEMP_USER_ID_HEADER } from '@zipper/utils';
+import { getZipperDotDevUrl, ZIPPER_TEMP_USER_ID_HEADER } from '@zipper/utils';
 import { getUserInfo, UserInfoReturnType } from '../../app/info/[slug]';
 
 export default async function handler(
@@ -158,7 +158,9 @@ export default async function handler(
       },
       entryPoint: {
         filename: appRun.path,
-        editUrl: `${process.env.NEXT_PUBLIC_ZIPPER_DOT_DEV_URL}/${resourceOwner?.slug}/${appRun.app.slug}/edit/${appRun.path}`,
+        editUrl: `${getZipperDotDevUrl().origin}/${resourceOwner?.slug}/${
+          appRun.app.slug
+        }/edit/${appRun.path}`,
       },
     },
   };

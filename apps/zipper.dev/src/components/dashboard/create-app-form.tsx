@@ -151,7 +151,7 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
           {createAppForm.watch('name') && (
             <FormHelperText>
               {`Your app will be available at
-                            ${slug}.${process.env.NEXT_PUBLIC_OUTPUT_SERVER_HOSTNAME}`}
+                            ${slug}.${process.env.NEXT_PUBLIC_ZIPPER_DOT_RUN_HOST}`}
             </FormHelperText>
           )}
           <FormErrorMessage>

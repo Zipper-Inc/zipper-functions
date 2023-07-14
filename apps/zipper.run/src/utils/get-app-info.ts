@@ -1,11 +1,5 @@
 import { AppInfoResult } from '@zipper/types';
-import { ZIPPER_TEMP_USER_ID_HEADER } from '@zipper/utils';
-
-/**
- * App info endpoint url
- * @see /apps/zipper.dev/pages/api/app/info
- */
-const APP_INFO_URL = `${process.env.NEXT_PUBLIC_ZIPPER_API_URL}/app/info`;
+import { getZipperApiUrl, ZIPPER_TEMP_USER_ID_HEADER } from '@zipper/utils';
 
 export default async function getAppInfo({
   subdomain,
@@ -24,7 +18,7 @@ export default async function getAppInfo({
   if (tempUserId) {
     headers[ZIPPER_TEMP_USER_ID_HEADER] = tempUserId;
   }
-  return fetch(`${APP_INFO_URL}/${subdomain}`, {
+  return fetch(`${getZipperApiUrl()}/app/info/${subdomain}`, {
     method: 'POST',
     body: JSON.stringify({ filename }),
     headers,

@@ -159,7 +159,7 @@ const TableRow: React.FC<{ row: Row<any> }> = ({ row }) => {
                           ? 'http://'
                           : 'https://'
                       }${row.original.slug}.${
-                        process.env.NEXT_PUBLIC_OUTPUT_SERVER_HOSTNAME
+                        process.env.NEXT_PUBLIC_ZIPPER_DOT_RUN_HOST
                       }`,
                     )
                   }

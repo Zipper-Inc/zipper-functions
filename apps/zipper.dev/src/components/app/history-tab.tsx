@@ -90,7 +90,7 @@ const HistoryTab: React.FC<HistoryTabProps> = ({ appId }) => {
                 href={`${
                   process.env.NODE_ENV === 'development' ? 'http' : 'https'
                 }://${router.query['app-slug']}.${
-                  process.env.NEXT_PUBLIC_OUTPUT_SERVER_HOSTNAME
+                  process.env.NEXT_PUBLIC_ZIPPER_DOT_RUN_HOST
                 }/run/history/${id.split('-')[0]}`}
               >
                 {getValue()}
@@ -188,7 +188,7 @@ const HistoryTab: React.FC<HistoryTabProps> = ({ appId }) => {
         return `${
           process.env.NODE_ENV === 'development' ? 'http' : 'https'
         }://${router.query['app-slug']}.${
-          process.env.NEXT_PUBLIC_OUTPUT_SERVER_HOSTNAME
+          process.env.NEXT_PUBLIC_ZIPPER_DOT_RUN_HOST
         }/run/history/${row.id.split('-')[0]}`;
       },
       {
