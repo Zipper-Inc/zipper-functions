@@ -296,7 +296,11 @@ export function AppPage({
     <>
       <Head>
         <title>{appTitle}</title>
-        <OpenGraph appTitle={appTitle} runUrl={runUrl} />
+        <OpenGraph
+          title={appTitle}
+          description={app.description || app.slug}
+          url={runUrl}
+        />
       </Head>
       <VStack flex={1} alignItems="stretch" spacing={14}>
         <Header
