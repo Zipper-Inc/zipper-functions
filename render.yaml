@@ -1,5 +1,5 @@
 previewsEnabled: true
-previewsExpireAfterDays: 3
+previewsExpireAfterDays: 2
 
 services:
   # # # ZIPPER.DEV # # #
@@ -7,7 +7,7 @@ services:
     name: zipper.dev--preview
     runtime: node
     # # #
-    plan: starter
+    plan: free
     previewPlan: starter
     # # #
     rootDir: apps/zipper.dev
@@ -42,24 +42,24 @@ services:
         fromService:
           name: zipper.dev--preview
           type: web
-          property: hostport
+          property: host
       - key: NEXT_PUBLIC_ZIPPER_DOT_DEV_HOST
         fromService:
           name: zipper.dev--preview
           type: web
-          property: hostport
+          property: host
       - key: NEXT_PUBLIC_ZIPPER_DOT_RUN_HOST
         fromService:
           name: zipper.run--preview
           type: web
-          property: hostport
+          property: host
 
   # # # ZIPPER.RUN # # #
   - type: web
     name: zipper.run--preview
     runtime: node
     # # #
-    plan: starter
+    plan: free
     previewPlan: starter
     # # #
     rootDir: apps/zipper.run
@@ -93,26 +93,26 @@ services:
         fromService:
           name: zipper.dev--preview
           type: web
-          property: hostport
+          property: host
       - key: NEXT_PUBLIC_ZIPPER_DOT_DEV_HOST
         fromService:
           name: zipper.dev--preview
           type: web
-          property: hostport
+          property: host
       - key: NEXT_PUBLIC_ZIPPER_DOT_RUN_HOST
         fromService:
           name: zipper.run--preview
           type: web
-          property: hostport
+          property: host
 
   # # # REDIS # # #
   - type: redis
     name: zipper-redis--preview
-    plan: starter
+    plan: free
     previewPlan: starter
     ipAllowList: []
 
 databases:
   - name: zipper-db--preview
-    plan: starter
+    plan: free
     previewPlan: starter
