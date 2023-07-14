@@ -13,11 +13,11 @@
     "node": ">=18.14.0"
   },
   "scripts": {
-    "onboard": "yarn install; yarn link-env; yarn migrate; yarn seed",
-    "build": "yarn install; yarn link-env; turbo run build",
-    "dev": "yarn install; yarn link-env; yarn migrate; turbo run dev --parallel",
-    "update-env": "yarn dotenv -c .env.local ts-node --compiler-options \"{\\\"module\\\":\\\"commonjs\\\"}\" ./bin/ts/update-env.ts",
-    "link-env": "sh ./bin/link-env-files.sh",
+    "onboard": "yarn install; yarn env:link; yarn migrate; yarn seed",
+    "build": "yarn install; yarn env:link; turbo run build",
+    "dev": "yarn install; yarn env:link; yarn migrate; turbo run dev --parallel",
+    "env:link": "sh ./bin/link-env-files.sh",
+    "env:update": "yarn dotenv -c .env.local ts-node ./bin/ts/env-update.ts",
     "lint": "turbo run lint",
     "test": "turbo run test",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
@@ -25,9 +25,7 @@
     "ts-node": "ts-node -T",
     "migrate": "yarn workspace zipper.dev db-migrate-dev",
     "seed": "yarn workspace zipper.dev db-seed",
-    "studio": "yarn workspace zipper.dev prisma studio",
-    "deno:dev": "yarn dotenv -c .env.local ts-node --compiler-options \"{\\\"module\\\":\\\"commonjs\\\"}\" ./bin/ts/deno-dev.ts",
-    "deno:deploy": "yarn dotenv -c .env.local ts-node --compiler-options \"{\\\"module\\\":\\\"commonjs\\\"}\" ./bin/ts/deno-deploy.ts"
+    "studio": "yarn workspace zipper.dev prisma studio"
   },
   "dependencies": {},
   "devDependencies": {

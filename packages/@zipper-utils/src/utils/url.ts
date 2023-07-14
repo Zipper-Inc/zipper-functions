@@ -22,7 +22,7 @@ export function getHost(url?: string) {
   }
 }
 
-export function isLocalhost(
+export function isLocalHost(
   host = process.env.NEXT_PUBLIC_ZIPPER_DOT_DEV_HOST || '',
   env = process.env.NODE_ENV || 'development',
 ) {
@@ -33,7 +33,7 @@ export function isLocalhost(
 }
 
 export function getZipperDotDevUrl() {
-  const protocol = isLocalhost() ? 'http' : 'https';
+  const protocol = isLocalHost() ? 'http' : 'https';
   return new URL(
     `${protocol}://${process.env.NEXT_PUBLIC_ZIPPER_DOT_DEV_HOST}`,
   );
