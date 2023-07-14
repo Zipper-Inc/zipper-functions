@@ -3,14 +3,16 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "dev": "yarn env:inject:development -- -- next dev --port 3002",
-    "env:inject:development": "dotenv -c $(sh ../../bin/env-inject-development.sh)",
-    "env:inject:preview": "dotenv $(sh ../../bin/env-inject-preview.sh)",
-    "env:inject:production": "dotenv $(sh ../../bin/env-inject-production.sh)",
+    "dev": "yarn dotenv:development -- -- next dev --port 3002",
+    "dotenv:development": "dotenv -c $(sh ../../bin/dotenv.development.sh)",
+    "dotenv:preview": "dotenv $(sh ../../bin/dotenv.preview.sh)",
+    "dotenv:production": "dotenv $(sh ../../bin/dotenv.production.sh)",
     "build": "next build",
+    "build:preview": "yarn dotenv:preview -- -- next build",
+    "build:production": "yarn dotenv:production -- -- next build",
     "start": "yarn playwright install; next start",
-    "start:preview": "yarn playwright install; yarn env:inject:preview -- -- next start",
-    "start:production": "yarn playwright install; yarn env:inject:production -- -- next start",
+    "start:preview": "yarn playwright install; yarn dotenv:preview -- -- next start",
+    "start:production": "yarn playwright install; yarn dotenv:production -- -- next start",
     "lint": "next lint"
   },
   "prettier": {

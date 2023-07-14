@@ -19,7 +19,7 @@ services:
         - '**/*.test.ts'
         - '**/*.test.tsx'
     initialDeployHook: 'yarn db-migrate-dev; yarn db-seed'
-    buildCommand: 'yarn install; yarn env:inject:preview -- -- yarn build'
+    buildCommand: 'yarn install; yarn build:preview'
     startCommand: 'yarn start:preview'
     # # #
     envVars:
@@ -38,17 +38,12 @@ services:
           type: redis
           name: zipper-redis--preview
           property: port
-      - key: PUBLICLY_ACCESSIBLE_RPC_HOST
+      - key: RENDER_ZIPPER_DOT_DEV_HOST
         fromService:
           name: zipper.dev--preview
           type: web
           property: host
-      - key: NEXT_PUBLIC_ZIPPER_DOT_DEV_HOST
-        fromService:
-          name: zipper.dev--preview
-          type: web
-          property: host
-      - key: NEXT_PUBLIC_ZIPPER_DOT_RUN_HOST
+      - key: RENDER_ZIPPER_DOT_RUN_HOST
         fromService:
           name: zipper.run--preview
           type: web
@@ -70,7 +65,7 @@ services:
       ignoredPaths:
         - '**/*.test.ts'
         - '**/*.test.tsx'
-    buildCommand: 'yarn install; yarn env:inject:preview -- -- yarn build'
+    buildCommand: 'yarn install; yarn build:preview'
     startCommand: 'yarn start:preview'
     # # #
     envVars:
@@ -89,17 +84,12 @@ services:
           type: redis
           name: zipper-redis--preview
           property: port
-      - key: PUBLICLY_ACCESSIBLE_RPC_HOST
+      - key: RENDER_ZIPPER_DOT_DEV_HOST
         fromService:
           name: zipper.dev--preview
           type: web
           property: host
-      - key: NEXT_PUBLIC_ZIPPER_DOT_DEV_HOST
-        fromService:
-          name: zipper.dev--preview
-          type: web
-          property: host
-      - key: NEXT_PUBLIC_ZIPPER_DOT_RUN_HOST
+      - key: RENDER_ZIPPER_DOT_RUN_HOST
         fromService:
           name: zipper.run--preview
           type: web
