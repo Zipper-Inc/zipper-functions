@@ -19,8 +19,8 @@ services:
         - '**/*.test.ts'
         - '**/*.test.tsx'
     initialDeployHook: 'yarn db-migrate-dev; yarn db-seed'
-    buildCommand: 'yarn install; yarn build'
-    startCommand: 'yarn start:production'
+    buildCommand: 'yarn install; yarn env:inject:preview -- -- yarn build'
+    startCommand: 'yarn start:preview'
     # # #
     envVars:
       - fromGroup: zipper-env-group--preview
@@ -70,8 +70,8 @@ services:
       ignoredPaths:
         - '**/*.test.ts'
         - '**/*.test.tsx'
-    buildCommand: 'yarn install; yarn build'
-    startCommand: 'yarn start'
+    buildCommand: 'yarn install; yarn env:inject:preview -- -- yarn build'
+    startCommand: 'yarn start:preview'
     # # #
     envVars:
       - fromGroup: zipper-env-group--preview

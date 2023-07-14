@@ -3,9 +3,14 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --port 3002",
+    "dev": "yarn env:inject:development -- -- next dev --port 3002",
+    "env:inject:development": "dotenv -c $(sh ../../bin/env-inject-development.sh)",
+    "env:inject:preview": "dotenv $(sh ../../bin/env-inject-preview.sh)",
+    "env:inject:production": "dotenv $(sh ../../bin/env-inject-production.sh)",
     "build": "next build",
     "start": "yarn playwright install; next start",
+    "start:preview": "yarn playwright install; yarn env:inject:preview -- -- next start",
+    "start:production": "yarn playwright install; yarn env:inject:production -- -- next start",
     "lint": "next lint"
   },
   "prettier": {
