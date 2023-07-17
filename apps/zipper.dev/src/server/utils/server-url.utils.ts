@@ -2,7 +2,7 @@
  * Copy pasta from @zipper-utils/src/utils/url.ts
  * For some reason, we can't import @zipper-utils in server-only stuff
  */
-function isLocalhost(
+function isLocalHost(
   host = process.env.NEXT_PUBLIC_ZIPPER_DOT_DEV_HOST || '',
   env = process.env.NODE_ENV || 'development',
 ) {
@@ -13,7 +13,7 @@ function isLocalhost(
 }
 
 export function getZipperDotDevUrlForServer() {
-  const protocol = isLocalhost() ? 'http' : 'https';
+  const protocol = isLocalHost() ? 'http' : 'https';
   return new URL(
     `${protocol}://${process.env.NEXT_PUBLIC_ZIPPER_DOT_DEV_HOST}`,
   );

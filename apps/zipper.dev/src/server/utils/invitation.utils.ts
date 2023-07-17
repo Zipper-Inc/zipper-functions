@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 import { prisma } from '../prisma';
 import { Resend } from 'resend';
-import { InvitationEmail } from '~/../emails';
+import { InvitationEmail } from '~/emails';
 import { resend } from '../resend';
 import { getZipperApiUrl, getZipperDotDevUrl } from '@zipper/utils';
 

@@ -14,7 +14,7 @@ import { PrismaClient } from '@prisma/client';
 import { Adapter, AdapterAccount } from 'next-auth/adapters';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime';
 import { ResourceOwnerType, UserRole } from '@zipper/types';
-import { MagicLinkEmail } from '~/../emails';
+import { MagicLinkEmail } from '~/emails';
 import fetch from 'node-fetch';
 import { createUserSlug } from '~/utils/create-user-slug';
 import { resend } from '~/server/resend';
