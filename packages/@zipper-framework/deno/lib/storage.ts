@@ -29,11 +29,11 @@ export class ZipperStorage<Value extends Zipper.Serializable>
   }
 
   async getAll() {
-    const path = `api/app/${this.appId}/storage`;
+    const path = `/api/app/${this.appId}/storage`;
     const { hmac, timestamp } = generateHmac('GET', path);
 
     const res = await fetch(
-      `https://${Deno.env.get('PUBLICLY_ACCESSIBLE_RPC_HOST')}/${path}`,
+      `https://${Deno.env.get('PUBLICLY_ACCESSIBLE_RPC_HOST')}${path}`,
       {
         headers: { 'x-zipper-hmac': hmac, 'x-timestamp': timestamp },
       },
@@ -44,11 +44,11 @@ export class ZipperStorage<Value extends Zipper.Serializable>
   }
 
   async get(key: string) {
-    const path = `api/app/${this.appId}/storage?key=${key}`;
+    const path = `/api/app/${this.appId}/storage?key=${key}`;
     const { hmac, timestamp } = generateHmac('GET', path);
 
     const res = await fetch(
-      `https://${Deno.env.get('PUBLICLY_ACCESSIBLE_RPC_HOST')}/${path}`,
+      `https://${Deno.env.get('PUBLICLY_ACCESSIBLE_RPC_HOST')}${path}`,
       {
         headers: { 'x-zipper-hmac': hmac, 'x-timestamp': timestamp },
       },
@@ -59,11 +59,11 @@ export class ZipperStorage<Value extends Zipper.Serializable>
   }
 
   async set(key: string, value: Value) {
-    const path = `api/app/${this.appId}/storage`;
+    const path = `/api/app/${this.appId}/storage`;
     const { hmac, timestamp } = generateHmac('POST', path, { key, value });
 
     const res = await fetch(
-      `https://${Deno.env.get('PUBLICLY_ACCESSIBLE_RPC_HOST')}/${path}`,
+      `https://${Deno.env.get('PUBLICLY_ACCESSIBLE_RPC_HOST')}${path}`,
       {
         headers: { 'x-zipper-hmac': hmac, 'x-timestamp': timestamp },
         method: 'POST',
@@ -75,11 +75,11 @@ export class ZipperStorage<Value extends Zipper.Serializable>
   }
 
   async delete(key: string) {
-    const path = `api/app/${this.appId}/storage?key=${key}`;
+    const path = `/api/app/${this.appId}/storage?key=${key}`;
     const { hmac, timestamp } = generateHmac('DELETE', path);
 
     const res = await fetch(
-      `https://${Deno.env.get('PUBLICLY_ACCESSIBLE_RPC_HOST')}/${path}`,
+      `https://${Deno.env.get('PUBLICLY_ACCESSIBLE_RPC_HOST')}${path}`,
       {
         headers: { 'x-zipper-hmac': hmac, 'x-timestamp': timestamp },
         method: 'DELETE',
