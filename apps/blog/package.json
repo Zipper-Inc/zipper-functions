@@ -1,0 +1,56 @@
+{
+  "name": "blog",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "yarn dotenv:development -- -- next dev --port 3004",
+    "dotenv:development": "dotenv -c $(sh ../../bin/dotenv.development.sh)",
+    "dotenv:preview": "dotenv $(sh ../../bin/dotenv.preview.sh)",
+    "dotenv:production": "dotenv $(sh ../../bin/dotenv.production.sh)",
+    "build": "next build",
+    "build:preview": "yarn dotenv:preview -- -- next build",
+    "build:production": "yarn dotenv:production -- -- next build",
+    "start": "next start",
+    "start:preview": "yarn dotenv:preview -- -- next start",
+    "start:production": "yarn dotenv:production -- -- next start",
+    "lint": "next lint"
+  },
+  "prettier": {
+    "printWidth": 80,
+    "trailingComma": "all",
+    "singleQuote": true
+  },
+  "engines": {
+    "node": "^18.14.0"
+  },
+  "dependencies": {
+    "@chakra-ui/react": "^2.4.9",
+    "@emotion/react": "^11.10.5",
+    "@emotion/styled": "^11.10.5",
+    "@fontsource/inter": "^4.5.15",
+    "@sentry/nextjs": "^7.51.0",
+    "@zipper/types": "*",
+    "@zipper/ui": "*",
+    "@zipper/utils": "*",
+    "framer-motion": "^9.0.0",
+    "next": "^13.1.1",
+    "nextra": "^2.10.0",
+    "nextra-theme-blog": "^2.10.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-icons": "^4.8.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.0.0",
+    "@types/node": "^17.0.12",
+    "@types/react": "^18.0.22",
+    "@types/react-dom": "^18.0.7",
+    "@zipper/framework": "*",
+    "eslint": "7.32.0",
+    "eslint-plugin-prettier": "^4.2.1",
+    "typescript": "^4.5.3"
+  },
+  "publishConfig": {
+    "access": "restricted"
+  }
+}
