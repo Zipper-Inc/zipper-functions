@@ -52,7 +52,7 @@ export function Gallery({
   >();
 
   const resourceOwnerNameQuery = trpc.useQuery(
-    ['resourceOwnerSlug.getName', { slug: resourceOwner?.slug! }],
+    ['resourceOwnerSlug.getName', { slug: resourceOwner?.slug as string }],
     {
       enabled: !!resourceOwner?.slug,
     },

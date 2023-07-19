@@ -7,6 +7,6 @@ export const Markdown = ({ children }: { children: string }) => (
   <ReactMarkdown
     components={ChakraUIRenderer()}
     children={children}
-    remarkPlugins={[remarkGfm]}
+    remarkPlugins={[remarkGfm as any]}
   />
 );

@@ -36,27 +36,30 @@ function parseTypeNode(type: TypeNode, src: SourceFile): ParsedNode {
 
   if (type.isKind(SyntaxKind.ArrayType) || text.startsWith('Array'))
     return { type: InputType.array };
-  
 
-  if(type.isKind(SyntaxKind.TypeReference)) {
+  if (type.isKind(SyntaxKind.TypeReference)) {
     // we have a type reference
     const typeReference = type.getTypeName();
     const typeReferenceText = typeReference.getText();
 
     // find in the code the declaration of the typeReferenceText, this can be a type, a interface, a enum, etc.
-    const typeReferenceDeclaration = src.getTypeAlias(typeReferenceText) || src.getInterface(typeReferenceText) || src.getEnum(typeReferenceText);
-
-
+    const typeReferenceDeclaration =
+      src.getTypeAlias(typeReferenceText) ||
+      src.getInterface(typeReferenceText) ||
+      src.getEnum(typeReferenceText);
 
     //we have the declaration, we need to know if it's a type, interface or enum
-    if(typeReferenceDeclaration) {
-      if(typeReferenceDeclaration.isKind(SyntaxKind.TypeAliasDeclaration)) {
+    if (typeReferenceDeclaration) {
+      if (typeReferenceDeclaration.isKind(SyntaxKind.TypeAliasDeclaration)) {
         // we have a type
-        const typeReferenceDeclarationType = typeReferenceDeclaration.getTypeNode();
+        const typeReferenceDeclarationType =
+          typeReferenceDeclaration.getTypeNode();
 
         // check if type is a string literal
-        if(typeReferenceDeclarationType && typeReferenceDeclarationType.isKind(SyntaxKind.UnionType)) {
-
+        if (
+          typeReferenceDeclarationType &&
+          typeReferenceDeclarationType.isKind(SyntaxKind.UnionType)
+        ) {
           const unionTypes = typeReferenceDeclarationType.getTypeNodes();
           const unionTypesDetails = unionTypes.map((unionType: TypeNode) => {
             return unionType.getText().replace(/['"]+/g, '').trim();
@@ -72,22 +75,24 @@ function parseTypeNode(type: TypeNode, src: SourceFile): ParsedNode {
         if (typeReferenceDeclarationType)
           return parseTypeNode(typeReferenceDeclarationType, src);
       }
-      if(typeReferenceDeclaration.isKind(SyntaxKind.InterfaceDeclaration)) {
+      if (typeReferenceDeclaration.isKind(SyntaxKind.InterfaceDeclaration)) {
         // we have a interface
-        const typeReferenceDeclarationProperties = typeReferenceDeclaration.getProperties();
-        const propDetails = typeReferenceDeclarationProperties.map((prop: any) => {
-          return {
-            key: prop.getName(),
-            details: parseTypeNode(prop.getTypeNode(), src),
-          };
-        }
+        const typeReferenceDeclarationProperties =
+          typeReferenceDeclaration.getProperties();
+        const propDetails = typeReferenceDeclarationProperties.map(
+          (prop: any) => {
+            return {
+              key: prop.getName(),
+              details: parseTypeNode(prop.getTypeNode(), src),
+            };
+          },
         );
         return {
           type: InputType.object,
           details: { properties: propDetails },
         };
       }
-      if(typeReferenceDeclaration.isKind(SyntaxKind.EnumDeclaration)) {
+      if (typeReferenceDeclaration.isKind(SyntaxKind.EnumDeclaration)) {
         // we have a enum
         return {
           type: InputType.enum,
@@ -99,19 +104,22 @@ function parseTypeNode(type: TypeNode, src: SourceFile): ParsedNode {
 
                 // check if the memberText has a value by checking if it has a '='
                 const hasValue = memberText.includes('=');
-                if(!hasValue) {
+                if (!hasValue) {
                   return memberText.trim();
                 }
 
                 // if it has a value, we need to extract it
-                const memberValue = memberText.split('=')[1]?.replace(/['"]+/g, '').trim();
+                const memberValue = memberText
+                  .split('=')[1]
+                  ?.replace(/['"]+/g, '')
+                  .trim();
                 return {
                   key: memberText.split('=')[0]?.trim(),
                   value: memberValue,
                 };
               }),
           },
-        }
+        };
       }
     }
   }
