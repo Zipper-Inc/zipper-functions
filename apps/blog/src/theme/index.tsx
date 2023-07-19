@@ -8,6 +8,7 @@ import { PageLayout } from './page-layout';
 import { PostsLayout } from './posts-layout';
 import type { LayoutProps } from './types';
 import { ChakraProvider } from '@chakra-ui/react';
+import { ThemeProvider as NextThemesProvider } from 'next-themes';
 import { theme } from '@zipper/ui';
 
 const layoutMap = {
@@ -31,9 +32,11 @@ const BlogLayout = ({
   }
   return (
     <ChakraProvider theme={theme}>
-      <BlogProvider opts={opts} config={config}>
-        <Layout>{children}</Layout>
-      </BlogProvider>
+      <NextThemesProvider>
+        <BlogProvider opts={opts} config={config}>
+          <Layout>{children}</Layout>
+        </BlogProvider>
+      </NextThemesProvider>
     </ChakraProvider>
   );
 };
