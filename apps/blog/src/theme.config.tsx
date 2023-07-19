@@ -1,5 +1,5 @@
 const config = {
-  footer: <p>MIT 2023 © Nextra.</p>,
+  footer: <p>© Zipper.</p>,
   head: ({ _title, meta }: any) => (
     <>
       {meta.description && (
@@ -9,13 +9,13 @@ const config = {
       {meta.author && <meta name="author" content={meta.author} />}
     </>
   ),
-  readMore: 'Read More →',
+  readMore: 'Check it out',
   postFooter: null,
-  darkMode: false,
+  darkMode: true,
   navs: [
     {
-      url: 'https://github.com/shuding/nextra',
-      name: 'Nextra',
+      url: 'https://zipper.dev',
+      name: 'Home',
     },
   ],
 };

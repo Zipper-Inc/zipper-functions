@@ -134,6 +134,58 @@ export const brandColors = {
   default: baseColors.gray[600],
 };
 
+// no, not those kind of primary colors 🔵🔴🟡
+export const primaryColors = {
+  'primary.25': {
+    default: baseColors.purple[25],
+    _dark: baseColors.purple[900],
+  },
+  'primary.50': {
+    default: baseColors.purple[50],
+    _dark: baseColors.purple[800],
+  },
+  'primary.100': {
+    default: baseColors.purple[100],
+    _dark: baseColors.purple[700],
+  },
+  'primary.200': {
+    default: baseColors.purple[200],
+    _dark: baseColors.purple[600],
+  },
+  'primary.300': {
+    default: baseColors.purple[300],
+    _dark: baseColors.purple[500],
+  },
+  'primary.400': {
+    default: baseColors.purple[400],
+    _dark: baseColors.purple[400],
+  },
+  'primary.500': {
+    default: baseColors.purple[500],
+    _dark: baseColors.purple[300],
+  },
+  'primary.600': {
+    default: baseColors.purple[600],
+    _dark: baseColors.purple[200],
+  },
+  'primary.700': {
+    default: baseColors.purple[700],
+    _dark: baseColors.purple[100],
+  },
+  'primary.800': {
+    default: baseColors.purple[800],
+    _dark: baseColors.purple[50],
+  },
+  'primary.900': {
+    default: baseColors.purple[900],
+    _dark: baseColors.purple[25],
+  },
+  primary: {
+    default: baseColors.purple[600],
+    _dark: baseColors.purple[200],
+  },
+};
+
 export const foregroundColors = {
   'fg.25': {
     default: 'gray.25',
@@ -183,6 +235,7 @@ export const foregroundColors = {
 
 export const semanticTokens = {
   colors: {
+    ...primaryColors,
     ...foregroundColors,
     fgText: foregroundColors['fg.800'],
     bgColor: {

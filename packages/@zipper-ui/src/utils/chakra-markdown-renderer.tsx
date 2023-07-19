@@ -43,15 +43,24 @@ export const defaults: Components & { heading: Components['h1'] } = {
   blockquote: (props) => {
     const { children } = props;
     return (
-      <Code as="blockquote" p={2}>
+      <Text
+        borderLeft={'solid'}
+        borderLeftWidth={4}
+        borderColor="primary"
+        as="blockquote"
+        pl={3}
+        pr={2}
+        py={2}
+      >
         {children}
-      </Code>
+      </Text>
     );
   },
   code: (props) => {
     const { inline, children, className } = props;
 
-    if (inline) {
+    const isInline = inline || typeof children === 'string';
+    if (isInline) {
       return <Code p={2} children={children} />;
     }
 
@@ -145,6 +154,7 @@ export const defaults: Components & { heading: Components['h1'] } = {
     );
   },
   heading: (props) => {
+    console.log('heading props', props);
     const { level, children } = props;
     const sizes = ['xl', 'lg', 'md', 'sm', 'xs', '2xs'];
     return (

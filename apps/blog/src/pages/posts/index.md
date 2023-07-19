@@ -1,7 +1,8 @@
 ---
 type: posts
-title: Posts
+title: Latest
 date: 2021-03-18
 ---
 
-# Posts
+# Latest
+Check out the latest posts on Zipper

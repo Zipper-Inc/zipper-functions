@@ -5,7 +5,6 @@ description: View examples of all possible Markdown options.
 tag: web development
 author: Nobody
 ---
-
 # Markdown Examples
 
 ## h2 Heading
@@ -46,9 +45,9 @@ Ordered
 
 ## Code
 
-Inline `code`
+Inline `code here`
 
-```
+```js {1,4-5} filename="example.js" copy
 export default function Nextra({ Component, pageProps }) {
   return (
     <>

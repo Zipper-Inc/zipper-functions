@@ -1,0 +1,1 @@
+function useThemeColor(color?: string) {}
