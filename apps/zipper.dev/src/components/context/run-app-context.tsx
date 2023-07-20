@@ -212,7 +212,7 @@ export function RunAppProvider({
     let currentPoll;
     const pollLogs = async () => {
       await updateLogs();
-      currentPoll = setTimeout(() => pollLogs, 500);
+      currentPoll = setTimeout(pollLogs, 500);
     };
     pollLogs();
 
