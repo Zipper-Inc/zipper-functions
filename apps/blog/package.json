@@ -7,12 +7,12 @@
     "dotenv:development": "dotenv -c $(sh ../../bin/dotenv.development.sh)",
     "dotenv:preview": "dotenv $(sh ../../bin/dotenv.preview.sh)",
     "dotenv:production": "dotenv $(sh ../../bin/dotenv.production.sh)",
-    "build": "next build",
-    "build:preview": "yarn dotenv:preview -- -- next build",
-    "build:production": "yarn dotenv:production -- -- next build",
-    "start": "next start",
-    "start:preview": "yarn dotenv:preview -- -- next start",
-    "start:production": "yarn dotenv:production -- -- next start",
+    "__build": "next build",
+    "__build:preview": "yarn dotenv:preview -- -- next build",
+    "__build:production": "yarn dotenv:production -- -- next build",
+    "__start": "next start",
+    "__start:preview": "yarn dotenv:preview -- -- next start",
+    "__start:production": "yarn dotenv:production -- -- next start",
     "lint": "next lint"
   },
   "prettier": {
