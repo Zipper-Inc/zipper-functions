@@ -80,6 +80,10 @@ export default async function handler(
               const appName = event.deployment_id;
               const [appId, version] = appName.split('@');
 
+              if (!appId || !version) {
+                return;
+              }
+
               const logger = getLogger({ appId, version });
               const app = await prisma.app.findUnique({
                 where: { id: appId },
