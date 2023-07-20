@@ -25,7 +25,6 @@ export const generateAccessToken = (
   };
 
   if (profile) {
-    console.log('profile', profile);
     payload.name = profile.name;
     payload.email = profile.email;
     payload.image = profile.image;
