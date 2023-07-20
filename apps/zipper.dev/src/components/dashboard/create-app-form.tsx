@@ -71,6 +71,8 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
 
   const [slug, setSlug] = useState<string>('');
 
+  const [submitting, setSubmitting] = useState(false);
+
   const createAppForm = useForm({
     defaultValues: getDefaultCreateAppFormValues(),
   });
@@ -219,9 +221,10 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
             display="block"
             colorScheme="purple"
             type="submit"
-            isDisabled={isDisabled || addApp.isLoading}
+            isDisabled={isDisabled || addApp.isLoading || submitting}
             onClick={createAppForm.handleSubmit(
               async ({ description, isPublic, requiresAuthToRun, name }) => {
+                setSubmitting(true);
                 await addApp.mutateAsync(
                   {
                     description,
