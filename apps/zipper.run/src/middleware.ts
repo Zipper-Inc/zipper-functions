@@ -59,8 +59,10 @@ async function maybeGetCustomResponse(
         return NextResponse.rewrite(url, { request: { headers } });
       }
       if (request.method === 'POST') {
-        const url = new URL('/relay', request.url);
-        return NextResponse.rewrite(url, { request: { headers } });
+        return serveRelay({
+          request,
+          bootOnly: false,
+        });
       }
     }
   }
