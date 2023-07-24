@@ -92,9 +92,9 @@ ZIPPER_ENV_LOCAL_ACCESS_TOKEN=
 ```
 docker-compose up
 ```
-7. Run `yarn onboard` to install dependencies, set up the env files, and get your database migrated and seeded
+7. Run `yarn get-started` to install dependencies, set up the env files, and get your database migrated and seeded
 ```
-yarn onboard
+yarn get-started
 ```
 8. Run `yarn dev` to start development
 
