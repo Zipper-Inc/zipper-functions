@@ -118,7 +118,7 @@ export const AddScheduleModal: React.FC<AddScheduleModalProps> = ({
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
-      <ModalContent maxH="2xl">
+      <ModalContent maxH="3xl">
         <ModalHeader>Create a new schedule</ModalHeader>
         <ModalCloseButton />
         <ModalBody
@@ -165,23 +165,26 @@ export const AddScheduleModal: React.FC<AddScheduleModalProps> = ({
             isInvalid={isCronDescError}
           >
             <FormLabel>I want a job that runs every...</FormLabel>
-            <HStack>
-              <Input
-                size="md"
-                type="text"
-                color="fg.900"
-                bgColor="bgColor"
-                {...addModalForm.register('cronDesc')}
-              />
-              {isCronDescError ? (
-                <FormErrorMessage>{cronDescError}</FormErrorMessage>
-              ) : (
-                <></>
-              )}
+            <HStack verticalAlign={'top'}>
+              <VStack minWidth={'80%'} align={'left'}>
+                <Input
+                  size="md"
+                  type="text"
+                  color="fg.900"
+                  bgColor="bgColor"
+                  {...addModalForm.register('cronDesc')}
+                />
+                {isCronDescError ? (
+                  <FormErrorMessage>{cronDescError}</FormErrorMessage>
+                ) : (
+                  <></>
+                )}
+              </VStack>
               <Button
                 colorScheme="purple"
                 flex={1}
                 fontWeight="medium"
+                alignSelf={'start'}
                 onClick={handleGenClick}
               >
                 Gen
