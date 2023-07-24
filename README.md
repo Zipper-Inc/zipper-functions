@@ -28,8 +28,7 @@ We want to empower people to write simple, creative software that makes their wo
 - Code runner: Deno subhosting (SaaS service)
 
 ### Diagram
-![image](https://github.com/Zipper-Inc/zipper-functions/assets/1039639/86f3688d-6ff1-4dca-912c-e3c9fbaecb4e)
-
+<img width="1370" alt="zipper-infra-diagram" src="https://github.com/Zipper-Inc/zipper-functions/assets/1039639/c8d6899e-de27-47ab-b6e4-efe6a3e79be0">
 
 ## What's inside?
 
