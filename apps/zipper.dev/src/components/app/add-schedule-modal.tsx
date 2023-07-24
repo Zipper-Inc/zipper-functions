@@ -70,7 +70,7 @@ export const AddScheduleModal: React.FC<AddScheduleModalProps> = ({
     if (cronDescription) {
       try {
         const url = `${CRONTAB_AI_GENERATOR_API_URL}?text=${cronDescription}`;
-        const response = await fetch(url, {});
+        const response = await fetch(url);
         const parsedResponse = await response.json();
         if (parsedResponse.ok && parsedResponse.data) {
           addModalForm.setValue('crontab', parsedResponse.data);
