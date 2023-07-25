@@ -161,26 +161,24 @@ export const AddScheduleModal: React.FC<AddScheduleModalProps> = ({
             isInvalid={isCronError}
           >
             <FormLabel>I want a job that runs every...</FormLabel>
-            <VStack minWidth={'80%'} align={'left'}>
-              <Input
-                placeholder="Friday at 6pm"
-                size="md"
-                type="text"
-                color="fg.900"
-                bgColor="bgColor"
-                {...addModalForm.register('cronDesc', {
-                  onBlur: fetchAiCrontab,
-                  onChange: fetchAiCrontab,
-                })}
-              />
-              {isCronError ? (
-                <FormErrorMessage>{cronErrorString}</FormErrorMessage>
-              ) : (
-                <FormHelperText color="fg.900" fontWeight="semibold">
-                  {cronString}
-                </FormHelperText>
-              )}
-            </VStack>
+            <Input
+              placeholder="Friday at 6pm"
+              size="md"
+              type="text"
+              color="fg.900"
+              bgColor="bgColor"
+              {...addModalForm.register('cronDesc', {
+                onBlur: fetchAiCrontab,
+                onChange: fetchAiCrontab,
+              })}
+            />
+            {isCronError ? (
+              <FormErrorMessage>{cronErrorString}</FormErrorMessage>
+            ) : (
+              <FormHelperText color="fg.900" fontWeight="semibold">
+                {cronString}
+              </FormHelperText>
+            )}
           </FormControl>
 
           {inputParams && inputParams.length > 0 && (
