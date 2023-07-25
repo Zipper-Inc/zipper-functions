@@ -26,6 +26,22 @@ import { useUser } from '~/hooks/use-user';
 import { parseInputForTypes } from '~/utils/parse-code';
 import { useEditorContext } from '../context/editor-context';
 
+const CRONTAB_AI_GENERATOR_API_URL =
+  'https://crontab-ai-generator.zipper.run/api';
+
+type CronDescErrorProps = {
+  isError: boolean;
+  message: string | undefined;
+};
+
+const CronDescError: React.FC<CronDescErrorProps> = ({ isError, message }) => {
+  if (!isError) {
+    return null;
+  }
+
+  return <FormErrorMessage>{message}</FormErrorMessage>;
+};
+
 export type NewSchedule = {
   filename: string;
   crontab: string;
@@ -37,9 +53,6 @@ export type AddScheduleModalProps = {
   isOpen: boolean;
   onCreate: (schedule: NewSchedule, resetForm: VoidFunction) => void;
 };
-
-const CRONTAB_AI_GENERATOR_API_URL =
-  'https://crontab-ai-generator.zipper.run/api';
 
 export const AddScheduleModal: React.FC<AddScheduleModalProps> = ({
   onClose,
@@ -61,27 +74,6 @@ export const AddScheduleModal: React.FC<AddScheduleModalProps> = ({
   const [inputParams, setInputParams] = useState<InputParam[] | undefined>();
   const currentCronDescription: string = addModalForm.watch('cronDesc');
   const currentCrontab: string = addModalForm.watch('crontab');
-
-  const handleGenClick = async () => {
-    // clear previous errors
-    setCronDescError(undefined);
-    setIsCronDescError(false);
-
-    if (cronDescription) {
-      try {
-        const url = `${CRONTAB_AI_GENERATOR_API_URL}?text=${cronDescription}`;
-        const response = await fetch(url);
-        const parsedResponse = await response.json();
-        if (parsedResponse.ok && parsedResponse.data) {
-          addModalForm.setValue('crontab', parsedResponse.data);
-        }
-      } catch (e) {
-        console.log(e);
-        setCronDescError('Error fetching ai generated cron');
-        setIsCronDescError(true);
-      }
-    }
-  };
 
   useEffect(() => {
     try {
@@ -114,6 +106,27 @@ export const AddScheduleModal: React.FC<AddScheduleModalProps> = ({
   }, [isOpen]);
 
   const user = useUser();
+
+  const handleGenClick = async () => {
+    // clear previous errors
+    setCronDescError(undefined);
+    setIsCronDescError(false);
+
+    if (cronDescription) {
+      try {
+        const url = `${CRONTAB_AI_GENERATOR_API_URL}?text=${cronDescription}`;
+        const response = await fetch(url);
+        const parsedResponse = await response.json();
+        if (parsedResponse.ok && parsedResponse.data) {
+          addModalForm.setValue('crontab', parsedResponse.data);
+        }
+      } catch (e) {
+        console.log(e);
+        setCronDescError('Error fetching ai generated cron');
+        setIsCronDescError(true);
+      }
+    }
+  };
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
@@ -174,11 +187,10 @@ export const AddScheduleModal: React.FC<AddScheduleModalProps> = ({
                   bgColor="bgColor"
                   {...addModalForm.register('cronDesc')}
                 />
-                {isCronDescError ? (
-                  <FormErrorMessage>{cronDescError}</FormErrorMessage>
-                ) : (
-                  <></>
-                )}
+                <CronDescError
+                  isError={isCronDescError}
+                  message={cronDescError}
+                />
               </VStack>
               <Button
                 colorScheme="purple"
