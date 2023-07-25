@@ -19,8 +19,8 @@ services:
         - '**/*.test.ts'
         - '**/*.test.tsx'
     initialDeployHook: 'yarn db-migrate-dev; yarn db-seed'
-    buildCommand: 'yarn install; yarn build:preview'
-    startCommand: 'yarn start:preview'
+    buildCommand: 'npm install -g caddy; yarn install; yarn build:preview'
+    startCommand: 'caddy start; yarn start:preview'
     # # #
     envVars:
       - fromGroup: zipper-env-group--preview
