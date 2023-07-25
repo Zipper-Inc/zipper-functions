@@ -167,10 +167,7 @@ export const AddScheduleModal: React.FC<AddScheduleModalProps> = ({
               type="text"
               color="fg.900"
               bgColor="bgColor"
-              {...addModalForm.register('cronDesc', {
-                onBlur: fetchAiCrontab,
-                onChange: fetchAiCrontab,
-              })}
+              {...addModalForm.register('cronDesc')}
             />
             {isCronError ? (
               <FormErrorMessage>{cronErrorString}</FormErrorMessage>
