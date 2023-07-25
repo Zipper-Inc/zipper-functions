@@ -45,6 +45,7 @@ import { useUser } from '~/hooks/use-user';
 import { useOrganizationList } from '~/hooks/use-organization-list';
 import { getEditAppletLink } from '@zipper/utils';
 import { useMutation } from 'react-query';
+import { ChatGPTMessage } from '~/app/aifunctions/route';
 
 const getDefaultCreateAppFormValues = () => ({
   name: generateDefaultSlug(),
@@ -61,6 +62,85 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
   const { setActive } = useOrganizationList();
   const utils = trpc.useContext();
   const router = useRouter();
+  const [messages, setMessages] = useState<ChatGPTMessage[]>([]);
+  const [isSending, setIsSending] = useState(false);
+
+  const getZipperCode = async ({
+    message,
+    basicCode,
+  }: {
+    message: string;
+    basicCode: string;
+  }) => {
+
+    const response = await fetch('/aifunctions/zipperCode', {
+      method: 'POST',
+      body: JSON.stringify({
+        userRequest: message,
+        rawTypescriptCode: basicCode
+      })
+    });
+
+    // Handle response
+    const data = await response.json();
+
+    if (data.error) {
+      console.log(data.error);
+      throw new Error('Failed to generate Zipper code');
+    }
+
+    return data.message;
+  };
+
+  // getBasicCode implementation
+  const getBasicCode = async (message: string): Promise<ChatGPTMessage> => {
+    const response = await fetch('/aifunctions/generate', {
+      method: 'POST',
+      body: JSON.stringify({
+        userRequest: message,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (data.error) {
+      throw new Error(data.error);
+    }
+
+    return data.message;
+  };
+
+  const sendMessageHandler = async (message: string) => {
+    // Existing logic to build messages 
+    const messagesToSend: ChatGPTMessage[] = [
+      ...messages,
+      { role: 'user', content: message }
+    ];
+  
+    setIsSending(true);
+  
+    try {
+      const basicCodeResponse = await getBasicCode(message);
+      const basicCode = basicCodeResponse.content;
+      const zipperCode = await getZipperCode({message, basicCode});
+
+      const cleanedCode = zipperCode.content.replace(/\\n/g, '')
+                                .replace(/\\/g,'');
+
+      console.log(cleanedCode)                                
+  
+      setMessages([
+        ...messagesToSend,
+        { role: 'assistant', content: basicCode },
+        { role: 'assistant', content: zipperCode }
+      ]);
+  
+    } catch (error) {
+      console.log(error);  
+    } finally {
+      setIsSending(false);    
+    }
+  }
 
   const addApp = trpc.useMutation('app.add', {
     async onSuccess() {
@@ -271,47 +351,48 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
               isDisabled={isDisabled || addApp.isLoading || isAILoading}
               onClick={createAppForm.handleSubmit(
                 async ({ description, isPublic, requiresAuthToRun, name }) => {
-                  let ai = '';
-                  if (description) {
-                    ai = await getAICode(description);
-                  }
+                  await sendMessageHandler(description);
 
-                  await addApp.mutateAsync(
-                    {
-                      description,
-                      name,
-                      isPrivate: !isPublic,
-                      requiresAuthToRun,
-                      organizationId: selectedOrganizationId,
-                      aiCode: ai,
-                    },
-                    {
-                      onSuccess: (applet) => {
-                        console.log(applet);
-                        resetForm();
-                        if (
-                          (selectedOrganizationId ?? null) !==
-                            (organization?.id ?? null) &&
-                          setActive
-                        ) {
-                          setActive(selectedOrganizationId || null);
-                        }
-                        toast({
-                          title: 'Applet created',
-                          status: 'success',
-                          duration: 9999,
-                          isClosable: false,
-                        });
+                  // let ai = '';
+                  // if (description) {
+                  //   ai = await getAICode(description);
+                  // }
+                  // await addApp.mutateAsync(
+                  //   {
+                  //     description,
+                  //     name,
+                  //     isPrivate: !isPublic,
+                  //     requiresAuthToRun,
+                  //     organizationId: selectedOrganizationId,
+                  //     aiCode: ai,
+                  //   },
+                  //   {
+                  //     onSuccess: (applet) => {
+                  //       console.log(applet);
+                  //       resetForm();
+                  //       if (
+                  //         (selectedOrganizationId ?? null) !==
+                  //           (organization?.id ?? null) &&
+                  //         setActive
+                  //       ) {
+                  //         setActive(selectedOrganizationId || null);
+                  //       }
+                  //       toast({
+                  //         title: 'Applet created',
+                  //         status: 'success',
+                  //         duration: 9999,
+                  //         isClosable: false,
+                  //       });
 
-                        router.push(
-                          getEditAppletLink(
-                            applet!.resourceOwner!.slug,
-                            applet!.slug,
-                          ),
-                        );
-                      },
-                    },
-                  );
+                  //       router.push(
+                  //         getEditAppletLink(
+                  //           applet!.resourceOwner!.slug,
+                  //           applet!.slug,
+                  //         ),
+                  //       );
+                  //     },
+                  //   },
+                  // );
                 },
               )}
             >
