@@ -157,7 +157,7 @@ export function Gallery({
                       onOpen();
                     }}
                   >
-                    <Icon as={HiPlus} mr="2" />
+                    <Icon as={HiPlus} mx="2" />
                     Create Applet
                   </Button>
                   <Button
