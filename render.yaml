@@ -8,7 +8,7 @@ services:
     runtime: node
     # # #
     plan: free
-    previewPlan: standard
+    previewPlan: starter
     # # #
     rootDir: apps/zipper.dev
     buildFilter:
@@ -20,7 +20,7 @@ services:
         - '**/*.test.tsx'
     initialDeployHook: 'yarn install; yarn db-migrate-dev; yarn db-seed'
     buildCommand: 'yarn install; yarn build:preview'
-    startCommand: 'npm install -g caddy; caddy start; yarn start:preview'
+    startCommand: 'npm install -g caddy-npm; caddy start; yarn start:preview'
     # # #
     envVars:
       - fromGroup: zipper-env-group--preview
