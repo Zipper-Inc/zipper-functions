@@ -114,7 +114,7 @@ export const AddScheduleModal: React.FC<AddScheduleModalProps> = ({
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
-      <ModalContent maxH="3xl">
+      <ModalContent maxH="2xl">
         <ModalHeader>Create a new schedule</ModalHeader>
         <ModalCloseButton />
         <ModalBody
