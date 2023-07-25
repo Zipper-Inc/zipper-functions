@@ -18,9 +18,9 @@ services:
       ignoredPaths:
         - '**/*.test.ts'
         - '**/*.test.tsx'
-    initialDeployHook: 'yarn db-migrate-dev; yarn db-seed'
-    buildCommand: 'npm install -g caddy; yarn install; yarn build:preview'
-    startCommand: 'caddy start; yarn start:preview'
+    initialDeployHook: 'yarn install; yarn db-migrate-dev; yarn db-seed'
+    buildCommand: 'yarn install; yarn build:preview'
+    startCommand: 'npm install -g caddy; caddy start; yarn start:preview'
     # # #
     envVars:
       - fromGroup: zipper-env-group--preview
