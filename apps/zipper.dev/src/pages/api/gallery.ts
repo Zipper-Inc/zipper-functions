@@ -3,6 +3,10 @@ import { NextApiHandler, NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '~/server/prisma';
 import { defaultAvatarColors } from '~/components/app-avatar';
 import Cors from 'cors';
+import IORedis from 'ioredis';
+import { env } from '~/server/env';
+
+const EXPIRATION_DURATION_IN_SECONDS = 60 * 60; // 1 hour
 
 const cors = Cors({
   methods: ['POST', 'GET', 'HEAD'],
@@ -26,6 +30,17 @@ function runMiddleware(
 
 const handler: NextApiHandler = async (req, res) => {
   await runMiddleware(req, res, cors);
+
+  const redis = new IORedis(+env.REDIS_PORT, env.REDIS_HOST);
+
+  const result = await redis.get('galleryCache');
+
+  // cache hit
+  if (result) {
+    return res.json(JSON.parse(result));
+  }
+
+  // cache miss
   const apps = await prisma.app.findMany({
     where: {
       submissionState: appSubmissionState.approved,
@@ -71,6 +86,12 @@ const handler: NextApiHandler = async (req, res) => {
     [] as ({name: string | null, iconUrl: string, description: string | null, slug: string, resourceOwner: {slug: string}})[],
   );
 
+  redis.set(
+    'galleryCache',
+    JSON.stringify(appsWithResourceOwnerSlug),
+    'EX',
+    EXPIRATION_DURATION_IN_SECONDS,
+  );
   res.json(appsWithResourceOwnerSlug);
 };
 
