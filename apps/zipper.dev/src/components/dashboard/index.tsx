@@ -310,7 +310,7 @@ export function Dashboard() {
                         fontSize="sm"
                         onClick={onOpen}
                       >
-                        <Icon as={FiPlus} mr="2" />
+                        <Icon as={FiPlus} mx="2" />
                         Create Applet
                       </Button>
                     </HStack>
