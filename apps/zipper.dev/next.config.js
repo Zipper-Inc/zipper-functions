@@ -102,6 +102,19 @@ module.exports = getConfig({
   async rewrites() {
     return [
       {
+        source: '/home',
+        destination: 'https://similar-years-645746.framer.app',
+      },
+      {
+        source: '/about',
+        destination: 'https://similar-years-645746.framer.app/about',
+      },
+      // comment this back in when the blog is ready
+      // {
+      //   source: '/blog/:path*',
+      //   destination: 'http://localhost:3004/blog/:path*',
+      // },
+      {
         source: '/run/:slug/:version/:filename/:path*',
         destination: `${
           process.env.NODE_ENV === 'production' ? 'https' : 'http'
