@@ -8,7 +8,7 @@ services:
     runtime: node
     # # #
     plan: free
-    previewPlan: starter
+    previewPlan: standard
     # # #
     rootDir: apps/zipper.dev
     buildFilter:
