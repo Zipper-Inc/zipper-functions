@@ -1,0 +1,15 @@
+{
+  "name": "@zipper/client",
+  "version": "0.1.1",
+  "description": "A TypeScript client for interacting with Zipper Applets",
+  "main": "src/index.ts",
+  "author": "Zipper",
+  "license": "MIT",
+  "private": true,
+  "dependencies": {
+    "node-fetch": "2.6.7"
+  },
+  "devDependencies": {
+    "@types/node-fetch": "^2.6.4"
+  }
+}
