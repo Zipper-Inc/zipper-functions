@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { Configuration, OpenAIApi } from "openai";
 
+const conf = new Configuration({
+  apiKey: process.env.OPENAI,
+})
+
 export async function generateZipperAppletVersion({userRequest, rawTypescriptCode} : {userRequest: string, rawTypescriptCode: string}) {
   const zipperDefinitions = `
   Here is a list of all the definitions you can use in your code:
@@ -463,6 +467,7 @@ type DropdownProps<I> = Omit<Zipper.DropdownAction<I>, 'actionType'>;
 declare function Dropdown<I = Zipper.Inputs>(
   props: DropdownProps<I>,
 ): Zipper.Action;`
+
   const zipperSystemPrompt = `
   # Convert TypeScript to Zipper Applet
   Zipper allows creating serverless apps called applets. 
@@ -474,9 +479,52 @@ declare function Dropdown<I = Zipper.Inputs>(
   - Handler function should be always a declarative function, no arrow functions
   - Dont type the handler function because Zipper.Handler is already inferred
   - Zipper.Output type isnt necessary as well because it's inferred
-  - You can use any code you want, but the output should be as simple as possible
-  - Always try to create the config object for the handler function, even if it's empty
-  - Config objects usually contains the inputs, description, auth and run properties, here is a example
+  - Try to use the Zipper functionalities like storage to store data, If the user says "I want a list" this data should be saved using Zipper.storage
+  - If the user needs to perform any action in the items you should use Zipper.Action
+  - If you detect in your main function that you have other functions to perform actions you can extract this functions to other files, just output the code of that functions after the main.ts file and add the name of the file as a comment in the top, here is a example: 
+  // file: main.ts
+  export function handler() {
+    const list = Zipper.storage.get('list');
+    return list.map((item) => {
+      ...item,
+      actions: [
+        Zipper.Action.create({
+          actionType: 'button',
+          path: 'deleteitem',
+          text: 'Delete',
+          showAs: 'refresh',
+          inputs: {
+            id: item.id,
+          },
+        }),
+      ],
+    });
+  }
+  // file: deleteItem.ts
+  type Item = {
+    id: string;
+  }
+  export function handler({ id }) {
+    const list = await Zipper.storage.get<Item[]>('list');
+    const newList = list.filter((item) => item.id !== id);
+    Zipper.storage.set('list', newList);
+  }
+  - Always use await for Zipper.storage methods
+  - Always try to create the necessary interfaces and types for stuff you want to create like items, lists, etc
+  - Remember to think in applets as regular web apps, if your user wants a applet that is a "List of items" your main.ts file should return the list of items your user wants to see
+  - If you are using Zipper.Actions, make sure you add the showAs property as it is mandatory
+  - Path property in Zipper.Actions should be always the name of the file with .ts extension and file names are always lowercase
+  - Always remember if you create other files this files MUST export a handler function named 'handler'
+  - All the files you create must have a config object for each file, this config object should be always in the end of the file
+  - Before you start outputting a new file, output the config object for the previous file like this: 
+  // file: main.ts
+  export function handler() { ... }
+  export const config: Zipper.HandlerConfig = { ... }
+  // file: deleteItem.ts
+  export function handler() { ... }
+  export const config: Zipper.HandlerConfig = { ... }
+  - If you create another file to handle a functionality of your applet, remember to remove the old function from the main.ts file
+  - The first code you receive does not uses the Zipper framework, make sure you refactor it to use it, if you see for example data being saved in a raw array, make sure you refactor it to use Zipper.storage
   - It's always nice to have the description property so the user can understand what the applet does
   - You can use the global components like Stack, Row, Column, Link, Button, Markdown, md, Dropdown, etc
   - Don't use arrow functions, always use declarative functions
@@ -484,7 +532,7 @@ declare function Dropdown<I = Zipper.Inputs>(
   - Config objects should be always in the end of the code
   - Config objects are mandatory, you should always add one to the output
   - Pay attention to user requirements and try to use the tools that are available in global namespace, for example, if the user says "I want something that can manage a list of items", you should output
-  - Remember to not user anything that you don't have access to, for example, Zipper dont have access to useState from React so you can't use it
+  - Remember to not user anything that you don't have access to, for example, Zipper dont have access to useState from React so you can't use it  
   Here is a example of a config object: 
   export const config: Zipper.HandlerConfig<Inputs> = {
     description: {
@@ -500,10 +548,7 @@ declare function Dropdown<I = Zipper.Inputs>(
     },
   };
   `
-  const conf = new Configuration({
-    apiKey: process.env.OPENAI,
-  })
-
+  
   if (conf.apiKey === undefined) {
     console.log("No API key provided.")
     return {error: "No API key provided."}
@@ -551,6 +596,19 @@ declare function Dropdown<I = Zipper.Inputs>(
       }
     }
   }
+}
+
+export async function refactorZipperApplet() {
+  const zipperSystemPrompt = `
+    # Refactor Zipper Applet
+    You are a specialist on refactoring zipper applets. 
+    Your task is to look at a zipper applet code and refactor it to make it better.
+    You should think in the usability of the user, the readability of the code and the performance of the applet.
+    Applets can contain multiple files, all the files should export a handler function named 'handler' if they are not lib files. 
+    The entry point of every applet is a file named main.ts
+    You should always think following this constraints: 
+    
+  `
 }
 
 export async function POST(request: Request) {
