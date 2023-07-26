@@ -10,6 +10,7 @@ import denyList from '../utils/slugDenyList';
 import slugify from '~/utils/slugify';
 import { ResourceOwnerType } from '@zipper/types';
 import { createApplet } from '@zipper/client';
+import { captureMessage } from '@sentry/nextjs';
 
 const defaultSelect = Prisma.validator<Prisma.UserSelect>()({
   id: true,
@@ -112,17 +113,27 @@ export const userRouter = createProtectedRouter()
           },
         });
 
-        const response = await createApplet('feedback-tracker', {
-          token: process.env.FEEDBACK_TRACKER_API_KEY,
-        })
-          .path('create.ts')
-          .run({
-            email: user?.email,
-            url: input.url,
-            feedback: input.feedback,
+        try {
+          await createApplet('feedback-tracker', {
+            token: process.env.FEEDBACK_TRACKER_API_KEY,
+          })
+            .path('create.ts')
+            .run({
+              email: user?.email,
+              url: input.url,
+              feedback: input.feedback,
+            });
+
+          return true;
+        } catch (e) {
+          captureMessage('Failed to submit feedback', {
+            extra: {
+              input,
+            },
           });
 
-        return response.status;
+          return false;
+        }
       }
     },
   })
