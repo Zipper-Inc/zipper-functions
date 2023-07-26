@@ -3,12 +3,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import serveRelay from './utils/relay-middleware';
 import jsonHandler from './api-handlers/json.handler';
 import yamlHandler from './api-handlers/yaml.handler';
+import htmlHandler from './api-handlers/html.handler';
+
 import {
   getZipperApiUrl,
   ZIPPER_TEMP_USER_ID_COOKIE_NAME,
 } from '@zipper/utils';
 import { jwtVerify } from 'jose';
-import htmlHandler from './api-handlers/html.handler';
 
 const { __DEBUG__ } = process.env;
 
