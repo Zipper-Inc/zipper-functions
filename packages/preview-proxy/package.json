@@ -14,14 +14,14 @@
     "ts-node": "^10.9.1"
   },
   "scripts": {
-    "dev": "yarn nodemon",
-    "start": "yarn ts-node ./main.ts"
+    "__dev": "yarn nodemon",
+    "__start": "yarn ts-node ./main.ts"
   },
   "nodemonConfig": {
     "watch": [
       "main.ts"
     ],
-    "exec": "yarn start",
+    "exec": "yarn __start",
     "ext": "ts, tsx"
   }
 }
