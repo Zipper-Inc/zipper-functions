@@ -6,7 +6,7 @@ import fetch from 'node-fetch';
 import getRunUrl from '../utils/get-run-url';
 import { generateAccessToken } from '../utils/jwt-utils';
 
-const connection = new IORedis(+env.REDIS_PORT, env.REDIS_HOST, {
+export const redis = new IORedis(+env.REDIS_PORT, env.REDIS_HOST, {
   maxRetriesPerRequest: null,
 });
 
@@ -71,7 +71,7 @@ const initializeWorkers = () => {
           }
         }
       },
-      { connection },
+      { connection: redis },
     )
       ?.on('completed', (job) => {
         console.log(`[Job Queue] Completed job ID ${job?.id}`);
@@ -89,7 +89,7 @@ const initializeQueues = () => {
   console.log('[BullMQ] Initializing queues');
   return {
     schedule: new Queue('schedule-queue', {
-      connection,
+      connection: redis,
       defaultJobOptions: { removeOnComplete: 1000, removeOnFail: 5000 },
     }),
   };

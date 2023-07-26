@@ -6,8 +6,7 @@
 import { PrismaClient } from '@prisma/client';
 import { generateSlug } from 'random-word-slugs';
 import crypto from 'crypto';
-import { getAppHash, getAppVersionFromHash } from '../src/utils/hashing';
-import { build } from '../src/utils/eszip-build-applet';
+import { getAppHash } from '../src/utils/hashing';
 
 const prisma = new PrismaClient();
 
