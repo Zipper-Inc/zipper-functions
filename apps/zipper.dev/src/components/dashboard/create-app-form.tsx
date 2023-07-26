@@ -23,10 +23,6 @@ import {
   Box,
   AbsoluteCenter,
   Image,
-  ModalOverlay,
-  Modal,
-  ModalContent,
-  Center,
   Fade,
 } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
@@ -44,7 +40,6 @@ import { useOrganization } from '~/hooks/use-organization';
 import { useUser } from '~/hooks/use-user';
 import { useOrganizationList } from '~/hooks/use-organization-list';
 import { getEditAppletLink } from '@zipper/utils';
-import { useMutation } from 'react-query';
 import { ChatGPTMessage } from '~/app/aifunctions/route';
 
 const getDefaultCreateAppFormValues = () => ({
@@ -72,13 +67,12 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
     message: string;
     basicCode: string;
   }) => {
-
     const response = await fetch('/aifunctions/zipperCode', {
       method: 'POST',
       body: JSON.stringify({
         userRequest: message,
-        rawTypescriptCode: basicCode
-      })
+        rawTypescriptCode: basicCode,
+      }),
     });
 
     // Handle response
@@ -111,36 +105,38 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
   };
 
   const sendMessageHandler = async (message: string) => {
-    // Existing logic to build messages 
+    // Existing logic to build messages
     const messagesToSend: ChatGPTMessage[] = [
       ...messages,
-      { role: 'user', content: message }
+      { role: 'user', content: message },
     ];
-  
+
     setIsSending(true);
-  
+
     try {
       const basicCodeResponse = await getBasicCode(message);
       const basicCode = basicCodeResponse.content;
-      const zipperCode = await getZipperCode({message, basicCode});
+      const zipperCode = await getZipperCode({ message, basicCode });
 
-      const cleanedCode = zipperCode.content.replace(/\\n/g, '')
-                                .replace(/\\/g,'');
+      const cleanedCode = zipperCode.content
+        .replace(/\\n/g, '')
+        .replace(/\\/g, '')
+        .replace(/```typescript/g, '')
+        .replace(/```/g, '');
 
-      console.log(cleanedCode)                                
-  
       setMessages([
         ...messagesToSend,
         { role: 'assistant', content: basicCode },
-        { role: 'assistant', content: zipperCode }
+        { role: 'assistant', content: zipperCode },
       ]);
-  
+
+      return cleanedCode;
     } catch (error) {
-      console.log(error);  
+      console.log(error);
     } finally {
-      setIsSending(false);    
+      setIsSending(false);
     }
-  }
+  };
 
   const addApp = trpc.useMutation('app.add', {
     async onSuccess() {
@@ -188,28 +184,10 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
   const duration = 1500;
   const toast = useToast();
 
-  const { mutateAsync: getAICode, isLoading: isAILoading } = useMutation(
-    ['app.ai'],
-    async (description: string) => {
-      return fetch('/ai', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          prompt: description,
-        }),
-      }).then((res) => {
-        if (!res.ok) Promise.reject();
-        return res.text();
-      });
-    },
-  );
-
   // Gif center above/ modal
   return (
     <Box position="relative">
-      <Fade in={isAILoading}>
+      <Fade in={isSending}>
         <Box
           position="fixed"
           top={0}
@@ -348,51 +326,48 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
               display="block"
               colorScheme="purple"
               type="submit"
-              isDisabled={isDisabled || addApp.isLoading || isAILoading}
+              isDisabled={isDisabled || addApp.isLoading || isSending}
               onClick={createAppForm.handleSubmit(
                 async ({ description, isPublic, requiresAuthToRun, name }) => {
-                  await sendMessageHandler(description);
+                  let aiCode: string | undefined = undefined;
+                  if (description) {
+                    aiCode = await sendMessageHandler(description);
+                  }
+                  await addApp.mutateAsync(
+                    {
+                      description,
+                      name,
+                      isPrivate: !isPublic,
+                      requiresAuthToRun,
+                      organizationId: selectedOrganizationId,
+                      aiCode,
+                    },
+                    {
+                      onSuccess: (applet) => {
+                        resetForm();
+                        if (
+                          (selectedOrganizationId ?? null) !==
+                            (organization?.id ?? null) &&
+                          setActive
+                        ) {
+                          setActive(selectedOrganizationId || null);
+                        }
+                        toast({
+                          title: 'Applet created',
+                          status: 'success',
+                          duration: 9999,
+                          isClosable: false,
+                        });
 
-                  // let ai = '';
-                  // if (description) {
-                  //   ai = await getAICode(description);
-                  // }
-                  // await addApp.mutateAsync(
-                  //   {
-                  //     description,
-                  //     name,
-                  //     isPrivate: !isPublic,
-                  //     requiresAuthToRun,
-                  //     organizationId: selectedOrganizationId,
-                  //     aiCode: ai,
-                  //   },
-                  //   {
-                  //     onSuccess: (applet) => {
-                  //       console.log(applet);
-                  //       resetForm();
-                  //       if (
-                  //         (selectedOrganizationId ?? null) !==
-                  //           (organization?.id ?? null) &&
-                  //         setActive
-                  //       ) {
-                  //         setActive(selectedOrganizationId || null);
-                  //       }
-                  //       toast({
-                  //         title: 'Applet created',
-                  //         status: 'success',
-                  //         duration: 9999,
-                  //         isClosable: false,
-                  //       });
-
-                  //       router.push(
-                  //         getEditAppletLink(
-                  //           applet!.resourceOwner!.slug,
-                  //           applet!.slug,
-                  //         ),
-                  //       );
-                  //     },
-                  //   },
-                  // );
+                        router.push(
+                          getEditAppletLink(
+                            applet!.resourceOwner!.slug,
+                            applet!.slug,
+                          ),
+                        );
+                      },
+                    },
+                  );
                 },
               )}
             >
