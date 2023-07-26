@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import serveRelay from './utils/relay-middleware';
 import jsonHandler from './api-handlers/json.handler';
 import yamlHandler from './api-handlers/yaml.handler';
+import htmlHandler from './api-handlers/html.handler';
+
 import {
   getZipperApiUrl,
   ZIPPER_TEMP_USER_ID_COOKIE_NAME,
@@ -35,6 +37,11 @@ async function maybeGetCustomResponse(
     case /\/api\/yaml(\/?)$/.test(appRoute): {
       console.log('matching yaml api route');
       return await yamlHandler(request);
+    }
+
+    case /\/api\/html(\/?)$/.test(appRoute): {
+      console.log('matching html api route');
+      return await htmlHandler(request);
     }
 
     case /\/relay(\/?)$/.test(appRoute): {
