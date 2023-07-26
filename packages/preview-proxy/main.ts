@@ -2,6 +2,7 @@ import proxy from 'express-http-proxy';
 import express, { RequestHandler } from 'express';
 
 const PORT = 9999;
+export const ZIPPER_PREVIEW_PROXY_HOST_HEADER = 'x-preview-proxy-host';
 
 const app = express();
 
@@ -23,11 +24,11 @@ const previewProxy: RequestHandler = (req, res, next) => {
   // last part of the array is unique render hostname
   // i.e. zipper-run-preview
   const renderSubdomain = hostnameParts.splice(-1);
-  req.headers['x-preview-proxy-host'] = req.hostname;
+  req.headers[ZIPPER_PREVIEW_PROXY_HOST_HEADER] = req.hostname;
   return proxy(`https://${renderSubdomain}.onrender.com`, {
     memoizeHost: false,
     userResHeaderDecorator: (headers) => ({
-      'x-preview-proxy-host': req.hostname,
+      [ZIPPER_PREVIEW_PROXY_HOST_HEADER]: req.hostname,
       ...headers,
     }),
   })(req, res, next);

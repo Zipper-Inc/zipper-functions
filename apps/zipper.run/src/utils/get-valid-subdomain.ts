@@ -1,4 +1,4 @@
-const X_PREVIEW_PROXY_HOST = 'x-preview-proxy-host';
+import { ZIPPER_PREVIEW_PROXY_HOST_HEADER } from '@zipper/utils';
 
 /**
  * Just making this up for now, but this list will have to live somewhere
@@ -12,7 +12,7 @@ const NON_ALLOWED_SUBDOMAINS = ['www', 'app', 'zipper'];
 export default function getValidSubdomain(
   headers: Record<string, any>,
 ): string | void {
-  const host = headers[X_PREVIEW_PROXY_HOST] || headers.host;
+  const host = headers[ZIPPER_PREVIEW_PROXY_HOST_HEADER] || headers.host;
 
   const hostParts = host.split('.');
 
