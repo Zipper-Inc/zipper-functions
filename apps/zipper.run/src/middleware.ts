@@ -8,6 +8,7 @@ import {
   ZIPPER_TEMP_USER_ID_COOKIE_NAME,
 } from '@zipper/utils';
 import { jwtVerify } from 'jose';
+import htmlHandler from './api-handlers/html.handler';
 
 const { __DEBUG__ } = process.env;
 
@@ -35,6 +36,11 @@ async function maybeGetCustomResponse(
     case /\/api\/yaml(\/?)$/.test(appRoute): {
       console.log('matching yaml api route');
       return await yamlHandler(request);
+    }
+
+    case /\/api\/html(\/?)$/.test(appRoute): {
+      console.log('matching html api route');
+      return await htmlHandler(request);
     }
 
     case /\/relay(\/?)$/.test(appRoute): {
