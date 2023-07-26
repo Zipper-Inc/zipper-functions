@@ -27,6 +27,7 @@ import { useRouter } from 'next/router';
 import {
   getInputsFromFormData,
   ZIPPER_TEMP_USER_ID_COOKIE_NAME,
+  ZIPPER_TEMP_USER_ID_HEADER,
 } from '@zipper/utils';
 import Unauthorized from './unauthorized';
 import removeAppConnectorUserAuth from '~/utils/remove-app-connector-user-auth';
@@ -422,6 +423,8 @@ export const getServerSideProps: GetServerSideProps = async ({
 
   const headers: Record<string, string> = {
     Authorization: `Bearer ${token || ''}`,
+    [ZIPPER_TEMP_USER_ID_HEADER]:
+      req.cookies[ZIPPER_TEMP_USER_ID_COOKIE_NAME] || '',
   };
 
   const version = versionFromUrl || 'latest';
@@ -438,6 +441,7 @@ export const getServerSideProps: GetServerSideProps = async ({
 
   if (payload === 'UNAUTHORIZED' || payload === 'INVALID_VERSION')
     return { props: { errorCode: payload } };
+
   const { configs: handlerConfigs } = JSON.parse(payload) as Zipper.BootPayload;
 
   const config = handlerConfigs[filename];
