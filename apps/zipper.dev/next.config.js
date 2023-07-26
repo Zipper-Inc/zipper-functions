@@ -64,6 +64,7 @@ module.exports = getConfig({
     NODE_ENV: env.NODE_ENV,
   },
   transpilePackages: [
+    '@zipper/client',
     '@zipper/types',
     '@zipper/ui',
     '@zipper/utils',
