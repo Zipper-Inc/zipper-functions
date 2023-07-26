@@ -4,12 +4,12 @@ import { TRPCError } from '@trpc/server';
 import { prisma } from '../prisma';
 import { generateAccessToken } from '~/utils/jwt-utils';
 import { encryptToHex } from '@zipper/utils';
-import fetch from 'node-fetch';
 import { Prisma } from '@prisma/client';
 import { getToken } from 'next-auth/jwt';
 import denyList from '../utils/slugDenyList';
 import slugify from '~/utils/slugify';
 import { ResourceOwnerType } from '@zipper/types';
+import { createApplet } from '@zipper/client';
 
 const defaultSelect = Prisma.validator<Prisma.UserSelect>()({
   id: true,
@@ -112,24 +112,17 @@ export const userRouter = createProtectedRouter()
           },
         });
 
-        const res = await fetch(
-          'https://feedback-tracker.zipper.run/create.ts/api/json',
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${process.env.FEEDBACK_TRACKER_API_KEY}`,
-              Accept: 'application/json',
-            },
-            body: JSON.stringify({
-              email: user?.email,
-              url: input.url,
-              feedback: input.feedback,
-            }),
-          },
-        );
+        const response = await createApplet('feedback-tracker', {
+          token: process.env.FEEDBACK_TRACKER_API_KEY,
+        })
+          .path('create.ts')
+          .run({
+            email: user?.email,
+            url: input.url,
+            feedback: input.feedback,
+          });
 
-        return res.status;
+        return response.status;
       }
     },
   })
