@@ -44,6 +44,16 @@ class Applet implements ZipperRunClient {
     );
     this.isDebugMode = !!options?.debug;
     if (options?.token) this.token = options.token;
+
+    this.debug('Applet.constructor', {
+      indentifier,
+      baseUrl: this.baseUrl,
+      options: { ...options, token: options?.token ? '*****' : undefined },
+    });
+  }
+
+  private debug(...args: any) {
+    if (this.isDebugMode) console.log(`${LOG_PREFIX} DEBUG`, ...args);
   }
 
   get url() {
@@ -60,6 +70,8 @@ class Applet implements ZipperRunClient {
     path?: string;
     inputs?: I;
   }): Promise<O> {
+    this.debug('Applet.run', { path, inputs });
+
     const runUrl = new URL(this.baseUrl);
     runUrl.pathname = [path, 'api'].join('/');
 
@@ -81,6 +93,15 @@ class Applet implements ZipperRunClient {
       headers.Authorization = `Bearer ${this.token}`;
     }
 
+    this.debug('Applet.run fetch', {
+      runUrl,
+      headers: {
+        ...headers,
+        Authorization: headers.Authorization ? '******' : undefined,
+      },
+      body,
+    });
+
     const { ok, data, error }: ApiResponse<O> = await fetch(runUrl, {
       method: 'POST',
       headers,
@@ -96,20 +117,20 @@ class Applet implements ZipperRunClient {
       }));
 
     if (!ok) {
-      if (this.isDebugMode)
-        console.log(`${LOG_PREFIX} DEBUG`, {
-          path,
-          inputs,
-          baseUrl: this.baseUrl?.toString(),
-          runUrl: runUrl?.toString(),
-          body,
-        });
+      this.debug('Applet.run not ok', {
+        data,
+        error,
+        path,
+        inputs,
+        body,
+      });
 
       throw new Error(
         `${LOG_PREFIX} Response was not ok | ${error || 'Unknown error'}`,
       );
     }
 
+    this.debug('Applet.run ok', { ok, data });
     return data;
   }
 
@@ -119,6 +140,7 @@ class Applet implements ZipperRunClient {
   path<I extends Inputs = Inputs, O = any>(
     path: string,
   ): ZipperRunClient<I, O> {
+    this.debug('Applet.path', { path });
     return {
       url: [this.baseUrl + path].join('/'),
       run: async (inputs) => this.run({ path, inputs }),
