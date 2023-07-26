@@ -3,7 +3,10 @@ import { GetServerSideProps } from 'next';
 import { getConnectorsAuthUrl } from '~/utils/get-connectors-auth-url';
 import { getInputValuesFromAppRun } from '~/utils/get-input-values-from-url';
 import getRunInfo from '~/utils/get-run-info';
-import getValidSubdomain from '~/utils/get-valid-subdomain';
+import {
+  getHostFromHeaders,
+  getValidSubdomain,
+} from '~/utils/get-valid-subdomain';
 import type { AppPageProps } from '~/components/applet';
 import { getZipperAuth } from '~/utils/get-zipper-auth';
 export { default } from '~/components/applet';
@@ -40,15 +43,14 @@ export const getServerSideProps: GetServerSideProps = async ({
     runnableScripts,
   } = result.data;
 
-  console.log(appRun);
-
   const defaultValues = getInputValuesFromAppRun(inputs, appRun.inputs);
+  const host = getHostFromHeaders(req.headers);
 
   const { githubAuthUrl, slackAuthUrl } = getConnectorsAuthUrl({
     appId: app.id,
     userAuthConnectors,
     userId: userId || (req.cookies[ZIPPER_TEMP_USER_ID_COOKIE_NAME] as string),
-    host: req.headers.host,
+    host,
   });
 
   const proto = process.env.NODE_ENV === 'development' ? 'http' : 'https';

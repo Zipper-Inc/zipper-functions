@@ -13,7 +13,7 @@ import {
   UserAuthConnector,
 } from '@zipper/types';
 import getAppInfo from '~/utils/get-app-info';
-import getValidSubdomain from '~/utils/get-valid-subdomain';
+import { getValidSubdomain } from '~/utils/get-valid-subdomain';
 import { getFilenameAndVersionFromPath } from '~/utils/get-values-from-url';
 import { Heading, Progress, VStack } from '@chakra-ui/react';
 import Head from 'next/head';

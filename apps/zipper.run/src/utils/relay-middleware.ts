@@ -3,7 +3,7 @@ import { NextRequest } from 'next/server';
 import * as jose from 'jose';
 import addAppRun from './add-app-run';
 import getAppInfo from './get-app-info';
-import getValidSubdomain from './get-valid-subdomain';
+import { getValidSubdomain } from './get-valid-subdomain';
 import { getFilenameAndVersionFromPath } from './get-values-from-url';
 import {
   formatDeploymentId,

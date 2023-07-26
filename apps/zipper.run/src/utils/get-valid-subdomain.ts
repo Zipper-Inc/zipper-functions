@@ -7,12 +7,19 @@ import { ZIPPER_PREVIEW_PROXY_HOST_HEADER } from '@zipper/utils';
 const NON_ALLOWED_SUBDOMAINS = ['www', 'app', 'zipper'];
 
 /**
+ * Get host from headers, takes into account our dev proxy
+ */
+export function getHostFromHeaders(headers: Record<string, any>) {
+  return headers[ZIPPER_PREVIEW_PROXY_HOST_HEADER] || headers.host;
+}
+
+/**
  * Gets the subdomain if it exists and is valid
  */
-export default function getValidSubdomain(
-  headers: Record<string, any>,
-): string | void {
-  const host = headers[ZIPPER_PREVIEW_PROXY_HOST_HEADER] || headers.host;
+export function getValidSubdomain(headers: Record<string, any>): string | void {
+  const host = getHostFromHeaders(headers);
+
+  if (!host) return;
 
   const hostParts = host.split('.');
 
