@@ -12,10 +12,8 @@ export const getServerSideProps: GetServerSideProps = async ({
   req,
   query,
 }) => {
-  const { host } = req.headers;
-
   // validate subdomain
-  const subdomain = getValidSubdomain(host);
+  const subdomain = getValidSubdomain(req.headers);
   if (!subdomain) return { notFound: true };
 
   const { token, userId } = await getZipperAuth(req);

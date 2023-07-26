@@ -392,14 +392,15 @@ export const getServerSideProps: GetServerSideProps = async ({
 }) => {
   console.log({ url: req.url, resolvedUrl });
 
-  const { host } = req.headers;
   const isEmbedUrl = /^\/run\/embed(\/|\?|$)/.test(resolvedUrl);
   const isRunUrl = /^\/run(\/|\?|$)/.test(resolvedUrl);
   const isInitialServerSideProps = !req.url?.startsWith('/_next');
 
   // validate subdomain
-  const subdomain = getValidSubdomain(host);
-  if (__DEBUG__) console.log('getValidSubdomain', { subdomain, host });
+  const subdomain = getValidSubdomain(req.headers);
+  if (__DEBUG__) {
+    console.log('getValidSubdomain', { subdomain, headers: req.headers });
+  }
   if (!subdomain) return { notFound: true };
 
   const { version: versionFromUrl, filename: filenameFromUrl } =
@@ -440,17 +441,20 @@ export const getServerSideProps: GetServerSideProps = async ({
       req.cookies[ZIPPER_TEMP_USER_ID_COOKIE_NAME] || '',
   };
 
+  // if this is a preview proxy, add the appropriate header
+  if (req.headers['x-preview-proxy-host']) {
+    headers['x-preview-proxy-host'] = req.headers[
+      'x-preview-proxy-host'
+    ] as string;
+  }
+
   const version = versionFromUrl || 'latest';
   const filename = filenameFromUrl || 'main.ts';
 
   // boot it up
   // todo cache this
   const bootUrl = getBootUrl({ slug: appInfoResult.data.app.slug });
-  const payload = await fetch(bootUrl, {
-    headers: {
-      Authorization: `Bearer ${token || ''}`,
-    },
-  }).then((r) => r.text());
+  const payload = await fetch(bootUrl, { headers }).then((r) => r.text());
 
   if (payload === 'UNAUTHORIZED' || payload === 'INVALID_VERSION')
     return { props: { errorCode: payload } };
