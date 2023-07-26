@@ -5,6 +5,7 @@ import { defaultAvatarColors } from '~/components/app-avatar';
 import Cors from 'cors';
 import IORedis from 'ioredis';
 import { env } from '~/server/env';
+import { redis } from '~/server/queue';
 
 const EXPIRATION_DURATION_IN_SECONDS = 60 * 60; // 1 hour
 
@@ -30,8 +31,6 @@ function runMiddleware(
 
 const handler: NextApiHandler = async (req, res) => {
   await runMiddleware(req, res, cors);
-
-  const redis = new IORedis(+env.REDIS_PORT, env.REDIS_HOST);
 
   const result = await redis.get('galleryCache');
 
