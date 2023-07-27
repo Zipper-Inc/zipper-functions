@@ -1,4 +1,5 @@
 import nodeCrypto from 'crypto';
+import { Buffer } from 'buffer';
 
 const ALGORITHM = {
   // 128 bit auth tag is recommended for GCM
