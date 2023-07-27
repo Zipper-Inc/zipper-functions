@@ -2,6 +2,7 @@ export const code = `import { Octokit } from "https://cdn.skypack.dev/octokit@2.
 
 const client = new Octokit({
   auth: Deno.env.get("GITHUB_TOKEN"),
+  // auth: Deno.env.get("GITHUB_USER_TOKEN"), // for user-scoped auth
 });
 
 export default client;

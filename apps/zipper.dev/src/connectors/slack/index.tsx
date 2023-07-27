@@ -200,6 +200,7 @@ function SlackConnectorForm({ appId }: { appId: string }) {
             <Spacer flexGrow={1} />
             <Switch
               isChecked={isUserAuthRequired}
+              isDisabled={!userValue || userValue.length === 0}
               ml="auto"
               onChange={(e) => {
                 if (mutateOnChange) {
@@ -218,6 +219,7 @@ function SlackConnectorForm({ appId }: { appId: string }) {
           <FormHelperText maxW="xl">
             When checked, users will have to authorize the Slack integration
             before they're able to run this Zipper app and see the output.
+            Requires at least 1 user scope.
           </FormHelperText>
         </FormControl>
       </HStack>
