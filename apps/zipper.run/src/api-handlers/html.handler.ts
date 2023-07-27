@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getFilenameAndVersionFromPath } from '~/utils/get-values-from-url';
 import { relayRequest } from '~/utils/relay-middleware';
+import { setCorsHeaders } from '~/utils/cors';
 
 export default async function htmlHandler(request: NextRequest) {
   const { version, filename } = getFilenameAndVersionFromPath(
@@ -15,13 +16,7 @@ export default async function htmlHandler(request: NextRequest) {
   });
 
   headers?.set('Content-Type', 'text/html');
-
-  headers?.set('Access-Control-Allow-Origin', '*');
-  headers?.set(
-    'Access-Control-Allow-Methods',
-    'GET, POST, PUT, DELETE, OPTIONS',
-  );
-  headers?.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  setCorsHeaders(headers);
 
   if (status === 404) {
     return NextResponse.rewrite(new URL('/404', request.url));
