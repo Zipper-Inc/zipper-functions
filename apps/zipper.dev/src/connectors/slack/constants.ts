@@ -1,7 +1,9 @@
 export const code = `import { WebClient } from "https://deno.land/x/slack_web_api@6.7.2/mod.js";
 
+// This is an Slack API client intialized with the applet developer's Slack token
+// THIS CLIENT DOES NOT USE THE USER TOKEN
+// All requests using this client will use the same token. Be careful if sharing publicly!
 const client = new WebClient(Deno.env.get('SLACK_BOT_TOKEN'));
-//const client = new WebClient(Deno.env.get('SLACK_USER_TOKEN'));
 
 client.sendToChannel = async (text: string, channelName: string) => {
   return await client.chat.postMessage({
@@ -9,6 +11,9 @@ client.sendToChannel = async (text: string, channelName: string) => {
     text,
   });
 };
+
+// The current user's Slack token is available in the context of a handler function
+export const getUserClient = (userToken: string) => new WebClient(userToken);
 
 export default client;
 `;

@@ -7,5 +7,9 @@ export type UserAuthConnector = {
   clientId?: string;
   userScopes: string[];
   workspaceScopes: string[];
-  appConnectorUserAuths: Required<{ metadata: any }>[];
+  appConnectorUserAuths: Required<{
+    encryptedAccessToken: string;
+    connectorType: string;
+    metadata: any;
+  }>[];
 };

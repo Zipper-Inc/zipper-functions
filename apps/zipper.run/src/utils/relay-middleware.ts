@@ -11,6 +11,7 @@ import {
   ZIPPER_TEMP_USER_ID_COOKIE_NAME,
   uuid,
   ZIPPER_TEMP_USER_ID_HEADER,
+  webCryptoDecryptFromBase64,
 } from '@zipper/utils';
 import Zipper from '@zipper/framework';
 import { getZipperAuth } from './get-zipper-auth';
@@ -146,13 +147,29 @@ export async function relayRequest(
   }
 
   const runId = request.headers.get('x-zipper-run-id') || uuid();
+  const userConnectorTokens: Record<string, string> = {};
+  await Promise.all(
+    userAuthConnectors
+      .filter((uac) => uac.isUserAuthRequired)
+      .map(async (uac) => {
+        if (uac.appConnectorUserAuths[0]) {
+          const token = await webCryptoDecryptFromBase64(
+            uac.appConnectorUserAuths[0]?.encryptedAccessToken,
+            process.env.ENCRYPTION_KEY!,
+          );
 
-  const connectorsWithUserAuth = userAuthConnectors
-    .filter((uac) => uac.isUserAuthRequired)
-    .map((uac) => uac.type);
+          userConnectorTokens[uac.appConnectorUserAuths[0].connectorType] =
+            token;
+        }
+      }),
+  );
 
   if (!bootOnly) {
-    if (connectorsWithUserAuth.length > 0 && !userInfo.userId && !tempUserId) {
+    if (
+      Object.keys(userConnectorTokens).length > 0 &&
+      !userInfo.userId &&
+      !tempUserId
+    ) {
       throw new Error('missing user ID');
     }
   }
@@ -163,7 +180,7 @@ export async function relayRequest(
       slug: app.slug,
       version,
       url: `https://${getAppLink(app.slug)}`,
-      connectorsWithUserAuth,
+      connectorsWithUserAuth: Object.keys(userConnectorTokens),
     },
     inputs:
       request.method === 'GET'
@@ -172,6 +189,7 @@ export async function relayRequest(
     originalRequest: { url: request.url, method: request.method },
     runId,
     userId: userInfo.userId || tempUserId || '',
+    userConnectorTokens,
   };
 
   relayBody.userInfo = {

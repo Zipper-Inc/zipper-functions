@@ -89,6 +89,11 @@ declare namespace Zipper {
      * The ID for this particular run
      */
     runId: string;
+
+    /**
+     * Auth tokens for each service the user has individually authed against
+     */
+    userConnectorTokens: { [service: string]: string };
   };
 
   /**
@@ -384,6 +389,7 @@ declare namespace Zipper {
       originalRequest: { url: string; method: string };
       path?: string;
       userId: string;
+      userConnectorTokens: Record<string, string>;
     };
   }
 

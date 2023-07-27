@@ -3,7 +3,6 @@ import { files } from './applet/generated/index.gen.ts';
 import { BOOT_PATH, ENV_BLOCKLIST, MAIN_PATH } from './lib/constants.ts';
 import { ZipperStorage } from './lib/storage.ts';
 import { sendLog, methods } from './lib/console.ts';
-import { getUserConnectorAuths } from './lib/user-auth-connectors.ts';
 
 import './lib/global-components.ts';
 
@@ -39,7 +38,7 @@ async function runApplet({ request }: Deno.RequestEvent) {
     delete env[key];
   });
 
-  const { appInfo, userInfo, runId, userId } = body;
+  const { appInfo, userInfo, runId, userId, userConnectorTokens } = body;
 
   // Handle booting seperately
   // This way, we can deploy without running Applet code
@@ -149,25 +148,8 @@ async function runApplet({ request }: Deno.RequestEvent) {
     return new Response(`Zipper Error 404: Path not found`, { status: 404 });
   }
 
-  const fetchUserAuthConnectorInfo = async () => {
-    const authInfo = await getUserConnectorAuths(appInfo.id, userId);
-    if (authInfo.missingConnectorAuths.length > 0) {
-      const missingAuths = authInfo.missingConnectorAuths.join(', ');
-      throw new Error(`Missing the following connector auths: ${missingAuths}`);
-    }
-    if (Object.keys(authInfo.authTokens).length > 0) {
-      Object.keys(authInfo.authTokens).forEach((key) => {
-        env[key] = authInfo.authTokens[key];
-      });
-    }
-  };
-
   // Run the handler
   try {
-    if (appInfo.connectorsWithUserAuth?.length > 0) {
-      await fetchUserAuthConnectorInfo();
-    }
-
     /**
      * A blank slate for a response object
      * Can be written to from inside a handler
@@ -180,6 +162,7 @@ async function runApplet({ request }: Deno.RequestEvent) {
       runId,
       request,
       response,
+      userConnectorTokens,
     };
 
     const output = await handler(body.inputs, context);
