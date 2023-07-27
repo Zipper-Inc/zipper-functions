@@ -5,6 +5,7 @@ import type {
   ApiResponse,
   AppletOptions,
   ZipperRunClient,
+  Output,
 } from './types';
 
 import {
@@ -63,14 +64,20 @@ class Applet implements ZipperRunClient {
   /**
    * Runs the applet at a given path with given inputs
    */
-  async run<I extends Inputs = Inputs, O = any>({
-    path = 'main.ts',
-    inputs,
-  }: {
-    path?: string;
-    inputs?: I;
-  }): Promise<O> {
-    this.debug('Applet.run', { path, inputs });
+  async run<I extends Inputs = Inputs, O extends Output = any>(
+    pathOrInputs?: string | I,
+    maybeInputs?: I,
+  ) {
+    const path: string =
+      pathOrInputs && typeof pathOrInputs === 'string'
+        ? pathOrInputs
+        : 'main.ts';
+    const inputs = maybeInputs ? maybeInputs : (pathOrInputs as I);
+
+    this.debug('Applet.run', {
+      path,
+      inputs,
+    });
 
     const runUrl = new URL(this.baseUrl);
     runUrl.pathname = [path, 'api'].join('/');
@@ -83,6 +90,7 @@ class Applet implements ZipperRunClient {
         throw new Error(`${LOG_PREFIX} Applet inputs could not be serialized`);
       }
     }
+
     const headers: Record<string, string> = {
       Accept: 'application/json',
       'Content-Type': 'application/json',
@@ -137,13 +145,13 @@ class Applet implements ZipperRunClient {
   /**
    * Chain syntax to run the applet a given path
    */
-  path<I extends Inputs = Inputs, O = any>(
+  path<I extends Inputs = Inputs, O extends Output = any>(
     path: string,
   ): ZipperRunClient<I, O> {
     this.debug('Applet.path', { path });
     return {
       url: [this.baseUrl + path].join('/'),
-      run: async (inputs) => this.run({ path, inputs }),
+      run: async (inputs: unknown) => this.run(path, inputs as I),
     };
   }
 }

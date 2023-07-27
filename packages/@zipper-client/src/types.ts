@@ -26,6 +26,8 @@ export type Serializable =
  */
 export type Inputs = { [key: string]: Serializable | undefined };
 
+export type Output = Serializable | void;
+
 /**
  * Passed in when creating an Applet
  */
@@ -38,7 +40,7 @@ export type AppletOptions = {
 /**
  * The API Response from a Zipper Applet
  */
-export type ApiResponse<D = any> = {
+export type ApiResponse<D extends Output = any> = {
   ok: boolean;
   data: D;
   error?: string;
@@ -46,8 +48,16 @@ export type ApiResponse<D = any> = {
 
 /**
  * A client for running an individual path
+ * Accepts input and output types
  */
-export interface ZipperRunClient<I extends Inputs = Inputs, O = any> {
+export interface ZipperRunClient<
+  II extends Inputs = Inputs,
+  OO extends Output = any,
+> {
   url: string;
-  run: (inputs: I) => Promise<O>;
+  run<I extends Inputs = II, O extends Output = OO>(inputs?: I): Promise<O>;
+  run<I extends Inputs = II, O extends Output = OO>(
+    path?: string,
+    Inputs?: I,
+  ): Promise<O>;
 }
