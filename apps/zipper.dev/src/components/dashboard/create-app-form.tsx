@@ -41,6 +41,8 @@ import { useUser } from '~/hooks/use-user';
 import { useOrganizationList } from '~/hooks/use-organization-list';
 import { getEditAppletLink } from '@zipper/utils';
 import { ChatGPTMessage } from '~/app/aifunctions/route';
+import { AICodeOutput } from '@zipper/types';
+import { useEditorContext } from '../context/editor-context';
 
 const getDefaultCreateAppFormValues = () => ({
   name: generateDefaultSlug(),
@@ -59,6 +61,9 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
   const router = useRouter();
   const [messages, setMessages] = useState<ChatGPTMessage[]>([]);
   const [isSending, setIsSending] = useState(false);
+
+  const addScript = trpc.useMutation('script.add');
+  const { scripts } = useEditorContext();
 
   const getZipperCode = async ({
     message,
@@ -83,7 +88,7 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
       throw new Error('Failed to generate Zipper code');
     }
 
-    return data.message;
+    return data as { raw: string; groupedByFilename: AICodeOutput[] };
   };
 
   // getBasicCode implementation
@@ -118,19 +123,15 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
       const basicCode = basicCodeResponse.content;
       const zipperCode = await getZipperCode({ message, basicCode });
 
-      const cleanedCode = zipperCode.content
-        .replace(/\\n/g, '')
-        .replace(/\\/g, '')
-        .replace(/```typescript/g, '')
-        .replace(/```/g, '');
+      console.log(zipperCode);
 
       setMessages([
         ...messagesToSend,
         { role: 'assistant', content: basicCode },
-        { role: 'assistant', content: zipperCode },
+        { role: 'assistant', content: zipperCode.raw },
       ]);
 
-      return cleanedCode;
+      return zipperCode;
     } catch (error) {
       console.log(error);
     } finally {
@@ -329,10 +330,14 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
               isDisabled={isDisabled || addApp.isLoading || isSending}
               onClick={createAppForm.handleSubmit(
                 async ({ description, isPublic, requiresAuthToRun, name }) => {
-                  let aiCode: string | undefined = undefined;
-                  if (description) {
-                    aiCode = await sendMessageHandler(description);
-                  }
+                  const aiOutput = description
+                    ? await sendMessageHandler(description)
+                    : undefined;
+                  const mainCode =
+                    aiOutput?.groupedByFilename.find(
+                      (output) => output.filename === 'main',
+                    )?.code || aiOutput?.raw;
+
                   await addApp.mutateAsync(
                     {
                       description,
@@ -340,10 +345,10 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
                       isPrivate: !isPublic,
                       requiresAuthToRun,
                       organizationId: selectedOrganizationId,
-                      aiCode,
+                      aiCode: mainCode,
                     },
                     {
-                      onSuccess: (applet) => {
+                      onSuccess: async (applet) => {
                         resetForm();
                         if (
                           (selectedOrganizationId ?? null) !==
@@ -352,6 +357,19 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
                         ) {
                           setActive(selectedOrganizationId || null);
                         }
+                        if (aiOutput) {
+                          await Promise.allSettled(
+                            aiOutput.groupedByFilename.map((output) => {
+                              return addScript.mutateAsync({
+                                name: output.filename,
+                                appId: applet!.id,
+                                order: scripts.length + 1,
+                                code: output.code,
+                              });
+                            }),
+                          );
+                        }
+
                         toast({
                           title: 'Applet created',
                           status: 'success',

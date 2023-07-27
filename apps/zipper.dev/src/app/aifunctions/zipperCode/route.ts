@@ -1,3 +1,4 @@
+import { AICodeOutput } from "@zipper/types";
 import { NextResponse } from "next/server";
 import { Configuration, OpenAIApi } from "openai";
 
@@ -611,9 +612,43 @@ export async function refactorZipperApplet() {
   `
 }
 
+function groupCodeByFilename(inputs: string): AICodeOutput[] {
+  const output: AICodeOutput[] = [];
+  const lines = inputs.split('\n');
+
+  let currentFilename = 'main.ts';
+  let currentCode = '';
+
+  for (const line of lines) {
+    if (line.trim().startsWith('// file:')) {
+      if (currentCode !== '') {
+        output.push({ filename: currentFilename, code: currentCode });
+        currentCode = '';
+      }
+      currentFilename = line.trim().replace('// file:', '').trim();
+    } else {
+      currentCode += line + '\n';
+    }
+  }
+
+  // Add the last code block
+  if (currentCode !== '') {
+    output.push({ filename: currentFilename, code: currentCode });
+  }
+
+  return output;
+}
+
 export async function POST(request: Request) {
   const {userRequest, rawTypescriptCode} = await request.json()
   const zipperAppletVersion = await generateZipperAppletVersion({userRequest, rawTypescriptCode})
-  console.log(zipperAppletVersion)
-  return NextResponse.json({message: zipperAppletVersion})
+
+  if (!zipperAppletVersion) return NextResponse.json({ error: 'No response from OpenAI' }, { status: 500 })
+  
+
+  if ('message' in zipperAppletVersion || 'error' in zipperAppletVersion) {
+    return NextResponse.json({ error: zipperAppletVersion.error}, { status: 500 })
+  }
+
+  return NextResponse.json({ raw: zipperAppletVersion.content, groupedByFilename: groupCodeByFilename(zipperAppletVersion.content ?? '')})
 }
