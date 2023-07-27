@@ -225,8 +225,7 @@ function GitHubConnectorForm({ appId }: { appId: string }) {
           <FormHelperText maxW="xl">
             When checked, users will have to authorize the GitHub integration
             before they're able to run this Zipper app and see the output. The
-            user's GitHub token is available via the GITHUB_USER_TOKEN env var
-            at runtime.
+            user's GitHub token will be available the HandlerContext at runtime.
           </FormHelperText>
         </FormControl>
       </HStack>

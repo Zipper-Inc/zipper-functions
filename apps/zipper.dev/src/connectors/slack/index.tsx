@@ -219,7 +219,8 @@ function SlackConnectorForm({ appId }: { appId: string }) {
           <FormHelperText maxW="xl">
             When checked, users will have to authorize the Slack integration
             before they're able to run this Zipper app and see the output.
-            Requires at least 1 user scope.
+            Requires at least 1 user scope. The user's Slack token will be
+            available via the HandlerContext at runtime.
           </FormHelperText>
         </FormControl>
       </HStack>
