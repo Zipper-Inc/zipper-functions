@@ -1,11 +1,18 @@
 export const code = `import { Octokit } from "https://cdn.skypack.dev/octokit@2.0.14?dts";
 
+// This is an Octokit client intialized with the applet developer's GitHub token
+// THIS CLIENT DOES NOT USE THE USER TOKEN
+// All requests using this client will use the same token. Be careful if sharing publicly!
 const client = new Octokit({
   auth: Deno.env.get("GITHUB_TOKEN"),
-  // auth: Deno.env.get("GITHUB_USER_TOKEN"), // for user-scoped auth
 });
 
+// The current user's GitHub token is available in the context of a handler function
+export const getUserClient = (userToken: string) =>
+  new Octokit({ auth: userToken });
+
 export default client;
+
 `;
 
 export const scopes = [
