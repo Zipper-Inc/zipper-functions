@@ -3,7 +3,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import serveRelay from './utils/relay-middleware';
 import jsonHandler from './api-handlers/json.handler';
 import yamlHandler from './api-handlers/yaml.handler';
-import { ZIPPER_TEMP_USER_ID_COOKIE_NAME } from '@zipper/utils';
+import htmlHandler from './api-handlers/html.handler';
+
+import {
+  getZipperApiUrl,
+  ZIPPER_TEMP_USER_ID_COOKIE_NAME,
+} from '@zipper/utils';
 import { jwtVerify } from 'jose';
 
 const { __DEBUG__ } = process.env;
@@ -34,6 +39,11 @@ async function maybeGetCustomResponse(
       return await yamlHandler(request);
     }
 
+    case /\/api\/html(\/?)$/.test(appRoute): {
+      console.log('matching html api route');
+      return await htmlHandler(request);
+    }
+
     case /\/relay(\/?)$/.test(appRoute): {
       console.log('matching relay route');
       return serveRelay({
@@ -56,8 +66,10 @@ async function maybeGetCustomResponse(
         return NextResponse.rewrite(url, { request: { headers } });
       }
       if (request.method === 'POST') {
-        const url = new URL('/relay', request.url);
-        return NextResponse.rewrite(url, { request: { headers } });
+        return serveRelay({
+          request,
+          bootOnly: false,
+        });
       }
     }
   }
@@ -112,19 +124,16 @@ const checkAuthCookies = async (request: NextRequest) => {
             refreshToken,
           });
           const { hmac, timestamp } = await generateHMAC(body);
-          const result = await fetch(
-            `${process.env.NEXT_PUBLIC_ZIPPER_API_URL}/auth/refreshToken`,
-            {
-              method: 'POST',
-              headers: {
-                Accept: 'application/json',
-                'Content-Type': 'application/json',
-                'x-timestamp': timestamp,
-                'x-zipper-hmac': hmac,
-              },
-              body,
+          const result = await fetch(`${getZipperApiUrl()}/auth/refreshToken`, {
+            method: 'POST',
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json',
+              'x-timestamp': timestamp,
+              'x-zipper-hmac': hmac,
             },
-          );
+            body,
+          });
           if (result.status === 200) {
             const json = await result.json();
             return { userId, accessToken: json.accessToken };

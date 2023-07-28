@@ -13,6 +13,8 @@ import {
 import { getAppVersionFromHash } from '~/utils/hashing';
 import s3Client from '~/server/s3';
 import { GetObjectCommand } from '@aws-sdk/client-s3';
+import { getLogger } from '~/utils/app-console';
+import { prettyLog, PRETTY_LOG_TOKENS } from '~/utils/pretty-log';
 
 const X_DENO_CONFIG = 'x-deno-config';
 
@@ -74,6 +76,37 @@ export default async function handler(
           .pipe(ndjson.parse())
           .on('data', async (event) => {
             console.log(event);
+            if (event.deployment_id) {
+              const appName = event.deployment_id;
+              const [appId, version] = appName.split('@');
+
+              if (!appId || !version) {
+                return;
+              }
+
+              const logger = getLogger({ appId, version });
+              const app = await prisma.app.findUnique({
+                where: { id: appId },
+                select: { name: true },
+              });
+
+              if (app) {
+                logger.info(
+                  ...prettyLog(
+                    {
+                      badge: event.event_type,
+                      topic: `${app.name}@${version}`,
+                      msg: event.event.msg || event.event || event,
+                    },
+                    {
+                      badgeStyle: {
+                        background: PRETTY_LOG_TOKENS['purpleAlt']!,
+                      },
+                    },
+                  ),
+                );
+              }
+            }
           });
       });
 
@@ -106,7 +139,7 @@ async function decodeAuthHeader(req: NextApiRequest) {
   }
 
   const encoder = new TextEncoder();
-  const secretKey = encoder.encode(process.env.SHARED_SECRET);
+  const secretKey = encoder.encode(process.env.DENO_DEPLOY_SECRET);
   try {
     const verified = await jose.jwtVerify(token, secretKey);
     return verified.payload;

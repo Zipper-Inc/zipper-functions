@@ -19,7 +19,9 @@ function generateHmac(
   };
 }
 
-export class ZipperStorage<Value extends Zipper.Serializable> implements Zipper.Storage<Value> {
+export class ZipperStorage<Value extends Zipper.Serializable>
+  implements Zipper.Storage<Value>
+{
   public appId: string;
 
   constructor(appId: string) {
@@ -30,9 +32,12 @@ export class ZipperStorage<Value extends Zipper.Serializable> implements Zipper.
     const path = `/api/app/${this.appId}/storage`;
     const { hmac, timestamp } = generateHmac('GET', path);
 
-    const res = await fetch(Deno.env.get('RPC_HOST') + path, {
-      headers: { 'x-zipper-hmac': hmac, 'x-timestamp': timestamp },
-    });
+    const res = await fetch(
+      `https://${Deno.env.get('PUBLICLY_ACCESSIBLE_RPC_HOST')}${path}`,
+      {
+        headers: { 'x-zipper-hmac': hmac, 'x-timestamp': timestamp },
+      },
+    );
 
     const result = await res.json();
     return result;
@@ -42,23 +47,29 @@ export class ZipperStorage<Value extends Zipper.Serializable> implements Zipper.
     const path = `/api/app/${this.appId}/storage?key=${key}`;
     const { hmac, timestamp } = generateHmac('GET', path);
 
-    const res = await fetch(Deno.env.get('RPC_HOST') + path, {
-      headers: { 'x-zipper-hmac': hmac, 'x-timestamp': timestamp },
-    });
+    const res = await fetch(
+      `https://${Deno.env.get('PUBLICLY_ACCESSIBLE_RPC_HOST')}${path}`,
+      {
+        headers: { 'x-zipper-hmac': hmac, 'x-timestamp': timestamp },
+      },
+    );
 
     const result = await res.json();
-    return result.value
+    return result.value;
   }
 
   async set(key: string, value: Value) {
     const path = `/api/app/${this.appId}/storage`;
     const { hmac, timestamp } = generateHmac('POST', path, { key, value });
 
-    const res = await fetch(Deno.env.get('RPC_HOST') + path, {
-      headers: { 'x-zipper-hmac': hmac, 'x-timestamp': timestamp },
-      method: 'POST',
-      body: JSON.stringify({ key, value }),
-    });
+    const res = await fetch(
+      `https://${Deno.env.get('PUBLICLY_ACCESSIBLE_RPC_HOST')}${path}`,
+      {
+        headers: { 'x-zipper-hmac': hmac, 'x-timestamp': timestamp },
+        method: 'POST',
+        body: JSON.stringify({ key, value }),
+      },
+    );
 
     return res.json();
   }
@@ -67,10 +78,13 @@ export class ZipperStorage<Value extends Zipper.Serializable> implements Zipper.
     const path = `/api/app/${this.appId}/storage?key=${key}`;
     const { hmac, timestamp } = generateHmac('DELETE', path);
 
-    const res = await fetch(Deno.env.get('RPC_HOST') + path, {
-      headers: { 'x-zipper-hmac': hmac, 'x-timestamp': timestamp },
-      method: 'DELETE',
-    });
+    const res = await fetch(
+      `https://${Deno.env.get('PUBLICLY_ACCESSIBLE_RPC_HOST')}${path}`,
+      {
+        headers: { 'x-zipper-hmac': hmac, 'x-timestamp': timestamp },
+        method: 'DELETE',
+      },
+    );
 
     return res.json();
   }

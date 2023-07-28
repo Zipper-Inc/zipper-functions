@@ -1,4 +1,5 @@
-import crypto from 'crypto';
+import nodeCrypto from 'crypto';
+import { Buffer } from 'buffer';
 
 const ALGORITHM = {
   // 128 bit auth tag is recommended for GCM
@@ -11,12 +12,13 @@ const ALGORITHM = {
   SALT_BYTE_LEN: 16,
 };
 
-export const getRandomKey = () => crypto.randomBytes(ALGORITHM.KEY_BYTE_LEN);
+export const getRandomKey = () =>
+  nodeCrypto.randomBytes(ALGORITHM.KEY_BYTE_LEN);
 
 /**
  * To prevent rainbow table attacks
  * */
-export const getSalt = () => crypto.randomBytes(ALGORITHM.SALT_BYTE_LEN);
+export const getSalt = () => nodeCrypto.randomBytes(ALGORITHM.SALT_BYTE_LEN);
 
 /**
  *
@@ -28,7 +30,7 @@ export const getSalt = () => crypto.randomBytes(ALGORITHM.SALT_BYTE_LEN);
  * from lingering in the memory
  */
 export const getKeyFromPassword = (password: Buffer, salt: Buffer) => {
-  return crypto.scryptSync(password, salt, ALGORITHM.KEY_BYTE_LEN);
+  return nodeCrypto.scryptSync(password, salt, ALGORITHM.KEY_BYTE_LEN);
 };
 
 /**
@@ -42,9 +44,9 @@ export const getKeyFromPassword = (password: Buffer, salt: Buffer) => {
  */
 
 export const encrypt = (messagetext: string, key: string) => {
-  const iv = crypto.randomBytes(ALGORITHM.IV_BYTE_LEN);
+  const iv = nodeCrypto.randomBytes(ALGORITHM.IV_BYTE_LEN);
   const keyInBytes = Buffer.from(key, 'hex');
-  const cipher = crypto.createCipheriv('aes-256-gcm', keyInBytes, iv, {
+  const cipher = nodeCrypto.createCipheriv('aes-256-gcm', keyInBytes, iv, {
     authTagLength: ALGORITHM.AUTH_TAG_BYTE_LEN,
   });
   let encryptedMessage = cipher.update(messagetext);
@@ -68,12 +70,64 @@ export const encryptToHex = (messagetext: string, key?: string) => {
   return encrypt(messagetext, key).toString('hex');
 };
 
+export const webCryptoDecrypt = async (ciphertext: Buffer, key: string) => {
+  const iv = ciphertext.subarray(0, ALGORITHM.IV_BYTE_LEN);
+  const encryptedMessage = ciphertext.subarray(
+    ALGORITHM.IV_BYTE_LEN,
+    ciphertext.length,
+  );
+
+  const keyInBytes = new Uint8Array(Buffer.from(key, 'hex'));
+
+  try {
+    const cryptoKey = await crypto.subtle.importKey(
+      'raw',
+      keyInBytes,
+      {
+        name: 'AES-GCM',
+        length: 128,
+      },
+      true,
+      ['encrypt', 'decrypt'],
+    );
+
+    const decryptedArrayBuffer = await crypto.subtle.decrypt(
+      {
+        name: 'AES-GCM',
+        iv: iv,
+        tagLength: ALGORITHM.AUTH_TAG_BYTE_LEN * 8, // GCM authTag length is in bits
+      },
+      cryptoKey,
+      encryptedMessage,
+    );
+
+    const decryptedText = new TextDecoder().decode(decryptedArrayBuffer);
+    return decryptedText;
+  } catch (error) {
+    console.error('Error decrypting:', error);
+    throw new Error('Decryption failed');
+  }
+};
+
+export const webCryptoDecryptFromBase64 = (
+  cipherInBase64: string,
+  key?: string,
+) => {
+  const ciphertext = Buffer.from(cipherInBase64, 'base64');
+
+  if (!key) {
+    throw new Error('Missing ENCRYPTION_KEY');
+  }
+
+  return webCryptoDecrypt(ciphertext, key);
+};
+
 export const decrypt = (ciphertext: Buffer, key: string) => {
   const authTag = ciphertext.subarray(-16);
   const iv = ciphertext.subarray(0, 12);
   const encryptedMessage = ciphertext.subarray(12, -16);
   const keyInBytes = Buffer.from(key, 'hex');
-  const decipher = crypto.createDecipheriv('aes-256-gcm', keyInBytes, iv, {
+  const decipher = nodeCrypto.createDecipheriv('aes-256-gcm', keyInBytes, iv, {
     authTagLength: ALGORITHM.AUTH_TAG_BYTE_LEN,
   });
   decipher.setAuthTag(authTag);

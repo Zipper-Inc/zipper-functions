@@ -52,7 +52,7 @@ export function Gallery({
   >();
 
   const resourceOwnerNameQuery = trpc.useQuery(
-    ['resourceOwnerSlug.getName', { slug: resourceOwner?.slug! }],
+    ['resourceOwnerSlug.getName', { slug: resourceOwner?.slug as string }],
     {
       enabled: !!resourceOwner?.slug,
     },
@@ -157,7 +157,7 @@ export function Gallery({
                       onOpen();
                     }}
                   >
-                    <Icon as={HiPlus} mr="2" />
+                    <Icon as={HiPlus} mx="2" />
                     Create Applet
                   </Button>
                   <Button

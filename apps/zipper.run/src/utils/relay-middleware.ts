@@ -11,15 +11,17 @@ import {
   ZIPPER_TEMP_USER_ID_COOKIE_NAME,
   uuid,
   ZIPPER_TEMP_USER_ID_HEADER,
+  webCryptoDecryptFromBase64,
 } from '@zipper/utils';
 import Zipper from '@zipper/framework';
 import { getZipperAuth } from './get-zipper-auth';
 
-const { __DEBUG__, SHARED_SECRET: DENO_SHARED_SECRET, RPC_HOST } = process.env;
+const { __DEBUG__, DENO_DEPLOY_SECRET, PUBLICLY_ACCESSIBLE_RPC_HOST } =
+  process.env;
 
 const DEPLOY_KID = 'zipper';
 const DENO_ORIGIN = new URL(`https://subhosting-v1.deno-aws.net`);
-const RPC_ROOT = `${RPC_HOST}/api/deno/v0/`;
+const RPC_ROOT = `https://${PUBLICLY_ACCESSIBLE_RPC_HOST}/api/deno/v0/`;
 
 const X_FORWARDED_HOST = 'x-forwarded-host';
 const X_DENO_SUBHOST = 'x-deno-subhost';
@@ -57,7 +59,7 @@ async function getPatchedHeaders(
 
 function encodeJWT(deploymentId: string) {
   const encoder = new TextEncoder();
-  const secretKey = encoder.encode(DENO_SHARED_SECRET);
+  const secretKey = encoder.encode(DENO_DEPLOY_SECRET);
   const iat = Math.floor(Date.now() / 1000);
   const exp = iat + 15 * 60; // 15mn exp
   const claims = {
@@ -83,7 +85,7 @@ export async function relayRequest(
   },
   bootOnly = false,
 ) {
-  if (!DENO_SHARED_SECRET || !RPC_HOST)
+  if (!DENO_DEPLOY_SECRET || !PUBLICLY_ACCESSIBLE_RPC_HOST)
     return {
       status: 500,
       result: 'Missing environment variables',
@@ -145,13 +147,29 @@ export async function relayRequest(
   }
 
   const runId = request.headers.get('x-zipper-run-id') || uuid();
+  const userConnectorTokens: Record<string, string> = {};
+  await Promise.all(
+    userAuthConnectors
+      .filter((uac) => uac.isUserAuthRequired)
+      .map(async (uac) => {
+        if (uac.appConnectorUserAuths[0]) {
+          const token = await webCryptoDecryptFromBase64(
+            uac.appConnectorUserAuths[0]?.encryptedAccessToken,
+            process.env.ENCRYPTION_KEY!,
+          );
 
-  const connectorsWithUserAuth = userAuthConnectors
-    .filter((uac) => uac.isUserAuthRequired)
-    .map((uac) => uac.type);
+          userConnectorTokens[uac.appConnectorUserAuths[0].connectorType] =
+            token;
+        }
+      }),
+  );
 
   if (!bootOnly) {
-    if (connectorsWithUserAuth.length > 0 && !userInfo.userId && !tempUserId) {
+    if (
+      Object.keys(userConnectorTokens).length > 0 &&
+      !userInfo.userId &&
+      !tempUserId
+    ) {
       throw new Error('missing user ID');
     }
   }
@@ -162,7 +180,7 @@ export async function relayRequest(
       slug: app.slug,
       version,
       url: `https://${getAppLink(app.slug)}`,
-      connectorsWithUserAuth,
+      connectorsWithUserAuth: Object.keys(userConnectorTokens),
     },
     inputs:
       request.method === 'GET'
@@ -171,6 +189,7 @@ export async function relayRequest(
     originalRequest: { url: request.url, method: request.method },
     runId,
     userId: userInfo.userId || tempUserId || '',
+    userConnectorTokens,
   };
 
   relayBody.userInfo = {

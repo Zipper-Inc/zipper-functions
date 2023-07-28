@@ -123,14 +123,7 @@ export const PlaygroundPublishInfo = ({ app }: { app: AppQueryOutput }) => {
                       }://${appLink}`}
                       target="_blank"
                     >
-                      {currentScript?.filename === 'main.ts' ? (
-                        <>{appLink}</>
-                      ) : (
-                        <>{`${appLink}/${currentScript?.filename.slice(
-                          0,
-                          -3,
-                        )}`}</>
-                      )}
+                      {appLink}
                     </Link>
                   </Text>
                   {app.publishedVersion && (

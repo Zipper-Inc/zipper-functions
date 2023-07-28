@@ -2,7 +2,7 @@ import Avatar from 'boring-avatars';
 import { brandColors, baseColors } from '@zipper/ui';
 import { useColorModeValue } from '@chakra-ui/react';
 
-const defaultAvatarColors = [
+export const defaultAvatarColors = [
   brandColors.brandPurple,
   brandColors.brandDarkPurple,
   brandColors.brandOrange,
@@ -10,7 +10,7 @@ const defaultAvatarColors = [
   'white',
 ];
 
-const darkModeAvatarColors = [
+export const darkModeAvatarColors = [
   baseColors.purple['200'],
   brandColors.brandPurple,
   brandColors.brandOrange,

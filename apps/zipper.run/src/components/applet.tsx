@@ -27,6 +27,7 @@ import { useRouter } from 'next/router';
 import {
   getInputsFromFormData,
   ZIPPER_TEMP_USER_ID_COOKIE_NAME,
+  ZIPPER_TEMP_USER_ID_HEADER,
 } from '@zipper/utils';
 import Unauthorized from './unauthorized';
 import removeAppConnectorUserAuth from '~/utils/remove-app-connector-user-auth';
@@ -98,6 +99,9 @@ export function AppPage({
   const [currentFileConfig, setCurrentFileConfig] = useState<
     Zipper.HandlerConfig | undefined
   >();
+
+  const [skipAuth, setSkipAuth] = useState(false);
+
   const previousRouteRef = useRef(asPath);
 
   // We have to do this so that the results aren't SSRed
@@ -151,7 +155,7 @@ export function AppPage({
   }, [handlerConfigs, filename]);
 
   const runApp = async () => {
-    if (!loading && canRunApp) {
+    if (!loading) {
       setLoading(true);
       const rawValues = formContext.getValues();
       const values = getInputsFromFormData(rawValues, inputs);
@@ -296,7 +300,11 @@ export function AppPage({
     <>
       <Head>
         <title>{appTitle}</title>
-        <OpenGraph appTitle={appTitle} runUrl={runUrl} />
+        <OpenGraph
+          title={appTitle}
+          description={app.description || app.slug}
+          url={runUrl}
+        />
       </Head>
       <VStack flex={1} alignItems="stretch" spacing={14}>
         <Header
@@ -319,6 +327,8 @@ export function AppPage({
                   actions: connectorActions(app.id),
                   appTitle,
                   userAuthConnectors,
+                  setSkipAuth,
+                  skipAuth,
                 }}
                 userInputsProps={{
                   isLoading: loading,
@@ -327,6 +337,7 @@ export function AppPage({
                   hasResult: false,
                   inputs,
                   runApp,
+                  skipAuth,
                 }}
               />
             </>
@@ -418,6 +429,8 @@ export const getServerSideProps: GetServerSideProps = async ({
 
   const headers: Record<string, string> = {
     Authorization: `Bearer ${token || ''}`,
+    [ZIPPER_TEMP_USER_ID_HEADER]:
+      req.cookies[ZIPPER_TEMP_USER_ID_COOKIE_NAME] || '',
   };
 
   const version = versionFromUrl || 'latest';
@@ -434,6 +447,7 @@ export const getServerSideProps: GetServerSideProps = async ({
 
   if (payload === 'UNAUTHORIZED' || payload === 'INVALID_VERSION')
     return { props: { errorCode: payload } };
+
   const { configs: handlerConfigs } = JSON.parse(payload) as Zipper.BootPayload;
 
   const config = handlerConfigs[filename];

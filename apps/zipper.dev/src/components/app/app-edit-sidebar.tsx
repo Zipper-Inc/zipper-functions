@@ -9,6 +9,7 @@ import {
   Text,
   HStack,
   Heading,
+  useColorMode,
 } from '@chakra-ui/react';
 import { TabButton } from '@zipper/ui';
 import { useState } from 'react';
@@ -46,6 +47,8 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
     markLogsAsRead,
     lastReadLogsTimestamp,
   } = useEditorContext();
+
+  const { colorMode } = useColorMode();
 
   const unreadLogs = logs.filter(
     (log) => log.timestamp > lastReadLogsTimestamp,
@@ -138,7 +141,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
             p={0}
             background="bgColor"
           >
-            <AppConsole logs={logs} />
+            <AppConsole key={colorMode} logs={logs} />
           </TabPanel>
         </TabPanels>
       </Tabs>

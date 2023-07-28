@@ -14,7 +14,7 @@ import {
   MenuList,
   Divider,
 } from '@chakra-ui/react';
-import { getAppLink } from '@zipper/utils';
+import { getAppLink, getZipperDotDevUrl } from '@zipper/utils';
 import { useEffectOnce, ZipperSymbol } from '@zipper/ui';
 import { HiOutlineUpload, HiOutlinePencilAlt } from 'react-icons/hi';
 import { AppInfo, EntryPointInfo } from '@zipper/types';
@@ -87,7 +87,7 @@ const Header: React.FC<HeaderProps> = ({
     <>
       <Flex as="header" pt="20px" maxW="full" minW="md" paddingX={10}>
         <HStack spacing={3} alignItems="center" flex={1} minW={0}>
-          <Link height={4} href={process.env.NEXT_PUBLIC_ZIPPER_DOT_DEV_URL}>
+          <Link height={4} href={getZipperDotDevUrl().origin}>
             <ZipperSymbol style={{ maxHeight: '100%' }} />
           </Link>
 
@@ -261,9 +261,7 @@ const Header: React.FC<HeaderProps> = ({
               Sign out
             </Button>
           ) : (
-            <Link
-              href={`${process.env.NEXT_PUBLIC_ZIPPER_DOT_DEV_URL}/auth/from/${slug}`}
-            >
+            <Link href={`${getZipperDotDevUrl().origin}/auth/from/${slug}`}>
               Sign in
             </Link>
           )}

@@ -7,6 +7,7 @@ import {
   ModalBody,
   VStack,
   FormControl,
+  FormErrorMessage,
   FormLabel,
   Input,
   FormHelperText,
@@ -18,13 +19,27 @@ import {
 } from '@chakra-ui/react';
 import { InputParam } from '@zipper/types';
 import { FunctionInputs } from '@zipper/ui';
-import cronstrue from 'cronstrue';
+import { useDebounce } from 'use-debounce';
+import parser from 'cron-parser';
 import { useEffect, useState } from 'react';
 import { FieldValues, useForm } from 'react-hook-form';
 import { useUser } from '~/hooks/use-user';
 import { parseInputForTypes } from '~/utils/parse-code';
 import { useEditorContext } from '../context/editor-context';
-import { useRunAppContext } from '../context/run-app-context';
+
+const CRONTAB_AI_GENERATOR_API_URL =
+  'https://crontab-ai-generator.zipper.run/api';
+
+const fetchAiCrontab = async (cronDescription: string): Promise<string> => {
+  const url = `${CRONTAB_AI_GENERATOR_API_URL}?text=${cronDescription}`;
+  const response = await fetch(url);
+  const parsedResponse = await response.json();
+  if (!parsedResponse.ok || !parsedResponse.data) {
+    return 'invalid response';
+  }
+
+  return parsedResponse.data;
+};
 
 export type NewSchedule = {
   filename: string;
@@ -46,27 +61,43 @@ export const AddScheduleModal: React.FC<AddScheduleModalProps> = ({
   const { scripts } = useEditorContext();
   const addModalForm = useForm<FieldValues>({
     defaultValues: {
-      crontab: '0 * * * *',
       filename: 'main.ts',
     },
   });
+
   const [cronString, setCronString] = useState<string>();
+  const [crontab, setCrontab] = useState<string>('');
+  const [isCronError, setIsCronError] = useState<boolean>(false);
+  const [cronErrorString, setCronErrorString] = useState<string>();
   const [inputParams, setInputParams] = useState<InputParam[] | undefined>();
-  const currentCrontab: string = addModalForm.watch('crontab');
+  const currentCronDescription: string = addModalForm.watch('cronDesc');
+  const [debouncedCronDesc] = useDebounce(currentCronDescription, 400);
 
   useEffect(() => {
-    try {
-      if (currentCrontab) {
-        const string = cronstrue.toString(currentCrontab, {
-          use24HourTimeFormat: true,
-        });
-        setCronString(string);
+    (async () => {
+      if (!debouncedCronDesc) return;
+
+      try {
+        const generatedCron = await fetchAiCrontab(debouncedCronDesc);
+        // reset errors
+        setIsCronError(false);
+
+        // validate the generated response
+        try {
+          parser.parseExpression(generatedCron);
+        } catch (e) {
+          throw new Error(`Invalid crontab: ${generatedCron}`);
+        }
+
+        setCronString(`Generated crontab: ${generatedCron}`);
+        setCrontab(generatedCron);
+      } catch (e) {
+        console.log(e);
+        setIsCronError(true);
+        setCronErrorString(`${e}`);
       }
-    } catch (error: any) {
-      console.log(error);
-      setCronString(error || 'Invalid cron expression');
-    }
-  }, [currentCrontab]);
+    })();
+  }, [debouncedCronDesc]);
 
   useEffect(() => {
     if (isOpen) {
@@ -88,7 +119,6 @@ export const AddScheduleModal: React.FC<AddScheduleModalProps> = ({
         <ModalCloseButton />
         <ModalBody
           fontSize="sm"
-          color="neutral.700"
           flex={1}
           display="flex"
           flexDirection="column"
@@ -100,6 +130,7 @@ export const AddScheduleModal: React.FC<AddScheduleModalProps> = ({
             <Select
               size="md"
               color="fg.900"
+              bgColor="bgColor"
               {...addModalForm.register('filename', {
                 onChange: (e) => {
                   addModalForm.setValue('filename', e.target.value);
@@ -123,17 +154,28 @@ export const AddScheduleModal: React.FC<AddScheduleModalProps> = ({
                 ))}
             </Select>
           </FormControl>
-          <FormControl flex={1} display="flex" flexDirection="column">
-            <FormLabel>Schedule (as a cron expression)</FormLabel>
+          <FormControl
+            flex={1}
+            display="flex"
+            flexDirection="column"
+            isInvalid={isCronError}
+          >
+            <FormLabel>I want a job that runs every...</FormLabel>
             <Input
+              placeholder="Friday at 6pm"
               size="md"
               type="text"
               color="fg.900"
-              {...addModalForm.register('crontab')}
+              bgColor="bgColor"
+              {...addModalForm.register('cronDesc')}
             />
-            <FormHelperText color="fg.900" fontWeight="semibold">
-              {cronString}
-            </FormHelperText>
+            {isCronError ? (
+              <FormErrorMessage>{cronErrorString}</FormErrorMessage>
+            ) : (
+              <FormHelperText color="fg.900" fontWeight="semibold">
+                {cronString}
+              </FormHelperText>
+            )}
           </FormControl>
 
           {inputParams && inputParams.length > 0 && (
@@ -184,15 +226,14 @@ export const AddScheduleModal: React.FC<AddScheduleModalProps> = ({
             Cancel
           </Button>
           <Button
+            isDisabled={!crontab || isCronError}
             colorScheme="purple"
-            type="submit"
             flex={1}
             fontWeight="medium"
-            isDisabled={!inputParams}
-            onClick={addModalForm.handleSubmit(
-              ({ crontab, filename, ...inputs }) =>
-                onCreate({ filename, crontab, inputs }, addModalForm.reset),
-            )}
+            onClick={() => {
+              const { filename, ...inputs } = addModalForm.getValues();
+              onCreate({ filename, crontab, inputs }, addModalForm.reset);
+            }}
           >
             Save
           </Button>

@@ -94,6 +94,7 @@ function FunctionParamInput({
           fontSize="smaller"
           minHeight={14}
           isDisabled={isDisabled}
+          _placeholder={{ color: 'fg.300' }}
           {...formProps}
           placeholder={placeholder}
         />

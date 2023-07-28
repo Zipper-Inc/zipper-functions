@@ -11,6 +11,7 @@ import {
   Box,
   Divider,
 } from '@chakra-ui/react';
+import { getZipperDotDevUrl } from '@zipper/utils';
 import { useState, useEffect } from 'react';
 import { useOrganization } from '~/hooks/use-organization';
 import { trpc } from '~/utils/trpc';
@@ -61,7 +62,9 @@ function OrganizationSettings() {
             ></Input>
             <FormHelperText>
               {`This is the display name for your organization. It does not change
-            the url: ${process.env.NEXT_PUBLIC_ZIPPER_DOT_DEV_URL}/${organizationSlugQuery.data?.slug}`}
+            the url: ${getZipperDotDevUrl().origin}/${
+                organizationSlugQuery.data?.slug
+              }`}
             </FormHelperText>
           </FormControl>
           <HStack justifyContent={'end'} w="full">

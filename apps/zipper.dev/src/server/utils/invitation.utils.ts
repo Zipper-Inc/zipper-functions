@@ -1,8 +1,9 @@
 import crypto from 'crypto';
 import { prisma } from '../prisma';
 import { Resend } from 'resend';
-import { InvitationEmail } from '~/../emails';
+import { InvitationEmail } from '~/emails';
 import { resend } from '../resend';
+import { getZipperApiUrl, getZipperDotDevUrl } from '@zipper/utils';
 
 /**
  * Only sends the email - does not create the org invitation or pending app editor
@@ -37,13 +38,13 @@ export async function sendInvitationEmail({
     from: 'Zipper <yourfriends@zipper.dev>',
     subject: `[Zipper] You've been invited to join ${resourceToJoinName}`,
     react: InvitationEmail({
-      loginUrl: `${
-        process.env.NEXT_PUBLIC_ZIPPER_DOT_DEV_URL
-      }/api/auth/callback/email?${new URLSearchParams({
-        token: token,
-        email: email,
-        callbackUrl,
-      })}`,
+      loginUrl: `${getZipperApiUrl()}/auth/callback/email?${new URLSearchParams(
+        {
+          token: token,
+          email: email,
+          callbackUrl,
+        },
+      )}`,
       resourceToJoinName,
     }),
   });
