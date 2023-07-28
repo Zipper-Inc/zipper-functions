@@ -358,8 +358,10 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
                           setActive(selectedOrganizationId || null);
                         }
                         if (aiOutput) {
+                          const filteredOutput = aiOutput.groupedByFilename.filter((output) => output.filename !== 'main.ts');
+                        
                           await Promise.allSettled(
-                            aiOutput.groupedByFilename.map((output) => {
+                            filteredOutput.map((output) => {
                               return addScript.mutateAsync({
                                 name: output.filename,
                                 appId: applet!.id,

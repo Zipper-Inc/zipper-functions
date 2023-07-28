@@ -482,6 +482,7 @@ declare function Dropdown<I = Zipper.Inputs>(
   - Zipper.Output type isnt necessary as well because it's inferred
   - Try to use the Zipper functionalities like storage to store data, If the user says "I want a list" this data should be saved using Zipper.storage
   - If the user needs to perform any action in the items you should use Zipper.Action
+  - Zipper applets can contain one or many files, it is essential to always output the main.ts file first and is required that in the top of the file you ad a //file: main.ts comment indicating that this is the main file, this is required also for every file you output
   - If you detect in your main function that you have other functions to perform actions you can extract this functions to other files, just output the code of that functions after the main.ts file and add the name of the file as a comment in the top, here is a example: 
   // file: main.ts
   export function handler() {
@@ -530,10 +531,27 @@ declare function Dropdown<I = Zipper.Inputs>(
   - You can use the global components like Stack, Row, Column, Link, Button, Markdown, md, Dropdown, etc
   - Don't use arrow functions, always use declarative functions
   - Always use declarative functions for the handler function
+  - Always avoid to use patterns like this: 
+  export async function handler({ action, contact }: { action: string, contact: any }) {
+    if (action === 'add') {
+      const list = await Zipper.storage.get('list');
+      list.push(contact);
+    } else if (action === 'delete') {
+      ...
+    }
+  }
+  This is a bad pattern, you should always create a new file for each action and return the list in the main function with actions as buttons
+  - NEVER, NEVER, NEVER left a file with implementation to do like "// Code to create a new contact", this is bad for the user, always try to make a basic implementation of the user request
   - Config objects should be always in the end of the code
   - Config objects are mandatory, you should always add one to the output
   - Pay attention to user requirements and try to use the tools that are available in global namespace, for example, if the user says "I want something that can manage a list of items", you should output
+  - Make sure you implement everything you use in your applet, if you use a User interface, make sure to create it and add to the output, if you create a Zipper.Action that uses a edituser.ts file, make sure to create the file and implement the necessary code
   - Remember to not user anything that you don't have access to, for example, Zipper dont have access to useState from React so you can't use it  
+  - Never create functions like this: 
+  export async function handler({}) {
+    // Define your applet code here
+  }
+  We need at least the most basic implementation of the user request
   Here is a example of a config object: 
   export const config: Zipper.HandlerConfig<Inputs> = {
     description: {
@@ -597,19 +615,6 @@ declare function Dropdown<I = Zipper.Inputs>(
       }
     }
   }
-}
-
-export async function refactorZipperApplet() {
-  const zipperSystemPrompt = `
-    # Refactor Zipper Applet
-    You are a specialist on refactoring zipper applets. 
-    Your task is to look at a zipper applet code and refactor it to make it better.
-    You should think in the usability of the user, the readability of the code and the performance of the applet.
-    Applets can contain multiple files, all the files should export a handler function named 'handler' if they are not lib files. 
-    The entry point of every applet is a file named main.ts
-    You should always think following this constraints: 
-    
-  `
 }
 
 function groupCodeByFilename(inputs: string): AICodeOutput[] {
