@@ -12,6 +12,7 @@ import {
   uuid,
   ZIPPER_TEMP_USER_ID_HEADER,
   webCryptoDecryptFromBase64,
+  parseBody,
 } from '@zipper/utils';
 import Zipper from '@zipper/framework';
 import { getZipperAuth } from './get-zipper-auth';
@@ -185,7 +186,7 @@ export async function relayRequest(
     inputs:
       request.method === 'GET'
         ? Object.fromEntries(relayUrl.searchParams.entries())
-        : JSON.parse((await request.text()) || '{}'),
+        : await parseBody(request),
     originalRequest: { url: request.url, method: request.method },
     runId,
     userId: userInfo.userId || tempUserId || '',
