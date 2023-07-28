@@ -1,0 +1,3 @@
+[submodule "zipper-client-js"]
+	path = packages/@zipper-client-js
+	url = https://github.com/Zipper-Inc/zipper-client-js.git
