@@ -9,7 +9,7 @@ import { getToken } from 'next-auth/jwt';
 import denyList from '../utils/slugDenyList';
 import slugify from '~/utils/slugify';
 import { ResourceOwnerType } from '@zipper/types';
-import { initApplet } from '@zipper/client-js';
+import { initApplet } from '@zipper-inc/client-js';
 import { captureMessage } from '@sentry/nextjs';
 
 const defaultSelect = Prisma.validator<Prisma.UserSelect>()({

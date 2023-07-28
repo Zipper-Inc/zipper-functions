@@ -26,7 +26,7 @@ import { FieldValues, useForm } from 'react-hook-form';
 import { useUser } from '~/hooks/use-user';
 import { parseInputForTypes } from '~/utils/parse-code';
 import { useEditorContext } from '../context/editor-context';
-import { initApplet } from '@zipper/client-js';
+import { initApplet } from '@zipper-inc/client-js';
 
 export type NewSchedule = {
   filename: string;
