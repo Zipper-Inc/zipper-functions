@@ -6,8 +6,8 @@
   "deno.enablePaths": [
     "./packages/@zipper-framework/deno", 
     "./packages/@zipper-framework/bin", 
-    "./packages/@zipper-client-js/src", 
-    "./packages/@zipper-client-js/bin", 
-    "./packages/@zipper-client-js/mod.ts"
+    "./packages/zipper-client-js/src", 
+    "./packages/zipper-client-js/bin", 
+    "./packages/zipper-client-js/mod.ts"
   ]
 }
