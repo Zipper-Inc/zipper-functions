@@ -26,7 +26,7 @@ import { FieldValues, useForm } from 'react-hook-form';
 import { useUser } from '~/hooks/use-user';
 import { parseInputForTypes } from '~/utils/parse-code';
 import { useEditorContext } from '../context/editor-context';
-import { createApplet } from '@zipper/client';
+import { initApplet } from '@zipper/client-js';
 
 export type NewSchedule = {
   filename: string;
@@ -65,7 +65,7 @@ export const AddScheduleModal: React.FC<AddScheduleModalProps> = ({
       if (!debouncedCronDesc) return;
 
       try {
-        const generatedCron: string = await createApplet('crontab-ai-generator')
+        const generatedCron: string = await initApplet('crontab-ai-generator')
           .run({ text: debouncedCronDesc })
           .catch(() => 'invalid response');
 

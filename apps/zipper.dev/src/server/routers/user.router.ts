@@ -9,7 +9,7 @@ import { getToken } from 'next-auth/jwt';
 import denyList from '../utils/slugDenyList';
 import slugify from '~/utils/slugify';
 import { ResourceOwnerType } from '@zipper/types';
-import { createApplet } from '@zipper/client';
+import { initApplet } from '@zipper/client-js';
 import { captureMessage } from '@sentry/nextjs';
 
 const defaultSelect = Prisma.validator<Prisma.UserSelect>()({
@@ -114,7 +114,7 @@ export const userRouter = createProtectedRouter()
         });
 
         try {
-          await createApplet('feedback-tracker', {
+          await initApplet('feedback-tracker', {
             token: process.env.FEEDBACK_TRACKER_API_KEY,
           })
             .path('create.ts')
