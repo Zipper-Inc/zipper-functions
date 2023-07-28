@@ -123,8 +123,6 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
       const basicCode = basicCodeResponse.content;
       const zipperCode = await getZipperCode({ message, basicCode });
 
-      console.log(zipperCode);
-
       setMessages([
         ...messagesToSend,
         { role: 'assistant', content: basicCode },
@@ -185,7 +183,6 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
   const duration = 1500;
   const toast = useToast();
 
-  // Gif center above/ modal
   return (
     <Box position="relative">
       <Fade in={addApp.isLoading || isSending}>
