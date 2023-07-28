@@ -11,6 +11,7 @@ export type UserInputsProps = {
   canRunApp: boolean;
   runApp: () => void;
   isLoading: boolean;
+  skipAuth: boolean;
 };
 
 export default function UserInputs({
@@ -20,6 +21,7 @@ export default function UserInputs({
   runApp,
   hasResult,
   isLoading,
+  skipAuth,
 }: UserInputsProps) {
   return (
     <VStack
@@ -34,7 +36,7 @@ export default function UserInputs({
           <FunctionInputs
             params={inputs}
             formContext={formContext}
-            isDisabled={!canRunApp}
+            isDisabled={!skipAuth && !canRunApp}
             hasResult={hasResult}
           />
         </Box>
@@ -44,7 +46,7 @@ export default function UserInputs({
           colorScheme="purple"
           onClick={runApp}
           width="full"
-          isDisabled={!canRunApp || isLoading}
+          isDisabled={!skipAuth && (!canRunApp || isLoading)}
         >
           <HiOutlinePlay />
           <Text marginLeft={2}>Run</Text>
