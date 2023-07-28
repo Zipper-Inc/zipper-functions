@@ -1876,6 +1876,19 @@
   resolved "https://registry.npmjs.org/@deno/shim-deno-test/-/shim-deno-test-0.3.3.tgz"
   integrity sha512-Ge0Tnl7zZY0VvEfgsyLhjid8DzI1d0La0dgm+3m0/A8gZXgp5xwlyIyue5e4SCUuVB/3AH/0lun9LcJhhTwmbg==
 
+"@deno/shim-deno-test@^0.4.0":
+  version "0.4.0"
+  resolved "https://registry.yarnpkg.com/@deno/shim-deno-test/-/shim-deno-test-0.4.0.tgz#2ff56821854c51323c0cd08a4a56d668f84367ba"
+  integrity sha512-oYWcD7CpERZy/TXMTM9Tgh1HD/POHlbY9WpzmAk+5H8DohcxG415Qws8yLGlim3EaKBT2v3lJv01x4G0BosnaQ==
+
+"@deno/shim-deno@~0.11.0":
+  version "0.11.0"
+  resolved "https://registry.yarnpkg.com/@deno/shim-deno/-/shim-deno-0.11.0.tgz#02b3e56feb8ecca8caf8498ad3de48f0d91e23e9"
+  integrity sha512-z5FRYleehfz1Z0Wp9jilB98cJRGV2HYiLN0FZu1/xwLrQk+hk5VaNKp1nEoyGrUM4MLruTlnhEbqHJwxfnbPLw==
+  dependencies:
+    "@deno/shim-deno-test" "^0.4.0"
+    which "^2.0.2"
+
 "@deno/shim-deno@~0.7.0":
   version "0.7.0"
   resolved "https://registry.npmjs.org/@deno/shim-deno/-/shim-deno-0.7.0.tgz"
@@ -4430,6 +4443,14 @@
   version "0.2.1"
   resolved "https://registry.npmjs.org/@zag-js/focus-visible/-/focus-visible-0.2.1.tgz"
   integrity sha512-19uTjoZGP4/Ax7kSNhhay9JA83BirKzpqLkeEAilrpdI1hE5xuq6q+tzJOsrMOOqJrm7LkmZp5lbsTQzvK2pYg==
+
+"@zipper-inc/client-js@^0.1.1":
+  version "0.1.1"
+  resolved "https://registry.yarnpkg.com/@zipper-inc/client-js/-/client-js-0.1.1.tgz#944b1779ab652cdf287d4cdec8270b9ae7ec3ed0"
+  integrity sha512-vXrf5Gi3TF1UQNGTRF+eTEdp/ap4ZFWCUbTu62x9E73xlouqpHshwkrkzjoR9MAjpj0WuWG0Zrg6g/Y8giTLfA==
+  dependencies:
+    "@deno/shim-deno" "~0.11.0"
+    undici "^5.12.0"
 
 abbrev@1, abbrev@^1.0.0:
   version "1.1.1"
@@ -12622,6 +12643,13 @@ undefsafe@^2.0.5:
   version "2.0.5"
   resolved "https://registry.npmjs.org/undefsafe/-/undefsafe-2.0.5.tgz"
   integrity sha512-WxONCrssBM8TSPRqN5EmsjVrsv4A8X12J4ArBiiayv3DyyG3ZlIg6yysuuSYdZsVz3TKcTg2fd//Ujd4CHV1iA==
+
+undici@^5.12.0:
+  version "5.22.1"
+  resolved "https://registry.yarnpkg.com/undici/-/undici-5.22.1.tgz#877d512effef2ac8be65e695f3586922e1a57d7b"
+  integrity sha512-Ji2IJhFXZY0x/0tVBXeQwgPlLWw13GVzpsWPQ3rV50IFMMof2I55PZZxtm4P6iNq+L5znYN9nSTAq0ZyE6lSJw==
+  dependencies:
+    busboy "^1.6.0"
 
 undici@^5.5.1:
   version "5.16.0"
