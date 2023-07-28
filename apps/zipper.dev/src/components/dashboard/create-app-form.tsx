@@ -335,7 +335,7 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
                     : undefined;
                   const mainCode =
                     aiOutput?.groupedByFilename.find(
-                      (output) => output.filename === 'main',
+                      (output) => output.filename === 'main.ts',
                     )?.code || aiOutput?.raw;
 
                   await addApp.mutateAsync(
@@ -358,8 +358,11 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
                           setActive(selectedOrganizationId || null);
                         }
                         if (aiOutput) {
-                          const filteredOutput = aiOutput.groupedByFilename.filter((output) => output.filename !== 'main.ts');
-                        
+                          const filteredOutput =
+                            aiOutput.groupedByFilename.filter(
+                              (output) => output.filename !== 'main.ts',
+                            );
+
                           await Promise.allSettled(
                             filteredOutput.map((output) => {
                               return addScript.mutateAsync({
