@@ -188,7 +188,7 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
   // Gif center above/ modal
   return (
     <Box position="relative">
-      <Fade in={isSending}>
+      <Fade in={addApp.isLoading || isSending}>
         <Box
           position="fixed"
           top={0}
@@ -199,7 +199,7 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
           backgroundColor="blackAlpha.600"
         />
         <AbsoluteCenter axis="both" zIndex={110}>
-          <Image src="/static/spinner-dark@1x.gif" />
+          <Image src="/static/spinner@1x.gif" />
         </AbsoluteCenter>
       </Fade>
       <FormProvider {...createAppForm}>
