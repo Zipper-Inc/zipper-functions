@@ -49,6 +49,7 @@ type Screen = 'initial' | 'output';
 const RUN_PATH_NAME = '/run/[[...versionAndFilename]]';
 
 export type AppPageProps = {
+  isEmbedded?: boolean;
   app?: AppInfo;
   inputs: InputParams;
   userAuthConnectors: UserAuthConnector[];
@@ -68,6 +69,7 @@ export type AppPageProps = {
 };
 
 export function AppPage({
+  isEmbedded,
   app,
   inputs,
   userAuthConnectors,
@@ -274,6 +276,10 @@ export function AppPage({
     return <Error statusCode={404} />;
   }
 
+  if (isEmbedded) {
+    return <>{output}</>;
+  }
+
   const appletDescription = () => {
     if (!currentFileConfig || !currentFileConfig.description) {
       return <></>;
@@ -387,6 +393,7 @@ export const getServerSideProps: GetServerSideProps = async ({
   console.log({ url: req.url, resolvedUrl });
 
   const { host } = req.headers;
+  const isEmbedUrl = /^\/run\/embed(\/|\?|$)/.test(resolvedUrl);
   const isRunUrl = /^\/run(\/|\?|$)/.test(resolvedUrl);
   const isInitialServerSideProps = !req.url?.startsWith('/_next');
 
@@ -536,6 +543,7 @@ export const getServerSideProps: GetServerSideProps = async ({
 
   const propsToReturn = {
     props: {
+      isEmbedded: isEmbedUrl,
       app,
       inputs: inputParams,
       version,
