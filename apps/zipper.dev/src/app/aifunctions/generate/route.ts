@@ -1,10 +1,10 @@
 // aifunctions generate route
-import { NextResponse } from "next/server";
-import { OpenAIApi } from "openai";
-import { conf, systemPrompt } from '../route' 
+import { NextResponse } from 'next/server';
+import { OpenAIApi } from 'openai';
+import { conf, systemPrompt } from '../route';
 
-export async function POST (req: Request) {
-  const { userRequest } = await req.json()
+export async function POST(req: Request) {
+  const { userRequest } = await req.json();
   const openai = new OpenAIApi(conf);
 
   const chatWithFunction = await openai.createChatCompletion({
@@ -20,6 +20,8 @@ export async function POST (req: Request) {
       },
     ],
   } as any);
-  
-  return NextResponse.json({message: chatWithFunction.data.choices[0]?.message})
+
+  return NextResponse.json({
+    message: chatWithFunction.data.choices[0]?.message,
+  });
 }

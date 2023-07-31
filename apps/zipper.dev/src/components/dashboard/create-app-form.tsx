@@ -326,7 +326,9 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
               display="block"
               colorScheme="purple"
               type="submit"
-              isDisabled={isDisabled || addApp.isLoading || isSending || submitting}
+              isDisabled={
+                isDisabled || addApp.isLoading || isSending || submitting
+              }
               onClick={createAppForm.handleSubmit(
                 async ({ description, isPublic, requiresAuthToRun, name }) => {
                   setSubmitting(true);
