@@ -1881,10 +1881,10 @@
   resolved "https://registry.yarnpkg.com/@deno/shim-deno-test/-/shim-deno-test-0.4.0.tgz#2ff56821854c51323c0cd08a4a56d668f84367ba"
   integrity sha512-oYWcD7CpERZy/TXMTM9Tgh1HD/POHlbY9WpzmAk+5H8DohcxG415Qws8yLGlim3EaKBT2v3lJv01x4G0BosnaQ==
 
-"@deno/shim-deno@~0.11.0":
-  version "0.11.0"
-  resolved "https://registry.yarnpkg.com/@deno/shim-deno/-/shim-deno-0.11.0.tgz#02b3e56feb8ecca8caf8498ad3de48f0d91e23e9"
-  integrity sha512-z5FRYleehfz1Z0Wp9jilB98cJRGV2HYiLN0FZu1/xwLrQk+hk5VaNKp1nEoyGrUM4MLruTlnhEbqHJwxfnbPLw==
+"@deno/shim-deno@~0.16.1":
+  version "0.16.1"
+  resolved "https://registry.yarnpkg.com/@deno/shim-deno/-/shim-deno-0.16.1.tgz#f7d3925745c74337c83818de7d6435557c816c60"
+  integrity sha512-s9v0kzF5bm/o9TgdwvsraHx6QNllYrXXmKzgOG2lh4LFXnVMr2gpjK/c/ve6EflQn1MqImcWmVD8HAv5ahuuZQ==
   dependencies:
     "@deno/shim-deno-test" "^0.4.0"
     which "^2.0.2"
@@ -4445,13 +4445,13 @@
   resolved "https://registry.npmjs.org/@zag-js/focus-visible/-/focus-visible-0.2.1.tgz"
   integrity sha512-19uTjoZGP4/Ax7kSNhhay9JA83BirKzpqLkeEAilrpdI1hE5xuq6q+tzJOsrMOOqJrm7LkmZp5lbsTQzvK2pYg==
 
-"@zipper-inc/client-js@^0.1.2":
-  version "0.1.2"
-  resolved "https://registry.yarnpkg.com/@zipper-inc/client-js/-/client-js-0.1.2.tgz#6b1909b087cbf5bdf5f204362f78e841d4fafc7c"
-  integrity sha512-dLiQl78NkAB+EvObjj047YFKS+/3mapCUnp2rq9fB5PbioMajdJrv2DDQmTWzScy/gbvfKzNsFjvl9nK7DP1TA==
+"@zipper-inc/client-js@^0.1.3":
+  version "0.1.3"
+  resolved "https://registry.yarnpkg.com/@zipper-inc/client-js/-/client-js-0.1.3.tgz#6185516d13dacc66ff217870ad49d8380bab7c23"
+  integrity sha512-jZiBGa2OK8zro7FlSWhMuuf9A+g2UeKRxfjBr0kJ3igNpRqa1XMlwmSlQ6DV7901ruYHJANm/yix/SlOC19+2w==
   dependencies:
-    "@deno/shim-deno" "~0.11.0"
-    undici "^5.12.0"
+    "@deno/shim-deno" "~0.16.1"
+    undici "^5.21.0"
 
 abbrev@1, abbrev@^1.0.0:
   version "1.1.1"
@@ -12659,7 +12659,7 @@ undefsafe@^2.0.5:
   resolved "https://registry.npmjs.org/undefsafe/-/undefsafe-2.0.5.tgz"
   integrity sha512-WxONCrssBM8TSPRqN5EmsjVrsv4A8X12J4ArBiiayv3DyyG3ZlIg6yysuuSYdZsVz3TKcTg2fd//Ujd4CHV1iA==
 
-undici@^5.12.0:
+undici@^5.21.0:
   version "5.22.1"
   resolved "https://registry.yarnpkg.com/undici/-/undici-5.22.1.tgz#877d512effef2ac8be65e695f3586922e1a57d7b"
   integrity sha512-Ji2IJhFXZY0x/0tVBXeQwgPlLWw13GVzpsWPQ3rV50IFMMof2I55PZZxtm4P6iNq+L5znYN9nSTAq0ZyE6lSJw==
