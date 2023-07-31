@@ -27,6 +27,7 @@ const connectors: Record<ConnectorType, { icon: IconType; name: string }> = {
 
 export type UserConnectorProps = ConnectorActionProps & {
   connector: UserAuthConnector;
+  optional: boolean;
 };
 
 const getAuthedUser = ({
@@ -47,6 +48,7 @@ const UserConnector: React.FC<UserConnectorProps> = ({
   connector,
   authUrl,
   onDelete,
+  optional,
 }) => {
   const type = connector.type as AuthedConnectorType;
   const connectorName = connectors[type].name;
@@ -57,6 +59,7 @@ const UserConnector: React.FC<UserConnectorProps> = ({
       <VStack spacing={3} align="start">
         <Button
           colorScheme="purple"
+          variant={optional ? 'outline' : 'solid'}
           w="full"
           gap={2}
           py="2.5"

@@ -101,6 +101,9 @@ export function AppPage({
   const [currentFileConfig, setCurrentFileConfig] = useState<
     Zipper.HandlerConfig | undefined
   >();
+
+  const [skipAuth, setSkipAuth] = useState(false);
+
   const previousRouteRef = useRef(asPath);
 
   // We have to do this so that the results aren't SSRed
@@ -154,7 +157,7 @@ export function AppPage({
   }, [handlerConfigs, filename]);
 
   const runApp = async () => {
-    if (!loading && canRunApp) {
+    if (!loading) {
       setLoading(true);
       const rawValues = formContext.getValues();
       const values = getInputsFromFormData(rawValues, inputs);
@@ -330,6 +333,8 @@ export function AppPage({
                   actions: connectorActions(app.id),
                   appTitle,
                   userAuthConnectors,
+                  setSkipAuth,
+                  skipAuth,
                 }}
                 userInputsProps={{
                   isLoading: loading,
@@ -338,6 +343,7 @@ export function AppPage({
                   hasResult: false,
                   inputs,
                   runApp,
+                  skipAuth,
                 }}
               />
             </>

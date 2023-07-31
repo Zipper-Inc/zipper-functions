@@ -58,6 +58,7 @@ module.exports = getConfig({
   experimental: {
     webpackBuildWorker: true,
     esmExternals: false,
+    appDir: true,
   },
   publicRuntimeConfig: {
     NODE_ENV: env.NODE_ENV,

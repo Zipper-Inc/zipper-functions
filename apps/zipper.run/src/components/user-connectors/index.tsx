@@ -1,4 +1,4 @@
-import { VStack, Text } from '@chakra-ui/react';
+import { VStack, Text, HStack, Button, Spacer } from '@chakra-ui/react';
 import UserConnector from './user-connector';
 import {
   ConnectorActionProps,
@@ -10,12 +10,16 @@ export type AuthUserConnectorsProps = {
   userAuthConnectors: UserAuthConnector[];
   actions: Record<ConnectorType, ConnectorActionProps>;
   appTitle: string;
+  setSkipAuth: (b: boolean) => void;
+  skipAuth: boolean;
 };
 
 const AuthUserConnectors: React.FC<AuthUserConnectorsProps> = ({
   actions,
   userAuthConnectors,
   appTitle,
+  setSkipAuth,
+  skipAuth,
 }) => {
   const unauthorizedConnectors = userAuthConnectors.filter(
     (uac) => !uac.appConnectorUserAuths[0],
@@ -35,15 +39,28 @@ const AuthUserConnectors: React.FC<AuthUserConnectorsProps> = ({
       listStyleType="none"
     >
       {unauthorizedConnectors.length > 0 && (
-        <li>
+        <HStack>
           <Text color="fg.700" fontWeight="semibold" fontSize="lg">
             Sign in to use {appTitle}
           </Text>
-        </li>
+          <Spacer />
+          <Button
+            colorScheme="purple"
+            variant="link"
+            onClick={() => setSkipAuth(true)}
+            visibility={skipAuth ? 'hidden' : 'visible'}
+          >
+            Skip
+          </Button>
+        </HStack>
       )}
       {unauthorizedConnectors.concat(authorizedConnectors).map((uac) => (
         <li key={uac.type}>
-          <UserConnector connector={uac} {...actions[uac.type]} />
+          <UserConnector
+            connector={uac}
+            {...actions[uac.type]}
+            optional={skipAuth}
+          />
         </li>
       ))}
     </VStack>

@@ -96,6 +96,7 @@ export const appRouter = createRouter()
         organizationId: z.string().nullable().optional(),
         isPrivate: z.boolean().optional().default(true),
         requiresAuthToRun: z.boolean().optional().default(false),
+        aiCode: z.string().optional(),
       })
       .optional(),
     async resolve({
@@ -112,6 +113,7 @@ export const appRouter = createRouter()
         organizationId: orgId,
         isPrivate,
         requiresAuthToRun,
+        aiCode,
       } = input;
       let { slug } = input;
 
@@ -187,7 +189,7 @@ export const appRouter = createRouter()
           app: { connect: { id: app.id } },
           script: {
             create: {
-              code: defaultCode,
+              code: aiCode ? aiCode : defaultCode,
               name: defaultMainFile,
               filename: defaultMainFilename,
               isRunnable: true,
@@ -199,7 +201,7 @@ export const appRouter = createRouter()
       });
       // get a hash of main script and update the script
       const scriptHash = getScriptHash({
-        code: defaultCode,
+        code: aiCode ?? defaultCode,
         filename: defaultMainFilename,
         id: scriptMain.scriptId,
       });
