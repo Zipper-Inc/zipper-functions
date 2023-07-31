@@ -4,15 +4,20 @@ import { OpenAI } from 'langchain/llms/openai';
 import { PipelinePromptTemplate, PromptTemplate } from 'langchain/prompts';
 import { readFrameworkFile } from '~/utils/read-file';
 
-export const runtime = "nodejs";
+export const runtime = 'nodejs';
 
 export async function POST(req: Request) {
   const frameworkFile = await readFrameworkFile('zipper.d.ts');
 
   const { stream, handlers } = LangChainStream();
-  const { prompt: initialPrompt } = await req.json(); 
+  const { prompt: initialPrompt } = await req.json();
 
-  const llm = new OpenAI({ temperature: 0, openAIApiKey: process.env.OPENAI, modelName: "gpt-3.5-turbo-16k-0613", streaming: true });
+  const llm = new OpenAI({
+    temperature: 0,
+    openAIApiKey: process.env.OPENAI,
+    modelName: 'gpt-3.5-turbo-16k-0613',
+    streaming: true,
+  });
 
   const fullPrompt = PromptTemplate.fromTemplate(`
   {introduction}
@@ -23,7 +28,7 @@ export async function POST(req: Request) {
   `);
 
   const introductionPrompt = PromptTemplate.fromTemplate(`
-  You are Typescript developer, high skilled with Deno creating Zipper Applets.
+  You are a Typescript developer, high skilled with Deno creating Zipper Applets.
   Your responses must exclusively contain TypeScript code, without any additional text or explanation. 
 
   Your first task is to take the request sent by the user and generate typescript code that can be used to create a Zipper applet.
@@ -58,7 +63,6 @@ export async function POST(req: Request) {
   BRACE_CLOSE,.
   `);
 
-
   const examplePrompt = PromptTemplate.fromTemplate(`
     Here is an example of an applet that greets a user by their name:
 
@@ -69,54 +73,53 @@ export async function POST(req: Request) {
     Note that are some special characters in the code above, like BRACE_OPEN, BRACE_CLOSE, &#36;&#123; and &#125; that are used to create block and interpolate the username variable. You need to replace them with the correct characters.
   `);
 
-
   const frameworkPrompt = PromptTemplate.fromTemplate(`
     Here is the Zipper framework file for your reference, you can use everything from here without importing: {frameworkFile}
   `);
-    
+
   const requestPromptTemplate = PromptTemplate.fromTemplate(`
     Applet Request: {request}.
-  `)
+  `);
 
   const composedPrompt = new PipelinePromptTemplate({
     pipelinePrompts: [
       {
-        name: "introduction",
+        name: 'introduction',
         prompt: introductionPrompt,
       },
       {
-        name: "example",
+        name: 'example',
         prompt: examplePrompt,
       },
       {
-        name: "framework",
+        name: 'framework',
         prompt: frameworkPrompt,
       },
       {
-        name: "requestPrompt",
+        name: 'requestPrompt',
         prompt: requestPromptTemplate,
-      }
+      },
     ],
     finalPrompt: fullPrompt,
   });
 
   const createCodeChain = new LLMChain({
     prompt: composedPrompt,
-    outputKey: "zipperCode",
+    outputKey: 'zipperCode',
     llm,
-  })
-  
+  });
+
   const zipperChain = new SequentialChain({
     chains: [createCodeChain],
-    inputVariables: ["request", "frameworkFile"],
-    outputVariables: ["zipperCode"],
+    inputVariables: ['request', 'frameworkFile'],
+    outputVariables: ['zipperCode'],
     verbose: true,
   });
 
   const chainExecutionCall = await zipperChain.call({
     request: initialPrompt,
     frameworkFile: frameworkFile,
-  })
+  });
 
-  return new StreamingTextResponse(chainExecutionCall.zipperCode)
+  return new StreamingTextResponse(chainExecutionCall.zipperCode);
 }
