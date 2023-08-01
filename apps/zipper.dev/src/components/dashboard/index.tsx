@@ -84,7 +84,7 @@ const columns = [
     }) => {
       return (
         <HStack align="center" spacing={4}>
-          <Box clipPath={'circle(32px)'} w="12">
+          <Box clipPath={'circle(32px)'} w="12" minW="12">
             <AppAvatar nameOrSlug={slug} />
           </Box>
           <VStack align={'start'}>
