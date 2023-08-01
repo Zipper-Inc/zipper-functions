@@ -36,7 +36,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogOverlay,
-  Code,
   AlertDialogCloseButton,
 } from '@chakra-ui/react';
 import { CheckIcon } from '@chakra-ui/icons';
@@ -54,13 +53,19 @@ import {
   HiOutlineClipboard,
   HiOutlineTrash,
 } from 'react-icons/hi';
-import { VscCode } from 'react-icons/vsc';
+import { VscCode, VscFile, VscGistSecret } from 'react-icons/vsc';
 import { getAppLink } from '@zipper/utils';
 
 type Props = {
   app: Pick<
     Unpack<inferQueryOutput<'app.byId'>>,
-    'id' | 'name' | 'slug' | 'description' | 'requiresAuthToRun' | 'isPrivate'
+    | 'id'
+    | 'name'
+    | 'slug'
+    | 'description'
+    | 'requiresAuthToRun'
+    | 'isPrivate'
+    | 'isDataSensitive'
   >;
 };
 
@@ -114,6 +119,7 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
       description: app.description,
       requiresAuthToRun: app.requiresAuthToRun,
       isPublic: !app.isPrivate,
+      isDataSensitive: app.isDataSensitive,
     },
   });
   const model = settingsForm.watch();
@@ -133,7 +139,8 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
       model.name !== appQuery.data.name ||
       model.description !== appQuery.data.description ||
       model.requiresAuthToRun !== appQuery.data.requiresAuthToRun ||
-      model.isPublic !== !appQuery.data.isPrivate
+      model.isPublic !== !appQuery.data.isPrivate ||
+      model.isDataSensitive !== appQuery.data.isDataSensitive
     );
   };
 
@@ -149,6 +156,7 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
           description: data.description,
           requiresAuthToRun: data.requiresAuthToRun,
           isPrivate: !data.isPublic,
+          isDataSensitive: data.isDataSensitive,
         },
       },
       {
@@ -308,17 +316,23 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
                         <VscCode />
                         <Text>Is the code public?</Text>
                       </HStack>
-                      <FormHelperText maxW="xl">{`With this field ${
+                      <FormHelperText maxW="xl">{`Since this is ${
                         settingsForm.watch('isPublic')
                           ? 'checked, anyone on the internet will be able to see the source code.'
-                          : 'unchecked, only organization members and people invited to the app will be able to see the source code.'
+                          : 'not checked, only organization members and people invited to the app will be able to see the source code.'
                       }`}</FormHelperText>
                     </VStack>
                   </Flex>
                   <Switch {...settingsForm.register('isPublic')} ml="auto" />
                 </HStack>
 
-                <VStack w="full" p="4" align="start">
+                <VStack
+                  w="full"
+                  p="4"
+                  align="start"
+                  borderBottom="1px solid"
+                  borderColor={'fg.200'}
+                >
                   <VStack align="start" w="full">
                     <HStack w="full">
                       {settingsForm.watch('requiresAuthToRun') ? (
@@ -332,10 +346,31 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
                     </HStack>
                   </VStack>
 
-                  <FormHelperText maxW="xl">{`With this field ${
+                  <FormHelperText maxW="xl">{`Since this is ${
                     settingsForm.watch('requiresAuthToRun')
                       ? 'checked, users will be asked to authenticate before running your applet. You will be able to use the information in Zipper.userInfo to determine who sees the output.'
-                      : 'unchecked, anyone on the internet will be able to run your applet and see the output.'
+                      : 'not checked, anyone on the internet will be able to run your applet and see the output.'
+                  }`}</FormHelperText>
+                </VStack>
+
+                <VStack w="full" p="4" align="start">
+                  <VStack align="start" w="full">
+                    <HStack w="full">
+                      {settingsForm.watch('isDataSensitive') ? (
+                        <VscGistSecret />
+                      ) : (
+                        <VscFile />
+                      )}
+                      <Text>Is the data sensitive?</Text>
+                      <Spacer flexGrow={1} />
+                      <Switch {...settingsForm.register('isDataSensitive')} />
+                    </HStack>
+                  </VStack>
+
+                  <FormHelperText maxW="xl">{`Since this is ${
+                    settingsForm.watch('isDataSensitive')
+                      ? 'checked, audit logs will not contain any which inputs were used and what output was return.'
+                      : 'not checked, audit logs will include the full inputs and output of each function run.'
                   }`}</FormHelperText>
                 </VStack>
               </VStack>
