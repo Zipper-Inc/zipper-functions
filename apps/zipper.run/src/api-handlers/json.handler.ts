@@ -1,5 +1,6 @@
 import { safeJSONParse } from '@zipper/utils';
 import { NextRequest, NextResponse } from 'next/server';
+import { setCorsHeaders } from '~/utils/cors';
 import { getMetaFromHeaders } from '~/utils/get-meta-from-headers';
 import { getFilenameAndVersionFromPath } from '~/utils/get-values-from-url';
 import { relayRequest } from '../utils/relay-middleware';
@@ -27,12 +28,7 @@ export default async function handler(request: NextRequest) {
     }
 
     headers?.set('Content-Type', 'application/json');
-    headers?.set('Access-Control-Allow-Origin', '*');
-    headers?.set(
-      'Access-Control-Allow-Methods',
-      'GET, POST, PUT, DELETE, OPTIONS',
-    );
-    headers?.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    setCorsHeaders(headers);
 
     return new NextResponse(
       JSON.stringify(

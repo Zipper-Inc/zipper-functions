@@ -4,12 +4,13 @@ import { TRPCError } from '@trpc/server';
 import { prisma } from '../prisma';
 import { generateAccessToken } from '~/utils/jwt-utils';
 import { encryptToHex } from '@zipper/utils';
-import fetch from 'node-fetch';
 import { Prisma } from '@prisma/client';
 import { getToken } from 'next-auth/jwt';
 import denyList from '../utils/slugDenyList';
 import slugify from '~/utils/slugify';
 import { ResourceOwnerType } from '@zipper/types';
+import { initApplet } from '@zipper-inc/client-js';
+import { captureMessage } from '@sentry/nextjs';
 
 const defaultSelect = Prisma.validator<Prisma.UserSelect>()({
   id: true,
@@ -112,24 +113,27 @@ export const userRouter = createProtectedRouter()
           },
         });
 
-        const res = await fetch(
-          'https://feedback-tracker.zipper.run/create.ts/api/json',
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${process.env.FEEDBACK_TRACKER_API_KEY}`,
-              Accept: 'application/json',
-            },
-            body: JSON.stringify({
+        try {
+          await initApplet('feedback-tracker', {
+            token: process.env.FEEDBACK_TRACKER_API_KEY,
+          })
+            .path('create.ts')
+            .run({
               email: user?.email,
               url: input.url,
               feedback: input.feedback,
-            }),
-          },
-        );
+            });
 
-        return res.status;
+          return true;
+        } catch (e) {
+          captureMessage('Failed to submit feedback', {
+            extra: {
+              input,
+            },
+          });
+
+          return false;
+        }
       }
     },
   })
