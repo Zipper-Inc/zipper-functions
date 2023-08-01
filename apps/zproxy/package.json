@@ -1,7 +1,7 @@
 {
-  "name": "preview-proxy",
+  "name": "zproxy",
   "version": "0.0.0",
-  "description": "dev only proxy server",
+  "description": "Zipper's internal dev proxy service",
   "main": "./main.ts",
   "license": "MIT",
   "private": true,
@@ -23,5 +23,8 @@
     ],
     "exec": "yarn __start",
     "ext": "ts, tsx"
+  },
+  "dependencies": {
+    "minimist-lite": "^2.2.1"
   }
 }

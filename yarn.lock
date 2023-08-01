@@ -10120,6 +10120,11 @@ minimatch@^6.1.6:
   dependencies:
     brace-expansion "^2.0.1"
 
+minimist-lite@^2.2.1:
+  version "2.2.1"
+  resolved "https://registry.yarnpkg.com/minimist-lite/-/minimist-lite-2.2.1.tgz#abb71db2c9b454d7cf4496868c03e9802de9934d"
+  integrity sha512-RSrWIRWGYoM2TDe102s7aIyeSipXMIXKb1fSHYx1tAbxAV0z4g2xR6ra3oPzkTqFb0EIUz1H3A/qvYYeDd+/qQ==
+
 minimist@^1.2.0, minimist@^1.2.5, minimist@^1.2.6, minimist@^1.2.7:
   version "1.2.7"
   resolved "https://registry.npmjs.org/minimist/-/minimist-1.2.7.tgz"
