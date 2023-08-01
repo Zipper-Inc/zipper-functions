@@ -40,9 +40,11 @@ import { useOrganization } from '~/hooks/use-organization';
 import { useUser } from '~/hooks/use-user';
 import { useOrganizationList } from '~/hooks/use-organization-list';
 import { getEditAppletLink } from '@zipper/utils';
-import { ChatGPTMessage } from '~/app/aifunctions/route';
+import { ChatGPTMessage } from '~/app/aifunctions/generate/route';
 import { AICodeOutput } from '@zipper/types';
 import { useEditorContext } from '../context/editor-context';
+
+import { getZipperDotDevUrl } from '@zipper/utils'
 
 const getDefaultCreateAppFormValues = () => ({
   name: generateDefaultSlug(),
@@ -64,6 +66,7 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
 
   const addScript = trpc.useMutation('script.add');
   const { scripts } = useEditorContext();
+  const zipperUrl = getZipperDotDevUrl().origin;
 
   const getZipperCode = async ({
     message,
@@ -72,7 +75,7 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
     message: string;
     basicCode: string;
   }) => {
-    const response = await fetch('/aifunctions/zipperCode', {
+    const response = await fetch(`${zipperUrl}/aifunctions/zipperCode`, {
       method: 'POST',
       body: JSON.stringify({
         userRequest: message,
@@ -93,7 +96,7 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
 
   // getBasicCode implementation
   const getBasicCode = async (message: string): Promise<ChatGPTMessage> => {
-    const response = await fetch('/aifunctions/generate', {
+    const response = await fetch(`${zipperUrl}/aifunctions/generate`, {
       method: 'POST',
       body: JSON.stringify({
         userRequest: message,
