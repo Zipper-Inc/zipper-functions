@@ -26,20 +26,7 @@ import { FieldValues, useForm } from 'react-hook-form';
 import { useUser } from '~/hooks/use-user';
 import { parseInputForTypes } from '~/utils/parse-code';
 import { useEditorContext } from '../context/editor-context';
-
-const CRONTAB_AI_GENERATOR_API_URL =
-  'https://crontab-ai-generator.zipper.run/api';
-
-const fetchAiCrontab = async (cronDescription: string): Promise<string> => {
-  const url = `${CRONTAB_AI_GENERATOR_API_URL}?text=${cronDescription}`;
-  const response = await fetch(url);
-  const parsedResponse = await response.json();
-  if (!parsedResponse.ok || !parsedResponse.data) {
-    return 'invalid response';
-  }
-
-  return parsedResponse.data;
-};
+import { initApplet } from '@zipper-inc/client-js';
 
 export type NewSchedule = {
   filename: string;
@@ -78,7 +65,10 @@ export const AddScheduleModal: React.FC<AddScheduleModalProps> = ({
       if (!debouncedCronDesc) return;
 
       try {
-        const generatedCron = await fetchAiCrontab(debouncedCronDesc);
+        const generatedCron: string = await initApplet('crontab-ai-generator')
+          .run({ text: debouncedCronDesc })
+          .catch(() => 'invalid response');
+
         // reset errors
         setIsCronError(false);
 
