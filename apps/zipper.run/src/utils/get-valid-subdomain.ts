@@ -1,4 +1,4 @@
-import { ZPROXY_HOST_HEADER } from '@zipper/utils';
+import { ZIPPER_ZPROXY_HOST_HEADER } from '@zipper/utils';
 
 /**
  * Just making this up for now, but this list will have to live somewhere
@@ -10,7 +10,7 @@ const NON_ALLOWED_SUBDOMAINS = ['www', 'app', 'zipper'];
  * Get host from headers, takes into account our dev proxy
  */
 export function getHostFromHeaders(headers: Record<string, any>) {
-  return headers[ZPROXY_HOST_HEADER] || headers.host;
+  return headers[ZIPPER_ZPROXY_HOST_HEADER] || headers.host;
 }
 
 /**
