@@ -26,5 +26,8 @@
   },
   "dependencies": {
     "minimist-lite": "^2.2.1"
+  },
+  "engines": {
+    "node": ">=18.14.0"
   }
 }
