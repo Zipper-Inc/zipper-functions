@@ -77,6 +77,7 @@ export function RunAppProvider({
     playgroundVersionHash,
     publishedVersionHash,
     canUserEdit,
+    isDataSensitive,
   } = app;
   const formMethods = useForm();
   const [isRunning, setIsRunning] = useState(false);
@@ -284,6 +285,7 @@ export function RunAppProvider({
           playgroundVersionHash,
           publishedVersionHash,
           canUserEdit,
+          isDataSensitive,
         },
         formMethods,
         isRunning,

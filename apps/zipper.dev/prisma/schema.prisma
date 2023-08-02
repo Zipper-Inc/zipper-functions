@@ -28,6 +28,7 @@ model App {
   organizationId        String?
   createdById           String?
   requiresAuthToRun     Boolean   @default(false)
+  isDataSensitive       Boolean   @default(false)
 
   scriptMain ScriptMain?
 
@@ -38,14 +39,14 @@ model App {
   editors        AppEditor[]
   pendingEditors PendingAppEditor[]
 
-  parent       App?             @relation("AppForks", fields: [parentId], references: [id])
-  forks        App[]            @relation("AppForks")
-  settings     AppSetting[]
-  connectors   AppConnector[]
-  accessTokens AppAccessToken[]
-  versions     Version[]
-  publishedVersion Version? @relation("PublishedVersion", fields: [publishedVersionHash], references: [hash])
-  playgroundVersion Version? @relation("PlaygroundVersion", fields: [playgroundVersionHash], references: [hash])
+  parent            App?             @relation("AppForks", fields: [parentId], references: [id])
+  forks             App[]            @relation("AppForks")
+  settings          AppSetting[]
+  connectors        AppConnector[]
+  accessTokens      AppAccessToken[]
+  versions          Version[]
+  publishedVersion  Version?         @relation("PublishedVersion", fields: [publishedVersionHash], references: [hash])
+  playgroundVersion Version?         @relation("PlaygroundVersion", fields: [playgroundVersionHash], references: [hash])
 
   @@map("apps")
 }
@@ -216,17 +217,17 @@ model Schedule {
 }
 
 model Script {
-  id           String    @id @default(uuid())
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime? @default(now())
-  name         String
-  filename     String
-  code         String
-  order        Int?      @default(0)
-  appId        String
-  connectorId  String?
-  hash         String?
-  isRunnable   Boolean   @default(false)
+  id          String    @id @default(uuid())
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime? @default(now())
+  name        String
+  filename    String
+  code        String
+  order       Int?      @default(0)
+  appId       String
+  connectorId String?
+  hash        String?
+  isRunnable  Boolean   @default(false)
 
   app        App         @relation(fields: [appId], references: [id])
   scriptMain ScriptMain?
@@ -236,20 +237,20 @@ model Script {
 }
 
 model Version {
-  hash          String   @id
-  appId         String
-  buildFile     Bytes?
-  isPublished   Boolean  @default(false)
-  createdAt     DateTime @default(now())
-  userId        String?
+  hash        String   @id
+  appId       String
+  buildFile   Bytes?
+  isPublished Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  userId      String?
 
   app App @relation(fields: [appId], references: [id])
 
-  publishedForApp App? @relation("PublishedVersion")
+  publishedForApp  App? @relation("PublishedVersion")
   playgroundForApp App? @relation("PlaygroundVersion")
 
-  @@map("versions")
   @@unique([appId, hash])
+  @@map("versions")
 }
 
 model ScriptMain {

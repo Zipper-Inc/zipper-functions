@@ -105,6 +105,7 @@ export default async function handler(
     playgroundVersionHash,
     scriptMain,
     scripts,
+    isDataSensitive,
   } = appFound;
 
   let entryPoint: Script | undefined = undefined;
@@ -151,6 +152,7 @@ export default async function handler(
           orgId: undefined,
           organizations: organizations,
         }),
+        isDataSensitive,
       },
       inputs: parsedCode.inputs || [],
       metadata: {
