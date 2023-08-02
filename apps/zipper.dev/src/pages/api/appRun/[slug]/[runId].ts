@@ -113,7 +113,8 @@ export default async function handler(
     }
   }
 
-  const { id, name, slug, description, updatedAt, scripts } = appRun.app;
+  const { id, name, slug, description, updatedAt, scripts, isDataSensitive } =
+    appRun.app;
 
   const organizations: Record<string, string> = {};
 
@@ -144,6 +145,7 @@ export default async function handler(
           orgId: undefined,
           organizations,
         }),
+        isDataSensitive,
       },
       inputs: parseInputForTypes({ code: entryPoint?.code }) || [],
       runnableScripts: scripts
