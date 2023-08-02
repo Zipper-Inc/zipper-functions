@@ -28,7 +28,7 @@ import {
   getInputsFromFormData,
   ZIPPER_TEMP_USER_ID_COOKIE_NAME,
   ZIPPER_TEMP_USER_ID_HEADER,
-  ZIPPER_PREVIEW_PROXY_HOST_HEADER,
+  ZIPPER_ZPROXY_HOST_HEADER,
 } from '@zipper/utils';
 import Unauthorized from './unauthorized';
 import removeAppConnectorUserAuth from '~/utils/remove-app-connector-user-auth';
@@ -443,8 +443,8 @@ export const getServerSideProps: GetServerSideProps = async ({
   };
 
   // if this is a preview proxy, add the appropriate header
-  const proxyHeader = req.headers[ZIPPER_PREVIEW_PROXY_HOST_HEADER] as string;
-  if (proxyHeader) headers[ZIPPER_PREVIEW_PROXY_HOST_HEADER] = proxyHeader;
+  const proxyHeader = req.headers[ZIPPER_ZPROXY_HOST_HEADER] as string;
+  if (proxyHeader) headers[ZIPPER_ZPROXY_HOST_HEADER] = proxyHeader;
 
   const version = versionFromUrl || 'latest';
   const filename = filenameFromUrl || 'main.ts';

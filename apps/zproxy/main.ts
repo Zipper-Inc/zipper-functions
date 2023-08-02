@@ -45,7 +45,7 @@ const LOCAL_PORTS = {
 
 const argv: { tld: TopLevelDomain } = minimist(process.argv.slice(2));
 
-export const ZIPPER_PREVIEW_PROXY_HOST_HEADER = 'x-preview-proxy-host';
+export const ZIPPER_ZPROXY_HOST_HEADER = 'x-zipper-zproxy-host';
 
 const looksLikeAnEnv = (part: string) =>
   /^(local|pr-\d+|preview|prod|fwd)$/.test(part);
@@ -85,12 +85,12 @@ app.use((req, res, next) => {
   const tld: TopLevelDomain = argv.tld || lastPartOfDomain;
   const [closestSubdomain] = hostnameParts.splice(-1);
   const env = looksLikeAnEnv(closestSubdomain) ? closestSubdomain : 'local';
-  req.headers[ZIPPER_PREVIEW_PROXY_HOST_HEADER] = req.hostname;
+  req.headers[ZIPPER_ZPROXY_HOST_HEADER] = req.hostname;
 
   return proxy(getProxiedHost(env as Env, tld as TopLevelDomain), {
     memoizeHost: false,
     userResHeaderDecorator: (headers) => ({
-      [ZIPPER_PREVIEW_PROXY_HOST_HEADER]: req.hostname,
+      [ZIPPER_ZPROXY_HOST_HEADER]: req.hostname,
       ...headers,
     }),
   })(req, res, next);
