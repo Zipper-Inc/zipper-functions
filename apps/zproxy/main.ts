@@ -3,30 +3,28 @@
  * Zipper internal preview proxy
  * Will be running on those domains you can be run on dev
  *
- * URLs work like this:
+ * The proxy works like this:
  *
- *  REQUEST URL => PROXIED URL
+ * REQUEST HOST => PROXIED HOST
  *
- *  https://zpr.dev => http://localhost:3000
- *  https://local.zpr.dev => http://localhost:3000
- *  http://localdev.me:3001=> http://localhost:3000
+ * zpr.dev => localhost:3000
+ * local.zpr.dev => localhost:3000
+ * localdev.me:3001 => localhost:3000
  *
- *  https://zpr.run => http://localhost:3002
- *  https://*.zpr.run => http://localhost:3002
- *  https://*.local.zpr.run => http://localhost:3002
- *  http://localdev.me:3003 => http://localhost:3002
+ * zpr.run => localhost:3002
+ * [applet].zpr.run => localhost:3002
+ * [applet].local.zpr.run => localhost:3002
+ * localdev.me:3003 => localhost:3002
  *
- *  https://pr-421.zpr.dev => https://zipper-dev-preview-pr-421.onrender.com
- *  http://pr-421.localdev.me:3001 => https://zipper-dev-preview-pr-421.onrender.com
+ * pr-421.zpr.dev => zipper-dev-preview-pr-421.onrender.com
+ * pr-421.localdev.me:3001 => zipper-dev-preview-pr-421.onrender.com
  *
- *  https://pr-421.zpr.run => https://zipper-run-preview-pr-421.onrender.com
- *  https://*.pr-421.zpr.run => https://zipper-run-preview-pr-421.onrender.com
- *  http://pr-421.localdev.me:3003 => https://zipper-run-preview-pr-421.onrender.com
+ * pr-421.zpr.run => zipper-run-preview-pr-421.onrender.com
+ * [applet].pr-421.zpr.run => zipper-run-preview-pr-421.onrender.com
+ * pr-421.localdev.me:3003 => zipper-run-preview-pr-421.onrender.com
  *
- *  https://fwd.zpr.dev => https://zipper-inc-internal-forwarder.zipper.run
- *  https://fwd.zpr.run => https://zipper-inc-internal-forwarder.zipper.run
- *  https://fwd.localdev.me:3001 => https://zipper-inc-internal-forwarder.zipper.run
- *  https://fwd.localdev.me:3003 => https://zipper-inc-internal-forwarder.zipper.run
+ * fwd.zpr.run => zipper-inc-internal-forwarder.zipper.run
+ * fwd.localdev.me:3003 => zipper-inc-internal-forwarder.zipper.run
  */
 
 import proxy from 'express-http-proxy';
@@ -52,20 +50,23 @@ export const ZIPPER_PREVIEW_PROXY_HOST_HEADER = 'x-preview-proxy-host';
 const looksLikeAnEnv = (part: string) =>
   /^(local|pr-\d+|preview|prod|fwd)$/.test(part);
 
-function getProxiedUrl(env: Env, tld: TopLevelDomain) {
-  if (env === 'local' && tld === 'dev')
-    return `http://localhost:${LOCAL_PORTS.dev}`;
-  if (env === 'local' && tld === 'run')
-    return `http://localhost:${LOCAL_PORTS.run}`;
-
-  if (env.startsWith('pr-'))
-    return `https://zipper-${tld}-preview-${env}.onrender.com`;
-
-  if (env === 'preview') return `https://zipper-${tld}-preview.onrender.com`;
-
-  if (env === 'prod') return `https://zipper.${tld}`;
-
-  return 'https://zipper-inc-internal-forwarder.zipper.run';
+function getProxiedHost(env: Env, tld: TopLevelDomain): string {
+  switch (env) {
+    case 'local':
+      return `localhost:${LOCAL_PORTS[tld]}`;
+    case 'preview':
+      return `zipper-${tld}-preview.onrender.com`;
+    case 'prod':
+      return `zipper.${tld}`;
+    case 'fwd':
+      return 'zipper-inc-internal-forwarder.zipper.run';
+    default: {
+      if (env.startsWith('pr-')) {
+        return `zipper-${tld}-preview-${env}.onrender.com`;
+      }
+      return getProxiedHost('preview', tld);
+    }
+  }
 }
 
 const app = express();
@@ -86,7 +87,7 @@ app.use((req, res, next) => {
   const env = looksLikeAnEnv(closestSubdomain) ? closestSubdomain : 'local';
   req.headers[ZIPPER_PREVIEW_PROXY_HOST_HEADER] = req.hostname;
 
-  return proxy(getProxiedUrl(env as Env, tld as TopLevelDomain), {
+  return proxy(getProxiedHost(env as Env, tld as TopLevelDomain), {
     memoizeHost: false,
     userResHeaderDecorator: (headers) => ({
       [ZIPPER_PREVIEW_PROXY_HOST_HEADER]: req.hostname,
