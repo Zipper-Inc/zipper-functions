@@ -60,6 +60,15 @@ async function maybeGetCustomResponse(
       });
     }
 
+    case /^\/run\/embed/.test(appRoute): {
+      if (request.method === 'POST') {
+        return serveRelay({
+          request,
+          bootOnly: false,
+        });
+      }
+    }
+
     case /^\/$/.test(appRoute): {
       if (request.method === 'GET') {
         const url = new URL('/main.ts', request.url);
