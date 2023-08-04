@@ -1,5 +1,8 @@
+import { OpenAIStream, streamToResponse } from 'ai';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { Configuration, OpenAIApi } from 'openai';
+import { Configuration, OpenAIApi } from 'openai-edge';
+import { generateBasicTSCode } from '../generate/applet';
+import { generateZipperAppletVersion } from '../zipper-version/applet';
 
 const conf = new Configuration({
   apiKey: process.env.OPENAI,
@@ -78,17 +81,15 @@ const functions: ChatGPTFunction[] = [
 ];
 
 const systemPrompt = `
-    You are a high skilled typescript developer, your task is to take the user request and generate typescript code. 
-    Your code must export a handler function. You are not allowed to use classes. 
-    Your final output should be a handler function that implements the user request.
+    You are a high skilled typescript developer, your task is to take the user request and generate typescript code that can be used in the zipper app.
+    Your task is split into 3 functions:
+    1. generate_basic_typescript: This function takes the user request and generates a basic typescript function.
+    2. generate_zipper_version: This function takes the raw typescript code and formats it to match the zipper definition.
+    3. audit_zipper_version: This function takes the formatted code and makes sure that it is valid and everything needed to run is there.
+    You must always execute the functions in the order above.
+    All functions must be executed.
     You should always only respond with the desired code, no additional text.
-    Example: 
-    User request: I want a applet that can greet the user by it's name
-    Code: 
-    export async function handler({name} : {name: string}){
-      return \`Hello \${name}\`
-    }
-
+    You must not return any code before all functions have been executed.
 `;
 
 export default async function handler(
@@ -103,6 +104,8 @@ export default async function handler(
   try {
     const chatWithFunction = await openai.createChatCompletion({
       model: 'gpt-3.5-turbo-16k-0613',
+      stream: true,
+      temperature: 0,
       messages: [
         {
           role: 'system',
@@ -111,11 +114,54 @@ export default async function handler(
         ...messages,
       ],
       functions,
+      function_call: { name: 'generate_basic_typescript' },
     } as any);
 
-    res
-      .status(200)
-      .json({ message: chatWithFunction.data.choices[0]?.message });
+    const stream = OpenAIStream(chatWithFunction, {
+      experimental_onFunctionCall: async (
+        { name, arguments: args },
+        createFunctionCallMessages,
+      ) => {
+        console.log('Function call', name, args);
+        if (name === 'generate_basic_typescript') {
+          const basicTypescriptCode = await generateBasicTSCode(
+            args.userRequest as string,
+          );
+          const newMessages = createFunctionCallMessages(basicTypescriptCode);
+          const function1 = await openai.createChatCompletion({
+            messages: [...messages, ...newMessages],
+            stream: true,
+            model: 'gpt-3.5-turbo-16k-0613',
+            functions,
+            function_call: { name: 'generate_zipper_version' },
+          });
+          return function1;
+        }
+
+        if (name === 'generate_zipper_version') {
+          const zipperAppletVersion = await generateZipperAppletVersion({
+            userRequest: args.userRequest as string,
+            rawTypescriptCode: args.rawTypescriptCode as string,
+          });
+          console.log(zipperAppletVersion);
+          const newMessages = createFunctionCallMessages(zipperAppletVersion);
+          const function2 = await openai.createChatCompletion({
+            messages: [...messages, ...newMessages],
+            stream: true,
+            model: 'gpt-3.5-turbo-16k-0613',
+            functions,
+            function_call: { name: 'audit_zipper_version' },
+          });
+          return function2;
+        }
+
+        if (name === 'audit_zipper_version') {
+          // call this shit
+        }
+      },
+    });
+
+    return streamToResponse(stream, res);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Something went wrong' });

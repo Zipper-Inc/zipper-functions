@@ -8,7 +8,7 @@ const conf = new Configuration({
   apiKey: process.env.OPENAI,
 });
 
-async function generateZipperAppletVersion({
+export async function generateZipperAppletVersion({
   userRequest,
   rawTypescriptCode,
 }: {
@@ -582,50 +582,34 @@ declare function Dropdown<I = Zipper.Inputs>(
   }
 
   const openai = new OpenAIApi(conf);
-  try {
-    const completion = await openai.createChatCompletion({
-      model: 'gpt-3.5-turbo-16k-0613',
-      messages: [
-        {
-          role: 'system',
-          content: zipperSystemPrompt,
-        },
-        {
-          role: 'system',
-          content: zipperDefinitions,
-        },
-        {
-          role: 'user',
-          content: userRequest,
-        },
-        {
-          role: 'user',
-          content: rawTypescriptCode,
-        },
-      ],
-      temperature: 0,
-    });
 
-    return completion.data.choices[0]?.message;
-  } catch (error: any) {
-    console.log(error);
-    if (error.response) {
-      console.log(error.response.status);
-      console.log(error.response.data);
-      return {
-        message: error.response.data?.error?.message ?? 'Unknown error',
-      };
-    } else {
-      console.log(error);
-      return {
-        message: error.error?.message ?? 'Unknown error',
-      };
-    }
-  }
+  const completion = await openai.createChatCompletion({
+    model: 'gpt-3.5-turbo-16k-0613',
+    messages: [
+      {
+        role: 'system',
+        content: zipperSystemPrompt,
+      },
+      {
+        role: 'system',
+        content: zipperDefinitions,
+      },
+      {
+        role: 'user',
+        content: userRequest,
+      },
+      {
+        role: 'user',
+        content: rawTypescriptCode,
+      },
+    ],
+    temperature: 0,
+  });
+
+  return JSON.stringify({ data: completion.data.choices[0]?.message });
 }
 
 const FileWithTsExtension = z.string().refine((value) => value.endsWith('.ts'));
-
 function groupCodeByFilename(inputs: string): AICodeOutput[] {
   const output: AICodeOutput[] = [];
   const lines = inputs.split('\n');
@@ -657,31 +641,31 @@ function groupCodeByFilename(inputs: string): AICodeOutput[] {
   return output;
 }
 
-export default async function handler(
-  request: NextApiRequest,
-  response: NextApiResponse,
-) {
-  const { userRequest, rawTypescriptCode } = JSON.parse(request.body);
-  const zipperAppletVersion = await generateZipperAppletVersion({
-    userRequest,
-    rawTypescriptCode,
-  });
+// export default async function handler(
+//   request: NextApiRequest,
+//   response: NextApiResponse,
+// ) {
+//   const { userRequest, rawTypescriptCode } = JSON.parse(request.body);
+//   const zipperAppletVersion = await generateZipperAppletVersion({
+//     userRequest,
+//     rawTypescriptCode,
+//   });
 
-  if (!zipperAppletVersion)
-    return NextResponse.json(
-      { error: 'No response from OpenAI' },
-      { status: 500 },
-    );
+//   if (!zipperAppletVersion)
+//     return NextResponse.json(
+//       { error: 'No response from OpenAI' },
+//       { status: 500 },
+//     );
 
-  if ('message' in zipperAppletVersion || 'error' in zipperAppletVersion) {
-    return NextResponse.json(
-      { error: zipperAppletVersion.error },
-      { status: 500 },
-    );
-  }
+//   if ('message' in zipperAppletVersion || 'error' in zipperAppletVersion) {
+//     return NextResponse.json(
+//       { error: zipperAppletVersion.error },
+//       { status: 500 },
+//     );
+//   }
 
-  return response.status(200).json({
-    raw: zipperAppletVersion.content,
-    groupedByFilename: groupCodeByFilename(zipperAppletVersion.content ?? ''),
-  });
-}
+//   return response.status(200).json({
+//     raw: zipperAppletVersion.content,
+//     groupedByFilename: groupCodeByFilename(zipperAppletVersion.content ?? ''),
+//   });
+// }

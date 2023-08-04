@@ -66,3 +66,23 @@ export default async function handler(
 
   res.status(200).json({ message: chatWithFunction.data.choices[0]?.message });
 }
+
+export async function generateBasicTSCode(userRequest: string) {
+  const openai = new OpenAIApi(conf);
+
+  const chatWithFunction = await openai.createChatCompletion({
+    model: 'gpt-3.5-turbo-16k-0613',
+    messages: [
+      {
+        role: 'system',
+        content: systemPrompt,
+      },
+      {
+        role: 'user',
+        content: userRequest,
+      },
+    ],
+  } as any);
+
+  return JSON.stringify({ data: chatWithFunction.data.choices[0]?.message });
+}
