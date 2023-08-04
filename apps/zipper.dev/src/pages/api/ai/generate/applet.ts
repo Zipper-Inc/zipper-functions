@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { Configuration, OpenAIApi } from 'openai';
+import { z } from 'zod';
 
 const conf = new Configuration({
   apiKey: process.env.OPENAI,
@@ -66,6 +67,10 @@ export default async function handler(
 
   res.status(200).json({ message: chatWithFunction.data.choices[0]?.message });
 }
+
+export const generateBasicTSCodeArgsSchema = z.object({
+  userRequest: z.string(),
+});
 
 export async function generateBasicTSCode(userRequest: string) {
   const openai = new OpenAIApi(conf);

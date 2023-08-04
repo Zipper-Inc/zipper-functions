@@ -1,8 +1,16 @@
+import { AICodeOutput } from '@zipper/types';
 import { OpenAIStream, streamToResponse } from 'ai';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { Configuration, OpenAIApi } from 'openai-edge';
-import { generateBasicTSCode } from '../generate/applet';
-import { generateZipperAppletVersion } from '../zipper-version/applet';
+import { z } from 'zod';
+import {
+  generateBasicTSCode,
+  generateBasicTSCodeArgsSchema,
+} from '../generate/applet';
+import {
+  generateZipperAppletVersion,
+  generateZipperAppletVersionArgsSchema,
+} from '../zipper-version/applet';
 
 const conf = new Configuration({
   apiKey: process.env.OPENAI,
@@ -119,13 +127,15 @@ export default async function handler(
 
     const stream = OpenAIStream(chatWithFunction, {
       experimental_onFunctionCall: async (
-        { name, arguments: args },
+        { name, arguments: functionArgs },
         createFunctionCallMessages,
       ) => {
-        console.log('Function call', name, args);
+        console.log('Function call', name, functionArgs);
+
         if (name === 'generate_basic_typescript') {
+          const args = generateBasicTSCodeArgsSchema.parse(functionArgs);
           const basicTypescriptCode = await generateBasicTSCode(
-            args.userRequest as string,
+            args.userRequest,
           );
           const newMessages = createFunctionCallMessages(basicTypescriptCode);
           const function1 = await openai.createChatCompletion({
@@ -139,9 +149,11 @@ export default async function handler(
         }
 
         if (name === 'generate_zipper_version') {
+          const args =
+            generateZipperAppletVersionArgsSchema.parse(functionArgs);
           const zipperAppletVersion = await generateZipperAppletVersion({
-            userRequest: args.userRequest as string,
-            rawTypescriptCode: args.rawTypescriptCode as string,
+            userRequest: args.userRequest,
+            rawTypescriptCode: args.rawTypescriptCode,
           });
           console.log(zipperAppletVersion);
           const newMessages = createFunctionCallMessages(zipperAppletVersion);
@@ -156,7 +168,18 @@ export default async function handler(
         }
 
         if (name === 'audit_zipper_version') {
-          // call this shit
+          const args = auditTSCodeArgsSchema.parse(functionArgs);
+          const auditedCode = await auditTSCode(args.code);
+          const newMessages = createFunctionCallMessages(auditedCode);
+          // Should I call the orchestrator or just return the code?
+          const function3 = await openai.createChatCompletion({
+            messages: [...messages, ...newMessages],
+            stream: true,
+            model: 'gpt-3.5-turbo-16k-0613',
+            functions,
+            // function_call: { name: 'audit_zipper_version' },
+          });
+          return function3;
         }
       },
     });
@@ -166,4 +189,75 @@ export default async function handler(
     console.error(error);
     res.status(500).json({ message: 'Something went wrong' });
   }
+}
+
+const fileWithTsExtensionSchema = z
+  .string()
+  .refine((value) => value.endsWith('.ts'));
+
+// Maybe this will be called in the clientside now that we're sending a stream?
+function groupCodeByFilename(inputs: string): AICodeOutput[] {
+  const output: AICodeOutput[] = [];
+  const lines = inputs.split('\n');
+
+  let currentFilename: AICodeOutput['filename'] = 'main.ts';
+  let currentCode = '';
+
+  for (const line of lines) {
+    if (line.trim().startsWith('// file:')) {
+      if (currentCode !== '') {
+        output.push({ filename: currentFilename, code: currentCode });
+        currentCode = '';
+      }
+      let file = line.trim().replace('// file:', '').trim();
+      if (!fileWithTsExtensionSchema.safeParse(file)) {
+        file += '.ts';
+      }
+      currentFilename = file as AICodeOutput['filename'];
+    } else {
+      currentCode += line + '\n';
+    }
+  }
+
+  // Add the last code block
+  if (currentCode !== '') {
+    output.push({ filename: currentFilename, code: currentCode });
+  }
+
+  return output;
+}
+
+const auditCodePrompt = `
+    You are a high skilled typescript developer, your task is to take the code and make sure that it is valid and everything needed to run is there.
+    You should always only respond with the desired code, no additional text.
+    Check if all types got defined and are correct.
+    Check if all functions got defined and are correct.
+    If you can group types and functions into files, do so.
+    If types are similar, group them into a shared file.
+`;
+
+const auditTSCodeArgsSchema = z.object({
+  code: z.string(),
+});
+
+export async function auditTSCode(code: string) {
+  const openai = new OpenAIApi(conf);
+
+  const chatWithFunction = await openai.createChatCompletion({
+    model: 'gpt-3.5-turbo-16k-0613',
+    messages: [
+      {
+        role: 'system',
+        content: auditCodePrompt,
+      },
+      {
+        role: 'user',
+        content: code,
+      },
+    ],
+  } as any);
+
+  const data = await chatWithFunction.json();
+
+  return JSON.stringify({ data: data?.choices[0]?.message });
 }

@@ -1,11 +1,13 @@
-import { AICodeOutput } from '@zipper/types';
-import { NextApiRequest, NextApiResponse } from 'next';
-import { NextResponse } from 'next/server';
 import { Configuration, OpenAIApi } from 'openai';
 import { z } from 'zod';
 
 const conf = new Configuration({
   apiKey: process.env.OPENAI,
+});
+
+export const generateZipperAppletVersionArgsSchema = z.object({
+  userRequest: z.string(),
+  rawTypescriptCode: z.string(),
 });
 
 export async function generateZipperAppletVersion({
@@ -607,38 +609,6 @@ declare function Dropdown<I = Zipper.Inputs>(
   });
 
   return JSON.stringify({ data: completion.data.choices[0]?.message });
-}
-
-const FileWithTsExtension = z.string().refine((value) => value.endsWith('.ts'));
-function groupCodeByFilename(inputs: string): AICodeOutput[] {
-  const output: AICodeOutput[] = [];
-  const lines = inputs.split('\n');
-
-  let currentFilename: AICodeOutput['filename'] = 'main.ts';
-  let currentCode = '';
-
-  for (const line of lines) {
-    if (line.trim().startsWith('// file:')) {
-      if (currentCode !== '') {
-        output.push({ filename: currentFilename, code: currentCode });
-        currentCode = '';
-      }
-      let file = line.trim().replace('// file:', '').trim();
-      if (!FileWithTsExtension.safeParse(file)) {
-        file += '.ts';
-      }
-      currentFilename = file as AICodeOutput['filename'];
-    } else {
-      currentCode += line + '\n';
-    }
-  }
-
-  // Add the last code block
-  if (currentCode !== '') {
-    output.push({ filename: currentFilename, code: currentCode });
-  }
-
-  return output;
 }
 
 // export default async function handler(
