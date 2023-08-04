@@ -60,6 +60,22 @@ async function maybeGetCustomResponse(
       });
     }
 
+    case /^\/run\/embed\/main.ts(\/?)/.test(appRoute): {
+      if (request.method === 'POST') {
+        const body = Object.fromEntries(await request.formData());
+        const params = new URLSearchParams(body as Record<string, string>);
+        const url = new URL('/run/embed/main.ts', request.url);
+        params.forEach((value, key) => {
+          url.searchParams.append(key, value);
+        });
+
+        return NextResponse.rewrite(url, {
+          request: { headers },
+        });
+      }
+      break;
+    }
+
     case /^\/$/.test(appRoute): {
       if (request.method === 'GET') {
         const url = new URL('/main.ts', request.url);

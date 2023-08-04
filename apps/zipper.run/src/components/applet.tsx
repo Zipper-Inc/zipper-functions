@@ -121,7 +121,7 @@ export function AppPage({
       asPath !== previousRouteRef.current
     ) {
       setScreen('initial');
-      const defaultValues = getInputValuesFromUrl(inputs, asPath);
+      const defaultValues = getInputValuesFromUrl({ inputs, url: asPath });
       formContext.reset(defaultValues);
       setResult('');
     }
@@ -459,7 +459,11 @@ export const getServerSideProps: GetServerSideProps = async ({
 
   const config = handlerConfigs[filename];
 
-  const urlValues = getInputValuesFromUrl(inputParams, req.url);
+  const urlValues = getInputValuesFromUrl({
+    inputs: inputParams,
+    query,
+    url: req.url,
+  });
 
   const isAutoRun = config?.run && !isRunUrl && isInitialServerSideProps;
   const isRunPathMissing = isRunUrl && !query.versionAndFilename;
