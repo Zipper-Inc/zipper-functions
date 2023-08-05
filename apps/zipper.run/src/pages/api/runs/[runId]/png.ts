@@ -18,16 +18,33 @@ export default async function handler(
   const context = await browser.newContext({ deviceScaleFactor: 2 });
   const page = await context.newPage();
   await page.setViewportSize({
-    width: 1920,
-    height: 1280,
+    width: 390, //1920,
+    height: 844, //1280,
   });
-  await page.goto(runUrl);
-  const output = page.locator(selector);
-  await output.waitFor();
-  const buffer = await output.screenshot({ scale: 'device' });
-  await browser.close();
 
-  res.setHeader('Content-Type', 'image/png');
-  res.setHeader('Content-Disposition', `inline; filename="${runId}.png"`);
-  res.end(buffer, 'binary');
+  try {
+    const response = await page.goto(runUrl);
+    if (!response) {
+      console.log('No response');
+      await browser.close();
+      res.status(500).end();
+    } else if (response.status() !== 200) {
+      console.log(`HTTP ${response.status()}: Couldn't load ${runUrl}`);
+      await browser.close();
+      res.status(404).end();
+    } else {
+      const output = page.locator(selector);
+      await output.waitFor();
+      const buffer = await output.screenshot({ scale: 'device' });
+      await browser.close();
+
+      res.setHeader('Content-Type', 'image/png');
+      res.setHeader('Content-Disposition', `inline; filename="${runId}.png"`);
+      res.end(buffer, 'binary');
+    }
+  } catch (e) {
+    console.error(e);
+    await browser.close();
+    res.status(500).end();
+  }
 }
