@@ -1,5 +1,11 @@
+import { ZIPPER_TEMP_USER_ID_COOKIE_NAME } from '@zipper/utils';
 import { chromium } from 'playwright';
 import type { NextApiRequest, NextApiResponse } from 'next';
+import getRunInfo from '~/utils/get-run-info';
+import getValidSubdomain from '~/utils/get-valid-subdomain';
+import { getZipperAuth } from '~/utils/get-zipper-auth';
+import { PutObjectCommand } from '@aws-sdk/client-s3';
+import s3Client from '../../../../utils/s3';
 
 export default async function handler(
   req: NextApiRequest,
@@ -7,7 +13,7 @@ export default async function handler(
 ) {
   const host = req.headers['x-forwarded-host'] || req.headers.host;
   const proto = process.env.NODE_ENV === 'production' ? 'https' : 'http';
-  const { runId } = req.query;
+  const { runId } = req.query as { runId: string };
   const path = `/run/history/${runId}`;
   console.log(path);
 
@@ -38,9 +44,39 @@ export default async function handler(
       const buffer = await output.screenshot({ scale: 'device' });
       await browser.close();
 
-      res.setHeader('Content-Type', 'image/png');
-      res.setHeader('Content-Disposition', `inline; filename="${runId}.png"`);
-      res.end(buffer, 'binary');
+      // validate subdomain
+      const { host } = req.headers;
+
+      // validate subdomain
+      const subdomain = getValidSubdomain(host);
+      if (!subdomain) return { notFound: true };
+
+      const { token } = await getZipperAuth(req);
+
+      // grab the app if it exists
+      const result = await getRunInfo({
+        subdomain,
+        token,
+        runId,
+        tempUserId: req.cookies[ZIPPER_TEMP_USER_ID_COOKIE_NAME],
+      });
+      if (result.ok) {
+        const appId = result.data.app.id;
+
+        // upload to s3
+        const s3Key = `${appId}/${runId}.png`;
+        s3Client.send(
+          new PutObjectCommand({
+            Bucket: process.env.CLOUDFLARE_SCREENSHOTS_BUCKET_NAME,
+            Key: s3Key,
+            Body: buffer,
+          }),
+        );
+
+        res.setHeader('Content-Type', 'image/png');
+        res.setHeader('Content-Disposition', `inline; filename="${runId}.png"`);
+        res.end(buffer, 'binary');
+      }
     }
   } catch (e) {
     console.error(e);
