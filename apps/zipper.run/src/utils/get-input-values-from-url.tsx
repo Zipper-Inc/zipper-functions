@@ -75,11 +75,17 @@ export function getDefaultInputValuesFromConfig(
   return defaultValues;
 }
 
-export function getRunValues(
-  inputParams: InputParam[],
-  url?: string,
-  config?: Zipper.HandlerConfig,
-) {
+export function getRunValues({
+  inputParams,
+  url,
+  query,
+  config,
+}: {
+  inputParams: InputParam[];
+  url?: string;
+  query?: ParsedUrlQuery;
+  config?: Zipper.HandlerConfig;
+}) {
   const runValues: Zipper.Inputs =
     typeof config?.run === 'object' ? config.run : {};
 
@@ -88,7 +94,7 @@ export function getRunValues(
   );
 
   const urlValues = parseFieldNamesOnObject(
-    getInputValuesFromUrl({ inputs: inputParams, url }),
+    getInputValuesFromUrl({ inputs: inputParams, url, query }),
   );
 
   return { ...defaultValues, ...runValues, ...urlValues };
