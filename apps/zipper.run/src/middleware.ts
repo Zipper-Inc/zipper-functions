@@ -60,20 +60,23 @@ async function maybeGetCustomResponse(
       });
     }
 
-    case /^\/run\/embed\/main.ts(\/?)/.test(appRoute): {
+    case /^\/run\/zendesk\/main.ts(\/?)/.test(appRoute): {
+      const url = new URL('/run/embed/main.ts', request.url);
+
+      // When zendesk signs it's urls it requests the initial page of the
+      // iframe with a POST. The JWT will be in the formData.
+      // Unsigned zendesk apps request the initial page with a GET.
       if (request.method === 'POST') {
         const body = Object.fromEntries(await request.formData());
         const params = new URLSearchParams(body as Record<string, string>);
-        const url = new URL('/run/embed/main.ts', request.url);
         params.forEach((value, key) => {
           url.searchParams.append(key, value);
         });
-
-        return NextResponse.rewrite(url, {
-          request: { headers },
-        });
       }
-      break;
+
+      return NextResponse.rewrite(url, {
+        request: { headers },
+      });
     }
 
     case /^\/$/.test(appRoute): {
