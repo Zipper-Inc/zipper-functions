@@ -474,7 +474,7 @@ export const getServerSideProps: GetServerSideProps = async ({
     runUrl.pathname = `/run/${filename}`;
 
     if (isAutoRun) {
-      const runValues = getRunValues({inputParams, url: req.url, config});
+      const runValues = getRunValues({ inputParams, url: req.url, config });
 
       // Add default and run values to the run url before redirecting
       Object.entries(runValues).forEach(([inputName, inputValue]) => {
