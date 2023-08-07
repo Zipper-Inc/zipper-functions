@@ -1,0 +1,14 @@
+{
+  "index": "Introduction",
+  "getting-started": "Getting Started",
+  "building-applets": "Building Applets",
+  "connecting-to-other-tools": "Connectors",
+  "running-applets": "Running Applets",
+  "advanced": "Advanced",
+  "contact": {
+    "title": "Contact ↗",
+    "type": "page",
+    "href": "https://twitter.com/shuding_",
+    "newWindow": true
+  }
+}
