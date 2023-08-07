@@ -4,8 +4,22 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import getRunInfo from '~/utils/get-run-info';
 import getValidSubdomain from '~/utils/get-valid-subdomain';
 import { getZipperAuth } from '~/utils/get-zipper-auth';
-import { PutObjectCommand } from '@aws-sdk/client-s3';
-import s3Client from '../../../../utils/s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import {
+  S3Client,
+  GetObjectCommand,
+  HeadObjectCommand,
+  PutObjectCommand,
+} from '@aws-sdk/client-s3';
+
+const s3Client = new S3Client({
+  region: 'auto',
+  endpoint: `https://${process.env.CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+  credentials: {
+    accessKeyId: process.env.CLOUDFLARE_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.CLOUDFLARE_ACCESS_KEY_SECRET!,
+  },
+});
 
 export default async function handler(
   req: NextApiRequest,
@@ -62,20 +76,39 @@ export default async function handler(
       });
       if (result.ok) {
         const appId = result.data.app.id;
-
-        // upload to s3
         const s3Key = `${appId}/${runId}.png`;
-        s3Client.send(
-          new PutObjectCommand({
-            Bucket: process.env.CLOUDFLARE_SCREENSHOTS_BUCKET_NAME,
-            Key: s3Key,
-            Body: buffer,
+        const objectParams = {
+          Bucket: process.env.CLOUDFLARE_SCREENSHOTS_BUCKET_NAME,
+          Key: s3Key,
+        };
+
+        // check for existing screenshot on s3
+        try {
+          await s3Client.send(new HeadObjectCommand(objectParams));
+        } catch (e) {
+          // upload to s3
+          await s3Client.send(
+            new PutObjectCommand({
+              ...objectParams,
+              Body: buffer,
+              ContentType: 'image/png',
+            }),
+          );
+        }
+
+        const url = await getSignedUrl(
+          // @ts-ignore-next-line
+          s3Client,
+          new GetObjectCommand({
+            ...objectParams,
+            ResponseContentDisposition: `inline; filename="zipper-run-${runId}.png"`,
           }),
+          { expiresIn: 3600 },
         );
 
-        res.setHeader('Content-Type', 'image/png');
-        res.setHeader('Content-Disposition', `inline; filename="${runId}.png"`);
-        res.end(buffer, 'binary');
+        console.log(url);
+
+        return res.redirect(302, url);
       }
     }
   } catch (e) {
