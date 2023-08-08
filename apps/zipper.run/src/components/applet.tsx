@@ -121,7 +121,7 @@ export function AppPage({
       asPath !== previousRouteRef.current
     ) {
       setScreen('initial');
-      const defaultValues = getInputValuesFromUrl(inputs, asPath);
+      const defaultValues = getInputValuesFromUrl({ inputs, url: asPath });
       formContext.reset(defaultValues);
       setResult('');
     }
@@ -390,7 +390,7 @@ export const getServerSideProps: GetServerSideProps = async ({
   query,
   resolvedUrl,
 }) => {
-  console.log({ url: req.url, resolvedUrl });
+  console.log({ url: req.url, resolvedUrl, query });
 
   const { host } = req.headers;
   const isEmbedUrl = /^\/run\/embed(\/|\?|$)/.test(resolvedUrl);
@@ -459,7 +459,11 @@ export const getServerSideProps: GetServerSideProps = async ({
 
   const config = handlerConfigs[filename];
 
-  const urlValues = getInputValuesFromUrl(inputParams, req.url);
+  const urlValues = getInputValuesFromUrl({
+    inputs: inputParams,
+    query,
+    url: req.url,
+  });
 
   const isAutoRun = config?.run && !isRunUrl && isInitialServerSideProps;
   const isRunPathMissing = isRunUrl && !query.versionAndFilename;
@@ -470,7 +474,7 @@ export const getServerSideProps: GetServerSideProps = async ({
     runUrl.pathname = `/run/${filename}`;
 
     if (isAutoRun) {
-      const runValues = getRunValues(inputParams, req.url, config);
+      const runValues = getRunValues({ inputParams, url: req.url, config });
 
       // Add default and run values to the run url before redirecting
       Object.entries(runValues).forEach(([inputName, inputValue]) => {
@@ -496,7 +500,7 @@ export const getServerSideProps: GetServerSideProps = async ({
 
   if (isRunUrl) {
     // now that we're on a run URL, run it!
-    const inputs = getRunValues(inputParams, req.url);
+    const inputs = getRunValues({ inputParams, url: req.url, query });
 
     result = await fetch(
       getRelayUrl({

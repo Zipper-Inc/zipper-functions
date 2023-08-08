@@ -7,6 +7,7 @@ import {
 } from '@zipper/utils';
 import { InputParam, InputType } from '@zipper/types';
 import { parseDate } from 'chrono-node';
+import { ParsedUrlQuery } from 'querystring';
 
 export function formatValueFromUrl(input: InputParam, value: string | null) {
   if (!value) return null;
@@ -30,14 +31,25 @@ export function formatValueFromUrl(input: InputParam, value: string | null) {
   }
 }
 
-export function getInputValuesFromUrl(inputs: InputParam[], url?: string) {
+export function getInputValuesFromUrl({
+  inputs,
+  query = {},
+  url,
+}: {
+  inputs: InputParam[];
+  query?: ParsedUrlQuery;
+  url?: string;
+}) {
   const searchParams = getSearchParams(url);
+
+  console.log({ url });
+  console.log('searchParams', searchParams);
 
   const defaultValues = inputs.reduce<
     Record<string, Zipper.Primitive | undefined>
   >((values, input) => {
     const name = getFieldName(input.key, input.type);
-    const value = searchParams.get(input.key);
+    const value = searchParams.get(input.key) || (query[input.key] as string);
     return value === null || typeof value === 'undefined'
       ? values
       : { ...values, [name]: formatValueFromUrl(input, value) };
@@ -63,11 +75,17 @@ export function getDefaultInputValuesFromConfig(
   return defaultValues;
 }
 
-export function getRunValues(
-  inputParams: InputParam[],
-  url?: string,
-  config?: Zipper.HandlerConfig,
-) {
+export function getRunValues({
+  inputParams,
+  url,
+  query,
+  config,
+}: {
+  inputParams: InputParam[];
+  url?: string;
+  query?: ParsedUrlQuery;
+  config?: Zipper.HandlerConfig;
+}) {
   const runValues: Zipper.Inputs =
     typeof config?.run === 'object' ? config.run : {};
 
@@ -76,7 +94,7 @@ export function getRunValues(
   );
 
   const urlValues = parseFieldNamesOnObject(
-    getInputValuesFromUrl(inputParams, url),
+    getInputValuesFromUrl({ inputs: inputParams, url, query }),
   );
 
   return { ...defaultValues, ...runValues, ...urlValues };
