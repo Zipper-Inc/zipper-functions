@@ -39,11 +39,9 @@ import { useRouter } from 'next/router';
 import { useOrganization } from '~/hooks/use-organization';
 import { useUser } from '~/hooks/use-user';
 import { useOrganizationList } from '~/hooks/use-organization-list';
-import { getEditAppletLink, getZipperApiUrl } from '@zipper/utils';
-import { ChatGPTMessage } from '~/pages/api/ai/generate/applet';
-import { AICodeOutput } from '@zipper/types';
+import { getEditAppletLink } from '@zipper/utils';
 import { useEditorContext } from '../context/editor-context';
-import { z } from 'zod';
+import { useAI } from '~/hooks/use-ai';
 
 const getDefaultCreateAppFormValues = () => ({
   name: generateDefaultSlug(),
@@ -58,57 +56,12 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
   const { organization } = useOrganization();
   const { user } = useUser();
   const { setActive } = useOrganizationList();
+  const ai = useAI();
   const utils = trpc.useContext();
   const router = useRouter();
-  const [isSending, setIsSending] = useState(false);
 
   const addScript = trpc.useMutation('script.add');
   const { scripts } = useEditorContext();
-
-  // getBasicCode implementation
-  const getZipperAICode = async (
-    userRequest: string,
-  ): Promise<ChatGPTMessage> => {
-    const response = await fetch(`${getZipperApiUrl()}/ai/functions/`, {
-      method: 'POST',
-      body: JSON.stringify({
-        messages: [
-          {
-            role: 'user',
-            content: userRequest,
-          },
-        ],
-      }),
-    });
-
-    console.log('<AI CODE RESPONSE>', response);
-    const data = await response.json();
-
-    if (data.error) {
-      throw new Error(data.error);
-    }
-
-    return data.message;
-  };
-
-  const sendMessageHandler = async (message: string) => {
-    setIsSending(true);
-
-    try {
-      const code = await getZipperAICode(message);
-      console.log('ai code', code);
-
-      // TODO: type getZipperAICode
-      return {
-        groupedByFilename: groupCodeByFilename(code),
-        raw: code,
-      };
-    } catch (error) {
-      console.log(error);
-    } finally {
-      setIsSending(false);
-    }
-  };
 
   const addApp = trpc.useMutation('app.add', {
     async onSuccess() {
@@ -160,7 +113,7 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
 
   return (
     <Box position="relative">
-      <Fade in={addApp.isLoading || isSending}>
+      <Fade in={addApp.isLoading || ai.isLoading}>
         <Box
           position="fixed"
           top={0}
@@ -300,13 +253,13 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
               colorScheme="purple"
               type="submit"
               isDisabled={
-                isDisabled || addApp.isLoading || isSending || submitting
+                isDisabled || addApp.isLoading || ai.isLoading || submitting
               }
               onClick={createAppForm.handleSubmit(
                 async ({ description, isPublic, requiresAuthToRun, name }) => {
                   setSubmitting(true);
                   const aiOutput = description
-                    ? await sendMessageHandler(description)
+                    ? await ai.generateCode(description)
                     : undefined;
                   const mainCode =
                     aiOutput?.groupedByFilename.find(
@@ -320,7 +273,7 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
                       isPrivate: !isPublic,
                       requiresAuthToRun,
                       organizationId: selectedOrganizationId,
-                      // aiCode: mainCode || '',
+                      aiCode: mainCode,
                     },
                     {
                       onSuccess: async (applet) => {
@@ -377,39 +330,3 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
     </Box>
   );
 };
-
-const fileWithTsExtensionSchema = z
-  .string()
-  .refine((value) => value.endsWith('.ts'));
-
-// Maybe this will be called in the clientside now that we're sending a stream?
-function groupCodeByFilename(inputs: string): AICodeOutput[] {
-  const output: AICodeOutput[] = [];
-  const lines = inputs.split('\n');
-
-  let currentFilename: AICodeOutput['filename'] = 'main.ts';
-  let currentCode = '';
-
-  for (const line of lines) {
-    if (line.trim().startsWith('// file:')) {
-      if (currentCode !== '') {
-        output.push({ filename: currentFilename, code: currentCode });
-        currentCode = '';
-      }
-      let file = line.trim().replace('// file:', '').trim();
-      if (!fileWithTsExtensionSchema.safeParse(file)) {
-        file += '.ts';
-      }
-      currentFilename = file as AICodeOutput['filename'];
-    } else {
-      currentCode += line + '\n';
-    }
-  }
-
-  // Add the last code block
-  if (currentCode !== '') {
-    output.push({ filename: currentFilename, code: currentCode });
-  }
-
-  return output;
-}
