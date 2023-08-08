@@ -72,7 +72,7 @@
     "@zipper/types": "*",
     "@zipper/ui": "*",
     "@zipper/utils": "*",
-    "ai": "^2.1.14",
+    "ai": "^2.1.32",
     "bcryptjs": "^2.4.3",
     "boring-avatars": "^1.7.0",
     "bullmq": "^3.2.0",

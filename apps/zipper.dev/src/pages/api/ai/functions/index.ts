@@ -1,7 +1,10 @@
-import { AICodeOutput } from '@zipper/types';
 import { OpenAIStream, streamToResponse } from 'ai';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { Configuration, OpenAIApi } from 'openai-edge';
+import {
+  ChatCompletionRequestMessage,
+  Configuration,
+  OpenAIApi,
+} from 'openai-edge';
 import { z } from 'zod';
 import {
   generateBasicTSCode,
@@ -105,25 +108,30 @@ export default async function handler(
   res: NextApiResponse,
 ) {
   const body = req.body;
-  const { messages } = JSON.parse(body);
+  const { userRequest } = JSON.parse(body);
 
   const openai = new OpenAIApi(conf);
 
   try {
+    const messages: ChatCompletionRequestMessage[] = [
+      {
+        role: 'system',
+        content: systemPrompt,
+      },
+      {
+        role: 'user',
+        content: userRequest,
+      },
+    ];
+
     const chatWithFunction = await openai.createChatCompletion({
       model: 'gpt-3.5-turbo-16k-0613',
       stream: true,
       temperature: 0,
-      messages: [
-        {
-          role: 'system',
-          content: systemPrompt,
-        },
-        ...messages,
-      ],
+      messages,
       functions,
       function_call: { name: 'generate_basic_typescript' },
-    } as any);
+    });
 
     const stream = OpenAIStream(chatWithFunction, {
       experimental_onFunctionCall: async (
@@ -138,6 +146,7 @@ export default async function handler(
             args.userRequest,
           );
           const newMessages = createFunctionCallMessages(basicTypescriptCode);
+          // TODO: fixme - convert CreateMessage to ChatCompletionRequestMessage
           const function1 = await openai.createChatCompletion({
             messages: [...messages, ...newMessages],
             stream: true,
@@ -157,6 +166,7 @@ export default async function handler(
           });
           console.log(zipperAppletVersion);
           const newMessages = createFunctionCallMessages(zipperAppletVersion);
+          // TODO: fixme - convert CreateMessage to ChatCompletionRequestMessage
           const function2 = await openai.createChatCompletion({
             messages: [...messages, ...newMessages],
             stream: true,
@@ -169,17 +179,7 @@ export default async function handler(
 
         if (name === 'audit_zipper_version') {
           const args = auditTSCodeArgsSchema.parse(functionArgs);
-          const auditedCode = await auditTSCode(args.code);
-          const newMessages = createFunctionCallMessages(auditedCode);
-          // Should I call the orchestrator or just return the code?
-          const function3 = await openai.createChatCompletion({
-            messages: [...messages, ...newMessages],
-            stream: true,
-            model: 'gpt-3.5-turbo-16k-0613',
-            functions,
-            // function_call: { name: 'audit_zipper_version' },
-          });
-          return function3;
+          return auditTSCode(args.code);
         }
       },
     });
@@ -189,42 +189,6 @@ export default async function handler(
     console.error(error);
     res.status(500).json({ message: 'Something went wrong' });
   }
-}
-
-const fileWithTsExtensionSchema = z
-  .string()
-  .refine((value) => value.endsWith('.ts'));
-
-// Maybe this will be called in the clientside now that we're sending a stream?
-function groupCodeByFilename(inputs: string): AICodeOutput[] {
-  const output: AICodeOutput[] = [];
-  const lines = inputs.split('\n');
-
-  let currentFilename: AICodeOutput['filename'] = 'main.ts';
-  let currentCode = '';
-
-  for (const line of lines) {
-    if (line.trim().startsWith('// file:')) {
-      if (currentCode !== '') {
-        output.push({ filename: currentFilename, code: currentCode });
-        currentCode = '';
-      }
-      let file = line.trim().replace('// file:', '').trim();
-      if (!fileWithTsExtensionSchema.safeParse(file)) {
-        file += '.ts';
-      }
-      currentFilename = file as AICodeOutput['filename'];
-    } else {
-      currentCode += line + '\n';
-    }
-  }
-
-  // Add the last code block
-  if (currentCode !== '') {
-    output.push({ filename: currentFilename, code: currentCode });
-  }
-
-  return output;
 }
 
 const auditCodePrompt = `
@@ -243,7 +207,7 @@ const auditTSCodeArgsSchema = z.object({
 export async function auditTSCode(code: string) {
   const openai = new OpenAIApi(conf);
 
-  const chatWithFunction = await openai.createChatCompletion({
+  return openai.createChatCompletion({
     model: 'gpt-3.5-turbo-16k-0613',
     messages: [
       {
@@ -255,9 +219,5 @@ export async function auditTSCode(code: string) {
         content: code,
       },
     ],
-  } as any);
-
-  const data = await chatWithFunction.json();
-
-  return JSON.stringify({ data: data?.choices[0]?.message });
+  });
 }

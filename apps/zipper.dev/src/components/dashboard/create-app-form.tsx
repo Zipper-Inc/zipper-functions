@@ -43,6 +43,7 @@ import { getEditAppletLink, getZipperApiUrl } from '@zipper/utils';
 import { ChatGPTMessage } from '~/pages/api/ai/generate/applet';
 import { AICodeOutput } from '@zipper/types';
 import { useEditorContext } from '../context/editor-context';
+import { z } from 'zod';
 
 const getDefaultCreateAppFormValues = () => ({
   name: generateDefaultSlug(),
@@ -59,44 +60,14 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
   const { setActive } = useOrganizationList();
   const utils = trpc.useContext();
   const router = useRouter();
-  const [messages, setMessages] = useState<ChatGPTMessage[]>([]);
   const [isSending, setIsSending] = useState(false);
 
   const addScript = trpc.useMutation('script.add');
   const { scripts } = useEditorContext();
 
-  const getZipperCode = async ({
-    message,
-    basicCode,
-  }: {
-    message: string;
-    basicCode: string;
-  }) => {
-    const response = await fetch(
-      `${getZipperApiUrl()}/ai/zipper-version/applet`,
-      {
-        method: 'POST',
-        body: JSON.stringify({
-          userRequest: message,
-          rawTypescriptCode: basicCode,
-        }),
-      },
-    );
-
-    // Handle response
-    const data = await response.json();
-
-    if (data.error) {
-      console.log(data.error);
-      throw new Error('Failed to generate Zipper code');
-    }
-
-    return data as { raw: string; groupedByFilename: AICodeOutput[] };
-  };
-
   // getBasicCode implementation
-  const getBasicCode = async (message: string): Promise<ChatGPTMessage> => {
-    const response = await fetch(`${getZipperApiUrl()}/ai/generate/applet`, {
+  const getZipperAICode = async (message: string): Promise<ChatGPTMessage> => {
+    const response = await fetch(`${getZipperApiUrl()}/ai/functions/`, {
       method: 'POST',
       body: JSON.stringify({
         userRequest: message,
@@ -113,26 +84,17 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
   };
 
   const sendMessageHandler = async (message: string) => {
-    // Existing logic to build messages
-    const messagesToSend: ChatGPTMessage[] = [
-      ...messages,
-      { role: 'user', content: message },
-    ];
-
     setIsSending(true);
 
     try {
-      const basicCodeResponse = await getBasicCode(message);
-      const basicCode = basicCodeResponse.content;
-      const zipperCode = await getZipperCode({ message, basicCode });
+      const code = await getZipperAICode(message);
+      console.log('ai code', code);
 
-      setMessages([
-        ...messagesToSend,
-        { role: 'assistant', content: basicCode },
-        { role: 'assistant', content: zipperCode.raw },
-      ]);
-
-      return zipperCode;
+      // TODO: type getZipperAICode
+      return {
+        groupedByFilename: groupCodeByFilename(code),
+        raw: code,
+      };
     } catch (error) {
       console.log(error);
     } finally {
@@ -350,7 +312,7 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
                       isPrivate: !isPublic,
                       requiresAuthToRun,
                       organizationId: selectedOrganizationId,
-                      aiCode: mainCode,
+                      // aiCode: mainCode || '',
                     },
                     {
                       onSuccess: async (applet) => {
@@ -407,3 +369,39 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
     </Box>
   );
 };
+
+const fileWithTsExtensionSchema = z
+  .string()
+  .refine((value) => value.endsWith('.ts'));
+
+// Maybe this will be called in the clientside now that we're sending a stream?
+function groupCodeByFilename(inputs: string): AICodeOutput[] {
+  const output: AICodeOutput[] = [];
+  const lines = inputs.split('\n');
+
+  let currentFilename: AICodeOutput['filename'] = 'main.ts';
+  let currentCode = '';
+
+  for (const line of lines) {
+    if (line.trim().startsWith('// file:')) {
+      if (currentCode !== '') {
+        output.push({ filename: currentFilename, code: currentCode });
+        currentCode = '';
+      }
+      let file = line.trim().replace('// file:', '').trim();
+      if (!fileWithTsExtensionSchema.safeParse(file)) {
+        file += '.ts';
+      }
+      currentFilename = file as AICodeOutput['filename'];
+    } else {
+      currentCode += line + '\n';
+    }
+  }
+
+  // Add the last code block
+  if (currentCode !== '') {
+    output.push({ filename: currentFilename, code: currentCode });
+  }
+
+  return output;
+}
