@@ -1,9 +1,9 @@
 {
-  "index": "Introduction",
-  "getting-started": "Getting Started",
+  "index": "Quick Start",
+  "introduction": "Introduction",
   "building-applets": "Building Applets",
   "connecting-to-other-tools": "Connectors",
-  "running-applets": "Running Applets",
+  "running-an-applet": "Running an Applet",
   "advanced": "Advanced",
   "contact": {
     "title": "Contact ↗",
