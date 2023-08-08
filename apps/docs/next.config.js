@@ -4,6 +4,10 @@ const withNextra = require('nextra')({
 });
 
 module.exports = withNextra({
+  output: 'export',
+  images: {
+    unoptimized: true,
+  },
   reactStrictMode: true,
   transpilePackages: [
     '@zipper/framework',
