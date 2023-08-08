@@ -66,14 +66,22 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
   const { scripts } = useEditorContext();
 
   // getBasicCode implementation
-  const getZipperAICode = async (message: string): Promise<ChatGPTMessage> => {
+  const getZipperAICode = async (
+    userRequest: string,
+  ): Promise<ChatGPTMessage> => {
     const response = await fetch(`${getZipperApiUrl()}/ai/functions/`, {
       method: 'POST',
       body: JSON.stringify({
-        userRequest: message,
+        messages: [
+          {
+            role: 'user',
+            content: userRequest,
+          },
+        ],
       }),
     });
 
+    console.log('<AI CODE RESPONSE>', response);
     const data = await response.json();
 
     if (data.error) {

@@ -1,10 +1,6 @@
 import { OpenAIStream, streamToResponse } from 'ai';
 import { NextApiRequest, NextApiResponse } from 'next';
-import {
-  ChatCompletionRequestMessage,
-  Configuration,
-  OpenAIApi,
-} from 'openai-edge';
+import { Configuration, OpenAIApi } from 'openai-edge';
 import { z } from 'zod';
 import {
   generateBasicTSCode,
@@ -108,27 +104,22 @@ export default async function handler(
   res: NextApiResponse,
 ) {
   const body = req.body;
-  const { userRequest } = JSON.parse(body);
+  const { messages } = JSON.parse(body);
 
   const openai = new OpenAIApi(conf);
 
   try {
-    const messages: ChatCompletionRequestMessage[] = [
-      {
-        role: 'system',
-        content: systemPrompt,
-      },
-      {
-        role: 'user',
-        content: userRequest,
-      },
-    ];
-
     const chatWithFunction = await openai.createChatCompletion({
       model: 'gpt-3.5-turbo-16k-0613',
       stream: true,
       temperature: 0,
-      messages,
+      messages: [
+        {
+          role: 'system',
+          content: systemPrompt,
+        },
+        ...messages,
+      ],
       functions,
       function_call: { name: 'generate_basic_typescript' },
     });
@@ -146,35 +137,32 @@ export default async function handler(
             args.userRequest,
           );
           const newMessages = createFunctionCallMessages(basicTypescriptCode);
-          // TODO: fixme - convert CreateMessage to ChatCompletionRequestMessage
-          const function1 = await openai.createChatCompletion({
+          return openai.createChatCompletion({
             messages: [...messages, ...newMessages],
             stream: true,
             model: 'gpt-3.5-turbo-16k-0613',
             functions,
             function_call: { name: 'generate_zipper_version' },
           });
-          return function1;
         }
 
         if (name === 'generate_zipper_version') {
           const args =
             generateZipperAppletVersionArgsSchema.parse(functionArgs);
+
           const zipperAppletVersion = await generateZipperAppletVersion({
             userRequest: args.userRequest,
             rawTypescriptCode: args.rawTypescriptCode,
           });
-          console.log(zipperAppletVersion);
+
           const newMessages = createFunctionCallMessages(zipperAppletVersion);
-          // TODO: fixme - convert CreateMessage to ChatCompletionRequestMessage
-          const function2 = await openai.createChatCompletion({
+          return openai.createChatCompletion({
             messages: [...messages, ...newMessages],
             stream: true,
             model: 'gpt-3.5-turbo-16k-0613',
             functions,
             function_call: { name: 'audit_zipper_version' },
           });
-          return function2;
         }
 
         if (name === 'audit_zipper_version') {

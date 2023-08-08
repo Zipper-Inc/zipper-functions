@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { Configuration, OpenAIApi } from 'openai';
+import { Configuration, OpenAIApi } from 'openai-edge';
 import { z } from 'zod';
 
 const conf = new Configuration({
@@ -65,7 +65,9 @@ export default async function handler(
     ],
   } as any);
 
-  res.status(200).json({ message: chatWithFunction.data.choices[0]?.message });
+  const data = await chatWithFunction.json();
+
+  res.status(200).json({ message: data.choices[0]?.message });
 }
 
 export const generateBasicTSCodeArgsSchema = z.object({
@@ -87,7 +89,8 @@ export async function generateBasicTSCode(userRequest: string) {
         content: userRequest,
       },
     ],
-  } as any);
+  });
+  const data = await chatWithFunction.json();
 
-  return JSON.stringify({ data: chatWithFunction.data.choices[0]?.message });
+  return JSON.stringify({ data: data.choices[0]?.message });
 }
