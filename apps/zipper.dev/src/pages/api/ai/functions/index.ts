@@ -67,7 +67,7 @@ const functions: ChatGPTFunction[] = [
           description: 'The user request to create a function for',
         },
       },
-      required: ['rawTypescriptCode'],
+      required: ['rawTypescriptCode', 'userRequest'],
     },
   },
   {
@@ -110,7 +110,7 @@ export default async function handler(
 
   try {
     const chatWithFunction = await openai.createChatCompletion({
-      model: 'gpt-3.5-turbo-16k-0613',
+      model: 'gpt-4-0613',
       stream: true,
       temperature: 0,
       messages: [
@@ -140,7 +140,7 @@ export default async function handler(
           return openai.createChatCompletion({
             messages: [...messages, ...newMessages],
             stream: true,
-            model: 'gpt-3.5-turbo-16k-0613',
+            model: 'gpt-4-0613',
             functions,
             function_call: { name: 'generate_zipper_version' },
           });
@@ -159,7 +159,7 @@ export default async function handler(
           return openai.createChatCompletion({
             messages: [...messages, ...newMessages],
             stream: true,
-            model: 'gpt-3.5-turbo-16k-0613',
+            model: 'gpt-4-0613',
             functions,
             function_call: { name: 'audit_zipper_version' },
           });
@@ -196,7 +196,7 @@ export async function auditTSCode(code: string) {
   const openai = new OpenAIApi(conf);
 
   return openai.createChatCompletion({
-    model: 'gpt-3.5-turbo-16k-0613',
+    model: 'gpt-4-0613',
     messages: [
       {
         role: 'system',
