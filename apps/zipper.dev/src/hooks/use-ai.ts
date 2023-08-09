@@ -1,147 +1,62 @@
 import { AICodeOutput } from '@zipper/types';
-import { getZipperApiUrl } from '@zipper/utils';
-import { ChatRequest, FunctionCallHandler, nanoid, CreateMessage } from 'ai';
-
-import { useChat } from 'ai/react';
-import type { AiFunctionTypes } from '~/pages/api/ai/functions';
-
-import type { ChatGPTMessage } from '~/pages/api/ai/generate/applet';
+import { useCompletion } from 'ai/react';
+import { useCallback } from 'react';
+import { z } from 'zod';
 
 export const useAI = () => {
-  const { messages, input, handleInputChange, handleSubmit } = useChat({
+  const { complete, isLoading } = useCompletion({
     api: '/api/ai/functions',
-    experimental_onFunctionCall: functionCallHandler,
   });
 
-  return true;
-};
+  const generateCode = useCallback(async (userRequest: string) => {
+    const code = await complete(userRequest);
+    // FIXME: Code from AI is coming back as undefined
+    console.log('Code from AI', code);
 
-const functionCallHandler: FunctionCallHandler = async (
-  chatMessages,
-  functionCall,
-) => {
-  if (functionCall.name === 'generate_basic_typescript') {
-    if (!functionCall.arguments) return;
+    if (!code) {
+      console.error('No code returned from AI');
+      return;
+    }
+    return { groupedByFilename: groupCodeByFilename(code), raw: code };
+  }, []);
 
-    const args: { userRequest: string } = JSON.parse(functionCall.arguments);
-    const basicCodeResponse = await getBasicCode(args.userRequest);
-
-    const functionResponse: ChatRequest = {
-      messages: [
-        ...chatMessages,
-        {
-          id: nanoid(),
-          name: 'generate_basic_typescript',
-          role: 'function' as const,
-          content: basicCodeResponse.content,
-        },
-      ],
-    };
-
-    return functionResponse;
-  }
-
-  if (functionCall.name === 'generate_zipper_version') {
-    if (!functionCall.arguments) return;
-
-    const args: {
-      userRequest: string;
-      rawTypescriptCode: string;
-    } = JSON.parse(functionCall.arguments);
-
-    const zipperCode = await getZipperCode(args);
-
-    const functionResponse: ChatRequest = {
-      messages: [
-        ...chatMessages,
-        {
-          id: nanoid(),
-          name: 'generate_zipper_version',
-          role: 'function' as const,
-          content: zipperCode.raw,
-        },
-      ],
-    };
-
-    return functionResponse;
-  }
-
-  if (functionCall.name === 'audit_zipper_version') {
-  }
-};
-
-const getZipperCode = async ({
-  userRequest,
-  rawTypescriptCode,
-}: {
-  userRequest: string;
-  rawTypescriptCode: string;
-}) => {
-  const response = await fetch(
-    `${getZipperApiUrl()}/ai/zipper-version/applet`,
-    {
-      method: 'POST',
-      body: JSON.stringify({
-        userRequest,
-        rawTypescriptCode,
-      }),
-    },
-  );
-
-  // Handle response
-  const data = await response.json();
-
-  if (data.error) {
-    console.log(data.error);
-    throw new Error('Failed to generate Zipper code');
-  }
-
-  return data as { raw: string; groupedByFilename: AICodeOutput[] };
-};
-
-type OpenAIFunctionOutput = {
-  role: 'assistant';
-  content: null;
-  function_call?: {
-    name: AiFunctionTypes;
-    arguments: string;
+  return {
+    generateCode,
+    isLoading,
   };
 };
 
-const getOpenAIFunction = async (
-  messages: ChatGPTMessage[],
-): Promise<OpenAIFunctionOutput> => {
-  const response = await fetch(`${getZipperApiUrl()}/ai/functions`, {
-    method: 'POST',
-    body: JSON.stringify({
-      messages,
-    }),
-  });
+const fileWithTsExtensionSchema = z
+  .string()
+  .refine((value) => value.endsWith('.ts'));
 
-  console.log(messages);
-  const data = await response.json();
+function groupCodeByFilename(inputs: string): AICodeOutput[] {
+  const output: AICodeOutput[] = [];
+  const lines = inputs.split('\n');
 
-  if (data.error) {
-    throw new Error(data.error);
+  let currentFilename: AICodeOutput['filename'] = 'main.ts';
+  let currentCode = '';
+
+  for (const line of lines) {
+    if (line.trim().startsWith('// file:')) {
+      if (currentCode !== '') {
+        output.push({ filename: currentFilename, code: currentCode });
+        currentCode = '';
+      }
+      let file = line.trim().replace('// file:', '').trim();
+      if (!fileWithTsExtensionSchema.safeParse(file)) {
+        file += '.ts';
+      }
+      currentFilename = file as AICodeOutput['filename'];
+    } else {
+      currentCode += line + '\n';
+    }
   }
 
-  return data.message;
-};
-
-// getBasicCode implementation
-const getBasicCode = async (message: string): Promise<CreateMessage> => {
-  const response = await fetch(`${getZipperApiUrl()}/ai/generate/applet`, {
-    method: 'POST',
-    body: JSON.stringify({
-      userRequest: message,
-    }),
-  });
-
-  const data = await response.json();
-
-  if (data.error) {
-    throw new Error(data.error);
+  // Add the last code block
+  if (currentCode !== '') {
+    output.push({ filename: currentFilename, code: currentCode });
   }
 
-  return data.message;
-};
+  return output;
+}

@@ -1,4 +1,4 @@
-import { OpenAIStream, streamToResponse } from 'ai';
+import { CreateMessage, OpenAIStream, streamToResponse } from 'ai';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { Configuration, OpenAIApi } from 'openai-edge';
 import { z } from 'zod';
@@ -104,9 +104,16 @@ export default async function handler(
   res: NextApiResponse,
 ) {
   const body = req.body;
-  const { messages } = JSON.parse(body);
+  const { prompt } = JSON.parse(body);
 
   const openai = new OpenAIApi(conf);
+
+  const messages = [
+    {
+      role: 'user',
+      content: prompt,
+    },
+  ] as any;
 
   try {
     const chatWithFunction = await openai.createChatCompletion({
