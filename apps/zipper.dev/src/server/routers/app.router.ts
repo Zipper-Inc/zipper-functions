@@ -28,9 +28,8 @@ import isCodeRunnable from '~/utils/is-code-runnable';
 import { generateAccessToken } from '~/utils/jwt-utils';
 import { getToken } from 'next-auth/jwt';
 import { buildAndStoreApplet } from '~/utils/eszip-build-applet';
-import s3Client from '../s3';
 import JSZip from 'jszip';
-import { PutObjectCommand } from '@aws-sdk/client-s3';
+import { storeVersionCode } from '../utils/r2.utils';
 
 const defaultSelect = Prisma.validator<Prisma.AppSelect>()({
   id: true,
@@ -891,14 +890,16 @@ export const appRouter = createRouter()
           zip.file(s.filename, JSON.stringify(s));
         });
 
+        const version = getAppVersionFromHash(hash);
+
+        if (!version) throw new Error('Invalid hash');
+
         zip.generateAsync({ type: 'uint8array' }).then((content) => {
-          s3Client.send(
-            new PutObjectCommand({
-              Bucket: process.env.CLOUDFLARE_APPLET_SRC_BUCKET_NAME,
-              Key: `${app.id}/${getAppVersionFromHash(hash)}.zip`,
-              Body: content,
-            }),
-          );
+          storeVersionCode({
+            appId: app.id,
+            version,
+            zip: content,
+          });
         });
       }
 
