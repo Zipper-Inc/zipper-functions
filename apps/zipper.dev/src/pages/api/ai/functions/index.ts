@@ -1,11 +1,7 @@
-import {
-  //  CreateMessage,
-  OpenAIStream,
-  streamToResponse,
-} from 'ai';
+import { OpenAIStream, streamToResponse } from 'ai';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { Configuration, OpenAIApi } from 'openai-edge';
-// import { z } from 'zod';
+import { z } from 'zod';
 import {
   generateBasicTSCode,
   generateBasicTSCodeArgsSchema,
@@ -74,21 +70,21 @@ const functions: ChatGPTFunction[] = [
       required: ['rawTypescriptCode', 'userRequest'],
     },
   },
-  // {
-  //   name: 'audit_zipper_version',
-  //   description:
-  //     'Make sure that the code is valid, and everything needed to run is there',
-  //   parameters: {
-  //     type: 'object',
-  //     properties: {
-  //       code: {
-  //         type: 'string',
-  //         description: 'The code to format',
-  //       },
-  //     },
-  //     required: ['code'],
-  //   },
-  // },
+  {
+    name: 'audit_zipper_version',
+    description:
+      'Make sure that the code is valid, and everything needed to run is there',
+    parameters: {
+      type: 'object',
+      properties: {
+        code: {
+          type: 'string',
+          description: 'The code to format',
+        },
+      },
+      required: ['code'],
+    },
+  },
 ];
 
 const systemPrompt = `
@@ -99,6 +95,7 @@ const systemPrompt = `
     3. audit_zipper_version: This function takes the formatted code and makes sure that it is valid and everything needed to run is there.
     You must always execute the functions in the order above.
     All functions must be executed.
+    You must not remove anything from the user request. Leave it as it is, just pass it to the function.
     You should always only respond with the desired code, no additional text.
     You must not return any code before all functions have been executed.
 `;
@@ -108,16 +105,9 @@ export default async function handler(
   res: NextApiResponse,
 ) {
   const body = req.body;
-  const { prompt } = JSON.parse(body);
+  const { messages } = JSON.parse(body);
 
   const openai = new OpenAIApi(conf);
-
-  const messages = [
-    {
-      role: 'user',
-      content: prompt,
-    },
-  ] as any;
 
   try {
     const chatWithFunction = await openai.createChatCompletion({
@@ -152,6 +142,7 @@ export default async function handler(
             messages: [...messages, ...newMessages],
             stream: true,
             model: 'gpt-4-0613',
+            temperature: 0,
             functions,
             function_call: { name: 'generate_zipper_version' },
           });
@@ -172,22 +163,24 @@ export default async function handler(
             stream: true,
             model: 'gpt-4-0613',
             functions,
-            // function_call: { name: 'audit_zipper_version' },
+            temperature: 0,
+            function_call: { name: 'audit_zipper_version' },
           });
         }
 
-        //   if (name === 'audit_zipper_version') {
-        //     const args = auditTSCodeArgsSchema.parse(functionArgs);
-        //     const audited = await auditTSCode(args.code);
-        //     const newMessages = createFunctionCallMessages(audited);
+        if (name === 'audit_zipper_version') {
+          const args = auditTSCodeArgsSchema.parse(functionArgs);
+          const audited = await auditTSCode(args.code);
+          const newMessages = createFunctionCallMessages(audited);
 
-        //     return openai.createChatCompletion({
-        //       messages: [...messages, ...newMessages],
-        //       stream: true,
-        //       model: 'gpt-3.5-turbo-16k-0613',
-        //       functions,
-        //     });
-        //   }
+          return openai.createChatCompletion({
+            messages: [...messages, ...newMessages],
+            stream: true,
+            model: 'gpt-4-0613',
+            temperature: 0,
+            functions,
+          });
+        }
       },
     });
 
@@ -198,36 +191,33 @@ export default async function handler(
   }
 }
 
-// const auditCodePrompt = `
-//     You are a high skilled typescript developer, your task is to take the code and make sure that it is valid and everything needed to run is there.
-//     You should always only respond with the desired code, no additional text.
-//     Check if all types got defined and are correct.
-//     Check if all functions got defined and are correct.
-//     If you can group types and functions into files, do so.
-//     If types are similar, group them into a shared file.
-//     DONT GROUP ZIPPER TYPES.
-//     Output format: Only code, no additional text.
-// `;
+const auditCodePrompt = `
+  You are a high skilled typescript developer, your task is to take the code and make sure that it is valid and everything needed to run is there.
+  You should always only respond with the desired code, no additional text.
+  Check if all types got defined and are correct.
+  Check if all functions got defined and are correct.
+  DONT. IMPORT. STUFF. FROM. ZIPPER.
+`;
 
-// const auditTSCodeArgsSchema = z.object({
-//   code: z.string(),
-// });
+const auditTSCodeArgsSchema = z.object({
+  code: z.string(),
+});
 
-// export async function auditTSCode(code: string) {
-//   const openai = new OpenAIApi(conf);
-//   const completation = await openai.createChatCompletion({
-//     model: 'gpt-3.5-turbo-16k-0613',
-//     messages: [
-//       {
-//         role: 'system',
-//         content: auditCodePrompt,
-//       },
-//       {
-//         role: 'user',
-//         content: code,
-//       },
-//     ],
-//   });
-//   const data = await completation.json();
-//   return JSON.stringify({ data: data.choices[0]?.message });
-// }
+export async function auditTSCode(code: string) {
+  const openai = new OpenAIApi(conf);
+  const completation = await openai.createChatCompletion({
+    model: 'gpt-3.5-turbo-16k-0613',
+    messages: [
+      {
+        role: 'system',
+        content: auditCodePrompt,
+      },
+      {
+        role: 'user',
+        content: code,
+      },
+    ],
+  });
+  const data = await completation.json();
+  return JSON.stringify({ data: data.choices[0]?.message });
+}

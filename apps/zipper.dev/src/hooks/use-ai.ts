@@ -1,22 +1,22 @@
 import { AICodeOutput } from '@zipper/types';
-import { useCompletion } from 'ai/react';
+import { useChat } from 'ai/react';
 import { useCallback } from 'react';
 import { z } from 'zod';
 
 export const useAI = () => {
-  const { complete, isLoading } = useCompletion({
+  const { append, isLoading } = useChat({
     api: '/api/ai/functions',
   });
 
   const generateCode = useCallback(async (userRequest: string) => {
-    const code = await complete(userRequest);
-    // FIXME: Code from AI is coming back as undefined
-    console.log('Code from AI', code);
-
-    if (!code) {
+    const gptOutput = await append({ role: 'user', content: userRequest });
+    if (!gptOutput) {
       console.error('No code returned from AI');
       return;
     }
+    const code = grabCodeInsideBackticks(gptOutput);
+    console.log('Code', code);
+
     return { groupedByFilename: groupCodeByFilename(code), raw: code };
   }, []);
 
@@ -59,4 +59,12 @@ function groupCodeByFilename(inputs: string): AICodeOutput[] {
   }
 
   return output;
+}
+
+function grabCodeInsideBackticks(raw: string) {
+  const lines = raw.split('\n');
+  const firstBacktickLine = lines.findIndex((line) => line.startsWith('```'));
+  const lastBacktickLine = lines.lastIndexOf('```');
+  const code = lines.slice(firstBacktickLine + 1, lastBacktickLine).join('\n');
+  return code;
 }

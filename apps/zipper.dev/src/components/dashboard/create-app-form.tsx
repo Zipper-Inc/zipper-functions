@@ -108,7 +108,6 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
     appSlugQuery.isFetched && slug && slug.length >= MIN_SLUG_LENGTH;
   const isDisabled = slugExists || slug.length < MIN_SLUG_LENGTH;
 
-  const duration = 1500;
   const toast = useToast();
 
   return (
@@ -303,6 +302,7 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
                           );
                         }
 
+                        setSubmitting(false);
                         toast({
                           title: 'Applet created',
                           status: 'success',
