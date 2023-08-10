@@ -1,0 +1,46 @@
+import { Callout } from 'nextra/components';
+import Features from '../components/features';
+import { Icon } from '@chakra-ui/react';
+
+# Zipper Quickstart
+
+<Callout type="info" emoji="👾">
+  **Zipper is currently in private beta.** If you’re interested in trying it
+  out, please [sign up for the waitlist](https://zipper.works). Things might
+  break but mostly won't.
+</Callout>
+
+## What you need to know
+
+- Zipper is a platform for turning Typescript functions into web services, with UI and auth built for you.
+- Functions are encapsulated in **Applets**, small forkable packages responsible for accomplishing a specific task.
+- Applets are written in [Typescript](https://www.typescriptlang.org/docs/) and runs on [Deno](https://deno.land), an alternative runtime for JavaScript.
+- Every applet gets a working URL that you can call from anywhere, anytime.
+
+Want to learn by example? Check out the applets below:
+
+<Features features={[{ name: 'Hello World', description: 'testing' }]} />
+
+## How Zipper works
+
+First things first, Zipper is an entirely online platform. There are no local installations or command line tools. You can write, deploy, and share applets entirely from your browser.
+
+Each applet is made up of a collection of Typescript files. There's always a `main.ts` file that serves as the entrypoint to your applet. Any other Typescript file that exports a function called `handler` will be treated as a route.
+
+Every time a route is hit, we run the `handler` function associated with that route. We automatically render whatever the handler function returns for you. If you need to collect information from the user, just add inputs to your function and we'll render a form to collect the inputs that get sent to the function.
+
+#### Other applet functionality
+
+- **Authentication**: Applets can piggyback off of Zipper's user authentication to limit who can access an applet.
+- **UI Framework**: In most cases, Zipper can render the UI for your function's output automatically. If you need more control, you can use our UI framework to build more complex interfaces.
+- **API endpoints**: Send GET & POST requests to your applet's paths to trigger their handler functions.
+- **Import packages via URL**: No need for a package.json file. Just import packages directly from their URLs.
+- **Built-in storage**: Store data in your applet's storage and access it from any function within the applet.
+
+## Platform Features
+
+- Forking
+- Automatic versioning
+- Sharing
+- Logs
+- Scheduling

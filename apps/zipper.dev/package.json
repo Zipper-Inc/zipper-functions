@@ -94,7 +94,7 @@
     "monaco-editor-workers": "^0.34.2",
     "monaco-jsx-highlighter": "^2.0.4",
     "ndjson": "^2.0.0",
-    "next": "^13.2.0",
+    "next": "^13.4.13",
     "next-absolute-url": "^1.2.2",
     "next-auth": "^4.22.1",
     "node-fetch": "2.6.7",
