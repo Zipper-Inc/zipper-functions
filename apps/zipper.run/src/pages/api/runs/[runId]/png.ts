@@ -25,7 +25,12 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
-  const host = req.headers['x-forwarded-host'] || req.headers.host;
+  let host: string;
+  if (req.headers['x-forwarded-host']) {
+    host = req.headers['x-forwarded-host'] as string;
+  } else {
+    host = req.headers.host as string;
+  }
   const proto = process.env.NODE_ENV === 'production' ? 'https' : 'http';
   const { runId } = req.query as { runId: string };
   const path = `/run/history/${runId}`;
@@ -33,9 +38,72 @@ export default async function handler(
 
   const runUrl = `${proto}://${host}${path}`;
 
-  const selector = '[data-function-output="smart"]';
+  // validate subdomain
+  const subdomain = getValidSubdomain(host);
+  if (!subdomain) return { notFound: true };
+
+  const { token } = await getZipperAuth(req);
+
+  // grab the app if it exists
+  const result = await getRunInfo({
+    subdomain,
+    token,
+    runId: req.query.runId as string,
+    tempUserId: req.cookies[ZIPPER_TEMP_USER_ID_COOKIE_NAME],
+  });
+
+  if (!result.ok) {
+    if (result.error === 'UNAUTHORIZED') return { props: { statusCode: 401 } };
+    return { notFound: true };
+  }
+
+  const appId = result.data.app.id;
+  const s3Key = `${appId}/${runId}.png`;
+  const objectParams = {
+    Bucket: process.env.CLOUDFLARE_SCREENSHOTS_BUCKET_NAME,
+    Key: s3Key,
+  };
+
+  async function getSignedUrlForScreenshot() {
+    return await getSignedUrl(
+      // @ts-ignore-next-line
+      s3Client,
+      new GetObjectCommand({
+        ...objectParams,
+        ResponseContentDisposition: `inline; filename="zipper-run-${runId}.png"`,
+      }),
+      { expiresIn: 3600 },
+    );
+  }
+
+  // check for existing screenshot on s3
+  try {
+    await s3Client.send(new HeadObjectCommand(objectParams));
+    return res.redirect(await getSignedUrlForScreenshot());
+  } catch (e) {
+    // no screenshot found, continue
+    console.log('No screenshot found, continuing');
+  }
+
+  // set up Playwright
   const browser = await chromium.launch();
   const context = await browser.newContext({ deviceScaleFactor: 2 });
+  const { __zipper_token, __zipper_temp_user_id } = req.cookies;
+
+  await context.addCookies([
+    {
+      name: '__zipper_token',
+      value: __zipper_token as string,
+      domain: host,
+      path: '/',
+    },
+    {
+      name: '__zipper_temp_user_id',
+      value: __zipper_temp_user_id as string,
+      domain: host,
+      path: '/',
+    },
+  ]);
   const page = await context.newPage();
   await page.setViewportSize({
     width: 390, //1920,
@@ -53,67 +121,28 @@ export default async function handler(
       await browser.close();
       res.status(404).end();
     } else {
+      console.log('Page loaded, taking screenshot');
+
+      const selector = '[data-function-output="smart"]';
       const output = page.locator(selector);
       await output.waitFor();
       const buffer = await output.screenshot({ scale: 'device' });
-      await browser.close();
 
-      // validate subdomain
-      const { host } = req.headers;
-
-      // validate subdomain
-      const subdomain = getValidSubdomain(host);
-      if (!subdomain) return { notFound: true };
-
-      const { token } = await getZipperAuth(req);
-
-      // grab the app if it exists
-      const result = await getRunInfo({
-        subdomain,
-        token,
-        runId,
-        tempUserId: req.cookies[ZIPPER_TEMP_USER_ID_COOKIE_NAME],
-      });
-      if (result.ok) {
-        const appId = result.data.app.id;
-        const s3Key = `${appId}/${runId}.png`;
-        const objectParams = {
-          Bucket: process.env.CLOUDFLARE_SCREENSHOTS_BUCKET_NAME,
-          Key: s3Key,
-        };
-
-        // check for existing screenshot on s3
-        try {
-          await s3Client.send(new HeadObjectCommand(objectParams));
-        } catch (e) {
-          // upload to s3
-          await s3Client.send(
-            new PutObjectCommand({
-              ...objectParams,
-              Body: buffer,
-              ContentType: 'image/png',
-            }),
-          );
-        }
-
-        const url = await getSignedUrl(
-          // @ts-ignore-next-line
-          s3Client,
-          new GetObjectCommand({
-            ...objectParams,
-            ResponseContentDisposition: `inline; filename="zipper-run-${runId}.png"`,
-          }),
-          { expiresIn: 3600 },
-        );
-
-        console.log(url);
-
-        return res.redirect(302, url);
-      }
+      console.log('Screenshot taken, uploading to s3');
+      // upload to s3
+      await s3Client.send(
+        new PutObjectCommand({
+          ...objectParams,
+          Body: buffer,
+          ContentType: 'image/png',
+        }),
+      );
+      return res.redirect(await getSignedUrlForScreenshot());
     }
   } catch (e) {
     console.error(e);
-    await browser.close();
     res.status(500).end();
+  } finally {
+    await browser.close();
   }
 }
