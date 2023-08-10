@@ -10,14 +10,14 @@ export default async function handler(
 ) {
   const { query } = req;
 
-  const { appId, version, filename } = query as {
-    appId: string;
+  const { slug, version, filename } = query as {
+    slug: string;
     version: string;
     filename: string;
   };
 
   const app = await prisma.app.findFirst({
-    where: { id: appId, isPrivate: false },
+    where: { slug, isPrivate: false },
     include: { scripts: true },
   });
 
