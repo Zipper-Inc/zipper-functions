@@ -1,4 +1,5 @@
 import { AICodeOutput } from '@zipper/types';
+import { NextApiRequest, NextApiResponse } from 'next';
 import { NextResponse } from 'next/server';
 import { Configuration, OpenAIApi } from 'openai';
 import { z } from 'zod';
@@ -7,7 +8,7 @@ const conf = new Configuration({
   apiKey: process.env.OPENAI,
 });
 
-export async function generateZipperAppletVersion({
+async function generateZipperAppletVersion({
   userRequest,
   rawTypescriptCode,
 }: {
@@ -583,7 +584,7 @@ declare function Dropdown<I = Zipper.Inputs>(
   const openai = new OpenAIApi(conf);
   try {
     const completion = await openai.createChatCompletion({
-      model: 'gpt-3.5-turbo-16k-0613',
+      model: 'gpt-4-0613',
       messages: [
         {
           role: 'system',
@@ -656,8 +657,11 @@ function groupCodeByFilename(inputs: string): AICodeOutput[] {
   return output;
 }
 
-export async function POST(request: Request) {
-  const { userRequest, rawTypescriptCode } = await request.json();
+export default async function handler(
+  request: NextApiRequest,
+  response: NextApiResponse,
+) {
+  const { userRequest, rawTypescriptCode } = JSON.parse(request.body);
   const zipperAppletVersion = await generateZipperAppletVersion({
     userRequest,
     rawTypescriptCode,
@@ -676,7 +680,7 @@ export async function POST(request: Request) {
     );
   }
 
-  return NextResponse.json({
+  return response.status(200).json({
     raw: zipperAppletVersion.content,
     groupedByFilename: groupCodeByFilename(zipperAppletVersion.content ?? ''),
   });

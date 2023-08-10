@@ -39,8 +39,8 @@ import { useRouter } from 'next/router';
 import { useOrganization } from '~/hooks/use-organization';
 import { useUser } from '~/hooks/use-user';
 import { useOrganizationList } from '~/hooks/use-organization-list';
-import { getEditAppletLink } from '@zipper/utils';
-import { ChatGPTMessage } from '~/app/aifunctions/route';
+import { getEditAppletLink, getZipperApiUrl } from '@zipper/utils';
+import { ChatGPTMessage } from '~/pages/api/ai/generate/applet';
 import { AICodeOutput } from '@zipper/types';
 import { useEditorContext } from '../context/editor-context';
 
@@ -72,13 +72,16 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
     message: string;
     basicCode: string;
   }) => {
-    const response = await fetch('/aifunctions/zipperCode', {
-      method: 'POST',
-      body: JSON.stringify({
-        userRequest: message,
-        rawTypescriptCode: basicCode,
-      }),
-    });
+    const response = await fetch(
+      `${getZipperApiUrl()}/ai/zipper-version/applet`,
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          userRequest: message,
+          rawTypescriptCode: basicCode,
+        }),
+      },
+    );
 
     // Handle response
     const data = await response.json();
@@ -93,7 +96,7 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
 
   // getBasicCode implementation
   const getBasicCode = async (message: string): Promise<ChatGPTMessage> => {
-    const response = await fetch('/aifunctions/generate', {
+    const response = await fetch(`${getZipperApiUrl()}/ai/generate/applet`, {
       method: 'POST',
       body: JSON.stringify({
         userRequest: message,

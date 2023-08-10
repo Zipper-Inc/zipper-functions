@@ -24,6 +24,8 @@ const DEPLOY_KID = 'zipper';
 const DENO_ORIGIN = new URL(`https://subhosting-v1.deno-aws.net`);
 const RPC_ROOT = `https://${PUBLICLY_ACCESSIBLE_RPC_HOST}/api/deno/v0/`;
 
+const SENSITIVE_DATA_PLACEHOLDER = '********';
+
 const X_FORWARDED_HOST = 'x-forwarded-host';
 const X_DENO_SUBHOST = 'x-deno-subhost';
 
@@ -215,8 +217,10 @@ export async function relayRequest(
       deploymentId,
       success: response.status === 200,
       scheduleId: request.headers.get('x-zipper-schedule-id') || undefined,
-      rpcBody: relayBody,
-      result,
+      rpcBody: app.isDataSensitive
+        ? { ...relayBody, inputs: { [SENSITIVE_DATA_PLACEHOLDER]: '' } }
+        : relayBody,
+      result: app.isDataSensitive ? SENSITIVE_DATA_PLACEHOLDER : result,
     });
     headers.set('x-zipper-run-id', await appRunRes.text());
   }

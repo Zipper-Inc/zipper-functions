@@ -47,6 +47,7 @@ const defaultSelect = Prisma.validator<Prisma.AppSelect>()({
   organizationId: true,
   createdById: true,
   requiresAuthToRun: true,
+  isDataSensitive: true,
 });
 
 export const defaultCode = [
@@ -788,6 +789,7 @@ export const appRouter = createRouter()
         description: z.string().optional().nullable(),
         isPrivate: z.boolean().optional(),
         requiresAuthToRun: z.boolean().optional(),
+        isDataSensitive: z.boolean().optional(),
         scripts: z
           .array(
             z.object({

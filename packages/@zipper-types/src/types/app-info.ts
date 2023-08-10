@@ -8,6 +8,7 @@ export type AppInfo = {
   description: string | null;
   updatedAt: Date | null;
   canUserEdit: boolean;
+  isDataSensitive: boolean;
   playgroundVersionHash: string | null;
   publishedVersionHash: string | null;
 };
