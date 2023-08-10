@@ -1,16 +1,18 @@
 # Basic Concepts
 
-Each Applet is made up of **Files** that can import and export Typescript modules, just like any other Typescript project. These files make up functionality for an app that is deployed on our **\*\***Run**\*\*** domain, called `zipper.run`.
+## Applets
 
-An applet requires a `main.ts` file that exports a function named `handler`. The **\*\***\*\***\*\***\*\*\*\***\*\***\*\***\*\***Handler Function**\*\***\*\***\*\***\*\*\*\***\*\***\*\***\*\*** defines the behavior of the root URL of the Applet.
+Each Applet is made up of **Files** that can import and export Typescript modules, just like any other Typescript project. These files make up functionality for an app that is deployed on our 'Run' domain, called `zipper.run`.
+
+An applet requires a `main.ts` file that exports a function named `handler`. The 'Handler Function' defines the behavior of the root URL of the Applet.
 
 ![Screenshot 2023-05-22 at 4.27.29 PM.png](public/images/Screenshot_2023-05-22_at_4.27.29_PM.png)
 
-Since the applet above is named **\*\***\*\*\*\***\*\***greeting,**\*\***\*\*\*\***\*\*** the `handler` in `main.ts` would be responsible for the behavior of `https://greeting.zipper.run`
+Since the applet above is named 'greeting', the `handler` in `main.ts` would be responsible for the behavior of `https://greeting.zipper.run`
 
 ![Screenshot 2023-05-22 at 8.32.16 PM.png](public/images/Screenshot_2023-05-22_at_8.32.16_PM.png)
 
-When running it by visiting the **Run URL** and clicking **\*\***Run, i**\*\***t should output the following results:
+When running it by visiting the **Run URL** and clicking 'Run', it should output the following results:
 
 > Hello, world!
 
@@ -32,7 +34,7 @@ Let's go a little deeper on what else you can do with these functions.
 
 ### Inputs
 
-A handler function can have optional arguments that you can pass through it. These can be anything: strings, booleans, arrays, and objects just as long as it's serializable as JSON. This is called the \***\*\*\*\*\*\*\***Inputs\***\*\*\*\*\*\*\*** object as is passed as a parameterized object in single argument to your handler.
+A handler function can have optional arguments that you can pass through it. These can be anything: strings, booleans, arrays, and objects just as long as it's serializable as JSON. This is called the 'Inputs' object as is passed as a parameterized object in single argument to your handler.
 
 Let’s start by modifying our `greeting` applet by letting you change the hello string and who you are saying hello to. Zipper uses the power of Typescript to help generate UI for all your inputs. Let's pass a string `name` to our function.
 
@@ -58,13 +60,13 @@ For more on Output, see the Output section.
 
 ### Handler Context
 
-You can also get some special information about the applet or the specific run through the **\*\*\*\***\*\***\*\*\*\***Handler Context**\*\*\*\***\*\***\*\*\*\*** object, which is passed as the _second_ argument to a Handler Function. To make it easy and safe to see what you might have on the context argument, you can use the `Zipper.HandlerContext` type.
+You can also get some special information about the applet or the specific run through the 'Handler Context' object, which is passed as the _second_ argument to a Handler Function. To make it easy and safe to see what you might have on the context argument, you can use the `Zipper.HandlerContext` type.
 
 Let’s say you wanted to see if someone is signed into Zipper and use their email instead of the `name` input they passed.
 
 ![Screenshot 2023-05-22 at 5.03.35 PM.png](public/images/Screenshot_2023-05-22_at_5.03.35_PM.png)
 
-If I’m logged in as \***\*\*\*\*\***Bruce\***\*\*\*\*\*** from **\*\***\*\*\*\***\*\***Wayne Co**\*\***\*\*\*\***\*\*** then my output might be something like:
+If I’m logged in as 'Bruce' from 'Wayne Co' then my output might be something like:
 
 > Hello, bruce@wayne.co!
 
@@ -78,11 +80,11 @@ This path can be run independently so you can test each function by itself.
 
 ## Library files
 
-If you create a file, you do not have to export a handler. This will make it a **\*\***\*\***\*\***Library**\*\***\*\***\*\*** file, so that you can share code throughout your applet like a normal Typescript module.
+If you create a file, you do not have to export a handler. This will make it a 'Library' file, so that you can share code throughout your applet like a normal Typescript module.
 
 ## Handler Config
 
-You can also export a config file that will control behavior when visiting the \***\*\*\*\*\***\*\*\*\*\***\*\*\*\*\***Run URL.\***\*\*\*\*\***\*\*\*\*\***\*\*\*\*\*** Note, it doesn’t change how POSTing and API calls work. So for example, if you’d like my Handler Function to run when a user loads the page (instead of having to input) and define a default value, you can do it like this, you can do it like so:
+You can also export a config file that will control behavior when visiting the 'Run URL'. Note, it doesn’t change how POSTing and API calls work. So for example, if you’d like my Handler Function to run when a user loads the page (instead of having to input) and define a default value, you can do it like this, you can do it like so:
 
 ![Screenshot 2023-05-22 at 8.47.13 PM.png](public/images/Screenshot_2023-05-22_at_8.47.13_PM.png)
 
