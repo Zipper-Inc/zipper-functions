@@ -21,7 +21,10 @@ export default async function handler(
     include: { scripts: true },
   });
 
-  if (!app) throw new Error('No app found. Maybe your gave me a bad app id?');
+  if (!app) {
+    res.status(404).send('App not found');
+    return;
+  }
 
   const loweredQueryFilename = filename.toLowerCase();
   console.log(loweredQueryFilename);
@@ -46,8 +49,10 @@ export default async function handler(
       );
     });
 
-    if (!script)
-      throw new Error('No script found. Maybe you gave me the wrong filename?');
+    if (!script) {
+      res.status(404).send('Script not found');
+      return;
+    }
 
     res.setHeader('Content-Type', 'text/typescript');
 
