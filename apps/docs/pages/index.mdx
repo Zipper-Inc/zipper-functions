@@ -42,10 +42,34 @@ Every time a route is hit, we run the `handler` function associated with that ro
 
 Once you sign in to Zipper, you should land on a page that lists your projects. (You won’t have any since it’s a new account).
 
-Click on the **+New Applet** button to create a new applet. You’ll be prompted to give your applet a name and choose to make your applet public or private. Public applets can be forked by anyone, while private applets can only be forked by you.
+Click on the **+New Applet** button to create a new applet. Give your applet a name and click **Create** (this will skip the AI generation step for the sake of keeping things simple). By default your applet's code will be private (only visible to you) but anyone with the link to the published URL will be able to run it. You can change this in the applet's settings tab.
 
 #### **Step 2**: Write a function
 
+After creating your applet, you'll be redirect to the applet's code editor. You should see a `main.ts` file with a `handler` function. This is the function we run when someone visits your applet's published URL. The inputs to this function are rendered as a form to the user and the output is rendered as a page.
+
+Let's go ahead and replace the contents of `main.ts` with the following:
+
+```ts
+enum daysOfWeek {
+  Sunday,
+  Monday,
+  Tuesday,
+  Wednesday,
+  Thursday,
+  Friday,
+  Saturday,
+}
+
+export async function handler({ date }: { date: Date }) {
+  return daysOfWeek[date.getDay()];
+}
+```
+
 #### **Step 3**: Preview your applet
 
+You should now see an input called `date` on the right sidebar. Choose a date and click **Run**. You should see the day of the week that date falls on in the output section below.
+
 #### **Step 4**: Deploy and share your applet
+
+Now that you've got a working version of your applet in the playground, it's time to publish it. Click the `Publish` button in the top right. It will open a menu with the URL of your published applet. Click `Update` your latest changes to the applet's URL. You can now share this URL with anyone and they'll be able to run your applet.
