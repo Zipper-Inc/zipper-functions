@@ -13,7 +13,6 @@ import {
   ZIPPER_TEMP_USER_ID_HEADER,
   webCryptoDecryptFromBase64,
   parseBody,
-  getZipperApiUrl,
 } from '@zipper/utils';
 import Zipper from '@zipper/framework';
 import { getZipperAuth } from './get-zipper-auth';
