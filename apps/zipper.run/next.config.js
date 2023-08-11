@@ -5,9 +5,9 @@ const { withSentryConfig } = require('@sentry/nextjs');
 
 const ZIPPER_DOT_DEV_PROTOCOL =
   process.env.NODE_ENV === 'development' &&
-  /^(localhost|127\.0.0.1)/.test(
-    process.env.NEXT_PUBLIC_ZIPPER_DOT_DEV_HOST || '',
-  )
+    /^(localhost|127\.0.0.1)/.test(
+      process.env.NEXT_PUBLIC_ZIPPER_DOT_DEV_HOST || '',
+    )
     ? 'http'
     : 'https';
 const ZIPPER_DOT_DEV_URL = `${ZIPPER_DOT_DEV_PROTOCOL}://${process.env.NEXT_PUBLIC_ZIPPER_DOT_DEV_HOST}`;

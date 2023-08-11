@@ -10,6 +10,7 @@ import {
   ZIPPER_TEMP_USER_ID_COOKIE_NAME,
 } from '@zipper/utils';
 import { jwtVerify } from 'jose';
+import getValidSubdomain from './utils/get-valid-subdomain';
 
 const { __DEBUG__ } = process.env;
 
@@ -28,6 +29,10 @@ async function maybeGetCustomResponse(
   headers: Headers,
 ): Promise<NextResponse | void> {
   switch (true) {
+    case /^\/src(\/?)/.test(appRoute): {
+      console.log('matching src route');
+      return serveSource({ request });
+    }
     case /\/api(\/?)$/.test(appRoute):
     case /\/api\/json(\/?)$/.test(appRoute): {
       console.log('matching json api route');
@@ -91,6 +96,49 @@ async function maybeGetCustomResponse(
         });
       }
     }
+  }
+}
+
+export async function serveSource({ request }: { request: NextRequest }) {
+  const path = request.nextUrl.pathname;
+  let newPath = path;
+
+  if (path.startsWith('/src')) {
+    newPath = path.replace('src', '');
+  }
+
+  let filename: string | undefined;
+  let version: string | undefined;
+
+  const parts = newPath.split('/').filter((s) => s.length !== 0);
+
+  // for each part, check if it's a version (based on @) otherwise assume it's a filename
+  // if there are multiple parts, the last part is the filename
+  parts.forEach((part) => {
+    if (part[0] === '@') version = part.slice(1);
+    else filename = part;
+  });
+
+  if (filename && !filename.endsWith('.ts')) filename = `${filename}.ts`;
+
+  const host = request.headers.get('host') || '';
+  const subdomain = getValidSubdomain(host);
+
+  if (!filename) {
+    return new NextResponse('Filename missing', { status: 404 });
+  }
+
+  const srcAPIUrl = `${getZipperApiUrl()}/src/${subdomain}/${
+    version || 'latest'
+  }/${filename}`;
+
+  const response = await fetch(srcAPIUrl);
+
+  if (response.status === 200) {
+    const result = await response.text();
+    return new NextResponse(result, { headers: response.headers });
+  } else {
+    return new NextResponse(response.statusText, { status: 404 });
   }
 }
 
