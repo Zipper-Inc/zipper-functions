@@ -10,7 +10,6 @@ import {
 import { getVersionCode } from '../utils/r2.utils';
 import { captureException } from '@sentry/nextjs';
 
-
 const defaultSelect = Prisma.validator<Prisma.VersionSelect>()({
   appId: true,
   hash: true,
