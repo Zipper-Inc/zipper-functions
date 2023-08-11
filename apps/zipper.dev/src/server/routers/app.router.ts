@@ -878,15 +878,16 @@ export const appRouter = createRouter()
         );
       }
 
+      // build and store the eszip file
       const { hash } = await buildAndStoreApplet({
-        app: { ...app, scripts: updatedScripts },
+        app: { ...app, scripts: scripts ? updatedScripts : app.scripts },
         userId: ctx.userId,
       });
 
+      // if the code has changed, send the latest code to R2
       if (hash !== app.playgroundVersionHash) {
-        //backup previous scripts to R2
         const zip = new JSZip();
-        updatedScripts.map((s) => {
+        (updatedScripts.length > 0 ? updatedScripts : app.scripts).map((s) => {
           zip.file(s.filename, JSON.stringify(s));
         });
 
