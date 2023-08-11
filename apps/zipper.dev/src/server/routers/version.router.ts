@@ -6,7 +6,10 @@ import {
   hasAppReadPermission,
   hasAppEditPermission,
 } from '../utils/authz.utils';
+
 import { getVersionCode } from '../utils/r2.utils';
+import { captureException } from '@sentry/nextjs';
+
 
 const defaultSelect = Prisma.validator<Prisma.VersionSelect>()({
   appId: true,
@@ -184,17 +187,25 @@ export const versionRouter = createRouter()
         version: input.version,
       });
 
-      await prisma.scriptMain.delete({
-        where: {
-          appId: input.appId,
-        },
-      });
+      try {
+        await prisma.scriptMain.delete({
+          where: {
+            appId: input.appId,
+          },
+        });
+      } catch (e) {
+        captureException(e);
+      }
 
-      await prisma.script.deleteMany({
-        where: {
-          appId: input.appId,
-        },
-      });
+      try {
+        await prisma.script.deleteMany({
+          where: {
+            appId: input.appId,
+          },
+        });
+      } catch (e) {
+        captureException(e);
+      }
 
       await prisma.script.createMany({
         data: versionScripts,
