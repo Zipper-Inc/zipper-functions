@@ -7,8 +7,7 @@ import { BuildCache, getModule } from './eszip-build-cache';
 import { readFrameworkFile } from './read-file';
 import { getAppHashAndVersion } from './hashing';
 import { prisma } from '~/server/prisma';
-import s3Client from '~/server/s3';
-import { PutObjectCommand } from '@aws-sdk/client-s3';
+import { storeVersionESZip } from '~/server/utils/r2.utils';
 
 /**
  * @todo
@@ -182,13 +181,11 @@ export async function buildAndStoreApplet({
   });
 
   if (savedVersion.buildFile) {
-    s3Client.send(
-      new PutObjectCommand({
-        Bucket: process.env.CLOUDFLARE_BUILD_FILE_BUCKET_NAME,
-        Key: `${savedVersion.appId}/${version}`,
-        Body: savedVersion.buildFile,
-      }),
-    );
+    storeVersionESZip({
+      appId: app.id,
+      version,
+      eszip: savedVersion.buildFile,
+    });
   }
 
   return { hash, eszip: savedVersion.buildFile };
