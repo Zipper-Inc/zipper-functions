@@ -11,8 +11,6 @@ export function ConnectorForm({
   connectorId: ConnectorId;
   appId: string;
 }) {
-  console.log('HERE IS THE CONNECTOR ID');
-  console.log(connectorId);
   if (connectorId === 'slack') {
     return <SlackConnectorForm appId={appId} />;
   }
@@ -26,7 +24,6 @@ export function ConnectorForm({
   }
 
   if (connectorId === 'zendesk') {
-    console.log('ADD THE ZENDESK FORM!!!!');
     return <ZendeskConnectorForm appId={appId} />;
   }
   return <></>;
