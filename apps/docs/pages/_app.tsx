@@ -1,13 +1,10 @@
 import { ChakraProvider } from '@chakra-ui/react';
-import { AppProps } from 'next/app';
 import { theme } from '@zipper/ui';
 
-function MyApp(props: AppProps) {
+export default function Nextra({ Component, pageProps }) {
   return (
     <ChakraProvider theme={theme}>
-      <props.Component {...props.pageProps} />
+      <Component {...pageProps} />
     </ChakraProvider>
   );
 }
-
-export default MyApp;
