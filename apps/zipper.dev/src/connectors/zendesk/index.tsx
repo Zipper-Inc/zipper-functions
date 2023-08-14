@@ -53,11 +53,28 @@ function ZendeskConnectorForm({ appId }: { appId: string }) {
   const [zendeskEmail, setZendeskEmail] = useState<string>('');
   const [zendeskToken, setZendeskToken] = useState<string>('');
   const [isSaving, setIsSaving] = useState(false);
-
   const addSecret = trpc.useMutation('secret.add');
-
   const existingSecrets: { [key: string]: UseQueryResult } = {};
+
+  const utils = trpc.useContext();
+  const deleteSecretMutation = trpc.useMutation('secret.delete');
+
+  async function invalidateQuery(appId: string, key: string) {
+    await utils.invalidateQueries(['secret.get', { appId, key: key }]);
+  }
+
+  async function invalidateAllQueries(appId: string) {
+    const invalidationPromises = Object.values(Secrets).map((secretKey) => {
+      return invalidateQuery(appId, secretKey);
+    });
+    await Promise.all([
+      // ...invalidationPromises,
+      await utils.invalidateQueries(['secret.all', { appId }]),
+    ]);
+  }
+
   let existingInstalation = false;
+
   for (const secret in Secrets) {
     existingSecrets[secret] = trpc.useQuery(
       ['secret.get', { appId, key: secret }],
@@ -67,12 +84,17 @@ function ZendeskConnectorForm({ appId }: { appId: string }) {
       existingInstalation = true;
   }
 
-  console.log('EXISTING SECRETS!');
-  console.log(existingSecrets);
-
   const handleUninstall = async () => {
     setIsSaving(true);
-    // TODO: do delete
+    const deleteSecretPromises = Object.values(Secrets).map((secretKey) => {
+      return deleteSecretMutation.mutateAsync({
+        appId,
+        key: secretKey,
+      });
+    });
+
+    await Promise.all(deleteSecretPromises);
+    await invalidateAllQueries(appId);
     setIsSaving(false);
   };
 
