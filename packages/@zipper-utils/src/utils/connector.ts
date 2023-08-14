@@ -24,7 +24,7 @@ export const getAuthedSlackUser = (
   return { userId: metadata?.user_id || '', username: metadata?.user || '' };
 };
 
-export type AuthedConnectorType = Exclude<ConnectorType, 'openai'>;
+export type AuthedConnectorType = Exclude<ConnectorType, 'openai' | 'zendesk'>;
 
 export const authedUserGetters: Record<
   AuthedConnectorType,
