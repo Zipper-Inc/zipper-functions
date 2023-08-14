@@ -1,0 +1,54 @@
+# **Config**
+
+You can configure the specifics of how a handler looks and behaves by exporting a `config` object with the type of `Zipper.HandlerConfig` from the handler file itself.
+
+```tsx
+export function handler() {
+...
+}
+
+export const config: Zipper.HandlerConfig = {
+ ...
+}
+```
+
+The config object must have the following type:
+
+```tsx
+type Zipper.HandlerConfig<I = Zipper.Inputs> = {
+    run?: boolean | I;
+    description?: Partial<{
+        title: string;
+        subtitle: string;
+        body: string;
+    }>;
+    inputs?: { [Property in keyof I]: Partial<{
+        label: string;
+        description: string;
+        defaultValue: I[Property];
+        placeholder: string;
+    }>; };
+}
+```
+
+### `run`
+
+determines whether the app runs automatically or not. When an app is run automatically, the user doesn’t need to click the Run button. We’ll either use no inputs, the value of this key, or the default values of the inputs key.
+
+Values:
+
+- `true`
+- `false` (default)
+- Inputs (e.g. `{ inputValue: 'something'}`)
+
+### `description`
+
+![Untitled](public/images/Untitled%206.png)
+
+optional description data that is displayed on [zipper.run](http://zipper.run) as headings above the inputs and output
+
+### `inputs`
+
+![Untitled](public/images/Untitled%207.png)
+
+additional information about each input. You can use these values to customize the label, placeholder, and help text of each input. You can also specify a default value that will either be prefilled on the inputs form or used if the handler is auto run.
