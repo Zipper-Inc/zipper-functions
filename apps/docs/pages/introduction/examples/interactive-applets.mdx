@@ -1,0 +1,35 @@
+# An Interactive Applet
+
+To build a useful web application, you often have to do more than just display information. You need to allow the user to interact with that information in some way. In this section, we will build a simple todo applet that uses buttons and modals.
+
+#### 1. Create a new applet
+
+Head over to zipper.dev and sign in. On your dashboard, you'll see a button to create a new applet. Click it and give your applet a name (if you want).
+
+#### 2. Add your main.ts handler
+
+Since the `main.ts` file represents the entry point for your applet, we'll start by adding a handler that fetches open Todos and displays them.
+
+```typescript
+
+```
+
+#### 3. Add a function to mark a todo as done or undone
+
+Let's create a new file called `set.ts`. You can add files by clicking the `+` button at the top of the files section of the playground. Once you've created the file, replace the placeholder code with the following:
+
+```typescript
+
+```
+
+This function accepts the ID of the todo and a boolean value indicating whether the todo should be marked as done or undone. It then uses this information to update the value of the `done` property on the todo in the app's storage.
+
+#### 4. Add a function to create a todo
+
+Create another file, this time called `create.ts`. This function will accept a string value and create a new todo with that value. Replace the placeholder code with the following:
+
+```typescript
+
+```
+
+#### 5. Hook it all up

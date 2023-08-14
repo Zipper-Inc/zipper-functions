@@ -1,5 +1,5 @@
 {
-  "hello-world": "Hello World!",
-  "interactive-applets": "Interactive Applets",
+  "simple-input-output": "Basic Applet",
+  "interactive-applets": "Interactive Applet",
   "build-a-slack-app": "Build a Slack App"
 }
