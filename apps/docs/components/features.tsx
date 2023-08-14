@@ -1,11 +1,10 @@
-import { ComponentWithAs, Grid, IconProps } from '@chakra-ui/react';
+import { Grid } from '@chakra-ui/react';
 import Feature from './feature';
 
 export default function Features({
   features,
 }: {
   features: {
-    Icon?: ComponentWithAs<'svg', IconProps>;
     name: string;
     description: string;
   }[];

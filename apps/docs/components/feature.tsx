@@ -1,19 +1,9 @@
-import {
-  Card,
-  CardBody,
-  CardHeader,
-  ComponentWithAs,
-  Heading,
-  IconProps,
-  Text,
-} from '@chakra-ui/react';
+import { Card, CardBody, CardHeader, Heading, Text } from '@chakra-ui/react';
 
 export default function Feature({
-  Icon,
   name,
   description,
 }: {
-  Icon?: ComponentWithAs<'svg', IconProps>;
   name: string;
   description: string;
 }) {
