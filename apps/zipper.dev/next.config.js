@@ -101,8 +101,8 @@ module.exports = getConfig({
       {
         source: '/docs',
         destination: `${process.env.NODE_ENV === 'production'
-          ? 'https://zipper-docs.onrender.com/docs'
-          : 'http://localhost:3003/docs'
+          ? 'https://zipper-docs.onrender.com'
+          : 'http://localhost:3003'
           }`,
       },
       // comment this back in when the blog is ready
