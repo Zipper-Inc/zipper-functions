@@ -99,9 +99,16 @@ module.exports = getConfig({
         destination: 'https://similar-years-645746.framer.app/about',
       },
       {
+        source: '/docs',
+        destination: `${process.env.NODE_ENV === 'production'
+          ? 'https://zipper-docs-production.onrender.com'
+          : 'http://localhost:3003'
+          }`,
+      },
+      {
         source: '/docs/:path*',
         destination: `${process.env.NODE_ENV === 'production'
-          ? 'https://zipper-docs.onrender.com/:path*'
+          ? 'https://zipper-docs-production.onrender.com/:path*'
           : 'http://localhost:3003/:path*'
           }`,
       },
