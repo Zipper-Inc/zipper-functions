@@ -99,10 +99,10 @@ module.exports = getConfig({
         destination: 'https://similar-years-645746.framer.app/about',
       },
       {
-        source: '/docs',
+        source: '/docs/:path*',
         destination: `${process.env.NODE_ENV === 'production'
-          ? 'https://zipper-docs.onrender.com'
-          : 'http://localhost:3003'
+          ? 'https://zipper-docs.onrender.com/:path*'
+          : 'http://localhost:3003/:path*'
           }`,
       },
       // comment this back in when the blog is ready
