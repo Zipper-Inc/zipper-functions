@@ -14,7 +14,7 @@ export function getFilenameAndVersionFromPath(
   });
 
   let filename = 'main.ts';
-  let version: string | undefined = undefined;
+  let version: string | undefined;
 
   // split the path without endings on / - remove any empty parts
   const parts = newPath.split('/').filter((s) => s.length !== 0);
