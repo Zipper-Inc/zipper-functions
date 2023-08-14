@@ -16,7 +16,7 @@ export function getScriptHash(
 }
 
 export function getAppHash(
-  app: Pick<App, 'id' | 'name'> & {
+  app: Pick<App, 'id' | 'slug'> & {
     scripts: Pick<Script, 'id' | 'hash'>[];
   },
 ) {
@@ -30,7 +30,7 @@ export function getAppHash(
   );
 
   return hash(
-    { id: app.id, name: app.name, scripts },
+    { id: app.id, slug: app.slug, scripts },
     {
       algorithm: 'sha1',
     },
@@ -38,7 +38,7 @@ export function getAppHash(
 }
 
 export function getAppHashAndVersion(
-  app: Pick<App, 'id' | 'name'> & {
+  app: Pick<App, 'id' | 'slug'> & {
     scripts: Pick<Script, 'id' | 'hash'>[];
   },
 ) {
