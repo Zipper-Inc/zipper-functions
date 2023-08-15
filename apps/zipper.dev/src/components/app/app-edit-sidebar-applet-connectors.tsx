@@ -95,24 +95,6 @@ export const AppEditSidebarAppletConnectors = () => {
     },
   });
 
-  const deleteZendeskSecret = trpc.useMutation('secret.delete', {
-    onSuccess: () => {
-      context.invalidateQueries([
-        'app.byResourceOwnerAndAppSlugs',
-        {
-          appSlug: router.query['app-slug'] as string,
-          resourceOwnerSlug: router.query['resource-owner'] as string,
-        },
-      ]);
-      toast({
-        title: 'Zendesk user auth revoked.',
-        status: 'success',
-        duration,
-        isClosable: true,
-      });
-    },
-  });
-
   // get the Slack auth URL -- if required --from the backend
   // (it includes an encrypted state value that links the auth request to the app)
   const slackAuthURL = trpc.useQuery(
@@ -188,11 +170,8 @@ export const AppEditSidebarAppletConnectors = () => {
         },
         zendesk: {
           authUrl: '#',
-          onDelete: () => {
-            deleteZendeskSecret.mutateAsync({
-              appId,
-            });
-          },
+          // eslint-disable-next-line @typescript-eslint/no-empty-function
+          onDelete: () => {},
         },
       }}
     />
