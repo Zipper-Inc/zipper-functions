@@ -89,12 +89,6 @@ async function maybeGetCustomResponse(
         const url = new URL('/main.ts', request.url);
         return NextResponse.rewrite(url, { request: { headers } });
       }
-      if (request.method === 'POST') {
-        return serveRelay({
-          request,
-          bootOnly: false,
-        });
-      }
     }
   }
 }
@@ -225,11 +219,19 @@ export const middleware = async (request: NextRequest) => {
   const requestHeaders = new Headers(request.headers);
   if (accessToken) requestHeaders.set('x-zipper-access-token', accessToken);
 
-  const customResponse = await maybeGetCustomResponse(
+  let customResponse = await maybeGetCustomResponse(
     appRoute,
     request,
     requestHeaders,
   );
+
+  if (!customResponse && request.method === 'POST') {
+    customResponse = await serveRelay({
+      request,
+      bootOnly: false,
+    });
+  }
+
   const response =
     customResponse ||
     NextResponse.next({ request: { headers: requestHeaders } });
