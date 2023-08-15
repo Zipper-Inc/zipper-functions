@@ -68,7 +68,7 @@ function ZendeskConnectorForm({ appId }: { appId: string }) {
       return invalidateQuery(appId, secretKey);
     });
     await Promise.all([
-      // ...invalidationPromises,
+      ...invalidationPromises,
       await utils.invalidateQueries(['secret.all', { appId }]),
     ]);
   }
@@ -132,6 +132,8 @@ function ZendeskConnectorForm({ appId }: { appId: string }) {
     } catch (error) {
       console.error(error);
     }
+    await invalidateAllQueries(appId);
+    setIsSaving(false);
   };
 
   return (

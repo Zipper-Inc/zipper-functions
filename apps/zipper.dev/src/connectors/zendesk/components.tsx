@@ -81,58 +81,71 @@ export function ConnectorInputForm({
   setZendeskToken,
   handleSave,
 }: ConnectorInputFormProps) {
+  function validateForm() {
+    return (
+      !!zendeskSubdomain && !!zendeskAppID && !!zendeskEmail && !!zendeskToken
+    );
+  }
   return (
-    <Card w="full">
-      <CardBody color="fg.600">
-        <VStack align="stretch">
-          <Heading size="sm">Configuration</Heading>
-          <SecretTextInput
-            type="text"
-            label="Zendesk Subdomain"
-            autoComplete="new-subdomain"
-            value={zendeskSubdomain}
-            onChange={(e: ChangeEvent<HTMLInputElement>) =>
-              setZendeskSubdomain(e.target.value)
-            }
-          />
-          <SecretTextInput
-            type="text"
-            label="Zendesk App ID"
-            autoComplete="new-app-id"
-            value={zendeskAppID}
-            onChange={(e: ChangeEvent<HTMLInputElement>) =>
-              setZendeskAppID(e.target.value)
-            }
-          />
-          <SecretTextInput
-            type="text"
-            label="Zendesk Email"
-            autoComplete="new-email"
-            value={zendeskEmail}
-            onChange={(e: ChangeEvent<HTMLInputElement>) =>
-              setZendeskEmail(e.target.value)
-            }
-          />
-          <SecretTextInput
-            type="password"
-            label="Zendesk Token"
-            autoComplete="new-token"
-            value={zendeskToken}
-            onChange={(e: ChangeEvent<HTMLInputElement>) =>
-              setZendeskToken(e.target.value)
-            }
-          />
-          <Button
-            mt="6"
-            colorScheme={'purple'}
-            isDisabled={isSaving}
-            onClick={handleSave}
-          >
-            Save & Install
-          </Button>
-        </VStack>
-      </CardBody>
-    </Card>
+    <VStack align="start" w="full">
+      <Card w="full">
+        <CardBody color="fg.600">
+          <VStack align="start" w="full" overflow="visible" spacing="4">
+            <FormControl>
+              <FormLabel>Zendesk Subdomain</FormLabel>
+              <Input
+                type="text"
+                value={zendeskSubdomain}
+                onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                  setZendeskSubdomain(e.target.value)
+                }
+              />
+            </FormControl>
+            <FormControl>
+              <FormLabel>Zendesk App ID</FormLabel>
+              <Input
+                type="text"
+                value={zendeskAppID}
+                onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                  setZendeskAppID(e.target.value)
+                }
+              />
+            </FormControl>
+            <FormControl>
+              <FormLabel>Zendesk Email</FormLabel>
+              <Input
+                type="text"
+                value={zendeskEmail}
+                onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                  setZendeskEmail(e.target.value)
+                }
+              />
+            </FormControl>
+            <FormControl>
+              <FormLabel>Zendesk Token</FormLabel>
+              <Input
+                type="password"
+                value={zendeskToken}
+                onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                  setZendeskToken(e.target.value)
+                }
+              />
+            </FormControl>
+            <Button
+              mt="6"
+              colorScheme={'purple'}
+              isDisabled={isSaving || !validateForm()}
+              onClick={handleSave}
+            >
+              Save & Install
+            </Button>
+            <Text mt="10" color="fg.600">
+              After saving, you can use the Zendesk connector in your app.
+            </Text>
+          </VStack>
+        </CardBody>
+      </Card>
+    </VStack>
   );
 }
 
@@ -174,7 +187,7 @@ export function ConnectorUninstallForm({
         <AlertDialogOverlay>
           <AlertDialogContent>
             <AlertDialogHeader fontSize="lg" fontWeight="bold">
-              Uninstall OpenAI App
+              Uninstall Zendesk Connector
             </AlertDialogHeader>
 
             <AlertDialogBody>
@@ -190,7 +203,6 @@ export function ConnectorUninstallForm({
                 isDisabled={isSaving}
                 onClick={(e) => {
                   handleUninstall(e);
-                  console.log('UNINSTALLED!!!');
                   onClose();
                 }}
                 ml={3}

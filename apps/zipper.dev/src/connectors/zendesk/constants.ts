@@ -2,9 +2,9 @@ export const code = `
 import { encode } from "https://deno.land/std@0.196.0/encoding/base64.ts";
 import * as jwt from "https://esm.sh/jsonwebtoken@8.5.1";
 
-export const ZENDESK_API_URL = 'https://' +
-  Deno.env.get("ZENDESK_SUBDOMAIN") +
-  '.zendesk.com/api/v2';
+const ZENDESK_DOMAIN = Deno.env.get("ZENDESK_SUBDOMAIN") + '.zendesk.com';
+
+export const ZENDESK_API_URL = 'https://' + ZENDESK_DOMAIN + '/api/v2';
 
 // Definitions of zendesk JWT claims:
 // https://developer.zendesk.com/documentation/apps/app-developer-guide/using-the-apps-framework/#jwt-claims
@@ -47,7 +47,7 @@ function getHearders() {
   return headers;
 }
 
-export async function doGet(path: string) {
+export async function getZendeskResource(path: string) {
   const url = ZENDESK_API_URL + path;
 
   return fetch(url, {
@@ -65,7 +65,7 @@ export async function doGet(path: string) {
  */
 export async function fetchPem(app_id: number | undefined) {
   if (!app_id) throw new Error("Invalid Zendesk App ID");
-  const pem = await doGet('/apps/' + app_id + '/public_key.pem');
+  const pem = await getZendeskResource('/apps/' + app_id + '/public_key.pem');
   return pem.text();
 }
 
@@ -117,7 +117,7 @@ export async function validateToken(
   try {
     const payload = jwt.verify(token, secret, {
       algorithms: ["RS256", "HS256"],
-      issuer: Deno.env.get("ZENDESK_DOMAIN"),
+      issuer: ZENDESK_DOMAIN,
     }) as ZendeskWebTokenPayload;
     const refreshedToken = getRefreshToken(payload, secret);
 
