@@ -56,9 +56,12 @@ export async function build({
   );
   const appFilesBaseUrl = `${baseUrl}/applet/src`;
   const frameworkEntrypointUrl = `${baseUrl}/${FRAMEWORK_ENTRYPOINT}`;
-  const appFileUrls = app.scripts
-    .map(({ filename }) => `${appFilesBaseUrl}/${filename}`)
-    .filter((url) => !url.endsWith('.md'));
+
+  const tsScripts = app.scripts.filter((s) => s.filename.endsWith('.ts'));
+
+  const appFileUrls = tsScripts.map(
+    ({ filename }) => `${appFilesBaseUrl}/${filename}`,
+  );
 
   const fileUrlsToBundle = [frameworkEntrypointUrl, ...appFileUrls];
 
@@ -69,10 +72,8 @@ export async function build({
      */
     if (specifier.startsWith(appFilesBaseUrl)) {
       const filename = specifier.replace(`${appFilesBaseUrl}/`, '');
-      const script = app.scripts.find((s) => s.filename === filename);
-      if (specifier.endsWith('.md')) {
-        return;
-      }
+      const script = tsScripts.find((s) => s.filename === filename);
+
       return {
         // Add TSX to all files so they support JSX
         specifier: specifier.replace(/\.(ts|tsx)$|$/, '.tsx'),
@@ -108,7 +109,7 @@ export async function build({
       if (isAppletIndex) {
         content = generateIndexForFramework({
           code: content,
-          filenames: app.scripts.map((s) => s.filename),
+          filenames: tsScripts.map((s) => s.filename),
         });
       }
 
