@@ -1,0 +1,89 @@
+# Build a Slack App with Zipper
+
+Zipper is a great option for building Slack applications for a few reasons:
+
+- Zipper handles the OAuth flow for you so you can get a token for a user or workspace without having to write any code
+- You can immediately start receiving webhooks from Slack without having to set up a server or configure a tunnel from localhost to the internet
+- There's built-in storage for your app's data so you don't have to worry about setting up a database
+
+To demonstrate, we'll build a simple Slack app that listens for newly created channels and posts a weekly message to `#general` with a summary of the channels that were created. We'll use the [Slack Events API](https://api.slack.com/events-api) to listen for channel creation events and the [Slack Web API](https://api.slack.com/web) to post messages.
+
+#### 1. Create a Zipper applet
+
+Head over to zipper.dev and sign in. On your dashboard, you'll see a button to create a new applet. Click it and give your applet a name (if you want).
+
+#### 2. Prepare to receive events from Slack
+
+Create a new file called `slack-events.ts` by clicking `+` button, filling in the filename and hitting Enter. Once the file has been created, replace its contents with the following:
+
+```typescript
+type SlackEvent = {
+  challenge: string;
+};
+
+export async function handler({ ...slackEvent }: SlackEvent) {
+  if (slackEvent.challenge) {
+    return slackEvent.challenge;
+  }
+
+  return new Response('ok', { status: 200 });
+}
+```
+
+You know have a function that receives the verification challenge from Slack and responds with the challenge value. Let's create a Slack app and confirm that it works.
+
+#### 3. Create a Slack app
+
+Head over to api.slack.com/apps and create a new app. Give it a name and select the workspace you want to install it in.
+
+From Scratch
+Event Subscriptions
+Enable Events
+Subscribe to Bot Events
+channel_created
+channels:read
+Basic information
+Install to Workspace
+
+#### 4. Save info about new channels
+
+```typescript
+type SlackChannel = {
+  id: string;
+  name: string;
+  created: number;
+  creator: string;
+};
+
+type SlackEvent = {
+  challenge: string;
+  type: string;
+  team: string;
+  event: {
+    type: string;
+    channel: SlackChannel;
+  };
+};
+
+const storeChannelInfo = async ({ ...channel }: SlackChannel, team: string) => {
+  const storedChannels: SlackChannel[] = (await Zipper.storage.get(team)) || [];
+  storedChannels.push(channel);
+  await Zipper.storage.set(team, storedChannels);
+};
+
+export async function handler({ ...slackEvent }: SlackEvent) {
+  if (slackEvent.challenge) {
+    return slackEvent.challenge;
+  }
+
+  if (slackEvent.type === 'event_callback') {
+    if (slackEvent.event.type === 'channel_created') {
+      storeChannelInfo(slackEvent.event.channel, slackEvent.team);
+    }
+  }
+
+  return new Response('ok', { status: 200 });
+}
+```
+
+#### 5. Post a weekly summary message
