@@ -151,7 +151,7 @@ export async function buildAndStoreApplet({
 }) {
   const { hash, version } = getAppHashAndVersion({
     id: app.id,
-    name: app.name,
+    slug: app.slug,
     scripts: app.scripts,
   });
 
@@ -170,7 +170,7 @@ export async function buildAndStoreApplet({
     },
     create: {
       app: { connect: { id: app.id } },
-      hash: hash,
+      hash,
       buildFile: await buildBuffer(),
       isPublished: !!isPublished,
       userId,

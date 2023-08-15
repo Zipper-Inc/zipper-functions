@@ -1,0 +1,17 @@
+# **Imports & Exports**
+
+Check out the following documentation to learn how imports and exports work in Deno:
+
+[https://deno.com/manual@v1.15.2/examples/import_export](https://deno.com/manual@v1.15.2/examples/import_export)
+
+<aside>
+🦕 **The high-level takeaways are:**
+
+- Deno uses the ECMAScript 6 `import/export` standard
+- Deno uses browser-like module resolution, meaning that file names must be specified in full (including the file extension)
+- You can import remote modules with just a URL. There is no package.json file.
+- You can import most NPM modules via Deno-friendly CDNs, see [https://deno.land/manual@v1.29.2/node/cdns](https://deno.land/manual@v1.29.2/node/cdns)
+
+</aside>
+
+You can create files in Zipper and export/import code between files in the same Applet. We don't support importing from other Applets yet, but we will someday.
