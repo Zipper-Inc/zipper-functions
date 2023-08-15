@@ -4,9 +4,7 @@ const withNextra = require('nextra')({
 });
 
 module.exports = withNextra({
-  images: {
-    unoptimized: true,
-  },
+  basePath: '/docs',
   reactStrictMode: true,
   transpilePackages: [
     '@zipper/framework',

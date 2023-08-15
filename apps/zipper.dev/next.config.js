@@ -101,15 +101,15 @@ module.exports = getConfig({
       {
         source: '/docs',
         destination: `${process.env.NODE_ENV === 'production'
-          ? 'https://zipper-docs-production.onrender.com'
-          : 'http://localhost:3003'
+          ? 'https://zipper-docs-production.onrender.com/docs'
+          : 'http://localhost:3003/docs'
           }`,
       },
       {
         source: '/docs/:path*',
         destination: `${process.env.NODE_ENV === 'production'
-          ? 'https://zipper-docs-production.onrender.com/:path*'
-          : 'http://localhost:3003/:path*'
+          ? 'https://zipper-docs-production.onrender.com/docs/:path*'
+          : 'http://localhost:3003/docs/:path*'
           }`,
       },
       // comment this back in when the blog is ready
