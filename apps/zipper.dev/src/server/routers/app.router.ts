@@ -16,7 +16,7 @@ import denyList from '../utils/slugDenyList';
 import { appSubmissionState, ResourceOwnerType } from '@zipper/types';
 import { Context } from '../context';
 import { getAppVersionFromHash, getScriptHash } from '~/utils/hashing';
-import { parseInputForTypes } from '~/utils/parse-code';
+import { endsWithTs, parseInputForTypes } from '~/utils/parse-code';
 import {
   getInputsFromFormData,
   ZIPPER_TEMP_USER_ID_COOKIE_NAME,
@@ -644,8 +644,6 @@ export const appRouter = createRouter()
 
       const version = getAppVersionFromHash(hash);
 
-      console.log('Run version: ', version);
-
       // Find the intended script, or mainScript if we can't find it
       const script =
         app.scripts.find((s) => s.id === input.scriptId) ||
@@ -655,7 +653,9 @@ export const appRouter = createRouter()
         throw new TRPCError({ code: 'NOT_FOUND' });
       }
 
+      console.log('---FILENAME---', script.filename);
       const inputParams = parseInputForTypes({ code: script.code });
+
       if (!inputParams) return { ok: false };
 
       const inputs = getInputsFromFormData(input.formData, inputParams);
@@ -797,6 +797,7 @@ export const appRouter = createRouter()
               data: z.object({
                 name: z.string().min(3).max(255).optional(),
                 code: z.string().optional(),
+                filename: z.string(),
               }),
             }),
           )
@@ -857,10 +858,12 @@ export const appRouter = createRouter()
         await Promise.all(
           scripts.map(async (script) => {
             const { id, data } = script;
+
             let isRunnable: boolean | undefined = undefined;
-            if (data.code) {
+            if (data.code && endsWithTs(data.filename)) {
               isRunnable = isCodeRunnable(data.code);
             }
+
             updatedScripts.push(
               await prisma.script.update({
                 where: { id },
@@ -883,6 +886,8 @@ export const appRouter = createRouter()
         app: { ...app, scripts: updatedScripts },
         userId: ctx.userId,
       });
+
+      console.log('hash generated', hash);
 
       if (hash !== app.playgroundVersionHash) {
         //backup previous scripts to R2

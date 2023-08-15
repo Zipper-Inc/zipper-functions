@@ -20,6 +20,9 @@ export const APPLET_INDEX_PATH = 'applet/generated/index.gen.ts';
 export const TYPESCRIPT_CONTENT_HEADERS = {
   'content-type': 'text/typescript',
 };
+export const MARKDOWN_CONTENT_HEADERS = {
+  'content-type': 'text/markdown',
+};
 
 const buildCache = new BuildCache();
 
@@ -37,7 +40,6 @@ export async function build({
   const startMs = performance.now();
   const appName = `${app.slug}@${version}`;
   const baseUrl = _baseUrl || `file://${app.slug}/v${version}`;
-
   const logger = getLogger({ appId: app.id, version });
   logger.info(
     ...prettyLog(
@@ -52,24 +54,25 @@ export async function build({
       },
     ),
   );
-
   const appFilesBaseUrl = `${baseUrl}/applet/src`;
   const frameworkEntrypointUrl = `${baseUrl}/${FRAMEWORK_ENTRYPOINT}`;
-  const appFileUrls = app.scripts.map(
-    ({ filename }) => `${appFilesBaseUrl}/${filename}`,
-  );
+  const appFileUrls = app.scripts
+    .map(({ filename }) => `${appFilesBaseUrl}/${filename}`)
+    .filter((url) => !url.endsWith('.md'));
+
   const fileUrlsToBundle = [frameworkEntrypointUrl, ...appFileUrls];
 
   const bundle = await eszip.build(fileUrlsToBundle, async (specifier) => {
     // if (__DEBUG__) console.debug(specifier);
-
     /**
      * Handle user's App files
      */
     if (specifier.startsWith(appFilesBaseUrl)) {
       const filename = specifier.replace(`${appFilesBaseUrl}/`, '');
       const script = app.scripts.find((s) => s.filename === filename);
-
+      if (specifier.endsWith('.md')) {
+        return;
+      }
       return {
         // Add TSX to all files so they support JSX
         specifier: specifier.replace(/\.(ts|tsx)$|$/, '.tsx'),
