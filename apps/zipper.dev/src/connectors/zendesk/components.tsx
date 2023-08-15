@@ -217,7 +217,17 @@ export function ConnectorUninstallForm({
   );
 }
 
-export function ConnectorInEditableForm() {
+export type ConnectorInEditableFormProps = {
+  zendeskSubdomain: string;
+  zendeskAppId: string;
+  zendeskEmail: string;
+};
+
+export function ConnectorInEditableForm({
+  zendeskSubdomain,
+  zendeskAppId,
+  zendeskEmail,
+}: ConnectorInEditableFormProps) {
   return (
     <VStack align="start" w="full">
       <Card w="full">
@@ -230,6 +240,18 @@ export function ConnectorInEditableForm() {
             py="2"
             mt="2"
           ></VStack>
+          <HStack>
+            <Text as="b">Zendesk Subdomain:</Text>
+            <Text>{zendeskSubdomain}</Text>
+          </HStack>
+          <HStack>
+            <Text as="b">Zendesk App ID:</Text>
+            <Text>{zendeskAppId}</Text>
+          </HStack>
+          <HStack>
+            <Text as="b">Zendesk Email:</Text>
+            <Text>{zendeskEmail}</Text>
+          </HStack>
         </CardBody>
       </Card>
     </VStack>

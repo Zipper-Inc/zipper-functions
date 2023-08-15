@@ -167,7 +167,11 @@ function ZendeskConnectorForm({ appId }: { appId: string }) {
                 )}
               </>
             ) : (
-              <ConnectorInEditableForm />
+              <ConnectorInEditableForm
+                zendeskAppId={zendeskAppID}
+                zendeskEmail={zendeskEmail}
+                zendeskSubdomain={zendeskSubdomain}
+              />
             )}
           </VStack>
           <Text mt="10" color="fg.600">
