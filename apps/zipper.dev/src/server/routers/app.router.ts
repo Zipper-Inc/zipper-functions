@@ -29,7 +29,6 @@ import { generateAccessToken } from '~/utils/jwt-utils';
 import { getToken } from 'next-auth/jwt';
 import { buildAndStoreApplet } from '~/utils/eszip-build-applet';
 import JSZip from 'jszip';
-import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { DEFAULT_MD } from './script.router';
 import { storeVersionCode } from '../utils/r2.utils';
 
