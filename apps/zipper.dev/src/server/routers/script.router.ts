@@ -23,7 +23,7 @@ const DEFAULT_CODE = `export async function handler({ world }: { world: string }
 };
 `;
 
-const DEFAULT_MD = `# New Markdown File
+export const DEFAULT_MD = `# New Markdown File
 
 Welcome! This is a new Markdown file.
 

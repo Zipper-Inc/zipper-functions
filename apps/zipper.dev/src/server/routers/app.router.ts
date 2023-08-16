@@ -31,6 +31,7 @@ import { buildAndStoreApplet } from '~/utils/eszip-build-applet';
 import s3Client from '../s3';
 import JSZip from 'jszip';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
+import { DEFAULT_MD } from './script.router';
 
 const defaultSelect = Prisma.validator<Prisma.AppSelect>()({
   id: true,
@@ -181,6 +182,24 @@ export const appRouter = createRouter()
           },
         },
         select: defaultSelect,
+      });
+
+      const readme = await prisma.script.create({
+        data: {
+          name: 'Readme',
+          filename: 'readme.md',
+          code: DEFAULT_MD,
+          appId: app.id,
+        },
+      });
+
+      await prisma.app.update({
+        where: { id: app.id },
+        data: {
+          scripts: {
+            connect: { id: readme.id },
+          },
+        },
       });
 
       if (!app) return;
