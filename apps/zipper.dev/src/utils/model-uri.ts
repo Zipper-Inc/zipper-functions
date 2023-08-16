@@ -18,7 +18,10 @@ export const getUriFromPath = (
   path: string,
   parseFn: (path: string) => Uri,
   extension: DENO_REQUIRED_FILE_EXTENSION,
-) => parseFn(`${path}.${extension}`);
+) => {
+  if (path.endsWith('md')) return parseFn(`${path}`);
+  return parseFn(`${path}.${extension}`);
+};
 
 /**
  * Get a Deno-friendly import path from a Monaco model URI

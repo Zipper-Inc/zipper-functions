@@ -71,7 +71,9 @@ export default function PlaygroundEditor(
   const monacoEditor = useMonaco();
   const [, updateMyPresence] = useMyPresence();
   const connectionIds = useOthersConnectionIds();
-
+  const [defaultLanguage, setDefaultLanguage] = useState<
+    'typescript' | 'markdown'
+  >('typescript');
   const theme = useColorModeValue('vs', 'vs-dark');
 
   useExitConfirmation({ enable: isEditorDirty(), ignorePaths: ['/edit/'] });
@@ -160,6 +162,12 @@ export default function PlaygroundEditor(
         mimetypes: ['application/typescript'],
       });
 
+      monacoEditor.languages.register({
+        id: 'markdown',
+        extensions: ['.md'],
+        mimetypes: ['text/markdown'],
+      });
+
       const diagnosticOptions: monaco.languages.typescript.DiagnosticsOptions =
         {
           diagnosticCodesToIgnore: TYPESCRIPT_ERRORS_TO_IGNORE,
@@ -239,10 +247,15 @@ export default function PlaygroundEditor(
       );
 
       scripts.forEach((script) => {
+        const extension = script.filename.split('.').pop();
         const uri = getUriFromPath(script.filename, monaco.Uri.parse, 'tsx');
         const model = monaco.editor.getModel(uri);
         if (!model) {
-          monaco.editor.createModel(script.code, 'typescript', uri);
+          monaco.editor.createModel(
+            script.code,
+            extension === 'md' ? 'markdown' : 'typescript',
+            uri,
+          );
         }
       });
 
@@ -291,6 +304,12 @@ export default function PlaygroundEditor(
 
   useEffect(() => {
     if (monacoEditor && editorRef.current && isEditorReady && currentScript) {
+      const extension = currentScript.filename.split('.').pop();
+
+      if (extension === 'md') {
+        setDefaultLanguage('markdown');
+      }
+
       const uri = getUriFromPath(
         currentScript.filename,
         monaco.Uri.parse,
@@ -303,7 +322,7 @@ export default function PlaygroundEditor(
       if (!model && currentScript) {
         const newModel = monacoEditor.editor.createModel(
           currentScript.code,
-          'typescript',
+          extension === 'md' ? 'markdown' : 'typescript',
           uri,
         );
         const path = getPathFromUri(uri);
@@ -356,7 +375,7 @@ export default function PlaygroundEditor(
   return (
     <>
       <Editor
-        defaultLanguage="typescript"
+        defaultLanguage={defaultLanguage}
         theme={theme}
         options={{
           fontSize: 13,

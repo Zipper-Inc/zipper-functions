@@ -41,7 +41,23 @@ export default function AddScriptForm({
   });
 
   const scriptFilename = watch('name');
-  const { isFilenameValid } = useScriptFilename(scriptFilename, appId);
+
+  // Get extension from filename
+  const extension = scriptFilename
+    ? scriptFilename.match(/\.[^.]+$/)?.[0] ?? '.ts'
+    : '.ts';
+
+  const slugifiedName = slugifyAllowDot(
+    scriptFilename?.replace(/\..+$/, '') ?? '',
+  );
+
+  const slugifiedFilename = slugifiedName + extension;
+
+  const { isFilenameValid } = useScriptFilename(scriptFilename, appId, [
+    '.ts',
+    '.md',
+  ]);
+
   const slugifiedScriptFilename = slugifyAllowDot(scriptFilename ?? '');
 
   return (
@@ -81,12 +97,7 @@ export default function AddScriptForm({
             </FormControl>
             {scriptFilename && isFilenameValid && (
               <Text fontWeight="medium" fontSize="sm" color="fg.700">
-                Press return to add{' '}
-                <Text fontFamily="mono" as="span">
-                  {slugifiedScriptFilename.endsWith('.ts')
-                    ? slugifiedScriptFilename
-                    : `${slugifiedScriptFilename}.ts`}
-                </Text>
+                Press return to add <Text>{slugifiedFilename}</Text>
               </Text>
             )}
             {scriptFilename && isFilenameValid === false && (

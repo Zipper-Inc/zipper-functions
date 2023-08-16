@@ -619,6 +619,7 @@ const EditorContextProvider = ({
               name: script.name,
               description: script.description || '',
               code: fileValues[`/${script.filename}`],
+              filename: script.filename,
             },
           })),
         },

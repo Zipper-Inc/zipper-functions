@@ -15,7 +15,7 @@ import {
 } from 'ts-morph';
 
 const isExternalImport = (specifier: string) => /^https?:\/\//.test(specifier);
-const endsWithTs = (specifier: string) => /\.ts$/.test(specifier);
+export const endsWithTs = (specifier: string) => /\.(ts|tsx)$/.test(specifier);
 
 // Strip the Deno-style file extension since TS-Morph can't handle it
 function removeTsExtension(moduleName: string) {

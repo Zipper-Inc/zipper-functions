@@ -16,7 +16,7 @@ import denyList from '../utils/slugDenyList';
 import { appSubmissionState, ResourceOwnerType } from '@zipper/types';
 import { Context } from '../context';
 import { getAppVersionFromHash, getScriptHash } from '~/utils/hashing';
-import { parseInputForTypes } from '~/utils/parse-code';
+import { endsWithTs, parseInputForTypes } from '~/utils/parse-code';
 import {
   getInputsFromFormData,
   ZIPPER_TEMP_USER_ID_COOKIE_NAME,
@@ -29,6 +29,7 @@ import { generateAccessToken } from '~/utils/jwt-utils';
 import { getToken } from 'next-auth/jwt';
 import { buildAndStoreApplet } from '~/utils/eszip-build-applet';
 import JSZip from 'jszip';
+import { DEFAULT_MD } from './script.router';
 import { storeVersionCode } from '../utils/r2.utils';
 
 const defaultSelect = Prisma.validator<Prisma.AppSelect>()({
@@ -183,6 +184,24 @@ export const appRouter = createRouter()
       });
 
       if (!app) return;
+
+      const readme = await prisma.script.create({
+        data: {
+          name: 'Readme',
+          filename: 'readme.md',
+          code: DEFAULT_MD,
+          appId: app.id,
+        },
+      });
+
+      await prisma.app.update({
+        where: { id: app.id },
+        data: {
+          scripts: {
+            connect: { id: readme.id },
+          },
+        },
+      });
 
       const scriptMain = await prisma.scriptMain.create({
         data: {
@@ -643,8 +662,6 @@ export const appRouter = createRouter()
 
       const version = getAppVersionFromHash(hash);
 
-      console.log('Run version: ', version);
-
       // Find the intended script, or mainScript if we can't find it
       const script =
         app.scripts.find((s) => s.id === input.scriptId) ||
@@ -654,7 +671,9 @@ export const appRouter = createRouter()
         throw new TRPCError({ code: 'NOT_FOUND' });
       }
 
+      console.log('---FILENAME---', script.filename);
       const inputParams = parseInputForTypes({ code: script.code });
+
       if (!inputParams) return { ok: false };
 
       const inputs = getInputsFromFormData(input.formData, inputParams);
@@ -796,6 +815,7 @@ export const appRouter = createRouter()
               data: z.object({
                 name: z.string().min(3).max(255).optional(),
                 code: z.string().optional(),
+                filename: z.string(),
               }),
             }),
           )
@@ -856,10 +876,12 @@ export const appRouter = createRouter()
         await Promise.all(
           scripts.map(async (script) => {
             const { id, data } = script;
+
             let isRunnable: boolean | undefined = undefined;
-            if (data.code) {
+            if (data.code && endsWithTs(data.filename)) {
               isRunnable = isCodeRunnable(data.code);
             }
+
             updatedScripts.push(
               await prisma.script.update({
                 where: { id },
