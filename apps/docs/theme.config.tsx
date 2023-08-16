@@ -1,18 +1,18 @@
-import React from 'react'
-import { DocsThemeConfig } from 'nextra-theme-docs'
+import React from 'react';
+import { DocsThemeConfig } from 'nextra-theme-docs';
+import { ZipperLogo } from '@zipper/ui';
 
 const config: DocsThemeConfig = {
-  logo: <span>My Project</span>,
-  project: {
-    link: 'https://github.com/shuding/nextra-docs-template',
-  },
-  chat: {
-    link: 'https://discord.com',
-  },
-  docsRepositoryBase: 'https://github.com/shuding/nextra-docs-template',
+  logo: (
+    <ZipperLogo
+      fill="var(--chakra-colors-purple-700)"
+      style={{ height: '20px' }}
+    />
+  ),
+  primaryHue: { dark: 278, light: 280 },
   footer: {
-    text: 'Nextra Docs Template',
+    text: 'Zipper © 2023',
   },
-}
+};
 
-export default config
+export default config;
