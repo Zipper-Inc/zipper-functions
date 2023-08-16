@@ -31,7 +31,7 @@ export const defaults: Components & { heading: Components['h1'] } = {
   p: (props: any) => {
     const { children, node } = props;
 
-    if (node.children[0].tagName === 'img') {
+    if (node && node?.children && node?.children[0].tagName === 'img') {
       const image = node.children[0];
       const metastring = image.properties.alt;
       const alt = metastring?.replace(/ *\{[^)]*\} */g, '');
