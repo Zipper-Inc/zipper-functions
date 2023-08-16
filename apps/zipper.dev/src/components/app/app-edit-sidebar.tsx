@@ -10,13 +10,14 @@ import {
   HStack,
   Heading,
   useColorMode,
+  Code,
 } from '@chakra-ui/react';
 import { TabButton } from '@zipper/ui';
 import { useState } from 'react';
-
 import { useEditorContext } from '../context/editor-context';
 import AppEditSidebarApplet from './app-edit-sidebar-applet';
 import { AppConsole } from './app-console';
+import { Markdown } from '@zipper/ui';
 
 type AppEditSidebarProps = {
   showInputForm: boolean;
@@ -46,6 +47,8 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
     logs,
     markLogsAsRead,
     lastReadLogsTimestamp,
+    currentScript,
+    currentScriptLive,
   } = useEditorContext();
 
   const { colorMode } = useColorMode();
@@ -55,6 +58,31 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
   ).length;
 
   const isLibrary = !inputParams && !inputError;
+  const isMarkdown = currentScript?.filename.endsWith('.md');
+
+  if (isMarkdown) {
+    return (
+      <VStack
+        h="full"
+        w="full"
+        align="stretch"
+        p={5}
+        maxW="700px"
+        overflowY="scroll"
+        scrollBehavior="smooth"
+        css={{
+          '&::-webkit-scrollbar': {
+            display: 'none',
+          },
+        }}
+      >
+        <Code px={10} py={4}>
+          <Markdown children={currentScriptLive?.code || ''} />
+        </Code>
+      </VStack>
+    );
+  }
+
   return (
     <VStack h="full" w="full">
       {isLibrary && (
