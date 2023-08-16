@@ -1,0 +1,56 @@
+# Handler Functions
+
+An exported `handler` turns a file into a path handler. It's the key to capturing inputs and its output gets turned into your web UI.
+
+Handler functions receives two parameters:
+
+1. The inputs object that is used to generate a form to collect user information.
+2. A `context` object that contains information about the current user, the request, and the response.
+
+```typescript
+type Inputs = {
+  salutation: string;
+};
+
+export async function handler(inputs: Inputs, context: Zipper.HandlerContext) {
+  return `Hello, ${inputs.salutation}!`;
+}
+```
+
+The context object has the following shape:
+
+```typescript
+export type HandlerContext = {
+  /**
+   * The request object sent to this handler
+   */
+  request: Request;
+
+  /**
+   * An editable response object
+   * Changes made to these properties will overwrite the default response
+   */
+  response: Partial<ResponseInit & { body: BodyInit }>;
+
+  /**
+   * Information about the user who called this app
+   * (blank if public)
+   */
+  userInfo: undefined | UserInfo;
+
+  /**
+   * Meta info about the applet itself
+   */
+  appInfo: AppInfo;
+
+  /**
+   * The ID for this particular run
+   */
+  runId: string;
+
+  /**
+   * Auth tokens for each service the user has individually authed against
+   */
+  userConnectorTokens: { [service: string]: string };
+};
+```

@@ -1,10 +1,26 @@
 # Accepting Inputs
 
-> Needs to be rewritten - copied from basic-concepts
+A handler function can have optional arguments that you can pass through it. These can be anything: strings, booleans, arrays, and objects just as long as it's serializable as JSON (with the exception of Dates which are handled specially for you). This is called the 'Inputs' object as is passed as a parameterized object in single argument to your handler.
 
-A handler function can have optional arguments that you can pass through it. These can be anything: strings, booleans, arrays, and objects just as long as it's serializable as JSON. This is called the \***\*\*\*\*\*\*\***Inputs\***\*\*\*\*\*\*\*** object as is passed as a parameterized object in single argument to your handler.
+Let’s create a simple `greeting` applet accepts a string for who you are saying hello to. Zipper uses the power of Typescript to help generate UI for all your inputs.
 
-Let’s start by modifying our `greeting` applet by letting you change the hello string and who you are saying hello to. Zipper uses the power of Typescript to help generate UI for all your inputs. Let's pass a string `name` to our function.
+```typescript
+export async function handler(inputs: { name: string }) {
+  return `Hello, ${inputs.name}!`;
+}
+```
+
+Alternatively, you can define your inputs as a type and pass it to the `handler` function.
+
+```typescript
+type Inputs = {
+  name: string;
+};
+
+export async function handler(inputs: Inputs) {
+  return `Hello, ${inputs.name}!`;
+}
+```
 
 ![We generate UI for your function based on the the types in your Input. Check out the Input Types section for more information.](public/images/Screenshot_2023-05-22_at_4.47.08_PM.png)
 

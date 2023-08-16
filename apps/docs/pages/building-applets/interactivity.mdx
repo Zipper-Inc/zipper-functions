@@ -1,5 +1,7 @@
 # Interactivity
 
+Zipper allows you to add interactive elements to your output that can be used to trigger other actions within your app.
+
 ### **Actions**
 
 Actions are interactive elements that can be included in your output. We render Actions as either buttons or dropdowns.
@@ -113,3 +115,19 @@ The `Zipper.Action.create` method is called with the following parameters:
 ```
 
 The output of the method should be included in the return value of the handler function.
+
+#### Show As
+
+The `showAs` property determines how the UI should be updated after the action has run:
+
+- **`replace_all`**: The action replaces the current output with the result of the action. This can only be used when `run: true` (i.e. there has to be output from the function that can be used to replace the existing output). This is useful for actions that drill into data.
+
+- **`expanded`**: The action will display the result of the action in the expanded section below the main output. This is useful for peeking into data.
+
+- **`modal`**: This action displays the output of the action in a modal. If `run: false` the background output will be automatically refreshed when the modal is closed.
+
+- **`refresh`**: runs the action and then re-runs the handler that generated the original content using the original inputs. This is useful for actions that update data.
+
+#### Run
+
+The `run` property determines whether the Action should run the handler with the provided inputs automatically or if it should prefill the inputs form and let the user hit run themselves.

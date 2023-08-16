@@ -1,6 +1,6 @@
-## Storage
+# Storage
 
-Zipper also has basic key value storage built-in. Each applet has its own unique storage instance, and it will not go with you when you fork an app. You can use it using the `[Zipper.storage](http://Zipper.storage)` global.
+Zipper also has basic key value storage built-in. Each applet has its own unique storage instance, and it will not go with you when you fork an app. You can use it using the `Zipper.storage` global.
 
 ### `getAll`
 
@@ -10,9 +10,11 @@ Get’s all the storage keys and values.
 const everything = await Zipper.storage.getAll();
 ```
 
+Returns `null` if there is nothing in storage. Otherwise, it returns an object with all the keys and values.
+
 ### `get`
 
-Get a storage key by value. You do not need to worry about unserializing.
+Get a storage key by value. You do not need to worry about unserializing. If the key hasn't been set, it'll return `null`.
 
 ```tsx
 const singleValue = await Zipper.storage.get('some_key_name');
