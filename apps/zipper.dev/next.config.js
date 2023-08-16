@@ -88,17 +88,6 @@ module.exports = getConfig({
     return config;
   },
 
-  async redirects() {
-    return [
-      {
-        source: '/docs',
-        destination:
-          'https://zipper-inc.notion.site/Documentation-f1c584a926c74fbfa70850f2a461c7d4',
-        permanent: true,
-      },
-    ];
-  },
-
   async rewrites() {
     return [
       {
@@ -109,6 +98,20 @@ module.exports = getConfig({
         source: '/about',
         destination: 'https://similar-years-645746.framer.app/about',
       },
+      {
+        source: '/docs',
+        destination: `${process.env.NODE_ENV === 'production'
+          ? 'https://zipper-docs-production.onrender.com/docs'
+          : 'http://localhost:3003/docs'
+          }`,
+      },
+      {
+        source: '/docs/:path*',
+        destination: `${process.env.NODE_ENV === 'production'
+          ? 'https://zipper-docs-production.onrender.com/docs/:path*'
+          : 'http://localhost:3003/docs/:path*'
+          }`,
+      },
       // comment this back in when the blog is ready
       // {
       //   source: '/blog/:path*',
@@ -116,19 +119,15 @@ module.exports = getConfig({
       // },
       {
         source: '/run/:slug/:version/:filename/:path*',
-        destination: `${
-          process.env.NODE_ENV === 'production' ? 'https' : 'http'
-        }://:slug.${
-          process.env.NEXT_PUBLIC_ZIPPER_DOT_RUN_HOST
-        }/@:version/:filename/relay`,
+        destination: `${process.env.NODE_ENV === 'production' ? 'https' : 'http'
+          }://:slug.${process.env.NEXT_PUBLIC_ZIPPER_DOT_RUN_HOST
+          }/@:version/:filename/relay`,
       },
       {
         source: '/boot/:slug/:version/:path*',
-        destination: `${
-          process.env.NODE_ENV === 'production' ? 'https' : 'http'
-        }://:slug.${
-          process.env.NEXT_PUBLIC_ZIPPER_DOT_RUN_HOST
-        }/@:version/boot`,
+        destination: `${process.env.NODE_ENV === 'production' ? 'https' : 'http'
+          }://:slug.${process.env.NEXT_PUBLIC_ZIPPER_DOT_RUN_HOST
+          }/@:version/boot`,
       },
     ];
   },

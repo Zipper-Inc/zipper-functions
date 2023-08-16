@@ -1,0 +1,317 @@
+# Customizing Output
+
+### Components
+
+Zipper ships with a handful of prebuilt UI components that allow you to customize the output of your app. These components are described in the output of your handler functions as JSON. We provide a handy `Zipper.Component.create()` method that outputs the necessary JSON for you.
+
+**Stacks**
+
+Based on flexbox containers, Stacks let you easily control the layout of your output by applying rows or columns with evenly spaced elements.
+
+```tsx
+Zipper.Component.create({
+	/**
+  * The type of component you want to create
+  */
+	type: 'stack';
+
+	/**
+  * The props of the stack component:
+  * - direction: the flex direction of
+  * - divider: show a divider between elements in the stack
+  * - align: shorthand for the align-items CSS property
+  */
+  props: {
+    direction: 'row' | 'column';
+    divider?: boolean;
+    align?: string;
+  };
+
+	/**
+  * You can pass through an array of elements that will be
+  * rendered within the stack. Children can be any JSON that
+  * Zipper would typically render, including other Components
+  * and Actions
+  */
+  children: Array<Serializable | Component>;
+})
+```
+
+**Links**
+
+The link component simply renders an `a` tag.
+
+```tsx
+Zipper.Component.create({
+	/**
+  * The type of component you want to create
+  */
+  type: 'link';
+
+	/**
+  * The props of the stack component:
+  * - href: the url you want to link to
+  * - target: whether the link should open in a new tab
+  */
+  props: {
+    href: string;
+    target?: '_blank' | '_self';
+  };
+
+	/**
+  * The text of the link
+  */
+  text: string;
+})
+```
+
+### Sections
+
+An applet is able to render its output in two places - the main section (where output is rendered when the app is run) and in a modal (which has to be triggered via an Action).
+
+Each of these places has two sections - primary and expanded. The expanded section opens below the primary section and has to be triggered via an Action. The expanded section should be thought of as a way to peek into information in the primary section.
+
+If you output to the same place and section multiple times, Zipper will replace the content but allow the user to navigate back through the stack.
+
+### Generated UI
+
+Zipper will automatically convert the JSON output of your handler function into rendered UI.
+
+**Arrays**
+
+Arrays will be converted to tables with sortable columns. If your arrays only contain primitives, they’ll also be able to be viewed as cards. If your array has more complex objects and arrays, those will be rendered within the table.
+
+**Objects**
+
+Objects will be rendered in Zipper’s object explorer which allows you to expand and collapse keys. It will also render nested objects and arrays.
+
+### HTML
+
+Returning an HTML string will just render HTML.
+
+### Markdown
+
+By default, returning a string will render you string in Markdown. You can also explicitly send Markdown as text to any part of your Applet by using the `md` tag. For example,
+
+```tsx
+const plaintext = 'regular text';
+const markdown = md`
+# Heading
+
+## Subheading
+
+Some _rich_ _text_ (here)[https://zipper.works]
+
+1.  one
+2.  two
+3.  three
+`;
+
+return { plaintext, markdown };
+```
+
+Will render an object with plaintext and markdown text.
+
+## Advanced: JSX Output for Custom UI
+
+Zipper also supports JSX for rendering basic HTML and special Zipper components. We do not support full client-side React/Preact at the time, but we do let you compose Actions, Components, and HTML layout together.
+
+So for example, you can use the `Stack` components (as `Row` and `Column` ) to build out a layout with text, HTML, and actions (as `Button` and `Dropdown` ).
+
+```tsx
+return (
+  <>
+    <h1>Title</h1>
+    <h2>Subtitle</h2>
+    <Markdown>Some **rich** _text_ here</Markdown>
+    <Stack>
+      <Row>
+        <Column>
+          <Button
+            showAs="modal"
+            path="greeting"
+            run={true}
+            inputs={{ world: 'Earth!!!' }}
+          >
+            earth
+          </Button>
+        </Column>
+        <Column>
+          <Dropdown
+            options={{
+              world: [
+                {
+                  label: 'mars',
+                  value: 'Mars!!!',
+                },
+                {
+                  label: 'venus',
+                  value: 'Venus!!!',
+                },
+              ],
+            }}
+            path="greeting"
+            showAs="modal"
+            text="OK"
+          />
+        </Column>
+      </Row>
+      <Row>
+        <Column>three</Column>
+        <Column>
+          <Link href="https://google.com/">Go to Google</Link>
+        </Column>
+      </Row>
+    </Stack>
+  </>
+);
+```
+
+Will return a something like this UI:
+
+![Screenshot 2023-06-12 at 6.54.18 PM.png](public/images/Screenshot_2023-06-12_at_6.54.18_PM.png)
+
+This would save you from writing all this JSON by hand:
+
+- **View raw JSON**
+
+  ```json
+  [
+    {
+      "$zipperType": "Zipper.Component",
+      "type": "html.h1",
+      "props": null,
+      "children": ["Title"]
+    },
+    {
+      "$zipperType": "Zipper.Component",
+      "type": "html.h2",
+      "props": null,
+      "children": ["Subtitle"]
+    },
+    {
+      "$zipperType": "Zipper.Component",
+      "type": "markdown",
+      "props": {},
+      "children": ["Some **rich** _text_ here"]
+    },
+    {
+      "$zipperType": "Zipper.Component",
+      "type": "stack",
+      "props": {},
+      "children": [
+        {
+          "$zipperType": "Zipper.Component",
+          "type": "stack",
+          "props": {
+            "direction": "row"
+          },
+          "children": [
+            {
+              "$zipperType": "Zipper.Component",
+              "type": "stack",
+              "props": {
+                "direction": "column"
+              },
+              "children": [
+                {
+                  "$zipperType": "Zipper.Action",
+                  "actionType": "button",
+                  "showAs": "modal",
+                  "path": "greeting",
+                  "run": true,
+                  "inputs": {
+                    "world": "Earth!!!"
+                  },
+                  "text": "earth"
+                }
+              ]
+            },
+            {
+              "$zipperType": "Zipper.Component",
+              "type": "stack",
+              "props": {
+                "direction": "column"
+              },
+              "children": [
+                {
+                  "$zipperType": "Zipper.Action",
+                  "actionType": "dropdown",
+                  "options": {
+                    "world": [
+                      {
+                        "label": "mars",
+                        "value": "Mars!!!"
+                      },
+                      {
+                        "label": "venus",
+                        "value": "Venus!!!"
+                      }
+                    ]
+                  },
+                  "path": "greeting",
+                  "showAs": "modal",
+                  "text": "OK",
+                  "children": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "$zipperType": "Zipper.Component",
+          "type": "stack",
+          "props": {
+            "direction": "row"
+          },
+          "children": [
+            {
+              "$zipperType": "Zipper.Component",
+              "type": "stack",
+              "props": {
+                "direction": "column"
+              },
+              "children": ["three"]
+            },
+            {
+              "$zipperType": "Zipper.Component",
+              "type": "stack",
+              "props": {
+                "direction": "column"
+              },
+              "children": [
+                {
+                  "$zipperType": "Zipper.Component",
+                  "type": "link",
+                  "props": {
+                    "href": "https://google.com/"
+                  },
+                  "children": ["Go to Google"]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+  ```
+
+### Composing components
+
+With JSX and React-style components, you can really make powerful and custom UIs with not too much code. Try composing different patterns into components to make your UIs custom.
+
+```tsx
+type Props = { title: string; subtitle: string; };
+
+const MyHeaderComponent = (props: Props) => (
+	<Row>
+		<h1>{title}</h1>
+		<h3>{subtitle}<h3>
+	</Row>
+);
+
+export function handler() {
+	return <MyHeaderComponent title="Hello" subtitle="world" />;
+}
+```

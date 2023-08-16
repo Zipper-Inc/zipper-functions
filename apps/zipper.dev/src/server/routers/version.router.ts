@@ -1,5 +1,4 @@
 import { Prisma } from '@prisma/client';
-import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { prisma } from '~/server/prisma';
 import { createRouter } from '../createRouter';
@@ -8,9 +7,8 @@ import {
   hasAppEditPermission,
 } from '../utils/authz.utils';
 
-import s3Client from '../s3';
-import JSZip from 'jszip';
-import { GetObjectCommand } from '@aws-sdk/client-s3';
+import { getVersionCode } from '../utils/r2.utils';
+import { captureException } from '@sentry/nextjs';
 
 const defaultSelect = Prisma.validator<Prisma.VersionSelect>()({
   appId: true,
@@ -19,55 +17,6 @@ const defaultSelect = Prisma.validator<Prisma.VersionSelect>()({
   createdAt: true,
   userId: true,
 });
-
-async function getVersionCode({
-  appId,
-  version,
-}: {
-  appId: string;
-  version: string;
-}) {
-  const zipFile = await s3Client.send(
-    new GetObjectCommand({
-      Bucket: process.env.CLOUDFLARE_APPLET_SRC_BUCKET_NAME,
-      Key: `${appId}/${version}.zip`,
-    }),
-  );
-
-  if (!zipFile || !zipFile.Body) {
-    throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
-  }
-  const versionScripts: Prisma.ScriptCreateManyInput[] = [];
-  const versionZip = new JSZip();
-
-  await versionZip.loadAsync(zipFile.Body.transformToByteArray());
-
-  const promises: Promise<string | void>[] = [];
-
-  // you now have every files contained in the loaded zip
-  versionZip.forEach(async function (relativePath, zipEntry) {
-    promises.push(
-      zipEntry.async('string').then(function (content) {
-        const jsonContent = JSON.parse(content);
-
-        versionScripts.push({
-          appId,
-          filename: jsonContent.filename,
-          code: jsonContent.code,
-          hash: jsonContent.hash,
-          isRunnable: jsonContent.isRunnable,
-          createdAt: jsonContent.createdAt,
-          updatedAt: jsonContent.updatedAt,
-          name: jsonContent.name,
-        });
-      }),
-    );
-  });
-
-  await Promise.all(promises);
-
-  return versionScripts;
-}
 
 export const versionRouter = createRouter()
   .query('byVersion', {
@@ -237,17 +186,25 @@ export const versionRouter = createRouter()
         version: input.version,
       });
 
-      await prisma.scriptMain.delete({
-        where: {
-          appId: input.appId,
-        },
-      });
+      try {
+        await prisma.scriptMain.delete({
+          where: {
+            appId: input.appId,
+          },
+        });
+      } catch (e) {
+        captureException(e);
+      }
 
-      await prisma.script.deleteMany({
-        where: {
-          appId: input.appId,
-        },
-      });
+      try {
+        await prisma.script.deleteMany({
+          where: {
+            appId: input.appId,
+          },
+        });
+      } catch (e) {
+        captureException(e);
+      }
 
       await prisma.script.createMany({
         data: versionScripts,

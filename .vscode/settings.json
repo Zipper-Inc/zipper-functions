@@ -6,5 +6,8 @@
   "deno.enablePaths": [
     "./packages/@zipper-framework/bin",
     "./packages/@zipper-framework/deno"
-  ]
+  ],
+  "[mdx]": {
+    "editor.wordWrap": "on"
+  }
 }

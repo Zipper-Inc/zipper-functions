@@ -4,7 +4,7 @@ import {
   ConnectorType,
   UserAuthConnector,
 } from '@zipper/types';
-import { SiOpenai } from 'react-icons/si';
+import { SiOpenai, SiZendesk } from 'react-icons/si';
 import { FiGithub } from 'react-icons/fi';
 import { BsSlack } from 'react-icons/bs';
 import { IconBaseProps, IconType } from 'react-icons';
@@ -22,6 +22,10 @@ const connectors: Record<ConnectorType, { icon: IconType; name: string }> = {
   openai: {
     name: 'OpenAI',
     icon: SiOpenai,
+  },
+  zendesk: {
+    name: 'Zendesk',
+    icon: SiZendesk,
   },
 };
 

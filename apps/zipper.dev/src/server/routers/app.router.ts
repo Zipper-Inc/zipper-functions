@@ -28,10 +28,10 @@ import isCodeRunnable from '~/utils/is-code-runnable';
 import { generateAccessToken } from '~/utils/jwt-utils';
 import { getToken } from 'next-auth/jwt';
 import { buildAndStoreApplet } from '~/utils/eszip-build-applet';
-import s3Client from '../s3';
 import JSZip from 'jszip';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { DEFAULT_MD } from './script.router';
+import { storeVersionCode } from '../utils/r2.utils';
 
 const defaultSelect = Prisma.validator<Prisma.AppSelect>()({
   id: true,
@@ -901,28 +901,29 @@ export const appRouter = createRouter()
         );
       }
 
+      // build and store the eszip file
       const { hash } = await buildAndStoreApplet({
-        app: { ...app, scripts: updatedScripts },
+        app: { ...app, scripts: scripts ? updatedScripts : app.scripts },
         userId: ctx.userId,
       });
 
-      console.log('hash generated', hash);
-
+      // if the code has changed, send the latest code to R2
       if (hash !== app.playgroundVersionHash) {
-        //backup previous scripts to R2
         const zip = new JSZip();
-        updatedScripts.map((s) => {
+        (updatedScripts.length > 0 ? updatedScripts : app.scripts).map((s) => {
           zip.file(s.filename, JSON.stringify(s));
         });
 
+        const version = getAppVersionFromHash(hash);
+
+        if (!version) throw new Error('Invalid hash');
+
         zip.generateAsync({ type: 'uint8array' }).then((content) => {
-          s3Client.send(
-            new PutObjectCommand({
-              Bucket: process.env.CLOUDFLARE_APPLET_SRC_BUCKET_NAME,
-              Key: `${app.id}/${getAppVersionFromHash(hash)}.zip`,
-              Body: content,
-            }),
-          );
+          storeVersionCode({
+            appId: app.id,
+            version,
+            zip: content,
+          });
         });
       }
 

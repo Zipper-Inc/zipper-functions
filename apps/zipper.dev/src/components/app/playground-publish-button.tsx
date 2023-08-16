@@ -13,6 +13,7 @@ import {
   VStack,
   Icon,
   Spinner,
+  Box,
 } from '@chakra-ui/react';
 import { HiCheck, HiGlobe, HiOutlineUpload } from 'react-icons/hi';
 import { getAppLink } from '@zipper/utils';
@@ -23,7 +24,7 @@ import { useRunAppContext } from '../context/run-app-context';
 import SignedIn from '../auth/signed-in';
 import { useState } from 'react';
 import TimeAgo from 'timeago-react';
-import { HiGlobeAlt } from 'react-icons/hi2';
+import { HiExclamationTriangle, HiGlobeAlt } from 'react-icons/hi2';
 
 export const PlaygroundPublishInfo = ({ app }: { app: AppQueryOutput }) => {
   const appLink = getAppLink(app.slug);
@@ -31,8 +32,7 @@ export const PlaygroundPublishInfo = ({ app }: { app: AppQueryOutput }) => {
   const [isPublishing, setIsPublishing] = useState(false);
   const [buttonText, setButtonText] = useState(<Text>Update</Text>);
 
-  const { save, currentScript, editorHasErrors, getErrorFiles } =
-    useEditorContext();
+  const { save, editorHasErrors, getErrorFiles } = useEditorContext();
   const toast = useToast();
 
   const { boot } = useRunAppContext();
@@ -102,6 +102,11 @@ export const PlaygroundPublishInfo = ({ app }: { app: AppQueryOutput }) => {
                   gap={2}
                   fontWeight="medium"
                   isDisabled={editorHasErrors()}
+                  opacity={
+                    app.publishedVersionHash !== app.playgroundVersionHash
+                      ? 1
+                      : 0.6
+                  }
                 >
                   <HiOutlineUpload />
                   <Text>Publish</Text>
@@ -136,14 +141,28 @@ export const PlaygroundPublishInfo = ({ app }: { app: AppQueryOutput }) => {
                   )}
                 </VStack>
               </HStack>
-              <Button
-                w="full"
-                colorScheme="purple"
-                onClick={publish}
-                isDisabled={isPublishing}
-              >
-                {buttonText}
-              </Button>
+
+              {app.publishedVersionHash === app.playgroundVersionHash ? (
+                <HStack
+                  w="full"
+                  justifyContent="center"
+                  borderTop="1px solid"
+                  borderColor="gray.200"
+                  pt="4"
+                >
+                  <Icon as={HiCheck} color="green.500" />
+                  <Text fontSize="sm">You're up to date</Text>
+                </HStack>
+              ) : (
+                <Button
+                  w="full"
+                  colorScheme="purple"
+                  onClick={publish}
+                  isDisabled={isPublishing}
+                >
+                  {buttonText}
+                </Button>
+              )}
             </VStack>
           </PopoverContent>
         </Popover>
