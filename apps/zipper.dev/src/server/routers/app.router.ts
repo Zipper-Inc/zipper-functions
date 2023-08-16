@@ -183,6 +183,8 @@ export const appRouter = createRouter()
         select: defaultSelect,
       });
 
+      if (!app) return;
+
       const readme = await prisma.script.create({
         data: {
           name: 'Readme',
@@ -200,8 +202,6 @@ export const appRouter = createRouter()
           },
         },
       });
-
-      if (!app) return;
 
       const scriptMain = await prisma.scriptMain.create({
         data: {
