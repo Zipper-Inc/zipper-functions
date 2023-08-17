@@ -49,6 +49,7 @@ async function maybeGetCustomResponse(
       return await htmlHandler(request);
     }
 
+    case /\/raw(\/?)$/.test(appRoute):
     case /\/relay(\/?)$/.test(appRoute): {
       console.log('matching relay route');
       return serveRelay({
@@ -219,18 +220,11 @@ export const middleware = async (request: NextRequest) => {
   const requestHeaders = new Headers(request.headers);
   if (accessToken) requestHeaders.set('x-zipper-access-token', accessToken);
 
-  let customResponse = await maybeGetCustomResponse(
+  const customResponse = await maybeGetCustomResponse(
     appRoute,
     request,
     requestHeaders,
   );
-
-  if (!customResponse && request.method === 'POST') {
-    customResponse = await serveRelay({
-      request,
-      bootOnly: false,
-    });
-  }
 
   const response =
     customResponse ||

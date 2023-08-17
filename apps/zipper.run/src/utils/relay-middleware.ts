@@ -237,7 +237,7 @@ export default async function serveRelay({
 }) {
   const { version, filename } = getFilenameAndVersionFromPath(
     request.nextUrl.pathname,
-    bootOnly ? ['boot'] : ['relay'],
+    bootOnly ? ['boot'] : ['relay', 'raw'],
   );
 
   console.log('version: ', version);
