@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import {
   Box,
   HStack,
@@ -10,6 +10,7 @@ import {
   useDisclosure,
   Text,
   Icon,
+  ChakraProps,
 } from '@chakra-ui/react';
 import { useRouter } from 'next/router';
 import NextLink from 'next/link';
@@ -38,6 +39,13 @@ const navRoutes = [
   { href: '/docs', text: 'Docs' },
 ];
 
+const landingRoutes = [
+  { href: '/feature', label: 'Feature' },
+  { href: '/docs', label: 'Docs' },
+  { href: '/blog', label: 'Blogs' },
+  { href: '/about', label: 'About' },
+];
+
 const Header: React.FC<HeaderProps> = ({
   showNav = true,
   showDivider = true,
@@ -46,6 +54,18 @@ const Header: React.FC<HeaderProps> = ({
   const router = useRouter();
   const isTablet = useBreakpointValue({ base: false, md: true });
   const baseRoute = router.pathname.split('/')[1];
+
+  const isLanding = useMemo(
+    () =>
+      ['/about', '/features', '/blog', '/about'].includes(router.asPath) ||
+      router.asPath === '/',
+    [router.asPath],
+  );
+
+  const activeLink = useMemo(
+    () => landingRoutes.find((link) => link.href === router.asPath),
+    [router.asPath],
+  );
 
   const { reload } = router.query;
   const { user, isLoaded } = useUser();
@@ -57,6 +77,57 @@ const Header: React.FC<HeaderProps> = ({
       window.location.href = window.location.href.replace('?reload=true', '');
     }
   }, [reload]);
+
+  const linkStyles: Record<string, ChakraProps> = {
+    active: {
+      fontWeight: 'semibold',
+      color: 'blue.500',
+      _hover: {
+        color: 'blue.400',
+      },
+    },
+    idle: {
+      fontSize: 'medium',
+      fontWeight: 'normal',
+      color: 'gray.600',
+      _hover: {
+        color: 'blue.500',
+        textDecoration: 'none',
+      },
+    },
+  };
+
+  if (isLanding) {
+    return (
+      <Flex
+        align="center"
+        css={{ margin: '0 auto' }}
+        justify="space-between"
+        height={20}
+        w="full"
+        maxW="container.lg"
+      >
+        <ZipperLogo type="color" />
+        <HStack gap={8}>
+          {landingRoutes.map((link, index) => {
+            const styles =
+              activeLink?.href === link.href
+                ? { ...linkStyles.active, ...linkStyles.idle }
+                : linkStyles.idle;
+
+            return (
+              <Link key={index} href={link.href} {...styles}>
+                {link.label}
+              </Link>
+            );
+          })}
+          <Button colorScheme="gray" variant="outline">
+            Sign Up
+          </Button>
+        </HStack>
+      </Flex>
+    );
+  }
 
   return (
     <>
@@ -124,7 +195,6 @@ const Header: React.FC<HeaderProps> = ({
             </>
           )}
         </HStack>
-
         {showNav && isLoaded && (
           <Flex
             flex={1}
