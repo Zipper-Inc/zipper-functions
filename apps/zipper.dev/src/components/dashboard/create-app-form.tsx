@@ -40,9 +40,8 @@ import { useOrganization } from '~/hooks/use-organization';
 import { useUser } from '~/hooks/use-user';
 import { useOrganizationList } from '~/hooks/use-organization-list';
 import { getEditAppletLink, getZipperApiUrl } from '@zipper/utils';
-import { ChatGPTMessage } from '~/pages/api/ai/generate/applet';
-import { AICodeOutput } from '@zipper/types';
 import { useEditorContext } from '../context/editor-context';
+import { AICodeOutput } from '@zipper/types';
 
 const getDefaultCreateAppFormValues = () => ({
   name: generateDefaultSlug(),
@@ -50,6 +49,69 @@ const getDefaultCreateAppFormValues = () => ({
   isPublic: false,
   requiresAuthToRun: false,
 });
+
+const getBasicCode = async (message: string): Promise<string> => {
+  const response = await fetch(`${getZipperApiUrl()}/ai/generate/applet`, {
+    method: 'POST',
+    body: JSON.stringify({
+      userRequest: message,
+    }),
+  });
+  if (!response.ok) throw new Error('Failed create basic code');
+  const data = await response.json();
+
+  if (data.error) {
+    throw new Error(data.error);
+  }
+
+  return data.message;
+};
+
+const getZipperCode = async ({
+  userRequest,
+  basicCode,
+}: {
+  userRequest: string;
+  basicCode: string;
+}): Promise<string> => {
+  const response = await fetch(
+    `${getZipperApiUrl()}/ai/zipper-version/applet`,
+    {
+      method: 'POST',
+      body: JSON.stringify({
+        userRequest,
+        rawTypescriptCode: basicCode,
+      }),
+    },
+  );
+
+  if (!response.ok) throw new Error('Failed to audit code');
+  const data = await response.json();
+
+  if (data.error) {
+    throw new Error('Failed to generate Zipper code');
+  }
+
+  return data.message;
+};
+
+const getAuditedCode = async (params: {
+  userRequest: string;
+  zipperCode: string;
+}): Promise<{ raw: string; groupedByFilename: AICodeOutput[] }> => {
+  const response = await fetch(`${getZipperApiUrl()}/ai/audit/applet`, {
+    method: 'POST',
+    body: JSON.stringify(params),
+  });
+  if (!response.ok) throw new Error('Failed to audit code');
+  const data = await response.json();
+
+  if (data.error) {
+    throw new Error(data.error);
+  }
+
+  return data;
+};
 
 export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
   onClose,
@@ -59,80 +121,26 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
   const { setActive } = useOrganizationList();
   const utils = trpc.useContext();
   const router = useRouter();
-  const [messages, setMessages] = useState<ChatGPTMessage[]>([]);
   const [isSending, setIsSending] = useState(false);
 
   const addScript = trpc.useMutation('script.add');
   const { scripts } = useEditorContext();
 
-  const getZipperCode = async ({
-    message,
-    basicCode,
-  }: {
-    message: string;
-    basicCode: string;
-  }) => {
-    const response = await fetch(
-      `${getZipperApiUrl()}/ai/zipper-version/applet`,
-      {
-        method: 'POST',
-        body: JSON.stringify({
-          userRequest: message,
-          rawTypescriptCode: basicCode,
-        }),
-      },
-    );
-
-    // Handle response
-    const data = await response.json();
-
-    if (data.error) {
-      console.log(data.error);
-      throw new Error('Failed to generate Zipper code');
-    }
-
-    return data as { raw: string; groupedByFilename: AICodeOutput[] };
-  };
-
-  // getBasicCode implementation
-  const getBasicCode = async (message: string): Promise<ChatGPTMessage> => {
-    const response = await fetch(`${getZipperApiUrl()}/ai/generate/applet`, {
-      method: 'POST',
-      body: JSON.stringify({
-        userRequest: message,
-      }),
-    });
-
-    const data = await response.json();
-
-    if (data.error) {
-      throw new Error(data.error);
-    }
-
-    return data.message;
-  };
-
-  const sendMessageHandler = async (message: string) => {
-    // Existing logic to build messages
-    const messagesToSend: ChatGPTMessage[] = [
-      ...messages,
-      { role: 'user', content: message },
-    ];
-
+  const generateAppletWithAI = async (userRequest: string) => {
     setIsSending(true);
 
     try {
-      const basicCodeResponse = await getBasicCode(message);
-      const basicCode = basicCodeResponse.content;
-      const zipperCode = await getZipperCode({ message, basicCode });
+      const basicCode = await getBasicCode(userRequest);
+      const zipperCode = await getZipperCode({
+        userRequest,
+        basicCode,
+      });
+      const auditedCode = await getAuditedCode({
+        zipperCode,
+        userRequest,
+      });
 
-      setMessages([
-        ...messagesToSend,
-        { role: 'assistant', content: basicCode },
-        { role: 'assistant', content: zipperCode.raw },
-      ]);
-
-      return zipperCode;
+      return auditedCode;
     } catch (error) {
       console.log(error);
     } finally {
@@ -185,7 +193,6 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
     appSlugQuery.isFetched && slug && slug.length >= MIN_SLUG_LENGTH;
   const isDisabled = slugExists || slug.length < MIN_SLUG_LENGTH;
 
-  const duration = 1500;
   const toast = useToast();
 
   return (
@@ -336,7 +343,7 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
                 async ({ description, isPublic, requiresAuthToRun, name }) => {
                   setSubmitting(true);
                   const aiOutput = description
-                    ? await sendMessageHandler(description)
+                    ? await generateAppletWithAI(description)
                     : undefined;
                   const mainCode =
                     aiOutput?.groupedByFilename.find(

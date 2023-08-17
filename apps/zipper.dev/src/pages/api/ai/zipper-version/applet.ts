@@ -1,21 +1,11 @@
-import { AICodeOutput } from '@zipper/types';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { NextResponse } from 'next/server';
 import { Configuration, OpenAIApi } from 'openai';
-import { z } from 'zod';
 
 const conf = new Configuration({
   apiKey: process.env.OPENAI,
 });
 
-async function generateZipperAppletVersion({
-  userRequest,
-  rawTypescriptCode,
-}: {
-  userRequest: string;
-  rawTypescriptCode: string;
-}) {
-  const zipperDefinitions = `
+const zipperDefinitions = `
   Here is a list of all the definitions you can use in your code:
   // zipper.d.ts contents 
   /**
@@ -477,7 +467,7 @@ declare function Dropdown<I = Zipper.Inputs>(
   props: DropdownProps<I>,
 ): Zipper.Action;`;
 
-  const zipperSystemPrompt = `
+const zipperSystemPrompt = `
   # Convert TypeScript to Zipper Applet
   Zipper allows creating serverless apps called applets. 
   Applets contain handler functions that use types like Handler and Serializable.
@@ -576,8 +566,14 @@ declare function Dropdown<I = Zipper.Inputs>(
   };
   `;
 
+async function generateZipperAppletVersion({
+  userRequest,
+  rawTypescriptCode,
+}: {
+  userRequest: string;
+  rawTypescriptCode: string;
+}) {
   if (conf.apiKey === undefined) {
-    console.log('No API key provided.');
     return { error: 'No API key provided.' };
   }
 
@@ -608,53 +604,16 @@ declare function Dropdown<I = Zipper.Inputs>(
 
     return completion.data.choices[0]?.message;
   } catch (error: any) {
-    console.log(error);
     if (error.response) {
-      console.log(error.response.status);
-      console.log(error.response.data);
       return {
         message: error.response.data?.error?.message ?? 'Unknown error',
       };
     } else {
-      console.log(error);
       return {
         message: error.error?.message ?? 'Unknown error',
       };
     }
   }
-}
-
-const FileWithTsExtension = z.string().refine((value) => value.endsWith('.ts'));
-
-function groupCodeByFilename(inputs: string): AICodeOutput[] {
-  const output: AICodeOutput[] = [];
-  const lines = inputs.split('\n');
-
-  let currentFilename: AICodeOutput['filename'] = 'main.ts';
-  let currentCode = '';
-
-  for (const line of lines) {
-    if (line.trim().startsWith('// file:')) {
-      if (currentCode !== '') {
-        output.push({ filename: currentFilename, code: currentCode });
-        currentCode = '';
-      }
-      let file = line.trim().replace('// file:', '').trim();
-      if (!FileWithTsExtension.safeParse(file)) {
-        file += '.ts';
-      }
-      currentFilename = file as AICodeOutput['filename'];
-    } else {
-      currentCode += line + '\n';
-    }
-  }
-
-  // Add the last code block
-  if (currentCode !== '') {
-    output.push({ filename: currentFilename, code: currentCode });
-  }
-
-  return output;
 }
 
 export default async function handler(
@@ -667,21 +626,18 @@ export default async function handler(
     rawTypescriptCode,
   });
 
-  if (!zipperAppletVersion)
-    return NextResponse.json(
-      { error: 'No response from OpenAI' },
-      { status: 500 },
-    );
-
-  if ('message' in zipperAppletVersion || 'error' in zipperAppletVersion) {
-    return NextResponse.json(
-      { error: zipperAppletVersion.error },
-      { status: 500 },
-    );
+  if (!zipperAppletVersion) {
+    return response.status(500).json({ error: 'No response from OpenAI' });
   }
 
-  return response.status(200).json({
-    raw: zipperAppletVersion.content,
-    groupedByFilename: groupCodeByFilename(zipperAppletVersion.content ?? ''),
-  });
+  if ('message' in zipperAppletVersion || 'error' in zipperAppletVersion) {
+    return response.status(500).json({ error: zipperAppletVersion.error });
+  }
+
+  if (!zipperAppletVersion.content) {
+    return response.status(500).json({ error: 'No response from OpenAI' });
+  }
+
+  const code = zipperAppletVersion.content;
+  return response.status(200).json({ message: code });
 }

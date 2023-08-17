@@ -5,28 +5,6 @@ const conf = new Configuration({
   apiKey: process.env.OPENAI,
 });
 
-export type ChatGPTAgent = 'user' | 'system' | 'assistant';
-export interface ChatGPTMessage {
-  role: ChatGPTAgent;
-  content: string;
-}
-
-export interface ChatGPTFunction {
-  name: string;
-  description: string;
-  parameters: {
-    type: string;
-    properties: {
-      [key: string]: {
-        type: string;
-        description: string;
-        enum?: string[];
-      };
-    };
-    required: string[];
-  };
-}
-
 const systemPrompt = `
     You are a high skilled typescript developer, your task is to take the user request and generate typescript code. 
     Your code must export a handler function. You are not allowed to use classes. 
@@ -50,7 +28,7 @@ export default async function handler(
 
   const openai = new OpenAIApi(conf);
 
-  const chatWithFunction = await openai.createChatCompletion({
+  const completion = await openai.createChatCompletion({
     model: 'gpt-4-0613',
     messages: [
       {
@@ -62,7 +40,12 @@ export default async function handler(
         content: userRequest,
       },
     ],
-  } as any);
+  });
 
-  res.status(200).json({ message: chatWithFunction.data.choices[0]?.message });
+  if (!completion.data.choices[0]?.message?.content) {
+    return res.status(500).json({ message: 'No response from AI' });
+  }
+
+  const code = completion.data.choices[0].message.content;
+  return res.status(200).json({ message: code });
 }
