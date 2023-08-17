@@ -215,6 +215,11 @@ export const middleware = async (request: NextRequest) => {
   const appRoute = request.nextUrl.pathname;
   if (__DEBUG__) console.log('middleware', { appRoute });
 
+  // Don't run middleware on rewrites
+  if (appRoute.startsWith('/_zipper')) {
+    return NextResponse.next();
+  }
+
   const { userId, accessToken } = await checkAuthCookies(request);
   const requestHeaders = new Headers(request.headers);
   if (accessToken) requestHeaders.set('x-zipper-access-token', accessToken);
@@ -225,6 +230,8 @@ export const middleware = async (request: NextRequest) => {
     requestHeaders,
   );
 
+  // if someone is trying to POST to a route that doesn't return a custom response (e.g. /api),
+  // then try serve the relay and just return the unrendered response
   if (!customResponse && request.method === 'POST') {
     customResponse = await serveRelay({
       request,
