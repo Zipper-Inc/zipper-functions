@@ -232,7 +232,7 @@ function SlackConnectorForm({ appId }: { appId: string }) {
       <HStack w="full" pt="4" pb="4">
         <FormControl>
           <HStack w="full">
-            <FormLabel>Require own client ID?</FormLabel>
+            <FormLabel>Custom client ID?</FormLabel>
             <Spacer flexGrow={1} />
             <Switch
               isChecked={isOwnClientIdRequired}
@@ -243,8 +243,9 @@ function SlackConnectorForm({ appId }: { appId: string }) {
             />
           </HStack>
           <FormHelperText maxW="xl" mb="2">
-            When checked, users will have the ability to add custom client ID
-            and secret.
+            When checked, you can specify your own Slack client ID and secret.
+            Useful if you need to enable features like the Events API or Slash
+            Commands.
           </FormHelperText>
 
           <Collapse in={isOwnClientIdRequired} animateOpacity>
