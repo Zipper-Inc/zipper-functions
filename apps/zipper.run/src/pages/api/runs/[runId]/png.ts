@@ -66,7 +66,6 @@ export default async function handler(
 
   async function getSignedUrlForScreenshot() {
     return await getSignedUrl(
-      // @ts-ignore-next-line
       s3Client,
       new GetObjectCommand({
         ...objectParams,
