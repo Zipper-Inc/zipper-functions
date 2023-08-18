@@ -60,7 +60,7 @@ export const scriptRouter = createRouter()
       const filename = `${slugifiedName}${extension}`;
       const code =
         extension === '.ts'
-          ? DEFAULT_CODE
+          ? data.code
           : extension === '.md'
           ? DEFAULT_MD
           : DEFAULT_CODE;
