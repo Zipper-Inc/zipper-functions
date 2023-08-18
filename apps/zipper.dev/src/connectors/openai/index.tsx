@@ -57,7 +57,7 @@ function OpenAIConnectorForm({ appId }: { appId: string }) {
   const addSecret = trpc.useMutation('secret.add', {
     async onSuccess() {
       // refetches posts after a post is added
-      await utils.invalidateQueries(['secret.all', { appId }]);
+      await utils.invalidateQueries(['secret.get', { appId, key: tokenName }]);
     },
   });
 
@@ -188,7 +188,7 @@ function OpenAIConnectorForm({ appId }: { appId: string }) {
                             isDisabled={!apiKey || addSecret.isLoading}
                             onClick={handleSaveApiKey}
                           >
-                            Save & Install
+                            Save
                           </Button>
                           <Text mt="10" color="fg.600">
                             After saving the API key, you can use the OpenAI
