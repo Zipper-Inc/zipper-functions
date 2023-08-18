@@ -291,10 +291,6 @@ export function AppPage({
     return <Error statusCode={404} />;
   }
 
-  if (isEmbedded) {
-    return <>{output}</>;
-  }
-
   const appletDescription = () => {
     if (!currentFileConfig || !currentFileConfig.description) {
       return <></>;
@@ -317,6 +313,83 @@ export function AppPage({
     );
   };
 
+  const initialContent = () => {
+    return (
+      <>
+        <ConnectorsAuthInputsSection
+          isCollapsible={false}
+          expandByDefault={expandInputsSection}
+          toggleIsExpanded={setExpandInputsSection}
+          userAuthProps={{
+            actions: connectorActions(app.id),
+            appTitle,
+            userAuthConnectors,
+            setSkipAuth,
+            skipAuth,
+          }}
+          userInputsProps={{
+            isLoading: loading,
+            canRunApp,
+            formContext,
+            hasResult: false,
+            inputs,
+            runApp,
+            skipAuth,
+          }}
+        />
+      </>
+    );
+  };
+
+  const runContent = () => {
+    return (
+      <VStack w="full" align="stretch" spacing={6}>
+        <InputSummary
+          inputs={inputs}
+          formContext={formContext}
+          onEditAndRerun={async () => {
+            const query = router.query;
+            delete query.versionAndFilename;
+
+            await router.push({
+              pathname: `/${filename}`,
+              query,
+            });
+            setScreen('initial');
+          }}
+        />
+        {output}
+      </VStack>
+    );
+  };
+
+  const loadingContent = () => {
+    return (
+      <Progress
+        colorScheme="purple"
+        size="xs"
+        isIndeterminate
+        width="full"
+        position="absolute"
+        background="transparent"
+        transform="auto"
+        translateY={-7}
+      />
+    );
+  };
+
+  const content = (
+    <VStack as="main" flex={1} spacing={4} position="relative" px={10}>
+      {appletDescription()}
+      {screen === 'initial' && initialContent()}
+      {showRunOutput && isEmbedded && output}
+      {showRunOutput && !isEmbedded && runContent()}
+      {loading && loadingContent()}
+    </VStack>
+  );
+
+  if (isEmbedded) return content;
+
   return (
     <>
       <Head>
@@ -336,65 +409,7 @@ export function AppPage({
           setScreen={setScreen}
           setLoading={setLoading}
         />
-        <VStack as="main" flex={1} spacing={4} position="relative" px={10}>
-          {appletDescription()}
-          {screen === 'initial' && (
-            <>
-              <ConnectorsAuthInputsSection
-                isCollapsible={false}
-                expandByDefault={expandInputsSection}
-                toggleIsExpanded={setExpandInputsSection}
-                userAuthProps={{
-                  actions: connectorActions(app.id),
-                  appTitle,
-                  userAuthConnectors,
-                  setSkipAuth,
-                  skipAuth,
-                }}
-                userInputsProps={{
-                  isLoading: loading,
-                  canRunApp,
-                  formContext,
-                  hasResult: false,
-                  inputs,
-                  runApp,
-                  skipAuth,
-                }}
-              />
-            </>
-          )}
-          {showRunOutput && (
-            <VStack w="full" align="stretch" spacing={6}>
-              <InputSummary
-                inputs={inputs}
-                formContext={formContext}
-                onEditAndRerun={async () => {
-                  const query = router.query;
-                  delete query.versionAndFilename;
-
-                  await router.push({
-                    pathname: `/${filename}`,
-                    query,
-                  });
-                  setScreen('initial');
-                }}
-              />
-              {output}
-            </VStack>
-          )}
-          {loading && (
-            <Progress
-              colorScheme="purple"
-              size="xs"
-              isIndeterminate
-              width="full"
-              position="absolute"
-              background="transparent"
-              transform="auto"
-              translateY={-7}
-            />
-          )}
-        </VStack>
+        {content}
       </VStack>
     </>
   );
@@ -408,7 +423,7 @@ export const getServerSideProps: GetServerSideProps = async ({
   console.log({ url: req.url, resolvedUrl, query });
 
   const { host } = req.headers;
-  const isEmbedUrl = /^\/run\/embed(\/|\?|$)/.test(resolvedUrl);
+  const isEmbedUrl = /\/embed(\/|\?|$)/.test(resolvedUrl);
   const isRunUrl = /^\/run(\/|\?|$)/.test(resolvedUrl);
   const isInitialServerSideProps = !req.url?.startsWith('/_next');
 
