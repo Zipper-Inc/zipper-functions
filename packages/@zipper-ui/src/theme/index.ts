@@ -123,6 +123,22 @@ export const baseColors = {
     800: '#9C2A10',
     900: '#7E2410',
   },
+  brandOrange: {
+    50: '#FEECEC',
+    100: '#FCD9D9',
+    200: '#FAB7B8',
+    300: '#F89193',
+    400: '#F57072',
+    500: '#F34B4E',
+    600: '#EF1014',
+    700: '#B10C0F',
+    800: '#78080A',
+    900: '#390405',
+    950: '#1D0202',
+  },
+  brandGray: {
+    100: '#F3F2F1',
+  },
 };
 
 export const brandColors = {
@@ -309,5 +325,7 @@ export const theme = extendTheme({
     ...baseColors,
   },
   semanticTokens,
-  fonts,
+  fonts: {
+    ...fonts,
+  },
 });

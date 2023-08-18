@@ -87,30 +87,33 @@ module.exports = getConfig({
       );
     return config;
   },
-
+  // old url: https://similar-years-645746.framer.app (for rollbacks if necessary)
   async rewrites() {
     return [
       {
         source: '/home',
-        destination: 'https://similar-years-645746.framer.app',
+        destination: '/',
       },
       {
         source: '/about',
-        destination: 'https://similar-years-645746.framer.app/about',
+        // destination: 'https://similar-years-645746.framer.app/about',
+        destination: '/about',
       },
       {
         source: '/docs',
-        destination: `${process.env.NODE_ENV === 'production'
-          ? 'https://zipper-docs-production.onrender.com/docs'
-          : 'http://localhost:3003/docs'
-          }`,
+        destination: `${
+          process.env.NODE_ENV === 'production'
+            ? 'https://zipper-docs-production.onrender.com/docs'
+            : 'http://localhost:3003/docs'
+        }`,
       },
       {
         source: '/docs/:path*',
-        destination: `${process.env.NODE_ENV === 'production'
-          ? 'https://zipper-docs-production.onrender.com/docs/:path*'
-          : 'http://localhost:3003/docs/:path*'
-          }`,
+        destination: `${
+          process.env.NODE_ENV === 'production'
+            ? 'https://zipper-docs-production.onrender.com/docs/:path*'
+            : 'http://localhost:3003/docs/:path*'
+        }`,
       },
       // comment this back in when the blog is ready
       // {
@@ -119,15 +122,19 @@ module.exports = getConfig({
       // },
       {
         source: '/run/:slug/:version/:filename/:path*',
-        destination: `${process.env.NODE_ENV === 'production' ? 'https' : 'http'
-          }://:slug.${process.env.NEXT_PUBLIC_ZIPPER_DOT_RUN_HOST
-          }/@:version/:filename/relay`,
+        destination: `${
+          process.env.NODE_ENV === 'production' ? 'https' : 'http'
+        }://:slug.${
+          process.env.NEXT_PUBLIC_ZIPPER_DOT_RUN_HOST
+        }/@:version/:filename/relay`,
       },
       {
         source: '/boot/:slug/:version/:path*',
-        destination: `${process.env.NODE_ENV === 'production' ? 'https' : 'http'
-          }://:slug.${process.env.NEXT_PUBLIC_ZIPPER_DOT_RUN_HOST
-          }/@:version/boot`,
+        destination: `${
+          process.env.NODE_ENV === 'production' ? 'https' : 'http'
+        }://:slug.${
+          process.env.NEXT_PUBLIC_ZIPPER_DOT_RUN_HOST
+        }/@:version/boot`,
       },
     ];
   },
