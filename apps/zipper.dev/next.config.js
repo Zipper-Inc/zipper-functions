@@ -91,8 +91,8 @@ module.exports = getConfig({
   async rewrites() {
     return [
       {
-        source: '/home',
-        destination: '/',
+        source: '/',
+        destination: '/home',
       },
       {
         source: '/about',

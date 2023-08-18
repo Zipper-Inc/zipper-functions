@@ -56,8 +56,9 @@ const Header: React.FC<HeaderProps> = ({
 
   const isLanding = useMemo(
     () =>
-      ['/about', '/features', '/blog', '/about'].includes(router.asPath) ||
-      router.asPath === '/',
+      ['/about', '/features', '/blog', '/about', '/home'].includes(
+        router.asPath,
+      ) || router.asPath === '/',
     [router.asPath],
   );
 
