@@ -49,6 +49,7 @@ async function maybeGetCustomResponse(
       return await htmlHandler(request);
     }
 
+    case /\/raw(\/?)$/.test(appRoute):
     case /\/relay(\/?)$/.test(appRoute): {
       console.log('matching relay route');
       return serveRelay({
@@ -65,9 +66,12 @@ async function maybeGetCustomResponse(
       });
     }
 
-    case /^\/run\/zendesk\/main.ts(\/?)/.test(appRoute): {
-      const url = new URL('/run/embed/main.ts', request.url);
-
+    case /^\/run\/zendesk(\/?)/.test(appRoute): {
+      // grab the filename so we can pass it on to the embed route,
+      // default to main.ts
+      const pathRemainder =
+        appRoute.match(/^\/run\/zendesk\/(.*)/)?.[1] || 'main.ts';
+      const url = new URL(`/run/embed/${pathRemainder}`, request.url);
       // When zendesk signs it's urls it requests the initial page of the
       // iframe with a POST. The JWT will be in the formData.
       // Unsigned zendesk apps request the initial page with a GET.
@@ -219,18 +223,11 @@ export const middleware = async (request: NextRequest) => {
   const requestHeaders = new Headers(request.headers);
   if (accessToken) requestHeaders.set('x-zipper-access-token', accessToken);
 
-  let customResponse = await maybeGetCustomResponse(
+  const customResponse = await maybeGetCustomResponse(
     appRoute,
     request,
     requestHeaders,
   );
-
-  if (!customResponse && request.method === 'POST') {
-    customResponse = await serveRelay({
-      request,
-      bootOnly: false,
-    });
-  }
 
   const response =
     customResponse ||

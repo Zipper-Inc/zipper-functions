@@ -9,6 +9,7 @@ import {
   HStack,
   StackDivider,
   Input,
+  Link,
   Spacer,
   Text,
   VStack,
@@ -143,6 +144,7 @@ export function ConnectorInputForm({
             <Text mt="10" color="fg.600">
               After saving, you can use the Zendesk connector in your app.
             </Text>
+            <ConnectorInstructions />
           </VStack>
         </CardBody>
       </Card>
@@ -325,6 +327,24 @@ export function ZendeskManifestFile({
       <Code w="full" p="4">
         <pre>{JSON.stringify(manifest, null, 2)}</pre>
       </Code>
+    </VStack>
+  );
+}
+
+export function ConnectorInstructions() {
+  return (
+    <VStack align="start">
+      <text>
+        For more information on how to embed your Zipper app in Zendesk see the
+        Zipper docs:{' '}
+        <Link
+          color="purple.600"
+          href="https://www.notion.so/zipper-inc/Zendesk-Apps-in-Zipper-5a526ad14bf5414da9ed4968f94568b6"
+          isExternal
+        >
+          <b>Embed Zipper in Zendesk</b>
+        </Link>
+      </text>
     </VStack>
   );
 }
