@@ -19,7 +19,6 @@ import { ZipperLogo } from '@zipper/ui';
 import OrganizationSwitcher from './auth/organizationSwitcher';
 import { MobileMenu } from './header-mobile-menu';
 import { ZipperSymbol } from '@zipper/ui';
-import { trpc } from '~/utils/trpc';
 import { useUser } from '~/hooks/use-user';
 import SignedIn from './auth/signed-in';
 import SignedOut from './auth/signed-out';
