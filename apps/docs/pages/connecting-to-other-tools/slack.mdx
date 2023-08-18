@@ -20,7 +20,7 @@ To get started, create a new applet and add the Slack connector by clicking the 
 #### Configuration
 
 **Bot Scopes**
-These are the scopes for the API methods that you want to call on behalf of a bot user (i.e. you'll see data and take action from the perspective of the bot). Adding bot scopes will add a bot user to your Slack app automatically.
+Choose the bot scopes that your applet needs. This is determined by looking at the specific API methods you'll be calling on behalf of a bot user. Adding bot scopes will add a bot user to your Slack app automatically.
 
 After you click the install button and complete the installation steps, a bot user will be added to the Slack workspace and a bot token will be added to your applet's secrets (as SLACK_BOT_TOKEN). You can use this token (`Deno.env.get('SLACK_BOT_TOKEN')`) to make API calls on behalf of the bot user.
 
@@ -32,7 +32,7 @@ You can use this token (`Deno.env.get('SLACK_USER_TOKEN')`) to make API calls as
 
 **Require users to auth**
 
-If your Zipper applet is going to be used by different users and you want them to be able to interact with the Slack API as themselve, you can set this field to true. This will add an `Authorize Slack` button above the inputs to your applet. When a user clicks this button, they'll be taken through the OAuth flow and we'll encrypt and store their API token for you.
+If your Zipper applet is going to be used by different users and you want them to be able to interact with the Slack API as themselves, you can set this field to true. This will add an `Authorize Slack` button above the inputs of your applet. When a user clicks this button, they'll be taken through the OAuth flow and we'll encrypt and store their API token for you.
 
 When a user runs your applet, we'll pass their API token to you through the Handler Context. Individual user's tokens will not be available in your environment variables.
 
