@@ -105,8 +105,18 @@ const Header: React.FC<HeaderProps> = ({
         justify="space-between"
         height={20}
         w="full"
-        maxW="container.lg"
+        maxW="container.xl"
       >
+        <Box
+          position="absolute"
+          top="-20%"
+          width="100vw"
+          height="1400px"
+          right="0"
+          zIndex="-1"
+          background="url('/layout/triangle-path.svg')"
+          backgroundSize="cover"
+        />
         <ZipperLogo type="color" />
         <HStack gap={8}>
           {landingRoutes.map((link, index) => {
