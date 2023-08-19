@@ -2,40 +2,11 @@ import { AICodeOutput } from '@zipper/types';
 import { LLMChain, PromptTemplate } from 'langchain';
 import { SequentialChain } from 'langchain/chains';
 import { OpenAI } from 'langchain/llms/openai';
+import {
+  OutputFixingParser,
+  StructuredOutputParser,
+} from 'langchain/output_parsers';
 import { z } from 'zod';
-
-const FileWithTsExtension = z.string().refine((value) => value.endsWith('.ts'));
-
-export function groupCodeByFilename(inputs: string): AICodeOutput[] {
-  const output: AICodeOutput[] = [];
-  const lines = inputs.split('\n');
-
-  let currentFilename: AICodeOutput['filename'] = 'main.ts';
-  let currentCode = '';
-
-  for (const line of lines) {
-    if (line.trim().startsWith('// file:')) {
-      if (currentCode !== '') {
-        output.push({ filename: currentFilename, code: currentCode });
-        currentCode = '';
-      }
-      let file = line.trim().replace('// file:', '').trim();
-      if (!FileWithTsExtension.safeParse(file)) {
-        file += '.ts';
-      }
-      currentFilename = file as AICodeOutput['filename'];
-    } else {
-      currentCode += line + '\n';
-    }
-  }
-
-  // Add the last code block
-  if (currentCode !== '') {
-    output.push({ filename: currentFilename, code: currentCode });
-  }
-
-  return output;
-}
 
 const zipperDefinitions = `
   Here is a list of all the definitions you can use in your code:
@@ -499,12 +470,13 @@ declare function Dropdown<I = Zipper.Inputs>(
   props: DropdownProps<I>,
 ): Zipper.Action;`;
 
-const format = (code: string) => code.replace(/({|})/g, '$1$1');
+// Langchain uses {} as their prompt template, so in order to pass code curly braces we need to duplicate them
+const formatPrompt = (code: string) => code.replace(/({|})/g, '$1$1');
 
 export const CreateBasicCodePrompt = PromptTemplate.fromTemplate<{
   userRequest: string;
 }>(
-  `${format(`
+  `${formatPrompt(`
   You are a high skilled typescript developer, your task is to take the user request and generate typescript code. 
   Your code must export a handler function. You are not allowed to use classes. 
   Your final output should be a handler function that implements the user request.
@@ -524,7 +496,7 @@ const CreateZipperCodePropmt = PromptTemplate.fromTemplate<{
   userRequest: string;
   basicTypescriptCode: string;
 }>(
-  `${format(`
+  `${formatPrompt(`
   # Convert TypeScript to Zipper Applet
   Zipper allows creating serverless apps called applets. 
   Applets contain handler functions that use types like Handler and Serializable.
@@ -622,7 +594,7 @@ const CreateZipperCodePropmt = PromptTemplate.fromTemplate<{
     },
   };
   `)}
-  ${format(zipperDefinitions)}
+  ${formatPrompt(zipperDefinitions)}
   Your time: thats the basic typescript code you need to convert to a Zipper applet that does this: {userRequest}
   Code: {basicTypescriptCode}
   `,
@@ -632,7 +604,7 @@ const CreateAuditedCodePrompt = PromptTemplate.fromTemplate<{
   userRequest: string;
   zipperCode: string;
 }>(
-  `${format(`
+  `${formatPrompt(`
   You're a software engineer, your task is to take the code and make sure that it is valid and everything needed to run is there.
   Dont remove any code, only add code if needed.
   Check if all types got defined and are correct.
@@ -658,7 +630,17 @@ const gpt4 = new OpenAI({
   temperature: 0,
 });
 
-// TODO: output parser to return { code: string, filename: string }[] / AIOutput[]
+export const codeOutputParser = StructuredOutputParser.fromZodSchema(
+  z.array(
+    z.object({
+      filename: z
+        .string()
+        .endsWith('.ts')
+        .describe('The filename of the typescript code'),
+      code: z.string().describe('The code that got generated'),
+    }),
+  ),
+);
 
 const createBasicCode = new LLMChain({
   llm: gpt4,
@@ -676,6 +658,7 @@ const createAuditedCode = new LLMChain({
   llm: gpt3,
   prompt: CreateAuditedCodePrompt,
   outputKey: 'auditedCode',
+  outputParser: codeOutputParser,
 });
 
 export const createCodeChain = new SequentialChain({
@@ -684,3 +667,20 @@ export const createCodeChain = new SequentialChain({
   outputVariables: ['auditedCode'],
   verbose: true,
 });
+
+export const parseCodeOutput = async (
+  output: string,
+): Promise<AICodeOutput[]> => {
+  let code: AICodeOutput[] = [];
+  try {
+    const codeParsed = await codeOutputParser.parse(output);
+    code = codeParsed as AICodeOutput[]; // Safe cast, sadly Zod doesnt add endsWith to the string type
+  } catch {
+    const fixParser = OutputFixingParser.fromLLM(gpt3, codeOutputParser);
+    const fixedOutput = await fixParser.parse(output).catch(() => {
+      throw new Error('Could not parse code');
+    });
+    code = fixedOutput as AICodeOutput[];
+  }
+  return code;
+};
