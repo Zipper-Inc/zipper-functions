@@ -22,6 +22,7 @@ export * from '../src/components/user-connector-inputs';
 export * from '../src/components/user-connector-inputs/openai-user-connector-input';
 export * from '../src/components/user-connector-inputs/slack-user-connector-input';
 export * from '../src/components/user-connector-inputs/types';
+export * from '../src/components/user-connector-inputs/zendesk-connector-input';
 export * from '../src/components/error-boundary';
 export * from '../src/components/function-inputs';
 export * from '../src/components/function-user-connectors-input';

@@ -1,0 +1,41 @@
+{
+  "name": "zipper-docs",
+  "version": "0.0.1",
+  "description": "Zipper docs",
+  "scripts": {
+    "dev": "next dev -p 3003",
+    "build": "next build",
+    "start": "next start"
+  },
+  "license": "MIT",
+  "prettier": {
+    "printWidth": 80,
+    "trailingComma": "all",
+    "singleQuote": true
+  },
+  "engines": {
+    "node": "^18.14.0"
+  },
+  "dependencies": {
+    "@chakra-ui/react": "^2.4.9",
+    "@emotion/react": "^11.10.5",
+    "@emotion/styled": "^11.10.5",
+    "@fontsource/inter": "^4.5.15",
+    "@sentry/nextjs": "^7.51.0",
+    "@zipper/types": "*",
+    "@zipper/ui": "*",
+    "@zipper/utils": "*",
+    "framer-motion": "^9.0.0",
+    "next": "^13.4.17",
+    "nextra": "^2.11.0",
+    "nextra-theme-docs": "^2.11.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-icons": "^4.8.0",
+    "sharp": "^0.32.4"
+  },
+  "devDependencies": {
+    "@types/node": "^18.14.0",
+    "typescript": "^4.5.3"
+  }
+}

@@ -7,8 +7,7 @@ import { BuildCache, getModule } from './eszip-build-cache';
 import { readFrameworkFile } from './read-file';
 import { getAppHashAndVersion } from './hashing';
 import { prisma } from '~/server/prisma';
-import s3Client from '~/server/s3';
-import { PutObjectCommand } from '@aws-sdk/client-s3';
+import { storeVersionESZip } from '~/server/utils/r2.utils';
 
 /**
  * @todo
@@ -19,6 +18,9 @@ export const FRAMEWORK_ENTRYPOINT = 'run.ts';
 export const APPLET_INDEX_PATH = 'applet/generated/index.gen.ts';
 export const TYPESCRIPT_CONTENT_HEADERS = {
   'content-type': 'text/typescript',
+};
+export const MARKDOWN_CONTENT_HEADERS = {
+  'content-type': 'text/markdown',
 };
 
 const buildCache = new BuildCache();
@@ -37,7 +39,6 @@ export async function build({
   const startMs = performance.now();
   const appName = `${app.slug}@${version}`;
   const baseUrl = _baseUrl || `file://${app.slug}/v${version}`;
-
   const logger = getLogger({ appId: app.id, version });
   logger.info(
     ...prettyLog(
@@ -52,23 +53,25 @@ export async function build({
       },
     ),
   );
-
   const appFilesBaseUrl = `${baseUrl}/applet/src`;
   const frameworkEntrypointUrl = `${baseUrl}/${FRAMEWORK_ENTRYPOINT}`;
-  const appFileUrls = app.scripts.map(
+
+  const tsScripts = app.scripts.filter((s) => s.filename.endsWith('.ts'));
+
+  const appFileUrls = tsScripts.map(
     ({ filename }) => `${appFilesBaseUrl}/${filename}`,
   );
+
   const fileUrlsToBundle = [frameworkEntrypointUrl, ...appFileUrls];
 
   const bundle = await eszip.build(fileUrlsToBundle, async (specifier) => {
     // if (__DEBUG__) console.debug(specifier);
-
     /**
      * Handle user's App files
      */
     if (specifier.startsWith(appFilesBaseUrl)) {
       const filename = specifier.replace(`${appFilesBaseUrl}/`, '');
-      const script = app.scripts.find((s) => s.filename === filename);
+      const script = tsScripts.find((s) => s.filename === filename);
 
       return {
         // Add TSX to all files so they support JSX
@@ -105,7 +108,7 @@ export async function build({
       if (isAppletIndex) {
         content = generateIndexForFramework({
           code: content,
-          filenames: app.scripts.map((s) => s.filename),
+          filenames: tsScripts.map((s) => s.filename),
         });
       }
 
@@ -152,7 +155,7 @@ export async function buildAndStoreApplet({
 }) {
   const { hash, version } = getAppHashAndVersion({
     id: app.id,
-    name: app.name,
+    slug: app.slug,
     scripts: app.scripts,
   });
 
@@ -171,7 +174,7 @@ export async function buildAndStoreApplet({
     },
     create: {
       app: { connect: { id: app.id } },
-      hash: hash,
+      hash,
       buildFile: await buildBuffer(),
       isPublished: !!isPublished,
       userId,
@@ -182,13 +185,11 @@ export async function buildAndStoreApplet({
   });
 
   if (savedVersion.buildFile) {
-    s3Client.send(
-      new PutObjectCommand({
-        Bucket: process.env.CLOUDFLARE_BUILD_FILE_BUCKET_NAME,
-        Key: `${savedVersion.appId}/${version}`,
-        Body: savedVersion.buildFile,
-      }),
-    );
+    storeVersionESZip({
+      appId: app.id,
+      version,
+      eszip: savedVersion.buildFile,
+    });
   }
 
   return { hash, eszip: savedVersion.buildFile };

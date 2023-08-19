@@ -1,4 +1,4 @@
-export type ConnectorType = 'github' | 'slack' | 'openai';
+export type ConnectorType = 'github' | 'slack' | 'openai' | 'zendesk';
 
 export type UserAuthConnector = {
   type: ConnectorType;

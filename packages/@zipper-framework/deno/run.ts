@@ -165,7 +165,18 @@ async function runApplet({ request }: Deno.RequestEvent) {
       userConnectorTokens,
     };
 
-    const output = await handler(body.inputs, context);
+    const inputs = JSON.parse(JSON.stringify(body.inputs), (key, value) => {
+      let a;
+      if (typeof value === 'string') {
+        a = /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z)$/.exec(value);
+        if (a && a[1]) {
+          return new Date(a[1]);
+        }
+      }
+      return value;
+    });
+
+    const output = await handler(inputs, context);
 
     // Apply response if the response is not overwritten
     if (!response.body) {

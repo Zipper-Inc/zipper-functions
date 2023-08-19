@@ -11,10 +11,9 @@ import {
   FRAMEWORK_ENTRYPOINT,
 } from '~/utils/eszip-build-applet';
 import { getAppVersionFromHash } from '~/utils/hashing';
-import s3Client from '~/server/s3';
-import { GetObjectCommand } from '@aws-sdk/client-s3';
 import { getLogger } from '~/utils/app-console';
 import { prettyLog, PRETTY_LOG_TOKENS } from '~/utils/pretty-log';
+import { getVersionESZip } from '~/server/utils/r2.utils';
 
 const X_DENO_CONFIG = 'x-deno-config';
 
@@ -202,8 +201,10 @@ async function originBoot({
 
   const versionToRun =
     deploymentVersion === 'latest'
-      ? app.publishedVersionHash || app.publishedVersionHash
+      ? app.publishedVersionHash || app.playgroundVersionHash
       : deploymentVersion;
+
+  if (!versionToRun) throw new Error('Missing version to run');
 
   const storedVersion = versionToRun
     ? await prisma.version.findFirst({
@@ -227,18 +228,7 @@ async function originBoot({
     // check for object on Cloudflare R2
     console.log(versionToRun);
     try {
-      const foundFile = await s3Client.send(
-        new GetObjectCommand({
-          Bucket: process.env.CLOUDFLARE_BUILD_FILE_BUCKET_NAME,
-          Key: `${app.id}/${versionToRun}`,
-        }),
-      );
-      const byteArray = await foundFile.Body?.transformToByteArray();
-
-      if (byteArray) {
-        console.log('found file on cloudflare');
-        eszip = Buffer.from(byteArray);
-      }
+      eszip = await getVersionESZip({ appId: app.id, version: versionToRun });
     } catch (error) {
       console.error(error);
     }

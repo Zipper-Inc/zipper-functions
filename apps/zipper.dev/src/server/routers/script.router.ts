@@ -23,6 +23,23 @@ const DEFAULT_CODE = `export async function handler({ world }: { world: string }
 };
 `;
 
+export const DEFAULT_MD = `# New Markdown File
+
+Welcome! This is a new Markdown file.
+
+## Getting Started
+
+Add some **Markdown**! Here are some ideas:
+
+- Add a header \`# Title\`
+- Create a list
+  - Item 1
+  - Item 2 
+- Embed an image ![alt text](image url)
+- Add a [link](https://example.com)
+- **Bold**, *italics*, \`code\`, and more!
+`;
+
 export const scriptRouter = createRouter()
   // create
   .mutation('add', {
@@ -32,24 +49,31 @@ export const scriptRouter = createRouter()
       appId: z.string().uuid(),
       code: z.string().default(DEFAULT_CODE),
       order: z.number(),
-      connectorId: z.enum(['github', 'slack', 'openai']).optional(),
+      connectorId: z.enum(['github', 'slack', 'openai', 'zendesk']).optional(),
     }),
     async resolve({ ctx, input }) {
       const { appId, ...data } = input;
       await hasAppEditPermission({ ctx, appId });
 
-      const sluggifiedName = slugifyAllowDot(data.name);
+      const extension = data.name.includes('.md') ? '.md' : '.ts';
+      const slugifiedName = slugifyAllowDot(data.name.replace(/\..+$/, ''));
+      const filename = `${slugifiedName}${extension}`;
+      const code =
+        extension === '.ts'
+          ? data.code
+          : extension === '.md'
+          ? DEFAULT_MD
+          : DEFAULT_CODE;
 
       const script = await prisma.script.create({
         data: {
           ...data,
-          isRunnable: isCodeRunnable(data.code),
+          code,
+          filename,
+          isRunnable: extension === '.ts' ? isCodeRunnable(data.code) : false,
           app: {
             connect: { id: appId },
           },
-          filename: sluggifiedName.endsWith('.ts')
-            ? sluggifiedName
-            : `${sluggifiedName}.ts`,
         },
         select: defaultSelect,
       });

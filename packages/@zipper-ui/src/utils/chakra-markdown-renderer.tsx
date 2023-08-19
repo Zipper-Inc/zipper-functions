@@ -28,8 +28,39 @@ function getCoreProps(props: GetCoreProps): any {
 }
 
 export const defaults: Components & { heading: Components['h1'] } = {
-  p: (props) => {
-    const { children } = props;
+  p: (props: any) => {
+    const { children, node } = props;
+
+    if (node && node?.children && node?.children[0].tagName === 'img') {
+      const image = node.children[0];
+      const metastring = image.properties.alt;
+      const alt = metastring?.replace(/ *\{[^)]*\} */g, '');
+
+      // TODO: maybe we can figure it out a way to use this properly, for now im fallbacking to 100% of width
+      // const metaWidth = metastring.match(/{([^}]+)x/);
+      // const metaHeight = metastring.match(/x([^}]+)}/);
+      // const width = metaWidth ? metaWidth[1] : '768';
+      // const height = metaHeight ? metaHeight[1] : '432';
+
+      const hasCaption = metastring?.toLowerCase().includes('{caption:');
+      const caption = metastring?.match(/{caption: (.*?)}/)?.pop();
+
+      return (
+        <div className="postImgWrapper">
+          <Image
+            src={image.properties.src}
+            width="100%"
+            className="postImg"
+            alt={alt}
+          />
+          {hasCaption ? (
+            <div className="caption" aria-label={caption}>
+              {caption}
+            </div>
+          ) : null}
+        </div>
+      );
+    }
     return (
       <Text mb={2} mt={1} whiteSpace={'pre-wrap'}>
         {children}
@@ -85,6 +116,7 @@ export const defaults: Components & { heading: Components['h1'] } = {
   a: Link,
   img: Image,
   text: (props) => {
+    console.log('text???', props);
     const { children } = props;
     return <Text as="span">{children}</Text>;
   },

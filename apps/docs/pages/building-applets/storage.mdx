@@ -1,0 +1,43 @@
+# Storage
+
+Zipper also has basic key value storage built-in. Each applet has its own unique storage instance, and it will not go with you when you fork an app. You can use it using the `Zipper.storage` global.
+
+### `getAll`
+
+Get’s all the storage keys and values.
+
+```tsx
+const everything = await Zipper.storage.getAll();
+```
+
+Returns `null` if there is nothing in storage. Otherwise, it returns an object with all the keys and values.
+
+### `get`
+
+Get a storage key by value. You do not need to worry about unserializing. If the key hasn't been set, it'll return `null`.
+
+```tsx
+const singleValue = await Zipper.storage.get('some_key_name');
+```
+
+You can also cast objects if you like:
+
+```tsx
+const myStringArray = await Zipper.storage.get<string[]>('some_key_name');
+```
+
+### `set`
+
+Set a key. You do not need to worry about serializing, it will do that for you.
+
+```tsx
+await Zipper.storage.set('some_key_name', { foo: 'bar' });
+```
+
+### `delete`
+
+Deleting by key name also works.
+
+```tsx
+await Zipper.storage.delete('some_key_name');
+```
