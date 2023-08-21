@@ -610,8 +610,11 @@ const CreateAuditedCodePrompt = PromptTemplate.fromTemplate<{
   Check if all types got defined and are correct.
   Check if all functions got defined and are correct.
   Remember, you need to mark things with export to import them in other files.
+
+  ❌ NEVER import anything from Zipper.
+  ✅ ALWAYS remove imports from Zipper. Zipper stuff are located in the global namespace Zipper. If you need to import something from Zipper, you are doing it wrong.
+  ✅ To use Zipper stuff, use Zipper.<stuff> like Zipper.storage, Zipper.Action, Zipper.Handler, etc
   After the audit, you should return the code with the fixes, but dont return any additional text. Just plain code.
-  DONT. IMPORT. STUFF. FROM. ZIPPER.
 `)}
   The user wants this: {userRequest}
   Here's the code that you need to audit: {zipperCode}
@@ -658,13 +661,83 @@ const createAuditedCode = new LLMChain({
   llm: gpt3,
   prompt: CreateAuditedCodePrompt,
   outputKey: 'auditedCode',
-  outputParser: codeOutputParser,
 });
 
+const OrganizeOutputPrompt = PromptTemplate.fromTemplate<{
+  auditedCode: string;
+}>(
+  `${formatPrompt(`I want you to grab a output like
+    // file: main.ts
+    const foo = 'bar';
+
+    // file: other.ts
+    const bar = 'foo';
+
+    and output me like this:
+    [
+      {
+        filename: "main.ts",
+        code: "const foo = 'bar';"
+        
+      },
+      {
+        filename: "other.ts",
+        code: ""const bar = 'foo';""
+      }
+    ]
+
+    If there is no file comment, output the code in a filename main.ts.
+    Return me the output in plain JSON. No additional text above!!
+    ✅ Thats considered a valid output:
+    \`\`\`json
+    [
+      {
+        "filename": "main.ts",
+        "code": "const foo = 'bar';"
+        
+      },
+      {
+        "filename": "other.ts",
+        "code": ""const bar = 'foo';""
+      }
+    ]
+    \`\`\`
+
+    ❌ This is not a valid output:
+    Hey, here is your output:
+    \`\`\`javascript
+    [
+      {
+        filename: "main.ts",
+        code: "const foo = 'bar';"
+        
+      },
+      {
+        filename: "other.ts",
+        code: ""const bar = 'foo';""
+      }
+    ]
+    \`\`\`
+  `)}
+  Code: {auditedCode}
+  `,
+);
+
+const organizeOutput = new LLMChain({
+  llm: gpt3,
+  prompt: OrganizeOutputPrompt,
+  outputKey: 'output',
+  outputParser: codeOutputParser,
+});
 export const createCodeChain = new SequentialChain({
-  chains: [createBasicCode, createZipperCode, createAuditedCode],
+  chains: [
+    createBasicCode,
+    createZipperCode,
+    createAuditedCode,
+    organizeOutput,
+  ],
   inputVariables: ['userRequest'],
-  outputVariables: ['auditedCode'],
+  outputVariables: ['output'],
   verbose: true,
 });
 
