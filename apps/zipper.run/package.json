@@ -24,6 +24,9 @@
     "node": "^18.14.0"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.391.0",
+    "@aws-sdk/s3-request-presigner": "^3.391.0",
+    "@aws-sdk/types": "^3.391.0",
     "@chakra-ui/react": "^2.4.9",
     "@emotion/react": "^11.10.5",
     "@emotion/styled": "^11.10.5",
