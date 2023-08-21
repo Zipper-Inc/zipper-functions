@@ -39,9 +39,8 @@ import { useRouter } from 'next/router';
 import { useOrganization } from '~/hooks/use-organization';
 import { useUser } from '~/hooks/use-user';
 import { useOrganizationList } from '~/hooks/use-organization-list';
-import { getEditAppletLink, getZipperApiUrl } from '@zipper/utils';
+import { getEditAppletLink } from '@zipper/utils';
 import { useEditorContext } from '../context/editor-context';
-import { AICodeOutput } from '@zipper/types';
 
 const getDefaultCreateAppFormValues = () => ({
   name: generateDefaultSlug(),
@@ -49,69 +48,6 @@ const getDefaultCreateAppFormValues = () => ({
   isPublic: false,
   requiresAuthToRun: false,
 });
-
-const getBasicCode = async (message: string): Promise<string> => {
-  const response = await fetch(`${getZipperApiUrl()}/ai/generate/applet`, {
-    method: 'POST',
-    body: JSON.stringify({
-      userRequest: message,
-    }),
-  });
-  if (!response.ok) throw new Error('Failed create basic code');
-  const data = await response.json();
-
-  if (data.error) {
-    throw new Error(data.error);
-  }
-
-  return data.message;
-};
-
-const getZipperCode = async ({
-  userRequest,
-  basicCode,
-}: {
-  userRequest: string;
-  basicCode: string;
-}): Promise<string> => {
-  const response = await fetch(
-    `${getZipperApiUrl()}/ai/zipper-version/applet`,
-    {
-      method: 'POST',
-      body: JSON.stringify({
-        userRequest,
-        rawTypescriptCode: basicCode,
-      }),
-    },
-  );
-
-  if (!response.ok) throw new Error('Failed to audit code');
-  const data = await response.json();
-
-  if (data.error) {
-    throw new Error('Failed to generate Zipper code');
-  }
-
-  return data.message;
-};
-
-const getAuditedCode = async (params: {
-  userRequest: string;
-  zipperCode: string;
-}): Promise<{ raw: string; groupedByFilename: AICodeOutput[] }> => {
-  const response = await fetch(`${getZipperApiUrl()}/ai/audit/applet`, {
-    method: 'POST',
-    body: JSON.stringify(params),
-  });
-  if (!response.ok) throw new Error('Failed to audit code');
-  const data = await response.json();
-
-  if (data.error) {
-    throw new Error(data.error);
-  }
-
-  return data;
-};
 
 export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
   onClose,
@@ -121,32 +57,10 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
   const { setActive } = useOrganizationList();
   const utils = trpc.useContext();
   const router = useRouter();
-  const [isSending, setIsSending] = useState(false);
 
   const addScript = trpc.useMutation('script.add');
+  const generateCodeWithAI = trpc.useMutation('ai.pipeline');
   const { scripts } = useEditorContext();
-
-  const generateAppletWithAI = async (userRequest: string) => {
-    setIsSending(true);
-
-    try {
-      const basicCode = await getBasicCode(userRequest);
-      const zipperCode = await getZipperCode({
-        userRequest,
-        basicCode,
-      });
-      const auditedCode = await getAuditedCode({
-        zipperCode,
-        userRequest,
-      });
-
-      return auditedCode;
-    } catch (error) {
-      console.log(error);
-    } finally {
-      setIsSending(false);
-    }
-  };
 
   const addApp = trpc.useMutation('app.add', {
     async onSuccess() {
@@ -197,7 +111,7 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
 
   return (
     <Box position="relative">
-      <Fade in={addApp.isLoading || isSending}>
+      <Fade in={addApp.isLoading || generateCodeWithAI.isLoading}>
         <Box
           position="fixed"
           top={0}
@@ -337,18 +251,23 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
               colorScheme="purple"
               type="submit"
               isDisabled={
-                isDisabled || addApp.isLoading || isSending || submitting
+                isDisabled ||
+                addApp.isLoading ||
+                generateCodeWithAI.isLoading ||
+                submitting
               }
               onClick={createAppForm.handleSubmit(
                 async ({ description, isPublic, requiresAuthToRun, name }) => {
                   setSubmitting(true);
                   const aiOutput = description
-                    ? await generateAppletWithAI(description)
+                    ? await generateCodeWithAI.mutateAsync({
+                        userRequest: description,
+                      })
                     : undefined;
-                  const mainCode =
-                    aiOutput?.groupedByFilename.find(
-                      (output) => output.filename === 'main.ts',
-                    )?.code || aiOutput?.raw;
+
+                  const mainCode = aiOutput?.find(
+                    (output) => output.filename === 'main.ts',
+                  )?.code;
 
                   await addApp.mutateAsync(
                     {
@@ -370,13 +289,12 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
                           setActive(selectedOrganizationId || null);
                         }
                         if (aiOutput) {
-                          const filteredOutput =
-                            aiOutput.groupedByFilename.filter(
-                              (output) => output.filename !== 'main.ts',
-                            );
+                          const otherFiles = aiOutput.filter(
+                            (output) => output.filename !== 'main.ts',
+                          );
 
                           await Promise.allSettled(
-                            filteredOutput.map((output) => {
+                            otherFiles.map((output) => {
                               return addScript.mutateAsync({
                                 name: output.filename,
                                 appId: applet!.id,
