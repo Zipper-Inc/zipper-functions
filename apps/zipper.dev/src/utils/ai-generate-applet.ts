@@ -1,7 +1,12 @@
 import { AICodeOutput } from '@zipper/types';
-import { LLMChain, PromptTemplate } from 'langchain';
-import { SequentialChain } from 'langchain/chains';
-import { OpenAI } from 'langchain/llms/openai';
+import { LLMChain, SequentialChain } from 'langchain/chains';
+import { ChatOpenAI } from 'langchain/chat_models/openai';
+import {
+  ChatPromptTemplate,
+  HumanMessagePromptTemplate,
+  SystemMessagePromptTemplate,
+} from 'langchain/prompts';
+
 import {
   OutputFixingParser,
   StructuredOutputParser,
@@ -471,12 +476,13 @@ declare function Dropdown<I = Zipper.Inputs>(
 ): Zipper.Action;`;
 
 // Langchain uses {} as their prompt template, so in order to pass code curly braces we need to duplicate them
-const formatPrompt = (code: string) => code.replace(/({|})/g, '$1$1');
+const formatCodePrompt = (code: string) => code.replace(/({|})/g, '$1$1');
 
-export const CreateBasicCodePrompt = PromptTemplate.fromTemplate<{
+const CreateBasicCodePrompt = ChatPromptTemplate.fromPromptMessages<{
   userRequest: string;
-}>(
-  `${formatPrompt(`
+}>([
+  SystemMessagePromptTemplate.fromTemplate(
+    formatCodePrompt(`
   You are a high skilled typescript developer, your task is to take the user request and generate typescript code. 
   Your code must export a handler function. You are not allowed to use classes. 
   Your final output should be a handler function that implements the user request.
@@ -486,17 +492,17 @@ export const CreateBasicCodePrompt = PromptTemplate.fromTemplate<{
   Code: 
   export async function handler({name} : {name: string}){
     return \`Hello \${name}\`
-  }
-  `)}
-  Your time, create a code to do this: {userRequest}
-  `,
-);
+  }`),
+  ),
+  HumanMessagePromptTemplate.fromTemplate('User request: {userRequest}'),
+]);
 
-const CreateZipperCodePropmt = PromptTemplate.fromTemplate<{
+const CreateZipperCodePropmt = ChatPromptTemplate.fromPromptMessages<{
   userRequest: string;
   basicTypescriptCode: string;
-}>(
-  `${formatPrompt(`
+}>([
+  SystemMessagePromptTemplate.fromTemplate(
+    formatCodePrompt(`
   # Convert TypeScript to Zipper Applet
   Zipper allows creating serverless apps called applets. 
   Applets contain handler functions that use types like Handler and Serializable.
@@ -593,18 +599,19 @@ const CreateZipperCodePropmt = PromptTemplate.fromTemplate<{
       },
     },
   };
-  `)}
-  ${formatPrompt(zipperDefinitions)}
-  Your time: thats the basic typescript code you need to convert to a Zipper applet that does this: {userRequest}
-  Code: {basicTypescriptCode}
-  `,
-);
+  `),
+  ),
+  HumanMessagePromptTemplate.fromTemplate(
+    `Zipper definition: ${formatCodePrompt(zipperDefinitions)}`,
+  ),
+  HumanMessagePromptTemplate.fromTemplate('User request: {userRequest}'),
+]);
 
-const CreateAuditedCodePrompt = PromptTemplate.fromTemplate<{
+const CreateAuditedCodePrompt = ChatPromptTemplate.fromPromptMessages<{
   userRequest: string;
   zipperCode: string;
-}>(
-  `${formatPrompt(`
+}>([
+  SystemMessagePromptTemplate.fromTemplate(`
   You're a software engineer, your task is to take the code and make sure that it is valid and everything needed to run is there.
   Dont remove any code, only add code if needed.
   Check if all types got defined and are correct.
@@ -615,19 +622,18 @@ const CreateAuditedCodePrompt = PromptTemplate.fromTemplate<{
   ✅ ALWAYS remove imports from Zipper. Zipper stuff are located in the global namespace Zipper. If you need to import something from Zipper, you are doing it wrong.
   ✅ To use Zipper stuff, use Zipper.<stuff> like Zipper.storage, Zipper.Action, Zipper.Handler, etc
   After the audit, you should return the code with the fixes, but dont return any additional text. Just plain code.
-`)}
-  The user wants this: {userRequest}
-  Here's the code that you need to audit: {zipperCode}
-`,
-);
+  `),
+  HumanMessagePromptTemplate.fromTemplate('User request: {userRequest}'),
+  HumanMessagePromptTemplate.fromTemplate('Code: {zipperCode}'),
+]);
 
-const gpt3 = new OpenAI({
+const gpt3 = new ChatOpenAI({
   openAIApiKey: process.env.OPENAI,
   modelName: 'gpt-3.5-turbo-16k-0613',
   temperature: 0,
 });
 
-const gpt4 = new OpenAI({
+const gpt4 = new ChatOpenAI({
   openAIApiKey: process.env.OPENAI,
   modelName: 'gpt-4-0613',
   temperature: 0,
@@ -663,10 +669,11 @@ const createAuditedCode = new LLMChain({
   outputKey: 'auditedCode',
 });
 
-const OrganizeOutputPrompt = PromptTemplate.fromTemplate<{
+const OrganizeOutputPrompt = ChatPromptTemplate.fromPromptMessages<{
   auditedCode: string;
-}>(
-  `${formatPrompt(`I want you to grab a output like
+}>([
+  SystemMessagePromptTemplate.fromTemplate(
+    formatCodePrompt(`I want you to grab a output like
     // file: main.ts
     const foo = 'bar';
 
@@ -688,6 +695,7 @@ const OrganizeOutputPrompt = PromptTemplate.fromTemplate<{
 
     If there is no file comment, output the code in a filename main.ts.
     Return me the output in plain JSON. No additional text above!!
+
     ✅ Thats considered a valid output:
     \`\`\`json
     [
@@ -718,10 +726,10 @@ const OrganizeOutputPrompt = PromptTemplate.fromTemplate<{
       }
     ]
     \`\`\`
-  `)}
-  Code: {auditedCode}
-  `,
-);
+  `),
+  ),
+  HumanMessagePromptTemplate.fromTemplate('Input code: {auditedCode}'),
+]);
 
 const organizeOutput = new LLMChain({
   llm: gpt3,
@@ -729,6 +737,7 @@ const organizeOutput = new LLMChain({
   outputKey: 'output',
   outputParser: codeOutputParser,
 });
+
 export const createCodeChain = new SequentialChain({
   chains: [
     createBasicCode,
