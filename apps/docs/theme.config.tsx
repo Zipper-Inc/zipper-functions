@@ -42,7 +42,7 @@ const config: DocsThemeConfig = {
         content="Zipper turns Typescript functions into serverless web apps. UI, APIs, and auth all come standard."
       />
       <meta name="apple-mobile-web-app-title" content="Zipper" />
-      <link rel="icon" href="/docs/favicon.ico" />
+      <link rel="icon" href="/docs/favicon.svg" />
     </>
   ),
   editLink: {
