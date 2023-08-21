@@ -108,7 +108,7 @@ const Header: React.FC<HeaderProps> = ({
       >
         <Box
           position="absolute"
-          top="-20%"
+          top="-25%"
           width="100vw"
           height="1400px"
           right="0"

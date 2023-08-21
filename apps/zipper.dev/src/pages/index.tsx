@@ -33,6 +33,7 @@ import {
 import { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 import { FiArrowLeft, FiArrowRight } from 'react-icons/fi';
+import Footer from '~/components/footer';
 
 export type GalleryAppQueryOutput = inferQueryOutput<
   'app.allApproved' | 'app.byResourceOwner'
@@ -174,6 +175,7 @@ const IndexPage: NextPageWithLayout = (props) => {
   // if (user) {
   //   router.push('/dashboard');
   // }
+
   return (
     <Box w="full">
       <Box w="full" py="9rem" position="relative">
@@ -453,6 +455,7 @@ const IndexPage: NextPageWithLayout = (props) => {
           </VStack>
         </Flex>
       </Box>
+      <Footer />
     </Box>
   );
 };
