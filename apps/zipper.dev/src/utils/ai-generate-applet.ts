@@ -1,4 +1,3 @@
-import { AICodeOutput } from '@zipper/types';
 import { LLMChain, SequentialChain } from 'langchain/chains';
 import { ChatOpenAI } from 'langchain/chat_models/openai';
 import {
@@ -7,10 +6,7 @@ import {
   SystemMessagePromptTemplate,
 } from 'langchain/prompts';
 
-import {
-  OutputFixingParser,
-  StructuredOutputParser,
-} from 'langchain/output_parsers';
+import { StructuredOutputParser } from 'langchain/output_parsers';
 import { z } from 'zod';
 
 const zipperDefinitions = `
