@@ -40,7 +40,7 @@
     "singleQuote": true
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.363.0",
+    "@aws-sdk/client-s3": "^3.391.0",
     "@babel/parser": "^7.22.5",
     "@babel/traverse": "^7.22.5",
     "@chakra-ui/icons": "^2.0.11",
