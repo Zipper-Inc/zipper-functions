@@ -14,7 +14,7 @@ import { baseColors } from '@zipper/ui';
 export default function Footer() {
   const { blue } = baseColors;
   return (
-    <VStack w="full">
+    <VStack w="full" mt="0 !important">
       <HStack
         minH={365}
         bgColor="purple.900"
@@ -40,9 +40,9 @@ export default function Footer() {
       <HStack
         minH={348}
         bgColor="neutral.100"
-        w="full"
         mt="0 !important"
         position="relative"
+        p={0}
       >
         <Box
           position="absolute"
@@ -57,8 +57,7 @@ export default function Footer() {
         <VStack
           zIndex={1}
           display="flex"
-          flexDirection="row"
-          w="full"
+          flexDirection={{ base: 'column', md: 'row' }}
           justifyContent="space-between"
           px={12}
         >
@@ -68,7 +67,7 @@ export default function Footer() {
             </VStack>
           </Box>
 
-          <Box>
+          <Box display="flex" flexDirection="row" gap={{ base: 16, md: 64 }}>
             <VStack align="flex-start">
               <Link color="blue.600" href="/home">
                 Home
@@ -83,9 +82,7 @@ export default function Footer() {
                 Blog
               </Link>
             </VStack>
-          </Box>
 
-          <Box>
             <VStack align="flex-start">
               <Link color="blue.600" href="#">
                 Careers
