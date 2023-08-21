@@ -265,6 +265,7 @@ export const fonts = {
   body: '"InterVariable", sans-serif',
   heading: '"InterVariable", sans-serif',
   mono: 'Monaco, "Monaco", monospace',
+  plak: '"Plaak", sans-serif',
 };
 
 export const theme = extendTheme({
