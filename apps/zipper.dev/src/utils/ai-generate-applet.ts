@@ -602,7 +602,9 @@ const CreateZipperCodePropmt = ChatPromptTemplate.fromPromptMessages<{
   `),
   ),
   HumanMessagePromptTemplate.fromTemplate(
-    `Zipper definition: ${formatCodePrompt(zipperDefinitions)}`,
+    `Zipper definition (will be a global object, you can access it using to use via Zipper.<something>): ${formatCodePrompt(
+      zipperDefinitions,
+    )}`,
   ),
   HumanMessagePromptTemplate.fromTemplate('User request: {userRequest}'),
 ]);
@@ -611,63 +613,28 @@ const CreateAuditedCodePrompt = ChatPromptTemplate.fromPromptMessages<{
   userRequest: string;
   zipperCode: string;
 }>([
-  SystemMessagePromptTemplate.fromTemplate(`
-  You're a software engineer, your task is to take the code and make sure that it is valid and everything needed to run is there.
-  Dont remove any code, only add code if needed.
-  Check if all types got defined and are correct.
-  Check if all functions got defined and are correct.
+  SystemMessagePromptTemplate.fromTemplate(
+    formatCodePrompt(`\
+  You're a Senior Typescript developer, a DX engineer. 
+  Your task is to take the code and audit it to make sure that it is valid and everything needed to run is there.
+
+  Check and fix all types in order to have all defined and correct.
+  Check and fix all functions in order to have all defined and correct with their types.
   Remember, you need to mark things with export to import them in other files.
 
-  ❌ NEVER import anything from Zipper.
-  ✅ ALWAYS remove imports from Zipper. Zipper stuff are located in the global namespace Zipper. If you need to import something from Zipper, you are doing it wrong.
-  ✅ To use Zipper stuff, use Zipper.<stuff> like Zipper.storage, Zipper.Action, Zipper.Handler, etc
+  When doing imports, add the extension .ts to the file name.
+  Example: import { Todo } from './types.ts' ✅
+
+  ✅ ALWAYS REMOVE \`import { Something } from 'Zipper'\`. Zipper stuff are located in the global namespace Zipper.
+  ✅ You NEED to refactor the code that \`import { Something } from Zipper\` to use Zipper.Something 
+  ❗ Remember: if you let pass ANY import from Zipper, the applet wont work. 
+
   After the audit, you should return the code with the fixes, but dont return any additional text. Just plain code.
   `),
+  ),
   HumanMessagePromptTemplate.fromTemplate('User request: {userRequest}'),
   HumanMessagePromptTemplate.fromTemplate('Code: {zipperCode}'),
 ]);
-
-const gpt3 = new ChatOpenAI({
-  openAIApiKey: process.env.OPENAI,
-  modelName: 'gpt-3.5-turbo-16k-0613',
-  temperature: 0,
-});
-
-const gpt4 = new ChatOpenAI({
-  openAIApiKey: process.env.OPENAI,
-  modelName: 'gpt-4-0613',
-  temperature: 0,
-});
-
-export const codeOutputParser = StructuredOutputParser.fromZodSchema(
-  z.array(
-    z.object({
-      filename: z
-        .string()
-        .endsWith('.ts')
-        .describe('The filename of the typescript code'),
-      code: z.string().describe('The code that got generated'),
-    }),
-  ),
-);
-
-const createBasicCode = new LLMChain({
-  llm: gpt4,
-  prompt: CreateBasicCodePrompt,
-  outputKey: 'basicTypescriptCode',
-});
-
-const createZipperCode = new LLMChain({
-  llm: gpt4,
-  prompt: CreateZipperCodePropmt,
-  outputKey: 'zipperCode',
-});
-
-const createAuditedCode = new LLMChain({
-  llm: gpt3,
-  prompt: CreateAuditedCodePrompt,
-  outputKey: 'auditedCode',
-});
 
 const OrganizeOutputPrompt = ChatPromptTemplate.fromPromptMessages<{
   auditedCode: string;
@@ -731,6 +698,48 @@ const OrganizeOutputPrompt = ChatPromptTemplate.fromPromptMessages<{
   HumanMessagePromptTemplate.fromTemplate('Input code: {auditedCode}'),
 ]);
 
+const gpt3 = new ChatOpenAI({
+  openAIApiKey: process.env.OPENAI,
+  modelName: 'gpt-3.5-turbo-16k-0613',
+  temperature: 0,
+});
+
+const gpt4 = new ChatOpenAI({
+  openAIApiKey: process.env.OPENAI,
+  modelName: 'gpt-4-0613',
+  temperature: 0,
+});
+
+export const codeOutputParser = StructuredOutputParser.fromZodSchema(
+  z.array(
+    z.object({
+      filename: z
+        .string()
+        .endsWith('.ts')
+        .describe('The filename of the typescript code'),
+      code: z.string().describe('The code that got generated'),
+    }),
+  ),
+);
+
+const createBasicCode = new LLMChain({
+  llm: gpt4,
+  prompt: CreateBasicCodePrompt,
+  outputKey: 'basicTypescriptCode',
+});
+
+const createZipperCode = new LLMChain({
+  llm: gpt4,
+  prompt: CreateZipperCodePropmt,
+  outputKey: 'zipperCode',
+});
+
+const createAuditedCode = new LLMChain({
+  llm: gpt4,
+  prompt: CreateAuditedCodePrompt,
+  outputKey: 'auditedCode',
+});
+
 const organizeOutput = new LLMChain({
   llm: gpt3,
   prompt: OrganizeOutputPrompt,
@@ -749,20 +758,3 @@ export const createCodeChain = new SequentialChain({
   outputVariables: ['output'],
   verbose: true,
 });
-
-export const parseCodeOutput = async (
-  output: string,
-): Promise<AICodeOutput[]> => {
-  let code: AICodeOutput[] = [];
-  try {
-    const codeParsed = await codeOutputParser.parse(output);
-    code = codeParsed as AICodeOutput[]; // Safe cast, sadly Zod doesnt add endsWith to the string type
-  } catch {
-    const fixParser = OutputFixingParser.fromLLM(gpt3, codeOutputParser);
-    const fixedOutput = await fixParser.parse(output).catch(() => {
-      throw new Error('Could not parse code');
-    });
-    code = fixedOutput as AICodeOutput[];
-  }
-  return code;
-};
