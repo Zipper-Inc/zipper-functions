@@ -290,7 +290,7 @@ export const theme = extendTheme({
         flex: 1,
         display: 'flex',
         flexDirection: 'column',
-        minWidth: 'container.md',
+        // minWidth: 'container.md',
       },
       // overrides some stuff in the AppConsole component
       '#app-console': {

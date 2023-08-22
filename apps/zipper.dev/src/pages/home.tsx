@@ -162,8 +162,8 @@ const PageHero = () => {
         as="article"
         aria-label="hero-content"
         margin="0 auto"
-        direction={['column', 'row']}
         gap={8}
+        flexDirection={['column', 'column', 'column', 'row']}
         align="center"
         maxW={{ md: 'container.xl' }}
         w="full"
@@ -226,7 +226,7 @@ const PageHero = () => {
             position="absolute"
             zIndex={10}
             top="30px"
-            right="-20px"
+            right={['-20px', '-20px', '0px', '30px']}
             background="url('/layout/hero_app.svg')"
             backgroundSize="contain"
             backgroundRepeat="no-repeat"
