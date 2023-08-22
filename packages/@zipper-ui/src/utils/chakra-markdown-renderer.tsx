@@ -122,8 +122,6 @@ export const defaults: Components & { heading: Components['h1'] } = {
       return child.props?.node.tagName === 'blockquote';
     });
 
-    console.log('IS NESTED BLOCKQUOTE??', isNestedBlockquote);
-
     return (
       <Box
         borderRadius={8}
