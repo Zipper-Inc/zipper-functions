@@ -38,7 +38,7 @@ Before moving on to the next step, make sure you've published your changes to yo
 
 Head over to api.slack.com/apps and create a new app. You're going to choose to configure your app "From Scratch". Give the app a name and choose a workspace. Once the app is created, you'll be taken to the app's settings page.
 
-Click on "Event Subscriptions" in the left sidebar and enable events. You'll be asked to input a URL to send events to - you're going to enter your app's zipper.run URL (`[app-name].zipper.run`). You should see a green checkmark after a few seconds indicating that Slack was able to successfully send a request to your applet.
+Click on "Event Subscriptions" in the left sidebar and enable events. You'll be asked to input a URL to send events to - you're going to enter your app's zipper.run URL followed by `/raw` (`[app-name].zipper.run/raw`). You should see a green checkmark after a few seconds indicating that Slack was able to successfully send a request to your applet.
 
 On the same page, click on "Subscribe to Bot Events" and add the `channel_created` event. Click "Save Changes" again.
 
