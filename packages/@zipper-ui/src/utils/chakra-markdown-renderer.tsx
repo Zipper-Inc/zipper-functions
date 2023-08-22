@@ -9,6 +9,7 @@ import {
   OrderedList,
   Text,
   UnorderedList,
+  Box,
 } from '@chakra-ui/layout';
 import { Image } from '@chakra-ui/image';
 import { Checkbox } from '@chakra-ui/checkbox';
@@ -28,10 +29,52 @@ function getCoreProps(props: GetCoreProps): any {
 }
 
 export const defaults: Components & { heading: Components['h1'] } = {
+  h1: (props) => {
+    return (
+      <Heading as="h1" size="xl" color="neutral.900" py={2}>
+        {props.children}
+      </Heading>
+    );
+  },
+  h2: (props) => {
+    return (
+      <Heading as="h2" size="lg" color="neutral.900" py={2}>
+        {props.children}
+      </Heading>
+    );
+  },
+  h3: (props) => {
+    return (
+      <Heading as="h3" size="md" color="neutral.900" py={2}>
+        {props.children}
+      </Heading>
+    );
+  },
+  h4: (props) => {
+    return (
+      <Heading as="h4" size="sm" color="neutral.900" py={2}>
+        {props.children}
+      </Heading>
+    );
+  },
+  h5: (props) => {
+    return (
+      <Heading as="h5" size="xs" color="neutral.900">
+        {props.children}
+      </Heading>
+    );
+  },
+  h6: (props) => {
+    return (
+      <Heading as="h6" size="xs">
+        {props.children}
+      </Heading>
+    );
+  },
   p: (props: any) => {
     const { children, node } = props;
 
-    if (node && node?.children && node?.children[0].tagName === 'img') {
+    if (node && node?.children && node?.children[0]?.tagName === 'img') {
       const image = node.children[0];
       const metastring = image.properties.alt;
       const alt = metastring?.replace(/ *\{[^)]*\} */g, '');
@@ -62,7 +105,7 @@ export const defaults: Components & { heading: Components['h1'] } = {
       );
     }
     return (
-      <Text mb={2} mt={1} whiteSpace={'pre-wrap'}>
+      <Text mb={2} mt={1} whiteSpace={'pre-wrap'} color="neutral.900">
         {children}
       </Text>
     );
@@ -71,28 +114,47 @@ export const defaults: Components & { heading: Components['h1'] } = {
     const { children } = props;
     return <Text as="em">{children}</Text>;
   },
+
   blockquote: (props) => {
     const { children } = props;
+
+    const isNestedBlockquote = children.some((child: any) => {
+      return child.props?.node?.tagName === 'blockquote';
+    });
+
     return (
-      <Text
-        borderLeft={'solid'}
-        borderLeftWidth={4}
-        borderColor="primary"
-        as="blockquote"
-        pl={3}
-        pr={2}
-        py={2}
+      <Box
+        borderRadius={8}
+        bgColor={isNestedBlockquote ? 'gray.50' : 'white'}
+        p={4}
       >
-        {children}
-      </Text>
+        <Text
+          position="relative"
+          _before={{
+            content: '""',
+            height: '100%',
+            width: '2px',
+            background: 'neutral.400',
+            display: 'block',
+            position: 'absolute',
+            left: 0,
+            borderRadius: '10px',
+          }}
+          as="blockquote"
+          paddingLeft={4}
+        >
+          {children}
+        </Text>
+      </Box>
     );
   },
   code: (props) => {
     const { inline, children, className } = props;
-
     const isInline = inline || typeof children === 'string';
     if (isInline) {
-      return <Code p={2} children={children} />;
+      return (
+        <Code p={2} children={children} bgColor="gray.50" borderRadius={8} />
+      );
     }
 
     return (
@@ -103,6 +165,8 @@ export const defaults: Components & { heading: Components['h1'] } = {
         w="full"
         p={2}
         children={children}
+        bgColor="gray.50"
+        borderRadius={8}
       />
     );
   },
@@ -113,7 +177,13 @@ export const defaults: Components & { heading: Components['h1'] } = {
   hr: () => {
     return <Divider />;
   },
-  a: Link,
+  a: (props) => {
+    return (
+      <Link color="primary" {...props}>
+        {props.children}
+      </Link>
+    );
+  },
   img: Image,
   text: (props) => {
     console.log('text???', props);
@@ -227,12 +297,12 @@ function ChakraUIRenderer(theme?: unknown, merge = true) {
     ul: defaults.ul,
     ol: defaults.ol,
     li: defaults.li,
-    h1: defaults.heading,
-    h2: defaults.heading,
-    h3: defaults.heading,
-    h4: defaults.heading,
-    h5: defaults.heading,
-    h6: defaults.heading,
+    h1: defaults.h1,
+    h2: defaults.h2,
+    h3: defaults.h3,
+    h4: defaults.h4,
+    h5: defaults.h5,
+    h6: defaults.h6,
     pre: defaults.pre,
     table: defaults.table,
     thead: defaults.thead,
