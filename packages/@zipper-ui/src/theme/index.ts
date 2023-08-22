@@ -275,6 +275,9 @@ export const theme = extendTheme({
   },
   styles: {
     global: {
+      html: {
+        boxSizing: 'border-box',
+      },
       body: {
         height: '100vh',
         padding: 0,
@@ -287,7 +290,7 @@ export const theme = extendTheme({
         flex: 1,
         display: 'flex',
         flexDirection: 'column',
-        minWidth: 'container.md',
+        // minWidth: 'container.md',
       },
       // overrides some stuff in the AppConsole component
       '#app-console': {

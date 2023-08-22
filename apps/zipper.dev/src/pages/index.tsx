@@ -32,7 +32,14 @@ import {
 } from '@chakra-ui/react';
 import { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
-import { FiArrowLeft, FiArrowRight } from 'react-icons/fi';
+import {
+  FiArrowLeft,
+  FiArrowRight,
+  FiBookOpen,
+  FiCalendar,
+  FiKey,
+  FiSliders,
+} from 'react-icons/fi';
 import Footer from '~/components/footer';
 
 export type GalleryAppQueryOutput = inferQueryOutput<
@@ -144,6 +151,36 @@ const IndexPage: NextPageWithLayout = (props) => {
         'https://source.boringavatars.com/bauhaus/120/status-page-example?colors=9B2FB4,651D78,EC4A0A,E3E2E1,white&square',
     },
   ];
+
+  const batteries = useMemo(
+    () => [
+      {
+        name: 'Scheduling',
+        description:
+          'Use our cron scheduler to run your applet on a regular basis.',
+        icon: <FiCalendar size={40} />,
+      },
+      {
+        name: 'Authentication',
+        description:
+          'Turn on auth and users will have to sign in via Zipper before accessing your applet.',
+        icon: <FiKey size={40} />,
+      },
+      {
+        name: 'Audit logs ',
+        description:
+          'See who’s been running an applet as well as who’s been changing the code.',
+        icon: <FiBookOpen size={40} />,
+      },
+      {
+        name: 'Integrations you control ',
+        description:
+          'Integrate into existing tools using official SDKs and our pre-written (but extensible) code.',
+        icon: <FiSliders size={40} />,
+      },
+    ],
+    [],
+  );
   // const router = useRouter();
   // const { user, isLoaded } = useUser();
 
@@ -328,7 +365,7 @@ const IndexPage: NextPageWithLayout = (props) => {
         </Flex>
       </Box>
 
-      <Box w="full" py="24" position="relative" overflow="hidden">
+      <Box w="full" pt="100px" pb="148px" position="relative" overflow="hidden">
         <Flex
           margin="0 auto"
           gap={20}
@@ -385,7 +422,10 @@ const IndexPage: NextPageWithLayout = (props) => {
                 bottom="-48px"
                 color="gray.500"
               >
-                <button aria-label="Previous slide" onClick={ctrl.nextSlide}>
+                <button
+                  aria-label="Previous slide"
+                  onClick={ctrl.previousSlide}
+                >
                   <FiArrowLeft size="24px" />
                 </button>
                 <button aria-label="Next slide" onClick={ctrl.nextSlide}>
@@ -453,6 +493,27 @@ const IndexPage: NextPageWithLayout = (props) => {
               of IT and security <br /> easily.  
             </Text>
           </VStack>
+
+          <Grid
+            templateColumns="repeat(2, 1fr)"
+            rowGap={10}
+            columnGap={5}
+            w="full"
+          >
+            {batteries.map((btr) => (
+              <GridItem colSpan={1} as={Flex} align="start" gap={5}>
+                <Box as="span" color="blue.500">
+                  {btr.icon}
+                </Box>
+                <VStack gap={2} color="gray.800" align="start">
+                  <Heading fontSize="xl" fontWeight={600}>
+                    {btr.name}
+                  </Heading>
+                  <Text style={{ marginTop: '0px' }}>{btr.description}</Text>
+                </VStack>
+              </GridItem>
+            ))}
+          </Grid>
         </Flex>
       </Box>
       <Footer />

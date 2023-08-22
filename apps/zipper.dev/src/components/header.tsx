@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import {
   Box,
   HStack,
@@ -11,10 +11,17 @@ import {
   Text,
   Icon,
   ChakraProps,
+  Drawer,
+  DrawerBody,
+  DrawerFooter,
+  DrawerOverlay,
+  DrawerContent,
+  DrawerCloseButton,
+  IconButton,
+  VStack,
 } from '@chakra-ui/react';
 import { useRouter } from 'next/router';
 import NextLink from 'next/link';
-
 import { ZipperLogo } from '@zipper/ui';
 import OrganizationSwitcher from './auth/organizationSwitcher';
 import { MobileMenu } from './header-mobile-menu';
@@ -25,6 +32,7 @@ import SignedOut from './auth/signed-out';
 import { HiHome } from 'react-icons/hi2';
 import { UserProfileButton } from './auth/user-profile-button';
 import { FeedbackModal } from './auth/feedback-modal';
+import { FiMenu } from 'react-icons/fi';
 
 type HeaderProps = {
   showNav?: boolean;
@@ -45,6 +53,82 @@ const landingRoutes = [
   { href: '/about', label: 'About' },
 ];
 
+const linkStyles: Record<string, ChakraProps> = {
+  active: {
+    fontWeight: 'semibold',
+    color: 'blue.500',
+    _hover: {
+      color: 'blue.400',
+    },
+  },
+  idle: {
+    fontSize: 'medium',
+    fontWeight: 'normal',
+    color: 'gray.600',
+    _hover: {
+      color: 'blue.500',
+      textDecoration: 'none',
+    },
+  },
+};
+
+const NavDrawer = ({
+  activeLink,
+}: {
+  activeLink?: (typeof landingRoutes)[0];
+}) => {
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const btnRef = useRef();
+  return (
+    <>
+      <IconButton
+        display={['flex', 'flex', 'none']}
+        aria-label="menu"
+        icon={<FiMenu size={24} />}
+        ref={btnRef as any}
+        colorScheme="gray"
+        bg="none"
+        onClick={onOpen}
+      />
+
+      <Drawer
+        isOpen={isOpen}
+        placement="right"
+        onClose={onClose}
+        finalFocusRef={btnRef as any}
+      >
+        <DrawerOverlay />
+        <DrawerContent>
+          <DrawerCloseButton />
+          {/* <DrawerHeader>Create your account</DrawerHeader> */}
+
+          <DrawerBody>
+            <VStack mt={6} as="nav" gap={4}>
+              {landingRoutes.map((link, index) => {
+                const styles =
+                  activeLink?.href === link.href
+                    ? { ...linkStyles.active, ...linkStyles.idle }
+                    : linkStyles.idle;
+
+                return (
+                  <Link key={index} href={link.href} {...styles}>
+                    {link.label}
+                  </Link>
+                );
+              })}
+              <Button colorScheme="gray" variant="outline">
+                Sign Up
+              </Button>
+            </VStack>
+          </DrawerBody>
+
+          <DrawerFooter></DrawerFooter>
+        </DrawerContent>
+      </Drawer>
+    </>
+  );
+};
+
 const Header: React.FC<HeaderProps> = ({
   showNav = true,
   showDivider = true,
@@ -56,8 +140,9 @@ const Header: React.FC<HeaderProps> = ({
 
   const isLanding = useMemo(
     () =>
-      ['/about', '/features', '/blog', '/about'].includes(router.asPath) ||
-      router.asPath === '/',
+      ['/about', '/features', '/blog', '/about', '/home'].includes(
+        router.asPath,
+      ) || router.asPath === '/',
     [router.asPath],
   );
 
@@ -77,32 +162,15 @@ const Header: React.FC<HeaderProps> = ({
     }
   }, [reload]);
 
-  const linkStyles: Record<string, ChakraProps> = {
-    active: {
-      fontWeight: 'semibold',
-      color: 'blue.500',
-      _hover: {
-        color: 'blue.400',
-      },
-    },
-    idle: {
-      fontSize: 'medium',
-      fontWeight: 'normal',
-      color: 'gray.600',
-      _hover: {
-        color: 'blue.500',
-        textDecoration: 'none',
-      },
-    },
-  };
-
   if (isLanding) {
     return (
       <Flex
         align="center"
+        as="header"
         css={{ margin: '0 auto' }}
         justify="space-between"
         height={20}
+        px={[6, 6, 0]}
         w="full"
         maxW="container.xl"
       >
@@ -110,14 +178,15 @@ const Header: React.FC<HeaderProps> = ({
           position="absolute"
           top="-25%"
           width="100vw"
-          height="1400px"
+          height={['1200px', '1400px']}
           right="0"
           zIndex="-1"
           background="url('/layout/triangle-path.svg')"
           backgroundSize="cover"
         />
         <ZipperLogo type="color" />
-        <HStack gap={8}>
+        <NavDrawer activeLink={activeLink} />
+        <HStack as="nav" display={['none', 'none', 'flex']} gap={8}>
           {landingRoutes.map((link, index) => {
             const styles =
               activeLink?.href === link.href
@@ -130,7 +199,12 @@ const Header: React.FC<HeaderProps> = ({
               </Link>
             );
           })}
-          <Button colorScheme="gray" variant="outline">
+          <Button
+            colorScheme="gray"
+            fontWeight={500}
+            h="44px"
+            variant="outline"
+          >
             Sign Up
           </Button>
         </HStack>
