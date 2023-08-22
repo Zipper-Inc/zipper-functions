@@ -423,7 +423,7 @@ export const getServerSideProps: GetServerSideProps = async ({
   console.log({ url: req.url, resolvedUrl, query });
 
   const { host } = req.headers;
-  const isEmbedUrl = /\/embed(\/|\?|$)/.test(resolvedUrl);
+  const isEmbedUrl = /\/embed\//.test(resolvedUrl);
   const isRunUrl = /^\/run(\/|\?|$)/.test(resolvedUrl);
   const isInitialServerSideProps = !req.url?.startsWith('/_next');
 
