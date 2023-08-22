@@ -7,11 +7,12 @@ import {
   GridItem,
   Heading,
   Input,
+  keyframes,
   Text,
   VStack,
 } from '@chakra-ui/react';
 import { baseColors } from '@zipper/ui';
-import { memo } from 'react';
+import { memo, useEffect, useState } from 'react';
 import { NextPageWithLayout } from './_app';
 import Header from '~/components/header';
 
@@ -121,36 +122,71 @@ const Title = ({
 
 /* ------------------- Hero ------------------- */
 
-const PageHero = memo(() => {
+const PageHero = () => {
+  const [allreadyLoaded, setAllreadyLoaded] = useState(false);
+
+  const clipPathAni = keyframes`
+    0% {
+      clip-path: polygon(100% 100%, 100% 100%, 100% 100%);
+    }
+
+    100% {
+      clip-path: polygon(100% 0%, 0% 100%, 100% 100%);
+    }
+  `;
+
+  const clipPathHover = keyframes`
+  0% {
+    clip-path: polygon(100% 0%, 0% 100%, 100% 100%);
+  }
+
+  100% {
+    clip-path: polygon(150% -400%, -400% 150%, 100% 100%);
+  }
+  `;
+
+  useEffect(() => {
+    setAllreadyLoaded(true);
+  }, []);
+
   return (
     <Box
       as="section"
       aria-label="hero-container"
       w="full"
-      py="9rem"
+      py={{ base: '52px', md: '9rem' }}
       position="relative"
-      whiteSpace="pre-line" //important for \n new lines
+      whiteSpace={{ md: 'pre-line' }} //important for \n new lines
     >
       <Flex
         as="article"
         aria-label="hero-content"
         margin="0 auto"
+        direction={['column', 'row']}
         gap={8}
         align="center"
-        maxW="container.xl"
+        maxW={{ md: 'container.xl' }}
         w="full"
         zIndex="10"
         position="relative"
       >
-        <VStack gap={5} w="auto" zIndex="10" align="start">
-          <Title color={baseColors.blue['500']}>{HERO_CONTENT.TITLE}</Title>
+        <VStack gap={5} w={['full', 'auto']} zIndex="10" align="start">
+          <Heading
+            fontFamily="plaak"
+            fontSize={['40px', '6xl']}
+            fontWeight="normal"
+            color={baseColors.blue['500']}
+          >
+            {HERO_CONTENT.TITLE}
+          </Heading>
           <Text marginTop="0px" fontSize="xl" color="gray.700">
             {HERO_CONTENT.DESCRIPTION}
           </Text>
+
           <Flex as="form" align="center" gap={2}>
             <Input
               height="2.75rem"
-              width="20rem"
+              width={{ base: 'full', md: '20rem' }}
               borderRadius="8px"
               variant="outline"
               placeholder="Email address"
@@ -160,6 +196,7 @@ const PageHero = memo(() => {
             />
             <Button
               height="2.75rem"
+              minWidth="138px"
               fontSize="md"
               borderRadius="8px"
               bg="brandOrange.500"
@@ -172,11 +209,43 @@ const PageHero = memo(() => {
             </Button>
           </Flex>
         </VStack>
-        <Box height="430px" flex={1} bg="red" />
+        <Box
+          marginLeft="-20px"
+          height={['280px', '480px']}
+          width={{ base: 'full' }}
+          flex={{ md: 1 }}
+          background="url('/layout/hero_code.svg')"
+          backgroundSize="contain"
+          backgroundPosition={{ base: 'top left' }}
+          backgroundRepeat="no-repeat"
+          position="relative"
+        >
+          <Box
+            height="full"
+            width="full"
+            position="absolute"
+            zIndex={10}
+            top="30px"
+            right="-20px"
+            background="url('/layout/hero_app.svg')"
+            backgroundSize="contain"
+            backgroundRepeat="no-repeat"
+            backgroundPosition="bottom right"
+            clipPath="polygon(100% 0%, 0% 100%, 100% 100%)"
+            transition="all 1s ease-in-out"
+            _hover={{
+              clipPath: 'polygon(150% -400%, -400% 150%, 100% 100%)',
+              animation: `${clipPathHover} 1s ease-in-out`,
+            }}
+            animation={
+              !allreadyLoaded ? `${clipPathAni} 2s ease-in-out` : undefined
+            }
+          />
+        </Box>
       </Flex>
     </Box>
   );
-});
+};
 
 const Features = memo(() => (
   <Box
@@ -276,9 +345,17 @@ const Features = memo(() => (
 /* -------------------------------------------- */
 
 const HomePage: NextPageWithLayout = () => (
-  <Box as="main" w="full">
+  <Box
+    display="flex"
+    flexDir="column"
+    alignItems="center"
+    as="main"
+    px={['24px', 0]}
+    w="full"
+    margin="0 auto"
+  >
     <PageHero />
-    <Features />
+    {/* <Features /> */}
   </Box>
 );
 

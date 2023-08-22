@@ -275,6 +275,9 @@ export const theme = extendTheme({
   },
   styles: {
     global: {
+      html: {
+        boxSizing: 'border-box',
+      },
       body: {
         height: '100vh',
         padding: 0,

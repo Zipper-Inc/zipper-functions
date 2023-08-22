@@ -101,6 +101,7 @@ const Header: React.FC<HeaderProps> = ({
     return (
       <Flex
         align="center"
+        as="header"
         css={{ margin: '0 auto' }}
         justify="space-between"
         height={20}
@@ -118,7 +119,7 @@ const Header: React.FC<HeaderProps> = ({
           backgroundSize="cover"
         />
         <ZipperLogo type="color" />
-        <HStack gap={8}>
+        <HStack as="nav" gap={8}>
           {landingRoutes.map((link, index) => {
             const styles =
               activeLink?.href === link.href
