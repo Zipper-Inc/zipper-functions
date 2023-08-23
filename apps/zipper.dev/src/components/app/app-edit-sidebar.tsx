@@ -10,7 +10,6 @@ import {
   HStack,
   Heading,
   useColorMode,
-  Code,
 } from '@chakra-ui/react';
 import { TabButton } from '@zipper/ui';
 import { useState } from 'react';

@@ -7,7 +7,7 @@ import { InputType } from '@zipper/types';
  * @returns
  */
 export const getFieldName = (name: string, type: InputType) =>
-  `${name}:${type}`;
+  `${name.replaceAll(`"`, '')}:${type}`;
 
 /**
  * `parseFieldName` parses a given form field name
