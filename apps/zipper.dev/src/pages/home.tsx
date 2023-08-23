@@ -1,4 +1,3 @@
-import { plakFont } from '~/utils/local-fonts';
 import {
   Box,
   Button,
@@ -9,12 +8,24 @@ import {
   Input,
   keyframes,
   Text,
+  useMediaQuery,
   VStack,
 } from '@chakra-ui/react';
 import { baseColors } from '@zipper/ui';
 import { memo, useEffect, useState } from 'react';
 import { NextPageWithLayout } from './_app';
 import Header from '~/components/header';
+import Footer from '~/components/footer';
+import Carousel from 'nuka-carousel';
+import {
+  FiArrowLeft,
+  FiArrowRight,
+  FiBookOpen,
+  FiCalendar,
+  FiKey,
+  FiSliders,
+} from 'react-icons/fi';
+import Image from 'next/image';
 
 /* -------------------------------------------- */
 /* Content                                      */
@@ -28,7 +39,7 @@ const HERO_CONTENT = {
 };
 
 const FEATURES_CONTENT = {
-  TITLE: 's/decisions/deploys',
+  TITLE: 's/decisions/\ndeploys',
 
   DESCRIPTION: `Your project shouldn’t be held up by a hundred decisions about
   hosting, routing, storage, and more (half of which you have to
@@ -42,87 +53,142 @@ const FEATURES_CONTENT = {
       color: baseColors.purple['500'],
       description:
         'Publish your code to a public facing URL with the click of a button.  ',
-      interact: <h1>hello</h1>,
+      interact: (
+        <Image
+          src="/layout/deploy.svg"
+          fill
+          style={{ objectFit: 'cover' }}
+          alt="Deploy"
+        />
+      ),
     },
     {
       title: 'A simple web framework',
       color: baseColors.brandOrange['500'],
       description:
         'Every file that exports a `handler` function automatically becomes a route in your app. Pass inputs to your handler, get back an output. ',
-      interact: <h1>hello</h1>,
+      interact: (
+        <Image
+          src="/layout/handler.svg"
+          fill
+          style={{ objectFit: 'cover' }}
+          alt="Deploy"
+        />
+      ),
     },
     {
       title: 'UI without any frontend code ',
       color: baseColors.blue['500'],
       description:
         'The inputs to your functions become forms to collect user input and the outputs get turned into a functional UI.	  ',
-      interact: <h1>hello</h1>,
+      interact: (
+        <Image
+          src="/layout/ui.svg"
+          fill
+          style={{ objectFit: 'cover' }}
+          alt="Deploy"
+        />
+      ),
     },
     {
       title: 'API endpoints for every route',
       color: baseColors.purple['500'],
       description:
         'Every route accepts GET & POST requests that can be secured with bearer tokens. Perfect for receiving webhooks or integrating into other pieces of software.',
-      interact: <h1>hello</h1>,
+      interact: (
+        <Image
+          src="/layout/getpost.svg"
+          fill
+          style={{ objectFit: 'cover' }}
+          alt="Deploy"
+        />
+      ),
     },
     {
       title: 'Built-in storage',
       color: baseColors.blue['500'],
       description:
         'Each applet has its own KV store for managing data across runs.   ',
-      interact: <h1>hello</h1>,
+      interact: (
+        <Image
+          src="/layout/storage.svg"
+          fill
+          style={{ objectFit: 'cover' }}
+          alt="Deploy"
+        />
+      ),
     },
     {
       title: 'Authentication connectors ',
       color: baseColors.purple['500'],
       description:
         'Force users to sign in to other services (such as Slack or GitHub) before running your applet.',
-      interact: <h1>hello</h1>,
+      interact: (
+        <Image
+          src="/layout/auth.svg"
+          fill
+          style={{ objectFit: 'cover' }}
+          alt="Deploy"
+        />
+      ),
     },
   ],
+};
+
+const APPLETS_GALERY_CONTENT = {
+  TITLE: 'hello ${working code}',
+  DESCRIPTION: `Chances are that the thing you need to build has already been thought through by
+  someone else. Zipper’s applet directory lets you fork pre-built applications that you can
+  immediately use or quickly customize to better suit your needs. If you don’t see what you’re 
+  looking for, you can start from a blank file or have AI generate some code for you ✨.`,
+};
+
+const BATERIES_CONTENT = {
+  TITLE: 'Batteries included',
+
+  DESCRIPTION: `Some days you just want to prototype something quickly to prove that it works, while the
+   next day that same app needs to be production ready. Zipper provides all the tooling you
+    require alongside your code so that your app can get the approval of IT and security easily.`,
+
+  LIST: [
+    {
+      name: 'Scheduling',
+      description:
+        'Use our cron scheduler to run your applet on a regular basis.',
+      icon: <FiCalendar size={40} />,
+    },
+    {
+      name: 'Authentication',
+      description:
+        'Turn on auth and users will have to sign in via Zipper before accessing your applet.',
+      icon: <FiKey size={40} />,
+    },
+    {
+      name: 'Audit logs ',
+      description:
+        'See who’s been running an applet as well as who’s been changing the code.',
+      icon: <FiBookOpen size={40} />,
+    },
+    {
+      name: 'Integrations you control ',
+      description:
+        'Integrate into existing tools using official SDKs and our pre-written (but extensible) code.',
+      icon: <FiSliders size={40} />,
+    },
+  ],
+};
+
+const HEADLINE_CONTENT = {
+  SPAN: 'Overheard from some developers you definitely know:',
 };
 
 /* -------------------------------------------- */
 /* Components                                   */
 /* -------------------------------------------- */
 
-/* ------------------- Title ------------------ */
-
-const SIZES = {
-  sm: '36px',
-  md: '48px',
-  lg: '72px',
-};
-
-const Title = ({
-  color = baseColors.gray['800'],
-  size = 'lg',
-  ..._props
-}: Partial<React.HTMLAttributes<HTMLHeadingElement>> & {
-  color?: string;
-  size?: keyof typeof SIZES;
-}) => {
-  const props = {
-    ..._props,
-    className: plakFont.className,
-    style: {
-      textTransform: 'uppercase',
-      fontWeight: size === 'lg' ? 400 : 600,
-      fontFamily: 'Plaak 6 Trial',
-      fontSize: SIZES[size],
-      margin: 0,
-      lineHeight: size === 'lg' ? '72px' : '40px',
-      color: color,
-      ..._props.style,
-    },
-  };
-
-  return <h1 {...(props as any)} />;
-};
-
 /* ------------------- Hero ------------------- */
 
-const PageHero = () => {
+const Hero = () => {
   const [allreadyLoaded, setAllreadyLoaded] = useState(false);
 
   const clipPathAni = keyframes`
@@ -155,6 +221,7 @@ const PageHero = () => {
       aria-label="hero-container"
       w="full"
       py={{ base: '52px', md: '9rem' }}
+      px={['24px', 0]}
       position="relative"
       whiteSpace={{ md: 'pre-line' }} //important for \n new lines
     >
@@ -252,10 +319,10 @@ const Features = memo(() => (
     as="section"
     aria-label="features"
     w="full"
-    py="100px"
+    py={{ base: '52px', md: '9rem' }}
     position="relative"
+    px={['24px', 0]}
     bg="brandGray.100"
-    whiteSpace="pre-line" //important for \n new lines
   >
     <Flex
       id="features-content"
@@ -267,14 +334,21 @@ const Features = memo(() => (
       w="full"
     >
       <VStack as="article" align="start" gap={3} pb={10}>
-        <Title color={baseColors.brandOrange['500']} size="sm">
+        <Heading
+          fontFamily="plaak"
+          fontSize="4xl"
+          fontWeight="bold"
+          color={baseColors.brandOrange['500']}
+          whiteSpace="pre-line"
+        >
           {FEATURES_CONTENT.TITLE}
-        </Title>
+        </Heading>
         <Text
           margin="0 !important"
           fontSize="lg"
           lineHeight={7}
           color="gray.900"
+          whiteSpace={{ md: 'pre-line' }}
         >
           {FEATURES_CONTENT.DESCRIPTION}
         </Text>
@@ -283,6 +357,7 @@ const Features = memo(() => (
           fontSize="xl"
           color="brandOrange.500"
           fontWeight={600}
+          whiteSpace={{ md: 'pre-line' }}
         >
           {FEATURES_CONTENT.SPAN}
         </Text>
@@ -292,7 +367,7 @@ const Features = memo(() => (
         as="ul"
         aria-label="features-list"
         w="full"
-        templateColumns="repeat(3, 1fr)"
+        templateColumns={['1fr', 'repeat(3, 1fr)']}
         gap={4}
       >
         {FEATURES_CONTENT.LIST.map((feat, index) => (
@@ -305,9 +380,9 @@ const Features = memo(() => (
             gap={0}
             borderRadius={2}
             background="white"
-            height="640px"
+            height={['auto', '640px']}
           >
-            <Box as="figure" w="full" height="342px">
+            <Box as="figure" w="full" height="342px" position="relative">
               {feat.interact}
             </Box>
             <VStack
@@ -340,6 +415,243 @@ const Features = memo(() => (
   </Box>
 ));
 
+const AppletsGallery = () => {
+  type GalleryApp = {
+    name: string;
+    description: string;
+    slug: string;
+    resourceOwner: {
+      slug: string;
+    };
+    iconUrl: string;
+  };
+
+  const [galleryApps, setGalleryApps] = useState<GalleryApp[]>([]);
+  const [isLargerThan600] = useMediaQuery('(min-width: 600px)');
+
+  const fetchData = async () => {
+    const data = (await fetch('https://zipper.dev/api/gallery').then((res) =>
+      res.json(),
+    )) as GalleryApp[];
+
+    return setGalleryApps(data);
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  return (
+    <Box
+      as="section"
+      aria-label="Applets Gallery"
+      w="full"
+      px={{ base: 6 }}
+      pt={['52px', '100px']}
+      pb={['100px', '148px']}
+      position="relative"
+      whiteSpace={{ md: 'pre-line' }}
+      overflow="hidden"
+    >
+      <Flex
+        margin="0 auto"
+        gap={20}
+        direction="column"
+        align="start"
+        maxW="container.xl"
+        position="relative"
+        w="full"
+      >
+        <VStack as="article" align="start" gap={6} pb={10}>
+          <Heading
+            fontFamily="plaak"
+            fontSize="4xl"
+            fontWeight="bold"
+            color={baseColors.purple['500']}
+          >
+            {APPLETS_GALERY_CONTENT.TITLE}
+          </Heading>
+          <Text
+            margin="0 !important"
+            fontSize="lg"
+            lineHeight={7}
+            color="gray.900"
+          >
+            {APPLETS_GALERY_CONTENT.DESCRIPTION}
+          </Text>
+        </VStack>
+
+        <Carousel
+          cellSpacing={16}
+          style={{ marginLeft: '-8px' }}
+          slideIndex={1}
+          wrapAround
+          renderBottomCenterControls={() => <></>}
+          renderCenterLeftControls={() => <></>}
+          renderCenterRightControls={() => <></>}
+          renderBottomLeftControls={(ctrl) => (
+            <Flex
+              align="center"
+              gap={3}
+              position="absolute"
+              bottom="-48px"
+              color="gray.500"
+            >
+              <button aria-label="Previous slide" onClick={ctrl.previousSlide}>
+                <FiArrowLeft size="24px" />
+              </button>
+              <button aria-label="Next slide" onClick={ctrl.nextSlide}>
+                <FiArrowRight size="24px" />
+              </button>
+            </Flex>
+          )}
+          slideWidth={isLargerThan600 ? 380 + 16 : 300 + 16}
+        >
+          {galleryApps.length > 1 &&
+            galleryApps?.map((app) => (
+              <VStack
+                align="start"
+                as="li"
+                minH={{ base: '480px' }}
+                justify={{ base: 'space-between' }}
+                key={app.slug}
+                gap={2}
+              >
+                <VStack
+                  as="article"
+                  aria-label="applet info"
+                  gap={2}
+                  align="start"
+                  flex={{ base: 1 }}
+                  justify={{ base: 'space-between' }}
+                >
+                  <Heading as="h3" fontSize="2xl" fontWeight={600}>
+                    {app.name}
+                  </Heading>
+                  <Text
+                    h="60px"
+                    css={{ margin: 0 }}
+                    fontSize="sm"
+                    color="gray.600"
+                  >
+                    {app.description}
+                  </Text>
+                </VStack>
+                <Box
+                  as="figure"
+                  w={['300px', '380px']}
+                  borderRadius="8px"
+                  h={['300px', '380px']}
+                  bg="gray.100"
+                />
+              </VStack>
+            ))}
+        </Carousel>
+      </Flex>
+    </Box>
+  );
+};
+
+const Bateries = memo(() => {
+  return (
+    <Box
+      as="section"
+      aria-label="Bateries"
+      w="full"
+      py={{ base: '52px', md: '9rem' }}
+      px={{ base: 6 }}
+      position="relative"
+      overflow="hidden"
+      bg="gray.100"
+    >
+      <Flex
+        margin="0 auto"
+        gap={[4, 20]}
+        direction="column"
+        align="start"
+        maxW="container.xl"
+        position="relative"
+        w="full"
+      >
+        <VStack align="start" gap={6} pb={10}>
+          <Heading
+            fontFamily="plaak"
+            fontSize="4xl"
+            fontWeight="bold"
+            color={baseColors.blue['500']}
+          >
+            {BATERIES_CONTENT.TITLE}
+          </Heading>
+          <Text
+            margin="0 !important"
+            fontSize="lg"
+            lineHeight={7}
+            color="gray.900"
+          >
+            {BATERIES_CONTENT.DESCRIPTION}
+          </Text>
+        </VStack>
+
+        <Grid
+          templateColumns={['1fr', 'repeat(2, 1fr)']}
+          rowGap={10}
+          columnGap={5}
+          w="full"
+        >
+          {BATERIES_CONTENT.LIST.map((btr) => (
+            <GridItem colSpan={1} as={Flex} align="start" gap={5}>
+              <Box as="span" color="blue.500">
+                {btr.icon}
+              </Box>
+              <VStack gap={2} color="gray.800" align="start">
+                <Heading fontSize="xl" fontWeight={600}>
+                  {btr.name}
+                </Heading>
+                <Text style={{ marginTop: '0px' }}>{btr.description}</Text>
+              </VStack>
+            </GridItem>
+          ))}
+        </Grid>
+      </Flex>
+    </Box>
+  );
+});
+
+const Headline = memo(() => {
+  return (
+    <Flex
+      as="section"
+      gap={[6]}
+      aria-label="Bateries"
+      direction={{ base: 'column' }}
+      w="full"
+      py={{ base: '52px', md: '9rem' }}
+      px={{ base: 6 }}
+      position="relative"
+      maxW="container.xl"
+      overflow="hidden"
+    >
+      <Text fontWeight={600} fontSize="lg" color="gray.600">
+        {HEADLINE_CONTENT.SPAN}
+      </Text>
+
+      <Text
+        fontSize={['48px', '72px']}
+        color="gray.800"
+        fontWeight={400}
+        lineHeight={['60px', '78px']}
+        whiteSpace={{ md: 'pre-line' }}
+      >
+        {'Using Zipper knocked \n me off the top of the list \n for '}
+        <Text as="span" color="brandOrange.500">
+          most swear words
+        </Text>{' '}
+        {'in \n commit messages.'}
+      </Text>
+    </Flex>
+  );
+});
+
 /* -------------------------------------------- */
 /* Render                                       */
 /* -------------------------------------------- */
@@ -350,12 +662,15 @@ const HomePage: NextPageWithLayout = () => (
     flexDir="column"
     alignItems="center"
     as="main"
-    px={['24px', 0]}
     w="full"
     margin="0 auto"
   >
-    <PageHero />
-    {/* <Features /> */}
+    <Hero />
+    <Features />
+    <AppletsGallery />
+    <Bateries />
+    <Headline />
+    <Footer />
   </Box>
 );
 
