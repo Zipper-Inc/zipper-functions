@@ -6,6 +6,7 @@ import {
   VStack,
   Box,
   Link,
+  Flex,
 } from '@chakra-ui/react';
 
 import { ZipperLogo, ZipperSymbol } from '@zipper/ui';
@@ -14,33 +15,69 @@ import { baseColors } from '@zipper/ui';
 export default function Footer() {
   const { blue } = baseColors;
   return (
-    <VStack w="full">
-      <HStack
-        minH={365}
+    <VStack w="full" as="footer">
+      <VStack
+        as="section"
+        aria-label="Subscription"
         bgColor="purple.900"
         w="full"
-        display="flex"
+        p="100px 0"
+        align="center"
         justify="center"
-        flexDirection="column"
-        gap={12}
+        gap={10}
       >
-        <VStack display="flex" flexDirection="row" gap={8}>
+        <HStack as="article" maxW="352px" align="center" gap={9}>
           <ZipperLogo type="horizontal" />
-          <Text color="white" fontSize="2xl" fontWeight="bold" maxWidth="190px">
+          <Text
+            style={{ margin: 0 }}
+            color="white"
+            fontSize="2xl"
+            fontWeight={600}
+            maxWidth="190px"
+          >
             Built for people who like to ship.
           </Text>
-        </VStack>
-        <VStack display="flex" flexDirection="row" gap={4}>
-          <Input bgColor="white" type="text" placeholder="E-mail address" />
-          <Button colorScheme="red" px={6} mt="0 !important">
-            <Text fontSize="sm">Join the beta</Text>
+        </HStack>
+        <HStack
+          as="form"
+          aria-label="Subscription form"
+          maxW="352px"
+          justify="center"
+          align="center"
+          gap={2}
+        >
+          <Input
+            height="2.75rem"
+            width={{ base: 'full', md: '20rem' }}
+            borderRadius="8px"
+            bg="white"
+            variant="outline"
+            placeholder="Email address"
+            borderColor="gray.300"
+            fontSize="md"
+            color="gray.500"
+          />
+          <Button
+            height="2.75rem"
+            minWidth="138px"
+            fontSize="md"
+            borderRadius="8px"
+            bg="brandOrange.500"
+            padding="10px 18px"
+            color="white"
+            fontWeight={500}
+            _hover={{ background: 'brandOrange.700' }}
+          >
+            Join the beta
           </Button>
-        </VStack>
-      </HStack>
-      <HStack
-        minH={348}
+        </HStack>
+      </VStack>
+      <VStack
+        as="section"
+        p={['52px 24px', '100px 130px']}
         bgColor="neutral.100"
         w="full"
+        align="center"
         mt="0 !important"
         position="relative"
       >
@@ -54,22 +91,23 @@ export default function Footer() {
           zIndex={0}
           borderLeft="200px solid white"
         />
-        <VStack
+        <Flex
           zIndex={1}
-          display="flex"
-          flexDirection="row"
           w="full"
+          align="start"
+          direction={{ base: 'column', lg: 'row' }}
+          maxW={{ lg: 'container.xl' }}
           justifyContent="space-between"
-          px={12}
+          gap={{ base: 10, lg: 5 }}
         >
-          <Box alignSelf="flex-start">
-            <VStack align="flex-start">
-              <ZipperSymbol fill={`${blue[600]}`} />
-            </VStack>
-          </Box>
+          <ZipperSymbol fill={`${blue[600]}`} />
 
-          <Box>
-            <VStack align="flex-start">
+          <HStack as="nav" aria-label="Quick links" gap={5}>
+            <VStack
+              as="ul"
+              w={{ base: '178px', lg: '280px' }}
+              align="flex-start"
+            >
               <Link color="blue.600" href="/home">
                 Home
               </Link>
@@ -83,10 +121,8 @@ export default function Footer() {
                 Blog
               </Link>
             </VStack>
-          </Box>
 
-          <Box>
-            <VStack align="flex-start">
+            <VStack as="ul" align="flex-start">
               <Link color="blue.600" href="#">
                 Careers
               </Link>
@@ -100,17 +136,20 @@ export default function Footer() {
                 Sign In
               </Link>
             </VStack>
-          </Box>
+          </HStack>
 
-          <Box>
-            <VStack align="flex-start">
-              <Text fontSize="xs" color="neutral.600">
-                &copy; 2023 Zipper, Inc. All rights reserved.
-              </Text>
-            </VStack>
-          </Box>
-        </VStack>
-      </HStack>
+          <HStack
+            h={{ lg: 'full' }}
+            w={{ base: 'full', lg: 'auto' }}
+            align="end"
+            justify="end"
+          >
+            <Text fontSize="xs" as="span" color="neutral.600">
+              &copy; 2023 Zipper, Inc. All rights reserved.
+            </Text>
+          </HStack>
+        </Flex>
+      </VStack>
     </VStack>
   );
 }
