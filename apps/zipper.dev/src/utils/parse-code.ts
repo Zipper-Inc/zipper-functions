@@ -253,37 +253,27 @@ export function parseInputForTypes({
       console.error('No types, treating input as any');
     }
 
-    return props
-      .map((prop) => {
-        if (
-          !prop.getTypeNode() ||
-          !prop.getName() ||
-          !prop.hasQuestionToken()
-        ) {
-          throw new Error('Cannot get the properties of the object parameter.');
-        }
-        const typeNode = prop.getTypeNode();
-
-        if (!typeNode) {
-          // Typescript defaults to any if it can't find the type
-          // type Input = { foo } // foo is any
-          return {
-            key: prop.getName(),
-            type: InputType.any,
-            optional: prop.hasQuestionToken(),
-          };
-        }
-
-        const typeDetails = parseTypeNode(typeNode, src);
-
+    return props.map((prop) => {
+      const typeNode = prop.getTypeNode();
+      if (!typeNode) {
+        // Typescript defaults to any if it can't find the type
+        // type Input = { foo } // foo is any
         return {
           key: prop.getName(),
-          type: typeDetails.type,
+          type: InputType.any,
           optional: prop.hasQuestionToken(),
-          ...('details' in typeDetails && { details: typeDetails.details }),
         };
-      })
-      .filter((p) => p) as InputParam[];
+      }
+
+      const typeDetails = parseTypeNode(typeNode, src);
+
+      return {
+        key: prop.getName(),
+        type: typeDetails.type,
+        optional: prop.hasQuestionToken(),
+        ...('details' in typeDetails && { details: typeDetails.details }),
+      };
+    });
   } catch (e) {
     if (throwErrors) throw e;
     console.error('caught during parseInputForTypes', e);
