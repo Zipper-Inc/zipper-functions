@@ -4,7 +4,6 @@ import {
   Text,
   Heading,
   VStack,
-  HStack,
   Link,
   Card,
   CardHeader,
@@ -14,231 +13,271 @@ import {
   AccordionButton,
   AccordionPanel,
   AccordionIcon,
+  Grid,
+  GridItem,
+  SimpleGrid,
 } from '@chakra-ui/react';
 import Image from 'next/image';
 import Header from '~/components/header';
 import { NextPageWithLayout } from './_app';
 import Footer from '~/components/footer';
 
+const position = `Help us set and execute a product design strategy and vision for Zipper that empowers developers while remaining simple and delightful.
+
+We know that the product experience is going to be key to helping people understand what's possible with Zipper and software within their businesses. It's a big challenge and a bigger opportunity.
+
+Once here you will:
+
+• Develop and execute a design strategy that solves customer needs and achieves business goals.
+• Own all aspects of product design at Zipper - everything from design aesthetic to the interaction model - across web, mobile, and various integration channels.
+• Employ research, storytelling, design systems, and design thinking to solve customer needs and achieve business goals.
+• Prototype and iterate quickly based on intuition and user feedback.
+• Partner with product and engineering to ensure high-quality and consistent implementation and UX.
+• Provide input and opinions on brand & marketing design.
+
+We're looking for:
+
+• At least 5 years of relevant experience designing delightful enterprise and/or consumer web applications from the ground up.
+• A relaxed and curious approach to ambiguous problems.
+• Experience and willingness to single-handedly drive the entire product design process.
+• Strong attention to detail and a keen eye for visual design.
+• Track record of using prototypes and experiments to validate ideas.
+• A collaborative design partner that's excited to build a product from the ground up.
+
+Benefits:
+
+• Healthcare (health, dental, vision)
+• Flexible PTO (with a 15 day minimum)
+• Parent-friendlv environment
+• Autonomy, Ownership, Equity
+
+Interested? We'd love to hear from you. Send your resume, portfolio, or any other useful information to dreamteam@zipper.works
+`;
+
 const AboutPage: NextPageWithLayout = () => {
   return (
-    <Box w="full">
-      <Box w="full" position="relative" py={12}>
+    <Flex align="center" direction="column" pt={[25]} w="full" gap={20}>
+      <Box w="full" maxW="container.xl" px={[6, 6, 0]} position="relative">
         <Flex
           margin="0 auto"
           gap={8}
-          align="center"
-          justify="center"
-          maxW="container.lg"
+          direction={{ base: 'column', lg: 'row' }}
+          align="start"
+          justify="space-between"
           w="full"
           zIndex="10"
           position="relative"
         >
-          <Box alignSelf="flex-start">
-            <Heading
-              color="purple.600"
-              fontSize="5xl"
-              w="md"
-              textTransform="uppercase"
-              fontFamily="plak"
-            >
-              There’s magic
-              <br /> in building software
-            </Heading>
-          </Box>
+          <Heading
+            color="purple.600"
+            fontSize={['4xl', '6xl']}
+            fontWeight={400}
+            textTransform="uppercase"
+            fontFamily="plak"
+            whiteSpace="pre-line"
+          >
+            {`There’s magic 
+              in building 
+              software`}
+          </Heading>
 
-          <Box maxW="lg">
-            <Text color="neutral.900" m={0} fontSize="xl">
+          <Box maxW={{ lg: '47%' }}>
+            <Text
+              color="gray.900"
+              m={0}
+              fontSize={{ base: '18px', lg: '2xl' }}
+              whiteSpace={{ lg: 'pre-line' }}
+            >
               It’s empowering to be able to take an idea, no matter how simple
               or silly, and turn it into something real that people use.
-            </Text>
-
-            <Text color="neutral.900" m={0} fontSize="xl">
+              <br />
+              <br />
               Unfortunately there's a lot of cruft (especially in a work
               context) that gets in the way of being able to do this.
-            </Text>
-
-            <Text color="neutral.900" m={0} fontSize="xl">
-              With Zipper, we're aiming to simplify things. You no longer have
-              to think about authentication, frameworks, servers, deployments,
-              and all the other stuff that gets in the way of just building,
-              creating, and having fun.
+              <br />
+              <br />
+              <Text as="span" fontWeight={600} color="purple.500">
+                With Zipper, we're aiming to simplify things.
+              </Text>{' '}
+              You no longer have to think about authentication frameworks,
+              servers, deployments, and all the other stuff that gets in the way
+              of just building, creating, and having fun.
             </Text>
           </Box>
         </Flex>
       </Box>
-      <Box w="full" pt="12" position="relative" zIndex={10}>
-        <Flex margin="0 auto" justify="center" maxW="container.lg" w="full">
-          <HStack alignItems="flex-start" alignSelf="flex-start">
-            <Box display="flex" flexDirection="row" gap={4}>
-              <Box>
-                <Heading
-                  color="blue.300"
-                  fontSize="2xl"
-                  w="md"
-                  textTransform="uppercase"
-                  fontFamily="plak"
+
+      <Box
+        as={Flex}
+        justifyContent="center"
+        w="full"
+        position="relative"
+        bg={['brandGray.100', 'none']}
+        zIndex={10}
+      >
+        <VStack
+          w="full"
+          align="start"
+          px={[6, 6, 0]}
+          pb={10}
+          maxW="container.xl"
+        >
+          <Heading
+            color="blue.500"
+            fontSize="4xl"
+            textTransform="uppercase"
+            fontFamily="plak"
+          >
+            THE TEAM
+          </Heading>
+
+          <Flex
+            direction={{ base: 'column', lg: 'row' }}
+            align={{ base: 'center', lg: 'start' }}
+            w="full"
+            gap={5}
+          >
+            <Text
+              whiteSpace={{ lg: 'pre-line' }}
+              fontSize={['18px']}
+              flex={1}
+              color="gray.900"
+            >
+              We’re a small team that likes to build software that helps people
+              build software.
+              <br />
+              <br />
+              Our experience across different companies like Slack and GitHub
+              has taught us that people can do incredibly creative things given
+              the space and opportunity. We're building Zipper as a platform to
+              bring that creativity out.
+            </Text>
+            <Grid
+              w={{ base: 'full', lg: '47%' }}
+              templateColumns={'repeat(2, 1fr)'}
+              gap={5}
+            >
+              <Card as={GridItem} boxShadow="none" bg="white">
+                <CardHeader
+                  style={{ aspectRatio: '1/1' }}
+                  width="full"
+                  position="relative"
                 >
-                  THE TEAM
-                </Heading>
-                <Text color="neutral.900" m={0} maxW="md" fontSize="md" my={4}>
-                  We’re a small team that likes to build software that helps
-                  people build software.
-                </Text>
-                <Text color="neutral.900" m={0} maxW="md" fontSize="md">
-                  Our experience across different companies like Slack and
-                  GitHub has taught us that people can do incredibly creative
-                  things given the space and opportunity. We're building Zipper
-                  as a platform to bring that creativity out.
-                </Text>
-              </Box>
-              <HStack>
-                <Card mr={4}>
-                  <CardHeader m={0} p={0}>
-                    <Image
-                      style={{ borderRadius: '8px 8px 0 0 0' }}
-                      src="/static/sachin.png"
-                      width="280"
-                      height="280"
-                      alt="Sachin Ranchod"
-                    />
-                  </CardHeader>
-                  <CardBody>
-                    <Text color="blue.500" fontSize="3xl" fontWeight="bold">
-                      Sachin <br />
-                      Ranchod
-                    </Text>
-                  </CardBody>
-                </Card>
-                <Card>
-                  <CardHeader m={0} p={0} borderTopRadius={8}>
-                    <Image
-                      style={{ borderRadius: '8px 8px 0 0' }}
-                      src="/static/ibu.png"
-                      width="280"
-                      height="280"
-                      alt="Sachin Ranchod"
-                    />
-                  </CardHeader>
-                  <CardBody>
-                    <Text color="blue.500" fontSize="3xl" fontWeight="bold">
-                      Ibu
-                      <br /> Madha
-                    </Text>
-                  </CardBody>
-                </Card>
-              </HStack>
-            </Box>
-          </HStack>
-        </Flex>
+                  <Image
+                    src="/static/sachin.png"
+                    fill
+                    style={{
+                      objectFit: 'cover',
+                      borderRadius: '8px 8px 0 0',
+                    }}
+                    alt="Sachin Ranchod"
+                  />
+                </CardHeader>
+                <CardBody>
+                  <Text
+                    lineHeight={['30px', '38px']}
+                    color="blue.500"
+                    fontSize={{ base: 'xl', lg: '3xl' }}
+                    fontWeight="bold"
+                  >
+                    Sachin <br />
+                    Ranchod
+                  </Text>
+                </CardBody>
+              </Card>
+              <Card as={GridItem} boxShadow="none" bg="white">
+                <CardHeader
+                  style={{ aspectRatio: '1/1' }}
+                  position="relative"
+                  borderTopRadius={2}
+                >
+                  <Image
+                    src="/static/ibu.png"
+                    fill
+                    style={{ objectFit: 'cover', borderRadius: '8px 8px 0 0' }}
+                    alt="Sachin Ranchod"
+                  />
+                </CardHeader>
+                <CardBody>
+                  <Text
+                    lineHeight={['30px', '38px']}
+                    color="blue.500"
+                    fontSize={{ base: 'xl', lg: '3xl' }}
+                    fontWeight="bold"
+                  >
+                    Ibu
+                    <br /> Madha
+                  </Text>
+                </CardBody>
+              </Card>
+            </Grid>
+          </Flex>
+        </VStack>
       </Box>
-      <Box w="full" py="32" mt="-36px" position="relative" bg="brandGray.100">
-        <Flex margin="0 auto" justify="center" maxW="container.lg" w="full">
-          <HStack alignItems="flex-start" alignSelf="flex-start">
-            <Box w="50%" lineHeight="28px">
-              <Heading color="red.400" fontFamily="plak">
-                OPEN ROLES
-              </Heading>
-              <Text mt={2}>
-                We’re a small team that likes to build software that helps
+      <Flex
+        w="full"
+        direction="column"
+        gap={20}
+        align="center"
+        position="relative"
+        zIndex={10}
+        mt={{ base: -20, lg: 0 }}
+        pt={{ base: 20, lg: 0 }}
+        bg="brandGray.100"
+      >
+        <VStack w="full" align="start" px={[6, 6, 0]} maxW="container.xl">
+          <Heading
+            color="brandOrange.500"
+            fontSize="4xl"
+            textTransform="uppercase"
+            fontFamily="plak"
+          >
+            OPEN ROLES
+          </Heading>
+
+          <SimpleGrid
+            templateColumns={{ base: '1fr', lg: '1fr 47%' }}
+            spacing={5}
+            w="full"
+          >
+            <Text whiteSpace={{ lg: 'pre-line' }} flex={1} fontSize={['18px']}>
+              {`We’re a small team  that likes to build software that helps
                 people build software.
-              </Text>
-              <Text>
-                <br />
+                
                 Our experience across different companies like Slack and GitHub
                 has taught us that people can do incredibly creative things
                 given the space and opportunity. We're building Zipper as a
-                platform to bring that creativity out.
-              </Text>
-            </Box>
-            <Box w="50%">
-              <Accordion
-                mt={12}
-                defaultIndex={[0]}
-                allowMultiple
-                bgColor="white"
-                borderTopWidth="0px"
-                borderTopColor="transparent"
-                p={6}
-                borderRadius={8}
-              >
-                <AccordionItem border="none">
-                  <Heading textColor="red.400">
-                    <AccordionButton>
-                      <Box
-                        as="span"
-                        flex="1"
-                        textAlign="left"
-                        fontSize="3xl"
-                        fontWeight="bold"
+                platform to bring that creativity out.`}
+            </Text>
+
+            <Accordion defaultIndex={[0]} allowMultiple>
+              <AccordionItem border="none" bg="white" borderRadius="8px">
+                <h2>
+                  <AccordionButton p={10} _hover={{ bg: 'white' }}>
+                    <Box as="span" flex="1" textAlign="left">
+                      <Heading
+                        as="h3"
+                        textColor="brandOrange.500"
+                        fontSize={['30px']}
                       >
                         Head of Design
-                      </Box>
-                      <AccordionIcon />
-                    </AccordionButton>
-                  </Heading>
-                  <AccordionPanel pb={4}>
-                    <Box
-                      as="span"
-                      flex="1"
-                      textAlign="left"
-                      fontSize="2xl"
-                      fontWeight="bold"
-                      color="neutral.800"
-                    >
-                      Remote/US West
+                      </Heading>
+                      <Heading as="h4" color="gray.900" fontSize={['xl']}>
+                        Remote/US West
+                      </Heading>
                     </Box>
-                    <Text>
-                      Help us set and execute a product design strategy and
-                      vision for Zipper that empowers developers while remaining
-                      simple and delightful. We know that the product experience
-                      is going to be key to helping people understand what's
-                      possible with Zipper and software within their businesses.
-                      It's a big challenge and a bigger opportunity. Once here
-                      you will: Develop and execute a design strategy that
-                      solves customer needs and achieves business goals. Own all
-                      aspects of product design at Zipper - everything from
-                      design aesthetic to the interaction model - across web,
-                      mobile, and various integration channels. Employ research,
-                      storytelling, design systems, and design thinking to solve
-                      customer needs and achieve business goals. Prototype and
-                      iterate quickly based on intuition and user feedback.
-                      Partner with product and engineering to ensure
-                      high-quality and consistent implementation and UX. Provide
-                      input and opinions on brand &amp; marketing design. We're
-                      looking for: At least 5 years of relevant experience
-                      designing delightful enterprise and/or consumer web
-                      applications from the ground up. A relaxed and curious
-                      approach to ambiguous problems. Experience and willingness
-                      to single-handedly drive the entire product design
-                      process. Strong attention to detail and a keen eye for
-                      visual design. Track record of using prototypes and
-                      experiments to validate ideas. A collaborative design
-                      partner that's excited to build a product from the ground
-                      up. Benefits: Healthcare (health, dental, vision) Flexible
-                      PTO (with a 15 day minimum) Parent-friendly environment
-                      Autonomy, Ownership, Equity Interested? We'd love to hear
-                      from you. Send your resume, portfolio, or any other useful
-                      information to dreamteam@zipper.works
-                    </Text>
-                  </AccordionPanel>
-                </AccordionItem>
-              </Accordion>
-            </Box>
-          </HStack>
-        </Flex>
-      </Box>
-      <Box
-        w="full"
-        py="32"
-        mt="-36px"
-        position="relative"
-        bg="brandGray.100"
-        display="flex"
-        flexDirection="column"
-        alignSelf="flex-start"
-      >
-        <Flex margin="0 auto" w="container.lg" direction="column">
+                    <AccordionIcon fontSize={['24px']} color="gray.500" />
+                  </AccordionButton>
+                </h2>
+                <AccordionPanel px={10} pb={10} whiteSpace="pre-line">
+                  {position}
+                </AccordionPanel>
+              </AccordionItem>
+            </Accordion>
+          </SimpleGrid>
+        </VStack>
+
+        <VStack w="full" align="start" px={[6, 6, 0]} maxW="container.xl">
           <Heading color="purple.600" fontFamily="plak">
             CONTACT
           </Heading>
@@ -250,14 +289,14 @@ const AboutPage: NextPageWithLayout = () => {
             and we'll respond to you as
             <br /> quickly as possible.
           </Text>
-        </Flex>
-      </Box>
-
-      <Footer />
-    </Box>
+        </VStack>
+        <Footer />
+      </Flex>
+    </Flex>
   );
 };
 
 AboutPage.header = () => <Header showOrgSwitcher={true} showDivider={false} />;
+AboutPage.skipAuth = true;
 
 export default AboutPage;

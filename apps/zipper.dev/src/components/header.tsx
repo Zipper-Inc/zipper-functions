@@ -169,16 +169,16 @@ const Header: React.FC<HeaderProps> = ({
         as="header"
         css={{ margin: '0 auto' }}
         justify="space-between"
-        height={20}
+        h={{ base: '80px', lg: '125px' }}
         px={[6, 6, 0]}
         w="full"
         maxW="container.xl"
       >
         <Box
           position="absolute"
-          top="-25%"
+          top="-40%"
           width={['200vw', '100vw']}
-          height={['1200px', '1400px']}
+          height={['1200px', '1670px']}
           right="0"
           zIndex="-1"
           background="url('/layout/triangle-path.svg')"
