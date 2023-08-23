@@ -1,21 +1,15 @@
-import { AICodeOutput } from '@zipper/types';
-import { NextApiRequest, NextApiResponse } from 'next';
-import { NextResponse } from 'next/server';
-import { Configuration, OpenAIApi } from 'openai';
+import { LLMChain, SequentialChain } from 'langchain/chains';
+import { ChatOpenAI } from 'langchain/chat_models/openai';
+import {
+  ChatPromptTemplate,
+  HumanMessagePromptTemplate,
+  SystemMessagePromptTemplate,
+} from 'langchain/prompts';
+
+import { StructuredOutputParser } from 'langchain/output_parsers';
 import { z } from 'zod';
 
-const conf = new Configuration({
-  apiKey: process.env.OPENAI,
-});
-
-async function generateZipperAppletVersion({
-  userRequest,
-  rawTypescriptCode,
-}: {
-  userRequest: string;
-  rawTypescriptCode: string;
-}) {
-  const zipperDefinitions = `
+const zipperDefinitions = `
   Here is a list of all the definitions you can use in your code:
   // zipper.d.ts contents 
   /**
@@ -477,7 +471,34 @@ declare function Dropdown<I = Zipper.Inputs>(
   props: DropdownProps<I>,
 ): Zipper.Action;`;
 
-  const zipperSystemPrompt = `
+// Langchain uses {} as their prompt template, so in order to pass code curly braces we need to duplicate them
+const formatCodePrompt = (code: string) => code.replace(/({|})/g, '$1$1');
+
+const CreateBasicCodePrompt = ChatPromptTemplate.fromPromptMessages<{
+  userRequest: string;
+}>([
+  SystemMessagePromptTemplate.fromTemplate(
+    formatCodePrompt(`
+  You are a high skilled typescript developer, your task is to take the user request and generate typescript code. 
+  Your code must export a handler function. You are not allowed to use classes. 
+  Your final output should be a handler function that implements the user request.
+  You should always only respond with the desired code, no additional text.
+  Example: 
+  User request: I want a applet that can greet the user by it's name
+  Code: 
+  export async function handler({name} : {name: string}){
+    return \`Hello \${name}\`
+  }`),
+  ),
+  HumanMessagePromptTemplate.fromTemplate('User request: {userRequest}'),
+]);
+
+const CreateZipperCodePropmt = ChatPromptTemplate.fromPromptMessages<{
+  userRequest: string;
+  basicTypescriptCode: string;
+}>([
+  SystemMessagePromptTemplate.fromTemplate(
+    formatCodePrompt(`
   # Convert TypeScript to Zipper Applet
   Zipper allows creating serverless apps called applets. 
   Applets contain handler functions that use types like Handler and Serializable.
@@ -574,114 +595,162 @@ declare function Dropdown<I = Zipper.Inputs>(
       },
     },
   };
-  `;
+  `),
+  ),
+  HumanMessagePromptTemplate.fromTemplate(
+    `Zipper definition (will be a global object, you can access it using to use via Zipper.<something>): ${formatCodePrompt(
+      zipperDefinitions,
+    )}`,
+  ),
+  HumanMessagePromptTemplate.fromTemplate('User request: {userRequest}'),
+]);
 
-  if (conf.apiKey === undefined) {
-    console.log('No API key provided.');
-    return { error: 'No API key provided.' };
-  }
+const CreateAuditedCodePrompt = ChatPromptTemplate.fromPromptMessages<{
+  userRequest: string;
+  zipperCode: string;
+}>([
+  SystemMessagePromptTemplate.fromTemplate(
+    formatCodePrompt(`\
+  You're a Senior Typescript developer, a DX engineer. 
+  Your task is to take the code and audit it to make sure that it is valid and everything needed to run is there.
 
-  const openai = new OpenAIApi(conf);
-  try {
-    const completion = await openai.createChatCompletion({
-      model: 'gpt-4-0613',
-      messages: [
-        {
-          role: 'system',
-          content: zipperSystemPrompt,
-        },
-        {
-          role: 'system',
-          content: zipperDefinitions,
-        },
-        {
-          role: 'user',
-          content: userRequest,
-        },
-        {
-          role: 'user',
-          content: rawTypescriptCode,
-        },
-      ],
-      temperature: 0,
-    });
+  Check and fix all types in order to have all defined and correct.
+  Check and fix all functions in order to have all defined and correct with their types.
+  Remember, you need to mark things with export to import them in other files.
 
-    return completion.data.choices[0]?.message;
-  } catch (error: any) {
-    console.log(error);
-    if (error.response) {
-      console.log(error.response.status);
-      console.log(error.response.data);
-      return {
-        message: error.response.data?.error?.message ?? 'Unknown error',
-      };
-    } else {
-      console.log(error);
-      return {
-        message: error.error?.message ?? 'Unknown error',
-      };
-    }
-  }
-}
+  When doing imports, add the extension .ts to the file name.
+  Example: import { Todo } from './types.ts' ✅
 
-const FileWithTsExtension = z.string().refine((value) => value.endsWith('.ts'));
+  ✅ ALWAYS REMOVE \`import { Something } from 'Zipper'\`. Zipper stuff are located in the global namespace Zipper.
+  ✅ You NEED to refactor the code that \`import { Something } from Zipper\` to use Zipper.Something 
+  ❗ Remember: if you let pass ANY import from Zipper, the applet wont work. 
 
-function groupCodeByFilename(inputs: string): AICodeOutput[] {
-  const output: AICodeOutput[] = [];
-  const lines = inputs.split('\n');
+  After the audit, you should return the code with the fixes, but dont return any additional text. Just plain code.
+  `),
+  ),
+  HumanMessagePromptTemplate.fromTemplate('User request: {userRequest}'),
+  HumanMessagePromptTemplate.fromTemplate('Code: {zipperCode}'),
+]);
 
-  let currentFilename: AICodeOutput['filename'] = 'main.ts';
-  let currentCode = '';
+const OrganizeOutputPrompt = ChatPromptTemplate.fromPromptMessages<{
+  auditedCode: string;
+}>([
+  SystemMessagePromptTemplate.fromTemplate(
+    formatCodePrompt(`I want you to grab a output like
+    // file: main.ts
+    const foo = 'bar';
 
-  for (const line of lines) {
-    if (line.trim().startsWith('// file:')) {
-      if (currentCode !== '') {
-        output.push({ filename: currentFilename, code: currentCode });
-        currentCode = '';
+    // file: other.ts
+    const bar = 'foo';
+
+    and output me like this:
+    [
+      {
+        filename: "main.ts",
+        code: "const foo = 'bar';"
+        
+      },
+      {
+        filename: "other.ts",
+        code: ""const bar = 'foo';""
       }
-      let file = line.trim().replace('// file:', '').trim();
-      if (!FileWithTsExtension.safeParse(file)) {
-        file += '.ts';
+    ]
+
+    If there is no file comment, output the code in a filename main.ts.
+    Return me the output in plain JSON. No additional text above!!
+
+    ✅ Thats considered a valid output:
+    \`\`\`json
+    [
+      {
+        "filename": "main.ts",
+        "code": "const foo = 'bar';"
+        
+      },
+      {
+        "filename": "other.ts",
+        "code": ""const bar = 'foo';""
       }
-      currentFilename = file as AICodeOutput['filename'];
-    } else {
-      currentCode += line + '\n';
-    }
-  }
+    ]
+    \`\`\`
 
-  // Add the last code block
-  if (currentCode !== '') {
-    output.push({ filename: currentFilename, code: currentCode });
-  }
+    ❌ This is not a valid output:
+    Hey, here is your output:
+    \`\`\`javascript
+    [
+      {
+        filename: "main.ts",
+        code: "const foo = 'bar';"
+        
+      },
+      {
+        filename: "other.ts",
+        code: ""const bar = 'foo';""
+      }
+    ]
+    \`\`\`
+  `),
+  ),
+  HumanMessagePromptTemplate.fromTemplate('Input code: {auditedCode}'),
+]);
 
-  return output;
-}
+const gpt3 = new ChatOpenAI({
+  openAIApiKey: process.env.OPENAI,
+  modelName: 'gpt-3.5-turbo-16k-0613',
+  temperature: 0,
+});
 
-export default async function handler(
-  request: NextApiRequest,
-  response: NextApiResponse,
-) {
-  const { userRequest, rawTypescriptCode } = JSON.parse(request.body);
-  const zipperAppletVersion = await generateZipperAppletVersion({
-    userRequest,
-    rawTypescriptCode,
-  });
+const gpt4 = new ChatOpenAI({
+  openAIApiKey: process.env.OPENAI,
+  modelName: 'gpt-4-0613',
+  temperature: 0,
+});
 
-  if (!zipperAppletVersion)
-    return NextResponse.json(
-      { error: 'No response from OpenAI' },
-      { status: 500 },
-    );
+export const codeOutputParser = StructuredOutputParser.fromZodSchema(
+  z.array(
+    z.object({
+      filename: z
+        .string()
+        .endsWith('.ts')
+        .describe('The filename of the typescript code'),
+      code: z.string().describe('The code that got generated'),
+    }),
+  ),
+);
 
-  if ('message' in zipperAppletVersion || 'error' in zipperAppletVersion) {
-    return NextResponse.json(
-      { error: zipperAppletVersion.error },
-      { status: 500 },
-    );
-  }
+const createBasicCode = new LLMChain({
+  llm: gpt4,
+  prompt: CreateBasicCodePrompt,
+  outputKey: 'basicTypescriptCode',
+});
 
-  return response.status(200).json({
-    raw: zipperAppletVersion.content,
-    groupedByFilename: groupCodeByFilename(zipperAppletVersion.content ?? ''),
-  });
-}
+const createZipperCode = new LLMChain({
+  llm: gpt4,
+  prompt: CreateZipperCodePropmt,
+  outputKey: 'zipperCode',
+});
+
+const createAuditedCode = new LLMChain({
+  llm: gpt4,
+  prompt: CreateAuditedCodePrompt,
+  outputKey: 'auditedCode',
+});
+
+const organizeOutput = new LLMChain({
+  llm: gpt3,
+  prompt: OrganizeOutputPrompt,
+  outputKey: 'output',
+  outputParser: codeOutputParser,
+});
+
+export const createCodeChain = new SequentialChain({
+  chains: [
+    createBasicCode,
+    createZipperCode,
+    createAuditedCode,
+    organizeOutput,
+  ],
+  inputVariables: ['userRequest'],
+  outputVariables: ['output'],
+  verbose: true,
+});
