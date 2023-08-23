@@ -17,6 +17,8 @@
 
 To get started, create a new applet and add the Slack connector by clicking the `+` in the file list and selecting Slack from the list of pre-built connectors. This will add a new file to your applet called `slack-connector.ts`. Click on it to configure the connector and see the pre-written (but editable) code we give you.
 
+![add-the-github-connector](public/images/connector-menu.png)
+
 #### Configuration
 
 **Bot Scopes**
@@ -41,6 +43,8 @@ When a user runs your applet, we'll pass their API token to you through the Hand
 Zipper provides a prebuilt Slack app that you can use to get started quickly. Our Slack app will be installed on your Slack workspace and we'll use its client ID and secret to get a token with the chosen scopes. However, if you want to use your own Slack app (so that you can enable other features like slash commands), you can enter your own client ID and secret here.
 
 Even when you provide your own client ID and secret, we'll still handle the OAuth flow for you and store the tokens safely. You'll just need to create your own Slack app and add the redirect URL that we provide to your app's redirect URLs.
+
+![slack connector config](public/images/slack-connector-config.png)
 
 #### Code
 
