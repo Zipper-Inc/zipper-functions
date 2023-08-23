@@ -694,16 +694,14 @@ const OrganizeOutputPrompt = ChatPromptTemplate.fromPromptMessages<{
   HumanMessagePromptTemplate.fromTemplate('Input code: {auditedCode}'),
 ]);
 
-const fixCI = (env: string | undefined) => env ?? 'sk-invalid-openai-key';
-
 const gpt3 = new ChatOpenAI({
-  openAIApiKey: fixCI(process.env.OPENAI),
+  openAIApiKey: process.env.OPENAI,
   modelName: 'gpt-3.5-turbo-16k-0613',
   temperature: 0,
 });
 
 const gpt4 = new ChatOpenAI({
-  openAIApiKey: fixCI(process.env.OPENAI),
+  openAIApiKey: process.env.OPENAI,
   modelName: 'gpt-4-0613',
   temperature: 0,
 });
