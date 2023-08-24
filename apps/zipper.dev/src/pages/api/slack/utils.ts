@@ -1,7 +1,18 @@
-import { m } from 'framer-motion';
 import type { NextApiResponse } from 'next';
 
+// TODO: this needs to come from slack and be stored in a DB
 const BOT_TOKEN = 'xoxb-5595568931968-5762958141557-DcPeKgbTuTQgEyYE7avjS49M';
+const SLACK_VIEW_UPDATE_URL = 'https://slack.com/api/views.update';
+const SLACK_VIEW_OPEN_URL = 'https://slack.com/api/views.open';
+const HEADERS = {
+  ['Content-Type']: 'application/json; charset=utf-8',
+  Authorization: `Bearer ${BOT_TOKEN}`,
+};
+
+export function getRunUrl(slug: string, filename: string) {
+  // TODO: don't hard code this
+  return `http://${slug}.localdev.me:3002/run/${filename}/api/json`;
+}
 
 export async function runApp(url: string, body: string) {
   const runResponse = await fetch(url, {
@@ -13,6 +24,8 @@ export async function runApp(url: string, body: string) {
 }
 
 export async function getAppInfo(slug: string, filename?: string) {
+  // TODO: Get the real appInfo url
+  // Event better do this with a code import instead of http.
   const appInfoUrl = `https://matt.zipper.ngrok.app/api/app/info/${slug}`;
   const appInfoResponse = await fetch(appInfoUrl, {
     method: 'POST',
@@ -47,7 +60,7 @@ export function buildSlackModalView({
     submit: showSubmit
       ? {
           type: 'plain_text',
-          text: 'Submit',
+          text: 'Run Applet',
         }
       : undefined,
     private_metadata: privateMetadata,
@@ -56,23 +69,17 @@ export function buildSlackModalView({
 }
 
 export function updateSlackModal(view: any) {
-  return fetch('https://slack.com/api/views.update', {
+  return fetch(SLACK_VIEW_UPDATE_URL, {
     method: 'POST',
-    headers: {
-      ['Content-Type']: 'application/json; charset=utf-8',
-      Authorization: `Bearer ${BOT_TOKEN}`,
-    },
+    headers: HEADERS,
     body: JSON.stringify(view),
   });
 }
 
 export function openSlackModal(view: any) {
-  return fetch('https://slack.com/api/views.open', {
+  return fetch(SLACK_VIEW_OPEN_URL, {
     method: 'POST',
-    headers: {
-      ['Content-Type']: 'application/json; charset=utf-8',
-      Authorization: `Bearer ${BOT_TOKEN}`,
-    },
+    headers: HEADERS,
     body: JSON.stringify(view),
   });
 }
@@ -81,19 +88,23 @@ export function acknowledgeSlack(res: NextApiResponse) {
   return res.status(200).json({ success: true });
 }
 
-function buildSelectOptions(options: string[]) {
+function buildSelectOption(text: string, value: string) {
+  return {
+    text: {
+      type: 'plain_text',
+      text,
+    },
+    value,
+  };
+}
+
+function buildAllSelectOptions(options: string[]) {
   return options.map((scriptName: string) => {
-    return {
-      text: {
-        type: 'plain_text',
-        text: scriptName,
-      },
-      value: scriptName,
-    };
+    return buildSelectOption(scriptName, scriptName);
   });
 }
 
-export function buildFilenameSelect(scripts: string[]) {
+export function buildFilenameSelect(scripts: string[], selected?: string) {
   return [
     {
       type: 'section',
@@ -103,6 +114,7 @@ export function buildFilenameSelect(scripts: string[]) {
         'filename_select_action',
         'Select an file',
         scripts,
+        selected,
       ),
     },
   ];
@@ -112,7 +124,12 @@ export function buildSelectElement(
   actionId: string,
   placeHolderText: string,
   options: string[],
+  selected?: string,
 ) {
+  const initialOption = selected
+    ? buildSelectOption(selected, selected)
+    : undefined;
+
   return {
     type: 'static_select',
     action_id: actionId,
@@ -120,14 +137,15 @@ export function buildSelectElement(
       type: 'plain_text',
       text: placeHolderText,
     },
-    options: buildSelectOptions(options),
+    options: buildAllSelectOptions(options),
+    initial_option: initialOption,
   };
 }
 
 function buildEnumInput({ key, details, optional }: ZipperInput) {
   const values = details?.values || [];
   const options = values.map((v: ZipperInputDetailValue) => v.value);
-  console.log('BUILD ENUM ' + key);
+
   return {
     type: 'input',
     block_id: `${key}_select`,
@@ -253,12 +271,7 @@ export type ZipperInput = {
 };
 
 export function buildViewInputBlock(inputs: ZipperInput[]) {
-  console.log('build an input for ');
   return inputs.map((i: ZipperInput) => {
-    console.log('INPUT:--------');
-    console.log(i);
-    console.log({ type: i.type });
-    console.log({ func: inputTypeFuncMap[i.type] });
     return inputTypeFuncMap[i.type](i);
   });
 }
@@ -297,4 +310,83 @@ export function buildRunUrlBodyParams(payload: any) {
     return { ...acc, ...parseSubmittedInput(inputs[k]) };
   }, {});
   return queryString;
+}
+
+export type PrivateMetadata = {
+  slug?: string;
+  filename?: string;
+};
+
+export function buildPrivateMetadata(privateMetadata: PrivateMetadata) {
+  return JSON.stringify(privateMetadata);
+}
+
+export async function buildInputModal(
+  slug: string,
+  filename: string,
+  viewId: string,
+  viewHash: string,
+) {
+  const appInfo = await getAppInfo(slug, filename);
+
+  const blocks = [
+    ...buildFilenameSelect(appInfo.data.runnableScripts, filename),
+    { type: 'divider' },
+    {
+      type: 'section',
+      text: {
+        type: 'mrkdwn',
+        text: '*Inputs:*',
+      },
+    },
+    ...buildViewInputBlock(appInfo.data.inputs),
+  ];
+
+  return {
+    view_id: viewId,
+    hash: viewHash,
+    view: buildSlackModalView({
+      title: `${appInfo.data.app.name}`,
+      callbackId: 'view-run-zipper-app',
+      blocks,
+      privateMetadata: buildPrivateMetadata({ slug, filename }),
+      showSubmit: true,
+    }),
+  };
+}
+
+export function buildRunResultView(slug: string, filename: string, data: any) {
+  const blocks = [
+    {
+      type: 'section',
+      text: {
+        type: 'plain_text',
+        text: JSON.stringify(data),
+      },
+    },
+    {
+      type: 'section',
+      text: {
+        type: 'plain_text',
+        text: ' ',
+      },
+      accessory: {
+        type: 'button',
+        text: {
+          type: 'plain_text',
+          text: 'Edit & Rerun',
+        },
+        value: 'edit_and_rerun',
+        action_id: 'edit_and_rerun_button',
+      },
+    },
+  ];
+
+  return buildSlackModalView({
+    title: `${slug}`,
+    callbackId: 'view-zipper-app-results',
+    blocks,
+    privateMetadata: `{ "slug": "${slug}", "filename": "${filename}" }`,
+    showSubmit: false,
+  });
 }
