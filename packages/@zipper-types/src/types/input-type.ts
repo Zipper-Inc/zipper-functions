@@ -14,4 +14,5 @@ export const JSONEditorInputTypes = [
   InputType.array,
   InputType.object,
   InputType.any,
+  InputType.unknown,
 ];

@@ -220,6 +220,14 @@ export function RunAppProvider({
     const runStart = performance.now();
     const formValues = formMethods.getValues();
 
+    // ReactHookForm doesn't parse destructured objects correctly i.e. { ...foo }: any
+    // this is a hack but we should fix it upstream
+    if (Object.keys(formValues).includes('{ ')) {
+      const badlyParsedKey = Object.keys(formValues['{ '])[0];
+      if (badlyParsedKey) {
+        formValues[`{ ...${badlyParsedKey}`] = formValues['{ '][badlyParsedKey];
+      }
+    }
     const inputs = getInputsFromFormData(formValues, inputParams);
     const hasInputs = inputs && Object.values(inputs).length;
 
