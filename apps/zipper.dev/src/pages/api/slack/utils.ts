@@ -1,12 +1,12 @@
 import type { NextApiResponse } from 'next';
 
 // TODO: this needs to come from slack and be stored in a DB
-const BOT_TOKEN = 'xoxb-5595568931968-5762958141557-DcPeKgbTuTQgEyYE7avjS49M';
+const { SLACK_BOT_TOKEN } = process.env;
 const SLACK_VIEW_UPDATE_URL = 'https://slack.com/api/views.update';
 const SLACK_VIEW_OPEN_URL = 'https://slack.com/api/views.open';
 const HEADERS = {
   ['Content-Type']: 'application/json; charset=utf-8',
-  Authorization: `Bearer ${BOT_TOKEN}`,
+  Authorization: `Bearer ${SLACK_BOT_TOKEN}`,
 };
 
 export function getRunUrl(slug: string, filename: string) {
