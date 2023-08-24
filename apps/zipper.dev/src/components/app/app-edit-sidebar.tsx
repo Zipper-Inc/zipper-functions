@@ -10,7 +10,6 @@ import {
   HStack,
   Heading,
   useColorMode,
-  Code,
 } from '@chakra-ui/react';
 import { TabButton } from '@zipper/ui';
 import { useState } from 'react';
@@ -76,9 +75,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
           },
         }}
       >
-        <Code px={10} py={4}>
-          <Markdown children={currentScriptLive?.code || ''} />
-        </Code>
+        <Markdown children={currentScriptLive?.code || ''} />
       </VStack>
     );
   }

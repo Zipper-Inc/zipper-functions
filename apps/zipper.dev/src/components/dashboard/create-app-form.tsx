@@ -39,9 +39,7 @@ import { useRouter } from 'next/router';
 import { useOrganization } from '~/hooks/use-organization';
 import { useUser } from '~/hooks/use-user';
 import { useOrganizationList } from '~/hooks/use-organization-list';
-import { getEditAppletLink, getZipperApiUrl } from '@zipper/utils';
-import { ChatGPTMessage } from '~/pages/api/ai/generate/applet';
-import { AICodeOutput } from '@zipper/types';
+import { getEditAppletLink } from '@zipper/utils';
 import { useEditorContext } from '../context/editor-context';
 
 const getDefaultCreateAppFormValues = () => ({
@@ -59,86 +57,10 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
   const { setActive } = useOrganizationList();
   const utils = trpc.useContext();
   const router = useRouter();
-  const [messages, setMessages] = useState<ChatGPTMessage[]>([]);
-  const [isSending, setIsSending] = useState(false);
 
   const addScript = trpc.useMutation('script.add');
+  const generateCodeWithAI = trpc.useMutation('ai.pipeline');
   const { scripts } = useEditorContext();
-
-  const getZipperCode = async ({
-    message,
-    basicCode,
-  }: {
-    message: string;
-    basicCode: string;
-  }) => {
-    const response = await fetch(
-      `${getZipperApiUrl()}/ai/zipper-version/applet`,
-      {
-        method: 'POST',
-        body: JSON.stringify({
-          userRequest: message,
-          rawTypescriptCode: basicCode,
-        }),
-      },
-    );
-
-    // Handle response
-    const data = await response.json();
-
-    if (data.error) {
-      console.log(data.error);
-      throw new Error('Failed to generate Zipper code');
-    }
-
-    return data as { raw: string; groupedByFilename: AICodeOutput[] };
-  };
-
-  // getBasicCode implementation
-  const getBasicCode = async (message: string): Promise<ChatGPTMessage> => {
-    const response = await fetch(`${getZipperApiUrl()}/ai/generate/applet`, {
-      method: 'POST',
-      body: JSON.stringify({
-        userRequest: message,
-      }),
-    });
-
-    const data = await response.json();
-
-    if (data.error) {
-      throw new Error(data.error);
-    }
-
-    return data.message;
-  };
-
-  const sendMessageHandler = async (message: string) => {
-    // Existing logic to build messages
-    const messagesToSend: ChatGPTMessage[] = [
-      ...messages,
-      { role: 'user', content: message },
-    ];
-
-    setIsSending(true);
-
-    try {
-      const basicCodeResponse = await getBasicCode(message);
-      const basicCode = basicCodeResponse.content;
-      const zipperCode = await getZipperCode({ message, basicCode });
-
-      setMessages([
-        ...messagesToSend,
-        { role: 'assistant', content: basicCode },
-        { role: 'assistant', content: zipperCode.raw },
-      ]);
-
-      return zipperCode;
-    } catch (error) {
-      console.log(error);
-    } finally {
-      setIsSending(false);
-    }
-  };
 
   const addApp = trpc.useMutation('app.add', {
     async onSuccess() {
@@ -185,12 +107,11 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
     appSlugQuery.isFetched && slug && slug.length >= MIN_SLUG_LENGTH;
   const isDisabled = slugExists || slug.length < MIN_SLUG_LENGTH;
 
-  const duration = 1500;
   const toast = useToast();
 
   return (
     <Box position="relative">
-      <Fade in={addApp.isLoading || isSending}>
+      <Fade in={addApp.isLoading || generateCodeWithAI.isLoading}>
         <Box
           position="fixed"
           top={0}
@@ -330,18 +251,23 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
               colorScheme="purple"
               type="submit"
               isDisabled={
-                isDisabled || addApp.isLoading || isSending || submitting
+                isDisabled ||
+                addApp.isLoading ||
+                generateCodeWithAI.isLoading ||
+                submitting
               }
               onClick={createAppForm.handleSubmit(
                 async ({ description, isPublic, requiresAuthToRun, name }) => {
                   setSubmitting(true);
                   const aiOutput = description
-                    ? await sendMessageHandler(description)
+                    ? await generateCodeWithAI.mutateAsync({
+                        userRequest: description,
+                      })
                     : undefined;
-                  const mainCode =
-                    aiOutput?.groupedByFilename.find(
-                      (output) => output.filename === 'main.ts',
-                    )?.code || aiOutput?.raw;
+
+                  const mainCode = aiOutput?.find(
+                    (output) => output.filename === 'main.ts',
+                  )?.code;
 
                   await addApp.mutateAsync(
                     {
@@ -363,13 +289,12 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
                           setActive(selectedOrganizationId || null);
                         }
                         if (aiOutput) {
-                          const filteredOutput =
-                            aiOutput.groupedByFilename.filter(
-                              (output) => output.filename !== 'main.ts',
-                            );
+                          const otherFiles = aiOutput.filter(
+                            (output) => output.filename !== 'main.ts',
+                          );
 
                           await Promise.allSettled(
-                            filteredOutput.map((output) => {
+                            otherFiles.map((output) => {
                               return addScript.mutateAsync({
                                 name: output.filename,
                                 appId: applet!.id,

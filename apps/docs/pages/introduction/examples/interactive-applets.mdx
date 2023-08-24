@@ -18,7 +18,7 @@ export type Todo = {
 };
 
 export async function handler() {
-  const todos = (await Zipper.storage.get<Todo[] | null>('todos')) || [];
+  const todos = (await Zipper.storage.getAll<Todo>()) || [];
 
   return todos;
 }
@@ -43,14 +43,14 @@ Replace the placeholder code with the following function that accepts a string v
 import { Todo } from './main.ts';
 
 export async function handler({ description }: { description: string }) {
-  const todos = await Zipper.storage.get<Todo[]>('todos');
   const newTodo: Todo = {
     id: crypto.randomUUID(),
     description,
     isComplete: false,
   };
-  todos.push(newTodo);
-  Zipper.storage.set('todos', todos);
+  const saved = await Zipper.storage.set(newTodo.id, newTodo);
+
+  return saved ? 'New todo created successfully!' : 'Something went wrong :(';
 }
 
 export const config: Zipper.HandlerConfig<{ description: string }> = {
@@ -77,10 +77,9 @@ Create another file, this time called `set.ts`. Once you've created the file, re
 import { Todo } from './main.ts';
 
 export async function handler({ id }: { id: string }) {
-  const todos = await Zipper.storage.get<Todo[]>('todos');
-  const todoIndex = todos.findIndex((todo) => todo.id === id);
-  todos[todoIndex].isComplete = !todos[todoIndex].isComplete;
-  Zipper.storage.set('todos', todos);
+  const todo = await Zipper.storage.get<Todo>(id);
+  todo.isComplete = !todo.isComplete;
+  Zipper.storage.set(id, todo);
 }
 
 export const config: Zipper.HandlerConfig<{ id: string }> = {
@@ -111,14 +110,14 @@ export type Todo = {
 };
 
 export async function handler() {
-  const todos = (await Zipper.storage.get<Todo[] | null>('todos')) || [];
+  const todos = (await Zipper.storage.getAll<Todo>()) || [];
 
   return (
     <Stack>
       <Button path="create.ts" showAs="modal" run={false}>
         Create
       </Button>
-      {todos.map(({ description, id, isComplete }) => {
+      {Object.values(todos).map(({ description, id, isComplete }) => {
         return {
           description,
           actions: [
@@ -158,17 +157,20 @@ export type Todo = {
 };
 
 export async function handler() {
-  const todos = (await Zipper.storage.get<Todo[] | null>('todos')) || [];
+  const todos = (await Zipper.storage.getAll<Todo>()) || [];
 
   return (
-    <Stack>
-      <Button path="create.ts" showAs="modal" run={false}>
-        Create
-      </Button>
+    <Stack gap={4}>
+      <Row justifyContent="space-between">
+        <Markdown>## Todos</Markdown>
+        <Button path="create.ts" showAs="modal" run={false}>
+          Create
+        </Button>
+      </Row>
 
       <Markdown>### Incomplete</Markdown>
 
-      {todos
+      {Object.values(todos)
         .filter((t) => !t.isComplete)
         .map(({ description, id, isComplete }) => {
           return {
@@ -189,7 +191,7 @@ export async function handler() {
 
       <Markdown>### Complete</Markdown>
 
-      {todos
+      {Object.values(todos)
         .filter((t) => t.isComplete)
         .map(({ description, id, isComplete }) => {
           return {
@@ -220,3 +222,10 @@ export const config: Zipper.HandlerConfig = {
 ```
 
 That's it! You've got a working todo applet. You can now hit `Publish` on the top right corner to deploy it to your zipper.run URL.
+
+---
+
+<video autoplay controls muted playsinline>
+  <source src="/docs/videos/interactive-applet.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
