@@ -4,10 +4,53 @@ import {
   getAppInfo,
   buildFilenameSelect,
   buildSlackModalView,
-  buildViewInputblock,
+  buildViewInputBlock,
   openSlackModal,
   updateSlackModal,
+  buildRunUrlBodyParams,
+  runApp,
 } from './utils';
+
+async function processRerun(
+  req: NextApiRequest,
+  res: NextApiResponse,
+  payload: any,
+) {
+  const { slug, filename } = JSON.parse(payload.view.private_metadata);
+
+  const appInfo = await getAppInfo(slug, filename);
+
+  const blocks = [
+    ...buildFilenameSelect(appInfo.data.runnableScripts),
+    { type: 'divider' },
+    {
+      type: 'section',
+      text: {
+        type: 'mrkdwn',
+        text: '*Inputs:*',
+      },
+    },
+    ...buildViewInputBlock(appInfo.data.inputs),
+  ];
+
+  const newView = {
+    view_id: payload.view.id,
+    hash: payload.view.hash,
+    view: buildSlackModalView({
+      title: `${appInfo.data.app.name}`,
+      callbackId: 'view-run-zipper-app',
+      blocks,
+      privateMetadata: `{ "slug": "${slug}", "filename": "${filename}" }`,
+      showSubmit: false,
+    }),
+  };
+
+  const updateResponse = await updateSlackModal(newView);
+  console.log('slack update response');
+  console.log(await updateResponse.json());
+
+  return acknowledgeSlack(res);
+}
 
 async function processZipperCommand(req: NextApiRequest, res: NextApiResponse) {
   const slug = req.body.text;
@@ -26,6 +69,7 @@ async function processZipperCommand(req: NextApiRequest, res: NextApiResponse) {
       callbackId: 'view-run-zipper-app',
       blocks: buildFilenameSelect(appInfo.data.runnableScripts),
       privateMetadata: `{ "slug": "${slug}" }`,
+      showSubmit: false,
     }),
   };
 
@@ -63,12 +107,9 @@ async function processFilenameSelection(
         text: '*Inputs:*',
       },
     },
-    ...buildViewInputblock(appInfo.data.inputs),
+    ...buildViewInputBlock(appInfo.data.inputs),
   ];
 
-  console.log('blocks built');
-
-  console.log(blocks);
   const newView = {
     view_id: payload.view.id,
     hash: payload.view.hash,
@@ -76,7 +117,8 @@ async function processFilenameSelection(
       title: `${appInfo.data.app.name}`,
       callbackId: 'view-run-zipper-app',
       blocks,
-      privateMetadata: `{ "slug": "${privateMetadata.slug}" }`,
+      privateMetadata: `{ "slug": "${privateMetadata.slug}", "filename": "${filenameSelectAction.selected_option.value}" }`,
+      showSubmit: true,
     }),
   };
 
@@ -88,30 +130,67 @@ async function processFilenameSelection(
   return res.status(200).send('ok');
 }
 
-function processRunScript(
+async function processRunScript(
   req: NextApiRequest,
   res: NextApiResponse,
   payload: any,
 ) {
-  return res.status(200).json({
-    response_action: 'update',
-    view: {
-      type: 'modal',
-      title: {
+  const start = new Date();
+  const { slug, filename } = JSON.parse(payload.view.private_metadata);
+  const runUrl = `http://${slug}.localdev.me:3002/run/${filename}/api/json`;
+  const body = buildRunUrlBodyParams(payload);
+
+  const response = await runApp(runUrl, JSON.stringify(body));
+  console.log(response);
+
+  console.log(`Process Run for ${slug} ${filename}`);
+  console.log(JSON.stringify(response.data));
+  const blocks = [
+    {
+      type: 'section',
+      text: {
         type: 'plain_text',
-        text: 'Updated view',
+        text: JSON.stringify(response.data),
       },
-      blocks: [
-        {
-          type: 'section',
-          text: {
-            type: 'plain_text',
-            text: 'Function results go here',
-          },
-        },
-      ],
     },
-  });
+    {
+      type: 'section',
+      text: {
+        type: 'plain_text',
+        text: ' ',
+      },
+      accessory: {
+        type: 'button',
+        text: {
+          type: 'plain_text',
+          text: 'Edit & Rerun',
+        },
+        value: 'edit_and_rerun',
+        action_id: 'edit_and_rerun_button',
+      },
+    },
+  ];
+
+  const newView = {
+    view_id: payload.view.id,
+    hash: payload.view.hash,
+    view: buildSlackModalView({
+      title: `${slug}`,
+      callbackId: 'view-zipper-app-results',
+      blocks,
+      privateMetadata: `{ "slug": "${slug}", "filename": "${filename}" }`,
+      showSubmit: false,
+    }),
+  };
+
+  const updateResponse = await updateSlackModal(newView);
+  console.log('slack update response');
+  // console.log(await updateResponse.json());
+
+  console.log('responding to slack');
+  const end = new Date();
+  console.log((end.getTime() - start.getTime()) / 1000);
+  return res.status(200).send('ok');
 }
 
 export default async function handler(
@@ -130,13 +209,18 @@ export default async function handler(
   if (req.body.payload) {
     try {
       const payload = JSON.parse(req.body.payload);
-      if (
-        payload.type === 'block_actions' &&
-        payload.actions &&
-        payload.actions[0]?.type === 'static_select' &&
-        payload.actions[0]?.block_id === 'filename_select'
-      ) {
-        return processFilenameSelection(req, res, payload);
+      if (payload.type === 'block_actions' && payload.actions) {
+        console.log('PAYLOAD ACTIONS');
+        console.log(payload.actions);
+        if (
+          payload.actions[0]?.type === 'static_select' &&
+          payload.actions[0]?.block_id === 'filename_select'
+        ) {
+          return processFilenameSelection(req, res, payload);
+        }
+        if (payload.actions[0]?.action_id === 'edit_and_rerun_button') {
+          return processRerun(req, res, payload);
+        }
       }
 
       if (payload.type === 'view_submission') {

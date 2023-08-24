@@ -1,6 +1,16 @@
+import { m } from 'framer-motion';
 import type { NextApiResponse } from 'next';
 
 const BOT_TOKEN = 'xoxb-5595568931968-5762958141557-DcPeKgbTuTQgEyYE7avjS49M';
+
+export async function runApp(url: string, body: string) {
+  const runResponse = await fetch(url, {
+    method: 'POST',
+    body,
+  });
+
+  return runResponse.json();
+}
 
 export async function getAppInfo(slug: string, filename?: string) {
   const appInfoUrl = `https://matt.zipper.ngrok.app/api/app/info/${slug}`;
@@ -17,6 +27,7 @@ export type BuildSlackViewInputs = {
   callbackId: string;
   blocks: any[];
   privateMetadata: string;
+  showSubmit: boolean;
 };
 
 export function buildSlackModalView({
@@ -24,6 +35,7 @@ export function buildSlackModalView({
   callbackId,
   blocks,
   privateMetadata,
+  showSubmit: showSubmit,
 }: BuildSlackViewInputs) {
   return {
     type: 'modal',
@@ -32,10 +44,12 @@ export function buildSlackModalView({
       type: 'plain_text',
       text: title,
     },
-    submit: {
-      type: 'plain_text',
-      text: 'Submit',
-    },
+    submit: showSubmit
+      ? {
+          type: 'plain_text',
+          text: 'Submit',
+        }
+      : undefined,
     private_metadata: privateMetadata,
     blocks,
   };
@@ -81,130 +95,133 @@ function buildSelectOptions(options: string[]) {
 
 export function buildFilenameSelect(scripts: string[]) {
   return [
-    buildSelectBlock(
-      'filename_select',
-      'filename',
-      'filename_select_action',
-      'Select an file',
-      scripts,
-    ),
+    {
+      type: 'section',
+      block_id: 'filename_select',
+      text: { type: 'mrkdwn', text: '*Filename*' },
+      accessory: buildSelectElement(
+        'filename_select_action',
+        'Select an file',
+        scripts,
+      ),
+    },
   ];
 }
 
-export function buildSelectBlock(
-  blockId: string,
-  text: string,
+export function buildSelectElement(
   actionId: string,
   placeHolderText: string,
   options: string[],
 ) {
   return {
-    type: 'section',
-    block_id: blockId,
-    text: {
-      type: 'mrkdwn',
-      text,
+    type: 'static_select',
+    action_id: actionId,
+    placeholder: {
+      type: 'plain_text',
+      text: placeHolderText,
     },
-    accessory: {
-      action_id: actionId,
-      type: 'static_select',
-      placeholder: {
-        type: 'plain_text',
-        text: placeHolderText,
-      },
-      options: buildSelectOptions(options),
-    },
+    options: buildSelectOptions(options),
   };
 }
 
-function buildEnumInput(input: ZipperInput) {
-  console.log('build enum');
-  console.log(input);
-  const values = input.details?.values || [];
+function buildEnumInput({ key, details, optional }: ZipperInput) {
+  const values = details?.values || [];
   const options = values.map((v: ZipperInputDetailValue) => v.value);
-  return buildSelectBlock(
-    `${input.key}_select`,
-    input.key,
-    `${input.key}_select_action`,
-    `Select ${input.key}`,
-    options,
-  );
-}
-
-function buildStringInput(input: ZipperInput) {
+  console.log('BUILD ENUM ' + key);
   return {
     type: 'input',
-    block_id: input.key,
+    block_id: `${key}_select`,
     label: {
       type: 'plain_text',
-      text: input.key,
+      text: key,
     },
-    element: {
-      type: 'plain_text_input',
-      action_id: `${input.key}_input_action`,
-    },
+    element: buildSelectElement(key, `Select ${key}`, options),
+    optional,
   };
 }
 
-function buildMultilineInput(input: ZipperInput) {
+function buildStringInput({ key, optional }: ZipperInput) {
   return {
     type: 'input',
-    block_id: input.key,
+    block_id: key,
     label: {
       type: 'plain_text',
-      text: input.key,
+      text: key,
     },
     element: {
       type: 'plain_text_input',
-      action_id: `${input.key}_input_action`,
+      action_id: key,
+    },
+    optional,
+  };
+}
+
+function buildMultilineInput({ key, optional }: ZipperInput) {
+  return {
+    type: 'input',
+    block_id: key,
+    label: {
+      type: 'plain_text',
+      text: key,
+    },
+    element: {
+      type: 'plain_text_input',
+      action_id: key,
       multiline: true,
     },
+    optional,
   };
 }
 
-function buildDateInput(input: ZipperInput) {
+function buildDateInput({ key, optional }: ZipperInput) {
   return {
-    type: 'section',
-    block_id: input.key,
-    text: {
-      type: 'mrkdwn',
-      text: input.key,
+    type: 'input',
+    block_id: `${key}_label_id`,
+    label: {
+      type: 'plain_text',
+      text: key,
     },
-    accessory: {
+    element: {
       type: 'datepicker',
-      action_id: `${input.key}_date_action`,
+      action_id: key,
       initial_date: new Date().toISOString().split('T')[0],
       placeholder: {
         type: 'plain_text',
         text: 'Select a date',
       },
     },
+    optional,
   };
 }
 
-function buildBooleanInput(input: ZipperInput) {
-  return buildSelectBlock(
-    `${input.key}_boolean_select`,
-    input.key,
-    `${input.key}_boolean_select_action`,
-    `Select ${input.key}`,
-    ['true', 'false'],
-  );
-}
-
-function buildNumberInput(input: ZipperInput) {
+function buildBooleanInput({ key, optional }: ZipperInput) {
   return {
     type: 'input',
+    block_id: `${key}_boolean_select`,
+    label: {
+      type: 'plain_text',
+      text: key,
+    },
+    element: buildSelectElement(key, `Select ${key}`, ['true', 'false']),
+    optional,
+  };
+}
+
+function buildNumberInput({ key, optional }: ZipperInput) {
+  return {
+    type: 'input',
+    block_id: `${key}_block_id`,
     element: {
       type: 'number_input',
       is_decimal_allowed: false,
-      action_id: `${input.key}_number_action`,
+      action_id: key,
     },
     label: {
       type: 'plain_text',
-      text: input.key,
+      text: key,
       emoji: true,
     },
+    optional,
   };
 }
 
@@ -235,11 +252,49 @@ export type ZipperInput = {
   details?: ZipperInputDetails;
 };
 
-export function buildViewInputblock(inputs: ZipperInput[]) {
+export function buildViewInputBlock(inputs: ZipperInput[]) {
   console.log('build an input for ');
   return inputs.map((i: ZipperInput) => {
+    console.log('INPUT:--------');
+    console.log(i);
     console.log({ type: i.type });
     console.log({ func: inputTypeFuncMap[i.type] });
     return inputTypeFuncMap[i.type](i);
   });
+}
+
+const inputParseFuncMap: {
+  [key: string]: (label: string, input: any) => { [key: string]: string };
+} = {
+  static_select: (label: string, input: any) => {
+    return { [label]: input.selected_option.value };
+  },
+  plain_text_input: (label: string, input: any) => {
+    return { [label]: input.value };
+  },
+  datepicker: (label: string, input: any) => {
+    return { [label]: input.selected_date };
+  },
+  number_input: (label: string, input: any) => {
+    return { [label]: input.value };
+  },
+};
+
+function parseSubmittedInput(input: any) {
+  const key = Object.keys(input)[0];
+  if (!key) throw new Error('Unknown unput');
+
+  const type: string = input[key].type;
+  if (!type || !inputParseFuncMap[type]) throw new Error('Unknown unput');
+
+  return inputParseFuncMap[type]?.(key, input[key]);
+}
+
+export function buildRunUrlBodyParams(payload: any) {
+  const inputs = payload.view.state.values;
+  const inputKeys = Object.keys(inputs);
+  const queryString = inputKeys.reduce((acc: any, k: string) => {
+    return { ...acc, ...parseSubmittedInput(inputs[k]) };
+  }, {});
+  return queryString;
 }
