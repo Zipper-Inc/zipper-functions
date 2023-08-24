@@ -8,7 +8,9 @@ export const getInputsFromFormData = (
 ) => {
   const formKeys = inputParams.map(({ key, type }) => getFieldName(key, type));
   return Object.keys(formData)
-    .filter((k) => formKeys.includes(k))
+    .filter((k) => {
+      return formKeys.includes(k);
+    })
     .reduce((acc, cur) => {
       const { name, type } = parseFieldName(cur);
 
@@ -22,6 +24,10 @@ export const getInputsFromFormData = (
 
       if (type === InputType.boolean) {
         value = !!value;
+      }
+
+      if (name.startsWith('{')) {
+        return { ...acc, ...value };
       }
 
       return { ...acc, [name]: value };
