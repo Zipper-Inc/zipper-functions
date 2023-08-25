@@ -5,7 +5,6 @@ import {
   updateSlackModal,
   buildRunUrlBodyParams,
   buildInputModal,
-  getRunUrl,
   runApp,
 } from './utils';
 
@@ -20,6 +19,7 @@ async function processRerun(res: NextApiResponse, payload: any) {
     payload.view.id,
     payload.view.hash,
   );
+
   const updateResponse = await updateSlackModal(newView);
   if (__DEBUG__) {
     console.log('slack update response for rerun');
@@ -53,12 +53,9 @@ async function processFilenameSelection(res: NextApiResponse, payload: any) {
 
 async function submissionHandler(res: NextApiResponse, payload: any) {
   const { slug, filename } = JSON.parse(payload.view.private_metadata);
-  const runUrl = getRunUrl(slug, filename);
-  const body = buildRunUrlBodyParams(payload);
-
-  const response = await runApp(runUrl, JSON.stringify(body));
-
-  const view = buildRunResultView(slug, filename, response.data);
+  const inputs = buildRunUrlBodyParams(payload);
+  const response = await runApp(slug, filename, inputs);
+  const view = buildRunResultView(slug, filename, response);
 
   return res.status(200).json({
     response_action: 'update',

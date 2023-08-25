@@ -1,32 +1,25 @@
 import type { NextApiResponse } from 'next';
+import { initApplet } from '@zipper-inc/client-js';
 
-// TODO: this needs to come from slack and be stored in a DB
+// TODO: The bot token needs to come from slack and be stored in a DB
 const { SLACK_BOT_TOKEN } = process.env;
 const SLACK_VIEW_UPDATE_URL = 'https://slack.com/api/views.update';
 const SLACK_VIEW_OPEN_URL = 'https://slack.com/api/views.open';
+const ZIPPER_APP_INFO_URL = 'https://zipper.dev/api/app/info/';
 const HEADERS = {
   ['Content-Type']: 'application/json; charset=utf-8',
   Authorization: `Bearer ${SLACK_BOT_TOKEN}`,
 };
 
-export function getRunUrl(slug: string, filename: string) {
-  // TODO: don't hard code this
-  return `http://${slug}.localdev.me:3002/run/${filename}/api/json`;
-}
-
-export async function runApp(url: string, body: string) {
-  const runResponse = await fetch(url, {
-    method: 'POST',
-    body,
-  });
-
-  return runResponse.json();
+export function runApp(slug: string, path: string, inputs: any) {
+  return initApplet(slug)
+    .path(path)
+    .run(inputs)
+    .catch((e) => `invalid response ${e}`);
 }
 
 export async function getAppInfo(slug: string, filename?: string) {
-  // TODO: Get the real appInfo url
-  // Event better do this with a code import instead of http.
-  const appInfoUrl = `https://matt.zipper.ngrok.app/api/app/info/${slug}`;
+  const appInfoUrl = `${ZIPPER_APP_INFO_URL}${slug}`;
   const appInfoResponse = await fetch(appInfoUrl, {
     method: 'POST',
     body: `{"filename":"${filename}"}`,

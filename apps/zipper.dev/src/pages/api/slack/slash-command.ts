@@ -10,13 +10,22 @@ import {
 
 const { __DEBUG__ } = process.env;
 
-type SlashCommandHandler = (req: NextApiRequest, res: NextApiResponse) => void;
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse,
+) {
+  if (__DEBUG__) {
+    console.log('Slack Slash Command handler');
+    console.log({ url: req.url, body: req.body });
+  }
 
-async function zipperHandler(req: NextApiRequest, res: NextApiResponse) {
   const slug = req.body.text;
   const triggerId = req.body.trigger_id;
 
   const appInfo = await getAppInfo(slug);
+
+  if (!appInfo.ok) return res.status(200).send(`Error: ${appInfo.error}`);
+
   const blocks = buildFilenameSelect(appInfo.data.runnableScripts);
   const privateMetadata = buildPrivateMetadata({ slug });
   const view = buildSlackModalView({
@@ -38,24 +47,4 @@ async function zipperHandler(req: NextApiRequest, res: NextApiResponse) {
   }
 
   return acknowledgeSlack(res);
-}
-
-const commandHandlerMap: { [key: string]: SlashCommandHandler } = {
-  ['/zipper']: zipperHandler,
-};
-
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
-  if (__DEBUG__) {
-    console.log('Slack Slash Command handler');
-    console.log({ url: req.url, body: req.body });
-  }
-
-  if (commandHandlerMap[req.body.command])
-    return commandHandlerMap[req.body.command]?.(req, res);
-
-  console.error('unknown command');
-  return res.status(200).send('unknown command');
 }
