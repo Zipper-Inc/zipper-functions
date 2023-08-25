@@ -10,24 +10,29 @@ import {
   HStack,
   Heading,
   useColorMode,
+  Button,
 } from '@chakra-ui/react';
 import { TabButton } from '@zipper/ui';
 import { useState } from 'react';
 import { useEditorContext } from '../context/editor-context';
 import AppEditSidebarApplet from './app-edit-sidebar-applet';
 import { AppConsole } from './app-console';
-import { Markdown } from '@zipper/ui';
+import { HiEye, HiPencil } from 'react-icons/hi2';
 
 type AppEditSidebarProps = {
   showInputForm: boolean;
   tips?: JSX.Element;
   appSlug: string;
+  isMarkdownEditable: boolean;
+  setIsMarkdownEditable: (editable: boolean) => void;
 };
 
 export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
   showInputForm = true,
   tips,
   appSlug,
+  isMarkdownEditable,
+  setIsMarkdownEditable,
 }) => {
   const [tabIndex, setTabIndex] = useState(0);
 
@@ -47,7 +52,6 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
     markLogsAsRead,
     lastReadLogsTimestamp,
     currentScript,
-    currentScriptLive,
   } = useEditorContext();
 
   const { colorMode } = useColorMode();
@@ -57,32 +61,27 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
   ).length;
 
   const isLibrary = !inputParams && !inputError;
-  const isMarkdown = currentScript?.filename.endsWith('.md');
 
-  if (isMarkdown) {
-    return (
-      <VStack
-        h="full"
-        w="full"
-        align="stretch"
-        p={5}
-        maxW="700px"
-        overflowY="scroll"
-        scrollBehavior="smooth"
-        css={{
-          '&::-webkit-scrollbar': {
-            display: 'none',
-          },
-        }}
-      >
-        <Markdown children={currentScriptLive?.code || ''} />
-      </VStack>
-    );
-  }
+  const isMarkdown = currentScript?.filename.endsWith('.md');
 
   return (
     <VStack h="full" w="full">
-      {isLibrary && (
+      {isMarkdown && (
+        <Button
+          variant="outline"
+          alignSelf="start"
+          size="sm"
+          fontWeight="normal"
+          ml={10}
+          onClick={() => setIsMarkdownEditable(!isMarkdownEditable)}
+        >
+          <HStack spacing={2}>
+            {isMarkdownEditable ? <HiEye /> : <HiPencil />}
+            <Text>{isMarkdownEditable ? 'Preview' : 'Edit'}</Text>
+          </HStack>
+        </Button>
+      )}
+      {isLibrary && !isMarkdown && (
         <Box
           p={4}
           backgroundColor="fg.100"

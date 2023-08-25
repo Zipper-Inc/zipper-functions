@@ -21,6 +21,7 @@ import {
   AppEditSidebarContextType,
   AppEditSidebarProvider,
 } from '~/components/context/app-edit-sidebar-context';
+import { Markdown } from '@zipper/ui';
 
 export const PlaygroundEditor = dynamic(() => import('./playground-editor'), {
   ssr: false,
@@ -54,13 +55,15 @@ type CodeTabProps = {
 };
 
 export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
-  const { currentScript, onChange, onValidate } = useEditorContext();
+  const { currentScript, onChange, onValidate, currentScriptLive } =
+    useEditorContext();
   const { isRunning, run, boot: saveAndBoot } = useRunAppContext();
   const [expandedResult, setExpandedResult] = useState<
     AppEditSidebarContextType['expandedResult']
   >({});
 
   const [inputs, setInputs] = useState<AppEditSidebarContextType['inputs']>({});
+  const [isMarkdownEditable, setIsMarkdownEditable] = useState(false);
   const toast = useToast();
 
   useCmdOrCtrl(
@@ -96,6 +99,8 @@ export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
 
   const currentScriptConnectorId = currentScript?.connectorId;
 
+  const isMarkdown = currentScript?.filename.endsWith('.md');
+
   return (
     <HStack
       flex={1}
@@ -125,29 +130,49 @@ export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
         minW="sm"
         overflow="auto"
       >
+        {isMarkdown && !isMarkdownEditable && (
+          <VStack
+            h="full"
+            w="full"
+            align="stretch"
+            px="10"
+            overflowY="scroll"
+            scrollBehavior="smooth"
+            css={{
+              '&::-webkit-scrollbar': {
+                display: 'none',
+              },
+            }}
+          >
+            <Markdown children={currentScriptLive?.code || ''} />
+          </VStack>
+        )}
+
         {currentScriptConnectorId && (
           <ConnectorForm
             connectorId={currentScriptConnectorId as ConnectorId}
             appId={app.id}
           />
         )}
-        <FormControl
-          flex={1}
-          as={VStack}
-          alignItems="stretch"
-          pt={currentScriptConnectorId ? 4 : 0}
-          minH={currentScriptConnectorId ? '50%' : '100%'}
-          pr={2}
-        >
-          {PlaygroundEditor && (
-            <PlaygroundEditor
-              key={app.id}
-              onChange={onChange}
-              onValidate={onValidate}
-              appName={app.slug}
-            />
-          )}
-        </FormControl>
+        {(!isMarkdown || isMarkdownEditable) && (
+          <FormControl
+            flex={1}
+            as={VStack}
+            alignItems="stretch"
+            pt={currentScriptConnectorId ? 4 : 0}
+            minH={currentScriptConnectorId ? '50%' : '100%'}
+            pr={2}
+          >
+            {PlaygroundEditor && (
+              <PlaygroundEditor
+                key={app.id}
+                onChange={onChange}
+                onValidate={onValidate}
+                appName={app.slug}
+              />
+            )}
+          </FormControl>
+        )}
       </VStack>
       <VStack flex={2} minW="220px">
         <AppEditSidebarProvider
@@ -162,6 +187,8 @@ export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
             showInputForm={!currentScriptConnectorId}
             tips={ConnectorSidebarTips(currentScriptConnectorId)}
             appSlug={app.slug}
+            isMarkdownEditable={isMarkdownEditable}
+            setIsMarkdownEditable={setIsMarkdownEditable}
           />
         </AppEditSidebarProvider>
       </VStack>
