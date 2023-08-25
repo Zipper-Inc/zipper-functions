@@ -125,7 +125,7 @@ export const defaults: Components & { heading: Components['h1'] } = {
     return (
       <Box
         borderRadius={8}
-        bgColor={isNestedBlockquote ? 'gray.50' : 'white'}
+        bgColor={isNestedBlockquote ? 'fg.50' : 'white'}
         p={4}
       >
         <Text
@@ -134,7 +134,7 @@ export const defaults: Components & { heading: Components['h1'] } = {
             content: '""',
             height: '100%',
             width: '2px',
-            background: 'neutral.400',
+            background: 'fg.400',
             display: 'block',
             position: 'absolute',
             left: 0,
