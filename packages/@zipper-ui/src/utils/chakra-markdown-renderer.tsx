@@ -31,35 +31,35 @@ function getCoreProps(props: GetCoreProps): any {
 export const defaults: Components & { heading: Components['h1'] } = {
   h1: (props) => {
     return (
-      <Heading as="h1" size="xl" color="neutral.900" py={2}>
+      <Heading as="h1" size="xl" color="fg.900" py={2}>
         {props.children}
       </Heading>
     );
   },
   h2: (props) => {
     return (
-      <Heading as="h2" size="lg" color="neutral.900" py={2}>
+      <Heading as="h2" size="lg" color="fg.900" py={2}>
         {props.children}
       </Heading>
     );
   },
   h3: (props) => {
     return (
-      <Heading as="h3" size="md" color="neutral.900" py={2}>
+      <Heading as="h3" size="md" color="fg.900" py={2}>
         {props.children}
       </Heading>
     );
   },
   h4: (props) => {
     return (
-      <Heading as="h4" size="sm" color="neutral.900" py={2}>
+      <Heading as="h4" size="sm" color="fg.900" py={2}>
         {props.children}
       </Heading>
     );
   },
   h5: (props) => {
     return (
-      <Heading as="h5" size="xs" color="neutral.900">
+      <Heading as="h5" size="xs" color="fg.900">
         {props.children}
       </Heading>
     );
@@ -105,7 +105,7 @@ export const defaults: Components & { heading: Components['h1'] } = {
       );
     }
     return (
-      <Text mb={2} mt={1} whiteSpace={'pre-wrap'} color="neutral.900">
+      <Text mb={2} mt={1} whiteSpace={'pre-wrap'} color="fg.900">
         {children}
       </Text>
     );
@@ -153,7 +153,7 @@ export const defaults: Components & { heading: Components['h1'] } = {
     const isInline = inline || typeof children === 'string';
     if (isInline) {
       return (
-        <Code p={2} children={children} bgColor="gray.50" borderRadius={8} />
+        <Code p={2} children={children} bgColor="fg.50" borderRadius={8} />
       );
     }
 
@@ -165,7 +165,7 @@ export const defaults: Components & { heading: Components['h1'] } = {
         w="full"
         p={2}
         children={children}
-        bgColor="gray.50"
+        bgColor="fg.50"
         borderRadius={8}
       />
     );
