@@ -68,6 +68,9 @@ export class BuildCache {
   }
 
   async get(specifier: string) {
+    // For now, force a cache miss for zipper.run URLs
+    if (specifier.includes('zipper.run')) return;
+
     try {
       const raw = await this.client.get(getCacheKey(specifier));
       if (!raw) return;

@@ -1,5 +1,5 @@
 #!/bin/deno
-import { generateIndexForFramework } from '../../@zipper-utils/src/utils/generate-index-for-framework.ts';
+import { generateIndexForFramework } from '../../@zipper-utils/src/utils/generate-for-framework.ts';
 
 export const APPLET_ROOT = './deno/applet';
 export const SRC_DIR = `${APPLET_ROOT}/src`;
