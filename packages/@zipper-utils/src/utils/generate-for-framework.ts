@@ -16,6 +16,16 @@ const EXPORTS_REG_EXP = new RegExp(
 const ZIPPER_CLIENT_JS_URL =
   'https://deno.land/x/zipper_client_js@v0.1.6/mod.ts';
 
+/**
+ * camelCases filenames that use any seperator so that they work as module names
+ *
+ * @example
+ * getExportNameFromFilename('do-something.ts')
+ * // doSomething
+ * @example
+ * getExportNameFromFilename('crypto.utils.ts')
+ * // cryptoUtils
+ */
 function getExportNameFromFilename(filename: string) {
   const parts = filename.split('.');
   parts.pop();
@@ -42,7 +52,7 @@ export function generateModTs({
     `const applet = initApplet("${subdomain}");`,
 
     // Type utilities
-    `type Handler = (inputs?: Record<string | number, any>) => any;`,
+    `type Handler = (...args: any) => any;`,
     `type ExtractReturnType<H extends Handler> = ReturnType<H> extends Promise<any> ? ReturnType<H> : Promise<ReturnType<H>>;`,
     `type ExtractType<H extends Handler> = Parameters<H> extends [] ? () => ExtractReturnType<H> : (inputs: Parameters<H>[0]) => ExtractReturnType<H>;`,
 
