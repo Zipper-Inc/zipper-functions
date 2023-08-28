@@ -18,6 +18,8 @@ import { appAccessTokenRouter } from './appAccessToken.router';
 import { organizationRouter } from './organization.router';
 import { versionRouter } from './version.router';
 import { aiRouter } from './ai.router';
+import { githubAppConnector } from '~/connectors/github-app';
+import { githubAppConnectorRouter } from './githubAppConnector.router';
 
 /**
  * Create your application's root router
@@ -51,6 +53,7 @@ export const trpcRouter = createRouter()
   .merge('appRun.', appRunRouter)
   .merge('slackConnector.', slackConnectorRouter)
   .merge('githubConnector.', githubConnectorRouter)
+  .merge('githubAppConnector.', githubAppConnectorRouter)
   .merge('resourceOwnerSlug.', resourceOwnerSlugRouter)
   .merge('secret.', secretRouter)
   .merge('script.', scriptRouter)

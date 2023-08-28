@@ -40,6 +40,7 @@ export const appConnectorRouter = createRouter()
         userScopes: z.array(z.string()).optional(),
         workspaceScopes: z.array(z.string()).optional(),
         clientId: z.string().optional().nullable(),
+        events: z.array(z.string()).optional(),
       }),
     }),
     async resolve({ ctx, input }) {

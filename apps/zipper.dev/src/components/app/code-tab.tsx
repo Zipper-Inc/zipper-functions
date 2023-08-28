@@ -98,6 +98,7 @@ export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
   );
 
   const currentScriptConnectorId = currentScript?.connectorId;
+  console.log(currentScript?.connectorId);
 
   const isMarkdown = currentScript?.filename.endsWith('.md');
 

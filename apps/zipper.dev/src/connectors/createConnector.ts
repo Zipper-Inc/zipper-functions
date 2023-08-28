@@ -8,6 +8,7 @@ export type Connector = {
   code?: string;
   workspaceScopes?: string[];
   userScopes?: string[];
+  events?: string[];
 };
 
 export type ConnectorId = ConnectorType;
@@ -19,6 +20,7 @@ export const createConnector = ({
   icon,
   workspaceScopes,
   userScopes,
+  events,
 }: Connector): Connector => {
   return {
     id,
@@ -27,6 +29,7 @@ export const createConnector = ({
     icon,
     workspaceScopes,
     userScopes,
+    events,
   };
 };
 
