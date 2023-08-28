@@ -1,0 +1,92 @@
+# GitHub
+
+Zipper's GitHub connector helps you build applets that use GitHub's REST API. The connector uses GitHub's OAuth as opposed to GitHub Apps.
+
+### Why use Zipper?
+
+- Each Zipper applet has an **HTTPS URL** that you can use to receive webhook events from GitHub. This means that you don't need to set up a server or use ngrok.
+- We have set up a **preconfigured OAuth app** that you can use to get started quickly. This means that you can start querying the GitHub API without having to create an app on GitHub.
+- Confused by the OAuth flow? We take care of it for you, store the encrypted token, and pass it to your functions at runtime.
+- **Per-user GitHub auth** works out-of-the-box so ask users to authorize GitHub before they run your applet.
+
+## Adding the Connector
+
+To get started, create a new applet and add the GitHub connector by clicking the `+` in the file list and selecting GitHub from the list of pre-built connectors. This will add a new file to your applet called `github-connector.ts`. Click on it to configure the connector and see the pre-written (but editable) code we give you.
+
+![add-the-github-connector](public/images/connector-menu.png)
+
+#### Configuration
+
+**Scopes**
+Choose the scopes that your applet needs. This is determined by looking at the specific API methods you'll be calling.
+
+After you click the install button and complete the installation steps, an API token will be added to your applet's secrets (as GITHUB_TOKEN). You can use this token (`Deno.env.get('GITHUB_TOKEN')`) to make API calls.
+
+**Require users to auth**
+
+If your Zipper applet is going to be used by different users and you want them to be able to interact with the GitHub API as themselves, you can set this field to true. This will add an `Authorize GitHub` button above the inputs of your applet. When a user clicks this button, they'll be taken through the OAuth flow and we'll encrypt and store their API token for you.
+
+When a user runs your applet, we'll pass their API token to you through the Handler Context. Individual user's tokens will not be available in your environment variables.
+
+**Custom client ID**
+
+Zipper provides a prebuilt GitHub app that you can use to get started quickly. Our GitHub app will be installed on your GitHub account and we'll use its client ID and secret to get a token with the chosen scopes. However, if you want to use your own GitHub app, you can enter your own client ID and secret here.
+
+Even when you provide your own client ID and secret, we'll still handle the OAuth flow for you and store the tokens safely. You'll just need to create your own GitHub OAuth app and add the redirect URL that we provide to your app's redirect URLs.
+
+#### Code
+
+The `github-connector.ts` file exports the following:
+
+- `default`: an instance of the Octokit client that's configured to use the token stored in the `GITHUB_TOKEN` environment variable.
+- `getUserClient`: a function that returns a GitHub Octokit client that will use the token that's passed to it. This function takes a single argument, `userToken`, which is the token of the user who you want to access the API on behalf of.
+
+## Build an app
+
+GitHub's REST API has a bunch of methods that you can use to interact with your GitHub organizations and repos. You can use these methods to create comments, start deploys, fetch commits, and much more.
+
+For a full description of all the REST methods that are available via the octokit client, check out the [Octokit plugin-rest-endpoint-methods.js documentation](https://github.com/octokit/plugin-rest-endpoint-methods.js/tree/main/docs).
+
+**Scopes:**
+You can look through GitHub's [REST API documentation](https://docs.github.com/en/rest) to see what methods are available and what scopes they require. Once you know the scopes that you need, head back to your `github-connector.ts` file and fill them in.
+
+After the installation you can access the API token via `GITHUB_TOKEN` environment variable.
+
+```typescript
+import github from './github-connector.ts';
+
+export async function handler() {
+  const username = (await github.rest.users.getAuthenticated()).data.login;
+  const repos = await github.rest.repos.listForUser({ username });
+
+  return repos.data;
+}
+```
+
+**Applet user's token:**
+To call the GitHub API as an applet user, set `Require users to auth` to true. At runtime, the current user's GitHub API token will be available in the handler context.
+
+```typescript
+import { getUserClient } from './github-connector.ts';
+
+export async function handler(inputs: {}, context: Zipper.HandlerContext) {
+  const client = getUserClient(context.userConnectorTokens.github);
+
+  const username = (await client.rest.users.getAuthenticated()).data.login;
+  const repos = await client.rest.repos.listForUser({ username });
+
+  return repos.data;
+}
+```
+
+## Webhooks
+
+GitHub lets you create webhooks on repos and organizations. When an event happens, GitHub will send a POST request to the webhook's URL. You can use Zipper to receive these events and run your applet in response.
+
+To receive webhook events from GitHub, create a webhook and set the URL to your applet's URL + `/raw`. You can find your applet's URL by clicking the `Publish` button in the top right corner of the playground.
+
+```typescript
+export async function handler(webhook: any) {
+  return webhook.payload;
+}
+```

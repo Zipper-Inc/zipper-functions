@@ -1,0 +1,13 @@
+# Deno & Typescript
+
+Before you dive in, it's crucial to understand that Zipper applets are written in [Typescript](https://typescriptlang.org) and executed in the [Deno](https://deno.com) runtime environment.
+
+Typescript is a typed superset of JavaScript, which compiles down to plain JavaScript. We opted for Typescript as the primary language for Zipper due to its popularity, ease of adoption (especially for those familiar with JavaScript), and its inclusion of types. These types enable us to offer context-aware suggestions and early error detection within our IDE.
+
+![context-aware suggestions in Zipper's editor](public/images/intellisense.png)
+
+Deno is a runtime environment for TypeScript and JavaScript code. It was created to address some of the shortcomings and security concerns present Node.js. For the most part, using Deno instead of Node.js shouldn't be too noticeable for developers. However, there are some key differences that you should be aware of:
+
+1. **There is no package manager**: In contrast to Node.js, Deno doesn't depend on a separate package manager. Instead, it grants you the ability to directly import modules either from URLs or local files.
+2. **Typescript support**: Deno supports TypeScript out-of-the-box, which means you don't need to transpile your code outside of the runtime environment.
+3. **Smaller standard library**: Deno's standard libarary is intentionally more minimalistic and aims to follow modern web standards. It encourages the use of web APIs and reduces platform-specific code.

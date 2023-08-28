@@ -1,0 +1,36 @@
+# OpenAI
+
+At his point, the OpenAI connector is pretty simple (because connecting to OpenAI is simple).
+
+### Get an API key
+
+To get started, head over to https://platform.openai.com/ and sign up for an account. Once you have an account, go to https://platform.openai.com/account/api-keys and create an API key.
+
+### Add the connector
+
+Create a new applet or go to an existing one. In the playground, click the `+` button in the file list and select `OpenAI` from the list of connectors. Paste your API key and click `Save`.
+
+### Use the connector
+
+The OpenAI connector exports (as default) an instance of the OpenAI Deno module that's configured to use your API key. You can see examples of how to use the OpenAI module at https://deno.land/x/openai.
+
+```ts
+import openAI from './openai-connector.ts';
+
+export async function handler() {
+  const chatCompletion = await openAI.createChatCompletion({
+    model: 'gpt-3.5-turbo',
+    messages: [
+      { role: 'system', content: 'You are a helpful assistant.' },
+      { role: 'user', content: 'Who won the world series in 2020?' },
+      {
+        role: 'assistant',
+        content: 'The Los Angeles Dodgers won the World Series in 2020.',
+      },
+      { role: 'user', content: 'Where was it played?' },
+    ],
+  });
+
+  return chatCompletion.choices;
+}
+```

@@ -1,0 +1,148 @@
+# Slack
+
+### What you can build
+
+- **Web API apps** use Slack's API to interact with a Slack workspace. These apps only make outgoing requests and don't receive webhooks or other requests from Slack. These apps are great if you want to build dashboards from Slack data, post messages to Slack when something happens in another tool, or post Slack messages on a recurring basis.
+- **Bots** are like Slack users that can be invited to channels and respond to messages and commands. Bots require the use of Slack Events API to receive messages and other events from Slack. Bots are great for building interactive apps that respond to messages and commands in Slack.
+- **Slash commands** are messages that begin with a / and trigger an app to perform a specific action. Slash commands are great for building simple apps that can be invoked from anywhere in Slack. Apps that use slash commands need to be able to receive events from Slack.
+
+### Why use Zipper?
+
+- Each Zipper applet has an **HTTPS URL** that you can use to receive events from Slack. This means that you don't need to set up a server or use ngrok to receive events from Slack.
+- We have set up a **preconfigured OAuth app** that you can use to get started quickly. This means that you can start querying the Slack API without having to create an app in the Slack API dashboard.
+- Confused by the OAuth flow? We take care of it for you, store the encrypted token, and pass it to your functions at runtime. The only case where you'll need to do the OAuth stuff yourself is if your Slack app has a bot user that needs to be installed in multiple workspaces.
+- **Per-user Slack auth** works out-of-the-box so ask users to authorize Slack before they run your applet.
+
+## Adding the Connector
+
+To get started, create a new applet and add the Slack connector by clicking the `+` in the file list and selecting Slack from the list of pre-built connectors. This will add a new file to your applet called `slack-connector.ts`. Click on it to configure the connector and see the pre-written (but editable) code we give you.
+
+![add-the-github-connector](public/images/connector-menu.png)
+
+#### Configuration
+
+**Bot Scopes**
+Choose the bot scopes that your applet needs. This is determined by looking at the specific API methods you'll be calling on behalf of a bot user. Adding bot scopes will add a bot user to your Slack app automatically.
+
+After you click the install button and complete the installation steps, a bot user will be added to the Slack workspace and a bot token will be added to your applet's secrets (as SLACK_BOT_TOKEN). You can use this token (`Deno.env.get('SLACK_BOT_TOKEN')`) to make API calls on behalf of the bot user.
+
+**User Scopes**
+
+These are the scopes for the API methods that you want to call on behalf of a user. At the time of installation, the only authorized user will be you and your API token will be stored in the `SLACK_USER_TOKEN` environment variable.
+
+You can use this token (`Deno.env.get('SLACK_USER_TOKEN')`) to make API calls as yourself.
+
+**Require users to auth**
+
+If your Zipper applet is going to be used by different users and you want them to be able to interact with the Slack API as themselves, you can set this field to true. This will add an `Authorize Slack` button above the inputs of your applet. When a user clicks this button, they'll be taken through the OAuth flow and we'll encrypt and store their API token for you.
+
+When a user runs your applet, we'll pass their API token to you through the Handler Context. Individual user's tokens will not be available in your environment variables.
+
+**Custom client ID**
+
+Zipper provides a prebuilt Slack app that you can use to get started quickly. Our Slack app will be installed on your Slack workspace and we'll use its client ID and secret to get a token with the chosen scopes. However, if you want to use your own Slack app (so that you can enable other features like slash commands), you can enter your own client ID and secret here.
+
+Even when you provide your own client ID and secret, we'll still handle the OAuth flow for you and store the tokens safely. You'll just need to create your own Slack app and add the redirect URL that we provide to your app's redirect URLs.
+
+![slack connector config](public/images/slack-connector-config.png)
+
+#### Code
+
+The `slack-connector.ts` file exports the following:
+
+- `default`: an instance of the Slack WebAPI client that's configured to use the token stored in the `SLACK_BOT_TOKEN` environment variable. You can edit the code to use `SLACK_USER_TOKEN` if you want to use **your** token instead.
+- `getUserClient`: a function that returns a Slack WebAPI client that will use the token that's passed to it. This function takes a single argument, `userToken`, which is the token of the user who you want to access the API on behalf of.
+
+## Build a Web API App
+
+Slack's Web API has a bunch of methods that you can use to interact with Slack. You can use these methods to post messages, get information about users, channels, and workspaces, and more. Each method has an associated scope that your app needs to request during installation.
+
+You can take a look through Slack's [Web API documentation](https://api.slack.com/methods) to see what methods are available and what scopes they require. Once you know the scopes that you need. Once you know the scopes, head back to your `slack-connector.ts` file and fill them in.
+
+**Bot token:**
+To call the Slack API as a bot user, add at least one bot scope and click 'Save & Install' on `slack-connector.ts`. After the installation you can access the bot's API token via your environment variables.
+
+```typescript
+import { WebClient } from 'https://deno.land/x/slack_web_api@6.7.2/mod.js';
+
+//requires `chat:write` and `chat:write.public` bot scopes
+const client = new WebClient(Deno.env.get('SLACK_BOT_TOKEN'));
+await client.chat.postMessage({
+  channel: 'general',
+  text: 'Hello world!',
+});
+```
+
+**Your (the developer) token:**
+To call the Slack API as a you (the developer), add a user scope and click `Save & Install`. After installation, your API token will be available via the `SLACK_USER_TOKEN` environment variable.
+
+```typescript
+import { WebClient } from 'https://deno.land/x/slack_web_api@6.7.2/mod.js';
+
+//requires `chat:write` user scope
+const client = new WebClient(Deno.env.get('SLACK_USER_TOKEN'));
+await client.chat.postMessage({
+  channel: 'general',
+  text: 'Hello world!',
+});
+```
+
+**Applet user's token:**
+To call the Slack API as an applet user, add a user scope and set `Require users to auth` to true. At runtime, the current user's Slack API token will be available in the handler context.
+
+```typescript
+import { WebClient } from 'https://deno.land/x/slack_web_api@6.7.2/mod.js';
+
+export async function handler(
+  inputs: { text: string },
+  context: HandlerContext,
+) {
+  const client = new WebClient(context.userConnectorTokens.slack);
+  await client.chat.postMessage({
+    channel: 'general',
+    text: inputs.text,
+  });
+
+  return 'Message sent!';
+}
+```
+
+### Build an Events API App (such as a Bot)
+
+To build a Slack app that listens for events, you'll need to create a new app in the Slack API dashboard and enable the Events API. The request URL where events will be sent to will be one of the paths of your applet followed by `/raw`. The path that you select needs to return Slack's challenge response (to confirm that you own the endpoint). You can use the following code to do that:
+
+```typescript
+export async function handler({ ...slackEvent }: any) {
+  if (slackEvent.challenge) {
+    return slackEvent.challenge;
+  }
+
+  return new Response('ok', { status: 200 });
+}
+```
+
+If you're not planning to use the Web API, you don't need to configure the Slack connector. However, if you want to use the Web API, you'll need to add the necessary scopes and provide your own client ID and secret.
+
+### Adding Slash Commands
+
+To use a slash command in your app, you'll need to create a new Slack app and add a slash command. The request URL where slash commands will be sent to will be one of the paths. If your applet returns messages in response to slash commands, you'll need to set the response type to `in_channel` set the `Content-Type` header on your response.
+
+```typescript
+type SlackSlashCommandPayload = {
+  text: string;
+  token: string;
+  command: string;
+};
+
+export async function handler(
+  payload: SlackSlashCommandPayload,
+  context: Zipper.HandlerContext,
+) {
+  context.response.headers = { 'Content-Type': 'application/json' };
+
+  return {
+    response_type: 'in_channel',
+    text: `Hello ${payload.text}`,
+  };
+}
+```

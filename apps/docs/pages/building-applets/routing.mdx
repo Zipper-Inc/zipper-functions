@@ -1,0 +1,19 @@
+# Routing
+
+Every Zipper applet has a built-in router that maps paths to their corresponding handler functions.
+
+### Defining Routes
+
+Adding routes to a Zipper applet is simple. All you need to do is create a new file and export a function called `handler` from it. The route will be named after the file name. For example, if you create a file called `set.ts` and export a function called `handler` from it, your applet will have a route called `/set`.
+
+If a file does not export a handler function, it will not be added to the router. This is useful for creating utility files that can be imported into other files.
+
+### Index Route
+
+Every Zipper applet must have a `main.ts` file that exports a `handler` function. This function will be called when the applet is invoked without a path.
+
+### Route Methods
+
+Every route can accept GET and POST HTTP request methods. POST requests will return a simple JSON reponse while GET requests will return a rendered HTML page.
+
+If you'd like to modify the behavior of your handler function based on the HTTP method, you can inspect the request object that's passed to the handler function via the context object.

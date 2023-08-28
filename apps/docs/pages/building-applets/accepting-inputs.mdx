@@ -1,0 +1,108 @@
+# Accepting Inputs
+
+A handler function can have optional arguments that you can pass through it. These can be anything: strings, booleans, arrays, and objects just as long as it's serializable as JSON (with the exception of Dates which are handled specially for you). This is called the 'Inputs' object as is passed as a parameterized object in single argument to your handler.
+
+Let’s create a simple `greeting` applet accepts a string for who you are saying hello to. Zipper uses the power of Typescript to help generate UI for all your inputs.
+
+```typescript
+export async function handler(inputs: { name: string }) {
+  return `Hello, ${inputs.name}!`;
+}
+```
+
+Alternatively, you can define your inputs as a type and pass it to the `handler` function.
+
+```typescript
+type Inputs = {
+  name: string;
+};
+
+export async function handler(inputs: Inputs) {
+  return `Hello, ${inputs.name}!`;
+}
+```
+
+![We generate UI for your function based on the the types in your Input. Check out the Input Types section for more information.](public/images/playground-inputs.png)
+
+We generate UI for your function based on the the types in your Input. Check out the Input Types section for more information.
+
+You can enter your inputs through the generated UI, by POSTing to your Run URL the entire inputs object, or prefill your inputs UI by using the query parameters. In this example,
+
+- visiting `[https://greeting.zipper.run](https://greeting.zipper.run)/?name=Earth`
+- sending a `POST` to `https://greeting.zipper.run` with body `{ "name: "Earth" }`
+- or manually filling out “Earth” in the input and clicking “Run”
+
+Should all do the same thing and output:
+
+> Hello, Earth!
+
+## Input Types
+
+When you type your inputs object, we can automatically generate form UI for you based on the inputs to your `handler` function. Here are the input types we support:
+
+### `string`
+
+```tsx
+type Inputs = {
+  name: string;
+};
+```
+
+![String input](public/images/input-string.png)
+
+### `Date`
+
+```tsx
+type Inputs = {
+  date: Date;
+};
+```
+
+![Date input](public/images/input-date.png)
+
+### `boolean`
+
+```tsx
+type Inputs = {
+  bool: boolean;
+};
+```
+
+![Boolean input](public/images/input-bool.png)
+
+### `number`
+
+```tsx
+type Inputs = {
+  numeric: number;
+};
+```
+
+![Number input](public/images/input-number.png)
+
+### `enum`
+
+```tsx
+enum Directions {
+  UP = 'up',
+  DOWN = 'down',
+}
+
+type Inputs = {
+  directions: keyof typeof Directions;
+};
+```
+
+![enum input](public/images/input-enum.png)
+
+### `array`, `object`, or `any`
+
+If you use a more generic type like `array`, `object`, or `any`, or a type Zipper doesn’t know yet, we will default to a generic text input that can take JSON.
+
+```tsx
+type Inputs = {
+  anyType: any;
+};
+```
+
+![any input](public/images/input-any.png)

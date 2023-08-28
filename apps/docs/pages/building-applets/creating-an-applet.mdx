@@ -1,0 +1,23 @@
+# Creating an Applet
+
+Sign in and click the `+ Create Applet` button in the top right corner of the dashboard to create a new applet. It's important to note that the applet will be created inside the workspace that you're currently viewing. You can change workspaces or create new ones by clicking the dropdown in the left side of the headers.
+
+When creating a new applet, you'll be asked to provide a name. The name will be used to generate a unique URL for the applet. The URL will be in the format of `https://<applet-name>.zipper.run`. The name can be changed later, but any links that have been shared will no longer work.
+
+### **Using AI to get started**
+
+If you have an idea of what you want to build, you can use Zipper's AI to get started. Just type in a description of what you want to build in the applet creation form and Zipper will generate code for you. The code generation step can take some time so be patient while the machines do their thing. Once the code has been generated, you'll be able to edit it in the editor (there are often some bugs in the generated code so you'll probably need to make some changes).
+
+![ai-prompt](public/images/ai-prompt.png)
+
+### **Visibility**
+
+There are two visibility settings on every applet: Code & Output.
+
+If the code for an applet is public, the applet will show up on you a user or organization’s profile. Anyone will be able to view the code regardless of whether they’re a Zipper user or not. However, only editor and/or organization members will be able to make changes. People viewing public code will not be able to see schedules, secrets, app history, or settings.
+
+If the output of an app is public, anyone will be able to access the [zipper.run](http://zipper.run) URL for the applet and run the applet itself. For public output, the Run history URLs will also work for everyone with the link.
+
+**End-user auth**
+
+If the output of an applet is not public, users will be asked to authenticate against Zipper before they’re able to run an applet or any of its paths. The email address of the authenticated user will be included in the `context` object that’s passed to the `handler` function. You can use this information to determine what the applet should output.

@@ -1,0 +1,29 @@
+# **API Endpoints & Personal Access Tokens**
+
+All applets have the following API endpoints:
+
+- `[app-slug].zipper.run/[path]/api/json` - returns the output of the applet as JSON
+- `[app-slug].zipper.run/[path]/api/yaml` - returns the output of the applet as YAML
+- `[app-slug].zipper.run/[path]/raw` - returns the output of the applet without any changes
+
+```bash
+curl -X POST http://greeting.zipper.run/api/json \
+     -H "Content-Type: application/json" \
+     -d '{"name": "internet"}'**
+
+{
+  "ok": true,
+  "data": "Hello, internet!",
+  "__meta": {
+    "request": {
+      "executionId": "a49ae29e-8623-4192-b8ec-7eae4ba589b2",
+      "server": "deno/aws-us-west-1",
+      "timing": "system;dur=0,deployment;dur=0"
+    }
+  }
+}
+```
+
+Zipper supports GET and POST requests to these endpoints. For GET requests, inputs can be sent through as query params. For POST requests, inputs should be provided as JSON in the body of the request.
+
+If the output of your applet is not public (i.e. users have to be authed into Zipper before they can run the applet), you have to provide a Personal Applet Access Token in the `Authorization` header as a bearer token. Personal Applet Access Tokens can be generated in the settings of an applet and they are scoped to a single applet and are tied to a particular user.

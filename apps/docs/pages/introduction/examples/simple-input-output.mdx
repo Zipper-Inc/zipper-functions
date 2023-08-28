@@ -1,0 +1,40 @@
+# Simple input/output applet
+
+Let's start with a simple example. We'll create an applet that takes a shortened link and expands it to the original URL.
+
+#### 1. Create a new applet
+
+Head over to [zipper.dev](https://www.zipper.dev) and sign in. On your dashboard, you'll see a button to create a new applet. Click it and give your applet a name (if you want).
+
+#### 2. Write your code
+
+Once you've created your applet, you'll be taken to the editor. You'll see a file called `main.ts` with some code in it. This is the entrypoint of your applet and the only file we'll be editing in this example.
+
+Things to know:
+
+- `main.ts` is always the entry point of your applet and it has to export a function called `handler`.
+- The first input to your handler function will be used to render a form for your applet. You can use it to collect data from your users.
+
+Replace the contents of `main.ts` with the following code:
+
+```ts
+export async function handler({ shortLink }: { shortLink: string }) {
+  const linkWithProto = shortLink.startsWith('http')
+    ? shortLink
+    : `https://${shortLink}`;
+  const response = await fetch(linkWithProto, { redirect: 'manual' });
+
+  return response.headers.get('location') || linkWithProto;
+}
+```
+
+#### 3. Run your applet
+
+There are two ways to run your applet, first you can do it on the right sidebar of the editor by inputting a shortened URL (such as `https://bitly.com/98K8eH`) clicking the "Run" button. This will run your applet locally and give you a URL to call it.
+
+---
+
+<video autoplay controls muted playsinline>
+  <source src="/docs/videos/url-unshortener.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>

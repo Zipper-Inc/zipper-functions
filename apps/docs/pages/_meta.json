@@ -1,0 +1,20 @@
+{
+  "index": "Quick Start",
+  "introduction": "Introduction",
+  "building-applets": "Building Applets",
+  "connecting-to-other-tools": "Connectors",
+  "running-an-applet": "Running an Applet",
+  "advanced": "Advanced",
+  "dashboard": {
+    "title": "Zipper.dev",
+    "type": "page",
+    "href": "https://zipper.dev",
+    "newWindow": true
+  },
+  "contact": {
+    "title": "Contact",
+    "type": "page",
+    "href": "mailto://hello@zipper.works",
+    "newWindow": true
+  }
+}
