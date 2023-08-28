@@ -50,6 +50,7 @@ const RUN_PATH_NAME = '/run/[[...versionAndFilename]]';
 
 export type AppPageProps = {
   isEmbedded?: boolean;
+  shouldShowDescription?: boolean;
   app?: AppInfo;
   inputs: InputParams;
   userAuthConnectors: UserAuthConnector[];
@@ -70,6 +71,7 @@ export type AppPageProps = {
 
 export function AppPage({
   isEmbedded,
+  shouldShowDescription = true,
   app,
   inputs,
   userAuthConnectors,
@@ -157,17 +159,21 @@ export function AppPage({
   }, [handlerConfigs, filename]);
 
   const runApp = async () => {
+    const embedPath = isEmbedded ? 'embed/' : '';
     if (!loading) {
       setLoading(true);
       const rawValues = formContext.getValues();
       const values = getInputsFromFormData(rawValues, inputs);
       if (version !== 'latest') {
         router.push({
-          pathname: `/run/${filename}/@${version}`,
+          pathname: `/run/${embedPath}${filename}/@${version}`,
           query: values,
         });
       } else {
-        router.push({ pathname: `/run/${filename}`, query: values });
+        router.push({
+          pathname: `/run/${embedPath}${filename}`,
+          query: values,
+        });
       }
     }
   };
@@ -313,78 +319,75 @@ export function AppPage({
     );
   };
 
-  const initialContent = () => {
-    return (
-      <>
-        <ConnectorsAuthInputsSection
-          isCollapsible={false}
-          expandByDefault={expandInputsSection}
-          toggleIsExpanded={setExpandInputsSection}
-          userAuthProps={{
-            actions: connectorActions(app.id),
-            appTitle,
-            userAuthConnectors,
-            setSkipAuth,
-            skipAuth,
-          }}
-          userInputsProps={{
-            isLoading: loading,
-            canRunApp,
-            formContext,
-            hasResult: false,
-            inputs,
-            runApp,
-            skipAuth,
-          }}
-        />
-      </>
-    );
-  };
-
-  const runContent = () => {
-    return (
-      <VStack w="full" align="stretch" spacing={6}>
-        <InputSummary
-          inputs={inputs}
-          formContext={formContext}
-          onEditAndRerun={async () => {
-            const query = router.query;
-            delete query.versionAndFilename;
-
-            await router.push({
-              pathname: `/${filename}`,
-              query,
-            });
-            setScreen('initial');
-          }}
-        />
-        {output}
-      </VStack>
-    );
-  };
-
-  const loadingContent = () => {
-    return (
-      <Progress
-        colorScheme="purple"
-        size="xs"
-        isIndeterminate
-        width="full"
-        position="absolute"
-        background="transparent"
-        transform="auto"
-        translateY={-7}
+  const initialContent = (
+    <>
+      <ConnectorsAuthInputsSection
+        isCollapsible={false}
+        expandByDefault={expandInputsSection}
+        toggleIsExpanded={setExpandInputsSection}
+        userAuthProps={{
+          actions: connectorActions(app.id),
+          appTitle,
+          userAuthConnectors,
+          setSkipAuth,
+          skipAuth,
+        }}
+        userInputsProps={{
+          isLoading: loading,
+          canRunApp,
+          formContext,
+          hasResult: false,
+          inputs,
+          runApp,
+          skipAuth,
+        }}
       />
-    );
-  };
+    </>
+  );
+
+  const inputSummary = (
+    <InputSummary
+      inputs={inputs}
+      formContext={formContext}
+      onEditAndRerun={async () => {
+        const query = router.query;
+        delete query.versionAndFilename;
+
+        await router.push({
+          pathname: `/${filename}`,
+          query,
+        });
+        setScreen('initial');
+      }}
+    />
+  );
+
+  const runContent = (
+    <VStack w="full" align="stretch" spacing={6}>
+      {!isEmbedded && inputSummary}
+      {output}
+    </VStack>
+  );
+
+  const loadingContent = (
+    <Progress
+      colorScheme="purple"
+      size="xs"
+      isIndeterminate
+      width="full"
+      position="absolute"
+      background="transparent"
+      transform="auto"
+      translateY={-7}
+    />
+  );
 
   const content = (
     <VStack as="main" flex={1} spacing={4} position="relative" px={10}>
-      {appletDescription()}
-      {screen === 'initial' && initialContent()}
-      {showRunOutput && isEmbedded && output}
-      {showRunOutput && !isEmbedded && runContent()}
-      {loading && loadingContent()}
+      {shouldShowDescription && appletDescription()}
+      {screen === 'initial' && initialContent}
+      {showRunOutput && runContent}
+      {loading && loadingContent}
     </VStack>
   );
 
@@ -578,6 +581,7 @@ export const getServerSideProps: GetServerSideProps = async ({
   const propsToReturn = {
     props: {
       isEmbedded: isEmbedUrl,
+      shouldShowDescription: !(isEmbedUrl && isRunUrl),
       app,
       inputs: inputParams,
       version,
