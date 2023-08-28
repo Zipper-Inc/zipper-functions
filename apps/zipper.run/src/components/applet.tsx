@@ -50,7 +50,7 @@ const RUN_PATH_NAME = '/run/[[...versionAndFilename]]';
 
 export type AppPageProps = {
   isEmbedded?: boolean;
-  shouldShowDescription: boolean,
+  shouldShowDescription: boolean;
   app?: AppInfo;
   inputs: InputParams;
   userAuthConnectors: UserAuthConnector[];
@@ -159,7 +159,7 @@ export function AppPage({
   }, [handlerConfigs, filename]);
 
   const runApp = async () => {
-    const embedPath = isEmbedded ? 'embed/' : ''
+    const embedPath = isEmbedded ? 'embed/' : '';
     if (!loading) {
       setLoading(true);
       const rawValues = formContext.getValues();
