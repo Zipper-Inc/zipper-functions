@@ -2,11 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import * as eszip from '@deno/eszip';
 import { BuildCache, getModule } from '~/utils/eszip-build-cache';
 import { LoadResponseModule } from '@deno/eszip/types/loader';
-import {
-  isZipperImportUrl,
-  getZipperImportModule,
-  applyTsxHack,
-} from '~/utils/eszip-utils';
+import { isZipperImportUrl, applyTsxHack } from '~/utils/eszip-utils';
 
 enum ModMode {
   Module = 'module',
@@ -156,7 +152,7 @@ async function respondWithTypesBundle({
   } catch (e) {
     // Just respond with a regular bundle if types fail
     console.error(
-      '[API/TS/[MOD].TS]',
+      '[API/EDITOR/TS/[MOD].TS]',
       `(${moduleUrl})`,
       'Failed to bundle types, sending code bundle\n',
       e,

@@ -153,8 +153,8 @@ async function fetchImport({
     console.log('[IMPORTS]', `(${importUrl})`, 'Fetching import');
 
     // Grab the bundle (or bundle of types)
-    const bundle = await fetch(`/api/ts/bundle?x=${importUrl}`).then((r) =>
-      r.json(),
+    const bundle = await fetch(`/api/editor/ts/bundle?x=${importUrl}`).then(
+      (r) => r.json(),
     );
 
     // Add each individual file in the bundle the model
