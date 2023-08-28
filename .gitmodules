@@ -1,0 +1,3 @@
+[submodule "apps/docs"]
+	path = apps/docs
+	url = git@github.com:Zipper-Inc/docs.git
