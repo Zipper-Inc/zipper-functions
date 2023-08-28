@@ -50,7 +50,7 @@ const RUN_PATH_NAME = '/run/[[...versionAndFilename]]';
 
 export type AppPageProps = {
   isEmbedded?: boolean;
-  shouldShowDescription: boolean;
+  shouldShowDescription?: boolean;
   app?: AppInfo;
   inputs: InputParams;
   userAuthConnectors: UserAuthConnector[];
@@ -71,7 +71,7 @@ export type AppPageProps = {
 
 export function AppPage({
   isEmbedded,
-  shouldShowDescription,
+  shouldShowDescription = true,
   app,
   inputs,
   userAuthConnectors,
