@@ -8,6 +8,7 @@ import { readFrameworkFile } from './read-file';
 import { getAppHashAndVersion } from './hashing';
 import { prisma } from '~/server/prisma';
 import { storeVersionESZip } from '~/server/utils/r2.utils';
+import { isZipperImportUrl } from './is-zipper-import-url';
 
 /**
  * @todo
@@ -49,6 +50,7 @@ export async function build({
         msg: `Starting build for deploy`,
       },
       {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         badgeStyle: { background: PRETTY_LOG_TOKENS['fgText']! },
       },
     ),
@@ -117,6 +119,27 @@ export async function build({
         specifier,
         headers: TYPESCRIPT_CONTENT_HEADERS,
         content,
+      };
+    }
+
+    /**
+     * Handle Zipper Remote Imports
+     */
+    if (isZipperImportUrl(specifier)) {
+      const mod = await getModule(specifier);
+
+      return {
+        // Add TSX to all files so they support JSX
+        specifier: specifier.replace(/\.(ts|tsx)$|$/, '.tsx'),
+        headers: TYPESCRIPT_CONTENT_HEADERS,
+        content:
+          // Add the JSX pragma to all files automatically
+          mod?.content.replace(
+            /^/,
+            '/** @jsx Zipper.JSX.createElement @jsxFrag Zipper.JSX.Fragment */',
+          ) || '/* 🤷🏽‍♂️ missing code */',
+        kind: 'module',
+        version,
       };
     }
 
