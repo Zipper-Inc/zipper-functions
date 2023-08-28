@@ -28,6 +28,7 @@ import { uuid } from '@zipper/utils';
 import { prettyLog } from '~/utils/pretty-log';
 import { AppQueryOutput } from '~/types/trpc';
 import { getAppVersionFromHash } from '~/utils/hashing';
+import { isZipperImportUrl } from '~/utils/eszip-utils';
 import Fuse from 'fuse.js';
 
 /** This string indicates which errors we own in the editor */
@@ -163,8 +164,10 @@ async function fetchImport({
       const uri = getUriFromPath(
         url,
         uriParser,
-        url.endsWith('tsx') ? 'tsx' : 'ts',
+        isZipperImportUrl(url) || url.endsWith('tsx') ? 'tsx' : 'ts',
       );
+
+      console.log('bundle?', { url, uri, src });
       if (!monacoRef?.current?.editor.getModel(uri)) {
         monacoRef?.current?.editor.createModel(src, 'typescript', uri);
       }
