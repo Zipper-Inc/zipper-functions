@@ -76,7 +76,7 @@ export default function PlaygroundEditor(
   >('typescript');
   const theme = useColorModeValue('vs', 'vs-dark');
 
-  useExitConfirmation({ enable: isEditorDirty(), ignorePaths: ['/edit/'] });
+  useExitConfirmation({ enable: isEditorDirty(), ignorePaths: ['/src/'] });
 
   const handleEditorDidMount = (editor: MonacoEditor, monaco: Monaco) => {
     console.log('editor mounted');

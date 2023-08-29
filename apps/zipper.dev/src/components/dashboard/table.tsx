@@ -141,7 +141,7 @@ const TableRow: React.FC<{ row: Row<any> }> = ({ row }) => {
                   size={'sm'}
                   onClick={() =>
                     window.location.replace(
-                      `/${row.original.resourceOwner.slug}/${row.original.slug}/edit/main.ts`,
+                      `/${row.original.resourceOwner.slug}/${row.original.slug}/src/main.ts`,
                     )
                   }
                 >
