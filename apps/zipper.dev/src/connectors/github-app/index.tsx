@@ -42,7 +42,7 @@ import { useEditorContext } from '~/components/context/editor-context';
 export const githubAppConnector = createConnector({
   id: 'github-app',
   name: 'GitHub App',
-  description: 'Build GitHub bot & receive webhooks',
+  description: 'Build a GitHub bot & receive webhooks',
   icon: <VscGithubInverted />,
   code,
   userScopes: scopes,

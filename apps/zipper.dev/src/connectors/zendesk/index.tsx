@@ -1,5 +1,5 @@
 import createConnector from '../createConnector';
-import { Box, Heading, Text, useDisclosure, VStack } from '@chakra-ui/react';
+import { Box, Heading, Text, VStack } from '@chakra-ui/react';
 import { code, userScopes } from './constants';
 import { SiZendesk } from 'react-icons/si';
 import { trpc } from '~/utils/trpc';
@@ -16,7 +16,7 @@ import { UseQueryResult } from 'react-query';
 export const zendeskConnector = createConnector({
   id: 'zendesk',
   name: 'Zendesk',
-  description: `Query data or build embeddable applets`,
+  description: `Query data and build embeddable applets`,
   icon: <SiZendesk />,
   code,
   userScopes,
