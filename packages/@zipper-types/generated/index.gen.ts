@@ -6,6 +6,7 @@ export * from '../src/types/app-info';
 export * from '../src/types/app-submission-state';
 export * from '../src/types/applet-content';
 export * from '../src/types/connector';
+export * from '../src/types/github-app-connector';
 export * from '../src/types/github-connector';
 export * from '../src/types/http';
 export * from '../src/types/input-params';

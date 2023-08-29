@@ -7,19 +7,8 @@ import {
   hasAppEditPermission,
   hasAppReadPermission,
 } from '../utils/authz.utils';
-import {
-  decryptFromBase64,
-  decryptFromHex,
-  encryptToBase64,
-  encryptToHex,
-} from '@zipper/utils';
-import fetch from 'node-fetch';
-import { AppConnectorUserAuth, Prisma } from '@prisma/client';
-import {
-  GitHubAuthTokenResponse,
-  GitHubCheckTokenResponse,
-} from '@zipper/types';
-import { filterTokenFields } from '~/server/utils/json';
+import { decryptFromHex, encryptToBase64, encryptToHex } from '@zipper/utils';
+import { Prisma } from '@prisma/client';
 
 export const githubAppConnectorRouter = createRouter()
   .query('get', {
@@ -121,23 +110,87 @@ export const githubAppConnectorRouter = createRouter()
 
       if (!appId) throw new TRPCError({ code: 'UNAUTHORIZED' });
 
-      const connector = await prisma.appConnector.findUniqueOrThrow({
+      const res = await fetch(
+        `https://api.github.com/app-manifests/${input.code}/conversions`,
+        {
+          method: 'post',
+        },
+      );
+
+      const json = await res.json();
+
+      if (json.message) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: json.message });
+      }
+
+      const secretKeys = ['webhook_secret', 'pem', 'client_secret'];
+
+      const secrets = secretKeys.reduce((acc, key) => {
+        let valueToStore = json[key];
+        if (key === 'pem') {
+          valueToStore = json[key].toString('base64');
+        }
+
+        const secretKey =
+          key === 'pem' ? 'GITHUB_PEM_BASE64' : `GITHUB_${key.toUpperCase()}`;
+        const secretValue = encryptToBase64(
+          valueToStore,
+          process.env.ENCRYPTION_KEY!,
+        );
+        acc.push({ key: secretKey, value: secretValue });
+        return acc;
+      }, [] as Record<'key' | 'value', string>[]);
+
+      await Promise.all(
+        secrets.map((secret) =>
+          prisma.secret.upsert({
+            where: {
+              appId_key: {
+                appId: appId!,
+                key: secret.key,
+              },
+            },
+            create: {
+              appId,
+              key: secret.key,
+              encryptedValue: secret.value,
+            },
+            update: {
+              encryptedValue: secret.value,
+            },
+          }),
+        ),
+      );
+
+      secretKeys.forEach((key) => {
+        delete json[key];
+      });
+
+      const connector = await prisma.appConnector.update({
         where: {
           appId_type: {
             appId,
-            type: 'github',
+            type: 'githubApp',
           },
+        },
+        data: {
+          metadata: json,
         },
         include: {
-          app: {
-            include: {
-              secrets: {
-                where: { key: 'GITHUB_CLIENT_SECRET' },
-              },
-            },
-          },
+          app: true,
         },
       });
-      //save secrets
+
+      const resourceOwner = await prisma.resourceOwnerSlug.findFirstOrThrow({
+        where: {
+          resourceOwnerId:
+            connector.app.organizationId || connector.app.createdById,
+        },
+      });
+
+      return {
+        app: { ...connector.app, resourceOwner },
+        redirectTo,
+      };
     },
   });

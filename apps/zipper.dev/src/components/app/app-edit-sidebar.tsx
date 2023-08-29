@@ -20,23 +20,19 @@ import { AppConsole } from './app-console';
 import { HiEye, HiPencil } from 'react-icons/hi2';
 
 type AppEditSidebarProps = {
-  showInputForm: boolean;
-  tips?: JSX.Element;
   appSlug: string;
   isMarkdownEditable: boolean;
   setIsMarkdownEditable: (editable: boolean) => void;
 };
 
 export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
-  showInputForm = true,
-  tips,
   appSlug,
   isMarkdownEditable,
   setIsMarkdownEditable,
 }) => {
   const [tabIndex, setTabIndex] = useState(0);
 
-  const consoleTabIndex = tips ? 2 : 1;
+  const consoleTabIndex = 1;
 
   const handleTabsChange = (index: number) => {
     setTabIndex(index);
@@ -122,8 +118,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
           pb={4}
         >
           <HStack spacing={2}>
-            {showInputForm && <TabButton title="Preview" />}
-            {tips && <TabButton title="Tips" />}
+            <TabButton title="Preview" />
             <TabButton
               title="Console"
               badge={unreadLogs > 0 ? unreadLogs : undefined}
@@ -138,23 +133,19 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
           maxH="calc(100% - 115px)"
         >
           {/* INPUT */}
-          {showInputForm && (
-            <TabPanel
-              p={0}
-              pt={4}
-              h="full"
-              display="flex"
-              flexDir="column"
-              flex="1 1 auto"
-              overflow="auto"
-              w="full"
-            >
-              <AppEditSidebarApplet appSlug={appSlug} />
-            </TabPanel>
-          )}
 
-          {/* TIPS */}
-          {tips && <TabPanel flex={1}>{tips}</TabPanel>}
+          <TabPanel
+            p={0}
+            pt={4}
+            h="full"
+            display="flex"
+            flexDir="column"
+            flex="1 1 auto"
+            overflow="auto"
+            w="full"
+          >
+            <AppEditSidebarApplet appSlug={appSlug} />
+          </TabPanel>
 
           {/* LOGS */}
           <TabPanel

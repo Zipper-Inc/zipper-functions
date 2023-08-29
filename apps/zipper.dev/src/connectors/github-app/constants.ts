@@ -1,18 +1,81 @@
-export const code = `import { Octokit } from "https://cdn.skypack.dev/octokit@2.0.14?dts";
+export const code = `import { create, getNumericDate } from "https://deno.land/x/djwt@v2.2/mod.ts";
 
-// This is an Octokit client intialized with the applet developer's GitHub token
-// THIS CLIENT DOES NOT USE THE USER TOKEN
-// All requests using this client will use the same token. Be careful if sharing publicly!
-const client = new Octokit({
-  auth: Deno.env.get("GITHUB_TOKEN"),
-});
+// Get the JWT for the app. This JWT is used to get an installation token.
+export function appJwt(): Promise<string> {
+  return create(
+    { alg: "RS256", typ: "JWT" },
+    {
+      iss: Deno.env.get('GITHUB_APP_ID'), // issuer
+      iat: getNumericDate(0), // issued at time (now)
+      exp: getNumericDate(5 * 60), // expiration time (in 5 minutes)
+    },
+    atob(Deno.env.get('GITHUB_PEM_BASE64'));
+  );
+}
 
-// The current user's GitHub token is available in the context of a handler function
-export const getUserClient = (userToken: string) =>
-  new Octokit({ auth: userToken });
+// Make a request to the GitHub API as the app.
+export async function appRequest(
+  jwt: string,
+  endpoint: string,
+  method: "GET" | "POST" | "PUT" | "DELETE",
+  body?: string
+) {
+  const response = await fetch(\`\${"https://api.github.com"}/\${endpoint}\`, {
+    method,
+    headers: {
+      authorization: \`bearer \${jwt}\`,
+      accept: "application/vnd.github.full+json",
+    },
+    body,
+  });
+  return await response.json();
+}
 
-export default client;
+export function listInstallations(jwt: string) {
+  return appRequest(jwt, "app/installations", "GET");
+}
 
+// This function is used to get an installation token using an app's JWT.
+async function getInstallationAccessToken(jwt: string, installationId: string) {
+  return appRequest(
+    jwt,
+    \`app/installations/\${installationId}/access_tokens\`,
+    "POST"
+  );
+}
+
+// Example of how to call GitHub's API using an installation token
+export async function postComment({
+  jwt,
+  installationId,
+  owner,
+  repo,
+  issueNumber,
+  commentBody,
+}: {
+  jwt: string;
+  installationId: string;
+  owner: string;
+  repo: string;
+  issueNumber: string;
+  commentBody: string;
+}) {
+  const installationAccessToken = await getInstallationAccessToken(
+    jwt,
+    installationId
+  );
+  return appRequest(
+    installationAccessToken.token,
+    \`repos/\${owner}/\${repo}/issues/\${issueNumber}/comments\`,
+    "POST",
+    JSON.stringify({ body: commentBody })
+  );
+}
+
+// The function that will receive GitHub webhooks. You can customize the endpoint where webhooks are sent in the GitHub App settings.
+export function handler({ ...githubEvent }: any) {
+  return githubEvent;
+}
 `;
 
 export const events = [

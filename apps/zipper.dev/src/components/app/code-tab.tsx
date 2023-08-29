@@ -98,7 +98,6 @@ export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
   );
 
   const currentScriptConnectorId = currentScript?.connectorId;
-  console.log(currentScript?.connectorId);
 
   const isMarkdown = currentScript?.filename.endsWith('.md');
 
@@ -185,8 +184,6 @@ export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
           }}
         >
           <AppEditSidebar
-            showInputForm={!currentScriptConnectorId}
-            tips={ConnectorSidebarTips(currentScriptConnectorId)}
             appSlug={app.slug}
             isMarkdownEditable={isMarkdownEditable}
             setIsMarkdownEditable={setIsMarkdownEditable}

@@ -9,29 +9,19 @@ import {
   FormLabel,
   Heading,
   HStack,
-  Switch,
   Text,
   VStack,
   useToast,
   Spacer,
-  StackDivider,
-  Popover,
-  PopoverArrow,
-  PopoverBody,
-  PopoverContent,
-  PopoverHeader,
-  PopoverTrigger,
   useDisclosure,
-  FormHelperText,
   AlertDialog,
   AlertDialogBody,
   AlertDialogContent,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogOverlay,
-  Code,
-  Collapse,
-  Input,
+  Link,
+  Select,
 } from '@chakra-ui/react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { trpc } from '~/utils/trpc';
@@ -39,10 +29,13 @@ import { VscGithubInverted } from 'react-icons/vsc';
 import { code, scopes, events } from './constants';
 import { MultiSelect, SelectOnChange, useMultiSelect } from '@zipper/ui';
 import { HiOutlineTrash } from 'react-icons/hi';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useRunAppContext } from '~/components/context/run-app-context';
-import { GithubConnectorAuthMetadata } from '@zipper/types';
+import { GithubAppConnectorInstallationMetadata } from '@zipper/types';
+import { getZipperDotDevUrl } from '@zipper/utils';
+import { HiOutlineCog } from 'react-icons/hi2';
+import { useEditorContext } from '~/components/context/editor-context';
 
 export const githubAppConnector = createConnector({
   id: 'githubApp',
@@ -54,6 +47,7 @@ export const githubAppConnector = createConnector({
 });
 
 function GitHubAppConnectorForm({ appId }: { appId: string }) {
+  const { scripts } = useEditorContext();
   const __scope_options = scopes.map((scope) => ({
     label: scope,
     value: scope,
@@ -90,6 +84,14 @@ function GitHubAppConnectorForm({ appId }: { appId: string }) {
     },
   });
 
+  const manifestForm = useForm({
+    defaultValues: {
+      manifest: '',
+    },
+  });
+
+  const manifestFormRef = useRef<HTMLFormElement>(null);
+
   const { appInfo } = useRunAppContext();
 
   const utils = trpc.useContext();
@@ -97,8 +99,6 @@ function GitHubAppConnectorForm({ appId }: { appId: string }) {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const cancelRef = useRef() as React.MutableRefObject<HTMLButtonElement>;
 
-  // get the Github auth URL from the backend (it includes an encrypted state value that links
-  // the auth request to the app)
   const stateValueQuery = trpc.useQuery([
     'githubAppConnector.getStateValue',
     {
@@ -107,7 +107,6 @@ function GitHubAppConnectorForm({ appId }: { appId: string }) {
     },
   ]);
 
-  //  get the existing Github connector data from the database
   const connector = trpc.useQuery(['githubAppConnector.get', { appId }], {
     onSuccess: (data) => {
       if (data && setScopesValue && setEventsValue) {
@@ -117,26 +116,10 @@ function GitHubAppConnectorForm({ appId }: { appId: string }) {
     },
   });
 
-  // const [clientId, setClientId] = useState<string>('');
-  // const [clientSecret, setClientSecret] = useState<string>('');
-
-  // const [isOwnClientIdRequired, setIsOwnClientIdRequired] =
-  //   useState<boolean>(false);
-
   const [isSaving, setIsSaving] = useState(false);
-
-  // const tokenName = 'GITHUB_TOKEN';
-
-  // // get the existing Github token from the database
-  // const existingSecret = trpc.useQuery(
-  //   ['secret.get', { appId, key: tokenName }],
-  //   { enabled: !!appInfo?.canUserEdit },
-  // );
-
-  // const existingClientSecretSecret = trpc.useQuery(
-  //   ['secret.get', { appId, key: 'GITHUB_CLIENT_SECRET' }],
-  //   { enabled: isOwnClientIdRequired },
-  // );
+  const [webhookPath, setWebhookPath] = useState<string>(
+    'github-app-connector.ts',
+  );
 
   const toast = useToast();
 
@@ -166,6 +149,7 @@ function GitHubAppConnectorForm({ appId }: { appId: string }) {
   const saveConnector = async (data: any) => {
     if (stateValueQuery.data) {
       setIsSaving(true);
+
       await updateAppConnectorMutation.mutateAsync({
         appId,
         type: 'githubApp',
@@ -174,35 +158,27 @@ function GitHubAppConnectorForm({ appId }: { appId: string }) {
           events: eventsValue as string[],
         },
       });
-      const formdata = new FormData();
-      formdata.append(
-        'manifest',
-        JSON.stringify({
-          url: `https://${appInfo.slug}.zipper.run/raw`,
-          redirect_url: `https://zipper.dev/connectors/github-app/manifest-redirect`,
-          callback_urls: ['https://zipper.dev/connectors/github-app/auth'],
-          hook_attributes: {
-            url: `https://${appInfo.slug}.zipper.run`,
-          },
-          public: true,
-          default_events: eventsValue,
-          default_permissions: (scopesValue as string[]).reduce((p, c) => {
-            const scopeParts = c.split(':');
-            if (scopeParts[0] && scopeParts[1])
-              p[scopeParts[0]] = scopeParts[1];
 
-            return p;
-          }, {} as Record<string, string>),
-        }),
-      );
-      const res = await fetch('https://github.com/settings/apps/new', {
-        method: 'POST',
-        body: formdata,
+      const manifest = JSON.stringify({
+        url: `https://${appInfo.slug}.${process.env.NEXT_PUBLIC_ZIPPER_DOT_RUN_HOST}`,
+        redirect_url: `${getZipperDotDevUrl()}/connectors/github-app/manifest-redirect`,
+        callback_urls: [`${getZipperDotDevUrl()}/connectors/github-app/auth`],
+        hook_attributes: {
+          url: `https://${appInfo.slug}.${process.env.NEXT_PUBLIC_ZIPPER_DOT_RUN_HOST}/${webhookPath}/raw`,
+        },
+        public: true,
+        default_events: eventsValue,
+        default_permissions: (scopesValue as string[]).reduce((p, c) => {
+          const scopeParts = c.split(':');
+          if (scopeParts[0] && scopeParts[1]) p[scopeParts[0]] = scopeParts[1];
+
+          return p;
+        }, {} as Record<string, string>),
       });
 
-      console.log(res.redirected, res.url);
+      manifestForm.setValue('manifest', manifest);
+      manifestFormRef.current?.submit();
 
-      // create the app using a manifest
       setIsSaving(false);
     }
   };
@@ -212,16 +188,13 @@ function GitHubAppConnectorForm({ appId }: { appId: string }) {
     {
       async onSuccess() {
         await utils.invalidateQueries(['githubAppConnector.get', { appId }]);
-        // await utils.invalidateQueries([
-        //   'secret.get',
-        //   { appId, key: tokenName },
-        // ]);
         await utils.invalidateQueries(['secret.all', { appId }]);
       },
     },
   );
 
-  console.log(githubAppConnector);
+  const metadata = connector.data
+    ?.metadata as GithubAppConnectorInstallationMetadata;
 
   return (
     <Box px="6" w="full">
@@ -238,8 +211,46 @@ function GitHubAppConnectorForm({ appId }: { appId: string }) {
                     <Card w="full">
                       <CardBody color="fg.600">
                         <VStack align="stretch">
-                          <Heading size="sm">Configuration</Heading>
-                          <HStack w="full" pt="2" spacing="1"></HStack>
+                          <Heading size="sm">{metadata.name}</Heading>
+                          <Text>
+                            Boom! You've got a GitHub App that's ready to use
+                            with this applet. You can install it on any of your
+                            repositories and use the stored secrets to access
+                            GitHub's API.
+                          </Text>
+                          <HStack w="full" pt="2" spacing="4">
+                            <Button
+                              as={Link}
+                              colorScheme="primary"
+                              href={`${metadata.html_url}/installations/select_target`}
+                              _hover={{ textDecoration: 'none' }}
+                            >
+                              Install
+                            </Button>
+                            <Spacer />
+                            <HStack>
+                              <HiOutlineCog />
+                              <Link
+                                _hover={{ textDecoration: 'none' }}
+                                href={metadata.html_url.replace(
+                                  'apps',
+                                  'settings/apps',
+                                )}
+                              >
+                                Manage Settings
+                              </Link>
+                            </HStack>
+                            <Button
+                              variant="unstyled"
+                              color="red.600"
+                              onClick={onOpen}
+                            >
+                              <HStack>
+                                <HiOutlineTrash />
+                                <Text>Remove</Text>
+                              </HStack>
+                            </Button>
+                          </HStack>
                         </VStack>
                       </CardBody>
                     </Card>
@@ -251,7 +262,7 @@ function GitHubAppConnectorForm({ appId }: { appId: string }) {
                       <AlertDialogOverlay>
                         <AlertDialogContent>
                           <AlertDialogHeader fontSize="lg" fontWeight="bold">
-                            Uninstall GitHub App
+                            Remove GitHub App
                           </AlertDialogHeader>
 
                           <AlertDialogBody>
@@ -285,6 +296,18 @@ function GitHubAppConnectorForm({ appId }: { appId: string }) {
                 ) : (
                   <Card w="full">
                     <CardBody color="fg.600">
+                      <FormProvider {...manifestForm}>
+                        <form
+                          ref={manifestFormRef}
+                          action={`https://github.com/settings/apps/new?state=${stateValueQuery?.data}`}
+                          method="post"
+                        >
+                          <input
+                            hidden={true}
+                            {...manifestForm.register('manifest')}
+                          />
+                        </form>
+                      </FormProvider>
                       <FormProvider {...connectorForm}>
                         <form
                           onSubmit={connectorForm.handleSubmit(saveConnector)}
@@ -305,6 +328,25 @@ function GitHubAppConnectorForm({ appId }: { appId: string }) {
                                 value={eventsValue}
                                 onChange={eventsOnChange as SelectOnChange}
                               />
+                            </FormControl>
+                            <FormControl>
+                              <FormLabel color={'fg.500'}>
+                                Webhook Handler
+                              </FormLabel>
+                              <Select
+                                defaultValue={'github-app-connector.ts'}
+                                onChange={(e) => {
+                                  setWebhookPath(e.target.value);
+                                }}
+                              >
+                                {scripts
+                                  .filter((s) => s.isRunnable)
+                                  .map((s) => (
+                                    <option value={s.filename} key={s.id}>
+                                      {s.filename}
+                                    </option>
+                                  ))}
+                              </Select>
                             </FormControl>
                             <Button
                               mt="6"
