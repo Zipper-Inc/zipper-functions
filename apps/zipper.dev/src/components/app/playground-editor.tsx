@@ -188,7 +188,9 @@ export default function PlaygroundEditor(
         const path = `types/${filename}`;
 
         if (!extraLibs[path]) {
-          const response = await fetch(`/api/ts/declarations/${filename}`);
+          const response = await fetch(
+            `/api/editor/ts/declarations/${filename}`,
+          );
           const src = await response.text();
           monaco.languages.typescript.typescriptDefaults.addExtraLib(src, path);
         }
