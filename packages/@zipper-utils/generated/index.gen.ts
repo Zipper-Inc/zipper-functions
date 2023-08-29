@@ -6,7 +6,7 @@ export { default as cryptoUtils } from '../src/utils/crypto.utils';
 export * from '../src/utils/datetime';
 export * from '../src/utils/deployment-id';
 export * from '../src/utils/form';
-export * from '../src/utils/generate-index-for-framework';
+export * from '../src/utils/generate-for-framework';
 export * from '../src/utils/get-app-link';
 export * from '../src/utils/get-edit-applet-link';
 export * from '../src/utils/object';
