@@ -10,7 +10,6 @@ import { prisma } from '~/server/prisma';
 import { storeVersionESZip } from '~/server/utils/r2.utils';
 import {
   applyTsxHack,
-  getZipperImportModule,
   isZipperImportUrl,
   TYPESCRIPT_CONTENT_HEADERS,
 } from './eszip-utils';
