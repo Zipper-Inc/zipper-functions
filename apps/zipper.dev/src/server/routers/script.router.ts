@@ -50,7 +50,7 @@ export const scriptRouter = createRouter()
       code: z.string().default(DEFAULT_CODE),
       order: z.number(),
       connectorId: z
-        .enum(['github', 'slack', 'openai', 'zendesk', 'githubApp'])
+        .enum(['github', 'slack', 'openai', 'zendesk', 'github-app'])
         .optional(),
     }),
     async resolve({ ctx, input }) {

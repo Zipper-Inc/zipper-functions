@@ -22,6 +22,8 @@ import {
   AlertDialogOverlay,
   Link,
   Select,
+  Code,
+  StackDivider,
 } from '@chakra-ui/react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { trpc } from '~/utils/trpc';
@@ -38,7 +40,7 @@ import { HiOutlineCog } from 'react-icons/hi2';
 import { useEditorContext } from '~/components/context/editor-context';
 
 export const githubAppConnector = createConnector({
-  id: 'githubApp',
+  id: 'github-app',
   name: 'GitHub App',
   icon: <VscGithubInverted />,
   code,
@@ -152,7 +154,7 @@ function GitHubAppConnectorForm({ appId }: { appId: string }) {
 
       await updateAppConnectorMutation.mutateAsync({
         appId,
-        type: 'githubApp',
+        type: 'github-app',
         data: {
           userScopes: scopesValue as string[],
           events: eventsValue as string[],
@@ -364,8 +366,36 @@ function GitHubAppConnectorForm({ appId }: { appId: string }) {
                 )}
               </>
             ) : (
-              // user can't edit
-              <></>
+              <VStack align="stretch" w="full">
+                <Card w="full">
+                  <CardBody>
+                    <Heading size="sm">Configuration</Heading>
+                    <VStack
+                      align="start"
+                      divider={<StackDivider />}
+                      fontSize="sm"
+                      py="2"
+                      mt="2"
+                    >
+                      <HStack>
+                        <Text>Scopes:</Text>
+                        <Box>
+                          {connector.data?.userScopes.map((scope: string) => (
+                            <Code key={scope}>{scope}</Code>
+                          ))}
+                        </Box>
+                      </HStack>
+
+                      <HStack>
+                        <Text>Events</Text>
+                        {connector.data?.events.map((event: string) => (
+                          <Code key={event}>{event}</Code>
+                        ))}
+                      </HStack>
+                    </VStack>
+                  </CardBody>
+                </Card>
+              </VStack>
             )}
           </VStack>
           <Divider my={4} />

@@ -1,6 +1,6 @@
 export type ConnectorType =
   | 'github'
-  | 'githubApp'
+  | 'github-app'
   | 'slack'
   | 'openai'
   | 'zendesk';

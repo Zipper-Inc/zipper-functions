@@ -7,7 +7,7 @@ import { githubAppConnector } from './github-app';
 
 export const connectors: Record<ConnectorId, Connector> = {
   github: githubConnector,
-  githubApp: githubAppConnector,
+  ['github-app']: githubAppConnector,
   slack: slackConnector,
   openai: openaiConnector,
   zendesk: zendeskConnector,

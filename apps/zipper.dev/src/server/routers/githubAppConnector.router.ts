@@ -21,7 +21,7 @@ export const githubAppConnectorRouter = createRouter()
       return prisma.appConnector.findFirst({
         where: {
           appId: input.appId,
-          type: 'githubApp',
+          type: 'github-app',
         },
       });
     },
@@ -53,7 +53,7 @@ export const githubAppConnectorRouter = createRouter()
         where: {
           appId_type: {
             appId,
-            type: 'githubApp',
+            type: 'github-app',
           },
         },
         data: {
@@ -170,7 +170,7 @@ export const githubAppConnectorRouter = createRouter()
         where: {
           appId_type: {
             appId,
-            type: 'githubApp',
+            type: 'github-app',
           },
         },
         data: {

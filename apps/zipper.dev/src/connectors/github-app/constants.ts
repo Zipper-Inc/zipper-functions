@@ -2,6 +2,9 @@ export const code = `import { create, getNumericDate } from "https://deno.land/x
 
 // Get the JWT for the app. This JWT is used to get an installation token.
 export function appJwt(): Promise<string> {
+  const base64Pem = Deno.env.get('GITHUB_PEM_BASE64')
+  if(!base64Pem) throw new Error('GITHUB_PEM_BASE64 is not set');
+
   return create(
     { alg: "RS256", typ: "JWT" },
     {
@@ -9,7 +12,7 @@ export function appJwt(): Promise<string> {
       iat: getNumericDate(0), // issued at time (now)
       exp: getNumericDate(5 * 60), // expiration time (in 5 minutes)
     },
-    atob(Deno.env.get('GITHUB_PEM_BASE64'));
+    atob(base64Pem),
   );
 }
 

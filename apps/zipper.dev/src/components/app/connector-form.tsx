@@ -28,7 +28,7 @@ export function ConnectorForm({
     return <ZendeskConnectorForm appId={appId} />;
   }
 
-  if (connectorId === 'githubApp') {
+  if (connectorId === 'github-app') {
     return <GitHubAppConnectorForm appId={appId} />;
   }
   return <></>;
