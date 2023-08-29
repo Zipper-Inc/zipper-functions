@@ -4,6 +4,7 @@ import { ReactElement } from 'react';
 export type Connector = {
   id: ConnectorId;
   name: string;
+  description?: string;
   icon?: ReactElement;
   code?: string;
   workspaceScopes?: string[];
@@ -16,6 +17,7 @@ export type ConnectorId = ConnectorType;
 export const createConnector = ({
   id,
   name,
+  description,
   code,
   icon,
   workspaceScopes,
@@ -25,6 +27,7 @@ export const createConnector = ({
   return {
     id,
     name,
+    description,
     code,
     icon,
     workspaceScopes,
