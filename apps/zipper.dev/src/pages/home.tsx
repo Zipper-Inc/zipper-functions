@@ -1,6 +1,7 @@
 import {
   Box,
   Button,
+  Container,
   Flex,
   Grid,
   GridItem,
@@ -11,7 +12,7 @@ import {
   useMediaQuery,
   VStack,
 } from '@chakra-ui/react';
-import { baseColors } from '@zipper/ui';
+import { baseColors, Website } from '@zipper/ui';
 import { memo, useEffect, useState } from 'react';
 import { NextPageWithLayout } from './_app';
 import Header from '~/components/header';
@@ -225,13 +226,13 @@ const Hero = () => {
       position="relative"
       whiteSpace={{ md: 'pre-line' }} //important for \n new lines
     >
-      <Flex
+      <Container
         as="article"
         aria-label="hero-content"
         margin="0 auto"
         gap={8}
         flexDirection={['column', 'column', 'column', 'row']}
-        align="center"
+        alignItems="center"
         maxW={{ md: 'container.xl' }}
         w="full"
         zIndex="10"
@@ -276,7 +277,7 @@ const Hero = () => {
             </Button>
           </Flex>
         </VStack>
-        <Box
+        {/* <Box
           marginLeft="-20px"
           height={['280px', '480px']}
           width={{ base: 'full' }}
@@ -308,8 +309,8 @@ const Hero = () => {
               !allreadyLoaded ? `${clipPathAni} 2s ease-in-out` : undefined
             }
           />
-        </Box>
-      </Flex>
+        </Box> */}
+      </Container>
     </Box>
   );
 };
@@ -452,6 +453,7 @@ const AppletsGallery = () => {
       position="relative"
       whiteSpace={{ md: 'pre-line' }}
       overflow="hidden"
+      bg="white"
     >
       <Flex
         margin="0 auto"
@@ -564,11 +566,11 @@ const Bateries = memo(() => {
       overflow="hidden"
       bg="gray.100"
     >
-      <Flex
+      <Container
         margin="0 auto"
         gap={[4, 20]}
-        direction="column"
-        align="start"
+        flexDir="column"
+        alignItems="start"
         maxW="container.xl"
         position="relative"
         w="full"
@@ -612,43 +614,51 @@ const Bateries = memo(() => {
             </GridItem>
           ))}
         </Grid>
-      </Flex>
+      </Container>
     </Box>
   );
 });
 
 const Headline = memo(() => {
   return (
-    <Flex
+    <Box
       as="section"
-      gap={[6]}
-      aria-label="Bateries"
-      direction={{ base: 'column' }}
+      aria-label="Headline"
       w="full"
       py={{ base: '52px', md: '9rem' }}
       px={{ base: 6 }}
       position="relative"
-      maxW="container.xl"
       overflow="hidden"
+      bg="white"
     >
-      <Text fontWeight={600} fontSize="lg" color="gray.600">
-        {HEADLINE_CONTENT.SPAN}
-      </Text>
-
-      <Text
-        fontSize={['48px', '72px']}
-        color="gray.800"
-        fontWeight={400}
-        lineHeight={['60px', '78px']}
-        whiteSpace={{ md: 'pre-line' }}
+      <Container
+        as="section"
+        gap={[6]}
+        flexDirection={{ base: 'column' }}
+        w="full"
+        position="relative"
+        maxW="container.xl"
+        overflow="hidden"
       >
-        {'Using Zipper knocked \n me off the top of the list \n for '}
-        <Text as="span" color="brandOrange.500">
-          most swear words
-        </Text>{' '}
-        {'in \n commit messages.'}
-      </Text>
-    </Flex>
+        <Text fontWeight={600} fontSize="lg" color="gray.600">
+          {HEADLINE_CONTENT.SPAN}
+        </Text>
+
+        <Text
+          fontSize={['48px', '72px']}
+          color="gray.800"
+          fontWeight={400}
+          lineHeight={['60px', '78px']}
+          whiteSpace={{ md: 'pre-line' }}
+        >
+          {'Using Zipper knocked \n me off the top of the list \n for '}
+          <Text as="span" color="brandOrange.500">
+            most swear words
+          </Text>{' '}
+          {'in \n commit messages.'}
+        </Text>
+      </Container>
+    </Box>
   );
 });
 
@@ -657,21 +667,24 @@ const Headline = memo(() => {
 /* -------------------------------------------- */
 
 const HomePage: NextPageWithLayout = () => (
-  <Box
-    display="flex"
-    flexDir="column"
-    alignItems="center"
-    as="main"
-    w="full"
-    margin="0 auto"
-  >
-    <Hero />
-    <Features />
-    <AppletsGallery />
-    <Bateries />
-    <Headline />
-    <Footer />
-  </Box>
+  <Website>
+    <Website.Navbar />
+    <Box
+      display="flex"
+      flexDir="column"
+      alignItems="center"
+      as="main"
+      w="full"
+      margin="0 auto"
+    >
+      <Hero />
+      <Features />
+      <AppletsGallery />
+      <Bateries />
+      <Headline />
+      <Website.Footer />
+    </Box>
+  </Website>
 );
 
 HomePage.header = (props) => {
