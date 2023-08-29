@@ -1,6 +1,11 @@
 import { createContext, useContext, useState } from 'react';
 import noop from '~/utils/noop';
-import { AppInfo, ConnectorType, InputParam } from '@zipper/types';
+import {
+  AppInfo,
+  ConnectorType,
+  InputParam,
+  UserAuthConnectorType,
+} from '@zipper/types';
 import { useForm } from 'react-hook-form';
 import { trpc } from '~/utils/trpc';
 import { AppQueryOutput } from '~/types/trpc';
@@ -13,7 +18,7 @@ import { getLogger } from '~/utils/app-console';
 import { prettyLog, PRETTY_LOG_TOKENS } from '~/utils/pretty-log';
 
 type UserAuthConnector = {
-  type: ConnectorType;
+  type: UserAuthConnectorType;
   appId: string;
   isUserAuthRequired: boolean;
   userScopes: string[];
