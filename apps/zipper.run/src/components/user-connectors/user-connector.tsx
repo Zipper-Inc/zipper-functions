@@ -1,8 +1,8 @@
 import { Button, VStack, Text, HStack } from '@chakra-ui/react';
 import {
   ConnectorActionProps,
-  ConnectorType,
   UserAuthConnector,
+  UserAuthConnectorType,
 } from '@zipper/types';
 import { SiOpenai, SiZendesk } from 'react-icons/si';
 import { FiGithub } from 'react-icons/fi';
@@ -10,7 +10,10 @@ import { BsSlack } from 'react-icons/bs';
 import { IconBaseProps, IconType } from 'react-icons';
 import { AuthedConnectorType, authedUserGetters } from '@zipper/utils';
 
-const connectors: Record<ConnectorType, { icon: IconType; name: string }> = {
+const connectors: Record<
+  UserAuthConnectorType,
+  { icon: IconType; name: string }
+> = {
   github: {
     name: 'GitHub',
     icon: FiGithub,
@@ -18,14 +21,6 @@ const connectors: Record<ConnectorType, { icon: IconType; name: string }> = {
   slack: {
     name: 'Slack',
     icon: BsSlack,
-  },
-  openai: {
-    name: 'OpenAI',
-    icon: SiOpenai,
-  },
-  zendesk: {
-    name: 'Zendesk',
-    icon: SiZendesk,
   },
 };
 

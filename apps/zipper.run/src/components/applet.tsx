@@ -223,36 +223,6 @@ export function AppPage({
           router.reload();
         },
       },
-      openai: {
-        authUrl: '#',
-        onDelete: async () => {
-          if (token) {
-            await removeAppConnectorUserAuth({
-              appId,
-              type: 'openai',
-              token,
-            });
-          } else {
-            deleteCookie(ZIPPER_TEMP_USER_ID_COOKIE_NAME);
-          }
-          router.reload();
-        },
-      },
-      zendesk: {
-        authUrl: '#',
-        onDelete: async () => {
-          if (token) {
-            await removeAppConnectorUserAuth({
-              appId,
-              type: 'zendesk',
-              token,
-            });
-          } else {
-            deleteCookie(ZIPPER_TEMP_USER_ID_COOKIE_NAME);
-          }
-          router.reload();
-        },
-      },
     };
   };
 

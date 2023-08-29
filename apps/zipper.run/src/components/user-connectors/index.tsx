@@ -2,13 +2,13 @@ import { VStack, Text, HStack, Button, Spacer } from '@chakra-ui/react';
 import UserConnector from './user-connector';
 import {
   ConnectorActionProps,
-  ConnectorType,
   UserAuthConnector,
+  UserAuthConnectorType,
 } from '@zipper/types';
 
 export type AuthUserConnectorsProps = {
   userAuthConnectors: UserAuthConnector[];
-  actions: Record<ConnectorType, ConnectorActionProps>;
+  actions: Record<UserAuthConnectorType, ConnectorActionProps>;
   appTitle: string;
   setSkipAuth: (b: boolean) => void;
   skipAuth: boolean;
