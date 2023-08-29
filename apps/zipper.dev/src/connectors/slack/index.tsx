@@ -45,7 +45,7 @@ import { useUser } from '~/hooks/use-user';
 export const slackConnector = createConnector({
   id: 'slack',
   name: 'Slack',
-  description: `Use Slack's APIs to build interactive apps`,
+  description: `Use Slack's APIs to build interactive apps.`,
   icon: <FiSlack fill="black" />,
   code,
   userScopes,

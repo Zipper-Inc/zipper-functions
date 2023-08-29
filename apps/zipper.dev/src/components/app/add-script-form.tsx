@@ -127,6 +127,7 @@ export default function AddScriptForm({
               }
               return acc;
             }, [] as Array<Connector>)
+            .sort((a, b) => a.name.localeCompare(b.name))
             .map((connector) => {
               if (!connectors.find((c: any) => c.type === connector.id)) {
                 return (
