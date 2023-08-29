@@ -121,9 +121,9 @@ export default function AddScriptForm({
           {Object.values(defaultConnectors)
             .reduce((acc, curr) => {
               if (!connectors.find((c: any) => c.type === curr.id)) {
-                acc.push(curr);
-              } else {
                 acc.unshift(curr);
+              } else {
+                acc.push(curr);
               }
               return acc;
             }, [] as Array<Connector>)
@@ -166,6 +166,8 @@ export default function AddScriptForm({
                     variant="ghost"
                     justifyContent="start"
                     fontWeight="normal"
+                    onClick={() => undefined}
+                    color="fg.400"
                     _hover={{
                       bg: 'bg.100',
                       cursor: 'default',
