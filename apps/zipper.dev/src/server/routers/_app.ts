@@ -18,7 +18,6 @@ import { appAccessTokenRouter } from './appAccessToken.router';
 import { organizationRouter } from './organization.router';
 import { versionRouter } from './version.router';
 import { aiRouter } from './ai.router';
-import { githubAppConnector } from '~/connectors/github-app';
 import { githubAppConnectorRouter } from './githubAppConnector.router';
 
 /**
