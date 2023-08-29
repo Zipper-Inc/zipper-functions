@@ -157,7 +157,7 @@ export function PlaygroundSidebar({
                   </PopoverTrigger>
                   <PopoverContent>
                     <PopoverArrow />
-                    <PopoverBody color="chakra-body-text" p={3}>
+                    <PopoverBody color="chakra-body-text" p="0">
                       <AddScriptForm
                         connectors={app.connectors}
                         appId={app.id}

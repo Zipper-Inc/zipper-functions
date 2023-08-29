@@ -8,6 +8,7 @@ import {
   Text,
   Flex,
   Divider,
+  Button,
 } from '@chakra-ui/react';
 import { useForm } from 'react-hook-form';
 import { trpc } from '~/utils/trpc';
@@ -17,6 +18,7 @@ import { useEditorContext } from '../context/editor-context';
 import { slugifyAllowDot } from '~/utils/slugify';
 import { useScriptFilename } from '~/hooks/use-script-filename';
 import { HiCheck } from 'react-icons/hi';
+import { Connector } from '~/connectors/createConnector';
 
 export default function AddScriptForm({
   appId,
@@ -62,7 +64,7 @@ export default function AddScriptForm({
 
   return (
     <VStack alignItems="stretch" spacing={0} gap={4} minW={0}>
-      <VStack alignItems="stretch">
+      <VStack alignItems="stretch" p="3" pb="1">
         <Text size="sm" color="fg.700" fontWeight="medium">
           Create a script
         </Text>
@@ -112,17 +114,29 @@ export default function AddScriptForm({
       </VStack>
       <Divider />
       <VStack alignItems="stretch">
-        <Text size="sm" color="fg.700" fontWeight="medium">
+        <Text size="sm" color="fg.700" fontWeight="medium" px="3" pb="1">
           Add a pre-built connector
         </Text>
-        <VStack align="stretch">
-          {Object.values(defaultConnectors).map((connector) => {
-            if (!connectors.find((c: any) => c.type === connector.id)) {
-              return (
-                <HStack key={connector.id}>
-                  {connector.icon}
-                  <Link
+        <VStack align="stretch" spacing="0" pb="2">
+          {Object.values(defaultConnectors)
+            .reduce((acc, curr) => {
+              if (!connectors.find((c: any) => c.type === curr.id)) {
+                acc.push(curr);
+              } else {
+                acc.unshift(curr);
+              }
+              return acc;
+            }, [] as Array<Connector>)
+            .map((connector) => {
+              if (!connectors.find((c: any) => c.type === connector.id)) {
+                return (
+                  <Button
+                    variant="ghost"
                     key={connector.id}
+                    justifyContent="start"
+                    fontWeight="normal"
+                    height="3.2rem"
+                    py="3"
                     onClick={() => {
                       addScript.mutateAsync({
                         name: `${connector.id}-connector`,
@@ -133,29 +147,49 @@ export default function AddScriptForm({
                       });
                     }}
                   >
-                    {connector.name}
-                  </Link>
-                </HStack>
-              );
-            } else {
-              return (
-                <HStack
-                  key={connector.id}
-                  justifyContent="space-between"
-                  spacing={4}
-                >
-                  <HStack>
-                    {connector.icon}
-                    <Text>{connector.name}</Text>
-                  </HStack>
-                  <HStack color="fg.400" spacing={1} fontSize="xs">
-                    <Text>CONNECTED</Text>
-                    <HiCheck />
-                  </HStack>
-                </HStack>
-              );
-            }
-          })}
+                    <VStack align="start" spacing="0.5">
+                      <HStack key={connector.id}>
+                        {connector.icon}
+                        <Text>{connector.name}</Text>
+                      </HStack>
+                      {connector.description && (
+                        <Text fontSize="xs" color="fg.500" pl="6">
+                          {connector.description}
+                        </Text>
+                      )}
+                    </VStack>
+                  </Button>
+                );
+              } else {
+                return (
+                  <Button
+                    variant="ghost"
+                    justifyContent="start"
+                    fontWeight="normal"
+                    _hover={{
+                      bg: 'bg.100',
+                      cursor: 'default',
+                    }}
+                  >
+                    <HStack
+                      key={connector.id}
+                      w="full"
+                      justifyContent="space-between"
+                      spacing={4}
+                    >
+                      <HStack>
+                        {connector.icon}
+                        <Text>{connector.name}</Text>
+                      </HStack>
+                      <HStack color="fg.400" spacing={1} fontSize="xs">
+                        <Text>CONNECTED</Text>
+                        <HiCheck />
+                      </HStack>
+                    </HStack>
+                  </Button>
+                );
+              }
+            })}
         </VStack>
       </VStack>
     </VStack>

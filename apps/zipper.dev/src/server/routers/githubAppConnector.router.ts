@@ -127,6 +127,7 @@ export const githubAppConnectorRouter = createRouter()
 
       const secrets = secretKeys.reduce((acc, key) => {
         let valueToStore = json[key];
+        if (!valueToStore) return acc;
         if (key === 'pem') {
           valueToStore = json[key].toString('base64');
         }
@@ -164,6 +165,30 @@ export const githubAppConnectorRouter = createRouter()
 
       secretKeys.forEach((key) => {
         delete json[key];
+      });
+
+      // useful to have the app id because it's required to make API calls
+      await prisma.secret.upsert({
+        where: {
+          appId_key: {
+            appId: appId!,
+            key: 'GITHUB_APP_ID',
+          },
+        },
+        create: {
+          appId,
+          key: 'GITHUB_APP_ID',
+          encryptedValue: encryptToBase64(
+            json.id.toString(),
+            process.env.ENCRYPTION_KEY!,
+          ),
+        },
+        update: {
+          encryptedValue: encryptToBase64(
+            json.id.toString(),
+            process.env.ENCRYPTION_KEY!,
+          ),
+        },
       });
 
       const connector = await prisma.appConnector.update({

@@ -16,6 +16,7 @@ import { UseQueryResult } from 'react-query';
 export const zendeskConnector = createConnector({
   id: 'zendesk',
   name: 'Zendesk',
+  description: `Query data or build embeddable applets`,
   icon: <SiZendesk />,
   code,
   userScopes,

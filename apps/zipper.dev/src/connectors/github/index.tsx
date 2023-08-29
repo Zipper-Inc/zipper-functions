@@ -46,7 +46,8 @@ import { GithubConnectorAuthMetadata } from '@zipper/types';
 
 export const githubConnector = createConnector({
   id: 'github',
-  name: 'GitHub',
+  name: 'GitHub OAuth',
+  description: `Access GitHub's API as a user`,
   icon: <VscGithub />,
   code,
   userScopes: scopes,

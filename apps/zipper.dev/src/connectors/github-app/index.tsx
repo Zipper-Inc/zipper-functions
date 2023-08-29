@@ -42,6 +42,7 @@ import { useEditorContext } from '~/components/context/editor-context';
 export const githubAppConnector = createConnector({
   id: 'github-app',
   name: 'GitHub App',
+  description: 'Build GitHub bot & receive webhooks',
   icon: <VscGithubInverted />,
   code,
   userScopes: scopes,
@@ -223,6 +224,7 @@ function GitHubAppConnectorForm({ appId }: { appId: string }) {
                           <HStack w="full" pt="2" spacing="4">
                             <Button
                               as={Link}
+                              target="_blank"
                               colorScheme="primary"
                               href={`${metadata.html_url}/installations/select_target`}
                               _hover={{ textDecoration: 'none' }}
@@ -234,6 +236,7 @@ function GitHubAppConnectorForm({ appId }: { appId: string }) {
                               <HiOutlineCog />
                               <Link
                                 _hover={{ textDecoration: 'none' }}
+                                target="_blank"
                                 href={metadata.html_url.replace(
                                   'apps',
                                   'settings/apps',
@@ -344,7 +347,11 @@ function GitHubAppConnectorForm({ appId }: { appId: string }) {
                                 {scripts
                                   .filter((s) => s.isRunnable)
                                   .map((s) => (
-                                    <option value={s.filename} key={s.id}>
+                                    <option
+                                      value={s.filename}
+                                      key={s.id}
+                                      selected={s.filename === webhookPath}
+                                    >
                                       {s.filename}
                                     </option>
                                   ))}
