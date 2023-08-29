@@ -381,3 +381,13 @@ model AllowListIdentifier {
 
   @@map("allow_list_identifiers")
 }
+
+model SlackZipperSlashCommandInstall {
+  teamId                String
+  appId                 String
+  encryptedBotToken     String
+  createdAt             DateTime @default(now())
+
+  @@unique([teamId, appId])
+  @@map("slack_zipper_slash_command_installs")
+}

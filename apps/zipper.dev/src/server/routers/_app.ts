@@ -19,6 +19,7 @@ import { organizationRouter } from './organization.router';
 import { versionRouter } from './version.router';
 import { aiRouter } from './ai.router';
 import { githubAppConnectorRouter } from './githubAppConnector.router';
+import { slackRouter } from './slack.router';
 
 /**
  * Create your application's root router
@@ -51,6 +52,7 @@ export const trpcRouter = createRouter()
   .merge('appEditor.', appEditorRouter)
   .merge('appRun.', appRunRouter)
   .merge('slackConnector.', slackConnectorRouter)
+  .merge('slack.', slackRouter)
   .merge('githubConnector.', githubConnectorRouter)
   .merge('githubAppConnector.', githubAppConnectorRouter)
   .merge('resourceOwnerSlug.', resourceOwnerSlugRouter)
