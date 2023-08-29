@@ -17,7 +17,6 @@ export type Props = {
 };
 
 export const parsePlaygroundQuery = (query: NextRouter['query']): Props => {
-  console.log('ppq', { query });
   const resourceOwnerSlug = query['resource-owner'] as string;
   const appSlug = query['app-slug'] as string;
 
@@ -34,6 +33,5 @@ export const parsePlaygroundQuery = (query: NextRouter['query']): Props => {
     if (filenameFromUrl) filename = filenameFromUrl;
   }
 
-  console.log('ppq', { resourceOwnerSlug, appSlug, tab, filename });
   return { resourceOwnerSlug, appSlug, tab, filename };
 };
