@@ -329,7 +329,7 @@ function GitHubAppConnectorForm({ appId }: { appId: string }) {
                                 onChange={eventsOnChange as SelectOnChange}
                               />
                             </FormControl>
-                            <FormControl>
+                            <FormControl pb="6">
                               <FormLabel color={'fg.500'}>
                                 Webhook Handler
                               </FormLabel>
