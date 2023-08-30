@@ -1,4 +1,9 @@
-import { LoadResponseModule } from '@deno/eszip/types/loader';
+import type { NextRequest } from 'next/server';
+import type { LoadResponseModule } from '@deno/eszip/types/loader';
+import type { BuildCache, CacheRecord } from './eszip-build-cache';
+import fetch from 'node-fetch';
+
+export const X_ZIPPER_ESZIP_BUILD_HEADER = 'X-Zipper-Eszip-Build';
 
 export const TYPESCRIPT_CONTENT_HEADERS = {
   'content-type': 'text/typescript',
@@ -24,6 +29,10 @@ export function isZipperImportUrl(specifier: string) {
   }
 }
 
+export function hasZipperEszipHeader(req: NextRequest) {
+  return req.headers.get(X_ZIPPER_ESZIP_BUILD_HEADER) === 'true';
+}
+
 export function addJsxPragma(code: string) {
   return code.replace(
     /^/,
@@ -43,4 +52,43 @@ export function applyTsxHack(
     content: shouldAddJsxPragma ? addJsxPragma(code) : code,
     kind: 'module',
   } as LoadResponseModule;
+}
+
+export async function getModule(specifier: string, buildCache?: BuildCache) {
+  const shouldUseCache = !!buildCache && !isZipperImportUrl(specifier);
+
+  if (shouldUseCache) {
+    const cachedModule = await buildCache.get(specifier);
+    if (cachedModule) return cachedModule;
+  }
+
+  const response = await fetch(specifier, {
+    headers: {
+      [X_ZIPPER_ESZIP_BUILD_HEADER]: 'true',
+    },
+    redirect: 'follow',
+  });
+
+  if (response.status !== 200) {
+    // ensure the body is read as to not leak resources
+    await response.arrayBuffer();
+    return undefined;
+  }
+
+  const content = await response.text();
+  const headers: Record<string, string> = {};
+  response.headers.forEach((value, key) => {
+    headers[key.toLowerCase()] = value;
+  });
+
+  const mod = {
+    kind: 'module',
+    specifier: response.url,
+    headers,
+    content,
+  } as CacheRecord['module'];
+
+  if (shouldUseCache) await buildCache.set(specifier, mod);
+
+  return mod;
 }

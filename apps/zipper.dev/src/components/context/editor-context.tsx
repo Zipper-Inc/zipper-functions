@@ -30,6 +30,7 @@ import { AppQueryOutput } from '~/types/trpc';
 import { getAppVersionFromHash } from '~/utils/hashing';
 import { isZipperImportUrl } from '~/utils/eszip-utils';
 import Fuse from 'fuse.js';
+import { parsePlaygroundQuery, PlaygroundTab } from '~/utils/playground.utils';
 
 /** This string indicates which errors we own in the editor */
 const ZIPPER_LINT = 'zipper-lint';
@@ -85,6 +86,8 @@ export type EditorContextType = {
       n: Record<string, Zipper.Log.Message[]>,
     ) => Record<string, Zipper.Log.Message[]>,
   ) => void;
+  resourceOwnerSlug: string;
+  appSlug: string;
 };
 
 export const EditorContext = createContext<EditorContextType>({
@@ -125,6 +128,8 @@ export const EditorContext = createContext<EditorContextType>({
   addLog: noop,
   markLogsAsRead: noop,
   setLogStore: noop,
+  resourceOwnerSlug: '',
+  appSlug: '',
 });
 
 const MAX_RETRIES_FOR_EXTERNAL_IMPORT = 3;
@@ -167,7 +172,6 @@ async function fetchImport({
         isZipperImportUrl(url) || url.endsWith('tsx') ? 'tsx' : 'ts',
       );
 
-      console.log('bundle?', { url, uri, src });
       if (!monacoRef?.current?.editor.getModel(uri)) {
         monacoRef?.current?.editor.createModel(src, 'typescript', uri);
       }
@@ -480,14 +484,20 @@ const EditorContextProvider = ({
         setInputError(e.message);
       }
 
-      if (router.query.filename !== currentScript.filename) {
+      const { tab: playgroundTab, filename: playgroundFilename } =
+        parsePlaygroundQuery(router.query);
+
+      if (
+        playgroundTab === PlaygroundTab.Code &&
+        playgroundFilename !== currentScript.filename
+      ) {
         router.push(
           {
-            pathname: '/[resource-owner]/[app-slug]/edit/[filename]',
+            pathname: '/[resource-owner]/[app-slug]/[...playground]',
             query: {
               'app-slug': appSlug,
               'resource-owner': resourceOwnerSlug,
-              filename: currentScript?.filename,
+              playground: [PlaygroundTab.Code, currentScript?.filename],
             },
           },
           undefined,
@@ -737,6 +747,8 @@ const EditorContextProvider = ({
         preserveLogs,
         setPreserveLogs,
         lastReadLogsTimestamp,
+        resourceOwnerSlug: resourceOwnerSlug as string,
+        appSlug: appSlug as string,
       }}
     >
       {children}

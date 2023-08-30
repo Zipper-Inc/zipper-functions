@@ -376,7 +376,7 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
                         {
                           onSuccess: (fork) => {
                             router.push(
-                              `/${fork.resourceOwner.slug}/${fork.slug}/edit`,
+                              `/${fork.resourceOwner.slug}/${fork.slug}/src`,
                             );
 
                             resetForm();

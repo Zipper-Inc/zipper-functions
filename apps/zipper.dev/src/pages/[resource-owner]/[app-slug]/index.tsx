@@ -81,7 +81,7 @@ const AppPage: NextPageWithLayout = () => {
         </Heading>
         <Heading
           as={Link}
-          href={`/${resourceOwnerSlug}/${appSlug}/edit/${
+          href={`/${resourceOwnerSlug}/${appSlug}/src/${
             appQuery.data.scriptMain?.script.filename || 'main.ts'
           }`}
           color="purple.700"
@@ -173,7 +173,7 @@ const AppPage: NextPageWithLayout = () => {
       </VStack>
       <HStack position="relative" flex={3}>
         <Link
-          href={`/${resourceOwnerSlug}/${appSlug}/edit/${
+          href={`/${resourceOwnerSlug}/${appSlug}/src/${
             appQuery.data.scriptMain?.script.filename || 'main.ts'
           }`}
           _hover={{ textDecoration: 'none' }}
@@ -236,7 +236,7 @@ const AppPage: NextPageWithLayout = () => {
             colorScheme="blue"
             as={Link}
             paddingX={6}
-            href={`/${resourceOwnerSlug}/${appSlug}/edit/${
+            href={`/${resourceOwnerSlug}/${appSlug}/src/${
               appQuery.data.scriptMain?.script.filename || 'main.ts'
             }`}
             _hover={{ transform: 'scale(1.1)', textDecoration: 'none' }}
