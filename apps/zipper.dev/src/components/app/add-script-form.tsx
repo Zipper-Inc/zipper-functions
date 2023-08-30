@@ -117,7 +117,7 @@ export default function AddScriptForm({
         <Text size="sm" color="fg.700" fontWeight="medium" px="3" pb="1">
           Add a pre-built connector
         </Text>
-        <VStack align="stretch" spacing="0" pb="2">
+        <VStack align="stretch" spacing="0" pb="4">
           {Object.values(defaultConnectors)
             .reduce((acc, curr) => {
               if (!connectors.find((c: any) => c.type === curr.id)) {
