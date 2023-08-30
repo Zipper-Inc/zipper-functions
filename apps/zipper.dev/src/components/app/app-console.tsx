@@ -99,7 +99,6 @@ export function AppConsole({ logs }: { logs: LogMessage[] }) {
           border="solid 1px"
           backgroundColor="fg.100"
           borderColor="fg.200"
-          borderTopRadius="md"
         >
           <FormControl display="flex" alignItems="center" height={6}>
             <Switch
@@ -133,7 +132,6 @@ export function AppConsole({ logs }: { logs: LogMessage[] }) {
       <Box
         color="fg.200"
         borderColor="fg.200"
-        borderBottomRadius="md"
         px={2}
         border="solid 1px"
         borderTop="none"

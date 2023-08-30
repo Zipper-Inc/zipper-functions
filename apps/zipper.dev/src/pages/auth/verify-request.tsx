@@ -51,7 +51,6 @@ export default function VerifyRequest() {
             px={4}
             py={10}
             shadow="xl"
-            rounded="md"
             display="flex"
             flexDirection="column"
             gap={4}

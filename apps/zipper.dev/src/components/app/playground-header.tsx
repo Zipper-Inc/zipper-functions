@@ -208,7 +208,6 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
               {app.canUserEdit && (
                 <Button
                   variant="ghost"
-                  rounded="full"
                   size="sm"
                   colorScheme="purple"
                   p={0}

@@ -25,7 +25,6 @@ function baseStyleList(props: Record<string, any>) {
     w: 'full',
     py: '2',
     zIndex: 1,
-    borderRadius: 'md',
     borderWidth: '1px',
     maxH: '64',
     overflowY: 'auto',
@@ -78,7 +77,6 @@ function baseStyleItem(props: Record<string, any>) {
 
 function baseStyleSelectedItem(props: Record<string, any>) {
   return {
-    borderRadius: 'full',
     variant: 'solid',
     colorscheme: props.colorscheme,
   };

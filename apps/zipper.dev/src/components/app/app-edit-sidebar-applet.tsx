@@ -160,7 +160,6 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
         p={4}
         backgroundColor="fg.100"
         position="relative"
-        rounded="md"
         border="1px"
         borderColor="fg.200"
         w="full"
@@ -194,7 +193,6 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
                       border="1px solid"
                       p="4"
                       borderColor="red.200"
-                      borderRadius="md"
                       backgroundColor="bgColor"
                       boxShadow="sm"
                       alignItems="start"

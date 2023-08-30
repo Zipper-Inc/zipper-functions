@@ -52,7 +52,6 @@ export const ScriptItem: React.FC<ScriptItemProps> = ({
 
   return (
     <HStack
-      rounded="md"
       px={3}
       py={isRenaming ? 0 : 1}
       background={

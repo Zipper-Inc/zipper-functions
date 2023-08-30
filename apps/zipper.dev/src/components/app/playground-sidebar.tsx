@@ -133,7 +133,6 @@ export function PlaygroundSidebar({
         background={bgGradient}
         color="bgColor"
         flex={1}
-        rounded="2xl"
         paddingX={2}
         paddingY={4}
         spacing={4}

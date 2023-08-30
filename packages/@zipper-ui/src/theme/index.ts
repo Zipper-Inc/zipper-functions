@@ -245,6 +245,20 @@ export const semanticTokens = {
   },
 };
 
+// 📐 Embrace the right angle
+const borderRadius = {
+  radii: {
+    none: '0',
+    sm: '0',
+    base: '0',
+    md: '0',
+    lg: '0',
+    xl: '0',
+    '2xl': '0',
+    '3xl': '0',
+    full: '9999px',
+  },
+};
 export const fonts = {
   body: '"InterVariable", sans-serif',
   heading: '"InterVariable", sans-serif',
@@ -310,4 +324,5 @@ export const theme = extendTheme({
   },
   semanticTokens,
   fonts,
+  ...borderRadius,
 });

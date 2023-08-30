@@ -300,7 +300,6 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
                 w="full"
                 border="1px solid"
                 borderColor="fg.200"
-                rounded="md"
                 align={'stretch'}
                 spacing="0"
               >
@@ -403,7 +402,6 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
               <VStack
                 border="1px solid"
                 borderColor="fg.100"
-                borderRadius={'lg'}
                 backgroundColor="fg.50"
                 py="10"
                 color={'fg.500'}
@@ -416,12 +414,7 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
             )}
           {appAccessTokenQuery.data && appAccessTokenQuery.data.length > 0 && (
             <>
-              <VStack
-                align={'stretch'}
-                border="1px solid"
-                borderColor="fg.100"
-                borderRadius={'lg'}
-              >
+              <VStack align={'stretch'} border="1px solid" borderColor="fg.100">
                 {appAccessTokenQuery.data.map((token) => (
                   <HStack
                     borderBottom={'1px solid'}
@@ -475,7 +468,7 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
             </Text>
           </HStack>
           <Divider mb="4" mt={2} />
-          <VStack border="1px solid" borderColor="red.100" borderRadius={'lg'}>
+          <VStack border="1px solid" borderColor="red.100">
             <VStack w="full" p="4" align="start">
               <VStack align="start" w="full">
                 <HStack w="full">

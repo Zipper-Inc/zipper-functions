@@ -24,13 +24,7 @@ export default function UserInputs({
   skipAuth,
 }: UserInputsProps) {
   return (
-    <VStack
-      p={6}
-      alignItems="stretch"
-      bgColor="fg.50"
-      rounded="2xl"
-      spacing="2.5"
-    >
+    <VStack p={6} alignItems="stretch" bgColor="fg.50" spacing="2.5">
       {inputs.length > 0 && (
         <Box mb={4}>
           <FunctionInputs

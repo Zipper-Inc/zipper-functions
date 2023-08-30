@@ -202,7 +202,6 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
               w="full"
               border="1px solid"
               borderColor="fg.200"
-              rounded="md"
               align={'stretch'}
               spacing="0"
             >

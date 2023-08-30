@@ -37,7 +37,6 @@ export const TabButton: React.FC<TabButtonProps> = ({
     <Tab
       px={4}
       py={2}
-      rounded="md"
       _selected={{
         backgroundColor,
         fontWeight: 'bold',
