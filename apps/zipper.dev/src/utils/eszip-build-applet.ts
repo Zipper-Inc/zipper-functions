@@ -117,7 +117,6 @@ export async function build({
      */
     if (isZipperImportUrl(specifier)) {
       const mod = await getModule(specifier);
-      console.log('zipperimport', { specifier, module: mod });
       return {
         ...mod,
         ...applyTsxHack(specifier, mod?.content),
