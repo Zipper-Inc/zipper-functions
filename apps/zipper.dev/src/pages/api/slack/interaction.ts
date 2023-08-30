@@ -20,7 +20,11 @@ async function processRerun(res: NextApiResponse, payload: any) {
     payload.view.hash,
   );
 
-  const updateResponse = await updateSlackModal(newView);
+  const updateResponse = await updateSlackModal(
+    newView,
+    payload.api_app_id,
+    payload.team.id,
+  );
   if (__DEBUG__) {
     console.log('slack update response for rerun');
     console.log(await updateResponse.json());
@@ -42,7 +46,11 @@ async function processFilenameSelection(res: NextApiResponse, payload: any) {
     payload.view.hash,
   );
 
-  const updateResponse = await updateSlackModal(newView);
+  const updateResponse = await updateSlackModal(
+    newView,
+    payload.api_app_id,
+    payload.team.id,
+  );
   if (__DEBUG__) {
     console.log('slack update response for filename selection');
     console.log(await updateResponse.json());

@@ -1,15 +1,34 @@
 import type { NextApiResponse } from 'next';
 import { initApplet } from '@zipper-inc/client-js';
+import { prisma } from '../../../server/prisma';
+import { decryptFromBase64 } from '@zipper/utils';
 
 // TODO: The bot token needs to come from slack and be stored in a DB
-const { SLACK_BOT_TOKEN } = process.env;
 const SLACK_VIEW_UPDATE_URL = 'https://slack.com/api/views.update';
 const SLACK_VIEW_OPEN_URL = 'https://slack.com/api/views.open';
 const ZIPPER_APP_INFO_URL = 'https://zipper.dev/api/app/info/';
-const HEADERS = {
-  ['Content-Type']: 'application/json; charset=utf-8',
-  Authorization: `Bearer ${SLACK_BOT_TOKEN}`,
-};
+const MAX_TEXT_LENGTH = 2000;
+
+async function buildHeaders(slackAppId: string, slackTeamId: string) {
+  const installation = await prisma.slackZipperSlashCommandInstall.findFirst({
+    where: {
+      appId: slackAppId,
+      teamId: slackTeamId,
+    },
+  });
+
+  if (!installation) throw new Error('Instalation not found');
+
+  const token = decryptFromBase64(
+    installation.encryptedBotToken,
+    process.env.ENCRYPTION_KEY,
+  );
+
+  return {
+    ['Content-Type']: 'application/json; charset=utf-8',
+    Authorization: `Bearer ${token}`,
+  };
+}
 
 export function runApp(slug: string, path: string, inputs: any) {
   return initApplet(slug)
@@ -61,18 +80,26 @@ export function buildSlackModalView({
   };
 }
 
-export function updateSlackModal(view: any) {
+export async function updateSlackModal(
+  view: any,
+  slackAppId: string,
+  slackTeamId: string,
+) {
   return fetch(SLACK_VIEW_UPDATE_URL, {
     method: 'POST',
-    headers: HEADERS,
+    headers: await buildHeaders(slackAppId, slackTeamId),
     body: JSON.stringify(view),
   });
 }
 
-export function openSlackModal(view: any) {
+export async function openSlackModal(
+  view: any,
+  slackAppId: string,
+  slackTeamId: string,
+) {
   return fetch(SLACK_VIEW_OPEN_URL, {
     method: 'POST',
-    headers: HEADERS,
+    headers: await buildHeaders(slackAppId, slackTeamId),
     body: JSON.stringify(view),
   });
 }
@@ -135,9 +162,15 @@ export function buildSelectElement(
   };
 }
 
+function getValuesFromDetails(details: ZipperInputDetails): string[] {
+  if (!details.values) return [];
+  return details.values.map((v) => {
+    return typeof v === 'string' ? v : v.value;
+  });
+}
+
 function buildEnumInput({ key, details, optional }: ZipperInput) {
-  const values = details?.values || [];
-  const options = values.map((v: ZipperInputDetailValue) => v.value);
+  const options = details ? getValuesFromDetails(details) : [];
 
   return {
     type: 'input',
@@ -146,7 +179,7 @@ function buildEnumInput({ key, details, optional }: ZipperInput) {
       type: 'plain_text',
       text: key,
     },
-    element: buildSelectElement(key, `Select ${key}`, options),
+    element: buildSelectElement(key, `Select ${key}`, options as string[]),
     optional,
   };
 }
@@ -253,7 +286,7 @@ export type ZipperInputDetailValue = {
 };
 
 export type ZipperInputDetails = {
-  values: ZipperInputDetailValue[];
+  values: ZipperInputDetailValue[] | string[];
 };
 
 export type ZipperInput = {
@@ -299,10 +332,10 @@ function parseSubmittedInput(input: any) {
 export function buildRunUrlBodyParams(payload: any) {
   const inputs = payload.view.state.values;
   const inputKeys = Object.keys(inputs);
-  const queryString = inputKeys.reduce((acc: any, k: string) => {
+  const queryParams = inputKeys.reduce((acc: any, k: string) => {
     return { ...acc, ...parseSubmittedInput(inputs[k]) };
   }, {});
-  return queryString;
+  return queryParams;
 }
 
 export type PrivateMetadata = {
@@ -349,14 +382,46 @@ export async function buildInputModal(
 }
 
 export function buildRunResultView(slug: string, filename: string, data: any) {
-  const blocks = [
+  // Slack has a 250kb limit on view size so trim the response if needed.
+  const fullText = JSON.stringify(data);
+  const truncateText = fullText.length > MAX_TEXT_LENGTH;
+
+  const resultsBlocks: any[] = [
     {
       type: 'section',
       text: {
         type: 'plain_text',
-        text: JSON.stringify(data),
+        text: truncateText
+          ? `${fullText.substring(0, MAX_TEXT_LENGTH)}...`
+          : fullText,
       },
     },
+  ];
+
+  if (truncateText) {
+    const url = `https://${slug}.zipper.run/run/${filename}`
+    resultsBlocks.push({
+      type: 'section',
+      text: {
+        type: 'mrkdwn',
+        text: 'Showing truncated results',
+      },
+      accessory: {
+        type: 'button',
+        text: {
+          type: 'plain_text',
+          text: 'Full results',
+          emoji: true,
+        },
+        value: 'full_results',
+        url,
+        action_id: 'zipper_link',
+      },
+    });
+  }
+
+  const blocks = [
+    ...resultsBlocks,
     {
       type: 'section',
       text: {

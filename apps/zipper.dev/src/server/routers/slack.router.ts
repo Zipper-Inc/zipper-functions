@@ -3,6 +3,9 @@ import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { createRouter } from '../createRouter';
 import fetch from 'node-fetch';
+import { prisma } from '../prisma';
+import { encryptToBase64 } from '@zipper/utils';
+import { Prisma } from '@prisma/client';
 
 export const slackRouter = createRouter().mutation('exchangeCodeForToken', {
   input: z.object({
@@ -27,16 +30,38 @@ export const slackRouter = createRouter().mutation('exchangeCodeForToken', {
       }),
     });
 
-    const json = await res.json();
+    const accessJson = await res.json();
 
-    console.log('FROM SLACK: ', json);
-
-    if (!json.ok) {
+    if (!accessJson.ok) {
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
-        message: `Something went wrong while exchanging the code for a token: ${json.error}`,
+        message: `Something went wrong while exchanging the code for a token: ${accessJson.error}`,
       });
     }
+
+    const encryptedBotToken = encryptToBase64(
+      accessJson.access_token,
+      process.env.ENCRYPTION_KEY!,
+    );
+
+    const defaultSelect =
+      Prisma.validator<Prisma.SlackZipperSlashCommandInstallSelect>()({
+        teamId: true,
+        appId: true,
+        encryptedBotToken: true,
+        createdAt: true,
+      });
+
+    const installation = await prisma.slackZipperSlashCommandInstall.create({
+      data: {
+        teamId: accessJson.team.id,
+        appId: accessJson.app_id,
+        encryptedBotToken,
+      },
+      select: defaultSelect,
+    });
+
+    if (!installation) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
 
     return {};
   },
