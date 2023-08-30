@@ -252,7 +252,7 @@ const AppPage: NextPageWithLayout = () => {
 export const getServerSideProps: GetServerSideProps = async ({ query }) => {
   return {
     redirect: {
-      destination: `/${query.resourceOwnerSlug}/${query.appSlug}/edit/readme.md`,
+      destination: `/${query['resource-owner']}/${query['app-slug']}/edit/readme.md`,
       permanent: false,
     },
   };
