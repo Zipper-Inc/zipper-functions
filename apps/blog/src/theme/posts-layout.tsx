@@ -1,6 +1,6 @@
 import NextLink from 'next/link';
 import { useRouter } from 'next/router';
-import type { ReactElement, ReactNode } from 'react';
+import type { ReactElement } from 'react';
 import { BasicLayout } from './basic-layout';
 import { useBlogContext } from './blog-context';
 import { collectPostsAndNavs } from './utils/collect';
@@ -50,11 +50,7 @@ const COLORS = {
   },
 };
 
-export function PostsLayout({
-  children,
-}: {
-  children: ReactNode;
-}): ReactElement {
+export function PostsLayout(): ReactElement {
   const { config, opts } = useBlogContext();
   const { posts } = collectPostsAndNavs({ config, opts });
   const router = useRouter();
@@ -90,7 +86,7 @@ export function PostsLayout({
         as="li"
         display="flex"
         key={post.route}
-        h={[post.index === 1 ? '284px' : '272px']}
+        h={{ base: 'auto', lg: post.index === 1 ? '284px' : '272px' }}
         colSpan={post.index === 1 ? 2 : 1}
         position="relative"
         className="post-item"
@@ -124,14 +120,14 @@ export function PostsLayout({
             as={NextLink}
             href={post.route}
             fontFamily="plaak"
-            fontWeight={post.index === 1 ? 400 : 700}
-            lineHeight={post.index === 1 ? '72px' : '40px'}
+            fontWeight={{ base: 700, lg: post.index === 1 ? 400 : 700 }}
+            lineHeight={{ lg: post.index === 1 ? '72px' : '40px' }}
             color={colorSet.color}
             _hover={{
               color: colorSet.hover,
             }}
             margin="0"
-            fontSize={post.index === 1 ? '64px' : '3xl'}
+            fontSize={{ base: '4xl', lg: post.index === 1 ? '64px' : '3xl' }}
           >
             {postTitle}
           </Heading>
@@ -179,12 +175,12 @@ export function PostsLayout({
         flexDir={['column', 'row']}
         maxWidth="container.xl"
         w="full"
-        py="24"
+        py={{ base: 20, lg: 24 }}
         gap={2}
       >
         <Flex align="start" gap={5}>
           <SimpleGrid
-            gridTemplateColumns="repeat(2, 1fr)"
+            gridTemplateColumns={{ base: '1fr', lg: 'repeat(2, 1fr)' }}
             as="ul"
             gap={3}
             flex={1}
@@ -195,6 +191,7 @@ export function PostsLayout({
           <Flex
             direction="column"
             align="center"
+            display={{ base: 'none', lg: 'flex' }}
             flex={1}
             borderRadius="8px"
             justify="space-between"
