@@ -1,3 +1,4 @@
+import type { NextRequest } from 'next/server';
 import type { LoadResponseModule } from '@deno/eszip/types/loader';
 import type { BuildCache, CacheRecord } from './eszip-build-cache';
 import fetch from 'node-fetch';
@@ -26,6 +27,10 @@ export function isZipperImportUrl(specifier: string) {
   } catch (e) {
     return false;
   }
+}
+
+export function hasZipperEszipHeader(req: NextRequest) {
+  return req.headers.get(X_ZIPPER_ESZIP_BUILD_HEADER) === 'true';
 }
 
 export function addJsxPragma(code: string) {
