@@ -1,13 +1,6 @@
 import Avatar from 'boring-avatars';
-import {
-  PURPLE,
-  BLUE,
-  ORANGE,
-  DARK_PURPLE,
-  GRAY,
-  DARK_GRAY,
-  LIGHT_GRAY,
-} from '@zipper/ui';
+import { PURPLE, ORANGE, DARK_PURPLE, GRAY, DARK_GRAY } from '@zipper/ui';
+
 import { useColorModeValue } from '@chakra-ui/react';
 
 export const defaultAvatarColors = [

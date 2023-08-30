@@ -41,12 +41,10 @@ export const TabButton: React.FC<TabButtonProps> = ({
         backgroundColor,
         fontWeight: 'bold',
         textColor,
-        _hover: { transform: 'none' },
       }}
       _hover={{
         backgroundColor,
         textColor,
-        transform: 'scale(1.05)',
       }}
       {...props}
     >
