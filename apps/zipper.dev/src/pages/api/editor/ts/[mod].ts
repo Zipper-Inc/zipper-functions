@@ -1,8 +1,12 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import * as eszip from '@deno/eszip';
-import { BuildCache, getModule } from '~/utils/eszip-build-cache';
+import { BuildCache } from '~/utils/eszip-build-cache';
 import { LoadResponseModule } from '@deno/eszip/types/loader';
-import { isZipperImportUrl, applyTsxHack } from '~/utils/eszip-utils';
+import {
+  isZipperImportUrl,
+  applyTsxHack,
+  getModule,
+} from '~/utils/eszip-utils';
 
 enum ModMode {
   Module = 'module',
