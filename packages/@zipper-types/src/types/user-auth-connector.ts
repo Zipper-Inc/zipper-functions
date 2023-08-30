@@ -1,7 +1,14 @@
-export type ConnectorType = 'github' | 'slack' | 'openai' | 'zendesk';
+export type ConnectorType =
+  | 'github'
+  | 'github-app'
+  | 'slack'
+  | 'openai'
+  | 'zendesk';
+
+export type UserAuthConnectorType = 'github' | 'slack';
 
 export type UserAuthConnector = {
-  type: ConnectorType;
+  type: UserAuthConnectorType;
   appId: string;
   isUserAuthRequired: boolean;
   clientId?: string;

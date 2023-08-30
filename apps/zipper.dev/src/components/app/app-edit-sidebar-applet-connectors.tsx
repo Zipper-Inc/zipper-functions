@@ -159,20 +159,6 @@ export const AppEditSidebarAppletConnectors = () => {
             });
           },
         },
-        openai: {
-          authUrl: '#',
-          onDelete: () => {
-            deleteOpenAISecret.mutateAsync({
-              appId,
-              key: 'OPENAI_API_KEY',
-            });
-          },
-        },
-        zendesk: {
-          authUrl: '#',
-          // eslint-disable-next-line @typescript-eslint/no-empty-function
-          onDelete: () => {},
-        },
       }}
     />
   );

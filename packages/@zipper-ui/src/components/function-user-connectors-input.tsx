@@ -1,5 +1,4 @@
-import { Heading } from '@chakra-ui/react';
-import { ConnectorType, UserAuthConnector } from '@zipper/types';
+import { UserAuthConnector, UserAuthConnectorType } from '@zipper/types';
 import { userConnectorInputs } from './user-connector-inputs';
 
 type ConnectorActionProps = {
@@ -9,7 +8,7 @@ type ConnectorActionProps = {
 
 type FunctionUserConnectorsProps = {
   userAuthConnectors: UserAuthConnector[];
-  actions: Record<ConnectorType, ConnectorActionProps>;
+  actions: Record<UserAuthConnectorType, ConnectorActionProps>;
 };
 
 export const FunctionUserConnectors: React.FC<FunctionUserConnectorsProps> = ({

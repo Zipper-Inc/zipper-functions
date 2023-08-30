@@ -34,7 +34,7 @@ Add some **Markdown**! Here are some ideas:
 - Add a header \`# Title\`
 - Create a list
   - Item 1
-  - Item 2 
+  - Item 2
 - Embed an image ![alt text](image url)
 - Add a [link](https://example.com)
 - **Bold**, *italics*, \`code\`, and more!
@@ -49,7 +49,9 @@ export const scriptRouter = createRouter()
       appId: z.string().uuid(),
       code: z.string().default(DEFAULT_CODE),
       order: z.number(),
-      connectorId: z.enum(['github', 'slack', 'openai', 'zendesk']).optional(),
+      connectorId: z
+        .enum(['github', 'slack', 'openai', 'zendesk', 'github-app'])
+        .optional(),
     }),
     async resolve({ ctx, input }) {
       const { appId, ...data } = input;

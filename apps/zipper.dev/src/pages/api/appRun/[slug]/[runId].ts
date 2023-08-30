@@ -162,7 +162,7 @@ export default async function handler(
         filename: appRun.path,
         editUrl: `${getZipperDotDevUrl().origin}/${resourceOwner?.slug}/${
           appRun.app.slug
-        }/edit/${appRun.path}`,
+        }/src/${appRun.path}`,
       },
     },
   };

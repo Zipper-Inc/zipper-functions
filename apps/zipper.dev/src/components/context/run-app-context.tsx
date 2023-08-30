@@ -1,6 +1,11 @@
 import { createContext, useContext, useState } from 'react';
 import noop from '~/utils/noop';
-import { AppInfo, ConnectorType, InputParam } from '@zipper/types';
+import {
+  AppInfo,
+  ConnectorType,
+  InputParam,
+  UserAuthConnectorType,
+} from '@zipper/types';
 import { useForm } from 'react-hook-form';
 import { trpc } from '~/utils/trpc';
 import { AppQueryOutput } from '~/types/trpc';
@@ -13,7 +18,7 @@ import { getLogger } from '~/utils/app-console';
 import { prettyLog, PRETTY_LOG_TOKENS } from '~/utils/pretty-log';
 
 type UserAuthConnector = {
-  type: ConnectorType;
+  type: UserAuthConnectorType;
   appId: string;
   isUserAuthRequired: boolean;
   userScopes: string[];
@@ -220,6 +225,14 @@ export function RunAppProvider({
     const runStart = performance.now();
     const formValues = formMethods.getValues();
 
+    // ReactHookForm doesn't parse destructured objects correctly i.e. { ...foo }: any
+    // this is a hack but we should fix it upstream
+    if (Object.keys(formValues).includes('{ ')) {
+      const badlyParsedKey = Object.keys(formValues['{ '])[0];
+      if (badlyParsedKey) {
+        formValues[`{ ...${badlyParsedKey}`] = formValues['{ '][badlyParsedKey];
+      }
+    }
     const inputs = getInputsFromFormData(formValues, inputParams);
     const hasInputs = inputs && Object.values(inputs).length;
 

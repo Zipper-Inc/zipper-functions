@@ -17,7 +17,7 @@ const SlackAuth: NextPageWithLayout = () => {
         if (data.redirectTo?.includes('http')) {
           window.location.replace(data.redirectTo);
         } else {
-          router.push(data.redirectTo || `/app/${data.appId}/edit/main.ts`);
+          router.push(data.redirectTo || `/app/${data.appId}/src/main.ts`);
         }
       },
       onError: (error) => {

@@ -1,7 +1,12 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import * as eszip from '@deno/eszip';
-import { BuildCache, getModule } from '~/utils/eszip-build-cache';
+import { BuildCache } from '~/utils/eszip-build-cache';
 import { LoadResponseModule } from '@deno/eszip/types/loader';
+import {
+  isZipperImportUrl,
+  applyTsxHack,
+  getModule,
+} from '~/utils/eszip-utils';
 
 enum ModMode {
   Module = 'module',
@@ -56,7 +61,7 @@ function respondWithRawModule({
   return res
     .status(200)
     .setHeader('Content-Type', 'text/typescript')
-    .send(rootModule.content);
+    .send(rootModule.content.toString());
 }
 
 async function respondWithBundle({
@@ -78,7 +83,16 @@ async function respondWithBundle({
   await eszip.build([rootModule.specifier], async (specifier) => {
     const bundlePath = replaceRedirect ? replaceRedirect(specifier) : specifier;
 
-    if (specifier === rootModule.specifier) {
+    // Handler Zipper Imports
+    if (isZipperImportUrl(specifier)) {
+      const rawModule = await getModule(specifier);
+      const mod = {
+        ...rawModule,
+        ...applyTsxHack(specifier, rawModule?.content, false),
+      };
+      if (mod?.content) bundle[bundlePath] = mod.content;
+      return mod;
+    } else if (specifier === rootModule.specifier) {
       bundle[bundlePath] = rootModule.content;
       return rootModule;
     } else {
@@ -142,7 +156,7 @@ async function respondWithTypesBundle({
   } catch (e) {
     // Just respond with a regular bundle if types fail
     console.error(
-      '[API/TS/[MOD].TS]',
+      '[API/EDITOR/TS/[MOD].TS]',
       `(${moduleUrl})`,
       'Failed to bundle types, sending code bundle\n',
       e,

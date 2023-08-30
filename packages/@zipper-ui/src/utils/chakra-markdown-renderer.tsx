@@ -31,35 +31,35 @@ function getCoreProps(props: GetCoreProps): any {
 export const defaults: Components & { heading: Components['h1'] } = {
   h1: (props) => {
     return (
-      <Heading as="h1" size="xl" color="fgText" py={2}>
+      <Heading as="h1" size="xl" color="fg.900" py={2}>
         {props.children}
       </Heading>
     );
   },
   h2: (props) => {
     return (
-      <Heading as="h2" size="lg" color="fgText" py={2}>
+      <Heading as="h2" size="lg" color="fg.900" py={2}>
         {props.children}
       </Heading>
     );
   },
   h3: (props) => {
     return (
-      <Heading as="h3" size="md" color="fgText" py={2}>
+      <Heading as="h3" size="md" color="fg.900" py={2}>
         {props.children}
       </Heading>
     );
   },
   h4: (props) => {
     return (
-      <Heading as="h4" size="sm" color="fgText" py={2}>
+      <Heading as="h4" size="sm" color="fg.900" py={2}>
         {props.children}
       </Heading>
     );
   },
   h5: (props) => {
     return (
-      <Heading as="h5" size="xs" color="fgText">
+      <Heading as="h5" size="xs" color="fg.900">
         {props.children}
       </Heading>
     );
@@ -105,7 +105,7 @@ export const defaults: Components & { heading: Components['h1'] } = {
       );
     }
     return (
-      <Text mb={2} mt={1} whiteSpace={'pre-wrap'} color="fgText">
+      <Text mb={2} mt={1} whiteSpace={'pre-wrap'} color="fg.900">
         {children}
       </Text>
     );
@@ -118,12 +118,15 @@ export const defaults: Components & { heading: Components['h1'] } = {
   blockquote: (props) => {
     const { children } = props;
 
+    const isNestedBlockquote = children.some((child: any) => {
+      return child.props?.node?.tagName === 'blockquote';
+    });
+
     return (
       <Box
         borderRadius={8}
-        bgColor={'fg.50'}
+        bgColor={isNestedBlockquote ? 'fg.50' : 'white'}
         p={4}
-        style={{ color: 'red !important' }}
       >
         <Text
           position="relative"
@@ -131,7 +134,7 @@ export const defaults: Components & { heading: Components['h1'] } = {
             content: '""',
             height: '100%',
             width: '2px',
-            background: 'neutral.400',
+            background: 'fg.400',
             display: 'block',
             position: 'absolute',
             left: 0,
