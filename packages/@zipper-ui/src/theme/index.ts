@@ -45,7 +45,7 @@ export const baseColors = {
   darkPurple: makeColorFromGradient(DARK_PURPLE),
   orange: makeColorFromGradient(ORANGE),
   blue: makeColorFromGradient(BLUE),
-  gray: makeColorFromGradient(['#f1f2f3', GRAY, DARK_GRAY, BLACK]),
+  gray: makeColorFromGradient([GRAY, '#d4d3d2', DARK_GRAY, BLACK]),
   neutral: makeColorFromGradient([WHITE, GRAY, BLACK]),
   yellow: {
     25: '#FFFCF5',
