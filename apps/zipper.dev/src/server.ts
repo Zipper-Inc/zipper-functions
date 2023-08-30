@@ -8,7 +8,7 @@ loadEnvConfig('./../../', process.env.NODE_ENV !== 'production');
 
 const dev = process.env.NODE_ENV !== 'production';
 const [hostname, portString] =
-  process.env.NEXT_PUBLIC_ZUPPER_DOT_DEV_HOST?.split(':') || [];
+  process.env.NEXT_PUBLIC_ZIPPER_DOT_DEV_HOST?.split(':') || [];
 const port = parseInt(process.env.PORT || portString || '3000', 10);
 const app = next({ dev, hostname, port });
 const handle = app.getRequestHandler();
