@@ -172,7 +172,6 @@ async function fetchImport({
         isZipperImportUrl(url) || url.endsWith('tsx') ? 'tsx' : 'ts',
       );
 
-      console.log('bundle?', { url, uri, src });
       if (!monacoRef?.current?.editor.getModel(uri)) {
         monacoRef?.current?.editor.createModel(src, 'typescript', uri);
       }
