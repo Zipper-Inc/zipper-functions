@@ -102,6 +102,7 @@ export function AppConsole({ logs }: { logs: LogMessage[] }) {
         >
           <FormControl display="flex" alignItems="center" height={6}>
             <Switch
+              variant="boxy"
               colorScheme="purple"
               id="preserve-logs"
               size="sm"

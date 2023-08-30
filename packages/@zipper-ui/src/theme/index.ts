@@ -1,6 +1,7 @@
-import { extendTheme } from '@chakra-ui/react';
+import { extendTheme, defineStyleConfig } from '@chakra-ui/react';
 import multiSelectTheme from './multiSelectTheme';
 import Gradient from 'javascript-color-gradient';
+import { switchTheme } from './switch';
 
 export const DARK_PURPLE = '#3C1053';
 export const PURPLE = '#9B26B6';
@@ -245,6 +246,7 @@ export const theme = extendTheme({
   initialColorMode: 'system',
   components: {
     MultiSelect: multiSelectTheme,
+    Switch: switchTheme,
   },
   styles: {
     global: {
