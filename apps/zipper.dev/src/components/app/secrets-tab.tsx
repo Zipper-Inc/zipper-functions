@@ -13,7 +13,7 @@ import {
   AlertDialogHeader,
   AlertDialogOverlay,
 } from '@chakra-ui/react';
-import { AddIcon } from '@chakra-ui/icons';
+import { PiPlusBold } from 'react-icons/pi';
 import { useFieldArray, useForm } from 'react-hook-form';
 
 import { trpc } from '~/utils/trpc';
@@ -169,6 +169,7 @@ const SecretsTab: React.FC<SecretsTabProps> = ({ appId, editable }) => {
             <Button
               variant="outline"
               mr={3}
+              leftIcon={<PiPlusBold />}
               onClick={() => {
                 append({
                   key: '',
@@ -176,7 +177,6 @@ const SecretsTab: React.FC<SecretsTabProps> = ({ appId, editable }) => {
                 });
               }}
             >
-              <AddIcon mr={2} boxSize={3} />
               Add Secret
             </Button>
           )}

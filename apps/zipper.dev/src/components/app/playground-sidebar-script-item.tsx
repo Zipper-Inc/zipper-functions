@@ -13,7 +13,7 @@ import {
 } from '@chakra-ui/react';
 import { Script } from '@prisma/client';
 import { UseFormReturn } from 'react-hook-form';
-import { HiDotsVertical } from 'react-icons/hi';
+import { PiDotsThreeVerticalBold } from 'react-icons/pi';
 import { useEditorContext } from '../context/editor-context';
 
 export type ScriptItemProps = {
@@ -113,7 +113,7 @@ export const ScriptItem: React.FC<ScriptItemProps> = ({
         <Menu>
           <MenuButton as={Text}>
             <Icon
-              as={HiDotsVertical}
+              as={PiDotsThreeVerticalBold}
               fontSize="xs"
               stroke="0"
               visibility={

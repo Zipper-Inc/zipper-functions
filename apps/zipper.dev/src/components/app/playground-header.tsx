@@ -29,22 +29,22 @@ import {
 import NextLink from 'next/link';
 import { CheckIcon } from '@chakra-ui/icons';
 import React, { useEffect, useState } from 'react';
-import { ZipperLogo, ZipperSymbol } from '@zipper/ui';
-
-import {
-  HiShare,
-  HiLockOpen,
-  HiLockClosed,
-  HiPencilSquare,
-  HiGlobeAlt,
-} from 'react-icons/hi2';
-
-import { CgGitFork } from 'react-icons/cg';
+import { BLUE, ZipperLogo, ZipperSymbol } from '@zipper/ui';
 
 import { AppQueryOutput } from '~/types/trpc';
 import { EditAppSlugForm } from './edit-app-slug-form';
 import { useAppEditors } from '~/hooks/use-app-editors';
-import { HiExclamationTriangle } from 'react-icons/hi2';
+import {
+  PiWarning,
+  PiGitBranch,
+  PiGitBranchBold,
+  PiShareNetwork,
+  PiAppWindow,
+  PiNotePencilBold,
+  PiLockSimpleBold,
+  PiLockSimpleOpenBold,
+  PiSignInDuotone,
+} from 'react-icons/pi';
 import slugify from 'slugify';
 import { OrganizationSelector } from '../dashboard/organization-selector';
 import { useForm } from 'react-hook-form';
@@ -148,7 +148,11 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
         <Box height={4}>
           <NextLink href="/">
             <SignedIn>
-              <ZipperSymbol fill="currentColor" style={{ maxHeight: '100%' }} />
+              <ZipperSymbol
+                fill="currentColor"
+                middle={{ fill: BLUE }}
+                style={{ maxHeight: '100%' }}
+              />
             </SignedIn>
             <SignedOut>
               <ZipperLogo fill="currentColor" style={{ maxHeight: '100%' }} />
@@ -182,9 +186,9 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
 
           <HStack spacing={2} alignItems="center" minW={0}>
             {app.isPrivate ? (
-              <HiLockClosed color="fg.500" />
+              <PiLockSimpleBold color="fg.500" />
             ) : (
-              <HiLockOpen color="fg.400" />
+              <PiLockSimpleOpenBold color="fg.400" />
             )}
             {app.parentId && parentApp.data && (
               <Tooltip
@@ -193,46 +197,45 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
                 }`}
               >
                 <Link href={`/app/${app.parentId}/edit`} target="_blank">
-                  <CgGitFork />
+                  <PiGitBranchBold />
                 </Link>
               </Tooltip>
             )}
+            {editSlug ? (
+              <EditAppSlugForm app={app} onClose={() => setEditSlug(false)} />
+            ) : (
+              <>
+                <Heading as="h1" size="md" overflow="auto" whiteSpace="nowrap">
+                  {app.slug}
+                </Heading>
+                {app.canUserEdit && (
+                  <Button
+                    variant="unstyled"
+                    pt={0.5}
+                    px={0.5}
+                    color="primary"
+                    _hover={{
+                      color: 'primary.300',
+                    }}
+                    onClick={() => {
+                      setEditSlug(true);
+                    }}
+                  >
+                    <PiNotePencilBold />
+                  </Button>
+                )}
+              </>
+            )}
           </HStack>
-          {editSlug ? (
-            <EditAppSlugForm app={app} onClose={() => setEditSlug(false)} />
-          ) : (
-            <>
-              <Heading as="h1" size="md" overflow="auto" whiteSpace="nowrap">
-                {app.slug}
-              </Heading>
-              {app.canUserEdit && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  colorScheme="purple"
-                  p={0}
-                  onClick={() => {
-                    setEditSlug(true);
-                  }}
-                >
-                  <Box>
-                    <HiPencilSquare />
-                  </Box>
-                </Button>
-              )}
-            </>
-          )}
         </HStack>
       </HStack>
       <HStack justifyContent="end">
         {isLoaded && (
           <Button
             size="sm"
-            colorScheme="gray"
-            variant="outline"
-            color="fg.600"
-            display="flex"
-            gap={2}
+            colorScheme="darkPurple"
+            variant="solid"
+            leftIcon={<PiGitBranch />}
             fontWeight="medium"
             onClick={() => {
               if (user) {
@@ -244,41 +247,34 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
               }
             }}
           >
-            <CgGitFork />
             Fork
           </Button>
         )}
         <SignedIn>
           <Button
             size="sm"
-            colorScheme="gray"
-            color="fg.600"
-            variant="outline"
+            colorScheme="orange"
+            variant="solid"
             onClick={() => setShareModalOpen(true)}
-            display="flex"
-            gap={2}
             fontWeight="medium"
+            leftIcon={<PiShareNetwork />}
           >
-            <HiShare />
             <Text>Share</Text>
           </Button>
         </SignedIn>
         <Button
           as={Link}
           size="sm"
-          colorScheme="gray"
-          color="fg.600"
-          variant="outline"
+          colorScheme="blue"
+          variant="solid"
           href={`${
             process.env.NODE_ENV === 'production' ? 'https://' : 'http://'
           }${getAppLink(app.slug)}`}
           target="_blank"
-          display="flex"
-          gap={2}
+          leftIcon={<PiAppWindow />}
           fontWeight="medium"
           _hover={{ textDecoration: 'none', backgroundColor: 'gray.100' }}
         >
-          <Icon as={HiGlobeAlt} />
           <Text>View</Text>
         </Button>
         <SignedIn>
@@ -289,11 +285,13 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
 
         {!user && (
           <Button
+            size="sm"
             colorScheme="purple"
-            display="flex"
-            gap={2}
-            fontWeight="medium"
+            variant="outline"
+            borderWidth={1.5}
+            fontWeight="semibold"
             mr="3"
+            leftIcon={<PiSignInDuotone />}
             onClick={() => {
               signIn();
             }}
@@ -335,7 +333,7 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
                       <InputRightElement
                         children={
                           slugExists ? (
-                            <Icon as={HiExclamationTriangle} color="red.500" />
+                            <Icon as={PiWarning} color="red.500" />
                           ) : (
                             <CheckIcon color="green.500" />
                           )

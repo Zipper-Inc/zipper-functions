@@ -47,14 +47,18 @@ import { HiExclamationTriangle } from 'react-icons/hi2';
 import slugify from 'slugify';
 import { MIN_SLUG_LENGTH, useAppSlug } from '~/hooks/use-app-slug';
 import { useRouter } from 'next/router';
-import {
-  HiLockOpen,
-  HiLockClosed,
-  HiOutlineClipboard,
-  HiOutlineTrash,
-} from 'react-icons/hi';
-import { VscCode, VscFile, VscGistSecret } from 'react-icons/vsc';
 import { getAppLink } from '@zipper/utils';
+import {
+  PiLockSimple,
+  PiLockSimpleOpen,
+  PiCode,
+  PiCodeSimple,
+  PiEnvelopeSimpleOpen,
+  PiEnvelopeSimple,
+  PiKeyBold,
+  PiTrashSimpleBold,
+  PiClipboardBold,
+} from 'react-icons/pi';
 
 type Props = {
   app: Pick<
@@ -312,7 +316,11 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
                   <Flex flexGrow={'1'}>
                     <VStack align="start">
                       <HStack>
-                        <VscCode />
+                        {settingsForm.watch('isPublic') ? (
+                          <PiCodeSimple />
+                        ) : (
+                          <PiCode />
+                        )}
                         <Text>Is the code public?</Text>
                       </HStack>
                       <FormHelperText maxW="xl">{`Since this is ${
@@ -335,9 +343,9 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
                   <VStack align="start" w="full">
                     <HStack w="full">
                       {settingsForm.watch('requiresAuthToRun') ? (
-                        <HiLockClosed />
+                        <PiLockSimple />
                       ) : (
-                        <HiLockOpen />
+                        <PiLockSimpleOpen />
                       )}
                       <Text>Require auth to run?</Text>
                       <Spacer flexGrow={1} />
@@ -356,9 +364,9 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
                   <VStack align="start" w="full">
                     <HStack w="full">
                       {settingsForm.watch('isDataSensitive') ? (
-                        <VscGistSecret />
+                        <PiEnvelopeSimple />
                       ) : (
-                        <VscFile />
+                        <PiEnvelopeSimpleOpen />
                       )}
                       <Text>Is the data sensitive?</Text>
                       <Spacer flexGrow={1} />
@@ -391,7 +399,12 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
             <Text fontSize={'xl'} flexGrow={1}>
               Your Access Tokens
             </Text>
-            <Button colorScheme="purple" variant="outline" onClick={onOpen}>
+            <Button
+              colorScheme="purple"
+              variant="outline"
+              onClick={onOpen}
+              leftIcon={<PiKeyBold />}
+            >
               Generate Token
             </Button>
           </HStack>
@@ -428,7 +441,7 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
                     <IconButton
                       aria-label="Delete token"
                       variant="ghost"
-                      icon={<Icon as={HiOutlineTrash} color="fg.400" />}
+                      icon={<Icon as={PiTrashSimpleBold} color="fg.400" />}
                       onClick={() => {
                         appAccessTokenDeleteMutation.mutateAsync(
                           { identifier: token.identifier },
@@ -475,9 +488,10 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
                   <Text>Delete this applet</Text>
                   <Spacer flexGrow={1} />
                   <Button
-                    variant="solid"
                     colorScheme="red"
+                    variant="outline"
                     onClick={onOpenDeleteConfirmation}
+                    leftIcon={<PiTrashSimpleBold />}
                   >
                     Delete applet
                   </Button>
@@ -515,7 +529,7 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
                         size="xs"
                         onClick={() => copyToken()}
                       >
-                        <HiOutlineClipboard />
+                        <PiClipboardBold />
                       </IconButton>
                     </Tooltip>
                   </HStack>

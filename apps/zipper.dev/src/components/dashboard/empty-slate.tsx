@@ -11,7 +11,7 @@ export function EmptySlate({
   organization,
   onCreateButtonClick,
 }: EmptySlateProps) {
-  const [gray200] = useToken('colors', ['neutral.200']);
+  const [gray200] = useToken('colors', ['gray.200']);
 
   return (
     <Box bg={'fg.50'} w="full" p="4">

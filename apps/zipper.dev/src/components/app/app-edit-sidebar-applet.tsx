@@ -26,6 +26,7 @@ import {
   HiOutlineLightBulb,
   HiOutlinePlay,
 } from 'react-icons/hi2';
+import { PiPlayBold } from 'react-icons/pi';
 import { useUser } from '~/hooks/use-user';
 import getRunUrl from '~/utils/get-run-url';
 import { getAppVersionFromHash } from '~/utils/hashing';
@@ -266,7 +267,7 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
                   fontWeight="medium"
                   isDisabled={isRunning || !inputParams || editorHasErrors()}
                 >
-                  <HiOutlinePlay />
+                  <PiPlayBold />
                   <Text>{`Run${
                     currentScript?.filename !== 'main.ts' ? ' this file' : ''
                   }`}</Text>

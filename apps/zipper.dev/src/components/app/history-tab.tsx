@@ -29,6 +29,7 @@ import {
 import { useRouter } from 'next/router';
 import { HiExclamationTriangle, HiCheck } from 'react-icons/hi2';
 import { TbClockPlay } from 'react-icons/tb';
+import { PiWarning, PiCheck } from 'react-icons/pi';
 import {
   createColumnHelper,
   flexRender,

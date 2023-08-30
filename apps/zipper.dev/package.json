@@ -113,7 +113,7 @@
     "react-dropzone": "^14.2.3",
     "react-email": "^1.9.4",
     "react-hook-form": "^7.43.0",
-    "react-icons": "^4.8.0",
+    "react-icons": "^4.10.1",
     "react-query": "^3.39.2",
     "resend": "^0.15.3",
     "slugify": "^1.6.5",

@@ -2,8 +2,7 @@ import { CloseIcon } from '@chakra-ui/icons';
 import { HStack, Input, IconButton, Box } from '@chakra-ui/react';
 
 import { UseFormRegister } from 'react-hook-form';
-import { FiTrash } from 'react-icons/fi';
-import { HiOutlineLockClosed } from 'react-icons/hi';
+import { PiLockLaminatedBold, PiTrashSimpleBold } from 'react-icons/pi';
 
 export type SecretToDelete = {
   id: string;
@@ -33,7 +32,7 @@ export const EditSecret: React.FC<EditSecretProps> = (props) => {
     return (
       <HStack>
         <Box color="fg.400">
-          <HiOutlineLockClosed />
+          <PiLockLaminatedBold />
         </Box>
         <Input placeholder="Key" {...register(`secrets.${index}.key`, {})} />
         <Input
@@ -60,7 +59,7 @@ export const EditSecret: React.FC<EditSecretProps> = (props) => {
   return (
     <HStack>
       <Box color="fg.400">
-        <HiOutlineLockClosed />
+        <PiLockLaminated />
       </Box>
       <Input placeholder="Key" disabled value={existingSecret.key} />
       <Input
@@ -78,7 +77,7 @@ export const EditSecret: React.FC<EditSecretProps> = (props) => {
             remove({ appId: existingSecret.appId, id: existingSecret.id });
           }}
         >
-          <FiTrash />
+          <PiTrashSimpleBold />
         </IconButton>
       )}
     </HStack>

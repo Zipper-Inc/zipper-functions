@@ -21,7 +21,7 @@ import {
 import cronstrue from 'cronstrue';
 import { useState } from 'react';
 import { trpc } from '~/utils/trpc';
-import { FiPlusSquare, FiTrash } from 'react-icons/fi';
+import { PiCalendarPlusBold, PiTrashSimpleBold } from 'react-icons/pi';
 import {
   AddScheduleModal,
   AddScheduleModalProps,
@@ -194,7 +194,7 @@ const SchedulesTab: React.FC<SchedulesTabProps> = ({ appId }) => {
                               }
                             }}
                           >
-                            <FiTrash />
+                            <PiTrashSimpleBold />
                           </IconButton>
                         </HStack>
                       </Td>
@@ -222,7 +222,7 @@ const SchedulesTab: React.FC<SchedulesTabProps> = ({ appId }) => {
                     px={2}
                     onClick={onOpenAdd}
                   >
-                    <FiPlusSquare />
+                    <PiCalendarPlusBold />
                     <Text>Create a new schedule</Text>
                   </Button>
                 </Td>
