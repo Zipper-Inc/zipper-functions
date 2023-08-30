@@ -1,58 +1,102 @@
-import { Flex, Container, Heading } from '@chakra-ui/react';
+import {
+  Flex,
+  Container,
+  Heading,
+  HStack,
+  Text,
+  Button,
+  Box,
+} from '@chakra-ui/react';
 import Head from 'next/head';
 import type { ReactNode } from 'react';
 import { useRef } from 'react';
 import { useBlogContext } from './blog-context';
 import { HeadingContext } from './mdx-theme';
-import { SimpleSiteHeader } from '@zipper/ui';
+import { Website, ZipperLogo } from '@zipper/ui';
+import { useRouter } from 'next/router';
+import { FiChevronLeft } from 'react-icons/fi';
 
 export const BasicLayout = ({ children }: { children: ReactNode }) => {
   const { config, opts } = useBlogContext();
+  const { asPath, push } = useRouter();
   const title = `${opts.title}${config.titleSuffix || ''}`;
   const ref = useRef<HTMLHeadingElement>(null);
+
   return (
     <>
       <Head>
         <title>{title} - Zipper</title>
         {config.head?.({ title, meta: opts.frontMatter })}
       </Head>
-      <SimpleSiteHeader />
-      <HeadingContext.Provider value={ref}>
-        <Flex backgroundColor="primary" color="bgColor" shadow="sm" mb={2}>
-          <Container
-            as="header"
-            dir="ltr"
-            maxWidth="container.lg"
-            mx="auto"
-            gap={2}
-            display="flex"
-            flexDirection="column"
-            my={12}
-          >
-            {opts.hasJsxInH1 ? (
-              <Heading as="h1" fontWeight="normal" size="3xl" ref={ref} />
-            ) : null}
-            {opts.hasJsxInH1 ? null : (
-              <Heading as="h1" fontWeight="normal" size="3xl">
-                {opts.title}
+      <Website>
+        <Website.Navbar />
+        <HeadingContext.Provider value={ref}>
+          {asPath === '/blog' ? (
+            <Container
+              as="header"
+              dir="ltr"
+              py={10}
+              maxWidth="container.xl"
+              width="full"
+              margin="0 auto"
+              gap={2}
+            >
+              <Heading
+                as="h1"
+                fontFamily="plaak"
+                fontSize="4xl"
+                color="blue.500"
+              >
+                Zipper Blog
               </Heading>
-            )}
-          </Container>
-        </Flex>
-        <Container
-          as="article"
-          dir="ltr"
-          maxWidth="container.lg"
-          mx="auto"
-          mb={16}
-          gap={2}
-          display="flex"
-          flexDirection="column"
-        >
+            </Container>
+          ) : (
+            <Container
+              as="header"
+              dir="ltr"
+              maxWidth="container.xl"
+              mx="auto"
+              gap={5}
+              display="flex"
+              flexDirection="column"
+              py={24}
+            >
+              <HStack
+                as="nav"
+                _hover={{ opacity: '.75' }}
+                cursor="pointer"
+                color="gray.500"
+                onClick={() => push('/blog')}
+              >
+                <FiChevronLeft size={24} />
+                <Text fontSize="lg">Zipper Blog</Text>
+              </HStack>
+              {opts.hasJsxInH1 ? (
+                <Heading as="h1" fontWeight="normal" size="3xl" ref={ref} />
+              ) : null}
+              {opts.hasJsxInH1 ? null : (
+                <Heading
+                  fontFamily="plaak"
+                  fontWeight={400}
+                  color="primary"
+                  margin="0"
+                  fontSize={'64px'}
+                >
+                  {opts.title}
+                </Heading>
+              )}
+              <Heading as="h3" fontSize="lg" fontWeight={400}>
+                {opts.frontMatter.description}
+              </Heading>
+            </Container>
+          )}
+          {/* <Container maxWidth="container.xl" w="full" py="24" gap={2}> */}
           {children}
-          {config.footer}
-        </Container>
-      </HeadingContext.Provider>
+          {/* {config.footer} */}
+          {/* </Container> */}
+          <Website.Footer />
+        </HeadingContext.Provider>
+      </Website>
     </>
   );
 };

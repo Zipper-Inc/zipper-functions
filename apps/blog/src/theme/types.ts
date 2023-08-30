@@ -29,7 +29,7 @@ export interface NextraBlogTheme {
   titleSuffix?: string;
 }
 
-export type BlogPageOpts = PageOpts<BlogFrontMatter>;
+export type BlogPageOpts = PageOpts<BlogFrontMatter> & { description?: string };
 
 export type BlogFrontMatter = {
   author?: string;
