@@ -3,7 +3,8 @@ import { App, Script } from '@prisma/client';
 import { generateIndexForFramework } from '@zipper/utils';
 import { getLogger } from './app-console';
 import { prettyLog, PRETTY_LOG_TOKENS } from './pretty-log';
-import { BuildCache, getModule } from './eszip-build-cache';
+import { BuildCache } from './eszip-build-cache';
+import { getModule } from './eszip-utils';
 import { readFrameworkFile } from './read-file';
 import { getAppHashAndVersion } from './hashing';
 import { prisma } from '~/server/prisma';
@@ -116,6 +117,7 @@ export async function build({
      */
     if (isZipperImportUrl(specifier)) {
       const mod = await getModule(specifier);
+      console.log('zipperimport', { specifier, module: mod });
       return {
         ...mod,
         ...applyTsxHack(specifier, mod?.content),
