@@ -44,6 +44,7 @@ import { AppRun, User } from '@prisma/client';
 import { JSONViewer } from '../json-editor';
 import { AppConsole } from './app-console';
 import { IconBase } from 'react-icons';
+import { LogMessage } from '@zipper/types';
 
 type HistoryTabProps = {
   appId: string;
@@ -58,7 +59,7 @@ const HistoryTab: React.FC<HistoryTabProps> = ({ appId }) => {
   const columnHelper = createColumnHelper<AppRun & { user: User }>();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [modalValue, setModalValue] = useState<any>();
-  const [logValue, setLogValue] = useState<any>();
+  const [logValue, setLogValue] = useState<LogMessage[]>([]);
   const [modalHeading, setModalHeading] = useState<string>();
 
   const runLogs = trpc.useMutation('appLog.getRunId');

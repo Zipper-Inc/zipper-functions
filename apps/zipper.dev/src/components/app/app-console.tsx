@@ -92,22 +92,21 @@ export function AppConsole({
 
   return (
     <Box id="app-console">
-      <Box
-        position="sticky"
-        top="0"
-        pt={4}
-        zIndex="docked"
-        background="bgColor"
-      >
-        <Flex
-          padding={4}
-          width="100%"
-          border="solid 1px"
-          backgroundColor="fg.100"
-          borderColor="fg.200"
-          borderTopRadius="md"
+      {showPreserveLogsToggle && (
+        <Box
+          position="sticky"
+          top="0"
+          pt={4}
+          zIndex="docked"
+          background="bgColor"
         >
-          {showPreserveLogsToggle && (
+          <Flex
+            padding={4}
+            width="100%"
+            border="solid 1px"
+            backgroundColor="fg.100"
+            borderColor="fg.200"
+          >
             <FormControl display="flex" alignItems="center" height={6}>
               <Switch
                 colorScheme="purple"
@@ -127,24 +126,23 @@ export function AppConsole({
                 Preserve logs
               </FormLabel>
             </FormControl>
-          )}
-          <Input
-            backgroundColor="bgColor"
-            fontFamily="monospace"
-            fontSize="xs"
-            onChange={(e) => setLogFilter(e.target.value)}
-            height={6}
-            placeholder="Filter"
-          />
-        </Flex>
-      </Box>
+            <Input
+              backgroundColor="bgColor"
+              fontFamily="monospace"
+              fontSize="xs"
+              onChange={(e) => setLogFilter(e.target.value)}
+              height={6}
+              placeholder="Filter"
+            />
+          </Flex>
+        </Box>
+      )}
       <Box
         color="fg.200"
         borderColor="fg.200"
-        borderBottomRadius="md"
         px={2}
         border="solid 1px"
-        borderTop="none"
+        borderTop={showPreserveLogsToggle ? 'none' : '1px solid'}
       >
         <Console
           variant={colorMode}
