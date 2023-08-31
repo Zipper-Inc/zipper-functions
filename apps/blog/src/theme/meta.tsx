@@ -1,27 +1,30 @@
 import NextLink from 'next/link';
 import { ReactElement, useMemo } from 'react';
 import { useBlogContext } from './blog-context';
-import ThemeSwitch from './theme-switch';
 import { split } from './utils/get-tags';
 import { getParent } from './utils/parent';
 import {
-  Box,
   Flex,
   HStack,
   VStack,
   Link,
   Text,
   Heading,
+  IconButton,
 } from '@chakra-ui/react';
-import { FiFacebook, FiLinkedin, FiMail } from 'react-icons/fi';
+import { FiFacebook, FiLinkedin, FiMail, FiTwitter } from 'react-icons/fi';
+import {
+  LinkedinShareButton,
+  FacebookShareButton,
+  EmailShareButton,
+  TwitterShareButton,
+} from 'next-share';
 
 export default function Meta(): ReactElement {
   const { opts, config } = useBlogContext();
   const { author, date, tag } = opts.frontMatter;
   const { back } = getParent({ opts, config });
   const tags = tag ? split(tag) : [];
-
-  // const URL = `${router.defaultLocale}/${router.pathname}`;
 
   let URL = '';
 
@@ -33,18 +36,47 @@ export default function Meta(): ReactElement {
     () => [
       {
         name: 'LinkedIn',
-        icon: <FiLinkedin size={24} />,
-        href: `https://www.linkedin.com/shareArticle?mini=true&url=${URL}`,
+        icon: (
+          <IconButton
+            url={URL}
+            as={LinkedinShareButton}
+            icon={<FiLinkedin size={24} />}
+            aria-label="Share LinkedIn"
+          />
+        ),
       },
       {
         name: 'Facebook',
-        icon: <FiFacebook size={24} />,
-        href: `https://www.facebook.com/sharer/sharer.php?u=${URL}`,
+        icon: (
+          <IconButton
+            url={URL}
+            as={FacebookShareButton}
+            icon={<FiFacebook size={24} />}
+            aria-label="Share Facebook"
+          />
+        ),
       },
       {
         name: 'E-mail',
-        icon: <FiMail size={24} />,
-        href: `mailto:?subject=Check%20out%20this%20link&body=${URL}`,
+        icon: (
+          <IconButton
+            aria-label="Share e-mail"
+            as={EmailShareButton}
+            icon={<FiMail size={24} />}
+            url={URL}
+          />
+        ),
+      },
+      {
+        name: 'Twitter',
+        icon: (
+          <IconButton
+            aria-label="Share Twitter"
+            as={TwitterShareButton}
+            icon={<FiTwitter size={24} />}
+            url={URL}
+          />
+        ),
       },
     ],
     [URL],
@@ -61,8 +93,9 @@ export default function Meta(): ReactElement {
       <Link
         px={4}
         py={1}
-        border="gray.700"
-        bg="gray.300"
+        border="1px solid"
+        borderColor="gray.300"
+        bg="gray.200"
         fontSize="sm"
         borderRadius="md"
       >
@@ -131,10 +164,8 @@ export default function Meta(): ReactElement {
 
           <HStack gap={2}>
             {SOCIALS.length > 0 &&
-              SOCIALS.map((social, index) => (
-                <Link key={index} isExternal href={social.href}>
-                  {social.icon}
-                </Link>
+              SOCIALS.map((social) => (
+                <span key={social.name}>{social.icon}</span>
               ))}
           </HStack>
         </VStack>
