@@ -110,7 +110,6 @@ const AppletDemo = () => {
             h="full"
             minH="320px"
             border="1px"
-            borderColor="purple.300"
             bg="purple.800"
             borderRadius="16px"
           >
@@ -256,7 +255,7 @@ const AppletDemo = () => {
         </Grid>
         <Button
           as={Link}
-          external={true}
+          isExternal
           display="flex"
           target="_blank"
           align="center"

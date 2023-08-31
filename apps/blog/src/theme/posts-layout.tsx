@@ -12,43 +12,12 @@ import {
   Flex,
   GridItem,
   Heading,
+  Link,
   SimpleGrid,
   Text,
 } from '@chakra-ui/react';
 import { ZipperLogo } from '@zipper/ui';
-
-const COLORS = {
-  0: {
-    color: 'purple.800',
-    hover: 'purple.900',
-    btn: 'purple.50',
-    hover_btn: 'purple.100',
-  },
-  1: {
-    color: 'brandOrange.500',
-    hover: 'brandOrange.600',
-    btn: 'brandOrange.50',
-    hover_btn: 'brandOrange.100',
-  },
-  2: {
-    color: 'blue.500',
-    hover: 'blue.600',
-    btn: 'blue.50',
-    hover_btn: 'blue.100',
-  },
-  3: {
-    color: 'purple.500',
-    hover: 'purple.600',
-    btn: 'purple.50',
-    hover_btn: 'purple.100',
-  },
-  4: {
-    color: 'purple.800',
-    hover: 'purple.900',
-    btn: 'purple.50',
-    hover_btn: 'purple.100',
-  },
-};
+import { getRandomColor } from './mdx-theme';
 
 export function PostsLayout(): ReactElement {
   const { config, opts } = useBlogContext();
@@ -77,7 +46,7 @@ export function PostsLayout(): ReactElement {
 
     const description = post.frontMatter?.description;
 
-    const colorSet = COLORS[post.index as keyof typeof COLORS];
+    const colorSet = getRandomColor()!;
 
     const isEven = post.index % 2 == 0;
 
@@ -141,6 +110,8 @@ export function PostsLayout(): ReactElement {
           )}
         </Flex>
         <Button
+          as={NextLink}
+          href={post.route}
           variant="solid"
           bg={colorSet.btn}
           color={colorSet.color}
@@ -208,11 +179,26 @@ export function PostsLayout(): ReactElement {
               Turn simple functions into robust apps without complex code.
             </Text>
 
-            <Button w="full" maxH="44px" fontWeight={500} colorScheme="purple">
+            <Button
+              as={Link}
+              isExternal
+              target="_blank"
+              href="https://zipper.dev/auth/signin"
+              w="full"
+              maxH="44px"
+              fontWeight={500}
+              colorScheme="purple"
+            >
               Get Started for Free
             </Button>
 
-            <Text as="a" href="#" fontSize="sm">
+            <Text
+              as={Link}
+              href="https://zipper.docs/"
+              isExternal
+              _hover={{ color: 'purple.500' }}
+              fontSize="sm"
+            >
               Learn more about Zipper
             </Text>
           </Flex>

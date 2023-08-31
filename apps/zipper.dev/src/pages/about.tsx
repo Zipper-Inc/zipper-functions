@@ -20,7 +20,6 @@ import {
 import Image from 'next/image';
 import Header from '~/components/header';
 import { NextPageWithLayout } from './_app';
-import Footer from '~/components/footer';
 import { Website } from '@zipper/ui';
 
 /* -------------------------------------------- */
@@ -155,14 +154,14 @@ const AboutPage: NextPageWithLayout = () => {
                 flex={1}
                 color="gray.900"
               >
-                We’re a small team that likes to build software that helps
-                people build software.
+                {`We’re a small team that likes to build software that helps
+                people build software.`}
                 <br />
                 <br />
-                Our experience across different companies like Slack and GitHub
-                has taught us that people can do incredibly creative things
-                given the space and opportunity. We're building Zipper as a
-                platform to bring that creativity out.
+                {`Our experience across different companies like Slack and GitHub
+                has taught us that people can do incredibly creative things given the 
+                space and opportunity. We're building Zipper as a platform to bring
+                that creativity out.`}
               </Text>
               <Grid
                 w={{ base: 'full', lg: '47%' }}
@@ -236,8 +235,8 @@ const AboutPage: NextPageWithLayout = () => {
           align="center"
           position="relative"
           zIndex={10}
-          mt={{ base: -20, lg: 0 }}
-          pt={{ base: 20, lg: 0 }}
+          mt={-20}
+          pt={20}
           bg="brandGray.100"
         >
           <Container w="full" alignItems="start" maxW="container.xl">

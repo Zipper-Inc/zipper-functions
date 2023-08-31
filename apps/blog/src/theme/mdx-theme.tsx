@@ -3,7 +3,7 @@ import { Code } from 'nextra/components';
 import { MDXProvider } from 'nextra/mdx';
 import type { Components } from 'nextra/mdx';
 import type { ComponentProps, ReactElement, ReactNode, RefObject } from 'react';
-import {
+import React, {
   createContext,
   createRef,
   useContext,
@@ -102,15 +102,15 @@ const COLORS = [
   },
 ];
 
-function getRandomPosition(array: any[]) {
+export function getRandomColor() {
   // Get the length of the array.
-  const length = array.length;
+  const length = COLORS.length;
 
   // Generate a random number between 0 and the length of the array, inclusive.
   const randomIndex = Math.floor(Math.random() * length);
 
   // Return the random index.
-  return randomIndex;
+  return COLORS[randomIndex];
 }
 
 const useComponents = (): Components => {
@@ -123,16 +123,17 @@ const useComponents = (): Components => {
       <HeadingLink
         as="h2"
         size="2xl"
-        color={COLORS[getRandomPosition(COLORS)]?.color}
-        my={16}
+        color={getRandomColor()?.color}
+        mt={16}
+        mb={8}
         {...props}
       />
     ),
     h3: (props: HeadingProps) => (
-      <HeadingLink as="h3" size="xl" my={12} {...props} />
+      <HeadingLink as="h3" size="xl" mt={12} mb={6} {...props} />
     ),
     h4: (props: HeadingProps) => (
-      <HeadingLink as="h4" size="lg" my={10} {...props} />
+      <HeadingLink as="h4" size="lg" mt={10} mb={4} {...props} />
     ),
     h5: (props: HeadingProps) => (
       <HeadingLink as="h5" size="md" my={2} {...props} />
@@ -140,7 +141,29 @@ const useComponents = (): Components => {
     h6: (props: HeadingProps) => (
       <HeadingLink as="h6" size="sm" my={2} {...props} />
     ),
-    code: Code,
+    code: (props: CodeProps) => {
+      if (typeof props.children === 'string') {
+        return <Code {...(props as any)} />;
+      }
+
+      return (
+        <Box
+          as="pre"
+          padding="1rem"
+          background="white"
+          border="1px solid"
+          borderColor="gray.200"
+          borderRadius={8}
+          ml="-1rem"
+          mr="-1rem"
+          my="1rem"
+        >
+          {React.Children.map(props.children, (child) => (
+            <span>{child}</span>
+          ))}
+        </Box>
+      );
+    },
     ...config.components,
   }) as any;
 };

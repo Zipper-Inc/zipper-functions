@@ -398,15 +398,14 @@ const Features = memo(() => (
     w="full"
     py={{ base: '52px', md: '9rem' }}
     position="relative"
-    px={['24px', 0]}
     bg="brandGray.100"
   >
-    <Flex
+    <Container
       id="features-content"
       margin="0 auto"
       gap={5}
-      direction="column"
-      align="start"
+      flexDir="column"
+      alignItems="start"
       maxW="container.xl"
       w="full"
     >
@@ -444,7 +443,11 @@ const Features = memo(() => (
         as="ul"
         aria-label="features-list"
         w="full"
-        templateColumns={['1fr', 'repeat(3, 1fr)']}
+        templateColumns={{
+          base: '1fr',
+          md: 'repeat(2, 1fr)',
+          lg: 'repeat(3, 1fr)',
+        }}
         gap={4}
       >
         {FEATURES_CONTENT.LIST.map((feat, index) => (
@@ -488,7 +491,7 @@ const Features = memo(() => (
           </GridItem>
         ))}
       </Grid>
-    </Flex>
+    </Container>
   </Box>
 ));
 
@@ -705,8 +708,35 @@ const Headline = memo(() => {
       px={{ base: 6 }}
       position="relative"
       overflow="hidden"
-      bg="white"
+      bg="brandGray.100"
     >
+      <Box
+        position="absolute"
+        left="0"
+        top="0"
+        w="0"
+        h="0"
+        borderBottom={{
+          base: '200px solid transparent',
+          lg: '800px solid transparent',
+        }}
+        zIndex={0}
+        borderLeft={{ base: '200px solid white', lg: '800px solid white' }}
+      />
+
+      <Box
+        position="absolute"
+        right="0"
+        bottom="0"
+        w="0"
+        h="0"
+        borderTop={{
+          base: '200px solid transparent',
+          lg: '800px solid transparent',
+        }}
+        zIndex={0}
+        borderRight={{ base: '200px solid white', lg: '800px solid white' }}
+      />
       <Container
         as="section"
         gap={[6]}
