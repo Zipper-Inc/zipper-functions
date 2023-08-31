@@ -46,7 +46,7 @@ export const RunAppContext = createContext<RunAppContextType>({
   configs: {},
 });
 
-const fiveSecondsAgo = Date.now() - 5 * 1000;
+const oneSecondAgo = Date.now() - 1 * 1000;
 
 export function RunAppProvider({
   app,
@@ -126,7 +126,7 @@ export function RunAppProvider({
         const logs = await logMutation.mutateAsync({
           appId: app.id,
           version,
-          fromTimestamp: fiveSecondsAgo,
+          fromTimestamp: oneSecondAgo,
         });
         if (!logs.length) return;
         if (logsToIgnore.length) logs.splice(0, logsToIgnore.length);
@@ -199,13 +199,13 @@ export function RunAppProvider({
       const vLogs = await logMutation.mutateAsync({
         appId: app.id,
         version: version!,
-        fromTimestamp: fiveSecondsAgo,
+        fromTimestamp: oneSecondAgo,
       });
       const rLogs = await logMutation.mutateAsync({
         appId: app.id,
         version: version!,
         runId: runId,
-        fromTimestamp: fiveSecondsAgo,
+        fromTimestamp: oneSecondAgo,
       });
 
       if (!vLogs?.length && !rLogs?.length) return;

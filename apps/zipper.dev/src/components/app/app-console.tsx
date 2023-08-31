@@ -55,7 +55,13 @@ const applyPrettyColors = (colorToken: 'default' | '_dark') => (msg: string) =>
     msg,
   );
 
-export function AppConsole({ logs }: { logs: LogMessage[] }) {
+export function AppConsole({
+  logs,
+  showPreserveLogsToggle = true,
+}: {
+  logs: LogMessage[];
+  showPreserveLogsToggle?: boolean;
+}) {
   const [logCounter, setLogCounter] = useState(0);
   const [logFilter, setLogFilter] = useState('');
 
@@ -101,25 +107,27 @@ export function AppConsole({ logs }: { logs: LogMessage[] }) {
           borderColor="fg.200"
           borderTopRadius="md"
         >
-          <FormControl display="flex" alignItems="center" height={6}>
-            <Switch
-              colorScheme="purple"
-              id="preserve-logs"
-              size="sm"
-              checked={preserveLogs}
-              defaultChecked={true}
-              onChange={() => setPreserveLogs(!preserveLogs)}
-            />
-            <FormLabel
-              htmlFor="preserve-logs"
-              ml={2}
-              mb="0"
-              fontWeight="normal"
-              fontSize="xs"
-            >
-              Preserve logs
-            </FormLabel>
-          </FormControl>
+          {showPreserveLogsToggle && (
+            <FormControl display="flex" alignItems="center" height={6}>
+              <Switch
+                colorScheme="purple"
+                id="preserve-logs"
+                size="sm"
+                checked={preserveLogs}
+                defaultChecked={true}
+                onChange={() => setPreserveLogs(!preserveLogs)}
+              />
+              <FormLabel
+                htmlFor="preserve-logs"
+                ml={2}
+                mb="0"
+                fontWeight="normal"
+                fontSize="xs"
+              >
+                Preserve logs
+              </FormLabel>
+            </FormControl>
+          )}
           <Input
             backgroundColor="bgColor"
             fontFamily="monospace"

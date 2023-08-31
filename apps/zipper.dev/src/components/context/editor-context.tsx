@@ -533,7 +533,7 @@ const EditorContextProvider = ({
     setLogs(
       newLogs
         .concat(...Object.values(logStore))
-        .sort((a, b) => a.timestamp - b.timestamp),
+        .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime()),
     );
   }, [logStore]);
 
@@ -542,7 +542,7 @@ const EditorContextProvider = ({
       id: uuid(),
       method,
       data,
-      timestamp: Date.now(),
+      timestamp: new Date(),
     };
 
     setLogStore((prev) => {
