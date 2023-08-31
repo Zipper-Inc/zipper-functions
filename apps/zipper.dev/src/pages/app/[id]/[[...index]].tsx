@@ -21,7 +21,7 @@ export const AppIdPage: NextPageWithLayout = () => {
   useEffect(() => {
     if (appQuery.data) {
       router.push(
-        `/${appQuery.data.resourceOwner.slug}/${appQuery.data.slug}/edit`,
+        `/${appQuery.data.resourceOwner.slug}/${appQuery.data.slug}/src`,
       );
     }
   }, [appQuery.data]);

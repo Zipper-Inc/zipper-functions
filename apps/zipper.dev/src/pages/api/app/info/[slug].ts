@@ -177,7 +177,7 @@ export default async function handler(
         filename: entryPoint.filename,
         editUrl: `${getZipperDotDevUrl().origin}/${resourceOwner?.slug}/${
           appFound.slug
-        }/edit/${entryPoint.filename}`,
+        }/src/${entryPoint.filename}`,
       },
     },
   };

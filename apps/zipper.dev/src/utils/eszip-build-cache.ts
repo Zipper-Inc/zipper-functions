@@ -1,6 +1,5 @@
 import Redis from 'ioredis';
-import { LoadResponseModule } from '@deno/eszip/types/loader';
-import fetch from 'node-fetch';
+import type { LoadResponseModule } from '@deno/eszip/types/loader';
 
 export type CacheRecord = {
   module: LoadResponseModule;
@@ -68,9 +67,6 @@ export class BuildCache {
   }
 
   async get(specifier: string) {
-    // For now, force a cache miss for zipper.run URLs
-    if (specifier.includes('zipper.run')) return;
-
     try {
       const raw = await this.client.get(getCacheKey(specifier));
       if (!raw) return;
@@ -94,39 +90,4 @@ export class BuildCache {
       // yolo cache set miss
     }
   }
-}
-
-export async function getModule(
-  specifier: string,
-  buildCache = new BuildCache(),
-) {
-  const cachedModule = await buildCache.get(specifier);
-  if (cachedModule) return cachedModule;
-
-  const response = await fetch(specifier, {
-    redirect: 'follow',
-  });
-
-  if (response.status !== 200) {
-    // ensure the body is read as to not leak resources
-    await response.arrayBuffer();
-    return undefined;
-  }
-
-  const content = await response.text();
-  const headers: Record<string, string> = {};
-  response.headers.forEach((value, key) => {
-    headers[key.toLowerCase()] = value;
-  });
-
-  const mod = {
-    kind: 'module',
-    specifier: response.url,
-    headers,
-    content,
-  } as CacheRecord['module'];
-
-  await buildCache.set(specifier, mod);
-
-  return mod;
 }

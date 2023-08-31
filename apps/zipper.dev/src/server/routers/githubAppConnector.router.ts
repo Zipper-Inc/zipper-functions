@@ -66,6 +66,32 @@ export const githubAppConnectorRouter = createRouter()
           where: {
             appId_key: {
               appId,
+              key: 'GITHUB_APP_ID',
+            },
+          },
+        });
+      } catch (e) {
+        // ignore
+      }
+
+      try {
+        await prisma.secret.delete({
+          where: {
+            appId_key: {
+              appId,
+              key: 'GITHUB_WEBHOOK_SECRET',
+            },
+          },
+        });
+      } catch (e) {
+        // ignore
+      }
+
+      try {
+        await prisma.secret.delete({
+          where: {
+            appId_key: {
+              appId,
               key: 'GITHUB_CLIENT_SECRET',
             },
           },
@@ -79,7 +105,7 @@ export const githubAppConnectorRouter = createRouter()
           where: {
             appId_key: {
               appId,
-              key: 'GITHUB_PEM_BASE64',
+              key: 'GITHUB_PEM',
             },
           },
         });
@@ -127,12 +153,12 @@ export const githubAppConnectorRouter = createRouter()
 
       const secrets = secretKeys.reduce((acc, key) => {
         let valueToStore = json[key];
+        if (!valueToStore) return acc;
         if (key === 'pem') {
           valueToStore = json[key].toString('base64');
         }
 
-        const secretKey =
-          key === 'pem' ? 'GITHUB_PEM_BASE64' : `GITHUB_${key.toUpperCase()}`;
+        const secretKey = `GITHUB_${key.toUpperCase()}`;
         const secretValue = encryptToBase64(
           valueToStore,
           process.env.ENCRYPTION_KEY!,
@@ -164,6 +190,30 @@ export const githubAppConnectorRouter = createRouter()
 
       secretKeys.forEach((key) => {
         delete json[key];
+      });
+
+      // useful to have the app id because it's required to make API calls
+      await prisma.secret.upsert({
+        where: {
+          appId_key: {
+            appId: appId!,
+            key: 'GITHUB_APP_ID',
+          },
+        },
+        create: {
+          appId,
+          key: 'GITHUB_APP_ID',
+          encryptedValue: encryptToBase64(
+            json.id.toString(),
+            process.env.ENCRYPTION_KEY!,
+          ),
+        },
+        update: {
+          encryptedValue: encryptToBase64(
+            json.id.toString(),
+            process.env.ENCRYPTION_KEY!,
+          ),
+        },
       });
 
       const connector = await prisma.appConnector.update({

@@ -1,9 +1,25 @@
 export const code = `import { create, getNumericDate } from "https://deno.land/x/djwt@v2.2/mod.ts";
 
-// Get the JWT for the app. This JWT is used to get an installation token.
+/**
+ * Welcome to the GitHub App connector! In order to make API calls to the GitHub
+ * API you will need to get an installation token using your app token.
+ *
+ * To get an app token, call the appJwt function. You can use the JWT that is
+ * returned to list all the installations for your app but calling the
+ * listInstallations function.
+ *
+ * To make API calls for a particular installation, you need an installation
+ * access token which you can get by calling getInstallationAccessToken.
+ *
+ * You can use the installation access token and call the appRequest function
+ * to query GitHub's API.
+ **/
+
+
+/* Get the JWT for the app. This JWT is used to get an installation token. */
 export function appJwt(): Promise<string> {
-  const base64Pem = Deno.env.get('GITHUB_PEM_BASE64')
-  if(!base64Pem) throw new Error('GITHUB_PEM_BASE64 is not set');
+  const base64Pem = Deno.env.get('GITHUB_PEM')
+  if(!base64Pem) throw new Error('GITHUB_PEM is not set');
 
   return create(
     { alg: "RS256", typ: "JWT" },
@@ -12,11 +28,11 @@ export function appJwt(): Promise<string> {
       iat: getNumericDate(0), // issued at time (now)
       exp: getNumericDate(5 * 60), // expiration time (in 5 minutes)
     },
-    atob(base64Pem),
+    base64Pem,
   );
 }
 
-// Make a request to the GitHub API as the app.
+/* Make a request to the GitHub API as the app. */
 export async function appRequest(
   jwt: string,
   endpoint: string,
@@ -38,7 +54,7 @@ export function listInstallations(jwt: string) {
   return appRequest(jwt, "app/installations", "GET");
 }
 
-// This function is used to get an installation token using an app's JWT.
+/* This function is used to get an installation token using an app's JWT. */
 async function getInstallationAccessToken(jwt: string, installationId: string) {
   return appRequest(
     jwt,
@@ -47,7 +63,7 @@ async function getInstallationAccessToken(jwt: string, installationId: string) {
   );
 }
 
-// Example of how to call GitHub's API using an installation token
+/* Example of how to call GitHub's API using an installation token */
 export async function postComment({
   jwt,
   installationId,
@@ -75,9 +91,12 @@ export async function postComment({
   );
 }
 
-// The function that will receive GitHub webhooks. You can customize the endpoint where webhooks are sent in the GitHub App settings.
-export function handler({ ...githubEvent }: any) {
-  return githubEvent;
+/* The function that will receive GitHub webhooks. You can customize the
+endpoint where webhooks are sent in the GitHub App settings. */
+export function handler({ ...githubWebhook }: any) {
+  console.log(githubWebhook);
+
+  return 'Webhook received';
 }
 `;
 
