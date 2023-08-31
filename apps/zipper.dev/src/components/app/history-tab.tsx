@@ -43,7 +43,6 @@ import {
 import { AppRun, User } from '@prisma/client';
 import { JSONViewer } from '../json-editor';
 import { AppConsole } from './app-console';
-import { IconBase } from 'react-icons';
 import { LogMessage } from '@zipper/types';
 
 type HistoryTabProps = {
