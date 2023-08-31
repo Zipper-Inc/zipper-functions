@@ -1,11 +1,6 @@
 import { createContext, useContext, useState } from 'react';
 import noop from '~/utils/noop';
-import {
-  AppInfo,
-  ConnectorType,
-  InputParam,
-  UserAuthConnectorType,
-} from '@zipper/types';
+import { AppInfo, InputParam, UserAuthConnectorType } from '@zipper/types';
 import { useForm } from 'react-hook-form';
 import { trpc } from '~/utils/trpc';
 import { AppQueryOutput } from '~/types/trpc';
@@ -14,7 +9,6 @@ import { getAppVersionFromHash } from '~/utils/hashing';
 import { useEditorContext } from './editor-context';
 import { requiredUserAuthConnectorFilter } from '~/utils/user-auth-connector-filter';
 import { getInputsFromFormData, safeJSONParse, uuid } from '@zipper/utils';
-import { getLogger } from '~/utils/app-console';
 import { prettyLog, PRETTY_LOG_TOKENS } from '~/utils/pretty-log';
 
 type UserAuthConnector = {
@@ -51,6 +45,8 @@ export const RunAppContext = createContext<RunAppContextType>({
   boot: noop,
   configs: {},
 });
+
+const oneSecondAgo = Date.now() - 1 * 1000;
 
 export function RunAppProvider({
   app,
@@ -108,6 +104,8 @@ export function RunAppProvider({
     },
   });
 
+  const logMutation = trpc.useMutation('appLog.get');
+
   const { currentScript, inputParams } = useEditorContext();
 
   const boot = async () => {
@@ -116,19 +114,27 @@ export function RunAppProvider({
       const version = getAppVersionFromHash(hash);
       if (!version) throw new Error('No version found');
 
-      const logger = getLogger({ appId: app.id, version });
+      const logs = await logMutation.mutateAsync({
+        appId: app.id,
+        version,
+        fromTimestamp: Date.now(),
+      });
 
-      const logsToIgnore = await logger.fetch();
+      const logsToIgnore = logs;
 
       const updateLogs = async () => {
-        const logs = await logger.fetch();
+        const logs = await logMutation.mutateAsync({
+          appId: app.id,
+          version,
+          fromTimestamp: oneSecondAgo,
+        });
         if (!logs.length) return;
         if (logsToIgnore.length) logs.splice(0, logsToIgnore.length);
 
         setLogStore((prev) => {
-          const prevLogs = prev[logger.url] || [];
+          const prevLogs = prev[`${app.id}@${version}`] || [];
           const newLogs = prevLogs.length > logs.length ? prevLogs : logs;
-          return { ...prev, [logger.url]: newLogs };
+          return { ...prev, [`${app.id}@${version}`]: newLogs };
         });
       };
 
@@ -181,18 +187,26 @@ export function RunAppProvider({
 
     const runId = uuid();
 
-    const versionLogger = getLogger({ appId: app.id, version });
-    const runLogger = getLogger({ appId: app.id, version, runId });
-
     // fetch deploy logs so we don't display them again
-    const vLogsToIgnore = await versionLogger.fetch();
+    const vLogsToIgnore = await logMutation.mutateAsync({
+      appId: app.id,
+      version: version!,
+      fromTimestamp: Date.now(),
+    });
 
     // Start fetching logs
     const updateLogs = async () => {
-      const [vLogs, rLogs] = await Promise.all([
-        versionLogger.fetch(),
-        runLogger.fetch(),
-      ]);
+      const vLogs = await logMutation.mutateAsync({
+        appId: app.id,
+        version: version!,
+        fromTimestamp: oneSecondAgo,
+      });
+      const rLogs = await logMutation.mutateAsync({
+        appId: app.id,
+        version: version!,
+        runId: runId,
+        fromTimestamp: oneSecondAgo,
+      });
 
       if (!vLogs?.length && !rLogs?.length) return;
 
@@ -201,15 +215,15 @@ export function RunAppProvider({
       // We use a log store because the log fetcher grabs all the logs for a given object
       // This way, we always update the store with the freshest logs without duplicating
       setLogStore((prev) => {
-        const prevVLogs = prev[versionLogger.url] || [];
-        const prevRLogs = prev[runLogger.url] || [];
+        const prevVLogs = prev[`${app.id}@${version}`] || [];
+        const prevRLogs = prev[runId] || [];
 
         const newVLogs = prevVLogs.length > vLogs.length ? prevVLogs : vLogs;
         const newRLogs = prevRLogs.length > rLogs.length ? prevRLogs : rLogs;
         return {
           ...prev,
-          [versionLogger.url]: newVLogs,
-          [runLogger.url]: newRLogs,
+          [`${app.id}@${version}`]: newVLogs,
+          [runId]: newRLogs,
         };
       });
     };

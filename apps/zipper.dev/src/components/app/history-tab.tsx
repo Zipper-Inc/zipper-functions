@@ -23,11 +23,16 @@ import {
   DrawerHeader,
   DrawerCloseButton,
   DrawerBody,
-  AvatarBadge,
   Avatar,
+  Button,
+  Spacer,
 } from '@chakra-ui/react';
 import { useRouter } from 'next/router';
-import { HiExclamationTriangle, HiCheck } from 'react-icons/hi2';
+import {
+  HiExclamationTriangle,
+  HiCheck,
+  HiMagnifyingGlassPlus,
+} from 'react-icons/hi2';
 import { TbClockPlay } from 'react-icons/tb';
 import {
   createColumnHelper,
@@ -37,20 +42,26 @@ import {
 } from '@tanstack/react-table';
 import { AppRun, User } from '@prisma/client';
 import { JSONViewer } from '../json-editor';
+import { AppConsole } from './app-console';
+import { LogMessage } from '@zipper/types';
 
 type HistoryTabProps = {
   appId: string;
 };
 
 const HistoryTab: React.FC<HistoryTabProps> = ({ appId }) => {
-  const appRuns = trpc.useQuery(['appRun.all', { appId, limit: 100 }]);
-
   const [data, setData] = useState<any[]>([]);
+  const appRuns = trpc.useQuery(['appRun.all', { appId, limit: 100 }], {
+    enabled: !!data,
+  });
 
   const columnHelper = createColumnHelper<AppRun & { user: User }>();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [modalValue, setModalValue] = useState<any>();
+  const [logValue, setLogValue] = useState<LogMessage[]>([]);
   const [modalHeading, setModalHeading] = useState<string>();
+
+  const runLogs = trpc.useMutation('appLog.getRunId');
 
   const columns = [
     //date
@@ -146,11 +157,11 @@ const HistoryTab: React.FC<HistoryTabProps> = ({ appId }) => {
     }),
     columnHelper.accessor('inputs', {
       id: 'inputs',
-      header: 'Inputs',
+      header: 'Inputs & Logs',
       size: 120,
       cell({
         row: {
-          original: { inputs, createdAt },
+          original: { inputs, createdAt, id },
         },
       }) {
         const inputString =
@@ -168,16 +179,25 @@ const HistoryTab: React.FC<HistoryTabProps> = ({ appId }) => {
           <HStack
             cursor="pointer"
             maxW={'lg'}
+            w="full"
             _hover={{ color: 'purple' }}
-            onClick={() => {
+            onClick={async () => {
               setModalHeading(
                 `${createdAt.toLocaleDateString()} @ ${createdAt.toLocaleTimeString()}`,
               );
               setModalValue(JSON.stringify(inputs, null, 2));
+              setLogValue(
+                await runLogs.mutateAsync({
+                  appId,
+                  runId: id,
+                }),
+              );
               onOpen();
             }}
           >
             <Text isTruncated>{inputString}</Text>
+            <Spacer />
+            <Icon as={HiMagnifyingGlassPlus} />
           </HStack>
         );
       },
@@ -193,7 +213,7 @@ const HistoryTab: React.FC<HistoryTabProps> = ({ appId }) => {
       },
       {
         id: 'runUrl',
-        header: '',
+        header: 'Result',
         size: 10,
         cell({
           getValue,
@@ -204,9 +224,18 @@ const HistoryTab: React.FC<HistoryTabProps> = ({ appId }) => {
           return (
             <>
               {success ? (
-                <Link href={getValue()}>
-                  <Icon as={HiCheck} fill="green.600" />
-                </Link>
+                <Button
+                  size="xs"
+                  variant="outline"
+                  as={Link}
+                  Link
+                  href={getValue()}
+                >
+                  <HStack p="2">
+                    <Icon as={HiCheck} fill="green.600" />
+                    <Text>View</Text>
+                  </HStack>
+                </Button>
               ) : (
                 <Tooltip label={result?.toString()}>
                   <span>
@@ -333,6 +362,14 @@ const HistoryTab: React.FC<HistoryTabProps> = ({ appId }) => {
               Inputs
             </Heading>
             <JSONViewer value={modalValue} options={{ readOnly: true }} />
+            {logValue.length > 0 && (
+              <>
+                <Heading fontSize="md" my="4">
+                  Logs
+                </Heading>
+                <AppConsole logs={logValue} showPreserveLogsToggle={false} />
+              </>
+            )}
           </DrawerBody>
         </DrawerContent>
       </Drawer>

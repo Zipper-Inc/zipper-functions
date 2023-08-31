@@ -4,8 +4,8 @@ import {
   ConsoleLogger,
   LogMethod,
 } from '@zipper/types';
-import { getZipperApiUrl, safeJSONStringify, uuid } from '@zipper/utils';
-import fetch from 'node-fetch';
+import { uuid } from '@zipper/utils';
+import { prisma } from '~/server/prisma';
 
 export type LoggerParams = {
   appId: string;
@@ -14,42 +14,24 @@ export type LoggerParams = {
 };
 
 /**
- * Get the URL to send/recieve logs
- */
-export function getLogsApiUrl({ appId, version, runId }: LoggerParams) {
-  const url = getZipperApiUrl();
-  url.pathname = `/api/app/${appId}/${version}/logs`;
-  if (runId) url.pathname = `${url.pathname}/${runId}`;
-  return url;
-}
-
-/**
- * Fetch logs by appId, version and runId
- * You can also fetch after timestamp, useful for polling
- */
-export async function fetchLogs({
-  appId,
-  version,
-  runId,
-  url = getLogsApiUrl({ appId, version, runId }),
-  fromTimestamp,
-}: LoggerParams & { url?: URL; fromTimestamp?: number }) {
-  if (fromTimestamp)
-    url.searchParams.set('fromTimestamp', fromTimestamp.toString());
-  return (await fetch(url).then((r) => r.json())) as LogMessage[];
-}
-
-/**
  * Send a log object to a given appId, version and runId
  */
 export async function sendLog({
   appId,
   version,
   runId,
-  url = getLogsApiUrl({ appId, version, runId }),
   log,
 }: LoggerParams & { url?: URL; log: LogMessage }) {
-  await fetch(url, { method: 'POST', body: safeJSONStringify(log) });
+  await prisma.appLog.create({
+    data: {
+      appId: appId.toString(),
+      version: version.toString(),
+      runId: runId?.toString(),
+      method: log.method,
+      timestamp: new Date(log.timestamp),
+      data: JSON.parse(JSON.stringify(log.data)),
+    },
+  });
 }
 
 /**
@@ -58,7 +40,7 @@ export async function sendLog({
 export function makeLog({
   id = uuid(),
   method = LogMethod.log,
-  timestamp = Date.now(),
+  timestamp = new Date(Date.now()),
   data = [],
 }: Partial<LogMessage>) {
   return {
@@ -78,13 +60,8 @@ export function getLogger({
   version,
   runId,
 }: LoggerParams): ConsoleLogger {
-  const url = getLogsApiUrl({ appId, version, runId });
-
   const initialLogger = {
-    url,
-    send: (log: LogMessage) => sendLog({ appId, version, runId, url, log }),
-    fetch: (fromTimestamp: number) =>
-      fetchLogs({ appId, version, runId, url, fromTimestamp }),
+    send: (log: LogMessage) => sendLog({ appId, version, runId, log }),
   };
 
   const getLoggerForMethod =
@@ -94,7 +71,6 @@ export function getLogger({
         appId,
         version,
         runId,
-        url,
         log: makeLog({ method, data }),
       });
 
