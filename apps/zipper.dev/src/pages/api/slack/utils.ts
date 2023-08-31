@@ -96,7 +96,7 @@ export async function openSlackModal(
 }
 
 export function acknowledgeSlack(res: NextApiResponse) {
-  return res.status(200).json({ success: true });
+  return res.status(200).send('ok');
 }
 
 function buildSelectOption(text: string, value: string) {
