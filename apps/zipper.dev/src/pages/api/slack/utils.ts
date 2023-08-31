@@ -2,7 +2,6 @@ import type { NextApiResponse } from 'next';
 import { prisma } from '../../../server/prisma';
 import { decryptFromBase64 } from '@zipper/utils';
 
-// TODO: The bot token needs to come from slack and be stored in a DB
 const SLACK_VIEW_UPDATE_URL = 'https://slack.com/api/views.update';
 const SLACK_VIEW_OPEN_URL = 'https://slack.com/api/views.open';
 const ZIPPER_APP_INFO_URL = 'https://zipper.dev/api/app/info';
