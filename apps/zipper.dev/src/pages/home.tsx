@@ -6,11 +6,19 @@ import {
   Grid,
   GridItem,
   Heading,
+  HStack,
   Input,
-  keyframes,
   Text,
   useMediaQuery,
   VStack,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalFooter,
+  ModalBody,
+  ModalCloseButton,
+  useDisclosure,
 } from '@chakra-ui/react';
 import { baseColors, Website } from '@zipper/ui';
 import { memo, useEffect, useState } from 'react';
@@ -25,8 +33,11 @@ import {
   FiCalendar,
   FiKey,
   FiSliders,
+  FiCheck,
+  FiPlay,
 } from 'react-icons/fi';
 import Image from 'next/image';
+import { motion, useAnimation } from 'framer-motion';
 
 /* -------------------------------------------- */
 /* Content                                      */
@@ -35,8 +46,24 @@ import Image from 'next/image';
 const HERO_CONTENT = {
   TITLE: 'Forget about \n your toolchain',
 
-  DESCRIPTION: `Zipper turns Typescript functions into serverless web apps. 
-    UI, APIs, and auth all come standard.`,
+  DESCRIPTION: `
+    Turn Typescript functions into serverless web apps 
+    Don't write a line of frontend, auth, or API code 
+    Do everything in your browser - start immediately with no setup`,
+  LIST: [
+    {
+      description: 'Turn Typescript functions into serverless web apps',
+      icon: <FiCheck size={24} />,
+    },
+    {
+      description: `Don't write a line of frontend, auth, or API code`,
+      icon: <FiCheck size={24} />,
+    },
+    {
+      description: `Do everything in your browser - start immediately with no setup`,
+      icon: <FiCheck size={24} />,
+    },
+  ],
 };
 
 const FEATURES_CONTENT = {
@@ -190,31 +217,30 @@ const HEADLINE_CONTENT = {
 /* ------------------- Hero ------------------- */
 
 const Hero = () => {
-  const [allreadyLoaded, setAllreadyLoaded] = useState(false);
+  // Animations
+  const { isOpen, onOpen, onClose } = useDisclosure();
 
-  const clipPathAni = keyframes`
-    0% {
-      clip-path: polygon(100% 100%, 100% 100%, 100% 100%);
-    }
+  const box1Animation = useAnimation();
+  const box2Animation = useAnimation();
 
-    100% {
-      clip-path: polygon(100% 0%, 0% 100%, 100% 100%);
-    }
-  `;
+  const box1Variants = {
+    rest: { x: 0, y: 0 },
+    anim: { x: -10, y: -10 },
+  };
 
-  const clipPathHover = keyframes`
-  0% {
-    clip-path: polygon(100% 0%, 0% 100%, 100% 100%);
-  }
+  const box2Variants = {
+    rest: { x: 0, y: 0 },
+    anim: { x: 10, y: 10 },
+  };
 
-  100% {
-    clip-path: polygon(150% -400%, -400% 150%, 100% 100%);
-  }
-  `;
-
-  useEffect(() => {
-    setAllreadyLoaded(true);
-  }, []);
+  const onHoverStart = () => {
+    box1Animation.start(box1Variants.anim);
+    box2Animation.start(box2Variants.anim);
+  };
+  const onHoverEnd = () => {
+    box1Animation.start(box1Variants.rest);
+    box2Animation.start(box1Variants.rest);
+  };
 
   return (
     <Box
@@ -238,83 +264,133 @@ const Hero = () => {
         zIndex="10"
         position="relative"
       >
-        <VStack gap={5} w={['full', 'auto']} zIndex="10" align="start">
-          <Heading
-            fontFamily="plaak"
-            fontSize={['40px', '6xl']}
-            fontWeight="normal"
-            color={baseColors.blue['500']}
-          >
-            {HERO_CONTENT.TITLE}
-          </Heading>
-          <Text marginTop="0px" fontSize="xl" color="gray.700">
-            {HERO_CONTENT.DESCRIPTION}
-          </Text>
-
-          <Flex as="form" align="center" gap={2}>
-            <Input
-              height="2.75rem"
-              width={{ base: 'full', md: '20rem' }}
-              borderRadius="8px"
-              variant="outline"
-              placeholder="Email address"
-              borderColor="gray.300"
-              fontSize="md"
-              color="gray.500"
-            />
-            <Button
-              height="2.75rem"
-              minWidth="138px"
-              fontSize="md"
-              borderRadius="8px"
-              bg="brandOrange.500"
-              padding="10px 18px"
-              color="white"
-              fontWeight={500}
-              _hover={{ background: 'brandOrange.700' }}
+        <HStack gap={12}>
+          <VStack gap={5} w={['full', 'auto']} zIndex="10" align="start">
+            <Heading
+              fontFamily="plaak"
+              fontSize={['40px', '6xl']}
+              fontWeight="normal"
+              color={baseColors.blue['500']}
             >
-              Join the beta
-            </Button>
-          </Flex>
-        </VStack>
-        {/* <Box
-          marginLeft="-20px"
-          height={['280px', '480px']}
-          width={{ base: 'full' }}
-          flex={{ md: 1 }}
-          background="url('/layout/hero_code.svg')"
-          backgroundSize="contain"
-          backgroundPosition={{ base: 'top left' }}
-          backgroundRepeat="no-repeat"
-          position="relative"
-        >
+              {HERO_CONTENT.TITLE}
+            </Heading>
+            {HERO_CONTENT.LIST.map((feat, index) => (
+              <Flex key={index} align="center" gap={2}>
+                <Box as="span" color="blue.500">
+                  {feat.icon}
+                </Box>
+                <Text fontSize="lg" color="gray.800">
+                  {feat.description}
+                </Text>
+              </Flex>
+            ))}
+
+            <Flex as="form" align="center" gap={2}>
+              <Input
+                height="2.75rem"
+                width={{ base: 'full', md: '20rem' }}
+                borderRadius="8px"
+                variant="outline"
+                placeholder="Email address"
+                borderColor="gray.300"
+                fontSize="md"
+                color="gray.500"
+                value=""
+              />
+              <Button
+                height="2.75rem"
+                minWidth="138px"
+                fontSize="md"
+                borderRadius="8px"
+                bg="brandOrange.500"
+                padding="10px 18px"
+                color="white"
+                fontWeight={500}
+                _hover={{ background: 'brandOrange.700' }}
+              >
+                Join the beta
+              </Button>
+            </Flex>
+          </VStack>
           <Box
-            height="full"
-            width="full"
-            position="absolute"
-            zIndex={10}
-            top="30px"
-            right={['-20px', '-20px', '0px', '30px']}
-            background="url('/layout/hero_app.svg')"
-            backgroundSize="contain"
-            backgroundRepeat="no-repeat"
-            backgroundPosition="bottom right"
-            clipPath="polygon(100% 0%, 0% 100%, 100% 100%)"
-            transition="all 1s ease-in-out"
-            _hover={{
-              clipPath: 'polygon(150% -400%, -400% 150%, 100% 100%)',
-              animation: `${clipPathHover} 1s ease-in-out`,
-            }}
-            animation={
-              !allreadyLoaded ? `${clipPathAni} 2s ease-in-out` : undefined
-            }
-          />
-        </Box> */}
+            display="flex"
+            position="relative"
+            width="535px"
+            height="445px"
+            as={motion.div}
+          >
+            <Box
+              as={motion.div}
+              position="absolute"
+              top="0"
+              left="0"
+              width="440px"
+              height="330px"
+              animate={box1Animation}
+            >
+              <Image
+                src="/static/animation_code.png"
+                width="440"
+                height="330"
+                alt="Hero App"
+              />
+            </Box>
+            <Box
+              as={motion.div}
+              position="absolute"
+              bottom="0"
+              right="0"
+              width="440px"
+              height="330px"
+              animate={box2Animation}
+            >
+              <Image
+                src="/static/animation_applet.png"
+                width="440"
+                height="330"
+                alt="Hero App"
+              />
+            </Box>
+
+            <Box
+              as={motion.div}
+              whileHover={{ scale: 1.2 }}
+              onHoverStart={onHoverStart}
+              onHoverEnd={onHoverEnd}
+              onClick={onOpen}
+              cursor="pointer"
+              animate="rest"
+              width="100px"
+              height="100px"
+              margin="auto"
+              left="0"
+              right="0"
+              top="calc(50% - 50px)"
+              bgColor="blue.600"
+              border="5px solid white"
+              position="absolute"
+              borderRadius="100%"
+              zIndex="10"
+              display="flex"
+              justifyContent="center"
+              alignItems="center"
+              boxShadow={'2xl'}
+            >
+              <FiPlay size="40px" color="white" fill="white" />
+            </Box>
+          </Box>
+        </HStack>
       </Container>
+      <Modal isOpen={isOpen} onClose={onClose}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalCloseButton />
+          <ModalBody>asdoaijsdoiajsdoiajsdojoasijd</ModalBody>
+        </ModalContent>
+      </Modal>
     </Box>
   );
 };
-
 const Features = memo(() => (
   <Box
     as="section"
