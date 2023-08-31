@@ -1,18 +1,10 @@
-import {
-  Flex,
-  Container,
-  Heading,
-  HStack,
-  Text,
-  Button,
-  Box,
-} from '@chakra-ui/react';
+import { Container, Heading, HStack, Text } from '@chakra-ui/react';
 import Head from 'next/head';
 import type { ReactNode } from 'react';
 import { useRef } from 'react';
 import { useBlogContext } from './blog-context';
 import { HeadingContext } from './mdx-theme';
-import { Website, ZipperLogo } from '@zipper/ui';
+import { Website } from '@zipper/ui';
 import { useRouter } from 'next/router';
 import { FiChevronLeft } from 'react-icons/fi';
 
@@ -77,10 +69,10 @@ export const BasicLayout = ({ children }: { children: ReactNode }) => {
               {opts.hasJsxInH1 ? null : (
                 <Heading
                   fontFamily="plaak"
-                  fontWeight={400}
+                  fontWeight={{ base: 700, lg: 400 }}
                   color="primary"
                   margin="0"
-                  fontSize={'64px'}
+                  fontSize={{ base: '4xl', lg: '64px' }}
                 >
                   {opts.title}
                 </Heading>

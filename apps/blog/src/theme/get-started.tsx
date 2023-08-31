@@ -7,6 +7,7 @@ export const GetStartedBanner = () => {
       direction="column"
       align="center"
       flex={1}
+      display={{ base: 'none', lg: 'flex' }}
       borderRadius="8px"
       justify="space-between"
       p={10}
