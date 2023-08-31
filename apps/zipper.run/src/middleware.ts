@@ -6,11 +6,13 @@ import yamlHandler from './api-handlers/yaml.handler';
 import htmlHandler from './api-handlers/html.handler';
 
 import {
+  generateModTs,
   getZipperApiUrl,
   ZIPPER_TEMP_USER_ID_COOKIE_NAME,
 } from '@zipper/utils';
 import { jwtVerify } from 'jose';
 import getValidSubdomain from './utils/get-valid-subdomain';
+import getAppInfo from './utils/get-app-info';
 
 const { __DEBUG__ } = process.env;
 
@@ -33,6 +35,12 @@ async function maybeGetCustomResponse(
       console.log('matching src route');
       return serveSource({ request });
     }
+
+    case /\/mod\.ts$/.test(appRoute): {
+      console.log('matching mod.ts route');
+      return serveModTs({ request });
+    }
+
     case /\/api(\/?)$/.test(appRoute):
     case /\/api\/json(\/?)$/.test(appRoute): {
       console.log('matching json api route');
@@ -66,9 +74,12 @@ async function maybeGetCustomResponse(
       });
     }
 
-    case /^\/run\/zendesk\/main.ts(\/?)/.test(appRoute): {
-      const url = new URL('/run/embed/main.ts', request.url);
-
+    case /^\/run\/zendesk(\/?)/.test(appRoute): {
+      // grab the filename so we can pass it on to the embed route,
+      // default to main.ts
+      const pathRemainder =
+        appRoute.match(/^\/run\/zendesk\/(.*)/)?.[1] || 'main.ts';
+      const url = new URL(`/run/embed/${pathRemainder}`, request.url);
       // When zendesk signs it's urls it requests the initial page of the
       // iframe with a POST. The JWT will be in the formData.
       // Unsigned zendesk apps request the initial page with a GET.
@@ -134,6 +145,28 @@ export async function serveSource({ request }: { request: NextRequest }) {
     return new NextResponse(result, { headers: response.headers });
   } else {
     return new NextResponse(response.statusText, { status: 404 });
+  }
+}
+
+export async function serveModTs({ request }: { request: NextRequest }) {
+  const host = request.headers.get('host') || '';
+  const subdomain = getValidSubdomain(host);
+  if (!subdomain) return new NextResponse('Not found', { status: 404 });
+  try {
+    const response = await getAppInfo({ subdomain });
+    if (!response.ok) throw new Error(response.error);
+
+    const { runnableScripts } = response.data;
+    const file = generateModTs({
+      subdomain,
+      filenames: runnableScripts,
+    });
+
+    return new NextResponse(file, {
+      headers: { 'Content-Type': 'text/typescript' },
+    });
+  } catch (e) {
+    return new NextResponse(e as string, { status: 500 });
   }
 }
 

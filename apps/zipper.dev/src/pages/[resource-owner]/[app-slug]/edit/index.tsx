@@ -8,7 +8,7 @@ const EditPage: NextPageWithLayout = () => {
   const appSlug = router.query['app-slug'] as string;
 
   useEffect(() => {
-    router.replace(`/${resourceOwnerSlug}/${appSlug}/edit/main.ts`);
+    router.replace(`/${resourceOwnerSlug}/${appSlug}/src/main.ts`);
   }, []);
 
   return <></>;

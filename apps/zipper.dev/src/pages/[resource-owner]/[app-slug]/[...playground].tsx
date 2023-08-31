@@ -1,6 +1,4 @@
 import { NextPageWithLayout } from '~/pages/_app';
-import NextError from 'next/error';
-import { useRouter } from 'next/router';
 
 import { trpc } from '~/utils/trpc';
 
@@ -15,14 +13,18 @@ import { GetServerSideProps, GetServerSidePropsContext } from 'next';
 import { getValidSubdomain, removeSubdomains } from '~/utils/subdomains';
 import SignedIn from '~/components/auth/signed-in';
 import Header from '~/components/header';
+import {
+  parsePlaygroundQuery,
+  Props,
+  PlaygroundTab,
+} from '~/utils/playground.utils';
 
-const PlaygroundPage: NextPageWithLayout = () => {
-  const { query } = useRouter();
-
-  const resourceOwnerSlug = query['resource-owner'] as string;
-  const appSlug = query['app-slug'] as string;
-  const filename = query.filename as string;
-
+const PlaygroundPage: NextPageWithLayout<Props> = ({
+  resourceOwnerSlug,
+  appSlug,
+  tab,
+  filename,
+}) => {
   const appQuery = trpc.useQuery(
     ['app.byResourceOwnerAndAppSlugs', { resourceOwnerSlug, appSlug }],
     { retry: false },
@@ -85,7 +87,7 @@ const PlaygroundPage: NextPageWithLayout = () => {
         initialScripts={appQuery.data?.scripts || []}
         refetchApp={refetchApp}
       >
-        <Playground app={appQuery.data} filename={filename} />
+        <Playground app={appQuery.data} filename={filename} tab={tab} />
       </EditorContextProvider>
     ),
     {
@@ -112,6 +114,7 @@ const PlaygroundPage: NextPageWithLayout = () => {
 
 export const getServerSideProps: GetServerSideProps = async ({
   req,
+  query,
   resolvedUrl,
 }: GetServerSidePropsContext) => {
   const { host } = req.headers;
@@ -130,7 +133,7 @@ export const getServerSideProps: GetServerSideProps = async ({
     };
   }
 
-  return { props: {} };
+  return { props: parsePlaygroundQuery(query) };
 };
 
 PlaygroundPage.skipAuth = true;

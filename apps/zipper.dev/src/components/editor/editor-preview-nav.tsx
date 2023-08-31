@@ -26,7 +26,7 @@ export const EditorPreviewNav: React.FC<EditorNavProps> = ({ app }) => {
             _hover={{ transform: 'scale(1.05)' }}
             onClick={(e) => {
               e.preventDefault();
-              window.location.href = `/${app.resourceOwner.slug}/${app.slug}/edit/${scriptMain.filename}`;
+              window.location.href = `/${app.resourceOwner.slug}/${app.slug}/src/${scriptMain.filename}`;
             }}
           >
             {scriptMain.filename}
@@ -49,7 +49,7 @@ export const EditorPreviewNav: React.FC<EditorNavProps> = ({ app }) => {
               _hover={{ transform: 'scale(1.05)' }}
               onClick={(e) => {
                 e.preventDefault();
-                window.location.href = `/${app.resourceOwner.slug}/${app.slug}/edit/${script.filename}`;
+                window.location.href = `/${app.resourceOwner.slug}/${app.slug}/src/${script.filename}`;
               }}
             >
               {script.filename}

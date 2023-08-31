@@ -1,0 +1,28 @@
+# Postgres
+
+You can connect to a Postgres database using the postgres module from deno.land. This example uses [sql-bricks](http://csnw.github.io/sql-bricks/) package to generate SQL queries.
+
+```typescript
+import { Client } from 'https://deno.land/x/postgres@v0.17.0/mod.ts';
+import * as sql from 'https://esm.sh/sql-bricks';
+
+export async function handler() {
+  const client = new Client({
+    user: 'zipper_user',
+    password: Deno.env.get('DB_PASSWORD'),
+    database: 'zipper_example',
+    hostname: 'dpg-cifkqeenqql1s39j7vt0-a.oregon-postgres.render.com',
+    port: 5432,
+  });
+
+  await client.connect();
+
+  const query = sql.select().from('users').toString();
+  const result = await client.queryArray(query);
+
+  return {
+    query,
+    result: result.rows,
+  };
+}
+```

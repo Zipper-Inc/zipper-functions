@@ -229,14 +229,6 @@ export function Dashboard() {
     });
   }, [appSearchTerm]);
 
-  if (appQuery.isLoading) {
-    return (
-      <Center>
-        <Spinner color="purple.700" />
-      </Center>
-    );
-  }
-
   return (
     <>
       <VStack flex={1} paddingX={10} alignItems="stretch" spacing={0}>
@@ -314,7 +306,14 @@ export function Dashboard() {
                         Create Applet
                       </Button>
                     </HStack>
-                    {apps && apps.length > 0 ? (
+
+                    {appQuery.isLoading && (
+                      <Center>
+                        <Spinner color="purple.700" />
+                      </Center>
+                    )}
+
+                    {!appQuery.isLoading && apps && apps.length > 0 && (
                       <>
                         <TableContainer w="full">
                           <DataTable
@@ -335,7 +334,9 @@ export function Dashboard() {
                           />
                         </TableContainer>
                       </>
-                    ) : (
+                    )}
+
+                    {appQuery.isSuccess && apps && apps.length === 0 && (
                       <EmptySlate
                         organization={organization}
                         onCreateButtonClick={onOpen}

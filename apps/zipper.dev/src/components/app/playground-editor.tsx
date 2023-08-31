@@ -76,7 +76,7 @@ export default function PlaygroundEditor(
   >('typescript');
   const theme = useColorModeValue('vs', 'vs-dark');
 
-  useExitConfirmation({ enable: isEditorDirty(), ignorePaths: ['/edit/'] });
+  useExitConfirmation({ enable: isEditorDirty(), ignorePaths: ['/src/'] });
 
   const handleEditorDidMount = (editor: MonacoEditor, monaco: Monaco) => {
     console.log('editor mounted');
@@ -188,7 +188,9 @@ export default function PlaygroundEditor(
         const path = `types/${filename}`;
 
         if (!extraLibs[path]) {
-          const response = await fetch(`/api/ts/declarations/${filename}`);
+          const response = await fetch(
+            `/api/editor/ts/declarations/${filename}`,
+          );
           const src = await response.text();
           monaco.languages.typescript.typescriptDefaults.addExtraLib(src, path);
         }

@@ -46,7 +46,8 @@ import { GithubConnectorAuthMetadata } from '@zipper/types';
 
 export const githubConnector = createConnector({
   id: 'github',
-  name: 'GitHub',
+  name: 'GitHub OAuth',
+  description: `Access GitHub's API as a user.`,
   icon: <VscGithub />,
   code,
   userScopes: scopes,
@@ -282,6 +283,17 @@ function GitHubConnectorForm({ appId }: { appId: string }) {
                 type="password"
                 onChange={(e) => setClientSecret(e.target.value)}
               />
+            </FormControl>
+            <FormControl pt="2">
+              <FormLabel>Redirect URL</FormLabel>
+              <Text>
+                Set your GitHub OAuth app's application callback URL to:{' '}
+                {process.env.NODE_ENV === 'development' ? (
+                  <Code>https://your.ngrok.url/connectors/github/auth</Code>
+                ) : (
+                  <Code>https://zipper.dev/connectors/github/auth</Code>
+                )}
+              </Text>
             </FormControl>
           </Collapse>
         </FormControl>

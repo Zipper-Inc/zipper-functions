@@ -150,6 +150,7 @@ model AppConnector {
   isUserAuthRequired Boolean   @default(false)
   userScopes         String[]
   workspaceScopes    String[]
+  events             String[]
 
   app                   App                    @relation(fields: [appId], references: [id])
   appConnectorUserAuths AppConnectorUserAuth[]

@@ -5,20 +5,34 @@ import {
   Badge,
   useColorModeValue,
 } from '@chakra-ui/react';
+import Link from 'next/link';
 
 type TabButtonProps = UseTabOptions &
   ChakraProps & {
     title: string;
     badge?: number;
+    href?: string;
   };
 
 export const TabButton: React.FC<TabButtonProps> = ({
   title,
   badge,
+  href,
   ...props
 }) => {
   const backgroundColor = useColorModeValue('purple.50', 'whiteAlpha.100');
   const textColor = useColorModeValue('purple.700', 'purple.300');
+  const inner = (
+    <>
+      {title}
+      {badge && (
+        <Badge ml={2} colorScheme="purple">
+          {badge}
+        </Badge>
+      )}
+    </>
+  );
+
   return (
     <Tab
       px={4}
@@ -37,11 +51,12 @@ export const TabButton: React.FC<TabButtonProps> = ({
       }}
       {...props}
     >
-      {title}
-      {badge && (
-        <Badge ml={2} colorScheme="purple">
-          {badge}
-        </Badge>
+      {href ? (
+        <Link shallow href={href}>
+          {inner}
+        </Link>
+      ) : (
+        inner
       )}
     </Tab>
   );

@@ -3,11 +3,17 @@ import { App, Script } from '@prisma/client';
 import { generateIndexForFramework } from '@zipper/utils';
 import { getLogger } from './app-console';
 import { prettyLog, PRETTY_LOG_TOKENS } from './pretty-log';
-import { BuildCache, getModule } from './eszip-build-cache';
+import { BuildCache } from './eszip-build-cache';
+import { getModule } from './eszip-utils';
 import { readFrameworkFile } from './read-file';
 import { getAppHashAndVersion } from './hashing';
 import { prisma } from '~/server/prisma';
 import { storeVersionESZip } from '~/server/utils/r2.utils';
+import {
+  applyTsxHack,
+  isZipperImportUrl,
+  TYPESCRIPT_CONTENT_HEADERS,
+} from './eszip-utils';
 
 /**
  * @todo
@@ -16,12 +22,6 @@ import { storeVersionESZip } from '~/server/utils/r2.utils';
  */
 export const FRAMEWORK_ENTRYPOINT = 'run.ts';
 export const APPLET_INDEX_PATH = 'applet/generated/index.gen.ts';
-export const TYPESCRIPT_CONTENT_HEADERS = {
-  'content-type': 'text/typescript',
-};
-export const MARKDOWN_CONTENT_HEADERS = {
-  'content-type': 'text/markdown',
-};
 
 const buildCache = new BuildCache();
 
@@ -49,6 +49,7 @@ export async function build({
         msg: `Starting build for deploy`,
       },
       {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         badgeStyle: { background: PRETTY_LOG_TOKENS['fgText']! },
       },
     ),
@@ -74,16 +75,7 @@ export async function build({
       const script = tsScripts.find((s) => s.filename === filename);
 
       return {
-        // Add TSX to all files so they support JSX
-        specifier: specifier.replace(/\.(ts|tsx)$|$/, '.tsx'),
-        headers: TYPESCRIPT_CONTENT_HEADERS,
-        content:
-          // Add the JSX pragma to all files automatically
-          script?.code?.replace(
-            /^/,
-            '/** @jsx Zipper.JSX.createElement @jsxFrag Zipper.JSX.Fragment */',
-          ) || '/* 🤷🏽‍♂️ missing code */',
-        kind: 'module',
+        ...applyTsxHack(specifier, script?.code),
         version,
       };
     }
@@ -117,6 +109,17 @@ export async function build({
         specifier,
         headers: TYPESCRIPT_CONTENT_HEADERS,
         content,
+      };
+    }
+
+    /**
+     * Handle Zipper Remote Imports
+     */
+    if (isZipperImportUrl(specifier)) {
+      const mod = await getModule(specifier);
+      return {
+        ...mod,
+        ...applyTsxHack(specifier, mod?.content),
       };
     }
 

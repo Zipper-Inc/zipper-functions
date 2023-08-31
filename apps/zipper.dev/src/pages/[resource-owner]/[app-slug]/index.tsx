@@ -81,7 +81,7 @@ const AppPage: NextPageWithLayout = () => {
         </Heading>
         <Heading
           as={Link}
-          href={`/${resourceOwnerSlug}/${appSlug}/edit/${
+          href={`/${resourceOwnerSlug}/${appSlug}/src/${
             appQuery.data.scriptMain?.script.filename || 'main.ts'
           }`}
           color="purple.700"
@@ -173,7 +173,7 @@ const AppPage: NextPageWithLayout = () => {
       </VStack>
       <HStack position="relative" flex={3}>
         <Link
-          href={`/${resourceOwnerSlug}/${appSlug}/edit/${
+          href={`/${resourceOwnerSlug}/${appSlug}/src/${
             appQuery.data.scriptMain?.script.filename || 'main.ts'
           }`}
           _hover={{ textDecoration: 'none' }}
@@ -236,7 +236,7 @@ const AppPage: NextPageWithLayout = () => {
             colorScheme="blue"
             as={Link}
             paddingX={6}
-            href={`/${resourceOwnerSlug}/${appSlug}/edit/${
+            href={`/${resourceOwnerSlug}/${appSlug}/src/${
               appQuery.data.scriptMain?.script.filename || 'main.ts'
             }`}
             _hover={{ transform: 'scale(1.1)', textDecoration: 'none' }}
@@ -249,21 +249,27 @@ const AppPage: NextPageWithLayout = () => {
   );
 };
 
-export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
-  const { host } = req.headers;
+export const getServerSideProps: GetServerSideProps = async ({ query }) => {
+  return {
+    redirect: {
+      destination: `/${query['resource-owner']}/${query['app-slug']}/edit/readme.md`,
+      permanent: false,
+    },
+  };
+  // const { host } = req.headers;
 
-  // validate subdomain
-  const subdomain = getValidSubdomain(host);
+  // // validate subdomain
+  // const subdomain = getValidSubdomain(host);
 
-  if (subdomain) {
-    return {
-      props: {
-        subdomain,
-      },
-    };
-  }
+  // if (subdomain) {
+  //   return {
+  //     props: {
+  //       subdomain,
+  //     },
+  //   };
+  // }
 
-  return { props: {} };
+  // return { props: {} };
 };
 
 AppPage.skipAuth = true;
