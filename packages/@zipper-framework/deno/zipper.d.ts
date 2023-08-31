@@ -302,7 +302,7 @@ declare namespace Zipper {
       // The arguments passed to console API
       data: Serializable[];
       // Time of log
-      timestamp: number;
+      timestamp: Date;
     }
 
     export type MessageorDisplay = Omit<Message, 'timestamp'> & {
