@@ -1,19 +1,18 @@
 import type { NextApiResponse } from 'next';
-import { initApplet } from '@zipper-inc/client-js';
 import { prisma } from '../../../server/prisma';
 import { decryptFromBase64 } from '@zipper/utils';
 
 // TODO: The bot token needs to come from slack and be stored in a DB
 const SLACK_VIEW_UPDATE_URL = 'https://slack.com/api/views.update';
 const SLACK_VIEW_OPEN_URL = 'https://slack.com/api/views.open';
-const ZIPPER_APP_INFO_URL = 'https://zipper.dev/api/app/info/';
+const ZIPPER_APP_INFO_URL = 'https://zipper.dev/api/app/info';
 const MAX_TEXT_LENGTH = 2000;
 
-async function buildHeaders(slackAppId: string, slackTeamId: string) {
+async function buildHeaders(appId: string, teamId: string) {
   const installation = await prisma.slackZipperSlashCommandInstall.findFirst({
     where: {
-      appId: slackAppId,
-      teamId: slackTeamId,
+      appId,
+      teamId,
     },
   });
 
@@ -30,24 +29,17 @@ async function buildHeaders(slackAppId: string, slackTeamId: string) {
   };
 }
 
-export function runApp(slug: string, path: string, inputs: any) {
-  return initApplet(slug)
-    .path(path)
-    .run(inputs)
-    .catch((e) => `invalid response ${e}`);
-}
-
 export async function getAppInfo(slug: string, filename?: string) {
-  const appInfoUrl = `${ZIPPER_APP_INFO_URL}${slug}`;
+  const appInfoUrl = `${ZIPPER_APP_INFO_URL}/${slug}`;
   const appInfoResponse = await fetch(appInfoUrl, {
     method: 'POST',
-    body: `{"filename":"${filename}"}`,
+    body: JSON.stringify({ filename }),
   });
 
   return appInfoResponse.json();
 }
 
-export type BuildSlackViewInputs = {
+type BuildSlackViewInputs = {
   title: string;
   callbackId: string;
   blocks: any[];
@@ -60,7 +52,7 @@ export function buildSlackModalView({
   callbackId,
   blocks,
   privateMetadata,
-  showSubmit: showSubmit,
+  showSubmit,
 }: BuildSlackViewInputs) {
   return {
     type: 'modal',
@@ -140,7 +132,7 @@ export function buildFilenameSelect(scripts: string[], selected?: string) {
   ];
 }
 
-export function buildSelectElement(
+function buildSelectElement(
   actionId: string,
   placeHolderText: string,
   options: string[],
@@ -280,23 +272,23 @@ const inputTypeFuncMap: any = {
   any: buildMultilineInput,
 };
 
-export type ZipperInputDetailValue = {
+type ZipperInputDetailValue = {
   key: string;
   value: string;
 };
 
-export type ZipperInputDetails = {
+type ZipperInputDetails = {
   values: ZipperInputDetailValue[] | string[];
 };
 
-export type ZipperInput = {
+type ZipperInput = {
   key: string;
   type: string;
   optional: boolean;
   details?: ZipperInputDetails;
 };
 
-export function buildViewInputBlock(inputs: ZipperInput[]) {
+function buildViewInputBlock(inputs: ZipperInput[]) {
   return inputs.map((i: ZipperInput) => {
     return inputTypeFuncMap[i.type](i);
   });
@@ -338,7 +330,7 @@ export function buildRunUrlBodyParams(payload: any) {
   return queryParams;
 }
 
-export type PrivateMetadata = {
+type PrivateMetadata = {
   slug?: string;
   filename?: string;
 };
@@ -399,7 +391,6 @@ export function buildRunResultView(slug: string, filename: string, data: any) {
   ];
 
   if (truncateText) {
-    const url = `https://${slug}.zipper.run/run/${filename}`
     resultsBlocks.push({
       type: 'section',
       text: {
@@ -414,7 +405,7 @@ export function buildRunResultView(slug: string, filename: string, data: any) {
           emoji: true,
         },
         value: 'full_results',
-        url,
+        url: `https://${slug}.zipper.run/run/${filename}`,
         action_id: 'zipper_link',
       },
     });

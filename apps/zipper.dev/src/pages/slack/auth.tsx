@@ -53,8 +53,8 @@ const SlackAuth: NextPageWithLayout = () => {
     }
   }, []);
 
-  //on the backend, exchange code for token and store it in the db for the unencoded state (app id)
-
+  // on the backend, exchange code for token and store it
+  // in the db for the unencoded state (app id)
   return (
     <Center w="100%" h="100vh">
       <VStack spacing="12">

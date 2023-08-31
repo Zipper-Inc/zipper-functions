@@ -5,26 +5,22 @@ import {
   updateSlackModal,
   buildRunUrlBodyParams,
   buildInputModal,
-  runApp,
 } from './utils';
+import { initApplet } from '@zipper-inc/client-js';
 
 const { __DEBUG__ } = process.env;
 
 async function processRerun(res: NextApiResponse, payload: any) {
   const { slug, filename } = JSON.parse(payload.view.private_metadata);
+  const {
+    api_app_id: appId,
+    team: { id: teamId },
+    view: { id: viewId, hash: viewHash },
+  } = payload;
 
-  const newView = await buildInputModal(
-    slug,
-    filename,
-    payload.view.id,
-    payload.view.hash,
-  );
+  const newView = await buildInputModal(slug, filename, viewId, viewHash);
+  const updateResponse = await updateSlackModal(newView, appId, teamId);
 
-  const updateResponse = await updateSlackModal(
-    newView,
-    payload.api_app_id,
-    payload.team.id,
-  );
   if (__DEBUG__) {
     console.log('slack update response for rerun');
     console.log(await updateResponse.json());
@@ -35,22 +31,19 @@ async function processRerun(res: NextApiResponse, payload: any) {
 
 async function processFilenameSelection(res: NextApiResponse, payload: any) {
   const { slug } = JSON.parse(payload.view.private_metadata);
-  const filenameSelectAction = payload.actions.find((a: any) => {
+  const {
+    api_app_id: appId,
+    team: { id: teamId },
+    view: { id: viewId, hash: viewHash },
+  } = payload;
+
+  const filename = payload.actions.find((a: any) => {
     return a.action_id === 'filename_select_action';
-  });
+  })?.selected_option.value;
 
-  const newView = await buildInputModal(
-    slug,
-    filenameSelectAction.selected_option.value,
-    payload.view.id,
-    payload.view.hash,
-  );
+  const newView = await buildInputModal(slug, filename, viewId, viewHash);
+  const updateResponse = await updateSlackModal(newView, appId, teamId);
 
-  const updateResponse = await updateSlackModal(
-    newView,
-    payload.api_app_id,
-    payload.team.id,
-  );
   if (__DEBUG__) {
     console.log('slack update response for filename selection');
     console.log(await updateResponse.json());
@@ -62,7 +55,11 @@ async function processFilenameSelection(res: NextApiResponse, payload: any) {
 async function submissionHandler(res: NextApiResponse, payload: any) {
   const { slug, filename } = JSON.parse(payload.view.private_metadata);
   const inputs = buildRunUrlBodyParams(payload);
-  const response = await runApp(slug, filename, inputs);
+  const response = await initApplet(slug)
+    .path(filename)
+    .run(inputs)
+    .catch((e) => `invalid response ${e}`);
+
   const view = buildRunResultView(slug, filename, response);
 
   return res.status(200).json({

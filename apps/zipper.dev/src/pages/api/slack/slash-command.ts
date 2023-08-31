@@ -14,11 +14,6 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
-  if (__DEBUG__) {
-    console.log('Slack Slash Command handler');
-    console.log({ url: req.url, body: req.body });
-  }
-
   const slug = req.body.text;
   const triggerId = req.body.trigger_id;
   const slackTeamId = req.body.team_id;
