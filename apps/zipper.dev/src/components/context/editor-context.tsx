@@ -9,7 +9,7 @@ import {
   useRef,
   MutableRefObject,
 } from 'react';
-import noop, { asyncNoop } from '~/utils/noop';
+import noop from '~/utils/noop';
 
 import {
   useSelf,
@@ -679,6 +679,7 @@ const EditorContextProvider = ({
   };
 
   const setModelIsDirty = (path: string, isDirty: boolean) => {
+    if (path === 'types/zipper.d') return;
     setModelsDirtyState((previousModelsDirtyState) => {
       const newModelState = { ...previousModelsDirtyState };
       newModelState[path] = isDirty;
@@ -695,6 +696,7 @@ const EditorContextProvider = ({
   };
 
   const setModelHasErrors = (path: string, hasErrors: boolean) => {
+    if (path === 'types/zipper.d') return;
     setModelsErrorState((previousModelErrorState) => {
       const newModelState = { ...previousModelErrorState };
       newModelState[path] = hasErrors;
