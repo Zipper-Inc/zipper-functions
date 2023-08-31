@@ -32,8 +32,6 @@ export default function Meta(): ReactElement {
     URL = window.location.href;
   }
 
-  console.log(URL);
-
   const SOCIALS = useMemo(
     () => [
       {
