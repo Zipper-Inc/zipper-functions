@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client';
 import { z } from 'zod';
 import { prisma } from '~/server/prisma';
 import { createRouter } from '../createRouter';
@@ -16,10 +17,20 @@ export const appLogRouter = createRouter().mutation('get', {
       appId: input.appId,
     });
 
+    const where: Prisma.AppLogWhereInput = {
+      appId: input.appId,
+      version: input.version,
+      runId: input.runId,
+    };
+
+    if (input.fromTimestamp) {
+      where.timestamp = {
+        gte: new Date(input.fromTimestamp),
+      };
+    }
+
     const logs = (await prisma.appLog.findMany({
-      where: {
-        ...input,
-      },
+      where,
     })) as Zipper.Log.Message[];
 
     return logs;

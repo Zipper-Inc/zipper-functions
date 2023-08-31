@@ -46,6 +46,8 @@ export const RunAppContext = createContext<RunAppContextType>({
   configs: {},
 });
 
+const fiveSecondsAgo = Date.now() - 5 * 1000;
+
 export function RunAppProvider({
   app,
   children,
@@ -112,12 +114,20 @@ export function RunAppProvider({
       const version = getAppVersionFromHash(hash);
       if (!version) throw new Error('No version found');
 
-      const logs = await logMutation.mutateAsync({ appId: app.id, version });
+      const logs = await logMutation.mutateAsync({
+        appId: app.id,
+        version,
+        fromTimestamp: Date.now(),
+      });
 
       const logsToIgnore = logs;
 
       const updateLogs = async () => {
-        const logs = await logMutation.mutateAsync({ appId: app.id, version });
+        const logs = await logMutation.mutateAsync({
+          appId: app.id,
+          version,
+          fromTimestamp: fiveSecondsAgo,
+        });
         if (!logs.length) return;
         if (logsToIgnore.length) logs.splice(0, logsToIgnore.length);
 
@@ -181,6 +191,7 @@ export function RunAppProvider({
     const vLogsToIgnore = await logMutation.mutateAsync({
       appId: app.id,
       version: version!,
+      fromTimestamp: Date.now(),
     });
 
     // Start fetching logs
@@ -188,15 +199,14 @@ export function RunAppProvider({
       const vLogs = await logMutation.mutateAsync({
         appId: app.id,
         version: version!,
+        fromTimestamp: fiveSecondsAgo,
       });
       const rLogs = await logMutation.mutateAsync({
         appId: app.id,
         version: version!,
         runId: runId,
+        fromTimestamp: fiveSecondsAgo,
       });
-
-      console.log({ rLogs });
-      console.log({ vLogs });
 
       if (!vLogs?.length && !rLogs?.length) return;
 
