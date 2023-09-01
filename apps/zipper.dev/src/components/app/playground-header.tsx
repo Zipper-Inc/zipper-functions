@@ -29,7 +29,14 @@ import {
 import NextLink from 'next/link';
 import { CheckIcon } from '@chakra-ui/icons';
 import React, { useEffect, useState } from 'react';
-import { BLUE, ZipperLogo, ZipperSymbol } from '@zipper/ui';
+import {
+  BLUE,
+  DARK_PURPLE,
+  ORANGE,
+  PURPLE,
+  ZipperLogo,
+  ZipperSymbol,
+} from '@zipper/ui';
 
 import { AppQueryOutput } from '~/types/trpc';
 import { EditAppSlugForm } from './edit-app-slug-form';
@@ -44,6 +51,10 @@ import {
   PiLockSimpleBold,
   PiLockSimpleOpenBold,
   PiSignInDuotone,
+  PiAppWindowBold,
+  PiShapesDuotone,
+  PiShareNetworkDuotone,
+  PiBrowserDuotone,
 } from 'react-icons/pi';
 import slugify from 'slugify';
 import { OrganizationSelector } from '../dashboard/organization-selector';
@@ -144,14 +155,14 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
       pt="1"
       pb="1"
     >
-      <HStack spacing={3} alignItems="center" flex={1} minW={0}>
-        <Box height={4}>
+      <HStack spacing={2} alignItems="center" flex={1} minW={0}>
+        <Box height={4} mr={2}>
           <NextLink href="/">
             <SignedIn>
               <ZipperSymbol
                 fill="currentColor"
                 middle={{ fill: BLUE }}
-                style={{ maxHeight: '100%' }}
+                style={{ maxHeight: '100%', width: '26px' }}
               />
             </SignedIn>
             <SignedOut>
@@ -159,83 +170,67 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
             </SignedOut>
           </NextLink>
         </Box>
-        <HStack>
-          <NextLink href={`/${app.resourceOwner.slug}`}>
-            <Heading
-              as="h1"
-              size="md"
-              overflow="auto"
-              whiteSpace="nowrap"
-              fontWeight="medium"
-              color="fg.600"
-            >
-              {app.resourceOwner.slug}
-            </Heading>
-          </NextLink>
-
+        <NextLink href={`/${app.resourceOwner.slug}`}>
           <Heading
-            as="h1"
             size="md"
             overflow="auto"
             whiteSpace="nowrap"
             fontWeight="medium"
-            color="fg.400"
+            color="fg.600"
           >
-            /
+            {app.resourceOwner.slug}
           </Heading>
+        </NextLink>
 
-          <HStack spacing={2} alignItems="center" minW={0}>
-            {app.isPrivate ? (
-              <PiLockSimpleBold color="fg.500" />
-            ) : (
-              <PiLockSimpleOpenBold color="fg.400" />
-            )}
-            {app.parentId && parentApp.data && (
-              <Tooltip
-                label={`Forked from ${
-                  parentApp.data.name || parentApp.data.slug
-                }`}
-              >
-                <Link href={`/app/${app.parentId}/edit`} target="_blank">
-                  <PiGitBranchBold />
-                </Link>
-              </Tooltip>
-            )}
-            {editSlug ? (
-              <EditAppSlugForm app={app} onClose={() => setEditSlug(false)} />
-            ) : (
-              <>
-                <Heading as="h1" size="md" overflow="auto" whiteSpace="nowrap">
-                  {app.slug}
-                </Heading>
-                {app.canUserEdit && (
-                  <Button
-                    variant="unstyled"
-                    pt={0.5}
-                    px={0.5}
-                    color="primary"
-                    _hover={{
-                      color: 'primary.300',
-                    }}
-                    onClick={() => {
-                      setEditSlug(true);
-                    }}
-                  >
-                    <PiNotePencilBold />
-                  </Button>
-                )}
-              </>
-            )}
-          </HStack>
-        </HStack>
+        <Heading
+          size="md"
+          overflow="auto"
+          whiteSpace="nowrap"
+          fontWeight="medium"
+          color="fg.400"
+        >
+          /
+        </Heading>
+
+        <Heading as="h1" size="md" overflow="auto" whiteSpace="nowrap">
+          {app.slug}
+        </Heading>
+        {app.parentId && parentApp.data && (
+          <Tooltip
+            label={`Forked from ${parentApp.data.name || parentApp.data.slug}`}
+            bg={BLUE}
+            placement="right"
+            fontSize="xs"
+          >
+            <Link
+              href={`/app/${app.parentId}/edit`}
+              target="_blank"
+              color={BLUE}
+            >
+              <PiGitBranchBold />
+            </Link>
+          </Tooltip>
+        )}
+        {app.isPrivate && (
+          <Tooltip
+            label="Only you, members of your organization, or anyone invited can see this code."
+            bg={BLUE}
+            placement="right"
+            fontSize="xs"
+          >
+            <Text>
+              <PiLockSimpleBold color={BLUE} />
+            </Text>
+          </Tooltip>
+        )}
       </HStack>
       <HStack justifyContent="end">
         {isLoaded && (
           <Button
             size="sm"
-            colorScheme="darkPurple"
-            variant="solid"
-            leftIcon={<PiGitBranch />}
+            colorScheme="gray"
+            variant="outline"
+            leftIcon={<PiGitBranch color={PURPLE} />}
             fontWeight="medium"
             onClick={() => {
               if (user) {
@@ -253,11 +248,11 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
         <SignedIn>
           <Button
             size="sm"
-            colorScheme="orange"
-            variant="solid"
+            colorScheme="gray"
+            variant="outline"
             onClick={() => setShareModalOpen(true)}
             fontWeight="medium"
-            leftIcon={<PiShareNetwork />}
+            leftIcon={<PiShareNetworkDuotone color={ORANGE} />}
           >
             <Text>Share</Text>
           </Button>
@@ -265,15 +260,14 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
         <Button
           as={Link}
           size="sm"
-          colorScheme="blue"
-          variant="solid"
+          colorScheme="gray"
+          variant="outline"
           href={`${
             process.env.NODE_ENV === 'production' ? 'https://' : 'http://'
           }${getAppLink(app.slug)}`}
           target="_blank"
-          leftIcon={<PiAppWindow />}
+          leftIcon={<PiBrowserDuotone color={BLUE} />}
           fontWeight="medium"
-          _hover={{ textDecoration: 'none', backgroundColor: 'gray.100' }}
         >
           <Text>View</Text>
         </Button>
@@ -288,7 +282,6 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
             size="sm"
             colorScheme="purple"
             variant="outline"
-            borderWidth={1.5}
             fontWeight="semibold"
             mr="3"
             leftIcon={<PiSignInDuotone />}

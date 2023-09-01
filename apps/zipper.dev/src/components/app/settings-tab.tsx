@@ -51,6 +51,8 @@ import { getAppLink } from '@zipper/utils';
 import {
   PiLockSimple,
   PiLockSimpleOpen,
+  PiLockLaminated,
+  PiLockLaminatedOpen,
   PiCode,
   PiCodeSimple,
   PiEnvelopeSimpleOpen,
@@ -122,7 +124,7 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
       slug: app.slug,
       description: app.description,
       requiresAuthToRun: app.requiresAuthToRun,
-      isPublic: !app.isPrivate,
+      isPrivate: !app.isPrivate,
       isDataSensitive: app.isDataSensitive,
     },
   });
@@ -143,7 +145,7 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
       model.name !== appQuery.data.name ||
       model.description !== appQuery.data.description ||
       model.requiresAuthToRun !== appQuery.data.requiresAuthToRun ||
-      model.isPublic !== !appQuery.data.isPrivate ||
+      model.isPrivate !== !appQuery.data.isPrivate ||
       model.isDataSensitive !== appQuery.data.isDataSensitive
     );
   };
@@ -159,7 +161,7 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
           name: data.name,
           description: data.description,
           requiresAuthToRun: data.requiresAuthToRun,
-          isPrivate: !data.isPublic,
+          isPrivate: data.isPrivate,
           isDataSensitive: data.isDataSensitive,
         },
       },
@@ -316,21 +318,21 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
                   <Flex flexGrow={'1'}>
                     <VStack align="start">
                       <HStack>
-                        {settingsForm.watch('isPublic') ? (
-                          <PiCodeSimple />
+                        {settingsForm.watch('isPrivate') ? (
+                          <PiLockSimple />
                         ) : (
-                          <PiCode />
+                          <PiLockSimpleOpen />
                         )}
-                        <Text>Is the code public?</Text>
+                        <Text>Is the code private?</Text>
                       </HStack>
                       <FormHelperText maxW="xl">{`Since this is ${
-                        settingsForm.watch('isPublic')
-                          ? 'checked, anyone on the internet will be able to see the source code.'
-                          : 'not checked, only organization members and people invited to the app will be able to see the source code.'
+                        settingsForm.watch('isPrivate')
+                          ? 'checked, only organization members and people invited to the app will be able to see the source code.'
+                          : 'not checked, anyone on the internet will be able to see the source code.'
                       }`}</FormHelperText>
                     </VStack>
                   </Flex>
-                  <Switch {...settingsForm.register('isPublic')} ml="auto" />
+                  <Switch {...settingsForm.register('isPrivate')} ml="auto" />
                 </HStack>
 
                 <VStack
@@ -343,9 +345,9 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
                   <VStack align="start" w="full">
                     <HStack w="full">
                       {settingsForm.watch('requiresAuthToRun') ? (
-                        <PiLockSimple />
+                        <PiLockLaminated />
                       ) : (
-                        <PiLockSimpleOpen />
+                        <PiLockLaminatedOpen />
                       )}
                       <Text>Require auth to run?</Text>
                       <Spacer flexGrow={1} />
