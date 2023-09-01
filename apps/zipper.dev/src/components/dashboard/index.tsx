@@ -237,10 +237,16 @@ export function Dashboard() {
     );
   }
 
-  const url = new URL('https://slack.com/oauth/v2/authorize');
-  url.searchParams.set('client_id', process.env.NEXT_PUBLIC_SLACK_CLIENT_ID!);
-  url.searchParams.set('scope', 'chat:write, chat:write.public, commands');
-  url.searchParams.set(
+  const slackAppInstallUrl = new URL('https://slack.com/oauth/v2/authorize');
+  slackAppInstallUrl.searchParams.set(
+    'client_id',
+    process.env.NEXT_PUBLIC_SLACK_CLIENT_ID!,
+  );
+  slackAppInstallUrl.searchParams.set(
+    'scope',
+    'chat:write, chat:write.public, commands',
+  );
+  slackAppInstallUrl.searchParams.set(
     'redirect_uri',
     'https://redirectmeto.com/http://localhost:3000/slack/auth',
   );
@@ -296,7 +302,9 @@ export function Dashboard() {
                       ? 'Applets that you and other organization members have created within this workspace.'
                       : "Applets that you've created or that have been shared with you outside an organization workspace."}
                   </Text>
-                  <Link href={url.toString()}>Install to Slack</Link>
+                  <Link href={slackAppInstallUrl.toString()}>
+                    Install to Slack
+                  </Link>
                 </VStack>
                 {isOpen ? (
                   <VStack flex={3} align="start">
