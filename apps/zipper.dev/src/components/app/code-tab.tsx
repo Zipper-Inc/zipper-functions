@@ -144,7 +144,9 @@ export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
               },
             }}
           >
-            <Markdown children={currentScriptLive?.code || ''} />
+            <Markdown
+              children={currentScriptLive?.code || currentScript?.code || ''}
+            />
           </VStack>
         )}
 
@@ -154,25 +156,24 @@ export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
             appId={app.id}
           />
         )}
-        {(!isMarkdown || isMarkdownEditable) && (
-          <FormControl
-            flex={1}
-            as={VStack}
-            alignItems="stretch"
-            pt={currentScriptConnectorId ? 4 : 0}
-            minH={currentScriptConnectorId ? '50%' : '100%'}
-            pr={2}
-          >
-            {PlaygroundEditor && (
-              <PlaygroundEditor
-                key={app.id}
-                onChange={onChange}
-                onValidate={onValidate}
-                appName={app.slug}
-              />
-            )}
-          </FormControl>
-        )}
+        <FormControl
+          flex={1}
+          as={VStack}
+          alignItems="stretch"
+          pt={currentScriptConnectorId ? 4 : 0}
+          minH={currentScriptConnectorId ? '50%' : '100%'}
+          display={!isMarkdown || isMarkdownEditable ? 'flex' : 'none'}
+          pr={2}
+        >
+          {PlaygroundEditor && (
+            <PlaygroundEditor
+              key={app.id}
+              onChange={onChange}
+              onValidate={onValidate}
+              appName={app.slug}
+            />
+          )}
+        </FormControl>
       </VStack>
       <VStack flex={2} minW="220px">
         <AppEditSidebarProvider

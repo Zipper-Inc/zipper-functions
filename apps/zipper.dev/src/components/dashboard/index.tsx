@@ -308,7 +308,7 @@ export function Dashboard() {
                       </Center>
                     )}
 
-                    {apps && apps.length > 0 ? (
+                    {!appQuery.isLoading && apps && apps.length > 0 && (
                       <>
                         <TableContainer w="full">
                           <DataTable
@@ -329,7 +329,9 @@ export function Dashboard() {
                           />
                         </TableContainer>
                       </>
-                    ) : (
+                    )}
+
+                    {appQuery.isSuccess && apps && apps.length === 0 && (
                       <EmptySlate
                         organization={organization}
                         onCreateButtonClick={onOpen}

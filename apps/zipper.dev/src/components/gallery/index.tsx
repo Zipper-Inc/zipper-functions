@@ -132,12 +132,14 @@ export function Gallery({
             <Spacer flexGrow={1} />
             {showManage && setActive && (
               <>
-                <Modal isOpen={isOpen} onClose={onClose} size="xl">
+                <Modal isOpen={isOpen} onClose={onClose} size="4xl">
                   <ModalOverlay />
-                  <ModalContent maxH="2xl">
+                  <ModalContent h="2xl">
                     <ModalCloseButton />
                     <ModalBody>
-                      <CreateAppForm onClose={onClose} />
+                      <Center mt="6">
+                        <CreateAppForm onClose={onClose} />
+                      </Center>
                     </ModalBody>
                   </ModalContent>
                 </Modal>

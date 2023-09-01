@@ -55,7 +55,13 @@ const applyPrettyColors = (colorToken: 'default' | '_dark') => (msg: string) =>
     msg,
   );
 
-export function AppConsole({ logs }: { logs: LogMessage[] }) {
+export function AppConsole({
+  logs,
+  showPreserveLogsToggle = true,
+}: {
+  logs: LogMessage[];
+  showPreserveLogsToggle?: boolean;
+}) {
   const [logCounter, setLogCounter] = useState(0);
   const [logFilter, setLogFilter] = useState('');
 
@@ -86,56 +92,57 @@ export function AppConsole({ logs }: { logs: LogMessage[] }) {
 
   return (
     <Box id="app-console">
-      <Box
-        position="sticky"
-        top="0"
-        pt={4}
-        zIndex="docked"
-        background="bgColor"
-      >
-        <Flex
-          padding={4}
-          width="100%"
-          border="solid 1px"
-          backgroundColor="fg.100"
-          borderColor="fg.200"
+      {showPreserveLogsToggle && (
+        <Box
+          position="sticky"
+          top="0"
+          pt={4}
+          zIndex="docked"
+          background="bgColor"
         >
-          <FormControl display="flex" alignItems="center" height={6}>
-            <Switch
-              variant="boxy"
-              colorScheme="purple"
-              id="preserve-logs"
-              size="sm"
-              checked={preserveLogs}
-              defaultChecked={true}
-              onChange={() => setPreserveLogs(!preserveLogs)}
-            />
-            <FormLabel
-              htmlFor="preserve-logs"
-              ml={2}
-              mb="0"
-              fontWeight="normal"
+          <Flex
+            padding={4}
+            width="100%"
+            border="solid 1px"
+            backgroundColor="fg.100"
+            borderColor="fg.200"
+          >
+            <FormControl display="flex" alignItems="center" height={6}>
+              <Switch
+                colorScheme="purple"
+                id="preserve-logs"
+                size="sm"
+                checked={preserveLogs}
+                defaultChecked={true}
+                onChange={() => setPreserveLogs(!preserveLogs)}
+              />
+              <FormLabel
+                htmlFor="preserve-logs"
+                ml={2}
+                mb="0"
+                fontWeight="normal"
+                fontSize="xs"
+              >
+                Preserve logs
+              </FormLabel>
+            </FormControl>
+            <Input
+              backgroundColor="bgColor"
+              fontFamily="monospace"
               fontSize="xs"
-            >
-              Preserve logs
-            </FormLabel>
-          </FormControl>
-          <Input
-            backgroundColor="bgColor"
-            fontFamily="monospace"
-            fontSize="xs"
-            onChange={(e) => setLogFilter(e.target.value)}
-            height={6}
-            placeholder="Filter"
-          />
-        </Flex>
-      </Box>
+              onChange={(e) => setLogFilter(e.target.value)}
+              height={6}
+              placeholder="Filter"
+            />
+          </Flex>
+        </Box>
+      )}
       <Box
         color="fg.200"
         borderColor="fg.200"
         px={2}
         border="solid 1px"
-        borderTop="none"
+        borderTop={showPreserveLogsToggle ? 'none' : '1px solid'}
       >
         <Console
           variant={colorMode}

@@ -248,21 +248,27 @@ const AppPage: NextPageWithLayout = () => {
   );
 };
 
-export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
-  const { host } = req.headers;
+export const getServerSideProps: GetServerSideProps = async ({ query }) => {
+  return {
+    redirect: {
+      destination: `/${query['resource-owner']}/${query['app-slug']}/edit/readme.md`,
+      permanent: false,
+    },
+  };
+  // const { host } = req.headers;
 
-  // validate subdomain
-  const subdomain = getValidSubdomain(host);
+  // // validate subdomain
+  // const subdomain = getValidSubdomain(host);
 
-  if (subdomain) {
-    return {
-      props: {
-        subdomain,
-      },
-    };
-  }
+  // if (subdomain) {
+  //   return {
+  //     props: {
+  //       subdomain,
+  //     },
+  //   };
+  // }
 
-  return { props: {} };
+  // return { props: {} };
 };
 
 AppPage.skipAuth = true;

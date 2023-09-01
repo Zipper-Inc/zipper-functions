@@ -118,12 +118,8 @@ export const defaults: Components & { heading: Components['h1'] } = {
   blockquote: (props) => {
     const { children } = props;
 
-    const isNestedBlockquote = children.some((child: any) => {
-      return child.props?.node?.tagName === 'blockquote';
-    });
-
     return (
-      <Box bgColor={isNestedBlockquote ? 'fg.50' : 'white'} p={4}>
+      <Box bgColor={'fg.50'} p={4}>
         <Text
           position="relative"
           _before={{

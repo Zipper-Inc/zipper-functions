@@ -47,6 +47,7 @@ model App {
   versions          Version[]
   publishedVersion  Version?         @relation("PublishedVersion", fields: [publishedVersionHash], references: [hash])
   playgroundVersion Version?         @relation("PlaygroundVersion", fields: [playgroundVersionHash], references: [hash])
+  logs              AppLog[]
 
   @@map("apps")
 }
@@ -134,6 +135,7 @@ model AppRun {
 
   app      App?      @relation(fields: [appId], references: [id])
   schedule Schedule? @relation(fields: [scheduleId], references: [id])
+  logs     AppLog[]
 
   @@map("apps_runs")
 }
@@ -380,4 +382,19 @@ model AllowListIdentifier {
   inviterName           String?
 
   @@map("allow_list_identifiers")
+}
+
+model AppLog {
+  id          String    @id @default(uuid())
+  method      String
+  data        Json
+  timestamp   DateTime
+  appId       String
+  version     String
+  runId       String?
+
+  app         App       @relation(fields: [appId], references: [id])
+  run         AppRun?   @relation(fields: [runId], references: [id])
+
+  @@map("app_logs")
 }

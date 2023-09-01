@@ -1,5 +1,6 @@
 import {
   App,
+  AppConnector,
   AppEditor,
   Prisma,
   ResourceOwnerSlug,
@@ -719,7 +720,7 @@ export const appRouter = createRouter()
 
       const app = await prisma.app.findFirstOrThrow({
         where: { id, deletedAt: null },
-        include: { scripts: true, scriptMain: true },
+        include: { scripts: true, scriptMain: true, connectors: true },
       });
 
       const fork = await prisma.app.create({
@@ -765,6 +766,23 @@ export const appRouter = createRouter()
               },
             });
           }
+        }),
+      );
+
+      await Promise.all(
+        app.connectors.map(async (connector: AppConnector) => {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          await prisma.appConnector.create({
+            data: {
+              type: connector.type,
+              isUserAuthRequired: connector.isUserAuthRequired,
+              metadata: undefined,
+              userScopes: connector.userScopes,
+              workspaceScopes: connector.workspaceScopes,
+              events: connector.events,
+              appId: fork.id,
+            },
+          });
         }),
       );
 
