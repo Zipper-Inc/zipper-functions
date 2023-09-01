@@ -371,6 +371,11 @@ export function AppPage({
           title={appTitle}
           description={app.description || app.slug}
           url={runUrl}
+          image={
+            result && latestRunId && process.env.NODE_ENV === 'production'
+              ? `https://api.urlbox.io/v1/yp9laCbg58Haq8m1/png?url=https://${app.slug}.zipper.run/run/history/${latestRunId}thumb_width=600`
+              : undefined
+          }
         />
       </Head>
       <VStack flex={1} alignItems="stretch" spacing={14}>
