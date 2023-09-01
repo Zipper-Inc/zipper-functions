@@ -27,7 +27,7 @@ export const WebSiteNavbar = ({
     data: [
       { href: '/feature', label: 'Feature' },
       { href: '/docs', label: 'Docs' },
-      { href: '/blog', label: 'Blogs' },
+      { href: '/blog', label: 'Blog' },
       { href: '/about', label: 'About' },
     ],
     component: 'a',
