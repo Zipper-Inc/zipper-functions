@@ -125,7 +125,7 @@ const SecretsTab: React.FC<SecretsTabProps> = ({ appId, editable }) => {
             <AlertDialogOverlay>
               <AlertDialogContent>
                 <AlertDialogHeader fontSize="lg" fontWeight="bold">
-                  Delete Customer
+                  Delete secret
                 </AlertDialogHeader>
 
                 <AlertDialogBody>

@@ -1,4 +1,4 @@
-import { extendTheme, defineStyleConfig } from '@chakra-ui/react';
+import { extendTheme } from '@chakra-ui/react';
 import multiSelectTheme from './multiSelectTheme';
 import Gradient from 'javascript-color-gradient';
 import { switchTheme } from './switch';
@@ -13,11 +13,11 @@ export const LIGHT_GRAY = '#F9F8F8';
 export const BLACK = '#000000';
 export const WHITE = '#EEEEEE';
 
-const VARIANTS = [25, 50, 100, 200, 300, 400, 500, 600, 700, 800, 900];
+const VARIANTS = [25, 50, 100, 200, 300, 400, 500, 600, 700, 800, 900] as const;
 
-const makeColorFromGradient = (
-  baseColor: string | string[],
-): { [v: number]: string } => {
+type ColorRange = Record<(typeof VARIANTS)[number], string>;
+
+const makeColorFromGradient = (baseColor: string | string[]) => {
   const spectrum = Array.isArray(baseColor)
     ? baseColor
     : [GRAY, baseColor, DARK_GRAY];
@@ -27,12 +27,12 @@ const makeColorFromGradient = (
     .setMidpoint(100)
     .getColors();
 
-  const variants = VARIANTS.reduce((prev, value) => {
+  const variants = VARIANTS.reduce<ColorRange>((prev, value) => {
     return {
       ...prev,
       [value]: points[Math.floor(value / 10) - 1],
     };
-  }, {});
+  }, {} as ColorRange);
   return variants;
 };
 

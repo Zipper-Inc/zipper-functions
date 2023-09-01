@@ -2,7 +2,7 @@ import { CloseIcon } from '@chakra-ui/icons';
 import { HStack, Input, IconButton, Box } from '@chakra-ui/react';
 
 import { UseFormRegister } from 'react-hook-form';
-import { PiLockLaminatedBold, PiTrashSimpleBold } from 'react-icons/pi';
+import { PiKey, PiKeyDuotone, PiTrashSimpleBold } from 'react-icons/pi';
 
 export type SecretToDelete = {
   id: string;
@@ -32,7 +32,7 @@ export const EditSecret: React.FC<EditSecretProps> = (props) => {
     return (
       <HStack>
         <Box color="fg.400">
-          <PiLockLaminatedBold />
+          <PiKey />
         </Box>
         <Input placeholder="Key" {...register(`secrets.${index}.key`, {})} />
         <Input
@@ -59,7 +59,7 @@ export const EditSecret: React.FC<EditSecretProps> = (props) => {
   return (
     <HStack>
       <Box color="fg.400">
-        <PiLockLaminated />
+        <PiKeyDuotone />
       </Box>
       <Input placeholder="Key" disabled value={existingSecret.key} />
       <Input
