@@ -1,11 +1,8 @@
-import { ChakraProps, Link } from '@chakra-ui/react';
+import { ChakraProps, Link, Text } from '@chakra-ui/react';
 import React, { useMemo } from 'react';
 
-export const Links = ({
-  data,
-  component,
-}: {
-  data: { label: string; href: string }[];
+export const Links = (props: {
+  data: { label: string; href: string; external?: boolean }[];
   component?: any;
 }) => {
   const pathname =
@@ -34,22 +31,33 @@ export const Links = ({
   );
 
   const activeLink = useMemo(() => {
-    return data.find((route) => route.href === pathname);
-  }, [data, pathname]);
+    return props.data.find((route) => route.href === pathname);
+  }, [props.data, pathname]);
 
   return (
     <React.Fragment>
-      {data.map((link, index) => {
+      {props.data.map((link, index) => {
         const styles =
           activeLink?.href === link.href
             ? { ...LINK_STYLES.idle, ...LINK_STYLES.active }
             : LINK_STYLES.idle;
 
-        return (
-          <Link as={component} key={index} href={link.href} {...styles}>
-            {link.label}
-          </Link>
-        );
+        if (link.external === false) {
+          console.log('here');
+          return (
+            <Text as={props.component} key={index} href={link.href} {...styles}>
+              {link.label}
+            </Text>
+          );
+        }
+
+        if (link.external === true) {
+          return (
+            <Link key={index} href={link.href} isExternal {...styles}>
+              {link.label}
+            </Link>
+          );
+        }
       })}
     </React.Fragment>
   );

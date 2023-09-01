@@ -20,6 +20,7 @@ import {
 import Image from 'next/image';
 import Header from '~/components/header';
 import { NextPageWithLayout } from './_app';
+import NextLink from 'next/link';
 import { Website } from '@zipper/ui';
 
 /* -------------------------------------------- */
@@ -65,7 +66,7 @@ Interested? We'd love to hear from you. Send your resume, portfolio, or any othe
 const AboutPage: NextPageWithLayout = () => {
   return (
     <Website>
-      <Website.Navbar />
+      <Website.Navbar links={{ component: NextLink }} />
       <Flex
         align="center"
         as="main"

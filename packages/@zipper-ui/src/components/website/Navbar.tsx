@@ -13,29 +13,73 @@ import {
   VStack,
   Box,
 } from '@chakra-ui/react';
-import React, { useRef } from 'react';
+import React, { useMemo, useRef } from 'react';
 import { FiMenu } from 'react-icons/fi';
 import { ZipperLogo } from '../zipper-logo';
 import { Links } from './common/Links';
 
 type Props = {
-  links?: Parameters<typeof Links>[0];
+  links?: Partial<Parameters<typeof Links>[0]>;
 };
 
-export const WebSiteNavbar = ({
-  links = {
-    data: [
-      { href: '/feature', label: 'Feature' },
-      { href: '/docs', label: 'Docs' },
-      { href: '/blog', label: 'Blog' },
-      { href: '/about', label: 'About' },
+const LINKS = {
+  DEV: {
+    SITE: [
+      { href: '/', label: 'Features', external: false },
+      { href: '/about', label: 'About', external: false },
+      { href: 'http://localhost:3003', label: 'Docs', external: true },
+      { href: 'http://localhost:3004', label: 'Blog', external: true },
     ],
-    component: 'a',
+    BLOG: [
+      {
+        href: 'http://localhost:3000/home',
+        label: 'Features',
+        external: true,
+      },
+      { href: 'http://localhost:3000/about', label: 'About', external: true },
+      { href: 'http://localhost:3003', label: 'Docs', external: true },
+      { href: '/', label: 'Blog', external: true },
+    ],
   },
-}: Props) => {
+
+  PROD: {
+    SITE: [
+      { href: '/', label: 'Features', external: false },
+      { href: '/about', label: 'About', external: false },
+      { href: 'https://zipper.docs', label: 'Docs', external: true },
+      { href: 'https://zipper.blog', label: 'Blog', external: true },
+    ],
+    BLOG: [
+      { href: '/', label: 'Blog', external: true },
+      {
+        href: 'https://zipper.dev/home',
+        label: 'Features',
+        external: true,
+      },
+      { href: 'https://zipper.dev/home', label: 'About', external: true },
+      { href: 'https://zipper.docs', label: 'Docs', external: true },
+    ],
+  },
+};
+
+export const WebSiteNavbar = ({ links }: Props) => {
+  const URL = typeof window !== 'undefined' ? window.location.href : '';
+
+  const linksObj = useMemo(
+    () =>
+      ({
+        ENV: process.env.NODE_ENV === 'development' ? 'DEV' : 'PROD',
+        SITE: ['localhost:3000', 'zipper.dev'].some((el) => URL.includes(el))
+          ? 'SITE'
+          : 'BLOG',
+      } as { ENV: keyof typeof LINKS; SITE: keyof (typeof LINKS)['DEV'] }),
+    [URL],
+  );
+
   const NavDrawer = () => {
     const { isOpen, onOpen, onClose } = useDisclosure();
     const btnRef = useRef();
+
     return (
       <>
         <IconButton
@@ -61,7 +105,12 @@ export const WebSiteNavbar = ({
 
             <DrawerBody>
               <VStack mt={6} as="nav" gap={4}>
-                {typeof window !== undefined && <Links {...links} />}
+                {typeof window !== undefined && (
+                  <Links
+                    data={LINKS[linksObj.ENV][linksObj.SITE]}
+                    component={links?.component}
+                  />
+                )}
                 <Button
                   colorScheme="gray"
                   fontWeight={500}
@@ -91,12 +140,19 @@ export const WebSiteNavbar = ({
       w="full"
       maxW="container.xl"
     >
-      <links.component href="/home">
-        <ZipperLogo type="color" />
-      </links.component>
+      {links?.component && (
+        <links.component href="/home">
+          <ZipperLogo type="color" />
+        </links.component>
+      )}
 
       <HStack as="nav" display={['none', 'none', 'flex']} gap={8}>
-        {typeof window !== undefined && <Links {...links} />}
+        {typeof window !== undefined && URL.length > 2 && (
+          <Links
+            data={LINKS[linksObj.ENV][linksObj.SITE]}
+            component={links?.component}
+          />
+        )}
         <Button colorScheme="gray" fontWeight={500} h="44px" variant="outline">
           Sign Up
         </Button>

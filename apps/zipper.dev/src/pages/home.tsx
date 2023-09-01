@@ -24,7 +24,7 @@ import { baseColors, Website } from '@zipper/ui';
 import { memo, useEffect, useState } from 'react';
 import { NextPageWithLayout } from './_app';
 import Header from '~/components/header';
-import Footer from '~/components/footer';
+import NextLink from 'next/link';
 import Carousel from 'nuka-carousel';
 import {
   FiArrowLeft,
@@ -750,7 +750,7 @@ const Headline = memo(() => {
 
 const HomePage: NextPageWithLayout = () => (
   <Website>
-    <Website.Navbar />
+    <Website.Navbar links={{ component: NextLink }} />
     <Box
       display="flex"
       flexDir="column"

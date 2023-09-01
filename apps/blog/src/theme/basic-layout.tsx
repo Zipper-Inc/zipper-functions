@@ -7,6 +7,7 @@ import { HeadingContext } from './mdx-theme';
 import { Website } from '@zipper/ui';
 import { useRouter } from 'next/router';
 import { FiChevronLeft } from 'react-icons/fi';
+import NextLink from 'next/link';
 
 export const BasicLayout = ({ children }: { children: ReactNode }) => {
   const { config, opts } = useBlogContext();
@@ -21,7 +22,7 @@ export const BasicLayout = ({ children }: { children: ReactNode }) => {
         {config.head?.({ title, meta: opts.frontMatter })}
       </Head>
       <Website>
-        <Website.Navbar />
+        <Website.Navbar links={{ component: NextLink }} />
         <HeadingContext.Provider value={ref}>
           {asPath === '/blog' ? (
             <Container
