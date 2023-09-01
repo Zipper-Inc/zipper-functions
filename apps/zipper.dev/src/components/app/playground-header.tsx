@@ -41,6 +41,7 @@ import {
   PiBrowserDuotone,
   PiGitBranchDuotone,
   PiGitBranchBold,
+  PiLockSimpleOpenBold,
 } from 'react-icons/pi';
 import slugify from 'slugify';
 import { OrganizationSelector } from '../dashboard/organization-selector';
@@ -216,18 +217,24 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
             </Link>
           </Tooltip>
         )}
-        {app.isPrivate && (
-          <Tooltip
-            label="Only you, members of your organization, or anyone invited can see this code."
-            bg={BLUE}
-            placement="right"
-            fontSize="xs"
-          >
-            <Text>
+        <Tooltip
+          label={
+            app.isPrivate
+              ? 'This code is private, only org members and invitees can view this code'
+              : 'This code is open-source, anyone with the link can read and fork it'
+          }
+          bg={BLUE}
+          placement="right"
+          fontSize="xs"
+        >
+          <Text color={BLUE}>
+            {app.isPrivate ? (
               <PiLockSimpleBold color={BLUE} />
-            </Text>
-          </Tooltip>
-        )}
+            ) : (
+              <PiLockSimpleOpenBold />
+            )}
+          </Text>
+        </Tooltip>
       </HStack>
       <HStack justifyContent="end">
         {isLoaded && (
