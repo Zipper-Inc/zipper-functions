@@ -265,8 +265,8 @@ const Hero = () => {
         zIndex="10"
         position="relative"
       >
-        <HStack gap={12}>
-          <VStack gap={5} w={['full', 'auto']} zIndex="10" align="start">
+        <Flex gap={8} direction={{ base: 'column', md: 'row' }}>
+          <VStack gap={5} w={['full', 'auto']} align="start">
             <Heading
               fontFamily="plaak"
               fontSize={['40px', '6xl']}
@@ -291,16 +291,16 @@ const Hero = () => {
           <Box
             display="flex"
             position="relative"
-            width="535px"
-            height="445px"
+            width={{ base: 'full', md: '535px' }}
+            height={{ base: '50vh', md: '445px' }}
             as={motion.div}
           >
             <Box
               as={motion.div}
               position="absolute"
               top="0"
-              left="0"
-              width="440px"
+              left={{ base: '-25px', md: '0' }}
+              width={{ md: '440px' }}
               height="330px"
               animate={box1Animation}
             >
@@ -315,8 +315,8 @@ const Hero = () => {
               as={motion.div}
               position="absolute"
               bottom="0"
-              right="0"
-              width="440px"
+              right={{ base: '-45px', md: '0' }}
+              width={{ md: '440px' }}
               height="330px"
               animate={box2Animation}
             >
@@ -355,13 +355,13 @@ const Hero = () => {
               <FiPlay size="40px" color="white" fill="white" />
             </Box>
           </Box>
-        </HStack>
+        </Flex>
       </Container>
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent>
           <ModalCloseButton />
-          <ModalBody>asdoaijsdoiajsdoiajsdojoasijd</ModalBody>
+          <ModalBody></ModalBody>
         </ModalContent>
       </Modal>
     </Box>

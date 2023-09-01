@@ -64,7 +64,7 @@ export default function JoinBetaForm() {
 
   return (
     <Flex as="form" onSubmit={handleSubmit(onSubmit)} gap={2}>
-      <FormControl isInvalid={!!errors.email}>
+      <FormControl isInvalid={!!errors.email} width="full">
         <Input
           height="2.75rem"
           width={{ base: 'full', md: '20rem' }}
@@ -82,23 +82,22 @@ export default function JoinBetaForm() {
           </FormErrorMessage>
         )}
       </FormControl>
-      <FormControl>
-        <Button
-          height="2.75rem"
-          minWidth="138px"
-          fontSize="md"
-          borderRadius="8px"
-          bg="brandOrange.500"
-          padding="10px 18px"
-          color="white"
-          fontWeight={500}
-          _hover={{ background: 'brandOrange.700' }}
-          type="submit"
-          isLoading={isSubmitting}
-        >
-          Join the beta
-        </Button>
-      </FormControl>
+
+      <Button
+        height="2.75rem"
+        minWidth={{ base: '7rem', md: '138px' }}
+        fontSize={{ base: 'sm', md: 'md' }}
+        borderRadius="8px"
+        bg="brandOrange.500"
+        padding={{ base: '5px 8px', md: '10px 18px' }}
+        color="white"
+        fontWeight={500}
+        _hover={{ background: 'brandOrange.700' }}
+        type="submit"
+        isLoading={isSubmitting}
+      >
+        Join the beta
+      </Button>
     </Flex>
   );
 }
