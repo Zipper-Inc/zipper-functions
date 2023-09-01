@@ -258,6 +258,7 @@ const AboutPage: NextPageWithLayout = () => {
                 whiteSpace={{ lg: 'pre-line' }}
                 flex={1}
                 fontSize={['18px']}
+                color="gray.900"
               >
                 {`We’re a small team  that likes to build software that helps
                 people build software.
@@ -287,7 +288,12 @@ const AboutPage: NextPageWithLayout = () => {
                       <AccordionIcon fontSize={['24px']} color="gray.500" />
                     </AccordionButton>
                   </h2>
-                  <AccordionPanel px={10} pb={10} whiteSpace="pre-line">
+                  <AccordionPanel
+                    px={10}
+                    pb={10}
+                    whiteSpace="pre-line"
+                    color="gray.900"
+                  >
                     {POSITION_DETAILS}
                   </AccordionPanel>
                 </AccordionItem>
