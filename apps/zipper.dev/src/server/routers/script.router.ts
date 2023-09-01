@@ -6,6 +6,7 @@ import isCodeRunnable from '~/utils/is-code-runnable';
 import { slugifyAllowDot } from '~/utils/slugify';
 import { createRouter } from '../createRouter';
 import { hasAppEditPermission } from '../utils/authz.utils';
+import { kebabCase } from '~/utils/kebab-case';
 
 const defaultSelect = Prisma.validator<Prisma.ScriptSelect>()({
   id: true,
@@ -44,7 +45,7 @@ export const scriptRouter = createRouter()
   // create
   .mutation('add', {
     input: z.object({
-      name: z.string().min(3).max(255),
+      name: z.string().min(3).max(255).transform(kebabCase),
       description: z.string().optional(),
       appId: z.string().uuid(),
       code: z.string().default(DEFAULT_CODE),
