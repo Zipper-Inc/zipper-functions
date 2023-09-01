@@ -16,7 +16,6 @@ import {
   MenuDivider,
   useColorMode,
 } from '@chakra-ui/react';
-import { BLUE, DARK_GRAY, DARK_PURPLE, GRAY, ORANGE, PURPLE } from '@zipper/ui';
 import { signOut } from 'next-auth/react';
 import {
   PiGearDuotone,
@@ -48,18 +47,16 @@ export function UserProfileButton(props: { showAdditionalOptions?: boolean }) {
             <MenuGroup title="Settings">
               <MenuItem onClick={userSettingsModal.onOpen}>
                 <Stack gap={1} direction="row" alignItems="center">
-                  <PiGearDuotone
-                    color={colorMode === 'dark' ? GRAY : DARK_GRAY}
-                  />
+                  <PiGearDuotone />
                   <Text>Manage profile</Text>
                 </Stack>
               </MenuItem>
               <MenuItem onClick={toggleColorMode}>
                 <Stack gap={1} direction="row" alignItems="center">
                   {colorMode === 'dark' ? (
-                    <PiSunDuotone color={PURPLE} />
+                    <PiSunDuotone color="DarkGoldenRod" />
                   ) : (
-                    <PiMoonDuotone color={DARK_PURPLE} />
+                    <PiMoonDuotone color="DarkGoldenRod" />
                   )}
                   <Text>
                     Switch to {colorMode === 'dark' ? 'light' : 'dark'} mode
@@ -71,7 +68,7 @@ export function UserProfileButton(props: { showAdditionalOptions?: boolean }) {
               <MenuGroup title="Citizenship">
                 <MenuItem onClick={feedbackModal.onOpen}>
                   <Stack gap={1} direction="row" alignItems="center">
-                    <PiMegaphoneSimpleDuotone color={BLUE} />
+                    <PiMegaphoneSimpleDuotone />
                     <Text>Submit Feedback</Text>
                   </Stack>
                 </MenuItem>
@@ -83,7 +80,7 @@ export function UserProfileButton(props: { showAdditionalOptions?: boolean }) {
                   _hover={{ textDecoration: 'none' }}
                 >
                   <Stack gap={1} direction="row" alignItems="center">
-                    <PiLifebuoyDuotone color={ORANGE} />
+                    <PiLifebuoyDuotone />
                     <Text>View Docs</Text>
                   </Stack>
                 </MenuItem>

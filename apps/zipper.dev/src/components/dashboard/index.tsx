@@ -40,7 +40,7 @@ import {
 import { AppOwner, useAppOwner } from '~/hooks/use-app-owner';
 import { EmptySlate } from './empty-slate';
 import { ResourceOwnerType } from '@zipper/types';
-import { TabButton } from '@zipper/ui';
+import { BLUE, TabButton, WHITE } from '@zipper/ui';
 import ManageMembers from './members';
 import OrganizationSettings from './organization-settings';
 import UserSettings from './user-settings';
@@ -96,13 +96,18 @@ const columns = [
                 href={getEditAppletLink(resourceOwner.slug, slug)}
                 gap={2}
               >
-                <Tooltip
-                  placement="top"
-                  label={isPrivate ? 'Private code' : 'Public code'}
-                >
-                  {isPrivate ? <PiLockSimple /> : <PiLockSimpleOpen />}
-                </Tooltip>
                 {getValue()}
+                <Tooltip
+                  colorScheme="blue"
+                  backgroundColor={BLUE}
+                  color={WHITE}
+                  placement="right"
+                  label={isPrivate ? 'Private code' : 'Open-source'}
+                >
+                  <Text color={BLUE}>
+                    {isPrivate ? <PiLockSimple /> : <PiLockSimpleOpen />}
+                  </Text>
+                </Tooltip>
               </Link>
             </HStack>
             <Tooltip label={description} openDelay={800}>
@@ -290,11 +295,11 @@ export function Dashboard() {
                         onChange={(e) => setAppSearchTerm(e.target.value)}
                       />
                       <Button
-                        type="button"
                         variant="solid"
                         colorScheme="purple"
                         fontWeight="medium"
                         fontSize="sm"
+                        px={6}
                         onClick={onOpen}
                         leftIcon={<PiPlusBold />}
                       >
