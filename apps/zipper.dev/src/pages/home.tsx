@@ -38,6 +38,7 @@ import {
 } from 'react-icons/fi';
 import Image from 'next/image';
 import { motion, useAnimation } from 'framer-motion';
+import JoinBetaForm from '~/components/join-beta-form';
 
 /* -------------------------------------------- */
 /* Content                                      */
@@ -285,32 +286,7 @@ const Hero = () => {
               </Flex>
             ))}
 
-            <Flex as="form" align="center" gap={2}>
-              <Input
-                height="2.75rem"
-                width={{ base: 'full', md: '20rem' }}
-                borderRadius="8px"
-                variant="outline"
-                placeholder="Email address"
-                borderColor="gray.300"
-                fontSize="md"
-                color="gray.500"
-                value=""
-              />
-              <Button
-                height="2.75rem"
-                minWidth="138px"
-                fontSize="md"
-                borderRadius="8px"
-                bg="brandOrange.500"
-                padding="10px 18px"
-                color="white"
-                fontWeight={500}
-                _hover={{ background: 'brandOrange.700' }}
-              >
-                Join the beta
-              </Button>
-            </Flex>
+            <JoinBetaForm />
           </VStack>
           <Box
             display="flex"
