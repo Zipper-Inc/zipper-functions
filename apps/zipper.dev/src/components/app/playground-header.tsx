@@ -29,32 +29,18 @@ import {
 import NextLink from 'next/link';
 import { CheckIcon } from '@chakra-ui/icons';
 import React, { useEffect, useState } from 'react';
-import {
-  BLUE,
-  DARK_PURPLE,
-  ORANGE,
-  PURPLE,
-  ZipperLogo,
-  ZipperSymbol,
-} from '@zipper/ui';
+import { BLUE, ORANGE, PURPLE, ZipperLogo, ZipperSymbol } from '@zipper/ui';
 
 import { AppQueryOutput } from '~/types/trpc';
-import { EditAppSlugForm } from './edit-app-slug-form';
 import { useAppEditors } from '~/hooks/use-app-editors';
 import {
   PiWarning,
-  PiGitBranch,
-  PiGitBranchBold,
-  PiShareNetwork,
-  PiAppWindow,
-  PiNotePencilBold,
   PiLockSimpleBold,
-  PiLockSimpleOpenBold,
   PiSignInDuotone,
-  PiAppWindowBold,
-  PiShapesDuotone,
   PiShareNetworkDuotone,
   PiBrowserDuotone,
+  PiGitBranchDuotone,
+  PiGitBranchBold,
 } from 'react-icons/pi';
 import slugify from 'slugify';
 import { OrganizationSelector } from '../dashboard/organization-selector';
@@ -155,14 +141,18 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
       pt="1"
       pb="1"
     >
-      <HStack spacing={2} alignItems="center" flex={1} minW={0}>
-        <Box height={4} mr={2}>
+      <HStack spacing={4} alignItems="center" flex={1} minW={0}>
+        <Box height={4}>
           <NextLink href="/">
             <SignedIn>
               <ZipperSymbol
-                fill="currentColor"
+                fill={BLUE}
                 middle={{ fill: BLUE }}
-                style={{ maxHeight: '100%', width: '26px' }}
+                style={{
+                  maxHeight: '100%',
+                  width: '20px',
+                  marginLeft: '5px',
+                }}
               />
             </SignedIn>
             <SignedOut>
@@ -170,6 +160,15 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
             </SignedOut>
           </NextLink>
         </Box>
+        <Heading
+          size="md"
+          overflow="auto"
+          whiteSpace="nowrap"
+          fontWeight="medium"
+          color="fg.400"
+        >
+          /
+        </Heading>
         <NextLink href={`/${app.resourceOwner.slug}`}>
           <Heading
             size="md"
@@ -192,7 +191,13 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
           /
         </Heading>
 
-        <Heading as="h1" size="md" overflow="auto" whiteSpace="nowrap">
+        <Heading
+          as="h1"
+          size="md"
+          overflow="auto"
+          whiteSpace="nowrap"
+          fontWeight="semibold"
+        >
           {app.slug}
         </Heading>
         {app.parentId && parentApp.data && (
@@ -230,7 +235,7 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
             size="sm"
             colorScheme="gray"
             variant="outline"
-            leftIcon={<PiGitBranch color={PURPLE} />}
+            leftIcon={<PiGitBranchDuotone color={PURPLE} />}
             fontWeight="medium"
             onClick={() => {
               if (user) {
