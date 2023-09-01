@@ -29,7 +29,6 @@ export default function JoinBetaForm() {
     resolver: zodResolver(schema),
   });
 
-  const [message, setMessage] = useState('');
   const toast = useToast();
 
   const joinWaitlistApplet = async (data: FormValues) => {
@@ -64,55 +63,41 @@ export default function JoinBetaForm() {
   };
 
   return (
-    <Flex
-      as="form"
-      onSubmit={handleSubmit(onSubmit)}
-      gap={2}
-      flexDirection="column"
-    >
-      <Box display="flex" gap={2}>
-        <FormControl isInvalid={!!errors.email}>
-          <Input
-            height="2.75rem"
-            width={{ base: 'full', md: '20rem' }}
-            borderRadius="8px"
-            variant="outline"
-            placeholder="Email address"
-            borderColor="gray.300"
-            fontSize="md"
-            color="gray.500"
-            {...register('email')}
-          />
-          {errors.email && (
-            <FormErrorMessage color={'red.300'}>
-              {errors.email?.message}
-            </FormErrorMessage>
-          )}
-        </FormControl>
-        <FormControl>
-          <Button
-            height="2.75rem"
-            minWidth="138px"
-            fontSize="md"
-            borderRadius="8px"
-            bg="brandOrange.500"
-            padding="10px 18px"
-            color="white"
-            fontWeight={500}
-            _hover={{ background: 'brandOrange.700' }}
-            type="submit"
-            isLoading={isSubmitting}
-          >
-            Join the beta
-          </Button>
-        </FormControl>
-      </Box>
-      <FormControl flex="1">
-        {message && (
-          <FormHelperText color={'gray.800'}>
-            <Text color={'gray.800'}>{message}</Text>
-          </FormHelperText>
+    <Flex as="form" onSubmit={handleSubmit(onSubmit)} gap={2}>
+      <FormControl isInvalid={!!errors.email}>
+        <Input
+          height="2.75rem"
+          width={{ base: 'full', md: '20rem' }}
+          borderRadius="8px"
+          variant="outline"
+          placeholder="Email address"
+          borderColor="gray.300"
+          fontSize="md"
+          color="gray.500"
+          {...register('email')}
+        />
+        {errors.email && (
+          <FormErrorMessage color={'red.300'}>
+            {errors.email?.message}
+          </FormErrorMessage>
         )}
+      </FormControl>
+      <FormControl>
+        <Button
+          height="2.75rem"
+          minWidth="138px"
+          fontSize="md"
+          borderRadius="8px"
+          bg="brandOrange.500"
+          padding="10px 18px"
+          color="white"
+          fontWeight={500}
+          _hover={{ background: 'brandOrange.700' }}
+          type="submit"
+          isLoading={isSubmitting}
+        >
+          Join the beta
+        </Button>
       </FormControl>
     </Flex>
   );
