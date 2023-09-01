@@ -34,7 +34,6 @@ const AuthUserConnectors: React.FC<AuthUserConnectorsProps> = ({
       alignItems="stretch"
       bgColor="fg.50"
       p={6}
-      rounded="2xl"
       spacing="2.5"
       listStyleType="none"
     >

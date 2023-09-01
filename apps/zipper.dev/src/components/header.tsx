@@ -14,15 +14,13 @@ import {
 import { useRouter } from 'next/router';
 import NextLink from 'next/link';
 
-import { ZipperLogo } from '@zipper/ui';
+import { ZipperSymbol, ZipperLogo } from '@zipper/ui';
 import OrganizationSwitcher from './auth/organizationSwitcher';
 import { MobileMenu } from './header-mobile-menu';
-import { ZipperSymbol } from '@zipper/ui';
-import { trpc } from '~/utils/trpc';
 import { useUser } from '~/hooks/use-user';
 import SignedIn from './auth/signed-in';
 import SignedOut from './auth/signed-out';
-import { HiHome } from 'react-icons/hi2';
+import { PiHouseSimple } from 'react-icons/pi';
 import { UserProfileButton } from './auth/user-profile-button';
 import { FeedbackModal } from './auth/feedback-modal';
 
@@ -87,7 +85,7 @@ const Header: React.FC<HeaderProps> = ({
                       />
                       {showNav && (
                         <HStack spacing={1}>
-                          <Icon as={HiHome} />
+                          <Icon as={PiHouseSimple} />
                           <Text fontSize="sm">Dashboard</Text>
                         </HStack>
                       )}

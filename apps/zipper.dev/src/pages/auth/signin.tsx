@@ -62,7 +62,6 @@ export default function SignIn({
           <Card
             pt={10}
             shadow="xl"
-            rounded="md"
             display="flex"
             flexDirection="column"
             gap={4}

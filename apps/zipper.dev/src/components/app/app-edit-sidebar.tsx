@@ -82,7 +82,6 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
           p={4}
           backgroundColor="fg.100"
           position="relative"
-          rounded="md"
           border="1px"
           borderColor="fg.200"
         >

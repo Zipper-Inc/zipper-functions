@@ -63,7 +63,6 @@ const tablistStyles: ChakraProps = {
   borderColor: 'fg.200',
   p: 2,
   w: 'full',
-  borderTopRadius: 'md',
 };
 const tabButtonStyles: ChakraProps = {
   rounded: 'lg',
@@ -278,11 +277,7 @@ export function FunctionOutput({
               <Tab {...tabButtonStyles}>Results</Tab>
               <Tab {...tabButtonStyles}>Raw Output</Tab>
             </TabList>
-            <TabPanels
-              border="1px solid"
-              borderColor="fg.200"
-              borderBottomRadius={'md'}
-            >
+            <TabPanels border="1px solid" borderColor="fg.200">
               <TabPanel>
                 <Box overflow="auto">
                   <Box width="full" data-function-output="smart">
@@ -441,11 +436,7 @@ export function FunctionOutput({
             <TabList {...tablistStyles}>
               <Tab {...tabButtonStyles}>Raw Output</Tab>
             </TabList>
-            <TabPanels
-              border="1px solid"
-              borderColor="fg.200"
-              borderBottomRadius={'md'}
-            >
+            <TabPanels border="1px solid" borderColor="fg.200">
               <TabPanel backgroundColor="fg.100">
                 <RawFunctionOutput result={applet?.mainContent.output?.data} />
               </TabPanel>
@@ -473,7 +464,6 @@ export function FunctionOutput({
                 </Link>
               </TabList>
               <TabPanels
-                borderBottomRadius={'md'}
                 border={showTabs ? '1px solid' : 'none'}
                 borderColor="fg.200"
               >
