@@ -310,7 +310,7 @@ function SingleInput({
               {hasResult && (
                 <Badge
                   variant="subtle"
-                  colorScheme="purple"
+                  colorScheme="darkPurple"
                   fontSize="xs"
                   fontWeight="medium"
                   py="0.5"
