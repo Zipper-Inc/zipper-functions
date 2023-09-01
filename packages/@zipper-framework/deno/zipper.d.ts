@@ -228,6 +228,12 @@ declare namespace Zipper {
     | 'self-start'
     | 'start';
 
+  export interface ButtonComponentProps {
+    width?: string;
+    colorScheme?: 'purple' | 'blue' | 'red' | 'green' | 'yellow';
+    variant?: 'outline' | 'solid' | 'link' | 'ghost';
+  }
+
   export interface StackComponent extends ComponentBase {
     type: 'stack';
     props?:
@@ -455,7 +461,7 @@ declare function Link(props: LinkProps): Zipper.Component;
 
 type ButtonProps<I> = Omit<Zipper.ButtonAction<I>, 'actionType' | 'text'>;
 declare function Button<I = Zipper.Inputs>(
-  props: ButtonProps<I>,
+  props: ButtonProps<I> & Zipper.ButtonComponentProps,
 ): Zipper.Action;
 
 type MarkdownProps = { text?: string };
