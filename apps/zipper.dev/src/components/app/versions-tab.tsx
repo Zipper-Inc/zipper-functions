@@ -35,8 +35,10 @@ import {
 import { User, Version } from '@prisma/client';
 import { getAppVersionFromHash } from '~/utils/hashing';
 import { getAppLink } from '@zipper/utils';
-import { RxCounterClockwiseClock } from 'react-icons/rx';
-import { HiOutlineUpload } from 'react-icons/hi';
+import {
+  PiArrowCounterClockwiseBold,
+  PiRocketLaunchBold,
+} from 'react-icons/pi';
 import { useRouter } from 'next/router';
 import { Avatar } from '../avatar';
 
@@ -201,7 +203,7 @@ const VersionsTab: React.FC<VersionsTabProps> = ({ appId, slug }) => {
                     colorScheme="purple"
                     isDisabled={isCurrentlyPublished}
                     fontSize="sm"
-                    icon={<HiOutlineUpload />}
+                    icon={<PiRocketLaunchBold />}
                     onClick={async () =>
                       await promoteMutation.mutateAsync({
                         appId,
@@ -217,9 +219,9 @@ const VersionsTab: React.FC<VersionsTabProps> = ({ appId, slug }) => {
                 >
                   <IconButton
                     aria-label="restore"
-                    colorScheme="red"
+                    colorScheme="orange"
                     isDisabled={isCurrentlyPlayground}
-                    icon={<RxCounterClockwiseClock />}
+                    icon={<PiArrowCounterClockwiseBold />}
                     variant="outline"
                     onClick={onOpen}
                   />

@@ -27,7 +27,7 @@ import { useForm } from 'react-hook-form';
 import { useEditorContext } from '../context/editor-context';
 import { AppQueryOutput } from '~/types/trpc';
 import { ScriptItem, ScriptItemProps } from './playground-sidebar-script-item';
-import { FiPlusSquare } from 'react-icons/fi';
+import { PiPlusSquare } from 'react-icons/pi';
 
 export function PlaygroundSidebar({
   app,
@@ -133,7 +133,6 @@ export function PlaygroundSidebar({
         background={bgGradient}
         color="bgColor"
         flex={1}
-        rounded="2xl"
         paddingX={2}
         paddingY={4}
         spacing={4}
@@ -152,7 +151,7 @@ export function PlaygroundSidebar({
                     <Flex
                       _hover={{ cursor: 'pointer', transform: 'scale(1.1)' }}
                     >
-                      <FiPlusSquare />
+                      <PiPlusSquare />
                     </Flex>
                   </PopoverTrigger>
                   <PopoverContent>

@@ -192,8 +192,6 @@ const Header: React.FC<HeaderProps> = ({
                               fontSize="sm"
                               _last={{
                                 pb: 4,
-                                borderEndRadius: 8,
-                                borderBottomLeftRadius: 8,
                               }}
                             >
                               {s.slice(0, -3)}

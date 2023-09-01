@@ -37,17 +37,14 @@ export const TabButton: React.FC<TabButtonProps> = ({
     <Tab
       px={4}
       py={2}
-      rounded="md"
       _selected={{
         backgroundColor,
         fontWeight: 'bold',
         textColor,
-        _hover: { transform: 'none' },
       }}
       _hover={{
         backgroundColor,
         textColor,
-        transform: 'scale(1.05)',
       }}
       {...props}
     >

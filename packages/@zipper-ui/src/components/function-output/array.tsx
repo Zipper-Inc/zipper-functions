@@ -178,7 +178,6 @@ function CardCollection(props: Props) {
         <Card
           key={index}
           bgColor="neutral.50"
-          borderRadius="xl"
           overflow="hidden"
           px={8}
           py={6}

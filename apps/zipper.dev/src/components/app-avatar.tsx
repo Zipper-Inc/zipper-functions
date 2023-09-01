@@ -1,21 +1,21 @@
 import Avatar from 'boring-avatars';
-import { brandColors, baseColors } from '@zipper/ui';
+import { PURPLE, ORANGE, DARK_PURPLE, GRAY, DARK_GRAY } from '@zipper/ui';
+
 import { useColorModeValue } from '@chakra-ui/react';
 
 export const defaultAvatarColors = [
-  brandColors.brandPurple,
-  brandColors.brandDarkPurple,
-  brandColors.brandOrange,
-  baseColors.neutral['200'],
-  'white',
+  PURPLE,
+  DARK_PURPLE,
+  ORANGE,
+  GRAY,
+  DARK_GRAY,
 ];
-
 export const darkModeAvatarColors = [
-  baseColors.purple['200'],
-  brandColors.brandPurple,
-  brandColors.brandOrange,
-  baseColors.neutral['600'],
-  baseColors.gray['800'],
+  DARK_PURPLE,
+  PURPLE,
+  ORANGE,
+  DARK_GRAY,
+  GRAY,
 ];
 
 function AppAvatar({ nameOrSlug }: { nameOrSlug: string }) {
@@ -26,9 +26,9 @@ function AppAvatar({ nameOrSlug }: { nameOrSlug: string }) {
   return (
     <Avatar
       size="100%"
+      square
       name={nameOrSlug}
       variant="bauhaus"
-      square
       colors={avatarColors}
     />
   );

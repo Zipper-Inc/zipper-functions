@@ -29,22 +29,20 @@ import {
 import NextLink from 'next/link';
 import { CheckIcon } from '@chakra-ui/icons';
 import React, { useEffect, useState } from 'react';
-import { ZipperLogo, ZipperSymbol } from '@zipper/ui';
-
-import {
-  HiShare,
-  HiLockOpen,
-  HiLockClosed,
-  HiPencilSquare,
-  HiGlobeAlt,
-} from 'react-icons/hi2';
-
-import { CgGitFork } from 'react-icons/cg';
+import { BLUE, ORANGE, PURPLE, ZipperLogo, ZipperSymbol } from '@zipper/ui';
 
 import { AppQueryOutput } from '~/types/trpc';
-import { EditAppSlugForm } from './edit-app-slug-form';
 import { useAppEditors } from '~/hooks/use-app-editors';
-import { HiExclamationTriangle } from 'react-icons/hi2';
+import {
+  PiWarning,
+  PiLockSimpleBold,
+  PiSignInDuotone,
+  PiShareNetworkDuotone,
+  PiBrowserDuotone,
+  PiGitBranchDuotone,
+  PiGitBranchBold,
+  PiLockSimpleOpenBold,
+} from 'react-icons/pi';
 import slugify from 'slugify';
 import { OrganizationSelector } from '../dashboard/organization-selector';
 import { useForm } from 'react-hook-form';
@@ -144,86 +142,99 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
       pt="1"
       pb="1"
     >
-      <HStack spacing={3} alignItems="center" flex={1} minW={0}>
+      <HStack spacing={4} alignItems="center" flex={1} minW={0}>
         <Box height={4}>
           <NextLink href="/">
             <SignedIn>
-              <ZipperSymbol fill="currentColor" style={{ maxHeight: '100%' }} />
+              <ZipperSymbol
+                fill={BLUE}
+                middle={{ fill: BLUE }}
+                style={{
+                  maxHeight: '100%',
+                  width: '20px',
+                  marginLeft: '5px',
+                }}
+              />
             </SignedIn>
             <SignedOut>
               <ZipperLogo fill="currentColor" style={{ maxHeight: '100%' }} />
             </SignedOut>
           </NextLink>
         </Box>
-        <HStack>
-          <NextLink href={`/${app.resourceOwner.slug}`}>
-            <Heading
-              as="h1"
-              size="md"
-              overflow="auto"
-              whiteSpace="nowrap"
-              fontWeight="medium"
-              color="fg.600"
-            >
-              {app.resourceOwner.slug}
-            </Heading>
-          </NextLink>
-
+        <Heading
+          size="md"
+          overflow="auto"
+          whiteSpace="nowrap"
+          fontWeight="medium"
+          color="fg.400"
+        >
+          /
+        </Heading>
+        <NextLink href={`/${app.resourceOwner.slug}`}>
           <Heading
-            as="h1"
             size="md"
             overflow="auto"
             whiteSpace="nowrap"
             fontWeight="medium"
-            color="fg.400"
+            color="fg.600"
           >
-            /
+            {app.resourceOwner.slug}
           </Heading>
+        </NextLink>
 
-          <HStack spacing={2} alignItems="center" minW={0}>
+        <Heading
+          size="md"
+          overflow="auto"
+          whiteSpace="nowrap"
+          fontWeight="medium"
+          color="fg.400"
+        >
+          /
+        </Heading>
+
+        <Heading
+          as="h1"
+          size="md"
+          overflow="auto"
+          whiteSpace="nowrap"
+          fontWeight="semibold"
+        >
+          {app.slug}
+        </Heading>
+        {app.parentId && parentApp.data && (
+          <Tooltip
+            label={`Forked from ${parentApp.data.name || parentApp.data.slug}`}
+            bg={BLUE}
+            placement="right"
+            fontSize="xs"
+          >
+            <Link
+              href={`/app/${app.parentId}/edit`}
+              target="_blank"
+              color={BLUE}
+            >
+              <PiGitBranchBold />
+            </Link>
+          </Tooltip>
+        )}
+        <Tooltip
+          label={
+            app.isPrivate
+              ? 'This code is private, only org members and invitees can view this code'
+              : 'This code is open-source, anyone with the link can read and fork it'
+          }
+          bg={BLUE}
+          placement="right"
+          fontSize="xs"
+        >
+          <Text color={BLUE}>
             {app.isPrivate ? (
-              <HiLockClosed color="fg.500" />
+              <PiLockSimpleBold color={BLUE} />
             ) : (
-              <HiLockOpen color="fg.400" />
+              <PiLockSimpleOpenBold />
             )}
-            {app.parentId && parentApp.data && (
-              <Tooltip
-                label={`Forked from ${
-                  parentApp.data.name || parentApp.data.slug
-                }`}
-              >
-                <Link href={`/app/${app.parentId}/edit`} target="_blank">
-                  <CgGitFork />
-                </Link>
-              </Tooltip>
-            )}
-          </HStack>
-          {editSlug ? (
-            <EditAppSlugForm app={app} onClose={() => setEditSlug(false)} />
-          ) : (
-            <>
-              <Heading as="h1" size="md" overflow="auto" whiteSpace="nowrap">
-                {app.slug}
-              </Heading>
-              {app.canUserEdit && (
-                <Button
-                  variant="ghost"
-                  rounded="full"
-                  size="sm"
-                  colorScheme="purple"
-                  p={0}
-                  onClick={() => {
-                    setEditSlug(true);
-                  }}
-                >
-                  <Box>
-                    <HiPencilSquare />
-                  </Box>
-                </Button>
-              )}
-            </>
-          )}
-        </HStack>
+          </Text>
+        </Tooltip>
       </HStack>
       <HStack justifyContent="end">
         {isLoaded && (
@@ -231,9 +242,7 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
             size="sm"
             colorScheme="gray"
             variant="outline"
-            color="fg.600"
-            display="flex"
-            gap={2}
+            leftIcon={<PiGitBranchDuotone color={PURPLE} />}
             fontWeight="medium"
             onClick={() => {
               if (user) {
@@ -245,7 +254,6 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
               }
             }}
           >
-            <CgGitFork />
             Fork
           </Button>
         )}
@@ -253,14 +261,11 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
           <Button
             size="sm"
             colorScheme="gray"
-            color="fg.600"
             variant="outline"
             onClick={() => setShareModalOpen(true)}
-            display="flex"
-            gap={2}
             fontWeight="medium"
+            leftIcon={<PiShareNetworkDuotone color={ORANGE} />}
           >
-            <HiShare />
             <Text>Share</Text>
           </Button>
         </SignedIn>
@@ -268,18 +273,14 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
           as={Link}
           size="sm"
           colorScheme="gray"
-          color="fg.600"
           variant="outline"
           href={`${
             process.env.NODE_ENV === 'production' ? 'https://' : 'http://'
           }${getAppLink(app.slug)}`}
           target="_blank"
-          display="flex"
-          gap={2}
+          leftIcon={<PiBrowserDuotone color={BLUE} />}
           fontWeight="medium"
-          _hover={{ textDecoration: 'none', backgroundColor: 'gray.100' }}
         >
-          <Icon as={HiGlobeAlt} />
           <Text>View</Text>
         </Button>
         <SignedIn>
@@ -290,11 +291,12 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
 
         {!user && (
           <Button
+            size="sm"
             colorScheme="purple"
-            display="flex"
-            gap={2}
-            fontWeight="medium"
+            variant="outline"
+            fontWeight="semibold"
             mr="3"
+            leftIcon={<PiSignInDuotone />}
             onClick={() => {
               signIn();
             }}
@@ -336,7 +338,7 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
                       <InputRightElement
                         children={
                           slugExists ? (
-                            <Icon as={HiExclamationTriangle} color="red.500" />
+                            <Icon as={PiWarning} color="red.500" />
                           ) : (
                             <CheckIcon color="green.500" />
                           )

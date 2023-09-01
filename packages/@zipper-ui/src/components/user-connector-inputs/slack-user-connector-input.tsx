@@ -38,7 +38,6 @@ export const SlackUserConnectorInput: React.FC<ConnectorInputProps> = ({
                   colorScheme="purple"
                   fontSize="xs"
                   fontWeight="medium"
-                  rounded="full"
                   py="0.5"
                   px={2}
                 >
