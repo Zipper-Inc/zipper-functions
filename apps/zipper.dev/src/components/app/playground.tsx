@@ -98,12 +98,6 @@ export function Playground({
     }
   };
 
-  console.log('render', {
-    tab,
-    values: Object.values(PlaygroundTab),
-    idx: Object.values(PlaygroundTab).indexOf(tab),
-    filename,
-  });
   return (
     <RunAppProvider
       app={app}
