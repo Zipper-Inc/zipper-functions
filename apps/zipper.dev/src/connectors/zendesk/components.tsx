@@ -2,6 +2,7 @@ import {
   Button,
   Card,
   CardBody,
+  Code,
   FormControl,
   FormLabel,
   Heading,
@@ -154,11 +155,21 @@ export function ConnectorInputForm({
 export type ConnectorUninstallFormProps = {
   handleUninstall: MouseEventHandler<HTMLButtonElement>;
   isSaving: boolean;
+  zendeskAppName: string;
+  authorName: string;
+  authorEmail: string;
+  appEntryPoint: string;
+  signedUrl: boolean;
 };
 
 export function ConnectorUninstallForm({
   handleUninstall,
   isSaving,
+  zendeskAppName,
+  authorName,
+  authorEmail,
+  appEntryPoint,
+  signedUrl,
 }: ConnectorUninstallFormProps) {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const cancelRef = useRef() as React.MutableRefObject<HTMLButtonElement>;
@@ -167,8 +178,7 @@ export function ConnectorUninstallForm({
       <Card w="full" gap={2}>
         <CardBody color="fg.600">
           <VStack align="start">
-            <Heading size="sm">Configuration</Heading>
-            <HStack w="full" pt="2" spacing="1">
+            <HStack w="full" spacing="1">
               <FormLabel m="0">Installed!</FormLabel>
               <Spacer />
               <Button variant="unstyled" color="red.600" onClick={onOpen}>
@@ -178,8 +188,24 @@ export function ConnectorUninstallForm({
                 </HStack>
               </Button>
             </HStack>
-            <br />
-            <ConnectorInstructions />
+            <Heading pt="4" size="sm">
+              Zendesk Manifest
+            </Heading>
+            <Text>
+              Use the JSON below for your manifest file that get's uploaded to
+              Zendesk.
+            </Text>
+            <Text pb="4">
+              Replace "ZENDESK_PRODUCT" and "PRODUCT_SPECIFIC_LOCATION" with the
+              correct values for where the app should reside in Zendesk.
+            </Text>
+            <ZendeskManifestFile
+              zendeskAppName={zendeskAppName}
+              authorName={authorName}
+              authorEmail={authorEmail}
+              appEntryPoint={appEntryPoint}
+              signedUrl={signedUrl}
+            />
           </VStack>
         </CardBody>
       </Card>
@@ -258,6 +284,49 @@ export function ConnectorInEditableForm({
           </HStack>
         </CardBody>
       </Card>
+    </VStack>
+  );
+}
+
+export type ZendeskManifestFileProps = {
+  zendeskAppName: string;
+  authorName: string;
+  authorEmail: string;
+  appEntryPoint: string;
+  signedUrl: boolean;
+};
+
+export function ZendeskManifestFile({
+  zendeskAppName,
+  authorName,
+  authorEmail,
+  appEntryPoint,
+  signedUrl,
+}: ZendeskManifestFileProps) {
+  const manifest = {
+    name: zendeskAppName,
+    author: {
+      name: authorName,
+      email: authorEmail,
+    },
+    defaultLocale: 'en',
+    private: true,
+    location: {
+      ['ZENDESK_PRODUCT']: {
+        ['PRODUCT_SPECIFIC_LOCATION']: {
+          url: appEntryPoint,
+        },
+      },
+    },
+    signedUrls: signedUrl,
+    version: '1.0.0',
+    frameworkVersion: '2.0',
+  };
+  return (
+    <VStack w="full">
+      <Code w="full" p="4">
+        <pre>{JSON.stringify(manifest, null, 2)}</pre>
+      </Code>
     </VStack>
   );
 }

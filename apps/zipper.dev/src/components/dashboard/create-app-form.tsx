@@ -265,7 +265,7 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
                     : undefined;
 
                   const mainCode = aiOutput?.find(
-                    (output) => output.filename === 'main.ts',
+                    (output) => output.filename === 'main',
                   )?.code;
 
                   await addApp.mutateAsync(
@@ -289,7 +289,7 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
                         }
                         if (aiOutput) {
                           const otherFiles = aiOutput.filter(
-                            (output) => output.filename !== 'main.ts',
+                            (output) => output.filename !== 'main',
                           );
 
                           await Promise.allSettled(
