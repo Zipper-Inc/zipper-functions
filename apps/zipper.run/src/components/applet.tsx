@@ -370,7 +370,7 @@ export function AppPage({
           property="og:image"
           content={
             process.env.NODE_ENV === 'production' && latestRunId
-              ? `https://api.urlbox.io/v1/yp9laCbg58Haq8m1/png?url=https://${app.slug}.zipper.run/run/history/${latestRunId}thumb_width=600`
+              ? `https://api.urlbox.io/v1/yp9laCbg58Haq8m1/png?url=https://${app.slug}.zipper.run/run/history/${latestRunId}thumb_width=1200`
               : undefined
           }
         />
