@@ -32,7 +32,6 @@ import {
 import Unauthorized from './unauthorized';
 import removeAppConnectorUserAuth from '~/utils/remove-app-connector-user-auth';
 import Header from './header';
-import { OpenGraph } from './open-graph';
 import InputSummary from './input-summary';
 import ConnectorsAuthInputsSection from './connectors-auth-inputs-section';
 import { getConnectorsAuthUrl } from '~/utils/get-connectors-auth-url';
@@ -367,16 +366,24 @@ export function AppPage({
     <>
       <Head>
         <title>{appTitle}</title>
-        <OpenGraph
-          title={appTitle}
-          description={app.description || app.slug}
-          url={runUrl}
-          image={
-            result && latestRunId && process.env.NODE_ENV === 'production'
+        <meta
+          property="og:image"
+          content={
+            process.env.NODE_ENV === 'production' && latestRunId
               ? `https://api.urlbox.io/v1/yp9laCbg58Haq8m1/png?url=https://${app.slug}.zipper.run/run/history/${latestRunId}thumb_width=600`
               : undefined
           }
         />
+        <meta name="description" content={app.description || app.slug} />
+        <meta property="og:title" content={appTitle} />
+        <meta property="og:description" content={app.description || app.slug} />
+        <meta property="og:site_name" content="Zipper" />
+        <meta property="og:type" content="website" />
+        {runUrl && (
+          <>
+            <meta property="og:url" content={runUrl} />
+          </>
+        )}
       </Head>
       <VStack flex={1} alignItems="stretch" spacing={14}>
         <Header
