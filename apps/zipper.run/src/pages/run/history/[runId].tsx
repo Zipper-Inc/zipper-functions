@@ -42,8 +42,6 @@ export const getServerSideProps: GetServerSideProps = async ({
     runnableScripts,
   } = result.data;
 
-  console.log(appRun);
-
   const defaultValues = getInputValuesFromAppRun(inputs, appRun.inputs);
 
   const { githubAuthUrl, slackAuthUrl } = getConnectorsAuthUrl({

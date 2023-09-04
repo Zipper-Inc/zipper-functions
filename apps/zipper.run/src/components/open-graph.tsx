@@ -2,9 +2,10 @@ export type OpenGraphProps = {
   title: string;
   description?: string;
   url?: string;
+  image?: string;
 };
 
-export function OpenGraph({ title, description, url }: OpenGraphProps) {
+export function OpenGraph({ title, description, url, image }: OpenGraphProps) {
   const imagePreviewUrl = `${url}.png`;
   return (
     <>
@@ -16,7 +17,7 @@ export function OpenGraph({ title, description, url }: OpenGraphProps) {
       {url && (
         <>
           <meta property="og:url" content={url} />
-          <meta property="og:image" content={imagePreviewUrl} />
+          <meta property="og:image" content={image} />
         </>
       )}
     </>
