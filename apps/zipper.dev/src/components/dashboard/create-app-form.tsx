@@ -26,6 +26,11 @@ import {
   Fade,
   Center,
   Divider,
+  Card,
+  CardHeader,
+  CardBody,
+  Grid,
+  GridItem,
 } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
@@ -85,6 +90,10 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
 
   const [submitting, setSubmitting] = useState(false);
 
+  const [templateSelection, setTemplateSelection] = useState<
+    string | undefined
+  >('hello-world');
+
   const createAppForm = useForm({
     defaultValues: getDefaultCreateAppFormValues(),
   });
@@ -112,7 +121,7 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
   const toast = useToast();
   const steps = [
     { title: 'First', description: 'Configuration' },
-    { title: 'Second', description: 'AI Prompt' },
+    { title: 'Second', description: 'Initialization' },
   ];
 
   const [currentStep, setCurrentStep] = useState(0);
@@ -165,6 +174,8 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
                   flexGrow={lastItem ? 'initial' : 1}
                   flexShrink={lastItem ? 'initial' : 1}
                   flexBasis={lastItem ? 'initial' : 0}
+                  onClick={() => setCurrentStep(index)}
+                  _hover={{ cursor: 'pointer' }}
                 >
                   <Center
                     bg={index === currentStep ? 'primary.500' : 'bg.100'}
@@ -207,6 +218,7 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
                   <Text>/</Text>
                   <InputGroup>
                     <Input
+                      autoFocus
                       backgroundColor="bgColor"
                       maxLength={60}
                       {...createAppForm.register('name')}
@@ -308,21 +320,100 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
             <>
               <FormControl>
                 <HStack spacing={1}>
-                  <FormLabel mr="0">Generate code using AI</FormLabel>
-                  <FormLabel fontWeight="normal">(optional)</FormLabel>
+                  <FormLabel mr="0">Start from a template</FormLabel>
                 </HStack>
 
-                <FormHelperText mb={4}>
-                  {`Tell us what you'd like your applet to do and we'll use the magic of AI to autogenerate some code to get you started. This process can take up to a minute.`}
-                </FormHelperText>
-                <Textarea
-                  fontFamily={'mono'}
-                  fontSize="sm"
-                  height={220}
-                  backgroundColor="bgColor"
-                  {...createAppForm.register('description')}
-                />
+                <Grid templateColumns="repeat(3, 1fr)" gap="3">
+                  {[
+                    {
+                      id: 'hello-world',
+                      name: 'Hello World',
+                      description: '👋',
+                    },
+                    {
+                      id: 'ai',
+                      name: 'AI Generated Code',
+                      description: '🤖✨',
+                    },
+                    {
+                      id: 'crud',
+                      name: 'CRUD app',
+                      description: '🗄️',
+                    },
+                    {
+                      id: 'slack',
+                      name: 'Slack',
+                      description: '💬',
+                    },
+                    {
+                      id: 'github',
+                      name: 'GitHub',
+                      description: '👩‍💻',
+                    },
+                  ].map(({ id, name, description }) => {
+                    return (
+                      <GridItem>
+                        <Card
+                          w="250px"
+                          h="120px"
+                          onClick={() => {
+                            setTemplateSelection((curr) => {
+                              if (curr === id) return undefined;
+                              return id;
+                            });
+                          }}
+                          _hover={{
+                            cursor: 'pointer',
+                            shadow: 'md',
+                            transform: 'translateY(-5px)',
+                            transitionDuration: '0.2s',
+                            transitionTimingFunction: 'ease-in-out',
+                          }}
+                          border={
+                            templateSelection === id ? '1px solid' : 'none'
+                          }
+                          borderColor="purple.300"
+                        >
+                          <CardBody>
+                            <Heading
+                              as={'h3'}
+                              size="sm"
+                              fontWeight="medium"
+                              mb="2"
+                            >
+                              {name}
+                            </Heading>
+                            {description}
+                          </CardBody>
+                        </Card>
+                      </GridItem>
+                    );
+                  })}
+                </Grid>
               </FormControl>
+              {templateSelection === 'ai' && (
+                <FormControl>
+                  <HStack spacing={1}>
+                    <FormLabel mr="0">Generate code using AI</FormLabel>
+                  </HStack>
+
+                  <FormHelperText mb={4}>
+                    Tell us what you'd like your applet to do and we'll use the
+                    magic of AI to autogenerate some code to get you started.{' '}
+                    <Text fontWeight="bold">
+                      This process can take up to a minute.
+                    </Text>
+                  </FormHelperText>
+                  <Textarea
+                    autoFocus
+                    fontFamily={'mono'}
+                    fontSize="sm"
+                    height={120}
+                    backgroundColor="bgColor"
+                    {...createAppForm.register('description')}
+                  />
+                </FormControl>
+              )}
               <HStack w="full" justifyContent="end">
                 <Button
                   variant="ghost"
@@ -335,6 +426,9 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
                   colorScheme="purple"
                   type="submit"
                   isDisabled={
+                    !templateSelection ||
+                    (templateSelection === 'ai' &&
+                      !createAppForm.getValues().description) ||
                     isDisabled ||
                     addApp.isLoading ||
                     generateCodeWithAI.isLoading ||

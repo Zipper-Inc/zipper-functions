@@ -83,6 +83,7 @@ export const CreateOrganizationModal = ({
               <FormLabel fontSize="sm">Organization account name</FormLabel>
               <InputGroup>
                 <Input
+                  autoFocus
                   type="text"
                   name="organizationName"
                   value={organizationName}
