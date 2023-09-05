@@ -390,8 +390,8 @@ model SlackZipperSlashCommandInstall {
   encryptedBotToken     String
   createdAt             DateTime @default(now())
   installers            String[]
-  teamName              String?
-  botUserId             String?
+  teamName              String
+  botUserId             String
 
   @@unique([teamId, appId])
   @@map("slack_zipper_slash_command_installs")
