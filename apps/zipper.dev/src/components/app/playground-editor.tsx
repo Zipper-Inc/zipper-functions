@@ -43,6 +43,10 @@ const TYPESCRIPT_ERRORS_TO_IGNORE = [
   // For example, this url https://esm.sh/lodash/unescape should work but it
   // TS2307: Cannot find module or it's corresponding type declarations.
   2307,
+  // Allow parameters to have an implicit `any` type
+  7006,
+  // Allow destructured elements to have an implicit `any` type.
+  7031,
 ];
 
 const isExternalResource = (resource: string | monaco.Uri) =>
