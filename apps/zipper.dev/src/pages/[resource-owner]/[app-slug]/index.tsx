@@ -190,7 +190,6 @@ const AppPage: NextPageWithLayout = () => {
             <VStack
               flex={1}
               background={bgGradient}
-              borderTopLeftRadius={12}
               padding={6}
               spacing={6}
               alignItems="start"

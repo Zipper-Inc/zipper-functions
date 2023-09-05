@@ -163,7 +163,6 @@ export const OrganizationSwitcher: React.FC<ButtonProps> = (props) => {
                         py="1"
                         fontWeight="semibold"
                         variant="outline"
-                        borderRadius="md"
                       >
                         Invited
                       </Badge>
@@ -186,8 +185,6 @@ export const OrganizationSwitcher: React.FC<ButtonProps> = (props) => {
           <MenuItem
             backgroundColor="fg.50"
             color="fg.600"
-            borderEndRadius={8}
-            borderBottomLeftRadius={8}
             pt={4}
             pb={6}
             px={4}

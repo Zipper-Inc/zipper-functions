@@ -1,6 +1,6 @@
 import ogSlugify from 'slugify';
 
-const DEFAULT_OPTIONS = {
+const DEFAULT_OPTIONS: Options = {
   lower: true,
   strict: true,
   remove: /[*+~.()'"!:@]/g,

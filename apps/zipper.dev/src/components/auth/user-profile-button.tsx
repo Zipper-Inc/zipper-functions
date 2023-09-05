@@ -18,13 +18,13 @@ import {
 } from '@chakra-ui/react';
 import { signOut } from 'next-auth/react';
 import {
-  HiOutlineCog,
-  HiLogout,
-  HiOutlineSpeakerphone,
-  HiOutlineSun,
-  HiMoon,
-} from 'react-icons/hi';
-import { IoHelpBuoySharp } from 'react-icons/io5';
+  PiGearDuotone,
+  PiLifebuoyDuotone,
+  PiMegaphoneSimpleDuotone,
+  PiMoonDuotone,
+  PiSignOutDuotone,
+  PiSunDuotone,
+} from 'react-icons/pi';
 import { AvatarForCurrentUser } from '../avatar';
 import { FeedbackModal } from './feedback-modal';
 import SignedIn from './signed-in';
@@ -47,13 +47,17 @@ export function UserProfileButton(props: { showAdditionalOptions?: boolean }) {
             <MenuGroup title="Settings">
               <MenuItem onClick={userSettingsModal.onOpen}>
                 <Stack gap={1} direction="row" alignItems="center">
-                  <HiOutlineCog />
+                  <PiGearDuotone />
                   <Text>Manage profile</Text>
                 </Stack>
               </MenuItem>
               <MenuItem onClick={toggleColorMode}>
                 <Stack gap={1} direction="row" alignItems="center">
-                  {colorMode === 'dark' ? <HiOutlineSun /> : <HiMoon />}
+                  {colorMode === 'dark' ? (
+                    <PiSunDuotone color="DarkGoldenRod" />
+                  ) : (
+                    <PiMoonDuotone color="DarkGoldenRod" />
+                  )}
                   <Text>
                     Switch to {colorMode === 'dark' ? 'light' : 'dark'} mode
                   </Text>
@@ -64,7 +68,7 @@ export function UserProfileButton(props: { showAdditionalOptions?: boolean }) {
               <MenuGroup title="Citizenship">
                 <MenuItem onClick={feedbackModal.onOpen}>
                   <Stack gap={1} direction="row" alignItems="center">
-                    <HiOutlineSpeakerphone />
+                    <PiMegaphoneSimpleDuotone />
                     <Text>Submit Feedback</Text>
                   </Stack>
                 </MenuItem>
@@ -76,7 +80,7 @@ export function UserProfileButton(props: { showAdditionalOptions?: boolean }) {
                   _hover={{ textDecoration: 'none' }}
                 >
                   <Stack gap={1} direction="row" alignItems="center">
-                    <IoHelpBuoySharp />
+                    <PiLifebuoyDuotone />
                     <Text>View Docs</Text>
                   </Stack>
                 </MenuItem>
@@ -86,7 +90,7 @@ export function UserProfileButton(props: { showAdditionalOptions?: boolean }) {
             <MenuGroup>
               <MenuItem onClick={() => signOut()}>
                 <Stack gap={1} direction="row" alignItems="center">
-                  <HiLogout />
+                  <PiSignOutDuotone />
                   <Text>Sign out</Text>
                 </Stack>
               </MenuItem>

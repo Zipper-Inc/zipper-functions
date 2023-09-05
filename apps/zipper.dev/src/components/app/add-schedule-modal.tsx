@@ -182,7 +182,6 @@ export const AddScheduleModal: React.FC<AddScheduleModalProps> = ({
                   flex={1}
                   background="fg.100"
                   p="4"
-                  borderRadius="12"
                   alignItems="stretch"
                   overflow="auto"
                   mt="0"

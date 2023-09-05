@@ -118,16 +118,8 @@ export const defaults: Components & { heading: Components['h1'] } = {
   blockquote: (props) => {
     const { children } = props;
 
-    const isNestedBlockquote = children.some((child: any) => {
-      return child.props?.node?.tagName === 'blockquote';
-    });
-
     return (
-      <Box
-        borderRadius={8}
-        bgColor={isNestedBlockquote ? 'fg.50' : 'white'}
-        p={4}
-      >
+      <Box bgColor={'fg.50'} p={4}>
         <Text
           position="relative"
           _before={{
@@ -138,7 +130,6 @@ export const defaults: Components & { heading: Components['h1'] } = {
             display: 'block',
             position: 'absolute',
             left: 0,
-            borderRadius: '10px',
           }}
           as="blockquote"
           paddingLeft={4}
@@ -152,9 +143,7 @@ export const defaults: Components & { heading: Components['h1'] } = {
     const { inline, children, className } = props;
     const isInline = inline || typeof children === 'string';
     if (isInline) {
-      return (
-        <Code p={2} children={children} bgColor="fg.50" borderRadius={8} />
-      );
+      return <Code p={2} children={children} bgColor="fg.50" />;
     }
 
     return (
@@ -166,7 +155,6 @@ export const defaults: Components & { heading: Components['h1'] } = {
         p={2}
         children={children}
         bgColor="fg.50"
-        borderRadius={8}
       />
     );
   },

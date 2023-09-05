@@ -1,4 +1,4 @@
 export type AICodeOutput = {
-  filename: `${string}.ts`;
+  filename: string;
   code: string;
 };

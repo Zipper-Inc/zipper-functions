@@ -19,6 +19,7 @@ import { slugifyAllowDot } from '~/utils/slugify';
 import { useScriptFilename } from '~/hooks/use-script-filename';
 import { HiCheck } from 'react-icons/hi';
 import { Connector } from '~/connectors/createConnector';
+import { kebabCase } from '~/utils/kebab-case';
 
 export default function AddScriptForm({
   appId,
@@ -50,7 +51,7 @@ export default function AddScriptForm({
     : '.ts';
 
   const slugifiedName = slugifyAllowDot(
-    scriptFilename?.replace(/\..+$/, '') ?? '',
+    kebabCase(scriptFilename?.replace(/\..+$/, '') ?? ''),
   );
 
   const slugifiedFilename = slugifiedName + extension;
@@ -59,8 +60,6 @@ export default function AddScriptForm({
     '.ts',
     '.md',
   ]);
-
-  const slugifiedScriptFilename = slugifyAllowDot(scriptFilename ?? '');
 
   return (
     <VStack alignItems="stretch" spacing={0} gap={4} minW={0}>

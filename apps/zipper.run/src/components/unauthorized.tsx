@@ -20,18 +20,12 @@ export default function Unauthorized() {
     <Box as="main">
       <Flex as="header" mx={8} my={4} justifyContent="end" color="fg.600">
         {user && (
-          <VStack
-            align={'start'}
-            spacing="0"
-            background={'fg.100'}
-            p="2"
-            borderRadius={4}
-          >
+          <VStack align={'start'} spacing="0" background={'fg.100'} p="2">
             {/* <UserButton showName /> */}
           </VStack>
         )}
       </Flex>
-      <Center h="lg" bg="fg.100" m="20" rounded="2xl">
+      <Center h="lg" bg="fg.100" m="20">
         <VStack spacing="20" w="md">
           <Box as={ZipperLogo} fill={'fg.400'} h="2em" />
           <VStack spacing="6" w="md">

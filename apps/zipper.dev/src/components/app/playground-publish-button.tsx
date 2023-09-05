@@ -15,7 +15,7 @@ import {
   Spinner,
   Box,
 } from '@chakra-ui/react';
-import { HiCheck, HiGlobe, HiOutlineUpload } from 'react-icons/hi';
+import { HiCheck } from 'react-icons/hi';
 import { getAppLink } from '@zipper/utils';
 import { useEditorContext } from '../context/editor-context';
 import { AppQueryOutput } from '~/types/trpc';
@@ -24,7 +24,8 @@ import { useRunAppContext } from '../context/run-app-context';
 import SignedIn from '../auth/signed-in';
 import { useState } from 'react';
 import TimeAgo from 'timeago-react';
-import { HiExclamationTriangle, HiGlobeAlt } from 'react-icons/hi2';
+
+import { PiAppWindowDuotone, PiRocketLaunchDuotone } from 'react-icons/pi';
 
 export const PlaygroundPublishInfo = ({ app }: { app: AppQueryOutput }) => {
   const appLink = getAppLink(app.slug);
@@ -100,7 +101,8 @@ export const PlaygroundPublishInfo = ({ app }: { app: AppQueryOutput }) => {
                   variant="outline"
                   display="flex"
                   gap={2}
-                  fontWeight="medium"
+                  fontWeight="semibold"
+                  borderWidth={1.5}
                   isDisabled={editorHasErrors()}
                   opacity={
                     app.publishedVersionHash !== app.playgroundVersionHash
@@ -108,7 +110,7 @@ export const PlaygroundPublishInfo = ({ app }: { app: AppQueryOutput }) => {
                       : 0.6
                   }
                 >
-                  <HiOutlineUpload />
+                  <PiRocketLaunchDuotone />
                   <Text>Publish</Text>
                 </Button>
               </span>
@@ -117,7 +119,9 @@ export const PlaygroundPublishInfo = ({ app }: { app: AppQueryOutput }) => {
           <PopoverContent p={4} mr={8}>
             <VStack alignItems="start">
               <HStack alignItems="start" mb="2">
-                <Icon as={HiGlobeAlt} mt={1} />
+                <Box mt={0.5}>
+                  <PiAppWindowDuotone />
+                </Box>
                 <VStack alignItems="flex-start" spacing={1}>
                   <Text fontWeight="semibold" fontSize="xs">
                     <Link

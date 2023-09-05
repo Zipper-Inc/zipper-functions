@@ -1,63 +1,53 @@
-import { extendTheme, theme as defaultTheme } from '@chakra-ui/react';
+import { extendTheme } from '@chakra-ui/react';
 import multiSelectTheme from './multiSelectTheme';
+import Gradient from 'javascript-color-gradient';
+import { switchTheme } from './switch';
+
+export const DARK_PURPLE = '#3C1053';
+export const PURPLE = '#9B26B6';
+export const ORANGE = '#F9423A';
+export const BLUE = '#0072CE';
+export const GRAY = '#F3F2F1';
+export const DARK_GRAY = '#20252d';
+export const LIGHT_GRAY = '#F9F8F8';
+export const BLACK = '#000000';
+export const WHITE = '#EEEEEE';
+
+const VARIANTS = [25, 50, 100, 200, 300, 400, 500, 600, 700, 800, 900] as const;
+
+type ColorRange = Record<(typeof VARIANTS)[number], string>;
+
+const makeColorFromGradient = (baseColor: string | string[]) => {
+  const spectrum = Array.isArray(baseColor)
+    ? baseColor
+    : [GRAY, baseColor, DARK_GRAY];
+
+  const points = new Gradient()
+    .setColorGradient(...spectrum)
+    .setMidpoint(100)
+    .getColors();
+
+  const variants = VARIANTS.reduce<ColorRange>((prev, value) => {
+    return {
+      ...prev,
+      [value]: points[Math.floor(value / 10) - 1],
+    };
+  }, {} as ColorRange);
+  return variants;
+};
 
 /**
  * Chakra UI theme
  * @see https://chakra-ui.com/docs/styled-system/theme
  */
+
 export const baseColors = {
-  gray: {
-    25: '#FCFCFD',
-    50: '#F9FAFB',
-    100: '#F2F4F7',
-    200: '#E4E7EC',
-    300: '#D0D5DD',
-    400: '#98A2B3',
-    500: '#667085',
-    600: '#475467', // Default
-    700: '#344054',
-    800: '#20252d',
-    900: '#101216',
-  },
-  neutral: {
-    25: '#FFFDFB',
-    50: '#F9F7F4',
-    100: '#F3F2F1', // aka brand gray
-    200: '#E3E2E1',
-    300: '#C3C2C1',
-    400: '#AEADAD',
-    500: '#8F8F8E',
-    600: '#6E6D6D',
-    700: '#5B5A59',
-    800: '#3C3B3A',
-    900: '#1D1C1B',
-  },
-  purple: {
-    25: '#FDFBFF',
-    50: '#FBF4FD',
-    100: '#F8ECFA',
-    200: '#E5BEEB',
-    300: '#CD83D7',
-    400: '#D361CC',
-    500: '#BA47C2',
-    600: '#9B2FB4', // aka brand purple
-    700: '#89279B',
-    800: '#651D78',
-    900: '#3D1353',
-  },
-  blue: {
-    25: '#F2F5F8',
-    50: '#EEF8FF',
-    100: '#BFE1FA',
-    200: '#96C9ED',
-    300: '#74BBED',
-    400: '#41A6EC',
-    500: '#1789DC',
-    600: '#1174CB', // aka brand blue
-    700: '#0766B7',
-    800: '#004A98',
-    900: '#003E80',
-  },
+  purple: makeColorFromGradient(PURPLE),
+  darkPurple: makeColorFromGradient(DARK_PURPLE),
+  orange: makeColorFromGradient(ORANGE),
+  blue: makeColorFromGradient(BLUE),
+  gray: makeColorFromGradient([GRAY, '#d4d3d2', DARK_GRAY, BLACK]),
+  neutral: makeColorFromGradient([WHITE, GRAY, BLACK]),
   yellow: {
     25: '#FFFCF5',
     50: '#FFFAEB',
@@ -142,7 +132,7 @@ export const baseColors = {
 };
 
 export const brandColors = {
-  brandNeutral: baseColors.neutral[100],
+  brandNeutral: GRAY,
   brandPurple: baseColors.purple[600],
   brandDarkPurple: baseColors.purple[800],
   brandBlue: baseColors.blue[600],
@@ -197,51 +187,51 @@ export const primaryColors = {
     _dark: baseColors.purple[25],
   },
   primary: {
-    default: baseColors.purple[600],
-    _dark: baseColors.purple[200],
+    default: baseColors.purple[500],
+    _dark: baseColors.purple[300],
   },
 };
 
 export const foregroundColors = {
   'fg.25': {
-    default: 'gray.25',
+    default: 'gray.50',
     _dark: 'whiteAlpha.50',
   },
   'fg.50': {
     default: 'gray.50',
-    _dark: 'whiteAlpha.100',
+    _dark: 'whiteAlpha.50',
   },
   'fg.100': {
     default: 'gray.100',
-    _dark: 'whiteAlpha.200',
+    _dark: 'whiteAlpha.100',
   },
   'fg.200': {
     default: 'gray.200',
-    _dark: 'whiteAlpha.300',
+    _dark: 'whiteAlpha.200',
   },
   'fg.300': {
     default: 'gray.300',
-    _dark: 'whiteAlpha.400',
+    _dark: 'whiteAlpha.300',
   },
   'fg.400': {
     default: 'gray.400',
-    _dark: 'whiteAlpha.500',
+    _dark: 'whiteAlpha.400',
   },
   'fg.500': {
     default: 'gray.500',
-    _dark: 'whiteAlpha.600',
+    _dark: 'whiteAlpha.500',
   },
   'fg.600': {
     default: 'gray.600',
-    _dark: 'whiteAlpha.700',
+    _dark: 'whiteAlpha.600',
   },
   'fg.700': {
     default: 'gray.700',
-    _dark: 'whiteAlpha.800',
+    _dark: 'whiteAlpha.700',
   },
   'fg.800': {
     default: 'gray.800',
-    _dark: 'whiteAlpha.900',
+    _dark: 'whiteAlpha.800',
   },
   'fg.900': {
     default: 'gray.900',
@@ -261,6 +251,20 @@ export const semanticTokens = {
   },
 };
 
+// 📐 Embrace the right angle
+const borderRadius = {
+  radii: {
+    none: '0',
+    sm: '0',
+    base: '0',
+    md: '0',
+    lg: '0',
+    xl: '0',
+    '2xl': '0',
+    '3xl': '0',
+    full: '9999px',
+  },
+};
 export const fonts = {
   body: '"InterVariable", sans-serif',
   heading: '"InterVariable", sans-serif',
@@ -272,6 +276,7 @@ export const theme = extendTheme({
   initialColorMode: 'system',
   components: {
     MultiSelect: multiSelectTheme,
+    Switch: switchTheme,
   },
   styles: {
     global: {
@@ -332,4 +337,5 @@ export const theme = extendTheme({
   fonts: {
     ...fonts,
   },
+  ...borderRadius,
 });

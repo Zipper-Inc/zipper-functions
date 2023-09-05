@@ -42,13 +42,7 @@ export default function Collection(props: Props) {
   const { setSearchQuery } = useSmartFunctionOutputContext();
 
   return (
-    <Stack
-      width="100%"
-      border="1px solid"
-      borderColor="fg.200"
-      p="2"
-      borderRadius="md"
-    >
+    <Stack width="100%" border="1px solid" borderColor="fg.200" p="2">
       {props.tableLevel === 0 && (
         <Box display="flex" justifyContent="flex-end" gap="2">
           <InputGroup w="md">
@@ -218,13 +212,7 @@ function CardCollection(props: Props) {
     <SimpleGrid minChildWidth="200px" spacing={10}>
       {data.map((record, index) => {
         return (
-          <Card
-            key={index}
-            bgColor="fg.50"
-            borderRadius="xl"
-            overflow="hidden"
-            p={4}
-          >
+          <Card key={index} bgColor="fg.50" overflow="hidden" p={4}>
             <CardBody p={0}>
               {Object.entries(record).map(([key, value]) => {
                 if (isPrimitive(value)) {
