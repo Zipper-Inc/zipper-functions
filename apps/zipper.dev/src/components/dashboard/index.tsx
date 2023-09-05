@@ -230,6 +230,14 @@ export function Dashboard() {
     });
   }, [appSearchTerm]);
 
+  if (appQuery.isLoading) {
+    return (
+      <Center>
+        <Spinner color="purple.700" />
+      </Center>
+    );
+  }
+
   return (
     <>
       <VStack flex={1} paddingX={10} alignItems="stretch" spacing={0}>
