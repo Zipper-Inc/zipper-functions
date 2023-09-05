@@ -65,6 +65,9 @@ export const getServerSideProps: GetServerSideProps = async ({
       filename: appRun.path,
       result: appRun.result,
       hideRun: true,
+      metadata: {
+        runId: query.runId as string,
+      },
       runnableScripts,
       githubAuthUrl,
       slackAuthUrl,
