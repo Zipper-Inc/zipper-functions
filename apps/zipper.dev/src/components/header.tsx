@@ -150,6 +150,7 @@ const Header: React.FC<HeaderProps> = ({
                       textUnderlineOffset={12}
                       textDecoration={textDecoration}
                       fontSize="sm"
+                      color={'fg.900'}
                     >
                       {r.text}
                     </Link>
