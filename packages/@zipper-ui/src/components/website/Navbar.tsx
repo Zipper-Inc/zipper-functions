@@ -13,7 +13,7 @@ import {
   VStack,
   Box,
 } from '@chakra-ui/react';
-import React, { useMemo, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { FiMenu } from 'react-icons/fi';
 import { ZipperLogo } from '../zipper-logo';
 import { Links } from './common/Links';
@@ -25,7 +25,7 @@ type Props = {
 const LINKS = {
   DEV: {
     SITE: [
-      { href: '/', label: 'Features', external: false },
+      { href: '/home', label: 'Features', external: false },
       { href: '/about', label: 'About', external: false },
       { href: 'http://localhost:3003', label: 'Docs', external: true },
       { href: 'http://localhost:3004', label: 'Blog', external: true },
@@ -44,7 +44,7 @@ const LINKS = {
 
   PROD: {
     SITE: [
-      { href: '/', label: 'Features', external: false },
+      { href: '/home', label: 'Features', external: false },
       { href: '/about', label: 'About', external: false },
       { href: 'https://zipper.docs', label: 'Docs', external: true },
       { href: 'https://zipper.blog', label: 'Blog', external: true },
@@ -63,18 +63,18 @@ const LINKS = {
 };
 
 export const WebSiteNavbar = ({ links }: Props) => {
-  const URL = typeof window !== 'undefined' ? window.location.href : '';
+  const [URL, setURL] = React.useState('');
 
-  const linksObj = useMemo(
-    () =>
-      ({
-        ENV: process.env.NODE_ENV === 'development' ? 'DEV' : 'PROD',
-        SITE: ['localhost:3000', 'zipper.dev'].some((el) => URL.includes(el))
-          ? 'SITE'
-          : 'BLOG',
-      } as { ENV: keyof typeof LINKS; SITE: keyof (typeof LINKS)['DEV'] }),
-    [URL],
-  );
+  useEffect(() => {
+    setURL(typeof window !== 'undefined' ? window.location.href : '');
+  }, []);
+
+  const linksObj = {
+    ENV: process.env.NODE_ENV === 'development' ? 'DEV' : 'PROD',
+    SITE: ['localhost:3000', 'zipper.dev'].some((el) => URL.includes(el))
+      ? 'SITE'
+      : 'BLOG',
+  } as { ENV: keyof typeof LINKS; SITE: keyof (typeof LINKS)['DEV'] };
 
   const NavDrawer = () => {
     const { isOpen, onOpen, onClose } = useDisclosure();
@@ -104,7 +104,7 @@ export const WebSiteNavbar = ({ links }: Props) => {
             {/* <DrawerHeader>Create your account</DrawerHeader> */}
 
             <DrawerBody>
-              <VStack mt={6} as="nav" gap={4}>
+              <VStack mt={6} gap={4}>
                 {typeof window !== undefined && (
                   <Links
                     data={LINKS[linksObj.ENV][linksObj.SITE]}
@@ -147,13 +147,17 @@ export const WebSiteNavbar = ({ links }: Props) => {
       )}
 
       <HStack as="nav" display={['none', 'none', 'flex']} gap={8}>
-        {typeof window !== undefined && URL.length > 2 && (
-          <Links
-            data={LINKS[linksObj.ENV][linksObj.SITE]}
-            component={links?.component}
-          />
-        )}
-        <Button colorScheme="gray" fontWeight={500} h="44px" variant="outline">
+        <Links
+          data={LINKS[linksObj.ENV][linksObj.SITE]}
+          component={links?.component}
+        />
+        <Button
+          as="nav"
+          colorScheme="gray"
+          fontWeight={500}
+          h="44px"
+          variant="outline"
+        >
           Sign Up
         </Button>
       </HStack>

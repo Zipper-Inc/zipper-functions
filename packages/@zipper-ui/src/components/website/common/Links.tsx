@@ -43,7 +43,6 @@ export const Links = (props: {
             : LINK_STYLES.idle;
 
         if (link.external === false) {
-          console.log('here');
           return (
             <Text as={props.component} key={index} href={link.href} {...styles}>
               {link.label}

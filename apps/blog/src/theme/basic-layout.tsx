@@ -55,7 +55,6 @@ export const BasicLayout = ({ children }: { children: ReactNode }) => {
               py={24}
             >
               <HStack
-                as="nav"
                 _hover={{ opacity: '.75' }}
                 cursor="pointer"
                 color="gray.500"

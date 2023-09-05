@@ -562,16 +562,17 @@ const AppletsGallery = () => {
               </button>
             </Flex>
           )}
-          slideWidth={isLargerThan600 ? 380 + 16 : 300 + 16}
+          slideWidth={isLargerThan600 ? 980 + 16 : 380 + 16}
         >
           {galleryApps.length > 1 &&
             galleryApps?.map((app) => (
               <VStack
                 align="start"
                 as="li"
-                minH={{ base: '480px' }}
+                minH={{ base: '480px', lg: '720px' }}
                 justify={{ base: 'space-between' }}
                 key={app.slug}
+                flexDirection={{ lg: 'column-reverse' }}
                 gap={2}
               >
                 <VStack
@@ -596,10 +597,17 @@ const AppletsGallery = () => {
                 </VStack>
                 <Box
                   as="figure"
-                  w={['300px', '380px']}
+                  w={{ sm: '380px', lg: '980px' }}
                   borderRadius="8px"
-                  h={['300px', '380px']}
+                  h={{ sm: '380px', lg: '620px' }}
                   bg="gray.100"
+                  background={{
+                    base: `url('layout/gallery/${app.slug}-sm.svg')`,
+                    md: `url('layout/gallery/${app.slug}-md.svg')`,
+                    lg: `url('layout/gallery/${app.slug}-lg.svg')`,
+                  }}
+                  backgroundPosition="center"
+                  backgroundSize="contain"
                 />
               </VStack>
             ))}
@@ -656,7 +664,13 @@ const Bateries = memo(() => {
           w="full"
         >
           {BATERIES_CONTENT.LIST.map((btr) => (
-            <GridItem colSpan={1} as={Flex} align="start" gap={5}>
+            <GridItem
+              key={btr.name}
+              colSpan={1}
+              as={Flex}
+              align="start"
+              gap={5}
+            >
               <Box as="span" color="blue.500">
                 {btr.icon}
               </Box>
