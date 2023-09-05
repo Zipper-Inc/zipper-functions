@@ -15,6 +15,7 @@ import { getZipperDotDevUrl } from '@zipper/utils';
 import { useState, useEffect } from 'react';
 import { useOrganization } from '~/hooks/use-organization';
 import { trpc } from '~/utils/trpc';
+import SlackInstallButton from './slack-install-button';
 
 function OrganizationSettings() {
   const [disabled, setDisabled] = useState(false);
@@ -38,6 +39,7 @@ function OrganizationSettings() {
     await organization?.update({ name: orgName });
     setDisabled(false);
   };
+
   return (
     <HStack spacing={0} flex={1} alignItems="start" gap={16}>
       <VStack flex={1} alignItems="stretch">
@@ -73,6 +75,20 @@ function OrganizationSettings() {
             </Button>
           </HStack>
         </form>
+
+        <Box w="100%">
+          <Text fontSize={'xl'}>Integrations</Text>
+          <Divider mb="4" mt={2} />
+        </Box>
+
+        <FormControl>
+          <FormLabel size="sm">Run Applets from Slack</FormLabel>
+          <Text fontSize="sm" color="fg.600" mb="4">
+            Once installed, run the `/zipper [applet-slug]` slash command to run
+            an applet from within Slack
+          </Text>
+          <SlackInstallButton />
+        </FormControl>
       </VStack>
     </HStack>
   );

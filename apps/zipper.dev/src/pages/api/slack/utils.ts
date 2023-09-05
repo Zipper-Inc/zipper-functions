@@ -1,10 +1,12 @@
 import type { NextApiResponse } from 'next';
 import { prisma } from '../../../server/prisma';
 import { decryptFromBase64 } from '@zipper/utils';
+import { getZipperDotDevUrlForServer } from '~/server/utils/server-url.utils';
 
 const SLACK_VIEW_UPDATE_URL = 'https://slack.com/api/views.update';
 const SLACK_VIEW_OPEN_URL = 'https://slack.com/api/views.open';
-const ZIPPER_APP_INFO_URL = 'https://zipper.dev/api/app/info';
+const SLACK_POST_MESSAGE_URL = 'https://slack.com/api/chat.postMessage';
+const ZIPPER_APP_INFO_URL = `${getZipperDotDevUrlForServer()}/api/app/info`;
 const MAX_TEXT_LENGTH = 2000;
 
 async function buildHeaders(appId: string, teamId: string) {
@@ -92,6 +94,18 @@ export async function openSlackModal(
     method: 'POST',
     headers: await buildHeaders(slackAppId, slackTeamId),
     body: JSON.stringify(view),
+  });
+}
+
+export async function sendMessage(
+  slackAppId: string,
+  slackTeamId: string,
+  body: { channel: string; text?: string; blocks?: any[] },
+) {
+  return fetch(SLACK_POST_MESSAGE_URL, {
+    method: 'POST',
+    headers: await buildHeaders(slackAppId, slackTeamId),
+    body: JSON.stringify(body),
   });
 }
 

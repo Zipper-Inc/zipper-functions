@@ -10,14 +10,22 @@ const SlackAuth: NextPageWithLayout = () => {
   const { code, state, error, error_description } = router.query;
   const [errorMessage, setErrorMessage] = useState<string | undefined>();
 
-  const exchangeMutation = trpc.useMutation('slack.exchangeCodeForToken', {
-    onSuccess: () => {
-      router.push('/');
+  const sendWelcomeMessage = trpc.useMutation(
+    'zipperSlackIntegration.sendWelcomeMessage',
+  );
+
+  const exchangeMutation = trpc.useMutation(
+    'zipperSlackIntegration.exchangeCodeForToken',
+    {
+      onSuccess: (data) => {
+        sendWelcomeMessage.mutateAsync(data);
+        router.push('/');
+      },
+      onError: (error) => {
+        setErrorMessage(error.message);
+      },
     },
-    onError: (error) => {
-      setErrorMessage(error.message);
-    },
-  });
+  );
 
   if (error || errorMessage) {
     return (
