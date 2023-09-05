@@ -228,6 +228,12 @@ declare namespace Zipper {
     | 'self-start'
     | 'start';
 
+  export interface ButtonComponentProps {
+    width?: string;
+    colorScheme?: 'purple' | 'blue' | 'red' | 'green' | 'yellow';
+    variant?: 'outline' | 'solid' | 'link' | 'ghost';
+  }
+
   export interface StackComponent extends ComponentBase {
     type: 'stack';
     props?:
@@ -302,7 +308,7 @@ declare namespace Zipper {
       // The arguments passed to console API
       data: Serializable[];
       // Time of log
-      timestamp: number;
+      timestamp: Date;
     }
 
     export type MessageorDisplay = Omit<Message, 'timestamp'> & {
@@ -455,7 +461,7 @@ declare function Link(props: LinkProps): Zipper.Component;
 
 type ButtonProps<I> = Omit<Zipper.ButtonAction<I>, 'actionType' | 'text'>;
 declare function Button<I = Zipper.Inputs>(
-  props: ButtonProps<I>,
+  props: ButtonProps<I> & Zipper.ButtonComponentProps,
 ): Zipper.Action;
 
 type MarkdownProps = { text?: string };

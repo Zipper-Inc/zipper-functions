@@ -9,7 +9,11 @@ import { AppInfoResult, InputParam, InputParams } from '@zipper/types';
 import { SmartFunctionOutputContext } from './smart-function-output-context';
 import Zipper from '../../../../@zipper-framework';
 
-export function ActionButton({ action }: { action: Zipper.ButtonAction }) {
+export function ActionButton({
+  action,
+}: {
+  action: Zipper.ButtonAction & Zipper.ButtonComponentProps;
+}) {
   const {
     showSecondaryOutput,
     getRunUrl,
@@ -139,10 +143,10 @@ export function ActionButton({ action }: { action: Zipper.ButtonAction }) {
 
   return (
     <Button
-      colorScheme={'purple'}
-      variant="outline"
+      colorScheme={action.colorScheme || 'purple'}
+      w={action.width || 'fit-content'}
+      variant={action.variant || 'outline'}
       isDisabled={isLoading}
-      mr="2"
       onClick={async () => {
         setIsLoading(true);
         action.run

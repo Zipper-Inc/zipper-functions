@@ -6,11 +6,7 @@
   },
   "compilerOptions": {
     "target": "es5",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
+    "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -24,24 +20,13 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",
-    "types": [
-      "@types/jest",
-      "node"
-    ],
+    "types": ["@types/jest", "node"],
     "incremental": true,
     "baseUrl": ".",
     "paths": {
-      "~/*": [
-        "src/*"
-      ]
+      "~/*": ["src/*"]
     }
   },
-  "include": [
-    "**/*.ts",
-    "**/*.tsx",
-  ],
-  "exclude": [
-    "node_modules",
-    "**/*.test.*"
-  ]
+  "include": ["**/*.ts", "**/*.tsx", "../../index.d.ts"],
+  "exclude": ["node_modules", "**/*.test.*"]
 }

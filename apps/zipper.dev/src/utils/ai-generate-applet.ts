@@ -8,6 +8,7 @@ import {
 
 import { StructuredOutputParser } from 'langchain/output_parsers';
 import { z } from 'zod';
+import { kebabCase } from './kebab-case';
 
 const zipperDefinitions = `
   Here is a list of all the definitions you can use in your code:
@@ -512,7 +513,7 @@ const CreateZipperCodePropmt = ChatPromptTemplate.fromPromptMessages<{
   - Try to use the Zipper functionalities like storage to store data, If the user says "I want a list" this data should be saved using Zipper.storage
   - If the user needs to perform any action in the items you should use Zipper.Action
   - Zipper applets can contain one or many files, it is essential to always output the main.ts file first and is required that in the top of the file you ad a //file: main.ts comment indicating that this is the main file, this is required also for every file you output
-  - If you detect in your main function that you have other functions to perform actions you can extract this functions to other files, just output the code of that functions after the main.ts file and add the name of the file as a comment in the top, here is a example: 
+  - If you detect in your main function that you have other functions to perform actions you can extract this functions to other files, just output the code of that functions after the main.ts file and add the name of the file in kebab case as a comment in the top, here is a example: 
   // file: main.ts
   export function handler() {
     const list = Zipper.storage.get('list');
@@ -531,7 +532,7 @@ const CreateZipperCodePropmt = ChatPromptTemplate.fromPromptMessages<{
       ],
     });
   }
-  // file: deleteItem.ts
+  // file: delete-item.ts
   type Item = {
     id: string;
   }
@@ -551,7 +552,7 @@ const CreateZipperCodePropmt = ChatPromptTemplate.fromPromptMessages<{
   // file: main.ts
   export function handler() { ... }
   export const config: Zipper.HandlerConfig = { ... }
-  // file: deleteItem.ts
+  // file: delete-item.ts
   export function handler() { ... }
   export const config: Zipper.HandlerConfig = { ... }
   - If you create another file to handle a functionality of your applet, remember to remove the old function from the main.ts file
@@ -640,7 +641,7 @@ const OrganizeOutputPrompt = ChatPromptTemplate.fromPromptMessages<{
     // file: main.ts
     const foo = 'bar';
 
-    // file: other.ts
+    // file: delete-item.ts
     const bar = 'foo';
 
     and output me like this:
@@ -651,12 +652,13 @@ const OrganizeOutputPrompt = ChatPromptTemplate.fromPromptMessages<{
         
       },
       {
-        filename: "other.ts",
+        filename: "delete-item.ts",
         code: ""const bar = 'foo';""
       }
     ]
 
     If there is no file comment, output the code in a filename main.ts.
+    The filename should be always in kebab-case.
     Return me the output in plain JSON. No additional text above!!
 
     ✅ Thats considered a valid output:
@@ -712,7 +714,8 @@ export const codeOutputParser = StructuredOutputParser.fromZodSchema(
       filename: z
         .string()
         .endsWith('.ts')
-        .describe('The filename of the typescript code'),
+        .transform((filename) => filename.replace('.ts', ''))
+        .describe('The filename of the typescript code in kebab-case'),
       code: z.string().describe('The code that got generated'),
     }),
   ),

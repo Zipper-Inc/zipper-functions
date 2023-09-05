@@ -53,7 +53,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
   const { colorMode } = useColorMode();
 
   const unreadLogs = logs.filter(
-    (log) => log.timestamp > lastReadLogsTimestamp,
+    (log) => log.timestamp > new Date(lastReadLogsTimestamp),
   ).length;
 
   const isLibrary = !inputParams && !inputError;
@@ -82,7 +82,6 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
           p={4}
           backgroundColor="fg.100"
           position="relative"
-          rounded="md"
           border="1px"
           borderColor="fg.200"
         >

@@ -58,11 +58,10 @@ export default function SignIn({
     <>
       <Center w="100%" h="100vh">
         <VStack spacing="12">
-          <ZipperLogo />
+          <ZipperLogo fill="currentColor" />
           <Card
             pt={10}
             shadow="xl"
-            rounded="md"
             display="flex"
             flexDirection="column"
             gap={4}

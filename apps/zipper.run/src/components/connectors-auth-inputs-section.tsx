@@ -52,16 +52,11 @@ const ConnectorsAuthInputsSection: React.FC<
       {isCollapsible ? (
         <Accordion
           allowToggle
-          rounded="2xl"
           defaultIndex={expandByDefault ? 0 : undefined}
           onChange={onChange}
         >
           <AccordionItem border="none">
-            <AccordionButton
-              _hover={{ bgColor: 'fg.50' }}
-              color="fg.700"
-              rounded="xl"
-            >
+            <AccordionButton _hover={{ bgColor: 'fg.50' }} color="fg.700">
               <Box as="span" flex="1" textAlign="left">
                 {inputSummary}
               </Box>

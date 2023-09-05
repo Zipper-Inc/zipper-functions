@@ -78,7 +78,7 @@ export function Gallery({
     return (
       <Center>
         <VStack paddingY={20} bg={'gray.50'} w="90%">
-          <Box bg={'white'} boxShadow="2xl" padding={5} rounded="2xl" mb={6}>
+          <Box bg={'white'} boxShadow="2xl" padding={5} mb={6}>
             <ZipperSymbol style={{ maxHeight: '100%' }} fill={gray200} />
           </Box>
           <Stack alignContent="center" gap={2} maxW={500} textAlign="center">
@@ -200,7 +200,6 @@ export function Gallery({
             ]}
             gridGap={6}
             // bgColor="fg.50"
-            rounded={40}
           >
             {(apps || []).map((app) => {
               return <GalleryItem app={app} key={app.id} />;

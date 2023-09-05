@@ -145,7 +145,6 @@ export function PlaygroundCollabCursor({
             left="-10px"
             height={5}
             width={5}
-            borderRadius="full"
             backgroundColor={color}
             justifyContent="center"
             alignItems="center"

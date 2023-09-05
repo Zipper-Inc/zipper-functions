@@ -12,6 +12,8 @@ import {
   ConnectorInEditableForm,
 } from './components';
 import { UseQueryResult } from 'react-query';
+import getRunUrl from '~/utils/get-run-url';
+import { getAppVersionFromHash } from '~/utils/hashing';
 
 export const zendeskConnector = createConnector({
   id: 'zendesk',
@@ -151,6 +153,11 @@ function ZendeskConnectorForm({ appId }: { appId: string }) {
                   <ConnectorUninstallForm
                     handleUninstall={handleUninstall}
                     isSaving={isSaving}
+                    zendeskAppName={appInfo.name || ''}
+                    authorName={user?.name || ''}
+                    authorEmail={user?.email || ''}
+                    appEntryPoint={`https://${appInfo.slug}.zipper.run/run/zendesk/main.ts`}
+                    signedUrl={true}
                   />
                 ) : (
                   <ConnectorInputForm

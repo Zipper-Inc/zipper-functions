@@ -26,7 +26,7 @@ export const GalleryItem: React.FC<GalleryItemProps> = ({ app }) => {
   return (
     <GridItem>
       <NextLink href={`/${app.resourceOwner.slug}/${app.slug}`}>
-        <Card background="bgColor" borderRadius={10} height="100%">
+        <Card background="bgColor" height="100%">
           <CardBody
             padding={0}
             as={HStack}
@@ -48,12 +48,7 @@ export const GalleryItem: React.FC<GalleryItemProps> = ({ app }) => {
               <VStack alignItems="stretch" pt="2">
                 {app.isPrivate && (
                   <HStack paddingY={1}>
-                    <Badge
-                      colorScheme="blackAlpha"
-                      rounded="xl"
-                      paddingX={2}
-                      color="fg.600"
-                    >
+                    <Badge colorScheme="blackAlpha" paddingX={2} color="fg.600">
                       Private
                     </Badge>
                   </HStack>

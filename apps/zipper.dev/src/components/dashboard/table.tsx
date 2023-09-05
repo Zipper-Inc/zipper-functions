@@ -1,4 +1,5 @@
 import * as React from 'react';
+import Link from 'next/link';
 import {
   Table,
   Thead,
@@ -9,7 +10,6 @@ import {
   chakra,
   Button,
   HStack,
-  Icon,
 } from '@chakra-ui/react';
 import { TriangleDownIcon, TriangleUpIcon } from '@chakra-ui/icons';
 import {
@@ -22,9 +22,7 @@ import {
   SortingOptions,
   Row,
 } from '@tanstack/react-table';
-import { HiExternalLink } from 'react-icons/hi';
-import { useRouter } from 'next/router';
-import { VscCode } from 'react-icons/vsc';
+import { PiBrowserBold, PiCodeSimpleBold } from 'react-icons/pi';
 
 export type DataTableProps<Data extends Record<string, unknown>> = {
   data: Data[];
@@ -108,7 +106,6 @@ export function DataTable<Data extends Record<string, unknown>>({
 
 const TableRow: React.FC<{ row: Row<any> }> = ({ row }) => {
   const [isHovering, setIsHovering] = React.useState(false);
-  const router = useRouter();
   return (
     <Tr
       key={row.id}
@@ -135,38 +132,36 @@ const TableRow: React.FC<{ row: Row<any> }> = ({ row }) => {
           return (
             <Td key={cell.id}>
               <HStack>
-                <Button
-                  variant={'outline'}
-                  colorScheme="purple"
-                  size={'sm'}
-                  onClick={() =>
-                    window.location.replace(
-                      `/${row.original.resourceOwner.slug}/${row.original.slug}/src/main.ts`,
-                    )
-                  }
+                <Link
+                  href={`/${row.original.resourceOwner.slug}/${row.original.slug}/src/main.ts`}
                 >
-                  <Icon as={VscCode} mr="1" />
-                  Edit
-                </Button>
-                <Button
-                  variant={'outline'}
-                  colorScheme="purple"
-                  size={'sm'}
-                  onClick={() =>
-                    router.push(
-                      `${
-                        process.env.NODE_ENV === 'development'
-                          ? 'http://'
-                          : 'https://'
-                      }${row.original.slug}.${
-                        process.env.NEXT_PUBLIC_ZIPPER_DOT_RUN_HOST
-                      }`,
-                    )
-                  }
+                  <Button
+                    variant="outline"
+                    colorScheme="purple"
+                    size="sm"
+                    leftIcon={<PiCodeSimpleBold />}
+                  >
+                    Edit
+                  </Button>
+                </Link>
+                <Link
+                  href={`${
+                    process.env.NODE_ENV === 'development'
+                      ? 'http://'
+                      : 'https://'
+                  }${row.original.slug}.${
+                    process.env.NEXT_PUBLIC_ZIPPER_DOT_RUN_HOST
+                  }`}
                 >
-                  <Icon as={HiExternalLink} mr="1" />
-                  View
-                </Button>
+                  <Button
+                    variant="outline"
+                    colorScheme="blue"
+                    size="sm"
+                    leftIcon={<PiBrowserBold />}
+                  >
+                    View
+                  </Button>
+                </Link>
               </HStack>
             </Td>
           );

@@ -47,14 +47,20 @@ import { HiExclamationTriangle } from 'react-icons/hi2';
 import slugify from 'slugify';
 import { MIN_SLUG_LENGTH, useAppSlug } from '~/hooks/use-app-slug';
 import { useRouter } from 'next/router';
-import {
-  HiLockOpen,
-  HiLockClosed,
-  HiOutlineClipboard,
-  HiOutlineTrash,
-} from 'react-icons/hi';
-import { VscCode, VscFile, VscGistSecret } from 'react-icons/vsc';
 import { getAppLink } from '@zipper/utils';
+import {
+  PiLockSimple,
+  PiLockSimpleOpen,
+  PiLockLaminated,
+  PiLockLaminatedOpen,
+  PiCode,
+  PiCodeSimple,
+  PiEnvelopeSimpleOpen,
+  PiEnvelopeSimple,
+  PiKeyBold,
+  PiTrashSimpleBold,
+  PiClipboardBold,
+} from 'react-icons/pi';
 
 type Props = {
   app: Pick<
@@ -118,7 +124,7 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
       slug: app.slug,
       description: app.description,
       requiresAuthToRun: app.requiresAuthToRun,
-      isPublic: !app.isPrivate,
+      isPrivate: !app.isPrivate,
       isDataSensitive: app.isDataSensitive,
     },
   });
@@ -139,7 +145,7 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
       model.name !== appQuery.data.name ||
       model.description !== appQuery.data.description ||
       model.requiresAuthToRun !== appQuery.data.requiresAuthToRun ||
-      model.isPublic !== !appQuery.data.isPrivate ||
+      model.isPrivate !== !appQuery.data.isPrivate ||
       model.isDataSensitive !== appQuery.data.isDataSensitive
     );
   };
@@ -155,7 +161,7 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
           name: data.name,
           description: data.description,
           requiresAuthToRun: data.requiresAuthToRun,
-          isPrivate: !data.isPublic,
+          isPrivate: data.isPrivate,
           isDataSensitive: data.isDataSensitive,
         },
       },
@@ -300,7 +306,6 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
                 w="full"
                 border="1px solid"
                 borderColor="fg.200"
-                rounded="md"
                 align={'stretch'}
                 spacing="0"
               >
@@ -313,17 +318,21 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
                   <Flex flexGrow={'1'}>
                     <VStack align="start">
                       <HStack>
-                        <VscCode />
-                        <Text>Is the code public?</Text>
+                        {settingsForm.watch('isPrivate') ? (
+                          <PiLockSimple />
+                        ) : (
+                          <PiLockSimpleOpen />
+                        )}
+                        <Text>Is the code private?</Text>
                       </HStack>
                       <FormHelperText maxW="xl">{`Since this is ${
-                        settingsForm.watch('isPublic')
-                          ? 'checked, anyone on the internet will be able to see the source code.'
-                          : 'not checked, only organization members and people invited to the app will be able to see the source code.'
+                        settingsForm.watch('isPrivate')
+                          ? 'checked, only organization members and people invited to the app will be able to see the source code.'
+                          : 'not checked, anyone on the internet will be able to see the source code.'
                       }`}</FormHelperText>
                     </VStack>
                   </Flex>
-                  <Switch {...settingsForm.register('isPublic')} ml="auto" />
+                  <Switch {...settingsForm.register('isPrivate')} ml="auto" />
                 </HStack>
 
                 <VStack
@@ -336,9 +345,9 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
                   <VStack align="start" w="full">
                     <HStack w="full">
                       {settingsForm.watch('requiresAuthToRun') ? (
-                        <HiLockClosed />
+                        <PiLockLaminated />
                       ) : (
-                        <HiLockOpen />
+                        <PiLockLaminatedOpen />
                       )}
                       <Text>Require auth to run?</Text>
                       <Spacer flexGrow={1} />
@@ -357,9 +366,9 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
                   <VStack align="start" w="full">
                     <HStack w="full">
                       {settingsForm.watch('isDataSensitive') ? (
-                        <VscGistSecret />
+                        <PiEnvelopeSimple />
                       ) : (
-                        <VscFile />
+                        <PiEnvelopeSimpleOpen />
                       )}
                       <Text>Is the data sensitive?</Text>
                       <Spacer flexGrow={1} />
@@ -392,7 +401,12 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
             <Text fontSize={'xl'} flexGrow={1}>
               Your Access Tokens
             </Text>
-            <Button colorScheme="purple" variant="outline" onClick={onOpen}>
+            <Button
+              colorScheme="purple"
+              variant="outline"
+              onClick={onOpen}
+              leftIcon={<PiKeyBold />}
+            >
               Generate Token
             </Button>
           </HStack>
@@ -403,7 +417,6 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
               <VStack
                 border="1px solid"
                 borderColor="fg.100"
-                borderRadius={'lg'}
                 backgroundColor="fg.50"
                 py="10"
                 color={'fg.500'}
@@ -416,12 +429,7 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
             )}
           {appAccessTokenQuery.data && appAccessTokenQuery.data.length > 0 && (
             <>
-              <VStack
-                align={'stretch'}
-                border="1px solid"
-                borderColor="fg.100"
-                borderRadius={'lg'}
-              >
+              <VStack align={'stretch'} border="1px solid" borderColor="fg.100">
                 {appAccessTokenQuery.data.map((token) => (
                   <HStack
                     borderBottom={'1px solid'}
@@ -435,7 +443,7 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
                     <IconButton
                       aria-label="Delete token"
                       variant="ghost"
-                      icon={<Icon as={HiOutlineTrash} color="fg.400" />}
+                      icon={<Icon as={PiTrashSimpleBold} color="fg.400" />}
                       onClick={() => {
                         appAccessTokenDeleteMutation.mutateAsync(
                           { identifier: token.identifier },
@@ -475,16 +483,17 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
             </Text>
           </HStack>
           <Divider mb="4" mt={2} />
-          <VStack border="1px solid" borderColor="red.100" borderRadius={'lg'}>
+          <VStack border="1px solid" borderColor="red.100">
             <VStack w="full" p="4" align="start">
               <VStack align="start" w="full">
                 <HStack w="full">
                   <Text>Delete this applet</Text>
                   <Spacer flexGrow={1} />
                   <Button
-                    variant="solid"
                     colorScheme="red"
+                    variant="outline"
                     onClick={onOpenDeleteConfirmation}
+                    leftIcon={<PiTrashSimpleBold />}
                   >
                     Delete applet
                   </Button>
@@ -522,7 +531,7 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
                         size="xs"
                         onClick={() => copyToken()}
                       >
-                        <HiOutlineClipboard />
+                        <PiClipboardBold />
                       </IconButton>
                     </Tooltip>
                   </HStack>

@@ -38,6 +38,7 @@ export * from '../src/hooks/use-select';
 export * from '../src/theme';
 export * from '../src/theme/multiSelectTheme';
 export { default as multiSelectTheme } from '../src/theme/multiSelectTheme';
+export * from '../src/theme/switch';
 export * from '../src/utils/chakra-markdown-renderer';
 export { default as ChakraUIRenderer } from '../src/utils/chakra-markdown-renderer';
 export * from '../src/utils/user-agent';

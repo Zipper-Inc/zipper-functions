@@ -23,7 +23,6 @@ import {
 import React, { useEffect, useMemo, useState } from 'react';
 import { CreateAppForm } from './create-app-form';
 
-import { FiPlus } from 'react-icons/fi';
 import { DataTable } from './table';
 import {
   SortingState,
@@ -32,15 +31,16 @@ import {
   getSortedRowModel,
 } from '@tanstack/react-table';
 import {
-  HiBuildingOffice,
-  HiOutlineLockOpen,
-  HiOutlineLockClosed,
-  HiUser,
-} from 'react-icons/hi2';
+  PiPlusBold,
+  PiUser,
+  PiBuildings,
+  PiLockSimpleOpen,
+  PiLockSimple,
+} from 'react-icons/pi';
 import { AppOwner, useAppOwner } from '~/hooks/use-app-owner';
 import { EmptySlate } from './empty-slate';
 import { ResourceOwnerType } from '@zipper/types';
-import { TabButton } from '@zipper/ui';
+import { BLUE, TabButton, WHITE } from '@zipper/ui';
 import ManageMembers from './members';
 import OrganizationSettings from './organization-settings';
 import UserSettings from './user-settings';
@@ -84,30 +84,31 @@ const columns = [
     }) => {
       return (
         <HStack align="center" spacing={4}>
-          <Box clipPath={'circle(32px)'} w="12" minW="12">
+          <Box w={16} h={16}>
             <AppAvatar nameOrSlug={slug} />
           </Box>
           <VStack align={'start'}>
-            <HStack>
+            <HStack align="center">
               <Link
                 fontSize={'lg'}
                 fontWeight={600}
+                display="flex"
                 href={getEditAppletLink(resourceOwner.slug, slug)}
+                gap={2}
               >
                 {getValue()}
+                <Tooltip
+                  colorScheme="blue"
+                  backgroundColor={BLUE}
+                  color={WHITE}
+                  placement="right"
+                  label={isPrivate ? 'Private code' : 'Open-source'}
+                >
+                  <Text color={BLUE}>
+                    {isPrivate ? <PiLockSimple /> : <PiLockSimpleOpen />}
+                  </Text>
+                </Tooltip>
               </Link>
-              <Tooltip
-                placement="top"
-                label={isPrivate ? 'Private code' : 'Public code'}
-              >
-                <span>
-                  {isPrivate ? (
-                    <Icon as={HiOutlineLockClosed} />
-                  ) : (
-                    <Icon as={HiOutlineLockOpen} />
-                  )}
-                </span>
-              </Tooltip>
             </HStack>
             <Tooltip label={description} openDelay={800}>
               <Text
@@ -133,12 +134,12 @@ const columns = [
         <>
           {info.getValue() ? (
             <HStack>
-              <HiUser />
+              <PiUser />
               <Text>You</Text>
             </HStack>
           ) : (
             <HStack>
-              <Icon as={HiBuildingOffice} />
+              <Icon as={PiBuildings} />
               <Text>{createdByInfo.resourceOwnerName}</Text>
             </HStack>
           )}
@@ -156,11 +157,11 @@ const columns = [
 
       return (
         <>
-          <HStack>
+          <HStack gap={2}>
             {createdByInfo.resourceOwnerType === ResourceOwnerType.User ? (
-              <Icon as={HiUser} />
+              <PiUser />
             ) : (
-              <Icon as={HiBuildingOffice} />
+              <PiBuildings />
             )}
             <Text>{info.getValue()}</Text>
           </HStack>
@@ -319,15 +320,14 @@ export function Dashboard() {
                         onChange={(e) => setAppSearchTerm(e.target.value)}
                       />
                       <Button
-                        type="button"
-                        pl={4}
-                        pr={6}
                         variant="solid"
                         colorScheme="purple"
+                        fontWeight="medium"
                         fontSize="sm"
+                        px={6}
                         onClick={onOpen}
+                        leftIcon={<PiPlusBold />}
                       >
-                        <Icon as={FiPlus} mx="2" />
                         Create Applet
                       </Button>
                     </HStack>
