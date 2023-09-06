@@ -44,9 +44,13 @@ export function PlaygroundSidebar({
 
     // always make sure `main` is on top, respect order after
     if (a.id === mainScript?.id) orderA = -Infinity;
-    else orderA = a.createdAt === null ? Infinity : a.createdAt;
+    else orderA = a.createdAt === null ? Infinity : a.createdAt.getTime();
     if (b.id === mainScript?.id) orderB = -Infinity;
-    else orderB = b.createdAt === null ? Infinity : b.createdAt;
+    else orderB = b.createdAt === null ? Infinity : b.createdAt.getTime();
+
+    if (orderA === orderB) {
+      orderA = a.filename > b.filename ? orderA + 100 : orderA - 100;
+    }
 
     // now let's make sure non-runnable files go below runnable scripts
     if (!a.isRunnable) orderA = new Date(a.createdAt.getTime() * 100);

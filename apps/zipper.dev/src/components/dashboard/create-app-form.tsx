@@ -31,6 +31,7 @@ import {
   CardBody,
   Grid,
   GridItem,
+  Spinner,
 } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
@@ -48,6 +49,7 @@ import { useUser } from '~/hooks/use-user';
 import { useOrganizationList } from '~/hooks/use-organization-list';
 import { getEditAppletLink } from '@zipper/utils';
 import { useEditorContext } from '../context/editor-context';
+import { AICodeOutput } from '@zipper/types';
 
 const getDefaultCreateAppFormValues = () => ({
   name: generateDefaultSlug(),
@@ -55,6 +57,21 @@ const getDefaultCreateAppFormValues = () => ({
   isPublic: false,
   requiresAuthToRun: false,
 });
+
+const defaultTemplates = [
+  {
+    id: 'hello-world',
+    name: 'Hello World',
+    description: '👋',
+    shouldFork: false,
+  },
+  {
+    id: 'ai',
+    name: 'AI Generated Code',
+    description: '🤖✨',
+    shouldFork: false,
+  },
+];
 
 export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
   onClose,
@@ -68,6 +85,29 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
   const addScript = trpc.useMutation('script.add');
   const generateCodeWithAI = trpc.useMutation('ai.pipeline');
   const { scripts } = useEditorContext();
+
+  const templatesQuery = trpc.useQuery(['app.templates']);
+  const [templates, setTemplates] = useState<
+    {
+      id: string;
+      name: string | null;
+      description: string | null;
+      shouldFork: boolean;
+    }[]
+  >(defaultTemplates);
+
+  const forkTemplate = trpc.useMutation('app.fork', {
+    async onSuccess() {
+      // refetches posts after a post is added
+      await utils.invalidateQueries(['app.byAuthedUser']);
+      if (router.query['resource-owner']) {
+        await utils.invalidateQueries([
+          'app.byResourceOwner',
+          { resourceOwnerSlug: router.query['resource-owner'] as string },
+        ]);
+      }
+    },
+  });
 
   const addApp = trpc.useMutation('app.add', {
     async onSuccess() {
@@ -106,6 +146,22 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
     setSelectedOrganizationId(organization?.id);
   }, [organization?.id]);
 
+  useEffect(() => {
+    if (templatesQuery.data) {
+      setTemplates([
+        ...defaultTemplates,
+        ...templatesQuery.data.map((template) => {
+          return {
+            id: template.id,
+            name: template.name,
+            description: template.description,
+            shouldFork: true,
+          };
+        }),
+      ]);
+    }
+  }, [templatesQuery.data]);
+
   const resetForm = () => {
     const defaultValue = getDefaultCreateAppFormValues();
     createAppForm.reset(defaultValue);
@@ -125,6 +181,83 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
   ];
 
   const [currentStep, setCurrentStep] = useState(0);
+
+  const runAddAppMutation = async ({
+    description,
+    name,
+    isPublic,
+    requiresAuthToRun,
+  }: {
+    name: string;
+    description: string;
+    isPublic: boolean;
+    requiresAuthToRun: boolean;
+  }) => {
+    const aiOutput = description
+      ? await generateCodeWithAI.mutateAsync({
+          userRequest: description,
+        })
+      : undefined;
+    const mainCode = aiOutput?.find(
+      (output) => output.filename === 'main.ts',
+    )?.code;
+    await addApp.mutateAsync(
+      {
+        description,
+        name,
+        isPrivate: !isPublic,
+        requiresAuthToRun,
+        organizationId: selectedOrganizationId,
+        aiCode: mainCode,
+      },
+      {
+        onSuccess: async (applet) => {
+          resetForm();
+          if (
+            (selectedOrganizationId ?? null) !== (organization?.id ?? null) &&
+            setActive
+          ) {
+            setActive(selectedOrganizationId || null);
+          }
+          if (aiOutput) {
+            const otherFiles = aiOutput.filter(
+              (output) => output.filename !== 'main.ts',
+            );
+
+            await Promise.allSettled(
+              otherFiles.map((output) => {
+                return addScript.mutateAsync({
+                  name: output.filename,
+                  appId: applet!.id,
+                  order: scripts.length + 1,
+                  code: output.code,
+                });
+              }),
+            );
+          }
+
+          toast({
+            title: 'Applet created',
+            status: 'success',
+            duration: 9999,
+            isClosable: false,
+          });
+
+          router.push(
+            getEditAppletLink(applet!.resourceOwner!.slug, applet!.slug),
+          );
+        },
+      },
+    );
+  };
+
+  if (templatesQuery.isLoading) {
+    return (
+      <Center>
+        <Spinner />;
+      </Center>
+    );
+  }
 
   return (
     <Box position="relative" width="container.md">
@@ -324,33 +457,7 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
                 </HStack>
 
                 <Grid templateColumns="repeat(3, 1fr)" gap="3">
-                  {[
-                    {
-                      id: 'hello-world',
-                      name: 'Hello World',
-                      description: '👋',
-                    },
-                    {
-                      id: 'ai',
-                      name: 'AI Generated Code',
-                      description: '🤖✨',
-                    },
-                    {
-                      id: 'crud',
-                      name: 'CRUD app',
-                      description: '🗄️',
-                    },
-                    {
-                      id: 'slack',
-                      name: 'Slack',
-                      description: '💬',
-                    },
-                    {
-                      id: 'github',
-                      name: 'GitHub',
-                      description: '👩‍💻',
-                    },
-                  ].map(({ id, name, description }) => {
+                  {templates.map(({ id, name, description }) => {
                     return (
                       <GridItem>
                         <Card
@@ -434,59 +541,22 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
                     generateCodeWithAI.isLoading ||
                     submitting
                   }
-                  onClick={createAppForm.handleSubmit(
-                    async ({
-                      description,
-                      isPublic,
-                      requiresAuthToRun,
-                      name,
-                    }) => {
-                      setSubmitting(true);
-                      const aiOutput = description
-                        ? await generateCodeWithAI.mutateAsync({
-                            userRequest: description,
-                          })
-                        : undefined;
+                  onClick={createAppForm.handleSubmit(async (data) => {
+                    setSubmitting(true);
 
-                      const mainCode = aiOutput?.find(
-                        (output) => output.filename === 'main.ts',
-                      )?.code;
-
-                      await addApp.mutateAsync(
+                    const selectedTemplate = templates.find(
+                      (t) => t.id === templateSelection,
+                    );
+                    if (selectedTemplate?.shouldFork) {
+                      await forkTemplate.mutateAsync(
                         {
-                          description,
-                          name,
-                          isPrivate: !isPublic,
-                          requiresAuthToRun,
-                          organizationId: selectedOrganizationId,
-                          aiCode: mainCode,
+                          id: selectedTemplate.id,
+                          name: data.name,
+                          connectToParent: false,
                         },
                         {
-                          onSuccess: async (applet) => {
+                          onSuccess: (applet) => {
                             resetForm();
-                            if (
-                              (selectedOrganizationId ?? null) !==
-                                (organization?.id ?? null) &&
-                              setActive
-                            ) {
-                              setActive(selectedOrganizationId || null);
-                            }
-                            if (aiOutput) {
-                              const otherFiles = aiOutput.filter(
-                                (output) => output.filename !== 'main.ts',
-                              );
-
-                              await Promise.allSettled(
-                                otherFiles.map((output) => {
-                                  return addScript.mutateAsync({
-                                    name: output.filename,
-                                    appId: applet!.id,
-                                    order: scripts.length + 1,
-                                    code: output.code,
-                                  });
-                                }),
-                              );
-                            }
 
                             toast({
                               title: 'Applet created',
@@ -504,8 +574,10 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
                           },
                         },
                       );
-                    },
-                  )}
+                    } else {
+                      await runAddAppMutation(data);
+                    }
+                  })}
                 >
                   {createAppForm.watch('description')
                     ? 'Generate ✨'

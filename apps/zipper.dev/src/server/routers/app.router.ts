@@ -257,6 +257,19 @@ export const appRouter = createRouter()
       return { ...app, scriptMain, resourceOwner };
     },
   })
+  .query('templates', {
+    async resolve() {
+      const apps = await prisma.app.findMany({
+        where: {
+          isTemplate: true,
+          deletedAt: null,
+        },
+        select: defaultSelect,
+      });
+
+      return apps;
+    },
+  })
   .query('allApproved', {
     async resolve() {
       /**
@@ -710,13 +723,14 @@ export const appRouter = createRouter()
     input: z.object({
       id: z.string().uuid(),
       name: z.string().min(3).max(50),
+      connectToParent: z.boolean().optional().default(true),
     }),
     async resolve({ input, ctx }) {
       if (!ctx.userId) {
         throw new TRPCError({ code: 'UNAUTHORIZED' });
       }
 
-      const { id } = input;
+      const { id, name, connectToParent } = input;
 
       const app = await prisma.app.findFirstOrThrow({
         where: { id, deletedAt: null },
@@ -725,10 +739,10 @@ export const appRouter = createRouter()
 
       const fork = await prisma.app.create({
         data: {
-          slug: slugify(input.name),
-          name: input.name,
+          slug: slugify(name),
+          name: name,
           description: app.description,
-          parentId: app.id,
+          parentId: connectToParent ? app.id : undefined,
           organizationId: ctx.orgId,
           createdById: ctx.userId,
           editors: {

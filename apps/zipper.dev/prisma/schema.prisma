@@ -29,6 +29,7 @@ model App {
   createdById           String?
   requiresAuthToRun     Boolean   @default(false)
   isDataSensitive       Boolean   @default(false)
+  isTemplate            Boolean   @default(false)
 
   scriptMain ScriptMain?
 
