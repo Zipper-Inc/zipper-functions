@@ -61,6 +61,7 @@ import {
   PiTrashSimpleBold,
   PiClipboardBold,
 } from 'react-icons/pi';
+import { TITLE_COLUMN_MIN_WIDTH } from './constants';
 
 type Props = {
   app: Pick<
@@ -124,7 +125,7 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
       slug: app.slug,
       description: app.description,
       requiresAuthToRun: app.requiresAuthToRun,
-      isPrivate: !app.isPrivate,
+      isPrivate: app.isPrivate,
       isDataSensitive: app.isDataSensitive,
     },
   });
@@ -145,7 +146,7 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
       model.name !== appQuery.data.name ||
       model.description !== appQuery.data.description ||
       model.requiresAuthToRun !== appQuery.data.requiresAuthToRun ||
-      model.isPrivate !== !appQuery.data.isPrivate ||
+      model.isPrivate !== appQuery.data.isPrivate ||
       model.isDataSensitive !== appQuery.data.isDataSensitive
     );
   };
@@ -157,7 +158,9 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
       {
         id: app.id,
         data: {
-          slug: data.slug,
+          slug: settingsForm.getFieldState('slug').isDirty
+            ? data.slug
+            : undefined,
           name: data.name,
           description: data.description,
           requiresAuthToRun: data.requiresAuthToRun,
@@ -234,7 +237,7 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
 
   return (
     <HStack spacing={0} flex={1} alignItems="start" gap={16}>
-      <VStack flex={1} alignItems="stretch">
+      <VStack flex={1} alignItems="stretch" minW={TITLE_COLUMN_MIN_WIDTH}>
         <Heading as="h6" pb="4" fontWeight={400}>
           Settings
         </Heading>

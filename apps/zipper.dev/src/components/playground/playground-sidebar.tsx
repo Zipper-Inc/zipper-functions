@@ -19,7 +19,7 @@ import {
   useColorModeValue,
 } from '@chakra-ui/react';
 import React, { useEffect, useRef, useState } from 'react';
-import AddScriptForm from '~/components/app/add-script-form';
+import AddScriptForm from '~/components/playground/add-script-form';
 
 import { Script } from '@prisma/client';
 import { trpc } from '~/utils/trpc';
