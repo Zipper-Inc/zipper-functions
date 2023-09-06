@@ -60,14 +60,14 @@ export const zipperSlackIntegrationRouter = createRouter()
           appId: accessJson.app_id,
           botUserId: accessJson.bot_user_id,
           teamName: accessJson.team.name,
-          installers: [accessJson.user_id.id],
+          installers: [accessJson.authed_user.id],
           encryptedBotToken,
         },
         update: {
           encryptedBotToken,
           teamName: accessJson.team.name,
           installers: {
-            push: accessJson.user_id.id,
+            push: accessJson.authed_user.id,
           },
         },
       });
