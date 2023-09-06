@@ -172,6 +172,105 @@ const APPLETS_GALERY_CONTENT = {
   looking for, you can start from a blank file or have AI generate some code for you ✨.`,
 };
 
+const APPLET_GALLEYR_LIST = [
+  {
+    title: 'Slack Backlinker',
+    description:
+      "Easily reference important messages, threads, or documents with a click, keeping your team's communication organized and efficient.",
+    slug: 'slack-backlinker',
+  },
+  {
+    title: 'Team Bookmarks / Go Links',
+    description:
+      "Effortlessly access and share links in Slack using intuitive slash commands. Retrieve important URLs with speed and simplicity, enhancing your team's productivity and knowledge sharing.",
+    slug: 'team-go-links',
+  },
+  {
+    title: 'JSON Explorer',
+    description:
+      "Instantly fetch a repository's dependency list. Gain valuable insights into each package with real-time NPM statistics and automatically generated descriptions, helping you understand their role within your application.",
+    slug: 'json-explorer',
+  },
+  {
+    title: 'User Feedback Button',
+    description:
+      'Easily collect valuable feedback with this button, fostering communication and improving your product based on user insights.',
+    slug: 'user-feedback-button',
+  },
+  {
+    title: 'Airtable Expense Tracker',
+    description:
+      'Connect and automate expense management. This embed applet seamlessly integrates with your Airtable workspace, effortlessly handling new records and providing real-time financial insights.',
+    slug: 'airtable-expense-tracker',
+  },
+  {
+    title: 'In-product changelog',
+    description:
+      'Display updates, enhancements, and new features directly within your application, ensuring users stay in the loop and can make the most of your latest changes.',
+    slug: 'in-product-changelog',
+  },
+  {
+    title: 'Waitlist Manager',
+    description:
+      'Easily manage user registrations, track progress, and streamline communication to ensure a smooth experience for both you and your eager audience.',
+    slug: 'waitlist-manager',
+  },
+  {
+    title: 'Product Activity Notifications',
+    description:
+      'Stay in the know with real-time updates. Receive Slack notifications when someone surpasses predefined activity thresholds, keeping your team informed and engaged.',
+    slug: 'product-activity-notifications',
+  },
+  {
+    title: 'Incident Management Bot',
+    description:
+      'Your dedicated incident response assistant within Slack. This bot automates incident handling, sends real-time alerts, and guides your team through incident resolution directly in your Slack workspace.',
+    slug: 'incident-managment-bot',
+  },
+  {
+    title: 'Basic Knowledge Base',
+    description:
+      'Elevate your information hub. Access a foundational knowledge base enhanced with AI-driven responses, providing more accurate and dynamic answers to your queries.',
+    slug: 'basic-knowledge-base',
+  },
+  {
+    title: "What's the team listening to",
+    description:
+      "Sync your team's musical vibes. This app integrates with Spotify API to curate and share what your team is currently jamming to, fostering a shared musical experience within your workspace.",
+    slug: 'what-team-listening-to',
+  },
+  {
+    title: 'Natural language to crontab',
+    description:
+      'Transform human language into computer-readable crontab syntax with AI. Easily schedule tasks and automate processes by describing them in plain English, and let the AI convert them into precise crontab schedules.',
+    slug: 'natural-language-contrab',
+  },
+  {
+    title: 'Link Zendesk tickets to GitHub Issues',
+    description:
+      'ink Zendesk tickets directly to GitHub Issues. Streamline support and development workflows by seamlessly connecting customer inquiries with development tasks in GitHub.',
+    slug: 'zendesk-tickets-github-issues',
+  },
+  {
+    title: 'GitHub WIP tracker',
+    description:
+      'Keep tabs on work in progress. Monitor and manage your GitHub projects with ease, tracking the status of ongoing tasks and ensuring efficient project management.',
+    slug: 'github-wip-tracker',
+  },
+  {
+    title: 'Feature Flagging',
+    description:
+      'Implement feature flags to toggle functionalities on and off, allowing for flexible and controlled feature deployments within your application.',
+    slug: 'feature-flagging',
+  },
+  {
+    title: 'PagerDuty to Slack usergroup',
+    description:
+      'Synchronize PagerDuty alerts and notifications with Slack usergroups to ensure the right team members are informed and ready to act during incidents.',
+    slug: 'sync-pagerduty-slack-usergroup',
+  },
+];
+
 const BATERIES_CONTENT = {
   TITLE: 'Batteries included',
 
@@ -482,20 +581,8 @@ const AppletsGallery = () => {
     iconUrl: string;
   };
 
-  const [galleryApps, setGalleryApps] = useState<GalleryApp[]>([]);
   const [isLargerThan600] = useMediaQuery('(min-width: 600px)');
-
-  const fetchData = async () => {
-    const data = (await fetch('https://zipper.dev/api/gallery').then((res) =>
-      res.json(),
-    )) as GalleryApp[];
-
-    return setGalleryApps(data);
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, []);
+  const [isLargerThan880] = useMediaQuery('(min-width: 880px)');
 
   return (
     <Box
@@ -562,55 +649,75 @@ const AppletsGallery = () => {
               </button>
             </Flex>
           )}
-          slideWidth={isLargerThan600 ? 980 + 16 : 380 + 16}
+          slideWidth={
+            isLargerThan600 && !isLargerThan880
+              ? 580 + 16
+              : isLargerThan880
+              ? 980 + 16
+              : 320 + 16
+          }
         >
-          {galleryApps.length > 1 &&
-            galleryApps?.map((app) => (
+          {APPLET_GALLEYR_LIST.map((app) => (
+            <VStack
+              align="start"
+              as="li"
+              minH={{ base: '524px', lg: '720px' }}
+              justify={{ base: 'space-between' }}
+              key={app.slug}
+              flexDirection={{ base: 'column', lg: 'column-reverse' }}
+              gap={{ base: 4, md: 8, lg: 4 }}
+            >
               <VStack
-                align="start"
-                as="li"
-                minH={{ base: '480px', lg: '720px' }}
-                justify={{ base: 'space-between' }}
-                key={app.slug}
-                flexDirection={{ lg: 'column-reverse' }}
+                as="article"
+                aria-label="applet info"
                 gap={2}
+                align="start"
+                maxW={{ base: '380px', lg: '480px' }}
+                flex={{ base: 0, lg: 1 }}
+                justify={{ base: 'space-between' }}
               >
-                <VStack
-                  as="article"
-                  aria-label="applet info"
-                  gap={2}
-                  align="start"
-                  flex={{ base: 1 }}
-                  justify={{ base: 'space-between' }}
+                <Heading as="h3" fontSize="2xl" fontWeight={600}>
+                  {app.title}
+                </Heading>
+                <Text
+                  h="60px"
+                  css={{ margin: 0 }}
+                  fontSize="sm"
+                  color="gray.600"
                 >
-                  <Heading as="h3" fontSize="2xl" fontWeight={600}>
-                    {app.name}
-                  </Heading>
-                  <Text
-                    h="60px"
-                    css={{ margin: 0 }}
-                    fontSize="sm"
-                    color="gray.600"
-                  >
-                    {app.description}
-                  </Text>
-                </VStack>
-                <Box
-                  as="figure"
-                  w={{ sm: '380px', lg: '980px' }}
-                  borderRadius="8px"
-                  h={{ sm: '380px', lg: '620px' }}
-                  bg="gray.100"
-                  background={{
-                    base: `url('layout/gallery/${app.slug}-sm.svg')`,
-                    md: `url('layout/gallery/${app.slug}-md.svg')`,
-                    lg: `url('layout/gallery/${app.slug}-lg.svg')`,
-                  }}
-                  backgroundPosition="center"
-                  backgroundSize="contain"
-                />
+                  {app.description}
+                </Text>
               </VStack>
-            ))}
+              <Box
+                as="div"
+                w={{ base: '320px', sm: '580px', lg: '980px' }}
+                borderRadius="8px"
+                h={{ base: '320px', sm: '534px', lg: '625px' }}
+                bg="brandGray.100"
+                padding={{ base: 8, lg: 20 }}
+                border="1px solid"
+                borderColor="gray.200"
+                position="relative"
+              >
+                <Image
+                  src={`thumbs/${app.slug}/${
+                    isLargerThan600 && !isLargerThan880
+                      ? 'md'
+                      : isLargerThan880
+                      ? 'lg'
+                      : 'sm'
+                  }.svg`}
+                  alt={app.slug}
+                  fill
+                  style={{
+                    objectFit: 'contain',
+                    pointerEvents: 'none',
+                    borderRadius: 'inherit',
+                  }}
+                />
+              </Box>
+            </VStack>
+          ))}
         </Carousel>
       </Flex>
     </Box>
