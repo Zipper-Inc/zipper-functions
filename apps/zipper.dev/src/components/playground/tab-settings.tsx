@@ -61,6 +61,7 @@ import {
   PiTrashSimpleBold,
   PiClipboardBold,
 } from 'react-icons/pi';
+import { TITLE_COLUMN_MIN_WIDTH } from './constants';
 
 type Props = {
   app: Pick<
@@ -236,7 +237,7 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
 
   return (
     <HStack spacing={0} flex={1} alignItems="start" gap={16}>
-      <VStack flex={1} alignItems="stretch">
+      <VStack flex={1} alignItems="stretch" minW={TITLE_COLUMN_MIN_WIDTH}>
         <Heading as="h6" pb="4" fontWeight={400}>
           Settings
         </Heading>

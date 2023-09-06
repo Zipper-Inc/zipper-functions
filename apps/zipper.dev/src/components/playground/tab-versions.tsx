@@ -41,6 +41,7 @@ import {
 } from 'react-icons/pi';
 import { useRouter } from 'next/router';
 import { Avatar } from '../avatar';
+import { TITLE_COLUMN_MIN_WIDTH } from './constants';
 
 type VersionsTabProps = {
   appId: string;
@@ -289,7 +290,13 @@ const VersionsTab: React.FC<VersionsTabProps> = ({ appId, slug }) => {
 
   return (
     <HStack spacing={0} flex={1} alignItems="start" gap={16}>
-      <VStack flex={1} alignItems="stretch" spacing={0} gap={4}>
+      <VStack
+        flex={1}
+        alignItems="stretch"
+        spacing={0}
+        gap={4}
+        minW={TITLE_COLUMN_MIN_WIDTH}
+      >
         <Heading as="h6" fontWeight={400} flex={1}>
           Code Versions
         </Heading>
