@@ -171,7 +171,7 @@ const SecretsTab: React.FC<SecretsTabProps> = ({ appId, editable }) => {
           </AlertDialog>
         </VStack>
 
-        <Box mt={4}>
+        <Box mt={4} pl={6}>
           {editable && (
             <Button
               variant="outline"
