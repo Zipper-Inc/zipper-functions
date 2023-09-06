@@ -14,6 +14,8 @@ import {
   Spacer,
   Icon,
   useDisclosure,
+  FormControl,
+  FormLabel,
 } from '@chakra-ui/react';
 
 import { useOrganizationList } from '~/hooks/use-organization-list';
@@ -21,6 +23,7 @@ import { useEffect, useState } from 'react';
 import { HiPlus } from 'react-icons/hi';
 import { CreateOrganizationModal } from '../auth/createOrganizationModal';
 import UserProfile from '../auth/userProfile';
+import SlackInstallButton from './slack-install-button';
 
 function UserSettings() {
   const [hash, setHash] = useState<string | undefined>();
@@ -59,6 +62,19 @@ function UserSettings() {
           <Text fontSize={'xl'}>General</Text>
           <Divider mb="4" mt={2} />
           <UserProfile />
+        </Box>
+
+        <Box w="100%" pb="10">
+          <Text fontSize={'xl'}>Integrations</Text>
+          <Divider mb="4" mt={2} />
+          <FormControl>
+            <FormLabel size="sm">Run Applets from Slack</FormLabel>
+            <Text fontSize="sm" color="fg.600" mb="4">
+              Once installed, run the `/zipper [applet-slug]` slash command to
+              run an applet from within Slack
+            </Text>
+            <SlackInstallButton />
+          </FormControl>
         </Box>
 
         {!hash && (

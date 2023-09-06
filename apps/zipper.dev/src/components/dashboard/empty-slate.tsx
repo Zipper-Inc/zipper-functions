@@ -25,7 +25,7 @@ export function EmptySlate({
             applet
           </Text>
           <Text
-            color={'neutral.600'}
+            color={'fg.600'}
             fontSize="sm"
             lineHeight="20px"
             fontWeight="400"
