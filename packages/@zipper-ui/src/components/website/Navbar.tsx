@@ -12,6 +12,7 @@ import {
   useDisclosure,
   VStack,
   Box,
+  Link,
 } from '@chakra-ui/react';
 import React, { useEffect, useRef } from 'react';
 import { FiMenu } from 'react-icons/fi';
@@ -154,7 +155,9 @@ export const WebSiteNavbar = ({ links }: Props) => {
           displayActiveLink
         />
         <Button
-          as="nav"
+          as={Link}
+          href="https://zipper.dev/auth/signin"
+          isExternal
           colorScheme="gray"
           fontWeight={500}
           h="44px"
