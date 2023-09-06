@@ -124,7 +124,7 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
       slug: app.slug,
       description: app.description,
       requiresAuthToRun: app.requiresAuthToRun,
-      isPrivate: !app.isPrivate,
+      isPrivate: app.isPrivate,
       isDataSensitive: app.isDataSensitive,
     },
   });
@@ -145,7 +145,7 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
       model.name !== appQuery.data.name ||
       model.description !== appQuery.data.description ||
       model.requiresAuthToRun !== appQuery.data.requiresAuthToRun ||
-      model.isPrivate !== !appQuery.data.isPrivate ||
+      model.isPrivate !== appQuery.data.isPrivate ||
       model.isDataSensitive !== appQuery.data.isDataSensitive
     );
   };
@@ -157,7 +157,9 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
       {
         id: app.id,
         data: {
-          slug: data.slug,
+          slug: settingsForm.getFieldState('slug').isDirty
+            ? data.slug
+            : undefined,
           name: data.name,
           description: data.description,
           requiresAuthToRun: data.requiresAuthToRun,

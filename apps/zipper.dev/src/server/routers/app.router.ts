@@ -918,43 +918,49 @@ export const appRouter = createRouter()
         );
       }
 
-      // build and store the eszip file
-      const { hash } = await buildAndStoreApplet({
-        app: { ...app, scripts: scripts ? updatedScripts : app.scripts },
-        userId: ctx.userId,
-      });
-
-      // if the code has changed, send the latest code to R2
-      if (hash !== app.playgroundVersionHash) {
-        const zip = new JSZip();
-        (updatedScripts.length > 0 ? updatedScripts : app.scripts).map((s) => {
-          zip.file(s.filename, JSON.stringify(s));
+      if (input.data.slug || input.data.scripts) {
+        const { hash } = await buildAndStoreApplet({
+          app: { ...app, scripts: scripts ? updatedScripts : app.scripts },
+          userId: ctx.userId,
         });
 
-        const version = getAppVersionFromHash(hash);
+        // if the code has changed, send the latest code to R2
+        if (hash !== app.playgroundVersionHash) {
+          const zip = new JSZip();
+          (updatedScripts.length > 0 ? updatedScripts : app.scripts).map(
+            (s) => {
+              zip.file(s.filename, JSON.stringify(s));
+            },
+          );
 
-        if (!version) throw new Error('Invalid hash');
+          const version = getAppVersionFromHash(hash);
 
-        zip.generateAsync({ type: 'uint8array' }).then((content) => {
-          storeVersionCode({
-            appId: app.id,
-            version,
-            zip: content,
+          if (!version) throw new Error('Invalid hash');
+
+          zip.generateAsync({ type: 'uint8array' }).then((content) => {
+            storeVersionCode({
+              appId: app.id,
+              version,
+              zip: content,
+            });
           });
+        }
+
+        const appWithUpdatedHash = await prisma.app.update({
+          where: {
+            id,
+          },
+          data: {
+            playgroundVersionHash: hash,
+          },
+          select: defaultSelect,
         });
+
+        return { ...appWithUpdatedHash, resourceOwner };
       }
 
-      const appWithUpdatedHash = await prisma.app.update({
-        where: {
-          id,
-        },
-        data: {
-          playgroundVersionHash: hash,
-        },
-        select: defaultSelect,
-      });
-
-      return { ...appWithUpdatedHash, resourceOwner };
+      return { ...app, resourceOwner };
+      // build and store the eszip file
     },
   })
   .mutation('delete', {
