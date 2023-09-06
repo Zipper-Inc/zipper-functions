@@ -164,7 +164,6 @@ export function PostsLayout(): ReactElement {
             align="center"
             display={{ base: 'none', lg: 'flex' }}
             flex={1}
-            borderRadius="8px"
             justify="space-between"
             p={10}
             as="span"

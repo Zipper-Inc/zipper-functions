@@ -86,7 +86,7 @@ export const BasicLayout = ({ children }: { children: ReactNode }) => {
           {children}
           {/* {config.footer} */}
           {/* </Container> */}
-          <Website.Footer />
+          <Website.Footer links={{ component: NextLink }} />
         </HeadingContext.Provider>
       </Website>
     </>

@@ -180,7 +180,6 @@ const AboutPage: NextPageWithLayout = () => {
                       fill
                       style={{
                         objectFit: 'cover',
-                        borderRadius: '8px 8px 0 0',
                       }}
                       alt="Sachin Ranchod"
                     />
@@ -201,14 +200,12 @@ const AboutPage: NextPageWithLayout = () => {
                   <CardHeader
                     style={{ aspectRatio: '1/1' }}
                     position="relative"
-                    borderTopRadius={2}
                   >
                     <Image
                       src="/static/ibu.png"
                       fill
                       style={{
                         objectFit: 'cover',
-                        borderRadius: '8px 8px 0 0',
                       }}
                       alt="Sachin Ranchod"
                     />
@@ -271,7 +268,7 @@ const AboutPage: NextPageWithLayout = () => {
               </Text>
 
               <Accordion defaultIndex={[0]} allowMultiple>
-                <AccordionItem border="none" bg="white" borderRadius="8px">
+                <AccordionItem border="none" bg="white">
                   <h2>
                     <AccordionButton p={10} _hover={{ bg: 'white' }}>
                       <Box as="span" flex="1" textAlign="left">
@@ -315,7 +312,7 @@ const AboutPage: NextPageWithLayout = () => {
               <br /> quickly as possible.
             </Text>
           </Container>
-          <Website.Footer />
+          <Website.Footer links={{ component: NextLink }} />
         </Flex>
       </Flex>
     </Website>

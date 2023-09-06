@@ -68,7 +68,6 @@ export default function JoinBetaForm() {
         <Input
           height="2.75rem"
           width={{ base: 'full', md: '20rem' }}
-          borderRadius="8px"
           variant="outline"
           placeholder="Email address"
           borderColor="gray.300"
@@ -87,7 +86,6 @@ export default function JoinBetaForm() {
         height="2.75rem"
         minWidth={{ base: '7rem', md: '138px' }}
         fontSize={{ base: 'sm', md: 'md' }}
-        borderRadius="8px"
         bg="brandOrange.500"
         padding={{ base: '5px 8px', md: '10px 18px' }}
         color="white"

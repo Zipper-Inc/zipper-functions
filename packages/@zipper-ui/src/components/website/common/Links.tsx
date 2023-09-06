@@ -3,6 +3,7 @@ import React, { useMemo } from 'react';
 
 export const Links = (props: {
   data: { label: string; href: string; external?: boolean }[];
+  displayActiveLink?: boolean;
   component?: any;
 }) => {
   const pathname =
@@ -31,14 +32,14 @@ export const Links = (props: {
   );
 
   const activeLink = useMemo(() => {
-    return props.data.find((route) => route.href === pathname);
+    return props.data.find((route) => pathname.includes(route.href));
   }, [props.data, pathname]);
 
   return (
     <React.Fragment>
       {props.data.map((link, index) => {
         const styles =
-          activeLink?.href === link.href
+          activeLink?.href === link.href && props.displayActiveLink === true
             ? { ...LINK_STYLES.idle, ...LINK_STYLES.active }
             : LINK_STYLES.idle;
 

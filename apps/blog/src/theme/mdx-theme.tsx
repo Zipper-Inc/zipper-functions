@@ -153,7 +153,6 @@ const useComponents = (): Components => {
           background="white"
           border="1px solid"
           borderColor="gray.200"
-          borderRadius={8}
           ml="-1rem"
           mr="-1rem"
           my="1rem"

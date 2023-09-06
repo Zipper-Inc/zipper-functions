@@ -533,7 +533,6 @@ const Features = memo(() => (
             display="flex"
             flexDirection="column"
             gap={0}
-            borderRadius={2}
             background="white"
             height={['auto', '640px']}
           >
@@ -571,16 +570,6 @@ const Features = memo(() => (
 ));
 
 const AppletsGallery = () => {
-  type GalleryApp = {
-    name: string;
-    description: string;
-    slug: string;
-    resourceOwner: {
-      slug: string;
-    };
-    iconUrl: string;
-  };
-
   const [isLargerThan600] = useMediaQuery('(min-width: 600px)');
   const [isLargerThan880] = useMediaQuery('(min-width: 880px)');
 
@@ -691,7 +680,6 @@ const AppletsGallery = () => {
               <Box
                 as="div"
                 w={{ base: '320px', sm: '580px', lg: '980px' }}
-                borderRadius="8px"
                 h={{ base: '320px', sm: '534px', lg: '625px' }}
                 bg="brandGray.100"
                 padding={{ base: 8, lg: 20 }}
@@ -885,7 +873,7 @@ const HomePage: NextPageWithLayout = () => (
       <AppletsGallery />
       <Bateries />
       <Headline />
-      <Website.Footer />
+      <Website.Footer links={{ component: NextLink }} />
     </Box>
   </Website>
 );

@@ -38,7 +38,7 @@ const LINKS = {
       },
       { href: 'http://localhost:3000/about', label: 'About', external: true },
       { href: 'http://localhost:3003', label: 'Docs', external: true },
-      { href: '/', label: 'Blog', external: true },
+      { href: '/blog', label: 'Blog', external: true },
     ],
   },
 
@@ -50,7 +50,7 @@ const LINKS = {
       { href: 'https://zipper.blog', label: 'Blog', external: true },
     ],
     BLOG: [
-      { href: '/', label: 'Blog', external: true },
+      { href: '/blog', label: 'Blog', external: true },
       {
         href: 'https://zipper.dev/home',
         label: 'Features',
@@ -108,6 +108,7 @@ export const WebSiteNavbar = ({ links }: Props) => {
                 {typeof window !== undefined && (
                   <Links
                     data={LINKS[linksObj.ENV][linksObj.SITE]}
+                    displayActiveLink
                     component={links?.component}
                   />
                 )}
@@ -150,6 +151,7 @@ export const WebSiteNavbar = ({ links }: Props) => {
         <Links
           data={LINKS[linksObj.ENV][linksObj.SITE]}
           component={links?.component}
+          displayActiveLink
         />
         <Button
           as="nav"

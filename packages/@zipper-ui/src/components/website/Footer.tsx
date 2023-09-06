@@ -12,11 +12,12 @@ import {
   Text,
   VStack,
 } from '@chakra-ui/react';
-import { FormEvent, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { FiCheck, FiCode, FiPlay, FiShuffle } from 'react-icons/fi';
 import { SmartFunctionOutput } from '../function-output/smart-function-output';
 import { ZipperSymbol } from '../zipperSymbol';
 import { LAYOUTS_ICONS } from './common/Layouts';
+import { Links } from './common/Links';
 import { WebSiteSubscriptionForm } from './common/Subscription';
 
 /* -------------------------------------------- */
@@ -25,16 +26,77 @@ import { WebSiteSubscriptionForm } from './common/Subscription';
 
 const DEMO_DESCRIPTION = 'Quickly build interactive apps, just like this:';
 
-const LINKS = [
-  { label: 'Home', href: '/home' },
-  { label: 'Features', href: '/features' },
-  { label: 'Docs', href: '/docs' },
-  { label: 'Blog', href: '/blog' },
-  { label: 'Careers', href: '/careers' },
-  { label: 'About', href: '/about' },
-  { label: 'Contact', href: '/contact' },
-  { label: 'Sign In', href: '/sign-in' },
-];
+const LINKS = {
+  DEV: {
+    SITE: [
+      { href: '/home', label: 'Features', external: false },
+      { href: '/about', label: 'About', external: false },
+      { href: 'http://localhost:3003', label: 'Docs', external: true },
+      { href: 'http://localhost:3004', label: 'Blog', external: true },
+      { label: 'Careers', href: '/about', external: false },
+      { label: 'About', href: '/about', external: false },
+      { label: 'Contact', href: '/about', external: false },
+      {
+        label: 'Sign In',
+        href: 'https://zipper.dev/auth/signin',
+        external: true,
+      },
+    ],
+    BLOG: [
+      {
+        href: 'http://localhost:3000/home',
+        label: 'Features',
+        external: true,
+      },
+      { href: 'http://localhost:3000/about', label: 'About', external: true },
+      { href: 'http://localhost:3003', label: 'Docs', external: true },
+      { href: '/', label: 'Blog', external: true },
+      { label: 'Careers', href: 'http://localhost:3000/about', external: true },
+      { label: 'About', href: 'http://localhost:3000/about', external: true },
+      { label: 'Contact', href: 'http://localhost:3000/about', external: true },
+      {
+        label: 'Sign In',
+        href: 'https://zipper.dev/auth/signin',
+        external: true,
+      },
+    ],
+  },
+
+  PROD: {
+    SITE: [
+      { href: '/home', label: 'Features', external: false },
+      { href: '/about', label: 'About', external: false },
+      { href: 'https://zipper.docs', label: 'Docs', external: true },
+      { href: 'https://zipper.blog', label: 'Blog', external: true },
+      { label: 'Careers', href: '/about', external: false },
+      { label: 'About', href: '/about', external: false },
+      { label: 'Contact', href: '/about', external: false },
+      {
+        label: 'Sign In',
+        href: 'https://zipper.dev/auth/signin',
+        external: true,
+      },
+    ],
+    BLOG: [
+      { href: '/', label: 'Blog', external: true },
+      {
+        href: 'https://zipper.dev/home',
+        label: 'Features',
+        external: true,
+      },
+      { href: 'https://zipper.dev/home', label: 'About', external: true },
+      { href: 'https://zipper.docs', label: 'Docs', external: true },
+      { label: 'Careers', href: 'https://zipper.dev/about', external: true },
+      { label: 'About', href: 'https://zipper.dev/about', external: true },
+      { label: 'Contact', href: 'https://zipper.dev/about', external: true },
+      {
+        label: 'Sign In',
+        href: 'https://zipper.dev/auth/signin',
+        external: true,
+      },
+    ],
+  },
+};
 
 const COLORS = {
   inputs: ['purple', 'blue', 'brandOrange'],
@@ -111,7 +173,6 @@ const AppletDemo = () => {
             minH="320px"
             border="1px"
             bg="purple.800"
-            borderRadius="16px"
           >
             {logoRAW && !loading ? (
               <SmartFunctionOutput result={logoRAW} level={0} tableLevel={0} />
@@ -123,15 +184,7 @@ const AppletDemo = () => {
               </Text>
             )}
           </Center>
-          <VStack
-            p={8}
-            align="start"
-            as="form"
-            gap={5}
-            bg="white"
-            borderRadius="16px"
-            maxH="340px"
-          >
+          <VStack p={8} align="start" as="form" gap={5} bg="white" maxH="340px">
             <VStack align="start" gap={1}>
               <Text as="label" fontWeight={600} fontSize="sm">
                 Colors
@@ -271,7 +324,24 @@ const AppletDemo = () => {
   );
 };
 
-export const WebSiteFooter = () => {
+type Props = {
+  links?: Partial<Parameters<typeof Links>[0]>;
+};
+
+export const WebSiteFooter = ({ links }: Props) => {
+  const [URL, setURL] = useState('');
+
+  useEffect(() => {
+    setURL(typeof window !== 'undefined' ? window.location.href : '');
+  }, []);
+
+  const linksObj = {
+    ENV: process.env.NODE_ENV === 'development' ? 'DEV' : 'PROD',
+    SITE: ['localhost:3000', 'zipper.dev'].some((el) => URL.includes(el))
+      ? 'SITE'
+      : 'BLOG',
+  } as { ENV: keyof typeof LINKS; SITE: keyof (typeof LINKS)['DEV'] };
+
   return (
     <VStack align="center" as="footer" w="full">
       <AppletDemo />
@@ -332,11 +402,11 @@ export const WebSiteFooter = () => {
               justify="space-between"
               align="flex-start"
             >
-              {LINKS.slice(0, 4).map((link) => (
-                <Link key={link.href} color="blue.600" href={link.href}>
-                  {link.label}
-                </Link>
-              ))}
+              <Links
+                data={LINKS[linksObj.ENV][linksObj.SITE].slice(0, 4)}
+                component={links?.component}
+                displayActiveLink={false}
+              />
             </VStack>
 
             <VStack
@@ -346,11 +416,11 @@ export const WebSiteFooter = () => {
               justify="space-between"
               align="flex-start"
             >
-              {LINKS.slice(4, 9).map((link) => (
-                <Link key={link.href} color="blue.600" href={link.href}>
-                  {link.label}
-                </Link>
-              ))}
+              <Links
+                data={LINKS[linksObj.ENV][linksObj.SITE].slice(4, 9)}
+                component={links?.component}
+                displayActiveLink={false}
+              />
             </VStack>
           </HStack>
 
