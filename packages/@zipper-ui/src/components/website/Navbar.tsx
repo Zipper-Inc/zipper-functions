@@ -27,8 +27,8 @@ const LINKS = {
     SITE: [
       { href: '/home', label: 'Features', external: false },
       { href: '/about', label: 'About', external: false },
-      { href: 'http://localhost:3003', label: 'Docs', external: true },
-      { href: 'http://localhost:3004', label: 'Blog', external: true },
+      { href: 'http://localhost:3003/docs', label: 'Docs', external: true },
+      { href: 'http://localhost:3004/blog', label: 'Blog', external: true },
     ],
     BLOG: [
       {
@@ -37,7 +37,7 @@ const LINKS = {
         external: true,
       },
       { href: 'http://localhost:3000/about', label: 'About', external: true },
-      { href: 'http://localhost:3003', label: 'Docs', external: true },
+      { href: 'http://localhost:3003/docs', label: 'Docs', external: true },
       { href: '/blog', label: 'Blog', external: true },
     ],
   },
