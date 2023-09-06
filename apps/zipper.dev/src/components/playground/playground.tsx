@@ -9,11 +9,11 @@ import {
   ChakraProps,
 } from '@chakra-ui/react';
 import React, { useState, useEffect } from 'react';
-import SecretsTab from '~/components/app/secrets-tab';
-import SchedulesTab from '~/components/app/schedules-tab';
-import SettingsTab from './settings-tab';
+import SecretsTab from '~/components/playground/tab-secrets';
+import SchedulesTab from '~/components/playground/tab-schedules';
+import SettingsTab from './tab-settings';
 import { PlaygroundHeader } from './playground-header';
-import { CodeTab } from './code-tab';
+import { CodeTab } from './tab-code';
 import { useEditorContext } from '../context/editor-context';
 import { Script } from '@prisma/client';
 import { AppQueryOutput } from '~/types/trpc';
@@ -22,8 +22,8 @@ import { RunAppProvider } from '../context/run-app-context';
 import { PlaygroundAvatars } from './playground-avatars';
 import { useAppEditors } from '~/hooks/use-app-editors';
 import { TabButton } from '@zipper/ui';
-import HistoryTab from './history-tab';
-import VersionsTab from './versions-tab';
+import HistoryTab from './tab-runs';
+import VersionsTab from './tab-versions';
 import { useRouter } from 'next/router';
 
 const tabPanelStyles: ChakraProps = {
