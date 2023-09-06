@@ -28,6 +28,7 @@ import {
   NewSchedule,
 } from './add-schedule-modal';
 import { Avatar } from '../avatar';
+import { TITLE_COLUMN_MIN_WIDTH } from './constants';
 
 const tableHeaderStyles: ChakraProps = {
   fontWeight: 'normal',
@@ -116,7 +117,13 @@ const SchedulesTab: React.FC<SchedulesTabProps> = ({ appId }) => {
 
   return (
     <HStack spacing={0} flex={1} alignItems="start" gap={16}>
-      <VStack flex={1} alignItems="stretch" spacing={0} gap={4}>
+      <VStack
+        flex={1}
+        alignItems="stretch"
+        spacing={0}
+        gap={4}
+        minW={TITLE_COLUMN_MIN_WIDTH}
+      >
         <Heading as="h6" fontWeight="normal">
           Schedules
         </Heading>
