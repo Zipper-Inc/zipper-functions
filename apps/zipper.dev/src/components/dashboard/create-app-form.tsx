@@ -193,11 +193,12 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
     isPublic: boolean;
     requiresAuthToRun: boolean;
   }) => {
-    const aiOutput = description
-      ? await generateCodeWithAI.mutateAsync({
-          userRequest: description,
-        })
-      : undefined;
+    const aiOutput =
+      templateSelection === 'ai' && description
+        ? await generateCodeWithAI.mutateAsync({
+            userRequest: description,
+          })
+        : undefined;
     const mainCode = aiOutput?.find(
       (output) => output.filename === 'main.ts',
     )?.code;
@@ -579,7 +580,8 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
                     }
                   })}
                 >
-                  {createAppForm.watch('description')
+                  {templateSelection === 'ai' &&
+                  createAppForm.watch('description')
                     ? 'Generate ✨'
                     : 'Create'}
                 </Button>
