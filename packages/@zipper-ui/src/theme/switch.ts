@@ -10,7 +10,7 @@ const bauhaus = definePartsStyle({
     align: 'center',
   },
   track: {
-    borderRadius: 'none',
+    borderRadius: '2px',
     height: 'calc(var(--switch-track-height) / 2)',
     p: 0,
     alignItems: 'center',
@@ -18,8 +18,8 @@ const bauhaus = definePartsStyle({
   thumb: {
     borderRadius: 'full',
     border: 'solid',
-    height: 'calc(var(--switch-track-height))',
-    p: 1.5,
+    height: 'calc(var(--switch-track-height) + 2px)',
+    width: 'calc(var(--switch-track-height) + 2px)',
     borderWidth: 2,
     borderColor: 'var(--switch-bg)',
   },
