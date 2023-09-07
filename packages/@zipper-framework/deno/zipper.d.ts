@@ -447,6 +447,8 @@ declare namespace Zipper {
    * await Zipper.storage.delete('another-store-key');
    */
   export const storage: Storage<Serializable>;
+
+  export type FileUrl = string;
 }
 
 // Global components

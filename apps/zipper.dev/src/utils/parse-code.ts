@@ -33,7 +33,7 @@ function parseTypeNode(type: TypeNode, src: SourceFile): ParsedNode {
   if (text.toLowerCase() === 'date') return { type: InputType.date };
   if (text.toLowerCase() === 'unknown') return { type: InputType.unknown };
   if (text.toLowerCase() === 'any') return { type: InputType.any };
-  if (text.toLowerCase() === 'file') return { type: InputType.file };
+  if (text.toLowerCase() === 'zipper.fileurl') return { type: InputType.file };
 
   if (type.isKind(SyntaxKind.ArrayType) || text.startsWith('Array'))
     return { type: InputType.array };
