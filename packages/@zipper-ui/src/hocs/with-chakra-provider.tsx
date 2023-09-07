@@ -1,5 +1,5 @@
 import { ChakraProvider, ChakraProviderProps } from '@chakra-ui/react';
-import { theme } from '../theme';
+import { theme } from '../theme/theme';
 
 export const withChakraProvider =
   (providerProps: ChakraProviderProps) =>

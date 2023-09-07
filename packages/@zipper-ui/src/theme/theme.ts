@@ -226,13 +226,13 @@ export const semanticTokens = {
 const borderRadius = {
   radii: {
     none: '0',
-    sm: '0',
-    base: '0',
-    md: '0',
-    lg: '0',
-    xl: '0',
-    '2xl': '0',
-    '3xl': '0',
+    sm: '2px',
+    base: '2px',
+    md: '2px',
+    lg: '2px',
+    xl: '2px',
+    '2xl': '2px',
+    '3xl': '2px',
     full: '9999px',
   },
 };

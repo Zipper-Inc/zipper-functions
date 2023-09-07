@@ -13,7 +13,22 @@ import {
 } from '@chakra-ui/react';
 import { Script } from '@prisma/client';
 import { UseFormReturn } from 'react-hook-form';
-import { PiDotsThreeVerticalBold } from 'react-icons/pi';
+import {
+  PiCode,
+  PiCodeSimple,
+  PiCodeSimpleDuotone,
+  PiDotsThreeVerticalBold,
+  PiNote,
+  PiPlugsDuotone,
+  PiQuestion,
+} from 'react-icons/pi';
+import {
+  isConnector,
+  isHandler,
+  isLib,
+  isMain,
+  isReadme,
+} from '~/utils/playground.utils';
 import { useEditorContext } from '../context/editor-context';
 
 export type ScriptItemProps = {
@@ -27,6 +42,15 @@ export type ScriptItemProps = {
   onStartRenaming: (id: string) => void;
   onEndRenaming: VoidFunction;
   canUserEdit: boolean;
+};
+
+const ScriptIcon = ({ script }: { script: Script }) => {
+  if (isReadme(script)) return <PiNote />;
+  else if (isMain(script)) return <PiCode />;
+  else if (isHandler(script)) return <PiCodeSimpleDuotone />;
+  else if (isLib(script)) return <PiCodeSimple />;
+  else if (isConnector(script)) return <PiPlugsDuotone />;
+  else return <PiQuestion />;
 };
 
 export const ScriptItem: React.FC<ScriptItemProps> = ({
@@ -97,14 +121,15 @@ export const ScriptItem: React.FC<ScriptItemProps> = ({
             setCurrentScript(script);
           }}
         >
-          <Flex grow={1} cursor="pointer">
+          <Flex grow={1} cursor="pointer" gap={2} alignItems="center">
+            <ScriptIcon script={script} />
             <Text
               fontWeight={isDirty || hasErrors ? 'bold' : 'medium'}
               fontSize="xs"
               fontFamily="mono"
               color={hasErrors ? errorColor : 'inherit'}
             >
-              {script.filename}
+              {script.filename === 'readme.md' ? 'README.md' : script.filename}
             </Text>
           </Flex>
         </Link>
