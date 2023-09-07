@@ -26,6 +26,12 @@ import {
   Fade,
   Center,
   Divider,
+  Card,
+  CardHeader,
+  CardBody,
+  Grid,
+  GridItem,
+  Spinner,
 } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
@@ -43,6 +49,7 @@ import { useUser } from '~/hooks/use-user';
 import { useOrganizationList } from '~/hooks/use-organization-list';
 import { getEditAppletLink } from '@zipper/utils';
 import { useEditorContext } from '../context/editor-context';
+import { AICodeOutput } from '@zipper/types';
 
 const getDefaultCreateAppFormValues = () => ({
   name: generateDefaultSlug(),
@@ -50,6 +57,21 @@ const getDefaultCreateAppFormValues = () => ({
   isPublic: false,
   requiresAuthToRun: false,
 });
+
+const defaultTemplates = [
+  {
+    id: 'hello-world',
+    name: 'Hello World',
+    description: '👋',
+    shouldFork: false,
+  },
+  {
+    id: 'ai',
+    name: 'AI Generated Code',
+    description: '🤖✨',
+    shouldFork: false,
+  },
+];
 
 export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
   onClose,
@@ -63,6 +85,29 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
   const addScript = trpc.useMutation('script.add');
   const generateCodeWithAI = trpc.useMutation('ai.pipeline');
   const { scripts } = useEditorContext();
+
+  const templatesQuery = trpc.useQuery(['app.templates']);
+  const [templates, setTemplates] = useState<
+    {
+      id: string;
+      name: string | null;
+      description: string | null;
+      shouldFork: boolean;
+    }[]
+  >(defaultTemplates);
+
+  const forkTemplate = trpc.useMutation('app.fork', {
+    async onSuccess() {
+      // refetches posts after a post is added
+      await utils.invalidateQueries(['app.byAuthedUser']);
+      if (router.query['resource-owner']) {
+        await utils.invalidateQueries([
+          'app.byResourceOwner',
+          { resourceOwnerSlug: router.query['resource-owner'] as string },
+        ]);
+      }
+    },
+  });
 
   const addApp = trpc.useMutation('app.add', {
     async onSuccess() {
@@ -85,6 +130,10 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
 
   const [submitting, setSubmitting] = useState(false);
 
+  const [templateSelection, setTemplateSelection] = useState<
+    string | undefined
+  >('hello-world');
+
   const createAppForm = useForm({
     defaultValues: getDefaultCreateAppFormValues(),
   });
@@ -96,6 +145,22 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
   useEffect(() => {
     setSelectedOrganizationId(organization?.id);
   }, [organization?.id]);
+
+  useEffect(() => {
+    if (templatesQuery.data) {
+      setTemplates([
+        ...defaultTemplates,
+        ...templatesQuery.data.map((template) => {
+          return {
+            id: template.id,
+            name: template.name,
+            description: template.description,
+            shouldFork: true,
+          };
+        }),
+      ]);
+    }
+  }, [templatesQuery.data]);
 
   const resetForm = () => {
     const defaultValue = getDefaultCreateAppFormValues();
@@ -112,10 +177,88 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
   const toast = useToast();
   const steps = [
     { title: 'First', description: 'Configuration' },
-    { title: 'Second', description: 'AI Prompt' },
+    { title: 'Second', description: 'Initialization' },
   ];
 
   const [currentStep, setCurrentStep] = useState(0);
+
+  const runAddAppMutation = async ({
+    description,
+    name,
+    isPublic,
+    requiresAuthToRun,
+  }: {
+    name: string;
+    description: string;
+    isPublic: boolean;
+    requiresAuthToRun: boolean;
+  }) => {
+    const aiOutput =
+      templateSelection === 'ai' && description
+        ? await generateCodeWithAI.mutateAsync({
+            userRequest: description,
+          })
+        : undefined;
+    const mainCode = aiOutput?.find(
+      (output) => output.filename === 'main.ts',
+    )?.code;
+    await addApp.mutateAsync(
+      {
+        description,
+        name,
+        isPrivate: !isPublic,
+        requiresAuthToRun,
+        organizationId: selectedOrganizationId,
+        aiCode: mainCode,
+      },
+      {
+        onSuccess: async (applet) => {
+          resetForm();
+          if (
+            (selectedOrganizationId ?? null) !== (organization?.id ?? null) &&
+            setActive
+          ) {
+            setActive(selectedOrganizationId || null);
+          }
+          if (aiOutput) {
+            const otherFiles = aiOutput.filter(
+              (output) => output.filename !== 'main.ts',
+            );
+
+            await Promise.allSettled(
+              otherFiles.map((output) => {
+                return addScript.mutateAsync({
+                  name: output.filename,
+                  appId: applet!.id,
+                  order: scripts.length + 1,
+                  code: output.code,
+                });
+              }),
+            );
+          }
+
+          toast({
+            title: 'Applet created',
+            status: 'success',
+            duration: 9999,
+            isClosable: false,
+          });
+
+          router.push(
+            getEditAppletLink(applet!.resourceOwner!.slug, applet!.slug),
+          );
+        },
+      },
+    );
+  };
+
+  if (templatesQuery.isLoading) {
+    return (
+      <Center>
+        <Spinner />;
+      </Center>
+    );
+  }
 
   return (
     <Box position="relative" width="container.md">
@@ -165,6 +308,8 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
                   flexGrow={lastItem ? 'initial' : 1}
                   flexShrink={lastItem ? 'initial' : 1}
                   flexBasis={lastItem ? 'initial' : 0}
+                  onClick={() => setCurrentStep(index)}
+                  _hover={{ cursor: 'pointer' }}
                 >
                   <Center
                     bg={index === currentStep ? 'primary.500' : 'bg.100'}
@@ -207,6 +352,7 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
                   <Text>/</Text>
                   <InputGroup>
                     <Input
+                      autoFocus
                       backgroundColor="bgColor"
                       maxLength={60}
                       {...createAppForm.register('name')}
@@ -308,21 +454,74 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
             <>
               <FormControl>
                 <HStack spacing={1}>
-                  <FormLabel mr="0">Generate code using AI</FormLabel>
-                  <FormLabel fontWeight="normal">(optional)</FormLabel>
+                  <FormLabel mr="0">Start from a template</FormLabel>
                 </HStack>
 
-                <FormHelperText mb={4}>
-                  {`Tell us what you'd like your applet to do and we'll use the magic of AI to autogenerate some code to get you started. This process can take up to a minute.`}
-                </FormHelperText>
-                <Textarea
-                  fontFamily={'mono'}
-                  fontSize="sm"
-                  height={220}
-                  backgroundColor="bgColor"
-                  {...createAppForm.register('description')}
-                />
+                <Grid templateColumns="repeat(3, 1fr)" gap="3">
+                  {templates.map(({ id, name, description }) => {
+                    return (
+                      <GridItem>
+                        <Card
+                          w="250px"
+                          h="120px"
+                          onClick={() => {
+                            setTemplateSelection((curr) => {
+                              if (curr === id) return undefined;
+                              return id;
+                            });
+                          }}
+                          _hover={{
+                            cursor: 'pointer',
+                            shadow: 'md',
+                            transform: 'translateY(-5px)',
+                            transitionDuration: '0.2s',
+                            transitionTimingFunction: 'ease-in-out',
+                          }}
+                          border={
+                            templateSelection === id ? '1px solid' : 'none'
+                          }
+                          borderColor="purple.300"
+                        >
+                          <CardBody>
+                            <Heading
+                              as={'h3'}
+                              size="sm"
+                              fontWeight="medium"
+                              mb="2"
+                            >
+                              {name}
+                            </Heading>
+                            {description}
+                          </CardBody>
+                        </Card>
+                      </GridItem>
+                    );
+                  })}
+                </Grid>
               </FormControl>
+              {templateSelection === 'ai' && (
+                <FormControl>
+                  <HStack spacing={1}>
+                    <FormLabel mr="0">Generate code using AI</FormLabel>
+                  </HStack>
+
+                  <FormHelperText mb={4}>
+                    Tell us what you'd like your applet to do and we'll use the
+                    magic of AI to autogenerate some code to get you started.{' '}
+                    <Text fontWeight="bold">
+                      This process can take up to a minute.
+                    </Text>
+                  </FormHelperText>
+                  <Textarea
+                    autoFocus
+                    fontFamily={'mono'}
+                    fontSize="sm"
+                    height={120}
+                    backgroundColor="bgColor"
+                    {...createAppForm.register('description')}
+                  />
+                </FormControl>
+              )}
               <HStack w="full" justifyContent="end">
                 <Button
                   variant="ghost"
@@ -335,64 +534,30 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
                   colorScheme="purple"
                   type="submit"
                   isDisabled={
+                    !templateSelection ||
+                    (templateSelection === 'ai' &&
+                      !createAppForm.getValues().description) ||
                     isDisabled ||
                     addApp.isLoading ||
                     generateCodeWithAI.isLoading ||
                     submitting
                   }
-                  onClick={createAppForm.handleSubmit(
-                    async ({
-                      description,
-                      isPublic,
-                      requiresAuthToRun,
-                      name,
-                    }) => {
-                      setSubmitting(true);
-                      const aiOutput = description
-                        ? await generateCodeWithAI.mutateAsync({
-                            userRequest: description,
-                          })
-                        : undefined;
+                  onClick={createAppForm.handleSubmit(async (data) => {
+                    setSubmitting(true);
 
-                      const mainCode = aiOutput?.find(
-                        (output) => output.filename === 'main.ts',
-                      )?.code;
-
-                      await addApp.mutateAsync(
+                    const selectedTemplate = templates.find(
+                      (t) => t.id === templateSelection,
+                    );
+                    if (selectedTemplate?.shouldFork) {
+                      await forkTemplate.mutateAsync(
                         {
-                          description,
-                          name,
-                          isPrivate: !isPublic,
-                          requiresAuthToRun,
-                          organizationId: selectedOrganizationId,
-                          aiCode: mainCode,
+                          id: selectedTemplate.id,
+                          name: data.name,
+                          connectToParent: false,
                         },
                         {
-                          onSuccess: async (applet) => {
+                          onSuccess: (applet) => {
                             resetForm();
-                            if (
-                              (selectedOrganizationId ?? null) !==
-                                (organization?.id ?? null) &&
-                              setActive
-                            ) {
-                              setActive(selectedOrganizationId || null);
-                            }
-                            if (aiOutput) {
-                              const otherFiles = aiOutput.filter(
-                                (output) => output.filename !== 'main.ts',
-                              );
-
-                              await Promise.allSettled(
-                                otherFiles.map((output) => {
-                                  return addScript.mutateAsync({
-                                    name: output.filename,
-                                    appId: applet!.id,
-                                    order: scripts.length + 1,
-                                    code: output.code,
-                                  });
-                                }),
-                              );
-                            }
 
                             toast({
                               title: 'Applet created',
@@ -410,10 +575,13 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
                           },
                         },
                       );
-                    },
-                  )}
+                    } else {
+                      await runAddAppMutation(data);
+                    }
+                  })}
                 >
-                  {createAppForm.watch('description')
+                  {templateSelection === 'ai' &&
+                  createAppForm.watch('description')
                     ? 'Generate ✨'
                     : 'Create'}
                 </Button>

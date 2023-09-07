@@ -11,11 +11,16 @@ import { getAppHash } from '../src/utils/hashing';
 const prisma = new PrismaClient();
 
 async function main() {
-  const defaultOrgId = crypto.randomUUID();
-  const readOnlyOrgId = crypto.randomUUID();
   const readOnlySlug = generateSlug(2, { format: 'kebab' }).toLowerCase();
-  const mainScriptId = crypto.randomUUID();
-  const mainScriptId2 = crypto.randomUUID();
+  const [
+    defaultOrgId,
+    readOnlyOrgId,
+    mainScriptId,
+    mainScriptId2,
+    templateScriptId,
+    templateScriptId2,
+    templateScriptId3,
+  ] = [...Array(10)].map(() => crypto.randomUUID());
 
   await prisma.organization.createMany({
     data: [
@@ -154,6 +159,77 @@ export async function handler({ text }: { text: string }) {
     data: {
       playgroundVersionHash: hash2,
       publishedVersionHash: hash2,
+    },
+  });
+
+  const template = await prisma.app.create({
+    data: {
+      slug: 'crud-template',
+      name: 'CRUD Template',
+      description: '🗄️',
+      isPrivate: false,
+      isTemplate: true,
+      organizationId: readOnlyOrgId,
+      submissionState: 0,
+      scripts: {
+        createMany: {
+          data: [
+            {
+              id: templateScriptId,
+              name: 'main',
+              filename: 'main.ts',
+              code: `export async function handler({ text }: { text: string }) {
+  return Math.floor(Math.random() * 100);
+}`,
+              order: 0,
+            },
+
+            {
+              id: templateScriptId2,
+              name: 'set',
+              filename: 'set.ts',
+              code: `export async function handler({ text }: { text: string }) {
+  return Math.floor(Math.random() * 100);
+}`,
+              order: 0,
+            },
+
+            {
+              id: templateScriptId3,
+              name: 'get',
+              filename: 'get.ts',
+              code: `export async function handler({ text }: { text: string }) {
+  return Math.floor(Math.random() * 100);
+}`,
+              order: 0,
+            },
+          ],
+        },
+      },
+      scriptMain: {
+        create: { script: { connect: { id: templateScriptId } } },
+      },
+    },
+    include: {
+      scripts: true,
+    },
+  });
+
+  const templateHash = getAppHash(template);
+
+  await prisma.version.create({
+    data: {
+      appId: template.id,
+      hash: templateHash,
+      isPublished: true,
+    },
+  });
+
+  await prisma.app.update({
+    where: { id: template.id },
+    data: {
+      playgroundVersionHash: templateHash,
+      publishedVersionHash: templateHash,
     },
   });
 

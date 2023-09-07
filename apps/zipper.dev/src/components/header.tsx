@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import {
   Box,
   HStack,
@@ -13,8 +13,7 @@ import {
 } from '@chakra-ui/react';
 import { useRouter } from 'next/router';
 import NextLink from 'next/link';
-
-import { ZipperSymbol, ZipperLogo } from '@zipper/ui';
+import { ZipperLogo, ZipperSymbol } from '@zipper/ui';
 import OrganizationSwitcher from './auth/organizationSwitcher';
 import { MobileMenu } from './header-mobile-menu';
 import { useUser } from '~/hooks/use-user';
@@ -45,6 +44,14 @@ const Header: React.FC<HeaderProps> = ({
   const isTablet = useBreakpointValue({ base: false, md: true });
   const baseRoute = router.pathname.split('/')[1];
 
+  const isLanding = useMemo(
+    () =>
+      ['/about', '/features', '/blog', '/about', '/home'].includes(
+        router.asPath,
+      ),
+    [router.asPath],
+  );
+
   const { reload } = router.query;
   const { user, isLoaded } = useUser();
 
@@ -55,6 +62,10 @@ const Header: React.FC<HeaderProps> = ({
       window.location.href = window.location.href.replace('?reload=true', '');
     }
   }, [reload]);
+
+  if (isLanding) {
+    return <></>;
+  }
 
   return (
     <>
@@ -122,7 +133,6 @@ const Header: React.FC<HeaderProps> = ({
             </>
           )}
         </HStack>
-
         {showNav && isLoaded && (
           <Flex
             flex={1}
