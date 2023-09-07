@@ -28,6 +28,34 @@ import { useEditorContext } from '../context/editor-context';
 import { AppQueryOutput } from '~/types/trpc';
 import { ScriptItem, ScriptItemProps } from './playground-sidebar-script-item';
 import { PiPlusSquare } from 'react-icons/pi';
+import {
+  isReadme,
+  isMain,
+  isHandler,
+  isLib,
+  isConnector,
+} from '~/utils/playground.utils';
+
+// Order should always be:
+// - README.md
+// - main.ts
+// - other-handlers.ts
+// - whatever-connector.ts
+// - other libs and stuff
+const getSortingName = (script: Script) => {
+  let prefix = '99';
+  if (isReadme(script)) prefix = '00';
+  else if (isMain(script)) prefix = '01';
+  else if (isHandler(script)) prefix = '02';
+  else if (isLib(script)) prefix = '03';
+  else if (isConnector(script)) prefix = '04';
+  else prefix = '04';
+  return `${prefix}-${script.filename}`;
+};
+
+const sortScripts = (a: Script, b: Script) => {
+  return getSortingName(a) > getSortingName(b) ? 1 : -1;
+};
 
 export function PlaygroundSidebar({
   app,
@@ -38,21 +66,6 @@ export function PlaygroundSidebar({
 }) {
   const { currentScript, setCurrentScript } = useEditorContext();
   const { refetchApp } = useEditorContext();
-  const sortScripts = (a: Script, b: Script) => {
-    let orderA;
-    let orderB;
-
-    // always make sure `main` is on top, respect order after
-    if (a.id === mainScript?.id) orderA = -Infinity;
-    else orderA = a.createdAt === null ? Infinity : a.createdAt;
-    if (b.id === mainScript?.id) orderB = -Infinity;
-    else orderB = b.createdAt === null ? Infinity : b.createdAt;
-
-    // now let's make sure non-runnable files go below runnable scripts
-    if (!a.isRunnable) orderA = new Date(a.createdAt.getTime() * 100);
-    if (!b.isRunnable) orderB = new Date(b.createdAt.getTime() * 100);
-    return orderA > orderB ? 1 : -1;
-  };
 
   const renameForm: ScriptItemProps['renameForm'] = useForm();
 
