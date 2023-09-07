@@ -1,4 +1,17 @@
 import { NextRouter } from 'next/router';
+import { Script } from '@prisma/client';
+
+export const isConnector = (script: Script) =>
+  script.filename.endsWith('-connector.ts');
+export const isReadme = (script: Script) => script.filename === 'readme.md';
+export const isMain = (script: Script) => script.filename === 'main.ts';
+export const isLib = (script: Script) =>
+  script.filename.endsWith('.ts') &&
+  !script.isRunnable &&
+  !isConnector(script) &&
+  !isMain(script);
+export const isHandler = (script: Script) =>
+  !isMain(script) && !isConnector(script) && script.isRunnable;
 
 export enum PlaygroundTab {
   Code = 'src',
