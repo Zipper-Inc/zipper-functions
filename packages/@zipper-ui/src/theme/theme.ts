@@ -100,6 +100,22 @@ export const baseColors = {
     800: '#9E165F',
     900: '#851651',
   },
+  brandOrange: {
+    50: '#FEECEC',
+    100: '#FCD9D9',
+    200: '#FAB7B8',
+    300: '#F89193',
+    400: '#F57072',
+    500: '#F34B4E',
+    600: '#EF1014',
+    700: '#B10C0F',
+    800: '#78080A',
+    900: '#390405',
+    950: '#1D0202',
+  },
+  brandGray: {
+    100: '#F3F2F1',
+  },
 };
 
 export const brandColors = {
@@ -240,6 +256,7 @@ export const fonts = {
   body: '"InterVariable", sans-serif',
   heading: '"InterVariable", sans-serif',
   mono: 'Monaco, "Monaco", monospace',
+  plak: '"Plaak", sans-serif',
 };
 
 export const theme = extendTheme({
@@ -250,6 +267,9 @@ export const theme = extendTheme({
   },
   styles: {
     global: {
+      html: {
+        boxSizing: 'border-box',
+      },
       body: {
         height: '100vh',
         padding: 0,
@@ -262,7 +282,7 @@ export const theme = extendTheme({
         flex: 1,
         display: 'flex',
         flexDirection: 'column',
-        minWidth: 'container.md',
+        // minWidth: 'container.md',
       },
       // overrides some stuff in the AppConsole component
       '#app-console': {
@@ -301,6 +321,8 @@ export const theme = extendTheme({
     ...baseColors,
   },
   semanticTokens,
-  fonts,
+  fonts: {
+    ...fonts,
+  },
   ...borderRadius,
 });

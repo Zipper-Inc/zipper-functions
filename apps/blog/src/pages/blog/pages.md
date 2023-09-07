@@ -12,7 +12,7 @@ In Next.js, a **page** is a [React Component](https://reactjs.org/docs/component
 
 **Example**: If you create `pages/about.js` that exports a React component like below, it will be accessible at `/about`.
 
-```
+```js
 function About() {
   return <div>About</div>
 }
@@ -55,7 +55,7 @@ In Next.js, you can statically generate pages **with or without data**. Let's ta
 
 By default, Next.js pre-renders pages using Static Generation without fetching data. Here's an example:
 
-```
+```js
 function About() {
   return <div>About</div>
 }

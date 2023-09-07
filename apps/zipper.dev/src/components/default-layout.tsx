@@ -13,6 +13,42 @@ type DefaultLayoutProps = {
   title?: string;
 };
 
+import { Global } from '@emotion/react';
+
+const Fonts = () => (
+  <Global
+    styles={`
+      @font-face {
+        font-family: 'Plaak';
+        font-style: normal;
+        font-weight: 300;
+        src: url('/fonts/plaak/Plaak - 26-Ney-Light-205TF.otf') format('opentype');
+      }
+
+      @font-face {
+        font-family: 'Plaak';
+        font-style: normal;
+        font-weight: 400;
+        src: url('/fonts/plaak/Plaak - 36-Ney-Regular-205TF.otf') format('opentype');
+      }
+
+      @font-face {
+        font-family: 'Plaak';
+        font-style: normal;
+        font-weight: 700;
+        src: url('/fonts/plaak/Plaak - 46-Ney-Bold-205TF.otf') format('opentype');
+      }
+
+      @font-face {
+        font-family: 'Plaak';
+        font-style: normal;
+        font-weight: 900;
+        src: url('/fonts/plaak/Plaak - 56-Ney-Heavy-205TF.otf') format('opentype');
+      }
+    `}
+  />
+);
+
 export const DefaultLayout = ({ children, header }: DefaultLayoutProps) => {
   return (
     <>
@@ -22,6 +58,7 @@ export const DefaultLayout = ({ children, header }: DefaultLayoutProps) => {
       </Head>
 
       <ChakraProvider theme={theme}>
+        <Fonts />
         <>
           {header}
           <Flex

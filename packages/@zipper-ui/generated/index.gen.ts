@@ -1,5 +1,8 @@
 // created from ctix
 
+export * from '../src/components/website/common/Layouts';
+export * from '../src/components/website/common/Links';
+export * from '../src/components/website/common/Subscription';
 export * from '../src/components/function-output/action-button';
 export * from '../src/components/function-output/action-component';
 export * from '../src/components/function-output/action-dropdown';
@@ -21,6 +24,11 @@ export * from '../src/components/user-connector-inputs/github-user-connector-inp
 export * from '../src/components/user-connector-inputs';
 export * from '../src/components/user-connector-inputs/slack-user-connector-input';
 export * from '../src/components/user-connector-inputs/types';
+export * from '../src/components/website/Content';
+export * from '../src/components/website/Footer';
+export * from '../src/components/website';
+export * from '../src/components/website/Navbar';
+export * from '../src/components/website/Wrapper';
 export * from '../src/components/error-boundary';
 export * from '../src/components/function-inputs';
 export * from '../src/components/function-user-connectors-input';

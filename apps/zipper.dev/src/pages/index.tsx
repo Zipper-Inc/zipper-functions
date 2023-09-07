@@ -10,7 +10,6 @@ import SuperJSON from 'superjson';
 import { useRouter } from 'next/router';
 import Header from '~/components/header';
 import { useUser } from '~/hooks/use-user';
-import { getToken } from 'next-auth/jwt';
 import { authOptions } from './api/auth/[...nextauth]';
 import { getServerSession } from 'next-auth';
 
