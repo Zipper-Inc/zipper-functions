@@ -48,7 +48,7 @@ const Header: React.FC<HeaderProps> = ({
     () =>
       ['/about', '/features', '/blog', '/about', '/home'].includes(
         router.asPath,
-      ) || router.asPath === '/',
+      ),
     [router.asPath],
   );
 
