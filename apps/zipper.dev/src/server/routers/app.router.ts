@@ -257,6 +257,19 @@ export const appRouter = createRouter()
       return { ...app, scriptMain, resourceOwner };
     },
   })
+  .query('templates', {
+    async resolve() {
+      const apps = await prisma.app.findMany({
+        where: {
+          isTemplate: true,
+          deletedAt: null,
+        },
+        select: defaultSelect,
+      });
+
+      return apps;
+    },
+  })
   .query('allApproved', {
     async resolve() {
       /**
@@ -710,13 +723,14 @@ export const appRouter = createRouter()
     input: z.object({
       id: z.string().uuid(),
       name: z.string().min(3).max(50),
+      connectToParent: z.boolean().optional().default(true),
     }),
     async resolve({ input, ctx }) {
       if (!ctx.userId) {
         throw new TRPCError({ code: 'UNAUTHORIZED' });
       }
 
-      const { id } = input;
+      const { id, name, connectToParent } = input;
 
       const app = await prisma.app.findFirstOrThrow({
         where: { id, deletedAt: null },
@@ -725,10 +739,10 @@ export const appRouter = createRouter()
 
       const fork = await prisma.app.create({
         data: {
-          slug: slugify(input.name),
-          name: input.name,
+          slug: slugify(name),
+          name: name,
           description: app.description,
-          parentId: app.id,
+          parentId: connectToParent ? app.id : undefined,
           organizationId: ctx.orgId,
           createdById: ctx.userId,
           editors: {
@@ -918,43 +932,49 @@ export const appRouter = createRouter()
         );
       }
 
-      // build and store the eszip file
-      const { hash } = await buildAndStoreApplet({
-        app: { ...app, scripts: scripts ? updatedScripts : app.scripts },
-        userId: ctx.userId,
-      });
-
-      // if the code has changed, send the latest code to R2
-      if (hash !== app.playgroundVersionHash) {
-        const zip = new JSZip();
-        (updatedScripts.length > 0 ? updatedScripts : app.scripts).map((s) => {
-          zip.file(s.filename, JSON.stringify(s));
+      if (input.data.slug || input.data.scripts) {
+        const { hash } = await buildAndStoreApplet({
+          app: { ...app, scripts: scripts ? updatedScripts : app.scripts },
+          userId: ctx.userId,
         });
 
-        const version = getAppVersionFromHash(hash);
+        // if the code has changed, send the latest code to R2
+        if (hash !== app.playgroundVersionHash) {
+          const zip = new JSZip();
+          (updatedScripts.length > 0 ? updatedScripts : app.scripts).map(
+            (s) => {
+              zip.file(s.filename, JSON.stringify(s));
+            },
+          );
 
-        if (!version) throw new Error('Invalid hash');
+          const version = getAppVersionFromHash(hash);
 
-        zip.generateAsync({ type: 'uint8array' }).then((content) => {
-          storeVersionCode({
-            appId: app.id,
-            version,
-            zip: content,
+          if (!version) throw new Error('Invalid hash');
+
+          zip.generateAsync({ type: 'uint8array' }).then((content) => {
+            storeVersionCode({
+              appId: app.id,
+              version,
+              zip: content,
+            });
           });
+        }
+
+        const appWithUpdatedHash = await prisma.app.update({
+          where: {
+            id,
+          },
+          data: {
+            playgroundVersionHash: hash,
+          },
+          select: defaultSelect,
         });
+
+        return { ...appWithUpdatedHash, resourceOwner };
       }
 
-      const appWithUpdatedHash = await prisma.app.update({
-        where: {
-          id,
-        },
-        data: {
-          playgroundVersionHash: hash,
-        },
-        select: defaultSelect,
-      });
-
-      return { ...appWithUpdatedHash, resourceOwner };
+      return { ...app, resourceOwner };
+      // build and store the eszip file
     },
   })
   .mutation('delete', {

@@ -6,7 +6,7 @@ import {
   VStack,
   useToast,
 } from '@chakra-ui/react';
-import { AppEditSidebar } from '~/components/app/app-edit-sidebar';
+import { AppEditSidebar } from '~/components/playground/app-edit-sidebar';
 import { useCmdOrCtrl } from '@zipper/ui';
 import { ConnectorForm } from './connector-form';
 import { PlaygroundSidebar } from './playground-sidebar';

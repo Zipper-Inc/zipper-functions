@@ -4,7 +4,7 @@ import { trpc } from '~/utils/trpc';
 
 import { withLiveBlocks } from '~/hocs/withLiveBlocks';
 
-import { Playground } from '~/components/app/playground';
+import { Playground } from '~/components/playground/playground';
 import { LiveObject } from '@liveblocks/client';
 import EditorContextProvider from '~/components/context/editor-context';
 import { Box, Button, Center, Heading, Link, VStack } from '@chakra-ui/react';

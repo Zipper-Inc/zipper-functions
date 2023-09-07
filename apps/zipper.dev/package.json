@@ -56,7 +56,7 @@
     "@monaco-editor/react": "^4.4.6",
     "@next/env": "^13.2.4",
     "@nicksrandall/console-feed": "^3.5.0",
-    "@prisma/client": "^4.3.1",
+    "@prisma/client": "^4.11.0",
     "@react-email/components": "^0.0.7",
     "@sentry/nextjs": "^7.51.0",
     "@tanstack/react-table": "^8.7.9",

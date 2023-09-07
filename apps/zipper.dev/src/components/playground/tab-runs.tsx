@@ -45,6 +45,7 @@ import { AppRun, User } from '@prisma/client';
 import { JSONViewer } from '../json-editor';
 import { AppConsole } from './app-console';
 import { LogMessage } from '@zipper/types';
+import { TITLE_COLUMN_MIN_WIDTH } from './constants';
 
 type HistoryTabProps = {
   appId: string;
@@ -272,7 +273,13 @@ const HistoryTab: React.FC<HistoryTabProps> = ({ appId }) => {
 
   return (
     <HStack spacing={0} flex={1} alignItems="start" gap={16}>
-      <VStack flex={1} alignItems="stretch" spacing={0} gap={4}>
+      <VStack
+        flex={1}
+        alignItems="stretch"
+        spacing={0}
+        gap={4}
+        minW={TITLE_COLUMN_MIN_WIDTH}
+      >
         <Heading as="h6" fontWeight={400} flex={1}>
           Run History
         </Heading>
