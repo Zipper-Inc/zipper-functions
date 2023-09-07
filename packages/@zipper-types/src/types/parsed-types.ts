@@ -7,6 +7,7 @@ export type ParsedNode =
   | { type: InputType.date }
   | { type: InputType.array }
   | { type: InputType.any }
+  | { type: InputType.file }
   | { type: InputType.unknown }
   | {
       type: InputType.enum;

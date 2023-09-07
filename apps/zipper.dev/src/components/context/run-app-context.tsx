@@ -10,6 +10,8 @@ import { useEditorContext } from './editor-context';
 import { requiredUserAuthConnectorFilter } from '~/utils/user-auth-connector-filter';
 import { getInputsFromFormData, safeJSONParse, uuid } from '@zipper/utils';
 import { prettyLog, PRETTY_LOG_TOKENS } from '~/utils/pretty-log';
+import { generateReactHelpers } from '@uploadthing/react/hooks';
+import { OurFileRouter } from '~/pages/api/uploadthing';
 
 type UserAuthConnector = {
   type: UserAuthConnectorType;
@@ -85,6 +87,8 @@ export function RunAppProvider({
   const [results, setResults] = useState<Record<string, string>>({});
   const [configs, setConfigs] = useState<Zipper.BootPayload['configs']>({});
   const utils = trpc.useContext();
+  const { useUploadThing } = generateReactHelpers<OurFileRouter>();
+  const { isUploading, startUpload } = useUploadThing('imageUploader');
 
   const runAppMutation = trpc.useMutation('app.run', {
     async onSuccess() {
@@ -247,6 +251,7 @@ export function RunAppProvider({
         formValues[`{ ...${badlyParsedKey}`] = formValues['{ '][badlyParsedKey];
       }
     }
+
     const inputs = getInputsFromFormData(formValues, inputParams);
     const hasInputs = inputs && Object.values(inputs).length;
 
@@ -262,6 +267,25 @@ export function RunAppProvider({
       ),
       ...(hasInputs ? [inputs] : []),
     ]);
+
+    const uploadPromises = Object.entries(formValues).map(
+      async ([key, value]) => {
+        if (value instanceof FileList) {
+          const file = value[0] as File;
+
+          if (!isUploading) {
+            const uploadedFile = await startUpload([file]);
+
+            if (uploadedFile) {
+              formValues[key] = uploadedFile[0]?.url;
+            }
+          }
+        }
+      },
+    );
+
+    // Wait for all uploads to complete
+    await Promise.all(uploadPromises);
 
     const result = await runAppMutation.mutateAsync({
       formData: formValues,

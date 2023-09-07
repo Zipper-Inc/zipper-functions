@@ -14,18 +14,12 @@ import {
   Popover,
   PopoverArrow,
   PopoverBody,
-  PopoverCloseButton,
   PopoverContent,
   PopoverHeader,
 } from '@chakra-ui/react';
 import { FunctionInputs, FunctionOutput, useAppletContent } from '@zipper/ui';
 import { useEffect, useMemo, useState } from 'react';
-import {
-  HiExclamationCircle,
-  HiInformationCircle,
-  HiOutlineLightBulb,
-  HiOutlinePlay,
-} from 'react-icons/hi2';
+import { HiExclamationCircle, HiOutlineLightBulb } from 'react-icons/hi2';
 import { PiPlayBold } from 'react-icons/pi';
 import { useUser } from '~/hooks/use-user';
 import getRunUrl from '~/utils/get-run-url';
