@@ -44,13 +44,14 @@ export type ScriptItemProps = {
   canUserEdit: boolean;
 };
 
-const ScriptIcon = ({ script }: { script: Script }) => {
-  if (isReadme(script)) return <PiNote />;
-  else if (isMain(script)) return <PiCode />;
-  else if (isHandler(script)) return <PiCodeSimpleDuotone />;
-  else if (isLib(script)) return <PiCodeSimple />;
-  else if (isConnector(script)) return <PiPlugsDuotone />;
-  else return <PiQuestion />;
+const ScriptIcon = ({ script, ...propsPassedIn }: { script: Script } & any) => {
+  const props = { ...propsPassedIn, size: '14px' };
+  if (isReadme(script)) return <PiNote {...props} />;
+  else if (isMain(script)) return <PiCode {...props} size="16px" />;
+  else if (isHandler(script)) return <PiCodeSimpleDuotone {...props} />;
+  else if (isLib(script)) return <PiCodeSimple {...props} />;
+  else if (isConnector(script)) return <PiPlugsDuotone {...props} />;
+  else return <PiQuestion {...props} />;
 };
 
 export const ScriptItem: React.FC<ScriptItemProps> = ({
@@ -121,8 +122,16 @@ export const ScriptItem: React.FC<ScriptItemProps> = ({
             setCurrentScript(script);
           }}
         >
-          <Flex grow={1} cursor="pointer" gap={2} alignItems="center">
-            <ScriptIcon script={script} />
+          <Flex
+            cursor="pointer"
+            gap={2}
+            alignItems="center"
+            alignContent="center"
+            align="center"
+          >
+            <Flex justify="center" align="center" w="4">
+              <ScriptIcon script={script} />
+            </Flex>
             <Text
               fontWeight={isDirty || hasErrors ? 'bold' : 'medium'}
               fontSize="xs"
