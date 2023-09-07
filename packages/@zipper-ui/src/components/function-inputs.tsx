@@ -215,6 +215,19 @@ function FunctionParamInput({
         </VStack>
       );
     }
+    case InputType.file: {
+      return (
+        <VStack align="start" w="full">
+          <Input
+            backgroundColor="bgColor"
+            type="file"
+            {...formProps}
+            isDisabled={isDisabled}
+            placeholder={placeholder}
+          />
+        </VStack>
+      );
+    }
     case InputType.any: {
       return (
         <VStack align="start" w="full">

@@ -7,6 +7,7 @@ export enum InputType {
   object = 'object',
   any = 'any',
   enum = 'enum',
+  file = 'file',
   unknown = 'unknown',
 }
 
