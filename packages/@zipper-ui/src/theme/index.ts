@@ -226,13 +226,13 @@ export const semanticTokens = {
 const borderRadius = {
   radii: {
     none: '0',
-    sm: '0',
-    base: '0',
-    md: '0',
-    lg: '0',
-    xl: '0',
-    '2xl': '0',
-    '3xl': '0',
+    sm: '1px',
+    base: '1px',
+    md: '1px',
+    lg: '1px',
+    xl: '1px',
+    '2xl': '1px',
+    '3xl': '1px',
     full: '9999px',
   },
 };
@@ -257,6 +257,9 @@ export const theme = extendTheme({
         display: 'flex',
         flexDirection: 'column',
         overflow: 'auto',
+      },
+      'button, input': {
+        borderRadius: '1px',
       },
       '#__next': {
         flex: 1,
