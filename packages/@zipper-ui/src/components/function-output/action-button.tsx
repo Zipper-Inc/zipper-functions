@@ -147,6 +147,7 @@ export function ActionButton({
       w={action.width || 'fit-content'}
       variant={action.variant || 'outline'}
       isDisabled={isLoading}
+      mr={2}
       onClick={async () => {
         setIsLoading(true);
         action.run
