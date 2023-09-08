@@ -13,6 +13,8 @@ import {
   Spinner,
 } from '@chakra-ui/react';
 import { useState } from 'react';
+import { useAnalytics } from '~/hooks/use-analytics';
+import { useUser } from '~/hooks/use-user';
 import { trpc } from '~/utils/trpc';
 
 export function FeedbackModal({
@@ -25,6 +27,8 @@ export function FeedbackModal({
   onClose: () => void;
 }) {
   const [feedback, setFeedback] = useState('');
+  const { user } = useUser();
+  const analytics = useAnalytics();
   const [submittingFeedback, setSubmittingFeedback] = useState(false);
 
   const feedbackMutation = trpc.useMutation('user.submitFeedback');
@@ -59,6 +63,11 @@ export function FeedbackModal({
                   feedback,
                   url: window.location.href,
                 });
+
+                analytics?.track('Gave Feedback', {
+                  email: user?.email,
+                });
+
                 setSubmittingFeedback(false);
                 onClose();
               }}

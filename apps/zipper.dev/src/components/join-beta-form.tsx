@@ -13,6 +13,8 @@ import {
 } from '@chakra-ui/react';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useAnalytics } from '~/hooks/use-analytics';
+import { getEmailUsername } from '~/utils/get-email-username';
 
 const schema = z.object({
   email: z.string().email(),
@@ -30,6 +32,7 @@ export default function JoinBetaForm() {
   });
 
   const toast = useToast();
+  const analytics = useAnalytics();
 
   const joinWaitlistApplet = async (data: FormValues) => {
     const res = await fetch('https://waitlist-manager.zipper.run/api/json', {
@@ -53,6 +56,23 @@ export default function JoinBetaForm() {
         isClosable: true,
       });
     } else {
+      /**
+       * IMPORTANT!
+       * it's important to call the .identify call before the .group call,
+       * because the .group call will attach the current identified user.
+       */
+      analytics?.identify(getEmailUsername(data.email), {
+        email: data.email,
+      });
+
+      analytics?.group('beta.requests', {
+        name: 'Beta requests',
+      });
+
+      analytics?.track('Subscribed to Beta', {
+        email: data.email,
+      });
+
       toast({
         description: response.data,
         status: 'success',

@@ -14,10 +14,12 @@ import { ZipperLogo } from '@zipper/ui';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { useEffect, useRef, useState } from 'react';
+import { useAnalytics } from '~/hooks/use-analytics';
 
 export default function VerifyRequest() {
   const router = useRouter();
   const { email, callbackUrl } = router.query;
+  const analytics = useAnalytics();
   const callbackURIComponent = callbackUrl
     ? `&callbackUrl=${encodeURIComponent(callbackUrl as string)}`
     : '';
@@ -30,6 +32,10 @@ export default function VerifyRequest() {
     window.location.href = `/api/auth/callback/email?email=${encodeURIComponent(
       email as string,
     )}&token=${token}${callbackURIComponent}`;
+
+    analytics?.track('Logged In', {
+      email,
+    });
   };
 
   useEffect(() => {

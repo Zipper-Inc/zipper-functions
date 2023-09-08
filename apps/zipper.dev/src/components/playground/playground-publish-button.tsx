@@ -26,10 +26,13 @@ import { useState } from 'react';
 import TimeAgo from 'timeago-react';
 
 import { PiAppWindowDuotone, PiRocketLaunchDuotone } from 'react-icons/pi';
+import { useAnalytics } from '~/hooks/use-analytics';
+import { useUser } from '~/hooks/use-user';
 
 export const PlaygroundPublishInfo = ({ app }: { app: AppQueryOutput }) => {
   const appLink = getAppLink(app.slug);
   const publishApp = trpc.useMutation('app.publish');
+  const { user } = useUser();
   const [isPublishing, setIsPublishing] = useState(false);
   const [buttonText, setButtonText] = useState(<Text>Update</Text>);
 
@@ -37,6 +40,7 @@ export const PlaygroundPublishInfo = ({ app }: { app: AppQueryOutput }) => {
   const toast = useToast();
 
   const { boot } = useRunAppContext();
+  const analytics = useAnalytics();
 
   const errorTooltip = editorHasErrors() && (
     <>
@@ -67,6 +71,11 @@ export const PlaygroundPublishInfo = ({ app }: { app: AppQueryOutput }) => {
                 <Text>Update</Text>
               </HStack>,
             );
+
+            analytics?.track('Published Applet', {
+              email: user?.email,
+            });
+
             setTimeout(() => {
               setButtonText(<Text>Update</Text>);
             }, 2000);

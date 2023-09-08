@@ -22,6 +22,8 @@ import Header from '~/components/header';
 import { NextPageWithLayout } from './_app';
 import NextLink from 'next/link';
 import { Website } from '@zipper/ui';
+import { useAnalytics } from '~/hooks/use-analytics';
+import { useEffect } from 'react';
 
 /* -------------------------------------------- */
 /* Constants                                    */
@@ -64,6 +66,12 @@ Interested? We'd love to hear from you. Send your resume, portfolio, or any othe
 /* -------------------------------------------- */
 
 const AboutPage: NextPageWithLayout = () => {
+  const analytics = useAnalytics();
+
+  useEffect(() => {
+    analytics?.page('Marketing Site', 'About');
+  }, []);
+
   return (
     <Website>
       <Website.Navbar links={{ component: NextLink }} />
