@@ -164,30 +164,28 @@ const useComponents = (): Components => {
           >
             <Box bg="transparent" w="full" h="full" />
             <Box as="section" w="full" {...props}>
-              {React.Children.map(children, (child) => {
-                console.log(child);
-                if (React.isValidElement(child)) {
-                  if (child.type.name === 'h2') {
-                    return (
-                      <Heading
-                        fontSize="xl"
-                        mb={4}
-                        borderBottom="1px"
-                        maxW={{ base: 'full', lg: '380px' }}
-                        lineHeight={2}
-                        color="purple.500"
-                        borderColor="purple.500"
-                      >
-                        Notes
-                      </Heading>
-                    );
-                  } else {
-                    if (child.type.name === 'ol') {
-                      return <OrderedList {...child.props} />;
-                    }
+              {React.Children.map(children, (_child) => {
+                const child = _child as any;
+                if (child.type?.name === 'h2') {
+                  return (
+                    <Heading
+                      fontSize="xl"
+                      mb={4}
+                      borderBottom="1px"
+                      maxW={{ base: 'full', lg: '380px' }}
+                      lineHeight={2}
+                      color="purple.500"
+                      borderColor="purple.500"
+                    >
+                      Notes
+                    </Heading>
+                  );
+                } else {
+                  if (child.type?.name === 'ol') {
+                    return <OrderedList {...child.props} />;
                   }
                 }
-                return null; // or handle other non-valid elements as needed
+                return null;
               })}
             </Box>
           </Box>
