@@ -163,7 +163,14 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
               />
             </SignedIn>
             <SignedOut>
-              <ZipperLogo fill="currentColor" style={{ maxHeight: '100%' }} />
+              <ZipperLogo
+                fill={BLUE}
+                style={{
+                  maxHeight: '100%',
+                  marginLeft: '5px',
+                  width: '140px',
+                }}
+              />
             </SignedOut>
           </NextLink>
           <Box

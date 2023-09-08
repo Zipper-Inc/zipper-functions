@@ -122,13 +122,13 @@ function TableArray(props: Props) {
         level={props.tableLevel + 1}
         tableLevel={props.tableLevel + 1}
         collapse={Object.keys(props.data).length > 1}
-        headingMode={HeadingMode.CollapsedColumn}
+        headingMode={HeadingMode.ExpandableTableCell}
       />
     );
   }
 
   return (
-    <TableContainer marginTop={props.tableLevel > 0 ? -4 : undefined}>
+    <TableContainer>
       <Table {...getTableProps()}>
         <Thead>
           <Tr>
