@@ -56,7 +56,12 @@ export const organizationRouter = createRouter()
   .mutation('add', {
     input: z.object({
       name: z.string().min(3).max(50),
-      slug: z.string().min(3).max(50).optional(),
+      slug: z
+        .string()
+        .min(3)
+        .max(50)
+        .optional()
+        .transform((arg) => arg?.toLowerCase() || undefined),
       shouldCreateResourceOwnerSlug: z.boolean().optional().default(true),
       shouldAssignAdmin: z.boolean().optional().default(true),
     }),
