@@ -37,7 +37,9 @@ const ResourceOwnerPage: NextPageWithLayout = () => {
         <Gallery
           apps={appsByResourceOwnerQuery.data || []}
           subheading={
-            appsByResourceOwnerQuery.data.length ? 'Recent Applets' : ''
+            appsByResourceOwnerQuery.data.length
+              ? `Browse through the applets created by ${slug}`
+              : ''
           }
         />
       </>

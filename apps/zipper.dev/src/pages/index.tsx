@@ -40,8 +40,8 @@ const IndexPage: NextPageWithLayout = (props) => {
     return (
       <Gallery
         apps={galleryAppsQuery.data}
-        heading="Popular Applets"
-        subheading="Browse popular internal tools being built on Zipper"
+        heading="Applet Gallery"
+        subheading="Browse popular applets being built on Zipper"
       />
     );
   }
