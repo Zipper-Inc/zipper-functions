@@ -4,7 +4,6 @@ import {
   Collapse,
   Box,
   Text,
-  HStack,
   TableContainer,
   Thead,
   Tr,
@@ -12,23 +11,33 @@ import {
   Tbody,
   Table,
   Td,
+  Flex,
 } from '@chakra-ui/react';
-import { HiChevronRight } from 'react-icons/hi';
+import { PiCaretRight } from 'react-icons/pi';
 import { SmartFunctionOutput } from './smart-function-output';
 import { isPrimitive } from './utils';
 
-function ObjectExplorerRow({
+const ROW_PADDING = 6;
+
+export enum HeadingMode {
+  ObjectProperty,
+  CollapsedColumn,
+}
+
+export function ObjectExplorerRow({
   heading,
   data,
   level,
   tableLevel,
   collapse,
+  headingMode = HeadingMode.ObjectProperty,
 }: {
   heading: string;
   data: any;
   level: number;
   tableLevel: number;
   collapse: boolean;
+  headingMode?: HeadingMode;
 }) {
   const { isOpen, onToggle } = useDisclosure({ defaultIsOpen: !collapse });
   const shouldCollapse = !isPrimitive(data) && data && !data['$zipperType'];
@@ -37,41 +46,76 @@ function ObjectExplorerRow({
       borderBottom="1px"
       borderColor="fg.200"
       _last={{ borderBottom: 'none' }}
+      verticalAlign="top"
     >
       <Td border={'none'} p="0">
-        <HStack
-          flex={1}
-          flexBasis={'auto'}
-          width="100%"
-          overflow="auto"
-          whiteSpace="nowrap"
-          justifyContent="space-between"
-        >
-          <Text py={6} size="sm" color="fg.600" fontWeight={300}>
+        {shouldCollapse ? (
+          <Button
+            variant="link"
+            display="flex"
+            size="md"
+            pl={0}
+            pr={4}
+            onClick={onToggle}
+            minWidth="unset"
+            justifyContent="start"
+            alignSelf="start"
+            justifySelf="start"
+            width="100%"
+            gap={4}
+            _hover={{
+              textDecoration: 'none',
+            }}
+            position="sticky"
+            top={0}
+          >
+            {headingMode === HeadingMode.ObjectProperty && (
+              <Text py={ROW_PADDING} size="sm" color="fg.600" fontWeight={300}>
+                {heading}
+              </Text>
+            )}
+            {headingMode === HeadingMode.CollapsedColumn && (
+              <Text size="xs" color="fg.500" fontWeight={300}>
+                {!isOpen ? `Expand ${heading}` : `Collapse`}
+              </Text>
+            )}
+            <Box
+              transitionDuration="100ms"
+              transform={isOpen ? 'rotate(90deg)' : 'none'}
+              color="fg.600"
+              justifySelf="right"
+              ml="auto"
+            >
+              <PiCaretRight />
+            </Box>
+          </Button>
+        ) : (
+          <Text py={ROW_PADDING} size="sm" color="fg.600" fontWeight={300}>
             {heading}
           </Text>
-          {shouldCollapse && (
-            <Button
-              variant="ghost"
-              size="xs"
-              onClick={onToggle}
-              minWidth="unset"
-            >
-              <Box
-                transitionDuration="100ms"
-                transform={isOpen ? 'rotate(-90deg)' : 'none'}
-              >
-                <HiChevronRight />
-              </Box>
-            </Button>
-          )}
-        </HStack>
+        )}
       </Td>
-      <Td border="none">
+      <Td border="none" p={0} pl={4}>
         {shouldCollapse ? (
-          <Box flex={5}>
+          <Flex
+            height="100%"
+            align="center"
+            marginTop={
+              headingMode === HeadingMode.CollapsedColumn &&
+              tableLevel > 0 &&
+              isOpen
+                ? -ROW_PADDING
+                : undefined
+            }
+          >
             {!isOpen && (
-              <Text py={6} color="fg.400">
+              <Text
+                color="fg.400"
+                textOverflow="ellipsis"
+                overflow="hidden"
+                whiteSpace="nowrap"
+                maxW="421px"
+              >
                 {Array.isArray(data)
                   ? data.length === 1
                     ? `${data.length} item`
@@ -86,18 +130,20 @@ function ObjectExplorerRow({
                 tableLevel={tableLevel + 1}
               />
             </Collapse>
-          </Box>
+          </Flex>
         ) : (
-          <Box flex={5}>
+          <Flex height="100%" flex={5} align="center">
             <SmartFunctionOutput
-              result={data}
+              // this is a hack to make sure there's an empty character since tables hate empty cells
+              // the character is U+3164
+              result={data || 'ㅤ'}
               level={level + 1}
               tableLevel={tableLevel + 1}
             />
             {/* <Text size="sm" whiteSpace="normal" textAlign="right">
               {data?.toString() || 'null'}
             </Text> */}
-          </Box>
+          </Flex>
         )}
       </Td>
     </Tr>
@@ -108,14 +154,32 @@ export function ObjectExplorer({
   data,
   level,
   tableLevel,
+  heading,
+  expandable = !!level,
 }: {
   data: Record<string, any>;
   level: number;
   tableLevel: number;
+  heading?: string;
+  expandable?: boolean;
 }) {
+  if (heading && expandable) {
+    return (
+      <ObjectExplorerRow
+        key={heading}
+        heading={heading}
+        data={data}
+        level={level + 1}
+        tableLevel={tableLevel + 1}
+        collapse={Object.keys(data).length > 1}
+        headingMode={HeadingMode.CollapsedColumn}
+      />
+    );
+  }
+
   return (
-    <TableContainer w="100%">
-      <Table>
+    <TableContainer w="100%" position="relative">
+      <Table height="fit-content">
         <Thead display="none">
           <Tr>
             <Th width="max-content"></Th>

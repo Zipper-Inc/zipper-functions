@@ -16,10 +16,12 @@ export function SmartFunctionOutput({
   result,
   level = 0,
   tableLevel = 0,
+  heading,
 }: {
   result: any;
   level: number;
   tableLevel: number;
+  heading?: string;
 }) {
   if (!result) return null;
 
@@ -33,7 +35,13 @@ export function SmartFunctionOutput({
       return <Markdown children={data.toString()} />;
 
     case OutputType.Array:
-      return <Array data={data} tableLevel={tableLevel} />;
+      return (
+        <Array
+          data={data}
+          tableLevel={tableLevel}
+          heading={data.length ? heading : undefined}
+        />
+      );
 
     case OutputType.Collection:
       return <Collection data={data} level={level} tableLevel={tableLevel} />;
@@ -47,7 +55,12 @@ export function SmartFunctionOutput({
 
     case OutputType.Object:
       return (
-        <ObjectExplorer data={data} level={level} tableLevel={tableLevel} />
+        <ObjectExplorer
+          data={data}
+          level={level}
+          tableLevel={tableLevel}
+          heading={heading}
+        />
       );
 
     case OutputType.Action: {
