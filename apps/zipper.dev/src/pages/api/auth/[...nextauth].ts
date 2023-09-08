@@ -1,9 +1,4 @@
-import NextAuth, {
-  AuthOptions,
-  TokenSet,
-  SessionStrategy,
-  DefaultSession,
-} from 'next-auth';
+import NextAuth, { AuthOptions, TokenSet, SessionStrategy } from 'next-auth';
 import GithubProvider from 'next-auth/providers/github';
 import GoogleProvider from 'next-auth/providers/google';
 import EmailProvider, {
@@ -284,11 +279,16 @@ export const authOptions: AuthOptions = {
     },
     async jwt({ token: _token, user, account, trigger, session }) {
       const token = { ..._token };
+
       // Initial sign in (only time account is not null)
       if (account) {
+        if (trigger === 'signUp') {
+          user.newUser = true;
+        }
         // Save the access token and refresh token in the JWT on the initial login
         return {
           ...token,
+          newUser: user.newUser,
           access_token: account.access_token,
           expires_at: account.expires_at,
           refresh_token: account.refresh_token,
@@ -357,6 +357,7 @@ export const authOptions: AuthOptions = {
           email: token.email,
           image: token.picture,
           username: token.slug,
+          newUser: token.newUser,
         };
 
         if (trigger !== 'update') {
@@ -377,7 +378,7 @@ export const authOptions: AuthOptions = {
     verifyRequest: '/auth/verify-request',
   },
   events: {
-    async signIn({ user }) {
+    async signIn({ user, isNewUser, account }) {
       const pending = await prisma.pendingAppEditor.findMany({
         where: {
           email: user.email!,
@@ -397,6 +398,12 @@ export const authOptions: AuthOptions = {
           userId: user.id,
         })),
       });
+
+      if (isNewUser && account) {
+        user.newUser = true;
+        account.newUser = true;
+      }
+      user.newUser = false;
     },
   },
 };
@@ -414,6 +421,7 @@ declare module 'next-auth' {
 
   interface User {
     slug?: string;
+    newUser?: boolean;
   }
 }
 
@@ -423,6 +431,7 @@ export interface SessionUser {
   image?: string | null;
   username?: string | null;
   id?: string | null;
+  newUser?: boolean | null;
 }
 
 declare module 'next-auth/jwt' {
@@ -434,6 +443,7 @@ declare module 'next-auth/jwt' {
     organizationMemberships?: SessionOrganizationMembership[];
     currentOrganizationId?: string;
     slug?: string;
+    newUser?: boolean;
   }
 }
 

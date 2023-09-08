@@ -178,6 +178,9 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
   // Note: Make sure not to redirect to the same page
   // To avoid an infinite loop!
   if (session) {
+    if (session.user?.newUser) {
+      return { redirect: { destination: '/auth/welcome' } };
+    }
     return { redirect: { destination: '/' } };
   }
 

@@ -348,6 +348,7 @@ const Hero = () => {
       px={['24px', 0]}
       position="relative"
       whiteSpace={{ md: 'pre-line' }} //important for \n new lines
+      minH={'600px'}
     >
       <Container
         as="article"
@@ -453,29 +454,6 @@ const Hero = () => {
           </Box>
         </Flex>
       </Container>
-      <Box
-        bgColor={'indigo.600'}
-        w={['full']}
-        justifyContent="center"
-        display={'flex'}
-        p="4"
-      >
-        <Text
-          fontWeight={'bold'}
-          mr={2}
-          display="flex"
-          alignItems="center"
-          gap="2"
-        >
-          <HiOutlineLightningBolt size={20} /> Zipper is in beta
-        </Text>
-        <Text>
-          <Box as="span" textDecoration={'underline'}>
-            <Link href="/auth/signin">Sign up now</Link>
-          </Box>{' '}
-          to be the first to get new features.
-        </Text>
-      </Box>
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent>
@@ -873,6 +851,34 @@ const Headline = memo(() => {
   );
 });
 
+const BetaSection = () => {
+  return (
+    <Box
+      bgColor={'indigo.600'}
+      w={['full']}
+      justifyContent="center"
+      display={'flex'}
+      p="4"
+    >
+      <Text
+        fontWeight={'bold'}
+        mr={2}
+        display="flex"
+        alignItems="center"
+        gap="2"
+      >
+        <HiOutlineLightningBolt size={20} /> Zipper is in beta
+      </Text>
+      <Text>
+        <Box as="span" textDecoration={'underline'}>
+          <Link href="/auth/signin">Sign up now</Link>
+        </Box>{' '}
+        to be the first to get new features.
+      </Text>
+    </Box>
+  );
+};
+
 /* -------------------------------------------- */
 /* Render                                       */
 /* -------------------------------------------- */
@@ -889,6 +895,7 @@ const HomePage: NextPageWithLayout = () => (
       margin="0 auto"
     >
       <Hero />
+      <BetaSection />
       <Features />
       <AppletsGallery />
       <Bateries />
