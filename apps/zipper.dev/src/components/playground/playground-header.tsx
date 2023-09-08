@@ -143,7 +143,13 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
       pb="1"
     >
       <HStack spacing={4} alignItems="center" flex={1} minW={0}>
-        <Box height={4}>
+        <Box
+          height={4}
+          display={'flex'}
+          flexDirection={'row'}
+          alignItems={'center'}
+          gap={2}
+        >
           <NextLink href="/">
             <SignedIn>
               <ZipperSymbol
@@ -160,6 +166,22 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
               <ZipperLogo fill="currentColor" style={{ maxHeight: '100%' }} />
             </SignedOut>
           </NextLink>
+          <Box
+            bgColor={'blue.50'}
+            alignItems={'center'}
+            display={'flex'}
+            px={2}
+            py={1}
+          >
+            <Text
+              fontSize={'x-small'}
+              textTransform="uppercase"
+              fontWeight={'bold'}
+              color={'indigo.600'}
+            >
+              Beta
+            </Text>
+          </Box>
         </Box>
         <Heading
           size="md"
