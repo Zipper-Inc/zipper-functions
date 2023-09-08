@@ -34,7 +34,6 @@
     "@zipper/ui": "*",
     "@zipper/utils": "*",
     "framer-motion": "^9.0.0",
-    "markdown-it-footnote": "^3.0.3",
     "next": "^13.4.17",
     "next-share": "^0.25.0",
     "next-themes": "^0.2.1",
