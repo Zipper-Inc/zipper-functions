@@ -17,11 +17,18 @@ import {
   CodeProps,
   Flex,
   Heading,
+  TextProps,
   HeadingProps,
   Link,
   Text,
+  BoxProps,
+  Container,
+  Grid,
+  List,
+  OrderedList,
 } from '@chakra-ui/react';
 import { ChakraUIRenderer } from '@zipper/ui';
+import MarkdownIt from 'markdown-it-footnote';
 
 export const HeadingContext = createContext<
   RefObject<HTMLHeadingElement | null>
@@ -141,6 +148,52 @@ const useComponents = (): Components => {
     h6: (props: HeadingProps) => (
       <HeadingLink as="h6" size="sm" my={2} {...props} />
     ),
+    section: ({ children, ...props }: BoxProps) => {
+      if (props.className === 'footnotes') {
+        return (
+          <Box
+            as={Grid}
+            maxW="container.xl"
+            w="full"
+            px={0}
+            gridTemplateColumns={{ base: '0px 100%', lg: '1fr 412px' }}
+            gap={{ base: 0, lg: 5 }}
+            position={{ lg: 'absolute' }}
+            top="1200px"
+            margin={{ lg: '0 auto' }}
+          >
+            <Box bg="transparent" w="full" h="full" />
+            <Box as="section" w="full" {...props}>
+              {React.Children.map(children, (child) => {
+                console.log(child);
+                if (React.isValidElement(child)) {
+                  if (child.type.name === 'h2') {
+                    return (
+                      <Heading
+                        fontSize="xl"
+                        mb={4}
+                        borderBottom="1px"
+                        maxW={{ base: 'full', lg: '380px' }}
+                        lineHeight={2}
+                        color="purple.500"
+                        borderColor="purple.500"
+                      >
+                        Notes
+                      </Heading>
+                    );
+                  } else {
+                    if (child.type.name === 'ol') {
+                      return <OrderedList {...child.props} />;
+                    }
+                  }
+                }
+                return null; // or handle other non-valid elements as needed
+              })}
+            </Box>
+          </Box>
+        );
+      }
+    },
     code: (props: CodeProps) => {
       if (typeof props.children === 'string') {
         return <Code {...(props as any)} />;
