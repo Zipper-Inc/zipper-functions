@@ -34,6 +34,8 @@ import {
   PiSquaresFour,
   PiCheckCircleFill,
   PiXCircleFill,
+  PiCaretDownFill,
+  PiCaretUpFill,
 } from 'react-icons/pi';
 import { useSmartFunctionOutputContext } from './smart-function-output-context';
 
@@ -164,9 +166,19 @@ function TableCollection(props: Props) {
                       fontSize="xx-small"
                       textAlign="center"
                       height="full"
-                      pl={2}
+                      pl={1}
                     >
-                      {column.isSorted ? (column.isSortedDesc ? '▼' : '▲') : ''}
+                      {column.isSorted ? (
+                        column.isSortedDesc ? (
+                          <PiCaretDownFill
+                            style={{ display: 'inline-block' }}
+                          />
+                        ) : (
+                          <PiCaretUpFill style={{ display: 'inline-block' }} />
+                        )
+                      ) : (
+                        ''
+                      )}
                     </Text>
                   }
                 </Th>

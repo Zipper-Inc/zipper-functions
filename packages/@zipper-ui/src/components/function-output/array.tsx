@@ -25,6 +25,7 @@ import { HiTable, HiViewGrid } from 'react-icons/hi';
 import { FiSearch } from 'react-icons/fi';
 import { useSmartFunctionOutputContext } from './smart-function-output-context';
 import { HeadingMode, ObjectExplorerRow } from './object-explorer';
+import { PiCaretDownFill, PiCaretUpFill } from 'react-icons/pi';
 
 type Props = {
   data: Array<any>;
@@ -146,9 +147,19 @@ function TableArray(props: Props) {
                       fontSize="xx-small"
                       textAlign="center"
                       height="full"
-                      pl={2}
+                      pl={1}
                     >
-                      {column.isSorted ? (column.isSortedDesc ? '▼' : '▲') : ''}
+                      {column.isSorted ? (
+                        column.isSortedDesc ? (
+                          <PiCaretDownFill
+                            style={{ display: 'inline-block' }}
+                          />
+                        ) : (
+                          <PiCaretUpFill style={{ display: 'inline-block' }} />
+                        )
+                      ) : (
+                        ''
+                      )}
                     </Text>
                   }
                 </Th>
