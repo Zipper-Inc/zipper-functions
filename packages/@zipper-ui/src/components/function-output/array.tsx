@@ -24,10 +24,14 @@ import styled from '@emotion/styled';
 import { HiTable, HiViewGrid } from 'react-icons/hi';
 import { FiSearch } from 'react-icons/fi';
 import { useSmartFunctionOutputContext } from './smart-function-output-context';
+import { HeadingMode, ObjectExplorerRow } from './object-explorer';
+import { PiCaretDownFill, PiCaretUpFill } from 'react-icons/pi';
 
 type Props = {
   data: Array<any>;
   tableLevel: number;
+  heading?: string;
+  expandable?: boolean;
 };
 
 export default function Array(props: Props) {
@@ -72,12 +76,14 @@ export default function Array(props: Props) {
 }
 
 const StyledTr = styled(Tr)`
+  vertical-align: top;
   &:last-of-type td {
     border-bottom: none;
   }
 `;
 
 function TableArray(props: Props) {
+  const expandable = props.expandable || !!props.tableLevel;
   const { searchQuery } = useSmartFunctionOutputContext();
 
   const columns = useMemo(
@@ -103,8 +109,26 @@ function TableArray(props: Props) {
   const { getTableProps, getTableBodyProps, headers, rows, prepareRow } =
     useTable({ columns, data }, useSortBy);
 
+  if (!props.data.length) {
+    return <Text color="fg.500">No results</Text>;
+  }
+
+  if (props.heading && expandable) {
+    return (
+      <ObjectExplorerRow
+        key={props.heading}
+        heading={props.heading}
+        data={props.data}
+        level={props.tableLevel + 1}
+        tableLevel={props.tableLevel + 1}
+        collapse={Object.keys(props.data).length > 1}
+        headingMode={HeadingMode.CollapsedColumn}
+      />
+    );
+  }
+
   return (
-    <TableContainer>
+    <TableContainer marginTop={props.tableLevel > 0 ? -4 : undefined}>
       <Table {...getTableProps()}>
         <Thead>
           <Tr>
@@ -123,9 +147,19 @@ function TableArray(props: Props) {
                       fontSize="xx-small"
                       textAlign="center"
                       height="full"
-                      pl={2}
+                      pl={1}
                     >
-                      {column.isSorted ? (column.isSortedDesc ? '▼' : '▲') : ''}
+                      {column.isSorted ? (
+                        column.isSortedDesc ? (
+                          <PiCaretDownFill
+                            style={{ display: 'inline-block' }}
+                          />
+                        ) : (
+                          <PiCaretUpFill style={{ display: 'inline-block' }} />
+                        )
+                      ) : (
+                        ''
+                      )}
                     </Text>
                   }
                 </Th>

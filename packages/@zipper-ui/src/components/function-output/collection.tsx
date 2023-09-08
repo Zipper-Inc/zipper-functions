@@ -26,8 +26,17 @@ import { useSortBy, useTable } from 'react-table';
 import styled from '@emotion/styled';
 import { isAction, isPrimitive } from './utils';
 import { SmartFunctionOutput } from './smart-function-output';
-import { HiCheck, HiX, HiTable, HiViewGrid } from 'react-icons/hi';
-import { FiSearch } from 'react-icons/fi';
+import {
+  PiMagnifyingGlass,
+  PiCheckFill,
+  PiXFill,
+  PiTable,
+  PiSquaresFour,
+  PiCheckCircleFill,
+  PiXCircleFill,
+  PiCaretDownFill,
+  PiCaretUpFill,
+} from 'react-icons/pi';
 import { useSmartFunctionOutputContext } from './smart-function-output-context';
 
 type Props = {
@@ -42,24 +51,30 @@ export default function Collection(props: Props) {
   const { setSearchQuery } = useSmartFunctionOutputContext();
 
   return (
-    <Stack width="100%" border="1px solid" borderColor="fg.200" p="2">
+    <Stack
+      width="100%"
+      border="1px solid"
+      borderColor="fg.200"
+      p="2"
+      mt={!!props.tableLevel ? 4 : undefined}
+    >
       {props.tableLevel === 0 && (
         <Box display="flex" justifyContent="flex-end" gap="2">
           <InputGroup w="md">
             <InputLeftAddon>
-              <Icon as={FiSearch} />
+              <Icon as={PiMagnifyingGlass} />
             </InputLeftAddon>
             <Input onChange={(e) => setSearchQuery(e.target.value)} />
           </InputGroup>
           <IconButton
             aria-label="Table view"
-            icon={<HiTable />}
+            icon={<PiTable />}
             onClick={() => setView('table')}
             colorScheme={view === 'table' ? 'purple' : 'gray'}
           />
           <IconButton
             aria-label="Card view"
-            icon={<HiViewGrid />}
+            icon={<PiSquaresFour />}
             onClick={() => setView('cards')}
             colorScheme={view === 'cards' ? 'purple' : 'gray'}
           />
@@ -77,6 +92,7 @@ export default function Collection(props: Props) {
 }
 
 const StyledTr = styled(Tr)`
+  vertical-align: top;
   &:last-of-type td {
     border-bottom: none;
   }
@@ -150,9 +166,19 @@ function TableCollection(props: Props) {
                       fontSize="xx-small"
                       textAlign="center"
                       height="full"
-                      pl={2}
+                      pl={1}
                     >
-                      {column.isSorted ? (column.isSortedDesc ? '▼' : '▲') : ''}
+                      {column.isSorted ? (
+                        column.isSortedDesc ? (
+                          <PiCaretDownFill
+                            style={{ display: 'inline-block' }}
+                          />
+                        ) : (
+                          <PiCaretUpFill style={{ display: 'inline-block' }} />
+                        )
+                      ) : (
+                        ''
+                      )}
                     </Text>
                   }
                 </Th>
@@ -170,7 +196,19 @@ function TableCollection(props: Props) {
                     if (typeof cell.value === 'boolean') {
                       return (
                         <Td {...cell.getCellProps()}>
-                          {cell.value ? <HiCheck /> : <HiX />}
+                          <HStack
+                            w="full"
+                            h="full"
+                            align="center"
+                            justify="center"
+                            height={5}
+                          >
+                            {cell.value ? (
+                              <PiCheckCircleFill height={4} />
+                            ) : (
+                              <PiXCircleFill height={4} />
+                            )}
+                          </HStack>
                         </Td>
                       );
                     }
@@ -187,6 +225,7 @@ function TableCollection(props: Props) {
                         result={cell.value}
                         tableLevel={props.tableLevel + 1}
                         level={props.level + 1}
+                        heading={cell.column.Header?.toString()}
                       />
                     </Td>
                   );
@@ -224,7 +263,7 @@ function CardCollection(props: Props) {
                         justifyContent="space-between"
                       >
                         <Text mr="2">{key}:</Text>
-                        {value ? <HiCheck /> : <HiX />}
+                        {value ? <PiCheckCircleFill /> : <PiXCircleFill />}
                       </Flex>
                     );
                   }
