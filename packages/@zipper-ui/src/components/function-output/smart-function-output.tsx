@@ -35,7 +35,13 @@ export function SmartFunctionOutput({
       return <Markdown children={data.toString()} />;
 
     case OutputType.Array:
-      return <Array data={data} tableLevel={tableLevel} />;
+      return (
+        <Array
+          data={data}
+          tableLevel={tableLevel}
+          heading={data.length ? heading : undefined}
+        />
+      );
 
     case OutputType.Collection:
       return <Collection data={data} level={level} tableLevel={tableLevel} />;

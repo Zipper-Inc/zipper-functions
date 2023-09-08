@@ -19,11 +19,12 @@ import { isPrimitive } from './utils';
 
 const ROW_PADDING = 6;
 
-enum HeadingMode {
+export enum HeadingMode {
   ObjectProperty,
   CollapsedColumn,
 }
-function ObjectExplorerRow({
+
+export function ObjectExplorerRow({
   heading,
   data,
   level,
