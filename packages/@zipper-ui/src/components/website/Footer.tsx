@@ -313,7 +313,7 @@ const AppletDemo = () => {
           target="_blank"
           align="center"
           gap={2}
-          href="https://zipper.dev/zipper/zipper-logo/src/main.ts"
+          href="https://zipper.dev/zipper-inc/zipper-logo/src/main.ts"
           fontWeight={500}
           colorScheme="brandOrange"
         >
