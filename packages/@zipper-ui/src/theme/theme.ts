@@ -76,7 +76,7 @@ export const baseColors = {
   },
   indigo: {
     25: '#F5F8FF',
-    50: '#EEF4FF',
+    50: '#EEF8FF',
     100: '#E0EAFF',
     200: '#C7D7FE',
     300: '#A4BCFD',
