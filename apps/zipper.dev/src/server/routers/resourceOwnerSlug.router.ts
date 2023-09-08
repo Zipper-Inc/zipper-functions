@@ -14,7 +14,7 @@ export const resourceOwnerSlugRouter = createRouter()
   // create
   .mutation('add', {
     input: z.object({
-      slug: z.string().min(3).max(50),
+      slug: z.string().min(3).max(50).toLowerCase(),
       resourceOwnerId: z.string(),
       resourceOwnerType: z.number(),
     }),
@@ -34,7 +34,7 @@ export const resourceOwnerSlugRouter = createRouter()
   // read
   .query('find', {
     input: z.object({
-      slug: z.string().min(3),
+      slug: z.string().min(3).toLowerCase(),
     }),
     async resolve({ input }) {
       const deniedSlug = denyList.find((d) => d === input.slug);
@@ -53,7 +53,7 @@ export const resourceOwnerSlugRouter = createRouter()
   })
   .query('getName', {
     input: z.object({
-      slug: z.string(),
+      slug: z.string().toLowerCase(),
     }),
     async resolve({ input }) {
       const resourceOwner = await prisma.resourceOwnerSlug.findUnique({

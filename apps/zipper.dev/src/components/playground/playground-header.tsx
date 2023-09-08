@@ -166,6 +166,7 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
               <ZipperLogo fill="currentColor" style={{ maxHeight: '100%' }} />
             </SignedOut>
           </NextLink>
+
           <Box
             bgColor={'blue.50'}
             alignItems={'center'}
@@ -178,6 +179,7 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
               textTransform="uppercase"
               fontWeight={'bold'}
               color={'indigo.600'}
+              cursor="default"
             >
               Beta
             </Text>

@@ -1,15 +1,12 @@
 import NextLink from 'next/link';
 import {
-  GridItem,
   Card,
   CardBody,
   VStack,
-  Heading,
   HStack,
   Badge,
   Box,
   Text,
-  WrapItem,
 } from '@chakra-ui/react';
 import { GalleryAppQueryOutput } from '~/pages';
 import AppAvatar from '../app-avatar';
@@ -17,9 +14,6 @@ import AppAvatar from '../app-avatar';
 type GalleryItemProps = {
   app: Unpack<GalleryAppQueryOutput>;
 };
-
-// TODO get the badges from api
-const badges: string[] = [];
 
 export const GalleryItem: React.FC<GalleryItemProps> = ({ app }) => {
   if (!app) return <></>;
