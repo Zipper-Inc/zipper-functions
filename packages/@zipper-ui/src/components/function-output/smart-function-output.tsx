@@ -16,10 +16,12 @@ export function SmartFunctionOutput({
   result,
   level = 0,
   tableLevel = 0,
+  heading,
 }: {
   result: any;
   level: number;
   tableLevel: number;
+  heading?: string;
 }) {
   if (!result) return null;
 
@@ -47,7 +49,12 @@ export function SmartFunctionOutput({
 
     case OutputType.Object:
       return (
-        <ObjectExplorer data={data} level={level} tableLevel={tableLevel} />
+        <ObjectExplorer
+          data={data}
+          level={level}
+          tableLevel={tableLevel}
+          heading={heading}
+        />
       );
 
     case OutputType.Action: {
