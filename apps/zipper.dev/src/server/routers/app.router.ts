@@ -441,8 +441,8 @@ export const appRouter = createRouter()
   })
   .query('byResourceOwnerAndAppSlugs', {
     input: z.object({
-      resourceOwnerSlug: z.string(),
-      appSlug: z.string(),
+      resourceOwnerSlug: z.string().toLowerCase(),
+      appSlug: z.string().toLowerCase(),
     }),
     async resolve({ ctx, input }) {
       //find resouce owner (org or user) based on slug
@@ -513,7 +513,7 @@ export const appRouter = createRouter()
   })
   .query('byResourceOwner', {
     input: z.object({
-      resourceOwnerSlug: z.string(),
+      resourceOwnerSlug: z.string().toLowerCase(),
     }),
     async resolve({ input, ctx }) {
       //find resouce owner (org or user) based on slug
