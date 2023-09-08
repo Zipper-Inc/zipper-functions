@@ -139,7 +139,7 @@ export const userRouter = createProtectedRouter()
   })
   .query('isSlugAvailable', {
     input: z.object({
-      slug: z.string().transform((s) => slugify(s)),
+      slug: z.string().transform((s) => slugify(s).toLowerCase()),
     }),
     async resolve({ input }) {
       const deniedSlug = denyList.find((d) => d === input.slug);
@@ -159,7 +159,7 @@ export const userRouter = createProtectedRouter()
   })
   .mutation('updateUserSlug', {
     input: z.object({
-      slug: z.string().transform((s) => slugify(s)),
+      slug: z.string().transform((s) => slugify(s).toLowerCase()),
     }),
     async resolve({ ctx, input }) {
       if (!ctx.userId) throw new TRPCError({ code: 'UNAUTHORIZED' });
