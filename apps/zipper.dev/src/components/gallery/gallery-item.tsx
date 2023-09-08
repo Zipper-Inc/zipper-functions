@@ -8,6 +8,8 @@ import {
   HStack,
   Badge,
   Box,
+  Text,
+  WrapItem,
 } from '@chakra-ui/react';
 import { GalleryAppQueryOutput } from '~/pages';
 import AppAvatar from '../app-avatar';
@@ -24,13 +26,13 @@ export const GalleryItem: React.FC<GalleryItemProps> = ({ app }) => {
   const nameOrSlug = app.name || app.slug;
 
   return (
-    <GridItem>
+    <Box>
       <NextLink href={`/${app.resourceOwner.slug}/${app.slug}`}>
-        <Card background="bgColor" height="100%">
+        <Card background="bgColor" flexGrow={1} overflow="hidden" maxW="800px">
           <CardBody
             padding={0}
             as={HStack}
-            alignItems="stretch"
+            alignItems="start"
             justifyContent="stretch"
             p={6}
             spacing={4}
@@ -39,25 +41,45 @@ export const GalleryItem: React.FC<GalleryItemProps> = ({ app }) => {
               <AppAvatar nameOrSlug={nameOrSlug} />
             </Box>
             <VStack alignItems="start" spacing="1" flex={1}>
-              <Heading as="h2" size="md" fontWeight="semibold">
-                {nameOrSlug}
-              </Heading>
-              <Heading as="h3" size="sm" color="fg.800" fontWeight="normal">
-                {app.resourceOwner.slug}
-              </Heading>
-              <VStack alignItems="stretch" pt="2">
+              <Text as="h2" fontSize="lg" fontWeight="semibold">
+                {nameOrSlug}{' '}
+              </Text>
+              <HStack>
+                <Text
+                  as={'span'}
+                  fontSize="md"
+                  fontStyle="italic"
+                  fontWeight="light"
+                >
+                  by
+                </Text>{' '}
+                <Text as="span" fontSize="md" fontWeight="normal">
+                  {app.resourceOwner.slug}
+                </Text>
                 {app.isPrivate && (
-                  <HStack paddingY={1}>
-                    <Badge colorScheme="blackAlpha" paddingX={2} color="fg.600">
-                      Private
-                    </Badge>
-                  </HStack>
+                  <Badge
+                    colorScheme="blackAlpha"
+                    paddingX={2}
+                    color="fg.600"
+                    ml="2"
+                  >
+                    Private
+                  </Badge>
                 )}
-              </VStack>
+              </HStack>
+              <Text
+                pt="2"
+                fontSize="sm"
+                isTruncated
+                noOfLines={4}
+                whiteSpace="pre-line"
+              >
+                {app.description}
+              </Text>
             </VStack>
           </CardBody>
         </Card>
       </NextLink>
-    </GridItem>
+    </Box>
   );
 };
