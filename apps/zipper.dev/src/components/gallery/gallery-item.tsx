@@ -28,7 +28,13 @@ export const GalleryItem: React.FC<GalleryItemProps> = ({ app }) => {
   return (
     <Box>
       <NextLink href={`/${app.resourceOwner.slug}/${app.slug}`}>
-        <Card background="bgColor" flexGrow={1} overflow="hidden" maxW="800px">
+        <Card
+          background="bgColor"
+          flexGrow={1}
+          overflow="hidden"
+          maxW="800px"
+          minH="full"
+        >
           <CardBody
             padding={0}
             as={HStack}
@@ -40,7 +46,7 @@ export const GalleryItem: React.FC<GalleryItemProps> = ({ app }) => {
             <Box w={24}>
               <AppAvatar nameOrSlug={nameOrSlug} />
             </Box>
-            <VStack alignItems="start" spacing="1" flex={1}>
+            <VStack alignItems="start" spacing="-0.5" flex={1}>
               <Text as="h2" fontSize="lg" fontWeight="semibold">
                 {nameOrSlug}{' '}
               </Text>
@@ -71,7 +77,7 @@ export const GalleryItem: React.FC<GalleryItemProps> = ({ app }) => {
                 pt="2"
                 fontSize="sm"
                 isTruncated
-                noOfLines={4}
+                noOfLines={2}
                 whiteSpace="pre-line"
               >
                 {app.description}
