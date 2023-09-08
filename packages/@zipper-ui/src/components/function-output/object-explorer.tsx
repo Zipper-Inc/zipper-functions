@@ -17,11 +17,13 @@ import { PiCaretRight } from 'react-icons/pi';
 import { SmartFunctionOutput } from './smart-function-output';
 import { isPrimitive } from './utils';
 
+const AUTO_OPEN_MAX_LEVELS_DEEP = 2;
+const AUTO_OPEN_MAX_ITEMS = 5;
 const ROW_PADDING = 6;
 
 export enum HeadingMode {
   ObjectProperty,
-  CollapsedColumn,
+  ExpandableTableCell,
 }
 
 export function ObjectExplorerRow({
@@ -39,7 +41,14 @@ export function ObjectExplorerRow({
   collapse: boolean;
   headingMode?: HeadingMode;
 }) {
-  const { isOpen, onToggle } = useDisclosure({ defaultIsOpen: !collapse });
+  const shouldAutoOpen =
+    level <= AUTO_OPEN_MAX_LEVELS_DEEP &&
+    tableLevel <= AUTO_OPEN_MAX_LEVELS_DEEP &&
+    Object.keys(data).length <= AUTO_OPEN_MAX_ITEMS;
+
+  const { isOpen, onToggle } = useDisclosure({
+    defaultIsOpen: shouldAutoOpen || !collapse,
+  });
   const shouldCollapse = !isPrimitive(data) && data && !data['$zipperType'];
   return (
     <Tr
@@ -74,7 +83,7 @@ export function ObjectExplorerRow({
                 {heading}
               </Text>
             )}
-            {headingMode === HeadingMode.CollapsedColumn && (
+            {headingMode === HeadingMode.ExpandableTableCell && (
               <Text size="xs" color="fg.500" fontWeight={300}>
                 {!isOpen ? `Expand ${heading}` : `Collapse`}
               </Text>
@@ -101,7 +110,7 @@ export function ObjectExplorerRow({
             height="100%"
             align="center"
             marginTop={
-              headingMode === HeadingMode.CollapsedColumn &&
+              headingMode === HeadingMode.ExpandableTableCell &&
               tableLevel > 0 &&
               isOpen
                 ? -ROW_PADDING
@@ -172,7 +181,7 @@ export function ObjectExplorer({
         level={level + 1}
         tableLevel={tableLevel + 1}
         collapse={Object.keys(data).length > 1}
-        headingMode={HeadingMode.CollapsedColumn}
+        headingMode={HeadingMode.ExpandableTableCell}
       />
     );
   }
