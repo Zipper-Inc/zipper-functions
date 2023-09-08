@@ -20,8 +20,11 @@ const GalleryPage: NextPageWithLayout = () => {
     return (
       <Gallery
         apps={galleryApps.data}
-        heading={'Popular Applets'}
-        subheading="Browse through popular applets on Zipper"
+        isPublicGallery
+        heading={'Applet Gallery'}
+        subheading={`Wander through some of the applets we've built to show you what's possible with Zipper.
+
+        If something sparks your interest, you can fork it or just browse through the code to see how it works.`}
       />
     );
   }
