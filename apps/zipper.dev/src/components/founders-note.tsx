@@ -2,7 +2,9 @@ import { Box, Button, Heading, Text } from '@chakra-ui/react';
 import { ZipperLogo, ZipperSymbol } from '@zipper/ui';
 import Link from 'next/link';
 
-export default function FoundersNote() {
+export default function FoundersNote({ callbackUrl }: { callbackUrl: string }) {
+  const link = callbackUrl ? decodeURIComponent(callbackUrl) : `/dashboard`;
+
   const BETA_SIGNAGE_CONTENT = {
     TITLE: `You're in!`,
     SUBTITLE: `A quick note from our founders:`,
@@ -53,7 +55,7 @@ export default function FoundersNote() {
         </Heading>
         <Text color="gray.900">{BETA_SIGNAGE_CONTENT.CONTENT}</Text>
         <Signatures />
-        <Link href="/dashboard">
+        <Link href={link}>
           <Button
             bgColor={'#9B2FB4'}
             _hover={{ backgroundColor: 'purple' }}

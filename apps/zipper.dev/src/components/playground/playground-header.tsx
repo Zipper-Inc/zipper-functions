@@ -167,7 +167,7 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
             </SignedOut>
           </NextLink>
           <Box
-            bgColor={'indigo.50'}
+            bgColor={'blue.50'}
             alignItems={'center'}
             display={'flex'}
             px={2}
