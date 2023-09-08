@@ -17,6 +17,14 @@ import {
   Box,
   Stack,
   useToken,
+  Wrap,
+  SimpleGrid,
+  Input,
+  Accordion,
+  AccordionItem,
+  AccordionButton,
+  AccordionIcon,
+  AccordionPanel,
 } from '@chakra-ui/react';
 import { ResourceOwnerSlug } from '@prisma/client';
 import { ResourceOwnerType } from '@zipper/types';
@@ -24,11 +32,13 @@ import { ZipperSymbol } from '@zipper/ui';
 import { useSession } from 'next-auth/react';
 import React, { useEffect, useState } from 'react';
 import { HiCog, HiPlus } from 'react-icons/hi';
+import { HiCheck, HiMiniTicket } from 'react-icons/hi2';
 import { useOrganizationList } from '~/hooks/use-organization-list';
 import { useUser } from '~/hooks/use-user';
 import { GalleryAppQueryOutput } from '~/pages';
 import { trpc } from '~/utils/trpc';
 import { CreateAppForm } from '../dashboard/create-app-form';
+import { TITLE_COLUMN_MIN_WIDTH } from '../playground/constants';
 import { GalleryItem } from './gallery-item';
 
 export function Gallery({
@@ -36,16 +46,19 @@ export function Gallery({
   heading,
   subheading,
   preheading,
+  isPublicGallery = false,
 }: {
   apps: GalleryAppQueryOutput;
   heading?: string;
   subheading?: string;
   preheading?: string;
+  isPublicGallery?: boolean;
 }) {
   const { user } = useUser();
   const session = useSession();
   const { organizationList, setActive } = useOrganizationList();
   const [isNavigating, setIsNavigating] = useState(false);
+  const [appSearchTerm, setAppSearchTerm] = useState<string | undefined>();
   const { isOpen, onClose, onOpen } = useDisclosure();
   const [resourceOwner, setResourceOwner] = useState<
     ResourceOwnerSlug | undefined
@@ -72,7 +85,7 @@ export function Gallery({
     if (!heading) setResourceOwner(apps?.[0]?.resourceOwner);
   }, [heading, apps]);
 
-  const [gray200] = useToken('colors', ['neutral.200']);
+  const [gray200] = useToken('colors', ['fg.200']);
 
   if (!apps?.length) {
     return (
@@ -86,7 +99,7 @@ export function Gallery({
               There's nothing to see here yet
             </Text>
             <Text
-              color={'neutral.600'}
+              color={'fg.600'}
               fontSize="sm"
               lineHeight="20px"
               fontWeight="400"
@@ -101,112 +114,129 @@ export function Gallery({
   }
 
   return (
-    <>
-      <Center>
-        <VStack flex={1} maxW="container.xl" py={6} align="stretch">
-          {preheading && <Text color={'fg.500'}>{preheading}</Text>}
-          <HStack w="full" pb="6" spacing={4}>
-            <Heading>
-              {heading || resourceOwnerNameQuery.data || resourceOwner?.slug}
-            </Heading>
-            {session.data?.organizationMemberships?.find((org) => {
-              return org.organization.id === resourceOwner?.resourceOwnerId;
-            })?.pending && (
+    <HStack spacing={0} flex={1} alignItems="start" gap={16} px={10}>
+      <VStack flex={1} alignItems="stretch" minW={TITLE_COLUMN_MIN_WIDTH}>
+        <Heading as="h6" pb="4" fontWeight={400}>
+          {heading || resourceOwnerNameQuery.data || resourceOwner?.slug}
+        </Heading>
+        <Text color="fg.600" pb="4" whiteSpace="pre-line">
+          {subheading || resourceOwner?.slug}
+        </Text>
+        {session.data?.organizationMemberships?.find((org) => {
+          return org.organization.id === resourceOwner?.resourceOwnerId;
+        })?.pending && (
+          <Button
+            colorScheme="purple"
+            size="sm"
+            onClick={async () => {
+              if (resourceOwner) {
+                await acceptInvitation.mutateAsync({
+                  organizationId: resourceOwner.resourceOwnerId!,
+                });
+                session.update({
+                  updateOrganizationList: true,
+                  setCurrentOrganizationId: resourceOwner.resourceOwnerId!,
+                });
+              }
+            }}
+          >
+            <Icon as={HiCheck} mx="2" />
+            Accept Invitation
+          </Button>
+        )}
+        {isPublicGallery && (
+          <Accordion pt="10" allowMultiple allowToggle>
+            <AccordionItem>
+              <AccordionButton>
+                <Box fontWeight="semibold" as="span" flex="1" textAlign="left">
+                  What are Applets?
+                </Box>
+                <AccordionIcon />
+              </AccordionButton>
+              <AccordionPanel pb={4}>
+                Applets are web-services that have been built and deployed on
+                Zipper. Applets can be forked and customized to your needs.
+              </AccordionPanel>
+            </AccordionItem>
+
+            <AccordionItem>
+              <AccordionButton>
+                <Box fontWeight="semibold" as="span" flex="1" textAlign="left">
+                  What is Zipper?
+                </Box>
+                <AccordionIcon />
+              </AccordionButton>
+              <AccordionPanel pb={4}>
+                Zipper is a platform for building web services using simple
+                Typescript functions. We take care of UI, APIs, and auth for
+                you.
+              </AccordionPanel>
+            </AccordionItem>
+          </Accordion>
+        )}
+      </VStack>
+      <VStack align="stretch" flex={3} pb="10">
+        {showManage && setActive && (
+          <>
+            <Modal isOpen={isOpen} onClose={onClose} size="4xl">
+              <ModalOverlay />
+              <ModalContent h="2xl">
+                <ModalCloseButton />
+                <ModalBody>
+                  <Center mt="6">
+                    <CreateAppForm onClose={onClose} />
+                  </Center>
+                </ModalBody>
+              </ModalContent>
+            </Modal>
+
+            <HStack w="full" spacing={4} pb="4">
+              <Input
+                placeholder="Search applets (name, slug or description)"
+                value={appSearchTerm}
+                onChange={(e) => setAppSearchTerm(e.target.value)}
+              />
               <Button
+                size="sm"
                 colorScheme="purple"
+                ml="auto"
+                isDisabled={isNavigating}
+                p="5"
                 onClick={async () => {
-                  if (resourceOwner) {
-                    await acceptInvitation.mutateAsync({
-                      organizationId: resourceOwner.resourceOwnerId!,
-                    });
-                    session.update({
-                      updateOrganizationList: true,
-                      setCurrentOrganizationId: resourceOwner.resourceOwnerId!,
-                    });
-                  }
+                  await setActive(
+                    resourceOwner?.resourceOwnerType ===
+                      ResourceOwnerType.Organization
+                      ? resourceOwner?.resourceOwnerId
+                      : null,
+                  );
+                  onOpen();
                 }}
               >
-                Accept Invitation
+                <Icon as={HiPlus} mr="2" />
+                Create Applet
               </Button>
-            )}
-            <Spacer flexGrow={1} />
-            {showManage && setActive && (
-              <>
-                <Modal isOpen={isOpen} onClose={onClose} size="4xl">
-                  <ModalOverlay />
-                  <ModalContent h="2xl">
-                    <ModalCloseButton />
-                    <ModalBody>
-                      <Center mt="6">
-                        <CreateAppForm onClose={onClose} />
-                      </Center>
-                    </ModalBody>
-                  </ModalContent>
-                </Modal>
-                <HStack>
-                  <Button
-                    size="sm"
-                    colorScheme="purple"
-                    isDisabled={isNavigating}
-                    p="4"
-                    onClick={async () => {
-                      await setActive(
-                        resourceOwner?.resourceOwnerType ===
-                          ResourceOwnerType.Organization
-                          ? resourceOwner?.resourceOwnerId
-                          : null,
-                      );
-                      onOpen();
-                    }}
-                  >
-                    <Icon as={HiPlus} mx="2" />
-                    Create Applet
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    colorScheme="purple"
-                    isDisabled={isNavigating}
-                    p="4"
-                    onClick={async () => {
-                      setIsNavigating(true);
-                      await setActive(
-                        resourceOwner?.resourceOwnerType ===
-                          ResourceOwnerType.Organization
-                          ? resourceOwner?.resourceOwnerId
-                          : null,
-                      );
-                      setIsNavigating(false);
-                      window.location.replace('../dashboard');
-                    }}
-                  >
-                    <Icon as={HiCog} mr="2" />
-                    Manage
-                  </Button>
-                </HStack>
-              </>
-            )}
-          </HStack>
-          <Text fontSize={'xl'} pb="6">
-            {resourceOwner?.slug || subheading}
-          </Text>
-          <Grid
-            templateColumns={[
-              'repeat(1, 1fr)',
-              'repeat(2, 1fr)',
-              'repeat(2, 1fr)',
-              'repeat(3, 1fr)',
-              'repeat(3, 1fr)',
-            ]}
-            gridGap={6}
-            // bgColor="fg.50"
-          >
-            {(apps || []).map((app) => {
+            </HStack>
+          </>
+        )}
+        <SimpleGrid
+          minChildWidth="500px"
+          gridGap={6}
+          // bgColor="fg.50"
+        >
+          {(apps || [])
+            .filter((app) => {
+              if (!appSearchTerm) return true;
+              return (
+                app.name?.includes(appSearchTerm) ||
+                app.slug.includes(appSearchTerm) ||
+                app.description?.includes(appSearchTerm)
+              );
+            })
+            .map((app) => {
               return <GalleryItem app={app} key={app.id} />;
             })}
-          </Grid>
-        </VStack>
-      </Center>
-    </>
+        </SimpleGrid>
+      </VStack>
+    </HStack>
   );
 }

@@ -1,27 +1,22 @@
 import {
   Box,
-  Button,
   Container,
   Flex,
   Grid,
   GridItem,
   Heading,
-  HStack,
-  Input,
   Text,
   useMediaQuery,
   VStack,
   Modal,
   ModalOverlay,
   ModalContent,
-  ModalHeader,
-  ModalFooter,
   ModalBody,
   ModalCloseButton,
   useDisclosure,
 } from '@chakra-ui/react';
 import { baseColors, Website } from '@zipper/ui';
-import { memo, useEffect, useState } from 'react';
+import { memo } from 'react';
 import { NextPageWithLayout } from './_app';
 import Header from '~/components/header';
 import NextLink from 'next/link';
@@ -36,9 +31,11 @@ import {
   FiCheck,
   FiPlay,
 } from 'react-icons/fi';
+import { HiOutlineLightningBolt } from 'react-icons/hi';
 import Image from 'next/image';
 import { motion, useAnimation } from 'framer-motion';
 import JoinBetaForm from '~/components/join-beta-form';
+import Link from 'next/link';
 
 /* -------------------------------------------- */
 /* Content                                      */
@@ -351,6 +348,7 @@ const Hero = () => {
       px={['24px', 0]}
       position="relative"
       whiteSpace={{ md: 'pre-line' }} //important for \n new lines
+      minH={'600px'}
     >
       <Container
         as="article"
@@ -853,6 +851,34 @@ const Headline = memo(() => {
   );
 });
 
+const BetaSection = () => {
+  return (
+    <Box
+      bgColor={'indigo.600'}
+      w={['full']}
+      justifyContent="center"
+      display={'flex'}
+      p="4"
+    >
+      <Text
+        fontWeight={'bold'}
+        mr={2}
+        display="flex"
+        alignItems="center"
+        gap="2"
+      >
+        <HiOutlineLightningBolt size={20} /> Zipper is in beta
+      </Text>
+      <Text>
+        <Box as="span" textDecoration={'underline'}>
+          <Link href="/auth/signin">Sign up now</Link>
+        </Box>{' '}
+        to be the first to get new features.
+      </Text>
+    </Box>
+  );
+};
+
 /* -------------------------------------------- */
 /* Render                                       */
 /* -------------------------------------------- */
@@ -869,6 +895,7 @@ const HomePage: NextPageWithLayout = () => (
       margin="0 auto"
     >
       <Hero />
+      <BetaSection />
       <Features />
       <AppletsGallery />
       <Bateries />

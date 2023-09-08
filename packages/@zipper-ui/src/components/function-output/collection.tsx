@@ -50,13 +50,14 @@ export default function Collection(props: Props) {
   const [view, setView] = useState<'table' | 'cards'>('table');
   const { setSearchQuery } = useSmartFunctionOutputContext();
 
+  const isNested = !!props.tableLevel;
+
   return (
     <Stack
       width="100%"
-      border="1px solid"
+      border={isNested ? 'none' : '1px solid'}
       borderColor="fg.200"
       p="2"
-      mt={!!props.tableLevel ? 4 : undefined}
     >
       {props.tableLevel === 0 && (
         <Box display="flex" justifyContent="flex-end" gap="2">
