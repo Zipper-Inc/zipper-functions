@@ -9,6 +9,7 @@
     "dev": "yarn nodemon"
   },
   "devDependencies": {
+    "@types/lodash.shuffle": "^4.2.7",
     "@types/react-table": "^7.7.14",
     "ctix": "^1.8.2",
     "nodemon": "^2.0.20"
@@ -17,10 +18,12 @@
     "@chakra-ui/react": "^2.4.9",
     "@emotion/react": "^11.10.5",
     "@emotion/styled": "^11.10.5",
+    "@zipper-inc/client-js": "^0.1.6",
     "@zipper/types": "*",
     "@zipper/utils": "*",
     "framer-motion": "^9.0.0",
     "javascript-color-gradient": "^2.4.4",
+    "lodash.shuffle": "^4.2.0",
     "react": "^18.2.0",
     "react-hook-form": "^7.43.0",
     "react-hotkeys-hook": "3.4.7",
