@@ -710,11 +710,11 @@ const AppletsGallery = () => {
   );
 };
 
-const Bateries = memo(() => {
+const Batteries = memo(() => {
   return (
     <Box
       as="section"
-      aria-label="Bateries"
+      aria-label="Batteries"
       w="full"
       py={{ base: '52px', md: '9rem' }}
       px={{ base: 6 }}
@@ -855,9 +855,10 @@ const BetaSection = () => {
   return (
     <Box
       bgColor={'indigo.600'}
-      w={['full']}
+      color="white"
+      w="full"
       justifyContent="center"
-      display={'flex'}
+      display="flex"
       p="4"
     >
       <Text
@@ -898,7 +899,7 @@ const HomePage: NextPageWithLayout = () => (
       <BetaSection />
       <Features />
       <AppletsGallery />
-      <Bateries />
+      <Batteries />
       <Headline />
       <Website.Footer links={{ component: NextLink }} />
     </Box>
