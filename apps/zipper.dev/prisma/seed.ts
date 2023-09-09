@@ -27,7 +27,7 @@ async function main() {
       {
         id: defaultOrgId,
         name: 'Zipper',
-        slug: 'zipper',
+        slug: 'zipper-inc',
       },
       {
         id: readOnlyOrgId,
