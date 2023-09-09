@@ -146,7 +146,7 @@ export function ActionButton({
       colorScheme={action.colorScheme || 'purple'}
       w={action.width || 'fit-content'}
       variant={action.variant || 'outline'}
-      isDisabled={isLoading}
+      isDisabled={isLoading || action.isDisabled}
       mr={2}
       onClick={async () => {
         setIsLoading(true);

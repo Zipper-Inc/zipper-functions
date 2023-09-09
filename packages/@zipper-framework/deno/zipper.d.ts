@@ -183,7 +183,9 @@ declare namespace Zipper {
     inputs?: I;
   }
 
-  interface ButtonAction<I = Inputs> extends ActionBase<I> {
+  interface ButtonAction<I = Inputs>
+    extends ActionBase<I>,
+      ButtonComponentProps {
     /**
      * The type of action this is
      */
@@ -232,6 +234,7 @@ declare namespace Zipper {
     width?: string;
     colorScheme?: 'purple' | 'blue' | 'red' | 'green' | 'yellow';
     variant?: 'outline' | 'solid' | 'link' | 'ghost';
+    isDisabled?: boolean;
   }
 
   export interface StackComponent extends ComponentBase {
