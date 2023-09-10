@@ -13,8 +13,8 @@
     "node": ">=18.14.0"
   },
   "scripts": {
-    "build": "yarn install; yarn env:update; yarn env:link; turbo run build",
-    "dev": "yarn install; yarn env:update; yarn env:link; yarn migrate; turbo run dev --parallel",
+    "build": "yarn install; yarn env:link; turbo run build",
+    "dev": "yarn install; yarn env:link; yarn migrate; turbo run dev --parallel",
     "env:link": "sh ./bin/link-env-files.sh",
     "env:update": "yarn dotenv -c .env.local ts-node ./bin/ts/env-update.ts",
     "get-started": "yarn install; yarn env:update; yarn env:link; yarn migrate; yarn seed",
