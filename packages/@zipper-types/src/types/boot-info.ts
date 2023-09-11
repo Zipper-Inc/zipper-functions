@@ -40,5 +40,6 @@ export type BootInfoResult =
     }
   | {
       ok: false;
+      status: number;
       error: string;
     };

@@ -123,13 +123,21 @@ export async function relayRequest(
     filename,
     token,
   });
+
   if (__DEBUG__) console.log('getBootInfo', { result: bootInfoResult });
 
-  if (!bootInfoResult.ok)
+  if (!bootInfoResult.ok) {
+    const errorStatus = bootInfoResult.status || 500;
     return {
-      status: bootInfoResult.error === 'UNAUTHORIZED' ? 401 : 500,
-      result: bootInfoResult.error,
+      status: errorStatus,
+      result: JSON.stringify({
+        ok: false,
+        status: errorStatus,
+        error: bootInfoResult.error,
+        errorClass: 'Boot',
+      }),
     };
+  }
 
   const { app, userAuthConnectors, userInfo } = bootInfoResult.data;
 
