@@ -17,6 +17,7 @@ import { getZipperDotDevUrl, ZIPPER_TEMP_USER_ID_HEADER } from '@zipper/utils';
 import * as Sentry from '@sentry/nextjs';
 import { verifyAccessToken } from '~/utils/jwt-utils';
 import { SessionOrganizationMembership } from '../auth/[...nextauth]';
+import { getAnalytics } from '~/utils/api-analytics';
 
 export default async function handler(
   req: NextApiRequest,
@@ -124,6 +125,23 @@ export default async function handler(
     },
   });
 
+  const dailyRunPercentage = Math.round((dailyRuns / dailyRunLimit) * 100);
+
+  // Beacon when we hit 80 and 99 percent
+  if (dailyRunPercentage === 80 || dailyRunPercentage === 99) {
+    const analytics = await getAnalytics();
+    if (userInfo) {
+      const { email, userId } = userInfo;
+      analytics.identify(userId, { userId, email });
+    }
+
+    analytics.track(`Run usage at ${dailyRunPercentage}%`, {
+      applet: slug,
+      appId: id,
+    });
+  }
+
+  // Send error if we are at the rate limit
   if (process.env.NODE_ENV !== 'development' && dailyRuns >= dailyRunLimit) {
     return res.status(429).send({
       ok: false,
