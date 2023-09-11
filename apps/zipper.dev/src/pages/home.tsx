@@ -16,7 +16,7 @@ import {
   useDisclosure,
 } from '@chakra-ui/react';
 import { baseColors, Website } from '@zipper/ui';
-import { memo } from 'react';
+import { memo, useEffect } from 'react';
 import { NextPageWithLayout } from './_app';
 import Header from '~/components/header';
 import NextLink from 'next/link';
@@ -35,6 +35,8 @@ import { HiOutlineLightningBolt } from 'react-icons/hi';
 import Image from 'next/image';
 import { motion, useAnimation } from 'framer-motion';
 import JoinBetaForm from '~/components/join-beta-form';
+import { useAnalytics } from '~/hooks/use-analytics';
+import { useRouter } from 'next/router';
 import Link from 'next/link';
 
 /* -------------------------------------------- */
@@ -883,27 +885,34 @@ const BetaSection = () => {
 /* Render                                       */
 /* -------------------------------------------- */
 
-const HomePage: NextPageWithLayout = () => (
-  <Website>
-    <Website.Navbar links={{ component: NextLink }} />
-    <Box
-      display="flex"
-      flexDir="column"
-      alignItems="center"
-      as="main"
-      w="full"
-      margin="0 auto"
-    >
-      <Hero />
-      <BetaSection />
-      <Features />
-      <AppletsGallery />
-      <Bateries />
-      <Headline />
-      <Website.Footer links={{ component: NextLink }} />
-    </Box>
-  </Website>
-);
+const HomePage: NextPageWithLayout = () => {
+  const analytics = useAnalytics();
+
+  useEffect(() => {
+    analytics?.page('Marketing Site', 'Features');
+  }, []);
+
+  return (
+    <Website>
+      <Website.Navbar links={{ component: NextLink }} />
+      <Box
+        display="flex"
+        flexDir="column"
+        alignItems="center"
+        as="main"
+        w="full"
+        margin="0 auto"
+      >
+        <Hero />
+        <Features />
+        <AppletsGallery />
+        <Bateries />
+        <Headline />
+        <Website.Footer links={{ component: NextLink }} />
+      </Box>
+    </Website>
+  );
+};
 
 HomePage.header = (props) => {
   if (props.subdomain) return <Header showNav={false} />;
