@@ -1,4 +1,4 @@
-import { AppInfoResult } from '@zipper/types';
+import { BootInfoResult } from '@zipper/types';
 import { getZipperApiUrl, ZIPPER_TEMP_USER_ID_HEADER } from '@zipper/utils';
 
 export default async function getBootInfo({
@@ -11,7 +11,7 @@ export default async function getBootInfo({
   tempUserId?: string;
   filename?: string;
   token?: string | null;
-}): Promise<AppInfoResult> {
+}): Promise<BootInfoResult> {
   const headers: Record<string, string> = {
     Authorization: `Bearer ${token || ''}`,
   };
