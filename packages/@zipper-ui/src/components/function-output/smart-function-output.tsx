@@ -153,6 +153,30 @@ export function SmartFunctionOutput({
           const defaultElement =
             defaultElements[element as keyof typeof defaultElements];
 
+          // Check if the element is a void element
+          const voidElements = [
+            'area',
+            'base',
+            'br',
+            'col',
+            'command',
+            'embed',
+            'hr',
+            'img',
+            'input',
+            'keygen',
+            'link',
+            'meta',
+            'param',
+            'source',
+            'track',
+            'wbr',
+          ];
+
+          if (voidElements.includes(element)) {
+            return React.createElement(defaultElement || element, props);
+          }
+
           return React.createElement(
             defaultElement || element,
             props,
