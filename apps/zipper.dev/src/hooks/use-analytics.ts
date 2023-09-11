@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 import { AnalyticsBrowser } from '@june-so/analytics-next';
 
 export function useAnalytics() {
-  const writeKey = 'ilDYCR6UTQL6mcc5';
-  const [analytics, setAnalytics] = useState<AnalyticsBrowser | null>(null);
+  const writeKey = process.env.NEXT_PUBLIC_JUNE_WRITE_KEY!;
+  const [analytics, setAnalytics] = useState<AnalyticsBrowser>();
 
   useEffect(() => {
     const loadAnalytics = async () => {
