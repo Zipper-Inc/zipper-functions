@@ -18,12 +18,22 @@ const denyList = [
   'org',
   'organization',
   'run',
+  'password-reset',
+  'password',
+  'log-in',
+  'log-out',
+  'login',
+  'logout',
+  'signin',
+  'signout',
+  'signup',
   'sign-in',
   'sign-out',
   'sign-up',
   'www',
   'cname',
   'txt',
+  'zipper',
 ];
 
 export default denyList;

@@ -40,5 +40,5 @@ export const createUserSlug = async ({
 
   const slug = validSlugs[0] || crypto.randomBytes(4).toString('hex');
 
-  return slug;
+  return slug.toLowerCase();
 };

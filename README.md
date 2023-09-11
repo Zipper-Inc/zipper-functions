@@ -16,7 +16,9 @@ Also, here is [Zipper's Product Manual](https://www.notion.so/zipper-inc/Documen
 We want to empower people to write simple, creative software that makes their work lives better. We're doing this by removing a lot of the cruft around writing and deploying modern software (frontend frameworks, complex integrations, and authz/authn) so that people can focus on the problem they want to solve.
 
 ## Architecture
+
 ### Stack
+
 - Database: Postgres accessed via Prisma
 - KV store: Redis
 - Frontend/Backend: Next.js
@@ -28,6 +30,7 @@ We want to empower people to write simple, creative software that makes their wo
 - Code runner: Deno subhosting (SaaS service)
 
 ### Diagram
+
 <img width="1370" alt="zipper-infra-diagram" src="https://github.com/Zipper-Inc/zipper-functions/assets/1039639/c8d6899e-de27-47ab-b6e4-efe6a3e79be0">
 
 ## What's inside?
@@ -64,38 +67,51 @@ Tests should live in the same folder as the code that's being tested.
 # Getting started
 
 1. Make sure you have the following installed:
- - [Docker](https://docs.docker.com/engine/install/)
- - [Node](https://nodejs.org/en/download) (download here or use `nvm`, we're using v18.x LTS)
- - [Ngrok](https://ngrok.com/download)
- - [Deno](https://deno.com/manual@v1.34.1/getting_started/installation)
-   
+
+- [Docker](https://docs.docker.com/engine/install/)
+- [Node](https://nodejs.org/en/download) (download here or use `nvm`, we're using v18.x LTS)
+- [Ngrok](https://ngrok.com/download)
+- [Deno](https://deno.com/manual@v1.34.1/getting_started/installation)
+
 2. Clone this repo
+
 ```
 git clone https://github.com/Zipper-Inc/zipper-functions
 ```
+
 3. Start ngrok - chat to Sachin or Ibu to get you access to ngrok
+
 ```
 ngrok http 3000 --domain [yourname].zipper.ngrok.app
 ```
+
 4. Copy `.env.example` to `.env.local`
+
 ```
 cp .env.example .env.local
 ```
+
 5. Fill in the top two missing variables in `.env.local`
+
 ```
 # Your local ngrok tunnel address
 ZIPPER_ENV_LOCAL_NGROK_URL=https://{yourname}.zipper.ngrok.app
-# Get this access token from https://zipper.dev/zipper/zipper-env-local
+# Get this access token from https://zipper.dev/zipper-inc/zipper-env-local
 ZIPPER_ENV_LOCAL_ACCESS_TOKEN=
 ```
+
 6. Start the databases using Docker Compose
+
 ```
 docker-compose up
 ```
+
 7. Run `yarn get-started` to install dependencies, set up the env files, and get your database migrated and seeded
+
 ```
 yarn get-started
 ```
+
 8. Run `yarn dev` to start development
 
 If you hit any problems, let us know in #engineering
