@@ -16,7 +16,7 @@ import { requiredUserAuthConnectorFilter } from '~/utils/user-auth-connector-fil
 import { getZipperDotDevUrl, ZIPPER_TEMP_USER_ID_HEADER } from '@zipper/utils';
 import * as Sentry from '@sentry/nextjs';
 import { verifyAccessToken } from '~/utils/jwt-utils';
-import { SessionOrganizationMembership } from '../../auth/[...nextauth]';
+import { SessionOrganizationMembership } from '../auth/[...nextauth]';
 
 export default async function handler(
   req: NextApiRequest,
