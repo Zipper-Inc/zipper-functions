@@ -2,7 +2,6 @@ import { Box, Container, Flex } from '@chakra-ui/react';
 import type { ReactNode } from 'react';
 import { BasicLayout } from './basic-layout';
 import { useBlogContext } from './blog-context';
-import { GetStartedBanner } from './get-started';
 import { MDXTheme } from './mdx-theme';
 import Meta from './meta';
 
@@ -34,14 +33,6 @@ export const ArticleLayout = ({ children }: { children: ReactNode }) => {
                 {config.comments}
               </MDXTheme>
             </Box>
-            <Flex
-              direction="column"
-              display={{ base: 'none', lg: 'flex' }}
-              as="span"
-            >
-              <Meta />
-              <GetStartedBanner />
-            </Flex>
           </Flex>
         </Container>
       </Flex>

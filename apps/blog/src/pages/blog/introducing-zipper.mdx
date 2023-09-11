@@ -1,0 +1,40 @@
+---
+title: Build without the BS
+date: 2023/09/18
+description: Unblocking developers by removing the need to spin up a full toolchain just to see your code run.
+tag: build-process
+author: Sachin Ranchod
+---
+
+Back in 2011, I decided to switch careers and become a web developer. I’d heard that Ruby on Rails was great so I picked up Michael Hartl’s [Ruby on Rails Tutorial](https://www.railstutorial.org) and worked my way through it. I was hooked within the first chapter — here was a framework that let me deploy a working (albeit simple) CRUD app within minutes. It was magical! By removing the need to make decisions about all sorts of minutia and giving me all the components I needed to build a working application, I was able to move fast even though I was just getting started.
+
+A decade later, I found myself looking back at that time and missing the simplicity of being able to see my code running without having to figure out a whole lot of boilerplate. The tools and frameworks we have today are amazing but they’re all designed to help you build complex web applications. Tying together a modern stack and getting it deployed takes a significant amount of time and effort (which is fine if you’re working on a complex, long-running project). If you’re working on a quick web app for your team, integrating a few tools, or prototyping an idea, the setup cost can kill your desire to even get started.
+
+**That’s why we built Zipper.** We want to make it simple to see your code running on a live URL without having to make a single decision about how your toolchain, write a line of frontend code, or worry about where it is deployed.
+
+## **Introducing Zipper**
+
+We’ve built a platform that lets you create fully fledged web applications by just writing your business logic as Typescript functions. You don’t need a line of frontend code to get an interactive web UI that has an API and auth built in. Thanks to simple conventions, the inputs to your functions become forms, the outputs get rendered beautifully, and your routing just works.
+
+To really see how simple it is, take a look at the demo video below:
+
+[https://www.loom.com/share/d50630ac57a94f5fb1bcdcce2de85324?sid=84a34221-931b-4c6a-9bf1-61e0a0deb528](https://www.loom.com/share/d50630ac57a94f5fb1bcdcce2de85324?sid=84a34221-931b-4c6a-9bf1-61e0a0deb528)
+
+As you can see in demo, the structure of a Zipper applet is straightforward:
+
+- It’s just a collection of [Typescript files that run on Deno](https://zipper.dev/docs/introduction/deno-and-typescript).
+- If a file exports a [`handler` function](https://zipper.dev/docs/building-applets/handler-functions) it becomes a [route](https://zipper.dev/docs/building-applets/routing) in your applet.
+- The [inputs](https://zipper.dev/docs/building-applets/accepting-inputs) to this `handler` function are turned into a form to collect data from users (or via querystring/POST body).
+- Those inputs are passed to your function, which we deploy and run for you in a serverless environment.
+- The output of your function is returned as JSON and rendered automatically – arrays become tables and objects are browsable.
+- If you want, you have the power to [customize the UI](https://zipper.dev/docs/building-applets/customizing-output), add [interactive elements](https://zipper.dev/docs/building-applets/interactivity), and [import 3rd-party packages](https://zipper.dev/docs/building-applets/importing-packages) (and other applets).
+
+<br />
+
+To keep things simple for developers, we also include a handful of [connectors to popular](https://zipper.dev/docs/connecting-to-other-tools/github) [SaaS](https://zipper.dev/docs/connecting-to-other-tools/slack) [tools](https://zipper.dev/docs/connecting-to-other-tools/openai) (with a lot more coming soon). These connectors handle OAuth for you, configure the necessary secrets, and give you sample code to get started. All while continuing to use official SDKs and APIs so you don’t need to learn something new.
+
+## **Come build with us**
+
+We’re excited to see what folks build, fork, and share on Zipper. We’re obviously a little biased but it’s been really fun to turn all sorts of ideas for integrations and internal tools into working software using Zipper. We’ve got a [gallery](https://zipper.dev/gallery) of applets that you can play around with, a handful of templates to get your started, and an integration into OpenAI to generate code for you as you get started.
+
+**You can sign up for the open beta at [https://www.zipper.dev](https://www.zipper.dev).**
