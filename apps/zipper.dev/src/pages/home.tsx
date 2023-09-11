@@ -907,7 +907,7 @@ const HomePage: NextPageWithLayout = () => {
         <Hero />
         <Features />
         <AppletsGallery />
-        <Bateries />
+        <Batteries />
         <Headline />
         <Website.Footer links={{ component: NextLink }} />
       </Box>
