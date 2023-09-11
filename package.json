@@ -7,25 +7,24 @@
     "packages/*"
   ],
   "prisma": {
-    "seed": "yarn dotenv -c .env.local ts-node apps/zipper.dev/prisma/seed.ts"
+    "seed": "bun run dotenv -c .env.local bun run apps/zipper.dev/prisma/seed.ts"
   },
   "engines": {
     "node": ">=18.14.0"
   },
   "scripts": {
-    "build": "yarn install; yarn env:link; turbo run build",
-    "dev": "yarn install; yarn env:link; yarn migrate; turbo run dev --parallel",
+    "build": "bun install; bun run env:link; turbo run build",
+    "dev": "bun install; bun run env:link; bun run migrate; turbo run dev --parallel",
     "env:link": "sh ./bin/link-env-files.sh",
-    "env:update": "yarn dotenv -c .env.local ts-node ./bin/ts/env-update.ts",
-    "get-started": "yarn install; yarn env:update; yarn env:link; yarn migrate; yarn seed",
+    "env:update": "bun run dotenv -c .env.local bun run ./bin/ts/env-update.ts",
+    "get-started": "bun install; bun run env:update; bun run env:link; bun run migrate; bun run seed",
     "lint": "turbo run lint",
     "test": "turbo run test",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "db-nuke": "docker-compose down --volumes --remove-orphans",
-    "ts-node": "ts-node -T",
-    "migrate": "yarn workspace zipper.dev db-migrate-dev",
-    "seed": "yarn workspace zipper.dev db-seed",
-    "studio": "yarn workspace zipper.dev prisma studio"
+    "migrate": "bun run workspace zipper.dev db-migrate-dev",
+    "seed": "bun run workspace zipper.dev db-seed",
+    "studio": "bun run workspace zipper.dev prisma studio"
   },
   "dependencies": {},
   "devDependencies": {
@@ -42,5 +41,5 @@
     "trailingComma": "all",
     "singleQuote": true
   },
-  "packageManager": "yarn@1.22.19"
+  "packageManager": "bun run@1.22.19"
 }

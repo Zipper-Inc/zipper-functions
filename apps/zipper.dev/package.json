@@ -7,29 +7,29 @@
     "build:02-next": "next build",
     "build:03-tsc": "tsc --project tsconfig.server.json",
     "build": "run-s build:0*",
-    "build:preview": "yarn build:01-prisma; yarn dotenv:preview -- -- next build; yarn build:03-tsc",
-    "build:production": "yarn build:01-prisma; yarn dotenv:production -- -- next build; yarn build:03-tsc",
+    "build:preview": "bun run build:01-prisma; bun run dotenv:preview -- -- next build; bun run build:03-tsc",
+    "build:production": "bun run build:01-prisma; bun run dotenv:production -- -- next build; bun run build:03-tsc",
     "db-seed": "prisma db seed",
-    "db-migrate-dev": "yarn prisma migrate dev",
-    "dev": "yarn dotenv:development -- -- yarn nodemon -x \"yarn ts-node ./src/server.ts || touch ./src/server.ts\" --watch ./src/server.ts",
+    "db-migrate-dev": "bun run prisma migrate dev",
+    "dev": "bun run dotenv:development -- -- bun run nodemon -x \"bun run ./src/server.ts || touch ./src/server.ts\" --watch ./src/server.ts",
     "dx": "run-s db-up db-migrate-dev db-seed dev",
     "dotenv:development": "dotenv -c $(sh ../../bin/dotenv.development.sh)",
     "dotenv:preview": "dotenv $(sh ../../bin/dotenv.preview.sh)",
     "dotenv:production": "dotenv $(sh ../../bin/dotenv.production.sh)",
     "start": "run-s db-migrate-dev db-seed dev",
-    "start:preview": "yarn prisma migrate deploy && yarn dotenv:preview -- -- node ./dist/server.js",
-    "start:production": "yarn prisma migrate deploy && yarn dotenv:production -- -- node ./dist/server.js",
+    "start:preview": "bun run prisma migrate deploy && bun run dotenv:preview -- -- node ./dist/server.js",
+    "start:production": "bun run prisma migrate deploy && bun run dotenv:production -- -- node ./dist/server.js",
     "start:test": "next start",
     "lint": "eslint src",
-    "lint-fix": "yarn lint --fix",
+    "lint-fix": "bun run lint --fix",
     "test-dev": "start-server-and-test dev 3000 test",
     "test-start": "start-server-and-test start 3000 test",
     "test": "run-s test:*",
     "test:unit": "jest -i --detectOpenHandles",
-    "postinstall": "yarn prisma generate"
+    "postinstall": "bun run prisma generate"
   },
   "prisma": {
-    "seed": "yarn ts-node prisma/seed.ts"
+    "seed": "bun run prisma/seed.ts"
   },
   "engines": {
     "node": "^18.14.0"

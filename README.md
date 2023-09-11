@@ -35,7 +35,7 @@ We want to empower people to write simple, creative software that makes their wo
 
 ## What's inside?
 
-This turborepo uses [Yarn](https://classic.yarnpkg.com/) as a package manager. It includes the following packages/apps:
+This turborepo uses [Yarn](https://classic.bun runpkg.com/) as a package manager. It includes the following packages/apps:
 
 ### Apps and Packages
 
@@ -106,12 +106,12 @@ ZIPPER_ENV_LOCAL_ACCESS_TOKEN=
 docker-compose up
 ```
 
-7. Run `yarn get-started` to install dependencies, set up the env files, and get your database migrated and seeded
+7. Run `bun run get-started` to install dependencies, set up the env files, and get your database migrated and seeded
 
 ```
-yarn get-started
+bun run get-started
 ```
 
-8. Run `yarn dev` to start development
+8. Run `bun run dev` to start development
 
 If you hit any problems, let us know in #engineering

@@ -14,7 +14,7 @@ async function main() {
 
   if (!file) {
     signale.fatal(
-      'Missing a Deno file. Add one with yarn deno:dev <path/to/file>',
+      'Missing a Deno file. Add one with bun run deno:dev <path/to/file>',
     );
     return;
   }

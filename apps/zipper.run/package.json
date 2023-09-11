@@ -3,16 +3,16 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "dev": "yarn dotenv:development -- -- next dev --port 3002",
+    "dev": "bun run dotenv:development -- -- next dev --port 3002",
     "dotenv:development": "dotenv -c $(sh ../../bin/dotenv.development.sh)",
     "dotenv:preview": "dotenv $(sh ../../bin/dotenv.preview.sh)",
     "dotenv:production": "dotenv $(sh ../../bin/dotenv.production.sh)",
     "build": "next build",
-    "build:preview": "yarn dotenv:preview -- -- next build",
-    "build:production": "yarn dotenv:production -- -- next build",
-    "start": "yarn playwright install; next start",
-    "start:preview": "yarn playwright install; yarn dotenv:preview -- -- next start",
-    "start:production": "yarn playwright install; yarn dotenv:production -- -- next start",
+    "build:preview": "bun run dotenv:preview -- -- next build",
+    "build:production": "bun run dotenv:production -- -- next build",
+    "start": "bun run playwright install; next start",
+    "start:preview": "bun run playwright install; bun run dotenv:preview -- -- next start",
+    "start:production": "bun run playwright install; bun run dotenv:production -- -- next start",
     "lint": "next lint"
   },
   "prettier": {

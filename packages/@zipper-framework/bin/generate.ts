@@ -19,7 +19,7 @@ export function generate() {
   );
 
   Deno.run({
-    cmd: ['yarn', 'prettier', GEN_FILE_PATH, '-w'],
+    cmd: ['bun run', 'prettier', GEN_FILE_PATH, '-w'],
   });
 }
 

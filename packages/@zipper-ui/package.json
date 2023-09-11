@@ -5,8 +5,8 @@
   "main": "./generated/index.gen.ts",
   "types": "./generated/index.gen.ts",
   "scripts": {
-    "build": "yarn ctix single",
-    "dev": "yarn nodemon"
+    "build": "bun run ctix single",
+    "dev": "bun run nodemon"
   },
   "devDependencies": {
     "@types/react-table": "^7.7.14",
@@ -35,7 +35,7 @@
     "watch": [
       "src"
     ],
-    "exec": "yarn build",
+    "exec": "bun run build",
     "ext": "ts, tsx"
   }
 }
