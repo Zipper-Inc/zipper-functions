@@ -1,7 +1,7 @@
-import { AppInfoResult } from '@zipper/types';
+import { BootInfoResult } from '@zipper/types';
 import { getZipperApiUrl, ZIPPER_TEMP_USER_ID_HEADER } from '@zipper/utils';
 
-export default async function getAppInfo({
+export default async function getBootInfo({
   subdomain,
   tempUserId,
   filename,
@@ -11,14 +11,14 @@ export default async function getAppInfo({
   tempUserId?: string;
   filename?: string;
   token?: string | null;
-}): Promise<AppInfoResult> {
+}): Promise<BootInfoResult> {
   const headers: Record<string, string> = {
     Authorization: `Bearer ${token || ''}`,
   };
   if (tempUserId) {
     headers[ZIPPER_TEMP_USER_ID_HEADER] = tempUserId;
   }
-  return fetch(`${getZipperApiUrl()}/app/info/${subdomain}`, {
+  return fetch(`${getZipperApiUrl()}/bootInfo/${subdomain}`, {
     method: 'POST',
     body: JSON.stringify({ filename }),
     headers,

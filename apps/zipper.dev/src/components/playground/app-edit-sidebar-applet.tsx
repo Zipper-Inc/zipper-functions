@@ -106,7 +106,7 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
             scriptName,
           );
         }}
-        appInfoUrl={`/api/app/info/${appSlug}`}
+        appInfoUrl={`/api/bootInfo/${appSlug}`}
         currentContext={'main'}
         appSlug={appInfo.slug}
         generateUserToken={async () => {

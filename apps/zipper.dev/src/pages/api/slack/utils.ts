@@ -6,7 +6,7 @@ import { getZipperDotDevUrlForServer } from '~/server/utils/server-url.utils';
 const SLACK_VIEW_UPDATE_URL = 'https://slack.com/api/views.update';
 const SLACK_VIEW_OPEN_URL = 'https://slack.com/api/views.open';
 const SLACK_POST_MESSAGE_URL = 'https://slack.com/api/chat.postMessage';
-const ZIPPER_APP_INFO_URL = `${getZipperDotDevUrlForServer()}/api/app/info`;
+const ZIPPER_APP_INFO_URL = `${getZipperDotDevUrlForServer()}/api/bootInfo`;
 const MAX_TEXT_LENGTH = 2000;
 
 async function buildHeaders(appId: string, teamId: string) {
@@ -30,7 +30,7 @@ async function buildHeaders(appId: string, teamId: string) {
   };
 }
 
-export async function getAppInfo(slug: string, filename?: string) {
+export async function getBootInfo(slug: string, filename?: string) {
   const appInfoUrl = `${ZIPPER_APP_INFO_URL}/${slug}`;
   const appInfoResponse = await fetch(appInfoUrl, {
     method: 'POST',
@@ -358,7 +358,7 @@ export async function buildInputModal(
   viewId: string,
   viewHash: string,
 ) {
-  const appInfo = await getAppInfo(slug, filename);
+  const appInfo = await getBootInfo(slug, filename);
 
   const blocks = [
     ...buildFilenameSelect(appInfo.data.runnableScripts, filename),

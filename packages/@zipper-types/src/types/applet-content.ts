@@ -1,4 +1,4 @@
-import { InputParams } from './app-info';
+import { InputParams } from './boot-info';
 
 export type AppletOutput = {
   inputsUsed: InputParams;
