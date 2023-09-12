@@ -487,10 +487,8 @@ const Hero = () => {
             >
               <iframe
                 src="https://www.loom.com/embed/d50630ac57a94f5fb1bcdcce2de85324?sid=766794ed-03a4-4917-98e7-4420e7f2c03d?autoplay=1"
-                frameborder="0"
-                webkitallowfullscreen
-                mozallowfullscreen
-                allowfullscreen
+                frameBorder={0}
+                allowFullScreen
                 style={{
                   position: 'absolute',
                   top: 0,
