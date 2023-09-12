@@ -946,7 +946,7 @@ const BetaSection = () => {
 /* Render                                       */
 /* -------------------------------------------- */
 
-const HomePage: NextPageWithLayout = () => {
+const HomePage = () => {
   const analytics = useAnalytics();
 
   useEffect(() => {
@@ -974,12 +974,5 @@ const HomePage: NextPageWithLayout = () => {
     </Website>
   );
 };
-
-HomePage.header = (props) => {
-  if (props.subdomain) return <Header showNav={false} />;
-  return <Header />;
-};
-
-HomePage.skipAuth = true;
 
 export default HomePage;
