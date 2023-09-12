@@ -1,0 +1,77 @@
+---
+title: Build without the BS
+date: 2023/09/18
+description: Tying together a modern stack and getting it deployed takes a significant amount of time and effort. With Zipper, we're eliminating all the decisions you have to make before you can see your code running.
+tag: build-process
+author: Sachin Ranchod
+summary: |
+  **Zipper is in open beta** - you can sign up at [https://zipper.dev](https://zipper.dev).
+
+  Zipper is a platform that simplifies web development by allowing developers to create fully fledged web applications just by writing business logic as Typescript functions. Inputs to these functions become forms, outputs are rendered beautifully, and routing just works. Connectors to popular SaaS tools are included and they handle OAuth for you.
+---
+
+Back in 2011, I decided to switch careers and become a web developer. I’d heard that
+Ruby on Rails was great so I picked up Michael Hartl’s [Ruby on Rails Tutorial](https://www.railstutorial.org)
+and worked my way through it. I was hooked within the first chapter — here was a
+framework that let me deploy a working (albeit simple) CRUD app within minutes. It
+was magical! By removing the need to make decisions about all sorts of minutia[^1]
+and giving me all the components [^2] I needed to build a working application, I
+was able to move fast even though I was just getting started.
+
+[^1]: [https://rubyonrails.org/doctrine#convention-over-configuration](https://rubyonrails.org/doctrine#convention-over-configuration)
+[^2]: [https://rubyonrails.org/doctrine#omakase](https://rubyonrails.org/doctrine#omakase)
+
+A decade later, I found myself looking back at that time and missing the simplicity of being able to see my code running without having to figure out a whole lot of boilerplate. The tools and frameworks we have today are amazing[^3] but they’re all designed to help you build complex web applications. Tying together a modern stack and getting it deployed takes a significant amount of time and effort (which is fine if you’re working on a complex, long-running project). If you’re working on a quick web app for your team, integrating a few tools, or prototyping an idea, the setup cost can kill your desire to even get started.
+
+[^3]: We’re big fans of [Next.js](http://nextjs.org/), [tRPC](http://trpc.io/), and [Prisma](https://www.prisma.io). Building Zipper wouldn’t have been possible without them.
+
+**That’s why we built Zipper.** We want to make it simple to see your code running on a live URL without having to make a single decision about how your toolchain, write a line of frontend code, or worry about where it is deployed.
+
+## **Introducing Zipper**
+
+We’ve built a platform that lets you create fully fledged web applications by just writing your business logic as Typescript functions. You don’t need a line of frontend code to get an interactive web UI that has an API and auth built in. Thanks to simple conventions, the inputs to your functions become forms, the outputs get rendered beautifully, and your routing just works.
+
+To really see how simple it is, take a look at the demo video below:
+
+<div
+  style={{
+    position: 'relative',
+    paddingBottom: '56.25%',
+    height: 0,
+    marginBottom: '2rem',
+  }}
+>
+  <iframe
+    src="https://www.loom.com/embed/d50630ac57a94f5fb1bcdcce2de85324?sid=80282622-0688-4ffe-8a62-0abc519523e9"
+    frameborder="0"
+    webkitallowfullscreen
+    mozallowfullscreen
+    allowfullscreen
+    style={{
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      width: '100%',
+      height: '100%',
+    }}
+  ></iframe>
+</div>
+
+As you can see in demo, the structure of a Zipper applet is straightforward:
+
+- It’s just a collection of [Typescript files that run on Deno](https://zipper.dev/docs/introduction/deno-and-typescript).
+- If a file exports a [`handler` function](https://zipper.dev/docs/building-applets/handler-functions) it becomes a [route](https://zipper.dev/docs/building-applets/routing) in your applet.
+- The [inputs](https://zipper.dev/docs/building-applets/accepting-inputs) to this `handler` function are turned into a form to collect data from users (or via querystring/POST body).
+- Those inputs are passed to your function, which we deploy and run for you in a serverless environment.
+- The output of your function is returned as JSON and rendered automatically – arrays become tables and objects are browsable.
+- If you want, you have the power to [customize the UI](https://zipper.dev/docs/building-applets/customizing-output), add [interactive elements](https://zipper.dev/docs/building-applets/interactivity), and [import 3rd-party packages](https://zipper.dev/docs/building-applets/importing-packages) (and other applets).
+
+<br />
+
+To keep things simple for developers, we also include a handful of [connectors to popular](https://zipper.dev/docs/connecting-to-other-tools/github) [SaaS](https://zipper.dev/docs/connecting-to-other-tools/slack) [tools](https://zipper.dev/docs/connecting-to-other-tools/openai) (with a lot more coming soon). These connectors handle OAuth for you, configure the necessary secrets, and give you sample code to get started. All while continuing to use official SDKs and APIs so you don’t need to learn something new.
+
+## **Come build with us**
+
+We’re excited to see what folks build, fork, and share on Zipper. We’re obviously a little biased but it’s been really fun to turn all sorts of ideas for integrations and internal tools into working software using Zipper. We’ve got a [gallery](https://zipper.dev/gallery) of applets that you can play around with, a handful of templates to get your started, and an integration into OpenAI to generate code for you as you get started.
+
+**You can sign up for the open beta at [https://www.zipper.dev](https://www.zipper.dev).**

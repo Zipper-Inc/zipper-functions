@@ -336,9 +336,10 @@ const AppletDemo = () => {
 
 type Props = {
   links?: Partial<Parameters<typeof Links>[0]>;
+  hideAppletDemo?: boolean;
 };
 
-export const WebSiteFooter = ({ links }: Props) => {
+export const WebSiteFooter = ({ links, hideAppletDemo }: Props) => {
   const [URL, setURL] = useState('');
 
   useEffect(() => {
@@ -354,13 +355,13 @@ export const WebSiteFooter = ({ links }: Props) => {
 
   return (
     <VStack align="center" as="footer" w="full">
-      <AppletDemo />
+      {!hideAppletDemo && <AppletDemo />}
 
       {/** footer nav */}
       <VStack
         as="section"
         p={['52px 24px', '100px 130px']}
-        bgColor="neutral.100"
+        bgColor={hideAppletDemo ? 'white' : 'neutral.100'}
         w="full"
         align="center"
         mt="0 !important"

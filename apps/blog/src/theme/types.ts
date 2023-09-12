@@ -29,7 +29,9 @@ export interface NextraBlogTheme {
   titleSuffix?: string;
 }
 
-export type BlogPageOpts = PageOpts<BlogFrontMatter> & { description?: string };
+export type BlogPageOpts = PageOpts<BlogFrontMatter> & {
+  description?: string;
+};
 
 export type BlogFrontMatter = {
   author?: string;
@@ -39,6 +41,8 @@ export type BlogFrontMatter = {
   tag?: string | string[];
   title?: string;
   type?: 'post' | 'page' | 'posts' | 'tag';
+  summary?: string;
+  autorRole?: string;
 };
 
 export interface LayoutProps {
