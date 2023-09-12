@@ -181,7 +181,6 @@ const AppletDemo = () => {
           <Center
             as="figure"
             flex={1}
-            h="full"
             minH="320px"
             border="1px"
             bg="purple.800"
