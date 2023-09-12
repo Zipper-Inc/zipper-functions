@@ -12,8 +12,10 @@ import {
   ModalOverlay,
   ModalContent,
   ModalBody,
-  ModalCloseButton,
   useDisclosure,
+  Spacer,
+  HStack,
+  Icon,
 } from '@chakra-ui/react';
 import { baseColors, Website } from '@zipper/ui';
 import { memo, useEffect } from 'react';
@@ -36,8 +38,8 @@ import Image from 'next/image';
 import { motion, useAnimation } from 'framer-motion';
 import JoinBetaForm from '~/components/join-beta-form';
 import { useAnalytics } from '~/hooks/use-analytics';
-import { useRouter } from 'next/router';
 import Link from 'next/link';
+import { HiArrowUpRight } from 'react-icons/hi2';
 
 /* -------------------------------------------- */
 /* Content                                      */
@@ -67,10 +69,11 @@ const HERO_CONTENT = {
 };
 
 const FEATURES_CONTENT = {
-  TITLE: 's/decisions/\ndeploys',
+  TITLE: 's/decisions/deploys',
+  TITLE_SM: 's/decisions/\ndeploys',
 
   DESCRIPTION: `Your project shouldn’t be held up by a hundred decisions about
-  hosting, routing, storage, and more (half of which you have to
+  hosting, routing, storage, and more (<rant> half of which you have to
   rethink because these services don’t all work together </rant>).`,
 
   SPAN: `Zipper gives you all the scaffolding you need to start
@@ -171,103 +174,115 @@ const APPLETS_GALERY_CONTENT = {
   looking for, you can start from a blank file or have AI generate some code for you ✨.`,
 };
 
-const APPLET_GALLEYR_LIST = [
+const APPLET_GALLERY_LIST = [
   {
     title: 'Slack Backlinker',
     description:
       "Easily reference important messages, threads, or documents with a click, keeping your team's communication organized and efficient.",
     slug: 'slack-backlinker',
+    url: 'https://zipper.dev/zipper-inc/slack-github-backlinks/edit/readme.md',
   },
   {
-    title: 'Team Bookmarks / Go Links',
+    title: 'Team Bookmarks',
     description:
       "Effortlessly access and share links in Slack using intuitive slash commands. Retrieve important URLs with speed and simplicity, enhancing your team's productivity and knowledge sharing.",
     slug: 'team-go-links',
+    url: 'https://zipper.dev/zipper-inc/team-links/src/readme.md',
   },
   {
     title: 'JSON Explorer',
     description:
       "Instantly fetch a repository's dependency list. Gain valuable insights into each package with real-time NPM statistics and automatically generated descriptions, helping you understand their role within your application.",
     slug: 'json-explorer',
+    url: 'https://zipper.dev/zipper-inc/package-json-explorer/src/readme.md',
   },
   {
     title: 'User Feedback Button',
     description:
       'Easily collect valuable feedback with this button, fostering communication and improving your product based on user insights.',
     slug: 'user-feedback-button',
+    url: 'https://zipper.dev/zipper-inc/feedback-tracker/src/readme.md',
   },
   {
     title: 'Airtable Expense Tracker',
     description:
       'Connect and automate expense management. This embed applet seamlessly integrates with your Airtable workspace, effortlessly handling new records and providing real-time financial insights.',
     slug: 'airtable-expense-tracker',
+    url: 'https://zipper.dev/zipper-inc/expense-tracking-airtable/src/readme.md',
   },
   {
     title: 'In-product changelog',
     description:
       'Display updates, enhancements, and new features directly within your application, ensuring users stay in the loop and can make the most of your latest changes.',
     slug: 'in-product-changelog',
+    url: 'https://zipper.dev/zipper-inc/in-product-changelog/src/readme.md',
   },
   {
     title: 'Waitlist Manager',
     description:
       'Easily manage user registrations, track progress, and streamline communication to ensure a smooth experience for both you and your eager audience.',
     slug: 'waitlist-manager',
+    url: 'https://zipper.dev/zipper-inc/waitlist-manager/src/readme.md',
   },
-  {
-    title: 'Product Activity Notifications',
-    description:
-      'Stay in the know with real-time updates. Receive Slack notifications when someone surpasses predefined activity thresholds, keeping your team informed and engaged.',
-    slug: 'product-activity-notifications',
-  },
+  // {
+  //   title: 'Product Activity Notifications',
+  //   description:
+  //     'Stay in the know with real-time updates. Receive Slack notifications when someone surpasses predefined activity thresholds, keeping your team informed and engaged.',
+  //   slug: 'product-activity-notifications',
+  // },
   {
     title: 'Incident Management Bot',
     description:
       'Your dedicated incident response assistant within Slack. This bot automates incident handling, sends real-time alerts, and guides your team through incident resolution directly in your Slack workspace.',
     slug: 'incident-managment-bot',
+    url: 'https://zipper.dev/zipper-inc/incident-bot/src/readme.md',
   },
-  {
-    title: 'Basic Knowledge Base',
-    description:
-      'Elevate your information hub. Access a foundational knowledge base enhanced with AI-driven responses, providing more accurate and dynamic answers to your queries.',
-    slug: 'basic-knowledge-base',
-  },
+  // {
+  //   title: 'Basic Knowledge Base',
+  //   description:
+  //     'Elevate your information hub. Access a foundational knowledge base enhanced with AI-driven responses, providing more accurate and dynamic answers to your queries.',
+  //   slug: 'basic-knowledge-base',
+  // },
   {
     title: "What's the team listening to",
     description:
       "Sync your team's musical vibes. This app integrates with Spotify API to curate and share what your team is currently jamming to, fostering a shared musical experience within your workspace.",
     slug: 'what-team-listening-to',
+    url: 'https://zipper.dev/zipper-inc/song-monitor/edit/readme.md',
   },
   {
     title: 'Natural language to crontab',
     description:
       'Transform human language into computer-readable crontab syntax with AI. Easily schedule tasks and automate processes by describing them in plain English, and let the AI convert them into precise crontab schedules.',
     slug: 'natural-language-contrab',
+    url: 'https://zipper.dev/zipper-inc/crontab-ai-generator/src/main.ts',
   },
-  {
-    title: 'Link Zendesk tickets to GitHub Issues',
-    description:
-      'ink Zendesk tickets directly to GitHub Issues. Streamline support and development workflows by seamlessly connecting customer inquiries with development tasks in GitHub.',
-    slug: 'zendesk-tickets-github-issues',
-  },
+  // {
+  //   title: 'Link Zendesk tickets to GitHub Issues',
+  //   description:
+  //     'ink Zendesk tickets directly to GitHub Issues. Streamline support and development workflows by seamlessly connecting customer inquiries with development tasks in GitHub.',
+  //   slug: 'zendesk-tickets-github-issues',
+  // },
   {
     title: 'GitHub WIP tracker',
     description:
       'Keep tabs on work in progress. Monitor and manage your GitHub projects with ease, tracking the status of ongoing tasks and ensuring efficient project management.',
     slug: 'github-wip-tracker',
+    url: 'https://zipper.dev/zipper-inc/github-repo-wip/src/readme.md',
   },
   {
     title: 'Feature Flagging',
     description:
       'Implement feature flags to toggle functionalities on and off, allowing for flexible and controlled feature deployments within your application.',
     slug: 'feature-flagging',
+    url: 'https://zipper.dev/zipper-inc/ff-onboarding-example/src/readme.md',
   },
-  {
-    title: 'PagerDuty to Slack usergroup',
-    description:
-      'Synchronize PagerDuty alerts and notifications with Slack usergroups to ensure the right team members are informed and ready to act during incidents.',
-    slug: 'sync-pagerduty-slack-usergroup',
-  },
+  // {
+  //   title: 'PagerDuty to Slack usergroup',
+  //   description:
+  //     'Synchronize PagerDuty alerts and notifications with Slack usergroups to ensure the right team members are informed and ready to act during incidents.',
+  //   slug: 'sync-pagerduty-slack-usergroup',
+  // },
 ];
 
 const BATERIES_CONTENT = {
@@ -364,7 +379,7 @@ const Hero = () => {
         zIndex="10"
         position="relative"
       >
-        <Flex gap={8} direction={{ base: 'column', md: 'row' }}>
+        <Flex direction={{ base: 'column', md: 'row' }}>
           <VStack gap={5} w={['full', 'auto']} align="start">
             <Heading
               fontFamily="plaak"
@@ -387,11 +402,13 @@ const Hero = () => {
 
             <JoinBetaForm />
           </VStack>
+          <Spacer />
           <Box
             display="flex"
             position="relative"
             width={{ base: 'full', md: '535px' }}
             height={{ base: '50vh', md: '445px' }}
+            mt={{ base: 8, md: 0 }}
             as={motion.div}
           >
             <Box
@@ -456,118 +473,147 @@ const Hero = () => {
           </Box>
         </Flex>
       </Container>
-      <Modal isOpen={isOpen} onClose={onClose}>
+      <Modal isOpen={isOpen} onClose={onClose} size="5xl">
         <ModalOverlay />
-        <ModalContent>
-          <ModalCloseButton />
-          <ModalBody></ModalBody>
+        <ModalContent p="0">
+          <ModalBody p="0">
+            <div
+              style={{
+                position: 'relative',
+                paddingBottom: '56.25%',
+                height: '0',
+                background: 'transparent',
+              }}
+            >
+              <iframe
+                src="https://www.loom.com/embed/d50630ac57a94f5fb1bcdcce2de85324?sid=766794ed-03a4-4917-98e7-4420e7f2c03d?autoplay=1"
+                frameborder="0"
+                webkitallowfullscreen
+                mozallowfullscreen
+                allowfullscreen
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  height: '100%',
+                  width: '100%',
+                }}
+              ></iframe>
+            </div>
+          </ModalBody>
         </ModalContent>
       </Modal>
     </Box>
   );
 };
-const Features = memo(() => (
-  <Box
-    as="section"
-    aria-label="features"
-    w="full"
-    py={{ base: '52px', md: '9rem' }}
-    position="relative"
-    bg="brandGray.100"
-  >
-    <Container
-      id="features-content"
-      margin="0 auto"
-      gap={5}
-      flexDir="column"
-      alignItems="start"
-      maxW="container.xl"
-      w="full"
-    >
-      <VStack as="article" align="start" gap={3} pb={10}>
-        <Heading
-          fontFamily="plaak"
-          fontSize="4xl"
-          fontWeight="bold"
-          color={baseColors.brandOrange['500']}
-          whiteSpace="pre-line"
-        >
-          {FEATURES_CONTENT.TITLE}
-        </Heading>
-        <Text
-          margin="0 !important"
-          fontSize="lg"
-          lineHeight={7}
-          color="gray.900"
-          whiteSpace={{ md: 'pre-line' }}
-        >
-          {FEATURES_CONTENT.DESCRIPTION}
-        </Text>
-        <Text
-          margin="0 !important"
-          fontSize="xl"
-          color="brandOrange.500"
-          fontWeight={600}
-          whiteSpace={{ md: 'pre-line' }}
-        >
-          {FEATURES_CONTENT.SPAN}
-        </Text>
-      </VStack>
 
-      <Grid
-        as="ul"
-        aria-label="features-list"
+const Features = memo(() => {
+  const [isLargerThan600] = useMediaQuery('(min-width: 600px)');
+  return (
+    <Box
+      as="section"
+      aria-label="features"
+      w="full"
+      py={{ base: '52px', md: '9rem' }}
+      position="relative"
+      bg="brandGray.100"
+    >
+      <Container
+        id="features-content"
+        margin="0 auto"
+        gap={5}
+        flexDir="column"
+        alignItems="start"
+        maxW="container.xl"
         w="full"
-        templateColumns={{
-          base: '1fr',
-          md: 'repeat(2, 1fr)',
-          lg: 'repeat(3, 1fr)',
-        }}
-        gap={4}
       >
-        {FEATURES_CONTENT.LIST.map((feat, index) => (
-          <GridItem
-            key={index}
-            as="li"
-            aria-label={feat.title}
-            display="flex"
-            flexDirection="column"
-            gap={0}
-            background="white"
-            height={['auto', '640px']}
+        <VStack as="article" align="start" gap={3} pb={10}>
+          <Heading
+            fontFamily="plaak"
+            fontSize="4xl"
+            fontWeight="bold"
+            color={baseColors.brandOrange['500']}
+            whiteSpace="pre-line"
           >
-            <Box as="figure" w="full" height="342px" position="relative">
-              {feat.interact}
-            </Box>
-            <VStack
-              as="article"
-              align="start"
-              aria-label="feature-info"
-              w="full"
-              p={10}
-              justify="start"
-              flex={1}
-              gap={2}
+            {isLargerThan600
+              ? FEATURES_CONTENT.TITLE
+              : FEATURES_CONTENT.TITLE_SM}
+          </Heading>
+          <Text
+            margin="0 !important"
+            fontSize="lg"
+            lineHeight={7}
+            color="gray.900"
+            whiteSpace={{ md: 'pre-line' }}
+          >
+            {FEATURES_CONTENT.DESCRIPTION}
+          </Text>
+          <Text
+            margin="0 !important"
+            fontSize="xl"
+            color="brandOrange.500"
+            fontWeight={600}
+            whiteSpace={{ md: 'pre-line' }}
+          >
+            {FEATURES_CONTENT.SPAN}
+          </Text>
+        </VStack>
+
+        <Grid
+          as="ul"
+          aria-label="features-list"
+          w="full"
+          templateColumns={{
+            base: '1fr',
+            md: 'repeat(2, 1fr)',
+            lg: 'repeat(3, 1fr)',
+          }}
+          gap={4}
+        >
+          {FEATURES_CONTENT.LIST.map((feat, index) => (
+            <GridItem
+              key={index}
+              as="li"
+              aria-label={feat.title}
+              display="flex"
+              flexDirection="column"
+              gap={0}
+              background="white"
+              height={['auto', '640px']}
             >
-              <Heading
-                as="h3"
-                margin="0 !important"
-                fontSize="1.875rem"
-                color={feat.color}
-                fontWeight={600}
+              <Box as="figure" w="full" height="342px" position="relative">
+                {feat.interact}
+              </Box>
+              <VStack
+                as="article"
+                align="start"
+                aria-label="feature-info"
+                w="full"
+                p={10}
+                justify="start"
+                flex={1}
+                gap={2}
               >
-                {feat.title}
-              </Heading>
-              <Text margin="0 !important" fontSize="lg" color="gray.800">
-                {feat.description}
-              </Text>
-            </VStack>
-          </GridItem>
-        ))}
-      </Grid>
-    </Container>
-  </Box>
-));
+                <Heading
+                  as="h3"
+                  margin="0 !important"
+                  fontSize="1.875rem"
+                  color={feat.color}
+                  fontWeight={600}
+                >
+                  {feat.title}
+                </Heading>
+                <Text margin="0 !important" fontSize="lg" color="gray.800">
+                  {feat.description}
+                </Text>
+              </VStack>
+            </GridItem>
+          ))}
+        </Grid>
+      </Container>
+    </Box>
+  );
+});
 
 const AppletsGallery = () => {
   const [isLargerThan600] = useMediaQuery('(min-width: 600px)');
@@ -642,15 +688,15 @@ const AppletsGallery = () => {
             isLargerThan600 && !isLargerThan880
               ? 580 + 16
               : isLargerThan880
-              ? 980 + 16
+              ? 680 + 16
               : 320 + 16
           }
         >
-          {APPLET_GALLEYR_LIST.map((app) => (
+          {APPLET_GALLERY_LIST.map((app) => (
             <VStack
               align="start"
               as="li"
-              minH={{ base: '524px', lg: '720px' }}
+              minH={{ base: '524px', lg: '520px' }}
               justify={{ base: 'space-between' }}
               key={app.slug}
               flexDirection={{ base: 'column', lg: 'column-reverse' }}
@@ -665,14 +711,19 @@ const AppletsGallery = () => {
                 flex={{ base: 0, lg: 1 }}
                 justify={{ base: 'space-between' }}
               >
-                <Heading
-                  as="h3"
-                  fontSize="2xl"
-                  fontWeight={600}
-                  color="blackAlpha.800"
-                >
-                  {app.title}
-                </Heading>
+                <HStack>
+                  <Heading
+                    as="h3"
+                    fontSize="2xl"
+                    fontWeight={600}
+                    color="blackAlpha.800"
+                  >
+                    {app.title}
+                  </Heading>
+                  <Link href={app.url} target="_blank">
+                    <Icon as={HiArrowUpRight} />
+                  </Link>
+                </HStack>
                 <Text
                   h="60px"
                   css={{ margin: 0 }}
@@ -684,10 +735,16 @@ const AppletsGallery = () => {
               </VStack>
               <Box
                 as="div"
-                w={{ base: '320px', sm: '580px', lg: '980px' }}
-                h={{ base: '320px', sm: '534px', lg: '625px' }}
+                w="100%"
+                pt={
+                  isLargerThan600 && !isLargerThan880
+                    ? '92%'
+                    : isLargerThan880
+                    ? '63.5%'
+                    : '100%'
+                }
                 bg="brandGray.100"
-                padding={{ base: 8, lg: 20 }}
+                // padding={{ base: 8, lg: 20 }}
                 border="1px solid"
                 borderColor="gray.200"
                 position="relative"
