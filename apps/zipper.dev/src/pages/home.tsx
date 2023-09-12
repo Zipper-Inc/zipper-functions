@@ -47,8 +47,8 @@ const HERO_CONTENT = {
   TITLE: 'Forget about \n your toolchain',
 
   DESCRIPTION: `
-    Turn Typescript functions into serverless web apps 
-    Don't write a line of frontend, auth, or API code 
+    Turn Typescript functions into serverless web apps
+    Don't write a line of frontend, auth, or API code
     Do everything in your browser - start immediately with no setup`,
   LIST: [
     {
@@ -167,7 +167,7 @@ const APPLETS_GALERY_CONTENT = {
   TITLE: 'hello ${working code}',
   DESCRIPTION: `Chances are that the thing you need to build has already been thought through by
   someone else. Zipper’s applet directory lets you fork pre-built applications that you can
-  immediately use or quickly customize to better suit your needs. If you don’t see what you’re 
+  immediately use or quickly customize to better suit your needs. If you don’t see what you’re
   looking for, you can start from a blank file or have AI generate some code for you ✨.`,
 };
 
@@ -665,7 +665,12 @@ const AppletsGallery = () => {
                 flex={{ base: 0, lg: 1 }}
                 justify={{ base: 'space-between' }}
               >
-                <Heading as="h3" fontSize="2xl" fontWeight={600}>
+                <Heading
+                  as="h3"
+                  fontSize="2xl"
+                  fontWeight={600}
+                  color="blackAlpha.800"
+                >
                   {app.title}
                 </Heading>
                 <Text
