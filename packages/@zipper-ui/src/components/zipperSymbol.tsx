@@ -8,6 +8,7 @@ interface Props extends PathProps {
   top?: PathProps;
   middle?: PathProps;
   bottom?: PathProps;
+  width?: number;
   height?: number;
 }
 
@@ -19,12 +20,13 @@ export const ZipperSymbol: React.FC<Props> = ({
   middle,
   bottom,
   height,
+  width,
 } = {}) => (
   <svg
     fill={fill}
     className={className}
     style={style}
-    width={40}
+    width={width || 40}
     height={height || 40}
     viewBox="0 0 834 834"
     xmlns="http://www.w3.org/2000/svg"
