@@ -41,6 +41,8 @@ const LINKS = {
         href: 'https://zipper.dev/auth/signin',
         external: true,
       },
+      { label: 'Privacy', href: '/privacy', external: false },
+      { label: 'Terms', href: '/terms', external: false },
     ],
     BLOG: [
       {
@@ -59,6 +61,12 @@ const LINKS = {
         href: 'https://zipper.dev/auth/signin',
         external: true,
       },
+      {
+        label: 'Privacy',
+        href: 'https://localhost:3000/privacy',
+        external: false,
+      },
+      { label: 'Terms', href: 'https://localhost:3000/terms', external: false },
     ],
   },
 
@@ -76,6 +84,8 @@ const LINKS = {
         href: 'https://zipper.dev/auth/signin',
         external: true,
       },
+      { label: 'Privacy', href: '/privacy', external: false },
+      { label: 'Terms', href: '/terms', external: false },
     ],
     BLOG: [
       { href: '/', label: 'Blog', external: true },
@@ -94,6 +104,8 @@ const LINKS = {
         href: 'https://zipper.dev/auth/signin',
         external: true,
       },
+      { label: 'Privacy', href: 'https://zipper.dev/privacy', external: false },
+      { label: 'Terms', href: 'https://zipper.dev/terms', external: false },
     ],
   },
 };
@@ -417,7 +429,20 @@ export const WebSiteFooter = ({ links }: Props) => {
               align="flex-start"
             >
               <Links
-                data={LINKS[linksObj.ENV][linksObj.SITE].slice(4, 9)}
+                data={LINKS[linksObj.ENV][linksObj.SITE].slice(4, 8)}
+                component={links?.component}
+                displayActiveLink={false}
+              />
+            </VStack>
+            <VStack
+              as="ul"
+              flex={1}
+              h="full"
+              justify="space-between"
+              align="flex-start"
+            >
+              <Links
+                data={LINKS[linksObj.ENV][linksObj.SITE].slice(9, 12)}
                 component={links?.component}
                 displayActiveLink={false}
               />
