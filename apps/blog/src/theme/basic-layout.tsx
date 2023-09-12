@@ -1,4 +1,12 @@
-import { Container, Heading, HStack, Text } from '@chakra-ui/react';
+import {
+  Container,
+  Heading,
+  HStack,
+  Text,
+  Spacer,
+  Flex,
+  Badge,
+} from '@chakra-ui/react';
 import Head from 'next/head';
 import type { ReactNode } from 'react';
 import { useRef } from 'react';
@@ -8,12 +16,31 @@ import { Website } from '@zipper/ui';
 import { useRouter } from 'next/router';
 import { FiChevronLeft } from 'react-icons/fi';
 import NextLink from 'next/link';
+import { split } from './utils/get-tags';
 
 export const BasicLayout = ({ children }: { children: ReactNode }) => {
   const { config, opts } = useBlogContext();
   const { asPath, push } = useRouter();
   const title = `${opts.title}${config.titleSuffix || ''}`;
   const ref = useRef<HTMLHeadingElement>(null);
+
+  const { author, date, tag } = opts.frontMatter;
+
+  const tags = tag ? split(tag) : [];
+
+  const tagsEl = tags.map((t) => (
+    <NextLink
+      key={t}
+      href="/tags/[tag]"
+      as={`/tags/${t}`}
+      passHref
+      legacyBehavior
+    >
+      <Badge px={4} py={1} colorScheme="orange">
+        #{t.replace(' ', '_')}
+      </Badge>
+    </NextLink>
+  ));
 
   return (
     <>
@@ -40,7 +67,7 @@ export const BasicLayout = ({ children }: { children: ReactNode }) => {
                 fontSize="4xl"
                 color="blue.500"
               >
-                Zipper Blog
+                Latest Posts
               </Heading>
             </Container>
           ) : (
@@ -54,18 +81,37 @@ export const BasicLayout = ({ children }: { children: ReactNode }) => {
               flexDirection="column"
               py={24}
             >
-              <HStack
-                _hover={{ opacity: '.75' }}
-                cursor="pointer"
-                color="gray.500"
-                onClick={() => push('/blog')}
-              >
-                <FiChevronLeft size={24} />
-                <Text fontSize="lg">Zipper Blog</Text>
-              </HStack>
               {opts.hasJsxInH1 ? (
                 <Heading as="h1" fontWeight="normal" size="3xl" ref={ref} />
               ) : null}
+              <HStack>
+                <HStack
+                  _hover={{ opacity: '.75' }}
+                  cursor="pointer"
+                  color="gray.500"
+                  onClick={() => push('/blog')}
+                >
+                  <FiChevronLeft size={16} />
+                  <Text fontSize="sm" fontFamily="mono">
+                    All posts
+                  </Text>
+                </HStack>
+
+                <Heading
+                  size="md"
+                  overflow="auto"
+                  whiteSpace="nowrap"
+                  fontWeight="medium"
+                  color="fg.400"
+                >
+                  |
+                </Heading>
+                <Text fontFamily="mono" color="gray.600" fontSize="sm">
+                  <time dateTime={new Date(date || Date.now()).toISOString()}>
+                    {new Date(date || Date.now()).toDateString()}
+                  </time>
+                </Text>
+              </HStack>
               {opts.hasJsxInH1 ? null : (
                 <Heading
                   fontFamily="plaak"
@@ -77,16 +123,37 @@ export const BasicLayout = ({ children }: { children: ReactNode }) => {
                   {opts.title}
                 </Heading>
               )}
-              <Heading as="h3" fontSize="lg" fontWeight={400}>
+              <Heading
+                as="h3"
+                fontSize="xl"
+                maxW="container.md"
+                fontWeight={400}
+                lineHeight="6"
+              >
                 {opts.frontMatter.description}
               </Heading>
+              <HStack>
+                <HStack color="gray.600">
+                  <Text>By</Text>
+                  <Text fontWeight="bold">{author}</Text>
+                </HStack>
+                <Spacer />
+                <Flex
+                  gap="1"
+                  mt={1}
+                  flexWrap={'wrap'}
+                  className="nx-not-prose nx-mt-1 nx-flex nx-flex-wrap nx-items-center nx-gap-1"
+                >
+                  {tagsEl}
+                </Flex>
+              </HStack>
             </Container>
           )}
           {/* <Container maxWidth="container.xl" w="full" py="24" gap={2}> */}
           {children}
           {/* {config.footer} */}
           {/* </Container> */}
-          <Website.Footer links={{ component: NextLink }} />
+          <Website.Footer links={{ component: NextLink }} hideAppletDemo />
         </HeadingContext.Provider>
       </Website>
     </>

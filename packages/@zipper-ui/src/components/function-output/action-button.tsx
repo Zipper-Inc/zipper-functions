@@ -5,7 +5,7 @@ import {
   FunctionOutputContext,
   FunctionOutputContextType,
 } from './function-output-context';
-import { AppInfoResult, InputParam, InputParams } from '@zipper/types';
+import { BootInfoResult, InputParam, InputParams } from '@zipper/types';
 import { SmartFunctionOutputContext } from './smart-function-output-context';
 import Zipper from '../../../../@zipper-framework';
 
@@ -17,7 +17,7 @@ export function ActionButton({
   const {
     showSecondaryOutput,
     getRunUrl,
-    appInfoUrl,
+    appInfoUrl: bootInfoUrl,
     applet,
     generateUserToken,
   } = useContext(FunctionOutputContext) as FunctionOutputContextType;
@@ -32,7 +32,7 @@ export function ActionButton({
       Authorization: `Bearer ${userToken || ''}`,
     };
 
-    const res = await fetch(appInfoUrl, {
+    const res = await fetch(bootInfoUrl, {
       method: 'POST',
       body: JSON.stringify({
         filename: action.path,
@@ -73,7 +73,7 @@ export function ActionButton({
       Authorization: `Bearer ${userToken || ''}`,
     };
 
-    const appInfoRes = await fetch(appInfoUrl, {
+    const bootInfoRes = await fetch(bootInfoUrl, {
       method: 'POST',
       body: JSON.stringify({
         filename: action.path,
@@ -81,9 +81,9 @@ export function ActionButton({
       headers,
     });
 
-    const appInfo = (await appInfoRes.json()) as AppInfoResult;
-    if (appInfo.ok) {
-      inputParamsWithValues = appInfo.data.inputs.map((i) => {
+    const bootInfo = (await bootInfoRes.json()) as BootInfoResult;
+    if (bootInfo.ok) {
+      inputParamsWithValues = bootInfo.data.inputs.map((i) => {
         i.value = actionInputs[i.key];
         return i;
       });

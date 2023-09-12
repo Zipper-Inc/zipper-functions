@@ -72,8 +72,8 @@ module.exports = getConfig({
         destination: `${ZIPPER_DOT_DEV_URL}/api/app/:appId/removeConnector/:connectorType`,
       },
       {
-        source: '/_zipper/app/info/:appSlug/:path*',
-        destination: `${ZIPPER_DOT_DEV_URL}/api/app/info/:appSlug`,
+        source: '/_zipper/bootInfo/:appSlug/:path*',
+        destination: `${ZIPPER_DOT_DEV_URL}/api/bootInfo/:appSlug`,
       },
       {
         source: '/run/history/:runId.png',

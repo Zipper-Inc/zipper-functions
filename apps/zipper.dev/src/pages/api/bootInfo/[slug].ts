@@ -8,7 +8,7 @@ import {
 } from '@prisma/client';
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '~/server/prisma';
-import { AppInfoResult, UserAuthConnector } from '@zipper/types';
+import { BootInfoResult, UserAuthConnector } from '@zipper/types';
 import { parseCode } from '~/utils/parse-code';
 import { compare } from 'bcryptjs';
 import { canUserEdit } from '~/server/routers/app.router';
@@ -16,7 +16,8 @@ import { requiredUserAuthConnectorFilter } from '~/utils/user-auth-connector-fil
 import { getZipperDotDevUrl, ZIPPER_TEMP_USER_ID_HEADER } from '@zipper/utils';
 import * as Sentry from '@sentry/nextjs';
 import { verifyAccessToken } from '~/utils/jwt-utils';
-import { SessionOrganizationMembership } from '../../auth/[...nextauth]';
+import { SessionOrganizationMembership } from '../auth/[...nextauth]';
+import { getAnalytics } from '~/utils/api-analytics';
 
 export default async function handler(
   req: NextApiRequest,
@@ -69,12 +70,15 @@ export default async function handler(
       },
     });
   } catch (e: any) {
-    return res.status(500).send({ ok: false, error: e.toString() });
+    return res
+      .status(500)
+      .send({ ok: false, status: 500, error: e.toString() });
   }
 
   if (!appFound) {
     return res.status(404).send({
       ok: false,
+      status: 404,
       error: `There are no apps with slug: ${slugFromUrl}`,
     });
   }
@@ -90,6 +94,7 @@ export default async function handler(
     if (!token || !userInfo.userId) {
       return res.status(401).send({
         ok: false,
+        status: 401,
         error: 'UNAUTHORIZED',
       });
     }
@@ -106,7 +111,45 @@ export default async function handler(
     scriptMain,
     scripts,
     isDataSensitive,
+    dailyRunLimit,
   } = appFound;
+
+  const now = new Date();
+  const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+  const dailyRuns = await prisma.appRun.count({
+    where: {
+      appId: id,
+      createdAt: {
+        gte: twentyFourHoursAgo,
+      },
+    },
+  });
+
+  const dailyRunPercentage = Math.round((dailyRuns / dailyRunLimit) * 100);
+
+  // Beacon when we hit 80 and 99 percent
+  if (dailyRunPercentage === 80 || dailyRunPercentage === 99) {
+    const analytics = await getAnalytics();
+    if (userInfo) {
+      const { email, userId } = userInfo;
+      analytics.identify(userId, { userId, email });
+    }
+
+    analytics.track(`Run usage at ${dailyRunPercentage}%`, {
+      applet: slug,
+      appId: id,
+    });
+  }
+
+  // Send error if we are at the rate limit
+  if (process.env.NODE_ENV !== 'development' && dailyRuns >= dailyRunLimit) {
+    return res.status(429).send({
+      ok: false,
+      status: 429,
+      error:
+        'DAILY RUN LIMIT EXCEEDED. Please email support@zipper.dev to increase your limit.',
+    });
+  }
 
   let entryPoint: Script | undefined = undefined;
 
@@ -124,6 +167,7 @@ export default async function handler(
   if (!entryPoint || !entryPoint.code) {
     return res.status(500).send({
       ok: false,
+      status: 500,
       error: `Can't get inputs for app: ${slug} is missing code`,
     });
   }
@@ -135,7 +179,7 @@ export default async function handler(
     organizations[mem.organization.id] = mem.role;
   });
 
-  const result: AppInfoResult = {
+  const result: BootInfoResult = {
     ok: true,
     data: {
       app: {

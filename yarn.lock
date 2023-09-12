@@ -5515,10 +5515,10 @@
   resolved "https://registry.npmjs.org/@zag-js/focus-visible/-/focus-visible-0.2.1.tgz"
   integrity sha512-19uTjoZGP4/Ax7kSNhhay9JA83BirKzpqLkeEAilrpdI1hE5xuq6q+tzJOsrMOOqJrm7LkmZp5lbsTQzvK2pYg==
 
-"@zipper-inc/client-js@^0.1.4":
-  version "0.1.4"
-  resolved "https://registry.yarnpkg.com/@zipper-inc/client-js/-/client-js-0.1.4.tgz#f55635999502eef1d0c213d0090cb986f8a8a46e"
-  integrity sha512-s3i5sR1npVlF4ASt0lvSovZHwi5GO4VRe9dMppT+a5jbdkLQHO+f+pyvDOjjFtF3MV0IhRXQRixS1M8UXjUN8Q==
+"@zipper-inc/client-js@^0.1.6":
+  version "0.1.6"
+  resolved "https://registry.yarnpkg.com/@zipper-inc/client-js/-/client-js-0.1.6.tgz#98e8058d4df76117d299cf21dfa354ae90664036"
+  integrity sha512-55u1jG+HslS+Z4nVj3m0M5LFNw2DRVdRsF4kYt8cG7nsadSwxMYeqBUwGhlETWrKXZTR6iR0o5wgD44wnGnmRg==
 
 abbrev@1, abbrev@^1.0.0:
   version "1.1.1"

@@ -20,7 +20,7 @@ export type EntryPointInfo = {
   editUrl: string;
 };
 
-export type AppInfoAndInputParams = {
+export type BootInfo = {
   app: AppInfo;
   userAuthConnectors: UserAuthConnector[];
   inputs: InputParams;
@@ -33,12 +33,13 @@ export type AppInfoAndInputParams = {
   entryPoint: EntryPointInfo;
 };
 
-export type AppInfoResult =
+export type BootInfoResult =
   | {
       ok: true;
-      data: AppInfoAndInputParams;
+      data: BootInfo;
     }
   | {
       ok: false;
+      status: number;
       error: string;
     };

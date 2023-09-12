@@ -150,9 +150,10 @@ export const createOmniApiHandler =
     try {
       const hmac = req.headers['x-zipper-hmac'] as string;
       if (
-        !hmac ||
-        !process.env.HMAC_SIGNING_SECRET ||
-        !verifyHmac(req, process.env.HMAC_SIGNING_SECRET)
+        process.env.NODE_ENV !== 'development' &&
+        (!hmac ||
+          !process.env.HMAC_SIGNING_SECRET ||
+          !verifyHmac(req, process.env.HMAC_SIGNING_SECRET))
       ) {
         return unauthorizedError({ res });
       }

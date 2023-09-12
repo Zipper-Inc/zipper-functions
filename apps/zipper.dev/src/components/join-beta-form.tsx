@@ -35,12 +35,15 @@ export default function JoinBetaForm() {
   const analytics = useAnalytics();
 
   const joinWaitlistApplet = async (data: FormValues) => {
-    const res = await fetch('https://waitlist-manager.zipper.run/api/json', {
-      method: 'POST',
-      body: JSON.stringify({
-        email: data.email,
-      }),
-    });
+    const res = await fetch(
+      'https://actual-waitlist-manager.zipper.run/create/api/json',
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          email: data.email,
+        }),
+      },
+    );
 
     return res.json();
   };
@@ -74,7 +77,8 @@ export default function JoinBetaForm() {
       });
 
       toast({
-        description: response.data,
+        description:
+          "You've been added to the waitlist! We'll be in touch soon",
         status: 'success',
         duration: 9000,
         isClosable: true,
@@ -90,6 +94,7 @@ export default function JoinBetaForm() {
           width={{ base: 'full', md: '20rem' }}
           variant="outline"
           placeholder="Email address"
+          _placeholder={{ color: 'gray.400' }}
           borderColor="gray.300"
           fontSize="md"
           color="gray.500"

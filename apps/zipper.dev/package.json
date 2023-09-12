@@ -70,7 +70,7 @@
     "@types/node": "^18.7.16",
     "@types/react": "^18.0.9",
     "@uploadthing/react": "^5.3.0",
-    "@zipper-inc/client-js": "^0.1.4",
+    "@zipper-inc/client-js": "^0.1.6",
     "@zipper/types": "*",
     "@zipper/ui": "*",
     "@zipper/utils": "*",

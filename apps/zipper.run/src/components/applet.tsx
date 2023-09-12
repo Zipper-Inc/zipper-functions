@@ -12,7 +12,7 @@ import {
   InputParams,
   UserAuthConnector,
 } from '@zipper/types';
-import getAppInfo from '~/utils/get-app-info';
+import getBootInfo from '~/utils/get-boot-info';
 import getValidSubdomain from '~/utils/get-valid-subdomain';
 import { getFilenameAndVersionFromPath } from '~/utils/get-values-from-url';
 import { Heading, Progress, VStack } from '@chakra-ui/react';
@@ -235,7 +235,7 @@ export function AppPage({
         getRunUrl={(scriptName: string) => {
           return getRunUrl(scriptName);
         }}
-        appInfoUrl={`/_zipper/app/info/${app?.slug}`}
+        appInfoUrl={`/_zipper/bootInfo/${app?.slug}`}
         currentContext={'main'}
         appSlug={app.slug}
         showTabs={false}
@@ -427,16 +427,16 @@ export const getServerSideProps: GetServerSideProps = async ({
   const { token, userId } = await getZipperAuth(req);
 
   // grab the app if it exists
-  const appInfoResult = await getAppInfo({
+  const bootInfoResult = await getBootInfo({
     subdomain,
     tempUserId: req.cookies[ZIPPER_TEMP_USER_ID_COOKIE_NAME],
     filename: filenameFromUrl,
     token,
   });
 
-  if (__DEBUG__) console.log('getAppInfo', { result: appInfoResult });
-  if (!appInfoResult.ok) {
-    return { props: { errorCode: appInfoResult.error } };
+  if (__DEBUG__) console.log('getBootInfo', { result: bootInfoResult });
+  if (!bootInfoResult.ok) {
+    return { props: { errorCode: bootInfoResult.error } };
   }
 
   const {
@@ -445,9 +445,9 @@ export const getServerSideProps: GetServerSideProps = async ({
     userAuthConnectors,
     entryPoint,
     runnableScripts,
-  } = appInfoResult.data;
+  } = bootInfoResult.data;
 
-  const metadata = appInfoResult.data.metadata || {};
+  const metadata = bootInfoResult.data.metadata || {};
 
   const headers: Record<string, string> = {
     Authorization: `Bearer ${token || ''}`,
@@ -460,7 +460,7 @@ export const getServerSideProps: GetServerSideProps = async ({
 
   // boot it up
   // todo cache this
-  const bootUrl = getBootUrl({ slug: appInfoResult.data.app.slug });
+  const bootUrl = getBootUrl({ slug: bootInfoResult.data.app.slug });
   const payload = await fetch(bootUrl, {
     headers: {
       Authorization: `Bearer ${token || ''}`,
