@@ -53,7 +53,7 @@ const Header: React.FC<HeaderProps> = ({
         '/about',
         '/home',
         '/terms',
-        'privacy',
+        '/privacy',
       ].includes(router.asPath),
     [router.asPath],
   );
