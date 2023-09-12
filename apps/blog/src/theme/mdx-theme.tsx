@@ -63,7 +63,6 @@ const A = ({ children, ...props }: ComponentProps<'a'>) => {
     return (
       <Link target="_blank" rel="noreferrer" color="primary" {...props}>
         {children}
-        <Text className="nx-sr-only nx-select-none"> (opens in a new tab)</Text>
       </Link>
     );
   }
@@ -124,7 +123,7 @@ const useComponents = (): Components => {
   const { config } = useBlogContext();
 
   return ChakraUIRenderer({
-    p: (props: TextProps) => <Text {...props} pb="8" />,
+    p: (props: TextProps) => <Text {...props} mb="8" />,
     a: A,
     h1: H1,
     h2: (props: HeadingProps) => (

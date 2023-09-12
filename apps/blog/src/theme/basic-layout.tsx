@@ -1,5 +1,4 @@
 import {
-  Link,
   Container,
   Heading,
   HStack,
@@ -7,8 +6,6 @@ import {
   Spacer,
   Flex,
   Badge,
-  VStack,
-  Box,
 } from '@chakra-ui/react';
 import Head from 'next/head';
 import type { ReactNode } from 'react';
@@ -70,7 +67,7 @@ export const BasicLayout = ({ children }: { children: ReactNode }) => {
                 fontSize="4xl"
                 color="blue.500"
               >
-                Zipper Blog
+                Latest Posts
               </Heading>
             </Container>
           ) : (
@@ -84,21 +81,37 @@ export const BasicLayout = ({ children }: { children: ReactNode }) => {
               flexDirection="column"
               py={24}
             >
-              <HStack
-                _hover={{ opacity: '.75' }}
-                cursor="pointer"
-                color="gray.500"
-                onClick={() => push('/blog')}
-              >
-                <FiChevronLeft size={24} />
-                <Text fontSize="lg">Zipper Blog</Text>
-              </HStack>
               {opts.hasJsxInH1 ? (
                 <Heading as="h1" fontWeight="normal" size="3xl" ref={ref} />
               ) : null}
-              <Text fontFamily="mono" fontSize="xs" color="orange.400" mt="4">
-                {date}
-              </Text>
+              <HStack>
+                <HStack
+                  _hover={{ opacity: '.75' }}
+                  cursor="pointer"
+                  color="gray.500"
+                  onClick={() => push('/blog')}
+                >
+                  <FiChevronLeft size={16} />
+                  <Text fontSize="sm" fontFamily="mono">
+                    All posts
+                  </Text>
+                </HStack>
+
+                <Heading
+                  size="md"
+                  overflow="auto"
+                  whiteSpace="nowrap"
+                  fontWeight="medium"
+                  color="fg.400"
+                >
+                  |
+                </Heading>
+                <Text fontFamily="mono" color="gray.600" fontSize="sm">
+                  <time dateTime={new Date(date || Date.now()).toISOString()}>
+                    {new Date(date || Date.now()).toDateString()}
+                  </time>
+                </Text>
+              </HStack>
               {opts.hasJsxInH1 ? null : (
                 <Heading
                   fontFamily="plaak"
@@ -110,7 +123,13 @@ export const BasicLayout = ({ children }: { children: ReactNode }) => {
                   {opts.title}
                 </Heading>
               )}
-              <Heading as="h3" fontSize="lg" fontWeight={400}>
+              <Heading
+                as="h3"
+                fontSize="xl"
+                maxW="container.md"
+                fontWeight={400}
+                lineHeight="6"
+              >
                 {opts.frontMatter.description}
               </Heading>
               <HStack>
