@@ -27,6 +27,7 @@ const PrivacyPage: NextPageWithLayout = () => {
         alignItems="start"
         as="main"
         w="full"
+        bg="white"
         py={8}
         margin="0 auto"
       >
@@ -964,7 +965,7 @@ const PrivacyPage: NextPageWithLayout = () => {
           </UnorderedList>
         </Container>
       </Box>
-      <Website.Footer links={{ component: NextLink }} />
+      <Website.Footer hideAppletDemo links={{ component: NextLink }} />
     </>
   );
 };

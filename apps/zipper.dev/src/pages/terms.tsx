@@ -21,6 +21,7 @@ export default function TermsPage() {
         as="main"
         w="full"
         py={8}
+        mb={4}
         margin="0 auto"
       >
         <Container maxW="container.xl">
@@ -909,7 +910,7 @@ Attn: DMCA Designated Agent
           </Text>
         </Container>
       </Box>
-      {/* <Website.Footer links={{ component: NextLink }} /> */}
+      <Website.Footer hideAppletDemo links={{ component: NextLink }} />
     </>
   );
 }
