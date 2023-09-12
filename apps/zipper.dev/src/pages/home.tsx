@@ -19,8 +19,6 @@ import {
 } from '@chakra-ui/react';
 import { baseColors, Website } from '@zipper/ui';
 import { memo, useEffect } from 'react';
-import { NextPageWithLayout } from './_app';
-import Header from '~/components/header';
 import NextLink from 'next/link';
 import Carousel from 'nuka-carousel';
 import {
