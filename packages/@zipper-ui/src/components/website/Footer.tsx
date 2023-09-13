@@ -145,7 +145,7 @@ const AppletDemo = () => {
             ) : (
               <Text textAlign="center" color="purple.300" fontWeight={500}>
                 {loading
-                  ? 'Rearranging letters and colors...'
+                  ? 'Rearranging colors and letters...'
                   : 'Generate a unique version of the Zipper logo'}
               </Text>
             )}
@@ -266,7 +266,7 @@ const AppletDemo = () => {
               fontWeight={500}
               onClick={fetchLogoImage}
             >
-              <FiPlay /> Run
+              <FiPlay /> Regenerate logo
             </Button>
           </VStack>
           {/* <Applet /> */}
