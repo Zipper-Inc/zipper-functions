@@ -1,11 +1,11 @@
 import React from 'react';
 import NextLink from 'next/link';
 import { DocsThemeConfig } from 'nextra-theme-docs';
-import { PURPLE, WebSiteFooter, ZipperLogo } from '@zipper/ui';
+import { BLUE, WebSiteFooter, ZipperLogo } from '@zipper/ui';
 
 const config: DocsThemeConfig = {
-  logo: <ZipperLogo type="color" style={{ height: '20px' }} />,
-  primaryHue: { dark: 278, light: 280 },
+  logo: <ZipperLogo fill={BLUE} style={{ height: '20px' }} />,
+  primaryHue: { dark: 207, light: 207 },
   footer: {
     component: <WebSiteFooter links={{ component: NextLink }} hideAppletDemo />,
   },
