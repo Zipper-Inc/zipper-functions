@@ -52,6 +52,7 @@ const MAX_CODE_TAB_HEIGHT = `calc(100vh - ${APPROXIMATE_HEADER_HEIGHT_PX})`;
 type CodeTabProps = {
   app: AppQueryOutput;
   mainScript: Script;
+  helpMode?: boolean;
 };
 
 export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
@@ -120,6 +121,7 @@ export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
         minWidth="250px"
         maxH="400px"
         minH="fit-content"
+        mt={1}
       >
         <PlaygroundSidebar app={app} mainScript={mainScript} />
       </VStack>

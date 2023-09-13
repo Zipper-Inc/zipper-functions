@@ -7,6 +7,21 @@ import {
   Progress,
   VStack,
   ChakraProps,
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuItem,
+  Box,
+  Tooltip,
+  MenuDivider,
+  Heading,
+  Input,
+  InputGroup,
+  InputLeftElement,
+  Button,
+  Flex,
+  Text,
+  useDisclosure,
 } from '@chakra-ui/react';
 import React, { useState, useEffect } from 'react';
 import SecretsTab from '~/components/playground/tab-secrets';
@@ -25,6 +40,28 @@ import { TabButton } from '@zipper/ui';
 import HistoryTab from './tab-runs';
 import VersionsTab from './tab-versions';
 import { useRouter } from 'next/router';
+import { IconButton } from '@chakra-ui/react';
+import { QuestionOutlineIcon } from '@chakra-ui/icons';
+import {
+  FiArrowLeft,
+  FiBook,
+  FiBookOpen,
+  FiChevronLeft,
+  FiChrome,
+  FiCommand,
+  FiCrosshair,
+  FiSearch,
+  FiX,
+} from 'react-icons/fi';
+import Link from 'next/link';
+import {
+  useHelpMode,
+  inspectableComponents,
+} from '../context/help-mode-context';
+
+import { HiOutlineMegaphone } from 'react-icons/hi2';
+
+import { FeedbackModal } from '~/components/auth/feedback-modal';
 
 const tabPanelStyles: ChakraProps = {
   flex: 1,
@@ -98,6 +135,14 @@ export function Playground({
     }
   };
 
+  const {
+    helpModeEnabled,
+    toggleHelpMode,
+    elementDescription,
+    hoveredElement,
+  } = useHelpMode();
+  const feedbackModal = useDisclosure();
+
   return (
     <RunAppProvider
       app={app}
@@ -109,6 +154,7 @@ export function Playground({
     >
       <VStack flex={1} paddingX={10} alignItems="stretch" spacing={0}>
         <PlaygroundHeader app={app} />
+
         <Tabs
           colorScheme="purple"
           index={tabIndex}
@@ -116,7 +162,6 @@ export function Playground({
             const href = makeHref(Object.values(PlaygroundTab)[index]);
             router.push(href, undefined, { shallow: true });
           }}
-          flex={1}
           display="flex"
           flexDirection="column"
           justifyContent="stretch"
@@ -190,7 +235,11 @@ export function Playground({
                   background="transparent"
                 />
               )}
-              <CodeTab app={app} mainScript={mainScript} />
+              <CodeTab
+                app={app}
+                mainScript={mainScript}
+                helpMode={helpModeEnabled}
+              />
             </TabPanel>
 
             {/* SCHEDULES */}
@@ -221,6 +270,213 @@ export function Playground({
             )}
           </TabPanels>
         </Tabs>
+        <Box
+          position={'fixed'}
+          bottom={10}
+          left={10}
+          zIndex={10}
+          display="flex"
+          gap={2}
+        >
+          <Menu closeOnSelect={false}>
+            {({ onClose }) => (
+              <>
+                <Tooltip
+                  label="Help & Docs"
+                  bg="transparent"
+                  boxShadow="lg"
+                  color="fg.700"
+                  marginBottom={4}
+                  marginLeft={10}
+                  px={4}
+                  py={2}
+                >
+                  <MenuButton
+                    as={IconButton}
+                    aria-label="Options"
+                    icon={<QuestionOutlineIcon color="purple" />}
+                    variant="outline"
+                    rounded="full"
+                    border="none"
+                    boxShadow="lg"
+                    zIndex="10"
+                    _hover={{
+                      bg: 'primary.25',
+                    }}
+                  />
+                </Tooltip>
+
+                <MenuList border={'none'} boxShadow="2xl" py={2}>
+                  {!helpModeEnabled ? (
+                    <>
+                      <Box
+                        display={'flex'}
+                        flexDirection={'row'}
+                        justifyContent={'space-between'}
+                        alignItems={'center'}
+                        py={2}
+                        px={2}
+                      >
+                        <Heading color="purple.600" size="sm" p={2}>
+                          Help & Docs
+                        </Heading>
+                        <Button
+                          onClick={() => onClose()}
+                          bg="transparent"
+                          _hover={{ backgroundColor: 'transparent' }}
+                        >
+                          <FiX size={20} color="gray" />
+                        </Button>
+                      </Box>
+                      {/* 
+                        <Box w="full" bg={'#F9FAFB'} mb={4} px={2}>
+                          <InputGroup>
+                            <InputLeftElement pointerEvents="none">
+                              <FiSearch color="gray.100" />
+                            </InputLeftElement>
+                            <Input
+                              type="text"
+                              placeholder="Search documentation"
+                              border="none"
+                              color={'fg.200'}
+                            />
+                          </InputGroup>
+                        </Box> 
+                      */}
+                      <MenuItem
+                        color="fg.700"
+                        icon={<FiBook size={20} color="#98A2B3" />}
+                        onClick={() =>
+                          window.open('https://zipper.dev/docs', '_blank')
+                        }
+                      >
+                        Zipper quickstart
+                      </MenuItem>
+                      <MenuItem
+                        color="fg.700"
+                        icon={<FiBook size={20} color="#98A2B3" />}
+                        onClick={() =>
+                          window.open(
+                            'https://zipper.dev/docs/introduction/basic-concepts',
+                            '_blank',
+                          )
+                        }
+                      >
+                        Basic concepts
+                      </MenuItem>
+                      <MenuItem
+                        color="fg.700"
+                        icon={<FiBook size={20} color="#98A2B3" />}
+                        onClick={() =>
+                          window.open(
+                            'https://zipper.dev/docs/introduction/what-you-can-build',
+                            '_blank',
+                          )
+                        }
+                      >
+                        What you can build
+                      </MenuItem>
+                      <MenuDivider color="fg.100" />
+
+                      <MenuItem
+                        color="fg.700"
+                        icon={<FiBookOpen size={20} color="#98A2B3" />}
+                        onClick={() =>
+                          window.open('https://zipper.dev/docs', '_blank')
+                        }
+                      >
+                        Browse Documentation
+                      </MenuItem>
+                      <MenuItem
+                        color="fg.700"
+                        icon={<FiCrosshair size={20} color="#98A2B3" />}
+                        onClick={toggleHelpMode}
+                      >
+                        Inspect UI
+                      </MenuItem>
+                      <MenuItem
+                        color="fg.700"
+                        icon={<FiCommand size={20} color="#98A2B3" />}
+                      >
+                        Keyboard Shortcuts
+                      </MenuItem>
+                      <MenuItem
+                        color="fg.700"
+                        icon={<FiChrome size={20} color="#98A2B3" />}
+                      >
+                        Contact support
+                      </MenuItem>
+                    </>
+                  ) : (
+                    <>
+                      <Box
+                        display={'flex'}
+                        flexDirection={'column'}
+                        pt={2}
+                        pb={8}
+                        px={2}
+                        maxW={237}
+                      >
+                        <Flex
+                          alignItems={'center'}
+                          justifyContent={'space-between'}
+                          mb={8}
+                        >
+                          <FiChevronLeft
+                            size={20}
+                            color="gray"
+                            onClick={toggleHelpMode}
+                            cursor="pointer"
+                          />
+
+                          <Heading color="purple.600" size="sm" flex="1" ml={2}>
+                            Inspect UI
+                          </Heading>
+                          <FiX
+                            size={20}
+                            color="gray"
+                            onClick={onClose}
+                            cursor="pointer"
+                          />
+                        </Flex>
+                        <Text
+                          color={'fg.900'}
+                          fontSize="md"
+                          fontWeight="bold"
+                          mb={2}
+                        >
+                          {hoveredElement
+                            ? inspectableComponents[hoveredElement]?.name
+                            : ''}
+                        </Text>
+                        <Text color={'fg.600'} fontSize="sm">
+                          {elementDescription
+                            ? elementDescription
+                            : 'Hover over the interface to learn more about what it does.'}
+                        </Text>
+                      </Box>
+                    </>
+                  )}
+                </MenuList>
+              </>
+            )}
+          </Menu>
+          <Button
+            aria-label="Options"
+            variant="outline"
+            rounded="full"
+            border="none"
+            boxShadow="lg"
+            zIndex="10"
+            _hover={{
+              bg: 'primary.25',
+            }}
+            onClick={feedbackModal.onOpen}
+          >
+            <HiOutlineMegaphone color="purple" />
+          </Button>
+        </Box>
+        <FeedbackModal {...feedbackModal} />
       </VStack>
     </RunAppProvider>
   );

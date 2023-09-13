@@ -18,8 +18,9 @@ import { getPathFromUri, getUriFromPath } from '~/utils/model-uri';
 import { parse } from '@babel/parser';
 import traverse from '@babel/traverse';
 import MonacoJSXHighlighter from 'monaco-jsx-highlighter';
-import { useColorModeValue } from '@chakra-ui/react';
+import { Box, useColorModeValue } from '@chakra-ui/react';
 import { baseColors } from '@zipper/ui';
+import { useHelpBorder } from '~/components/context/help-mode-context';
 
 type MonacoEditor = monaco.editor.IStandaloneCodeEditor;
 
@@ -378,50 +379,61 @@ export default function PlaygroundEditor(
     editorRef.current.pushUndoStop();
   }, [connectionId, currentScriptLive?.code, editorRef.current]);
 
+  const { style, onMouseEnter, onMouseLeave } = useHelpBorder();
+
   return (
     <>
-      <Editor
-        defaultLanguage={defaultLanguage}
-        theme={theme}
-        options={{
-          fontSize: 13,
-          minimap: { enabled: false },
-          automaticLayout: true,
-          scrollbar: { verticalScrollbarSize: 0, horizontalScrollbarSize: 0 },
-          readOnly: !appInfo.canUserEdit,
-          fixedOverflowWidgets: true,
-          renderLineHighlight: 'line',
-          renderLineHighlightOnlyWhenFocus: true,
-        }}
-        overrideServices={{
-          openerService: {
-            open: function (url: string) {
-              const ext =
-                isExternalResource(url) && !url.endsWith('tsx') ? 'ts' : 'tsx';
-              const resource = getUriFromPath(url, monaco.Uri.parse, ext);
-              // Don't try to open URLs that have models
-              // They will open from the defintion code
-              if (
-                isExternalResource(resource) &&
-                monacoEditor?.editor.getModel(resource)
-              ) {
-                return;
-              }
+      <Box
+        h={'full'}
+        onMouseEnter={onMouseEnter('Editor')}
+        onMouseLeave={onMouseLeave()}
+        border={style('Editor').border}
+      >
+        <Editor
+          defaultLanguage={defaultLanguage}
+          theme={theme}
+          options={{
+            fontSize: 13,
+            minimap: { enabled: false },
+            automaticLayout: true,
+            scrollbar: { verticalScrollbarSize: 0, horizontalScrollbarSize: 0 },
+            readOnly: !appInfo.canUserEdit,
+            fixedOverflowWidgets: true,
+            renderLineHighlight: 'line',
+            renderLineHighlightOnlyWhenFocus: true,
+          }}
+          overrideServices={{
+            openerService: {
+              open: function (url: string) {
+                const ext =
+                  isExternalResource(url) && !url.endsWith('tsx')
+                    ? 'ts'
+                    : 'tsx';
+                const resource = getUriFromPath(url, monaco.Uri.parse, ext);
+                // Don't try to open URLs that have models
+                // They will open from the defintion code
+                if (
+                  isExternalResource(resource) &&
+                  monacoEditor?.editor.getModel(resource)
+                ) {
+                  return;
+                }
 
-              return window.open(url, '_blank');
+                return window.open(url, '_blank');
+              },
             },
-          },
-        }}
-        onMount={handleEditorDidMount}
-        {...props}
-      />
-      {connectionIds.map((id) => (
-        <PlaygroundCollabCursor
-          connectionId={id}
-          editorRef={editorRef}
-          key={id}
+          }}
+          onMount={handleEditorDidMount}
+          {...props}
         />
-      ))}
+        {connectionIds.map((id) => (
+          <PlaygroundCollabCursor
+            connectionId={id}
+            editorRef={editorRef}
+            key={id}
+          />
+        ))}
+      </Box>
     </>
   );
 }

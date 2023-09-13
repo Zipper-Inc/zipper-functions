@@ -18,6 +18,7 @@ import { useEditorContext } from '../context/editor-context';
 import AppEditSidebarApplet from './app-edit-sidebar-applet';
 import { AppConsole } from './app-console';
 import { HiEye, HiPencil } from 'react-icons/hi2';
+import { useHelpBorder } from '../context/help-mode-context';
 
 type AppEditSidebarProps = {
   appSlug: string;
@@ -59,9 +60,19 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
   const isLibrary = !inputParams && !inputError;
 
   const isMarkdown = currentScript?.filename.endsWith('.md');
+  const { style, onMouseEnter, onMouseLeave } = useHelpBorder();
 
   return (
-    <VStack h="full" w="full">
+    <VStack
+      h="full"
+      w="full"
+      onMouseEnter={onMouseEnter('PreviewPanel')}
+      onMouseLeave={onMouseLeave()}
+      outline={style('PreviewPanel').border}
+      mr={4}
+      ml={2}
+      my={2}
+    >
       {isMarkdown && (
         <Button
           variant="outline"
