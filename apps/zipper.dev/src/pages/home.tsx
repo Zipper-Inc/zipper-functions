@@ -283,7 +283,7 @@ const APPLET_GALLERY_LIST = [
   // },
 ];
 
-const BATERIES_CONTENT = {
+const BATTERIES_CONTENT = {
   TITLE: 'Batteries included',
 
   DESCRIPTION: `Some days you just want to prototype something quickly to prove that it works, while the
@@ -796,9 +796,9 @@ const Batteries = memo(() => {
             fontFamily="plaak"
             fontSize="4xl"
             fontWeight="bold"
-            color={baseColors.blue['500']}
+            color="blue.500"
           >
-            {BATERIES_CONTENT.TITLE}
+            {BATTERIES_CONTENT.TITLE}
           </Heading>
           <Text
             margin="0 !important"
@@ -806,7 +806,7 @@ const Batteries = memo(() => {
             lineHeight={7}
             color="gray.900"
           >
-            {BATERIES_CONTENT.DESCRIPTION}
+            {BATTERIES_CONTENT.DESCRIPTION}
           </Text>
         </VStack>
 
@@ -816,7 +816,7 @@ const Batteries = memo(() => {
           columnGap={5}
           w="full"
         >
-          {BATERIES_CONTENT.LIST.map((btr) => (
+          {BATTERIES_CONTENT.LIST.map((btr) => (
             <GridItem
               key={btr.name}
               colSpan={1}
@@ -827,11 +827,13 @@ const Batteries = memo(() => {
               <Box as="span" color="blue.500">
                 {btr.icon}
               </Box>
-              <VStack gap={2} color="gray.800" align="start">
-                <Heading fontSize="xl" fontWeight={600}>
+              <VStack gap={2} align="start">
+                <Heading fontSize="xl" fontWeight={500} color="blue.500">
                   {btr.name}
                 </Heading>
-                <Text style={{ marginTop: '0px' }}>{btr.description}</Text>
+                <Text style={{ marginTop: '0px' }} color="gray.800">
+                  {btr.description}
+                </Text>
               </VStack>
             </GridItem>
           ))}
