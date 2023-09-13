@@ -1,26 +1,22 @@
 import React from 'react';
+import NextLink from 'next/link';
 import { DocsThemeConfig } from 'nextra-theme-docs';
-import { ZipperLogo } from '@zipper/ui';
+import { PURPLE, WebSiteFooter, ZipperLogo } from '@zipper/ui';
 
 const config: DocsThemeConfig = {
-  logo: (
-    <ZipperLogo
-      fill="var(--chakra-colors-purple-700)"
-      style={{ height: '20px' }}
-    />
-  ),
+  logo: <ZipperLogo type="color" style={{ height: '20px' }} />,
   primaryHue: { dark: 278, light: 280 },
   footer: {
-    text: 'Zipper © 2023',
+    component: <WebSiteFooter links={{ component: NextLink }} hideAppletDemo />,
   },
   useNextSeoProps() {
     return {
-      titleTemplate: '%s – Zipper Documentation',
+      titleTemplate: '%s | Zipper Documentation',
     };
   },
   head: (
     <>
-      <meta property="og:title" content="%s – Zipper Documentation" />
+      <meta property="og:title" content="%s | Zipper Documentation" />
       <meta
         name="viewport"
         content="width=device-width, initial-scale=1.0, viewport-fit=cover"

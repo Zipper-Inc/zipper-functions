@@ -12,7 +12,7 @@ import type { ReactNode } from 'react';
 import { useRef } from 'react';
 import { useBlogContext } from './blog-context';
 import { HeadingContext } from './mdx-theme';
-import { Website } from '@zipper/ui';
+import { SiteType, Website } from '@zipper/ui';
 import { useRouter } from 'next/router';
 import { FiChevronLeft } from 'react-icons/fi';
 import NextLink from 'next/link';
@@ -21,7 +21,6 @@ import { split } from './utils/get-tags';
 export const BasicLayout = ({ children }: { children: ReactNode }) => {
   const { config, opts } = useBlogContext();
   const { asPath, push } = useRouter();
-  const title = `${opts.title}${config.titleSuffix || ''}`;
   const ref = useRef<HTMLHeadingElement>(null);
 
   const { author, date, tag } = opts.frontMatter;
@@ -42,16 +41,21 @@ export const BasicLayout = ({ children }: { children: ReactNode }) => {
     </NextLink>
   ));
 
+  const isIndex = asPath === '/blog';
+  const title = isIndex
+    ? 'Zipper Blog | Updates from Zipper Inc.'
+    : `${opts.title}${config.titleSuffix || ''} | Zipper Blog`;
+
   return (
     <>
       <Head>
-        <title>{title} - Zipper</title>
+        <title>{title}</title>
         {config.head?.({ title, meta: opts.frontMatter })}
       </Head>
       <Website>
-        <Website.Navbar links={{ component: NextLink }} />
+        <Website.Navbar links={{ component: NextLink }} site={SiteType.Blog} />
         <HeadingContext.Provider value={ref}>
-          {asPath === '/blog' ? (
+          {isIndex ? (
             <Container
               as="header"
               dir="ltr"
@@ -153,7 +157,11 @@ export const BasicLayout = ({ children }: { children: ReactNode }) => {
           {children}
           {/* {config.footer} */}
           {/* </Container> */}
-          <Website.Footer links={{ component: NextLink }} hideAppletDemo />
+          <Website.Footer
+            links={{ component: NextLink }}
+            hideAppletDemo
+            site={SiteType.Blog}
+          />
         </HeadingContext.Provider>
       </Website>
     </>
