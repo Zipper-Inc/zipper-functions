@@ -35,11 +35,10 @@ import { HiCog, HiPlus } from 'react-icons/hi';
 import { HiCheck, HiMiniTicket } from 'react-icons/hi2';
 import { useOrganizationList } from '~/hooks/use-organization-list';
 import { useUser } from '~/hooks/use-user';
-import { GalleryAppQueryOutput } from '~/pages';
 import { trpc } from '~/utils/trpc';
 import { CreateAppForm } from '../dashboard/create-app-form';
 import { TITLE_COLUMN_MIN_WIDTH } from '../playground/constants';
-import { GalleryItem } from './gallery-item';
+import { GalleryAppQueryOutput, GalleryItem } from './gallery-item';
 
 export function Gallery({
   apps,

@@ -157,7 +157,7 @@ export default function Meta(): ReactElement {
           {tagsEl}
         </VStack>
 
-        <VStack align="start">
+        {/* <VStack align="start">
           <Heading as="h5" fontSize="14px">
             Share this article
           </Heading>
@@ -168,7 +168,7 @@ export default function Meta(): ReactElement {
                 <span key={social.name}>{social.icon}</span>
               ))}
           </HStack>
-        </VStack>
+        </VStack> */}
       </VStack>
       {/* <HStack
         alignItems={'center'}

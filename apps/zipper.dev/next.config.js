@@ -115,11 +115,22 @@ module.exports = getConfig({
             : 'http://localhost:3003/docs/:path*'
         }`,
       },
-      // comment this back in when the blog is ready
-      // {
-      //   source: '/blog/:path*',
-      //   destination: 'http://localhost:3004/blog/:path*',
-      // },
+      {
+        source: '/blog',
+        destination: `${
+          process.env.NODE_ENV === 'production'
+            ? 'https://zipper-docs-production.onrender.com/blog'
+            : 'http://localhost:3004/blog'
+        }`,
+      },
+      {
+        source: '/blog/:path*',
+        destination: `${
+          process.env.NODE_ENV === 'production'
+            ? 'https://zipper-blog.onrender.com/blog/:path*'
+            : 'http://localhost:3004/blog/:path*'
+        }`,
+      },
       {
         source: '/run/:slug/:version/:filename/:path*',
         destination: `${

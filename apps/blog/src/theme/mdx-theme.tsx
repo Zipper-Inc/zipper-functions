@@ -20,6 +20,13 @@ import {
   HeadingProps,
   Link,
   Text,
+  BoxProps,
+  OrderedList,
+  TextProps,
+  ListProps,
+  List,
+  ListItemProps,
+  ListItem,
 } from '@chakra-ui/react';
 import { ChakraUIRenderer } from '@zipper/ui';
 
@@ -56,7 +63,6 @@ const A = ({ children, ...props }: ComponentProps<'a'>) => {
     return (
       <Link target="_blank" rel="noreferrer" color="primary" {...props}>
         {children}
-        <Text className="nx-sr-only nx-select-none"> (opens in a new tab)</Text>
       </Link>
     );
   }
@@ -117,6 +123,7 @@ const useComponents = (): Components => {
   const { config } = useBlogContext();
 
   return ChakraUIRenderer({
+    p: (props: TextProps) => <Text {...props} mb="8" />,
     a: A,
     h1: H1,
     h2: (props: HeadingProps) => (
@@ -124,16 +131,16 @@ const useComponents = (): Components => {
         as="h2"
         size="2xl"
         color={getRandomColor()?.color}
-        mt={16}
+        mt={8}
         mb={8}
         {...props}
       />
     ),
     h3: (props: HeadingProps) => (
-      <HeadingLink as="h3" size="xl" mt={12} mb={6} {...props} />
+      <HeadingLink as="h3" size="xl" mt={6} mb={6} {...props} />
     ),
     h4: (props: HeadingProps) => (
-      <HeadingLink as="h4" size="lg" mt={10} mb={4} {...props} />
+      <HeadingLink as="h4" size="lg" mt={8} mb={4} {...props} />
     ),
     h5: (props: HeadingProps) => (
       <HeadingLink as="h5" size="md" my={2} {...props} />
@@ -141,6 +148,47 @@ const useComponents = (): Components => {
     h6: (props: HeadingProps) => (
       <HeadingLink as="h6" size="sm" my={2} {...props} />
     ),
+    section: ({ children, ...props }: BoxProps) => {
+      console.log(children);
+      if (props.className === 'footnotes') {
+        return (
+          <Box
+            maxW="container.xl"
+            w="full"
+            px={0}
+            gap={{ base: 0, lg: 5 }}
+            margin={{ lg: '40px auto' }}
+          >
+            <Box bg="transparent" w="full" h="full" />
+            <Box as="section" w="full" {...props}>
+              {React.Children.map(children, (_child) => {
+                const child = _child as any;
+                if (child.type?.name === 'h2') {
+                  return (
+                    <Heading
+                      fontSize="xl"
+                      mb={4}
+                      borderBottom="1px"
+                      maxW={{ base: 'full', lg: '380px' }}
+                      lineHeight={2}
+                      color="purple.500"
+                      borderColor="purple.500"
+                    >
+                      Notes
+                    </Heading>
+                  );
+                } else {
+                  if (child.type?.name === 'ol') {
+                    return <OrderedList {...child.props} />;
+                  }
+                }
+                return null;
+              })}
+            </Box>
+          </Box>
+        );
+      }
+    },
     code: (props: CodeProps) => {
       if (typeof props.children === 'string') {
         return <Code {...(props as any)} />;
@@ -163,6 +211,9 @@ const useComponents = (): Components => {
         </Box>
       );
     },
+    sup: (props: any) => {
+      return <Text as="sup">[{props.children}]</Text>;
+    },
     ...config.components,
   }) as any;
 };
@@ -174,7 +225,7 @@ export const MDXTheme = ({
 }): ReactElement => {
   return (
     <MDXProvider components={useComponents()}>
-      <Flex as="main" direction="column">
+      <Flex as="main" direction="column" maxW={'container.md'}>
         {children}
       </Flex>
     </MDXProvider>

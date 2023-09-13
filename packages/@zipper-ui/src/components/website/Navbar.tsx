@@ -119,7 +119,7 @@ export const WebSiteNavbar = ({ links }: Props) => {
                   h="44px"
                   variant="outline"
                 >
-                  Sign Up
+                  Sign In
                 </Button>
               </VStack>
             </DrawerBody>
@@ -163,7 +163,7 @@ export const WebSiteNavbar = ({ links }: Props) => {
           h="44px"
           variant="outline"
         >
-          Sign Up
+          Sign In
         </Button>
       </HStack>
 

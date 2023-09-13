@@ -13,6 +13,8 @@ import {
 } from '@chakra-ui/react';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useAnalytics } from '~/hooks/use-analytics';
+import { getEmailUsername } from '~/utils/get-email-username';
 
 const schema = z.object({
   email: z.string().email(),
@@ -30,14 +32,18 @@ export default function JoinBetaForm() {
   });
 
   const toast = useToast();
+  const analytics = useAnalytics();
 
   const joinWaitlistApplet = async (data: FormValues) => {
-    const res = await fetch('https://waitlist-manager.zipper.run/api/json', {
-      method: 'POST',
-      body: JSON.stringify({
-        email: data.email,
-      }),
-    });
+    const res = await fetch(
+      'https://actual-waitlist-manager.zipper.run/create/api/json',
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          email: data.email,
+        }),
+      },
+    );
 
     return res.json();
   };
@@ -53,8 +59,26 @@ export default function JoinBetaForm() {
         isClosable: true,
       });
     } else {
+      /**
+       * IMPORTANT!
+       * it's important to call the .identify call before the .group call,
+       * because the .group call will attach the current identified user.
+       */
+      analytics?.identify(getEmailUsername(data.email), {
+        email: data.email,
+      });
+
+      analytics?.group('beta.requests', {
+        name: 'Beta requests',
+      });
+
+      analytics?.track('Subscribed to Beta', {
+        email: data.email,
+      });
+
       toast({
-        description: response.data,
+        description:
+          "You've been added to the waitlist! We'll be in touch soon",
         status: 'success',
         duration: 9000,
         isClosable: true,
@@ -70,6 +94,7 @@ export default function JoinBetaForm() {
           width={{ base: 'full', md: '20rem' }}
           variant="outline"
           placeholder="Email address"
+          _placeholder={{ color: 'gray.400' }}
           borderColor="gray.300"
           fontSize="md"
           color="gray.500"

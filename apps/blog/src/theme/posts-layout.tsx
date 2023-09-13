@@ -55,7 +55,7 @@ export function PostsLayout(): ReactElement {
         as="li"
         display="flex"
         key={post.route}
-        h={{ base: 'auto', lg: post.index === 1 ? '284px' : '272px' }}
+        // h={{ base: 'auto', lg: post.index === 1 ? '350px' : '272px' }}
         colSpan={post.index === 1 ? 2 : 1}
         position="relative"
         className="post-item"

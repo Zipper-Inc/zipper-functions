@@ -2,9 +2,13 @@ import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 import { SessionOrganizationMembership } from '~/pages/api/auth/[...nextauth]';
 import { trpc } from '~/utils/trpc';
+import { useAnalytics } from './use-analytics';
+import { useUser } from './use-user';
 
 export const useOrganizationList = () => {
   const session = useSession();
+  const analytics = useAnalytics();
+  const { user } = useUser();
 
   const [organizationList, setOrganizationList] = useState<
     SessionOrganizationMembership[]
@@ -38,6 +42,18 @@ export const useOrganizationList = () => {
 
   return {
     createOrganization: async (name: string) => {
+      analytics?.identify(user?.username, {
+        email: user?.email,
+      });
+
+      analytics?.group(name.toLocaleLowerCase().replace(' ', '.'), {
+        name,
+      });
+
+      analytics?.track('Created Org', {
+        email: user?.email,
+        company: name,
+      });
       return createOrganization.mutateAsync({ name });
     },
     organizationList,

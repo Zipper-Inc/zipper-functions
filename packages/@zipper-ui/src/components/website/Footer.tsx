@@ -12,7 +12,10 @@ import {
   Text,
   VStack,
 } from '@chakra-ui/react';
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { initApplet } from '@zipper-inc/client-js';
+import shuffle from 'lodash.shuffle';
+import { BLUE, ORANGE, PURPLE } from '../../theme/theme';
+import { FormEvent, useEffect, useState } from 'react';
 import { FiCheck, FiCode, FiPlay, FiShuffle } from 'react-icons/fi';
 import { SmartFunctionOutput } from '../function-output/smart-function-output';
 import { ZipperSymbol } from '../zipperSymbol';
@@ -41,6 +44,8 @@ const LINKS = {
         href: 'https://zipper.dev/auth/signin',
         external: true,
       },
+      { label: 'Privacy', href: '/privacy', external: false },
+      { label: 'Terms', href: '/terms', external: false },
     ],
     BLOG: [
       {
@@ -59,6 +64,12 @@ const LINKS = {
         href: 'https://zipper.dev/auth/signin',
         external: true,
       },
+      {
+        label: 'Privacy',
+        href: 'https://localhost:3000/privacy',
+        external: false,
+      },
+      { label: 'Terms', href: 'https://localhost:3000/terms', external: false },
     ],
   },
 
@@ -76,6 +87,8 @@ const LINKS = {
         href: 'https://zipper.dev/auth/signin',
         external: true,
       },
+      { label: 'Privacy', href: '/privacy', external: false },
+      { label: 'Terms', href: '/terms', external: false },
     ],
     BLOG: [
       { href: '/', label: 'Blog', external: true },
@@ -94,18 +107,20 @@ const LINKS = {
         href: 'https://zipper.dev/auth/signin',
         external: true,
       },
+      { label: 'Privacy', href: 'https://zipper.dev/privacy', external: false },
+      { label: 'Terms', href: 'https://zipper.dev/terms', external: false },
     ],
   },
 };
 
 const COLORS = {
-  inputs: ['purple', 'blue', 'brandOrange'],
-  params: {
-    1: 'solid',
-    2: 'bicolor',
-    3: 'tricolor',
-  },
+  purple: PURPLE,
+  blue: BLUE,
+  brandOrange: ORANGE,
 };
+
+type ColorChoice = keyof typeof COLORS;
+const COLOR_CHOICES = Object.keys(COLORS) as ColorChoice[];
 
 /* -------------------------------------------- */
 /* Components                                   */
@@ -116,35 +131,45 @@ const AppletDemo = () => {
   const [loading, setLoading] = useState(false);
 
   const [inputs, setInputs] = useState({
-    layout: 'surprise-me',
-    selectedColors: [] as string[],
+    layout: 'random',
+    selectedColors: [] as ColorChoice[],
   });
 
-  const colorMode = useMemo(
-    () =>
-      COLORS.params[
-        inputs.selectedColors.length as keyof typeof COLORS.params
-      ] ?? 'surprise-me',
-    [inputs.selectedColors],
-  );
-
-  const fetchLogoImage = async (event: FormEvent) => {
-    event.preventDefault();
+  const fetchLogoImage = async (event?: FormEvent) => {
+    event?.preventDefault();
 
     setLoading(true);
 
-    const result = await fetch('https://zipper-logo.zipper.run/relay', {
-      method: 'POST',
-      body: JSON.stringify({
-        layout: inputs.layout,
-        colorMode,
-        size: 6,
-      }),
-    }).then((res) => res.json());
+    const selectedColorCount = inputs.selectedColors.length;
+    let pattern = 'random';
+    if (selectedColorCount === 1) pattern = 'solid';
+    if (selectedColorCount === 2)
+      pattern = shuffle([
+        'bicolor',
+        'bicolor-alt',
+        'bicolor-stripes',
+      ])[0] as string;
+    if (selectedColorCount === 3)
+      pattern = shuffle([
+        'tricolor',
+        'tricolor-alt',
+        'tricolor-stripes',
+      ])[0] as string;
+
+    const result = await initApplet('zipper-logo').run({
+      pattern,
+      layout: inputs.layout,
+      size: 5.25,
+      overrideColors: inputs.selectedColors.map((k: ColorChoice) => COLORS[k]),
+    });
 
     setLogoRAW(result);
     setLoading(false);
   };
+
+  useEffect(() => {
+    fetchLogoImage();
+  }, []);
 
   return (
     <Flex
@@ -152,7 +177,6 @@ const AppletDemo = () => {
       align="center"
       bg="purple.900"
       w="full"
-      onSubmit={fetchLogoImage}
       gap={10}
       py={{ base: 20, lg: 24 }}
     >
@@ -169,7 +193,6 @@ const AppletDemo = () => {
           <Center
             as="figure"
             flex={1}
-            h="full"
             minH="320px"
             border="1px"
             bg="purple.800"
@@ -179,8 +202,8 @@ const AppletDemo = () => {
             ) : (
               <Text textAlign="center" color="purple.300" fontWeight={500}>
                 {loading
-                  ? 'Generating the model...'
-                  : "Select the pre-definitions to gen the Zipper's logo"}
+                  ? 'Rearranging letters and colors...'
+                  : 'Generate a unique version of the Zipper logo'}
               </Text>
             )}
           </Center>
@@ -190,7 +213,7 @@ const AppletDemo = () => {
                 Colors
               </Text>
               <HStack>
-                {COLORS.inputs.map((color) => {
+                {COLOR_CHOICES.map((color) => {
                   const isActive = inputs.selectedColors.includes(color);
                   return (
                     <IconButton
@@ -276,14 +299,13 @@ const AppletDemo = () => {
                   aria-label="layout-shuffle"
                   _active={{
                     bg: 'gray.600',
+                    color: 'white',
                   }}
                   size="md"
-                  isActive={inputs.layout === 'surprise-me'}
+                  isActive={inputs.layout === 'random'}
                   icon={<FiShuffle />}
                   as="span"
-                  onClick={() =>
-                    setInputs({ ...inputs, layout: 'surprise-me' })
-                  }
+                  onClick={() => setInputs({ ...inputs, layout: 'random' })}
                   cursor="pointer"
                   borderRadius="full"
                   bg="gray.200"
@@ -292,7 +314,6 @@ const AppletDemo = () => {
               </HStack>
             </VStack>
             <Button
-              type="submit"
               display="flex"
               alignItems="center"
               gap={2}
@@ -300,6 +321,7 @@ const AppletDemo = () => {
               size="lg"
               w="full"
               fontWeight={500}
+              onClick={fetchLogoImage}
             >
               <FiPlay /> Run
             </Button>
@@ -326,9 +348,10 @@ const AppletDemo = () => {
 
 type Props = {
   links?: Partial<Parameters<typeof Links>[0]>;
+  hideAppletDemo?: boolean;
 };
 
-export const WebSiteFooter = ({ links }: Props) => {
+export const WebSiteFooter = ({ links, hideAppletDemo }: Props) => {
   const [URL, setURL] = useState('');
 
   useEffect(() => {
@@ -344,13 +367,13 @@ export const WebSiteFooter = ({ links }: Props) => {
 
   return (
     <VStack align="center" as="footer" w="full">
-      <AppletDemo />
+      {!hideAppletDemo && <AppletDemo />}
 
       {/** footer nav */}
       <VStack
         as="section"
         p={['52px 24px', '100px 130px']}
-        bgColor="neutral.100"
+        bgColor={hideAppletDemo ? 'white' : 'neutral.100'}
         w="full"
         align="center"
         mt="0 !important"
@@ -417,7 +440,20 @@ export const WebSiteFooter = ({ links }: Props) => {
               align="flex-start"
             >
               <Links
-                data={LINKS[linksObj.ENV][linksObj.SITE].slice(4, 9)}
+                data={LINKS[linksObj.ENV][linksObj.SITE].slice(4, 8)}
+                component={links?.component}
+                displayActiveLink={false}
+              />
+            </VStack>
+            <VStack
+              as="ul"
+              flex={1}
+              h="full"
+              justify="space-between"
+              align="flex-start"
+            >
+              <Links
+                data={LINKS[linksObj.ENV][linksObj.SITE].slice(9, 12)}
                 component={links?.component}
                 displayActiveLink={false}
               />

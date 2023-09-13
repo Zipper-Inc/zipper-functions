@@ -49,7 +49,7 @@ import { useUser } from '~/hooks/use-user';
 import { useOrganizationList } from '~/hooks/use-organization-list';
 import { getEditAppletLink } from '@zipper/utils';
 import { useEditorContext } from '../context/editor-context';
-import { AICodeOutput } from '@zipper/types';
+import { useAnalytics } from '~/hooks/use-analytics';
 
 const getDefaultCreateAppFormValues = () => ({
   name: generateDefaultSlug(),
@@ -78,6 +78,7 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
 }) => {
   const { organization } = useOrganization();
   const { user } = useUser();
+  const analytics = useAnalytics();
   const { setActive } = useOrganizationList();
   const utils = trpc.useContext();
   const router = useRouter();
@@ -199,9 +200,11 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
             userRequest: description,
           })
         : undefined;
+
     const mainCode = aiOutput?.find(
       (output) => output.filename === 'main.ts',
     )?.code;
+
     await addApp.mutateAsync(
       {
         description,
@@ -243,6 +246,16 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
             duration: 9999,
             isClosable: false,
           });
+
+          console.log('here');
+          analytics?.track(
+            templateSelection === 'ai'
+              ? 'Generated Applet (AI)'
+              : 'Created Applet',
+            {
+              email: user?.email,
+            },
+          );
 
           router.push(
             getEditAppletLink(applet!.resourceOwner!.slug, applet!.slug),
@@ -565,6 +578,16 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
                               duration: 9999,
                               isClosable: false,
                             });
+
+                            console.log('here');
+                            analytics?.track(
+                              templateSelection === 'ai'
+                                ? 'Generated Applet (AI)'
+                                : 'Created Applet',
+                              {
+                                email: user?.email,
+                              },
+                            );
 
                             router.push(
                               getEditAppletLink(
