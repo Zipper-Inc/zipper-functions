@@ -33,31 +33,6 @@ const POSITION_DETAILS = `Help us set and execute a product design strategy and 
 
 We know that the product experience is going to be key to helping people understand what's possible with Zipper and software within their businesses. It's a big challenge and a bigger opportunity.
 
-Once here you will:
-
-• Develop and execute a design strategy that solves customer needs and achieves business goals.
-• Own all aspects of product design at Zipper - everything from design aesthetic to the interaction model - across web, mobile, and various integration channels.
-• Employ research, storytelling, design systems, and design thinking to solve customer needs and achieve business goals.
-• Prototype and iterate quickly based on intuition and user feedback.
-• Partner with product and engineering to ensure high-quality and consistent implementation and UX.
-• Provide input and opinions on brand & marketing design.
-
-We're looking for:
-
-• At least 5 years of relevant experience designing delightful enterprise and/or consumer web applications from the ground up.
-• A relaxed and curious approach to ambiguous problems.
-• Experience and willingness to single-handedly drive the entire product design process.
-• Strong attention to detail and a keen eye for visual design.
-• Track record of using prototypes and experiments to validate ideas.
-• A collaborative design partner that's excited to build a product from the ground up.
-
-Benefits:
-
-• Healthcare (health, dental, vision)
-• Flexible PTO (with a 15 day minimum)
-• Parent-friendlv environment
-• Autonomy, Ownership, Equity
-
 Interested? We'd love to hear from you. Send your resume, portfolio, or any other useful information to dreamteam@zipper.works
 `;
 
@@ -260,21 +235,23 @@ const AboutPage: NextPageWithLayout = () => {
               spacing={5}
               w="full"
             >
-              <Text
-                whiteSpace={{ lg: 'pre-line' }}
-                flex={1}
-                fontSize={['18px']}
-                color="gray.900"
-              >
+              <Text flex={1} fontSize={['18px']} color="gray.900">
                 {`We’re a small team  that likes to build software that helps
-                people build software.
-                
-                Our experience across different companies like Slack and GitHub
+                people build software.`}
+                <br />
+                <br />
+                {`Our experience across different companies like Slack and GitHub
                 has taught us that people can do incredibly creative things
                 given the space and opportunity. We're building Zipper as a
                 platform to bring that creativity out.`}
+                <br />
+                <br />
+                {`We’re currently not actively hiring but interested to hear where you think you could fit in. Send a note to `}
+                <a href="mailto:jobs@zipper.works">jobs@zipper.works</a>
+                {` along with a resume or portfolio.`}
               </Text>
 
+              {/*
               <Accordion defaultIndex={[0]} allowMultiple>
                 <AccordionItem border="none" bg="white">
                   <h2>
@@ -304,6 +281,7 @@ const AboutPage: NextPageWithLayout = () => {
                   </AccordionPanel>
                 </AccordionItem>
               </Accordion>
+              */}
             </SimpleGrid>
           </Container>
 
