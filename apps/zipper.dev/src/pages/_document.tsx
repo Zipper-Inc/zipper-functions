@@ -14,13 +14,17 @@ class MyDocument extends Document {
   }
 
   render() {
+    const isHomePage = this.props.__NEXT_DATA__.page === '/home';
+
+    console.log(isHomePage);
+
     return (
       <Html>
         <Head />
         <body>
           <Main />
           <NextScript />
-          <Analytics />
+          {isHomePage && <Analytics />}
         </body>
       </Html>
     );

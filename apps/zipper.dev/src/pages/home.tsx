@@ -38,6 +38,7 @@ import JoinBetaForm from '~/components/join-beta-form';
 import { useAnalytics } from '~/hooks/use-analytics';
 import Link from 'next/link';
 import { HiArrowUpRight } from 'react-icons/hi2';
+import { NextPageWithLayout } from './_app';
 
 /* -------------------------------------------- */
 /* Content                                      */
@@ -944,7 +945,7 @@ const BetaSection = () => {
 /* Render                                       */
 /* -------------------------------------------- */
 
-const HomePage = () => {
+const HomePage: NextPageWithLayout = () => {
   const analytics = useAnalytics();
 
   useEffect(() => {
@@ -972,5 +973,7 @@ const HomePage = () => {
     </Website>
   );
 };
+
+HomePage.skipAuth = true;
 
 export default HomePage;
