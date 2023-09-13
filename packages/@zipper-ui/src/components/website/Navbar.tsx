@@ -59,7 +59,7 @@ export const WebSiteNavbar = ({ links, site = SiteType.Home }: Props) => {
           aria-label="menu"
           icon={<FiMenu size={24} />}
           ref={btnRef as any}
-          colorScheme="gray"
+          color="gray.800"
           bg="none"
           onClick={onOpen}
         />
@@ -85,7 +85,7 @@ export const WebSiteNavbar = ({ links, site = SiteType.Home }: Props) => {
                   />
                 )}
                 <Button
-                  colorScheme="gray"
+                  color="gray.600"
                   fontWeight={500}
                   h="44px"
                   variant="outline"
@@ -125,8 +125,9 @@ export const WebSiteNavbar = ({ links, site = SiteType.Home }: Props) => {
           as={Link}
           href="/auth/signin"
           isExternal
-          colorScheme="gray"
           fontWeight={500}
+          color="gray.600"
+          textDecoration="none"
           h="44px"
           variant="outline"
         >
