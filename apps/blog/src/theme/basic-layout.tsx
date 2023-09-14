@@ -166,6 +166,7 @@ export const BasicLayout = ({ children }: { children: ReactNode }) => {
               links={{ component: NextLink }}
               hideAppletDemo
               site={SiteType.Blog}
+              bgColor={!isIndex ? 'white' : undefined}
             />
           </HeadingContext.Provider>
         </LightMode>

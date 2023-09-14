@@ -293,12 +293,14 @@ type Props = {
   links?: Partial<Parameters<typeof Links>[0]>;
   hideAppletDemo?: boolean;
   site?: SiteType;
+  bgColor?: string;
 };
 
 export const WebSiteFooter = ({
   links,
   hideAppletDemo,
   site = SiteType.Home,
+  bgColor = 'brandGray.100',
 }: Props) => {
   const linksObj = LINKS[site];
 
@@ -310,7 +312,7 @@ export const WebSiteFooter = ({
       <VStack
         as="section"
         p={['52px 24px', '100px 130px']}
-        bgColor="brandGray.100"
+        bgColor={bgColor}
         w="full"
         align="center"
         mt="0 !important"
