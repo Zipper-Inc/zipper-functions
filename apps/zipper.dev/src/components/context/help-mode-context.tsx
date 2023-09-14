@@ -40,7 +40,12 @@ export const inspectableComponents: InspectableComponents = {
   },
   PreviewPanel: {
     name: 'Preview',
-    description: 'The Playground Code Editor is where you can write your code.',
+    description: `(if lib file) Since you are not exporting a handler function, there's nothing important here.
+    (if handler) You can preview the generated form for your hander function's input and actually run it here to test it out.`,
+  },
+  ConsoleTab: {
+    name: 'Console',
+    description: `Anything that you send with console.* as well as save, deploy, and other messages and/or errors that come from Zipper will show up in your Console. `,
   },
   CodeTab: {
     name: 'Code',

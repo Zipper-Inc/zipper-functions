@@ -43,20 +43,17 @@ import { useRouter } from 'next/router';
 import { IconButton } from '@chakra-ui/react';
 import { QuestionOutlineIcon } from '@chakra-ui/icons';
 import {
-  FiArrowLeft,
   FiBook,
   FiBookOpen,
   FiChevronLeft,
   FiChrome,
-  FiCommand,
   FiCrosshair,
-  FiSearch,
   FiX,
 } from 'react-icons/fi';
-import Link from 'next/link';
 import {
   useHelpMode,
   inspectableComponents,
+  useHelpBorder,
 } from '../context/help-mode-context';
 
 import { HiOutlineMegaphone } from 'react-icons/hi2';
@@ -141,6 +138,8 @@ export function Playground({
     elementDescription,
     hoveredElement,
   } = useHelpMode();
+
+  const { onMouseEnter, onMouseLeave } = useHelpBorder();
   const feedbackModal = useDisclosure();
 
   return (
@@ -182,34 +181,63 @@ export function Playground({
           >
             <HStack spacing={2} flex={4}>
               {/* CODE */}
-              <TabButton title="Code" href={makeHref(PlaygroundTab.Code)} />
+              <div
+                onMouseEnter={onMouseEnter('CodeTab')}
+                onMouseLeave={onMouseLeave}
+              >
+                <TabButton title="Code" href={makeHref(PlaygroundTab.Code)} />
+              </div>
 
               {/* SCHEDULES */}
-              <TabButton
-                title="Schedules"
-                href={makeHref(PlaygroundTab.Schedules)}
-              />
-
+              <div
+                onMouseEnter={onMouseEnter('SchedulesTab')}
+                onMouseLeave={onMouseLeave}
+              >
+                <TabButton
+                  title="Schedules"
+                  href={makeHref(PlaygroundTab.Schedules)}
+                />
+              </div>
               {/* SECRETS */}
-              <TabButton
-                title="Secrets"
-                href={makeHref(PlaygroundTab.Secrets)}
-              />
+
+              <div
+                onMouseEnter={onMouseEnter('SecretsTab')}
+                onMouseLeave={onMouseLeave}
+              >
+                <TabButton
+                  title="Secrets"
+                  href={makeHref(PlaygroundTab.Secrets)}
+                />
+              </div>
 
               {/* RUNS */}
-              <TabButton title="Runs" href={makeHref(PlaygroundTab.Runs)} />
+              <div
+                onMouseEnter={onMouseEnter('RunsTab')}
+                onMouseLeave={onMouseLeave}
+              >
+                <TabButton title="Runs" href={makeHref(PlaygroundTab.Runs)} />
+              </div>
 
               {/* VERSIONS */}
-              <TabButton
-                title="Versions"
-                href={makeHref(PlaygroundTab.Versions)}
-              />
-
+              <div
+                onMouseEnter={onMouseEnter('VersionsTab')}
+                onMouseLeave={onMouseLeave}
+              >
+                <TabButton
+                  title="Versions"
+                  href={makeHref(PlaygroundTab.Versions)}
+                />
+              </div>
               {/* SETTINGS */}
-              <TabButton
-                title="Settings"
-                href={makeHref(PlaygroundTab.Settings)}
-              />
+              <div
+                onMouseEnter={onMouseEnter('SettingsTab')}
+                onMouseLeave={onMouseLeave}
+              >
+                <TabButton
+                  title="Settings"
+                  href={makeHref(PlaygroundTab.Settings)}
+                />
+              </div>
             </HStack>
             {editorIds.length > 1 && (
               <PlaygroundAvatars
@@ -289,7 +317,7 @@ export function Playground({
                   marginBottom={4}
                   marginLeft={10}
                   px={4}
-                  py={2}
+                  pb={2}
                 >
                   <MenuButton
                     as={IconButton}
@@ -298,7 +326,7 @@ export function Playground({
                     variant="outline"
                     rounded="full"
                     border="none"
-                    boxShadow="lg"
+                    boxShadow="md"
                     zIndex="10"
                     _hover={{
                       bg: 'primary.25',
@@ -306,7 +334,7 @@ export function Playground({
                   />
                 </Tooltip>
 
-                <MenuList border={'none'} boxShadow="2xl" py={2}>
+                <MenuList pt={0}>
                   {!helpModeEnabled ? (
                     <>
                       <Box
@@ -328,21 +356,7 @@ export function Playground({
                           <FiX size={20} color="gray" />
                         </Button>
                       </Box>
-                      {/* 
-                        <Box w="full" bg={'#F9FAFB'} mb={4} px={2}>
-                          <InputGroup>
-                            <InputLeftElement pointerEvents="none">
-                              <FiSearch color="gray.100" />
-                            </InputLeftElement>
-                            <Input
-                              type="text"
-                              placeholder="Search documentation"
-                              border="none"
-                              color={'fg.200'}
-                            />
-                          </InputGroup>
-                        </Box> 
-                      */}
+
                       <MenuItem
                         color="fg.700"
                         icon={<FiBook size={20} color="#98A2B3" />}
@@ -394,18 +408,13 @@ export function Playground({
                       >
                         Inspect UI
                       </MenuItem>
-                      <MenuItem
-                        color="fg.700"
-                        icon={<FiCommand size={20} color="#98A2B3" />}
-                      >
-                        Keyboard Shortcuts
-                      </MenuItem>
-                      <MenuItem
+
+                      {/* <MenuItem
                         color="fg.700"
                         icon={<FiChrome size={20} color="#98A2B3" />}
                       >
                         Contact support
-                      </MenuItem>
+                      </MenuItem> */}
                     </>
                   ) : (
                     <>
@@ -416,6 +425,7 @@ export function Playground({
                         pb={8}
                         px={2}
                         maxW={237}
+                        minH={'200px'}
                       >
                         <Flex
                           alignItems={'center'}

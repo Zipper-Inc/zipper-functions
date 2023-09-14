@@ -18,7 +18,7 @@ import { useEditorContext } from '../context/editor-context';
 import AppEditSidebarApplet from './app-edit-sidebar-applet';
 import { AppConsole } from './app-console';
 import { HiEye, HiPencil } from 'react-icons/hi2';
-import { useHelpBorder } from '../context/help-mode-context';
+import { useHelpBorder, useHelpMode } from '../context/help-mode-context';
 
 type AppEditSidebarProps = {
   appSlug: string;
@@ -61,6 +61,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
 
   const isMarkdown = currentScript?.filename.endsWith('.md');
   const { style, onMouseEnter, onMouseLeave } = useHelpBorder();
+  const { hoveredElement } = useHelpMode();
 
   return (
     <VStack
@@ -68,10 +69,11 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
       w="full"
       onMouseEnter={onMouseEnter('PreviewPanel')}
       onMouseLeave={onMouseLeave()}
-      outline={style('PreviewPanel').border}
-      mr={4}
-      ml={2}
-      my={2}
+      border={
+        hoveredElement === 'PreviewPanel'
+          ? style('PreviewPanel').border
+          : '4px solid transparent'
+      }
     >
       {isMarkdown && (
         <Button
@@ -128,11 +130,15 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
           pb={4}
         >
           <HStack spacing={2}>
-            <TabButton title="Preview" />
-            <TabButton
-              title="Console"
-              badge={unreadLogs > 0 ? unreadLogs : undefined}
-            />
+            <div onMouseEnter={onMouseEnter('PreviewPanel')}>
+              <TabButton title="Preview" />
+            </div>
+            <div onMouseEnter={onMouseEnter('ConsoleTab')}>
+              <TabButton
+                title="Console"
+                badge={unreadLogs > 0 ? unreadLogs : undefined}
+              />
+            </div>
           </HStack>
         </TabList>
         <TabPanels
