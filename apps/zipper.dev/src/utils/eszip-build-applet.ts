@@ -31,7 +31,10 @@ export async function build({
   version,
 }: {
   baseUrl?: string;
-  app: Omit<App, 'datastore' | 'categories' | 'deletedAt' | 'isTemplate'> & {
+  app: Omit<
+    App,
+    'datastore' | 'categories' | 'deletedAt' | 'isTemplate' | 'dailyRunLimit'
+  > & {
     scripts: Script[];
   };
   version: string;
@@ -150,7 +153,10 @@ export async function buildAndStoreApplet({
   isPublished,
   userId,
 }: {
-  app: Omit<App, 'datastore' | 'categories' | 'deletedAt' | 'isTemplate'> & {
+  app: Omit<
+    App,
+    'datastore' | 'categories' | 'deletedAt' | 'isTemplate' | 'dailyRunLimit'
+  > & {
     scripts: Script[];
   };
   isPublished?: boolean;

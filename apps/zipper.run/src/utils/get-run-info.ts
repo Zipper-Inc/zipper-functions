@@ -3,7 +3,7 @@ import { getZipperApiUrl, ZIPPER_TEMP_USER_ID_HEADER } from '@zipper/utils';
 
 /**
  * App info endpoint url
- * @see /apps/zipper.dev/pages/api/app/info
+ * @see /apps/zipper.dev/pages/api/appRun
  */
 const APP_INFO_URL = `${getZipperApiUrl()}/appRun`;
 

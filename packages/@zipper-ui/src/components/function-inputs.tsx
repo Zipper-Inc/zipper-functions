@@ -1,5 +1,5 @@
-import { Select } from '@chakra-ui/react';
-import { useRef, useState } from 'react';
+import { Select, Spinner } from '@chakra-ui/react';
+import { Suspense, useRef, useState } from 'react';
 import {
   Box,
   Flex,
@@ -24,6 +24,7 @@ import { VscAdd } from 'react-icons/vsc';
 import { FieldValues, UseFormReturn, RegisterOptions } from 'react-hook-form';
 import { InputType, InputParam } from '@zipper/types';
 import { getFieldName } from '@zipper/utils';
+import { ErrorBoundary } from './error-boundary';
 
 interface Props {
   params: InputParam[];
@@ -346,16 +347,26 @@ function SingleInput({
           {isOpen && (
             <VStack w="full" align="start" spacing="2">
               <Flex width="100%">
-                <FunctionParamInput
-                  inputKey={name}
-                  type={type}
-                  value={null}
-                  optional={optional}
-                  formContext={formContext}
-                  isDisabled={isDisabled}
-                  placeholder={placeholder}
-                  details={details}
-                />
+                <ErrorBoundary
+                  fallback={
+                    <Text fontSize="sm" fontWeight="medium" color="red.500">
+                      An error occurred while loading the input
+                    </Text>
+                  }
+                >
+                  <Suspense fallback={<Spinner />}>
+                    <FunctionParamInput
+                      inputKey={name}
+                      type={type}
+                      value={null}
+                      optional={optional}
+                      formContext={formContext}
+                      isDisabled={isDisabled}
+                      placeholder={placeholder}
+                      details={details}
+                    />
+                  </Suspense>
+                </ErrorBoundary>
               </Flex>
 
               {description && (

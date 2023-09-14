@@ -1,17 +1,19 @@
-import { ChakraProvider } from '@chakra-ui/react';
+import { useColorMode } from '@chakra-ui/react';
 import { AppProps } from 'next/app';
-import { theme } from '@zipper/ui';
+import { withDefaultTheme } from '@zipper/ui';
+import { useEffect } from 'react';
+import { useTheme } from 'next-themes';
 
 function MyApp(props: AppProps) {
-  if (typeof window !== 'undefined') {
-    localStorage.setItem('chakra-ui-color-mode', localStorage.getItem('theme'));
-  }
+  const { setColorMode: setChakraColorMode } = useColorMode();
+  const { theme: nextThemesTheme } = useTheme();
 
-  return (
-    <ChakraProvider theme={theme}>
-      <props.Component {...props.pageProps} />
-    </ChakraProvider>
-  );
+  // Make sure the `next-themes` tailwind docs theme is in sync with the rest of chakra stuff
+  useEffect(() => {
+    setChakraColorMode(nextThemesTheme);
+  }, [nextThemesTheme]);
+
+  return <props.Component {...props.pageProps} />;
 }
 
-export default MyApp;
+export default withDefaultTheme(MyApp);

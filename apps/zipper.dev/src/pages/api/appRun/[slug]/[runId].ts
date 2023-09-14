@@ -13,7 +13,7 @@ import { canUserEdit } from '~/server/routers/app.router';
 import { parseInputForTypes } from '~/utils/parse-code';
 import { requiredUserAuthConnectorFilter } from '~/utils/user-auth-connector-filter';
 import { getZipperDotDevUrl, ZIPPER_TEMP_USER_ID_HEADER } from '@zipper/utils';
-import { getUserInfo, UserInfoReturnType } from '../../app/info/[slug]';
+import { getUserInfo, UserInfoReturnType } from '../../bootInfo/[slug]';
 
 export default async function handler(
   req: NextApiRequest,

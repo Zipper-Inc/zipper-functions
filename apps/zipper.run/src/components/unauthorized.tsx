@@ -42,13 +42,17 @@ export default function Unauthorized() {
                 </Text>
                 <Button
                   colorScheme="purple"
+                  display="flex"
+                  gap={1}
                   onClick={() => {
                     window.location.href = `${
                       getZipperDotDevUrl().origin
                     }/auth/from/${window.location.host.split('.')[0]}`;
                   }}
+                  leftIcon={
+                    <ZipperSymbol fill="currentColor" width={16} height={16} />
+                  }
                 >
-                  <ZipperSymbol fill="bgColor" height={16} />
                   Sign In to Zipper
                 </Button>
               </>

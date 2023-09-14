@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { NextRequest } from 'next/server';
 import * as jose from 'jose';
 import addAppRun from './add-app-run';
-import getAppInfo from './get-app-info';
+import getBootInfo from './get-boot-info';
 import getValidSubdomain from './get-valid-subdomain';
 import { getFilenameAndVersionFromPath } from './get-values-from-url';
 import {
@@ -117,21 +117,29 @@ export async function relayRequest(
     filename = `${filename}.ts`;
   }
 
-  const appInfoResult = await getAppInfo({
+  const bootInfoResult = await getBootInfo({
     subdomain,
     tempUserId,
     filename,
     token,
   });
-  if (__DEBUG__) console.log('getAppInfo', { result: appInfoResult });
 
-  if (!appInfoResult.ok)
+  if (__DEBUG__) console.log('getBootInfo', { result: bootInfoResult });
+
+  if (!bootInfoResult.ok) {
+    const errorStatus = bootInfoResult.status || 500;
     return {
-      status: appInfoResult.error === 'UNAUTHORIZED' ? 401 : 500,
-      result: appInfoResult.error,
+      status: errorStatus,
+      result: JSON.stringify({
+        ok: false,
+        status: errorStatus,
+        error: bootInfoResult.error,
+        errorClass: 'Boot',
+      }),
     };
+  }
 
-  const { app, userAuthConnectors, userInfo } = appInfoResult.data;
+  const { app, userAuthConnectors, userInfo } = bootInfoResult.data;
 
   // Get a version from URL or use the latest
   const version = _version || app.publishedVersionHash?.slice(0, 7) || 'latest';
