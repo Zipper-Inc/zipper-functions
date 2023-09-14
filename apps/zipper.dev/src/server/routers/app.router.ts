@@ -251,7 +251,7 @@ export const appRouter = createRouter()
       });
 
       const resourceOwner = await prisma.resourceOwnerSlug.findFirst({
-        where: { resourceOwnerId: app.createdById || app.organizationId },
+        where: { resourceOwnerId: app.organizationId ?? app.createdById },
       });
 
       return { ...app, scriptMain, resourceOwner };
