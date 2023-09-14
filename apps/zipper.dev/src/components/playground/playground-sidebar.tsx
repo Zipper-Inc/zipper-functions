@@ -20,6 +20,7 @@ import {
 } from '@chakra-ui/react';
 import React, { useEffect, useRef, useState } from 'react';
 import AddScriptForm from '~/components/playground/add-script-form';
+import { useHelpBorder } from '~/components/context/help-mode-context';
 
 import { Script } from '@prisma/client';
 import { trpc } from '~/utils/trpc';
@@ -139,6 +140,8 @@ export function PlaygroundSidebar({
     onOpen();
   };
 
+  const { style, onMouseEnter, onMouseLeave } = useHelpBorder();
+
   return (
     <>
       <VStack
@@ -151,6 +154,9 @@ export function PlaygroundSidebar({
         spacing={4}
         boxShadow="lg"
         mr={2}
+        onMouseEnter={onMouseEnter('PlaygroundSidebar')}
+        onMouseLeave={onMouseLeave()}
+        outline={style('PlaygroundSidebar').border}
       >
         <HStack px={3}>
           <Text size="sm" flexGrow={1} fontWeight="medium">
