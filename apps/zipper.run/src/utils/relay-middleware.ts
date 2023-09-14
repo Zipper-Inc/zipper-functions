@@ -259,10 +259,54 @@ export default async function serveRelay({
   }
 
   if (status >= 500) {
-    return new NextResponse(`Error: ${result}`, {
-      status,
-      headers,
-    });
+    return new NextResponse(
+      JSON.stringify({
+        $zipperType: 'Zipper.Component',
+        type: 'stack',
+        props: {
+          direction: 'column',
+        },
+        children: [
+          {
+            $zipperType: 'Zipper.Component',
+            type: 'markdown',
+            props: {},
+            children: [
+              '### Looks like something went wrong',
+              `\`\`\`${result}\`\`\``,
+            ],
+          },
+          {
+            $zipperType: 'Zipper.Component',
+            type: 'markdown',
+            props: {},
+            children: ['---', "#### If you're stuck, we can help"],
+          },
+          {
+            'Schedule a debug call': {
+              $zipperType: 'Zipper.Component',
+              type: 'markdown',
+              props: {},
+              children: [
+                '[Book here](https://cal.com/team/zipper-inc/help-me)',
+              ],
+            },
+            'Email support': {
+              $zipperType: 'Zipper.Component',
+              type: 'markdown',
+              props: {},
+              children: [
+                '[support@zipper.works](emailto:support@zipper.works)',
+              ],
+            },
+          },
+        ],
+      }),
+      {
+        status,
+        headers,
+      },
+    );
   }
 
   return new NextResponse(result, {
