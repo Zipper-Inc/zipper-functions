@@ -20,7 +20,7 @@ import { FiCheck, FiCode, FiPlay, FiShuffle } from 'react-icons/fi';
 import { SmartFunctionOutput } from '../function-output/smart-function-output';
 import { ZipperSymbol } from '../zipperSymbol';
 import { LAYOUTS_ICONS } from './common/Layouts';
-import { Links } from './common/Links';
+import { Links, SiteType } from './common/Links';
 import { WebSiteSubscriptionForm } from './common/Subscription';
 
 /* -------------------------------------------- */
@@ -30,87 +30,36 @@ import { WebSiteSubscriptionForm } from './common/Subscription';
 const DEMO_DESCRIPTION = 'Quickly build interactive apps, just like this:';
 
 const LINKS = {
-  DEV: {
-    SITE: [
-      { href: '/home', label: 'Features', external: false },
-      { href: '/about', label: 'About', external: false },
-      { href: 'http://localhost:3003', label: 'Docs', external: true },
-      { href: 'http://localhost:3004', label: 'Blog', external: true },
-      { label: 'Careers', href: '/about', external: false },
-      { label: 'About', href: '/about', external: false },
-      { label: 'Contact', href: '/about', external: false },
-      {
-        label: 'Sign In',
-        href: 'https://zipper.dev/auth/signin',
-        external: true,
-      },
-      { label: 'Privacy', href: '/privacy', external: false },
-      { label: 'Terms', href: '/terms', external: false },
-    ],
-    BLOG: [
-      {
-        href: 'http://localhost:3000/home',
-        label: 'Features',
-        external: true,
-      },
-      { href: 'http://localhost:3000/about', label: 'About', external: true },
-      { href: 'http://localhost:3003', label: 'Docs', external: true },
-      { href: '/', label: 'Blog', external: true },
-      { label: 'Careers', href: 'http://localhost:3000/about', external: true },
-      { label: 'About', href: 'http://localhost:3000/about', external: true },
-      { label: 'Contact', href: 'http://localhost:3000/about', external: true },
-      {
-        label: 'Sign In',
-        href: 'https://zipper.dev/auth/signin',
-        external: true,
-      },
-      {
-        label: 'Privacy',
-        href: 'https://localhost:3000/privacy',
-        external: false,
-      },
-      { label: 'Terms', href: 'https://localhost:3000/terms', external: false },
-    ],
-  },
-
-  PROD: {
-    SITE: [
-      { href: '/home', label: 'Features', external: false },
-      { href: '/about', label: 'About', external: false },
-      { href: 'https://zipper.docs', label: 'Docs', external: true },
-      { href: 'https://zipper.blog', label: 'Blog', external: true },
-      { label: 'Careers', href: '/about', external: false },
-      { label: 'About', href: '/about', external: false },
-      { label: 'Contact', href: '/about', external: false },
-      {
-        label: 'Sign In',
-        href: 'https://zipper.dev/auth/signin',
-        external: true,
-      },
-      { label: 'Privacy', href: '/privacy', external: false },
-      { label: 'Terms', href: '/terms', external: false },
-    ],
-    BLOG: [
-      { href: '/', label: 'Blog', external: true },
-      {
-        href: 'https://zipper.dev/home',
-        label: 'Features',
-        external: true,
-      },
-      { href: 'https://zipper.dev/home', label: 'About', external: true },
-      { href: 'https://zipper.docs', label: 'Docs', external: true },
-      { label: 'Careers', href: 'https://zipper.dev/about', external: true },
-      { label: 'About', href: 'https://zipper.dev/about', external: true },
-      { label: 'Contact', href: 'https://zipper.dev/about', external: true },
-      {
-        label: 'Sign In',
-        href: 'https://zipper.dev/auth/signin',
-        external: true,
-      },
-      { label: 'Privacy', href: 'https://zipper.dev/privacy', external: false },
-      { label: 'Terms', href: 'https://zipper.dev/terms', external: false },
-    ],
-  },
+  [SiteType.Home]: [
+    { label: 'Features', href: '/home', external: false },
+    { label: 'About', href: '/about', external: false },
+    { label: 'Docs', href: '/docs', external: true },
+    { label: 'Blog', href: '/blog', external: false },
+    { label: 'Careers', href: '/about#careers', external: false },
+    { label: 'Contact', href: '/about#contact', external: false },
+    { label: 'Terms', href: '/terms', external: true },
+    { label: 'Privacy', href: '/privacy', external: true },
+  ],
+  [SiteType.Docs]: [
+    { label: 'Docs', href: '/docs', external: true },
+    { label: 'Features', href: '/home', external: false },
+    { label: 'Blog', href: '/blog', external: false },
+    { label: 'About', href: '/about', external: false },
+    { label: 'Careers', href: '/about#careers', external: false },
+    { label: 'Contact', href: '/about#contact', external: false },
+    { label: 'Terms', href: '/terms', external: true },
+    { label: 'Privacy', href: '/privacy', external: true },
+  ],
+  [SiteType.Blog]: [
+    { label: 'Blog', href: '/blog', external: false },
+    { label: 'Features', href: '/home', external: false },
+    { label: 'About', href: '/about', external: false },
+    { label: 'Docs', href: '/docs', external: true },
+    { label: 'Careers', href: '/about#careers', external: false },
+    { label: 'Contact', href: '/about#contact', external: false },
+    { label: 'Terms', href: '/terms', external: true },
+    { label: 'Privacy', href: '/privacy', external: true },
+  ],
 };
 
 const COLORS = {
@@ -190,19 +139,13 @@ const AppletDemo = () => {
           gridTemplateColumns={{ lg: '1fr 380px' }}
           gap={10}
         >
-          <Center
-            as="figure"
-            flex={1}
-            minH="320px"
-            border="1px"
-            bg="purple.800"
-          >
+          <Center as="figure" flex={1} minH="320px" bg="purple.800">
             {logoRAW && !loading ? (
               <SmartFunctionOutput result={logoRAW} level={0} tableLevel={0} />
             ) : (
               <Text textAlign="center" color="purple.300" fontWeight={500}>
                 {loading
-                  ? 'Rearranging letters and colors...'
+                  ? 'Rearranging colors and letters...'
                   : 'Generate a unique version of the Zipper logo'}
               </Text>
             )}
@@ -323,7 +266,7 @@ const AppletDemo = () => {
               fontWeight={500}
               onClick={fetchLogoImage}
             >
-              <FiPlay /> Run
+              <FiPlay /> Regenerate logo
             </Button>
           </VStack>
           {/* <Applet /> */}
@@ -349,21 +292,15 @@ const AppletDemo = () => {
 type Props = {
   links?: Partial<Parameters<typeof Links>[0]>;
   hideAppletDemo?: boolean;
+  site?: SiteType;
 };
 
-export const WebSiteFooter = ({ links, hideAppletDemo }: Props) => {
-  const [URL, setURL] = useState('');
-
-  useEffect(() => {
-    setURL(typeof window !== 'undefined' ? window.location.href : '');
-  }, []);
-
-  const linksObj = {
-    ENV: process.env.NODE_ENV === 'development' ? 'DEV' : 'PROD',
-    SITE: ['localhost:3000', 'zipper.dev'].some((el) => URL.includes(el))
-      ? 'SITE'
-      : 'BLOG',
-  } as { ENV: keyof typeof LINKS; SITE: keyof (typeof LINKS)['DEV'] };
+export const WebSiteFooter = ({
+  links,
+  hideAppletDemo,
+  site = SiteType.Home,
+}: Props) => {
+  const linksObj = LINKS[site];
 
   return (
     <VStack align="center" as="footer" w="full">
@@ -373,22 +310,24 @@ export const WebSiteFooter = ({ links, hideAppletDemo }: Props) => {
       <VStack
         as="section"
         p={['52px 24px', '100px 130px']}
-        bgColor={hideAppletDemo ? 'white' : 'neutral.100'}
+        bgColor="brandGray.100"
         w="full"
         align="center"
         mt="0 !important"
         position="relative"
       >
-        <Box
-          position="absolute"
-          left="0"
-          top="0"
-          w="0"
-          h="0"
-          borderBottom="200px solid transparent"
-          zIndex={0}
-          borderLeft="200px solid white"
-        />
+        {!hideAppletDemo && (
+          <Box
+            position="absolute"
+            left="0"
+            top="0"
+            w="0"
+            h="0"
+            borderBottom="200px solid transparent"
+            zIndex={0}
+            borderLeft="200px solid white"
+          />
+        )}
         <Container
           as={Grid}
           zIndex={1}
@@ -426,7 +365,7 @@ export const WebSiteFooter = ({ links, hideAppletDemo }: Props) => {
               align="flex-start"
             >
               <Links
-                data={LINKS[linksObj.ENV][linksObj.SITE].slice(0, 4)}
+                data={linksObj.slice(0, 4)}
                 component={links?.component}
                 displayActiveLink={false}
               />
@@ -440,7 +379,7 @@ export const WebSiteFooter = ({ links, hideAppletDemo }: Props) => {
               align="flex-start"
             >
               <Links
-                data={LINKS[linksObj.ENV][linksObj.SITE].slice(4, 8)}
+                data={linksObj.slice(4, 8)}
                 component={links?.component}
                 displayActiveLink={false}
               />
@@ -453,7 +392,7 @@ export const WebSiteFooter = ({ links, hideAppletDemo }: Props) => {
               align="flex-start"
             >
               <Links
-                data={LINKS[linksObj.ENV][linksObj.SITE].slice(9, 12)}
+                data={linksObj.slice(9, 12)}
                 component={links?.component}
                 displayActiveLink={false}
               />

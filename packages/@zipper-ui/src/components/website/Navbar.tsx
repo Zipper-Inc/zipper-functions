@@ -14,68 +14,39 @@ import {
   Box,
   Link,
 } from '@chakra-ui/react';
-import React, { useEffect, useRef } from 'react';
+import React, { useRef } from 'react';
 import { FiMenu } from 'react-icons/fi';
 import { ZipperLogo } from '../zipper-logo';
-import { Links } from './common/Links';
+import { SiteType, Links } from './common/Links';
 
 type Props = {
   links?: Partial<Parameters<typeof Links>[0]>;
+  site?: SiteType;
 };
 
 const LINKS = {
-  DEV: {
-    SITE: [
-      { href: '/home', label: 'Features', external: false },
-      { href: '/about', label: 'About', external: false },
-      { href: 'http://localhost:3003/docs', label: 'Docs', external: true },
-      { href: 'http://localhost:3004/blog', label: 'Blog', external: true },
-    ],
-    BLOG: [
-      {
-        href: 'http://localhost:3000/home',
-        label: 'Features',
-        external: true,
-      },
-      { href: 'http://localhost:3000/about', label: 'About', external: true },
-      { href: 'http://localhost:3003/docs', label: 'Docs', external: true },
-      { href: '/blog', label: 'Blog', external: true },
-    ],
-  },
-
-  PROD: {
-    SITE: [
-      { href: '/home', label: 'Features', external: false },
-      { href: '/about', label: 'About', external: false },
-      { href: 'https://zipper.docs', label: 'Docs', external: true },
-      { href: 'https://zipper.blog', label: 'Blog', external: true },
-    ],
-    BLOG: [
-      { href: '/blog', label: 'Blog', external: true },
-      {
-        href: 'https://zipper.dev/home',
-        label: 'Features',
-        external: true,
-      },
-      { href: 'https://zipper.dev/home', label: 'About', external: true },
-      { href: 'https://zipper.docs', label: 'Docs', external: true },
-    ],
-  },
+  [SiteType.Home]: [
+    { label: 'Features', href: '/home', external: false },
+    { label: 'About', href: '/about', external: false },
+    { label: 'Docs', href: '/docs', external: true },
+    { label: 'Blog', href: '/blog', external: false },
+  ],
+  [SiteType.Docs]: [
+    { label: 'Docs', href: '/docs', external: true },
+    { label: 'Features', href: '/home', external: false },
+    { label: 'About', href: '/about', external: false },
+    { label: 'Blog', href: '/blog', external: false },
+  ],
+  [SiteType.Blog]: [
+    { label: 'Blog', href: '/blog', external: false },
+    { label: 'Features', href: '/home', external: false },
+    { label: 'About', href: '/about', external: false },
+    { label: 'Docs', href: '/docs', external: true },
+  ],
 };
 
-export const WebSiteNavbar = ({ links }: Props) => {
-  const [URL, setURL] = React.useState('');
-
-  useEffect(() => {
-    setURL(typeof window !== 'undefined' ? window.location.href : '');
-  }, []);
-
-  const linksObj = {
-    ENV: process.env.NODE_ENV === 'development' ? 'DEV' : 'PROD',
-    SITE: ['localhost:3000', 'zipper.dev'].some((el) => URL.includes(el))
-      ? 'SITE'
-      : 'BLOG',
-  } as { ENV: keyof typeof LINKS; SITE: keyof (typeof LINKS)['DEV'] };
+export const WebSiteNavbar = ({ links, site = SiteType.Home }: Props) => {
+  const linksObj = LINKS[site];
 
   const NavDrawer = () => {
     const { isOpen, onOpen, onClose } = useDisclosure();
@@ -88,7 +59,7 @@ export const WebSiteNavbar = ({ links }: Props) => {
           aria-label="menu"
           icon={<FiMenu size={24} />}
           ref={btnRef as any}
-          colorScheme="gray"
+          color="gray.800"
           bg="none"
           onClick={onOpen}
         />
@@ -108,13 +79,13 @@ export const WebSiteNavbar = ({ links }: Props) => {
               <VStack mt={6} gap={4}>
                 {typeof window !== undefined && (
                   <Links
-                    data={LINKS[linksObj.ENV][linksObj.SITE]}
+                    data={linksObj}
                     displayActiveLink
                     component={links?.component}
                   />
                 )}
                 <Button
-                  colorScheme="gray"
+                  color="gray.600"
                   fontWeight={500}
                   h="44px"
                   variant="outline"
@@ -149,17 +120,14 @@ export const WebSiteNavbar = ({ links }: Props) => {
       )}
 
       <HStack as="nav" display={['none', 'none', 'flex']} gap={8}>
-        <Links
-          data={LINKS[linksObj.ENV][linksObj.SITE]}
-          component={links?.component}
-          displayActiveLink
-        />
+        <Links data={linksObj} component={links?.component} displayActiveLink />
         <Button
           as={Link}
-          href="https://zipper.dev/auth/signin"
+          href="/auth/signin"
           isExternal
-          colorScheme="gray"
           fontWeight={500}
+          color="gray.600"
+          textDecoration="none"
           h="44px"
           variant="outline"
         >

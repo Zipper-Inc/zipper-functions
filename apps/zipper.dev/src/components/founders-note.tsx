@@ -6,14 +6,16 @@ export default function FoundersNote({ callbackUrl }: { callbackUrl: string }) {
   const link = callbackUrl ? decodeURIComponent(callbackUrl) : `/dashboard`;
 
   const BETA_SIGNAGE_CONTENT = {
-    TITLE: `You're in!`,
-    SUBTITLE: `A quick note from our founders:`,
-    CONTENT: `Thank you for joining the Zipper beta program, we’re excited to share what we’ve been working on. 
-    \nWe have one favor to ask. We need your feedback to make Zipper all it can be. Please use the feedback button to send us bugs, ideas, complaints, and suggestions.\n
-    And remember, we’re continually working to improve Zipper, so the app may change or break (but we’ll always do our best to keeping things running smoothly).
-    \n Sachin and Ibu
-    `,
+    TITLE: `You're in.`,
+    SUBTITLE: `A quick note from the makers of Zipper:`,
+    CONTENT: [
+      `First of all, we want to thank you for checking out our beta. We hope that using Zipper will be as fun, inspiring, and productive for you as it has been for us.`,
+      `As you know being fellow builders of software, user feedback is invaluable. Smash that feedback button and give us all your ideas, bugs, gripes, jokes, whatever. We're stoked to hear from you.`,
+      `Looking forward to seeing what you create!`,
+      `Sachin and Ibu`,
+    ].join('\n\n'),
   };
+
   return (
     <Box
       w="full"
