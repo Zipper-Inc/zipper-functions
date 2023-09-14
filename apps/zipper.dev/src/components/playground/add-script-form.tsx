@@ -89,6 +89,7 @@ export default function AddScriptForm({
                 size="md"
                 type="text"
                 placeholder="File name"
+                color={'gray.800'}
                 disabled={addScript.isLoading}
                 isInvalid={scriptFilename && !isFilenameValid}
                 autoComplete="off"
@@ -97,14 +98,19 @@ export default function AddScriptForm({
               />
             </FormControl>
             {scriptFilename && isFilenameValid && (
-              <Text fontWeight="medium" fontSize="sm" color="fg.700">
-                Press return to add <Text>{slugifiedFilename}</Text>
+              <Text fontWeight="medium" fontSize="sm" color="fg.700" pt="2">
+                Press return to add{' '}
+                <Text as={'span'} fontWeight="bold">
+                  {slugifiedFilename}
+                </Text>
               </Text>
             )}
             {scriptFilename && isFilenameValid === false && (
               <Flex>
                 <Text fontSize="sm" mt="2" color={'red.500'}>
-                  A file with that name already exists.
+                  {slugifiedFilename.length < 4
+                    ? 'Filename must be at least 1 character'
+                    : 'A file with that name already exists'}
                 </Text>
               </Flex>
             )}
