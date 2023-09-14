@@ -49,7 +49,7 @@ export const ArticleLayout = ({ children }: { children: ReactNode }) => {
                           textAlign="left"
                           fontWeight="bold"
                         >
-                          TL;DR
+                          ⚡️ TL;DR
                         </Box>
                         <AccordionIcon />
                       </AccordionButton>
