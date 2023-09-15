@@ -6,6 +6,7 @@ import {
   Spacer,
   Flex,
   Badge,
+  Link,
   LightMode,
 } from '@chakra-ui/react';
 import Head from 'next/head';
@@ -21,7 +22,7 @@ import { split } from './utils/get-tags';
 
 export const BasicLayout = ({ children }: { children: ReactNode }) => {
   const { config, opts } = useBlogContext();
-  const { asPath, push } = useRouter();
+  const { asPath } = useRouter();
   const ref = useRef<HTMLHeadingElement>(null);
 
   const { author, date, tag } = opts.frontMatter;
@@ -42,7 +43,7 @@ export const BasicLayout = ({ children }: { children: ReactNode }) => {
     </NextLink>
   ));
 
-  const isIndex = asPath === '/blog';
+  const isIndex = asPath === '/';
   const title = isIndex
     ? 'Zipper Blog | Updates from Zipper Inc.'
     : `${opts.title}${config.titleSuffix || ''} | Zipper Blog`;
@@ -55,10 +56,7 @@ export const BasicLayout = ({ children }: { children: ReactNode }) => {
       </Head>
       <Website>
         <LightMode>
-          <Website.Navbar
-            links={{ component: NextLink }}
-            site={SiteType.Blog}
-          />
+          <Website.Navbar links={{ component: Link }} site={SiteType.Blog} />
           <HeadingContext.Provider value={ref}>
             {isIndex ? (
               <Container
@@ -94,17 +92,14 @@ export const BasicLayout = ({ children }: { children: ReactNode }) => {
                   <Heading as="h1" fontWeight="normal" size="3xl" ref={ref} />
                 ) : null}
                 <HStack>
-                  <HStack
-                    _hover={{ opacity: '.75' }}
-                    cursor="pointer"
-                    color="gray.500"
-                    onClick={() => push('/blog')}
-                  >
-                    <FiChevronLeft size={16} />
-                    <Text fontSize="sm" fontFamily="mono">
-                      All posts
-                    </Text>
-                  </HStack>
+                  <NextLink href="/">
+                    <HStack color="gray.500">
+                      <FiChevronLeft size={16} />
+                      <Text fontSize="sm" fontFamily="mono">
+                        All posts
+                      </Text>
+                    </HStack>
+                  </NextLink>
 
                   <Heading
                     size="md"
@@ -163,7 +158,7 @@ export const BasicLayout = ({ children }: { children: ReactNode }) => {
             {/* {config.footer} */}
             {/* </Container> */}
             <Website.Footer
-              links={{ component: NextLink }}
+              links={{ component: Link }}
               hideAppletDemo
               site={SiteType.Blog}
               bgColor={!isIndex ? 'white' : undefined}

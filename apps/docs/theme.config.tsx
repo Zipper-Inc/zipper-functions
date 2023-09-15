@@ -1,5 +1,5 @@
 import React from 'react';
-import NextLink from 'next/link';
+import { Link } from '@chakra-ui/react';
 import { DocsThemeConfig } from 'nextra-theme-docs';
 import { BLUE, WebSiteFooter, ZipperLogo } from '@zipper/ui';
 
@@ -7,7 +7,7 @@ const config: DocsThemeConfig = {
   logo: <ZipperLogo fill={BLUE} style={{ height: '20px' }} />,
   primaryHue: { dark: 207, light: 207 },
   footer: {
-    component: <WebSiteFooter links={{ component: NextLink }} hideAppletDemo />,
+    component: <WebSiteFooter links={{ component: Link }} hideAppletDemo />,
   },
   useNextSeoProps() {
     return {
