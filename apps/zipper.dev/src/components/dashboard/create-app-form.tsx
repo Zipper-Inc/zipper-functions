@@ -274,8 +274,6 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
     );
   }
 
-  console.log(slugExists);
-
   return (
     <Box position="relative" width="container.md">
       {addApp.isLoading ||
