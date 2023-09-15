@@ -3,6 +3,7 @@ import { InputParams, InputType } from '@zipper/types';
 import { HiOutlinePlay } from 'react-icons/hi2';
 import { FieldValues, UseFormReturn } from 'react-hook-form';
 import { formatShortDate, getFieldName } from '@zipper/utils';
+import { parseDate } from 'chrono-node';
 
 type InputSummaryProps = {
   inputs: InputParams;
@@ -57,7 +58,7 @@ export const getInputSummary = (
           Boolean(value) &&
           value.toString() !== 'Invalid Date'
         ) {
-          value = formatShortDate(value);
+          value = parseDate(value).toLocaleDateString().split('T')[0] || value;
         } else if (type === InputType.boolean) {
           value = Boolean(value);
         } else if (
