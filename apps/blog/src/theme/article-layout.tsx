@@ -11,6 +11,7 @@ import {
 } from '@chakra-ui/react';
 import { Markdown } from '@zipper/ui';
 import type { ReactNode } from 'react';
+import { PiLightningDuotone } from 'react-icons/pi';
 import { BasicLayout } from './basic-layout';
 import { useBlogContext } from './blog-context';
 import { MDXTheme } from './mdx-theme';
@@ -43,14 +44,15 @@ export const ArticleLayout = ({ children }: { children: ReactNode }) => {
                   <AccordionItem border="1px solid" borderColor="blue.300">
                     <h2>
                       <AccordionButton>
-                        <Box
+                        <Flex
                           as="span"
-                          flex="1"
-                          textAlign="left"
+                          gap={1}
+                          align="center"
                           fontWeight="bold"
                         >
-                          ⚡️ TL;DR
-                        </Box>
+                          <PiLightningDuotone color="DarkGoldenRod" />
+                          <Text>TL;DR</Text>
+                        </Flex>
                         <AccordionIcon />
                       </AccordionButton>
                     </h2>

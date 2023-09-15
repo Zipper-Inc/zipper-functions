@@ -17,7 +17,8 @@ import {
 import React, { useRef } from 'react';
 import { FiMenu } from 'react-icons/fi';
 import { ZipperLogo } from '../zipper-logo';
-import { SiteType, Links } from './common/Links';
+import { Links } from './common/Links';
+import { SiteType } from './common/SiteType';
 
 type Props = {
   links?: Partial<Parameters<typeof Links>[0]>;

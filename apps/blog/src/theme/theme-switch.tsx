@@ -12,7 +12,6 @@ export default function ThemeSwitch() {
 
   // make sure to set the next theme so that the nextra components follow suit
   useEffect(() => {
-    console.log('effect', colorMode, theme);
     setTheme(colorMode);
   }, [colorMode]);
 

@@ -7,11 +7,6 @@ import {
   Card,
   CardHeader,
   CardBody,
-  Accordion,
-  AccordionItem,
-  AccordionButton,
-  AccordionPanel,
-  AccordionIcon,
   Grid,
   GridItem,
   SimpleGrid,
@@ -221,6 +216,8 @@ const AboutPage: NextPageWithLayout = () => {
           bg="brandGray.100"
         >
           <Container w="full" alignItems="start" maxW="container.xl">
+            <a id="careers" style={{ position: 'relative', top: '-32px' }} />
+
             <Heading
               color="brandOrange.500"
               fontSize="4xl"
@@ -286,6 +283,8 @@ const AboutPage: NextPageWithLayout = () => {
           </Container>
 
           <Container w="full" alignItems="start" maxW="container.xl">
+            <a id="contact" style={{ position: 'relative', top: '-32px' }} />
+
             <Heading color="purple.600" fontFamily="plak">
               CONTACT
             </Heading>
