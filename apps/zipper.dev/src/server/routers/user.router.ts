@@ -97,6 +97,43 @@ export const userRouter = createProtectedRouter()
       );
     },
   })
+  .mutation('contactSupport', {
+    input: z.object({
+      request: z.string(),
+    }),
+    async resolve({ ctx, input }) {
+      if (ctx.userId && process.env.FEEDBACK_TRACKER_API_KEY) {
+        const user = await prisma.user.findUnique({
+          where: {
+            id: ctx.userId,
+          },
+          select: {
+            email: true,
+          },
+        });
+
+        const options = {
+          method: 'POST',
+          headers: {
+            accept: 'application/json',
+            'content-type': 'application/json',
+            Authorization: `Bearer ${process.env.FRONT_SECRET}`,
+          },
+          body: JSON.stringify({
+            type: 'support',
+            subject: 'Help needed',
+            comment: input.request,
+            from: user?.email,
+          }),
+        };
+
+        fetch('https://api2.frontapp.com/conversations', options)
+          .then((response) => response.json())
+          .then((response) => console.log(response))
+          .catch((err) => console.error(err));
+      }
+    },
+  })
   .mutation('submitFeedback', {
     input: z.object({
       feedback: z.string(),

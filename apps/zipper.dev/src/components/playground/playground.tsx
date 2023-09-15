@@ -15,9 +15,6 @@ import {
   Tooltip,
   MenuDivider,
   Heading,
-  Input,
-  InputGroup,
-  InputLeftElement,
   Button,
   Flex,
   Text,
@@ -59,6 +56,7 @@ import {
 import { HiOutlineMegaphone } from 'react-icons/hi2';
 
 import { FeedbackModal } from '~/components/auth/feedback-modal';
+import { ContactModal } from '~/components/playground/contact-modal';
 
 const tabPanelStyles: ChakraProps = {
   flex: 1,
@@ -141,6 +139,7 @@ export function Playground({
 
   const { onMouseEnter, onMouseLeave } = useHelpBorder();
   const feedbackModal = useDisclosure();
+  const contactModal = useDisclosure();
 
   return (
     <RunAppProvider
@@ -409,12 +408,13 @@ export function Playground({
                         Inspect UI
                       </MenuItem>
 
-                      {/* <MenuItem
+                      <MenuItem
                         color="fg.700"
                         icon={<FiChrome size={20} color="#98A2B3" />}
+                        onClick={contactModal.onOpen}
                       >
                         Contact support
-                      </MenuItem> */}
+                      </MenuItem>
                     </>
                   ) : (
                     <>
@@ -486,6 +486,7 @@ export function Playground({
           </Button>
         </Box>
         <FeedbackModal {...feedbackModal} />
+        <ContactModal {...contactModal} />
       </VStack>
     </RunAppProvider>
   );
