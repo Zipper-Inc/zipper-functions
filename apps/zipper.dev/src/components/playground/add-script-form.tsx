@@ -89,7 +89,7 @@ export default function AddScriptForm({
                 size="md"
                 type="text"
                 placeholder="File name"
-                color={'gray.800'}
+                color={'fg.800'}
                 disabled={addScript.isLoading}
                 isInvalid={scriptFilename && !isFilenameValid}
                 autoComplete="off"
