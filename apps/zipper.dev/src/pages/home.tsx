@@ -38,6 +38,10 @@ import JoinBetaForm from '~/components/join-beta-form';
 import { useAnalytics } from '~/hooks/use-analytics';
 import Link from 'next/link';
 import { HiArrowUpRight } from 'react-icons/hi2';
+import { GetServerSideProps } from 'next';
+import { getServerSession } from 'next-auth';
+import { authOptions } from './api/auth/[...nextauth]';
+import Head from 'next/head';
 
 /* -------------------------------------------- */
 /* Content                                      */
@@ -954,25 +958,44 @@ const HomePage = () => {
   }, []);
 
   return (
-    <Website>
-      <Website.Navbar links={{ component: NextLink }} />
-      <Box
-        display="flex"
-        flexDir="column"
-        alignItems="center"
-        as="main"
-        w="full"
-        margin="0 auto"
-      >
-        <Hero />
-        <Features />
-        <AppletsGallery />
-        <Batteries />
-        <Headline />
-        <Website.Footer links={{ component: NextLink }} />
-      </Box>
-    </Website>
+    <>
+      <Head>
+        <link rel="canonical" href="https://zipper.dev/" />
+      </Head>
+      <Website>
+        <Website.Navbar links={{ component: NextLink }} />
+        <Box
+          display="flex"
+          flexDir="column"
+          alignItems="center"
+          as="main"
+          w="full"
+          margin="0 auto"
+        >
+          <Hero />
+          <Features />
+          <AppletsGallery />
+          <Batteries />
+          <Headline />
+          <Website.Footer links={{ component: NextLink }} />
+        </Box>
+      </Website>
+    </>
   );
+};
+
+export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
+  const session = await getServerSession(req, res, authOptions);
+  if (!session?.user) {
+    return {
+      redirect: {
+        destination: '/',
+        permanent: false,
+      },
+    };
+  }
+
+  return { props: { hasUser: false } };
 };
 
 export default HomePage;
