@@ -1,4 +1,4 @@
-import { CheckIcon } from '@chakra-ui/icons';
+import { CheckIcon, WarningIcon } from '@chakra-ui/icons';
 import {
   Button,
   FormControl,
@@ -362,7 +362,7 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
                       (user?.username as string) ||
                       'Personal workspace'}
                   </Text>
-                  <Text>/</Text>
+
                   <InputGroup>
                     <Input
                       autoFocus
@@ -373,15 +373,19 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
                         setSlug(slugify(e.target.value));
                       }}
                     />
-                    {isSlugValid && (
+                    {isSlugValid ? (
                       <InputRightElement
                         children={
                           slugExists ? (
-                            <Icon as={HiExclamationTriangle} color="red.500" />
+                            <WarningIcon color="red.500" />
                           ) : (
                             <CheckIcon color="green.500" />
                           )
                         }
+                      />
+                    ) : (
+                      <InputRightElement
+                        children={<WarningIcon color="red.500" />}
                       />
                     )}
                   </InputGroup>
@@ -457,6 +461,7 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
                   variant="outline"
                   colorScheme="purple"
                   onClick={() => setCurrentStep(currentStep + 1)}
+                  isDisabled={!isSlugValid || slugExists ? true : false}
                 >
                   Next
                 </Button>
