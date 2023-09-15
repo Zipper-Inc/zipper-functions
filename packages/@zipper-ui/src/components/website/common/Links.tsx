@@ -1,12 +1,6 @@
 import { ChakraProps, Link, Text } from '@chakra-ui/react';
 import React, { useMemo } from 'react';
 
-export enum SiteType {
-  Home,
-  Docs,
-  Blog,
-}
-
 export const Links = (props: {
   data: { label: string; href: string; external?: boolean }[];
   displayActiveLink?: boolean;

@@ -95,11 +95,6 @@ module.exports = getConfig({
         destination: '/home',
       },
       {
-        source: '/about',
-        // destination: 'https://similar-years-645746.framer.app/about',
-        destination: '/about',
-      },
-      {
         source: '/docs',
         destination: `${
           process.env.NODE_ENV === 'production'

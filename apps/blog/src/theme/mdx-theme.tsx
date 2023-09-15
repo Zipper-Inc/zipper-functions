@@ -149,7 +149,6 @@ const useComponents = (): Components => {
       <HeadingLink as="h6" size="sm" my={2} {...props} />
     ),
     section: ({ children, ...props }: BoxProps) => {
-      console.log(children);
       if (props.className === 'footnotes') {
         return (
           <Box

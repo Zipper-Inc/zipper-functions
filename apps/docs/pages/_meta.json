@@ -6,9 +6,9 @@
   "running-an-applet": "Running an Applet",
   "advanced": "Advanced",
   "dashboard": {
-    "title": "Home",
+    "title": "Features",
     "type": "page",
-    "href": "/",
+    "href": "/home",
     "newWindow": true
   },
   "about": {
