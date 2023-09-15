@@ -224,7 +224,7 @@ function FunctionParamInput({
       };
 
       const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        formProps.onChange(event); // Trigger formProps onChange handler if any
+        formProps.onChange(event);
       };
 
       return (
@@ -245,18 +245,17 @@ function FunctionParamInput({
           >
             <Text>Choose File</Text>
             <Input
-              ref={fileInputRef}
               type="file"
-              onChange={handleChange}
               style={{ display: 'none' }}
               isDisabled={isDisabled}
               placeholder={placeholder}
+              {...formProps}
+              ref={fileInputRef}
+              onChange={handleChange}
             />
           </Button>
           <Text fontSize="sm" color="gray.500">
-            {fileInputRef.current?.value
-              ? fileInputRef.current?.value.split('\\').pop()
-              : 'No file chosen'}
+            {fileInputRef.current?.files?.[0]?.name || 'No file chosen'}
           </Text>
         </VStack>
       );
