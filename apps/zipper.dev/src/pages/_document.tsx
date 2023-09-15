@@ -5,6 +5,7 @@ import Document, {
   NextScript,
   DocumentContext,
 } from 'next/document';
+import { Analytics } from '~/components/analytics';
 
 class MyDocument extends Document {
   static async getInitialProps(ctx: DocumentContext) {
@@ -13,12 +14,15 @@ class MyDocument extends Document {
   }
 
   render() {
+    const isHomePage = this.props.__NEXT_DATA__.page === '/home';
+
     return (
       <Html>
         <Head />
         <body>
           <Main />
           <NextScript />
+          {isHomePage && <Analytics />}
         </body>
       </Html>
     );

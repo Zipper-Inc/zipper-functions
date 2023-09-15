@@ -1,9 +1,6 @@
 import { GetServerSideProps } from 'next';
-import { Gallery } from '~/components/gallery';
 import { NextPageWithLayout } from './_app';
 import { useRouter } from 'next/router';
-import Header from '~/components/header';
-import { useUser } from '~/hooks/use-user';
 import { authOptions } from './api/auth/[...nextauth]';
 import { getServerSession } from 'next-auth';
 import HomePage from './home';
@@ -27,7 +24,7 @@ const IndexPage: NextPageWithLayout = (props) => {
   // }
 
   if (!props.hasUser) {
-    return HomePage();
+    return <HomePage />;
   }
 
   return <div></div>;

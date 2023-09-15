@@ -247,7 +247,6 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
             isClosable: false,
           });
 
-          console.log('here');
           analytics?.track(
             templateSelection === 'ai'
               ? 'Generated Applet (AI)'
@@ -369,9 +368,7 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
                       backgroundColor="bgColor"
                       maxLength={60}
                       {...createAppForm.register('name')}
-                      onChange={(e) => {
-                        setSlug(slugify(e.target.value));
-                      }}
+                      onChange={(e) => setSlug(slugify(e.target.value))}
                     />
                     {isSlugValid ? (
                       <InputRightElement
@@ -392,15 +389,17 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
                     )}
                   </InputGroup>
                 </HStack>
-                {createAppForm.watch('name') && (
+                {createAppForm.watch('name') && !slugExists && (
                   <FormHelperText>
                     {`Your app will be available at
                             https://${slug}.zipper.run`}
                   </FormHelperText>
                 )}
-                <FormErrorMessage>
-                  {createAppForm.formState.errors.name?.message}
-                </FormErrorMessage>
+                {slugExists && (
+                  <Text as="span" fontSize="sm" color="red.500">
+                    {slug} allready exists
+                  </Text>
+                )}
               </FormControl>
 
               <Divider />
@@ -462,6 +461,7 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
                   display="block"
                   variant="outline"
                   colorScheme="purple"
+                  disabled={slugExists || !createAppForm.formState.isValid}
                   onClick={() => setCurrentStep(currentStep + 1)}
                   isDisabled={!isSlugValid || slugExists ? true : false}
                 >
@@ -586,7 +586,6 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
                               isClosable: false,
                             });
 
-                            console.log('here');
                             analytics?.track(
                               templateSelection === 'ai'
                                 ? 'Generated Applet (AI)'
