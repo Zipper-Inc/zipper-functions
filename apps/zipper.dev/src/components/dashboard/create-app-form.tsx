@@ -183,8 +183,6 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
 
   const [currentStep, setCurrentStep] = useState(0);
 
-  console.log(createAppForm.formState.errors);
-
   const runAddAppMutation = async ({
     description,
     name,
@@ -597,12 +595,12 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
                               },
                             );
 
-                            // router.push(
-                            //   getEditAppletLink(
-                            //     applet!.resourceOwner!.slug,
-                            //     applet!.slug,
-                            //   ),
-                            // );
+                            router.push(
+                              getEditAppletLink(
+                                applet!.resourceOwner!.slug,
+                                applet!.slug,
+                              ),
+                            );
                           },
                         },
                       );
