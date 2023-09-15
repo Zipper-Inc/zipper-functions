@@ -108,9 +108,12 @@ export const userRouter = createProtectedRouter()
             id: ctx.userId,
           },
           select: {
+            name: true,
             email: true,
           },
         });
+
+        const email = user?.email;
 
         const options = {
           method: 'POST',
@@ -120,14 +123,17 @@ export const userRouter = createProtectedRouter()
             Authorization: `Bearer ${process.env.FRONT_SECRET}`,
           },
           body: JSON.stringify({
-            type: 'support',
-            subject: 'Help needed',
-            comment: input.request,
-            from: user?.email,
+            options: { archive: true },
+            to: ['support@zipper.works'],
+            sender_name: user?.name,
+            subject: 'Help needed!',
+            text: input.request,
+            body: input.request,
+            should_add_default_signature: true,
           }),
         };
 
-        fetch('https://api2.frontapp.com/conversations', options)
+        fetch('https://api2.frontapp.com/channels/cha_e8j14/messages', options)
           .then((response) => response.json())
           .then((response) => console.log(response))
           .catch((err) => console.error(err));
