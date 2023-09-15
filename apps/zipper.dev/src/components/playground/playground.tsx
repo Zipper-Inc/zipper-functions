@@ -190,7 +190,7 @@ export function Playground({
 
               {/* SCHEDULES */}
               <div
-                onMouseEnter={onMouseEnter('SchedulesTab')}
+                onMouseEnter={onMouseEnter('ScheduleTab')}
                 onMouseLeave={onMouseLeave}
               >
                 <TabButton
@@ -422,7 +422,6 @@ export function Playground({
                         display={'flex'}
                         flexDirection={'column'}
                         pt={2}
-                        pb={8}
                         px={2}
                         maxW={237}
                         minH={'200px'}
@@ -430,7 +429,7 @@ export function Playground({
                         <Flex
                           alignItems={'center'}
                           justifyContent={'space-between'}
-                          mb={8}
+                          mb={4}
                         >
                           <FiChevronLeft
                             size={20}
