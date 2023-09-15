@@ -41,10 +41,11 @@ export function ObjectExplorerRow({
   collapse: boolean;
   headingMode?: HeadingMode;
 }) {
+  const dataWithoutNull = data || {};
   const shouldAutoOpen =
     level <= AUTO_OPEN_MAX_LEVELS_DEEP &&
     tableLevel <= AUTO_OPEN_MAX_LEVELS_DEEP &&
-    Object.keys(data || {}).length <= AUTO_OPEN_MAX_ITEMS;
+    Object.keys(dataWithoutNull).length <= AUTO_OPEN_MAX_ITEMS;
 
   const { isOpen, onToggle } = useDisclosure({
     defaultIsOpen: shouldAutoOpen || !collapse,
@@ -129,7 +130,7 @@ export function ObjectExplorerRow({
                   ? data.length === 1
                     ? `${data.length} item`
                     : `${data.length} items`
-                  : Object.keys(data || {}).join(', ')}
+                  : Object.keys(dataWithoutNull).join(', ')}
               </Text>
             )}
             <Collapse in={isOpen}>
@@ -172,6 +173,7 @@ export function ObjectExplorer({
   heading?: string;
   expandable?: boolean;
 }) {
+  const dataWithoutNull = data || {};
   if (heading && expandable) {
     return (
       <ObjectExplorerRow
@@ -180,7 +182,7 @@ export function ObjectExplorer({
         data={data}
         level={level + 1}
         tableLevel={tableLevel + 1}
-        collapse={Object.keys(data || {}).length > 1}
+        collapse={Object.keys(dataWithoutNull).length > 1}
         headingMode={HeadingMode.ExpandableTableCell}
       />
     );
@@ -196,14 +198,14 @@ export function ObjectExplorer({
           </Tr>
         </Thead>
         <Tbody>
-          {Object.keys(data || {}).map((key) => (
+          {Object.keys(dataWithoutNull).map((key) => (
             <ObjectExplorerRow
               key={key}
               heading={key}
               data={data[key]}
               level={level}
               tableLevel={tableLevel}
-              collapse={Object.keys(data || {}).length > 1}
+              collapse={Object.keys(dataWithoutNull).length > 1}
             />
           ))}
         </Tbody>
