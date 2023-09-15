@@ -20,7 +20,8 @@ import { FiCheck, FiCode, FiPlay, FiShuffle } from 'react-icons/fi';
 import { SmartFunctionOutput } from '../function-output/smart-function-output';
 import { ZipperSymbol } from '../zipperSymbol';
 import { LAYOUTS_ICONS } from './common/Layouts';
-import { Links, SiteType } from './common/Links';
+import { Links } from './common/Links';
+import { SiteType } from './common/SiteType';
 import { WebSiteSubscriptionForm } from './common/Subscription';
 
 /* -------------------------------------------- */
