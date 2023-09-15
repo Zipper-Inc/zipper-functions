@@ -2,6 +2,7 @@
 
 export * from '../src/components/website/common/Layouts';
 export * from '../src/components/website/common/Links';
+export * from '../src/components/website/common/SiteType';
 export * from '../src/components/website/common/Subscription';
 export * from '../src/components/function-output/action-button';
 export * from '../src/components/function-output/action-component';

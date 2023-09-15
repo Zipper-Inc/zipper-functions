@@ -1,26 +1,22 @@
 import React from 'react';
+import { Link } from '@chakra-ui/react';
 import { DocsThemeConfig } from 'nextra-theme-docs';
-import { ZipperLogo } from '@zipper/ui';
+import { BLUE, WebSiteFooter, ZipperLogo } from '@zipper/ui';
 
 const config: DocsThemeConfig = {
-  logo: (
-    <ZipperLogo
-      fill="var(--chakra-colors-purple-700)"
-      style={{ height: '20px' }}
-    />
-  ),
-  primaryHue: { dark: 278, light: 280 },
+  logo: <ZipperLogo fill={BLUE} style={{ height: '20px' }} />,
+  primaryHue: { dark: 207, light: 207 },
   footer: {
-    text: 'Zipper © 2023',
+    component: <WebSiteFooter links={{ component: Link }} hideAppletDemo />,
   },
   useNextSeoProps() {
     return {
-      titleTemplate: '%s – Zipper Documentation',
+      titleTemplate: '%s | Zipper Documentation',
     };
   },
   head: (
     <>
-      <meta property="og:title" content="%s – Zipper Documentation" />
+      <meta property="og:title" content="%s | Zipper Documentation" />
       <meta
         name="viewport"
         content="width=device-width, initial-scale=1.0, viewport-fit=cover"

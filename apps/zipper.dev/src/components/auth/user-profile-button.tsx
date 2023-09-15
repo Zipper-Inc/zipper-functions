@@ -35,7 +35,13 @@ import UserProfile from './userProfile';
 export function UserProfileButton(props: { showAdditionalOptions?: boolean }) {
   const userSettingsModal = useDisclosure();
   const feedbackModal = useDisclosure();
-  const { colorMode, toggleColorMode } = useColorMode();
+  const { colorMode, setColorMode } = useColorMode();
+  const toggleColorMode = () => {
+    const newColor = colorMode === 'dark' ? 'light' : 'dark';
+    // also set it so that the docs site follows
+    localStorage.setItem('theme', newColor);
+    setColorMode(newColor);
+  };
   return (
     <>
       <SignedIn>

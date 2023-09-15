@@ -1,4 +1,4 @@
-import { CheckIcon } from '@chakra-ui/icons';
+import { CheckIcon, WarningIcon } from '@chakra-ui/icons';
 import {
   Button,
   FormControl,
@@ -247,7 +247,6 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
             isClosable: false,
           });
 
-          console.log('here');
           analytics?.track(
             templateSelection === 'ai'
               ? 'Generated Applet (AI)'
@@ -362,18 +361,16 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
                       (user?.username as string) ||
                       'Personal workspace'}
                   </Text>
-                  <Text>/</Text>
+
                   <InputGroup>
                     <Input
                       autoFocus
                       backgroundColor="bgColor"
                       maxLength={60}
                       {...createAppForm.register('name')}
-                      onChange={(e) => {
-                        setSlug(slugify(e.target.value));
-                      }}
+                      onChange={(e) => setSlug(slugify(e.target.value))}
                     />
-                    {isSlugValid && (
+                    {isSlugValid ? (
                       <InputRightElement
                         children={
                           slugExists ? (
@@ -383,18 +380,26 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
                           )
                         }
                       />
+                    ) : (
+                      <InputRightElement
+                        children={
+                          <Icon as={HiExclamationTriangle} color="red.500" />
+                        }
+                      />
                     )}
                   </InputGroup>
                 </HStack>
-                {createAppForm.watch('name') && (
+                {createAppForm.watch('name') && !slugExists && (
                   <FormHelperText>
                     {`Your app will be available at
                             https://${slug}.zipper.run`}
                   </FormHelperText>
                 )}
-                <FormErrorMessage>
-                  {createAppForm.formState.errors.name?.message}
-                </FormErrorMessage>
+                {slugExists && (
+                  <Text as="span" fontSize="sm" color="red.500">
+                    {slug} allready exists
+                  </Text>
+                )}
               </FormControl>
 
               <Divider />
@@ -456,7 +461,9 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
                   display="block"
                   variant="outline"
                   colorScheme="purple"
+                  disabled={slugExists || !createAppForm.formState.isValid}
                   onClick={() => setCurrentStep(currentStep + 1)}
+                  isDisabled={!isSlugValid || slugExists ? true : false}
                 >
                   Next
                 </Button>
@@ -579,7 +586,6 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
                               isClosable: false,
                             });
 
-                            console.log('here');
                             analytics?.track(
                               templateSelection === 'ai'
                                 ? 'Generated Applet (AI)'

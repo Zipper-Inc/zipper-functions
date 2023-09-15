@@ -6,15 +6,27 @@
   "running-an-applet": "Running an Applet",
   "advanced": "Advanced",
   "dashboard": {
-    "title": "Zipper.dev",
+    "title": "Features",
     "type": "page",
-    "href": "https://zipper.dev",
+    "href": "/home",
     "newWindow": true
   },
-  "contact": {
-    "title": "Contact",
+  "about": {
+    "title": "About",
     "type": "page",
-    "href": "mailto://hello@zipper.works",
+    "href": "/about",
+    "newWindow": true
+  },
+  "blog": {
+    "title": "Blog",
+    "type": "page",
+    "href": "/blog",
+    "newWindow": true
+  },
+  "sign-in": {
+    "title": "Sign In",
+    "type": "page",
+    "href": "/auth/signin",
     "newWindow": true
   }
 }

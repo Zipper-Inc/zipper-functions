@@ -95,11 +95,6 @@ module.exports = getConfig({
         destination: '/home',
       },
       {
-        source: '/about',
-        // destination: 'https://similar-years-645746.framer.app/about',
-        destination: '/about',
-      },
-      {
         source: '/docs',
         destination: `${
           process.env.NODE_ENV === 'production'
@@ -119,7 +114,7 @@ module.exports = getConfig({
         source: '/blog',
         destination: `${
           process.env.NODE_ENV === 'production'
-            ? 'https://zipper-docs-production.onrender.com/blog'
+            ? 'https://zipper-blog.onrender.com/blog'
             : 'http://localhost:3004/blog'
         }`,
       },

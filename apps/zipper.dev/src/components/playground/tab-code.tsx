@@ -22,6 +22,10 @@ import {
   AppEditSidebarProvider,
 } from '~/components/context/app-edit-sidebar-context';
 import { Markdown } from '@zipper/ui';
+import {
+  useHelpBorder,
+  useHelpMode,
+} from '~/components/context/help-mode-context';
 
 export const PlaygroundEditor = dynamic(() => import('./playground-editor'), {
   ssr: false,
@@ -52,6 +56,7 @@ const MAX_CODE_TAB_HEIGHT = `calc(100vh - ${APPROXIMATE_HEADER_HEIGHT_PX})`;
 type CodeTabProps = {
   app: AppQueryOutput;
   mainScript: Script;
+  helpMode?: boolean;
 };
 
 export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
@@ -66,6 +71,10 @@ export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
   const [isMarkdownEditable, setIsMarkdownEditable] = useState(false);
   const toast = useToast();
 
+  const { hoveredElement } = useHelpMode();
+  const { style, onMouseEnter, onMouseLeave } = useHelpBorder();
+
+  console.log('hoveredElement', hoveredElement);
   useCmdOrCtrl(
     'S',
     async (e: Event) => {
@@ -120,6 +129,7 @@ export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
         minWidth="250px"
         maxH="400px"
         minH="fit-content"
+        mt={1}
       >
         <PlaygroundSidebar app={app} mainScript={mainScript} />
       </VStack>
@@ -129,6 +139,13 @@ export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
         spacing={0}
         minW="sm"
         overflow="auto"
+        onMouseEnter={onMouseEnter('PlaygroundCode')}
+        onMouseLeave={onMouseLeave}
+        border={
+          hoveredElement === 'PlaygroundCode'
+            ? style('PlaygroundCode').border
+            : '4px solid transparent'
+        }
       >
         {isMarkdown && !isMarkdownEditable && (
           <VStack

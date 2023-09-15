@@ -1,5 +1,5 @@
-import { Select } from '@chakra-ui/react';
-import { useRef, useState } from 'react';
+import { Select, Spinner } from '@chakra-ui/react';
+import { Suspense, useRef, useState } from 'react';
 import {
   Box,
   Flex,
@@ -24,6 +24,7 @@ import { VscAdd } from 'react-icons/vsc';
 import { FieldValues, UseFormReturn, RegisterOptions } from 'react-hook-form';
 import { InputType, InputParam } from '@zipper/types';
 import { getFieldName } from '@zipper/utils';
+import { ErrorBoundary } from './error-boundary';
 
 interface Props {
   params: InputParam[];
@@ -216,15 +217,46 @@ function FunctionParamInput({
       );
     }
     case InputType.file: {
+      const fileInputRef = useRef<HTMLInputElement>(null);
+
+      const handleButtonClick = () => {
+        fileInputRef.current?.click();
+      };
+
+      const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        formProps.onChange(event);
+      };
+
       return (
-        <VStack align="start" w="full">
-          <Input
-            backgroundColor="bgColor"
-            type="file"
-            {...formProps}
+        <VStack
+          align="start"
+          alignItems={'center'}
+          w="full"
+          display={'flex'}
+          flexDirection={'row'}
+          gap={2}
+        >
+          <Button
+            onClick={handleButtonClick}
             isDisabled={isDisabled}
-            placeholder={placeholder}
-          />
+            backgroundColor="bgColor"
+            _hover={{ bg: 'primary', color: 'fg.50' }}
+            mt={2}
+          >
+            <Text>Choose File</Text>
+            <Input
+              type="file"
+              style={{ display: 'none' }}
+              isDisabled={isDisabled}
+              placeholder={placeholder}
+              {...formProps}
+              ref={fileInputRef}
+              onChange={handleChange}
+            />
+          </Button>
+          <Text fontSize="sm" color="gray.500">
+            {fileInputRef.current?.files?.[0]?.name || 'No file chosen'}
+          </Text>
         </VStack>
       );
     }
@@ -346,16 +378,26 @@ function SingleInput({
           {isOpen && (
             <VStack w="full" align="start" spacing="2">
               <Flex width="100%">
-                <FunctionParamInput
-                  inputKey={name}
-                  type={type}
-                  value={null}
-                  optional={optional}
-                  formContext={formContext}
-                  isDisabled={isDisabled}
-                  placeholder={placeholder}
-                  details={details}
-                />
+                <ErrorBoundary
+                  fallback={
+                    <Text fontSize="sm" fontWeight="medium" color="red.500">
+                      An error occurred while loading the input
+                    </Text>
+                  }
+                >
+                  <Suspense fallback={<Spinner />}>
+                    <FunctionParamInput
+                      inputKey={name}
+                      type={type}
+                      value={null}
+                      optional={optional}
+                      formContext={formContext}
+                      isDisabled={isDisabled}
+                      placeholder={placeholder}
+                      details={details}
+                    />
+                  </Suspense>
+                </ErrorBoundary>
               </Flex>
 
               {description && (

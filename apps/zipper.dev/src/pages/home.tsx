@@ -39,6 +39,10 @@ import { useAnalytics } from '~/hooks/use-analytics';
 import Link from 'next/link';
 import { HiArrowUpRight } from 'react-icons/hi2';
 import { NextPageWithLayout } from './_app';
+import { GetServerSideProps } from 'next';
+import { getServerSession } from 'next-auth';
+import { authOptions } from './api/auth/[...nextauth]';
+import Head from 'next/head';
 
 /* -------------------------------------------- */
 /* Content                                      */
@@ -284,7 +288,7 @@ const APPLET_GALLERY_LIST = [
   // },
 ];
 
-const BATERIES_CONTENT = {
+const BATTERIES_CONTENT = {
   TITLE: 'Batteries included',
 
   DESCRIPTION: `Some days you just want to prototype something quickly to prove that it works, while the
@@ -797,9 +801,9 @@ const Batteries = memo(() => {
             fontFamily="plaak"
             fontSize="4xl"
             fontWeight="bold"
-            color={baseColors.blue['500']}
+            color="blue.500"
           >
-            {BATERIES_CONTENT.TITLE}
+            {BATTERIES_CONTENT.TITLE}
           </Heading>
           <Text
             margin="0 !important"
@@ -807,7 +811,7 @@ const Batteries = memo(() => {
             lineHeight={7}
             color="gray.900"
           >
-            {BATERIES_CONTENT.DESCRIPTION}
+            {BATTERIES_CONTENT.DESCRIPTION}
           </Text>
         </VStack>
 
@@ -817,7 +821,7 @@ const Batteries = memo(() => {
           columnGap={5}
           w="full"
         >
-          {BATERIES_CONTENT.LIST.map((btr) => (
+          {BATTERIES_CONTENT.LIST.map((btr) => (
             <GridItem
               key={btr.name}
               colSpan={1}
@@ -828,11 +832,13 @@ const Batteries = memo(() => {
               <Box as="span" color="blue.500">
                 {btr.icon}
               </Box>
-              <VStack gap={2} color="gray.800" align="start">
-                <Heading fontSize="xl" fontWeight={600}>
+              <VStack gap={2} align="start">
+                <Heading fontSize="xl" fontWeight={500} color="blue.500">
                   {btr.name}
                 </Heading>
-                <Text style={{ marginTop: '0px' }}>{btr.description}</Text>
+                <Text style={{ marginTop: '0px' }} color="gray.800">
+                  {btr.description}
+                </Text>
               </VStack>
             </GridItem>
           ))}
@@ -953,27 +959,46 @@ const HomePage: NextPageWithLayout = () => {
   }, []);
 
   return (
-    <Website>
-      <Website.Navbar links={{ component: NextLink }} />
-      <Box
-        display="flex"
-        flexDir="column"
-        alignItems="center"
-        as="main"
-        w="full"
-        margin="0 auto"
-      >
-        <Hero />
-        <Features />
-        <AppletsGallery />
-        <Batteries />
-        <Headline />
-        <Website.Footer links={{ component: NextLink }} />
-      </Box>
-    </Website>
+    <>
+      <Head>
+        <link rel="canonical" href="https://zipper.dev/" />
+      </Head>
+      <Website>
+        <Website.Navbar links={{ component: NextLink }} />
+        <Box
+          display="flex"
+          flexDir="column"
+          alignItems="center"
+          as="main"
+          w="full"
+          margin="0 auto"
+        >
+          <Hero />
+          <Features />
+          <AppletsGallery />
+          <Batteries />
+          <Headline />
+          <Website.Footer links={{ component: NextLink }} />
+        </Box>
+      </Website>
+    </>
   );
 };
 
 HomePage.skipAuth = true;
+
+export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
+  const session = await getServerSession(req, res, authOptions);
+  if (!session?.user) {
+    return {
+      redirect: {
+        destination: '/',
+        permanent: false,
+      },
+    };
+  }
+
+  return { props: { hasUser: false } };
+};
 
 export default HomePage;

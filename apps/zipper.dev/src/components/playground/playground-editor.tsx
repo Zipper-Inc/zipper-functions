@@ -18,8 +18,9 @@ import { getPathFromUri, getUriFromPath } from '~/utils/model-uri';
 import { parse } from '@babel/parser';
 import traverse from '@babel/traverse';
 import MonacoJSXHighlighter from 'monaco-jsx-highlighter';
-import { useColorModeValue } from '@chakra-ui/react';
+import { Box, useColorModeValue } from '@chakra-ui/react';
 import { baseColors } from '@zipper/ui';
+import { useHelpBorder } from '../context/help-mode-context';
 
 type MonacoEditor = monaco.editor.IStandaloneCodeEditor;
 

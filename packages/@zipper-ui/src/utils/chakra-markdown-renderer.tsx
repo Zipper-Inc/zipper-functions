@@ -163,7 +163,7 @@ export const defaults: Components & { heading: Components['h1'] } = {
     return <Text as="del">{children}</Text>;
   },
   hr: () => {
-    return <Divider />;
+    return <Divider style={{ marginBottom: '10px' }} />;
   },
   a: (props) => {
     return (
@@ -174,7 +174,6 @@ export const defaults: Components & { heading: Components['h1'] } = {
   },
   img: Image,
   text: (props) => {
-    console.log('text???', props);
     const { children } = props;
     return <Text as="span">{children}</Text>;
   },

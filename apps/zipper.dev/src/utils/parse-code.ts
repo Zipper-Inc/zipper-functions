@@ -219,7 +219,6 @@ export function parseInputForTypes({
     }
 
     const typeNode = params.getTypeNode();
-    console.log(typeNode);
     if (typeNode?.isKind(SyntaxKind.AnyKeyword)) {
       return [
         {

@@ -45,7 +45,7 @@ export const scriptRouter = createRouter()
   // create
   .mutation('add', {
     input: z.object({
-      name: z.string().min(3).max(255).transform(kebabCase),
+      name: z.string().min(1).max(255).transform(kebabCase),
       description: z.string().optional(),
       appId: z.string().uuid(),
       code: z.string().default(DEFAULT_CODE),
@@ -135,7 +135,7 @@ export const scriptRouter = createRouter()
     input: z.object({
       id: z.string().uuid(),
       data: z.object({
-        name: z.string().min(3).max(255).optional(),
+        name: z.string().min(1).max(255).optional(),
         description: z.string().optional().nullable(),
       }),
     }),
@@ -182,6 +182,8 @@ export const scriptRouter = createRouter()
     }),
     async resolve({ ctx, input }) {
       const { appId, newFilename } = input;
+
+      if (newFilename.length < 4) return false;
 
       await hasAppEditPermission({
         ctx,
