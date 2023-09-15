@@ -22,6 +22,7 @@ import {
   Flex,
   Text,
   useDisclosure,
+  useColorMode,
 } from '@chakra-ui/react';
 import React, { useState, useEffect } from 'react';
 import SecretsTab from '~/components/playground/tab-secrets';
@@ -36,7 +37,7 @@ import { parsePlaygroundQuery, PlaygroundTab } from '~/utils/playground.utils';
 import { RunAppProvider } from '../context/run-app-context';
 import { PlaygroundAvatars } from './playground-avatars';
 import { useAppEditors } from '~/hooks/use-app-editors';
-import { TabButton } from '@zipper/ui';
+import { primaryColors, TabButton } from '@zipper/ui';
 import HistoryTab from './tab-runs';
 import VersionsTab from './tab-versions';
 import { useRouter } from 'next/router';
@@ -46,7 +47,6 @@ import {
   FiBook,
   FiBookOpen,
   FiChevronLeft,
-  FiChrome,
   FiCrosshair,
   FiX,
 } from 'react-icons/fi';
@@ -57,8 +57,8 @@ import {
 } from '../context/help-mode-context';
 
 import { HiOutlineMegaphone } from 'react-icons/hi2';
-
 import { FeedbackModal } from '~/components/auth/feedback-modal';
+import { useTheme } from 'next-themes';
 
 const tabPanelStyles: ChakraProps = {
   flex: 1,
@@ -141,6 +141,8 @@ export function Playground({
 
   const { onMouseEnter, onMouseLeave } = useHelpBorder();
   const feedbackModal = useDisclosure();
+  const { colorMode } = useColorMode();
+  const isDark = colorMode === 'dark';
 
   return (
     <RunAppProvider
@@ -322,7 +324,8 @@ export function Playground({
                   <MenuButton
                     as={IconButton}
                     aria-label="Options"
-                    icon={<QuestionOutlineIcon color="purple" />}
+                    w={'30px'}
+                    icon={<QuestionOutlineIcon color="primary" />}
                     variant="outline"
                     rounded="full"
                     border="none"
@@ -345,7 +348,7 @@ export function Playground({
                         py={2}
                         px={2}
                       >
-                        <Heading color="purple.600" size="sm" p={2}>
+                        <Heading color="primary" size="sm" p={2}>
                           Help & Docs
                         </Heading>
                         <Button
@@ -477,12 +480,20 @@ export function Playground({
             border="none"
             boxShadow="lg"
             zIndex="10"
+            p={0}
             _hover={{
               bg: 'primary.25',
             }}
             onClick={feedbackModal.onOpen}
           >
-            <HiOutlineMegaphone color="purple" />
+            <HiOutlineMegaphone
+              color={
+                isDark
+                  ? primaryColors.primary._dark
+                  : primaryColors.primary.default
+              }
+              size={16}
+            />
           </Button>
         </Box>
         <FeedbackModal {...feedbackModal} />
