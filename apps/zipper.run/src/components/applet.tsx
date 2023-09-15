@@ -166,12 +166,12 @@ export function AppPage({
       if (version !== 'latest') {
         router.push({
           pathname: `/run/${embedPath}${filename}/@${version}`,
-          query: values,
+          query: JSON.parse(JSON.stringify(values)),
         });
       } else {
         router.push({
           pathname: `/run/${embedPath}${filename}`,
-          query: values,
+          query: JSON.parse(JSON.stringify(values)),
         });
       }
     }

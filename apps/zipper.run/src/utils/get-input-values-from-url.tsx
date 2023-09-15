@@ -6,7 +6,6 @@ import {
   safeJSONStringify,
 } from '@zipper/utils';
 import { InputParam, InputType } from '@zipper/types';
-import { parseDate } from 'chrono-node';
 import { ParsedUrlQuery } from 'querystring';
 
 export function formatValueFromUrl(input: InputParam, value: string | null) {
@@ -23,9 +22,6 @@ export function formatValueFromUrl(input: InputParam, value: string | null) {
       if (Array.isArray(safeJSONParse(value))) return value;
       return JSON.stringify(value.split(','));
 
-    case InputType.date:
-      return parseDate(value).toISOString().split('T')[0] || null;
-
     default:
       return value;
   }
@@ -41,9 +37,6 @@ export function getInputValuesFromUrl({
   url?: string;
 }) {
   const searchParams = getSearchParams(url);
-
-  console.log({ url });
-  console.log('searchParams', searchParams);
 
   const defaultValues = inputs.reduce<
     Record<string, Zipper.Primitive | undefined>
