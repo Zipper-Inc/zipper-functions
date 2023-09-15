@@ -74,7 +74,6 @@ export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
   const { hoveredElement } = useHelpMode();
   const { style, onMouseEnter, onMouseLeave } = useHelpBorder();
 
-  console.log('hoveredElement', hoveredElement);
   useCmdOrCtrl(
     'S',
     async (e: Event) => {
