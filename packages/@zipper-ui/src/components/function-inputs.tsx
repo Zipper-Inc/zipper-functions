@@ -217,15 +217,46 @@ function FunctionParamInput({
       );
     }
     case InputType.file: {
+      const fileInputRef = useRef<HTMLInputElement>(null);
+
+      const handleButtonClick = () => {
+        fileInputRef.current?.click();
+      };
+
+      const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        formProps.onChange(event);
+      };
+
       return (
-        <VStack align="start" w="full">
-          <Input
-            backgroundColor="bgColor"
-            type="file"
-            {...formProps}
+        <VStack
+          align="start"
+          alignItems={'center'}
+          w="full"
+          display={'flex'}
+          flexDirection={'row'}
+          gap={2}
+        >
+          <Button
+            onClick={handleButtonClick}
             isDisabled={isDisabled}
-            placeholder={placeholder}
-          />
+            backgroundColor="bgColor"
+            _hover={{ bg: 'primary', color: 'fg.50' }}
+            mt={2}
+          >
+            <Text>Choose File</Text>
+            <Input
+              type="file"
+              style={{ display: 'none' }}
+              isDisabled={isDisabled}
+              placeholder={placeholder}
+              {...formProps}
+              ref={fileInputRef}
+              onChange={handleChange}
+            />
+          </Button>
+          <Text fontSize="sm" color="gray.500">
+            {fileInputRef.current?.files?.[0]?.name || 'No file chosen'}
+          </Text>
         </VStack>
       );
     }

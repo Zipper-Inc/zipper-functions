@@ -38,6 +38,7 @@ import JoinBetaForm from '~/components/join-beta-form';
 import { useAnalytics } from '~/hooks/use-analytics';
 import Link from 'next/link';
 import { HiArrowUpRight } from 'react-icons/hi2';
+import { NextPageWithLayout } from './_app';
 import { GetServerSideProps } from 'next';
 import { getServerSession } from 'next-auth';
 import { authOptions } from './api/auth/[...nextauth]';
@@ -950,7 +951,7 @@ const BetaSection = () => {
 /* Render                                       */
 /* -------------------------------------------- */
 
-const HomePage = () => {
+const HomePage: NextPageWithLayout = () => {
   const analytics = useAnalytics();
 
   useEffect(() => {
@@ -983,6 +984,8 @@ const HomePage = () => {
     </>
   );
 };
+
+HomePage.skipAuth = true;
 
 export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
   const session = await getServerSession(req, res, authOptions);
