@@ -377,7 +377,7 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
                       <InputRightElement
                         children={
                           slugExists ? (
-                            <WarningIcon color="red.500" />
+                            <Icon as={HiExclamationTriangle} color="red.500" />
                           ) : (
                             <CheckIcon color="green.500" />
                           )
@@ -385,7 +385,9 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
                       />
                     ) : (
                       <InputRightElement
-                        children={<WarningIcon color="red.500" />}
+                        children={
+                          <Icon as={HiExclamationTriangle} color="red.500" />
+                        }
                       />
                     )}
                   </InputGroup>
