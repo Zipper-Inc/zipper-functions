@@ -69,6 +69,10 @@ export const inspectableComponents: InspectableComponents = {
     name: 'Versions',
     description: `Publish or rollback to any saved version of this applet..`,
   },
+  SettingsTab: {
+    name: 'Settings',
+    description: `Change the name, description, and other settings of this applet.`,
+  },
 };
 
 export const useHelpMode = () => {
