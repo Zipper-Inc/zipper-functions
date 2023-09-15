@@ -130,14 +130,14 @@ export default async function handler(
   // Beacon when we hit 80 and 99 percent
   if (dailyRunPercentage === 80 || dailyRunPercentage === 99) {
     const analytics = await getAnalytics();
-    if (userInfo) {
-      const { email, userId } = userInfo;
-      analytics.identify(userId, { userId, email });
-    }
-
-    analytics.track(`Run usage at ${dailyRunPercentage}%`, {
-      applet: slug,
-      appId: id,
+    analytics.track({
+      event: `Run usage at ${dailyRunPercentage}%`,
+      properties: {
+        applet: slug,
+        appId: id,
+      },
+      userId: userInfo.userId,
+      anonymousId: 'unknown user',
     });
   }
 
