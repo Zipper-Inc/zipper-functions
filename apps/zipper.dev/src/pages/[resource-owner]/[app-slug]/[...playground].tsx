@@ -18,6 +18,7 @@ import {
   Props,
   PlaygroundTab,
 } from '~/utils/playground.utils';
+import { HelpModeProvider } from '~/components/context/help-mode-context';
 
 const PlaygroundPage: NextPageWithLayout<Props> = ({
   resourceOwnerSlug,
@@ -87,7 +88,9 @@ const PlaygroundPage: NextPageWithLayout<Props> = ({
         initialScripts={appQuery.data?.scripts || []}
         refetchApp={refetchApp}
       >
-        <Playground app={appQuery.data} filename={filename} tab={tab} />
+        <HelpModeProvider>
+          <Playground app={appQuery.data} filename={filename} tab={tab} />
+        </HelpModeProvider>
       </EditorContextProvider>
     ),
     {

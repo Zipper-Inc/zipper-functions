@@ -193,7 +193,7 @@ export function PostsLayout(): ReactElement {
 
             <Text
               as={Link}
-              href="https://zipper.docs/"
+              href="/docs"
               isExternal
               _hover={{ color: 'purple.500' }}
               fontSize="sm"

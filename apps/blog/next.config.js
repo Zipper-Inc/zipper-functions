@@ -5,6 +5,7 @@ const withNextra = require('nextra')({
 });
 
 module.exports = withNextra({
+  basePath: '/blog',
   reactStrictMode: true,
   transpilePackages: [
     '@zipper/framework',
@@ -12,15 +13,6 @@ module.exports = withNextra({
     '@zipper/ui',
     '@zipper/utils',
   ],
-  async redirects() {
-    return [
-      {
-        source: '/',
-        destination: '/blog',
-        permanent: true,
-      },
-    ];
-  },
 });
 
 // If you have other Next.js configurations, you can pass them as the parameter:

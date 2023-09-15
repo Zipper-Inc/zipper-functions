@@ -47,14 +47,15 @@ const Header: React.FC<HeaderProps> = ({
   const isLanding = useMemo(
     () =>
       [
+        '/home',
         '/about',
+        '/docs',
         '/features',
         '/blog',
-        '/about',
         '/home',
         '/terms',
         '/privacy',
-      ].includes(router.asPath),
+      ].find((path) => router.asPath.startsWith(path)),
     [router.asPath],
   );
 
