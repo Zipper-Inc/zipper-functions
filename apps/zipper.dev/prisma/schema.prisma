@@ -30,7 +30,7 @@ model App {
   requiresAuthToRun     Boolean   @default(false)
   isDataSensitive       Boolean   @default(false)
   isTemplate            Boolean   @default(false)
-  dailyRunLimit         Int       @default(100)
+  dailyRunLimit         Int       @default(1000)
 
   scriptMain ScriptMain?
 
