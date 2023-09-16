@@ -166,6 +166,7 @@ export function Playground({
           display="flex"
           flexDirection="column"
           justifyContent="stretch"
+          flex={1}
           isLazy
         >
           <TabList
