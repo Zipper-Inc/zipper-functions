@@ -386,9 +386,7 @@ export default function PlaygroundEditor(
         theme={theme}
         options={{
           fontSize: 13,
-          minimap: { enabled: false },
           automaticLayout: true,
-          scrollbar: { verticalScrollbarSize: 0, horizontalScrollbarSize: 0 },
           readOnly: !appInfo.canUserEdit,
           fixedOverflowWidgets: true,
           renderLineHighlight: 'line',
