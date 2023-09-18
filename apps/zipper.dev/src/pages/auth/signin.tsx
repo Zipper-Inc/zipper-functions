@@ -28,6 +28,7 @@ import { SiGithub } from 'react-icons/si';
 import { FcGoogle } from 'react-icons/fc';
 import { useState } from 'react';
 import { useRouter } from 'next/router';
+import Link from 'next/link';
 
 export const renderIcon = (providerName: string) => {
   switch (providerName) {
@@ -158,6 +159,19 @@ export default function SignIn({
                     >
                       Continue
                     </Button>
+                    <Text fontSize="xs" color="fg.800" mt={4}>
+                      By continuing, you agree to our{' '}
+                      <Text
+                        as="span"
+                        fontSize="xs"
+                        color="fg.800"
+                        textDecoration="underline"
+                      >
+                        <Link href="https://zipper.dev/terms">
+                          terms and conditions
+                        </Link>
+                      </Text>
+                    </Text>
                   </form>
                 </Stack>
               </Stack>
