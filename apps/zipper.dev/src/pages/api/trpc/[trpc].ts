@@ -3,6 +3,7 @@
  */
 import { captureException } from '@sentry/nextjs';
 import * as trpcNext from '@trpc/server/adapters/next';
+
 import { getToken } from 'next-auth/jwt';
 import { createContext } from '~/server/context';
 import { trpcRouter } from '~/server/routers/_app';

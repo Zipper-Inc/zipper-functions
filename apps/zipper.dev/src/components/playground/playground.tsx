@@ -15,9 +15,6 @@ import {
   Tooltip,
   MenuDivider,
   Heading,
-  Input,
-  InputGroup,
-  InputLeftElement,
   Button,
   Flex,
   Text,
@@ -42,23 +39,25 @@ import HistoryTab from './tab-runs';
 import VersionsTab from './tab-versions';
 import { useRouter } from 'next/router';
 import { IconButton } from '@chakra-ui/react';
-import { QuestionOutlineIcon } from '@chakra-ui/icons';
-import {
-  FiBook,
-  FiBookOpen,
-  FiChevronLeft,
-  FiCrosshair,
-  FiX,
-} from 'react-icons/fi';
+
+import { FiChevronLeft, FiX } from 'react-icons/fi';
 import {
   useHelpMode,
   inspectableComponents,
   useHelpBorder,
 } from '../context/help-mode-context';
 
-import { HiOutlineMegaphone } from 'react-icons/hi2';
 import { FeedbackModal } from '~/components/auth/feedback-modal';
+import { ContactModal } from '~/components/playground/contact-modal';
 import { useTheme } from 'next-themes';
+import {
+  PiBookDuotone,
+  PiBookOpenDuotone,
+  PiCrosshairDuotone,
+  PiLifebuoyDuotone,
+  PiMegaphoneSimpleDuotone,
+  PiQuestionDuotone,
+} from 'react-icons/pi';
 
 const tabPanelStyles: ChakraProps = {
   flex: 1,
@@ -141,6 +140,7 @@ export function Playground({
 
   const { onMouseEnter, onMouseLeave } = useHelpBorder();
   const feedbackModal = useDisclosure();
+  const contactModal = useDisclosure();
   const { colorMode } = useColorMode();
   const isDark = colorMode === 'dark';
 
@@ -326,7 +326,15 @@ export function Playground({
                     as={IconButton}
                     aria-label="Options"
                     w={'30px'}
-                    icon={<QuestionOutlineIcon color="primary" />}
+                    icon={
+                      <PiQuestionDuotone
+                        color={
+                          isDark
+                            ? primaryColors.primary._dark
+                            : primaryColors.primary.default
+                        }
+                      />
+                    }
                     variant="outline"
                     rounded="full"
                     border="none"
@@ -363,7 +371,7 @@ export function Playground({
 
                       <MenuItem
                         color="fg.700"
-                        icon={<FiBook size={20} color="#98A2B3" />}
+                        icon={<PiBookDuotone size={20} color="#98A2B3" />}
                         onClick={() =>
                           window.open('https://zipper.dev/docs', '_blank')
                         }
@@ -372,7 +380,7 @@ export function Playground({
                       </MenuItem>
                       <MenuItem
                         color="fg.700"
-                        icon={<FiBook size={20} color="#98A2B3" />}
+                        icon={<PiBookDuotone size={20} color="#98A2B3" />}
                         onClick={() =>
                           window.open(
                             'https://zipper.dev/docs/introduction/basic-concepts',
@@ -384,7 +392,7 @@ export function Playground({
                       </MenuItem>
                       <MenuItem
                         color="fg.700"
-                        icon={<FiBook size={20} color="#98A2B3" />}
+                        icon={<PiBookDuotone size={20} color="#98A2B3" />}
                         onClick={() =>
                           window.open(
                             'https://zipper.dev/docs/introduction/what-you-can-build',
@@ -398,7 +406,7 @@ export function Playground({
 
                       <MenuItem
                         color="fg.700"
-                        icon={<FiBookOpen size={20} color="#98A2B3" />}
+                        icon={<PiBookOpenDuotone size={20} color="#98A2B3" />}
                         onClick={() =>
                           window.open('https://zipper.dev/docs', '_blank')
                         }
@@ -407,18 +415,19 @@ export function Playground({
                       </MenuItem>
                       <MenuItem
                         color="fg.700"
-                        icon={<FiCrosshair size={20} color="#98A2B3" />}
+                        icon={<PiCrosshairDuotone size={20} color="#98A2B3" />}
                         onClick={toggleHelpMode}
                       >
                         Inspect UI
                       </MenuItem>
 
-                      {/* <MenuItem
+                      <MenuItem
                         color="fg.700"
-                        icon={<FiChrome size={20} color="#98A2B3" />}
+                        icon={<PiLifebuoyDuotone size={20} color="#98A2B3" />}
+                        onClick={contactModal.onOpen}
                       >
                         Contact support
-                      </MenuItem> */}
+                      </MenuItem>
                     </>
                   ) : (
                     <>
@@ -487,7 +496,7 @@ export function Playground({
             }}
             onClick={feedbackModal.onOpen}
           >
-            <HiOutlineMegaphone
+            <PiMegaphoneSimpleDuotone
               color={
                 isDark
                   ? primaryColors.primary._dark
@@ -498,6 +507,7 @@ export function Playground({
           </Button>
         </Box>
         <FeedbackModal {...feedbackModal} />
+        <ContactModal {...contactModal} />
       </VStack>
     </RunAppProvider>
   );
