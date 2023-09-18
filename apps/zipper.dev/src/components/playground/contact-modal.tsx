@@ -13,10 +13,13 @@ import {
   Spinner,
   Text,
   Box,
+  Input,
+  useToast,
 } from '@chakra-ui/react';
+
 import Link from 'next/link';
-import { useState } from 'react';
-import { FiClipboard } from 'react-icons/fi';
+import { useRef, useState } from 'react';
+
 import { PiPaperclipDuotone } from 'react-icons/pi';
 import { useAnalytics } from '~/hooks/use-analytics';
 import { useUser } from '~/hooks/use-user';
@@ -37,8 +40,25 @@ export function ContactModal({
 
   const contactSupportMutation = trpc.useMutation('user.contactSupport');
 
-  // we need to create a new function here to make the request client side
-  // we need to send a multipart-form data request with the file
+  const [file, setFile] = useState<any>();
+
+  const toast = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleButtonClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onloadend = () => {
+        setFile(reader.result);
+      };
+    }
+  };
 
   return (
     <>
@@ -65,16 +85,31 @@ export function ContactModal({
             <FormControl mt={2}>
               <Button
                 bg="transparent"
-                _hover={{ bgColor: 'transparent' }}
+                _hover={{ bgColor: 'transparent', textDecoration: 'underline' }}
                 display="flex"
                 alignItems={'center'}
                 alignContent={'center'}
                 justifyContent={'center'}
                 p={0}
                 gap={2}
+                onClick={handleButtonClick}
+                mt={2}
               >
                 <PiPaperclipDuotone />
                 <Text color="fg.600">Add an images, files or videos</Text>
+                {fileInputRef.current && fileInputRef.current.files?.length ? (
+                  <Text fontSize="sm" color="gray.500">
+                    {fileInputRef.current?.files?.[0]?.name || 'No file chosen'}
+                  </Text>
+                ) : (
+                  ''
+                )}
+                <Input
+                  type="file"
+                  style={{ display: 'none' }}
+                  ref={fileInputRef}
+                  onChange={handleChange}
+                />
               </Button>
             </FormControl>
           </ModalBody>
@@ -102,6 +137,7 @@ export function ContactModal({
                   await contactSupportMutation.mutateAsync(
                     {
                       request: feedback,
+                      file,
                     },
                     {
                       onSuccess: () => {
@@ -110,11 +146,19 @@ export function ContactModal({
                     },
                   );
 
-                  analytics?.track('Gave Feedback', {
+                  toast({
+                    description: 'Your request has been sent!',
+                    status: 'success',
+                    duration: 9000,
+                    isClosable: true,
+                  });
+
+                  analytics?.track('Contacted support', {
                     email: user?.email,
                   });
 
                   setSubmittingFeedback(false);
+                  onClose();
                 }}
               >
                 {submittingFeedback ? <Spinner /> : 'Submit'}

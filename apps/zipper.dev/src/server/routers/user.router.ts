@@ -100,6 +100,7 @@ export const userRouter = createProtectedRouter()
   .mutation('contactSupport', {
     input: z.object({
       request: z.string(),
+      file: z.string().optional(),
     }),
     async resolve({ ctx, input }) {
       if (ctx.userId && process.env.FEEDBACK_TRACKER_API_KEY) {
@@ -113,28 +114,49 @@ export const userRouter = createProtectedRouter()
           },
         });
 
+        const formData = new FormData();
+        formData.append(
+          'from',
+          user?.email ? user.email : 'support@zipper.works',
+        );
+        formData.append('to[0]', 'support@zipper.works');
+        formData.append('subject', 'Help needed');
+        formData.append('sender_name', user?.name ? user.name : 'Anonymous');
+        formData.append('body', input.request);
+        formData.append('text', input.request);
+        const file = input.file ? input.file.split(',')[1] : '';
+        const buffer = Buffer.from(file ? file : '', 'base64');
+
+        const fileType = input.file
+          ? input.file.split(';')[0]?.split(':')[1]
+          : '';
+
+        const typeObject = {
+          type: fileType,
+        };
+
+        const blob = new Blob([buffer], typeObject);
+        // // set the file name in blob var
+        formData.append(
+          'attachments[0]',
+          blob,
+          `file.${fileType?.split('/')[1]}`,
+        );
+
         const options = {
           method: 'POST',
           headers: {
-            accept: 'application/json',
-            'content-type': 'application/json',
             Authorization: `Bearer ${process.env.FRONT_SECRET}`,
           },
-          body: JSON.stringify({
-            options: { archive: true },
-            to: ['support@zipper.works'],
-            sender_name: user?.name,
-            subject: 'Help needed!',
-            text: input.request,
-            body: input.request,
-            should_add_default_signature: true,
-          }),
+          body: formData,
         };
 
         fetch('https://api2.frontapp.com/channels/cha_e8j14/messages', options)
           .then((response) => response.json())
           .then((response) => console.log(response))
           .catch((err) => console.error(err));
+
+        return true;
       }
     },
   })
