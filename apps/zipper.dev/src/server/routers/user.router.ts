@@ -113,8 +113,6 @@ export const userRouter = createProtectedRouter()
           },
         });
 
-        const email = user?.email;
-
         const options = {
           method: 'POST',
           headers: {
