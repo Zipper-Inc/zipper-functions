@@ -18,9 +18,8 @@ import { getPathFromUri, getUriFromPath } from '~/utils/model-uri';
 import { parse } from '@babel/parser';
 import traverse from '@babel/traverse';
 import MonacoJSXHighlighter from 'monaco-jsx-highlighter';
-import { Box, useColorModeValue } from '@chakra-ui/react';
+import { useColorModeValue } from '@chakra-ui/react';
 import { baseColors } from '@zipper/ui';
-import { useHelpBorder } from '../context/help-mode-context';
 
 type MonacoEditor = monaco.editor.IStandaloneCodeEditor;
 
@@ -386,13 +385,15 @@ export default function PlaygroundEditor(
         theme={theme}
         options={{
           fontSize: 13,
-          minimap: { enabled: false },
           automaticLayout: true,
-          scrollbar: { verticalScrollbarSize: 0, horizontalScrollbarSize: 0 },
           readOnly: !appInfo.canUserEdit,
           fixedOverflowWidgets: true,
           renderLineHighlight: 'line',
           renderLineHighlightOnlyWhenFocus: true,
+          minimap: {
+            autohide: true,
+          },
+          overviewRulerBorder: false,
         }}
         overrideServices={{
           openerService: {

@@ -281,7 +281,7 @@ export default async function serveRelay({
             props: {},
             children: [
               '### Looks like something went wrong',
-              `\`\`\`${result}\`\`\``,
+              `\`\`\`${result}`,
             ],
           },
           {
