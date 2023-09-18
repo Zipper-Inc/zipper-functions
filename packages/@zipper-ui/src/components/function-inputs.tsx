@@ -25,6 +25,7 @@ import { FieldValues, UseFormReturn, RegisterOptions } from 'react-hook-form';
 import { InputType, InputParam } from '@zipper/types';
 import { getFieldName } from '@zipper/utils';
 import { ErrorBoundary } from './error-boundary';
+import { AutoResizeTextarea } from './auto-resize-text-area';
 
 interface Props {
   params: InputParam[];
@@ -66,7 +67,8 @@ function FunctionParamInput({
   isDisabled?: boolean;
   details?: any;
 }) {
-  const { register } = formContext;
+  const { register, watch } = formContext;
+
   const name = getFieldName(inputKey, type);
   const formFieldOptions: RegisterOptions<FieldValues, string> = {
     required: !optional,
@@ -89,11 +91,13 @@ function FunctionParamInput({
 
     case InputType.string: {
       return (
-        <Textarea
+        <AutoResizeTextarea
           backgroundColor="bgColor"
           fontFamily="monospace"
-          fontSize="smaller"
+          fontSize={watch()[name]?.length < 100 ? 'smaller' : 'md'}
           minHeight={14}
+          maxH="xl"
+          overflowY="scroll"
           isDisabled={isDisabled}
           _placeholder={{ color: 'fg.300' }}
           {...formProps}
