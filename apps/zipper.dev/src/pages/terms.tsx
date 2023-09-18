@@ -34,7 +34,7 @@ const TermsPage = () => (
         </Heading>
 
         <Heading py={5} as="h3" fontSize="2xl">
-          Effective as of July 9, 2021
+          Effective as of September 18, 2023
         </Heading>
 
         <Text pb={5}>
@@ -115,11 +115,56 @@ const TermsPage = () => (
           What about my privacy?
         </Heading>
         <Text mb={10}>
-          Zipper takes the privacy of its users very seriously. For the current
-          Zipper Privacy Policy, please{' '}
+          Zipper takes the privacy of its users very seriously.
+          <br />
+          <br />
+          You agree, represent, and warrant to Zipper that if you in your use of
+          our Services collect any “personal data”, “personally identifiable
+          information,” “personal information,” any substantial equivalent of
+          these terms, or other data regulated under any applicable laws
+          (collectively, “Personal Information”), including Personal Information
+          pertaining to a minor, and store such information within your Zipper
+          account or upload or otherwise enable such information to be uploaded
+          to the application created for you by Zipper, you have obtained valid
+          consent for such activities according to the applicable laws of the
+          jurisdiction in which the data subject lives. You further agree,
+          represent, and warrant to Zipper that you will get and maintain all
+          necessary permissions and valid consents required to lawfully transfer
+          such personal information to Zipper and to enable such personal
+          information to be lawfully collected, processed, and shared by Zipper
+          for the purposes of providing the Service or as otherwise directed by
+          you.
+          <br />
+          <br />
+          Notwithstanding the foregoing, you acknowledge that the Services
+          offered by Zipper are not designed for Personal Information that is
+          governed by the General Data Protection Regulation (Regulation (EU)
+          2016/679) EU GDPR as it forms part of the law of England and Wales by
+          virtue of section 3 of the European Union (Withdrawal) Act 2018 the UK
+          Data Protection Laws, the Swiss Federal Act on Data Protection, the UK
+          Data Protection Act 2018, or any other Personal Information, including
+          sensitive or special data, that might impose specific data security or
+          data protection obligations on Zipper, including, without limitation
+          (i) “protected health information” as defined under the Health
+          Insurance Portability and Accountability Act of 1996 (HIPAA), (ii)
+          “cardholder data” as defined under the Payment Card Industry Data
+          Security Standard (PCI DSS), or (iii) “nonpublic personal information”
+          as defined under the Gramm-Leach-Bliley Act of 1999, in each case as
+          such Acts and standards have been or may be supplemented and amended
+          from time to time (collectively, “Prohibited Data”). You hereby agree
+          and acknowledge that you will not use the Services, nor permit your
+          users or anyone you authorize to access the Services, to store,
+          transmit, or process Prohibited Data.
+          <br />
+          <br />
+          The foregoing covers all personal information we collect at your
+          direction as our customer. However, to learn more about how we at
+          Zipper treat any personal information that we collect on our own
+          behalf, please click{' '}
           <Link as={NextLink} color="purple.500" href="/privacy">
-            click here
-          </Link>
+            here
+          </Link>{' '}
+          to see the current Zipper Privacy Policy.
         </Text>
 
         <Heading as="h3" fontSize="lg" py={2}>
@@ -406,7 +451,7 @@ const TermsPage = () => (
         >
           {`Zipper, Inc.
 Attn: DMCA Designated Agent
-1700 Montgomery Street, Suite 180, San Francisco, CA, 94111`}
+7 Mount Lassen Dr, Unit 152, San Rafael, CA, 94903`}
         </Text>
 
         <Heading as="h3" fontSize="2xl" py={2}>

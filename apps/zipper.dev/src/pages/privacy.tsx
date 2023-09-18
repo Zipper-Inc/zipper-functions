@@ -43,7 +43,7 @@ const PrivacyPage: NextPageWithLayout = () => {
           </Heading>
 
           <Heading py={5} as="h3" fontSize="2xl">
-            Effective as of July 9, 2021
+            Effective as of September 18, 2023
           </Heading>
 
           <Text pb={5}>
@@ -72,6 +72,27 @@ const PrivacyPage: NextPageWithLayout = () => {
               support@zipper.works
             </Link>{' '}
             .
+          </Text>
+          <Text>
+            Zipper is in the business of providing application production and
+            hosting services to our customers. In the ordinary course of
+            providing these services, at the direction of the customer, we may
+            process data consisting of or containing personal data about
+            individuals. EXCEPT FOR THE PERSONAL DATA EXPRESSLY DESCRIBED IN
+            THIS PRIVACY POLICY IN THE SECTION “CATEGORIES OF PERSONAL DATA WE
+            COLLECT” BELOW, WE ARE NOT THE CONTROLLERS OF SUCH PERSONAL DATA AND
+            OUR PROCESSING OF SUCH DATA IS GOVERNED BY THE TERMS IN PLACE
+            BETWEEN US AND THE CUSTOMER. If we process your personal data on
+            behalf of one of our customers and you wish to discontinue such
+            processing, or if you seek to correct, amend, or delete inaccurate
+            data, please directly contact the customer on whose behalf we are
+            processing such data. The customer's privacy policy or other
+            agreement between the customer and you or your organization, and not
+            this Privacy Policy, applies to such processing. We will follow the
+            customer's instructions with regard to the data at issue. We will
+            retain such personal data pursuant to our retention policy and will
+            retain it as necessary to comply with our legal obligations, resolve
+            disputes, and enforce our agreements.
           </Text>
 
           <Heading py={5} fontWeight="extrabold" as="h1" fontSize="4xl">
@@ -209,6 +230,8 @@ const PrivacyPage: NextPageWithLayout = () => {
                 <Td fontWeight="bold">Web Analytics</Td>
                 <Td>
                   <UnorderedList>
+                    <ListItem>Browsing or search history</ListItem>
+                    <ListItem>Web page interactions</ListItem>
                     <ListItem>
                       Referring webpage/source through which you accessed the
                       Services
@@ -217,6 +240,7 @@ const PrivacyPage: NextPageWithLayout = () => {
                       Statistics associated with the interaction between device
                       or browser and the Services
                     </ListItem>
+                    <ListItem>Non-identifiable request IDs</ListItem>
                   </UnorderedList>
                 </Td>
                 <Td>
@@ -231,6 +255,7 @@ const PrivacyPage: NextPageWithLayout = () => {
                 <Td>
                   <UnorderedList>
                     <ListItem>Email</ListItem>
+                    <ListItem>Avatars</ListItem>
                   </UnorderedList>
                 </Td>
                 <Td>
@@ -263,21 +288,16 @@ const PrivacyPage: NextPageWithLayout = () => {
                 </Td>
               </Tr>
               <Tr>
-                <Td fontWeight="bold">Sensory Data</Td>
+                <Td fontWeight="bold">Geolocation Data</Td>
                 <Td>
                   <UnorderedList>
-                    <ListItem>
-                      Photos, videos or recordings of your environment
-                    </ListItem>
+                    <ListItem>IP-address-based location information</ListItem>
                   </UnorderedList>
                 </Td>
                 <Td>
                   <UnorderedList>
                     <ListItem>Service Providers </ListItem>
                     <ListItem>Analytics Partners </ListItem>
-                    <ListItem>
-                      Parties You Authorize, Access or Authenticate
-                    </ListItem>
                   </UnorderedList>
                 </Td>
               </Tr>
