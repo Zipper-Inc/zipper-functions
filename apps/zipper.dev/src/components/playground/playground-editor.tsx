@@ -391,7 +391,11 @@ export default function PlaygroundEditor(
           renderLineHighlight: 'line',
           renderLineHighlightOnlyWhenFocus: true,
           minimap: {
-            autohide: true,
+            enabled: false,
+          },
+          scrollbar: {
+            horizontal: 'hidden',
+            verticalSliderSize: 2,
           },
           overviewRulerBorder: false,
         }}
