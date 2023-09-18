@@ -30,6 +30,7 @@ export * from '../src/components/website/Footer';
 export * from '../src/components/website';
 export * from '../src/components/website/Navbar';
 export * from '../src/components/website/Wrapper';
+export * from '../src/components/auto-resize-text-area';
 export * from '../src/components/error-boundary';
 export * from '../src/components/function-inputs';
 export * from '../src/components/function-user-connectors-input';
