@@ -51,6 +51,7 @@ export function ObjectExplorerRow({
     defaultIsOpen: shouldAutoOpen || !collapse,
   });
   const shouldCollapse = !isPrimitive(data) && data && !data['$zipperType'];
+
   return (
     <Tr
       borderBottom="1px"
@@ -146,7 +147,7 @@ export function ObjectExplorerRow({
             <SmartFunctionOutput
               // this is a hack to make sure there's an empty character since tables hate empty cells
               // the character is U+3164
-              result={data || 'ㅤ'}
+              result={data === undefined || data === null ? 'ㅤ' : data}
               level={level + 1}
               tableLevel={tableLevel + 1}
             />

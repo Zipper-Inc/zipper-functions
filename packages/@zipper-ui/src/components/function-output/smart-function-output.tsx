@@ -23,7 +23,8 @@ export function SmartFunctionOutput({
   tableLevel: number;
   heading?: string;
 }) {
-  if (!result) return null;
+  // if result === 0, it'll be evaluated as falsey by !result
+  if (result === undefined || result === null) return null;
 
   const { type, data } = parseResult(result);
 
