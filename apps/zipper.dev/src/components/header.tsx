@@ -31,7 +31,7 @@ type HeaderProps = {
 
 const navRoutes = [
   { href: '/gallery', text: 'Gallery' },
-  { href: '#', text: 'Changelog' },
+  { href: '/changelog', text: 'Changelog' },
   { href: '/docs', text: 'Docs' },
 ];
 
