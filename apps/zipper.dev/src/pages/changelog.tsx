@@ -11,18 +11,17 @@ import { NextPageWithLayout } from './_app';
 
 import { useEffect, useState } from 'react';
 import { Markdown } from '@zipper/ui';
+import { initApplet } from '@zipper-inc/client-js';
 
 const ChangelogPage: NextPageWithLayout = () => {
   const [changelogEntries, setChangelogEntries] = useState<any[]>([]);
   useEffect(() => {
     (async () => {
-      const res = await fetch('https://zipper-changelog.zipper.run/get/api');
-      const entries = await res.json();
-      setChangelogEntries(entries.data);
+      const entries = await initApplet('zipper-changelog').run('get');
+      setChangelogEntries(entries);
     })();
   }, []);
 
-  console.log(changelogEntries);
   return (
     <HStack spacing={0} flex={1} alignItems="start" gap={16} px={10}>
       <VStack flex={1} alignItems="stretch" minW={TITLE_COLUMN_MIN_WIDTH}>
