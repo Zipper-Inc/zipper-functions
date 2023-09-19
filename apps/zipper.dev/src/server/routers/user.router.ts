@@ -11,6 +11,7 @@ import slugify from '~/utils/slugify';
 import { ResourceOwnerType } from '@zipper/types';
 import { initApplet } from '@zipper-inc/client-js';
 import { captureMessage } from '@sentry/nextjs';
+import { trackEvent } from '~/utils/api-analytics';
 
 const defaultSelect = Prisma.validator<Prisma.UserSelect>()({
   id: true,
@@ -186,6 +187,15 @@ export const userRouter = createProtectedRouter()
               url: input.url,
               feedback: input.feedback,
             });
+
+          trackEvent({
+            userId: ctx.userId,
+            orgId: ctx.orgId,
+            eventName: 'Gave Feedback',
+            properties: {
+              feedback: input.feedback,
+            },
+          });
 
           return true;
         } catch (e) {

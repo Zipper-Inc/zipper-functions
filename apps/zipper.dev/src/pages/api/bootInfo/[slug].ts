@@ -17,7 +17,7 @@ import { getZipperDotDevUrl, ZIPPER_TEMP_USER_ID_HEADER } from '@zipper/utils';
 import * as Sentry from '@sentry/nextjs';
 import { verifyAccessToken } from '~/utils/jwt-utils';
 import { SessionOrganizationMembership } from '../auth/[...nextauth]';
-import { getAnalytics } from '~/utils/api-analytics';
+import { trackEvent } from '~/utils/api-analytics';
 
 export default async function handler(
   req: NextApiRequest,
@@ -129,15 +129,13 @@ export default async function handler(
 
   // Beacon when we hit 80 and 99 percent
   if (dailyRunPercentage === 80 || dailyRunPercentage === 99) {
-    const analytics = await getAnalytics();
-    analytics.track({
-      event: `Run usage at ${dailyRunPercentage}%`,
-      properties: {
-        applet: slug,
-        appId: id,
-      },
+    trackEvent({
+      eventName: `Run usage at ${dailyRunPercentage}%`,
       userId: userInfo.userId,
-      anonymousId: 'unknown user',
+      properties: {
+        slug: slug,
+        appletId: id,
+      },
     });
   }
 

@@ -1,113 +1,10 @@
-import { useState } from 'react';
-import { z } from 'zod';
-import {
-  Button,
-  Box,
-  Flex,
-  Input,
-  Text,
-  FormControl,
-  FormHelperText,
-  FormErrorMessage,
-  useToast,
-} from '@chakra-ui/react';
-import { useForm, SubmitHandler } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useAnalytics } from '~/hooks/use-analytics';
-import { getEmailUsername } from '~/utils/get-email-username';
+import { Button, Flex, Link } from '@chakra-ui/react';
 
-const schema = z.object({
-  email: z.string().email(),
-});
-
-type FormValues = z.infer<typeof schema>;
-
-export default function JoinBetaForm() {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<FormValues>({
-    resolver: zodResolver(schema),
-  });
-
-  const toast = useToast();
-  const analytics = useAnalytics();
-
-  const joinWaitlistApplet = async (data: FormValues) => {
-    const res = await fetch(
-      'https://actual-waitlist-manager.zipper.run/create/api/json',
-      {
-        method: 'POST',
-        body: JSON.stringify({
-          email: data.email,
-        }),
-      },
-    );
-
-    return res.json();
-  };
-
-  const onSubmit: SubmitHandler<FormValues> = async (data) => {
-    const response = await joinWaitlistApplet(data);
-
-    if (response.data.error === 'User already registered in this waitlist') {
-      toast({
-        description: 'You are already on the waitlist!',
-        status: 'success',
-        duration: 9000,
-        isClosable: true,
-      });
-    } else {
-      /**
-       * IMPORTANT!
-       * it's important to call the .identify call before the .group call,
-       * because the .group call will attach the current identified user.
-       */
-      analytics?.identify(getEmailUsername(data.email), {
-        email: data.email,
-      });
-
-      analytics?.group('beta.requests', {
-        name: 'Beta requests',
-      });
-
-      analytics?.track('Subscribed to Beta', {
-        email: data.email,
-      });
-
-      toast({
-        description:
-          "You've been added to the waitlist! We'll be in touch soon",
-        status: 'success',
-        duration: 9000,
-        isClosable: true,
-      });
-    }
-  };
-
+export default function JoinBetaForm({ onOpen }: { onOpen: VoidFunction }) {
   return (
-    <Flex as="form" onSubmit={handleSubmit(onSubmit)} gap={2}>
-      <FormControl isInvalid={!!errors.email} width="full">
-        <Input
-          height="2.75rem"
-          width={{ base: 'full', md: '20rem' }}
-          variant="outline"
-          placeholder="Email address"
-          _placeholder={{ color: 'gray.400' }}
-          borderColor="gray.300"
-          fontSize="md"
-          color="gray.500"
-          {...register('email')}
-        />
-        {errors.email && (
-          <FormErrorMessage color={'red.300'}>
-            {errors.email?.message}
-          </FormErrorMessage>
-        )}
-      </FormControl>
-
+    <Flex gap={4}>
       <Button
+        as={Link}
         height="2.75rem"
         minWidth={{ base: '7rem', md: '138px' }}
         fontSize={{ base: 'sm', md: 'md' }}
@@ -115,11 +12,20 @@ export default function JoinBetaForm() {
         padding={{ base: '5px 8px', md: '10px 18px' }}
         color="white"
         fontWeight={500}
-        _hover={{ background: 'brandOrange.700' }}
-        type="submit"
-        isLoading={isSubmitting}
+        _hover={{ background: 'brandOrange.700', textDecor: 'none' }}
+        href="/auth/signup"
+        rounded="sm"
+        isExternal
       >
         Join the beta
+      </Button>
+      <Button
+        variant="outline"
+        height="2.75rem"
+        fontWeight="400"
+        onClick={onOpen}
+      >
+        {'Watch demo (3 min)'}
       </Button>
     </Flex>
   );

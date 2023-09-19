@@ -6,7 +6,7 @@ import {
   ResourceOwnerSlug,
   Script,
 } from '@prisma/client';
-import { z } from 'zod';
+import { unknown, z } from 'zod';
 import { prisma } from '~/server/prisma';
 import { createRouter } from '../createRouter';
 import { hasAppEditPermission } from '../utils/authz.utils';
@@ -32,6 +32,7 @@ import { buildAndStoreApplet } from '~/utils/eszip-build-applet';
 import JSZip from 'jszip';
 import { DEFAULT_MD } from './script.router';
 import { storeVersionCode } from '../utils/r2.utils';
+import { trackEvent } from '~/utils/api-analytics';
 
 const defaultSelect = Prisma.validator<Prisma.AppSelect>()({
   id: true,
@@ -252,6 +253,17 @@ export const appRouter = createRouter()
 
       const resourceOwner = await prisma.resourceOwnerSlug.findFirst({
         where: { resourceOwnerId: app.organizationId ?? app.createdById },
+      });
+
+      trackEvent({
+        userId: ctx.userId,
+        orgId: ctx.orgId,
+        eventName: 'Created Applet',
+        properties: {
+          appletId: app.id,
+          slug: app.slug,
+          usedAI: !!aiCode,
+        },
       });
 
       return { ...app, scriptMain, resourceOwner };
@@ -704,17 +716,29 @@ export const appRouter = createRouter()
           )
         : undefined;
 
-      const result = await fetch(
-        getRunUrl(app.slug, version, script.filename),
-        {
-          method: 'POST',
-          body: JSON.stringify(inputs),
-          headers: {
-            authorization: token ? `Bearer ${token}` : '',
-            'x-zipper-run-id': input.runId,
-          },
+      const res = await fetch(getRunUrl(app.slug, version, script.filename), {
+        method: 'POST',
+        body: JSON.stringify(inputs),
+        headers: {
+          authorization: token ? `Bearer ${token}` : '',
+          'x-zipper-run-id': input.runId,
         },
-      ).then((r) => r.text());
+      });
+
+      const result = await res.text();
+
+      trackEvent({
+        userId: ctx.userId,
+        orgId: ctx.orgId,
+        eventName: 'Ran Applet',
+        properties: {
+          slug: app.slug,
+          appletId: app.id,
+          status: res.status,
+          runId: input.runId,
+          script: script.name,
+        },
+      });
 
       return { ok: true, filename: script.filename, version, result };
     },
@@ -819,6 +843,17 @@ export const appRouter = createRouter()
       const resourceOwner = await prisma.resourceOwnerSlug.findFirstOrThrow({
         where: {
           resourceOwnerId: fork.organizationId || fork.createdById,
+        },
+      });
+
+      trackEvent({
+        userId: ctx.userId,
+        orgId: ctx.orgId,
+        eventName: 'Forked Applet',
+        properties: {
+          appletId: updatedFork.id,
+          slug: updatedFork.slug,
+          isTemplate: !connectToParent,
         },
       });
 
@@ -1019,6 +1054,16 @@ export const appRouter = createRouter()
         },
         data: {
           buildFile: null,
+        },
+      });
+
+      trackEvent({
+        userId: ctx.userId,
+        orgId: ctx.orgId,
+        eventName: 'Published Applet',
+        properties: {
+          slug: app.slug,
+          appletId: app.id,
         },
       });
 
