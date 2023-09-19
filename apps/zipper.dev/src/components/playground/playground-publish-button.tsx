@@ -77,10 +77,6 @@ export const PlaygroundPublishInfo = ({ app }: { app: AppQueryOutput }) => {
               </HStack>,
             );
 
-            analytics?.track('Published Applet', {
-              email: user?.email,
-            });
-
             setTimeout(() => {
               setButtonText(<Text>Update</Text>);
             }, 2000);

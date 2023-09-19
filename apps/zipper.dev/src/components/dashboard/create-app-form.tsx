@@ -247,15 +247,6 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
             isClosable: false,
           });
 
-          analytics?.track(
-            templateSelection === 'ai'
-              ? 'Generated Applet (AI)'
-              : 'Created Applet',
-            {
-              email: user?.email,
-            },
-          );
-
           router.push(
             getEditAppletLink(applet!.resourceOwner!.slug, applet!.slug),
           );
@@ -585,15 +576,6 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
                               duration: 9999,
                               isClosable: false,
                             });
-
-                            analytics?.track(
-                              templateSelection === 'ai'
-                                ? 'Generated Applet (AI)'
-                                : 'Created Applet',
-                              {
-                                email: user?.email,
-                              },
-                            );
 
                             router.push(
                               getEditAppletLink(

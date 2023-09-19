@@ -21,7 +21,6 @@ import { FunctionInputs, FunctionOutput, useAppletContent } from '@zipper/ui';
 import { useEffect, useMemo, useState } from 'react';
 import { HiExclamationCircle, HiOutlineLightBulb } from 'react-icons/hi2';
 import { PiPlayBold } from 'react-icons/pi';
-import { useAnalytics } from '~/hooks/use-analytics';
 import { useUser } from '~/hooks/use-user';
 import getRunUrl from '~/utils/get-run-url';
 import { getAppVersionFromHash } from '~/utils/hashing';
@@ -46,7 +45,6 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
   );
 
   const { user } = useUser();
-  const analytics = useAnalytics();
 
   const {
     currentScript,
@@ -147,10 +145,6 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
     formKeys?.map((k) => {
       const key = k.split(':')[0] as string;
       inputs[key] = formValues[k];
-    });
-
-    analytics?.track('Ran Applet', {
-      email: user?.email,
     });
 
     setInputValuesAtRun(inputs);

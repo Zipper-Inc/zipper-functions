@@ -10,6 +10,7 @@ import slugify from '~/utils/slugify';
 import { sendInvitationEmail } from '../utils/invitation.utils';
 import { OMNI_USER_ID } from '../utils/omni.utils';
 import { getZipperDotDevUrl } from '@zipper/utils';
+import { trackEvent } from '~/utils/api-analytics';
 
 export const organizationRouter = createRouter()
   .query('getMemberships', {
@@ -101,6 +102,13 @@ export const organizationRouter = createRouter()
           },
         });
       }
+
+      trackEvent({
+        eventName: 'Created Org',
+        userId: ctx.userId,
+        orgId: org.id,
+        properties: {},
+      });
 
       return org;
     },

@@ -42,18 +42,6 @@ export const useOrganizationList = () => {
 
   return {
     createOrganization: async (name: string) => {
-      analytics?.identify(user?.username, {
-        email: user?.email,
-      });
-
-      analytics?.group(name.toLocaleLowerCase().replace(' ', '.'), {
-        name,
-      });
-
-      analytics?.track('Created Org', {
-        email: user?.email,
-        company: name,
-      });
       return createOrganization.mutateAsync({ name });
     },
     organizationList,
