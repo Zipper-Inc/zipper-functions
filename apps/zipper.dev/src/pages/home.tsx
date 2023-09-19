@@ -403,7 +403,7 @@ const Hero = () => {
               </Flex>
             ))}
 
-            <JoinBetaForm />
+            <JoinBetaForm onOpen={onOpen} />
           </VStack>
           <Spacer />
           <Box

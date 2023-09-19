@@ -71,7 +71,9 @@ export default function SignIn({
             <CardHeader py={0}>
               <Stack>
                 <Heading as="h1" size="md" whiteSpace="nowrap" fontWeight="600">
-                  Create your account
+                  {router.route === '/auth/signin'
+                    ? 'Sign in'
+                    : 'Create your account'}
                 </Heading>
                 <Text fontSize="md" color="fg.600">
                   to continue to Zipper

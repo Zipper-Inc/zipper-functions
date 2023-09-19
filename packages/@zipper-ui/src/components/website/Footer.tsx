@@ -281,7 +281,7 @@ const AppletDemo = () => {
           gap={2}
           href="https://zipper.dev/zipper-inc/zipper-logo/src/main.ts"
           fontWeight={500}
-          colorScheme="brandOrange"
+          colorScheme="blue"
         >
           View source code <FiCode />
         </Button>
