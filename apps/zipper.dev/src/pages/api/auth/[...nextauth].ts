@@ -14,6 +14,7 @@ import fetch from 'node-fetch';
 import { createUserSlug } from '~/utils/create-user-slug';
 import { resend } from '~/server/resend';
 import crypto from 'crypto';
+import { trackEvent } from '~/utils/api-analytics';
 
 export function PrismaAdapter(p: PrismaClient): Adapter {
   return {
@@ -263,19 +264,16 @@ export const authOptions: AuthOptions = {
     // ...add more providers here
   ],
   callbacks: {
-    async signIn({ user }) {
-      if (process.env.IGNORE_ALLOW_LIST) return true;
-      // every user signing in should have an email address
-      if (!user.email) return false;
-      const emailDomain = user.email.split('@')[1];
-      if (!emailDomain) return false;
-
-      // check if the user is allowed to sign in
-      const allowed = await prisma.allowListIdentifier.findFirst({
-        where: { value: { in: [user.email, emailDomain] } },
+    async signIn({ user, account }) {
+      trackEvent({
+        userId: user.id,
+        eventName: user.newUser ? 'Signed Up' : 'Logged In',
+        properties: {
+          provider: account?.provider || 'UNKNOWN',
+        },
       });
 
-      return !!allowed;
+      return true;
     },
     async jwt({ token: _token, user, account, trigger, session }) {
       const token = { ..._token };
