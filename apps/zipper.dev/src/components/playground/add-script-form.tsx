@@ -9,6 +9,7 @@ import {
   Flex,
   Divider,
   Button,
+  useColorMode,
 } from '@chakra-ui/react';
 import { useForm } from 'react-hook-form';
 import { trpc } from '~/utils/trpc';
@@ -20,6 +21,8 @@ import { useScriptFilename } from '~/hooks/use-script-filename';
 import { HiCheck } from 'react-icons/hi';
 import { Connector } from '~/connectors/createConnector';
 import { kebabCase } from '~/utils/kebab-case';
+import { cloneElement } from 'react';
+import { foregroundColors } from '@zipper/ui';
 
 export default function AddScriptForm({
   appId,
@@ -60,6 +63,8 @@ export default function AddScriptForm({
     '.ts',
     '.md',
   ]);
+
+  const { colorMode } = useColorMode();
 
   return (
     <VStack alignItems="stretch" spacing={0} gap={4} minW={0}>
@@ -155,8 +160,14 @@ export default function AddScriptForm({
                   >
                     <VStack align="start" spacing="0.5">
                       <HStack key={connector.id}>
-                        {connector.icon}
-                        <Text>{connector.name}</Text>
+                        {connector.icon &&
+                          cloneElement(connector.icon, {
+                            color:
+                              colorMode === 'light'
+                                ? foregroundColors['fg.800'].default
+                                : foregroundColors['fg.800']._dark,
+                          })}
+                        <Text color="fg.600">{connector.name}</Text>
                       </HStack>
                       {connector.description && (
                         <Text fontSize="xs" color="fg.500" pl="6">
