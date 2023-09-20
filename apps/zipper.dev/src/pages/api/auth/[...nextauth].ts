@@ -265,14 +265,6 @@ export const authOptions: AuthOptions = {
   ],
   callbacks: {
     async signIn({ user, account }) {
-      trackEvent({
-        userId: user.id,
-        eventName: user.newUser ? 'Signed Up' : 'Logged In',
-        properties: {
-          provider: account?.provider || 'UNKNOWN',
-        },
-      });
-
       return true;
     },
     async jwt({ token: _token, user, account, trigger, session }) {
@@ -397,11 +389,13 @@ export const authOptions: AuthOptions = {
         })),
       });
 
-      if (isNewUser && account) {
-        user.newUser = true;
-        account.newUser = true;
-      }
-      user.newUser = false;
+      trackEvent({
+        userId: user.id,
+        eventName: isNewUser ? 'Signed Up' : 'Logged In',
+        properties: {
+          provider: account?.provider || 'UNKNOWN',
+        },
+      });
     },
   },
 };
