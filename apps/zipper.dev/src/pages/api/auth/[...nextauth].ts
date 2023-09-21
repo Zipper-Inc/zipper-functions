@@ -15,6 +15,8 @@ import { createUserSlug } from '~/utils/create-user-slug';
 import { resend } from '~/server/resend';
 import crypto from 'crypto';
 import { trackEvent } from '~/utils/api-analytics';
+import { generateDefaultSlug } from '~/utils/generate-default';
+import { DEFAULT_CODE } from '~/server/routers/script.router';
 
 export function PrismaAdapter(p: PrismaClient): Adapter {
   return {
@@ -71,6 +73,51 @@ export function PrismaAdapter(p: PrismaClient): Adapter {
         }
       }
 
+      const appSlug = generateDefaultSlug();
+      let possibleSlugs = [
+        appSlug,
+        `${appSlug}-${Math.floor(Math.random() * 100)}`,
+        `${appSlug}-${Math.floor(Math.random() * 100)}`,
+      ];
+
+      // find existing apps with any of the slugs in possibleSlugs
+      const appsWithSameSlug = await prisma.app.findMany({
+        where: { slug: { in: possibleSlugs } },
+      });
+
+      // if there are existing apps with the same slug, remove the slug from possibleSlugs
+      if (appsWithSameSlug.length > 0) {
+        const existingSlugs = appsWithSameSlug.map((a) => a.slug);
+        possibleSlugs = possibleSlugs.filter((s) => {
+          return !existingSlugs.includes(s);
+        });
+      }
+      const mainScriptId = crypto.randomUUID();
+
+      await prisma.app.create({
+        data: {
+          name: 'My First Applet',
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          slug: possibleSlugs[0]!,
+          description: 'Your first Zipper Applet.',
+          isPrivate: false,
+          createdById: user.id,
+          scripts: {
+            create: {
+              id: mainScriptId,
+              name: 'main',
+              filename: 'main.ts',
+              code: DEFAULT_CODE,
+            },
+          },
+          scriptMain: {
+            create: { script: { connect: { id: mainScriptId } } },
+          },
+        },
+        include: {
+          scripts: true,
+        },
+      });
       return user;
     },
     getUser: (id) => p.user.findUnique({ where: { id } }),
