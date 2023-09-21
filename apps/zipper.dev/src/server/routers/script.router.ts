@@ -19,7 +19,7 @@ const defaultSelect = Prisma.validator<Prisma.ScriptSelect>()({
   connectorId: true,
 });
 
-const DEFAULT_CODE = `export async function handler({ world }: { world: string }) {
+export const DEFAULT_CODE = `export async function handler({ world }: { world: string }) {
   return \`hello \${world}\`;
 };
 `;
