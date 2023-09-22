@@ -49,7 +49,7 @@ type VersionsTabProps = {
 };
 
 const VersionsTab: React.FC<VersionsTabProps> = ({ appId, slug }) => {
-  const versions = trpc.useQuery(['version.all', { appId, limit: 100 }]);
+  const versions = trpc.version.all.useQuery({ appId, limit: 100 });
   const context = trpc.useContext();
   const router = useRouter();
 
@@ -165,28 +165,22 @@ const VersionsTab: React.FC<VersionsTabProps> = ({ appId, slug }) => {
           const { isOpen, onOpen, onClose } = useDisclosure();
           const cancelRef =
             useRef() as React.MutableRefObject<HTMLButtonElement>;
-          const restoreMutation = trpc.useMutation('version.restore', {
+          const restoreMutation = trpc.version.restore.useMutation({
             onSuccess: () => {
-              context.invalidateQueries(['version.all', { appId, limit: 100 }]);
-              context.invalidateQueries([
-                'app.byResourceOwnerAndAppSlugs',
-                {
-                  appSlug: slug,
-                  resourceOwnerSlug: router.query['resource-owner'] as string,
-                },
-              ]);
+              context.version.all.invalidate({ appId, limit: 100 });
+              context.app.byResourceOwnerAndAppSlugs.invalidate({
+                appSlug: slug,
+                resourceOwnerSlug: router.query['resource-owner'] as string,
+              });
             },
           });
-          const promoteMutation = trpc.useMutation('version.promote', {
+          const promoteMutation = trpc.version.promote.useMutation({
             onSuccess: () => {
-              context.invalidateQueries(['version.all', { appId, limit: 100 }]);
-              context.invalidateQueries([
-                'app.byResourceOwnerAndAppSlugs',
-                {
-                  appSlug: slug,
-                  resourceOwnerSlug: router.query['resource-owner'] as string,
-                },
-              ]);
+              context.version.all.invalidate({ appId, limit: 100 });
+              context.app.byResourceOwnerAndAppSlugs.invalidate({
+                appSlug: slug,
+                resourceOwnerSlug: router.query['resource-owner'] as string,
+              });
             },
           });
 

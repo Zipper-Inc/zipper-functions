@@ -1,8 +1,6 @@
 /**
  * This file contains the root router of your tRPC-backend
  */
-import { createRouter } from '../createRouter';
-import superjson from 'superjson';
 import { appRouter } from './app.router';
 import { scriptRouter } from './script.router';
 import { secretRouter } from './secret.router';
@@ -21,48 +19,29 @@ import { aiRouter } from './ai.router';
 import { githubAppConnectorRouter } from './githubAppConnector.router';
 import { zipperSlackIntegrationRouter } from './zipperSlackIntegration.router';
 import { appLogRouter } from './appLog.router';
-import { createTRPCRouter, mergeRouters, publicProcedure } from '../root';
+import { createTRPCRouter, publicProcedure } from '../root';
 
-/**
- * Create your application's root router
- * If you want to use SSG, you need export this
- * @link https://trpc.io/docs/ssg
- * @link https://trpc.io/docs/router
- */
-export const legacyRouter = createRouter()
-  /**
-   * Add data transformers
-   * @link https://trpc.io/docs/data-transformers
-   */
-  .transformer(superjson)
-  /**
-   * Optionally do custom error (type safe!) formatting
-   * @link https://trpc.io/docs/error-formatting
-   */
-  // .formatError(({ shape, error }) => { })
-  .merge('app.', appRouter)
-  .merge('appAccessToken.', appAccessTokenRouter)
-  .merge('appConnector.', appConnectorRouter)
-  .merge('appEditor.', appEditorRouter)
-  .merge('appLog.', appLogRouter)
-  .merge('appRun.', appRunRouter)
-  .merge('slackConnector.', slackConnectorRouter)
-  .merge('zipperSlackIntegration.', zipperSlackIntegrationRouter)
-  .merge('githubConnector.', githubConnectorRouter)
-  .merge('githubAppConnector.', githubAppConnectorRouter)
-  .merge('resourceOwnerSlug.', resourceOwnerSlugRouter)
-  .merge('secret.', secretRouter)
-  .merge('script.', scriptRouter)
-  .merge('schedule.', scheduleRouter)
-  .merge('user.', userRouter)
-  .merge('organization.', organizationRouter)
-  .merge('version.', versionRouter)
-  .merge('ai.', aiRouter)
-  .interop();
-
-const newRouter = createTRPCRouter({
+export const trpcRouter = createTRPCRouter({
   healthz: publicProcedure.query(() => 'yay!'),
+  app: appRouter,
+  appAccessToken: appAccessTokenRouter,
+  appConnector: appConnectorRouter,
+  appEditor: appEditorRouter,
+
+  appLog: appLogRouter,
+  appRun: appRunRouter,
+  slackConnector: slackConnectorRouter,
+  zipperSlackIntegration: zipperSlackIntegrationRouter,
+  githubConnector: githubConnectorRouter,
+  githubAppConnector: githubAppConnectorRouter,
+  resourceOwnerSlug: resourceOwnerSlugRouter,
+  secret: secretRouter,
+  script: scriptRouter,
+  schedule: scheduleRouter,
+  user: userRouter,
+  organization: organizationRouter,
+  version: versionRouter,
+  ai: aiRouter,
 });
 
-export const trpcRouter = mergeRouters(legacyRouter, newRouter);
 export type AppRouter = typeof trpcRouter;

@@ -35,7 +35,7 @@ import { useUser } from '~/hooks/use-user';
 
 export const PlaygroundPublishInfo = ({ app }: { app: AppQueryOutput }) => {
   const appLink = getAppLink(app.slug);
-  const publishApp = trpc.useMutation('app.publish');
+  const publishApp = trpc.app.publish.useMutation();
   const { user } = useUser();
   const [isPublishing, setIsPublishing] = useState(false);
   const [buttonText, setButtonText] = useState(<Text>Update</Text>);

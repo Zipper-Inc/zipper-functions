@@ -35,8 +35,8 @@ const AppPage: NextPageWithLayout = () => {
   const resourceOwnerSlug = router.query['resource-owner'] as string;
   const appSlug = router.query['app-slug'] as string;
 
-  const appQuery = trpc.useQuery(
-    ['app.byResourceOwnerAndAppSlugs', { resourceOwnerSlug, appSlug }],
+  const appQuery = trpc.app.byResourceOwnerAndAppSlugs.useQuery(
+    { resourceOwnerSlug, appSlug },
     { retry: false },
   );
 

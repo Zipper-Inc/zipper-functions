@@ -102,22 +102,22 @@ function GitHubAppConnectorForm({ appId }: { appId: string }) {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const cancelRef = useRef() as React.MutableRefObject<HTMLButtonElement>;
 
-  const stateValueQuery = trpc.useQuery([
-    'githubAppConnector.getStateValue',
-    {
-      appId,
-      postInstallationRedirect: window.location.href,
-    },
-  ]);
-
-  const connector = trpc.useQuery(['githubAppConnector.get', { appId }], {
-    onSuccess: (data) => {
-      if (data && setScopesValue && setEventsValue) {
-        setScopesValue(data?.userScopes || []);
-        setEventsValue(data?.events || []);
-      }
-    },
+  const stateValueQuery = trpc.githubAppConnector.getStateValue.useQuery({
+    appId,
+    postInstallationRedirect: window.location.href,
   });
+
+  const connector = trpc.githubAppConnector.get.useQuery(
+    { appId },
+    {
+      onSuccess: (data) => {
+        if (data && setScopesValue && setEventsValue) {
+          setScopesValue(data?.userScopes || []);
+          setEventsValue(data?.events || []);
+        }
+      },
+    },
+  );
 
   const [isSaving, setIsSaving] = useState(false);
   const [webhookPath, setWebhookPath] = useState<string>(
@@ -128,16 +128,14 @@ function GitHubAppConnectorForm({ appId }: { appId: string }) {
 
   const context = trpc.useContext();
   const router = useRouter();
-  const updateAppConnectorMutation = trpc.useMutation('appConnector.update', {
+  const updateAppConnectorMutation = trpc.appConnector.update.useMutation({
     onSuccess: () => {
-      context.invalidateQueries([
-        'app.byResourceOwnerAndAppSlugs',
-        {
-          appSlug: router.query['app-slug'] as string,
-          resourceOwnerSlug: router.query['resource-owner'] as string,
-        },
-      ]);
-      context.invalidateQueries(['githubAppConnector.get', { appId }]);
+      context.app.byResourceOwnerAndAppSlugs.invalidate({
+        appSlug: router.query['app-slug'] as string,
+        resourceOwnerSlug: router.query['resource-owner'] as string,
+      });
+
+      context.githubAppConnector.get.invalidate({ appId });
       toast({
         title: 'GitHub Appconfig updated.',
         status: 'success',
@@ -186,15 +184,12 @@ function GitHubAppConnectorForm({ appId }: { appId: string }) {
     }
   };
 
-  const deleteConnectorMutation = trpc.useMutation(
-    'githubAppConnector.delete',
-    {
-      async onSuccess() {
-        await utils.invalidateQueries(['githubAppConnector.get', { appId }]);
-        await utils.invalidateQueries(['secret.all', { appId }]);
-      },
+  const deleteConnectorMutation = trpc.githubAppConnector.delete.useMutation({
+    async onSuccess() {
+      await utils.githubAppConnector.get.invalidate({ appId });
+      await utils.secret.all.invalidate({ appId });
     },
-  );
+  });
 
   const metadata = connector.data
     ?.metadata as GithubAppConnectorInstallationMetadata;

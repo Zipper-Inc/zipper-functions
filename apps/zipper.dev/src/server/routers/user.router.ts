@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { createProtectedRouter } from '../createRouter';
 import { TRPCError } from '@trpc/server';
 import { prisma } from '../prisma';
 import { generateAccessToken } from '~/utils/jwt-utils';
@@ -12,6 +11,7 @@ import { ResourceOwnerType } from '@zipper/types';
 import { initApplet } from '@zipper-inc/client-js';
 import { captureMessage } from '@sentry/nextjs';
 import { trackEvent } from '~/utils/api-analytics';
+import { createTRPCRouter, protectedProcedure } from '../root';
 
 const defaultSelect = Prisma.validator<Prisma.UserSelect>()({
   id: true,
@@ -21,27 +21,28 @@ const defaultSelect = Prisma.validator<Prisma.UserSelect>()({
   slug: true,
 });
 
-export const userRouter = createProtectedRouter()
-  // Remove - we can now include user profiles when getting app runs
-  .query('profilesForUserIds', {
-    input: z.object({
-      ids: z.array(z.string()),
-    }),
-    async resolve({ input }) {
+export const userRouter = createTRPCRouter({
+  profilesForUserIds: protectedProcedure
+    .input(
+      z.object({
+        ids: z.array(z.string()),
+      }),
+    )
+    .query(async ({ input }) => {
       return prisma.user.findMany({
         where: {
           id: { in: input.ids },
         },
         select: defaultSelect,
       });
-    },
-  })
-  // Remove - everything we need to show the profile should be in the jwt
-  .query('profileForUserId', {
-    input: z.object({
-      id: z.string(),
     }),
-    async resolve({ input }) {
+  profileForUserId: protectedProcedure
+    .input(
+      z.object({
+        id: z.string(),
+      }),
+    )
+    .query(async ({ input }) => {
       if (input.id.startsWith('temp_')) return;
       return prisma.user.findUnique({
         where: {
@@ -49,43 +50,40 @@ export const userRouter = createProtectedRouter()
         },
         select: defaultSelect,
       });
-    },
-  })
-  .query('getAccounts', {
-    async resolve({ ctx }) {
-      if (!ctx.userId) throw new TRPCError({ code: 'UNAUTHORIZED' });
-      return prisma.account.findMany({
-        where: {
-          userId: ctx.userId,
-        },
-        select: {
-          id: true,
-          provider: true,
-          providerAccountId: true,
-        },
-      });
-    },
-  })
-  .mutation('addZipperAuthCode', {
-    async resolve({ ctx }) {
-      if (!ctx.userId) throw new TRPCError({ code: 'UNAUTHORIZED' });
-      if (!ctx.req) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
-
-      const result = await prisma.zipperAuthCode.create({
-        data: {
-          userId: ctx.userId,
-          expiresAt: Date.now() + 30 * 1000,
-        },
-      });
-
-      return encryptToHex(result.code, process.env.ENCRYPTION_KEY);
-    },
-  })
-  .mutation('generateAccessToken', {
-    input: z.object({
-      expiresIn: z.string().default('30s'),
     }),
-    async resolve({ ctx, input }) {
+  getAccounts: protectedProcedure.query(async ({ ctx }) => {
+    if (!ctx.userId) throw new TRPCError({ code: 'UNAUTHORIZED' });
+    return prisma.account.findMany({
+      where: {
+        userId: ctx.userId,
+      },
+      select: {
+        id: true,
+        provider: true,
+        providerAccountId: true,
+      },
+    });
+  }),
+  addZipperAuthCode: protectedProcedure.mutation(async ({ ctx }) => {
+    if (!ctx.userId) throw new TRPCError({ code: 'UNAUTHORIZED' });
+    if (!ctx.req) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+
+    const result = await prisma.zipperAuthCode.create({
+      data: {
+        userId: ctx.userId,
+        expiresAt: Date.now() + 30 * 1000,
+      },
+    });
+
+    return encryptToHex(result.code, process.env.ENCRYPTION_KEY);
+  }),
+  generateAccessToken: protectedProcedure
+    .input(
+      z.object({
+        expiresIn: z.string().default('30s'),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
       if (!ctx.userId) return new TRPCError({ code: 'UNAUTHORIZED' });
       const token = await getToken({ req: ctx.req! });
 
@@ -96,14 +94,15 @@ export const userRouter = createProtectedRouter()
         },
         { expiresIn: input.expiresIn },
       );
-    },
-  })
-  .mutation('contactSupport', {
-    input: z.object({
-      request: z.string(),
-      file: z.string().optional(),
     }),
-    async resolve({ ctx, input }) {
+  contactSupport: protectedProcedure
+    .input(
+      z.object({
+        request: z.string(),
+        file: z.string().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
       if (ctx.userId && process.env.FEEDBACK_TRACKER_API_KEY) {
         const user = await prisma.user.findUnique({
           where: {
@@ -159,14 +158,15 @@ export const userRouter = createProtectedRouter()
 
         return true;
       }
-    },
-  })
-  .mutation('submitFeedback', {
-    input: z.object({
-      feedback: z.string(),
-      url: z.string(),
     }),
-    async resolve({ ctx, input }) {
+  submitFeedback: protectedProcedure
+    .input(
+      z.object({
+        feedback: z.string(),
+        url: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
       if (ctx.userId && process.env.FEEDBACK_TRACKER_API_KEY) {
         const user = await prisma.user.findUnique({
           where: {
@@ -208,13 +208,14 @@ export const userRouter = createProtectedRouter()
           return false;
         }
       }
-    },
-  })
-  .query('isSlugAvailable', {
-    input: z.object({
-      slug: z.string().transform((s) => slugify(s).toLowerCase()),
     }),
-    async resolve({ input }) {
+  isSlugAvailable: protectedProcedure
+    .input(
+      z.object({
+        slug: z.string().transform((s) => slugify(s).toLowerCase()),
+      }),
+    )
+    .query(async ({ input }) => {
       const deniedSlug = denyList.find((d) => d === input.slug);
       if (deniedSlug)
         return new TRPCError({
@@ -228,13 +229,14 @@ export const userRouter = createProtectedRouter()
       });
 
       return !slug;
-    },
-  })
-  .mutation('updateUserSlug', {
-    input: z.object({
-      slug: z.string().transform((s) => slugify(s).toLowerCase()),
     }),
-    async resolve({ ctx, input }) {
+  updateUserSlug: protectedProcedure
+    .input(
+      z.object({
+        slug: z.string().transform((s) => slugify(s).toLowerCase()),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
       if (!ctx.userId) throw new TRPCError({ code: 'UNAUTHORIZED' });
 
       const user = await prisma.user.findUniqueOrThrow({
@@ -268,5 +270,5 @@ export const userRouter = createProtectedRouter()
           slug: input.slug,
         },
       });
-    },
-  });
+    }),
+});

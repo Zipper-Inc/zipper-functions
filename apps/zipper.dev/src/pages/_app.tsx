@@ -91,7 +91,11 @@ export default withTRPC<AppRouter>({
       // during client requests
       return {
         transformer: superjson, // optional - adds superjson serialization
-        url: '/api/trpc',
+        links: [
+          httpBatchLink({
+            url: `${getBaseUrl()}/api/trpc`,
+          }),
+        ],
       };
     }
 

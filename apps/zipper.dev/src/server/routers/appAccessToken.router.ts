@@ -1,11 +1,11 @@
 import { Prisma } from '@prisma/client';
 import { z } from 'zod';
 import { prisma } from '~/server/prisma';
-import { createRouter } from '../createRouter';
 import { hasAppReadPermission } from '../utils/authz.utils';
 import { TRPCError } from '@trpc/server';
 import { randomUUID } from 'crypto';
 import { hash } from 'bcryptjs';
+import { createTRPCRouter, publicProcedure } from '../root';
 
 const defaultSelect = Prisma.validator<Prisma.AppAccessTokenSelect>()({
   identifier: true,
@@ -15,14 +15,15 @@ const defaultSelect = Prisma.validator<Prisma.AppAccessTokenSelect>()({
   deletedAt: true,
 });
 
-export const appAccessTokenRouter = createRouter()
-  // create
-  .mutation('add', {
-    input: z.object({
-      appId: z.string(),
-      description: z.string(),
-    }),
-    async resolve({ ctx, input }) {
+export const appAccessTokenRouter = createTRPCRouter({
+  add: publicProcedure
+    .input(
+      z.object({
+        appId: z.string(),
+        description: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
       if (!ctx.userId) throw new TRPCError({ code: 'UNAUTHORIZED' });
       await hasAppReadPermission({
         ctx,
@@ -51,14 +52,14 @@ export const appAccessTokenRouter = createRouter()
         throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
 
       return `zaat.${identifier}.${secret}`;
-    },
-  })
-  // read
-  .query('getForCurrentUser', {
-    input: z.object({
-      appId: z.string(),
     }),
-    async resolve({ ctx, input }) {
+  getForCurrentUser: publicProcedure
+    .input(
+      z.object({
+        appId: z.string(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
       if (!ctx.userId) throw new TRPCError({ code: 'UNAUTHORIZED' });
       await hasAppReadPermission({
         ctx,
@@ -73,14 +74,14 @@ export const appAccessTokenRouter = createRouter()
         },
         select: defaultSelect,
       });
-    },
-  })
-  // delete
-  .mutation('delete', {
-    input: z.object({
-      identifier: z.string(),
     }),
-    async resolve({ ctx, input }) {
+  delete: publicProcedure
+    .input(
+      z.object({
+        identifier: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
       await prisma.appAccessToken.updateMany({
         where: {
           identifier: input.identifier,
@@ -94,5 +95,5 @@ export const appAccessTokenRouter = createRouter()
       return {
         id: input.identifier,
       };
-    },
-  });
+    }),
+});

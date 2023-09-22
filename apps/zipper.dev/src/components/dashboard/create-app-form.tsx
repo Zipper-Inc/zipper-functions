@@ -83,11 +83,11 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
   const utils = trpc.useContext();
   const router = useRouter();
 
-  const addScript = trpc.useMutation('script.add');
-  const generateCodeWithAI = trpc.useMutation('ai.pipeline');
+  const addScript = trpc.script.add.useMutation();
+  const generateCodeWithAI = trpc.ai.pipeline.useMutation();
   const { scripts } = useEditorContext();
 
-  const templatesQuery = trpc.useQuery(['app.templates']);
+  const templatesQuery = trpc.app.templates.useQuery();
   const [templates, setTemplates] = useState<
     {
       id: string;
@@ -97,28 +97,26 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
     }[]
   >(defaultTemplates);
 
-  const forkTemplate = trpc.useMutation('app.fork', {
+  const forkTemplate = trpc.app.fork.useMutation({
     async onSuccess() {
       // refetches posts after a post is added
-      await utils.invalidateQueries(['app.byAuthedUser']);
+      await utils.app.byAuthedUser.invalidate();
       if (router.query['resource-owner']) {
-        await utils.invalidateQueries([
-          'app.byResourceOwner',
-          { resourceOwnerSlug: router.query['resource-owner'] as string },
-        ]);
+        await utils.app.byResourceOwner.invalidate({
+          resourceOwnerSlug: router.query['resource-owner'] as string,
+        });
       }
     },
   });
 
-  const addApp = trpc.useMutation('app.add', {
+  const addApp = trpc.app.add.useMutation({
     async onSuccess() {
       // refetches posts after a post is added
-      await utils.invalidateQueries(['app.byAuthedUser']);
+      await utils.app.byAuthedUser.invalidate();
       if (router.query['resource-owner']) {
-        await utils.invalidateQueries([
-          'app.byResourceOwner',
-          { resourceOwnerSlug: router.query['resource-owner'] as string },
-        ]);
+        await utils.app.byResourceOwner.invalidate({
+          resourceOwnerSlug: router.query['resource-owner'] as string,
+        });
       }
     },
   });

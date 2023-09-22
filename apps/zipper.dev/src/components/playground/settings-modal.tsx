@@ -39,12 +39,12 @@ type Props = {
 const SettingsTab: React.FC<Props> = ({ isOpen, onClose, appId }) => {
   const { appInfo } = useRunAppContext();
   const utils = trpc.useContext();
-  const appEditMutation = trpc.useMutation('app.edit', {
+  const appEditMutation = trpc.app.edit.useMutation({
     onSuccess(data) {
-      utils.invalidateQueries([
-        'app.byResourceOwnerAndAppSlugs',
-        { appSlug: appInfo.slug, resourceOwnerSlug: data.resourceOwner.slug },
-      ]);
+      utils.app.byResourceOwnerAndAppSlugs.invalidate({
+        appSlug: appInfo.slug,
+        resourceOwnerSlug: data.resourceOwner.slug,
+      });
     },
   });
 
@@ -52,8 +52,8 @@ const SettingsTab: React.FC<Props> = ({ isOpen, onClose, appId }) => {
   const [slug, setSlug] = useState<string>(appInfo.slug || '');
   const [debouncedSlug] = useDebounce(slug, 200);
 
-  const appSlugQuery = trpc.useQuery(
-    ['app.validateSlug', { slug: debouncedSlug }],
+  const appSlugQuery = trpc.app.validateSlug.useQuery(
+    { slug: debouncedSlug },
     { enabled: !!(debouncedSlug.length >= MIN_SLUG_LENGTH) },
   );
 

@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
-import { createRouter } from '../createRouter';
 import { prisma } from '../prisma';
 import {
   hasAppEditPermission,
@@ -17,13 +16,16 @@ import {
 import fetch from 'node-fetch';
 import { AppConnectorUserAuth, Prisma } from '@prisma/client';
 import { filterTokenFields } from '~/server/utils/json';
+import { createTRPCRouter, publicProcedure } from '../root';
 
-export const slackConnectorRouter = createRouter()
-  .query('get', {
-    input: z.object({
-      appId: z.string(),
-    }),
-    async resolve({ ctx, input }) {
+export const slackConnectorRouter = createTRPCRouter({
+  get: publicProcedure
+    .input(
+      z.object({
+        appId: z.string(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
       await hasAppReadPermission({ ctx, appId: input.appId });
 
       return prisma.appConnector.findFirst({
@@ -32,19 +34,20 @@ export const slackConnectorRouter = createRouter()
           type: 'slack',
         },
       });
-    },
-  })
-  .query('getAuthUrl', {
-    input: z.object({
-      appId: z.string(),
-      scopes: z.object({
-        bot: z.array(z.string()),
-        user: z.array(z.string()),
-      }),
-      postInstallationRedirect: z.string().optional(),
-      redirectUri: z.string().optional(),
     }),
-    async resolve({ ctx, input }) {
+  getAuthUrl: publicProcedure
+    .input(
+      z.object({
+        appId: z.string(),
+        scopes: z.object({
+          bot: z.array(z.string()),
+          user: z.array(z.string()),
+        }),
+        postInstallationRedirect: z.string().optional(),
+        redirectUri: z.string().optional(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
       await hasAppReadPermission({ ctx, appId: input.appId });
 
       const { appId, scopes, postInstallationRedirect, redirectUri } = input;
@@ -76,13 +79,14 @@ export const slackConnectorRouter = createRouter()
       return {
         url: url.toString(),
       };
-    },
-  })
-  .mutation('delete', {
-    input: z.object({
-      appId: z.string(),
     }),
-    async resolve({ ctx, input }) {
+  delete: publicProcedure
+    .input(
+      z.object({
+        appId: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
       await hasAppEditPermission({ appId: input.appId, ctx });
 
       await prisma.appConnector.update({
@@ -127,13 +131,14 @@ export const slackConnectorRouter = createRouter()
       });
 
       return true;
-    },
-  })
-  .mutation('deleteUserAuth', {
-    input: z.object({
-      appId: z.string(),
     }),
-    async resolve({ ctx, input }) {
+  deleteUserAuth: publicProcedure
+    .input(
+      z.object({
+        appId: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
       const userIdOrTempId =
         ctx.userId ||
         (ctx.req?.cookies as any)[ZIPPER_TEMP_USER_ID_COOKIE_NAME];
@@ -161,14 +166,15 @@ export const slackConnectorRouter = createRouter()
       });
 
       return true;
-    },
-  })
-  .mutation('exchangeCodeForToken', {
-    input: z.object({
-      code: z.string(),
-      state: z.string(),
     }),
-    async resolve({ ctx, input }) {
+  exchangeCodeForToken: publicProcedure
+    .input(
+      z.object({
+        code: z.string(),
+        state: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
       let appId: string | undefined;
       let redirectTo: string | undefined;
       let userId: string | undefined;
@@ -343,5 +349,5 @@ export const slackConnectorRouter = createRouter()
         redirectTo,
         appConnectorUserAuth: appConnectorUserAuth || null,
       };
-    },
-  });
+    }),
+});

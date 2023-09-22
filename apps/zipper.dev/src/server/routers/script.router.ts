@@ -4,9 +4,9 @@ import { prisma } from '~/server/prisma';
 import { getScriptHash } from '~/utils/hashing';
 import isCodeRunnable from '~/utils/is-code-runnable';
 import { slugifyAllowDot } from '~/utils/slugify';
-import { createRouter } from '../createRouter';
 import { hasAppEditPermission } from '../utils/authz.utils';
 import { kebabCase } from '~/utils/kebab-case';
+import { createTRPCRouter, publicProcedure } from '../root';
 
 const defaultSelect = Prisma.validator<Prisma.ScriptSelect>()({
   id: true,
@@ -41,20 +41,21 @@ Add some **Markdown**! Here are some ideas:
 - **Bold**, *italics*, \`code\`, and more!
 `;
 
-export const scriptRouter = createRouter()
-  // create
-  .mutation('add', {
-    input: z.object({
-      name: z.string().min(1).max(255).transform(kebabCase),
-      description: z.string().optional(),
-      appId: z.string().uuid(),
-      code: z.string().default(DEFAULT_CODE),
-      order: z.number(),
-      connectorId: z
-        .enum(['github', 'slack', 'openai', 'zendesk', 'github-app'])
-        .optional(),
-    }),
-    async resolve({ ctx, input }) {
+export const scriptRouter = createTRPCRouter({
+  add: publicProcedure
+    .input(
+      z.object({
+        name: z.string().min(1).max(255).transform(kebabCase),
+        description: z.string().optional(),
+        appId: z.string().uuid(),
+        code: z.string().default(DEFAULT_CODE),
+        order: z.number(),
+        connectorId: z
+          .enum(['github', 'slack', 'openai', 'zendesk', 'github-app'])
+          .optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
       const { appId, ...data } = input;
       await hasAppEditPermission({ ctx, appId });
 
@@ -101,13 +102,14 @@ export const scriptRouter = createRouter()
       }
 
       return script;
-    },
-  })
-  .query('byAppId', {
-    input: z.object({
-      appId: z.string().uuid(),
     }),
-    async resolve({ input }) {
+  byAppId: publicProcedure
+    .input(
+      z.object({
+        appId: z.string().uuid(),
+      }),
+    )
+    .query(async ({ input }) => {
       return prisma.script.findMany({
         where: {
           appId: input.appId,
@@ -115,31 +117,32 @@ export const scriptRouter = createRouter()
         orderBy: { order: 'asc' },
         select: defaultSelect,
       });
-    },
-  })
-  .query('byId', {
-    input: z.object({
-      id: z.string(),
     }),
-    async resolve({ input }) {
+  byId: publicProcedure
+    .input(
+      z.object({
+        id: z.string(),
+      }),
+    )
+    .query(async ({ input }) => {
       return prisma.script.findFirstOrThrow({
         where: {
           id: input.id,
         },
         select: defaultSelect,
       });
-    },
-  })
-  // edit
-  .mutation('edit', {
-    input: z.object({
-      id: z.string().uuid(),
-      data: z.object({
-        name: z.string().min(1).max(255).optional(),
-        description: z.string().optional().nullable(),
-      }),
     }),
-    async resolve({ ctx, input }) {
+  edit: publicProcedure
+    .input(
+      z.object({
+        id: z.string().uuid(),
+        data: z.object({
+          name: z.string().min(1).max(255).optional(),
+          description: z.string().optional().nullable(),
+        }),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
       const { id, data } = input;
 
       const script = await prisma.script.findFirstOrThrow({
@@ -173,14 +176,15 @@ export const scriptRouter = createRouter()
         },
         select: defaultSelect,
       });
-    },
-  })
-  .query('validateFilename', {
-    input: z.object({
-      appId: z.string().uuid(),
-      newFilename: z.string(),
     }),
-    async resolve({ ctx, input }) {
+  validateFilename: publicProcedure
+    .input(
+      z.object({
+        appId: z.string().uuid(),
+        newFilename: z.string(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
       const { appId, newFilename } = input;
 
       if (newFilename.length < 4) return false;
@@ -201,15 +205,15 @@ export const scriptRouter = createRouter()
       });
 
       return scripts.length === 0;
-    },
-  })
-  // delete
-  .mutation('delete', {
-    input: z.object({
-      id: z.string().uuid(),
-      appId: z.string().uuid(),
     }),
-    async resolve({ ctx, input }) {
+  delete: publicProcedure
+    .input(
+      z.object({
+        id: z.string().uuid(),
+        appId: z.string().uuid(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
       await hasAppEditPermission({
         ctx,
         appId: input.appId,
@@ -235,5 +239,5 @@ export const scriptRouter = createRouter()
       return {
         id: input.id,
       };
-    },
-  });
+    }),
+});

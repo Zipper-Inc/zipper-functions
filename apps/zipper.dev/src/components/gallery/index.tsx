@@ -63,14 +63,14 @@ export function Gallery({
     ResourceOwnerSlug | undefined
   >();
 
-  const resourceOwnerNameQuery = trpc.useQuery(
-    ['resourceOwnerSlug.getName', { slug: resourceOwner?.slug as string }],
+  const resourceOwnerNameQuery = trpc.resourceOwnerSlug.getName.useQuery(
+    { slug: resourceOwner?.slug as string },
     {
       enabled: !!resourceOwner?.slug,
     },
   );
 
-  const acceptInvitation = trpc.useMutation('organization.acceptInvitation');
+  const acceptInvitation = trpc.organization.acceptInvitation.useMutation();
 
   const showManage =
     (resourceOwner?.resourceOwnerType === ResourceOwnerType.User &&

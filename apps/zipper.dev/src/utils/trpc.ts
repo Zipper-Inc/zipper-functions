@@ -30,7 +30,7 @@ export const trpc = createTRPCReact<AppRouter, SSRContext>();
 // export const transformer = superjson;
 /**
  * This is a helper method to infer the output of a query resolver
- * @example type HelloOutput = inferQueryOutput<'hello'>
+ * @example type HelloOutput = RouterOutputs['hello']
  */
 export type RouterInputs = inferRouterInputs<AppRouter>;
 export type RouterOutputs = inferRouterOutputs<AppRouter>;

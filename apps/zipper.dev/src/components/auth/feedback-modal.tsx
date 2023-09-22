@@ -29,7 +29,7 @@ export function FeedbackModal({
   const { user } = useUser();
   const [submittingFeedback, setSubmittingFeedback] = useState(false);
 
-  const feedbackMutation = trpc.useMutation('user.submitFeedback');
+  const feedbackMutation = trpc.user.submitFeedback.useMutation();
 
   return (
     <>

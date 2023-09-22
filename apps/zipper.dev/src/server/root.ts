@@ -3,18 +3,17 @@ import superjson from 'superjson';
 import { Context } from './context';
 
 const t = initTRPC.context<Context>().create({
-  // Optional:
   transformer: superjson,
   // Optional:
-  errorFormatter(opts) {
-    const { shape } = opts;
-    return {
-      ...shape,
-      data: {
-        ...shape.data,
-      },
-    };
-  },
+  // errorFormatter(opts) {
+  //   const { shape } = opts;
+  //   return {
+  //     ...shape,
+  //     data: {
+  //       ...shape.data,
+  //     },
+  //   };
+  // },
 });
 
 const enforceAuth = t.middleware(({ ctx, next }) => {

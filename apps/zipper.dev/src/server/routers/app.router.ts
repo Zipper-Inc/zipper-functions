@@ -6,9 +6,8 @@ import {
   ResourceOwnerSlug,
   Script,
 } from '@prisma/client';
-import { unknown, z } from 'zod';
+import { z } from 'zod';
 import { prisma } from '~/server/prisma';
-import { createRouter } from '../createRouter';
 import { hasAppEditPermission } from '../utils/authz.utils';
 import slugify from '~/utils/slugify';
 import { generateDefaultSlug } from '~/utils/generate-default';
@@ -33,6 +32,7 @@ import JSZip from 'jszip';
 import { DEFAULT_MD } from './script.router';
 import { storeVersionCode } from '../utils/r2.utils';
 import { trackEvent } from '~/utils/api-analytics';
+import { createTRPCRouter, publicProcedure } from '../root';
 
 const defaultSelect = Prisma.validator<Prisma.AppSelect>()({
   id: true,
@@ -85,254 +85,254 @@ export const canUserEdit = (
   return false;
 };
 
-export const appRouter = createRouter()
-  .mutation('add', {
-    input: z
-      .object({
-        name: z.string().min(3).optional(),
-        slug: z
-          .string()
-          .min(3)
-          .transform((s) => slugify(s))
-          .optional(),
-        description: z.string().optional(),
-        organizationId: z.string().nullable().optional(),
-        isPrivate: z.boolean().optional().default(true),
-        requiresAuthToRun: z.boolean().optional().default(false),
-        aiCode: z.string().optional(),
-      })
-      .optional(),
-    async resolve({
-      input = { name: undefined, slug: undefined, description: undefined },
-      ctx,
-    }) {
-      if (!ctx.userId) {
-        throw new TRPCError({ code: 'UNAUTHORIZED' });
-      }
+export const appRouter = createTRPCRouter({
+  add: publicProcedure
+    .input(
+      z
+        .object({
+          name: z.string().min(3).optional(),
+          slug: z
+            .string()
+            .min(3)
+            .transform((s) => slugify(s))
+            .optional(),
+          description: z.string().optional(),
+          organizationId: z.string().nullable().optional(),
+          isPrivate: z.boolean().optional().default(true),
+          requiresAuthToRun: z.boolean().optional().default(false),
+          aiCode: z.string().optional(),
+        })
+        .optional(),
+    )
+    .mutation(
+      async ({
+        input = { name: undefined, slug: undefined, description: undefined },
+        ctx,
+      }) => {
+        if (!ctx.userId) {
+          throw new TRPCError({ code: 'UNAUTHORIZED' });
+        }
 
-      const {
-        name,
-        description,
-        organizationId: orgId,
-        isPrivate,
-        requiresAuthToRun,
-        aiCode,
-      } = input;
-      let { slug } = input;
-
-      // if there's a name but no slug, use the name to generate a slug
-      if (name && !slug) {
-        slug = slugify(name);
-      }
-
-      // if the provided slug or slugified name is in the deny list, set slug to undefined so that it gets replaced
-      if (denyList.find((d) => d === input.slug)) {
-        slug = undefined;
-      }
-
-      // fallback to generating a random slug if there's no name or slug provided or the name or slug is on the deny list
-      if (!slug) {
-        slug = generateDefaultSlug();
-      }
-
-      // increase our chances of getting a unique slug by adding a random number to the end
-      // we create 3 possible slugs and check if any of them are already taken
-      let possibleSlugs = [
-        slug,
-        `${slug}-${Math.floor(Math.random() * 100)}`,
-        `${slug}-${Math.floor(Math.random() * 100)}`,
-      ];
-
-      // find existing apps with any of the slugs in possibleSlugs
-      const appsWithSameSlug = await prisma.app.findMany({
-        where: { slug: { in: possibleSlugs } },
-      });
-
-      // if there are existing apps with the same slug, remove the slug from possibleSlugs
-      if (appsWithSameSlug.length > 0) {
-        const existingSlugs = appsWithSameSlug.map((a) => a.slug);
-        possibleSlugs = possibleSlugs.filter((s) => {
-          return !existingSlugs.includes(s);
-        });
-      }
-
-      if (possibleSlugs.length === 0) {
-        throw new TRPCError({
-          message: 'No possible slugs',
-          code: 'INTERNAL_SERVER_ERROR',
-        });
-      }
-
-      const organizationId = orgId === null ? null : orgId || ctx.orgId;
-
-      const app = await prisma.app.create({
-        data: {
+        const {
           name,
           description,
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          slug: possibleSlugs[0]!,
-          organizationId,
-          createdById: ctx.userId,
+          organizationId: orgId,
           isPrivate,
           requiresAuthToRun,
-          editors: {
-            create: {
-              userId: ctx.userId,
-              isOwner: true,
+          aiCode,
+        } = input;
+        let { slug } = input;
+
+        // if there's a name but no slug, use the name to generate a slug
+        if (name && !slug) {
+          slug = slugify(name);
+        }
+
+        // if the provided slug or slugified name is in the deny list, set slug to undefined so that it gets replaced
+        if (denyList.find((d) => d === input.slug)) {
+          slug = undefined;
+        }
+
+        // fallback to generating a random slug if there's no name or slug provided or the name or slug is on the deny list
+        if (!slug) {
+          slug = generateDefaultSlug();
+        }
+
+        // increase our chances of getting a unique slug by adding a random number to the end
+        // we create 3 possible slugs and check if any of them are already taken
+        let possibleSlugs = [
+          slug,
+          `${slug}-${Math.floor(Math.random() * 100)}`,
+          `${slug}-${Math.floor(Math.random() * 100)}`,
+        ];
+
+        // find existing apps with any of the slugs in possibleSlugs
+        const appsWithSameSlug = await prisma.app.findMany({
+          where: { slug: { in: possibleSlugs } },
+        });
+
+        // if there are existing apps with the same slug, remove the slug from possibleSlugs
+        if (appsWithSameSlug.length > 0) {
+          const existingSlugs = appsWithSameSlug.map((a) => a.slug);
+          possibleSlugs = possibleSlugs.filter((s) => {
+            return !existingSlugs.includes(s);
+          });
+        }
+
+        if (possibleSlugs.length === 0) {
+          throw new TRPCError({
+            message: 'No possible slugs',
+            code: 'INTERNAL_SERVER_ERROR',
+          });
+        }
+
+        const organizationId = orgId === null ? null : orgId || ctx.orgId;
+
+        const app = await prisma.app.create({
+          data: {
+            name,
+            description,
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            slug: possibleSlugs[0]!,
+            organizationId,
+            createdById: ctx.userId,
+            isPrivate,
+            requiresAuthToRun,
+            editors: {
+              create: {
+                userId: ctx.userId,
+                isOwner: true,
+              },
             },
           },
-        },
-        select: defaultSelect,
-      });
+          select: defaultSelect,
+        });
 
-      if (!app) return;
+        if (!app) return;
 
-      const readme = await prisma.script.create({
-        data: {
-          name: 'Readme',
-          filename: 'readme.md',
-          code: DEFAULT_MD,
-          appId: app.id,
-        },
-      });
-
-      await prisma.app.update({
-        where: { id: app.id },
-        data: {
-          scripts: {
-            connect: { id: readme.id },
+        const readme = await prisma.script.create({
+          data: {
+            name: 'Readme',
+            filename: 'readme.md',
+            code: DEFAULT_MD,
+            appId: app.id,
           },
-        },
-      });
+        });
 
-      const scriptMain = await prisma.scriptMain.create({
-        data: {
-          app: { connect: { id: app.id } },
-          script: {
-            create: {
-              code: aiCode ? aiCode : defaultCode,
-              name: defaultMainFile,
-              filename: defaultMainFilename,
-              isRunnable: true,
-              appId: app.id,
-              order: 0,
+        await prisma.app.update({
+          where: { id: app.id },
+          data: {
+            scripts: {
+              connect: { id: readme.id },
             },
           },
-        },
-      });
-      // get a hash of main script and update the script
-      const scriptHash = getScriptHash({
-        code: aiCode ?? defaultCode,
-        filename: defaultMainFilename,
-        id: scriptMain.scriptId,
-      });
-      const script = await prisma.script.update({
-        where: {
+        });
+
+        const scriptMain = await prisma.scriptMain.create({
+          data: {
+            app: { connect: { id: app.id } },
+            script: {
+              create: {
+                code: aiCode ? aiCode : defaultCode,
+                name: defaultMainFile,
+                filename: defaultMainFilename,
+                isRunnable: true,
+                appId: app.id,
+                order: 0,
+              },
+            },
+          },
+        });
+        // get a hash of main script and update the script
+        const scriptHash = getScriptHash({
+          code: aiCode ?? defaultCode,
+          filename: defaultMainFilename,
           id: scriptMain.scriptId,
-        },
-        data: {
-          hash: scriptHash,
-        },
-      });
-
-      const { hash } = await buildAndStoreApplet({
-        app: { ...app, scripts: [script] },
-        isPublished: true,
-        userId: ctx.userId,
-      });
-
-      await prisma.app.update({
-        where: {
-          id: app.id,
-        },
-        data: {
-          publishedVersionHash: hash,
-          playgroundVersionHash: hash,
-        },
-      });
-
-      const resourceOwner = await prisma.resourceOwnerSlug.findFirst({
-        where: { resourceOwnerId: app.organizationId ?? app.createdById },
-      });
-
-      trackEvent({
-        userId: ctx.userId,
-        orgId: ctx.orgId,
-        eventName: 'Created Applet',
-        properties: {
-          appletId: app.id,
-          slug: app.slug,
-          usedAI: !!aiCode,
-        },
-      });
-
-      return { ...app, scriptMain, resourceOwner };
-    },
-  })
-  .query('templates', {
-    async resolve() {
-      const apps = await prisma.app.findMany({
-        where: {
-          isTemplate: true,
-          deletedAt: null,
-        },
-        select: defaultSelect,
-      });
-
-      return apps;
-    },
-  })
-  .query('allApproved', {
-    async resolve() {
-      /**
-       * For pagination you can have a look at this docs site
-       * @link https://trpc.io/docs/useInfiniteQuery
-       */
-
-      const apps = await prisma.app.findMany({
-        where: {
-          isPrivate: false,
-          submissionState: appSubmissionState.approved,
-          deletedAt: null,
-        },
-        select: defaultSelect,
-      });
-
-      const resourceOwners = await prisma.resourceOwnerSlug.findMany({
-        where: {
-          resourceOwnerId: {
-            in: apps
-              .map((a) => a.organizationId || a.createdById)
-              .filter((i) => !!i) as string[],
+        });
+        const script = await prisma.script.update({
+          where: {
+            id: scriptMain.scriptId,
           },
-        },
-      });
+          data: {
+            hash: scriptHash,
+          },
+        });
 
-      return apps.reduce(
-        (arr, app) => {
-          const resourceOwner = resourceOwners.find(
-            (r) =>
-              r.resourceOwnerId === (app.organizationId || app.createdById),
-          );
+        const { hash } = await buildAndStoreApplet({
+          app: { ...app, scripts: [script] },
+          isPublished: true,
+          userId: ctx.userId,
+        });
 
-          if (resourceOwner) {
-            arr.push({ ...app, resourceOwner });
-          }
-          return arr;
+        await prisma.app.update({
+          where: {
+            id: app.id,
+          },
+          data: {
+            publishedVersionHash: hash,
+            playgroundVersionHash: hash,
+          },
+        });
+
+        const resourceOwner = await prisma.resourceOwnerSlug.findFirst({
+          where: { resourceOwnerId: app.organizationId ?? app.createdById },
+        });
+
+        trackEvent({
+          userId: ctx.userId,
+          orgId: ctx.orgId,
+          eventName: 'Created Applet',
+          properties: {
+            appletId: app.id,
+            slug: app.slug,
+            usedAI: !!aiCode,
+          },
+        });
+
+        return { ...app, scriptMain, resourceOwner };
+      },
+    ),
+  templates: publicProcedure.query(async () => {
+    const apps = await prisma.app.findMany({
+      where: {
+        isTemplate: true,
+        deletedAt: null,
+      },
+      select: defaultSelect,
+    });
+
+    return apps;
+  }),
+  allApproved: publicProcedure.query(async () => {
+    /**
+     * For pagination you can have a look at this docs site
+     * @link https://trpc.io/docs/useInfiniteQuery
+     */
+
+    const apps = await prisma.app.findMany({
+      where: {
+        isPrivate: false,
+        submissionState: appSubmissionState.approved,
+        deletedAt: null,
+      },
+      select: defaultSelect,
+    });
+
+    const resourceOwners = await prisma.resourceOwnerSlug.findMany({
+      where: {
+        resourceOwnerId: {
+          in: apps
+            .map((a) => a.organizationId || a.createdById)
+            .filter((i) => !!i) as string[],
         },
-        // prettier-ignore
-        [] as ((typeof apps)[0] & { resourceOwner: ResourceOwnerSlug })[],
-      );
-    },
-  })
-  .query('byAuthedUser', {
-    input: z
-      .object({
-        parentId: z.string().optional(),
-        filterByOrganization: z.boolean().default(true),
-      })
-      .optional(),
-    async resolve({ ctx, input }) {
+      },
+    });
+
+    return apps.reduce(
+      (arr, app) => {
+        const resourceOwner = resourceOwners.find(
+          (r) => r.resourceOwnerId === (app.organizationId || app.createdById),
+        );
+
+        if (resourceOwner) {
+          arr.push({ ...app, resourceOwner });
+        }
+        return arr;
+      },
+      // prettier-ignore
+      [] as ((typeof apps)[0] & { resourceOwner: ResourceOwnerSlug })[],
+    );
+  }),
+  byAuthedUser: publicProcedure
+    .input(
+      z
+        .object({
+          parentId: z.string().optional(),
+          filterByOrganization: z.boolean().default(true),
+        })
+        .optional(),
+    )
+    .query(async ({ ctx, input }) => {
       if (!ctx.userId) throw new TRPCError({ code: 'UNAUTHORIZED' });
       const where: Prisma.AppWhereInput = {
         parentId: input?.parentId,
@@ -402,13 +402,14 @@ export const appRouter = createRouter()
         // prettier-ignore
         [] as (typeof apps[0] & { resourceOwner: ResourceOwnerSlug })[],
       );
-    },
-  })
-  .query('byId', {
-    input: z.object({
-      id: z.string(),
     }),
-    async resolve({ ctx, input }) {
+  byId: publicProcedure
+    .input(
+      z.object({
+        id: z.string(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
       const app = await prisma.app.findFirstOrThrow({
         where: {
           id: input.id,
@@ -449,14 +450,15 @@ export const appRouter = createRouter()
       }
 
       return { ...app, resourceOwner, canUserEdit: canUserEdit(app, ctx) };
-    },
-  })
-  .query('byResourceOwnerAndAppSlugs', {
-    input: z.object({
-      resourceOwnerSlug: z.string().toLowerCase(),
-      appSlug: z.string().toLowerCase(),
     }),
-    async resolve({ ctx, input }) {
+  byResourceOwnerAndAppSlugs: publicProcedure
+    .input(
+      z.object({
+        resourceOwnerSlug: z.string().toLowerCase(),
+        appSlug: z.string().toLowerCase(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
       //find resouce owner (org or user) based on slug
       const resourceOwner = await prisma.resourceOwnerSlug.findFirstOrThrow({
         where: {
@@ -521,13 +523,14 @@ export const appRouter = createRouter()
         throw new TRPCError({ code: 'UNAUTHORIZED' });
       // return the app
       return { ...app, resourceOwner, canUserEdit: canEdit };
-    },
-  })
-  .query('byResourceOwner', {
-    input: z.object({
-      resourceOwnerSlug: z.string().toLowerCase(),
     }),
-    async resolve({ input, ctx }) {
+  byResourceOwner: publicProcedure
+    .input(
+      z.object({
+        resourceOwnerSlug: z.string().toLowerCase(),
+      }),
+    )
+    .query(async ({ input, ctx }) => {
       //find resouce owner (org or user) based on slug
       const resourceOwner = await prisma.resourceOwnerSlug.findFirst({
         where: {
@@ -577,17 +580,18 @@ export const appRouter = createRouter()
         ...app,
         resourceOwner,
       }));
-    },
-  })
-  .query('validateSlug', {
-    input: z.object({
-      slug: z
-        .string()
-        .min(3)
-        .max(50)
-        .transform((s) => slugify(s)),
     }),
-    async resolve({ ctx, input }) {
+  validateSlug: publicProcedure
+    .input(
+      z.object({
+        slug: z
+          .string()
+          .min(3)
+          .max(50)
+          .transform((s) => slugify(s)),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
       if (!ctx.userId) {
         throw new TRPCError({ code: 'UNAUTHORIZED' });
       }
@@ -601,14 +605,15 @@ export const appRouter = createRouter()
       });
 
       return !!existingSlug;
-    },
-  })
-  .mutation('boot', {
-    input: z.object({
-      appId: z.string().uuid(),
-      usePublishedVersion: z.boolean().optional(),
     }),
-    async resolve({ input, ctx }) {
+  boot: publicProcedure
+    .input(
+      z.object({
+        appId: z.string().uuid(),
+        usePublishedVersion: z.boolean().optional(),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
       const app = await prisma.app.findFirstOrThrow({
         where: { id: input.appId, deletedAt: null },
         include: { scripts: true, scriptMain: true },
@@ -662,17 +667,18 @@ export const appRouter = createRouter()
       } catch (e: any) {
         return { ok: false, error: e.toString(), configs: {} };
       }
-    },
-  })
-  .mutation('run', {
-    input: z.object({
-      appId: z.string().uuid(),
-      formData: z.record(z.any()),
-      scriptId: z.string().uuid().optional(),
-      runId: z.string().uuid(),
-      usePublishedVersion: z.boolean().optional(),
     }),
-    async resolve({ input, ctx }) {
+  run: publicProcedure
+    .input(
+      z.object({
+        appId: z.string().uuid(),
+        formData: z.record(z.any()),
+        scriptId: z.string().uuid().optional(),
+        runId: z.string().uuid(),
+        usePublishedVersion: z.boolean().optional(),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
       const app = await prisma.app.findFirstOrThrow({
         where: { id: input.appId, deletedAt: null },
         include: { scripts: true, scriptMain: true },
@@ -741,15 +747,16 @@ export const appRouter = createRouter()
       });
 
       return { ok: true, filename: script.filename, version, result };
-    },
-  })
-  .mutation('fork', {
-    input: z.object({
-      id: z.string().uuid(),
-      name: z.string().min(3).max(50),
-      connectToParent: z.boolean().optional().default(true),
     }),
-    async resolve({ input, ctx }) {
+  fork: publicProcedure
+    .input(
+      z.object({
+        id: z.string().uuid(),
+        name: z.string().min(3).max(50),
+        connectToParent: z.boolean().optional().default(true),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
       if (!ctx.userId) {
         throw new TRPCError({ code: 'UNAUTHORIZED' });
       }
@@ -858,38 +865,39 @@ export const appRouter = createRouter()
       });
 
       return { ...updatedFork, resourceOwner, canUserEdit: true };
-    },
-  })
-  .mutation('edit', {
-    input: z.object({
-      id: z.string().uuid(),
-      data: z.object({
-        name: z.string().max(255).optional(),
-        slug: z
-          .string()
-          .min(5)
-          .max(60)
-          .transform((arg) => slugify(arg))
-          .optional(),
-        description: z.string().optional().nullable(),
-        isPrivate: z.boolean().optional(),
-        requiresAuthToRun: z.boolean().optional(),
-        isDataSensitive: z.boolean().optional(),
-        scripts: z
-          .array(
-            z.object({
-              id: z.string().uuid(),
-              data: z.object({
-                name: z.string().min(3).max(255).optional(),
-                code: z.string().optional(),
-                filename: z.string(),
-              }),
-            }),
-          )
-          .optional(),
-      }),
     }),
-    async resolve({ input, ctx }) {
+  edit: publicProcedure
+    .input(
+      z.object({
+        id: z.string().uuid(),
+        data: z.object({
+          name: z.string().max(255).optional(),
+          slug: z
+            .string()
+            .min(5)
+            .max(60)
+            .transform((arg) => slugify(arg))
+            .optional(),
+          description: z.string().optional().nullable(),
+          isPrivate: z.boolean().optional(),
+          requiresAuthToRun: z.boolean().optional(),
+          isDataSensitive: z.boolean().optional(),
+          scripts: z
+            .array(
+              z.object({
+                id: z.string().uuid(),
+                data: z.object({
+                  name: z.string().min(3).max(255).optional(),
+                  code: z.string().optional(),
+                  filename: z.string(),
+                }),
+              }),
+            )
+            .optional(),
+        }),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
       await hasAppEditPermission({
         ctx,
         appId: input.id,
@@ -1009,14 +1017,14 @@ export const appRouter = createRouter()
       }
 
       return { ...app, resourceOwner };
-      // build and store the eszip file
-    },
-  })
-  .mutation('delete', {
-    input: z.object({
-      id: z.string(),
     }),
-    async resolve({ ctx, input }) {
+  delete: publicProcedure
+    .input(
+      z.object({
+        id: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
       await hasAppEditPermission({ ctx, appId: input.id });
 
       await prisma.app.update({
@@ -1031,13 +1039,14 @@ export const appRouter = createRouter()
       return {
         id: input.id,
       };
-    },
-  })
-  .mutation('publish', {
-    input: z.object({
-      id: z.string(),
     }),
-    async resolve({ ctx, input }) {
+  publish: publicProcedure
+    .input(
+      z.object({
+        id: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
       await hasAppEditPermission({ ctx, appId: input.id });
 
       const app = await prisma.app.findFirstOrThrow({
@@ -1076,5 +1085,5 @@ export const appRouter = createRouter()
           playgroundVersionHash: hash,
         },
       });
-    },
-  });
+    }),
+});

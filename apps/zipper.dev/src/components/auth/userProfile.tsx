@@ -40,7 +40,7 @@ export default function UserProfile() {
   const [isHovered, setIsHovered] = useState<boolean>(false);
 
   const { user, isLoaded } = useUser();
-  const { data: accounts } = trpc.useQuery(['user.getAccounts'], {
+  const { data: accounts } = trpc.user.getAccounts.useQuery(undefined, {
     enabled: isLoaded,
   });
 
@@ -54,8 +54,8 @@ export default function UserProfile() {
 
   const isSlugValid = !!username && username.length >= MIN_SLUG_LENGTH;
 
-  const isSlugAvailableQuery = trpc.useQuery(
-    ['user.isSlugAvailable', { slug: username }],
+  const isSlugAvailableQuery = trpc.user.isSlugAvailable.useQuery(
+    { slug: username },
     {
       enabled: isSlugValid && isEditingUsername,
     },
@@ -68,7 +68,7 @@ export default function UserProfile() {
       isSlugAvailableQuery.isSuccess &&
       !isSlugAvailableQuery.data);
 
-  const updateUsername = trpc.useMutation('user.updateUserSlug', {
+  const updateUsername = trpc.user.updateUserSlug.useMutation({
     async onSuccess() {
       session.update({ updateProfile: true });
     },
