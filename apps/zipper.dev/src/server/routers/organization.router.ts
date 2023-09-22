@@ -187,6 +187,13 @@ export const organizationRouter = createTRPCRouter({
 
       return !!orgMem;
     }),
+  // revisit using https://uploadthing.com
+  // .mutation('setLogo', {
+  //   input: z.object({
+  //     id: z.string(),
+  //   }),
+  //   async resolve({ input, ctx }) {},
+  // })
   inviteMember: adminProcedure
     .input(
       z.object({
