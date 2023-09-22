@@ -22,6 +22,7 @@ const defaultSelect = Prisma.validator<Prisma.UserSelect>()({
 });
 
 export const userRouter = createTRPCRouter({
+  // Remove - we can now include user profiles when getting app runs
   profilesForUserIds: protectedProcedure
     .input(
       z.object({
@@ -36,6 +37,7 @@ export const userRouter = createTRPCRouter({
         select: defaultSelect,
       });
     }),
+  // Remove - we can now include user profiles when getting app runs
   profileForUserId: protectedProcedure
     .input(
       z.object({
