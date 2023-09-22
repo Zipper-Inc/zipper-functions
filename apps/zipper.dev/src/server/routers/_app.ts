@@ -21,6 +21,7 @@ import { aiRouter } from './ai.router';
 import { githubAppConnectorRouter } from './githubAppConnector.router';
 import { zipperSlackIntegrationRouter } from './zipperSlackIntegration.router';
 import { appLogRouter } from './appLog.router';
+import { createTRPCRouter, mergeRouters, publicProcedure } from '../root';
 
 /**
  * Create your application's root router
@@ -28,7 +29,7 @@ import { appLogRouter } from './appLog.router';
  * @link https://trpc.io/docs/ssg
  * @link https://trpc.io/docs/router
  */
-export const trpcRouter = createRouter()
+export const legacyRouter = createRouter()
   /**
    * Add data transformers
    * @link https://trpc.io/docs/data-transformers
@@ -39,14 +40,6 @@ export const trpcRouter = createRouter()
    * @link https://trpc.io/docs/error-formatting
    */
   // .formatError(({ shape, error }) => { })
-  /**
-   * Add a health check endpoint to be called with `/api/trpc/healthz`
-   */
-  .query('healthz', {
-    async resolve() {
-      return 'yay!';
-    },
-  })
   .merge('app.', appRouter)
   .merge('appAccessToken.', appAccessTokenRouter)
   .merge('appConnector.', appConnectorRouter)
@@ -64,6 +57,12 @@ export const trpcRouter = createRouter()
   .merge('user.', userRouter)
   .merge('organization.', organizationRouter)
   .merge('version.', versionRouter)
-  .merge('ai.', aiRouter);
+  .merge('ai.', aiRouter)
+  .interop();
 
+const newRouter = createTRPCRouter({
+  healthz: publicProcedure.query(() => 'yay!'),
+});
+
+export const trpcRouter = mergeRouters(legacyRouter, newRouter);
 export type AppRouter = typeof trpcRouter;
