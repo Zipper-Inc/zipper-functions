@@ -8,6 +8,7 @@ import {
   useState,
   useRef,
   MutableRefObject,
+  useMemo,
 } from 'react';
 import noop from '~/utils/noop';
 
@@ -67,6 +68,7 @@ export type EditorContextType = {
   editorHasErrors: () => boolean;
   getErrorFiles: () => string[];
   isSaving: boolean;
+  // appStorage: Array<Record<'datastore', Record<string, { value: string }>>>;
   setIsSaving: (isSaving: boolean) => void;
   save: () => Promise<string>;
   refetchApp: () => Promise<void>;
@@ -95,6 +97,7 @@ export const EditorContext = createContext<EditorContextType>({
   setCurrentScript: noop,
   currentScriptLive: undefined,
   onChange: noop,
+  // appStorage: [],
   onValidate: noop,
   connectionId: undefined,
   scripts: [],
@@ -282,6 +285,7 @@ const EditorContextProvider = ({
   appId,
   appSlug,
   resourceOwnerSlug,
+  // appStorage,
   initialScripts,
   refetchApp,
 }: {
@@ -289,6 +293,7 @@ const EditorContextProvider = ({
   children: any;
   appId: string | undefined;
   appSlug: string | undefined;
+  // appStorage: Array<Record<'datastore', Record<string, any>>>;
   resourceOwnerSlug: string | undefined;
   initialScripts: Script[];
   refetchApp: () => Promise<void>;
@@ -317,9 +322,31 @@ const EditorContextProvider = ({
     Record<string, boolean>
   >({});
 
-  const currentScriptLive: any = useLiveStorage(
+  const appletStorage = trpc.useQuery([
+    'app.appletStorage',
+    {
+      appId: String(appId),
+    },
+  ]);
+
+  const _currentScriptLive = useLiveStorage(
     (root) => root[`script-${currentScript?.id}`],
-  );
+  ) as typeof currentScript;
+
+  const currentScriptLive = useMemo(() => {
+    if (currentScript?.filename === 'storage.json') {
+      return {
+        code: appletStorage?.data?.[0]?.datastore
+          ? JSON.stringify(appletStorage?.data?.[0]?.datastore, null, '\t')
+          : currentScript.code,
+      };
+    }
+
+    return { ..._currentScriptLive };
+  }, [
+    _currentScriptLive,
+    appletStorage?.data?.[0]?.datastore,
+  ]) as EditorContextType['currentScriptLive'];
 
   const mutateLive = useLiveMutation(
     (context, newCode: string, newVersion: number) => {
@@ -721,6 +748,7 @@ const EditorContextProvider = ({
         currentScriptLive,
         onChange,
         onValidate,
+        // appStorage,
         connectionId: self?.connectionId,
         scripts,
         setScripts,

@@ -84,6 +84,7 @@ const PlaygroundPage: NextPageWithLayout<Props> = ({
         app={appQuery.data}
         appId={appQuery.data?.id}
         appSlug={appQuery.data.slug}
+        // appStorage={appletStorage.data as any}
         resourceOwnerSlug={appQuery.data.resourceOwner.slug}
         initialScripts={appQuery.data?.scripts || []}
         refetchApp={refetchApp}

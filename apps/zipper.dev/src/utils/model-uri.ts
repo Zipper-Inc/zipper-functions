@@ -19,7 +19,7 @@ export const getUriFromPath = (
   parseFn: (path: string) => Uri,
   extension: DENO_REQUIRED_FILE_EXTENSION,
 ) => {
-  if (path.endsWith('md')) return parseFn(`${path}`);
+  if (path.endsWith('md') || path.endsWith('json')) return parseFn(`${path}`);
   return parseFn(`${path}.${extension}`);
 };
 

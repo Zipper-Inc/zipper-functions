@@ -99,18 +99,41 @@ export function RunAppProvider({
     },
   });
 
+  const runStorageUpdate = trpc.useMutation('app.updateStorage', {
+    async onSuccess() {
+      await utils.invalidateQueries([
+        'app.byResourceOwnerAndAppSlugs',
+        { resourceOwnerSlug: app.resourceOwner.slug, appSlug: slug },
+      ]);
+
+      await utils.invalidateQueries([
+        'app.appletStorage',
+        {
+          appId: String(app.id),
+        },
+      ]);
+    },
+  });
+
   const bootAppMutation = trpc.useMutation('app.boot', {
     async onSuccess() {
       await utils.invalidateQueries([
         'app.byResourceOwnerAndAppSlugs',
         { resourceOwnerSlug: app.resourceOwner.slug, appSlug: slug },
       ]);
+
+      await utils.invalidateQueries([
+        'app.appletStorage',
+        {
+          appId: String(app.id),
+        },
+      ]);
     },
   });
 
   const logMutation = trpc.useMutation('appLog.get');
 
-  const { currentScript, inputParams } = useEditorContext();
+  const { currentScript, inputParams, scripts } = useEditorContext();
 
   const boot = async () => {
     try {
@@ -295,6 +318,12 @@ export function RunAppProvider({
     });
 
     if (result.ok && result.filename) {
+      if (scripts.find((script) => script.filename === 'storage.json')) {
+        await runStorageUpdate.mutateAsync({
+          appId: id,
+        });
+      }
+
       setResults({ ...results, [result.filename]: result.result });
     }
 

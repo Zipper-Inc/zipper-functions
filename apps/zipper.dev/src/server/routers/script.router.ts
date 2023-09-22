@@ -19,6 +19,12 @@ const defaultSelect = Prisma.validator<Prisma.ScriptSelect>()({
   connectorId: true,
 });
 
+export const DEFAULT_JSON = `{
+  "key": {
+    "value": "key_value"
+  }
+}`;
+
 const DEFAULT_CODE = `export async function handler({ world }: { world: string }) {
   return \`hello \${world}\`;
 };
@@ -56,17 +62,39 @@ export const scriptRouter = createRouter()
     }),
     async resolve({ ctx, input }) {
       const { appId, ...data } = input;
-      await hasAppEditPermission({ ctx, appId });
 
-      const extension = data.name.includes('.md') ? '.md' : '.ts';
+      const templates = {
+        '.md': DEFAULT_MD,
+        '.ts': DEFAULT_CODE,
+        '.json': DEFAULT_JSON,
+      };
+
+      await hasAppEditPermission({ ctx, appId });
+      // const extension =
+      //   extensions.find((ext) => data.name.includes(ext)) ?? '.ts';
+
+      const [extension, code] = Object.entries(templates).find(([key]) =>
+        data.name.includes(key),
+      ) ?? ['.ts', DEFAULT_CODE];
+
       const slugifiedName = slugifyAllowDot(data.name.replace(/\..+$/, ''));
       const filename = `${slugifiedName}${extension}`;
-      const code =
-        extension === '.ts'
-          ? data.code
-          : extension === '.md'
-          ? DEFAULT_MD
-          : DEFAULT_CODE;
+      // const code =
+      //   extension === '.ts'
+      //     ? data.code
+      //     : extension === '.md'
+      //     ? DEFAULT_MD
+      //     : DEFAULT_CODE;
+
+      console.log({
+        ...data,
+        code,
+        filename,
+        isRunnable: extension === '.ts' ? isCodeRunnable(data.code) : false,
+        app: {
+          connect: { id: appId },
+        },
+      });
 
       const script = await prisma.script.create({
         data: {

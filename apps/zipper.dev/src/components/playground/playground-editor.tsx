@@ -20,6 +20,7 @@ import traverse from '@babel/traverse';
 import MonacoJSXHighlighter from 'monaco-jsx-highlighter';
 import { useColorModeValue } from '@chakra-ui/react';
 import { baseColors } from '@zipper/ui';
+import { trpc } from '~/utils/trpc';
 
 type MonacoEditor = monaco.editor.IStandaloneCodeEditor;
 
@@ -52,6 +53,12 @@ const TYPESCRIPT_ERRORS_TO_IGNORE = [
 const isExternalResource = (resource: string | monaco.Uri) =>
   /^https?/.test(resource.toString());
 
+const extslist = {
+  md: 'markdown',
+  ts: 'typescript',
+  json: 'json',
+};
+
 export default function PlaygroundEditor(
   props: EditorProps & {
     appName: string;
@@ -76,15 +83,19 @@ export default function PlaygroundEditor(
   const [, updateMyPresence] = useMyPresence();
   const connectionIds = useOthersConnectionIds();
   const [defaultLanguage, setDefaultLanguage] = useState<
-    'typescript' | 'markdown'
+    'typescript' | 'markdown' | 'json'
   >('typescript');
   const theme = useColorModeValue('vs', 'vs-dark');
 
   useExitConfirmation({ enable: isEditorDirty(), ignorePaths: ['/src/'] });
 
+  const appletStorage = trpc.useQuery([
+    'app.appletStorage',
+    {
+      appId: String(appInfo.id),
+    },
+  ]);
   const handleEditorDidMount = (editor: MonacoEditor, monaco: Monaco) => {
-    console.log('editor mounted');
-
     monaco.editor.defineTheme('vs-dark', {
       inherit: true,
       base: 'vs-dark',
@@ -167,9 +178,10 @@ export default function PlaygroundEditor(
       });
 
       monacoEditor.languages.register({
-        id: 'markdown',
-        extensions: ['.md'],
-        mimetypes: ['text/markdown'],
+        id: 'json',
+        extensions: ['.json'],
+        aliases: ['JSON', 'json'],
+        mimetypes: ['application/json'],
       });
 
       const diagnosticOptions: monaco.languages.typescript.DiagnosticsOptions =
@@ -183,6 +195,10 @@ export default function PlaygroundEditor(
       monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions(
         diagnosticOptions,
       );
+
+      monaco.languages.json.jsonDefaults.setDiagnosticsOptions({
+        validate: true,
+      });
 
       // Add Deno and Zipper types
       const extraLibs =
@@ -205,6 +221,8 @@ export default function PlaygroundEditor(
         isolatedModules: true,
         target: monaco.languages.typescript.ScriptTarget.ES2020,
         allowNonTsExtensions: true,
+        resolveJsonModule: true,
+        allowSyntheticDefaultImports: true,
         moduleResolution:
           monaco.languages.typescript.ModuleResolutionKind.NodeJs,
         lib: ['esnext', 'dom', 'deno.ns'],
@@ -253,15 +271,20 @@ export default function PlaygroundEditor(
       );
 
       scripts.forEach((script) => {
-        const extension = script.filename.split('.').pop();
+        const extension = script.filename
+          .split('.')
+          .pop() as keyof typeof extslist;
+
         const uri = getUriFromPath(script.filename, monaco.Uri.parse, 'tsx');
         const model = monaco.editor.getModel(uri);
+
+        const code =
+          script.filename === 'storage.json'
+            ? JSON.stringify(appletStorage?.data?.[0]?.datastore)
+            : script.code;
+
         if (!model) {
-          monaco.editor.createModel(
-            script.code,
-            extension === 'md' ? 'markdown' : 'typescript',
-            uri,
-          );
+          monaco.editor.createModel(code, extslist[extension], uri);
         }
       });
 
@@ -310,10 +333,16 @@ export default function PlaygroundEditor(
 
   useEffect(() => {
     if (monacoEditor && editorRef.current && isEditorReady && currentScript) {
-      const extension = currentScript.filename.split('.').pop();
+      const extension = currentScript.filename
+        .split('.')
+        .pop() as keyof typeof extslist;
 
       if (extension === 'md') {
         setDefaultLanguage('markdown');
+      }
+
+      if (extension === 'json') {
+        setDefaultLanguage('json');
       }
 
       const uri = getUriFromPath(
@@ -328,7 +357,8 @@ export default function PlaygroundEditor(
       if (!model && currentScript) {
         const newModel = monacoEditor.editor.createModel(
           currentScript.code,
-          extension === 'md' ? 'markdown' : 'typescript',
+          // extension === 'md' ? 'markdown' : 'typescript',
+          extslist[extension],
           uri,
         );
         const path = getPathFromUri(uri);

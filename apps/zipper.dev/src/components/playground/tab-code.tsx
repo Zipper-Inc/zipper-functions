@@ -60,7 +60,7 @@ type CodeTabProps = {
 };
 
 export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
-  const { currentScript, onChange, onValidate, currentScriptLive } =
+  const { currentScript, onChange, onValidate, currentScriptLive, scripts } =
     useEditorContext();
   const { isRunning, run, boot: saveAndBoot } = useRunAppContext();
   const [expandedResult, setExpandedResult] = useState<

@@ -30,7 +30,7 @@ import { generateAccessToken } from '~/utils/jwt-utils';
 import { getToken } from 'next-auth/jwt';
 import { buildAndStoreApplet } from '~/utils/eszip-build-applet';
 import JSZip from 'jszip';
-import { DEFAULT_MD } from './script.router';
+import { DEFAULT_MD, DEFAULT_JSON } from './script.router';
 import { storeVersionCode } from '../utils/r2.utils';
 import { trackEvent } from '~/utils/api-analytics';
 
@@ -196,11 +196,29 @@ export const appRouter = createRouter()
         },
       });
 
+      const storage = await prisma.script.create({
+        data: {
+          name: 'Storage',
+          filename: 'storage.json',
+          code: DEFAULT_JSON,
+          appId: app.id,
+        },
+      });
+
       await prisma.app.update({
         where: { id: app.id },
         data: {
           scripts: {
             connect: { id: readme.id },
+          },
+        },
+      });
+
+      await prisma.app.update({
+        where: { id: app.id },
+        data: {
+          scripts: {
+            connect: { id: storage.id },
           },
         },
       });
@@ -267,6 +285,24 @@ export const appRouter = createRouter()
       });
 
       return { ...app, scriptMain, resourceOwner };
+    },
+  })
+  .query('appletStorage', {
+    input: z.object({
+      appId: z.string().uuid(),
+    }),
+    async resolve({ input }) {
+      const storageKeys = await prisma.app.findMany({
+        where: {
+          id: input.appId,
+        },
+
+        select: {
+          datastore: true,
+        },
+      });
+
+      return storageKeys;
     },
   })
   .query('templates', {
@@ -614,6 +650,28 @@ export const appRouter = createRouter()
         include: { scripts: true, scriptMain: true },
       });
 
+      /** updating applet storage on-save */
+      const storageFile = app.scripts.find(
+        (script) => script.filename === 'storage.json',
+      );
+
+      if (storageFile) {
+        /** yeah, it needs to be parsed two times... */
+        const datastore = JSON.parse(
+          JSON.parse(JSON.stringify(storageFile.code)),
+        );
+
+        await prisma.app.update({
+          where: {
+            id: String(input.appId),
+          },
+
+          data: {
+            datastore,
+          },
+        });
+      }
+
       const authToken = await getToken({ req: ctx.req! });
 
       const token = ctx.userId
@@ -635,8 +693,6 @@ export const appRouter = createRouter()
       }
 
       const version = getAppVersionFromHash(hash);
-
-      console.log('Boot version: ', version);
 
       try {
         const bootPayload: Zipper.BootPayload = await fetch(
@@ -662,6 +718,43 @@ export const appRouter = createRouter()
       } catch (e: any) {
         return { ok: false, error: e.toString(), configs: {} };
       }
+    },
+  })
+  .mutation('updateStorage', {
+    input: z.object({
+      appId: z.string(),
+    }),
+    async resolve({ input }) {
+      const app = await prisma.app.findFirstOrThrow({
+        where: { id: input.appId, deletedAt: null },
+        include: { scripts: true, scriptMain: true },
+      });
+
+      const storageScript = app.scripts.find(
+        (script) => script.filename === 'storage.json',
+      );
+
+      const res = await prisma.app.update({
+        where: {
+          id: app.id,
+        },
+
+        data: {
+          scripts: {
+            update: {
+              where: {
+                id: storageScript?.id,
+              },
+
+              data: {
+                code: JSON.stringify(app.datastore),
+              },
+            },
+          },
+        },
+      });
+
+      console.log(res);
     },
   })
   .mutation('run', {
@@ -726,6 +819,10 @@ export const appRouter = createRouter()
       });
 
       const result = await res.text();
+
+      if (res.ok && script.code.includes('Zipper.storage.set')) {
+        console.log(app.datastore);
+      }
 
       trackEvent({
         userId: ctx.userId,

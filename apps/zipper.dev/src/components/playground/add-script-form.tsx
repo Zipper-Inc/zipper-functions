@@ -59,6 +59,7 @@ export default function AddScriptForm({
   const { isFilenameValid } = useScriptFilename(scriptFilename, appId, [
     '.ts',
     '.md',
+    '.json',
   ]);
 
   return (
