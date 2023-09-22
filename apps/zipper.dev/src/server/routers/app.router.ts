@@ -32,7 +32,7 @@ import JSZip from 'jszip';
 import { DEFAULT_MD } from './script.router';
 import { storeVersionCode } from '../utils/r2.utils';
 import { trackEvent } from '~/utils/api-analytics';
-import { createTRPCRouter, publicProcedure } from '../root';
+import { createTRPCRouter, protectedProcedure, publicProcedure } from '../root';
 
 const defaultSelect = Prisma.validator<Prisma.AppSelect>()({
   id: true,
@@ -86,7 +86,7 @@ export const canUserEdit = (
 };
 
 export const appRouter = createTRPCRouter({
-  add: publicProcedure
+  add: protectedProcedure
     .input(
       z
         .object({
@@ -109,10 +109,6 @@ export const appRouter = createTRPCRouter({
         input = { name: undefined, slug: undefined, description: undefined },
         ctx,
       }) => {
-        if (!ctx.userId) {
-          throw new TRPCError({ code: 'UNAUTHORIZED' });
-        }
-
         const {
           name,
           description,
@@ -323,7 +319,7 @@ export const appRouter = createTRPCRouter({
       [] as ((typeof apps)[0] & { resourceOwner: ResourceOwnerSlug })[],
     );
   }),
-  byAuthedUser: publicProcedure
+  byAuthedUser: protectedProcedure
     .input(
       z
         .object({
@@ -333,7 +329,6 @@ export const appRouter = createTRPCRouter({
         .optional(),
     )
     .query(async ({ ctx, input }) => {
-      if (!ctx.userId) throw new TRPCError({ code: 'UNAUTHORIZED' });
       const where: Prisma.AppWhereInput = {
         parentId: input?.parentId,
         deletedAt: null,
@@ -581,7 +576,7 @@ export const appRouter = createTRPCRouter({
         resourceOwner,
       }));
     }),
-  validateSlug: publicProcedure
+  validateSlug: protectedProcedure
     .input(
       z.object({
         slug: z
@@ -591,10 +586,7 @@ export const appRouter = createTRPCRouter({
           .transform((s) => slugify(s)),
       }),
     )
-    .query(async ({ ctx, input }) => {
-      if (!ctx.userId) {
-        throw new TRPCError({ code: 'UNAUTHORIZED' });
-      }
+    .query(async ({ input }) => {
       const deniedSlug = denyList.find((d) => d === input.slug);
       if (deniedSlug) return false;
 
@@ -748,7 +740,7 @@ export const appRouter = createTRPCRouter({
 
       return { ok: true, filename: script.filename, version, result };
     }),
-  fork: publicProcedure
+  fork: protectedProcedure
     .input(
       z.object({
         id: z.string().uuid(),
@@ -757,10 +749,6 @@ export const appRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ input, ctx }) => {
-      if (!ctx.userId) {
-        throw new TRPCError({ code: 'UNAUTHORIZED' });
-      }
-
       const { id, name, connectToParent } = input;
 
       const app = await prisma.app.findFirstOrThrow({

@@ -5,7 +5,7 @@ import { hasAppReadPermission } from '../utils/authz.utils';
 import { TRPCError } from '@trpc/server';
 import { randomUUID } from 'crypto';
 import { hash } from 'bcryptjs';
-import { createTRPCRouter, publicProcedure } from '../root';
+import { createTRPCRouter, protectedProcedure, publicProcedure } from '../root';
 
 const defaultSelect = Prisma.validator<Prisma.AppAccessTokenSelect>()({
   identifier: true,
@@ -16,7 +16,7 @@ const defaultSelect = Prisma.validator<Prisma.AppAccessTokenSelect>()({
 });
 
 export const appAccessTokenRouter = createTRPCRouter({
-  add: publicProcedure
+  add: protectedProcedure
     .input(
       z.object({
         appId: z.string(),
@@ -24,7 +24,6 @@ export const appAccessTokenRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      if (!ctx.userId) throw new TRPCError({ code: 'UNAUTHORIZED' });
       await hasAppReadPermission({
         ctx,
         appId: input.appId,
@@ -53,14 +52,13 @@ export const appAccessTokenRouter = createTRPCRouter({
 
       return `zaat.${identifier}.${secret}`;
     }),
-  getForCurrentUser: publicProcedure
+  getForCurrentUser: protectedProcedure
     .input(
       z.object({
         appId: z.string(),
       }),
     )
     .query(async ({ ctx, input }) => {
-      if (!ctx.userId) throw new TRPCError({ code: 'UNAUTHORIZED' });
       await hasAppReadPermission({
         ctx,
         appId: input.appId,

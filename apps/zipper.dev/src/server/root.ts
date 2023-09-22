@@ -1,6 +1,7 @@
 import { TRPCError, initTRPC } from '@trpc/server';
 import superjson from 'superjson';
 import { Context } from './context';
+import { hasOrgAdminPermission } from './utils/authz.utils';
 
 const t = initTRPC.context<Context>().create({
   transformer: superjson,
@@ -23,7 +24,20 @@ const enforceAuth = t.middleware(({ ctx, next }) => {
   return next({
     ctx: {
       ...ctx,
-      user: ctx.userId,
+      userId: ctx.userId,
+    },
+  });
+});
+
+const enforceOrgAdmin = t.middleware(({ ctx, next }) => {
+  if (!ctx.orgId || !hasOrgAdminPermission(ctx)) {
+    throw new TRPCError({ code: 'UNAUTHORIZED' });
+  }
+
+  return next({
+    ctx: {
+      ...ctx,
+      orgId: ctx.orgId,
     },
   });
 });
@@ -36,3 +50,4 @@ export const createTRPCRouter = t.router;
 export const mergeRouters = t.mergeRouters;
 export const publicProcedure = t.procedure;
 export const protectedProcedure = t.procedure.use(enforceAuth);
+export const adminProcedure = t.procedure.use(enforceOrgAdmin);

@@ -27,7 +27,6 @@ export const trpcRouter = createTRPCRouter({
   appAccessToken: appAccessTokenRouter,
   appConnector: appConnectorRouter,
   appEditor: appEditorRouter,
-
   appLog: appLogRouter,
   appRun: appRunRouter,
   slackConnector: slackConnectorRouter,

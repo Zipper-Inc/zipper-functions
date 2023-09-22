@@ -52,7 +52,6 @@ export const userRouter = createTRPCRouter({
       });
     }),
   getAccounts: protectedProcedure.query(async ({ ctx }) => {
-    if (!ctx.userId) throw new TRPCError({ code: 'UNAUTHORIZED' });
     return prisma.account.findMany({
       where: {
         userId: ctx.userId,
@@ -65,7 +64,6 @@ export const userRouter = createTRPCRouter({
     });
   }),
   addZipperAuthCode: protectedProcedure.mutation(async ({ ctx }) => {
-    if (!ctx.userId) throw new TRPCError({ code: 'UNAUTHORIZED' });
     if (!ctx.req) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
 
     const result = await prisma.zipperAuthCode.create({
@@ -84,7 +82,6 @@ export const userRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      if (!ctx.userId) return new TRPCError({ code: 'UNAUTHORIZED' });
       const token = await getToken({ req: ctx.req! });
 
       return generateAccessToken(
@@ -103,7 +100,7 @@ export const userRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      if (ctx.userId && process.env.FEEDBACK_TRACKER_API_KEY) {
+      if (process.env.FEEDBACK_TRACKER_API_KEY) {
         const user = await prisma.user.findUnique({
           where: {
             id: ctx.userId,
@@ -167,7 +164,7 @@ export const userRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      if (ctx.userId && process.env.FEEDBACK_TRACKER_API_KEY) {
+      if (process.env.FEEDBACK_TRACKER_API_KEY) {
         const user = await prisma.user.findUnique({
           where: {
             id: ctx.userId,
@@ -237,8 +234,6 @@ export const userRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      if (!ctx.userId) throw new TRPCError({ code: 'UNAUTHORIZED' });
-
       const user = await prisma.user.findUniqueOrThrow({
         where: {
           id: ctx.userId,
