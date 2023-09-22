@@ -323,29 +323,33 @@ const EditorContextProvider = ({
   >({});
 
   const appletStorage = trpc.useQuery([
-    'app.appletStorage',
+    'app.getDataStore',
     {
       appId: String(appId),
     },
   ]);
 
-  const _currentScriptLive = useLiveStorage(
+  const liveScript: any = useLiveStorage(
     (root) => root[`script-${currentScript?.id}`],
-  ) as typeof currentScript;
+  ) as { code: string };
 
+  /**
+   * This memo shows the most updated version of _datastorage_  in the content
+   * of **storage.json** file.
+   */
   const currentScriptLive = useMemo(() => {
     if (currentScript?.filename === 'storage.json') {
       return {
-        code: appletStorage?.data?.[0]?.datastore
-          ? JSON.stringify(appletStorage?.data?.[0]?.datastore, null, '\t')
-          : currentScript.code,
+        code: appletStorage.data
+          ? JSON.stringify(appletStorage.data, null, '\t')
+          : `{}`,
       };
     }
 
-    return { ..._currentScriptLive };
+    return { ...liveScript };
   }, [
-    _currentScriptLive,
-    appletStorage?.data?.[0]?.datastore,
+    liveScript,
+    appletStorage.data,
   ]) as EditorContextType['currentScriptLive'];
 
   const mutateLive = useLiveMutation(
@@ -653,15 +657,18 @@ const EditorContextProvider = ({
       const newApp = await editAppMutation.mutateAsync({
         id: appId,
         data: {
-          scripts: scripts.map((script: any) => ({
-            id: script.id,
-            data: {
-              name: script.name,
-              description: script.description || '',
-              code: fileValues[`/${script.filename}`],
-              filename: script.filename,
-            },
-          })),
+          /** removing storage from mutate */
+          scripts: scripts
+            .filter((scr) => scr.filename !== 'storage.json')
+            .map((script: any) => ({
+              id: script.id,
+              data: {
+                name: script.name,
+                description: script.description || '',
+                code: fileValues[`/${script.filename}`],
+                filename: script.filename,
+              },
+            })),
         },
       });
       refetchApp();

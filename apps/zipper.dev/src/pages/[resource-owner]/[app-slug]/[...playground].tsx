@@ -13,11 +13,7 @@ import { GetServerSideProps, GetServerSidePropsContext } from 'next';
 import { getValidSubdomain, removeSubdomains } from '~/utils/subdomains';
 import SignedIn from '~/components/auth/signed-in';
 import Header from '~/components/header';
-import {
-  parsePlaygroundQuery,
-  Props,
-  PlaygroundTab,
-} from '~/utils/playground.utils';
+import { parsePlaygroundQuery, Props } from '~/utils/playground.utils';
 import { HelpModeProvider } from '~/components/context/help-mode-context';
 
 const PlaygroundPage: NextPageWithLayout<Props> = ({
@@ -30,6 +26,7 @@ const PlaygroundPage: NextPageWithLayout<Props> = ({
     ['app.byResourceOwnerAndAppSlugs', { resourceOwnerSlug, appSlug }],
     { retry: false },
   );
+
   const utils = trpc.useContext();
 
   if (appQuery.error) {
@@ -56,6 +53,26 @@ const PlaygroundPage: NextPageWithLayout<Props> = ({
 
   const pageTitle = `${data.resourceOwner.slug} / ${data.name || data.slug}`;
 
+  const appData = {
+    ...appQuery.data,
+    scripts: [
+      ...appQuery.data.scripts,
+      {
+        id: String(crypto.randomUUID()),
+        createdAt: '',
+        updatedAt: '',
+        name: 'Storage',
+        filename: 'storage.json',
+        code: '',
+        order: 0,
+        appId: appQuery.data.id,
+        connectorId: null,
+        hash: null,
+        isRunnable: false,
+      },
+    ],
+  } as typeof appQuery.data;
+
   const initialStorage: any = {
     app: new LiveObject({
       slug: data.slug,
@@ -64,7 +81,7 @@ const PlaygroundPage: NextPageWithLayout<Props> = ({
     }),
   };
 
-  appQuery.data?.scripts.forEach((s) => {
+  appData.scripts.forEach((s) => {
     initialStorage[`script-${s.id}`] = new LiveObject({
       code: s.code,
     });
@@ -84,13 +101,12 @@ const PlaygroundPage: NextPageWithLayout<Props> = ({
         app={appQuery.data}
         appId={appQuery.data?.id}
         appSlug={appQuery.data.slug}
-        // appStorage={appletStorage.data as any}
         resourceOwnerSlug={appQuery.data.resourceOwner.slug}
-        initialScripts={appQuery.data?.scripts || []}
+        initialScripts={appData.scripts || []}
         refetchApp={refetchApp}
       >
         <HelpModeProvider>
-          <Playground app={appQuery.data} filename={filename} tab={tab} />
+          <Playground app={appData} filename={filename} tab={tab} />
         </HelpModeProvider>
       </EditorContextProvider>
     ),

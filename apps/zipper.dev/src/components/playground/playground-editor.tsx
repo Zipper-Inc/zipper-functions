@@ -90,11 +90,12 @@ export default function PlaygroundEditor(
   useExitConfirmation({ enable: isEditorDirty(), ignorePaths: ['/src/'] });
 
   const appletStorage = trpc.useQuery([
-    'app.appletStorage',
+    'app.getDataStore',
     {
       appId: String(appInfo.id),
     },
   ]);
+
   const handleEditorDidMount = (editor: MonacoEditor, monaco: Monaco) => {
     monaco.editor.defineTheme('vs-dark', {
       inherit: true,
@@ -280,7 +281,7 @@ export default function PlaygroundEditor(
 
         const code =
           script.filename === 'storage.json'
-            ? JSON.stringify(appletStorage?.data?.[0]?.datastore)
+            ? JSON.stringify(appletStorage.data)
             : script.code;
 
         if (!model) {

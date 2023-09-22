@@ -196,29 +196,11 @@ export const appRouter = createRouter()
         },
       });
 
-      const storage = await prisma.script.create({
-        data: {
-          name: 'Storage',
-          filename: 'storage.json',
-          code: DEFAULT_JSON,
-          appId: app.id,
-        },
-      });
-
       await prisma.app.update({
         where: { id: app.id },
         data: {
           scripts: {
             connect: { id: readme.id },
-          },
-        },
-      });
-
-      await prisma.app.update({
-        where: { id: app.id },
-        data: {
-          scripts: {
-            connect: { id: storage.id },
           },
         },
       });
@@ -287,12 +269,12 @@ export const appRouter = createRouter()
       return { ...app, scriptMain, resourceOwner };
     },
   })
-  .query('appletStorage', {
+  .query('getDataStore', {
     input: z.object({
       appId: z.string().uuid(),
     }),
     async resolve({ input }) {
-      const storageKeys = await prisma.app.findMany({
+      const storageKeys = await prisma.app.findUnique({
         where: {
           id: input.appId,
         },
@@ -302,7 +284,7 @@ export const appRouter = createRouter()
         },
       });
 
-      return storageKeys;
+      return storageKeys?.datastore;
     },
   })
   .query('templates', {
@@ -720,43 +702,6 @@ export const appRouter = createRouter()
       }
     },
   })
-  .mutation('updateStorage', {
-    input: z.object({
-      appId: z.string(),
-    }),
-    async resolve({ input }) {
-      const app = await prisma.app.findFirstOrThrow({
-        where: { id: input.appId, deletedAt: null },
-        include: { scripts: true, scriptMain: true },
-      });
-
-      const storageScript = app.scripts.find(
-        (script) => script.filename === 'storage.json',
-      );
-
-      const res = await prisma.app.update({
-        where: {
-          id: app.id,
-        },
-
-        data: {
-          scripts: {
-            update: {
-              where: {
-                id: storageScript?.id,
-              },
-
-              data: {
-                code: JSON.stringify(app.datastore),
-              },
-            },
-          },
-        },
-      });
-
-      console.log(res);
-    },
-  })
   .mutation('run', {
     input: z.object({
       appId: z.string().uuid(),
@@ -819,10 +764,6 @@ export const appRouter = createRouter()
       });
 
       const result = await res.text();
-
-      if (res.ok && script.code.includes('Zipper.storage.set')) {
-        console.log(app.datastore);
-      }
 
       trackEvent({
         userId: ctx.userId,
