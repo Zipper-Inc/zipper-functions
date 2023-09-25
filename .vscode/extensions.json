@@ -3,6 +3,7 @@
     "esbenp.prettier-vscode",
     "dbaeumer.vscode-eslint",
     "prisma.prisma",
-    "denoland.vscode-deno"
+    "denoland.vscode-deno",
+    "bradlc.vscode-tailwindcss"
   ]
 }

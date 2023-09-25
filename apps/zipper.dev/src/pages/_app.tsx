@@ -11,6 +11,7 @@ import { SessionProvider } from 'next-auth/react';
 import { DefaultLayout } from '~/components/default-layout';
 import { AppRouter } from '~/server/routers/_app';
 import '@fontsource/inter/variable.css';
+
 import Header from '~/components/header';
 import { useEffectOnce } from '@zipper/ui';
 import { ZipperLocation } from '@zipper/types';
@@ -18,6 +19,7 @@ import SignedIn from '~/components/auth/signed-in';
 import SignedOut from '~/components/auth/signed-out';
 import RedirectToSignIn from '~/components/auth/redirect-to-signin';
 import '@uploadthing/react/styles.css';
+import '~/styles/global.css';
 
 export type NextPageWithLayout<P = Record<string, unknown>, IP = P> = NextPage<
   P,
