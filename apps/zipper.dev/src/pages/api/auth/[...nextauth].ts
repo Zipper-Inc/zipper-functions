@@ -8,7 +8,7 @@ import { prisma } from '~/server/prisma';
 import { PrismaClient } from '@prisma/client';
 import { Adapter, AdapterAccount } from 'next-auth/adapters';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime';
-import { ResourceOwnerType, UserRole } from '@zipper/types';
+import { ResourceOwnerType } from '@zipper/types';
 import { MagicLinkEmail } from '~/emails';
 import fetch from 'node-fetch';
 import { createUserSlug } from '~/utils/create-user-slug';
@@ -16,6 +16,7 @@ import { resend } from '~/server/resend';
 import crypto from 'crypto';
 import { trackEvent } from '~/utils/api-analytics';
 import { forkAppletBySlug } from '~/server/routers/app.router';
+import { captureException } from '@sentry/nextjs';
 
 export function PrismaAdapter(p: PrismaClient): Adapter {
   return {
@@ -25,12 +26,18 @@ export function PrismaAdapter(p: PrismaClient): Adapter {
         data: { ...data, slug },
       });
 
-      forkAppletBySlug({
-        appSlug: process.env.DEFAULT_APP_SLUG!,
-        name: `welcome-${slug}`,
-        userId: user.id,
-        connectToParent: false,
-      });
+      if (process.env.DEFAULT_APP_SLUG) {
+        try {
+          forkAppletBySlug({
+            appSlug: process.env.DEFAULT_APP_SLUG,
+            name: `welcome-${slug}`,
+            userId: user.id,
+            connectToParent: false,
+          });
+        } catch (e) {
+          captureException(e);
+        }
+      }
 
       if (shouldCreateResourceOwnerSlug) {
         // create a resource owner slug for the user - this makes sure that slugs
