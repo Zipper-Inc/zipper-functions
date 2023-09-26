@@ -2,13 +2,13 @@
  * This file contains tRPC's HTTP response handler
  */
 import { captureException } from '@sentry/nextjs';
-import * as trpcNext from '@trpc/server/adapters/next';
+import { createNextApiHandler } from '@trpc/server/adapters/next';
 
 import { getToken } from 'next-auth/jwt';
 import { createContext } from '~/server/context';
 import { trpcRouter } from '~/server/routers/_app';
 
-export default trpcNext.createNextApiHandler({
+export default createNextApiHandler({
   router: trpcRouter,
   /**
    * @link https://trpc.io/docs/context

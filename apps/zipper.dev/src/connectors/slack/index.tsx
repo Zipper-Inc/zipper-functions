@@ -99,14 +99,17 @@ function SlackConnectorForm({ appId }: { appId: string }) {
   });
 
   // get the existing Slack connector data from the database
-  const connector = trpc.useQuery(['slackConnector.get', { appId }], {
-    onSuccess: (data) => {
-      if (data && setBotValue && setUserValue) {
-        setBotValue(data.workspaceScopes || [defaultBotScope]);
-        setUserValue(data?.userScopes || []);
-      }
+  const connector = trpc.slackConnector.get.useQuery(
+    { appId },
+    {
+      onSuccess: (data) => {
+        if (data && setBotValue && setUserValue) {
+          setBotValue(data.workspaceScopes || [defaultBotScope]);
+          setUserValue(data?.userScopes || []);
+        }
+      },
     },
-  });
+  );
 
   const [isUserAuthRequired, setIsUserAuthRequired] = useState(
     connector.data?.isUserAuthRequired,
@@ -118,52 +121,43 @@ function SlackConnectorForm({ appId }: { appId: string }) {
   const [isSaving, setIsSaving] = useState(false);
 
   // get the existing Slack bot token from the database
-  const existingSecret = trpc.useQuery(
-    ['secret.get', { appId, key: botTokenName }],
+  const existingSecret = trpc.secret.get.useQuery(
+    { appId, key: botTokenName },
     { enabled: !!user },
   );
 
-  const existingUserSecret = trpc.useQuery(
-    ['secret.get', { appId, key: userTokenName }],
+  const existingUserSecret = trpc.secret.get.useQuery(
+    { appId, key: userTokenName },
     { enabled: !!user },
   );
 
   // get the Slack auth URL from the backend (it includes an encrypted state value that links
   // the auth request to the app)
-  const slackAuthURL = trpc.useQuery([
-    'slackConnector.getAuthUrl',
-    {
-      appId,
-      scopes: { bot: botValue as string[], user: userValue as string[] },
-      postInstallationRedirect: window.location.href,
-    },
-  ]);
+  const slackAuthURL = trpc.slackConnector.getAuthUrl.useQuery({
+    appId,
+    scopes: { bot: botValue as string[], user: userValue as string[] },
+    postInstallationRedirect: window.location.href,
+  });
 
   const [slackAuthInProgress, setSlackAuthInProgress] = useState(false);
 
   const context = trpc.useContext();
   const router = useRouter();
-  const updateAppConnectorMutation = trpc.useMutation('appConnector.update', {
+  const updateAppConnectorMutation = trpc.appConnector.update.useMutation({
     onSuccess: () => {
-      context.invalidateQueries([
-        'app.byResourceOwnerAndAppSlugs',
-        {
-          appSlug: router.query['app-slug'] as string,
-          resourceOwnerSlug: router.query['resource-owner'] as string,
-        },
-      ]);
+      context.app.byResourceOwnerAndAppSlugs.invalidate({
+        appSlug: router.query['app-slug'] as string,
+        resourceOwnerSlug: router.query['resource-owner'] as string,
+      });
     },
   });
 
-  const addSecretMutation = trpc.useMutation('secret.add');
+  const addSecretMutation = trpc.secret.add.useMutation();
 
-  const deleteConnectorMutation = trpc.useMutation('slackConnector.delete', {
+  const deleteConnectorMutation = trpc.slackConnector.delete.useMutation({
     async onSuccess() {
-      await utils.invalidateQueries(['slackConnector.get', { appId }]);
-      await utils.invalidateQueries([
-        'secret.get',
-        { appId, key: botTokenName },
-      ]);
+      await utils.slackConnector.get.invalidate({ appId });
+      await utils.secret.get.invalidate({ appId, key: botTokenName });
     },
   });
 

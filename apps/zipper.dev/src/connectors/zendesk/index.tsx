@@ -11,7 +11,7 @@ import {
   ConnectorInputForm,
   ConnectorInEditableForm,
 } from './components';
-import { UseQueryResult } from 'react-query';
+import { UseQueryResult } from '@tanstack/react-query';
 import getRunUrl from '~/utils/get-run-url';
 import { getAppVersionFromHash } from '~/utils/hashing';
 
@@ -56,14 +56,14 @@ function ZendeskConnectorForm({ appId }: { appId: string }) {
   const [zendeskEmail, setZendeskEmail] = useState<string>('');
   const [zendeskToken, setZendeskToken] = useState<string>('');
   const [isSaving, setIsSaving] = useState(false);
-  const addSecret = trpc.useMutation('secret.add');
+  const addSecret = trpc.secret.add.useMutation();
   const existingSecrets: { [key: string]: UseQueryResult } = {};
 
   const utils = trpc.useContext();
-  const deleteSecretMutation = trpc.useMutation('secret.delete');
+  const deleteSecretMutation = trpc.secret.delete.useMutation();
 
   async function invalidateQuery(appId: string, key: string) {
-    await utils.invalidateQueries(['secret.get', { appId, key: key }]);
+    await utils.secret.get.invalidate({ appId, key: key });
   }
 
   async function invalidateAllQueries(appId: string) {
@@ -72,15 +72,15 @@ function ZendeskConnectorForm({ appId }: { appId: string }) {
     });
     await Promise.all([
       ...invalidationPromises,
-      await utils.invalidateQueries(['secret.all', { appId }]),
+      await utils.secret.all.invalidate({ appId }),
     ]);
   }
 
   let existingInstalation = false;
 
   for (const secret in Secrets) {
-    existingSecrets[secret] = trpc.useQuery(
-      ['secret.get', { appId, key: secret }],
+    existingSecrets[secret] = trpc.secret.get.useQuery(
+      { appId, key: secret },
       { enabled: !!user },
     );
     if (existingSecrets[secret] && existingSecrets[secret]?.data)

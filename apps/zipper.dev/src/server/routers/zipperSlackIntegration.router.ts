@@ -1,20 +1,22 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
-import { createRouter } from '../createRouter';
 import fetch from 'node-fetch';
 import { prisma } from '../prisma';
 import { encryptToBase64 } from '@zipper/utils';
 import { getZipperDotDevUrlForServer } from '../utils/server-url.utils';
 import { sendMessage } from '~/pages/api/slack/utils';
+import { createTRPCRouter, publicProcedure } from '../root';
 
-export const zipperSlackIntegrationRouter = createRouter()
-  .mutation('exchangeCodeForToken', {
-    input: z.object({
-      code: z.string(),
-      state: z.string(),
-    }),
-    async resolve({ ctx, input }) {
+export const zipperSlackIntegrationRouter = createTRPCRouter({
+  exchangeCodeForToken: publicProcedure
+    .input(
+      z.object({
+        code: z.string(),
+        state: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
       const clientId = process.env.NEXT_PUBLIC_SLACK_CLIENT_ID!;
       const clientSecret = process.env.SLACK_CLIENT_SECRET!;
 
@@ -79,18 +81,19 @@ export const zipperSlackIntegrationRouter = createRouter()
         appId: installation.appId,
         installerId: accessJson.authed_user.id,
       };
-    },
-  })
-  .mutation('sendWelcomeMessage', {
-    input: z.object({
-      teamId: z.string(),
-      appId: z.string(),
-      installerId: z.string(),
     }),
-    async resolve({ input }) {
+  sendWelcomeMessage: publicProcedure
+    .input(
+      z.object({
+        teamId: z.string(),
+        appId: z.string(),
+        installerId: z.string(),
+      }),
+    )
+    .mutation(async ({ input }) => {
       await sendMessage(input.appId, input.teamId, {
         channel: input.installerId,
         text: `:zap: You've installed the *Zipper* Slack app. You can now use \`zipper [app-slug]\` from any channel to run a public applet. `,
       });
-    },
-  });
+    }),
+});

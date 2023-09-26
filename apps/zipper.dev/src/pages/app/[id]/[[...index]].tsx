@@ -7,7 +7,7 @@ import { useEffect } from 'react';
 export const AppIdPage: NextPageWithLayout = () => {
   const router = useRouter();
   const id = router.query.id as string;
-  const appQuery = trpc.useQuery(['app.byId', { id }]);
+  const appQuery = trpc.app.byId.useQuery({ id });
 
   if (appQuery.error) {
     return (

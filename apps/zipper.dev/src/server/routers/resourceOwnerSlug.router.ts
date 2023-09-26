@@ -2,23 +2,25 @@ import { Prisma } from '@prisma/client';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { prisma } from '~/server/prisma';
-import { createRouter } from '../createRouter';
+
 import denyList from '../utils/slugDenyList';
 import { ResourceOwnerType } from '@zipper/types';
+import { createTRPCRouter, publicProcedure } from '../root';
 
 const defaultSelect = Prisma.validator<Prisma.ResourceOwnerSlugSelect>()({
   slug: true,
 });
 
-export const resourceOwnerSlugRouter = createRouter()
-  // create
-  .mutation('add', {
-    input: z.object({
-      slug: z.string().min(3).max(50).toLowerCase(),
-      resourceOwnerId: z.string(),
-      resourceOwnerType: z.number(),
-    }),
-    async resolve({ input }) {
+export const resourceOwnerSlugRouter = createTRPCRouter({
+  add: publicProcedure
+    .input(
+      z.object({
+        slug: z.string().min(3).max(50).toLowerCase(),
+        resourceOwnerId: z.string(),
+        resourceOwnerType: z.number(),
+      }),
+    )
+    .mutation(async ({ input }) => {
       const deniedSlug = denyList.find((d) => d === input.slug);
       if (deniedSlug)
         return new TRPCError({
@@ -29,14 +31,14 @@ export const resourceOwnerSlugRouter = createRouter()
         data: { ...input },
         select: defaultSelect,
       });
-    },
-  })
-  // read
-  .query('find', {
-    input: z.object({
-      slug: z.string().min(3).toLowerCase(),
     }),
-    async resolve({ input }) {
+  find: publicProcedure
+    .input(
+      z.object({
+        slug: z.string().min(3).toLowerCase(),
+      }),
+    )
+    .query(async ({ input }) => {
       const deniedSlug = denyList.find((d) => d === input.slug);
       if (deniedSlug)
         throw new TRPCError({
@@ -49,13 +51,14 @@ export const resourceOwnerSlugRouter = createRouter()
         },
         select: defaultSelect,
       });
-    },
-  })
-  .query('getName', {
-    input: z.object({
-      slug: z.string().toLowerCase(),
     }),
-    async resolve({ input }) {
+  getName: publicProcedure
+    .input(
+      z.object({
+        slug: z.string().toLowerCase(),
+      }),
+    )
+    .query(async ({ input }) => {
       const resourceOwner = await prisma.resourceOwnerSlug.findUnique({
         where: {
           slug: input.slug,
@@ -93,13 +96,14 @@ export const resourceOwnerSlugRouter = createRouter()
       }
 
       return undefined;
-    },
-  })
-  .query('findByOrganizationId', {
-    input: z.object({
-      organizationId: z.string(),
     }),
-    async resolve({ input }) {
+  findByOrganizationId: publicProcedure
+    .input(
+      z.object({
+        organizationId: z.string(),
+      }),
+    )
+    .query(async ({ input }) => {
       return prisma.resourceOwnerSlug.findFirst({
         where: {
           resourceOwnerId: input.organizationId,
@@ -107,5 +111,5 @@ export const resourceOwnerSlugRouter = createRouter()
         },
         select: defaultSelect,
       });
-    },
-  });
+    }),
+});

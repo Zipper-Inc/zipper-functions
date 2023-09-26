@@ -1,9 +1,9 @@
 import { ResourceOwnerType } from '@zipper/types';
-import { inferQueryOutput } from '~/utils/trpc';
+import { RouterOutputs } from '~/utils/trpc';
 import { useOrganizationList } from './use-organization-list';
 import { useUser } from './use-user';
 
-type _App = Unpack<inferQueryOutput<'app.byAuthedUser'>>;
+type _App = Unpack<RouterOutputs['app']['byAuthedUser']>;
 export type AppOwner = {
   createdByAuthedUser: boolean;
   resourceOwnerType: ResourceOwnerType;

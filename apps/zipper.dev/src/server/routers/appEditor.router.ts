@@ -2,24 +2,25 @@ import { Prisma } from '@prisma/client';
 import { getZipperDotDevUrl } from '@zipper/utils';
 import { z } from 'zod';
 import { prisma } from '~/server/prisma';
-import { createRouter } from '../createRouter';
 import { hasAppEditPermission } from '../utils/authz.utils';
 import { sendInvitationEmail } from '../utils/invitation.utils';
+import { createTRPCRouter, publicProcedure } from '../root';
 
 const defaultSelect = Prisma.validator<Prisma.AppEditorSelect>()({
   app: true,
   userId: true,
 });
 
-export const appEditorRouter = createRouter()
-  // create
-  .mutation('add', {
-    input: z.object({
-      appId: z.string(),
-      userId: z.string(),
-      isOwner: z.boolean().optional().default(false),
-    }),
-    async resolve({ ctx, input }) {
+export const appEditorRouter = createTRPCRouter({
+  add: publicProcedure
+    .input(
+      z.object({
+        appId: z.string(),
+        userId: z.string(),
+        isOwner: z.boolean().optional().default(false),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
       await hasAppEditPermission({
         ctx,
         appId: input.appId,
@@ -31,15 +32,16 @@ export const appEditorRouter = createRouter()
         },
         select: defaultSelect,
       });
-    },
-  })
-  .mutation('invite', {
-    input: z.object({
-      appId: z.string(),
-      email: z.string(),
-      isOwner: z.boolean().optional().default(false),
     }),
-    async resolve({ ctx, input }) {
+  invite: publicProcedure
+    .input(
+      z.object({
+        appId: z.string(),
+        email: z.string(),
+        isOwner: z.boolean().optional().default(false),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
       await hasAppEditPermission({
         ctx,
         appId: input.appId,
@@ -101,15 +103,15 @@ export const appEditorRouter = createRouter()
       } catch (e: any) {
         return e?.errors[0]?.code === 'duplicate_record' ? 'pending' : 'error';
       }
-    },
-  })
-  // read
-  .query('all', {
-    input: z.object({
-      appId: z.string(),
-      includeUsers: z.boolean().optional().default(false),
     }),
-    async resolve({ input }) {
+  all: publicProcedure
+    .input(
+      z.object({
+        appId: z.string(),
+        includeUsers: z.boolean().optional().default(false),
+      }),
+    )
+    .query(async ({ input }) => {
       /**
        * For pagination you can have a look at this docs site
        * @link https://trpc.io/docs/useInfiniteQuery
@@ -157,14 +159,15 @@ export const appEditorRouter = createRouter()
       });
 
       return { appEditors: withUser, pending };
-    },
-  })
-  .mutation('deletePendingInvitation', {
-    input: z.object({
-      appId: z.string(),
-      email: z.string().email(),
     }),
-    async resolve({ ctx, input }) {
+  deletePendingInvitation: publicProcedure
+    .input(
+      z.object({
+        appId: z.string(),
+        email: z.string().email(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
       await hasAppEditPermission({ ctx, appId: input.appId });
 
       return prisma.pendingAppEditor.delete({
@@ -174,15 +177,15 @@ export const appEditorRouter = createRouter()
           },
         },
       });
-    },
-  })
-  // delete
-  .mutation('delete', {
-    input: z.object({
-      userId: z.string(),
-      appId: z.string(),
     }),
-    async resolve({ ctx, input }) {
+  delete: publicProcedure
+    .input(
+      z.object({
+        userId: z.string(),
+        appId: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
       await hasAppEditPermission({
         ctx,
         appId: input.appId,
@@ -197,5 +200,5 @@ export const appEditorRouter = createRouter()
       return {
         input,
       };
-    },
-  });
+    }),
+});

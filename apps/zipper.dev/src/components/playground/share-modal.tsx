@@ -41,26 +41,20 @@ type Props = {
 const ShareTab: React.FC<Props> = ({ isOpen, onClose, appId }) => {
   const { user } = useUser();
   const router = useRouter();
-  const appQuery = trpc.useQuery([
-    'app.byResourceOwnerAndAppSlugs',
-    {
-      resourceOwnerSlug: router.query['resource-owner'] as string,
-      appSlug: router.query['app-slug'] as string,
-    },
-  ]);
-  const resourceOwnerNameQuery = trpc.useQuery(
-    [
-      'resourceOwnerSlug.getName',
-      { slug: router.query['resource-owner'] as string },
-    ],
+  const appQuery = trpc.app.byResourceOwnerAndAppSlugs.useQuery({
+    resourceOwnerSlug: router.query['resource-owner'] as string,
+    appSlug: router.query['app-slug'] as string,
+  });
+  const resourceOwnerNameQuery = trpc.resourceOwnerSlug.getName.useQuery(
+    { slug: router.query['resource-owner'] as string },
     {
       enabled:
         appQuery.data?.resourceOwner.resourceOwnerType ===
         ResourceOwnerType.Organization,
     },
   );
-  const editorQuery = trpc.useQuery(
-    ['appEditor.all', { appId, includeUsers: true }],
+  const editorQuery = trpc.appEditor.all.useQuery(
+    { appId, includeUsers: true },
     { enabled: !!user },
   );
 
@@ -70,21 +64,21 @@ const ShareTab: React.FC<Props> = ({ isOpen, onClose, appId }) => {
     `${window.location.origin}/${router.query['resource-owner']}/${router.query['app-slug']}`,
   );
 
-  const inviteEditor = trpc.useMutation('appEditor.invite', {
+  const inviteEditor = trpc.appEditor.invite.useMutation({
     async onSuccess() {
       // refetches posts after a post is added
       editorQuery.refetch();
     },
   });
 
-  const removeEditor = trpc.useMutation('appEditor.deletePendingInvitation', {
+  const removeEditor = trpc.appEditor.deletePendingInvitation.useMutation({
     async onSuccess() {
       // refetches posts after a post is added
       editorQuery.refetch();
     },
   });
 
-  const setAppVisibility = trpc.useMutation('app.edit');
+  const setAppVisibility = trpc.app.edit.useMutation();
 
   const [isPrivate, setIsPrivate] = useState(appQuery.data?.isPrivate);
 

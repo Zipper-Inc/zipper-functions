@@ -9,15 +9,15 @@ import {
   Text,
 } from '@chakra-ui/react';
 import AppAvatar from '../app-avatar';
-import { inferQueryOutput } from '~/utils/trpc';
+import { RouterOutputs } from '~/utils/trpc';
 
 type GalleryItemProps = {
   app: Unpack<GalleryAppQueryOutput>;
 };
 
-export type GalleryAppQueryOutput = inferQueryOutput<
-  'app.allApproved' | 'app.byResourceOwner'
->;
+export type GalleryAppQueryOutput =
+  | RouterOutputs['app']['allApproved']
+  | RouterOutputs['app']['byResourceOwner'];
 
 export const GalleryItem: React.FC<GalleryItemProps> = ({ app }) => {
   if (!app) return <></>;

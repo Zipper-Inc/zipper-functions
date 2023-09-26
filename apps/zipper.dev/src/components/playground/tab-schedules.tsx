@@ -53,10 +53,10 @@ type SchedulesTabProps = {
 const SchedulesTab: React.FC<SchedulesTabProps> = ({ appId }) => {
   const utils = trpc.useContext();
   const [newSchedules, setNewSchedules] = useState<NewSchedule[]>([]);
-  const existingSchedules = trpc.useQuery(['schedule.all', { appId }]);
+  const existingSchedules = trpc.schedule.all.useQuery({ appId });
   const toast = useToast();
 
-  const addSchedule = trpc.useMutation('schedule.add', {
+  const addSchedule = trpc.schedule.add.useMutation({
     onError({}) {
       toast({
         title: 'Something went wrong...',
@@ -68,7 +68,7 @@ const SchedulesTab: React.FC<SchedulesTabProps> = ({ appId }) => {
       });
     },
     async onSuccess({ crontab }) {
-      await utils.invalidateQueries(['schedule.all', { appId }]);
+      await utils.schedule.all.invalidate({ appId });
       const remainingNewSchedules = newSchedules.filter(
         (s) => s.crontab !== crontab,
       );
@@ -82,10 +82,10 @@ const SchedulesTab: React.FC<SchedulesTabProps> = ({ appId }) => {
     },
   });
 
-  const deleteSchedule = trpc.useMutation('schedule.delete', {
+  const deleteSchedule = trpc.schedule.delete.useMutation({
     async onSuccess() {
       // refetches posts after a post is added
-      await utils.invalidateQueries(['schedule.all', { appId }]);
+      await utils.schedule.all.invalidate({ appId });
     },
   });
 

@@ -8,8 +8,8 @@ export const useAppSlug = (slug: string) => {
   const [debouncedSlug] = useDebounce(slug, 200);
   const { user } = useUser();
 
-  const appSlugQuery = trpc.useQuery(
-    ['app.validateSlug', { slug: debouncedSlug }],
+  const appSlugQuery = trpc.app.validateSlug.useQuery(
+    { slug: debouncedSlug },
     { enabled: !!(debouncedSlug.length >= MIN_SLUG_LENGTH) && !!user },
   );
   const slugExists = appSlugQuery.data;

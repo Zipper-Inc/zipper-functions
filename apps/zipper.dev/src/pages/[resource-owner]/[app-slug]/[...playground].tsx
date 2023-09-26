@@ -26,8 +26,8 @@ const PlaygroundPage: NextPageWithLayout<Props> = ({
   tab,
   filename,
 }) => {
-  const appQuery = trpc.useQuery(
-    ['app.byResourceOwnerAndAppSlugs', { resourceOwnerSlug, appSlug }],
+  const appQuery = trpc.app.byResourceOwnerAndAppSlugs.useQuery(
+    { resourceOwnerSlug, appSlug },
     { retry: false },
   );
   const utils = trpc.useContext();
@@ -71,11 +71,11 @@ const PlaygroundPage: NextPageWithLayout<Props> = ({
   });
 
   const refetchApp = async () => {
-    utils.invalidateQueries([
-      'app.byResourceOwnerAndAppSlugs',
-      { resourceOwnerSlug, appSlug },
-    ]);
-    utils.invalidateQueries(['app.byId', { id: appQuery.data.id }]);
+    utils.app.byResourceOwnerAndAppSlugs.invalidate({
+      resourceOwnerSlug,
+      appSlug,
+    });
+    utils.app.byId.invalidate({ id: appQuery.data.id });
   };
 
   const playground = withLiveBlocks(

@@ -89,9 +89,9 @@ function MemberList() {
   >();
   const [userList, setUserList] = useState<UserListItem[]>([]);
 
-  const updateMemberMutation = trpc.useMutation('organization.updateMember', {
+  const updateMemberMutation = trpc.organization.updateMember.useMutation({
     onSuccess: () => {
-      context.invalidateQueries(['organization.getMemberships']);
+      context.organization.getMemberships.invalidate();
     },
   });
 

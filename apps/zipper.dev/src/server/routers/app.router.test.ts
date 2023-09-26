@@ -1,6 +1,6 @@
 import { createContextInner } from '../context';
 import { AppRouter, trpcRouter } from './_app';
-import { inferProcedureInput } from '@trpc/server';
+import { inferRouterInputs } from '@trpc/server';
 import { prismaMock } from '../../../jestSetup';
 import { randomUUID } from 'crypto';
 import { App, Script, ScriptMain } from '@prisma/client';
@@ -22,15 +22,13 @@ describe('when calling app.add', () => {
     const ctx = createContextInner({ userId });
     const caller = trpcRouter.createCaller(ctx);
 
-    const input: inferProcedureInput<
-      AppRouter['_def']['mutations']['app.add']
-    > = {
+    const input: inferRouterInputs<AppRouter>['app']['add'] = {
       name: 'test',
       description: 'test',
       slug: 'test',
     };
 
-    await caller.mutation('app.add', input);
+    await caller.app.add(input);
 
     expect(prismaMock.app.create).toBeCalledWith(
       expect.objectContaining({
@@ -55,15 +53,13 @@ describe('when calling app.add', () => {
     const ctx = createContextInner({ userId, orgId });
     const caller = trpcRouter.createCaller(ctx);
 
-    const input: inferProcedureInput<
-      AppRouter['_def']['mutations']['app.add']
-    > = {
+    const input: inferRouterInputs<AppRouter>['app']['add'] = {
       name: 'test',
       description: 'test',
       slug: 'test',
     };
 
-    await caller.mutation('app.add', input);
+    await caller.app.add(input);
 
     expect(prismaMock.app.create).toBeCalledWith(
       expect.objectContaining({
@@ -91,15 +87,13 @@ describe('when calling app.add', () => {
     const ctx = createContextInner({ userId, orgId });
     const caller = trpcRouter.createCaller(ctx);
 
-    const input: inferProcedureInput<
-      AppRouter['_def']['mutations']['app.add']
-    > = {
+    const input: inferRouterInputs<AppRouter>['app']['add'] = {
       name: 'test',
       description: 'test',
       slug: 'test',
     };
 
-    await caller.mutation('app.add', input);
+    await caller.app.add(input);
 
     expect(prismaMock.app.create).toBeCalledWith(
       expect.objectContaining({
@@ -185,17 +179,13 @@ describe('when calling app.add', () => {
     const ctx = createContextInner({});
     const caller = trpcRouter.createCaller(ctx);
 
-    const input: inferProcedureInput<
-      AppRouter['_def']['mutations']['app.add']
-    > = {
+    const input: inferRouterInputs<AppRouter>['app']['add'] = {
       name: 'test',
       description: 'test',
       slug: 'test',
     };
 
-    expect(caller.mutation('app.add', input)).rejects.toThrowError(
-      'UNAUTHORIZED',
-    );
+    expect(caller.app.add(input)).rejects.toThrowError('UNAUTHORIZED');
   });
 
   it.todo('accepts a organization id');

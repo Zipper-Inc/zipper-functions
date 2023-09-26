@@ -53,9 +53,12 @@ type HistoryTabProps = {
 
 const HistoryTab: React.FC<HistoryTabProps> = ({ appId }) => {
   const [data, setData] = useState<any[]>([]);
-  const appRuns = trpc.useQuery(['appRun.all', { appId, limit: 100 }], {
-    enabled: !!data,
-  });
+  const appRuns = trpc.appRun.all.useQuery(
+    { appId, limit: 100 },
+    {
+      enabled: !!data,
+    },
+  );
 
   const columnHelper = createColumnHelper<AppRun & { user: User }>();
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -63,7 +66,7 @@ const HistoryTab: React.FC<HistoryTabProps> = ({ appId }) => {
   const [logValue, setLogValue] = useState<LogMessage[]>([]);
   const [modalHeading, setModalHeading] = useState<string>();
 
-  const runLogs = trpc.useMutation('appLog.getRunId');
+  const runLogs = trpc.appLog.getRunId.useMutation();
 
   const columns = [
     //date

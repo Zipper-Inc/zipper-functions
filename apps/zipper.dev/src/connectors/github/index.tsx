@@ -83,23 +83,23 @@ function GitHubConnectorForm({ appId }: { appId: string }) {
 
   // get the Github auth URL from the backend (it includes an encrypted state value that links
   // the auth request to the app)
-  const githubAuthURL = trpc.useQuery([
-    'githubConnector.getAuthUrl',
-    {
-      appId,
-      scopes: scopesValue as string[],
-      postInstallationRedirect: window.location.href,
-    },
-  ]);
+  const githubAuthURL = trpc.githubConnector.getAuthUrl.useQuery({
+    appId,
+    scopes: scopesValue as string[],
+    postInstallationRedirect: window.location.href,
+  });
 
   //  get the existing Github connector data from the database
-  const connector = trpc.useQuery(['githubConnector.get', { appId }], {
-    onSuccess: (data) => {
-      if (data && setScopesValue) {
-        setScopesValue(data?.userScopes || []);
-      }
+  const connector = trpc.githubConnector.get.useQuery(
+    { appId },
+    {
+      onSuccess: (data) => {
+        if (data && setScopesValue) {
+          setScopesValue(data?.userScopes || []);
+        }
+      },
     },
-  });
+  );
 
   const [clientId, setClientId] = useState<string>('');
   const [clientSecret, setClientSecret] = useState<string>('');
@@ -112,13 +112,13 @@ function GitHubConnectorForm({ appId }: { appId: string }) {
   const tokenName = 'GITHUB_TOKEN';
 
   // get the existing Github token from the database
-  const existingSecret = trpc.useQuery(
-    ['secret.get', { appId, key: tokenName }],
+  const existingSecret = trpc.secret.get.useQuery(
+    { appId, key: tokenName },
     { enabled: !!appInfo?.canUserEdit },
   );
 
-  const existingClientSecretSecret = trpc.useQuery(
-    ['secret.get', { appId, key: 'GITHUB_CLIENT_SECRET' }],
+  const existingClientSecretSecret = trpc.secret.get.useQuery(
+    { appId, key: 'GITHUB_CLIENT_SECRET' },
     { enabled: isOwnClientIdRequired },
   );
 
@@ -126,16 +126,13 @@ function GitHubConnectorForm({ appId }: { appId: string }) {
 
   const context = trpc.useContext();
   const router = useRouter();
-  const updateAppConnectorMutation = trpc.useMutation('appConnector.update', {
+  const updateAppConnectorMutation = trpc.appConnector.update.useMutation({
     onSuccess: () => {
-      context.invalidateQueries([
-        'app.byResourceOwnerAndAppSlugs',
-        {
-          appSlug: router.query['app-slug'] as string,
-          resourceOwnerSlug: router.query['resource-owner'] as string,
-        },
-      ]);
-      context.invalidateQueries(['githubConnector.get', { appId }]);
+      context.app.byResourceOwnerAndAppSlugs.invalidate({
+        appSlug: router.query['app-slug'] as string,
+        resourceOwnerSlug: router.query['resource-owner'] as string,
+      });
+      context.githubConnector.get.invalidate({ appId });
       toast({
         title: 'GitHub config updated.',
         status: 'success',
@@ -147,7 +144,7 @@ function GitHubConnectorForm({ appId }: { appId: string }) {
 
   const existingInstallation = existingSecret.data && connector.data?.metadata;
 
-  const addSecretMutation = trpc.useMutation('secret.add');
+  const addSecretMutation = trpc.secret.add.useMutation();
 
   useEffect(() => {
     connectorForm.setValue(
@@ -188,11 +185,11 @@ function GitHubConnectorForm({ appId }: { appId: string }) {
     }
   };
 
-  const deleteConnectorMutation = trpc.useMutation('githubConnector.delete', {
+  const deleteConnectorMutation = trpc.githubConnector.delete.useMutation({
     async onSuccess() {
-      await utils.invalidateQueries(['githubConnector.get', { appId }]);
-      await utils.invalidateQueries(['secret.get', { appId, key: tokenName }]);
-      await utils.invalidateQueries(['secret.all', { appId }]);
+      await utils.githubConnector.get.invalidate({ appId });
+      await utils.secret.get.invalidate({ appId, key: tokenName });
+      await utils.secret.all.invalidate({ appId });
     },
   });
 

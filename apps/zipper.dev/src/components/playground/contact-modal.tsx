@@ -38,7 +38,7 @@ export function ContactModal({
   const analytics = useAnalytics();
   const [submittingFeedback, setSubmittingFeedback] = useState(false);
 
-  const contactSupportMutation = trpc.useMutation('user.contactSupport');
+  const contactSupportMutation = trpc.user.contactSupport.useMutation();
 
   const [file, setFile] = useState<any>();
 

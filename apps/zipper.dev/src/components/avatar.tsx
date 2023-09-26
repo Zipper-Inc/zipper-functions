@@ -6,7 +6,7 @@ export function AvatarForUserId({
   userId,
   ...props
 }: { userId: string } & AvatarProps) {
-  const userQuery = trpc.useQuery(['user.profileForUserId', { id: userId }]);
+  const userQuery = trpc.user.profileForUserId.useQuery({ id: userId });
   return (
     <BaseAvatar
       name={userQuery?.data?.name || ''}

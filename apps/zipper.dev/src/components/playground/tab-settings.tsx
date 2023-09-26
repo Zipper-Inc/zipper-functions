@@ -42,7 +42,7 @@ import { CheckIcon } from '@chakra-ui/icons';
 import { FormProvider, useForm } from 'react-hook-form';
 import { useEffect, useRef, useState } from 'react';
 
-import { inferQueryOutput, trpc } from '~/utils/trpc';
+import { RouterOutputs, trpc } from '~/utils/trpc';
 import { HiExclamationTriangle } from 'react-icons/hi2';
 import slugify from 'slugify';
 import { MIN_SLUG_LENGTH, useAppSlug } from '~/hooks/use-app-slug';
@@ -65,7 +65,7 @@ import { TITLE_COLUMN_MIN_WIDTH } from './constants';
 
 type Props = {
   app: Pick<
-    Unpack<inferQueryOutput<'app.byId'>>,
+    Unpack<RouterOutputs['app']['byId']>,
     | 'id'
     | 'name'
     | 'slug'
@@ -84,35 +84,31 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
     onClose: onCloseDeleteConfirmation,
   } = useDisclosure();
   const cancelRef = useRef() as React.MutableRefObject<HTMLButtonElement>;
-  const appQuery = trpc.useQuery(['app.byId', { id: app.id }]);
-  const appEditMutation = trpc.useMutation('app.edit', {
+  const appQuery = trpc.app.byId.useQuery({ id: app.id });
+  const appEditMutation = trpc.app.edit.useMutation({
     onSuccess() {
       appQuery.refetch();
     },
   });
 
-  const appDeleteMutation = trpc.useMutation('app.delete', {
+  const appDeleteMutation = trpc.app.delete.useMutation({
     onSuccess() {
       router.push('/');
     },
   });
-  const appAccessTokenQuery = trpc.useQuery([
-    'appAccessToken.getForCurrentUser',
-    { appId: app.id },
-  ]);
-  const appAccessTokenAddMutation = trpc.useMutation('appAccessToken.add', {
+  const appAccessTokenQuery = trpc.appAccessToken.getForCurrentUser.useQuery({
+    appId: app.id,
+  });
+  const appAccessTokenAddMutation = trpc.appAccessToken.add.useMutation({
     onSuccess() {
       appAccessTokenQuery.refetch();
     },
   });
-  const appAccessTokenDeleteMutation = trpc.useMutation(
-    'appAccessToken.delete',
-    {
-      onSuccess() {
-        appAccessTokenQuery.refetch();
-      },
+  const appAccessTokenDeleteMutation = trpc.appAccessToken.delete.useMutation({
+    onSuccess() {
+      appAccessTokenQuery.refetch();
     },
-  );
+  });
 
   const router = useRouter();
   const [slug, setSlug] = useState<string>(app.slug || '');
