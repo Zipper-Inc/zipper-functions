@@ -85,12 +85,15 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
     }
   }, [router.isReady]);
 
-  const parentApp = trpc.useQuery(['app.byId', { id: app.parentId! }], {
-    enabled: !!app.parentId,
-  });
+  const parentApp = trpc.app.byId.useQuery(
+    { id: app.parentId! },
+    {
+      enabled: !!app.parentId,
+    },
+  );
   const { organization } = useOrganization();
   const { setActive } = useOrganizationList();
-  const forkApp = trpc.useMutation('app.fork', {
+  const forkApp = trpc.app.fork.useMutation({
     async onSuccess(data: any) {
       router.push(`/app/${data.id}/edit`);
     },

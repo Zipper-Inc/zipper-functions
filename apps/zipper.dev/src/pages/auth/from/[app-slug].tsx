@@ -7,7 +7,7 @@ import { trpc } from '~/utils/trpc';
 const AuthorizePage: NextPageWithLayout = () => {
   const router = useRouter();
   const slug = router.query['app-slug'] as string;
-  const generateCodeMutation = trpc.useMutation('user.addZipperAuthCode', {
+  const generateCodeMutation = trpc.user.addZipperAuthCode.useMutation({
     onSuccess: (code) => {
       router.push(
         `${

@@ -16,14 +16,11 @@ export const useScriptFilename = (
 
   const [debouncedFilename] = useDebounce(filenameWithoutExt, 500);
 
-  const validateFilenameQuery = trpc.useQuery(
-    [
-      'script.validateFilename',
-      {
-        appId,
-        newFilename: slugifyAllowDot(debouncedFilename || '') + extensions[0],
-      },
-    ],
+  const validateFilenameQuery = trpc.script.validateFilename.useQuery(
+    {
+      appId,
+      newFilename: slugifyAllowDot(debouncedFilename || '') + extensions[0],
+    },
     { enabled: !!debouncedFilename },
   );
 

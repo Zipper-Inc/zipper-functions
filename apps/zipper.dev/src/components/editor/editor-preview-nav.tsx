@@ -1,8 +1,8 @@
 import { Heading, VStack, Tag } from '@chakra-ui/react';
-import { inferQueryOutput } from '~/utils/trpc';
+import { RouterOutputs } from '~/utils/trpc';
 
 type EditorNavProps = {
-  app: Unpack<inferQueryOutput<'app.byResourceOwnerAndAppSlugs'>>;
+  app: Unpack<RouterOutputs['app']['byResourceOwnerAndAppSlugs']>;
 };
 
 export const EditorPreviewNav: React.FC<EditorNavProps> = ({ app }) => {

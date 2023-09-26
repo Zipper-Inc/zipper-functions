@@ -1,18 +1,20 @@
 import { Prisma } from '@prisma/client';
 import { z } from 'zod';
 import { prisma } from '~/server/prisma';
-import { createRouter } from '../createRouter';
 import { hasAppReadPermission } from '../utils/authz.utils';
+import { createTRPCRouter, publicProcedure } from '../root';
 
-export const appLogRouter = createRouter()
-  .mutation('get', {
-    input: z.object({
-      appId: z.string(),
-      version: z.string(),
-      runId: z.string().optional(),
-      fromTimestamp: z.number().optional(),
-    }),
-    async resolve({ ctx, input }) {
+export const appLogRouter = createTRPCRouter({
+  get: publicProcedure
+    .input(
+      z.object({
+        appId: z.string(),
+        version: z.string(),
+        runId: z.string().optional(),
+        fromTimestamp: z.number().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
       await hasAppReadPermission({
         ctx,
         appId: input.appId,
@@ -35,14 +37,15 @@ export const appLogRouter = createRouter()
       })) as Zipper.Log.Message[];
 
       return logs;
-    },
-  })
-  .mutation('getRunId', {
-    input: z.object({
-      appId: z.string(),
-      runId: z.string(),
     }),
-    async resolve({ ctx, input }) {
+  getRunId: publicProcedure
+    .input(
+      z.object({
+        appId: z.string(),
+        runId: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
       await hasAppReadPermission({
         ctx,
         appId: input.appId,
@@ -56,5 +59,5 @@ export const appLogRouter = createRouter()
       })) as Zipper.Log.Message[];
 
       return logs;
-    },
-  });
+    }),
+});

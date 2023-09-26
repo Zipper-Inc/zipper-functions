@@ -48,26 +48,26 @@ function OpenAIConnectorForm({ appId }: { appId: string }) {
 
   const utils = trpc.useContext();
 
-  const addSecret = trpc.useMutation('secret.add', {
+  const addSecret = trpc.secret.add.useMutation({
     async onSuccess() {
       // refetches posts after a post is added
-      await utils.invalidateQueries(['secret.get', { appId, key: tokenName }]);
+      await utils.secret.get.invalidate({ appId, key: tokenName });
     },
   });
 
-  const deleteSecretMutation = trpc.useMutation('secret.delete', {
+  const deleteSecretMutation = trpc.secret.delete.useMutation({
     async onSuccess() {
       // refetches posts after a post is added
-      await utils.invalidateQueries(['secret.get', { appId, key: tokenName }]);
-      await utils.invalidateQueries(['secret.all', { appId }]);
+      await utils.secret.get.invalidate({ appId, key: tokenName });
+      await utils.secret.all.invalidate({ appId });
       setApiKey('');
     },
   });
 
   const tokenName = 'OPENAI_API_KEY';
 
-  const existingSecret = trpc.useQuery(
-    ['secret.get', { appId, key: tokenName }],
+  const existingSecret = trpc.secret.get.useQuery(
+    { appId, key: tokenName },
     { enabled: !!appInfo?.canUserEdit },
   );
 

@@ -42,19 +42,19 @@ const SecretsTab: React.FC<SecretsTabProps> = ({ appId, editable }) => {
     name: 'secrets', // unique name for your Field Array
   });
 
-  const existingSecrets = trpc.useQuery(['secret.all', { appId }]);
+  const existingSecrets = trpc.secret.all.useQuery({ appId });
 
-  const addSecret = trpc.useMutation('secret.add', {
+  const addSecret = trpc.secret.add.useMutation({
     async onSuccess() {
       // refetches posts after a post is added
-      await utils.invalidateQueries(['secret.all', { appId }]);
+      await utils.secret.all.invalidate({ appId });
     },
   });
 
-  const deleteSecret = trpc.useMutation('secret.delete', {
+  const deleteSecret = trpc.secret.delete.useMutation({
     async onSuccess() {
       // refetches posts after a post is added
-      await utils.invalidateQueries(['secret.all', { appId }]);
+      await utils.secret.all.invalidate({ appId });
     },
   });
 

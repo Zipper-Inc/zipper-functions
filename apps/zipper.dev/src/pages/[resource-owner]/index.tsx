@@ -3,7 +3,7 @@ import { Gallery } from '~/components/gallery';
 import { trpc } from '~/utils/trpc';
 import NextError from 'next/error';
 import { GetServerSideProps } from 'next';
-import { createSSGHelpers } from '@trpc/react/ssg';
+import { createServerSideHelpers } from '@trpc/react-query/server';
 import { trpcRouter } from '~/server/routers/_app';
 import SuperJSON from 'superjson';
 import { createContext } from '~/server/context';
@@ -15,13 +15,10 @@ const ResourceOwnerPage: NextPageWithLayout = () => {
 
   const slug = router.query['resource-owner'] as string;
 
-  const appsByResourceOwnerQuery = trpc.useQuery(
-    [
-      'app.byResourceOwner',
-      {
-        resourceOwnerSlug: slug,
-      },
-    ],
+  const appsByResourceOwnerQuery = trpc.app.byResourceOwner.useQuery(
+    {
+      resourceOwnerSlug: slug,
+    },
     {
       enabled: !!router.query['resource-owner'],
     },
@@ -54,13 +51,13 @@ export const getServerSideProps: GetServerSideProps = async ({
   res,
   query,
 }) => {
-  const ssg = createSSGHelpers({
+  const ssg = createServerSideHelpers({
     router: trpcRouter,
     transformer: SuperJSON,
     ctx: await createContext({ req, res }),
   });
 
-  await ssg.fetchQuery('app.byResourceOwner', {
+  await ssg.app.byResourceOwner.fetch({
     resourceOwnerSlug: query['resource-owner'] as string,
   });
 

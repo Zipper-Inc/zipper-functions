@@ -31,7 +31,7 @@ export const useOrganizationList = () => {
     }
   }, [session.status, session.data]);
 
-  const createOrganization = trpc.useMutation('organization.add', {
+  const createOrganization = trpc.organization.add.useMutation({
     onSuccess: (data) => {
       session.update({
         updateOrganizationList: true,

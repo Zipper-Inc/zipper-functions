@@ -32,7 +32,7 @@ export const OrganizationSwitcher: React.FC<ButtonProps> = (props) => {
 
   const session = useSession();
 
-  const acceptInvitation = trpc.useMutation('organization.acceptInvitation');
+  const acceptInvitation = trpc.organization.acceptInvitation.useMutation();
 
   const { user } = useUser();
 

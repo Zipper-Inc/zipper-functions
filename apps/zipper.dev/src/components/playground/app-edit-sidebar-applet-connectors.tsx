@@ -22,31 +22,28 @@ export const AppEditSidebarAppletConnectors = () => {
   const [githubAuthRequired, setGitHubAuthRequired] = useState(false);
 
   // get the existing Slack connector data from the database
-  const slackConnector = trpc.useQuery(
-    ['slackConnector.get', { appId: appInfo.id }],
+  const slackConnector = trpc.slackConnector.get.useQuery(
+    { appId: appInfo.id },
     {
       enabled: slackAuthRequired,
     },
   );
   // get the existing GitHub connector data from the database
-  const githubConnector = trpc.useQuery(
-    ['githubConnector.get', { appId: appInfo.id }],
+  const githubConnector = trpc.githubConnector.get.useQuery(
+    { appId: appInfo.id },
     {
       enabled: githubAuthRequired,
     },
   );
 
-  const deleteConnectorUserAuth = trpc.useMutation(
-    'slackConnector.deleteUserAuth',
-    {
+  const deleteConnectorUserAuth =
+    trpc.slackConnector.deleteUserAuth.useMutation({
       onSuccess: () => {
-        context.invalidateQueries([
-          'app.byResourceOwnerAndAppSlugs',
-          {
-            appSlug: router.query['app-slug'] as string,
-            resourceOwnerSlug: router.query['resource-owner'] as string,
-          },
-        ]);
+        context.app.byResourceOwnerAndAppSlugs.invalidate({
+          appSlug: router.query['app-slug'] as string,
+          resourceOwnerSlug: router.query['resource-owner'] as string,
+        });
+
         toast({
           title: 'Slack user auth revoked.',
           status: 'success',
@@ -54,19 +51,14 @@ export const AppEditSidebarAppletConnectors = () => {
           isClosable: true,
         });
       },
-    },
-  );
-  const deleteGithubConnectorUserAuth = trpc.useMutation(
-    'githubConnector.deleteUserAuth',
-    {
+    });
+  const deleteGithubConnectorUserAuth =
+    trpc.githubConnector.deleteUserAuth.useMutation({
       onSuccess: () => {
-        context.invalidateQueries([
-          'app.byResourceOwnerAndAppSlugs',
-          {
-            appSlug: router.query['app-slug'] as string,
-            resourceOwnerSlug: router.query['resource-owner'] as string,
-          },
-        ]);
+        context.app.byResourceOwnerAndAppSlugs.invalidate({
+          appSlug: router.query['app-slug'] as string,
+          resourceOwnerSlug: router.query['resource-owner'] as string,
+        });
         toast({
           title: 'GitHub user auth revoked.',
           status: 'success',
@@ -74,18 +66,14 @@ export const AppEditSidebarAppletConnectors = () => {
           isClosable: true,
         });
       },
-    },
-  );
+    });
 
-  const deleteOpenAISecret = trpc.useMutation('secret.delete', {
+  const deleteOpenAISecret = trpc.secret.delete.useMutation({
     onSuccess: () => {
-      context.invalidateQueries([
-        'app.byResourceOwnerAndAppSlugs',
-        {
-          appSlug: router.query['app-slug'] as string,
-          resourceOwnerSlug: router.query['resource-owner'] as string,
-        },
-      ]);
+      context.app.byResourceOwnerAndAppSlugs.invalidate({
+        appSlug: router.query['app-slug'] as string,
+        resourceOwnerSlug: router.query['resource-owner'] as string,
+      });
       toast({
         title: 'OpenAI user auth revoked.',
         status: 'success',
@@ -97,18 +85,15 @@ export const AppEditSidebarAppletConnectors = () => {
 
   // get the Slack auth URL -- if required --from the backend
   // (it includes an encrypted state value that links the auth request to the app)
-  const slackAuthURL = trpc.useQuery(
-    [
-      'slackConnector.getAuthUrl',
-      {
-        appId,
-        scopes: {
-          bot: slackConnector.data?.workspaceScopes || [],
-          user: slackConnector.data?.userScopes || [],
-        },
-        postInstallationRedirect: window.location.href,
+  const slackAuthURL = trpc.slackConnector.getAuthUrl.useQuery(
+    {
+      appId,
+      scopes: {
+        bot: slackConnector.data?.workspaceScopes || [],
+        user: slackConnector.data?.userScopes || [],
       },
-    ],
+      postInstallationRedirect: window.location.href,
+    },
     {
       enabled: slackConnector.isFetched,
     },
@@ -116,15 +101,12 @@ export const AppEditSidebarAppletConnectors = () => {
 
   // get the Github auth URL -- if required --from the backend
   // (it includes an encrypted state value that links the auth request to the app)
-  const githubAuthURL = trpc.useQuery(
-    [
-      'githubConnector.getAuthUrl',
-      {
-        appId,
-        scopes: githubConnector.data?.userScopes || [],
-        postInstallationRedirect: window.location.href,
-      },
-    ],
+  const githubAuthURL = trpc.githubConnector.getAuthUrl.useQuery(
+    {
+      appId,
+      scopes: githubConnector.data?.userScopes || [],
+      postInstallationRedirect: window.location.href,
+    },
     {
       enabled: githubConnector.isFetched,
     },

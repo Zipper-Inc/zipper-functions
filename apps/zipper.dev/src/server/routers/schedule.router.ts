@@ -3,12 +3,12 @@ import { TRPCError } from '@trpc/server';
 import parser from 'cron-parser';
 import { z } from 'zod';
 import { prisma } from '~/server/prisma';
-import { createRouter } from '../createRouter';
 import { queues } from '../queue';
 import {
   hasAppEditPermission,
   hasAppReadPermission,
 } from '../utils/authz.utils';
+import { createTRPCRouter, publicProcedure } from '../root';
 
 const defaultSelect = Prisma.validator<Prisma.ScheduleSelect>()({
   id: true,
@@ -18,16 +18,17 @@ const defaultSelect = Prisma.validator<Prisma.ScheduleSelect>()({
   userId: true,
 });
 
-export const scheduleRouter = createRouter()
-  // create
-  .mutation('add', {
-    input: z.object({
-      appId: z.string(),
-      crontab: z.string(),
-      filename: z.string(),
-      inputs: z.record(z.any()).optional(),
-    }),
-    async resolve({ ctx, input }) {
+export const scheduleRouter = createTRPCRouter({
+  add: publicProcedure
+    .input(
+      z.object({
+        appId: z.string(),
+        crontab: z.string(),
+        filename: z.string(),
+        inputs: z.record(z.any()).optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
       await hasAppEditPermission({
         ctx,
         appId: input.appId,
@@ -63,14 +64,14 @@ export const scheduleRouter = createRouter()
       );
 
       return schedule;
-    },
-  })
-  // read
-  .query('all', {
-    input: z.object({
-      appId: z.string(),
     }),
-    async resolve({ ctx, input }) {
+  all: publicProcedure
+    .input(
+      z.object({
+        appId: z.string(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
       await hasAppReadPermission({
         ctx,
         appId: input.appId,
@@ -88,15 +89,15 @@ export const scheduleRouter = createRouter()
           appRuns: { orderBy: { createdAt: 'desc' }, take: 1 },
         },
       });
-    },
-  })
-  // delete
-  .mutation('delete', {
-    input: z.object({
-      id: z.string(),
-      appId: z.string(),
     }),
-    async resolve({ ctx, input }) {
+  delete: publicProcedure
+    .input(
+      z.object({
+        id: z.string(),
+        appId: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
       await hasAppEditPermission({
         ctx,
         appId: input.appId,
@@ -124,5 +125,5 @@ export const scheduleRouter = createRouter()
       return {
         id: input.id,
       };
-    },
-  });
+    }),
+});

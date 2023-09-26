@@ -30,7 +30,7 @@ export const useOrganization = (props?: Props) => {
   }
 
   const session = useSession();
-  const inviteMember = trpc.useMutation('organization.inviteMember');
+  const inviteMember = trpc.organization.inviteMember.useMutation();
 
   const [organization, setOrganization] = useState<
     | (SessionOrganization & {
@@ -56,11 +56,11 @@ export const useOrganization = (props?: Props) => {
       })[]
     | undefined
   >();
-  const removeMembership = trpc.useMutation('organization.removeMember');
-  const revokeInvitation = trpc.useMutation('organization.revokeInvitation');
-  const updateOrganization = trpc.useMutation('organization.update');
+  const removeMembership = trpc.organization.removeMember.useMutation();
+  const revokeInvitation = trpc.organization.revokeInvitation.useMutation();
+  const updateOrganization = trpc.organization.update.useMutation();
 
-  trpc.useQuery(['organization.getMemberships'], {
+  trpc.organization.getMemberships.useQuery(undefined, {
     enabled: !!membershipListProps && session.status === 'authenticated',
     onSuccess: (data) => {
       setMembershipList(
@@ -101,7 +101,7 @@ export const useOrganization = (props?: Props) => {
       );
   };
 
-  trpc.useQuery(['organization.getPendingInvitations'], {
+  trpc.organization.getPendingInvitations.useQuery(undefined, {
     enabled: !!invitationListProps && session.status === 'authenticated',
     onSuccess: (data) => {
       setInvitationList(

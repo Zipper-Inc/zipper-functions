@@ -40,9 +40,8 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
   const { run, formMethods, isRunning, results, userAuthConnectors, appInfo } =
     useRunAppContext();
 
-  const generateAccessTokenMutation = trpc.useMutation(
-    'user.generateAccessToken',
-  );
+  const generateAccessTokenMutation =
+    trpc.user.generateAccessToken.useMutation();
 
   const { user } = useUser();
 

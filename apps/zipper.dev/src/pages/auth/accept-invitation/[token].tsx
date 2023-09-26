@@ -8,7 +8,7 @@ export const AcceptInvitation = () => {
   const token = router.query.token as string;
   const session = useSession();
 
-  const acceptInvitation = trpc.useMutation('organization.acceptInvitation');
+  const acceptInvitation = trpc.organization.acceptInvitation.useMutation();
 
   useEffectOnce(() => {
     acceptInvitation.mutateAsync(

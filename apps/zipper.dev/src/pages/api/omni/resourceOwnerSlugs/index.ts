@@ -65,7 +65,7 @@ export default createOmniApiHandler(async (req, res) => {
       }
       const caller = resourceOwnerSlugRouter.createCaller(getOmniContext(req));
       const createdResourceOwnerSlugs = (await Promise.all(
-        ownersToCreate.map((owner) => caller.mutation('add', owner)),
+        ownersToCreate.map((owner) => caller.add(owner)),
       )) as ResourceOwnerSlug[];
 
       return successResponse({

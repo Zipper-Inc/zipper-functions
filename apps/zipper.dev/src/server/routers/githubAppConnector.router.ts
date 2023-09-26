@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
-import { createRouter } from '../createRouter';
 import { prisma } from '../prisma';
 import {
   hasAppEditPermission,
@@ -9,13 +8,16 @@ import {
 } from '../utils/authz.utils';
 import { decryptFromHex, encryptToBase64, encryptToHex } from '@zipper/utils';
 import { Prisma } from '@prisma/client';
+import { createTRPCRouter, publicProcedure } from '../root';
 
-export const githubAppConnectorRouter = createRouter()
-  .query('get', {
-    input: z.object({
-      appId: z.string(),
-    }),
-    async resolve({ ctx, input }) {
+export const githubAppConnectorRouter = createTRPCRouter({
+  get: publicProcedure
+    .input(
+      z.object({
+        appId: z.string(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
       await hasAppReadPermission({ ctx, appId: input.appId });
 
       return prisma.appConnector.findFirst({
@@ -24,14 +26,15 @@ export const githubAppConnectorRouter = createRouter()
           type: 'github-app',
         },
       });
-    },
-  })
-  .query('getStateValue', {
-    input: z.object({
-      appId: z.string(),
-      postInstallationRedirect: z.string().optional(),
     }),
-    async resolve({ ctx, input }) {
+  getStateValue: publicProcedure
+    .input(
+      z.object({
+        appId: z.string(),
+        postInstallationRedirect: z.string().optional(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
       await hasAppReadPermission({ ctx, appId: input.appId });
 
       const { appId, postInstallationRedirect } = input;
@@ -40,13 +43,14 @@ export const githubAppConnectorRouter = createRouter()
         `${appId}::${postInstallationRedirect || ''}`,
         process.env.ENCRYPTION_KEY || '',
       );
-    },
-  })
-  .mutation('delete', {
-    input: z.object({
-      appId: z.string(),
     }),
-    async resolve({ ctx, input: { appId } }) {
+  delete: publicProcedure
+    .input(
+      z.object({
+        appId: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input: { appId } }) => {
       await hasAppEditPermission({ ctx, appId });
 
       await prisma.appConnector.update({
@@ -114,14 +118,15 @@ export const githubAppConnectorRouter = createRouter()
       }
 
       return true;
-    },
-  })
-  .mutation('exchangeManifestCode', {
-    input: z.object({
-      code: z.string(),
-      state: z.string(),
     }),
-    async resolve({ ctx, input }) {
+  exchangeManifestCode: publicProcedure
+    .input(
+      z.object({
+        code: z.string(),
+        state: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
       let appId: string | undefined;
       let redirectTo: string | undefined;
       try {
@@ -242,5 +247,5 @@ export const githubAppConnectorRouter = createRouter()
         app: { ...connector.app, resourceOwner },
         redirectTo,
       };
-    },
-  });
+    }),
+});

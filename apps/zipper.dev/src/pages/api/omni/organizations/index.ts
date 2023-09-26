@@ -58,7 +58,7 @@ export default createOmniApiHandler(async (req, res) => {
       const caller = organizationRouter.createCaller(getOmniContext(req));
       const createdOrgs = (await Promise.all(
         orgsToCreate.map((org) =>
-          caller.mutation('add', {
+          caller.add({
             ...org,
             shouldCreateResourceOwnerSlug,
             // The API should never assign itself as an admin
