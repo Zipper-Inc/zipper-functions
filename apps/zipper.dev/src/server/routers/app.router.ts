@@ -5,6 +5,7 @@ import {
   Prisma,
   ResourceOwnerSlug,
   Script,
+  ScriptMain,
 } from '@prisma/client';
 import { z } from 'zod';
 import { prisma } from '~/server/prisma';
@@ -751,7 +752,7 @@ export const appRouter = createTRPCRouter({
     .mutation(async ({ input, ctx }) => {
       const { id, name, connectToParent } = input;
 
-      const { fork, updatedFork } = await forkApplet({
+      const { fork, updatedFork } = await forkAppletById({
         appId: id,
         name,
         connectToParent,
@@ -1000,13 +1001,7 @@ export const appRouter = createTRPCRouter({
     }),
 });
 
-export async function forkApplet({
-  appId,
-  name,
-  connectToParent,
-  userId,
-  orgId,
-}: {
+async function forkAppletById(inputs: {
   appId: string;
   name: string;
   connectToParent: boolean;
@@ -1014,10 +1009,45 @@ export async function forkApplet({
   orgId?: string;
 }) {
   const app = await prisma.app.findFirstOrThrow({
-    where: { id: appId, deletedAt: null },
+    where: { id: inputs.appId, deletedAt: null },
     include: { scripts: true, scriptMain: true, connectors: true },
   });
 
+  return forkApplet({ app, ...inputs });
+}
+
+export async function forkAppletBySlug(inputs: {
+  appSlug: string;
+  name: string;
+  connectToParent: boolean;
+  userId: string;
+  orgId?: string;
+}) {
+  const app = await prisma.app.findFirstOrThrow({
+    where: { slug: inputs.appSlug, deletedAt: null },
+    include: { scripts: true, scriptMain: true, connectors: true },
+  });
+
+  return forkApplet({ app, ...inputs });
+}
+
+async function forkApplet({
+  app,
+  name,
+  connectToParent,
+  userId,
+  orgId,
+}: {
+  app: App & {
+    scripts: Script[];
+    scriptMain: ScriptMain | null;
+    connectors: AppConnector[];
+  };
+  name: string;
+  connectToParent: boolean;
+  userId: string;
+  orgId?: string;
+}) {
   const fork = await prisma.app.create({
     data: {
       slug: slugify(name),

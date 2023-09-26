@@ -15,6 +15,7 @@ import { createUserSlug } from '~/utils/create-user-slug';
 import { resend } from '~/server/resend';
 import crypto from 'crypto';
 import { trackEvent } from '~/utils/api-analytics';
+import { forkAppletBySlug } from '~/server/routers/app.router';
 
 export function PrismaAdapter(p: PrismaClient): Adapter {
   return {
@@ -22,6 +23,13 @@ export function PrismaAdapter(p: PrismaClient): Adapter {
       const slug = await createUserSlug({ name: data.name, email: data.email });
       const user = await p.user.create({
         data: { ...data, slug },
+      });
+
+      forkAppletBySlug({
+        appSlug: process.env.DEFAULT_APP_SLUG!,
+        name: `welcome-${slug}`,
+        userId: user.id,
+        connectToParent: false,
       });
 
       if (shouldCreateResourceOwnerSlug) {
