@@ -16,9 +16,12 @@ import {
   Spacer,
   HStack,
   Icon,
+  Button,
+  ButtonGroup,
+  Stack,
 } from '@chakra-ui/react';
 import { baseColors, Website } from '@zipper/ui';
-import { memo, useEffect } from 'react';
+import React, { memo, useEffect } from 'react';
 import NextLink from 'next/link';
 import Carousel from 'nuka-carousel';
 import {
@@ -30,6 +33,10 @@ import {
   FiSliders,
   FiCheck,
   FiPlay,
+  FiSettings,
+  FiTool,
+  FiCode,
+  FiLoader,
 } from 'react-icons/fi';
 import { HiOutlineLightningBolt } from 'react-icons/hi';
 import Image from 'next/image';
@@ -43,6 +50,7 @@ import { GetServerSideProps } from 'next';
 import { getServerSession } from 'next-auth';
 import { authOptions } from './api/auth/[...nextauth]';
 import Head from 'next/head';
+import { PiPlayCircle } from 'react-icons/pi';
 
 /* -------------------------------------------- */
 /* Content                                      */
@@ -51,10 +59,8 @@ import Head from 'next/head';
 const HERO_CONTENT = {
   TITLE: 'Forget about \n your toolchain',
 
-  DESCRIPTION: `
-    Turn Typescript functions into serverless web apps
-    Don't write a line of frontend, auth, or API code
-    Do everything in your browser - start immediately with no setup`,
+  DESCRIPTION: `Zipper turns TypeScript functions into running apps with 
+  automatically generated UI, auth, and APIs straight out of the box.`,
   LIST: [
     {
       description: 'Turn Typescript functions into serverless web apps',
@@ -67,6 +73,45 @@ const HERO_CONTENT = {
     {
       description: `Do everything in your browser - start immediately with no setup`,
       icon: <FiCheck size={24} />,
+    },
+  ],
+};
+
+const WEB_FIRST_CONTENT = {
+  TITLE: 'build for the web',
+  DESCRIPTION: `Zipper is designed for building web services quickly. Every applet is 
+  deployed to a public-facing URL and can immediately start receiving 
+  GET & POST requests. Perfect for building user-facing web applications 
+  or API-based integrations.`,
+
+  LIST: [
+    {
+      ICON: <FiSettings size={40} />,
+      TITLE: 'L̶o̶w̶ Medium Code SaaS Integrations',
+      DESCRIPTION:
+        'Automate repetitive tasks and workflows with code with the flexibility of code without the constraints of no-code/low-code tools',
+      IMAGE_URL: '/thumbs/web-first/sass_integration.svg',
+    },
+    {
+      ICON: <FiTool size={40} />,
+      TITLE: 'Internal Tools as a Service',
+      DESCRIPTION:
+        'Wire up your own APIs or database, replace scripts and dashboard. With auth and audit logs built in, never build from scratch',
+      IMAGE_URL: '/thumbs/web-first/tool_as_service.svg',
+    },
+    {
+      ICON: <FiCode size={40} />,
+      TITLE: 'Worker Functions',
+      DESCRIPTION:
+        'Quickly deploy a worker function and event-driven architecture and scale your applications with serverless processes',
+      IMAGE_URL: '/thumbs/web-first/worker_functions.svg',
+    },
+    {
+      ICON: <FiLoader size={40} />,
+      TITLE: 'Anything else you want',
+      DESCRIPTION:
+        'An instant Typescript REPL with a built-in frontend framework where you can see your results immediately.',
+      IMAGE_URL: '/thumbs/web-first/editor.svg',
     },
   ],
 };
@@ -336,6 +381,7 @@ const HEADLINE_CONTENT = {
 const Hero = () => {
   // Animations
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const [isLargerThan600] = useMediaQuery('(min-width: 600px)');
 
   const box1Animation = useAnimation();
   const box2Animation = useAnimation();
@@ -358,6 +404,159 @@ const Hero = () => {
     box1Animation.start(box1Variants.rest);
     box2Animation.start(box1Variants.rest);
   };
+
+  const MobileVideoFigure = () => (
+    <Box
+      display="flex"
+      position="relative"
+      width={{ base: 'full', md: '535px' }}
+      height={{ base: '50vh', md: '445px' }}
+      mt={{ base: 8, md: 0 }}
+      as={motion.div}
+    >
+      <Box
+        as={motion.div}
+        position="absolute"
+        top="0"
+        left={{ base: '-25px', md: '0' }}
+        width={{ md: '440px' }}
+        height="330px"
+        animate={box1Animation}
+      >
+        <Image
+          src="/static/animation_code.png"
+          width="440"
+          height="330"
+          alt="Hero App"
+        />
+      </Box>
+      <Box
+        as={motion.div}
+        position="absolute"
+        bottom="0"
+        right={{ base: '-45px', md: '0' }}
+        width={{ md: '440px' }}
+        height="330px"
+        animate={box2Animation}
+      >
+        <Image
+          src="/static/animation_applet.png"
+          width="440"
+          height="330"
+          alt="Hero App"
+        />
+      </Box>
+
+      <Box
+        as={motion.div}
+        whileHover={{ scale: 1.2 }}
+        onHoverStart={onHoverStart}
+        onHoverEnd={onHoverEnd}
+        onClick={onOpen}
+        cursor="pointer"
+        animate="rest"
+        width="100px"
+        height="100px"
+        margin="auto"
+        left="0"
+        right="0"
+        top="calc(50% - 50px)"
+        bgColor="blue.600"
+        border="5px solid white"
+        position="absolute"
+        borderRadius="100%"
+        zIndex="10"
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        boxShadow={'2xl'}
+      >
+        <FiPlay size="40px" color="white" fill="white" />
+      </Box>
+    </Box>
+  );
+
+  const DesktopVideoFigure = () => (
+    <Box
+      display="flex"
+      flexDir="column"
+      justifyContent="center"
+      alignItems="center"
+      position="relative"
+      width="full"
+      height={{ base: '50vh', md: '668px' }}
+      mt={{ base: 8, md: 0 }}
+      as={motion.div}
+    >
+      <Box
+        as={motion.div}
+        position="absolute"
+        top="-15px"
+        left={{ base: '-25px', md: '0' }}
+        width={{ md: '536px' }}
+        height="373px"
+        animate={box1Animation}
+      >
+        <Image src="/layout/app.svg" width="536" height="373" alt="App" />
+      </Box>
+
+      <Box
+        as={motion.div}
+        position="absolute"
+        // bottom="0"
+        // right={{ base: '-45px', md: '200px' }}
+        width={{ md: '822px' }}
+        height="558"
+        // animate={box2Animation}
+      >
+        <Image
+          src="/layout/api_apps.svg"
+          width="822"
+          height="558"
+          alt="Editor"
+        />
+      </Box>
+
+      <Box
+        as={motion.div}
+        position="absolute"
+        bottom="0px"
+        right={{ base: '-45px', md: '100px' }}
+        width={{ md: '291' }}
+        height="335"
+        animate={box2Animation}
+      >
+        <Image src="/layout/modal.svg" width="291" height="335" alt="Modal" />
+      </Box>
+
+      <Box
+        as={motion.div}
+        whileHover={{ scale: 1.2 }}
+        onHoverStart={onHoverStart}
+        onHoverEnd={onHoverEnd}
+        onClick={onOpen}
+        cursor="pointer"
+        animate="rest"
+        width="100px"
+        height="100px"
+        margin="auto"
+        left="0"
+        right="0"
+        top="calc(50% - 50px)"
+        bgColor="blue.600"
+        border="5px solid white"
+        position="absolute"
+        borderRadius="100%"
+        zIndex="10"
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        boxShadow={'2xl'}
+      >
+        <FiPlay size="40px" color="white" fill="white" />
+      </Box>
+    </Box>
+  );
 
   return (
     <Box
@@ -382,98 +581,67 @@ const Hero = () => {
         zIndex="10"
         position="relative"
       >
-        <Flex direction={{ base: 'column', md: 'row' }}>
-          <VStack gap={5} w={['full', 'auto']} align="start">
+        <Flex direction="column" align="center" w="full" gap={10}>
+          <VStack gap={4} w={['full', 'auto']} align="center" py={{ lg: 10 }}>
             <Heading
               fontFamily="plaak"
-              fontSize={['40px', '6xl']}
+              fontSize={['40px', '7xl']}
+              lineHeight={{ base: '48px', lg: '72px' }}
               fontWeight="normal"
-              color={baseColors.blue['500']}
+              color="brandOrange.500"
+              textAlign="center"
+              whiteSpace={{ base: 'pre-line' }}
             >
               {HERO_CONTENT.TITLE}
             </Heading>
-            {HERO_CONTENT.LIST.map((feat, index) => (
-              <Flex key={index} align="center" gap={2}>
-                <Box as="span" color="blue.500">
-                  {feat.icon}
-                </Box>
-                <Text fontSize="lg" color="gray.800">
-                  {feat.description}
-                </Text>
-              </Flex>
-            ))}
+            <Text
+              fontSize="lg"
+              css={{ margin: 0 }}
+              color="gray.800"
+              textAlign="center"
+              whiteSpace={{ lg: 'pre-line' }}
+            >
+              {HERO_CONTENT.DESCRIPTION}
+            </Text>
 
-            <JoinBetaForm onOpen={onOpen} />
+            {/* <JoinBetaForm onOpen={onOpen} /> */}
+            <Stack
+              direction={{ base: 'column', lg: 'row' }}
+              w={{ base: '300px', lg: '600px' }}
+              gap={1}
+              pt={6}
+            >
+              <Button
+                as={NextLink}
+                height="2.75rem"
+                w="full"
+                fontSize={{ base: 'sm', md: 'md' }}
+                colorScheme="purple"
+                padding={{ base: '5px 8px', md: '10px 18px' }}
+                color="white"
+                fontWeight={500}
+                href="/auth/signup"
+                rounded="sm"
+              >
+                Join the beta
+              </Button>
+              <Button
+                variant="outline"
+                height="2.75rem"
+                fontWeight="400"
+                colorScheme="blue"
+                display="flex"
+                gap={1}
+                w="full"
+                onClick={onOpen}
+                color="blue.500"
+              >
+                <PiPlayCircle size={20} /> {'Watch a 3 minute demo'}
+              </Button>
+            </Stack>
           </VStack>
-          <Spacer />
-          <Box
-            display="flex"
-            position="relative"
-            width={{ base: 'full', md: '535px' }}
-            height={{ base: '50vh', md: '445px' }}
-            mt={{ base: 8, md: 0 }}
-            as={motion.div}
-          >
-            <Box
-              as={motion.div}
-              position="absolute"
-              top="0"
-              left={{ base: '-25px', md: '0' }}
-              width={{ md: '440px' }}
-              height="330px"
-              animate={box1Animation}
-            >
-              <Image
-                src="/static/animation_code.png"
-                width="440"
-                height="330"
-                alt="Hero App"
-              />
-            </Box>
-            <Box
-              as={motion.div}
-              position="absolute"
-              bottom="0"
-              right={{ base: '-45px', md: '0' }}
-              width={{ md: '440px' }}
-              height="330px"
-              animate={box2Animation}
-            >
-              <Image
-                src="/static/animation_applet.png"
-                width="440"
-                height="330"
-                alt="Hero App"
-              />
-            </Box>
 
-            <Box
-              as={motion.div}
-              whileHover={{ scale: 1.2 }}
-              onHoverStart={onHoverStart}
-              onHoverEnd={onHoverEnd}
-              onClick={onOpen}
-              cursor="pointer"
-              animate="rest"
-              width="100px"
-              height="100px"
-              margin="auto"
-              left="0"
-              right="0"
-              top="calc(50% - 50px)"
-              bgColor="blue.600"
-              border="5px solid white"
-              position="absolute"
-              borderRadius="100%"
-              zIndex="10"
-              display="flex"
-              justifyContent="center"
-              alignItems="center"
-              boxShadow={'2xl'}
-            >
-              <FiPlay size="40px" color="white" fill="white" />
-            </Box>
-          </Box>
+          {isLargerThan600 ? <DesktopVideoFigure /> : <MobileVideoFigure />}
         </Flex>
       </Container>
       <Modal isOpen={isOpen} onClose={onClose} size="5xl">
@@ -507,6 +675,95 @@ const Hero = () => {
     </Box>
   );
 };
+
+const WebFirst = memo(() => {
+  return (
+    <Box
+      as="section"
+      aria-label="features"
+      w="full"
+      py={{ base: '52px', md: '9rem' }}
+      position="relative"
+      bg="white"
+    >
+      <Container
+        id="features-content"
+        margin="0 auto"
+        flexDir="column"
+        alignItems="start"
+        maxW="container.xl"
+        w="full"
+      >
+        <VStack as="article" align="start" gap={3} mb="100px" pb={10}>
+          <Heading
+            fontFamily="plaak"
+            fontSize="4xl"
+            fontWeight="bold"
+            color="blue.500"
+            whiteSpace="pre-line"
+          >
+            {WEB_FIRST_CONTENT.TITLE}
+          </Heading>
+          <Text
+            margin="0 !important"
+            fontSize="lg"
+            lineHeight={7}
+            color="gray.900"
+            whiteSpace={{ md: 'pre-line' }}
+          >
+            {WEB_FIRST_CONTENT.DESCRIPTION}
+          </Text>
+        </VStack>
+
+        <VStack gap="100px" w="full">
+          {WEB_FIRST_CONTENT.LIST.map((item, index) => (
+            <Flex
+              align="start"
+              flexDirection={{ base: 'column', lg: 'row' }}
+              key={index}
+              gap={5}
+              w="full"
+            >
+              <VStack maxW={{ base: 'full', lg: '380px' }} align="start">
+                {React.cloneElement(item.ICON, {
+                  style: { color: baseColors.blue['500'] },
+                })}
+                <Heading
+                  as="h3"
+                  fontWeight={400}
+                  fontSize="4xl"
+                  color="blue.500"
+                >
+                  {item.TITLE}
+                </Heading>
+
+                <Text color="gray.900" fontSize="xl">
+                  {item.DESCRIPTION}
+                </Text>
+              </VStack>
+
+              <Box
+                as="figure"
+                flex={{ lg: 1 }}
+                w={{ base: 'full' }}
+                height={{ base: '208px', lg: '440px' }}
+                bg="gray.500"
+                position="relative"
+              >
+                <Image
+                  src={item.IMAGE_URL}
+                  fill
+                  style={{ objectFit: 'cover' }}
+                  alt={item.TITLE}
+                />
+              </Box>
+            </Flex>
+          ))}
+        </VStack>
+      </Container>
+    </Box>
+  );
+});
 
 const Features = memo(() => {
   const [isLargerThan600] = useMediaQuery('(min-width: 600px)');
@@ -868,10 +1125,10 @@ const Headline = memo(() => {
         h="0"
         borderBottom={{
           base: '200px solid transparent',
-          lg: '800px solid transparent',
+          lg: '1000px solid transparent',
         }}
         zIndex={0}
-        borderLeft={{ base: '200px solid white', lg: '800px solid white' }}
+        borderLeft={{ base: '200px solid white', lg: '1000px solid white' }}
       />
 
       <Box
@@ -882,10 +1139,10 @@ const Headline = memo(() => {
         h="0"
         borderTop={{
           base: '200px solid transparent',
-          lg: '800px solid transparent',
+          lg: '1000px solid transparent',
         }}
         zIndex={0}
-        borderRight={{ base: '200px solid white', lg: '800px solid white' }}
+        borderRight={{ base: '200px solid white', lg: '1000px solid white' }}
       />
       <Container
         as="section"
@@ -974,6 +1231,7 @@ const HomePage: NextPageWithLayout = () => {
           margin="0 auto"
         >
           <Hero />
+          <WebFirst />
           <Features />
           <AppletsGallery />
           <Batteries />

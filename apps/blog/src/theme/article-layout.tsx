@@ -51,9 +51,9 @@ export const ArticleLayout = ({ children }: { children: ReactNode }) => {
                           fontWeight="bold"
                         >
                           <PiLightningDuotone color="DarkGoldenRod" />
-                          <Text>TL;DR</Text>
+                          <Text color="blue.500">TL;DR</Text>
                         </Flex>
-                        <AccordionIcon />
+                        <AccordionIcon color="blue.500" />
                       </AccordionButton>
                     </h2>
                     <AccordionPanel pt="4" whiteSpace="pre-wrap">

@@ -120,6 +120,7 @@ export default function Meta(): ReactElement {
         <VStack
           align="start"
           className="nx-not-prose nx-flex nx-flex-wrap nx-items-center nx-gap-1"
+          color="gray.900"
         >
           <Heading as="h5" fontSize="14px">
             Published
@@ -150,7 +151,7 @@ export default function Meta(): ReactElement {
           </Flex>
         )}
 
-        <VStack align="start">
+        <VStack align="start" color="gray.900">
           <Heading as="h5" fontSize="14px">
             Tags
           </Heading>
