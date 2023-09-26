@@ -79,10 +79,10 @@ const HERO_CONTENT = {
 
 const WEB_FIRST_CONTENT = {
   TITLE: 'build for the web',
-  DESCRIPTION: `Pellentesque sed ullamcorper sem, in ornare tortor. Sed vestibulum 
-  bibendum sem aliquet vehicula. Fusce ullamcorper, augue nec mattis
-  commodo, tellus mauris semper dolor, vitae feugiat neque eros ac
-  velit. Aliquam molestie ipsum eget nunc tempor.`,
+  DESCRIPTION: `Zipper is designed for building web services quickly. Every applet is 
+  deployed to a public-facing URL and can immediately start receiving 
+  GET & POST requests. Perfect for building user-facing web applications 
+  or API-based integrations.`,
 
   LIST: [
     {
