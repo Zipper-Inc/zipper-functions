@@ -19,14 +19,6 @@ export default function JoinBetaForm({ onOpen }: { onOpen: VoidFunction }) {
       >
         Join the beta
       </Button>
-      <Button
-        variant="outline"
-        height="2.75rem"
-        fontWeight="400"
-        onClick={onOpen}
-      >
-        {'Watch demo (3 min)'}
-      </Button>
     </Flex>
   );
 }
