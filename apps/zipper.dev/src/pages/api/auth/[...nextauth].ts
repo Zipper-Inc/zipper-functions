@@ -36,41 +36,6 @@ export function PrismaAdapter(p: PrismaClient): Adapter {
         });
       }
 
-      // add the user to the default organization if one is set in the allow list
-      // NOTE: this doesn't handle blocking users from signing up - that happens in the signIn callback
-      const domain = data.email.split('@')[1];
-      if (domain) {
-        const allowListIdentifier = await p.allowListIdentifier.findFirst({
-          where: { value: { in: [data.email, domain] } },
-        });
-
-        if (allowListIdentifier && allowListIdentifier.defaultOrganizationId) {
-          const existingMemberCount = await p.organizationMembership.count({
-            where: {
-              organizationId: allowListIdentifier?.defaultOrganizationId,
-            },
-          });
-
-          const role =
-            existingMemberCount === 0 ? UserRole.Admin : UserRole.Member;
-
-          await p.organizationMembership.upsert({
-            where: {
-              organizationId_userId: {
-                organizationId: allowListIdentifier.defaultOrganizationId,
-                userId: user.id,
-              },
-            },
-            create: {
-              organizationId: allowListIdentifier.defaultOrganizationId,
-              userId: user.id,
-              role,
-            },
-            update: {},
-          });
-        }
-      }
-
       return user;
     },
     getUser: (id) => p.user.findUnique({ where: { id } }),
