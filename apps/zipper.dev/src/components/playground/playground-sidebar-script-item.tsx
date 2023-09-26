@@ -14,6 +14,7 @@ import {
 import { Script } from '@prisma/client';
 import { UseFormReturn } from 'react-hook-form';
 import {
+  PiBracketsCurlyDuotone,
   PiCode,
   PiCodeSimple,
   PiCodeSimpleDuotone,
@@ -25,6 +26,7 @@ import {
 import {
   isConnector,
   isHandler,
+  isJSON,
   isLib,
   isMain,
   isReadme,
@@ -51,7 +53,9 @@ const ScriptIcon = ({ script, ...propsPassedIn }: { script: Script } & any) => {
   else if (isHandler(script)) return <PiCodeSimpleDuotone {...props} />;
   else if (isLib(script)) return <PiCodeSimple {...props} />;
   else if (isConnector(script)) return <PiPlugsDuotone {...props} />;
-  else return <PiQuestion {...props} />;
+  else if (isJSON(script)) {
+    return <PiBracketsCurlyDuotone {...props} />;
+  } else return <PiQuestion {...props} />;
 };
 
 export const ScriptItem: React.FC<ScriptItemProps> = ({

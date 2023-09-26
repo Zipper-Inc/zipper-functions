@@ -8,6 +8,7 @@ import {
   useState,
   useRef,
   MutableRefObject,
+  useMemo,
 } from 'react';
 import noop from '~/utils/noop';
 
@@ -309,6 +310,8 @@ const EditorContextProvider = ({
   const invalidImportUrlsRef = useRef<{ [url: string]: number }>({});
   const externalImportModelsRef = useRef<Record<string, string[]>>({});
 
+  const router = useRouter();
+
   const [modelsDirtyState, setModelsDirtyState] = useState<
     Record<string, boolean>
   >({});
@@ -317,9 +320,20 @@ const EditorContextProvider = ({
     Record<string, boolean>
   >({});
 
-  const currentScriptLive: any = useLiveStorage(
+  const liveScript: any = useLiveStorage(
     (root) => root[`script-${currentScript?.id}`],
   );
+
+  const currentScriptLive = useMemo(() => {
+    if (
+      currentScript?.filename === 'storage.json' &&
+      router.asPath.includes('storage.json')
+    ) {
+      return { code: JSON.stringify(app.datastore, null, '\t') };
+    }
+
+    return liveScript;
+  }, [currentScript?.filename, router.asPath]);
 
   const mutateLive = useLiveMutation(
     (context, newCode: string, newVersion: number) => {
@@ -466,8 +480,6 @@ const EditorContextProvider = ({
       });
     }
   }, [scripts]);
-
-  const router = useRouter();
 
   useEffect(() => {
     if (currentScript) {

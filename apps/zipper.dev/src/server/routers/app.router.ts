@@ -485,6 +485,7 @@ export const appRouter = createTRPCRouter({
         select: {
           ...defaultSelect,
           scripts: true,
+          datastore: true,
           scriptMain: { include: { script: true } },
           editors: true,
           settings: true,

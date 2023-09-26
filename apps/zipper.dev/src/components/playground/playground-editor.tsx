@@ -23,6 +23,12 @@ import { baseColors } from '@zipper/ui';
 
 type MonacoEditor = monaco.editor.IStandaloneCodeEditor;
 
+const extslist = {
+  md: 'markdown',
+  ts: 'typescript',
+  json: 'json',
+};
+
 loader.config({ monaco });
 
 buildWorkerDefinition(
@@ -76,7 +82,7 @@ export default function PlaygroundEditor(
   const [, updateMyPresence] = useMyPresence();
   const connectionIds = useOthersConnectionIds();
   const [defaultLanguage, setDefaultLanguage] = useState<
-    'typescript' | 'markdown'
+    'typescript' | 'markdown' | 'json'
   >('typescript');
   const theme = useColorModeValue('vs', 'vs-dark');
 
@@ -172,6 +178,13 @@ export default function PlaygroundEditor(
         mimetypes: ['text/markdown'],
       });
 
+      monacoEditor.languages.register({
+        id: 'markdown',
+        extensions: ['.json'],
+        aliases: ['JSON', 'json'],
+        mimetypes: ['application/json'],
+      });
+
       const diagnosticOptions: monaco.languages.typescript.DiagnosticsOptions =
         {
           diagnosticCodesToIgnore: TYPESCRIPT_ERRORS_TO_IGNORE,
@@ -223,6 +236,10 @@ export default function PlaygroundEditor(
         jsx: monaco.languages.typescript.JsxEmit.Preserve,
       });
 
+      monaco.languages.json.jsonDefaults.setDiagnosticsOptions({
+        validate: true,
+      });
+
       // Fallback formatter
       monaco.languages.registerDocumentFormattingEditProvider('typescript', {
         provideDocumentFormattingEdits(model) {
@@ -253,15 +270,15 @@ export default function PlaygroundEditor(
       );
 
       scripts.forEach((script) => {
-        const extension = script.filename.split('.').pop();
+        const extension = script.filename
+          .split('.')
+          .pop() as keyof typeof extslist;
+
         const uri = getUriFromPath(script.filename, monaco.Uri.parse, 'tsx');
         const model = monaco.editor.getModel(uri);
+
         if (!model) {
-          monaco.editor.createModel(
-            script.code,
-            extension === 'md' ? 'markdown' : 'typescript',
-            uri,
-          );
+          monaco.editor.createModel(script.code, extslist[extension], uri);
         }
       });
 
@@ -316,6 +333,10 @@ export default function PlaygroundEditor(
         setDefaultLanguage('markdown');
       }
 
+      if (extension === 'json') {
+        setDefaultLanguage('json');
+      }
+
       const uri = getUriFromPath(
         currentScript.filename,
         monaco.Uri.parse,
@@ -326,9 +347,13 @@ export default function PlaygroundEditor(
         editorRef.current.setModel(model);
       }
       if (!model && currentScript) {
+        const extension = currentScript.filename
+          .split('.')
+          .pop() as keyof typeof extslist;
+
         const newModel = monacoEditor.editor.createModel(
           currentScript.code,
-          extension === 'md' ? 'markdown' : 'typescript',
+          extslist[extension],
           uri,
         );
         const path = getPathFromUri(uri);
@@ -359,7 +384,6 @@ export default function PlaygroundEditor(
     ).getFullModelRange();
 
     const selection = editorRef.current.getSelection();
-
     editorRef.current.executeEdits(
       'zipperLiveUpdate',
       [

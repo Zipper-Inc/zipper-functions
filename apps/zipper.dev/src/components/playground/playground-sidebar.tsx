@@ -18,7 +18,7 @@ import {
   Button,
   useColorModeValue,
 } from '@chakra-ui/react';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import AddScriptForm from '~/components/playground/add-script-form';
 import { useHelpBorder } from '~/components/context/help-mode-context';
 
@@ -142,6 +142,29 @@ export function PlaygroundSidebar({
 
   const { style, onMouseEnter, onMouseLeave } = useHelpBorder();
 
+  const appScripts = useMemo(() => {
+    if (app.canUserEdit) {
+      return [
+        ...app.scripts,
+        {
+          id: String(crypto.randomUUID()),
+          createdAt: '',
+          updatedAt: '',
+          name: 'Storage',
+          filename: 'storage.json',
+          code: '',
+          order: 0,
+          appId: app.id,
+          connectorId: null,
+          hash: null,
+          isRunnable: false,
+        },
+      ] as typeof app.scripts;
+    }
+
+    return app.scripts;
+  }, [app]);
+
   return (
     <>
       <VStack
@@ -192,7 +215,7 @@ export function PlaygroundSidebar({
           )}
         </HStack>
         <VStack spacing="2px" alignItems="stretch">
-          {app.scripts.sort(sortScripts).map((script, i) => (
+          {appScripts.sort(sortScripts).map((script, i) => (
             <ScriptItem
               key={script.id}
               script={script}

@@ -5,6 +5,7 @@ export const isConnector = (script: Script) =>
   script.filename.endsWith('-connector.ts');
 export const isReadme = (script: Script) => script.filename === 'readme.md';
 export const isMain = (script: Script) => script.filename === 'main.ts';
+export const isJSON = (script: Script) => script.filename.endsWith('.json');
 export const isLib = (script: Script) =>
   script.filename.endsWith('.ts') &&
   !script.isRunnable &&
