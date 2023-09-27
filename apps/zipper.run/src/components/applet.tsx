@@ -352,7 +352,7 @@ export function AppPage({
   );
 
   const content = (
-    <VStack as="main" flex={1} spacing={4} position="relative" px={10}>
+    <VStack as="main" w="full" flex={1} spacing={4} position="relative" px={10}>
       {shouldShowDescription && appletDescription()}
       {screen === 'initial' && initialContent}
       {showRunOutput && runContent}

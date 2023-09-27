@@ -30,7 +30,7 @@ const ConnectorsAuthInputsSection: React.FC<
   toggleIsExpanded,
 }) => {
   const inputsSection = (
-    <VStack align="stretch" spacing={6}>
+    <VStack align="center">
       {userAuthProps.userAuthConnectors.length > 0 && (
         <AuthUserConnectors {...userAuthProps} />
       )}
@@ -48,7 +48,7 @@ const ConnectorsAuthInputsSection: React.FC<
   );
 
   return (
-    <VStack w="container.sm" align="stretch">
+    <VStack w="full" align="stretch">
       {isCollapsible ? (
         <Accordion
           allowToggle
