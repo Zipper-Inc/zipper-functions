@@ -35,7 +35,7 @@ export default function Footer() {
             fontWeight={600}
             maxWidth="190px"
           >
-            Built for people who like to ship.
+            Build without the boilerplate
           </Text>
         </HStack>
         <HStack

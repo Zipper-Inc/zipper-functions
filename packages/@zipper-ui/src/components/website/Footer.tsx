@@ -349,9 +349,6 @@ export const WebSiteFooter = ({
             h="full"
           >
             <ZipperSymbol fill="#1174CB" />
-            <Text fontSize="xl" color="blue.600" fontWeight={600}>
-              Built for people <br /> who like to ship
-            </Text>
           </VStack>
 
           <HStack
