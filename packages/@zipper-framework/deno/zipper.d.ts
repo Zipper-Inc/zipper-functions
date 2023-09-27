@@ -128,6 +128,7 @@ declare namespace Zipper {
     description: Partial<{
       title: string;
       subtitle: string;
+      body: string;
     }>;
     inputs: {
       [Property in keyof I]: Partial<{
