@@ -179,7 +179,14 @@ export const defaults: Components & { heading: Components['h1'] } = {
     const isInline = inline || typeof children === 'string';
     if (isInline) {
       return (
-        <ChakraCode children={children} colorScheme="purple" data-markdown />
+        <ChakraCode
+          fontSize="inherit"
+          colorScheme="purple"
+          variant="subtle"
+          data-markdown
+        >
+          {children}
+        </ChakraCode>
       );
     }
 

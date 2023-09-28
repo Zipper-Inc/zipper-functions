@@ -52,9 +52,10 @@ export function HandlerDescription(props: Props) {
       {body && (
         <Flex
           direction="column"
-          pt={title || subtitle ? 4 : undefined}
+          pt={title || subtitle ? 2 : undefined}
           align="stretch"
           width="100%"
+          fontSize="sm"
         >
           <Markdown>{body}</Markdown>
         </Flex>
