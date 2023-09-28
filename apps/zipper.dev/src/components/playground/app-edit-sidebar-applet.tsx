@@ -27,7 +27,7 @@ import {
 } from '@zipper/ui';
 import { useEffect, useMemo, useState } from 'react';
 import { HiExclamationCircle, HiOutlineLightBulb } from 'react-icons/hi2';
-import { PiPlayBold } from 'react-icons/pi';
+import { PiPlayBold, PiPlayDuotone } from 'react-icons/pi';
 import { useUser } from '~/hooks/use-user';
 import getRunUrl from '~/utils/get-run-url';
 import { getAppVersionFromHash } from '~/utils/hashing';
@@ -274,7 +274,7 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
                 <Button
                   w="full"
                   mt="4"
-                  colorScheme="darkPurple"
+                  colorScheme="purple"
                   onClick={async () => {
                     setInputsAtTimeOfRun();
                     setRunId(await run(true));
@@ -284,7 +284,11 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
                   fontWeight="medium"
                   isDisabled={isRunning || !inputParams || editorHasErrors()}
                 >
-                  <PiPlayBold />
+                  {currentScript?.filename === 'main.ts' ? (
+                    <PiPlayBold />
+                  ) : (
+                    <PiPlayDuotone />
+                  )}
                   <Text>Run</Text>
                 </Button>
               </span>
