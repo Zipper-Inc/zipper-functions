@@ -1,15 +1,13 @@
 import {
-  Tabs,
-  TabList,
-  TabPanels,
-  TabPanel,
-  ChakraProps,
   Box,
-  Tab,
+  Button,
+  ChakraProps,
+  Divider,
   Heading,
   HStack,
+  Icon,
   IconButton,
-  Button,
+  Link,
   Modal,
   ModalBody,
   ModalCloseButton,
@@ -17,36 +15,35 @@ import {
   ModalFooter,
   ModalHeader,
   ModalOverlay,
+  Spacer,
+  Spinner,
+  Tab,
+  TabList,
+  TabPanel,
+  TabPanels,
+  Tabs,
   useDisclosure,
   VStack,
-  Spinner,
-  Icon,
-  Divider,
-  Text,
-  Spacer,
-  Link,
 } from '@chakra-ui/react';
-import { FunctionOutputProps } from './types';
-import { RawFunctionOutput } from './raw-function-output';
-import { SmartFunctionOutput } from './smart-function-output';
-import { ErrorBoundary } from '../error-boundary';
-import FunctionOutputProvider from './function-output-context';
+import { InputParam, InputParams, ZipperLocation } from '@zipper/types';
+import { getAppLink, getInputsFromFormData } from '@zipper/utils';
+import { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
 import {
-  HiOutlineChevronUp,
-  HiOutlineChevronDown,
   HiChevronLeft,
-  HiOutlineLink,
+  HiOutlineChevronDown,
+  HiOutlineChevronUp,
 } from 'react-icons/hi';
 import { HiArrowTopRightOnSquare } from 'react-icons/hi2';
-import { useEffect, useState } from 'react';
-import { getAppLink, getInputsFromFormData } from '@zipper/utils';
-import { FunctionInputs } from '../function-inputs';
-import { useForm } from 'react-hook-form';
-import { InputParam, InputParams } from '@zipper/types';
-import { useEffectOnce } from '../../hooks/use-effect-once';
-import { ZipperLocation } from '@zipper/types';
 import { useAppletContent } from '../../hooks/use-applet-content';
+import { useEffectOnce } from '../../hooks/use-effect-once';
+import { ErrorBoundary } from '../error-boundary';
+import { FunctionInputs } from '../function-inputs';
+import FunctionOutputProvider from './function-output-context';
+import { RawFunctionOutput } from './raw-function-output';
+import { SmartFunctionOutput } from './smart-function-output';
 import SmartFunctionOutputProvider from './smart-function-output-context';
+import { FunctionOutputProps } from './types';
 
 const stickyTabsStyles: ChakraProps = {
   top: -4,
@@ -471,7 +468,7 @@ export function FunctionOutput({
                 border={showTabs ? '1px solid' : 'none'}
                 borderColor="fg.200"
               >
-                <TabPanel>
+                <TabPanel p={0}>
                   <Box overflow="auto">
                     {applet.showGoBackLink() && (
                       <>

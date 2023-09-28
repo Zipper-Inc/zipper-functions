@@ -1,12 +1,12 @@
 import {
-  VStack,
   Accordion,
-  AccordionItem,
   AccordionButton,
   AccordionIcon,
+  AccordionItem,
   AccordionPanel,
-  Box,
   AccordionProps,
+  Box,
+  VStack,
 } from '@chakra-ui/react';
 import { getInputSummary } from './input-summary';
 import AuthUserConnectors, { AuthUserConnectorsProps } from './user-connectors';
@@ -48,7 +48,7 @@ const ConnectorsAuthInputsSection: React.FC<
   );
 
   return (
-    <VStack w="container.sm" align="stretch">
+    <VStack minW={{ base: '100%', md: 'container.sm' }} align="stretch">
       {isCollapsible ? (
         <Accordion
           allowToggle

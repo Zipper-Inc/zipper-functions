@@ -1,4 +1,4 @@
-import { Progress, VStack } from '@chakra-ui/react';
+import { Box, Heading, Progress, Stack, VStack } from '@chakra-ui/react';
 import {
   AppInfo,
   EntryPointInfo,
@@ -11,6 +11,10 @@ import {
   useCmdOrCtrl,
   withDefaultTheme,
 } from '@zipper/ui';
+import {
+  getDescription,
+  HandlerDescription,
+} from '@zipper/ui/src/components/function-output/handler-description';
 import {
   getInputsFromFormData,
   ZIPPER_TEMP_USER_ID_COOKIE_NAME,
@@ -37,7 +41,6 @@ import {
   getRunValues,
 } from '../utils/get-input-values-from-url';
 import ConnectorsAuthInputsSection from './connectors-auth-inputs-section';
-import { HandlerDescription } from './handler-description';
 import Header from './header';
 import InputSummary from './input-summary';
 import Unauthorized from './unauthorized';
@@ -71,7 +74,7 @@ export type AppPageProps = {
 
 export function AppPage({
   isEmbedded,
-  shouldShowDescription = true,
+  shouldShowDescription: shouldShowDescriptionPassedIn = true,
   app,
   inputs,
   userAuthConnectors,
@@ -102,10 +105,16 @@ export function AppPage({
   const [expandInputsSection, setExpandInputsSection] = useState(false);
   const [currentFileConfig, setCurrentFileConfig] = useState<
     Zipper.HandlerConfig | undefined
-  >();
+  >(filename ? handlerConfigs?.[filename] : undefined);
 
   const [skipAuth, setSkipAuth] = useState(false);
-
+  const description = getDescription({
+    applet: app,
+    filename: entryPoint?.filename,
+    config: currentFileConfig,
+  });
+  const shouldShowDescription =
+    shouldShowDescriptionPassedIn && description && screen === 'initial';
   const previousRouteRef = useRef(asPath);
 
   // We have to do this so that the results aren't SSRed
@@ -311,8 +320,11 @@ export function AppPage({
   );
 
   const runContent = (
-    <VStack w="full" align="stretch" spacing={6}>
-      {!isEmbedded && inputSummary}
+    <VStack w="full" align="stretch" spacing={6} ml={4}>
+      <Heading as="h1" fontSize="4xl" fontWeight="medium" mt={4}>
+        {description?.title || appTitle}
+      </Heading>
+      {!isEmbedded && <Box ml="4">{inputSummary}</Box>}
       {output}
     </VStack>
   );
@@ -331,14 +343,36 @@ export function AppPage({
   );
 
   const content = (
-    <VStack as="main" flex={1} spacing={4} position="relative" px={10}>
+    <Stack
+      as="main"
+      position="relative"
+      px={8}
+      spacing={8}
+      w="full"
+      direction={{ base: 'column', md: 'row' }}
+    >
       {shouldShowDescription && (
-        <HandlerDescription config={currentFileConfig} />
+        <VStack
+          width={{ base: 'auto', md: '100%' }}
+          align="stretch"
+          minW="320px"
+          ml={4}
+        >
+          <HandlerDescription
+            description={
+              screen === 'initial'
+                ? description
+                : { ...description, title: undefined }
+            }
+          />
+        </VStack>
       )}
-      {screen === 'initial' && initialContent}
-      {showRunOutput && runContent}
-      {loading && loadingContent}
-    </VStack>
+      <VStack mx={shouldShowDescription ? 'auto' : undefined} align="stretch">
+        {screen === 'initial' && initialContent}
+        {showRunOutput && runContent}
+        {loading && loadingContent}
+      </VStack>
+    </Stack>
   );
 
   if (isEmbedded) return content;
@@ -366,7 +400,7 @@ export function AppPage({
           </>
         )}
       </Head>
-      <VStack flex={1} alignItems="stretch" spacing={14}>
+      <VStack flex={1} alignItems="stretch" spacing={8}>
         <Header
           {...app}
           entryPoint={entryPoint}
