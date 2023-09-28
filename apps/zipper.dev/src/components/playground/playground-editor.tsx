@@ -1,25 +1,25 @@
-import * as monaco from 'monaco-editor';
 import Editor, {
   EditorProps,
-  useMonaco,
   loader,
   Monaco,
+  useMonaco,
 } from '@monaco-editor/react';
+import * as monaco from 'monaco-editor';
 import { buildWorkerDefinition } from 'monaco-editor-workers';
 import { useMyPresence, useOthersConnectionIds } from '~/liveblocks.config';
 
-import { useEffect, useRef, useState } from 'react';
-import { useEditorContext } from '../context/editor-context';
-import { useExitConfirmation } from '~/hooks/use-exit-confirmation';
-import { PlaygroundCollabCursor } from './playground-collab-cursor';
-import { format } from '~/utils/prettier';
-import { useRunAppContext } from '../context/run-app-context';
-import { getPathFromUri, getUriFromPath } from '~/utils/model-uri';
 import { parse } from '@babel/parser';
 import traverse from '@babel/traverse';
-import MonacoJSXHighlighter from 'monaco-jsx-highlighter';
 import { useColorModeValue } from '@chakra-ui/react';
 import { baseColors } from '@zipper/ui';
+import { prettierFormat } from '@zipper/utils';
+import MonacoJSXHighlighter from 'monaco-jsx-highlighter';
+import { useEffect, useRef, useState } from 'react';
+import { useExitConfirmation } from '~/hooks/use-exit-confirmation';
+import { getPathFromUri, getUriFromPath } from '~/utils/model-uri';
+import { useEditorContext } from '../context/editor-context';
+import { useRunAppContext } from '../context/run-app-context';
+import { PlaygroundCollabCursor } from './playground-collab-cursor';
 
 type MonacoEditor = monaco.editor.IStandaloneCodeEditor;
 
@@ -226,7 +226,7 @@ export default function PlaygroundEditor(
       // Fallback formatter
       monaco.languages.registerDocumentFormattingEditProvider('typescript', {
         provideDocumentFormattingEdits(model) {
-          const formatted = format(model.getValue());
+          const formatted = prettierFormat(model.getValue());
           return [
             {
               range: model.getFullModelRange(),
@@ -241,7 +241,7 @@ export default function PlaygroundEditor(
         'typescript',
         {
           provideDocumentRangeFormattingEdits(model, range) {
-            const formatted = format(model.getValueInRange(range));
+            const formatted = prettierFormat(model.getValueInRange(range));
             return [
               {
                 range: range,

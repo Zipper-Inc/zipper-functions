@@ -1,18 +1,27 @@
 import { Box, ChakraProps, useColorModeValue } from '@chakra-ui/react';
-
+import { prettierFormat } from '@zipper/utils';
 import { Highlight, themes } from 'prism-react-renderer';
 
 export const Code = ({
-  code,
-  language = 'tsx',
+  code: codePassedIn,
+  language = '',
   ...props
 }: {
   code: string;
   language?: string;
 } & ChakraProps) => {
   const theme = useColorModeValue(themes.oneLight, themes.oneDark);
+  let code = codePassedIn.trimEnd();
+
+  if (
+    ['typescript', 'ts', 'tsx', 'javascript', 'js', 'jsx'].includes(
+      language.toLowerCase(),
+    )
+  )
+    code = prettierFormat(code);
+
   return (
-    <Highlight theme={theme} code={code.trimEnd()} language={language}>
+    <Highlight theme={theme} code={code} language={language}>
       {({ className, style, tokens, getLineProps, getTokenProps }) => (
         <Box
           p={4}
