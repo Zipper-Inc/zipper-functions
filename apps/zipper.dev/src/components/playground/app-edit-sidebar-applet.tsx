@@ -17,6 +17,7 @@ import {
   UnorderedList,
   VStack,
 } from '@chakra-ui/react';
+import { ZipperLocation } from '@zipper/types';
 import {
   FunctionInputs,
   FunctionOutput,
@@ -26,7 +27,7 @@ import {
 } from '@zipper/ui';
 import { useEffect, useMemo, useState } from 'react';
 import { HiExclamationCircle, HiOutlineLightBulb } from 'react-icons/hi2';
-import { PiPlayBold } from 'react-icons/pi';
+import { PiPlayBold, PiPlayDuotone } from 'react-icons/pi';
 import { useUser } from '~/hooks/use-user';
 import getRunUrl from '~/utils/get-run-url';
 import { getAppVersionFromHash } from '~/utils/hashing';
@@ -124,6 +125,7 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
         }}
         showTabs
         runId={runId}
+        zipperLocation={ZipperLocation.ZipperDotDev}
       />
     );
   }, [mainApplet.updatedAt]);
@@ -171,7 +173,7 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
   return (
     <>
       {description && (
-        <Box mb="8">
+        <Box mb="6">
           <HandlerDescription description={description} />
         </Box>
       )}
@@ -273,9 +275,6 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
                   w="full"
                   mt="4"
                   colorScheme="purple"
-                  variant={
-                    currentScript?.filename === 'main.ts' ? 'solid' : 'outline'
-                  }
                   onClick={async () => {
                     setInputsAtTimeOfRun();
                     setRunId(await run(true));
@@ -285,10 +284,12 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
                   fontWeight="medium"
                   isDisabled={isRunning || !inputParams || editorHasErrors()}
                 >
-                  <PiPlayBold />
-                  <Text>{`Run${
-                    currentScript?.filename !== 'main.ts' ? ' this file' : ''
-                  }`}</Text>
+                  {currentScript?.filename === 'main.ts' ? (
+                    <PiPlayBold />
+                  ) : (
+                    <PiPlayDuotone />
+                  )}
+                  <Text>Run</Text>
                 </Button>
               </span>
             </Tooltip>

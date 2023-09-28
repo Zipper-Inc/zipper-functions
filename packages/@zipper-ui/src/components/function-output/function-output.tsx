@@ -84,6 +84,7 @@ export function FunctionOutput({
   generateUserToken,
   runId,
   reloadOnClose: _reloadOnClose = false,
+  zipperLocation = ZipperLocation.ZipperDotRun,
 }: FunctionOutputProps) {
   const [isExpandedResultOpen, setIsExpandedResultOpen] = useState(true);
   const [reloadOnClose, setReloadOnClose] = useState(_reloadOnClose);
@@ -468,7 +469,13 @@ export function FunctionOutput({
                 border={showTabs ? '1px solid' : 'none'}
                 borderColor="fg.200"
               >
-                <TabPanel p={0}>
+                <TabPanel
+                  p={
+                    zipperLocation === ZipperLocation.ZipperDotRun
+                      ? 0
+                      : undefined
+                  }
+                >
                   <Box overflow="auto">
                     {applet.showGoBackLink() && (
                       <>

@@ -1,4 +1,8 @@
-import { AppletContentReturnType, InputParams } from '@zipper/types';
+import {
+  AppletContentReturnType,
+  InputParams,
+  ZipperLocation,
+} from '@zipper/types';
 import { createContext, useContext } from 'react';
 
 export type FunctionOutputContextType = {
@@ -21,6 +25,7 @@ export type FunctionOutputContextType = {
   appSlug: string;
   applet: AppletContentReturnType;
   modalApplet: AppletContentReturnType;
+  zipperLocation?: ZipperLocation;
   generateUserToken: () => string | undefined | Promise<string | undefined>;
 };
 
