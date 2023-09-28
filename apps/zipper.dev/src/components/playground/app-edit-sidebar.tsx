@@ -1,24 +1,24 @@
 import {
-  Tabs,
-  TabList,
-  TabPanels,
-  TabPanel,
-  VStack,
   Box,
-  Flex,
-  Text,
-  HStack,
-  Heading,
-  useColorMode,
   Button,
+  Flex,
+  Heading,
+  HStack,
+  TabList,
+  TabPanel,
+  TabPanels,
+  Tabs,
+  Text,
+  useColorMode,
+  VStack,
 } from '@chakra-ui/react';
 import { TabButton } from '@zipper/ui';
 import { useState } from 'react';
-import { useEditorContext } from '../context/editor-context';
-import AppEditSidebarApplet from './app-edit-sidebar-applet';
-import { AppConsole } from './app-console';
 import { HiEye, HiPencil } from 'react-icons/hi2';
+import { useEditorContext } from '../context/editor-context';
 import { useHelpBorder, useHelpMode } from '../context/help-mode-context';
+import { AppConsole } from './app-console';
+import AppEditSidebarApplet from './app-edit-sidebar-applet';
 
 type AppEditSidebarProps = {
   appSlug: string;
