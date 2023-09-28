@@ -1,6 +1,5 @@
 // created from ctix
 
-export * from '../src/constants';
 export * from '../src/utils/connector';
 export * from '../src/utils/crypto.utils';
 export { default as cryptoUtils } from '../src/utils/crypto.utils';
@@ -16,4 +15,4 @@ export * from '../src/utils/safe-json';
 export * from '../src/utils/settings';
 export * from '../src/utils/url';
 export * from '../src/utils/uuid';
-
+export * from '../src/constants';
