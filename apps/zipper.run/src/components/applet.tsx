@@ -353,6 +353,7 @@ export function AppPage({
       spacing={8}
       w="full"
       direction={{ base: 'column', md: 'row' }}
+      justify="center"
     >
       {shouldShowDescription && (
         <VStack
@@ -360,6 +361,7 @@ export function AppPage({
           align="stretch"
           minW="320px"
           ml={4}
+          flex={2}
         >
           <HandlerDescription
             description={
@@ -370,7 +372,11 @@ export function AppPage({
           />
         </VStack>
       )}
-      <VStack mx={shouldShowDescription ? 'auto' : undefined} align="stretch">
+      <VStack
+        mx={shouldShowDescription ? 'auto' : undefined}
+        align="stretch"
+        flex={3}
+      >
         {screen === 'initial' && initialContent}
         {showRunOutput && runContent}
         {loading && loadingContent}
