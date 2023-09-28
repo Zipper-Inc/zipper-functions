@@ -177,7 +177,9 @@ export const defaults: Components & { heading: Components['h1'] } = {
     const { inline, children, className } = props;
     const isInline = inline || typeof children === 'string';
     if (isInline) {
-      return <Code px={2} children={children} bgColor="fg.50" data-markdown />;
+      return (
+        <ChakraCode children={children} colorScheme="purple" data-markdown />
+      );
     }
 
     return (
