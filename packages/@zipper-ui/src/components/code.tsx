@@ -11,17 +11,18 @@ export const Code = ({
   language?: string;
 } & ChakraProps) => {
   const theme = useColorModeValue(themes.oneLight, themes.oneDark);
-  let code = codePassedIn.trimEnd();
+  let code = codePassedIn;
 
   if (
     ['typescript', 'ts', 'tsx', 'javascript', 'js', 'jsx'].includes(
       language.toLowerCase(),
     )
-  )
+  ) {
     code = prettierFormat(code);
+  }
 
   return (
-    <Highlight theme={theme} code={code} language={language}>
+    <Highlight theme={theme} code={code.trimEnd()} language={language}>
       {({ className, style, tokens, getLineProps, getTokenProps }) => (
         <Box
           p={4}
