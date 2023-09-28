@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { captureException } from '@sentry/nextjs';
-import * as trpc from '@trpc/server';
+import { inferAsyncReturnType } from '@trpc/server';
+
 import { ServerResponse } from 'http';
 import {
   GetServerSidePropsContext,
@@ -61,4 +62,4 @@ export async function createContext(opts: {
   }
 }
 
-export type Context = trpc.inferAsyncReturnType<typeof createContext>;
+export type Context = inferAsyncReturnType<typeof createContext>;

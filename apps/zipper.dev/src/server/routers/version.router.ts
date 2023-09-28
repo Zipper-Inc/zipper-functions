@@ -1,7 +1,6 @@
 import { Prisma } from '@prisma/client';
 import { z } from 'zod';
 import { prisma } from '~/server/prisma';
-import { createRouter } from '../createRouter';
 import {
   hasAppReadPermission,
   hasAppEditPermission,
@@ -9,6 +8,7 @@ import {
 
 import { getVersionCode } from '../utils/r2.utils';
 import { captureException } from '@sentry/nextjs';
+import { createTRPCRouter, publicProcedure } from '../root';
 
 const defaultSelect = Prisma.validator<Prisma.VersionSelect>()({
   appId: true,
@@ -18,13 +18,15 @@ const defaultSelect = Prisma.validator<Prisma.VersionSelect>()({
   userId: true,
 });
 
-export const versionRouter = createRouter()
-  .query('byVersion', {
-    input: z.object({
-      appId: z.string(),
-      version: z.string().min(7),
-    }),
-    async resolve({ ctx, input }) {
+export const versionRouter = createTRPCRouter({
+  byVersion: publicProcedure
+    .input(
+      z.object({
+        appId: z.string(),
+        version: z.string().min(7),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
       await hasAppReadPermission({
         ctx,
         appId: input.appId,
@@ -74,15 +76,15 @@ export const versionRouter = createRouter()
         isCurrentlyPlayground: version.hash === app?.playgroundVersionHash,
         isCurrentlyPublished: version.hash === app?.publishedVersionHash,
       };
-    },
-  })
-  // read
-  .query('all', {
-    input: z.object({
-      appId: z.string(),
-      limit: z.number().optional(),
     }),
-    async resolve({ ctx, input }) {
+  all: publicProcedure
+    .input(
+      z.object({
+        appId: z.string(),
+        limit: z.number().optional(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
       await hasAppReadPermission({
         ctx,
         appId: input.appId,
@@ -127,14 +129,15 @@ export const versionRouter = createRouter()
           isCurrentlyPublished: v.hash === app?.publishedVersionHash,
         };
       });
-    },
-  })
-  .mutation('promote', {
-    input: z.object({
-      version: z.string().min(7),
-      appId: z.string(),
     }),
-    async resolve({ ctx, input }) {
+  promote: publicProcedure
+    .input(
+      z.object({
+        version: z.string().min(7),
+        appId: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
       await hasAppEditPermission({ ctx, appId: input.appId });
 
       const version = await prisma.version.findFirstOrThrow({
@@ -164,14 +167,15 @@ export const versionRouter = createRouter()
           publishedVersionHash: version.hash,
         },
       });
-    },
-  })
-  .mutation('restore', {
-    input: z.object({
-      appId: z.string(),
-      version: z.string().min(7),
     }),
-    async resolve({ ctx, input }) {
+  restore: publicProcedure
+    .input(
+      z.object({
+        appId: z.string(),
+        version: z.string().min(7),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
       await hasAppEditPermission({ ctx, appId: input.appId });
 
       const version = await prisma.version.findFirstOrThrow({
@@ -232,5 +236,5 @@ export const versionRouter = createRouter()
           playgroundVersionHash: version.hash,
         },
       });
-    },
-  });
+    }),
+});

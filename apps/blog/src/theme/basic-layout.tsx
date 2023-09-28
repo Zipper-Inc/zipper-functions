@@ -132,6 +132,7 @@ export const BasicLayout = ({ children }: { children: ReactNode }) => {
                   fontSize="xl"
                   maxW="container.md"
                   fontWeight={400}
+                  color="gray.500"
                   lineHeight="6"
                 >
                   {opts.frontMatter.description}

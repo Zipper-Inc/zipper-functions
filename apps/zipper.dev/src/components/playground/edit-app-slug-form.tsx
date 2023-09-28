@@ -28,7 +28,7 @@ export const EditAppSlugForm: React.FC<EditAppSlugFormProps> = ({
 }) => {
   const appSlugForm = useForm({ defaultValues: { slug: app.slug } });
   const router = useRouter();
-  const appEditMutation = trpc.useMutation('app.edit', {
+  const appEditMutation = trpc.app.edit.useMutation({
     onSuccess({ slug }) {
       if (slug !== app.slug) {
         const url = router.asPath.replace(app.slug, slug);

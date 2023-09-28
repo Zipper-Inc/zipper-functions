@@ -10,13 +10,11 @@ const SlackAuth: NextPageWithLayout = () => {
   const { code, state, error, error_description } = router.query;
   const [errorMessage, setErrorMessage] = useState<string | undefined>();
 
-  const sendWelcomeMessage = trpc.useMutation(
-    'zipperSlackIntegration.sendWelcomeMessage',
-  );
+  const sendWelcomeMessage =
+    trpc.zipperSlackIntegration.sendWelcomeMessage.useMutation();
 
-  const exchangeMutation = trpc.useMutation(
-    'zipperSlackIntegration.exchangeCodeForToken',
-    {
+  const exchangeMutation =
+    trpc.zipperSlackIntegration.exchangeCodeForToken.useMutation({
       onSuccess: (data) => {
         sendWelcomeMessage.mutateAsync(data);
         router.push('/');
@@ -24,8 +22,7 @@ const SlackAuth: NextPageWithLayout = () => {
       onError: (error) => {
         setErrorMessage(error.message);
       },
-    },
-  );
+    });
 
   if (error || errorMessage) {
     return (

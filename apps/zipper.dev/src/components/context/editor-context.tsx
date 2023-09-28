@@ -511,7 +511,7 @@ const EditorContextProvider = ({
     setScripts(initialScripts);
   }, [initialScripts]);
 
-  const editAppMutation = trpc.useMutation('app.edit', {
+  const editAppMutation = trpc.app.edit.useMutation({
     async onSuccess() {
       refetchApp();
     },

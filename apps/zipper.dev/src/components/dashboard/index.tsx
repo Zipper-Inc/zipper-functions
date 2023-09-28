@@ -1,4 +1,4 @@
-import { inferQueryOutput, trpc } from '~/utils/trpc';
+import { RouterOutputs, trpc } from '~/utils/trpc';
 import {
   TableContainer,
   Text,
@@ -48,7 +48,7 @@ import AppAvatar from '../app-avatar';
 import { useOrganization } from '~/hooks/use-organization';
 import { getEditAppletLink } from '@zipper/utils';
 
-type _App = Unpack<inferQueryOutput<'app.byAuthedUser'>>;
+type _App = Unpack<RouterOutputs['app']['byAuthedUser']>;
 type App = _App & {
   createdByInfo: AppOwner;
   updatedAt: Date;
@@ -192,10 +192,9 @@ export function Dashboard() {
   const [tabIndex, setTabIndex] = useState(0);
   const { organization } = useOrganization();
   const [appSearchTerm, setAppSearchTerm] = useState('');
-  const appQuery = trpc.useQuery([
-    'app.byAuthedUser',
-    { filterByOrganization: !appSearchTerm },
-  ]);
+  const appQuery = trpc.app.byAuthedUser.useQuery({
+    filterByOrganization: !appSearchTerm,
+  });
 
   const { onOpen, isOpen, onClose } = useDisclosure();
   const [columnVisibility, setColumnVisibility] = useState<

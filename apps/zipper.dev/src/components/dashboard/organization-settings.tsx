@@ -21,13 +21,11 @@ function OrganizationSettings() {
   const [disabled, setDisabled] = useState(false);
   const { organization } = useOrganization();
   const [orgName, setOrgName] = useState(organization?.name || '');
-  const organizationSlugQuery = trpc.useQuery(
-    [
-      'resourceOwnerSlug.findByOrganizationId',
+  const organizationSlugQuery =
+    trpc.resourceOwnerSlug.findByOrganizationId.useQuery(
       { organizationId: organization?.id || '' },
-    ],
-    { enabled: !!organization },
-  );
+      { enabled: !!organization },
+    );
 
   useEffect(() => {
     setOrgName(organization?.name || '');

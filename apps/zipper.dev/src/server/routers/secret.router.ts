@@ -1,12 +1,12 @@
 import { Prisma } from '@prisma/client';
 import { z } from 'zod';
 import { prisma } from '~/server/prisma';
-import { createRouter } from '../createRouter';
 import {
   hasAppEditPermission,
   hasAppReadPermission,
 } from '../utils/authz.utils';
 import { encryptToBase64 } from '@zipper/utils';
+import { createTRPCRouter, publicProcedure } from '../root';
 
 const defaultSelect = Prisma.validator<Prisma.SecretSelect>()({
   id: true,
@@ -15,15 +15,16 @@ const defaultSelect = Prisma.validator<Prisma.SecretSelect>()({
   encryptedValue: true,
 });
 
-export const secretRouter = createRouter()
-  // create
-  .mutation('add', {
-    input: z.object({
-      appId: z.string(),
-      key: z.string(),
-      value: z.string(),
-    }),
-    async resolve({ ctx, input }) {
+export const secretRouter = createTRPCRouter({
+  add: publicProcedure
+    .input(
+      z.object({
+        appId: z.string(),
+        key: z.string(),
+        value: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
       await hasAppEditPermission({
         ctx,
         appId: input.appId,
@@ -53,15 +54,15 @@ export const secretRouter = createRouter()
         },
         select: defaultSelect,
       });
-    },
-  })
-  // read
-  .query('get', {
-    input: z.object({
-      appId: z.string(),
-      key: z.string(),
     }),
-    async resolve({ ctx, input }) {
+  get: publicProcedure
+    .input(
+      z.object({
+        appId: z.string(),
+        key: z.string(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
       await hasAppEditPermission({
         ctx,
         appId: input.appId,
@@ -74,13 +75,14 @@ export const secretRouter = createRouter()
         },
         select: defaultSelect,
       });
-    },
-  })
-  .query('all', {
-    input: z.object({
-      appId: z.string(),
     }),
-    async resolve({ ctx, input }) {
+  all: publicProcedure
+    .input(
+      z.object({
+        appId: z.string(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
       await hasAppReadPermission({
         ctx,
         appId: input.appId,
@@ -96,16 +98,16 @@ export const secretRouter = createRouter()
         },
         select: defaultSelect,
       });
-    },
-  })
-  // delete
-  .mutation('delete', {
-    input: z.object({
-      id: z.string().optional(),
-      key: z.string().optional(),
-      appId: z.string(),
     }),
-    async resolve({ ctx, input }) {
+  delete: publicProcedure
+    .input(
+      z.object({
+        id: z.string().optional(),
+        key: z.string().optional(),
+        appId: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
       await hasAppEditPermission({
         ctx,
         appId: input.appId,
@@ -135,5 +137,5 @@ export const secretRouter = createRouter()
           key: input.key,
         };
       }
-    },
-  });
+    }),
+});

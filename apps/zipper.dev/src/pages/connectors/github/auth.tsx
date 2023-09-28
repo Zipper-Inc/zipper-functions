@@ -9,9 +9,8 @@ const GitHubAuth: NextPageWithLayout = () => {
   const router = useRouter();
   const { code, state, error, error_description } = router.query;
 
-  const exchangeMutation = trpc.useMutation(
-    'githubConnector.exchangeCodeForToken',
-    {
+  const exchangeMutation =
+    trpc.githubConnector.exchangeCodeForToken.useMutation({
       onSuccess: (data) => {
         if (data.redirectTo?.includes('http')) {
           window.location.replace(data.redirectTo);
@@ -22,8 +21,7 @@ const GitHubAuth: NextPageWithLayout = () => {
           );
         }
       },
-    },
-  );
+    });
 
   if (error) {
     return (

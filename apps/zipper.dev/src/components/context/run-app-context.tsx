@@ -90,25 +90,25 @@ export function RunAppProvider({
   const { useUploadThing } = generateReactHelpers<OurFileRouter>();
   const { isUploading, startUpload } = useUploadThing('imageUploader');
 
-  const runAppMutation = trpc.useMutation('app.run', {
+  const runAppMutation = trpc.app.run.useMutation({
     async onSuccess() {
-      await utils.invalidateQueries([
-        'app.byResourceOwnerAndAppSlugs',
-        { resourceOwnerSlug: app.resourceOwner.slug, appSlug: slug },
-      ]);
+      await utils.app.byResourceOwnerAndAppSlugs.invalidate({
+        resourceOwnerSlug: app.resourceOwner.slug,
+        appSlug: slug,
+      });
     },
   });
 
-  const bootAppMutation = trpc.useMutation('app.boot', {
+  const bootAppMutation = trpc.app.boot.useMutation({
     async onSuccess() {
-      await utils.invalidateQueries([
-        'app.byResourceOwnerAndAppSlugs',
-        { resourceOwnerSlug: app.resourceOwner.slug, appSlug: slug },
-      ]);
+      await utils.app.byResourceOwnerAndAppSlugs.invalidate({
+        resourceOwnerSlug: app.resourceOwner.slug,
+        appSlug: slug,
+      });
     },
   });
 
-  const logMutation = trpc.useMutation('appLog.get');
+  const logMutation = trpc.appLog.get.useMutation();
 
   const { currentScript, inputParams } = useEditorContext();
 

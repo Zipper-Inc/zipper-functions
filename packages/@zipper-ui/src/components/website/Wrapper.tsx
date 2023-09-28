@@ -23,10 +23,10 @@ export const Wrapper = ({ children }: { children: ReactNode }) => {
           h="0"
           borderBottom={{
             base: '600px solid transparent',
-            lg: '1700px solid transparent',
+            lg: '1500px solid transparent',
           }}
           zIndex={0}
-          borderLeft={{ base: '600px solid white', lg: '1700px solid white' }}
+          borderLeft={{ base: '600px solid white', lg: '1500px solid white' }}
         />
         <Box as="main" w="full" m="0 auto" zIndex={1} position="relative">
           {children}

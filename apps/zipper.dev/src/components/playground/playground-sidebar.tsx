@@ -77,14 +77,14 @@ export function PlaygroundSidebar({
     endRenaming();
   }, [currentScript]);
 
-  const deleteScript = trpc.useMutation('script.delete', {
+  const deleteScript = trpc.script.delete.useMutation({
     async onSuccess() {
       setDeletingId(null);
       refetchApp();
     },
   });
 
-  const editScriptQuery = trpc.useMutation('script.edit', {
+  const editScriptQuery = trpc.script.edit.useMutation({
     async onSuccess() {
       refetchApp();
     },
@@ -100,7 +100,7 @@ export function PlaygroundSidebar({
     endRenaming();
   };
 
-  const addScript = trpc.useMutation('script.add', {
+  const addScript = trpc.script.add.useMutation({
     async onSuccess() {
       refetchApp();
     },

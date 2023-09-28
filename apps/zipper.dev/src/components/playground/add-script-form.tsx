@@ -36,7 +36,7 @@ export default function AddScriptForm({
   const { register, handleSubmit, reset, watch } = useForm();
   const { setCurrentScript, scripts, refetchApp } = useEditorContext();
 
-  const addScript = trpc.useMutation('script.add', {
+  const addScript = trpc.script.add.useMutation({
     async onSuccess(script) {
       // refetches posts after a post is added
       await refetchApp();

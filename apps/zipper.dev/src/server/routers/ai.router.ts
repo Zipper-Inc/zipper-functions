@@ -1,15 +1,16 @@
 import { AICodeOutput } from '@zipper/types';
 import { z } from 'zod';
 import { createCodeChain } from '~/utils/ai-generate-applet';
-import { createRouter } from '../createRouter';
+import { createTRPCRouter, publicProcedure } from '../root';
 
-export const aiRouter = createRouter()
-  // Applet pipeline
-  .mutation('pipeline', {
-    input: z.object({
-      userRequest: z.string(),
-    }),
-    async resolve({ input }) {
+export const aiRouter = createTRPCRouter({
+  pipeline: publicProcedure
+    .input(
+      z.object({
+        userRequest: z.string(),
+      }),
+    )
+    .mutation(async ({ input }) => {
       const { userRequest } = input;
 
       try {
@@ -18,5 +19,5 @@ export const aiRouter = createRouter()
       } catch (err) {
         throw new Error(`Error while running the AI pipeline: ${err}`);
       }
-    },
-  });
+    }),
+});

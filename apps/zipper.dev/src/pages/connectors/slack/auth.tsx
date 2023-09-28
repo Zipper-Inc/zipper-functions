@@ -10,8 +10,7 @@ const SlackAuth: NextPageWithLayout = () => {
   const { code, state, error, error_description } = router.query;
   const [errorMessage, setErrorMessage] = useState<string | undefined>();
 
-  const exchangeMutation = trpc.useMutation(
-    'slackConnector.exchangeCodeForToken',
+  const exchangeMutation = trpc.slackConnector.exchangeCodeForToken.useMutation(
     {
       onSuccess: (data) => {
         if (data.redirectTo?.includes('http')) {

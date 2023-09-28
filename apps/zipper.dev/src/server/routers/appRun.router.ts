@@ -2,8 +2,8 @@ import { AppRun, Prisma } from '@prisma/client';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { prisma } from '~/server/prisma';
-import { createRouter } from '../createRouter';
 import { hasAppReadPermission } from '../utils/authz.utils';
+import { createTRPCRouter, publicProcedure } from '../root';
 
 const defaultSelect = Prisma.validator<Prisma.AppRunSelect>()({
   id: true,
@@ -21,35 +21,37 @@ const defaultSelect = Prisma.validator<Prisma.AppRunSelect>()({
   version: true,
 });
 
-export const appRunRouter = createRouter()
-  // create
-  .mutation('add', {
-    input: z.object({
-      appId: z.string(),
-      success: z.boolean(),
-      result: z.string(),
-      deploymentId: z.string(),
-      inputs: z.record(z.any()),
-      scheduleId: z.string().optional(),
-      originalRequestUrl: z.string(),
-      originalRequestMethod: z.string(),
-      path: z.string(),
-      userId: z.string(),
-      version: z.string(),
-    }),
-    async resolve({ input }) {
+export const appRunRouter = createTRPCRouter({
+  add: publicProcedure
+    .input(
+      z.object({
+        appId: z.string(),
+        success: z.boolean(),
+        result: z.string(),
+        deploymentId: z.string(),
+        inputs: z.record(z.any()),
+        scheduleId: z.string().optional(),
+        originalRequestUrl: z.string(),
+        originalRequestMethod: z.string(),
+        path: z.string(),
+        userId: z.string(),
+        version: z.string(),
+      }),
+    )
+    .mutation(async ({ input }) => {
       return prisma.appRun.create({
         data: { ...input },
         select: defaultSelect,
       });
-    },
-  })
-  .query('byId', {
-    input: z.object({
-      appSlug: z.string(),
-      runId: z.string(),
     }),
-    async resolve({ ctx, input }) {
+  byId: publicProcedure
+    .input(
+      z.object({
+        appSlug: z.string(),
+        runId: z.string(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
       const appRun = await prisma.appRun.findFirst({
         where: {
           id: { startsWith: input.runId },
@@ -63,15 +65,15 @@ export const appRunRouter = createRouter()
       }
 
       return appRun;
-    },
-  })
-  // read
-  .query('all', {
-    input: z.object({
-      appId: z.string(),
-      limit: z.number().optional(),
     }),
-    async resolve({ ctx, input }) {
+  all: publicProcedure
+    .input(
+      z.object({
+        appId: z.string(),
+        limit: z.number().optional(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
       await hasAppReadPermission({
         ctx,
         appId: input.appId,
@@ -103,5 +105,5 @@ export const appRunRouter = createRouter()
       return appRuns.map((r) => {
         return { ...r, user: users.find((u) => u.id === r.userId) };
       });
-    },
-  });
+    }),
+});

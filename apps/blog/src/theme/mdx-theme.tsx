@@ -123,7 +123,7 @@ const useComponents = (): Components => {
   const { config } = useBlogContext();
 
   return ChakraUIRenderer({
-    p: (props: TextProps) => <Text {...props} mb="8" />,
+    p: (props: TextProps) => <Text {...props} color="gray.900" mb="8" />,
     a: A,
     h1: H1,
     h2: (props: HeadingProps) => (
@@ -136,8 +136,9 @@ const useComponents = (): Components => {
         {...props}
       />
     ),
+    li: (props: TextProps) => <Text as="li" {...props} color="gray.900" />,
     h3: (props: HeadingProps) => (
-      <HeadingLink as="h3" size="xl" mt={6} mb={6} {...props} />
+      <Heading as="h3" size="xl" mt={6} mb={6} {...props} />
     ),
     h4: (props: HeadingProps) => (
       <HeadingLink as="h4" size="lg" mt={8} mb={4} {...props} />

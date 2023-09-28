@@ -46,8 +46,8 @@ export const CreateOrganizationModal = ({
   const [slug, setSlug] = useState<string>('');
   const [debouncedSlug] = useDebounce(slug, 200);
 
-  const resourceOwnerSlugQuery = trpc.useQuery(
-    ['resourceOwnerSlug.find', { slug: debouncedSlug }],
+  const resourceOwnerSlugQuery = trpc.resourceOwnerSlug.find.useQuery(
+    { slug: debouncedSlug },
     { enabled: !!(debouncedSlug.length >= MIN_SLUG_LENGTH) },
   );
 

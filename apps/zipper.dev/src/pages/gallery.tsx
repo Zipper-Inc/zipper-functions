@@ -4,13 +4,13 @@ import { Gallery } from '~/components/gallery';
 import { trpc } from '~/utils/trpc';
 import NextError from 'next/error';
 import { GetServerSideProps } from 'next';
-import { createSSGHelpers } from '@trpc/react/ssg';
+import { createServerSideHelpers } from '@trpc/react-query/server';
 import { trpcRouter } from '~/server/routers/_app';
 import SuperJSON from 'superjson';
 import { createContext } from '~/server/context';
 
 const GalleryPage: NextPageWithLayout = () => {
-  const galleryApps = trpc.useQuery(['app.allApproved']);
+  const galleryApps = trpc.app.allApproved.useQuery();
 
   if (galleryApps.error) {
     return <NextError statusCode={500} />;
@@ -33,13 +33,13 @@ const GalleryPage: NextPageWithLayout = () => {
 };
 
 export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
-  const ssg = createSSGHelpers({
+  const ssg = createServerSideHelpers({
     router: trpcRouter,
     transformer: SuperJSON,
     ctx: await createContext({ req, res }),
   });
 
-  await ssg.fetchQuery('app.allApproved');
+  await ssg.app.allApproved.fetch();
 
   return { props: { trpcState: ssg.dehydrate() } };
 };

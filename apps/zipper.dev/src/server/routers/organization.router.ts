@@ -1,78 +1,69 @@
 import { z } from 'zod';
-import { hasOrgAdminPermission } from '../utils/authz.utils';
 import { ResourceOwnerType, UserRole } from '@zipper/types';
-import * as trpc from '@trpc/server';
 import { prisma } from '../prisma';
+
 import crypto from 'crypto';
-import { createRouter } from '../createRouter';
 import denyList from '../utils/slugDenyList';
 import slugify from '~/utils/slugify';
 import { sendInvitationEmail } from '../utils/invitation.utils';
 import { OMNI_USER_ID } from '../utils/omni.utils';
 import { getZipperDotDevUrl } from '@zipper/utils';
 import { trackEvent } from '~/utils/api-analytics';
+import { adminProcedure, createTRPCRouter, protectedProcedure } from '../root';
+import { TRPCError } from '@trpc/server';
 
-export const organizationRouter = createRouter()
-  .query('getMemberships', {
-    async resolve({ ctx }) {
-      if (!hasOrgAdminPermission(ctx))
-        throw new trpc.TRPCError({ code: 'UNAUTHORIZED' });
-
-      return prisma.organizationMembership.findMany({
-        where: {
-          organizationId: ctx.orgId,
-        },
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-              image: true,
-              slug: true,
-            },
+export const organizationRouter = createTRPCRouter({
+  getMemberships: adminProcedure.query(async ({ ctx }) => {
+    return prisma.organizationMembership.findMany({
+      where: {
+        organizationId: ctx.orgId,
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            image: true,
+            slug: true,
           },
         },
-      });
-    },
-  })
-  .query('getPendingInvitations', {
-    async resolve({ ctx }) {
-      if (!hasOrgAdminPermission(ctx))
-        throw new trpc.TRPCError({ code: 'UNAUTHORIZED' });
-
-      return prisma.organizationInvitation.findMany({
-        where: {
-          organizationId: ctx.orgId,
-        },
-        select: {
-          organizationId: true,
-          email: true,
-          role: true,
-          createdAt: true,
-        },
-      });
-    },
-  })
-  .mutation('add', {
-    input: z.object({
-      name: z.string().min(3).max(50),
-      slug: z
-        .string()
-        .min(3)
-        .max(50)
-        .optional()
-        .transform((arg) => arg?.toLowerCase() || undefined),
-      shouldCreateResourceOwnerSlug: z.boolean().optional().default(true),
-      shouldAssignAdmin: z.boolean().optional().default(true),
-    }),
-    async resolve({ input, ctx }) {
-      if (!ctx.userId) throw new trpc.TRPCError({ code: 'UNAUTHORIZED' });
+      },
+    });
+  }),
+  getPendingInvitations: adminProcedure.query(async ({ ctx }) => {
+    return prisma.organizationInvitation.findMany({
+      where: {
+        organizationId: ctx.orgId,
+      },
+      select: {
+        organizationId: true,
+        email: true,
+        role: true,
+        createdAt: true,
+      },
+    });
+  }),
+  add: protectedProcedure
+    .input(
+      z.object({
+        name: z.string().min(3).max(50),
+        slug: z
+          .string()
+          .min(3)
+          .max(50)
+          .optional()
+          .transform((arg) => arg?.toLowerCase() || undefined),
+        shouldCreateResourceOwnerSlug: z.boolean().optional().default(true),
+        shouldAssignAdmin: z.boolean().optional().default(true),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
       const slug = input.slug || slugify(input.name);
 
       const deniedSlug = denyList.find((d) => d === slug);
       if (deniedSlug)
-        throw new trpc.TRPCError({
+        throw new TRPCError({
           message: 'Invalid slug',
           code: 'INTERNAL_SERVER_ERROR',
         });
@@ -111,37 +102,33 @@ export const organizationRouter = createRouter()
       });
 
       return org;
-    },
-  })
-  .mutation('update', {
-    input: z.object({
-      name: z.string(),
     }),
-    async resolve({ input, ctx }) {
-      if (!hasOrgAdminPermission(ctx))
-        throw new trpc.TRPCError({ code: 'UNAUTHORIZED' });
-
+  update: adminProcedure
+    .input(
+      z.object({
+        name: z.string(),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
       return prisma.organization.update({
         where: {
           id: ctx.orgId,
         },
         data: input,
       });
-    },
-  })
-  .mutation('updateMember', {
-    input: z.object({
-      userId: z.string(),
-      data: z.object({
-        role: z.nativeEnum(UserRole),
-      }),
     }),
-    async resolve({ input, ctx }) {
-      if (!hasOrgAdminPermission(ctx))
-        throw new trpc.TRPCError({ code: 'UNAUTHORIZED' });
-
+  updateMember: adminProcedure
+    .input(
+      z.object({
+        userId: z.string(),
+        data: z.object({
+          role: z.nativeEnum(UserRole),
+        }),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
       if (input.userId === ctx.userId) {
-        throw new trpc.TRPCError({
+        throw new TRPCError({
           code: 'BAD_REQUEST',
           message: 'Cannot update your own role',
         });
@@ -150,26 +137,24 @@ export const organizationRouter = createRouter()
       return prisma.organizationMembership.update({
         where: {
           organizationId_userId: {
-            organizationId: ctx.orgId!,
+            organizationId: ctx.orgId,
             userId: input.userId,
           },
         },
         data: input.data,
       });
-    },
-  })
-  .mutation('removeMember', {
-    input: z.object({
-      userId: z.string(),
     }),
-    async resolve({ input, ctx }) {
-      if (!hasOrgAdminPermission(ctx))
-        throw new trpc.TRPCError({ code: 'UNAUTHORIZED' });
-
+  removeMember: adminProcedure
+    .input(
+      z.object({
+        userId: z.string(),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
       const membership = await prisma.organizationMembership.findUniqueOrThrow({
         where: {
           organizationId_userId: {
-            organizationId: ctx.orgId!,
+            organizationId: ctx.orgId,
             userId: input.userId,
           },
         },
@@ -178,13 +163,13 @@ export const organizationRouter = createRouter()
       if (membership.role === UserRole.Admin) {
         const existingAdmins = await prisma.organizationMembership.findMany({
           where: {
-            organizationId: ctx.orgId!,
+            organizationId: ctx.orgId,
             role: UserRole.Admin,
           },
         });
 
         if (existingAdmins.length === 1) {
-          throw new trpc.TRPCError({
+          throw new TRPCError({
             code: 'BAD_REQUEST',
             message: 'Cannot remove the last admin',
           });
@@ -194,15 +179,14 @@ export const organizationRouter = createRouter()
       const orgMem = await prisma.organizationMembership.delete({
         where: {
           organizationId_userId: {
-            organizationId: ctx.orgId!,
+            organizationId: ctx.orgId,
             userId: input.userId,
           },
         },
       });
 
       return !!orgMem;
-    },
-  })
+    }),
   // revisit using https://uploadthing.com
   // .mutation('setLogo', {
   //   input: z.object({
@@ -210,15 +194,14 @@ export const organizationRouter = createRouter()
   //   }),
   //   async resolve({ input, ctx }) {},
   // })
-  .mutation('inviteMember', {
-    input: z.object({
-      email: z.string().email(),
-      role: z.nativeEnum(UserRole),
-    }),
-    async resolve({ input, ctx }) {
-      if (!hasOrgAdminPermission(ctx))
-        throw new trpc.TRPCError({ code: 'UNAUTHORIZED' });
-
+  inviteMember: adminProcedure
+    .input(
+      z.object({
+        email: z.string().email(),
+        role: z.nativeEnum(UserRole),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
       const existingUser = await prisma.user.findFirst({
         where: {
           email: input.email,
@@ -234,7 +217,7 @@ export const organizationRouter = createRouter()
         );
 
         if (existingMembership) {
-          throw new trpc.TRPCError({
+          throw new TRPCError({
             code: 'BAD_REQUEST',
             message: 'User is already a member of this organization',
           });
@@ -246,7 +229,7 @@ export const organizationRouter = createRouter()
       const invite = await prisma.organizationInvitation.create({
         data: {
           email: input.email,
-          organizationId: ctx.orgId!,
+          organizationId: ctx.orgId,
           role: input.role,
           token: crypto.randomBytes(4).toString('hex'),
           redirectUrl: `${getZipperDotDevUrl().origin}/${signInOrSignUp}`,
@@ -255,7 +238,7 @@ export const organizationRouter = createRouter()
 
       const org = await prisma.organization.findUnique({
         where: {
-          id: ctx.orgId!,
+          id: ctx.orgId,
         },
       });
 
@@ -271,46 +254,44 @@ export const organizationRouter = createRouter()
       }
 
       return invite;
-    },
-  })
-  .mutation('revokeInvitation', {
-    input: z.object({
-      email: z.string().email(),
     }),
-    async resolve({ input, ctx }) {
-      if (!hasOrgAdminPermission(ctx))
-        throw new trpc.TRPCError({ code: 'UNAUTHORIZED' });
-
+  revokeInvitation: adminProcedure
+    .input(
+      z.object({
+        email: z.string().email(),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
       try {
         const invite = await prisma.organizationInvitation.delete({
           where: {
             organizationId_email: {
-              organizationId: ctx.orgId!,
+              organizationId: ctx.orgId,
               email: input.email,
             },
           },
         });
         return !!invite;
       } catch (e) {
-        throw new trpc.TRPCError({
+        throw new TRPCError({
           code: 'NOT_FOUND',
           message: 'Invitation not found',
         });
       }
-    },
-  })
-  .mutation('acceptInvitation', {
-    input: z.object({
-      token: z.string().optional(),
-      organizationId: z.string().optional(),
     }),
-    async resolve({ input, ctx }) {
+  acceptInvitation: protectedProcedure
+    .input(
+      z.object({
+        token: z.string().optional(),
+        organizationId: z.string().optional(),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
       if (!input.token && !input.organizationId)
-        throw new trpc.TRPCError({
+        throw new TRPCError({
           code: 'BAD_REQUEST',
           message: 'Must provide either token or organizationId',
         });
-      if (!ctx.userId) throw new trpc.TRPCError({ code: 'UNAUTHORIZED' });
 
       const user = await prisma.user.findUnique({
         where: {
@@ -338,7 +319,7 @@ export const organizationRouter = createRouter()
       });
 
       if (!invite) {
-        throw new trpc.TRPCError({
+        throw new TRPCError({
           code: 'NOT_FOUND',
           message: 'Invitation not found',
         });
@@ -352,7 +333,7 @@ export const organizationRouter = createRouter()
       });
 
       if (existingMembership) {
-        throw new trpc.TRPCError({
+        throw new TRPCError({
           code: 'BAD_REQUEST',
           message: 'User is already a member of this organization',
         });
@@ -376,5 +357,5 @@ export const organizationRouter = createRouter()
       });
 
       return invite.organizationId;
-    },
-  });
+    }),
+});

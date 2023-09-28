@@ -128,6 +128,7 @@ export const WebSiteNavbar = ({ links, site = SiteType.Home }: Props) => {
           isExternal
           fontWeight={500}
           color="gray.600"
+          bg="white"
           textDecoration="none"
           h="44px"
           variant="outline"

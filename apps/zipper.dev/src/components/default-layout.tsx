@@ -2,7 +2,7 @@ import '@fontsource/inter';
 import { ChakraProvider, Flex } from '@chakra-ui/react';
 import Head from 'next/head';
 import { ReactNode } from 'react';
-import { ReactQueryDevtools } from 'react-query/devtools';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 
 import { theme } from '@zipper/ui';
 
