@@ -1,4 +1,4 @@
-import { Heading, VStack } from '@chakra-ui/react';
+import { Heading, Text, VStack } from '@chakra-ui/react';
 import { AppInfo } from '@zipper/types';
 import { Markdown } from './markdown';
 
@@ -49,7 +49,11 @@ export function HandlerDescription(props: Props) {
           {subtitle}
         </Heading>
       )}
-      {body && <Markdown>{body}</Markdown>}
+      {body && (
+        <Text pt={title || subtitle ? 4 : undefined}>
+          <Markdown>{body}</Markdown>
+        </Text>
+      )}
     </VStack>
   );
 }
