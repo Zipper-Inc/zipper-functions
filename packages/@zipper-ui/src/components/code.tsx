@@ -1,5 +1,5 @@
 import { Box, ChakraProps, useColorModeValue } from '@chakra-ui/react';
-import { prettierFormat } from '@zipper/utils';
+import { prettierFormat } from '@zipper/ui';
 import { Highlight, themes } from 'prism-react-renderer';
 
 export const Code = ({

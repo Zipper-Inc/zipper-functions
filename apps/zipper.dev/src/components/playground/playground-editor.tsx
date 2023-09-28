@@ -12,7 +12,7 @@ import { parse } from '@babel/parser';
 import traverse from '@babel/traverse';
 import { useColorModeValue } from '@chakra-ui/react';
 import { baseColors } from '@zipper/ui';
-import { prettierFormat } from '@zipper/utils';
+import { prettierFormat } from '@zipper/ui';
 import MonacoJSXHighlighter from 'monaco-jsx-highlighter';
 import { useEffect, useRef, useState } from 'react';
 import { useExitConfirmation } from '~/hooks/use-exit-confirmation';
