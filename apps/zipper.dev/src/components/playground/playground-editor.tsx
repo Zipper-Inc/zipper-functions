@@ -11,8 +11,7 @@ import { useMyPresence, useOthersConnectionIds } from '~/liveblocks.config';
 import { parse } from '@babel/parser';
 import traverse from '@babel/traverse';
 import { useColorModeValue } from '@chakra-ui/react';
-import { baseColors } from '@zipper/ui';
-import { prettierFormat } from '@zipper/ui';
+import { baseColors, prettierFormat } from '@zipper/ui';
 import MonacoJSXHighlighter from 'monaco-jsx-highlighter';
 import { useEffect, useRef, useState } from 'react';
 import { useExitConfirmation } from '~/hooks/use-exit-confirmation';
@@ -69,7 +68,7 @@ export default function PlaygroundEditor(
     monacoRef,
     onValidate,
   } = useEditorContext();
-  const { appInfo } = useRunAppContext();
+  const { appInfo, boot } = useRunAppContext();
   const editorRef = useRef<MonacoEditor>();
   const [isEditorReady, setIsEditorReady] = useState(false);
   const monacoEditor = useMonaco();
@@ -341,6 +340,10 @@ export default function PlaygroundEditor(
       }
     }
   }, [currentScript, editorRef.current, isEditorReady]);
+
+  useEffect(() => {
+    if (isEditorReady) boot();
+  }, [isEditorReady]);
 
   // Execute edits
   useEffect(() => {

@@ -9,7 +9,7 @@ import {
 import { Script } from '@prisma/client';
 import { Markdown, useCmdOrCtrl } from '@zipper/ui';
 import dynamic from 'next/dynamic';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import {
   AppEditSidebarContextType,
   AppEditSidebarProvider,
@@ -65,10 +65,6 @@ export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
   const [expandedResult, setExpandedResult] = useState<
     AppEditSidebarContextType['expandedResult']
   >({});
-
-  useEffect(() => {
-    saveAndBoot();
-  }, [currentScript]);
 
   const [inputs, setInputs] = useState<AppEditSidebarContextType['inputs']>({});
   const [isMarkdownEditable, setIsMarkdownEditable] = useState(false);
