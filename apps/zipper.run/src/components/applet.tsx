@@ -319,10 +319,11 @@ export function AppPage({
     />
   );
 
+  const title = description?.title || appTitle || app?.slug;
   const runContent = (
-    <VStack w="full" align="stretch" spacing={6} ml={4}>
-      <Heading as="h1" fontSize="4xl" fontWeight="medium" mt={4}>
-        {description?.title || appTitle}
+    <VStack w="full" align="stretch" spacing={4} ml={4}>
+      <Heading as="h1" fontSize="4xl" fontWeight="medium">
+        {title}
       </Heading>
       {!isEmbedded && <Box ml="4">{inputSummary}</Box>}
       {output}
@@ -347,6 +348,8 @@ export function AppPage({
       as="main"
       position="relative"
       px={8}
+      pt={4}
+      pb={8}
       spacing={8}
       w="full"
       direction={{ base: 'column', md: 'row' }}
@@ -400,7 +403,7 @@ export function AppPage({
           </>
         )}
       </Head>
-      <VStack flex={1} alignItems="stretch" spacing={8}>
+      <VStack flex={1} alignItems="stretch" spacing={4}>
         <Header
           {...app}
           entryPoint={entryPoint}

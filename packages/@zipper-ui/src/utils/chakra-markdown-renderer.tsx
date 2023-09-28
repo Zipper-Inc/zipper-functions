@@ -303,7 +303,6 @@ export const defaults: Components & { heading: Components['h1'] } = {
   },
   pre: (props) => {
     const { children } = props;
-    console.log('pre props', props);
     return (
       <chakra.pre {...getCoreProps(props)} width="full" data-markdown>
         {children}

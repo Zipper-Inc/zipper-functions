@@ -57,9 +57,11 @@ const ConnectorsAuthInputsSection: React.FC<
         >
           <AccordionItem border="none">
             <AccordionButton _hover={{ bgColor: 'fg.50' }} color="fg.700">
-              <Box as="span" flex="1" textAlign="left">
-                {inputSummary}
-              </Box>
+              {inputSummary.trim() && (
+                <Box as="span" flex="1" textAlign="left">
+                  {inputSummary}
+                </Box>
+              )}
               <AccordionIcon />
             </AccordionButton>
             <AccordionPanel pb={4}>{inputsSection}</AccordionPanel>

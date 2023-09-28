@@ -1,9 +1,9 @@
 import { Button, Container, HStack } from '@chakra-ui/react';
 import { InputParams, InputType } from '@zipper/types';
-import { HiOutlinePlay } from 'react-icons/hi2';
-import { FieldValues, UseFormReturn } from 'react-hook-form';
-import { formatShortDate, getFieldName } from '@zipper/utils';
+import { getFieldName } from '@zipper/utils';
 import { parseDate } from 'chrono-node';
+import { FieldValues, UseFormReturn } from 'react-hook-form';
+import { HiOutlinePlay } from 'react-icons/hi2';
 
 type InputSummaryProps = {
   inputs: InputParams;
@@ -91,27 +91,28 @@ const InputSummary: React.FC<InputSummaryProps> = ({
 
   return (
     <HStack spacing={4} color="fg.600" fontSize="sm">
-      <Container
-        m={0}
-        overflow="hidden"
-        whiteSpace="nowrap"
-        textOverflow="ellipsis"
-        px={0}
-        w="fit-content"
-        fontWeight="normal"
-      >
-        {inputSummary}
-      </Container>
+      {inputSummary.trim() && (
+        <Container
+          m={0}
+          overflow="hidden"
+          whiteSpace="nowrap"
+          textOverflow="ellipsis"
+          px={0}
+          w="fit-content"
+          fontWeight="normal"
+        >
+          {inputSummary}
+        </Container>
+      )}
       <Button
         variant="ghost"
         colorScheme="purple"
-        gap={1}
         size="sm"
         fontWeight="normal"
+        leftIcon={<HiOutlinePlay />}
         onClick={onEditAndRerun}
       >
-        <HiOutlinePlay />
-        Edit & Rerun
+        Run again
       </Button>
     </HStack>
   );
