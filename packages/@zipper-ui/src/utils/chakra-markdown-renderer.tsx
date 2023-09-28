@@ -2,7 +2,7 @@ import { Checkbox } from '@chakra-ui/checkbox';
 import { Image } from '@chakra-ui/image';
 import {
   Box,
-  Code,
+  Code as ChakraCode,
   Divider,
   Heading,
   Link,
@@ -16,6 +16,7 @@ import { Table, Tbody, Td, Th, Thead, Tr } from '@chakra-ui/table';
 import deepmerge from 'deepmerge';
 import * as React from 'react';
 import { Components } from 'react-markdown/src/ast-to-react';
+import { Code } from '../components/code';
 
 type GetCoreProps = {
   children?: React.ReactNode;
@@ -182,20 +183,10 @@ export const defaults: Components & { heading: Components['h1'] } = {
       );
     }
 
-    return (
-      <Code
-        className={className}
-        whiteSpace="break-spaces"
-        display="block"
-        w="full"
-        px={4}
-        py={2}
-        children={children}
-        bgColor="fg.50"
-        data-markdown
-        minWidth="full"
-      />
-    );
+    const langauge = className?.replace('language-', '');
+    const [code] = children as string[];
+
+    return <Code code={code || ''} language={langauge} data-markdown />;
   },
   del: (props) => {
     const { children } = props;
@@ -312,8 +303,9 @@ export const defaults: Components & { heading: Components['h1'] } = {
   },
   pre: (props) => {
     const { children } = props;
+    console.log('pre props', props);
     return (
-      <chakra.pre {...getCoreProps(props)} w="full" data-markdown>
+      <chakra.pre {...getCoreProps(props)} width="full" data-markdown>
         {children}
       </chakra.pre>
     );

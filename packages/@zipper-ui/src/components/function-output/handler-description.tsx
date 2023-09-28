@@ -1,4 +1,4 @@
-import { Heading, Text, VStack } from '@chakra-ui/react';
+import { Flex, Heading, VStack } from '@chakra-ui/react';
 import { AppInfo } from '@zipper/types';
 import { Markdown } from './markdown';
 
@@ -50,9 +50,14 @@ export function HandlerDescription(props: Props) {
         </Heading>
       )}
       {body && (
-        <Text pt={title || subtitle ? 4 : undefined}>
+        <Flex
+          direction="column"
+          pt={title || subtitle ? 4 : undefined}
+          align="stretch"
+          width="100%"
+        >
           <Markdown>{body}</Markdown>
-        </Text>
+        </Flex>
       )}
     </VStack>
   );
