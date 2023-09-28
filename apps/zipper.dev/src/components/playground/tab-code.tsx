@@ -1,31 +1,30 @@
 import {
-  FormControl,
-  Text,
   Code,
+  FormControl,
   HStack,
-  VStack,
+  Text,
   useToast,
+  VStack,
 } from '@chakra-ui/react';
-import { AppEditSidebar } from '~/components/playground/app-edit-sidebar';
-import { useCmdOrCtrl } from '@zipper/ui';
-import { ConnectorForm } from './connector-form';
-import { PlaygroundSidebar } from './playground-sidebar';
-import dynamic from 'next/dynamic';
-import { useEditorContext } from '../context/editor-context';
-import { useRunAppContext } from '../context/run-app-context';
-import { ConnectorId } from '~/connectors/createConnector';
-import { AppQueryOutput } from '~/types/trpc';
 import { Script } from '@prisma/client';
-import { useState } from 'react';
+import { Markdown, useCmdOrCtrl } from '@zipper/ui';
+import dynamic from 'next/dynamic';
+import { useEffect, useState } from 'react';
 import {
   AppEditSidebarContextType,
   AppEditSidebarProvider,
 } from '~/components/context/app-edit-sidebar-context';
-import { Markdown } from '@zipper/ui';
 import {
   useHelpBorder,
   useHelpMode,
 } from '~/components/context/help-mode-context';
+import { AppEditSidebar } from '~/components/playground/app-edit-sidebar';
+import { ConnectorId } from '~/connectors/createConnector';
+import { AppQueryOutput } from '~/types/trpc';
+import { useEditorContext } from '../context/editor-context';
+import { useRunAppContext } from '../context/run-app-context';
+import { ConnectorForm } from './connector-form';
+import { PlaygroundSidebar } from './playground-sidebar';
 
 export const PlaygroundEditor = dynamic(() => import('./playground-editor'), {
   ssr: false,
@@ -66,6 +65,10 @@ export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
   const [expandedResult, setExpandedResult] = useState<
     AppEditSidebarContextType['expandedResult']
   >({});
+
+  useEffect(() => {
+    saveAndBoot();
+  }, [currentScript]);
 
   const [inputs, setInputs] = useState<AppEditSidebarContextType['inputs']>({});
   const [isMarkdownEditable, setIsMarkdownEditable] = useState(false);
