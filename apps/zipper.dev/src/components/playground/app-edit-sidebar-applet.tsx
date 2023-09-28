@@ -1,23 +1,29 @@
 import {
   Box,
-  Heading,
-  VStack,
   Button,
-  Progress,
-  Text,
-  Tooltip,
-  UnorderedList,
-  ListItem,
+  Heading,
   HStack,
   Icon,
-  PopoverTrigger,
+  ListItem,
   Popover,
   PopoverArrow,
   PopoverBody,
   PopoverContent,
   PopoverHeader,
+  PopoverTrigger,
+  Progress,
+  Text,
+  Tooltip,
+  UnorderedList,
+  VStack,
 } from '@chakra-ui/react';
-import { FunctionInputs, FunctionOutput, useAppletContent } from '@zipper/ui';
+import {
+  FunctionInputs,
+  FunctionOutput,
+  getDescription,
+  HandlerDescription,
+  useAppletContent,
+} from '@zipper/ui';
 import { useEffect, useMemo, useState } from 'react';
 import { HiExclamationCircle, HiOutlineLightBulb } from 'react-icons/hi2';
 import { PiPlayBold } from 'react-icons/pi';
@@ -37,8 +43,15 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
 
   const [runId, setRunId] = useState<string | undefined>(undefined);
 
-  const { run, formMethods, isRunning, results, userAuthConnectors, appInfo } =
-    useRunAppContext();
+  const {
+    run,
+    configs,
+    formMethods,
+    isRunning,
+    results,
+    userAuthConnectors,
+    appInfo,
+  } = useRunAppContext();
 
   const generateAccessTokenMutation =
     trpc.user.generateAccessToken.useMutation();
@@ -149,8 +162,19 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
     setInputValuesAtRun(inputs);
   };
 
+  const description = getDescription({
+    config: currentScript?.filename
+      ? configs?.[currentScript.filename]
+      : undefined,
+  });
+
   return (
     <>
+      {description && (
+        <Box mb="8">
+          <HandlerDescription description={description} />
+        </Box>
+      )}
       <Box
         p={4}
         backgroundColor="fg.100"
