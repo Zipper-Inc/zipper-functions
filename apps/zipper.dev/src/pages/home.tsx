@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 import {
   Box,
   Container,
@@ -17,6 +18,7 @@ import {
   Icon,
   Button,
   Stack,
+  Spinner,
 } from '@chakra-ui/react';
 import { baseColors, Website } from '@zipper/ui';
 import React, { memo, useEffect } from 'react';
@@ -85,30 +87,34 @@ const WEB_FIRST_CONTENT = {
     {
       ICON: <FiSettings size={40} />,
       TITLE: 'Code-first SaaS Integrations',
+      COLOR: 'purple.500',
       DESCRIPTION:
         'Automate repetitive tasks and workflows or respond to triggers with the flexibility of code. You don’t have to be limited by the constraits of no-code tools.',
-      IMAGE_URL: '/thumbs/web-first/sass_integration.svg',
+      IMAGE_URL: '/static/sass_integration.png',
     },
     {
       ICON: <FiTool size={40} />,
       TITLE: 'Internal Tools as a Service',
+      COLOR: 'blue.600',
       DESCRIPTION:
         'A better way to run scripts or create admin tools for your own APIs or databases. With auth and audit logs built-in, never build from scratch.',
-      IMAGE_URL: '/thumbs/web-first/tool_as_service.svg',
+      IMAGE_URL: '/static/tool_as_service.png',
     },
     {
       ICON: <FiCode size={40} />,
       TITLE: 'Worker Functions',
+      COLOR: 'brandOrange.500',
       DESCRIPTION:
         'Handle expensive or unique tasks on our edge infrastructure, close to your users. Run them on a schedule or in response to an event to effortlessly scale your apps.',
-      IMAGE_URL: '/thumbs/web-first/worker_functions.svg',
+      IMAGE_URL: '/static/worker_functions.png',
     },
     {
       ICON: <FiLoader size={40} />,
       TITLE: 'Anything else you want',
+      COLOR: 'gray.900',
       DESCRIPTION:
         'An instant TypeScript REPL with a built-in frontend framework where you can see your results immediately. What will you build?',
-      IMAGE_URL: '/thumbs/web-first/editor.svg',
+      IMAGE_URL: '/static/editor.png',
     },
   ],
 };
@@ -379,6 +385,7 @@ const Hero = () => {
   // Animations
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [isLargerThan600] = useMediaQuery('(min-width: 600px)');
+  const [isMinorThan600] = useMediaQuery('(max-width: 599px)');
 
   const box1Animation = useAnimation();
   const box2Animation = useAnimation();
@@ -409,6 +416,10 @@ const Hero = () => {
       width={{ base: 'full', md: '535px' }}
       height={{ base: '50vh', md: '445px' }}
       mt={{ base: 8, md: 0 }}
+      animate={{
+        translateY: [-15, 0],
+        opacity: [0, 1],
+      }}
       as={motion.div}
     >
       <Box
@@ -478,23 +489,34 @@ const Hero = () => {
       display="flex"
       flexDir="column"
       justifyContent="center"
+      animate={{
+        translateY: [-15, 0],
+        opacity: [0, 1],
+      }}
+      transition="1.5s ease-in-out"
       alignItems="center"
       position="relative"
       width="full"
       height={{ base: '50vh', md: '668px' }}
-      mt={{ base: 8, md: 0 }}
+      mt={{ base: 8, md: 36 }}
       as={motion.div}
     >
       <Box
         as={motion.div}
         position="absolute"
-        top="-15px"
-        left={{ base: '-25px', md: '0' }}
+        top="-120px"
+        left={{ base: '-25px', md: '0px' }}
         width={{ md: '536px' }}
         height="373px"
         animate={box1Animation}
       >
-        <Image src="/layout/app.svg" width="536" height="373" alt="App" />
+        <img
+          src="/static/app.png"
+          style={{ objectFit: 'cover' }}
+          width="536"
+          height="373"
+          alt="App"
+        />
       </Box>
 
       <Box
@@ -502,14 +524,17 @@ const Hero = () => {
         position="absolute"
         // bottom="0"
         // right={{ base: '-45px', md: '200px' }}
-        width={{ md: '822px' }}
-        height="558"
+        width={{ md: '1000px' }}
+        left={280}
+        top={20}
+        height="600"
         // animate={box2Animation}
       >
-        <Image
-          src="/layout/api_apps.svg"
-          width="822"
-          height="558"
+        <img
+          style={{ objectFit: 'cover' }}
+          src="/static/code.png"
+          width={720}
+          height={480}
           alt="Editor"
         />
       </Box>
@@ -517,13 +542,19 @@ const Hero = () => {
       <Box
         as={motion.div}
         position="absolute"
-        bottom="0px"
-        right={{ base: '-45px', md: '100px' }}
+        bottom="150px"
+        right={{ base: '-45px', md: '0px' }}
         width={{ md: '291' }}
-        height="335"
+        height="400"
         animate={box2Animation}
       >
-        <Image src="/layout/modal.svg" width="291" height="335" alt="Modal" />
+        <img
+          style={{ objectFit: 'cover' }}
+          src="/static/api.png"
+          width="400"
+          height="400"
+          alt="Modal"
+        />
       </Box>
 
       <Box
@@ -631,14 +662,20 @@ const Hero = () => {
                 gap={1}
                 w="full"
                 onClick={onOpen}
+                background="white"
                 color="blue.500"
               >
                 <PiPlayCircle size={20} /> {'Watch a 3 minute demo'}
               </Button>
             </Stack>
           </VStack>
+          {!!isLargerThan600 === false && !!isMinorThan600 === false && (
+            <Spinner color="blue.500" />
+          )}
 
-          {isLargerThan600 ? <DesktopVideoFigure /> : <MobileVideoFigure />}
+          {isLargerThan600 && <DesktopVideoFigure />}
+
+          {isMinorThan600 && <MobileVideoFigure />}
         </Flex>
       </Container>
       <Modal isOpen={isOpen} onClose={onClose} size="5xl">
@@ -722,17 +759,18 @@ const WebFirst = memo(() => {
               w="full"
             >
               <VStack maxW={{ base: 'full', lg: '380px' }} align="start">
-                {React.cloneElement(item.ICON, {
-                  style: { color: baseColors.blue['500'] },
-                })}
-                <Heading
-                  as="h3"
-                  fontWeight={400}
-                  fontSize="4xl"
-                  color="blue.500"
-                >
-                  {item.TITLE}
-                </Heading>
+                <Box color={item.COLOR}>
+                  {item.ICON}
+                  <Heading
+                    as="h3"
+                    fontWeight={400}
+                    fontSize="4xl"
+                    color={item.COLOR}
+                    // color="blue.500"
+                  >
+                    {item.TITLE}
+                  </Heading>
+                </Box>
 
                 <Text color="gray.900" fontSize="xl">
                   {item.DESCRIPTION}
@@ -742,15 +780,18 @@ const WebFirst = memo(() => {
               <Box
                 as="figure"
                 flex={{ lg: 1 }}
-                w={{ base: 'full' }}
+                w={{ base: 'full', lg: '848px' }}
                 height={{ base: '208px', lg: '440px' }}
+                borderRadius="8px"
                 bg="gray.500"
                 position="relative"
               >
                 <Image
                   src={item.IMAGE_URL}
                   fill
-                  style={{ objectFit: 'cover' }}
+                  priority
+                  quality={100}
+                  style={{ objectFit: 'cover', borderRadius: '6px' }}
                   alt={item.TITLE}
                 />
               </Box>
