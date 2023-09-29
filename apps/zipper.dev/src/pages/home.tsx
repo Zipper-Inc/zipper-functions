@@ -13,11 +13,9 @@ import {
   ModalContent,
   ModalBody,
   useDisclosure,
-  Spacer,
   HStack,
   Icon,
   Button,
-  ButtonGroup,
   Stack,
 } from '@chakra-ui/react';
 import { baseColors, Website } from '@zipper/ui';
@@ -41,7 +39,6 @@ import {
 import { HiOutlineLightningBolt } from 'react-icons/hi';
 import Image from 'next/image';
 import { motion, useAnimation } from 'framer-motion';
-import JoinBetaForm from '~/components/join-beta-form';
 import { useAnalytics } from '~/hooks/use-analytics';
 import Link from 'next/link';
 import { HiArrowUpRight } from 'react-icons/hi2';
@@ -59,11 +56,11 @@ import { PiPlayCircle } from 'react-icons/pi';
 const HERO_CONTENT = {
   TITLE: 'Forget about \n your toolchain',
 
-  DESCRIPTION: `Zipper turns TypeScript functions into running apps with 
+  DESCRIPTION: `Zipper turns your business logic into running apps with 
   automatically generated UI, auth, and APIs straight out of the box.`,
   LIST: [
     {
-      description: 'Turn Typescript functions into serverless web apps',
+      description: 'Turn TypeScript functions into serverless web apps',
       icon: <FiCheck size={24} />,
     },
     {
@@ -78,7 +75,7 @@ const HERO_CONTENT = {
 };
 
 const WEB_FIRST_CONTENT = {
-  TITLE: 'build for the web',
+  TITLE: 'Build for the web',
   DESCRIPTION: `Zipper is designed for building web services quickly. Every applet is 
   deployed to a public-facing URL and can immediately start receiving 
   GET & POST requests. Perfect for building user-facing web applications 
@@ -87,30 +84,30 @@ const WEB_FIRST_CONTENT = {
   LIST: [
     {
       ICON: <FiSettings size={40} />,
-      TITLE: 'L̶o̶w̶ Medium Code SaaS Integrations',
+      TITLE: 'Code-first SaaS Integrations',
       DESCRIPTION:
-        'Automate repetitive tasks and workflows with code with the flexibility of code without the constraints of no-code/low-code tools',
+        'Automate repetitive tasks and workflows or respond to triggers with the flexibility of code. You don’t have to be limited by the constraits of no-code tools.',
       IMAGE_URL: '/thumbs/web-first/sass_integration.svg',
     },
     {
       ICON: <FiTool size={40} />,
       TITLE: 'Internal Tools as a Service',
       DESCRIPTION:
-        'Wire up your own APIs or database, replace scripts and dashboard. With auth and audit logs built in, never build from scratch',
+        'A better way to run scripts or create admin tools for your own APIs or databases. With auth and audit logs built-in, never build from scratch.',
       IMAGE_URL: '/thumbs/web-first/tool_as_service.svg',
     },
     {
       ICON: <FiCode size={40} />,
       TITLE: 'Worker Functions',
       DESCRIPTION:
-        'Quickly deploy a worker function and event-driven architecture and scale your applications with serverless processes',
+        'Handle expensive or unique tasks on our edge infrastructure, close to your users. Run them on a schedule or in response to an event to effortlessly scale your apps.',
       IMAGE_URL: '/thumbs/web-first/worker_functions.svg',
     },
     {
       ICON: <FiLoader size={40} />,
       TITLE: 'Anything else you want',
       DESCRIPTION:
-        'An instant Typescript REPL with a built-in frontend framework where you can see your results immediately.',
+        'An instant TypeScript REPL with a built-in frontend framework where you can see your results immediately. What will you build?',
       IMAGE_URL: '/thumbs/web-first/editor.svg',
     },
   ],
@@ -121,8 +118,8 @@ const FEATURES_CONTENT = {
   TITLE_SM: 's/decisions/\ndeploys',
 
   DESCRIPTION: `Your project shouldn’t be held up by a hundred decisions about
-  hosting, routing, storage, and more (<rant> half of which you have to
-  rethink because these services don’t all work together </rant>).`,
+  hosting, routing, storage, and more — half of which you have to
+  rethink because these services don’t all work together.`,
 
   SPAN: `Zipper gives you all the scaffolding you need to start
   shipping immediately`,
@@ -156,7 +153,7 @@ const FEATURES_CONTENT = {
       ),
     },
     {
-      title: 'UI without any frontend code ',
+      title: 'UI without any frontend code',
       color: baseColors.blue['500'],
       description:
         'The inputs to your functions become forms to collect user input and the outputs get turned into a functional UI.	  ',
@@ -198,7 +195,7 @@ const FEATURES_CONTENT = {
       ),
     },
     {
-      title: 'Authentication connectors ',
+      title: 'Authentication connectors',
       color: baseColors.purple['500'],
       description:
         'Force users to sign in to other services (such as Slack or GitHub) before running your applet.',
@@ -217,9 +214,9 @@ const FEATURES_CONTENT = {
 const APPLETS_GALERY_CONTENT = {
   TITLE: 'hello ${working code}',
   DESCRIPTION: `Chances are that the thing you need to build has already been thought through by
-  someone else. Zipper’s applet directory lets you fork pre-built applications that you can
-  immediately use or quickly customize to better suit your needs. If you don’t see what you’re
-  looking for, you can start from a blank file or have AI generate some code for you ✨.`,
+  someone else. Zipper’s applet directory lets you fork pre-built applications that you can
+  immediately use or quickly customize to better suit your needs. If you don’t see what you’re
+  looking for, you can start from a blank file or have AI generate some code for you ✨.`,
 };
 
 const APPLET_GALLERY_LIST = [
