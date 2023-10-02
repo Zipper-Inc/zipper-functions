@@ -14,6 +14,8 @@ import {
   MenuList,
   Divider,
   Container,
+  IconButton,
+  useMediaQuery,
 } from '@chakra-ui/react';
 import { getAppLink, getZipperDotDevUrl } from '@zipper/utils';
 import { useEffectOnce, ZipperSymbol } from '@zipper/ui';
@@ -51,6 +53,7 @@ const Header: React.FC<HeaderProps> = ({
   const toast = useToast();
   const { onCopy, setValue } = useClipboard('');
   const [user, setUser] = useState<Record<string, string> | undefined>();
+  const [isMobileView] = useMediaQuery('(max-width: 600px)');
 
   useEffectOnce(() => {
     const token = document.cookie
@@ -89,123 +92,138 @@ const Header: React.FC<HeaderProps> = ({
   /* Components                                   */
   /* -------------------------------------------- */
 
-  const AppletRouter = () => {
-    return (
-      <Flex align="center" justify="space-between">
-        <Box>
-          <Link
-            href="/"
-            _hover={{
-              textDecor: 'none',
-            }}
-          >
-            <Heading
-              as="h1"
-              size="md"
-              overflow="auto"
-              whiteSpace="nowrap"
-              fontWeight="semibold"
-              color="fg.800"
-            >
-              {name || slug}
-            </Heading>
-          </Link>
-        </Box>
+  const AppletPaths = () => (
+    <Box>
+      {runnableScripts.length > 1 ? (
+        <Menu>
+          {({ isOpen, onClose }) => (
+            <>
+              <MenuButton
+                as={isMobileView ? Button : undefined}
+                variant={{ base: 'outline', md: undefined }}
+              >
+                <HStack>
+                  <Text
+                    fontFamily="heading"
+                    fontSize={{ base: 'md', md: 'lg' }}
+                    fontWeight="semibold"
+                    color="fg.800"
+                  >
+                    {entryPoint.filename.slice(0, -3)}
+                  </Text>
+                  {isOpen ? <FiChevronUp /> : <FiChevronDown />}
+                </HStack>
+              </MenuButton>
+              <MenuList pb={0}>
+                <Box pb="4" pt="2" px={4}>
+                  <Link
+                    fontSize="sm"
+                    fontWeight="medium"
+                    onClick={() => {
+                      onClose();
+                      setLoading(true);
+                      router.push(`/${entryPoint.filename}`);
+                    }}
+                    _hover={{ background: 'none' }}
+                  >
+                    {entryPoint.filename.slice(0, -3)}
+                  </Link>
+                </Box>
 
-        <Box>
-          {runnableScripts.length > 1 ? (
-            <Menu>
-              {({ isOpen, onClose }) => (
-                <>
-                  <MenuButton>
-                    <HStack>
-                      <Text
-                        fontFamily="heading"
-                        fontSize="xl"
-                        fontWeight="semibold"
-                        color="fg.800"
-                      >
-                        {entryPoint.filename.slice(0, -3)}
-                      </Text>
-                      {isOpen ? <FiChevronUp /> : <FiChevronDown />}
-                    </HStack>
-                  </MenuButton>
-                  <MenuList pb={0}>
-                    <Box pb="4" pt="2" px={4}>
-                      <Link
-                        fontSize="sm"
-                        fontWeight="medium"
+                <Divider />
+                <Box
+                  w="full"
+                  backgroundColor={'fg.50'}
+                  backdropFilter="blur(10px)"
+                  pl="4"
+                  pt="5"
+                  fontSize="xs"
+                >
+                  <Text>Other paths:</Text>
+                </Box>
+                {runnableScripts
+                  .filter((s) => s !== entryPoint.filename)
+                  .sort()
+                  .map((s, i) => {
+                    return (
+                      <MenuItem
+                        key={`${s}-${i}`}
                         onClick={() => {
                           onClose();
                           setLoading(true);
-                          router.push(`/${entryPoint.filename}`);
+                          router.push(`/${s}`);
                         }}
-                        _hover={{ background: 'none' }}
+                        backgroundColor="fg.50"
+                        px="4"
+                        pt="2"
+                        fontWeight="medium"
+                        fontSize="sm"
+                        _last={{
+                          pb: 4,
+                        }}
                       >
-                        {entryPoint.filename.slice(0, -3)}
-                      </Link>
-                    </Box>
-
-                    <Divider />
-                    <Box
-                      w="full"
-                      backgroundColor={'fg.50'}
-                      backdropFilter="blur(10px)"
-                      pl="4"
-                      pt="5"
-                      fontSize="xs"
-                    >
-                      <Text>Other paths:</Text>
-                    </Box>
-                    {runnableScripts
-                      .filter((s) => s !== entryPoint.filename)
-                      .sort()
-                      .map((s, i) => {
-                        return (
-                          <MenuItem
-                            key={`${s}-${i}`}
-                            onClick={() => {
-                              onClose();
-                              setLoading(true);
-                              router.push(`/${s}`);
-                            }}
-                            backgroundColor="fg.50"
-                            px="4"
-                            pt="2"
-                            fontWeight="medium"
-                            fontSize="sm"
-                            _last={{
-                              pb: 4,
-                            }}
-                          >
-                            {s.slice(0, -3)}
-                          </MenuItem>
-                        );
-                      })}
-                  </MenuList>
-                </>
-              )}
-            </Menu>
-          ) : (
-            <Heading
-              as="h1"
-              size="md"
-              overflow="auto"
-              whiteSpace="nowrap"
-              fontWeight="semibold"
-              color="fg.800"
-              _hover={{ cursor: 'pointer' }}
-              onClick={() => {
-                window.location.replace('/');
-              }}
-            >
-              {entryPoint.filename.replace(/\.ts$/, '')}
-            </Heading>
+                        {s.slice(0, -3)}
+                      </MenuItem>
+                    );
+                  })}
+              </MenuList>
+            </>
           )}
-        </Box>
-      </Flex>
-    );
-  };
+        </Menu>
+      ) : (
+        <Heading
+          as="h1"
+          size="md"
+          overflow="auto"
+          whiteSpace="nowrap"
+          fontWeight="semibold"
+          color="fg.800"
+          _hover={{ cursor: 'pointer' }}
+          onClick={() => {
+            window.location.replace('/');
+          }}
+        >
+          {entryPoint.filename.replace(/\.ts$/, '')}
+        </Heading>
+      )}
+    </Box>
+  );
+
+  const AppletActions = () => (
+    <HStack gap={0}>
+      <Button
+        colorScheme="purple"
+        variant="ghost"
+        display="flex"
+        gap={2}
+        fontWeight="medium"
+        onClick={copyLink}
+      >
+        <HiOutlineUpload />
+        <Text>Share</Text>
+      </Button>
+
+      {canUserEdit && entryPoint.editUrl && (
+        <Button
+          colorScheme="purple"
+          variant="ghost"
+          display="flex"
+          gap={2}
+          fontWeight="medium"
+          onClick={() => {
+            window.location.href = entryPoint.editUrl;
+          }}
+        >
+          <HiOutlinePencilAlt />
+          <Text>Edit App</Text>
+        </Button>
+      )}
+    </HStack>
+  );
+
+  /* -------------------------------------------- */
+  /* Render¸                                      */
+  /* -------------------------------------------- */
 
   return (
     <>
@@ -221,7 +239,7 @@ const Header: React.FC<HeaderProps> = ({
           minW={0}
         >
           <HStack>
-            <Link height={6} href={getZipperDotDevUrl().origin}>
+            <Link height={4} href={getZipperDotDevUrl().origin}>
               <ZipperSymbol style={{ maxHeight: '100%' }} />
             </Link>
             <Heading
@@ -245,144 +263,85 @@ const Header: React.FC<HeaderProps> = ({
                   size="md"
                   overflow="auto"
                   whiteSpace="nowrap"
-                  fontSize="lg"
+                  fontSize={{ base: 'md', md: 'lg' }}
                   fontWeight="semibold"
                   color="fg.800"
                 >
                   {name || slug}
                 </Heading>
               </Link>
-              <Text fontSize="sm">{entryPoint.filename}</Text>
+              {isMobileView && <Text fontSize="sm">{entryPoint.filename}</Text>}
             </Box>
+            {!isMobileView && (
+              <>
+                <Heading
+                  as="h1"
+                  size="md"
+                  whiteSpace="nowrap"
+                  fontWeight="light"
+                  color="fg.400"
+                >
+                  /
+                </Heading>
+                <AppletPaths />
+              </>
+            )}
           </HStack>
 
-          {user?.email ? (
-            <Image
-              src={user.image as string}
-              alt={user.username as string}
-              height={40}
-              width={40}
-              style={{ borderRadius: '100%' }}
-            />
-          ) : (
-            <Link href={`${getZipperDotDevUrl().origin}/auth/from/${slug}`}>
-              Sign in
-            </Link>
-          )}
-          {/* <Button
-            variant="link"
-            onClick={() => {
-              deleteCookie('__zipper_token');
-              deleteCookie('__zipper_refresh');
-              window.location.reload();
-            }}
-          >
-            Sign out
-          </Button> */}
+          <HStack gap={2}>
+            {!isMobileView && <AppletActions />}
+            {user?.email ? (
+              <Menu>
+                {() => (
+                  <>
+                    <MenuButton>
+                      <Image
+                        src={user.image as string}
+                        alt={user.username as string}
+                        height={40}
+                        width={40}
+                        style={{ borderRadius: '100%' }}
+                      />
+                    </MenuButton>
+                    <MenuList pb={0}>
+                      <Box pb="4" pt="2" px={4}>
+                        <Button
+                          variant="link"
+                          onClick={() => {
+                            deleteCookie('__zipper_token');
+                            deleteCookie('__zipper_refresh');
+                            window.location.reload();
+                          }}
+                        >
+                          Sign out
+                        </Button>
+                      </Box>
+                    </MenuList>
+                  </>
+                )}
+              </Menu>
+            ) : (
+              <Link href={`${getZipperDotDevUrl().origin}/auth/from/${slug}`}>
+                Sign in
+              </Link>
+            )}
+          </HStack>
         </HStack>
 
         <HStack
           py={5}
-          borderBottom="1px solid"
-          borderColor="gray.100"
           justify="space-between"
           spacing={3}
           alignItems="center"
           flex={1}
           minW={0}
         >
-          <Box>
-            {runnableScripts.length > 1 ? (
-              <Menu>
-                {({ isOpen, onClose }) => (
-                  <>
-                    <MenuButton as={Button} variant="outline">
-                      <HStack>
-                        <Text
-                          fontFamily="heading"
-                          fontSize="md"
-                          fontWeight="semibold"
-                          color="fg.800"
-                        >
-                          {/* {entryPoint.filename.slice(0, -3)} */}
-                          Files
-                        </Text>
-                        {isOpen ? <FiChevronUp /> : <FiChevronDown />}
-                      </HStack>
-                    </MenuButton>
-                    <MenuList pb={0}>
-                      <Box pb="4" pt="2" px={4}>
-                        <Link
-                          fontSize="sm"
-                          fontWeight="medium"
-                          onClick={() => {
-                            onClose();
-                            setLoading(true);
-                            router.push(`/${entryPoint.filename}`);
-                          }}
-                          _hover={{ background: 'none' }}
-                        >
-                          {entryPoint.filename.slice(0, -3)}
-                        </Link>
-                      </Box>
-
-                      <Divider />
-                      <Box
-                        w="full"
-                        backgroundColor={'fg.50'}
-                        backdropFilter="blur(10px)"
-                        pl="4"
-                        pt="5"
-                        fontSize="xs"
-                      >
-                        <Text>Other paths:</Text>
-                      </Box>
-                      {runnableScripts
-                        .filter((s) => s !== entryPoint.filename)
-                        .sort()
-                        .map((s, i) => {
-                          return (
-                            <MenuItem
-                              key={`${s}-${i}`}
-                              onClick={() => {
-                                onClose();
-                                setLoading(true);
-                                router.push(`/${s}`);
-                              }}
-                              backgroundColor="fg.50"
-                              px="4"
-                              pt="2"
-                              fontWeight="medium"
-                              fontSize="sm"
-                              _last={{
-                                pb: 4,
-                              }}
-                            >
-                              {s.slice(0, -3)}
-                            </MenuItem>
-                          );
-                        })}
-                    </MenuList>
-                  </>
-                )}
-              </Menu>
-            ) : (
-              <Heading
-                as="h1"
-                size="md"
-                overflow="auto"
-                whiteSpace="nowrap"
-                fontWeight="semibold"
-                color="fg.800"
-                _hover={{ cursor: 'pointer' }}
-                onClick={() => {
-                  window.location.replace('/');
-                }}
-              >
-                {entryPoint.filename.replace(/\.ts$/, '')}
-              </Heading>
-            )}
-          </Box>
+          {isMobileView && (
+            <>
+              <AppletPaths />
+              <AppletActions />
+            </>
+          )}
         </HStack>
 
         {/* <Heading
