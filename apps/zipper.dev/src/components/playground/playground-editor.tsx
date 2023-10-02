@@ -20,14 +20,9 @@ import traverse from '@babel/traverse';
 import MonacoJSXHighlighter from 'monaco-jsx-highlighter';
 import { useColorModeValue } from '@chakra-ui/react';
 import { baseColors } from '@zipper/ui';
+import { extslist, getExtensionFromFilename } from '~/utils/get-file-extension';
 
 type MonacoEditor = monaco.editor.IStandaloneCodeEditor;
-
-const extslist = {
-  md: 'markdown',
-  ts: 'typescript',
-  json: 'json',
-};
 
 loader.config({ monaco });
 
@@ -270,9 +265,7 @@ export default function PlaygroundEditor(
       );
 
       scripts.forEach((script) => {
-        const extension = script.filename
-          .split('.')
-          .pop() as keyof typeof extslist;
+        const extension = getExtensionFromFilename(script.filename);
 
         const uri = getUriFromPath(script.filename, monaco.Uri.parse, 'tsx');
         const model = monaco.editor.getModel(uri);
@@ -327,7 +320,7 @@ export default function PlaygroundEditor(
 
   useEffect(() => {
     if (monacoEditor && editorRef.current && isEditorReady && currentScript) {
-      const extension = currentScript.filename.split('.').pop();
+      const extension = getExtensionFromFilename(currentScript.filename);
 
       if (extension === 'md') {
         setDefaultLanguage('markdown');
@@ -347,9 +340,7 @@ export default function PlaygroundEditor(
         editorRef.current.setModel(model);
       }
       if (!model && currentScript) {
-        const extension = currentScript.filename
-          .split('.')
-          .pop() as keyof typeof extslist;
+        const extension = getExtensionFromFilename(currentScript.filename);
 
         const newModel = monacoEditor.editor.createModel(
           currentScript.code,
