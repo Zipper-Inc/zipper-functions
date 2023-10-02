@@ -142,24 +142,28 @@ export function PlaygroundSidebar({
 
   const { style, onMouseEnter, onMouseLeave } = useHelpBorder();
 
+  /**
+   * **Virtual Storage.json file:**
+   * Adding `storage.json` file for display current data keys and values
+   * from Zipper.Storage (aka. app.datastore)
+   */
+  const storageScript = {
+    id: String(crypto.randomUUID()),
+    createdAt: '',
+    updatedAt: '',
+    name: 'Storage',
+    filename: 'storage.json',
+    code: '',
+    order: 0,
+    appId: app.id,
+    connectorId: null,
+    hash: null,
+    isRunnable: false,
+  };
+
   const appScripts = useMemo(() => {
     if (app.canUserEdit) {
-      return [
-        ...app.scripts,
-        {
-          id: String(crypto.randomUUID()),
-          createdAt: '',
-          updatedAt: '',
-          name: 'Storage',
-          filename: 'storage.json',
-          code: '',
-          order: 0,
-          appId: app.id,
-          connectorId: null,
-          hash: null,
-          isRunnable: false,
-        },
-      ] as typeof app.scripts;
+      return [...app.scripts, storageScript] as typeof app.scripts;
     }
 
     return app.scripts;
