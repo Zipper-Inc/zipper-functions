@@ -54,5 +54,4 @@ export * from '../src/theme/theme';
 export * from '../src/utils/chakra-markdown-renderer';
 export { default as ChakraUIRenderer } from '../src/utils/chakra-markdown-renderer';
 export * from '../src/utils/cn';
-export * from '../src/utils/prettier';
 export * from '../src/utils/user-agent';

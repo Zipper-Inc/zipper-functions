@@ -11,6 +11,7 @@ export * from '../src/utils/get-app-link';
 export * from '../src/utils/get-edit-applet-link';
 export * from '../src/utils/object';
 export * from '../src/utils/parseBody';
+export * from '../src/utils/prettier-format';
 export * from '../src/utils/safe-json';
 export * from '../src/utils/settings';
 export * from '../src/utils/url';
