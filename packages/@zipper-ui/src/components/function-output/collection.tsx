@@ -1,43 +1,38 @@
 import {
+  Box,
+  Card,
+  CardBody,
+  CardFooter,
+  Flex,
+  HStack,
+  Icon,
+  Input,
+  InputGroup,
+  InputLeftAddon,
+  SimpleGrid,
   Stack,
   Table,
   TableContainer,
   Tbody,
+  Td,
   Text,
   Th,
   Thead,
   Tr,
-  Td,
-  Box,
-  SimpleGrid,
-  IconButton,
-  Card,
-  CardBody,
-  Flex,
-  CardFooter,
-  HStack,
-  InputGroup,
-  InputLeftAddon,
-  Icon,
-  Input,
 } from '@chakra-ui/react';
-import React, { useMemo, useState, useRef, useEffect } from 'react';
-import { useSortBy, useTable } from 'react-table';
 import styled from '@emotion/styled';
-import { isAction, isPrimitive } from './utils';
-import { SmartFunctionOutput } from './smart-function-output';
+import { useMemo, useState } from 'react';
 import {
-  PiMagnifyingGlass,
-  PiCheckFill,
-  PiXFill,
-  PiTable,
-  PiSquaresFour,
-  PiCheckCircleFill,
-  PiXCircleFill,
   PiCaretDownFill,
   PiCaretUpFill,
+  PiCheckCircleFill,
+  PiMagnifyingGlass,
+  PiXCircleFill,
 } from 'react-icons/pi';
+import { useSortBy, useTable } from 'react-table';
+import { SmartFunctionOutput } from './smart-function-output';
 import { useSmartFunctionOutputContext } from './smart-function-output-context';
+import { isAction, isPrimitive } from './utils';
 
 type Props = {
   data: Array<any>;
@@ -47,7 +42,7 @@ type Props = {
 
 export default function Collection(props: Props) {
   // Define the state to keep track of the selected view
-  const [view, setView] = useState<'table' | 'cards'>('table');
+  const [view] = useState<'table' | 'cards'>('table');
   const { setSearchQuery } = useSmartFunctionOutputContext();
 
   const isNested = !!props.tableLevel;
@@ -60,25 +55,13 @@ export default function Collection(props: Props) {
       p="2"
     >
       {props.tableLevel === 0 && (
-        <Box display="flex" justifyContent="flex-end" gap="2">
-          <InputGroup w="md">
+        <Box display="flex" justifyContent="flex-end" gap="4">
+          <InputGroup w="md" mt={2} mr={2}>
             <InputLeftAddon>
               <Icon as={PiMagnifyingGlass} />
             </InputLeftAddon>
             <Input onChange={(e) => setSearchQuery(e.target.value)} />
           </InputGroup>
-          <IconButton
-            aria-label="Table view"
-            icon={<PiTable />}
-            onClick={() => setView('table')}
-            colorScheme={view === 'table' ? 'purple' : 'gray'}
-          />
-          <IconButton
-            aria-label="Card view"
-            icon={<PiSquaresFour />}
-            onClick={() => setView('cards')}
-            colorScheme={view === 'cards' ? 'purple' : 'gray'}
-          />
         </Box>
       )}
 
