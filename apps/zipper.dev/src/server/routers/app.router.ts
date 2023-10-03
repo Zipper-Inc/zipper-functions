@@ -451,6 +451,7 @@ export const appRouter = createTRPCRouter({
       z.object({
         resourceOwnerSlug: z.string().toLowerCase(),
         appSlug: z.string().toLowerCase(),
+        withDataStore: z.boolean().optional().default(false),
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -485,7 +486,7 @@ export const appRouter = createTRPCRouter({
         select: {
           ...defaultSelect,
           scripts: true,
-          datastore: true,
+          datastore: input.withDataStore,
           scriptMain: { include: { script: true } },
           editors: true,
           settings: true,

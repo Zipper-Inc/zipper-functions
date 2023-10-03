@@ -153,7 +153,7 @@ export function PlaygroundSidebar({
     updatedAt: '',
     name: 'Storage',
     filename: 'storage.json',
-    code: '',
+    code: JSON.stringify(app.datastore, null, '\t'),
     order: 0,
     appId: app.id,
     connectorId: null,
@@ -163,7 +163,11 @@ export function PlaygroundSidebar({
 
   const appScripts = useMemo(() => {
     if (app.canUserEdit) {
-      return [...app.scripts, storageScript] as typeof app.scripts;
+      const scripts = app.datastore
+        ? ([...app.scripts, storageScript] as typeof app.scripts)
+        : app.scripts;
+
+      return scripts;
     }
 
     return app.scripts;

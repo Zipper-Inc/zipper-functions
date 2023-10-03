@@ -27,10 +27,12 @@ const PlaygroundPage: NextPageWithLayout<Props> = ({
   filename,
 }) => {
   const appQuery = trpc.app.byResourceOwnerAndAppSlugs.useQuery(
-    { resourceOwnerSlug, appSlug },
+    { resourceOwnerSlug, appSlug, withDataStore: true },
     { retry: false },
   );
   const utils = trpc.useContext();
+
+  console.log(appQuery);
 
   if (appQuery.error) {
     return (
