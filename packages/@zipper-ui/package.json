@@ -4,7 +4,9 @@
   "private": true,
   "main": "./generated/index.gen.ts",
   "types": "./generated/index.gen.ts",
-  "files": ["tailwind.config.js"],
+  "files": [
+    "tailwind.config.js"
+  ],
   "scripts": {
     "build": "yarn ctix single",
     "dev": "yarn nodemon"

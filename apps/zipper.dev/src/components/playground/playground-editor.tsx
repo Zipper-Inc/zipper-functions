@@ -5,13 +5,13 @@ import Editor, {
   useMonaco,
 } from '@monaco-editor/react';
 import * as monaco from 'monaco-editor';
-import { buildWorkerDefinition } from 'monaco-editor-workers';
 import { useMyPresence, useOthersConnectionIds } from '~/liveblocks.config';
 
 import { parse } from '@babel/parser';
 import traverse from '@babel/traverse';
 import { useColorModeValue } from '@chakra-ui/react';
-import { baseColors, prettierFormat } from '@zipper/ui';
+import { baseColors } from '@zipper/ui';
+import { prettierFormat } from '@zipper/utils'
 import MonacoJSXHighlighter from 'monaco-jsx-highlighter';
 import { useEffect, useRef, useState } from 'react';
 import { useExitConfirmation } from '~/hooks/use-exit-confirmation';
@@ -20,7 +20,24 @@ import { useEditorContext } from '../context/editor-context';
 import { useRunAppContext } from '../context/run-app-context';
 import { PlaygroundCollabCursor } from './playground-collab-cursor';
 
+import {
+  configureMonacoTailwindcss,
+  tailwindcssData,
+} from 'monaco-tailwindcss';
+import { buildWorkerDefinition } from '~/utils/monaco-worker';
+
 type MonacoEditor = monaco.editor.IStandaloneCodeEditor;
+
+
+monaco.languages.css.cssDefaults.setOptions({
+  data: {
+    dataProviders: {
+      tailwindcssData,
+    },
+  },
+});
+
+configureMonacoTailwindcss(monaco);
 
 loader.config({ monaco });
 
@@ -29,6 +46,8 @@ buildWorkerDefinition(
   new URL('', window.location.href).href,
   false,
 );
+
+
 
 const TYPESCRIPT_ERRORS_TO_IGNORE = [
   // Ignore this error so we can import Deno URLs
