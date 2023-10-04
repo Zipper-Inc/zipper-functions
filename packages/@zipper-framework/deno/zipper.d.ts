@@ -138,10 +138,12 @@ declare namespace Zipper {
       }>;
     };
     output: Partial<{
-      /** Configure automatic HTML output in Zipper */
-      html: Partial<{
-        /** Since rendering user-generated HTML is insecure, you can choose to enable script tags and event handlers. Defaults to `false`. */
-        allowScripting: boolean;
+      format: Partial<{
+        /** Configure automatic HTML output in Zipper */
+        html: Partial<{
+          /** Since rendering user-generated HTML is insecure, you can choose to enable script tags and event handlers. Defaults to `false`. */
+          allowScripting: boolean;
+        }>;
       }>;
     }>;
   }>;

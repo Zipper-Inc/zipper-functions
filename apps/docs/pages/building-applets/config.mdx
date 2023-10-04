@@ -28,11 +28,6 @@ type Zipper.HandlerConfig<I = Zipper.Inputs> = {
         defaultValue: I[Property];
         placeholder: string;
     }>; };
-    output: Partial<{
-      html: Partial<{
-        allowScripting: boolean;
-      }>;
-    }>;
 }
 ```
 
@@ -57,11 +52,3 @@ optional description data that is displayed on [zipper.run](http://zipper.run) a
 ![Untitled](public/images/Untitled%207.png)
 
 additional information about each input. You can use these values to customize the label, placeholder, and help text of each input. You can also specify a default value that will either be prefilled on the inputs form or used if the handler is auto run.
-
-### `output`
-
-These are options for rendering Zipper's auto-generated output.
-
-#### `html`
-
-Curently, there is only one setting for `html`. Since Zipper will try to render anything it thinks is HTML in your browser as HTML and this is potentailly insecure, we strip out any `<script>` tags by default. If you want to allow scripting, you can set `allowScripting` to `true`.

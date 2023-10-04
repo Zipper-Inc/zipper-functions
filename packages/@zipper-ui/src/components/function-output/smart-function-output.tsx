@@ -57,7 +57,11 @@ export function SmartFunctionOutput({
           <iframe
             width="100%"
             height="400px"
-            srcDoc={config?.output?.html?.allowScripting ? data : stripJs(data)}
+            srcDoc={
+              config?.output?.format?.html?.allowScripting
+                ? data
+                : stripJs(data)
+            }
           />
         </Box>
       );
