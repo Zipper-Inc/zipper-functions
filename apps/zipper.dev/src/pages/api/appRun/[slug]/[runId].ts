@@ -6,14 +6,17 @@ import {
   AppRun,
   Script,
 } from '@prisma/client';
+import { RunInfoResult, UserAuthConnector } from '@zipper/types';
+import { getZipperDotDevUrl, ZIPPER_TEMP_USER_ID_HEADER } from '@zipper/utils';
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '~/server/prisma';
-import { RunInfoResult, UserAuthConnector } from '@zipper/types';
 import { canUserEdit } from '~/server/routers/app.router';
 import { parseInputForTypes } from '~/utils/parse-code';
 import { requiredUserAuthConnectorFilter } from '~/utils/user-auth-connector-filter';
-import { getZipperDotDevUrl, ZIPPER_TEMP_USER_ID_HEADER } from '@zipper/utils';
-import { getUserInfo, UserInfoReturnType } from '../../bootInfo/[slug]';
+import {
+  getUserInfo,
+  UserInfoReturnType,
+} from '../../../../utils/get-user-info';
 
 export default async function handler(
   req: NextApiRequest,

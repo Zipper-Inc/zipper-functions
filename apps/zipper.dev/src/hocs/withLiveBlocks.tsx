@@ -4,10 +4,10 @@ import { RoomProvider } from '~/liveblocks.config';
 
 export const withLiveBlocks = (
   children: () => ReactElement,
-  { id, initialStorage, initialPresence }: any,
+  { room, initialStorage, initialPresence }: any,
 ) => (
   <RoomProvider
-    id={id}
+    id={room}
     initialPresence={initialPresence}
     initialStorage={initialStorage}
   >

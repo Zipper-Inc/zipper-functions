@@ -1,24 +1,17 @@
-import { NextPageWithLayout } from '~/pages/_app';
-
-import { trpc } from '~/utils/trpc';
-
-import { withLiveBlocks } from '~/hocs/withLiveBlocks';
-
-import { Playground } from '~/components/playground/playground';
-import { LiveObject } from '@liveblocks/client';
-import EditorContextProvider from '~/components/context/editor-context';
 import { Box, Button, Center, Heading, Link, VStack } from '@chakra-ui/react';
-import Head from 'next/head';
+import { LiveObject } from '@liveblocks/client';
 import { GetServerSideProps, GetServerSidePropsContext } from 'next';
-import { getValidSubdomain, removeSubdomains } from '~/utils/subdomains';
+import Head from 'next/head';
 import SignedIn from '~/components/auth/signed-in';
-import Header from '~/components/header';
-import {
-  parsePlaygroundQuery,
-  Props,
-  PlaygroundTab,
-} from '~/utils/playground.utils';
+import EditorContextProvider from '~/components/context/editor-context';
 import { HelpModeProvider } from '~/components/context/help-mode-context';
+import Header from '~/components/header';
+import { Playground } from '~/components/playground/playground';
+import { withLiveBlocks } from '~/hocs/withLiveBlocks';
+import { NextPageWithLayout } from '~/pages/_app';
+import { parsePlaygroundQuery, Props } from '~/utils/playground.utils';
+import { getValidSubdomain, removeSubdomains } from '~/utils/subdomains';
+import { trpc } from '~/utils/trpc';
 
 const PlaygroundPage: NextPageWithLayout<Props> = ({
   resourceOwnerSlug,
@@ -94,7 +87,7 @@ const PlaygroundPage: NextPageWithLayout<Props> = ({
       </EditorContextProvider>
     ),
     {
-      id: `${resourceOwnerSlug}/${appSlug}}`,
+      room: `${resourceOwnerSlug}/${appSlug}`,
       initialStorage,
       initialPresence: {},
     },
