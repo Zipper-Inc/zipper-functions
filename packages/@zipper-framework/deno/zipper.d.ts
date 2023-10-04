@@ -124,7 +124,6 @@ declare namespace Zipper {
    */
   export type HandlerConfig<I = Inputs> = Partial<{
     run: boolean | I;
-    auth: boolean;
     description: Partial<{
       title: string;
       subtitle: string;
@@ -138,6 +137,11 @@ declare namespace Zipper {
         placeholder: string;
       }>;
     };
+    output: Partial<{
+      html: Partial<{
+        allowScripting: boolean;
+      }>;
+    }>;
   }>;
 
   export type BootPayload = {
