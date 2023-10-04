@@ -1,66 +1,64 @@
+import { CheckIcon } from '@chakra-ui/icons';
 import {
-  Button,
-  Input,
-  Heading,
-  VStack,
-  FormControl,
-  FormErrorMessage,
-  FormHelperText,
-  FormLabel,
-  Icon,
-  InputGroup,
-  InputRightElement,
-  Textarea,
-  useToast,
-  HStack,
-  Text,
-  Switch,
-  Divider,
-  Box,
-  IconButton,
-  Spinner,
-  Center,
-  Modal,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  useDisclosure,
-  ModalOverlay,
-  ModalContent,
-  Tooltip,
-  Flex,
-  Spacer,
   AlertDialog,
   AlertDialogBody,
+  AlertDialogCloseButton,
   AlertDialogContent,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogOverlay,
-  AlertDialogCloseButton,
+  Box,
+  Button,
+  Center,
+  Divider,
+  Flex,
+  FormControl,
+  FormErrorMessage,
+  FormHelperText,
+  FormLabel,
+  Heading,
+  HStack,
+  Icon,
+  IconButton,
+  Input,
+  InputGroup,
+  InputRightElement,
+  Modal,
+  ModalBody,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
+  ModalOverlay,
+  Spacer,
+  Spinner,
+  Switch,
+  Text,
+  Textarea,
+  Tooltip,
+  useDisclosure,
+  useToast,
+  VStack,
 } from '@chakra-ui/react';
-import { CheckIcon } from '@chakra-ui/icons';
-import { FormProvider, useForm } from 'react-hook-form';
 import { useEffect, useRef, useState } from 'react';
+import { FormProvider, useForm } from 'react-hook-form';
 
-import { RouterOutputs, trpc } from '~/utils/trpc';
-import { HiExclamationTriangle } from 'react-icons/hi2';
-import slugify from 'slugify';
-import { MIN_SLUG_LENGTH, useAppSlug } from '~/hooks/use-app-slug';
-import { useRouter } from 'next/router';
 import { getAppLink } from '@zipper/utils';
+import { useRouter } from 'next/router';
+import { HiExclamationTriangle } from 'react-icons/hi2';
 import {
-  PiLockSimple,
-  PiLockSimpleOpen,
+  PiClipboardBold,
+  PiEnvelopeSimple,
+  PiEnvelopeSimpleOpen,
+  PiKeyBold,
   PiLockLaminated,
   PiLockLaminatedOpen,
-  PiCode,
-  PiCodeSimple,
-  PiEnvelopeSimpleOpen,
-  PiEnvelopeSimple,
-  PiKeyBold,
+  PiLockSimple,
+  PiLockSimpleOpen,
   PiTrashSimpleBold,
-  PiClipboardBold,
 } from 'react-icons/pi';
+import slugify from 'slugify';
+import { MIN_SLUG_LENGTH, useAppSlug } from '~/hooks/use-app-slug';
+import { RouterOutputs, trpc } from '~/utils/trpc';
 import { TITLE_COLUMN_MIN_WIDTH } from './constants';
 
 type Props = {
@@ -377,7 +375,7 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
 
                   <FormHelperText maxW="xl">{`Since this is ${
                     settingsForm.watch('isDataSensitive')
-                      ? 'checked, audit logs will not contain any which inputs were used and what output was return.'
+                      ? 'checked, audit logs will not contain any inputs used or any output returned.'
                       : 'not checked, audit logs will include the full inputs and output of each function run.'
                   }`}</FormHelperText>
                 </VStack>
