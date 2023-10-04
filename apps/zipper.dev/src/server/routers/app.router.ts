@@ -9,8 +9,8 @@ import {
 import { z } from 'zod';
 import { prisma } from '~/server/prisma';
 import {
-   hasAppEditPermission, 
-   hasOrgAdminPermission 
+  hasAppEditPermission,
+  hasOrgAdminPermission,
 } from '../utils/authz.utils';
 import slugify from '~/utils/slugify';
 import { generateDefaultSlug } from '~/utils/generate-default';
