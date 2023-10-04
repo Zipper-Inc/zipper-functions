@@ -2,7 +2,7 @@ import { createClient } from '@liveblocks/client';
 import { createRoomContext } from '@liveblocks/react';
 
 const client = createClient({
-  authEndpoint: '/api/live/auth',
+  authEndpoint: '/api/liveblocks/auth',
 });
 
 export const {
