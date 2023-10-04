@@ -164,8 +164,8 @@ export const appRouter = createTRPCRouter({
 
         const organizationId = orgId === null ? null : orgId || ctx.orgId;
 
-        if (organizationId) {
-          await hasOrgAdminPermission(ctx);
+        if (organizationId && !hasOrgAdminPermission(ctx)) {
+          throw new TRPCError({ code: 'UNAUTHORIZED' });
         }
 
         const app = await prisma.app.create({
