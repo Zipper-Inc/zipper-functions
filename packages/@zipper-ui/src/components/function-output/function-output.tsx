@@ -85,6 +85,7 @@ export function FunctionOutput({
   runId,
   reloadOnClose: _reloadOnClose = false,
   zipperLocation = ZipperLocation.ZipperDotRun,
+  config,
 }: FunctionOutputProps) {
   const [isExpandedResultOpen, setIsExpandedResultOpen] = useState(true);
   const [reloadOnClose, setReloadOnClose] = useState(_reloadOnClose);
@@ -283,7 +284,10 @@ export function FunctionOutput({
                     data-function-output="smart"
                     whiteSpace="pre-wrap"
                   >
-                    <SmartFunctionOutputProvider outputSection="expanded">
+                    <SmartFunctionOutputProvider
+                      outputSection="expanded"
+                      config={config}
+                    >
                       <SmartFunctionOutput
                         result={applet.expandedContent.output.data}
                         level={0}
@@ -371,6 +375,7 @@ export function FunctionOutput({
             showTabs={showTabs}
             generateUserToken={generateUserToken}
             reloadOnClose={reloadOnClose}
+            config={config}
           />
         )}
       </>
@@ -497,7 +502,10 @@ export function FunctionOutput({
                       data-function-output="smart"
                       whiteSpace="pre-wrap"
                     >
-                      <SmartFunctionOutputProvider outputSection="main">
+                      <SmartFunctionOutputProvider
+                        config={config}
+                        outputSection="main"
+                      >
                         <SmartFunctionOutput
                           result={applet?.mainContent.output?.data}
                           level={0}
