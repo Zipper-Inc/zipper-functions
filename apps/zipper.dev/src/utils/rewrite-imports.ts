@@ -1,4 +1,5 @@
 import { SourceFile } from 'ts-morph';
+import { getZipperDotDevUrlForServer } from '~/server/utils/server-url.utils';
 import { getSourceFileFromCode, isExternalImport } from './parse-code';
 
 const DEFAULT_NPM_CDN = 'https://esm.sh';
@@ -16,7 +17,7 @@ function rewriteSpecifier(specifier: string) {
 
   // Treat the root like the root of zipper.dev
   if (specifier.startsWith('/')) {
-    return `${process.env.NEXT_PUBLIC_ZIPPER_DOT_DEV_URL}/${specifier}`;
+    return `${getZipperDotDevUrlForServer()}/${specifier}`;
   }
 
   // Fix the npm ones
