@@ -1,7 +1,7 @@
+import type { LoadResponseModule } from '@deno/eszip/esm/loader';
 import type { NextRequest } from 'next/server';
-import type { LoadResponseModule } from '@deno/eszip/types/loader';
-import type { BuildCache, CacheRecord } from './eszip-build-cache';
 import fetch from 'node-fetch';
+import type { BuildCache, CacheRecord } from './eszip-build-cache';
 
 export const X_ZIPPER_ESZIP_BUILD_HEADER = 'X-Zipper-Eszip-Build';
 
@@ -44,14 +44,14 @@ export function applyTsxHack(
   specifier: string,
   code = '/* 🤷🏽‍♂️ missing code */',
   shouldAddJsxPragma = true,
-) {
+): LoadResponseModule {
   return {
     // Add TSX to all files so they support JSX
     specifier: specifier.replace(/\.(ts|tsx)$|$/, '.tsx'),
     headers: TYPESCRIPT_CONTENT_HEADERS,
     content: shouldAddJsxPragma ? addJsxPragma(code) : code,
     kind: 'module',
-  } as LoadResponseModule;
+  };
 }
 
 export async function getModule(specifier: string, buildCache?: BuildCache) {

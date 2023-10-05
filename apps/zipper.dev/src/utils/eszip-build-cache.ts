@@ -1,5 +1,5 @@
+import type { LoadResponseModule } from '@deno/eszip/esm/loader';
 import Redis from 'ioredis';
-import type { LoadResponseModule } from '@deno/eszip/types/loader';
 
 export type CacheRecord = {
   module: LoadResponseModule;

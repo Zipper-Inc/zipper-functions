@@ -14,7 +14,8 @@ import {
   TypeNode,
 } from 'ts-morph';
 
-const isExternalImport = (specifier: string) => /^https?:\/\//.test(specifier);
+export const isExternalImport = (specifier: string) =>
+  /^https?:\/\//.test(specifier);
 export const endsWithTs = (specifier: string) => /\.(ts|tsx)$/.test(specifier);
 
 // Strip the Deno-style file extension since TS-Morph can't handle it
@@ -147,7 +148,7 @@ function parseTypeNode(type: TypeNode, src: SourceFile): ParsedNode {
   return { type: InputType.unknown };
 }
 
-export function getSourceFileFromCode(code: string) {
+export function getSourceFileFromCode(code = '', filename = 'main.ts') {
   const project = new Project({
     useInMemoryFileSystem: true,
     resolutionHost: (moduleResolutionHost, getCompilerOptions) => {
@@ -173,7 +174,7 @@ export function getSourceFileFromCode(code: string) {
     },
   });
 
-  return project.createSourceFile('main.ts', code);
+  return project.createSourceFile(filename, code);
 }
 
 // returns undefined if the file isn't runnable (no handler function)
