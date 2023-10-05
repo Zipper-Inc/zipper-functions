@@ -65,6 +65,19 @@ module.exports = getConfig({
     '@zipper/utils',
   ],
 
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'utfs.io',
+      },
+      {
+        protocol: 'http',
+        hostname: 'utfs.io',
+      },
+    ],
+  },
+
   async rewrites() {
     return [
       {

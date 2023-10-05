@@ -1,4 +1,12 @@
-import { Box, Heading, Progress, Stack, VStack } from '@chakra-ui/react';
+import {
+  Box,
+  Container,
+  Heading,
+  Progress,
+  Stack,
+  useMediaQuery,
+  VStack,
+} from '@chakra-ui/react';
 import {
   AppInfo,
   EntryPointInfo,
@@ -116,6 +124,8 @@ export function AppPage({
   const shouldShowDescription =
     shouldShowDescriptionPassedIn && description && screen === 'initial';
   const previousRouteRef = useRef(asPath);
+
+  const [isMobile] = useMediaQuery('(max-width: 600px)');
 
   // We have to do this so that the results aren't SSRed
   // (if they are DOMParser in FunctionOutput will be undefined)
@@ -321,7 +331,7 @@ export function AppPage({
 
   const title = description?.title || appTitle || app?.slug;
   const runContent = (
-    <VStack w="full" align="stretch" spacing={4} ml={4}>
+    <VStack w="full" align="stretch" spacing={4} ml={{ md: 4 }}>
       <Heading as="h1" fontSize="4xl" fontWeight="medium">
         {title}
       </Heading>
@@ -347,7 +357,7 @@ export function AppPage({
     <Stack
       as="main"
       position="relative"
-      px={8}
+      px={{ base: 4, md: 8 }}
       pt={4}
       pb={8}
       spacing={8}
@@ -360,7 +370,7 @@ export function AppPage({
           width={{ base: 'auto', md: '100%' }}
           align="stretch"
           minW="320px"
-          ml={4}
+          ml={{ md: 4 }}
           flex={2}
         >
           <HandlerDescription

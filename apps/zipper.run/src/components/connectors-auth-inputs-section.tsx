@@ -30,7 +30,7 @@ const ConnectorsAuthInputsSection: React.FC<
   toggleIsExpanded,
 }) => {
   const inputsSection = (
-    <VStack align="stretch" spacing={6}>
+    <VStack align="center" w="full">
       {userAuthProps.userAuthConnectors.length > 0 && (
         <AuthUserConnectors {...userAuthProps} />
       )}
