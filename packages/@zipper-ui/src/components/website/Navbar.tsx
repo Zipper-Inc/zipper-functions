@@ -110,12 +110,12 @@ export const WebSiteNavbar = ({ links, site = SiteType.Home }: Props) => {
       alignItems="center"
       justifyContent="space-between"
       css={{ margin: '0 auto' }}
-      h={{ base: '80px', lg: '125px' }}
+      h={{ base: '80px', lg: '124px' }}
       w="full"
       maxW="container.xl"
     >
       {links?.component && (
-        <links.component href="/home">
+        <links.component href="/home" aria-label="home">
           <ZipperLogo type="color" />
         </links.component>
       )}

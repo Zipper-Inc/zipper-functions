@@ -18,7 +18,6 @@ import {
   Icon,
   Button,
   Stack,
-  Spinner,
 } from '@chakra-ui/react';
 import { baseColors, Website } from '@zipper/ui';
 import React, { memo, useEffect } from 'react';
@@ -38,7 +37,6 @@ import {
   FiCode,
   FiLoader,
 } from 'react-icons/fi';
-import { HiOutlineLightningBolt } from 'react-icons/hi';
 import Image from 'next/image';
 import { motion, useAnimation } from 'framer-motion';
 import { useAnalytics } from '~/hooks/use-analytics';
@@ -85,7 +83,7 @@ const WEB_FIRST_CONTENT = {
 
   LIST: [
     {
-      ICON: <FiSettings size={40} />,
+      ICON: <FiSettings />,
       TITLE: 'Code-first SaaS Integrations',
       COLOR: 'purple.500',
       DESCRIPTION:
@@ -93,7 +91,7 @@ const WEB_FIRST_CONTENT = {
       IMAGE_URL: '/static/sass_integration.png',
     },
     {
-      ICON: <FiTool size={40} />,
+      ICON: <FiTool />,
       TITLE: 'Internal Tools as a Service',
       COLOR: 'blue.600',
       DESCRIPTION:
@@ -101,7 +99,7 @@ const WEB_FIRST_CONTENT = {
       IMAGE_URL: '/static/tool_as_service.png',
     },
     {
-      ICON: <FiCode size={40} />,
+      ICON: <FiCode />,
       TITLE: 'Worker Functions',
       COLOR: 'brandOrange.500',
       DESCRIPTION:
@@ -109,7 +107,7 @@ const WEB_FIRST_CONTENT = {
       IMAGE_URL: '/static/worker_functions.png',
     },
     {
-      ICON: <FiLoader size={40} />,
+      ICON: <FiLoader />,
       TITLE: 'Anything else you want',
       COLOR: 'gray.900',
       DESCRIPTION:
@@ -135,84 +133,42 @@ const FEATURES_CONTENT = {
       color: baseColors.purple['500'],
       description:
         'Publish your code to a public facing URL with the click of a button.  ',
-      interact: (
-        <Image
-          src="/layout/deploy.svg"
-          fill
-          style={{ objectFit: 'cover' }}
-          alt="Deploy"
-        />
-      ),
+      picture: '/layout/deploy.svg',
     },
     {
       title: 'A simple web framework',
       color: baseColors.brandOrange['500'],
       description:
         'Every file that exports a `handler` function automatically becomes a route in your app. Pass inputs to your handler, get back an output. ',
-      interact: (
-        <Image
-          src="/layout/handler.svg"
-          fill
-          style={{ objectFit: 'cover' }}
-          alt="Deploy"
-        />
-      ),
+      picture: '/layout/handler.svg',
     },
     {
       title: 'UI without any frontend code',
       color: baseColors.blue['500'],
       description:
         'The inputs to your functions become forms to collect user input and the outputs get turned into a functional UI.	  ',
-      interact: (
-        <Image
-          src="/layout/ui.svg"
-          fill
-          style={{ objectFit: 'cover' }}
-          alt="Deploy"
-        />
-      ),
+      picture: '/layout/ui.svg',
     },
     {
       title: 'API endpoints for every route',
       color: baseColors.purple['500'],
       description:
         'Every route accepts GET & POST requests that can be secured with bearer tokens. Perfect for receiving webhooks or integrating into other pieces of software.',
-      interact: (
-        <Image
-          src="/layout/getpost.svg"
-          fill
-          style={{ objectFit: 'cover' }}
-          alt="Deploy"
-        />
-      ),
+      picture: '/layout/getpost.svg',
     },
     {
       title: 'Built-in storage',
       color: baseColors.blue['500'],
       description:
         'Each applet has its own KV store for managing data across runs.   ',
-      interact: (
-        <Image
-          src="/layout/storage.svg"
-          fill
-          style={{ objectFit: 'cover' }}
-          alt="Deploy"
-        />
-      ),
+      picture: '/layout/storage.svg',
     },
     {
       title: 'Authentication connectors',
       color: baseColors.purple['500'],
       description:
         'Force users to sign in to other services (such as Slack or GitHub) before running your applet.',
-      interact: (
-        <Image
-          src="/layout/auth.svg"
-          fill
-          style={{ objectFit: 'cover' }}
-          alt="Deploy"
-        />
-      ),
+      picture: '/layout/auth.svg',
     },
   ],
 };
@@ -275,12 +231,6 @@ const APPLET_GALLERY_LIST = [
     slug: 'waitlist-manager',
     url: 'https://zipper.dev/zipper-inc/waitlist-manager/src/readme.md',
   },
-  // {
-  //   title: 'Product Activity Notifications',
-  //   description:
-  //     'Stay in the know with real-time updates. Receive Slack notifications when someone surpasses predefined activity thresholds, keeping your team informed and engaged.',
-  //   slug: 'product-activity-notifications',
-  // },
   {
     title: 'Incident Management Bot',
     description:
@@ -288,12 +238,6 @@ const APPLET_GALLERY_LIST = [
     slug: 'incident-managment-bot',
     url: 'https://zipper.dev/zipper-inc/incident-bot/src/readme.md',
   },
-  // {
-  //   title: 'Basic Knowledge Base',
-  //   description:
-  //     'Elevate your information hub. Access a foundational knowledge base enhanced with AI-driven responses, providing more accurate and dynamic answers to your queries.',
-  //   slug: 'basic-knowledge-base',
-  // },
   {
     title: "What's the team listening to",
     description:
@@ -308,12 +252,6 @@ const APPLET_GALLERY_LIST = [
     slug: 'natural-language-contrab',
     url: 'https://zipper.dev/zipper-inc/crontab-ai-generator/src/main.ts',
   },
-  // {
-  //   title: 'Link Zendesk tickets to GitHub Issues',
-  //   description:
-  //     'ink Zendesk tickets directly to GitHub Issues. Streamline support and development workflows by seamlessly connecting customer inquiries with development tasks in GitHub.',
-  //   slug: 'zendesk-tickets-github-issues',
-  // },
   {
     title: 'GitHub WIP tracker',
     description:
@@ -328,12 +266,6 @@ const APPLET_GALLERY_LIST = [
     slug: 'feature-flagging',
     url: 'https://zipper.dev/zipper-inc/ff-onboarding-example/src/readme.md',
   },
-  // {
-  //   title: 'PagerDuty to Slack usergroup',
-  //   description:
-  //     'Synchronize PagerDuty alerts and notifications with Slack usergroups to ensure the right team members are informed and ready to act during incidents.',
-  //   slug: 'sync-pagerduty-slack-usergroup',
-  // },
 ];
 
 const BATTERIES_CONTENT = {
@@ -384,8 +316,6 @@ const HEADLINE_CONTENT = {
 const Hero = () => {
   // Animations
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const [isLargerThan600] = useMediaQuery('(min-width: 600px)');
-  const [isMinorThan600] = useMediaQuery('(max-width: 599px)');
 
   const box1Animation = useAnimation();
   const box2Animation = useAnimation();
@@ -411,15 +341,11 @@ const Hero = () => {
 
   const MobileVideoFigure = () => (
     <Box
-      display="flex"
+      display={{ base: 'flex', md: 'none' }}
       position="relative"
       width={{ base: 'full', md: '535px' }}
-      height={{ base: '50vh', md: '445px' }}
+      height={{ base: '280px', md: '445px' }}
       mt={{ base: 8, md: 0 }}
-      animate={{
-        translateY: [-15, 0],
-        opacity: [0, 1],
-      }}
       as={motion.div}
     >
       <Box
@@ -441,10 +367,10 @@ const Hero = () => {
       <Box
         as={motion.div}
         position="absolute"
-        bottom="0"
+        bottom={-10}
         right={{ base: '-45px', md: '0' }}
         width={{ md: '440px' }}
-        height="330px"
+        // height="330px"
         animate={box2Animation}
       >
         <Image
@@ -486,18 +412,14 @@ const Hero = () => {
 
   const DesktopVideoFigure = () => (
     <Box
-      display="flex"
+      display={{ base: 'none', md: 'flex' }}
       flexDir="column"
       justifyContent="center"
-      animate={{
-        translateY: [-15, 0],
-        opacity: [0, 1],
-      }}
       transition="1.5s ease-in-out"
       alignItems="center"
       position="relative"
       width="full"
-      height={{ base: '50vh', md: '668px' }}
+      height={{ base: '50vh', md: '542px' }}
       mt={{ base: 8, md: 36 }}
       as={motion.div}
     >
@@ -522,13 +444,10 @@ const Hero = () => {
       <Box
         as={motion.div}
         position="absolute"
-        // bottom="0"
-        // right={{ base: '-45px', md: '200px' }}
         width={{ md: '1000px' }}
         left={280}
         top={20}
         height="600"
-        // animate={box2Animation}
       >
         <img
           style={{ objectFit: 'cover' }}
@@ -591,7 +510,8 @@ const Hero = () => {
       as="section"
       aria-label="hero-container"
       w="full"
-      py={{ base: '52px', md: '9rem' }}
+      py={{ base: '52px', md: '8rem' }}
+      mt={{ base: 0, md: '-3rem' }}
       px={['24px', 0]}
       position="relative"
       whiteSpace={{ md: 'pre-line' }} //important for \n new lines
@@ -669,40 +589,33 @@ const Hero = () => {
               </Button>
             </Stack>
           </VStack>
-          {!!isLargerThan600 === false && !!isMinorThan600 === false && (
-            <Spinner color="blue.500" />
-          )}
 
-          {isLargerThan600 && <DesktopVideoFigure />}
-
-          {isMinorThan600 && <MobileVideoFigure />}
+          <DesktopVideoFigure />
+          <MobileVideoFigure />
         </Flex>
       </Container>
       <Modal isOpen={isOpen} onClose={onClose} size="5xl">
         <ModalOverlay />
         <ModalContent p="0">
           <ModalBody p="0">
-            <div
-              style={{
-                position: 'relative',
-                paddingBottom: '56.25%',
-                height: '0',
-                background: 'transparent',
-              }}
+            <Box
+              as="figure"
+              position="relative"
+              paddingBottom="56.25%"
+              height="0"
+              background="transparent"
             >
-              <iframe
+              <Box
+                as="iframe"
                 src="https://www.loom.com/embed/d50630ac57a94f5fb1bcdcce2de85324?sid=766794ed-03a4-4917-98e7-4420e7f2c03d?autoplay=1"
-                frameBorder={0}
                 allowFullScreen
-                style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  height: '100%',
-                  width: '100%',
-                }}
-              ></iframe>
-            </div>
+                position="absolute"
+                top={0}
+                left={0}
+                height="100%"
+                width="100%"
+              />
+            </Box>
           </ModalBody>
         </ModalContent>
       </Modal>
@@ -749,28 +662,34 @@ const WebFirst = memo(() => {
           </Text>
         </VStack>
 
-        <VStack gap="100px" w="full">
+        <VStack as="ul" gap="100px" w="full">
           {WEB_FIRST_CONTENT.LIST.map((item, index) => (
             <Flex
+              as="li"
               align="start"
               flexDirection={{ base: 'column', lg: 'row' }}
               key={index}
               gap={5}
               w="full"
             >
-              <VStack maxW={{ base: 'full', lg: '380px' }} align="start">
-                <Box color={item.COLOR}>
-                  {item.ICON}
+              <VStack
+                as="article"
+                maxW={{ base: 'full', lg: '380px' }}
+                align="start"
+              >
+                <VStack align="start" color={item.COLOR}>
+                  {React.cloneElement(item.ICON, {
+                    size: 36,
+                  })}
                   <Heading
                     as="h3"
                     fontWeight={400}
                     fontSize="4xl"
                     color={item.COLOR}
-                    // color="blue.500"
                   >
                     {item.TITLE}
                   </Heading>
-                </Box>
+                </VStack>
 
                 <Text color="gray.900" fontSize="xl">
                   {item.DESCRIPTION}
@@ -878,7 +797,12 @@ const Features = memo(() => {
               height={['auto', '640px']}
             >
               <Box as="figure" w="full" height="342px" position="relative">
-                {feat.interact}
+                <Image
+                  src={feat.picture}
+                  fill
+                  style={{ objectFit: 'cover' }}
+                  alt={feat.title}
+                />
               </Box>
               <VStack
                 as="article"
@@ -1212,35 +1136,6 @@ const Headline = memo(() => {
     </Box>
   );
 });
-
-const BetaSection = () => {
-  return (
-    <Box
-      bgColor={'indigo.600'}
-      color="white"
-      w="full"
-      justifyContent="center"
-      display="flex"
-      p="4"
-    >
-      <Text
-        fontWeight={'bold'}
-        mr={2}
-        display="flex"
-        alignItems="center"
-        gap="2"
-      >
-        <HiOutlineLightningBolt size={20} /> Zipper is in beta
-      </Text>
-      <Text>
-        <Box as="span" textDecoration={'underline'}>
-          <Link href="/auth/signin">Sign up now</Link>
-        </Box>{' '}
-        to be the first to get new features.
-      </Text>
-    </Box>
-  );
-};
 
 /* -------------------------------------------- */
 /* Render                                       */
