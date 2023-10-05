@@ -1,10 +1,9 @@
+import { App } from '@prisma/client';
+import { inferRouterInputs } from '@trpc/server';
+import { randomUUID } from 'crypto';
+import { prismaMock } from '../../../jestSetup';
 import { createContextInner } from '../context';
 import { AppRouter, trpcRouter } from './_app';
-import { inferRouterInputs } from '@trpc/server';
-import { prismaMock } from '../../../jestSetup';
-import { randomUUID } from 'crypto';
-import { App, Script, ScriptMain } from '@prisma/client';
-import { defaultCode } from './app.router';
 
 let userId: string;
 let orgId: string;
@@ -15,6 +14,7 @@ describe('when calling app.add', () => {
     userId = randomUUID();
     orgId = randomUUID();
     appId = randomUUID();
+    prismaMock.organizationMembership.count.mockResolvedValue(1);
     prismaMock.app.findMany.mockResolvedValue([]);
   });
 
