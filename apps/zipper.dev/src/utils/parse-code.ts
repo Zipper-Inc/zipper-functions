@@ -147,7 +147,7 @@ function parseTypeNode(type: TypeNode, src: SourceFile): ParsedNode {
   return { type: InputType.unknown };
 }
 
-function getSourceFileFromCode(code: string) {
+export function getSourceFileFromCode(code: string) {
   const project = new Project({
     useInMemoryFileSystem: true,
     resolutionHost: (moduleResolutionHost, getCompilerOptions) => {
