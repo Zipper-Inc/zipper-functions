@@ -8,10 +8,7 @@ import {
 } from '@prisma/client';
 import { z } from 'zod';
 import { prisma } from '~/server/prisma';
-import {
-  hasAppEditPermission,
-  hasOrgAdminPermission,
-} from '../utils/authz.utils';
+import { hasAppEditPermission } from '../utils/authz.utils';
 import slugify from '~/utils/slugify';
 import { generateDefaultSlug } from '~/utils/generate-default';
 import { TRPCError } from '@trpc/server';
@@ -166,10 +163,6 @@ export const appRouter = createTRPCRouter({
         }
 
         const organizationId = orgId === null ? null : orgId || ctx.orgId;
-
-        if (organizationId && !hasOrgAdminPermission(ctx)) {
-          throw new TRPCError({ code: 'UNAUTHORIZED' });
-        }
 
         const app = await prisma.app.create({
           data: {

@@ -1,7 +1,10 @@
 import { Prisma } from '@prisma/client';
 import { z } from 'zod';
 import { prisma } from '~/server/prisma';
-import { hasAppEditPermission } from '../utils/authz.utils';
+import {
+  hasAppEditPermission,
+  hasAppReadPermission,
+} from '../utils/authz.utils';
 import { encryptToBase64 } from '@zipper/utils';
 import { createTRPCRouter, publicProcedure } from '../root';
 
@@ -80,7 +83,7 @@ export const secretRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
-      await hasAppEditPermission({
+      await hasAppReadPermission({
         ctx,
         appId: input.appId,
       });

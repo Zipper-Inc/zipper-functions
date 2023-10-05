@@ -73,7 +73,7 @@ export const appAccessTokenRouter = createTRPCRouter({
         select: defaultSelect,
       });
     }),
-  delete: protectedProcedure
+  delete: publicProcedure
     .input(
       z.object({
         identifier: z.string(),
