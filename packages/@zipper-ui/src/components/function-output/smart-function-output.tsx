@@ -1,16 +1,18 @@
-import { Box, Stack, StackDivider, Link } from '@chakra-ui/react';
+import { Box, Link, Stack, StackDivider } from '@chakra-ui/react';
 import { OutputType } from '@zipper/types';
 
-import { ObjectExplorer } from './object-explorer';
-import { parseResult } from './utils';
-import { RawFunctionOutput } from './raw-function-output';
-import { ActionComponent } from './action-component';
-import { RouterComponent } from './router-component';
-import { Markdown } from './markdown';
-import Collection from './collection';
-import Array from './array';
-import { defaults as defaultElements } from '../../utils/chakra-markdown-renderer';
 import React from 'react';
+import stripJs from 'strip-js';
+import { defaults as defaultElements } from '../../utils/chakra-markdown-renderer';
+import { ActionComponent } from './action-component';
+import Array from './array';
+import Collection from './collection';
+import { Markdown } from './markdown';
+import { ObjectExplorer } from './object-explorer';
+import { RawFunctionOutput } from './raw-function-output';
+import { RouterComponent } from './router-component';
+import { useSmartFunctionOutputContext } from './smart-function-output-context';
+import { parseResult } from './utils';
 
 export function SmartFunctionOutput({
   result,
@@ -23,6 +25,8 @@ export function SmartFunctionOutput({
   tableLevel: number;
   heading?: string;
 }) {
+  const { config } = useSmartFunctionOutputContext();
+
   // if result === 0, it'll be evaluated as falsey by !result
   if (result === undefined || result === null) return null;
 
@@ -48,9 +52,19 @@ export function SmartFunctionOutput({
       return <Collection data={data} level={level} tableLevel={tableLevel} />;
 
     case OutputType.Html:
+      /**
+       * 🙈🙊🙉
+       * this is a secret config value to allow scripts, just in case
+       * snitches get stitches
+       */
+      const { __dangerouslyAllowScripts } = config as Zipper.HandlerConfig & {
+        __dangerouslyAllowScripts: boolean;
+      };
+
+      const srcDoc = __dangerouslyAllowScripts ? data : stripJs(data);
       return (
         <Box>
-          <iframe width="100%" height="400px" srcDoc={data} />
+          <iframe width="100%" height="400px" srcDoc={srcDoc} />
         </Box>
       );
 
