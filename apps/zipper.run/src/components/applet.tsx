@@ -422,6 +422,7 @@ export function AppPage({
       <VStack flex={1} alignItems="stretch" spacing={4}>
         <Header
           {...app}
+          token={token}
           entryPoint={entryPoint}
           runnableScripts={runnableScripts}
           runId={latestRunId}
@@ -459,6 +460,8 @@ export const getServerSideProps: GetServerSideProps = async ({
   if (__DEBUG__) console.log({ versionFromUrl, filename: filenameFromUrl });
 
   const { token, userId } = await getZipperAuth(req);
+
+  console.log('token????', token);
 
   // grab the app if it exists
   const bootInfoResult = await getBootInfo({

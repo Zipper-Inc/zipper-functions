@@ -38,6 +38,7 @@ export type HeaderProps = AppInfo & {
   runId?: string;
   setScreen: (screen: 'initial' | 'output') => void;
   setLoading: (value: boolean) => void;
+  token?: string;
 };
 
 const Header: React.FC<HeaderProps> = ({
@@ -48,6 +49,7 @@ const Header: React.FC<HeaderProps> = ({
   runnableScripts = [],
   runId,
   setLoading,
+  token,
 }) => {
   const router = useRouter();
   const toast = useToast();
@@ -56,10 +58,6 @@ const Header: React.FC<HeaderProps> = ({
   const [isMobileView] = useMediaQuery('(max-width: 600px)');
 
   useEffectOnce(() => {
-    const token = document.cookie
-      .split('; ')
-      .find((c) => c.startsWith('__zipper_token'));
-
     if (token) {
       setUser(readJWT(token));
     }
@@ -87,6 +85,13 @@ const Header: React.FC<HeaderProps> = ({
   if (!entryPoint) {
     return <></>;
   }
+
+  const handleLogout = async () => {
+    await fetch(`/api/logout`, {
+      method: 'POST',
+    });
+    window.location.reload();
+  };
 
   /* -------------------------------------------- */
   /* Components                                   */
@@ -305,14 +310,7 @@ const Header: React.FC<HeaderProps> = ({
                     </MenuButton>
                     <MenuList pb={0}>
                       <Box pb="4" pt="2" px={4}>
-                        <Button
-                          variant="link"
-                          onClick={() => {
-                            deleteCookie('__zipper_token');
-                            deleteCookie('__zipper_refresh');
-                            window.location.reload();
-                          }}
-                        >
+                        <Button variant="link" onClick={() => handleLogout()}>
                           Sign out
                         </Button>
                       </Box>
