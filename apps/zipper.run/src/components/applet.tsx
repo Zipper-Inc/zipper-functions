@@ -461,8 +461,6 @@ export const getServerSideProps: GetServerSideProps = async ({
 
   const { token, userId } = await getZipperAuth(req);
 
-  console.log('token????', token);
-
   // grab the app if it exists
   const bootInfoResult = await getBootInfo({
     subdomain,
