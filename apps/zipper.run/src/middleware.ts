@@ -239,13 +239,22 @@ export const middleware = async (request: NextRequest) => {
       name: '__zipper_token',
       value: accessToken,
       path: '/',
+      secure: true,
+      httpOnly: true,
+      sameSite: 'strict',
     });
   } else {
     response.cookies.set('__zipper_token', '', {
       expires: new Date(Date.now()),
+      secure: true,
+      httpOnly: true,
+      sameSite: 'strict',
     });
     response.cookies.set('__zipper_refresh', '', {
       expires: new Date(Date.now()),
+      secure: true,
+      httpOnly: true,
+      sameSite: 'strict',
     });
   }
 
