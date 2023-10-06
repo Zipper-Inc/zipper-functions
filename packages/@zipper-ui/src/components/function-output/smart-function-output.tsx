@@ -52,17 +52,19 @@ export function SmartFunctionOutput({
       return <Collection data={data} level={level} tableLevel={tableLevel} />;
 
     case OutputType.Html:
+      /**
+       * 🙈🙊🙉
+       * this is a secret config value to allow scripts, just in case
+       * snitches get stitches
+       */
+      const { __dangerouslyAllowScripts } = config as Zipper.HandlerConfig & {
+        __dangerouslyAllowScripts: boolean;
+      };
+
+      const srcDoc = __dangerouslyAllowScripts ? data : stripJs(data);
       return (
         <Box>
-          <iframe
-            width="100%"
-            height="400px"
-            srcDoc={
-              config?.output?.format?.html?.allowScripting
-                ? data
-                : stripJs(data)
-            }
-          />
+          <iframe width="100%" height="400px" srcDoc={srcDoc} />
         </Box>
       );
 
