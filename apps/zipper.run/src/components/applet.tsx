@@ -423,6 +423,7 @@ export function AppPage({
       <VStack flex={1} alignItems="stretch" spacing={4}>
         <Header
           {...app}
+          token={token}
           entryPoint={entryPoint}
           runnableScripts={runnableScripts}
           runId={latestRunId}
