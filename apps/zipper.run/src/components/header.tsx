@@ -310,9 +310,9 @@ const Header: React.FC<HeaderProps> = ({
                     </MenuButton>
                     <MenuList pb={0}>
                       <Box pb="4" pt="2" px={4}>
-                        <Button variant="link" onClick={() => handleLogout()}>
-                          Sign out
-                        </Button>
+                        <Link href="/logout">
+                          <Button variant="link">Sign out</Button>
+                        </Link>
                       </Box>
                     </MenuList>
                   </>
