@@ -22,7 +22,7 @@ import { useRouter } from 'next/router';
 import { LiveObject, LsonObject } from '@liveblocks/client';
 import { getPathFromUri, getUriFromPath } from '~/utils/model-uri';
 import { InputParam } from '@zipper/types';
-import { parseCode } from '~/utils/parse-code';
+import { isExternalImport, parseCode } from '~/utils/parse-code';
 import debounce from 'lodash.debounce';
 import { uuid } from '@zipper/utils';
 import { prettyLog } from '~/utils/pretty-log';
@@ -31,6 +31,7 @@ import { getAppVersionFromHash } from '~/utils/hashing';
 import { isZipperImportUrl } from '~/utils/eszip-utils';
 import Fuse from 'fuse.js';
 import { parsePlaygroundQuery, PlaygroundTab } from '~/utils/playground.utils';
+import { rewriteSpecifier } from '~/utils/rewrite-imports';
 
 /** This string indicates which errors we own in the editor */
 const ZIPPER_LINT = 'zipper-lint';
@@ -350,7 +351,9 @@ const EditorContextProvider = ({
     [currentScript],
   );
 
-  const onChange: EditorProps['onChange'] = (value = '', event) => {
+  const onChange: EditorProps['onChange'] = async (value = '', event) => {
+    if (!editor || !monacoRef?.current || !currentScript) return;
+
     try {
       mutateLive(value, event.versionId);
 
@@ -363,31 +366,69 @@ const EditorContextProvider = ({
         setInputParams(inputs);
         setInputError(undefined);
 
-        editor?.removeAllMarkers(ZIPPER_LINT);
+        editor.removeAllMarkers(ZIPPER_LINT);
 
         // Handle imports and check to make sure they are valid
-
-        localImports.forEach((i) => {
-          const foundUri = getUriFromPath(
+        // Reports Z0001: Cannot find module
+        localImports.forEach(async (i) => {
+          const potentialModelUri = getUriFromPath(
             // Remove the first two characters, which should be `./`
             // The relative path is required by Deno/Zipper
             i.specifier.substring(2),
             monacoRef.current!.Uri.parse,
             'tsx',
           );
-          const foundModel = editor!.getModel(foundUri);
 
-          // If we can't find a model, this is an error
-          if (!foundModel) {
-            const currentUri = getUriFromPath(
-              currentScript!.filename,
-              monacoRef.current!.Uri.parse,
-              'tsx',
-            );
-            const currentModel = editor!.getModel(currentUri);
-            let message = `Cannot find module '${i.specifier}\'.`;
+          // If we can find a model, we're good
+          if (editor.getModel(potentialModelUri)) return;
 
-            const localModelUris = editor!
+          // See if this resolves to a valid external import via our rewrites
+          const specifier = rewriteSpecifier(i.specifier);
+          if (isExternalImport(specifier)) {
+            const { status, headers } = await fetch(specifier, {
+              redirect: 'follow',
+            });
+            const fromZipper = isZipperImportUrl(specifier);
+            if (status === 200 && !fromZipper) return;
+            if (
+              status === 200 &&
+              fromZipper &&
+              headers.get('content-type')?.toLowerCase().includes('typescript')
+            ) {
+              return;
+            }
+          }
+
+          // If it's not a module, let's add an error
+          const currentUri = getUriFromPath(
+            currentScript.filename,
+            monacoRef.current!.Uri.parse,
+            'tsx',
+          );
+          const currentModel = editor.getModel(currentUri);
+
+          // Not sure how this would happen but if there's no model, there's nothing to do
+          if (!currentModel) return;
+
+          let message = `Cannot find module \`${i.specifier}\' in applet.`;
+          let suggestion;
+
+          if (isZipperImportUrl(specifier)) {
+            message = `Cannot find module \`${specifier}\` on Zipper.`;
+          } else if (isExternalImport(specifier)) {
+            const npmName = i.specifier.replace(/^npm:/, '');
+            const results = await fetch(
+              `https://registry.npmjs.com/-/v1/search?text=${npmName}&size=20`,
+            )
+              .then((r) => r.json())
+              .catch();
+
+            message = `Cannot find module \`${npmName}\` on npm.`;
+            suggestion = results.objects.length
+              ? results.objects[0].package.name
+              : '';
+          } else {
+            const localModelUris = editor
               .getModels()
               .map((m) => m.uri)
               .filter((u) => u.scheme === 'file' && u.path !== currentUri.path);
@@ -398,24 +439,28 @@ const EditorContextProvider = ({
             // If there is, lets grab the full URI based on the original index
             const suggestedUri =
               topSuggestion && localModelUris[topSuggestion.refIndex];
-            if (suggestedUri) {
-              // Cool, now we can make it into a relative file path
-              const path = getPathFromUri(suggestedUri);
-              message = `${message} Did you mean '.${path}'?`;
-            }
-
-            editor!.setModelMarkers(currentModel!, ZIPPER_LINT, [
-              {
-                startLineNumber: i.startLine,
-                startColumn: i.startColumn,
-                endLineNumber: i.endLine,
-                endColumn: i.endColumn,
-                severity: monacoRef.current!.MarkerSeverity.Error,
-                message,
-                code: ZipperLintCode.CannotFindModule,
-              },
-            ]);
+            suggestion = suggestedUri ? `.${getPathFromUri(suggestedUri)}` : '';
           }
+
+          if (suggestion) {
+            message = `${message}\n\nDid you mean \`${suggestion}\`?`;
+          }
+
+          editor.setModelMarkers(currentModel, ZIPPER_LINT, [
+            ...editor.getModelMarkers({
+              resource: currentUri,
+              owner: ZIPPER_LINT,
+            }),
+            {
+              startLineNumber: i.startLine,
+              startColumn: i.startColumn,
+              endLineNumber: i.endLine,
+              endColumn: i.endColumn,
+              severity: monacoRef.current!.MarkerSeverity.Error,
+              message,
+              code: ZipperLintCode.CannotFindModule,
+            },
+          ]);
         });
 
         handleExternalImportsDebounced({
@@ -759,5 +804,4 @@ const EditorContextProvider = ({
 };
 
 export const useEditorContext = () => useContext(EditorContext);
-
 export default EditorContextProvider;

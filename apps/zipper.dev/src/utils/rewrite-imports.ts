@@ -1,11 +1,12 @@
 import { SourceFile } from 'ts-morph';
+/** This has to use the server version or build may break */
 import { getZipperDotDevUrlForServer } from '~/server/utils/server-url.utils';
 import { getSourceFileFromCode, isExternalImport } from './parse-code';
 
 const DEFAULT_NPM_CDN = 'https://esm.sh';
 const withNpmCdn = (specifier: string) => `${DEFAULT_NPM_CDN}/${specifier}`;
 
-function rewriteSpecifier(specifier: string) {
+export function rewriteSpecifier(specifier: string) {
   // Don't touch file imports or urls
   if (
     specifier.startsWith('./') ||
@@ -17,7 +18,7 @@ function rewriteSpecifier(specifier: string) {
 
   // Treat the root like the root of zipper.dev
   if (specifier.startsWith('/')) {
-    return `${getZipperDotDevUrlForServer()}/${specifier}`;
+    return `${getZipperDotDevUrlForServer()}${specifier.replace(/^\//, '')}`;
   }
 
   // Fix the npm ones
