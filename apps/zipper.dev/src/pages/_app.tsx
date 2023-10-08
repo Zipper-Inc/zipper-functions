@@ -3,6 +3,8 @@ import { AppProps } from 'next/app';
 import { AppType } from 'next/dist/shared/lib/utils';
 import { ReactElement, ReactNode } from 'react';
 
+import '~/styles/global.css';
+
 import { SessionProvider } from 'next-auth/react';
 
 import { DefaultLayout } from '~/components/default-layout';
