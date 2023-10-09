@@ -389,6 +389,24 @@ export const authOptions: AuthOptions = {
         })),
       });
 
+      if (isNewUser && user.email) {
+        resend.emails.send({
+          to: user.email,
+          from: 'Sachin & Ibu <founders@zipper.dev>',
+          reply_to: ['sachin@zipper.works', 'ibu@zipper.works'],
+          subject: 'Thank you for checking out Zipper',
+          text: `Hey there,
+
+We just wanted to drop you a quick note to say thank you for checking out Zipper.
+
+If you have any questions, feedback, or general comments, we'd genuinely love to hear them. Feel free to reply to this email at any point - your emails go directly into our inboxes (and not a general mailbox or support queue).
+
+Regards,
+Sachin & Ibu
+`,
+        });
+      }
+
       trackEvent({
         userId: user.id,
         eventName: isNewUser ? 'Signed Up' : 'Logged In',
