@@ -110,6 +110,7 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
     return (
       <FunctionOutput
         applet={mainApplet}
+        config={configs?.[currentScript?.filename || '']}
         getRunUrl={(scriptName: string) => {
           return getRunUrl(
             appSlug,

@@ -17,8 +17,8 @@ export const getServerSideProps: GetServerSideProps = async ({
   const json = await result.json();
 
   res.setHeader('set-cookie', [
-    `__zipper_token=${json.accessToken}`,
-    `__zipper_refresh=${json.refreshToken}`,
+    `__zipper_token=${json.accessToken};`,
+    `__zipper_refresh=${json.refreshToken};`,
   ]);
 
   return {
