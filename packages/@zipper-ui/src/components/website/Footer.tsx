@@ -369,6 +369,8 @@ export const WebSiteFooter = ({
               align="flex-start"
             >
               <Links
+                textDecor="underline"
+                color={{ default: 'gray.900', hover: 'gray.600' }}
                 data={linksObj.slice(0, 4)}
                 component={links?.component}
                 displayActiveLink={false}
@@ -383,6 +385,8 @@ export const WebSiteFooter = ({
               align="flex-start"
             >
               <Links
+                textDecor="underline"
+                color={{ default: 'gray.900', hover: 'gray.600' }}
                 data={linksObj.slice(4, 8)}
                 component={links?.component}
                 displayActiveLink={false}
@@ -396,6 +400,8 @@ export const WebSiteFooter = ({
               align="flex-start"
             >
               <Links
+                textDecor="underline"
+                color={{ default: 'gray.900', hover: 'gray.600' }}
                 data={linksObj.slice(9, 12)}
                 component={links?.component}
                 displayActiveLink={false}

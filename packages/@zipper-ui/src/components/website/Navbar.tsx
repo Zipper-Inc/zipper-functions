@@ -60,7 +60,7 @@ export const WebSiteNavbar = ({ links, site = SiteType.Home }: Props) => {
           aria-label="menu"
           icon={<FiMenu size={24} />}
           ref={btnRef as any}
-          color="gray.800"
+          color="gray.50"
           bg="none"
           onClick={onOpen}
         />
@@ -116,7 +116,7 @@ export const WebSiteNavbar = ({ links, site = SiteType.Home }: Props) => {
     >
       {links?.component && (
         <links.component href="/home" aria-label="home">
-          <ZipperLogo type="color" />
+          <ZipperLogo type="dark" />
         </links.component>
       )}
 
@@ -127,8 +127,8 @@ export const WebSiteNavbar = ({ links, site = SiteType.Home }: Props) => {
           href="/auth/signin"
           isExternal
           fontWeight={500}
-          color="gray.600"
           bg="white"
+          color="purple.500"
           textDecoration="none"
           h="44px"
           variant="outline"
