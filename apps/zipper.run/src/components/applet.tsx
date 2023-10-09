@@ -252,6 +252,7 @@ export function AppPage({
     return (
       <FunctionOutput
         applet={mainApplet}
+        config={currentFileConfig}
         getRunUrl={(scriptName: string) => {
           return getRunUrl(scriptName);
         }}
@@ -264,7 +265,7 @@ export function AppPage({
         }}
       />
     );
-  }, [app, mainApplet.updatedAt]);
+  }, [app, mainApplet.updatedAt, currentFileConfig]);
 
   const canRunApp = useMemo(() => {
     return (userAuthConnectors || []).every((connector) => {
