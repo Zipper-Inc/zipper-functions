@@ -4,6 +4,8 @@ import React, { useMemo } from 'react';
 export const Links = (props: {
   data: { label: string; href: string; external?: boolean }[];
   displayActiveLink?: boolean;
+  color?: Record<'default' | 'hover', ChakraProps['color']>;
+  textDecor?: ChakraProps['textDecor'];
   component?: any;
 }) => {
   const pathname =
@@ -21,15 +23,15 @@ export const Links = (props: {
       idle: {
         fontSize: 'medium',
         fontWeight: 'normal',
-        color: 'gray.600',
+        color: { base: 'gray.900', lg: props.color?.default ?? 'white' },
         _hover: {
-          color: 'blue.500',
-          textDecoration: 'none',
+          color: { base: 'gray.600', lg: props.color?.hover ?? 'gray.200' },
+          textDecoration: props.textDecor ?? 'none',
         },
       },
     }),
     [],
-  );
+  ) as Record<string, ChakraProps>;
 
   const activeLink = useMemo(() => {
     return props.data.find((route) => pathname.includes(route.href));
@@ -45,7 +47,13 @@ export const Links = (props: {
 
         if (link.external === false) {
           return (
-            <Text as={props.component} key={index} href={link.href} {...styles}>
+            <Text
+              py={1}
+              as={props.component}
+              key={index}
+              href={link.href}
+              {...styles}
+            >
               {link.label}
             </Text>
           );
