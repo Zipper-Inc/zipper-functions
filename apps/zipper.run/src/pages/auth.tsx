@@ -16,9 +16,12 @@ export const getServerSideProps: GetServerSideProps = async ({
 
   const json = await result.json();
 
+  const secureAttribute =
+    process.env.NODE_ENV === 'production' ? '; Secure' : '';
+
   res.setHeader('set-cookie', [
-    `__zipper_token=${json.accessToken};`,
-    `__zipper_refresh=${json.refreshToken};`,
+    `__zipper_token=${json.accessToken}; HttpOnly; SameSite=Lax${secureAttribute}`,
+    `__zipper_refresh=${json.refreshToken}; HttpOnly; SameSite=Lax${secureAttribute}`,
   ]);
 
   return {
