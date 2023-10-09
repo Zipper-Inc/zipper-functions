@@ -83,9 +83,16 @@ export function SmartFunctionOutput({
     }
 
     case OutputType.SpecialOutputArray: {
-      return data.map((d: Zipper.SpecialOutput<`Zipper.${string}`>) => (
-        <SmartFunctionOutput result={d} level={level} tableLevel={tableLevel} />
-      ));
+      return data.map(
+        (d: Zipper.SpecialOutput<`Zipper.${string}`>, index: number) => (
+          <SmartFunctionOutput
+            key={index}
+            result={d}
+            level={level}
+            tableLevel={tableLevel}
+          />
+        ),
+      );
     }
 
     case OutputType.Component: {
@@ -103,15 +110,18 @@ export function SmartFunctionOutput({
                 ) : undefined
               }
             >
-              {(component.children as Zipper.Serializable[]).map((child) => {
-                return (
-                  <SmartFunctionOutput
-                    result={child}
-                    level={level + 1}
-                    tableLevel={tableLevel}
-                  />
-                );
-              })}
+              {(component.children as Zipper.Serializable[]).map(
+                (child, index) => {
+                  return (
+                    <SmartFunctionOutput
+                      key={index}
+                      result={child}
+                      level={level + 1}
+                      tableLevel={tableLevel}
+                    />
+                  );
+                },
+              )}
             </Stack>
           );
         }
@@ -146,9 +156,10 @@ export function SmartFunctionOutput({
           };
 
           const children = (component.children as Zipper.Serializable[]).map(
-            (child) => {
+            (child, index) => {
               return (
                 <SmartFunctionOutput
+                  key={index}
                   result={child}
                   level={level + 1}
                   tableLevel={tableLevel}
