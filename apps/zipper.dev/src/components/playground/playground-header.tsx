@@ -24,11 +24,16 @@ import {
   VStack,
   Tooltip,
   Spacer,
+  Menu,
+  MenuButton,
+  IconButton,
+  MenuList,
+  MenuItem,
 } from '@chakra-ui/react';
 
 import NextLink from 'next/link';
 import { CheckIcon } from '@chakra-ui/icons';
-import React, { useEffect, useState } from 'react';
+import React, { memo, useEffect, useState } from 'react';
 import { BLUE, ORANGE, PURPLE, ZipperLogo, ZipperSymbol } from '@zipper/ui';
 
 import { AppQueryOutput } from '~/types/trpc';
@@ -60,6 +65,7 @@ import { signIn } from 'next-auth/react';
 import { PlaygroundPublishInfo } from './playground-publish-button';
 import { getAppLink } from '@zipper/utils';
 import { UserProfileButton } from '../auth/user-profile-button';
+import { FiMoreHorizontal } from 'react-icons/fi';
 
 const getDefaultCreateAppFormValues = () => ({
   name: generateDefaultSlug(),
@@ -140,7 +146,7 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
       as="header"
       gap={4}
       maxW="full"
-      minW="md"
+      minW={{ base: 'full', md: 'md' }}
       justifyContent="center"
       pt="1"
       pb="1"
@@ -151,7 +157,7 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
           display={'flex'}
           flexDirection={'row'}
           alignItems={'center'}
-          gap={2}
+          gap={{ base: 1, md: 2 }}
         >
           <NextLink href="/">
             <SignedIn>
@@ -180,7 +186,7 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
           <Box
             bgColor={'blue.50'}
             alignItems={'center'}
-            display={'flex'}
+            display={{ base: 'none', md: 'flex' }}
             px={2}
             py={1}
           >
@@ -199,6 +205,7 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
           size="md"
           overflow="auto"
           whiteSpace="nowrap"
+          display={{ base: 'none', md: 'block' }}
           fontWeight="medium"
           color="fg.400"
         >
@@ -207,6 +214,7 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
         <NextLink href={`/${app.resourceOwner.slug}`}>
           <Heading
             size="md"
+            display={{ base: 'none', md: 'block' }}
             overflow="auto"
             whiteSpace="nowrap"
             fontWeight="medium"
@@ -219,6 +227,7 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
         <Heading
           size="md"
           overflow="auto"
+          display={{ base: 'none', md: 'block' }}
           whiteSpace="nowrap"
           fontWeight="medium"
           color="fg.400"
@@ -226,15 +235,22 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
           /
         </Heading>
 
-        <Heading
-          as="h1"
-          size="md"
-          overflow="auto"
-          whiteSpace="nowrap"
-          fontWeight="semibold"
+        <Box
+          maxW="full"
+          overflow={{ base: 'hidden', md: undefined }}
+          whiteSpace={{ base: 'nowrap', md: undefined }}
         >
-          {app.slug}
-        </Heading>
+          <Heading
+            as="h1"
+            size="md"
+            overflow="auto"
+            textOverflow={{ base: 'ellipsis', md: undefined }}
+            whiteSpace="nowrap"
+            fontWeight="semibold"
+          >
+            {app.slug}
+          </Heading>
+        </Box>
         {app.parentId && parentApp.data && (
           <Tooltip
             label={`Forked from ${parentApp.data.name || parentApp.data.slug}`}
@@ -271,9 +287,56 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
         </Tooltip>
       </HStack>
       <HStack justifyContent="end">
+        {/**
+         * Extra Actions Menu
+         * it appears only on mobile devices.
+         */}
+        <Menu>
+          <MenuButton
+            as={IconButton}
+            icon={<FiMoreHorizontal />}
+            colorScheme="purple"
+            variant="ghost"
+            display={{ base: 'flex', xl: 'none' }}
+          />
+          <MenuList>
+            <MenuItem
+              icon={<PiGitBranchDuotone />}
+              onClick={() => {
+                if (user) {
+                  onOpen();
+                } else {
+                  signIn(undefined, {
+                    callbackUrl: `${window.location.pathname}?fork=1`,
+                  });
+                }
+              }}
+            >
+              Fork
+            </MenuItem>
+            <MenuItem
+              icon={<PiShareNetworkDuotone />}
+              onClick={() => setShareModalOpen(true)}
+            >
+              Share
+            </MenuItem>
+            <MenuItem
+              icon={<PiBrowserDuotone />}
+              display={{ base: 'flex', md: 'none' }}
+              as={Link}
+              href={`${
+                process.env.NODE_ENV === 'production' ? 'https://' : 'http://'
+              }${getAppLink(app.slug)}`}
+            >
+              View
+            </MenuItem>
+          </MenuList>
+        </Menu>
+
         {isLoaded && (
           <Button
             size="sm"
+            display={{ base: 'none', xl: 'flex' }}
             colorScheme="gray"
             variant="outline"
             leftIcon={<PiGitBranchDuotone color={PURPLE} />}
@@ -295,6 +358,7 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
           <Button
             size="sm"
             colorScheme="gray"
+            display={{ base: 'none', xl: 'flex' }}
             variant="outline"
             onClick={() => setShareModalOpen(true)}
             fontWeight="medium"
@@ -307,6 +371,7 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
           as={Link}
           size="sm"
           colorScheme="gray"
+          display={{ base: 'none', md: 'flex' }}
           variant="outline"
           href={`${
             process.env.NODE_ENV === 'production' ? 'https://' : 'http://'

@@ -153,7 +153,7 @@ export function PlaygroundSidebar({
         paddingY={4}
         spacing={4}
         boxShadow="lg"
-        mr={2}
+        mr={{ base: '0', xl: 2 }}
         onMouseEnter={onMouseEnter('PlaygroundSidebar')}
         onMouseLeave={onMouseLeave()}
         outline={style('PlaygroundSidebar').border}

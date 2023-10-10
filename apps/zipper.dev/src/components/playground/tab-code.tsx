@@ -1,7 +1,13 @@
+import { ChevronDownIcon, ChevronUpIcon } from '@chakra-ui/icons';
 import {
+  Button,
   Code,
   FormControl,
   HStack,
+  Menu,
+  MenuButton,
+  MenuItem,
+  MenuList,
   Text,
   useToast,
   VStack,
@@ -10,6 +16,7 @@ import { Script } from '@prisma/client';
 import { Markdown, useCmdOrCtrl } from '@zipper/ui';
 import dynamic from 'next/dynamic';
 import { useState } from 'react';
+import { FiEye } from 'react-icons/fi';
 import {
   AppEditSidebarContextType,
   AppEditSidebarProvider,
@@ -109,103 +116,163 @@ export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
   const isMarkdown = currentScript?.filename.endsWith('.md');
 
   return (
-    <HStack
-      flex={1}
-      h="full"
-      p="none"
-      pl="1"
-      spacing={0}
-      alignItems="stretch"
-      pb={3}
-      maxH={app.canUserEdit ? MAX_CODE_TAB_HEIGHT : MAX_CODE_TAB_HEIGHT + 50}
-      minH="350px"
-      overflow="hidden"
-    >
-      <VStack
-        flex={1}
-        alignItems="stretch"
-        minWidth="250px"
-        maxH="400px"
-        minH="fit-content"
-        mt={1}
+    <>
+      <HStack
+        justify="space-between"
+        display={{ base: 'flex', xl: 'none' }}
+        mb={10}
       >
-        <PlaygroundSidebar app={app} mainScript={mainScript} />
-      </VStack>
-      <VStack
-        flex={3}
-        alignItems="stretch"
-        spacing={0}
-        minW="sm"
-        overflow="auto"
-        onMouseEnter={onMouseEnter('PlaygroundCode')}
-        onMouseLeave={onMouseLeave}
-        border={
-          hoveredElement === 'PlaygroundCode'
-            ? style('PlaygroundCode').border
-            : '4px solid transparent'
-        }
-      >
-        {isMarkdown && !isMarkdownEditable && (
-          <VStack
-            h="full"
-            w="full"
-            align="stretch"
-            px="10"
-            overflowY="scroll"
-            scrollBehavior="smooth"
-            css={{
-              '&::-webkit-scrollbar': {
-                display: 'none',
-              },
-            }}
-          >
-            <Markdown
-              children={currentScriptLive?.code || currentScript?.code || ''}
-            />
-          </VStack>
-        )}
+        <Menu>
+          {({ isOpen }) => (
+            <>
+              <MenuButton
+                as={Button}
+                variant="ghost"
+                colorScheme="purple"
+                rightIcon={isOpen ? <ChevronUpIcon /> : <ChevronDownIcon />}
+              >
+                {currentScript?.filename}
+              </MenuButton>
+              <MenuList p={0}>
+                <PlaygroundSidebar app={app} mainScript={mainScript} />
+              </MenuList>
+            </>
+          )}
+        </Menu>
 
-        {currentScriptConnectorId && (
-          <ConnectorForm
-            connectorId={currentScriptConnectorId as ConnectorId}
-            appId={app.id}
-          />
-        )}
-        <FormControl
+        <Menu>
+          {({ isOpen }) => (
+            <>
+              <MenuButton
+                as={Button}
+                fontWeight="medium"
+                variant="ghost"
+                display={{ base: 'flex', lg: 'none' }}
+                colorScheme="purple"
+                leftIcon={<FiEye />}
+              >
+                Preview
+              </MenuButton>
+              <MenuList p={0} width="320px">
+                <AppEditSidebarProvider
+                  value={{
+                    expandedResult,
+                    setExpandedResult,
+                    inputs,
+                    setInputs,
+                  }}
+                >
+                  <AppEditSidebar
+                    appSlug={app.slug}
+                    isMarkdownEditable={isMarkdownEditable}
+                    setIsMarkdownEditable={setIsMarkdownEditable}
+                  />
+                </AppEditSidebarProvider>
+              </MenuList>
+            </>
+          )}
+        </Menu>
+      </HStack>
+      <HStack
+        flex={1}
+        h="full"
+        p="none"
+        pl="1"
+        spacing={0}
+        alignItems="stretch"
+        pb={3}
+        maxH={app.canUserEdit ? MAX_CODE_TAB_HEIGHT : MAX_CODE_TAB_HEIGHT + 50}
+        minH="350px"
+        overflow="hidden"
+      >
+        <VStack
           flex={1}
-          as={VStack}
           alignItems="stretch"
-          pt={currentScriptConnectorId ? 4 : 0}
-          minH={currentScriptConnectorId ? '50%' : '100%'}
-          display={!isMarkdown || isMarkdownEditable ? 'flex' : 'none'}
-          pr={2}
+          minWidth="250px"
+          display={{ base: 'none', xl: 'flex' }}
+          maxH="400px"
+          minH="fit-content"
+          mt={1}
         >
-          {PlaygroundEditor && (
-            <PlaygroundEditor
-              key={app.id}
-              onChange={onChange}
-              onValidate={onValidate}
-              appName={app.slug}
+          <PlaygroundSidebar app={app} mainScript={mainScript} />
+        </VStack>
+        <VStack
+          flex={3}
+          alignItems="stretch"
+          spacing={0}
+          minW="sm"
+          w="full"
+          overflow="auto"
+          onMouseEnter={onMouseEnter('PlaygroundCode')}
+          onMouseLeave={onMouseLeave}
+          border={
+            hoveredElement === 'PlaygroundCode'
+              ? style('PlaygroundCode').border
+              : '4px solid transparent'
+          }
+        >
+          {isMarkdown && !isMarkdownEditable && (
+            <VStack
+              h="full"
+              w="full"
+              align="stretch"
+              px="10"
+              overflowY="scroll"
+              scrollBehavior="smooth"
+              css={{
+                '&::-webkit-scrollbar': {
+                  display: 'none',
+                },
+              }}
+            >
+              <Markdown
+                children={currentScriptLive?.code || currentScript?.code || ''}
+              />
+            </VStack>
+          )}
+
+          {currentScriptConnectorId && (
+            <ConnectorForm
+              connectorId={currentScriptConnectorId as ConnectorId}
+              appId={app.id}
             />
           )}
-        </FormControl>
-      </VStack>
-      <VStack flex={2} minW="220px">
-        <AppEditSidebarProvider
-          value={{
-            expandedResult,
-            setExpandedResult,
-            inputs,
-            setInputs,
-          }}
-        >
-          <AppEditSidebar
-            appSlug={app.slug}
-            isMarkdownEditable={isMarkdownEditable}
-            setIsMarkdownEditable={setIsMarkdownEditable}
-          />
-        </AppEditSidebarProvider>
-      </VStack>
-    </HStack>
+          <FormControl
+            flex={1}
+            as={VStack}
+            alignItems="stretch"
+            pt={currentScriptConnectorId ? 4 : 0}
+            minH={currentScriptConnectorId ? '50%' : '100%'}
+            display={!isMarkdown || isMarkdownEditable ? 'flex' : 'none'}
+            pr={{ base: 0, lg: 2 }}
+          >
+            {PlaygroundEditor && (
+              <PlaygroundEditor
+                key={app.id}
+                onChange={onChange}
+                onValidate={onValidate}
+                appName={app.slug}
+              />
+            )}
+          </FormControl>
+        </VStack>
+        <VStack display={{ base: 'none', lg: 'flex' }} flex={2} minW="220px">
+          <AppEditSidebarProvider
+            value={{
+              expandedResult,
+              setExpandedResult,
+              inputs,
+              setInputs,
+            }}
+          >
+            <AppEditSidebar
+              appSlug={app.slug}
+              isMarkdownEditable={isMarkdownEditable}
+              setIsMarkdownEditable={setIsMarkdownEditable}
+            />
+          </AppEditSidebarProvider>
+        </VStack>
+      </HStack>
+    </>
   );
 };
