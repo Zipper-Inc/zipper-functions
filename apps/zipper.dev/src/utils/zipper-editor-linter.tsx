@@ -70,31 +70,45 @@ export async function runZipperLinter({
       // See if this resolves to a valid external import via our rewrites
       const rewrittenSpecifier = rewriteSpecifier(i.specifier);
 
+      // Return early if its a valid module
       if (isExternalImport(rewrittenSpecifier)) {
-        const { status, headers } = await fetch(rewrittenSpecifier, {
-          redirect: 'follow',
-          headers: isZipperImportUrl(rewrittenSpecifier)
-            ? { [X_ZIPPER_ESZIP_BUILD_HEADER]: 'true' }
-            : undefined,
-        }).catch();
+        try {
+          const { status, headers } = await fetch(rewrittenSpecifier, {
+            redirect: 'follow',
+            headers: isZipperImportUrl(rewrittenSpecifier)
+              ? { [X_ZIPPER_ESZIP_BUILD_HEADER]: 'true' }
+              : undefined,
+          });
 
-        const fromZipper = isZipperImportUrl(rewrittenSpecifier);
-        if (status === 200 && !fromZipper) return;
-        if (
-          status === 200 &&
-          fromZipper &&
-          headers.get('content-type')?.toLowerCase().includes('typescript')
-        ) {
-          return;
+          // todo - actually validate if its real typescript
+
+          const fromZipper = isZipperImportUrl(rewrittenSpecifier);
+          if (status === 200 && !fromZipper) return;
+          if (
+            status === 200 &&
+            fromZipper &&
+            headers.get('content-type')?.toLowerCase().includes('typescript')
+          ) {
+            return;
+          }
+        } catch (e) {
+          // error cases will be handled below anyways
         }
       }
 
       // If it's not a module, let's add an error
-      let message = `Cannot find module \`${i.specifier}\' in applet.`;
+      let message = `Cannot find module "${i.specifier}" in applet.`;
       let suggestion;
 
       if (isZipperImportUrl(rewrittenSpecifier)) {
-        message = `Cannot find module \`${rewrittenSpecifier}\` on Zipper.`;
+        message = `Cannot find module ${rewrittenSpecifier} on Zipper.`;
+      } else if (isExternalImport(i.specifier)) {
+        message = `Cannot find module at ${i.specifier}`;
+        try {
+          new URL(i.specifier);
+        } catch (e) {
+          suggestion = `${i.specifier} is not a valid URL.`;
+        }
       } else if (isExternalImport(rewrittenSpecifier)) {
         const npmName = i.specifier.replace(/^npm:/, '');
         const results = await fetch(
@@ -103,7 +117,7 @@ export async function runZipperLinter({
           .then((r) => r.json())
           .catch();
 
-        message = `Cannot find module \`${npmName}\` on npm.`;
+        message = `Cannot find module "${npmName}" on npm.`;
         suggestion = results?.objects?.length
           ? results.objects[0].package.name
           : '';
@@ -123,7 +137,7 @@ export async function runZipperLinter({
       }
 
       if (suggestion) {
-        message = `${message}\n\nDid you mean \`${suggestion}\`?`;
+        message = `${message}\n\nDid you mean "${suggestion}"?`;
       }
 
       markers.push({

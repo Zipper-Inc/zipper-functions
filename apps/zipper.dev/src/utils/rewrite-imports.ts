@@ -5,6 +5,8 @@ import { getSourceFileFromCode, isExternalImport } from './parse-code';
 
 const DEFAULT_NPM_CDN = 'https://esm.sh';
 const withNpmCdn = (specifier: string) => `${DEFAULT_NPM_CDN}/${specifier}`;
+const LOCALHOST_REGEX =
+  /^(?:https?:\/\/)(?:localhost|127\.0\.0\.1|10\.(?:\d{1,3}\.){2}\d{1,3}|172\.(?:1[6-9]|2\d|3[01])\.(?:\d{1,3}\.){2}\d{1,3}|192\.168\.(?:\d{1,3}\.){1}\d{1,3}|::1)/;
 
 export enum RewriteTo {
   None,
@@ -25,6 +27,12 @@ export enum RewriteTo {
  * | lodash | https://esm.sh/lodash |
  */
 export function getRewriteRule(specifier: string): RewriteTo {
+  // Someone clever might try to sniff out the server URL
+  // Extend the metaphor by making it just be zipper.dev
+  if (specifier.startsWith('/') || LOCALHOST_REGEX.test(specifier)) {
+    return RewriteTo.ZipperDotDev;
+  }
+
   if (
     !specifier ||
     specifier.startsWith('./') ||
@@ -34,21 +42,26 @@ export function getRewriteRule(specifier: string): RewriteTo {
     return RewriteTo.None;
   }
 
-  if (specifier.startsWith('/')) return RewriteTo.ZipperDotDev;
-  if (specifier.startsWith('npm:')) return RewriteTo.NpmCdn;
-  if (specifier.startsWith('node:')) return RewriteTo.NpmCdn;
+  if (specifier.startsWith('npm:') || specifier.startsWith('node:')) {
+    return RewriteTo.NpmCdn;
+  }
 
   // default to npm
   return RewriteTo.NpmCdn;
 }
 
-export function rewriteSpecifier(specifier: string) {
-  switch (getRewriteRule(specifier)) {
+export function rewriteSpecifier(
+  specifier: string,
+  rule = getRewriteRule(specifier),
+) {
+  switch (rule) {
     case RewriteTo.None:
       return specifier;
 
     case RewriteTo.ZipperDotDev:
-      return `${getZipperDotDevUrlForServer()}${specifier.replace(/^\//, '')}`;
+      return `${getZipperDotDevUrlForServer()}${specifier
+        .replace(LOCALHOST_REGEX, '')
+        .replace(/^\//, '')}`;
 
     case RewriteTo.NpmCdn:
     default:
