@@ -161,7 +161,8 @@ const AppletDemo = () => {
                   const isActive = inputs.selectedColors.includes(color);
                   return (
                     <IconButton
-                      aria-label={color}
+                      aria-label={'button-' + color}
+                      role="button"
                       size="md"
                       _active={{
                         bg: `${color}.500`,
@@ -196,7 +197,8 @@ const AppletDemo = () => {
                   );
                 })}
                 <IconButton
-                  aria-label="color-shuffle"
+                  aria-label="button-color-shuffle"
+                  role="button"
                   _active={{
                     bg: 'gray.600',
                     color: 'white',
@@ -223,7 +225,8 @@ const AppletDemo = () => {
               <HStack>
                 {Object.entries(LAYOUTS_ICONS).map(([key, icon]) => (
                   <IconButton
-                    aria-label={key}
+                    aria-label={'button-' + key}
+                    role="button"
                     _active={{
                       bg: 'gray.600',
                     }}
@@ -240,7 +243,8 @@ const AppletDemo = () => {
                   />
                 ))}
                 <IconButton
-                  aria-label="layout-shuffle"
+                  aria-label="button-layout-shuffle"
+                  role="button"
                   _active={{
                     bg: 'gray.600',
                     color: 'white',
@@ -349,9 +353,6 @@ export const WebSiteFooter = ({
             h="full"
           >
             <ZipperSymbol fill="#1174CB" />
-            <Text fontSize="xl" color="blue.600" fontWeight={600}>
-              Built for people <br /> who like to ship
-            </Text>
           </VStack>
 
           <HStack
@@ -368,6 +369,8 @@ export const WebSiteFooter = ({
               align="flex-start"
             >
               <Links
+                textDecor="underline"
+                color={{ default: 'gray.900', hover: 'gray.600' }}
                 data={linksObj.slice(0, 4)}
                 component={links?.component}
                 displayActiveLink={false}
@@ -382,6 +385,8 @@ export const WebSiteFooter = ({
               align="flex-start"
             >
               <Links
+                textDecor="underline"
+                color={{ default: 'gray.900', hover: 'gray.600' }}
                 data={linksObj.slice(4, 8)}
                 component={links?.component}
                 displayActiveLink={false}
@@ -395,6 +400,8 @@ export const WebSiteFooter = ({
               align="flex-start"
             >
               <Links
+                textDecor="underline"
+                color={{ default: 'gray.900', hover: 'gray.600' }}
                 data={linksObj.slice(9, 12)}
                 component={links?.component}
                 displayActiveLink={false}

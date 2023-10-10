@@ -1,12 +1,12 @@
 import {
-  VStack,
   Accordion,
-  AccordionItem,
   AccordionButton,
   AccordionIcon,
+  AccordionItem,
   AccordionPanel,
-  Box,
   AccordionProps,
+  Box,
+  VStack,
 } from '@chakra-ui/react';
 import { getInputSummary } from './input-summary';
 import AuthUserConnectors, { AuthUserConnectorsProps } from './user-connectors';
@@ -30,7 +30,7 @@ const ConnectorsAuthInputsSection: React.FC<
   toggleIsExpanded,
 }) => {
   const inputsSection = (
-    <VStack align="stretch" spacing={6}>
+    <VStack align="center" w="full">
       {userAuthProps.userAuthConnectors.length > 0 && (
         <AuthUserConnectors {...userAuthProps} />
       )}
@@ -48,7 +48,7 @@ const ConnectorsAuthInputsSection: React.FC<
   );
 
   return (
-    <VStack w="container.sm" align="stretch">
+    <VStack minW={{ base: '100%', md: 'container.sm' }} align="stretch">
       {isCollapsible ? (
         <Accordion
           allowToggle
@@ -57,9 +57,11 @@ const ConnectorsAuthInputsSection: React.FC<
         >
           <AccordionItem border="none">
             <AccordionButton _hover={{ bgColor: 'fg.50' }} color="fg.700">
-              <Box as="span" flex="1" textAlign="left">
-                {inputSummary}
-              </Box>
+              {inputSummary.trim() && (
+                <Box as="span" flex="1" textAlign="left">
+                  {inputSummary}
+                </Box>
+              )}
               <AccordionIcon />
             </AccordionButton>
             <AccordionPanel pb={4}>{inputsSection}</AccordionPanel>

@@ -1,26 +1,33 @@
 import {
   Box,
-  Heading,
-  VStack,
   Button,
-  Progress,
-  Text,
-  Tooltip,
-  UnorderedList,
-  ListItem,
+  Heading,
   HStack,
   Icon,
-  PopoverTrigger,
+  ListItem,
   Popover,
   PopoverArrow,
   PopoverBody,
   PopoverContent,
   PopoverHeader,
+  PopoverTrigger,
+  Progress,
+  Text,
+  Tooltip,
+  UnorderedList,
+  VStack,
 } from '@chakra-ui/react';
-import { FunctionInputs, FunctionOutput, useAppletContent } from '@zipper/ui';
+import { ZipperLocation } from '@zipper/types';
+import {
+  FunctionInputs,
+  FunctionOutput,
+  getDescription,
+  HandlerDescription,
+  useAppletContent,
+} from '@zipper/ui';
 import { useEffect, useMemo, useState } from 'react';
 import { HiExclamationCircle, HiOutlineLightBulb } from 'react-icons/hi2';
-import { PiPlayBold } from 'react-icons/pi';
+import { PiPlayBold, PiPlayDuotone } from 'react-icons/pi';
 import { useUser } from '~/hooks/use-user';
 import getRunUrl from '~/utils/get-run-url';
 import { getAppVersionFromHash } from '~/utils/hashing';
@@ -37,8 +44,15 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
 
   const [runId, setRunId] = useState<string | undefined>(undefined);
 
-  const { run, formMethods, isRunning, results, userAuthConnectors, appInfo } =
-    useRunAppContext();
+  const {
+    run,
+    configs,
+    formMethods,
+    isRunning,
+    results,
+    userAuthConnectors,
+    appInfo,
+  } = useRunAppContext();
 
   const generateAccessTokenMutation =
     trpc.user.generateAccessToken.useMutation();
@@ -96,6 +110,7 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
     return (
       <FunctionOutput
         applet={mainApplet}
+        config={configs?.[currentScript?.filename || '']}
         getRunUrl={(scriptName: string) => {
           return getRunUrl(
             appSlug,
@@ -111,6 +126,7 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
         }}
         showTabs
         runId={runId}
+        zipperLocation={ZipperLocation.ZipperDotDev}
       />
     );
   }, [mainApplet.updatedAt]);
@@ -149,8 +165,19 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
     setInputValuesAtRun(inputs);
   };
 
+  const description = getDescription({
+    config: currentScript?.filename
+      ? configs?.[currentScript.filename]
+      : undefined,
+  });
+
   return (
     <>
+      {description && (
+        <Box mb="6">
+          <HandlerDescription description={description} />
+        </Box>
+      )}
       <Box
         p={4}
         backgroundColor="fg.100"
@@ -249,9 +276,6 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
                   w="full"
                   mt="4"
                   colorScheme="purple"
-                  variant={
-                    currentScript?.filename === 'main.ts' ? 'solid' : 'outline'
-                  }
                   onClick={async () => {
                     setInputsAtTimeOfRun();
                     setRunId(await run(true));
@@ -261,10 +285,12 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
                   fontWeight="medium"
                   isDisabled={isRunning || !inputParams || editorHasErrors()}
                 >
-                  <PiPlayBold />
-                  <Text>{`Run${
-                    currentScript?.filename !== 'main.ts' ? ' this file' : ''
-                  }`}</Text>
+                  {currentScript?.filename === 'main.ts' ? (
+                    <PiPlayBold />
+                  ) : (
+                    <PiPlayDuotone />
+                  )}
+                  <Text>Run</Text>
                 </Button>
               </span>
             </Tooltip>

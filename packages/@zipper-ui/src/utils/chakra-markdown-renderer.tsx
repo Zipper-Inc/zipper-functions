@@ -1,7 +1,8 @@
-import * as React from 'react';
-import deepmerge from 'deepmerge';
+import { Checkbox } from '@chakra-ui/checkbox';
+import { Image } from '@chakra-ui/image';
 import {
-  Code,
+  Box,
+  Code as ChakraCode,
   Divider,
   Heading,
   Link,
@@ -9,13 +10,13 @@ import {
   OrderedList,
   Text,
   UnorderedList,
-  Box,
 } from '@chakra-ui/layout';
-import { Image } from '@chakra-ui/image';
-import { Checkbox } from '@chakra-ui/checkbox';
-import { Table, Tbody, Td, Th, Thead, Tr } from '@chakra-ui/table';
 import { chakra } from '@chakra-ui/system';
+import { Table, Tbody, Td, Th, Thead, Tr } from '@chakra-ui/table';
+import deepmerge from 'deepmerge';
+import * as React from 'react';
 import { Components } from 'react-markdown/src/ast-to-react';
+import { Code } from '../components/code';
 
 type GetCoreProps = {
   children?: React.ReactNode;
@@ -31,42 +32,76 @@ function getCoreProps(props: GetCoreProps): any {
 export const defaults: Components & { heading: Components['h1'] } = {
   h1: (props) => {
     return (
-      <Heading as="h1" size="xl" color="fg.900" py={2}>
+      <Heading
+        as="h1"
+        size="xl"
+        color="fg.900"
+        py={2}
+        fontWeight="medium"
+        data-markdown
+      >
         {props.children}
       </Heading>
     );
   },
   h2: (props) => {
     return (
-      <Heading as="h2" size="lg" color="fg.900" py={2}>
+      <Heading
+        as="h2"
+        size="lg"
+        color="fg.900"
+        py={2}
+        fontWeight="medium"
+        data-markdown
+      >
         {props.children}
       </Heading>
     );
   },
   h3: (props) => {
     return (
-      <Heading as="h3" size="md" color="fg.900" py={2}>
+      <Heading
+        as="h3"
+        size="md"
+        color="fg.900"
+        py={2}
+        fontWeight="medium"
+        data-markdown
+      >
         {props.children}
       </Heading>
     );
   },
   h4: (props) => {
     return (
-      <Heading as="h4" size="sm" color="fg.900" py={2}>
+      <Heading
+        as="h4"
+        size="sm"
+        color="fg.900"
+        py={2}
+        fontWeight="medium"
+        data-markdown
+      >
         {props.children}
       </Heading>
     );
   },
   h5: (props) => {
     return (
-      <Heading as="h5" size="xs" color="fg.900">
+      <Heading
+        as="h5"
+        size="xs"
+        color="fg.900"
+        fontWeight="medium"
+        data-markdown
+      >
         {props.children}
       </Heading>
     );
   },
   h6: (props) => {
     return (
-      <Heading as="h6" size="xs">
+      <Heading as="h6" size="xs" fontWeight="medium" data-markdown>
         {props.children}
       </Heading>
     );
@@ -89,7 +124,7 @@ export const defaults: Components & { heading: Components['h1'] } = {
       const caption = metastring?.match(/{caption: (.*?)}/)?.pop();
 
       return (
-        <div className="postImgWrapper">
+        <div className="postImgWrapper" data-markdown>
           <Image
             src={image.properties.src}
             width="100%"
@@ -105,7 +140,7 @@ export const defaults: Components & { heading: Components['h1'] } = {
       );
     }
     return (
-      <Text mb={2} mt={1} whiteSpace={'pre-wrap'} color="fg.900">
+      <Text mb={2} mt={1} whiteSpace={'pre-wrap'} color="fg.900" data-markdown>
         {children}
       </Text>
     );
@@ -119,7 +154,7 @@ export const defaults: Components & { heading: Components['h1'] } = {
     const { children } = props;
 
     return (
-      <Box bgColor={'fg.50'} p={4}>
+      <Box bgColor={'fg.50'} p={4} data-markdown>
         <Text
           position="relative"
           _before={{
@@ -143,31 +178,37 @@ export const defaults: Components & { heading: Components['h1'] } = {
     const { inline, children, className } = props;
     const isInline = inline || typeof children === 'string';
     if (isInline) {
-      return <Code p={2} children={children} bgColor="fg.50" />;
+      return (
+        <ChakraCode
+          fontSize="inherit"
+          colorScheme="purple"
+          variant="subtle"
+          data-markdown
+        >
+          {children}
+        </ChakraCode>
+      );
     }
 
-    return (
-      <Code
-        className={className}
-        whiteSpace="break-spaces"
-        display="block"
-        w="full"
-        p={2}
-        children={children}
-        bgColor="fg.50"
-      />
-    );
+    const langauge = className?.replace('language-', '');
+    const [code] = children as string[];
+
+    return <Code code={code || ''} language={langauge} data-markdown />;
   },
   del: (props) => {
     const { children } = props;
-    return <Text as="del">{children}</Text>;
+    return (
+      <Text as="del" data-markdown>
+        {children}
+      </Text>
+    );
   },
   hr: () => {
-    return <Divider style={{ marginBottom: '10px' }} />;
+    return <Divider style={{ marginBottom: '10px' }} data-markdown />;
   },
   a: (props) => {
     return (
-      <Link color="primary" {...props}>
+      <Link color="primary" {...props} data-markdown>
         {props.children}
       </Link>
     );
@@ -175,7 +216,11 @@ export const defaults: Components & { heading: Components['h1'] } = {
   img: Image,
   text: (props) => {
     const { children } = props;
-    return <Text as="span">{children}</Text>;
+    return (
+      <Text as="span" data-markdown>
+        {children}
+      </Text>
+    );
   },
   ul: (props) => {
     const { ordered, children, depth } = props;
@@ -196,6 +241,7 @@ export const defaults: Components & { heading: Components['h1'] } = {
         styleType={styleType}
         pl={4}
         {...attrs}
+        data-markdown
       >
         {children}
       </Element>
@@ -218,6 +264,7 @@ export const defaults: Components & { heading: Components['h1'] } = {
         styleType={styleType}
         pl={4}
         {...attrs}
+        data-markdown
       >
         {children}
       </Element>
@@ -228,7 +275,7 @@ export const defaults: Components & { heading: Components['h1'] } = {
     let checkbox = null;
     if (checked !== null && checked !== undefined) {
       checkbox = (
-        <Checkbox isChecked={checked} isReadOnly>
+        <Checkbox isChecked={checked} isReadOnly data-markdown>
           {children}
         </Checkbox>
       );
@@ -237,6 +284,7 @@ export const defaults: Components & { heading: Components['h1'] } = {
       <ListItem
         {...getCoreProps(props)}
         listStyleType={checkbox !== null ? 'none' : 'inherit'}
+        data-markdown
       >
         {checkbox || children}
       </ListItem>
@@ -253,6 +301,8 @@ export const defaults: Components & { heading: Components['h1'] } = {
         color={`fg${Math.min(4 + level, 9)}00`}
         as={`h${level}`}
         size={sizes[`${level - 1}`]}
+        fontWeight="medium"
+        data-markdown
       >
         {children}
       </Heading>
@@ -260,7 +310,11 @@ export const defaults: Components & { heading: Components['h1'] } = {
   },
   pre: (props) => {
     const { children } = props;
-    return <chakra.pre {...getCoreProps(props)}>{children}</chakra.pre>;
+    return (
+      <chakra.pre {...getCoreProps(props)} width="full" data-markdown>
+        {children}
+      </chakra.pre>
+    );
   },
   table: Table,
   thead: Thead,

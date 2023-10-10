@@ -1,7 +1,7 @@
-import { FunctionInputs } from '@zipper/ui';
-import { InputParams } from '@zipper/types';
 import { Box, Button, Text, VStack } from '@chakra-ui/react';
-import { UseFormReturn, FieldValues } from 'react-hook-form';
+import { InputParams } from '@zipper/types';
+import { FunctionInputs } from '@zipper/ui';
+import { FieldValues, UseFormReturn } from 'react-hook-form';
 import { HiOutlinePlay } from 'react-icons/hi2';
 
 export type UserInputsProps = {
@@ -24,7 +24,13 @@ export default function UserInputs({
   skipAuth,
 }: UserInputsProps) {
   return (
-    <VStack p={6} alignItems="stretch" bgColor="fg.50" spacing="2.5">
+    <VStack
+      alignItems="stretch"
+      bgColor="white"
+      w="full"
+      maxW="container.sm"
+      spacing="2.5"
+    >
       {inputs.length > 0 && (
         <Box mb={4}>
           <FunctionInputs

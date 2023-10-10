@@ -22,6 +22,7 @@ import { SiteType } from './common/SiteType';
 
 type Props = {
   links?: Partial<Parameters<typeof Links>[0]>;
+  mode?: 'dark' | 'light';
   site?: SiteType;
 };
 
@@ -46,7 +47,11 @@ const LINKS = {
   ],
 };
 
-export const WebSiteNavbar = ({ links, site = SiteType.Home }: Props) => {
+export const WebSiteNavbar = ({
+  links,
+  site = SiteType.Home,
+  mode = 'light',
+}: Props) => {
   const linksObj = LINKS[site];
 
   const NavDrawer = () => {
@@ -60,7 +65,7 @@ export const WebSiteNavbar = ({ links, site = SiteType.Home }: Props) => {
           aria-label="menu"
           icon={<FiMenu size={24} />}
           ref={btnRef as any}
-          color="gray.800"
+          color="gray.50"
           bg="none"
           onClick={onOpen}
         />
@@ -110,25 +115,30 @@ export const WebSiteNavbar = ({ links, site = SiteType.Home }: Props) => {
       alignItems="center"
       justifyContent="space-between"
       css={{ margin: '0 auto' }}
-      h={{ base: '80px', lg: '125px' }}
+      h={{ base: '80px', lg: '124px' }}
       w="full"
       maxW="container.xl"
     >
       {links?.component && (
-        <links.component href="/home">
-          <ZipperLogo type="color" />
+        <links.component href="/home" aria-label="home">
+          <ZipperLogo type={mode === 'dark' ? 'dark' : 'color'} />
         </links.component>
       )}
 
       <HStack as="nav" display={['none', 'none', 'flex']} gap={8}>
-        <Links data={linksObj} component={links?.component} displayActiveLink />
+        <Links
+          data={linksObj}
+          mode={mode}
+          component={links?.component}
+          displayActiveLink
+        />
         <Button
           as={Link}
           href="/auth/signin"
           isExternal
           fontWeight={500}
-          color="gray.600"
           bg="white"
+          color="purple.500"
           textDecoration="none"
           h="44px"
           variant="outline"
@@ -137,7 +147,7 @@ export const WebSiteNavbar = ({ links, site = SiteType.Home }: Props) => {
         </Button>
       </HStack>
 
-      <Box display={{ base: 'block', lg: 'none' }}>
+      <Box display={{ base: 'block', md: 'none' }}>
         <NavDrawer />
       </Box>
     </Container>

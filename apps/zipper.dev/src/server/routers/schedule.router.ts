@@ -72,7 +72,7 @@ export const scheduleRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
-      await hasAppReadPermission({
+      await hasAppEditPermission({
         ctx,
         appId: input.appId,
       });

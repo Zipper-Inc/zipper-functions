@@ -7,33 +7,33 @@ import {
   Script,
   ScriptMain,
 } from '@prisma/client';
-import { z } from 'zod';
-import { prisma } from '~/server/prisma';
-import { hasAppEditPermission } from '../utils/authz.utils';
-import slugify from '~/utils/slugify';
-import { generateDefaultSlug } from '~/utils/generate-default';
 import { TRPCError } from '@trpc/server';
-import denyList from '../utils/slugDenyList';
 import { appSubmissionState, ResourceOwnerType } from '@zipper/types';
-import { Context } from '../context';
-import { getAppVersionFromHash, getScriptHash } from '~/utils/hashing';
-import { endsWithTs, parseInputForTypes } from '~/utils/parse-code';
 import {
   getInputsFromFormData,
   ZIPPER_TEMP_USER_ID_COOKIE_NAME,
 } from '@zipper/utils';
-import getRunUrl, { getBootUrl } from '~/utils/get-run-url';
 import { randomUUID } from 'crypto';
+import JSZip from 'jszip';
+import { getToken } from 'next-auth/jwt';
 import fetch from 'node-fetch';
+import { z } from 'zod';
+import { prisma } from '~/server/prisma';
+import { trackEvent } from '~/utils/api-analytics';
+import { buildAndStoreApplet } from '~/utils/eszip-build-applet';
+import { generateDefaultSlug } from '~/utils/generate-default';
+import getRunUrl, { getBootUrl } from '~/utils/get-run-url';
+import { getAppVersionFromHash, getScriptHash } from '~/utils/hashing';
 import isCodeRunnable from '~/utils/is-code-runnable';
 import { generateAccessToken } from '~/utils/jwt-utils';
-import { getToken } from 'next-auth/jwt';
-import { buildAndStoreApplet } from '~/utils/eszip-build-applet';
-import JSZip from 'jszip';
-import { DEFAULT_MD } from './script.router';
-import { storeVersionCode } from '../utils/r2.utils';
-import { trackEvent } from '~/utils/api-analytics';
+import { endsWithTs, parseInputForTypes } from '~/utils/parse-code';
+import slugify from '~/utils/slugify';
+import { Context } from '../context';
 import { createTRPCRouter, protectedProcedure, publicProcedure } from '../root';
+import { hasAppEditPermission } from '../utils/authz.utils';
+import { storeVersionCode } from '../utils/r2.utils';
+import denyList from '../utils/slugDenyList';
+import { DEFAULT_MD } from './script.router';
 
 const defaultSelect = Prisma.validator<Prisma.AppSelect>()({
   id: true,
@@ -164,6 +164,14 @@ export const appRouter = createTRPCRouter({
         }
 
         const organizationId = orgId === null ? null : orgId || ctx.orgId;
+
+        if (organizationId) {
+          const isMember = await prisma.organizationMembership.count({
+            where: { organizationId, userId: ctx.userId },
+          });
+
+          if (!isMember) throw new TRPCError({ code: 'UNAUTHORIZED' });
+        }
 
         const app = await prisma.app.create({
           data: {

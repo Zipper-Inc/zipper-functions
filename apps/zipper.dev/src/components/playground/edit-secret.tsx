@@ -1,7 +1,9 @@
 import { CloseIcon } from '@chakra-ui/icons';
 import { HStack, Input, IconButton, Box } from '@chakra-ui/react';
+import { useState } from 'react';
 
 import { UseFormRegister } from 'react-hook-form';
+import { FiCheck, FiCopy } from 'react-icons/fi';
 import { PiKey, PiKeyDuotone, PiTrashSimpleBold } from 'react-icons/pi';
 
 export type SecretToDelete = {
@@ -27,6 +29,7 @@ type EditSecretProps =
     };
 
 export const EditSecret: React.FC<EditSecretProps> = (props) => {
+  const [copied, setCopied] = useState(false);
   if (!props.existingSecret) {
     const { index, register, remove } = props;
     return (
@@ -79,6 +82,26 @@ export const EditSecret: React.FC<EditSecretProps> = (props) => {
         >
           <PiTrashSimpleBold />
         </IconButton>
+      )}
+
+      {existingSecret.appId && (
+        <IconButton
+          variant="ghost"
+          colorScheme="purple"
+          aria-label="delete"
+          icon={copied ? <FiCheck /> : <FiCopy />}
+          onClick={() => {
+            setCopied(true);
+
+            navigator.clipboard.writeText(
+              `Deno.env.get('${existingSecret.key}')`,
+            );
+
+            setTimeout(() => {
+              setCopied(false);
+            }, 1000);
+          }}
+        />
       )}
     </HStack>
   );

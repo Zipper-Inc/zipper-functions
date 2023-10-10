@@ -1,45 +1,57 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { GetServerSideProps } from 'next';
 import {
-  withDefaultTheme,
-  FunctionOutput,
-  useCmdOrCtrl,
-  useAppletContent,
-} from '@zipper/ui';
+  Box,
+  Container,
+  Heading,
+  Progress,
+  Stack,
+  useMediaQuery,
+  VStack,
+} from '@chakra-ui/react';
 import {
   AppInfo,
   EntryPointInfo,
   InputParams,
   UserAuthConnector,
 } from '@zipper/types';
-import getBootInfo from '~/utils/get-boot-info';
-import getValidSubdomain from '~/utils/get-valid-subdomain';
-import { getFilenameAndVersionFromPath } from '~/utils/get-values-from-url';
-import { Heading, Progress, VStack } from '@chakra-ui/react';
-import Head from 'next/head';
-import { useForm } from 'react-hook-form';
 import {
-  getDefaultInputValuesFromConfig,
-  getInputValuesFromUrl,
-  getRunValues,
-} from '../utils/get-input-values-from-url';
-import { useRouter } from 'next/router';
+  FunctionOutput,
+  useAppletContent,
+  useCmdOrCtrl,
+  withDefaultTheme,
+} from '@zipper/ui';
+import {
+  getDescription,
+  HandlerDescription,
+} from '@zipper/ui/src/components/function-output/handler-description';
 import {
   getInputsFromFormData,
   ZIPPER_TEMP_USER_ID_COOKIE_NAME,
   ZIPPER_TEMP_USER_ID_HEADER,
 } from '@zipper/utils';
-import Unauthorized from './unauthorized';
-import removeAppConnectorUserAuth from '~/utils/remove-app-connector-user-auth';
-import Header from './header';
-import InputSummary from './input-summary';
-import ConnectorsAuthInputsSection from './connectors-auth-inputs-section';
+import { deleteCookie } from 'cookies-next';
+import { GetServerSideProps } from 'next';
+import Error from 'next/error';
+import Head from 'next/head';
+import { useRouter } from 'next/router';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import getBootInfo from '~/utils/get-boot-info';
 import { getConnectorsAuthUrl } from '~/utils/get-connectors-auth-url';
 import { getBootUrl, getRelayUrl } from '~/utils/get-relay-url';
+import getValidSubdomain from '~/utils/get-valid-subdomain';
+import { getFilenameAndVersionFromPath } from '~/utils/get-values-from-url';
 import { getZipperAuth } from '~/utils/get-zipper-auth';
-import { deleteCookie } from 'cookies-next';
+import removeAppConnectorUserAuth from '~/utils/remove-app-connector-user-auth';
 import { getShortRunId } from '~/utils/run-id';
-import Error from 'next/error';
+import {
+  getDefaultInputValuesFromConfig,
+  getInputValuesFromUrl,
+  getRunValues,
+} from '../utils/get-input-values-from-url';
+import ConnectorsAuthInputsSection from './connectors-auth-inputs-section';
+import Header from './header';
+import InputSummary from './input-summary';
+import Unauthorized from './unauthorized';
 
 const { __DEBUG__ } = process.env;
 
@@ -70,7 +82,7 @@ export type AppPageProps = {
 
 export function AppPage({
   isEmbedded,
-  shouldShowDescription = true,
+  shouldShowDescription: shouldShowDescriptionPassedIn = true,
   app,
   inputs,
   userAuthConnectors,
@@ -101,11 +113,19 @@ export function AppPage({
   const [expandInputsSection, setExpandInputsSection] = useState(false);
   const [currentFileConfig, setCurrentFileConfig] = useState<
     Zipper.HandlerConfig | undefined
-  >();
+  >(filename ? handlerConfigs?.[filename] : undefined);
 
   const [skipAuth, setSkipAuth] = useState(false);
-
+  const description = getDescription({
+    applet: app,
+    filename: entryPoint?.filename,
+    config: currentFileConfig,
+  });
+  const shouldShowDescription =
+    shouldShowDescriptionPassedIn && description && screen === 'initial';
   const previousRouteRef = useRef(asPath);
+
+  const [isMobile] = useMediaQuery('(max-width: 600px)');
 
   // We have to do this so that the results aren't SSRed
   // (if they are DOMParser in FunctionOutput will be undefined)
@@ -232,6 +252,7 @@ export function AppPage({
     return (
       <FunctionOutput
         applet={mainApplet}
+        config={currentFileConfig}
         getRunUrl={(scriptName: string) => {
           return getRunUrl(scriptName);
         }}
@@ -244,7 +265,7 @@ export function AppPage({
         }}
       />
     );
-  }, [app, mainApplet.updatedAt]);
+  }, [app, mainApplet.updatedAt, currentFileConfig]);
 
   const canRunApp = useMemo(() => {
     return (userAuthConnectors || []).every((connector) => {
@@ -265,28 +286,6 @@ export function AppPage({
   if (errorCode === 'NOT_FOUND' || !app) {
     return <Error statusCode={404} />;
   }
-
-  const appletDescription = () => {
-    if (!currentFileConfig || !currentFileConfig.description) {
-      return <></>;
-    }
-
-    const { title, subtitle } = currentFileConfig.description;
-    if (!title && !subtitle) {
-      return <></>;
-    }
-
-    return (
-      <VStack mb="10">
-        {title && <Heading as="h1">{title}</Heading>}
-        {subtitle && (
-          <Heading as="h2" fontSize="lg" fontWeight="semibold" color="fg.600">
-            {subtitle}
-          </Heading>
-        )}
-      </VStack>
-    );
-  };
 
   const initialContent = (
     <>
@@ -331,9 +330,13 @@ export function AppPage({
     />
   );
 
+  const title = description?.title || appTitle || app?.slug;
   const runContent = (
-    <VStack w="full" align="stretch" spacing={6}>
-      {!isEmbedded && inputSummary}
+    <VStack w="full" align="stretch" spacing={4} ml={{ md: 4 }}>
+      <Heading as="h1" fontSize="4xl" fontWeight="medium">
+        {title}
+      </Heading>
+      {!isEmbedded && <Box ml="4">{inputSummary}</Box>}
       {output}
     </VStack>
   );
@@ -352,12 +355,44 @@ export function AppPage({
   );
 
   const content = (
-    <VStack as="main" flex={1} spacing={4} position="relative" px={10}>
-      {shouldShowDescription && appletDescription()}
-      {screen === 'initial' && initialContent}
-      {showRunOutput && runContent}
-      {loading && loadingContent}
-    </VStack>
+    <Stack
+      as="main"
+      position="relative"
+      px={{ base: 4, md: 8 }}
+      pt={4}
+      pb={8}
+      spacing={8}
+      w="full"
+      direction={{ base: 'column', md: 'row' }}
+      justify="center"
+    >
+      {shouldShowDescription && (
+        <VStack
+          width={{ base: 'auto', md: '100%' }}
+          align="stretch"
+          minW="320px"
+          ml={{ md: 4 }}
+          flex={2}
+        >
+          <HandlerDescription
+            description={
+              screen === 'initial'
+                ? description
+                : { ...description, title: undefined }
+            }
+          />
+        </VStack>
+      )}
+      <VStack
+        mx={shouldShowDescription ? 'auto' : undefined}
+        align="stretch"
+        flex={3}
+      >
+        {screen === 'initial' && initialContent}
+        {showRunOutput && runContent}
+        {loading && loadingContent}
+      </VStack>
+    </Stack>
   );
 
   if (isEmbedded) return content;
@@ -385,9 +420,10 @@ export function AppPage({
           </>
         )}
       </Head>
-      <VStack flex={1} alignItems="stretch" spacing={14}>
+      <VStack flex={1} alignItems="stretch" spacing={4}>
         <Header
           {...app}
+          token={token}
           entryPoint={entryPoint}
           runnableScripts={runnableScripts}
           runId={latestRunId}

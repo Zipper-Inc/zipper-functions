@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 import {
   Box,
   Container,
@@ -13,11 +14,9 @@ import {
   ModalContent,
   ModalBody,
   useDisclosure,
-  Spacer,
   HStack,
   Icon,
   Button,
-  ButtonGroup,
   Stack,
 } from '@chakra-ui/react';
 import { baseColors, Website } from '@zipper/ui';
@@ -38,10 +37,8 @@ import {
   FiCode,
   FiLoader,
 } from 'react-icons/fi';
-import { HiOutlineLightningBolt } from 'react-icons/hi';
 import Image from 'next/image';
 import { motion, useAnimation } from 'framer-motion';
-import JoinBetaForm from '~/components/join-beta-form';
 import { useAnalytics } from '~/hooks/use-analytics';
 import Link from 'next/link';
 import { HiArrowUpRight } from 'react-icons/hi2';
@@ -59,11 +56,11 @@ import { PiPlayCircle } from 'react-icons/pi';
 const HERO_CONTENT = {
   TITLE: 'Forget about \n your toolchain',
 
-  DESCRIPTION: `Zipper turns TypeScript functions into running apps with 
+  DESCRIPTION: `Zipper turns your business logic into running apps with 
   automatically generated UI, auth, and APIs straight out of the box.`,
   LIST: [
     {
-      description: 'Turn Typescript functions into serverless web apps',
+      description: 'Turn TypeScript functions into serverless web apps',
       icon: <FiCheck size={24} />,
     },
     {
@@ -78,7 +75,7 @@ const HERO_CONTENT = {
 };
 
 const WEB_FIRST_CONTENT = {
-  TITLE: 'build for the web',
+  TITLE: 'Build for the web',
   DESCRIPTION: `Zipper is designed for building web services quickly. Every applet is 
   deployed to a public-facing URL and can immediately start receiving 
   GET & POST requests. Perfect for building user-facing web applications 
@@ -86,32 +83,36 @@ const WEB_FIRST_CONTENT = {
 
   LIST: [
     {
-      ICON: <FiSettings size={40} />,
-      TITLE: 'L̶o̶w̶ Medium Code SaaS Integrations',
+      ICON: <FiSettings />,
+      TITLE: 'Code-first SaaS Integrations',
+      COLOR: 'purple',
       DESCRIPTION:
-        'Automate repetitive tasks and workflows with code with the flexibility of code without the constraints of no-code/low-code tools',
-      IMAGE_URL: '/thumbs/web-first/sass_integration.svg',
+        'Automate repetitive tasks and workflows or respond to triggers with the flexibility of code. You don’t have to be limited by the constraits of no-code tools.',
+      IMAGE_URL: '/static/sass_integration.png',
     },
     {
-      ICON: <FiTool size={40} />,
+      ICON: <FiTool />,
       TITLE: 'Internal Tools as a Service',
+      COLOR: 'blue',
       DESCRIPTION:
-        'Wire up your own APIs or database, replace scripts and dashboard. With auth and audit logs built in, never build from scratch',
-      IMAGE_URL: '/thumbs/web-first/tool_as_service.svg',
+        'A better way to run scripts or create admin tools for your own APIs or databases. With auth and audit logs built-in, never build from scratch.',
+      IMAGE_URL: '/static/tool_as_service.png',
     },
     {
-      ICON: <FiCode size={40} />,
+      ICON: <FiCode />,
       TITLE: 'Worker Functions',
+      COLOR: 'brandOrange',
       DESCRIPTION:
-        'Quickly deploy a worker function and event-driven architecture and scale your applications with serverless processes',
-      IMAGE_URL: '/thumbs/web-first/worker_functions.svg',
+        'Handle expensive or unique tasks on our edge infrastructure, close to your users. Run them on a schedule or in response to an event to effortlessly scale your apps.',
+      IMAGE_URL: '/static/worker_functions.png',
     },
     {
-      ICON: <FiLoader size={40} />,
+      ICON: <FiLoader />,
       TITLE: 'Anything else you want',
+      COLOR: 'gray',
       DESCRIPTION:
-        'An instant Typescript REPL with a built-in frontend framework where you can see your results immediately.',
-      IMAGE_URL: '/thumbs/web-first/editor.svg',
+        'An instant TypeScript REPL with a built-in frontend framework where you can see your results immediately. What will you build?',
+      IMAGE_URL: '/static/editor.png',
     },
   ],
 };
@@ -121,8 +122,8 @@ const FEATURES_CONTENT = {
   TITLE_SM: 's/decisions/\ndeploys',
 
   DESCRIPTION: `Your project shouldn’t be held up by a hundred decisions about
-  hosting, routing, storage, and more (<rant> half of which you have to
-  rethink because these services don’t all work together </rant>).`,
+  hosting, routing, storage, and more — half of which you have to
+  rethink because these services don’t all work together.`,
 
   SPAN: `Zipper gives you all the scaffolding you need to start
   shipping immediately`,
@@ -132,84 +133,42 @@ const FEATURES_CONTENT = {
       color: baseColors.purple['500'],
       description:
         'Publish your code to a public facing URL with the click of a button.  ',
-      interact: (
-        <Image
-          src="/layout/deploy.svg"
-          fill
-          style={{ objectFit: 'cover' }}
-          alt="Deploy"
-        />
-      ),
+      picture: '/layout/deploy.svg',
     },
     {
       title: 'A simple web framework',
       color: baseColors.brandOrange['500'],
       description:
         'Every file that exports a `handler` function automatically becomes a route in your app. Pass inputs to your handler, get back an output. ',
-      interact: (
-        <Image
-          src="/layout/handler.svg"
-          fill
-          style={{ objectFit: 'cover' }}
-          alt="Deploy"
-        />
-      ),
+      picture: '/layout/handler.svg',
     },
     {
-      title: 'UI without any frontend code ',
+      title: 'UI without any frontend code',
       color: baseColors.blue['500'],
       description:
         'The inputs to your functions become forms to collect user input and the outputs get turned into a functional UI.	  ',
-      interact: (
-        <Image
-          src="/layout/ui.svg"
-          fill
-          style={{ objectFit: 'cover' }}
-          alt="Deploy"
-        />
-      ),
+      picture: '/layout/ui.svg',
     },
     {
       title: 'API endpoints for every route',
       color: baseColors.purple['500'],
       description:
         'Every route accepts GET & POST requests that can be secured with bearer tokens. Perfect for receiving webhooks or integrating into other pieces of software.',
-      interact: (
-        <Image
-          src="/layout/getpost.svg"
-          fill
-          style={{ objectFit: 'cover' }}
-          alt="Deploy"
-        />
-      ),
+      picture: '/layout/getpost.svg',
     },
     {
       title: 'Built-in storage',
       color: baseColors.blue['500'],
       description:
         'Each applet has its own KV store for managing data across runs.   ',
-      interact: (
-        <Image
-          src="/layout/storage.svg"
-          fill
-          style={{ objectFit: 'cover' }}
-          alt="Deploy"
-        />
-      ),
+      picture: '/layout/storage.svg',
     },
     {
-      title: 'Authentication connectors ',
+      title: 'Authentication connectors',
       color: baseColors.purple['500'],
       description:
         'Force users to sign in to other services (such as Slack or GitHub) before running your applet.',
-      interact: (
-        <Image
-          src="/layout/auth.svg"
-          fill
-          style={{ objectFit: 'cover' }}
-          alt="Deploy"
-        />
-      ),
+      picture: '/layout/auth.svg',
     },
   ],
 };
@@ -217,9 +176,9 @@ const FEATURES_CONTENT = {
 const APPLETS_GALERY_CONTENT = {
   TITLE: 'hello ${working code}',
   DESCRIPTION: `Chances are that the thing you need to build has already been thought through by
-  someone else. Zipper’s applet directory lets you fork pre-built applications that you can
-  immediately use or quickly customize to better suit your needs. If you don’t see what you’re
-  looking for, you can start from a blank file or have AI generate some code for you ✨.`,
+  someone else. Zipper’s applet directory lets you fork pre-built applications that you can
+  immediately use or quickly customize to better suit your needs. If you don’t see what you’re
+  looking for, you can start from a blank file or have AI generate some code for you ✨.`,
 };
 
 const APPLET_GALLERY_LIST = [
@@ -272,12 +231,6 @@ const APPLET_GALLERY_LIST = [
     slug: 'waitlist-manager',
     url: 'https://zipper.dev/zipper-inc/waitlist-manager/src/readme.md',
   },
-  // {
-  //   title: 'Product Activity Notifications',
-  //   description:
-  //     'Stay in the know with real-time updates. Receive Slack notifications when someone surpasses predefined activity thresholds, keeping your team informed and engaged.',
-  //   slug: 'product-activity-notifications',
-  // },
   {
     title: 'Incident Management Bot',
     description:
@@ -285,12 +238,6 @@ const APPLET_GALLERY_LIST = [
     slug: 'incident-managment-bot',
     url: 'https://zipper.dev/zipper-inc/incident-bot/src/readme.md',
   },
-  // {
-  //   title: 'Basic Knowledge Base',
-  //   description:
-  //     'Elevate your information hub. Access a foundational knowledge base enhanced with AI-driven responses, providing more accurate and dynamic answers to your queries.',
-  //   slug: 'basic-knowledge-base',
-  // },
   {
     title: "What's the team listening to",
     description:
@@ -305,12 +252,6 @@ const APPLET_GALLERY_LIST = [
     slug: 'natural-language-contrab',
     url: 'https://zipper.dev/zipper-inc/crontab-ai-generator/src/main.ts',
   },
-  // {
-  //   title: 'Link Zendesk tickets to GitHub Issues',
-  //   description:
-  //     'ink Zendesk tickets directly to GitHub Issues. Streamline support and development workflows by seamlessly connecting customer inquiries with development tasks in GitHub.',
-  //   slug: 'zendesk-tickets-github-issues',
-  // },
   {
     title: 'GitHub WIP tracker',
     description:
@@ -325,12 +266,6 @@ const APPLET_GALLERY_LIST = [
     slug: 'feature-flagging',
     url: 'https://zipper.dev/zipper-inc/ff-onboarding-example/src/readme.md',
   },
-  // {
-  //   title: 'PagerDuty to Slack usergroup',
-  //   description:
-  //     'Synchronize PagerDuty alerts and notifications with Slack usergroups to ensure the right team members are informed and ready to act during incidents.',
-  //   slug: 'sync-pagerduty-slack-usergroup',
-  // },
 ];
 
 const BATTERIES_CONTENT = {
@@ -342,25 +277,25 @@ const BATTERIES_CONTENT = {
 
   LIST: [
     {
-      name: 'Scheduling',
+      name: 'Always On Schedule',
       description:
         'Use our cron scheduler to run your applet on a regular basis.',
       icon: <FiCalendar size={40} />,
     },
     {
-      name: 'Authentication',
+      name: 'Authentication On Demand ',
       description:
         'Turn on auth and users will have to sign in via Zipper before accessing your applet.',
       icon: <FiKey size={40} />,
     },
     {
-      name: 'Audit logs ',
+      name: 'Automatic Audit Logs',
       description:
         'See who’s been running an applet as well as who’s been changing the code.',
       icon: <FiBookOpen size={40} />,
     },
     {
-      name: 'Integrations you control ',
+      name: 'Integrations You Control ',
       description:
         'Integrate into existing tools using official SDKs and our pre-written (but extensible) code.',
       icon: <FiSliders size={40} />,
@@ -379,9 +314,7 @@ const HEADLINE_CONTENT = {
 /* ------------------- Hero ------------------- */
 
 const Hero = () => {
-  // Animations
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const [isLargerThan600] = useMediaQuery('(min-width: 600px)');
 
   const box1Animation = useAnimation();
   const box2Animation = useAnimation();
@@ -407,11 +340,11 @@ const Hero = () => {
 
   const MobileVideoFigure = () => (
     <Box
-      display="flex"
+      display={{ base: 'flex', lg: 'none' }}
       position="relative"
       width={{ base: 'full', md: '535px' }}
-      height={{ base: '50vh', md: '445px' }}
-      mt={{ base: 8, md: 0 }}
+      height={{ base: '260px', md: '445px' }}
+      mt={{ base: 8, lg: 0 }}
       as={motion.div}
     >
       <Box
@@ -433,10 +366,9 @@ const Hero = () => {
       <Box
         as={motion.div}
         position="absolute"
-        bottom="0"
+        bottom={-10}
         right={{ base: '-45px', md: '0' }}
         width={{ md: '440px' }}
-        height="330px"
         animate={box2Animation}
       >
         <Image
@@ -478,41 +410,48 @@ const Hero = () => {
 
   const DesktopVideoFigure = () => (
     <Box
-      display="flex"
+      display={{ base: 'none', lg: 'flex' }}
       flexDir="column"
       justifyContent="center"
+      transition="1.5s ease-in-out"
       alignItems="center"
       position="relative"
       width="full"
-      height={{ base: '50vh', md: '668px' }}
-      mt={{ base: 8, md: 0 }}
+      height={{ base: '50vh', md: '360px' }}
+      mt={{ base: 8, md: 36 }}
       as={motion.div}
     >
       <Box
         as={motion.div}
         position="absolute"
-        top="-15px"
-        left={{ base: '-25px', md: '0' }}
+        top="-120px"
+        left={{ base: '-25px', md: '0px' }}
         width={{ md: '536px' }}
         height="373px"
         animate={box1Animation}
       >
-        <Image src="/layout/app.svg" width="536" height="373" alt="App" />
+        <img
+          src="/static/app.png"
+          style={{ objectFit: 'cover' }}
+          width="536"
+          height="373"
+          alt="App"
+        />
       </Box>
 
       <Box
         as={motion.div}
         position="absolute"
-        // bottom="0"
-        // right={{ base: '-45px', md: '200px' }}
-        width={{ md: '822px' }}
-        height="558"
-        // animate={box2Animation}
+        width={{ md: '1000px' }}
+        left={280}
+        top={20}
+        height="600"
       >
-        <Image
-          src="/layout/api_apps.svg"
-          width="822"
-          height="558"
+        <img
+          style={{ objectFit: 'cover' }}
+          src="/static/code.png"
+          width={720}
+          height={480}
           alt="Editor"
         />
       </Box>
@@ -521,12 +460,18 @@ const Hero = () => {
         as={motion.div}
         position="absolute"
         bottom="0px"
-        right={{ base: '-45px', md: '100px' }}
+        right={{ base: '-45px', md: '0px' }}
         width={{ md: '291' }}
-        height="335"
+        height="400"
         animate={box2Animation}
       >
-        <Image src="/layout/modal.svg" width="291" height="335" alt="Modal" />
+        <img
+          style={{ objectFit: 'cover' }}
+          src="/static/api.png"
+          width="400"
+          height="400"
+          alt="Modal"
+        />
       </Box>
 
       <Box
@@ -563,7 +508,8 @@ const Hero = () => {
       as="section"
       aria-label="hero-container"
       w="full"
-      py={{ base: '52px', md: '9rem' }}
+      pt={{ base: '52px', md: '8rem' }}
+      mt={{ base: 0, md: 0 }}
       px={['24px', 0]}
       position="relative"
       whiteSpace={{ md: 'pre-line' }} //important for \n new lines
@@ -582,13 +528,18 @@ const Hero = () => {
         position="relative"
       >
         <Flex direction="column" align="center" w="full" gap={10}>
-          <VStack gap={4} w={['full', 'auto']} align="center" py={{ lg: 10 }}>
+          <VStack
+            color="white"
+            gap={4}
+            w={['full', 'auto']}
+            align="center"
+            py={{ lg: 10 }}
+          >
             <Heading
               fontFamily="plaak"
               fontSize={['40px', '7xl']}
-              lineHeight={{ base: '48px', lg: '72px' }}
+              lineHeight={{ base: '48px', md: '72px' }}
               fontWeight="normal"
-              color="brandOrange.500"
               textAlign="center"
               whiteSpace={{ base: 'pre-line' }}
             >
@@ -597,7 +548,6 @@ const Hero = () => {
             <Text
               fontSize="lg"
               css={{ margin: 0 }}
-              color="gray.800"
               textAlign="center"
               whiteSpace={{ lg: 'pre-line' }}
             >
@@ -616,7 +566,8 @@ const Hero = () => {
                 height="2.75rem"
                 w="full"
                 fontSize={{ base: 'sm', md: 'md' }}
-                colorScheme="purple"
+                colorScheme="brandOrange"
+                transition="all .2s ease-in-out"
                 padding={{ base: '5px 8px', md: '10px 18px' }}
                 color="white"
                 fontWeight={500}
@@ -629,46 +580,48 @@ const Hero = () => {
                 variant="outline"
                 height="2.75rem"
                 fontWeight="400"
-                colorScheme="blue"
+                colorScheme="white"
+                _hover={{
+                  bg: 'white',
+                  color: 'purple.500',
+                }}
                 display="flex"
                 gap={1}
                 w="full"
                 onClick={onOpen}
-                color="blue.500"
+                color="white"
               >
                 <PiPlayCircle size={20} /> {'Watch a 3 minute demo'}
               </Button>
             </Stack>
           </VStack>
 
-          {isLargerThan600 ? <DesktopVideoFigure /> : <MobileVideoFigure />}
+          <DesktopVideoFigure />
+          <MobileVideoFigure />
         </Flex>
       </Container>
       <Modal isOpen={isOpen} onClose={onClose} size="5xl">
         <ModalOverlay />
         <ModalContent p="0">
           <ModalBody p="0">
-            <div
-              style={{
-                position: 'relative',
-                paddingBottom: '56.25%',
-                height: '0',
-                background: 'transparent',
-              }}
+            <Box
+              as="figure"
+              position="relative"
+              paddingBottom="56.25%"
+              height="0"
+              background="transparent"
             >
-              <iframe
+              <Box
+                as="iframe"
                 src="https://www.loom.com/embed/d50630ac57a94f5fb1bcdcce2de85324?sid=766794ed-03a4-4917-98e7-4420e7f2c03d?autoplay=1"
-                frameBorder={0}
                 allowFullScreen
-                style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  height: '100%',
-                  width: '100%',
-                }}
-              ></iframe>
-            </div>
+                position="absolute"
+                top={0}
+                left={0}
+                height="100%"
+                width="100%"
+              />
+            </Box>
           </ModalBody>
         </ModalContent>
       </Modal>
@@ -676,16 +629,28 @@ const Hero = () => {
   );
 };
 
-const WebFirst = memo(() => {
+const WebFirst = () => {
+  const [isMobile] = useMediaQuery('(max-width: 600px)');
   return (
     <Box
       as="section"
       aria-label="features"
       w="full"
-      py={{ base: '52px', md: '9rem' }}
+      pt={{ base: '8rem', md: '20rem' }}
+      pb={{ base: '52px', md: '9rem' }}
       position="relative"
       bg="white"
     >
+      <Box
+        position="absolute"
+        left="0"
+        top="0"
+        w="700px"
+        h="700px"
+        clipPath="polygon(0% 0%, 100% 0%, 0% 100%)"
+        bg="gray.50"
+        zIndex={0}
+      />
       <Container
         id="features-content"
         margin="0 auto"
@@ -694,12 +659,19 @@ const WebFirst = memo(() => {
         maxW="container.xl"
         w="full"
       >
-        <VStack as="article" align="start" gap={3} mb="100px" pb={10}>
+        <VStack
+          as="article"
+          zIndex={10}
+          position="relative"
+          align="start"
+          mb={10}
+          gap={3}
+        >
           <Heading
             fontFamily="plaak"
             fontSize="4xl"
             fontWeight="bold"
-            color="blue.500"
+            color="primary"
             whiteSpace="pre-line"
           >
             {WEB_FIRST_CONTENT.TITLE}
@@ -715,55 +687,97 @@ const WebFirst = memo(() => {
           </Text>
         </VStack>
 
-        <VStack gap="100px" w="full">
-          {WEB_FIRST_CONTENT.LIST.map((item, index) => (
-            <Flex
-              align="start"
-              flexDirection={{ base: 'column', lg: 'row' }}
-              key={index}
-              gap={5}
-              w="full"
-            >
-              <VStack maxW={{ base: 'full', lg: '380px' }} align="start">
-                {React.cloneElement(item.ICON, {
-                  style: { color: baseColors.blue['500'] },
-                })}
-                <Heading
-                  as="h3"
-                  fontWeight={400}
-                  fontSize="4xl"
-                  color="blue.500"
-                >
-                  {item.TITLE}
-                </Heading>
-
-                <Text color="gray.900" fontSize="xl">
-                  {item.DESCRIPTION}
-                </Text>
-              </VStack>
-
-              <Box
-                as="figure"
-                flex={{ lg: 1 }}
-                w={{ base: 'full' }}
-                height={{ base: '208px', lg: '440px' }}
-                bg="gray.500"
+        <Grid
+          templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }}
+          templateRows={{ base: 'repeat(4, 550px)', md: '400px 500px 500px' }}
+          w="full"
+          gridGap={5}
+        >
+          {WEB_FIRST_CONTENT.LIST.map((item, index) => {
+            const isMiddleItem = [1, 2].includes(index);
+            const isFirst = index === 0;
+            const isLast = index === WEB_FIRST_CONTENT.LIST.length - 1;
+            return (
+              <GridItem
+                colSpan={isMiddleItem ? 1 : { base: 1, md: 2 }}
                 position="relative"
+                overflow="hidden"
+                pt={{ base: 9, lg: 12 }}
+                px={{ base: 9, lg: 12 }}
+                bg={item.COLOR + '.700'}
               >
-                <Image
-                  src={item.IMAGE_URL}
-                  fill
-                  style={{ objectFit: 'cover' }}
-                  alt={item.TITLE}
+                <Box
+                  position="absolute"
+                  left="0"
+                  top="0"
+                  w={isMiddleItem ? '500px' : index === 3 ? '620px' : '920px'}
+                  h={isMiddleItem ? '500px' : index === 3 ? '620px' : '920px'}
+                  clipPath="polygon(0% 0%, 100% 0%, 0% 100%)"
+                  bg={item.COLOR + (index === 3 ? '.600' : '.500')}
+                  zIndex={0}
                 />
-              </Box>
-            </Flex>
-          ))}
-        </VStack>
+                <Stack
+                  direction={{ base: 'column', md: isFirst ? 'row' : 'column' }}
+                  as="article"
+                  position="relative"
+                  zIndex={1}
+                  w="full"
+                  h="full"
+                  align="start"
+                >
+                  <VStack align="start" color="white" w="full">
+                    {React.cloneElement(item.ICON, {
+                      size: 36,
+                    })}
+                    <Heading as="h3" fontWeight={600} fontSize="4xl">
+                      {item.TITLE}
+                    </Heading>
+                    <Text color="white" fontSize="xl">
+                      {item.DESCRIPTION}
+                    </Text>
+                  </VStack>
+
+                  {isMobile || isMiddleItem ? (
+                    <Box
+                      as="figure"
+                      position="absolute"
+                      w="calc(100% + 100px)"
+                      height="300px"
+                      left={{ base: -6, lg: -10 }}
+                      bottom={{ base: -40, lg: -20 }}
+                    >
+                      <Image
+                        fill
+                        src={item.IMAGE_URL}
+                        alt={item.TITLE}
+                        style={{
+                          objectFit: 'cover',
+                          objectPosition: 'left top',
+                        }}
+                      />
+                    </Box>
+                  ) : (
+                    <Box h="full" w="full" position="relative">
+                      <Image
+                        fill
+                        src={item.IMAGE_URL}
+                        alt={item.TITLE}
+                        style={{
+                          objectFit: 'cover',
+                          objectPosition: isLast ? 'center top' : undefined,
+                        }}
+                      />
+                    </Box>
+                  )}
+                </Stack>
+              </GridItem>
+            );
+          })}
+        </Grid>
       </Container>
     </Box>
   );
-});
+};
 
 const Features = memo(() => {
   const [isLargerThan600] = useMediaQuery('(min-width: 600px)');
@@ -840,7 +854,12 @@ const Features = memo(() => {
               height={['auto', '640px']}
             >
               <Box as="figure" w="full" height="342px" position="relative">
-                {feat.interact}
+                <Image
+                  src={feat.picture}
+                  fill
+                  style={{ objectFit: 'cover' }}
+                  alt={feat.title}
+                />
               </Box>
               <VStack
                 as="article"
@@ -1042,7 +1061,7 @@ const Batteries = memo(() => {
       px={{ base: 6 }}
       position="relative"
       overflow="hidden"
-      bg="gray.100"
+      bg="purple.50"
     >
       <Container
         margin="0 auto"
@@ -1058,7 +1077,7 @@ const Batteries = memo(() => {
             fontFamily="plaak"
             fontSize="4xl"
             fontWeight="bold"
-            color="blue.500"
+            color="purple.500"
           >
             {BATTERIES_CONTENT.TITLE}
           </Heading>
@@ -1073,7 +1092,7 @@ const Batteries = memo(() => {
         </VStack>
 
         <Grid
-          templateColumns={['1fr', 'repeat(2, 1fr)']}
+          templateColumns={{ base: '1fr', lg: 'repeat(4, 1fr)' }}
           rowGap={10}
           columnGap={5}
           w="full"
@@ -1082,21 +1101,35 @@ const Batteries = memo(() => {
             <GridItem
               key={btr.name}
               colSpan={1}
-              as={Flex}
-              align="start"
+              as={Stack}
+              flexDirection={{ base: 'row', lg: 'column' }}
+              alignItems={{ base: 'center', lg: 'center' }}
               gap={5}
             >
-              <Box as="span" color="blue.500">
+              <Box as="span" color="purple.500">
                 {btr.icon}
               </Box>
-              <VStack gap={2} align="start">
-                <Heading fontSize="xl" fontWeight={500} color="blue.500">
+              <Stack
+                direction="column"
+                gap={2}
+                align={{ base: 'start', lg: 'center' }}
+              >
+                <Heading
+                  fontSize={{ base: 'xl', lg: '2xl' }}
+                  fontWeight={{ base: 500, lg: 600 }}
+                  color="purple.500"
+                  textAlign={{ lg: 'center' }}
+                >
                   {btr.name}
                 </Heading>
-                <Text style={{ marginTop: '0px' }} color="gray.800">
+                <Text
+                  style={{ marginTop: '0px' }}
+                  textAlign={{ lg: 'center' }}
+                  color="gray.800"
+                >
                   {btr.description}
                 </Text>
-              </VStack>
+              </Stack>
             </GridItem>
           ))}
         </Grid>
@@ -1123,12 +1156,9 @@ const Headline = memo(() => {
         top="0"
         w="0"
         h="0"
-        borderBottom={{
-          base: '200px solid transparent',
-          lg: '1000px solid transparent',
-        }}
+        borderBottom={['200px solid transparent', '750px solid transparent']}
         zIndex={0}
-        borderLeft={{ base: '200px solid white', lg: '1000px solid white' }}
+        borderLeft={['200px solid white', '750px solid white']}
       />
 
       <Box
@@ -1137,72 +1167,39 @@ const Headline = memo(() => {
         bottom="0"
         w="0"
         h="0"
-        borderTop={{
-          base: '200px solid transparent',
-          lg: '1000px solid transparent',
-        }}
+        borderTop={['200px solid transparent', '750px solid transparent']}
         zIndex={0}
-        borderRight={{ base: '200px solid white', lg: '1000px solid white' }}
+        borderRight={['200px solid white', '750px solid white']}
       />
       <Container
         as="section"
-        gap={[6]}
         flexDirection={{ base: 'column' }}
         w="full"
         position="relative"
         maxW="container.xl"
         overflow="hidden"
       >
-        <Text fontWeight={600} fontSize="lg" color="gray.600">
+        <Text fontSize="lg" fontWeight={600} color="gray.600" mb={6}>
           {HEADLINE_CONTENT.SPAN}
         </Text>
 
         <Text
           fontSize={['48px', '72px']}
-          color="gray.800"
+          color="brandOrange.900"
           fontWeight={400}
           lineHeight={['60px', '78px']}
           whiteSpace={{ md: 'pre-line' }}
         >
-          {'Using Zipper knocked \n me off the top of the list \n for '}
+          {'“Using Zipper knocked \n me off the top of the \n list for '}
           <Text as="span" color="brandOrange.500">
-            most swear words
+            {'most swear \n words'}
           </Text>{' '}
-          {'in \n commit messages.'}
+          {'in commit \n messages.”'}
         </Text>
       </Container>
     </Box>
   );
 });
-
-const BetaSection = () => {
-  return (
-    <Box
-      bgColor={'indigo.600'}
-      color="white"
-      w="full"
-      justifyContent="center"
-      display="flex"
-      p="4"
-    >
-      <Text
-        fontWeight={'bold'}
-        mr={2}
-        display="flex"
-        alignItems="center"
-        gap="2"
-      >
-        <HiOutlineLightningBolt size={20} /> Zipper is in beta
-      </Text>
-      <Text>
-        <Box as="span" textDecoration={'underline'}>
-          <Link href="/auth/signin">Sign up now</Link>
-        </Box>{' '}
-        to be the first to get new features.
-      </Text>
-    </Box>
-  );
-};
 
 /* -------------------------------------------- */
 /* Render                                       */
@@ -1220,8 +1217,8 @@ const HomePage: NextPageWithLayout = () => {
       <Head>
         <link rel="canonical" href="https://zipper.dev/" />
       </Head>
-      <Website>
-        <Website.Navbar links={{ component: NextLink }} />
+      <Website mode="dark">
+        <Website.Navbar mode="dark" links={{ component: NextLink }} />
         <Box
           display="flex"
           flexDir="column"

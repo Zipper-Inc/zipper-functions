@@ -1,7 +1,7 @@
-import prettier from 'prettier/standalone';
 import typescript from 'prettier/parser-typescript';
+import prettier from 'prettier/standalone';
 
-export function format(source: string) {
+export function prettierFormat(source: string) {
   return prettier.format(source, {
     parser: 'typescript',
     plugins: [typescript],
