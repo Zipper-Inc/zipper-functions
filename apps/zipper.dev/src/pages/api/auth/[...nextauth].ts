@@ -15,6 +15,8 @@ import { createUserSlug } from '~/utils/create-user-slug';
 import { resend } from '~/server/resend';
 import crypto from 'crypto';
 import { trackEvent } from '~/utils/api-analytics';
+import { queues } from '~/server/queue';
+import { startNurtureCampaign } from '~/server/utils/nurtureCampaign.utils';
 
 export function PrismaAdapter(p: PrismaClient): Adapter {
   return {
@@ -390,21 +392,7 @@ export const authOptions: AuthOptions = {
       });
 
       if (isNewUser && user.email) {
-        resend.emails.send({
-          to: user.email,
-          from: 'Sachin & Ibu <founders@zipper.dev>',
-          reply_to: ['sachin@zipper.works', 'ibu@zipper.works'],
-          subject: 'Thank you for checking out Zipper',
-          text: `Hey there,
-
-We just wanted to drop you a quick note to say thank you for checking out Zipper.
-
-If you have any questions, feedback, or general comments, we'd genuinely love to hear them. Feel free to reply to this email at any point - your emails go directly into our inboxes (and not a general mailbox or support queue).
-
-Regards,
-Sachin & Ibu
-`,
-        });
+        startNurtureCampaign(user.email);
       }
 
       trackEvent({
