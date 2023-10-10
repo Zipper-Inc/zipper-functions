@@ -22,6 +22,7 @@ import { SiteType } from './common/SiteType';
 
 type Props = {
   links?: Partial<Parameters<typeof Links>[0]>;
+  mode?: 'dark' | 'light';
   site?: SiteType;
 };
 
@@ -46,7 +47,11 @@ const LINKS = {
   ],
 };
 
-export const WebSiteNavbar = ({ links, site = SiteType.Home }: Props) => {
+export const WebSiteNavbar = ({
+  links,
+  site = SiteType.Home,
+  mode = 'light',
+}: Props) => {
   const linksObj = LINKS[site];
 
   const NavDrawer = () => {
@@ -116,12 +121,17 @@ export const WebSiteNavbar = ({ links, site = SiteType.Home }: Props) => {
     >
       {links?.component && (
         <links.component href="/home" aria-label="home">
-          <ZipperLogo type="dark" />
+          <ZipperLogo type={mode === 'dark' ? 'dark' : 'color'} />
         </links.component>
       )}
 
       <HStack as="nav" display={['none', 'none', 'flex']} gap={8}>
-        <Links data={linksObj} component={links?.component} displayActiveLink />
+        <Links
+          data={linksObj}
+          mode={mode}
+          component={links?.component}
+          displayActiveLink
+        />
         <Button
           as={Link}
           href="/auth/signin"
@@ -137,7 +147,7 @@ export const WebSiteNavbar = ({ links, site = SiteType.Home }: Props) => {
         </Button>
       </HStack>
 
-      <Box display={{ base: 'block', lg: 'none' }}>
+      <Box display={{ base: 'block', md: 'none' }}>
         <NavDrawer />
       </Box>
     </Container>

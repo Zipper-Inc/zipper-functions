@@ -340,11 +340,11 @@ const Hero = () => {
 
   const MobileVideoFigure = () => (
     <Box
-      display={{ base: 'flex', md: 'none' }}
+      display={{ base: 'flex', lg: 'none' }}
       position="relative"
       width={{ base: 'full', md: '535px' }}
-      height={{ base: '280px', md: '445px' }}
-      mt={{ base: 8, md: 0 }}
+      height={{ base: '260px', md: '445px' }}
+      mt={{ base: 8, lg: 0 }}
       as={motion.div}
     >
       <Box
@@ -410,7 +410,7 @@ const Hero = () => {
 
   const DesktopVideoFigure = () => (
     <Box
-      display={{ base: 'none', md: 'flex' }}
+      display={{ base: 'none', lg: 'flex' }}
       flexDir="column"
       justifyContent="center"
       transition="1.5s ease-in-out"
@@ -509,7 +509,7 @@ const Hero = () => {
       aria-label="hero-container"
       w="full"
       pt={{ base: '52px', md: '8rem' }}
-      mt={{ base: 0, md: '-4rem' }}
+      mt={{ base: 0, md: 0 }}
       px={['24px', 0]}
       position="relative"
       whiteSpace={{ md: 'pre-line' }} //important for \n new lines
@@ -538,7 +538,7 @@ const Hero = () => {
             <Heading
               fontFamily="plaak"
               fontSize={['40px', '7xl']}
-              lineHeight={{ base: '48px', lg: '72px' }}
+              lineHeight={{ base: '48px', md: '72px' }}
               fontWeight="normal"
               textAlign="center"
               whiteSpace={{ base: 'pre-line' }}
@@ -702,8 +702,8 @@ const WebFirst = () => {
                 colSpan={isMiddleItem ? 1 : { base: 1, md: 2 }}
                 position="relative"
                 overflow="hidden"
-                pt={{ base: 9, md: 12 }}
-                px={{ base: 9, md: 12 }}
+                pt={{ base: 9, lg: 12 }}
+                px={{ base: 9, lg: 12 }}
                 bg={item.COLOR + '.700'}
               >
                 <Box
@@ -721,26 +721,15 @@ const WebFirst = () => {
                   as="article"
                   position="relative"
                   zIndex={1}
-                  // maxW={{ base: 'full', lg: '700px' }}
                   w="full"
                   h="full"
                   align="start"
                 >
-                  <VStack
-                    align="start"
-                    color="white"
-                    w="full"
-                    // minW={!middle ? '400px' : undefined}
-                  >
+                  <VStack align="start" color="white" w="full">
                     {React.cloneElement(item.ICON, {
                       size: 36,
                     })}
-                    <Heading
-                      as="h3"
-                      fontWeight={600}
-                      fontSize="4xl"
-                      // color={item.COLOR + '.500'}
-                    >
+                    <Heading as="h3" fontWeight={600} fontSize="4xl">
                       {item.TITLE}
                     </Heading>
                     <Text color="white" fontSize="xl">
@@ -754,8 +743,8 @@ const WebFirst = () => {
                       position="absolute"
                       w="calc(100% + 100px)"
                       height="300px"
-                      left={{ base: -6, md: -10 }}
-                      bottom={{ base: -40, md: -20 }}
+                      left={{ base: -6, lg: -10 }}
+                      bottom={{ base: -40, lg: -20 }}
                     >
                       <Image
                         fill
@@ -784,65 +773,7 @@ const WebFirst = () => {
               </GridItem>
             );
           })}
-          {/* <GridItem colSpan={1} bg="red"></GridItem>
-          <GridItem colSpan={1} bg="red"></GridItem>
-          <GridItem colSpan={{ base: 1, md: 2 }} bg="red"></GridItem> */}
         </Grid>
-        {/* <VStack as="ul" gap="100px" w="full">
-          {WEB_FIRST_CONTENT.LIST.map((item, index) => (
-            <Flex
-              as="li"
-              align="start"
-              flexDirection={{ base: 'column', lg: 'row' }}
-              key={index}
-              gap={5}
-              w="full"
-            >
-              <VStack
-                as="article"
-                maxW={{ base: 'full', lg: '380px' }}
-                align="start"
-              >
-                <VStack align="start" color={item.COLOR}>
-                  {React.cloneElement(item.ICON, {
-                    size: 36,
-                  })}
-                  <Heading
-                    as="h3"
-                    fontWeight={400}
-                    fontSize="4xl"
-                    color={item.COLOR}
-                  >
-                    {item.TITLE}
-                  </Heading>
-                </VStack>
-
-                <Text color="gray.900" fontSize="xl">
-                  {item.DESCRIPTION}
-                </Text>
-              </VStack>
-
-              <Box
-                as="figure"
-                flex={{ lg: 1 }}
-                w={{ base: 'full', lg: '848px' }}
-                height={{ base: '208px', lg: '440px' }}
-                borderRadius="8px"
-                bg="gray.500"
-                position="relative"
-              >
-                <Image
-                  src={item.IMAGE_URL}
-                  fill
-                  priority
-                  quality={100}
-                  style={{ objectFit: 'cover', borderRadius: '6px' }}
-                  alt={item.TITLE}
-                />
-              </Box>
-            </Flex>
-          ))}
-        </VStack> */}
       </Container>
     </Box>
   );
@@ -1161,7 +1092,7 @@ const Batteries = memo(() => {
         </VStack>
 
         <Grid
-          templateColumns={['1fr', 'repeat(4, 1fr)']}
+          templateColumns={{ base: '1fr', lg: 'repeat(4, 1fr)' }}
           rowGap={10}
           columnGap={5}
           w="full"
@@ -1286,8 +1217,8 @@ const HomePage: NextPageWithLayout = () => {
       <Head>
         <link rel="canonical" href="https://zipper.dev/" />
       </Head>
-      <Website>
-        <Website.Navbar links={{ component: NextLink }} />
+      <Website mode="dark">
+        <Website.Navbar mode="dark" links={{ component: NextLink }} />
         <Box
           display="flex"
           flexDir="column"
