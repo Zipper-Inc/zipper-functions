@@ -5,6 +5,7 @@ import { prisma } from './prisma';
 import fetch from 'node-fetch';
 import getRunUrl from '../utils/get-run-url';
 import { generateAccessToken } from '../utils/jwt-utils';
+import { sendNurtureEmail } from './utils/nurtureCampaign.utils';
 
 export const redis = new IORedis(+env.REDIS_PORT, env.REDIS_HOST, {
   maxRetriesPerRequest: null,
@@ -12,12 +13,27 @@ export const redis = new IORedis(+env.REDIS_PORT, env.REDIS_HOST, {
 
 const queueWorkersGlobal = global as typeof global & {
   workers?: Worker[];
-  queues?: Record<'schedule', Queue>;
+  queues?: Record<'schedule' | 'nurture', Queue>;
 };
 
 const initializeWorkers = () => {
   console.log('[BullMQ] Initializing workers');
   return [
+    new Worker(
+      'nurture',
+      async (job) => {
+        await sendNurtureEmail(job.data.step, job.data.email);
+      },
+      { connection: redis },
+    )
+      ?.on('completed', (job) => {
+        console.log(`[Job Queue] Completed nurture job ID ${job?.id}`);
+      })
+      ?.on('failed', (job, err) => {
+        console.log(
+          `[Job Queue] Failed nurture job ID ${job?.id} with error ${err}`,
+        );
+      }),
     new Worker(
       'schedule-queue',
       async (job) => {
@@ -92,10 +108,14 @@ const initializeQueues = () => {
       connection: redis,
       defaultJobOptions: { removeOnComplete: 1000, removeOnFail: 5000 },
     }),
+    nurture: new Queue('nurture', {
+      connection: redis,
+      defaultJobOptions: { removeOnComplete: 1000, removeOnFail: 5000 },
+    }),
   };
 };
 
-export const queues: Record<'schedule', Queue> =
+export const queues: Record<'schedule' | 'nurture', Queue> =
   queueWorkersGlobal.queues || initializeQueues();
 
 export const initializeQueuesAndWorkers = () => {
