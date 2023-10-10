@@ -126,7 +126,7 @@ export const EditorContext = createContext<EditorContextType>({
 });
 
 const MAX_RETRIES_FOR_EXTERNAL_IMPORT = 3;
-const DEBOUNCE_DELAY_MS = 150;
+const DEBOUNCE_DELAY_MS = 250;
 
 /**
  * Fetches an import and modifies refs as needed
