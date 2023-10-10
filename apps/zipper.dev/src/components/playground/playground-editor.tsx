@@ -38,9 +38,8 @@ const TYPESCRIPT_ERRORS_TO_IGNORE = [
   // Ignore this error so we can import Deno and Zipper URLs
   // TS2792: Cannot find module.
   2792,
-  /** @todo fix this error */
-  // Ignore this error because we don't know how to import from web correctly yet
-  // For example, this url https://esm.sh/lodash/unescape should work but it
+  // Ignore this error because we will check if modules are valid ourselves
+  // see Z001 in zipper-editor-linter
   // TS2307: Cannot find module or it's corresponding type declarations.
   2307,
   // Allow parameters to have an implicit `any` type
@@ -210,6 +209,9 @@ export default function PlaygroundEditor(
         lib: ['esnext', 'dom', 'deno.ns'],
         noResolve: true,
         jsx: monaco.languages.typescript.JsxEmit.Preserve,
+        esModuleInterop: true,
+        allowSyntheticDefaultImports: true,
+        disableSizeLimit: true,
       });
 
       monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
@@ -221,6 +223,9 @@ export default function PlaygroundEditor(
           monaco.languages.typescript.ModuleResolutionKind.NodeJs,
         lib: ['esnext', 'dom', 'deno.ns'],
         jsx: monaco.languages.typescript.JsxEmit.Preserve,
+        esModuleInterop: true,
+        allowSyntheticDefaultImports: true,
+        disableSizeLimit: true,
       });
 
       // Fallback formatter
