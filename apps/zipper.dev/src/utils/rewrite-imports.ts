@@ -26,6 +26,7 @@ export enum RewriteTo {
  */
 export function getRewriteRule(specifier: string): RewriteTo {
   if (
+    !specifier ||
     specifier.startsWith('./') ||
     specifier.startsWith('../') ||
     isExternalImport(specifier)

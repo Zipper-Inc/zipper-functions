@@ -22,23 +22,15 @@ import { useRouter } from 'next/router';
 import { LiveObject, LsonObject } from '@liveblocks/client';
 import { getPathFromUri, getUriFromPath } from '~/utils/model-uri';
 import { InputParam } from '@zipper/types';
-import { isExternalImport, parseCode } from '~/utils/parse-code';
+import { parseCode } from '~/utils/parse-code';
 import debounce from 'lodash.debounce';
 import { uuid } from '@zipper/utils';
 import { prettyLog } from '~/utils/pretty-log';
 import { AppQueryOutput } from '~/types/trpc';
 import { getAppVersionFromHash } from '~/utils/hashing';
 import { isZipperImportUrl } from '~/utils/eszip-utils';
-import Fuse from 'fuse.js';
 import { parsePlaygroundQuery, PlaygroundTab } from '~/utils/playground.utils';
-import { rewriteSpecifier } from '~/utils/rewrite-imports';
-
-/** This string indicates which errors we own in the editor */
-const ZIPPER_LINT = 'zipper-lint';
-/** Some error codes for Zipper Linting */
-enum ZipperLintCode {
-  CannotFindModule = 'Z001',
-}
+import { runZipperLinter } from '~/utils/zipper-editor-linter';
 
 type OnValidate = AddParameters<
   Required<EditorProps>['onValidate'],
@@ -73,7 +65,7 @@ export type EditorContextType = {
   refetchApp: () => Promise<void>;
   replaceCurrentScriptCode: (code: string) => void;
   inputParams?: InputParam[];
-  setInputParams: (inputParams: InputParam[]) => void;
+  setInputParams: (inputParams?: InputParam[]) => void;
   inputError?: string;
   monacoRef?: MutableRefObject<Monaco | undefined>;
   logs: Zipper.Log.Message[];
@@ -134,7 +126,7 @@ export const EditorContext = createContext<EditorContextType>({
 });
 
 const MAX_RETRIES_FOR_EXTERNAL_IMPORT = 3;
-const DEBOUNCE_DELAY_MS = 250;
+const DEBOUNCE_DELAY_MS = 150;
 
 /**
  * Fetches an import and modifies refs as needed
@@ -272,8 +264,58 @@ function handleExternalImports({
   externalImportModelsRef.current[currentScript.filename] = newImportModels;
 }
 
-const handleExternalImportsDebounced = debounce(
-  handleExternalImports,
+function runEditorActionsOnChange({
+  value,
+  setInputParams,
+  setInputError,
+  editor,
+  monacoRef,
+  currentScript,
+  externalImportModelsRef,
+  invalidImportUrlsRef,
+}: {
+  value: string;
+  setInputParams: EditorContextType['setInputParams'];
+  setInputError: (error: string | undefined) => void;
+  editor: typeof monaco.editor | undefined;
+  monacoRef: MutableRefObject<typeof monaco | undefined>;
+  currentScript: Script;
+  externalImportModelsRef: MutableRefObject<Record<string, string[]>>;
+  invalidImportUrlsRef: MutableRefObject<{ [url: string]: number }>;
+}) {
+  if (!editor || !monacoRef.current) return;
+
+  try {
+    const { inputs, externalImportUrls, imports } = parseCode({
+      code: value,
+      throwErrors: true,
+    });
+
+    setInputParams(inputs);
+    setInputError(undefined);
+
+    runZipperLinter({
+      editor,
+      imports,
+      monacoRef,
+      currentScript,
+    });
+
+    handleExternalImports({
+      imports: externalImportUrls,
+      monacoRef,
+      externalImportModelsRef,
+      invalidImportUrlsRef,
+      currentScript,
+    });
+  } catch (e: any) {
+    setInputParams(undefined);
+    setInputError(e.message);
+  }
+}
+
+const runEditorActionsOnChangeDebounced = debounce(
+  runEditorActionsOnChange,
   DEBOUNCE_DELAY_MS,
 );
 
@@ -354,129 +396,23 @@ const EditorContextProvider = ({
   const onChange: EditorProps['onChange'] = async (value = '', event) => {
     if (!editor || !monacoRef?.current || !currentScript) return;
 
+    // Sync to liveblocks
     try {
       mutateLive(value, event.versionId);
-
-      try {
-        const { inputs, externalImportUrls, localImports } = parseCode({
-          code: value,
-          throwErrors: true,
-        });
-
-        setInputParams(inputs);
-        setInputError(undefined);
-
-        editor.removeAllMarkers(ZIPPER_LINT);
-
-        // Handle imports and check to make sure they are valid
-        // Reports Z0001: Cannot find module
-        localImports.forEach(async (i) => {
-          const potentialModelUri = getUriFromPath(
-            // Remove the first two characters, which should be `./`
-            // The relative path is required by Deno/Zipper
-            i.specifier.substring(2),
-            monacoRef.current!.Uri.parse,
-            'tsx',
-          );
-
-          // If we can find a model, we're good
-          if (editor.getModel(potentialModelUri)) return;
-
-          // See if this resolves to a valid external import via our rewrites
-          const specifier = rewriteSpecifier(i.specifier);
-          if (isExternalImport(specifier)) {
-            const { status, headers } = await fetch(specifier, {
-              redirect: 'follow',
-            });
-            const fromZipper = isZipperImportUrl(specifier);
-            if (status === 200 && !fromZipper) return;
-            if (
-              status === 200 &&
-              fromZipper &&
-              headers.get('content-type')?.toLowerCase().includes('typescript')
-            ) {
-              return;
-            }
-          }
-
-          // If it's not a module, let's add an error
-          const currentUri = getUriFromPath(
-            currentScript.filename,
-            monacoRef.current!.Uri.parse,
-            'tsx',
-          );
-          const currentModel = editor.getModel(currentUri);
-
-          // Not sure how this would happen but if there's no model, there's nothing to do
-          if (!currentModel) return;
-
-          let message = `Cannot find module \`${i.specifier}\' in applet.`;
-          let suggestion;
-
-          if (isZipperImportUrl(specifier)) {
-            message = `Cannot find module \`${specifier}\` on Zipper.`;
-          } else if (isExternalImport(specifier)) {
-            const npmName = i.specifier.replace(/^npm:/, '');
-            const results = await fetch(
-              `https://registry.npmjs.com/-/v1/search?text=${npmName}&size=20`,
-            )
-              .then((r) => r.json())
-              .catch();
-
-            message = `Cannot find module \`${npmName}\` on npm.`;
-            suggestion = results.objects.length
-              ? results.objects[0].package.name
-              : '';
-          } else {
-            const localModelUris = editor
-              .getModels()
-              .map((m) => m.uri)
-              .filter((u) => u.scheme === 'file' && u.path !== currentUri.path);
-
-            // Search through paths to see if there's somethign similar to the broken path
-            const fuse = new Fuse(localModelUris.map((u) => u.path));
-            const [topSuggestion] = fuse.search(i.specifier);
-            // If there is, lets grab the full URI based on the original index
-            const suggestedUri =
-              topSuggestion && localModelUris[topSuggestion.refIndex];
-            suggestion = suggestedUri ? `.${getPathFromUri(suggestedUri)}` : '';
-          }
-
-          if (suggestion) {
-            message = `${message}\n\nDid you mean \`${suggestion}\`?`;
-          }
-
-          editor.setModelMarkers(currentModel, ZIPPER_LINT, [
-            ...editor.getModelMarkers({
-              resource: currentUri,
-              owner: ZIPPER_LINT,
-            }),
-            {
-              startLineNumber: i.startLine,
-              startColumn: i.startColumn,
-              endLineNumber: i.endLine,
-              endColumn: i.endColumn,
-              severity: monacoRef.current!.MarkerSeverity.Error,
-              message,
-              code: ZipperLintCode.CannotFindModule,
-            },
-          ]);
-        });
-
-        handleExternalImportsDebounced({
-          imports: externalImportUrls,
-          monacoRef,
-          externalImportModelsRef,
-          invalidImportUrlsRef,
-          currentScript,
-        });
-      } catch (e: any) {
-        setInputParams(undefined);
-        setInputError(e.message);
-      }
     } catch (e) {
       console.error('Caught error from mutateLive:', e);
     }
+
+    runEditorActionsOnChangeDebounced({
+      value,
+      setInputParams,
+      setInputError,
+      editor,
+      monacoRef,
+      currentScript,
+      externalImportModelsRef,
+      invalidImportUrlsRef,
+    });
   };
 
   const onValidate: EditorProps['onValidate'] = (
