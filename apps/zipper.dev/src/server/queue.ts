@@ -19,9 +19,21 @@ const queueWorkersGlobal = global as typeof global & {
 const initializeWorkers = () => {
   console.log('[BullMQ] Initializing workers');
   return [
-    new Worker('nurture', async (job) => {
-      await sendNurtureEmail(job.data.step, job.data.email);
-    }),
+    new Worker(
+      'nurture',
+      async (job) => {
+        await sendNurtureEmail(job.data.step, job.data.email);
+      },
+      { connection: redis },
+    )
+      ?.on('completed', (job) => {
+        console.log(`[Job Queue] Completed nurture job ID ${job?.id}`);
+      })
+      ?.on('failed', (job, err) => {
+        console.log(
+          `[Job Queue] Failed nurture job ID ${job?.id} with error ${err}`,
+        );
+      }),
     new Worker(
       'schedule-queue',
       async (job) => {
@@ -96,7 +108,10 @@ const initializeQueues = () => {
       connection: redis,
       defaultJobOptions: { removeOnComplete: 1000, removeOnFail: 5000 },
     }),
-    nurture: new Queue('nurture', { connection: redis }),
+    nurture: new Queue('nurture', {
+      connection: redis,
+      defaultJobOptions: { removeOnComplete: 1000, removeOnFail: 5000 },
+    }),
   };
 };
 
