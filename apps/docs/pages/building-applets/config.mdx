@@ -1,20 +1,16 @@
-# **Config**
+# Config
 
-You can configure the specifics of how a handler looks and behaves by exporting a `config` object with the type of `Zipper.HandlerConfig` from the handler file itself.
+You can configure the specifics of how an applet looks and how a handler behaves by exporting a `config` object (of type `Zipper.HandlerConfig`) from your applet file.
 
-```tsx
-export function handler() {
-...
-}
+```typescript
+export function handler() { ... }
 
-export const config: Zipper.HandlerConfig = {
- ...
-}
+export const config: Zipper.HandlerConfig = { ... }
 ```
 
-The config object must have the following type:
+The config object takes the following shape:
 
-```tsx
+```typescript
 type Zipper.HandlerConfig<I = Zipper.Inputs> = {
     run?: boolean | I;
     description?: Partial<{
@@ -31,24 +27,27 @@ type Zipper.HandlerConfig<I = Zipper.Inputs> = {
 }
 ```
 
-### `run`
+Note that your `config` function only affects the [in-browser run of the applet](/introduction/basic-concepts#within-the-browser). It will not change how POST requests or [API calls](/introduction/basic-concepts#api-calls) behave.
 
-determines whether the app runs automatically or not. When an app is run automatically, the user doesn’t need to click the Run button. We’ll either use no inputs, the value of this key, or the default values of the inputs key.
+## `run`
 
-Values:
+This attribute determines whether the app runs automatically. With this attribute set, the app runs automatically, and the user does not need to click the **▷ Run** button. In this case, Zipper will either use no inputs, the value of this key, or the `defaultValue` provided in the `inputs` key.
 
-- `true`
-- `false` (default)
-- Inputs (e.g. `{ inputValue: 'something'}`)
+Valid values for `run` are:
 
-### `description`
+* `true`
+* `false` (default)
+* Inputs (Example: `{ inputValue: 'something'}`)
 
-![Untitled](public/images/Untitled%206.png)
+## `description`
 
-optional description data that is displayed on [zipper.run](http://zipper.run) as headings above the inputs and output
+This contains optional description information that is displayed as headings above the inputs and output of your applet run page.
+
+![Config Description](public/images/config-description.png)
 
 ### `inputs`
 
-![Untitled](public/images/Untitled%207.png)
+This contains additional information about each input. You can use these values to customize the label, placeholder, and help text of each input. You can also specify a default value that will either be prefilled on the inputs form or used if the handler is configured to autorun.
 
-additional information about each input. You can use these values to customize the label, placeholder, and help text of each input. You can also specify a default value that will either be prefilled on the inputs form or used if the handler is auto run.
+![Config Inputs](public/images/config-inputs.png)
+

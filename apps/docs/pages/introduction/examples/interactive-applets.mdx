@@ -1,14 +1,14 @@
-# An Interactive Applet
+# Interactive Applet: A Todo List
 
-To build a useful web application, you often have to do more than just display information. You need to allow the user to interact with that information in some way. In this section, we will build a simple todo applet that uses buttons and modals.
+Most useful web application must do more than just display information. They let the user interact with that information in some way. In this example, we'll build a simple Todo List applet that uses buttons and modals. 
 
-#### 1. Create a new applet
+## 1. Create a new applet
 
-Head over to zipper.dev and sign in. On your dashboard, you'll see a button to create a new applet. Click it and give your applet a name (if you want).
+[Sign in](https://zipper.dev/auth/signin) to your Zipper account. On your dashboard, click the **+ Create Applet** button. Provide a name for your applet (or use the generated name). When prompted to start from a template, choose the "Hello World" template.
 
-#### 2. Add your main.ts handler
+## 2. Write the handler function for `main.ts`
 
-Since the `main.ts` file represents the entry point for your applet, we'll start by adding a handler that fetches open Todos and displays them.
+Because `main.ts` represents the entry point for our applet, we'll modify its [handler function](/building-applets/handler-functions) to fetch open todos and display them.
 
 ```typescript
 export type Todo = {
@@ -19,9 +19,8 @@ export type Todo = {
 
 export async function handler() {
   const todos = (await Zipper.storage.getAll<Todo>()) || [];
-
   return todos;
-}
+};
 
 export const config: Zipper.HandlerConfig = {
   description: {
@@ -31,13 +30,19 @@ export const config: Zipper.HandlerConfig = {
 };
 ```
 
-If you hit the `Run` button you should see an empty table being returned. This is because we don't have any Todos yet.
+When we click **▷ Run** for the first time, the output is empty. This is because we don't have any todos yet.
 
-#### 3. Add a function to create a todo
+![Todo Applet with no todos](public/images/example-todo-output-empty.png)
 
-Let's create a new file called `create.ts`. You can add files by clicking the `+` button at the top of the files section of the playground.
+Note that we've also added a `config` object to customize our applet's title and subtitle. For more information on this, see the [Config](/building-applets/config) section.
 
-Replace the placeholder code with the following function that accepts a string value and create a new todo with it:
+## 3. Add a function to create a todo
+
+We will create a new file called `create.ts`. At the top of the files sections of the playground, we click the **+** button and provide a name for our new file.
+
+![Todo Applet create new file](public/images/example-todo-create-file.png)
+
+The handler function for `create.ts` accespts a string value and creates a new todo with it. We replace our code for `create.ts` with the following:
 
 ```typescript
 import { Todo } from './main.ts';
@@ -51,27 +56,16 @@ export async function handler({ description }: { description: string }) {
   const saved = await Zipper.storage.set(newTodo.id, newTodo);
 
   return saved ? 'New todo created successfully!' : 'Something went wrong :(';
-}
-
-export const config: Zipper.HandlerConfig<{ description: string }> = {
-  description: {
-    title: 'Create Todo',
-    subtitle: 'Create a new todo',
-  },
-  inputs: {
-    description: {
-      label: 'Todo Description',
-      placeholder: 'Enter the description of the todo',
-    },
-  },
 };
 ```
 
-Fill in the description and hit the `Run` button. You should see your new Todo item with an id. If you rerun your `main.ts` handler, you should see your new todo in the list.
+We test out our function in the Preview sidebar. We enter a description for a todo and click the **Run** button. The response says, "New todo created successfully!" Now, if we rerun the `main.ts` handler function, we will see our new todo in the list.
 
-#### 4. Add a function to toggle isComplete
+![Todo Applet todo created response](public/images/example-todo-show-todo.png)
 
-Create another file, this time called `set.ts`. Once you've created the file, replace the placeholder code with the following:
+## 4. Add a function to mark a todo as complete/incomplete
+
+Next, we will create another file called `set.ts`, which contains the following code:
 
 ```typescript
 import { Todo } from './main.ts';
@@ -80,27 +74,19 @@ export async function handler({ id }: { id: string }) {
   const todo = await Zipper.storage.get<Todo>(id);
   todo.isComplete = !todo.isComplete;
   Zipper.storage.set(id, todo);
-}
-
-export const config: Zipper.HandlerConfig<{ id: string }> = {
-  description: {
-    title: 'Toggle Todo',
-    subtitle: 'Toggle the status of a todo',
-  },
-  inputs: {
-    id: {
-      label: 'Todo ID',
-      placeholder: 'Enter the ID of the todo',
-    },
-  },
 };
+
 ```
 
-This function accepts the ID of the todo and a boolean value indicating whether the todo should be marked as done or undone. It then uses this information to update the value of the `done` property on the todo in the app's storage.
+This function takes the ID of the todo and toggles the value of the `isComplete` boolean property for this todo in the app's [storage](/building-applets/storage).
 
-#### 5. Hook it all up
+We take the ID from the todo we created in the previous step, and we run `set.ts` with that value. When we run `main.ts` again, we see the todo shows `isComplete: true`.
 
-Now that we have all the pieces, we can hook them up in our `main.ts` file using Actions. In our list of todos, we'll add a button to mark the todo as done or undone. We'll also add a button to create a new todo. Replace your existing code with the following:
+![Todo Applet todo created response](public/images/example-todo-show-todo-complete.png)
+
+## 5. Hook it all up
+
+Now that we have all the pieces, we can hook them up together with [Actions](/building-applets/interactivity#actions) in our `main.ts` file. In our list of todos, we'll add a button to mark the todo as complete or incomplete. We'll also add a button to create a new todo. Replace `main.ts` with the following code:
 
 ```typescript
 export type Todo = {
@@ -124,7 +110,7 @@ export async function handler() {
             Zipper.Action.create({
               actionType: 'button',
               path: 'set.ts',
-              text: isComplete ? 'Mark as undone' : 'Mark as done',
+              text: isComplete ? 'Mark as incomplete' : 'Mark as complete',
               showAs: 'refresh',
               inputs: {
                 id,
@@ -135,7 +121,7 @@ export async function handler() {
       })}
     </Stack>
   );
-}
+};
 
 export const config: Zipper.HandlerConfig = {
   description: {
@@ -145,17 +131,11 @@ export const config: Zipper.HandlerConfig = {
 };
 ```
 
-#### 6. A little bit of polish
+## 6. A little bit of polish
 
-It's not very helpful to have all your complete and incomplete todos mixed together. Let's add a little bit of polish to our applet to separate them. Replace your existing code with the following:
+It's not very helpful to have our complete and incomplete todos mixed together. Let's add a little bit of polish to our applet by separating them. We'll replace our `handler` function in `main.ts` with the following:
 
 ```typescript
-export type Todo = {
-  id: string;
-  description: string;
-  isComplete: boolean;
-};
-
 export async function handler() {
   const todos = (await Zipper.storage.getAll<Todo>()) || [];
 
@@ -179,7 +159,7 @@ export async function handler() {
               Zipper.Action.create({
                 actionType: 'button',
                 path: 'set.ts',
-                text: isComplete ? 'Mark as undone' : 'Mark as done',
+                text: isComplete ? 'Mark as incomplete' : 'Mark as complete',
                 showAs: 'refresh',
                 inputs: {
                   id,
@@ -200,7 +180,7 @@ export async function handler() {
               Zipper.Action.create({
                 actionType: 'button',
                 path: 'set.ts',
-                text: isComplete ? 'Mark as undone' : 'Mark as done',
+                text: isComplete ? 'Mark as incomplete' : 'Mark as complete',
                 showAs: 'refresh',
                 inputs: {
                   id,
@@ -211,21 +191,14 @@ export async function handler() {
         })}
     </Stack>
   );
-}
-
-export const config: Zipper.HandlerConfig = {
-  description: {
-    title: 'Todo Applet',
-    subtitle: 'A simple todo applet',
-  },
 };
 ```
 
-That's it! You've got a working todo applet. You can now hit `Publish` on the top right corner to deploy it to your zipper.run URL.
+That's it! We now have a working todo applet. Once we save our code, we click **Publish** in the top right corner of the page. Then, we click **Update** to push our code changes to the published version of our applet. Our updated interactive applet is now live and available.
 
 ---
 
-<video autoplay controls muted playsinline>
+<video autoPlay controls muted playsinline>
   <source src="/docs/videos/interactive-applet.mp4" type="video/mp4" />
   Your browser does not support the video tag.
 </video>
