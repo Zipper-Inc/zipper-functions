@@ -180,6 +180,7 @@ export default function AddScriptForm({
               } else {
                 return (
                   <Button
+                    key={connector.id}
                     variant="ghost"
                     justifyContent="start"
                     fontWeight="normal"

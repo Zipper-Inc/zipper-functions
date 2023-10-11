@@ -52,7 +52,7 @@ export const PlaygroundPublishInfo = ({ app }: { app: AppQueryOutput }) => {
       Fix errors in the following files before running:
       <UnorderedList>
         {getErrorFiles().map((f) => (
-          <ListItem>{f}</ListItem>
+          <ListItem key={f}>{f}</ListItem>
         ))}
       </UnorderedList>
     </>

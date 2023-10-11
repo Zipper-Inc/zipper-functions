@@ -14,6 +14,7 @@ const envSchema = z.object({
   CLOUDFLARE_APPLET_SRC_BUCKET_NAME: z.string(),
   CLOUDFLARE_BUILD_FILE_BUCKET_NAME: z.string(),
   DATABASE_URL: z.string().url(),
+  DEFAULT_APP_SLUG: z.string(),
   DENO_DEPLOY_SECRET: z.string(),
   ENCRYPTION_KEY: z.string(),
   FEEDBACK_TRACKER_API_KEY: z.string(),

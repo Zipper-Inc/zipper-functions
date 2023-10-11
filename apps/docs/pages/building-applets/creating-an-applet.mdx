@@ -1,23 +1,35 @@
 # Creating an Applet
 
-Sign in and click the `+ Create Applet` button in the top right corner of the dashboard to create a new applet. It's important to note that the applet will be created inside the workspace that you're currently viewing. You can change workspaces or create new ones by clicking the dropdown in the left side of the headers.
+To create a new applet, sign in and click the **+ Create Applet** button in the top right corner of the dashboard.
 
-When creating a new applet, you'll be asked to provide a name. The name will be used to generate a unique URL for the applet. The URL will be in the format of `https://<applet-name>.zipper.run`. The name can be changed later, but any links that have been shared will no longer work.
+Note that your applet will be created inside the workspace that you're currently viewing. You can change workspaces or create new ones by clicking the workspace name dropdown in the top left of the page.
 
-### **Using AI to get started**
+When creating a new applet, you'll be asked to provide a name, which will be used to generate a unique URL for the applet. Your applet's URL will be in this format: `https://<applet-name>.zipper.run`. Your applet name can be changed later, which will subsequently change your applet URL. So, any previous links that were shared will no longer work.
 
-If you have an idea of what you want to build, you can use Zipper's AI to get started. Just type in a description of what you want to build in the applet creation form and Zipper will generate code for you. The code generation step can take some time so be patient while the machines do their thing. Once the code has been generated, you'll be able to edit it in the editor (there are often some bugs in the generated code so you'll probably need to make some changes).
+## **Using AI to get started**
 
-![ai-prompt](public/images/ai-prompt.png)
+If you have already an idea of what you want to build, you can use Zipper's "AI Generated Code" template to get started. Type in a description of what you want to build, and Zipper will generate code for you. The code generation step can take some time, so be patient while the machines do their thing. After the code has been generated, you'll still be able to edit it (there are often some bugs in the generated code, so you'll probably need to make some changes).
 
-### **Visibility**
+![AI Generated Code - Prompt](public/images/create-applet-ai-generated-code.png)
 
-There are two visibility settings on every applet: Code & Output.
+## **Visibility**
 
-If the code for an applet is public, the applet will show up on you a user or organization’s profile. Anyone will be able to view the code regardless of whether they’re a Zipper user or not. However, only editor and/or organization members will be able to make changes. People viewing public code will not be able to see schedules, secrets, app history, or settings.
+Every applet has two visibility settings: **code** and **output**.
 
-If the output of an app is public, anyone will be able to access the [zipper.run](http://zipper.run) URL for the applet and run the applet itself. For public output, the Run history URLs will also work for everyone with the link.
+### Applet code
 
-**End-user auth**
+If the code for an applet is public ("Is the code private?" turned _off_), the applet will show up on the user's (or organization's) profile. **Anyone** will be able to view the code, whether they’re a Zipper user or not. However, they won't be able to see schedules, secrets, app history, or settings.
 
-If the output of an applet is not public, users will be asked to authenticate against Zipper before they’re able to run an applet or any of its paths. The email address of the authenticated user will be included in the `context` object that’s passed to the `handler` function. You can use this information to determine what the applet should output.
+![Applet code not private](public/images/applet-code-not-private.png)
+
+Although the code is viewable by the public, only organization members or invited editors will be able to make changes.
+
+### Applet output
+
+If an applet is configured with "Require auth to run?" turned _off_, then anyone will be able to access your applet URL to run the applet and view its output. Run history URLs will also work for everyone with the link.
+
+![Applet output not private](public/images/require-auth-to-run-off.png)
+
+If the output of an applet is _not_ public, users will be asked to authenticate against Zipper before they can run an applet or any of its paths. The email address of the authenticated user will be included in the [context object](handler-functions#the-context-object) that is passed to the handler function.
+
+![Applet output private](public/images/require-auth-to-run-on.png)
