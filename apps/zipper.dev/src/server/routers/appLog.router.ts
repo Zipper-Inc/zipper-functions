@@ -1,7 +1,10 @@
 import { Prisma } from '@prisma/client';
 import { z } from 'zod';
 import { prisma } from '~/server/prisma';
-import { hasAppReadPermission } from '../utils/authz.utils';
+import {
+  hasAppEditPermission,
+  hasAppReadPermission,
+} from '../utils/authz.utils';
 import { createTRPCRouter, publicProcedure } from '../root';
 
 export const appLogRouter = createTRPCRouter({
@@ -15,7 +18,7 @@ export const appLogRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      await hasAppReadPermission({
+      await hasAppEditPermission({
         ctx,
         appId: input.appId,
       });
