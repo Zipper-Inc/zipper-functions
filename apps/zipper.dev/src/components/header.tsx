@@ -86,7 +86,7 @@ const Header: React.FC<HeaderProps> = ({
         paddingX={10}
         justifyContent="center"
       >
-        <HStack spacing={3} alignItems="start" alignContent={'center'}>
+        <HStack spacing={3}>
           <Box>
             {isLoaded && (
               <NextLink href="/">
@@ -136,8 +136,12 @@ const Header: React.FC<HeaderProps> = ({
                   ) : (
                     <HStack spacing={5}>
                       <ZipperLogo
-                        fill="currentColor"
-                        style={{ maxHeight: '20px' }}
+                        fill={BLUE}
+                        height={20}
+                        style={{
+                          marginLeft: '5px',
+                          width: '140px',
+                        }}
                       />
                       {showNav && (
                         <HStack spacing={1}>
@@ -150,8 +154,12 @@ const Header: React.FC<HeaderProps> = ({
                 </SignedIn>
                 <SignedOut>
                   <ZipperLogo
-                    fill="currentColor"
-                    style={{ maxHeight: '100%' }}
+                    fill={BLUE}
+                    height={20}
+                    style={{
+                      marginLeft: '5px',
+                      width: '140px',
+                    }}
                   />
                 </SignedOut>
               </NextLink>
