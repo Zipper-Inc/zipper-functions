@@ -1834,25 +1834,25 @@
   dependencies:
     "@jridgewell/trace-mapping" "0.3.9"
 
-"@deno/eszip@^0.40.0":
-  version "0.40.0"
-  resolved "https://registry.yarnpkg.com/@deno/eszip/-/eszip-0.40.0.tgz#96ffa56856f410138f4d0615ae6f58ee21323bed"
-  integrity sha512-uHiOd5KUwJjXFzwrc8914q1diVWg0wMHEVVYOarkNqkcbOKoKsy31bJ60eQiA2OiFOUVsinfGoAWWrQoAkqLHQ==
+"@deno/eszip@^0.54.0":
+  version "0.54.0"
+  resolved "https://registry.yarnpkg.com/@deno/eszip/-/eszip-0.54.0.tgz#a1de2d31ef5d455091c32ef5ab7cc1975c21a6dd"
+  integrity sha512-agPpJw7uxgumoIUjjM1jdBgXPobolDkgKTe6N1AZztU8H6X7dXMA5arFYMQGhyiRKhnTA3r59b6N5MPKGnT+3w==
   dependencies:
-    "@deno/shim-deno" "~0.7.0"
-    undici "^5.5.1"
+    "@deno/shim-deno" "~0.16.1"
+    undici "^5.21.0"
 
-"@deno/shim-deno-test@^0.3.2":
-  version "0.3.3"
-  resolved "https://registry.npmjs.org/@deno/shim-deno-test/-/shim-deno-test-0.3.3.tgz"
-  integrity sha512-Ge0Tnl7zZY0VvEfgsyLhjid8DzI1d0La0dgm+3m0/A8gZXgp5xwlyIyue5e4SCUuVB/3AH/0lun9LcJhhTwmbg==
+"@deno/shim-deno-test@^0.4.0":
+  version "0.4.0"
+  resolved "https://registry.yarnpkg.com/@deno/shim-deno-test/-/shim-deno-test-0.4.0.tgz#2ff56821854c51323c0cd08a4a56d668f84367ba"
+  integrity sha512-oYWcD7CpERZy/TXMTM9Tgh1HD/POHlbY9WpzmAk+5H8DohcxG415Qws8yLGlim3EaKBT2v3lJv01x4G0BosnaQ==
 
-"@deno/shim-deno@~0.7.0":
-  version "0.7.0"
-  resolved "https://registry.npmjs.org/@deno/shim-deno/-/shim-deno-0.7.0.tgz"
-  integrity sha512-KgSHusyPW54VZPnlyGPgY0fZXKyhp2btCLE6yAqIZOwVBh1MBcdoRCjTbjIdDfSfxnvnxBUCiYAz+A7VXOgLTw==
+"@deno/shim-deno@~0.16.1":
+  version "0.16.1"
+  resolved "https://registry.yarnpkg.com/@deno/shim-deno/-/shim-deno-0.16.1.tgz#f7d3925745c74337c83818de7d6435557c816c60"
+  integrity sha512-s9v0kzF5bm/o9TgdwvsraHx6QNllYrXXmKzgOG2lh4LFXnVMr2gpjK/c/ve6EflQn1MqImcWmVD8HAv5ahuuZQ==
   dependencies:
-    "@deno/shim-deno-test" "^0.3.2"
+    "@deno/shim-deno-test" "^0.4.0"
     which "^2.0.2"
 
 "@emotion/babel-plugin@^11.10.5":
@@ -2189,6 +2189,11 @@
     js-yaml "^3.13.1"
     minimatch "^3.0.4"
     strip-json-comments "^3.1.1"
+
+"@fastify/busboy@^2.0.0":
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/@fastify/busboy/-/busboy-2.0.0.tgz#f22824caff3ae506b18207bad4126dbc6ccdb6b8"
+  integrity sha512-JUFJad5lv7jxj926GPgymrWQxxjPYuJNiNjNMzqT+HiuP6Vl3dk5xzG+8sTX96np0ZAluvaMzPsjhHZ5rNuNQQ==
 
 "@fontsource/inter@^4.5.13", "@fontsource/inter@^4.5.15":
   version "4.5.15"
@@ -6291,7 +6296,7 @@ bullmq@^3.2.0:
     tslib "^2.0.0"
     uuid "^9.0.0"
 
-busboy@1.6.0, busboy@^1.6.0:
+busboy@1.6.0:
   version "1.6.0"
   resolved "https://registry.npmjs.org/busboy/-/busboy-1.6.0.tgz"
   integrity sha512-8SFQbg/0hQ9xy3UNTB0YEnsNBbWfhf7RtnzpL7TkBiTBRfrQ9Fxcnz7VJsleJpyp6rVLvXiuORqjlHi5q+PYuA==
@@ -14763,12 +14768,12 @@ undefsafe@^2.0.5:
   resolved "https://registry.npmjs.org/undefsafe/-/undefsafe-2.0.5.tgz"
   integrity sha512-WxONCrssBM8TSPRqN5EmsjVrsv4A8X12J4ArBiiayv3DyyG3ZlIg6yysuuSYdZsVz3TKcTg2fd//Ujd4CHV1iA==
 
-undici@^5.5.1:
-  version "5.16.0"
-  resolved "https://registry.npmjs.org/undici/-/undici-5.16.0.tgz"
-  integrity sha512-KWBOXNv6VX+oJQhchXieUznEmnJMqgXMbs0xxH2t8q/FUAWSJvOSr/rMaZKnX5RIVq7JDn0JbP4BOnKG2SGXLQ==
+undici@^5.21.0:
+  version "5.25.4"
+  resolved "https://registry.yarnpkg.com/undici/-/undici-5.25.4.tgz#7d8ef81d94f84cd384986271e5e5599b6dff4296"
+  integrity sha512-450yJxT29qKMf3aoudzFpIciqpx6Pji3hEWaXqXmanbXF58LTAGCKxcJjxMXWu3iG+Mudgo3ZUfDB6YDFd/dAw==
   dependencies:
-    busboy "^1.6.0"
+    "@fastify/busboy" "^2.0.0"
 
 unfetch@^3.1.1:
   version "3.1.2"

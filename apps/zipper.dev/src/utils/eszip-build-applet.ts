@@ -1,19 +1,20 @@
 import * as eszip from '@deno/eszip';
 import { App, Script } from '@prisma/client';
 import { generateIndexForFramework } from '@zipper/utils';
-import { getLogger } from './app-console';
-import { prettyLog, PRETTY_LOG_TOKENS } from './pretty-log';
-import { BuildCache } from './eszip-build-cache';
-import { getModule } from './eszip-utils';
-import { readFrameworkFile } from './read-file';
-import { getAppHashAndVersion } from './hashing';
 import { prisma } from '~/server/prisma';
 import { storeVersionESZip } from '~/server/utils/r2.utils';
+import { getLogger } from './app-console';
+import { BuildCache } from './eszip-build-cache';
 import {
   applyTsxHack,
+  getModule,
   isZipperImportUrl,
   TYPESCRIPT_CONTENT_HEADERS,
 } from './eszip-utils';
+import { getAppHashAndVersion } from './hashing';
+import { prettyLog, PRETTY_LOG_TOKENS } from './pretty-log';
+import { readFrameworkFile } from './read-file';
+import { rewriteImports } from './rewrite-imports';
 
 /**
  * @todo
@@ -78,7 +79,7 @@ export async function build({
       const script = tsScripts.find((s) => s.filename === filename);
 
       return {
-        ...applyTsxHack(specifier, script?.code),
+        ...applyTsxHack(specifier, rewriteImports(script?.code || '')),
         version,
       };
     }
@@ -122,7 +123,7 @@ export async function build({
       const mod = await getModule(specifier);
       return {
         ...mod,
-        ...applyTsxHack(specifier, mod?.content),
+        ...applyTsxHack(specifier, rewriteImports(mod?.content)),
       };
     }
 
