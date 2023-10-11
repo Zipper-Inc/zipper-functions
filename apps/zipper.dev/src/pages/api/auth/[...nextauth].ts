@@ -30,7 +30,7 @@ export function PrismaAdapter(p: PrismaClient): Adapter {
         try {
           forkAppletBySlug({
             appSlug: process.env.DEFAULT_APP_SLUG,
-            name: `Welcome to Zipper ${slug}`,
+            name: `Welcome ${slug}`,
             userId: user.id,
             connectToParent: false,
           });
