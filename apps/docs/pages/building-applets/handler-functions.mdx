@@ -1,23 +1,21 @@
 # Handler Functions
 
-An exported `handler` turns a file into a path handler. It's the key to capturing inputs and its output gets turned into your web UI.
-
-Handler functions receives two parameters:
-
-1. The inputs object that is used to generate a form to collect user information.
-2. A `context` object that contains information about the current user, the request, and the response.
+In any of your applet files, exporting a function called `handler` turns that file into a path for your applet. This handler function is the key to capturing inputs, and Zipper uses it to generate your web UI. The handler function receives two arguments: an inputs object and a context object.
 
 ```typescript
-type Inputs = {
-  salutation: string;
-};
-
-export async function handler(inputs: Inputs, context: Zipper.HandlerContext) {
-  return `Hello, ${inputs.salutation}!`;
-}
+export async function handler(
+  inputs: Inputs,
+  context: Zipper.HandlerContext
+) { ... }
 ```
 
-The context object has the following shape:
+## The inputs object
+
+The inputs object that is used to generate a form to collect user information. For more details, see the [Accepting Inputs](accepting-inputs) page.
+
+## The context object
+
+The context object contains information about the current user, the request, and the response. It has the following shape:
 
 ```typescript
 export type HandlerContext = {

@@ -1,19 +1,21 @@
 # Routing
 
-Every Zipper applet has a built-in router that maps paths to their corresponding handler functions.
+Every Zipper applet has a built-in router that maps a path to a corresponding handler function.
 
-### Defining Routes
+## Index route (root path)
 
-Adding routes to a Zipper applet is simple. All you need to do is create a new file and export a function called `handler` from it. The route will be named after the file name. For example, if you create a file called `set.ts` and export a function called `handler` from it, your applet will have a route called `/set`.
+Every Zipper applet must have a `main.ts` file that exports a `handler` function. This function will be called when the applet is invoked at the root URL, without a path.
 
-If a file does not export a handler function, it will not be added to the router. This is useful for creating utility files that can be imported into other files.
+## Adding new paths
 
-### Index Route
+Adding a new path to a Zipper applet is simple. All you need to do is create a new file in your applet which exports a function called `handler`. The path will be named after the file name. For example, if you create a file called `set.ts` which exports a function called `handler`, then your applet will have a `/set` path.
 
-Every Zipper applet must have a `main.ts` file that exports a `handler` function. This function will be called when the applet is invoked without a path.
+If a file does not export a handler function, it will not be added to the router. This is useful for creating library files that can be imported into other files.
 
-### Route Methods
+Note that Zipper already uses the `/run`, `/api`, and `/raw` paths (see [Basic Concepts](/introduction/basic-concepts#running-your-applet)). Avoid naming files in your project with these names, as they will be ignored.
 
-Every route can accept GET and POST HTTP request methods. POST requests will return a simple JSON reponse while GET requests will return a rendered HTML page.
+## Route methods
 
-If you'd like to modify the behavior of your handler function based on the HTTP method, you can inspect the request object that's passed to the handler function via the context object.
+Every route can accept `GET` and `POST` HTTP request methods. See [Basic Concepts](/introduction/basic-concepts#running-your-applet) for request and response specifications.
+
+If you'd like to modify the behavior of your handler function based on the HTTP method, you can inspect the request object that is part of the [context object](handler-functions#the-context-object) passed to the handler.

@@ -1,36 +1,32 @@
 # Interactivity
 
-Zipper allows you to add interactive elements to your output that can be used to trigger other actions within your app.
+Zipper lets you add interactive elements to your output. These elements can then be used to trigger other actions within your applet.
 
-### **Actions**
+## Actions
 
-Actions are interactive elements that can be included in your output. We render Actions as either buttons or dropdowns.
+Actions are interactive elements that can be included in your output. Zipper renders Actions either as **buttons** or **dropdowns**.
 
-When clicked, the Action will trigger a handler function within the app to be run. The output of this action can optionally be displayed to the user by either replacing the existing output, opening the new output below the existing output, or opening the new output in a modal.
+![Action: Button](public/images/action-button.png)
 
-Actions are described as JSON that is included in the output of your handler function. We provide a handy method (`Zipper.Action.create()`) that creates the JSON for you.
+![Action: Dropdown](public/images/action-dropdown.png)
 
-**Buttons**
+When clicked, the Action will trigger a handler function within the app to be run. There are several different approach for how to display the output of this Action (see [showAs](#showAs)).
 
-The `Zipper.Action.create` method is called with the following parameters:
+Actions should be described as JSON in the output of your handler function. Zipper provides a method that generates this JSON for you: `Zipper.Action.create()`.
 
-![Screenshot 2023-06-02 at 1.54.51 PM.png](public/images/Screenshot_2023-06-02_at_1.54.51_PM.png)
+## Calling `Zipper.Action.create`
 
-```tsx
+To add either a button or a dropdown, call the `Zipper.Action.create` method with the following parameters:
+
+```typescript
 {
   /**
-  * Tell Zipper that you want to render a button
+  * Tell Zipper if you want to render a button or a dropdown
   */
-	actionType: 'button'
+	actionType: 'button' | 'dropdown'
 
   /**
-  * Determine how the UI should be updated after the action has run:
-  * - replace_all: replaces the current output with the result of the action
-  * - expanded: displays the result of the action in the expanded section
-  *   below the main output
-  * - modal: displays the output of the action in a modal
-  * - refresh: runs the action and then re-runs the handler that generated the
-  *   original content using the original inputs
+  * Determine how the UI should be updated after the action has run.
   */
 	showAs: 'replace_all' | 'expanded' | 'modal' | 'refresh',
 
@@ -45,89 +41,41 @@ The `Zipper.Action.create` method is called with the following parameters:
 	inputs: Record<string, any>
 
   /**
+  * Run automatically or require user to click Run.
+  */
+	run: boolean,
+
+  /** FOR BUTTONS ONLY
+  *
   * The text of the button
   */
 	text: string,
 
-  /**
-  * Whether the Action should run the handler with the provided inputs
-  * automatically or if it should prefill the inputs form and let the user
-  * hit run themselves
-  */
-	run: boolean,
-}
-```
-
-The output of the method should be included in the return value of the handler function.
-
-**Dropdowns**
-
-![Screenshot 2023-06-02 at 1.59.27 PM.png](public/images/Screenshot_2023-06-02_at_1.59.27_PM.png)
-
-The `Zipper.Action.create` method is called with the following parameters:
-
-```tsx
-{
-  /**
-  * Tell Zipper that you want to render a button
-  */
-	actionType: 'dropdown'
-
-  /**
-  * Determine how the UI should be updated after the action has run:
-  * - replace_all: replaces the current output with the result of the action
-  * - expanded: displays the result of the action in the expanded section
-  *   below the main output
-  * - modal: displays the output of the action in a modal
-  * - refresh: runs the action and then re-runs the handler that generated the
-  *   original content using the original inputs
-  */
-	showAs: 'replace_all' | 'expanded' | 'modal' | 'refresh',
-
-  /**
-  * The filename of the handler you want to run
-  */
-	path: string,
-
-  /**
+  /** FOR DROPDOWNS ONLY
+  *
   * Describes the options that are available in the dropdown.
   * The key of the record should match the input value you want to override
   */
   options: Record<string, { value: string, label: string | number | boolean }[]>,
-
-  /**
-  * A collection of the inputs you're passing to the path.
-  */
-	inputs: Record<string, any>
-
-  /**
-  * The text of the button
-  */
-	text: string,
-
-  /**
-  * Whether the Action should run the handler with the provided inputs
-  * automatically or if it should prefill the inputs form and let the user
-  * hit run themselves
-  */
-	run: boolean,
 }
 ```
 
-The output of the method should be included in the return value of the handler function.
+Include the output of this `Zipper.Action.create` method call in the return value of the handler function.
 
-#### Show As
+The [Interactive Applet](/introduction/examples/interactive-applets#hook-it-all-up) shows an example of how to use button Actions.
 
-The `showAs` property determines how the UI should be updated after the action has run:
+## `showAs`
 
-- **`replace_all`**: The action replaces the current output with the result of the action. This can only be used when `run: true` (i.e. there has to be output from the function that can be used to replace the existing output). This is useful for actions that drill into data.
+The `showAs` property determines how the UI should be updated after the Action has run:
 
-- **`expanded`**: The action will display the result of the action in the expanded section below the main output. This is useful for peeking into data.
+- `replace_all`: This approach **replaces the current output with the result of the Action**. This can only be used when `run: true` (because there must be output from the function that can be used to replace the existing output). This option useful for actions that drill into data.
 
-- **`modal`**: This action displays the output of the action in a modal. If `run: false` the background output will be automatically refreshed when the modal is closed.
+- `expanded`: This approach **displays the result of the Action in the expanded section below the main output**. This is useful for peeking into data.
 
-- **`refresh`**: runs the action and then re-runs the handler that generated the original content using the original inputs. This is useful for actions that update data.
+- `modal`: This approach **displays the output of the Action in a modal**. If `run: false`, then the background output will be automatically refreshed when the modal is closed.
 
-#### Run
+- `refresh`: This approach **runs the Action and then re-runs the handler that generated the original content using the original inputs**. This is useful for actions that update data.
 
-The `run` property determines whether the Action should run the handler with the provided inputs automatically or if it should prefill the inputs form and let the user hit run themselves.
+## `run`
+
+The `run` property specifies whether the Action should run the handler with the provided inputs automatically or if it should prefill the inputs form and require the user to click **▷ Run**.

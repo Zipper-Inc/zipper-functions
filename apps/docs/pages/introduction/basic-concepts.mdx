@@ -2,94 +2,139 @@
 
 ## Applets
 
-Each Applet is made up of **Files** that can import and export Typescript modules, just like any other Typescript project. These files make up functionality for an app that is deployed on our 'Run' domain, called `zipper.run`.
+An applet is made up of files that can import and export TypeScript modules, just like any other TypeScript project. Each applet is deployed to a working URL on Zipper's `run` domain: `zipper.run`.
 
-An applet requires a `main.ts` file that exports a function named `handler`. The 'Handler Function' defines the behavior of the root URL of the Applet.
+Every applet requires a `main.ts` file that exports a function named `handler`. This handler function defines the behavior of the applet at its URL.
 
-![Zipper Playground](public/images/zipper-playground.png)
+![Greeting Code](public/images/greeting-code-main.png)
 
-Since the applet above is named 'greeting', the `handler` in `main.ts` would be responsible for the behavior of `https://greeting.zipper.run`
+Since the applet above is named "greeting", the handler function in `main.ts` would be responsible for the behavior of `https://greeting.zipper.run`.
 
-![Screenshot 2023-05-22 at 8.32.16 PM.png](public/images/Screenshot_2023-05-22_at_8.32.16_PM.png)
+![Greeting Applet Run](public/images/greeting-applet-run.png)
 
-When running it by visiting the **Run URL** and clicking 'Run', it should output the following results:
+When you click **▷ Run**, the applet outputs the following results:
 
-> Hello, world!
+![Greeting Applet Output](public/images/greeting-applet-output.png)
 
-You can also `POST` to the Run URL:
+## Handler function
 
-```bash
-POST https://greeting.zipper.run
-
-HTTP 200 OK
-
-Hello, world!
-```
-
-**Handler functions can just contain the business logic of your task, and we’ll handle all the inputs and outputs.**
-
-Let's go a little deeper on what else you can do with these functions.
-
-## Handler Function
+Handler functions only need to deal with the business logic of your task. Zipper will handle all the inputs and outputs.
 
 ### Inputs
 
-A handler function can have optional arguments that you can pass through it. These can be anything: strings, booleans, arrays, and objects just as long as it's serializable as JSON. This is called the 'Inputs' object as is passed as a parameterized object in single argument to your handler.
+Your applet can take inputs if you write your handler function to accept arguments. Based on those argument types, Zipper will generate a UI form so that applet users can supply the input values. For example, let's modify the handler function in applet to accept a string called `name`.
 
-Let’s start by modifying our `greeting` applet by letting you change the hello string and who you are saying hello to. Zipper uses the power of Typescript to help generate UI for all your inputs. Let's pass a string `name` to our function.
+![Greeting Applet Code with Input](public/images/greeting-applet-code-with-inputs.png)
 
-![We generate UI for your function based on the the types in your Input. Check out the Input Types section for more information.](public/images/playground-inputs.png)
+The updated applet now includes a form field for users to input a name.
 
-We generate UI for your function based on the the types in your Input. Check out the Input Types section for more information.
+![Greeting Applet Run with Input](public/images/greeting-applet-run-with-input.png)
 
-You can enter your inputs through the generated UI, by POSTing to your Run URL the entire inputs object, or prefill your inputs UI by using the query parameters. In this example,
-
-- visiting `[https://greeting.zipper.run](https://greeting.zipper.run)/?name=Earth`
-- sending a `POST` to `https://greeting.zipper.run` with body `{ "name: "Earth" }`
-- or manually filling out “Earth” in the input and clicking “Run”
-
-Should all do the same thing and output:
-
-> Hello, Earth!
+For more details on how to work with inputs, see the [Accepting Inputs](/building-applets/accepting-inputs) section.
 
 ### Output
 
-You can output more than just strings: objects, arrays, arrays of objets, even HTML. Zipper makes the output pretty and human readable for you, and even includes some basic components to make your Applet more powerful.
+Your handler function can output more than just strings—objects, arrays, arrays of objects, and even HTML. Zipper formats the output to be pretty and human readable, and it even includes some basic pre-built UI components to make your applet more powerful. For more on working with outputs, see the [Customizing Output](/building-applets/customizing-output) section.
 
-For more on Output, see the Output section.
+### Context
 
-### Handler Context
+Through the handler's `context` object, you have access to special information about the applet or the specific run. This object is passed as the _second_ argument to the handler function. To make it easy and safe to see what you might have in the context argument, you can use the `Zipper.HandlerContext` type.
 
-You can also get some special information about the applet or the specific run through the 'Handler Context' object, which is passed as the _second_ argument to a Handler Function. To make it easy and safe to see what you might have on the context argument, you can use the `Zipper.HandlerContext` type.
+For example, let’s say you wanted to see if someone is signed into Zipper when they run your applet, and you want to use their email instead of the `name` input they passed. In this case, you would look for `context.userInfo` for contextual information about the user running the applet.
 
-Let’s say you wanted to see if someone is signed into Zipper and use their email instead of the `name` input they passed.
+![Greeting Applet Code with Context](public/images/greeting-applet-code-with-context.png)
 
-![Screenshot 2023-05-22 at 5.03.35 PM.png](public/images/Screenshot_2023-05-22_at_5.03.35_PM.png)
+If you were logged in as "Bruce" from "Wayne Co", then your output might look like this:
 
-If I’m logged in as 'Bruce' from 'Wayne Co' then my output might be something like:
+![Greeting Applet Run with Context](public/images/greeting-applet-run-with-context.png)
 
-> Hello, bruce@wayne.co!
+## Running your applet
+
+There are multiple ways that you can run your applet and supply your inputs:
+
+### Within the browser
+
+- Visit the applet's URL in your browser. Manually supply the inputs, and then click **▷ Run**.
+- Visit the applet's URL in your browser with query parameters appended: `https://greeting.zipper.run/?name=Earth`. This will pre-fill your form, but it will not run your applet.
+
+#### To `/run` (also known as the "run URL")
+
+Your applet's "run URL" runs the applet in your browser immediately, without requiring the user to click **▷ Run**. You can supply inputs through query parameters.
+
+- Visit the applet's URL in your browser with `/run` and query parameters appended: `https://greeting.zipper.run/run?name=Earth`.
+
+### API calls
+
+#### To `/api`
+
+- Send a `GET` request to the applet's URL with `/api` and query parameters appended: `curl -X GET https://greeting.zipper.run/api?name=Earth`
+- Send a `POST` request with a JSON payload to the applet's URL with `/api` appended: `curl -X POST --header "Content-type:application/json" --data '{ "name": "Earth" }' https://greeting.zipper.run/api` 
+
+The response to these requests will be a JSON object that includes applet run metadata. The applet output can be found in the response object's `data` field.
+
+Example:
+
+```bash
+$ curl -X POST \
+       --header "Content-type:application/json" \
+       --data '{ "name":"Earth"}' \
+       https://greeting.zipper.run/api
+
+{
+  "ok": true,
+  "data": "Hello, Earth!",
+  "__meta": {
+    "request": {
+      "executionId": "5c74d40c-b4df-41ae-900c-3eaebb9a1d65",
+      "server": "deno/aws-us-west-1",
+      "timing": "system;dur=0,deployment;dur=1"
+    }
+  }
+}
+```
+
+#### To `/raw`
+
+- Send a `GET` request to the applet's URL with `/raw` and query parameters appended: `curl -X GET https://greeting.zipper.run/raw?name=Earth`
+- Send a `POST` request with a JSON payload to the applet's URL with `/raw` appended: `curl -X POST --header "Content-type:application/json" --data '{ "name": "Earth" }' https://greeting.zipper.run/raw` 
+
+The response to these requests will the actual function response data (without any applet run metadata).
+
+Example:
+
+```
+$ curl -X POST \
+       --header "Content-type:application/json" \
+       --data '{ "name":"Earth"}' \
+       https://greeting.zipper.run/raw
+
+Hello, Earth!
+```
+
+For more detailed information on working with HTTP requests, see the [API Endpoints](/running-an-applet/api-endpoints) section.
 
 ## Paths
 
-`main.ts` is not the only file that can export a Handler Function. You can create a path for your applet by adding a new file and exporting a `handler` there. So let’s say you wanted to create a new path in Greeting at `https://greeting.zipper.run/salutations`, you would create a `salutations.ts` (the path will match everything before the `.ts` in the filename) and export a `handler` function.
+`main.ts` is not the only file in your applet that can export a handler function. You can create other paths for your applet by adding new files that export their own handler functions. For example, let's say that you wanted to create a new path at `https://greeting.zipper.run/salutations`. To do this, create a file called `salutations.ts` file (the path will match everything before the `.ts` in the filename) that exports a function name `handler`.
 
-![Screenshot 2023-05-22 at 5.15.39 PM.png](public/images/Screenshot_2023-05-22_at_5.15.39_PM.png)
+![Salutations Path Code](public/images/paths-salutations-code.png)
 
-This path can be run independently so you can test each function by itself.
+Paths can be run independently, so you can test each function individually.
+
+### Note on path names
+
+Because of Zipper's special usage of the `/run`, `/api`, and `/raw` paths (see [Running your applet](#running-your-applet)), avoid naming files in your project with these names, as they will be ignored.
 
 ## Library files
 
-If you create a file, you do not have to export a handler. This will make it a 'Library' file, so that you can share code throughout your applet like a normal Typescript module.
+Files you create are not required to export a handler function. This will make it a library file, which you can use to share code throughout your applet like a typical TypeScript module.
 
-## Handler Config
+## Config
 
-You can also export a config file that will control behavior when visiting the 'Run URL'. Note, it doesn’t change how POSTing and API calls work. So for example, if you’d like my Handler Function to run when a user loads the page (instead of having to input) and define a default value, you can do it like this, you can do it like so:
+Your files can also export a `config` object that customizes the in-browser run of your applet. For example, if you’d like your handler function to run when a user loads the page (instead of requiring them to supply inputs and click **▷ Run**), you would do this:
 
-![Screenshot 2023-05-22 at 8.47.13 PM.png](public/images/Screenshot_2023-05-22_at_8.47.13_PM.png)
+![Config for immediate run](public/images/code-with-config.png)
 
-Since it’s set to `run` and we’ve provided a `defaultValue` for `name`, a user will not have to click run when hitting the Run URL and instead get the output of `handler`:
+Since it’s set to `run: true` and we’ve provided a `defaultValue` for `name`, the applet will run immediately upon visit.
 
-> Hello, world!
-
-See more in the [Config](https://www.notion.so/Zipper-Documentation-f1c584a926c74fbfa70850f2a461c7d4?pvs=21) section.
+For more details, see the [Config](/building-applets/config) section.

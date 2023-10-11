@@ -1,29 +1,68 @@
-# **API Endpoints & Personal Access Tokens**
+# API Endpoints and App Access Tokens
 
 All applets have the following API endpoints:
 
-- `[app-slug].zipper.run/[path]/api/json` - returns the output of the applet as JSON
-- `[app-slug].zipper.run/[path]/api/yaml` - returns the output of the applet as YAML
-- `[app-slug].zipper.run/[path]/raw` - returns the output of the applet without any changes
+* `[app-slug].zipper.run/[path]/api/json`: returns applet run metadata, along with the output, as JSON
+* `[app-slug].zipper.run/[path]/api/yaml`: returns applet run metadata, along with the output, as YAML
+* `[app-slug].zipper.run/[path]/raw`: returns only the output of the applet without any changes
 
 ```bash
-curl -X POST http://greeting.zipper.run/api/json \
-     -H "Content-Type: application/json" \
-     -d '{"name": "internet"}'**
+$ curl -X POST \
+       --header "Content-type:application/json" \
+       --data '{ "name":"Earth"}' \
+       https://greeting.zipper.run/api/json
 
 {
   "ok": true,
-  "data": "Hello, internet!",
+  "data": "Hello, Earth!",
   "__meta": {
     "request": {
-      "executionId": "a49ae29e-8623-4192-b8ec-7eae4ba589b2",
+      "executionId": "5c74d40c-b4df-41ae-900c-3eaebb9a1d65",
       "server": "deno/aws-us-west-1",
-      "timing": "system;dur=0,deployment;dur=0"
+      "timing": "system;dur=0,deployment;dur=1"
     }
   }
 }
 ```
 
-Zipper supports GET and POST requests to these endpoints. For GET requests, inputs can be sent through as query params. For POST requests, inputs should be provided as JSON in the body of the request.
+Zipper supports `GET` and `POST` requests to these endpoints. For `GET` requests, inputs can be supplied as query parameters. For `POST` requests, inputs should be provided as JSON in the body of the request.
 
-If the output of your applet is not public (i.e. users have to be authed into Zipper before they can run the applet), you have to provide a Personal Applet Access Token in the `Authorization` header as a bearer token. Personal Applet Access Tokens can be generated in the settings of an applet and they are scoped to a single applet and are tied to a particular user.
+## Personal access tokens
+
+If the output of your applet is not public (meaning users must be authenticated with Zipper before they can run the applet), then you need to provide an App Access Token as a bearer token in the `Authorization` header of your request. To generate an App Access Token, go to your applet settings and click **Generate Token**.
+
+![Your Access Tokens](public/images/your-access-tokens.png)
+
+Provide a description for your token, and then copy the displayed token value.
+
+Tokens are scoped to a single applet and are tied to a particular user.
+
+### Example without token
+```bash
+$ curl -X GET \
+       https://greeting.zipper.run/api/json?name=earth
+
+{
+  "ok":false,
+  "error": "{\"ok\":false,\"status\":401,\"error\":\"UNAUTHORIZED\",\"errorClass\":\"Boot\"}"
+}
+```
+
+### Example with token
+```bash
+$ curl -X GET \
+       --header "Authorization: Bearer zaat.c1507063e2094d52aa639.0d62966c224949eabda56" \
+       https://greetingz.zipper.run/api/json?name=earth
+
+{
+  "ok": true,
+  "data": "Hello, earth!",
+  "__meta": {
+    "request": {
+      "executionId": "a8604bc4-4f2c-4a08-b5ef-8b802bc450c0",
+      "server": "deno/aws-us-west-1",
+      "timing": "system;dur=173,deployment;dur=15"
+    }
+  }
+}
+```
