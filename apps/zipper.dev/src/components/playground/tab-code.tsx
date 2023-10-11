@@ -201,6 +201,7 @@ export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
         >
           <AppEditSidebar
             appSlug={app.slug}
+            canUserEdit={app.canUserEdit}
             isMarkdownEditable={isMarkdownEditable}
             setIsMarkdownEditable={setIsMarkdownEditable}
           />

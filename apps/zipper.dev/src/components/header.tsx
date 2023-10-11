@@ -10,10 +10,11 @@ import {
   useDisclosure,
   Text,
   Icon,
+  Heading,
 } from '@chakra-ui/react';
 import { useRouter } from 'next/router';
 import NextLink from 'next/link';
-import { ZipperLogo, ZipperSymbol } from '@zipper/ui';
+import { BLUE, ZipperLogo, ZipperSymbol } from '@zipper/ui';
 import OrganizationSwitcher from './auth/organizationSwitcher';
 import { MobileMenu } from './header-mobile-menu';
 import { useUser } from '~/hooks/use-user';
@@ -86,15 +87,52 @@ const Header: React.FC<HeaderProps> = ({
         justifyContent="center"
       >
         <HStack spacing={3} alignItems="start" alignContent={'center'}>
-          <Box my={3} height={4}>
+          <Box>
             {isLoaded && (
               <NextLink href="/">
                 <SignedIn>
                   {showNav && showOrgSwitcher ? (
-                    <ZipperSymbol
-                      fill="currentColor"
-                      style={{ maxHeight: '100%' }}
-                    />
+                    <HStack spacing={4}>
+                      <HStack spacing={2}>
+                        <ZipperSymbol
+                          fill={BLUE}
+                          middle={{ fill: BLUE }}
+                          style={{
+                            maxHeight: '100%',
+                            width: '20px',
+                            marginLeft: '5px',
+                          }}
+                        />
+
+                        <Box
+                          bgColor={'blue.50'}
+                          alignItems={'center'}
+                          display={'flex'}
+                          px={2}
+                          py={1}
+                        >
+                          <Text
+                            fontSize={'x-small'}
+                            textTransform="uppercase"
+                            fontWeight={'bold'}
+                            color={'indigo.600'}
+                            cursor="default"
+                          >
+                            Beta
+                          </Text>
+                        </Box>
+                      </HStack>
+
+                      <Heading
+                        size="md"
+                        overflow="auto"
+                        whiteSpace="nowrap"
+                        fontWeight="medium"
+                        color="fg.400"
+                      >
+                        /
+                      </Heading>
+                    </HStack>
                   ) : (
                     <HStack spacing={5}>
                       <ZipperLogo

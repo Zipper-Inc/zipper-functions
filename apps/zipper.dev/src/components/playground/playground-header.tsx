@@ -70,7 +70,6 @@ const getDefaultCreateAppFormValues = () => ({
 export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { user, isLoaded } = useUser();
-  const [editSlug, setEditSlug] = useState(false);
 
   const [isShareModalOpen, setShareModalOpen] = useState(false);
 
@@ -168,8 +167,8 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
             <SignedOut>
               <ZipperLogo
                 fill={BLUE}
+                height={20}
                 style={{
-                  maxHeight: '100%',
                   marginLeft: '5px',
                   width: '140px',
                 }}
