@@ -123,7 +123,7 @@ export async function build({
       const mod = await getModule(specifier);
       return {
         ...mod,
-        ...applyTsxHack(specifier, mod?.content),
+        ...applyTsxHack(specifier, rewriteImports(mod?.content)),
       };
     }
 
