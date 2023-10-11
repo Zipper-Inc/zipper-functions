@@ -6,7 +6,7 @@ import { getSourceFileFromCode, isExternalImport } from './parse-code';
 const DEFAULT_NPM_CDN = 'https://esm.sh';
 const withNpmCdn = (specifier: string) => `${DEFAULT_NPM_CDN}/${specifier}`;
 const LOCALHOST_REGEX =
-  /^(?:https?:\/\/)(?:localhost|127\.0\.0\.1|10\.(?:\d{1,3}\.){2}\d{1,3}|172\.(?:1[6-9]|2\d|3[01])\.(?:\d{1,3}\.){2}\d{1,3}|192\.168\.(?:\d{1,3}\.){1}\d{1,3}|::1)/;
+  /^(?:https?:\/\/)(?:localhost|127\.0\.0\.1|10\.(?:\d{1,3}\.){2}\d{1,3}|172\.(?:1[6-9]|2\d|3[01])\.(?:\d{1,3}\.){2}\d{1,3}|192\.168\.(?:\d{1,3}\.){1}\d{1,3}|::1)(?:\:\d+)?/;
 
 export enum RewriteTo {
   None,
