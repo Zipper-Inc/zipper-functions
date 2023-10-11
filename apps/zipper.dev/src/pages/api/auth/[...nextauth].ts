@@ -8,13 +8,15 @@ import { prisma } from '~/server/prisma';
 import { PrismaClient } from '@prisma/client';
 import { Adapter, AdapterAccount } from 'next-auth/adapters';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime';
-import { ResourceOwnerType, UserRole } from '@zipper/types';
+import { ResourceOwnerType } from '@zipper/types';
 import { MagicLinkEmail } from '~/emails';
 import fetch from 'node-fetch';
 import { createUserSlug } from '~/utils/create-user-slug';
 import { resend } from '~/server/resend';
 import crypto from 'crypto';
 import { trackEvent } from '~/utils/api-analytics';
+import { forkAppletBySlug } from '~/server/routers/app.router';
+import { captureException } from '@sentry/nextjs';
 
 export function PrismaAdapter(p: PrismaClient): Adapter {
   return {
@@ -23,6 +25,19 @@ export function PrismaAdapter(p: PrismaClient): Adapter {
       const user = await p.user.create({
         data: { ...data, slug },
       });
+
+      if (process.env.DEFAULT_APP_SLUG) {
+        try {
+          forkAppletBySlug({
+            appSlug: process.env.DEFAULT_APP_SLUG,
+            name: `Welcome ${slug}`,
+            userId: user.id,
+            connectToParent: false,
+          });
+        } catch (e) {
+          captureException(e);
+        }
+      }
 
       if (shouldCreateResourceOwnerSlug) {
         // create a resource owner slug for the user - this makes sure that slugs
@@ -34,41 +49,6 @@ export function PrismaAdapter(p: PrismaClient): Adapter {
             resourceOwnerId: user.id,
           },
         });
-      }
-
-      // add the user to the default organization if one is set in the allow list
-      // NOTE: this doesn't handle blocking users from signing up - that happens in the signIn callback
-      const domain = data.email.split('@')[1];
-      if (domain) {
-        const allowListIdentifier = await p.allowListIdentifier.findFirst({
-          where: { value: { in: [data.email, domain] } },
-        });
-
-        if (allowListIdentifier && allowListIdentifier.defaultOrganizationId) {
-          const existingMemberCount = await p.organizationMembership.count({
-            where: {
-              organizationId: allowListIdentifier?.defaultOrganizationId,
-            },
-          });
-
-          const role =
-            existingMemberCount === 0 ? UserRole.Admin : UserRole.Member;
-
-          await p.organizationMembership.upsert({
-            where: {
-              organizationId_userId: {
-                organizationId: allowListIdentifier.defaultOrganizationId,
-                userId: user.id,
-              },
-            },
-            create: {
-              organizationId: allowListIdentifier.defaultOrganizationId,
-              userId: user.id,
-              role,
-            },
-            update: {},
-          });
-        }
       }
 
       return user;

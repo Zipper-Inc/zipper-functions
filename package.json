@@ -7,7 +7,7 @@
     "packages/*"
   ],
   "prisma": {
-    "seed": "yarn dotenv -c .env.local ts-node apps/zipper.dev/prisma/seed.ts"
+    "seed": "yarn dotenv -c .env.local yarn swc-node apps/zipper.dev/prisma/seed.ts"
   },
   "engines": {
     "node": ">=18.14.0"
@@ -16,19 +16,21 @@
     "build": "yarn install; yarn env:link; turbo run build",
     "dev": "yarn install; yarn env:update; yarn env:link; yarn migrate; turbo run dev --parallel",
     "env:link": "sh ./bin/link-env-files.sh",
-    "env:update": "yarn dotenv -c .env.local ts-node ./bin/ts/env-update.ts",
+    "env:update": "yarn dotenv -c .env.local yarn swc-node ./bin/ts/env-update.ts",
     "get-started": "yarn install; yarn env:update; yarn env:link; yarn migrate; yarn seed",
     "lint": "turbo run lint",
     "test": "turbo run test",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "db-nuke": "docker-compose down --volumes --remove-orphans",
-    "ts-node": "ts-node -T",
+    "swc-node": "node -r @swc-node/register",
     "migrate": "yarn workspace zipper.dev db-migrate-dev",
     "seed": "yarn workspace zipper.dev db-seed",
     "studio": "yarn workspace zipper.dev prisma studio"
   },
   "dependencies": {},
   "devDependencies": {
+    "@swc-node/register": "^1.6.8",
+    "@swc/core": "^1.3.92",
     "@types/signale": "^1.4.4",
     "dotenv": "^16.0.3",
     "dotenv-cli": "^7.2.1",

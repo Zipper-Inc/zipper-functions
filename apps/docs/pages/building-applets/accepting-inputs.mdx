@@ -1,8 +1,8 @@
 # Accepting Inputs
 
-A handler function can have optional arguments that you can pass through it. These can be anything: strings, booleans, arrays, and objects just as long as it's serializable as JSON (with the exception of Dates which are handled specially for you). This is called the 'Inputs' object as is passed as a parameterized object in single argument to your handler.
+The first argument to your handler function is the inputs object. It is passed as a parameterized object to your handler, and it is optional. The inputs object can contain anything—strings, booleans, arrays, and even other objects—as long as it's serializable as JSON (which the exception of Dates, which Zipper handles specially for you).
 
-Let’s create a simple `greeting` applet accepts a string for who you are saying hello to. Zipper uses the power of Typescript to help generate UI for all your inputs.
+Let’s look at a simple "hello world" applet that accepts a string for who you are greeting.
 
 ```typescript
 export async function handler(inputs: { name: string }) {
@@ -10,7 +10,7 @@ export async function handler(inputs: { name: string }) {
 }
 ```
 
-Alternatively, you can define your inputs as a type and pass it to the `handler` function.
+Alternatively, you can define your inputs as a type (which is typcially named `Inputs` by convention) and pass it to the handler function.
 
 ```typescript
 type Inputs = {
@@ -22,27 +22,19 @@ export async function handler(inputs: Inputs) {
 }
 ```
 
-![We generate UI for your function based on the the types in your Input. Check out the Input Types section for more information.](public/images/playground-inputs.png)
+Based on type definitions through TypeScript, Zipper will generate a UI form so that your applet users can supply input values.
 
-We generate UI for your function based on the the types in your Input. Check out the Input Types section for more information.
+![Zipper generates the UI form](public/images/greeting-applet-run-with-input.png)
 
-You can enter your inputs through the generated UI, by POSTing to your Run URL the entire inputs object, or prefill your inputs UI by using the query parameters. In this example,
+When you run your applet, you can supply your inputs manually in the browser, through query parameters, or as a data payload in a `POST` request. See [Basic Concepts](/introduction/basic-concepts#running-your-applet) for details.
 
-- visiting `[https://greeting.zipper.run](https://greeting.zipper.run)/?name=Earth`
-- sending a `POST` to `https://greeting.zipper.run` with body `{ "name: "Earth" }`
-- or manually filling out “Earth” in the input and clicking “Run”
+## Input types
 
-Should all do the same thing and output:
-
-> Hello, Earth!
-
-## Input Types
-
-When you type your inputs object, we can automatically generate form UI for you based on the inputs to your `handler` function. Here are the input types we support:
+Zipper supports several different input types.
 
 ### `string`
 
-```tsx
+```typescript
 type Inputs = {
   name: string;
 };
@@ -52,7 +44,7 @@ type Inputs = {
 
 ### `Date`
 
-```tsx
+```typescript
 type Inputs = {
   date: Date;
 };
@@ -62,7 +54,7 @@ type Inputs = {
 
 ### `boolean`
 
-```tsx
+```typescript
 type Inputs = {
   bool: boolean;
 };
@@ -72,7 +64,7 @@ type Inputs = {
 
 ### `number`
 
-```tsx
+```typescript
 type Inputs = {
   numeric: number;
 };
@@ -82,7 +74,7 @@ type Inputs = {
 
 ### `enum`
 
-```tsx
+```typescript
 enum Directions {
   UP = 'up',
   DOWN = 'down',
@@ -97,9 +89,9 @@ type Inputs = {
 
 ### `array`, `object`, or `any`
 
-If you use a more generic type like `array`, `object`, or `any`, or a type Zipper doesn’t know yet, we will default to a generic text input that can take JSON.
+If you use a more generic type like `array`, `object`, or `any` (or a type Zipper doesn’t know yet), then Zipper will default to a generic text input that can take JSON.
 
-```tsx
+```typescript
 type Inputs = {
   anyType: any;
 };
