@@ -286,7 +286,7 @@ export function Dashboard() {
                     <CreateAppForm onClose={onClose} />
                   </VStack>
                 ) : (
-                  <VStack flex={3}>
+                  <VStack flex={3} w="full">
                     <HStack w="full" spacing={4} pb="4">
                       <Input
                         placeholder="Search applets (name, slug or description)"

@@ -34,8 +34,8 @@ export const defaults: Components & { heading: Components['h1'] } = {
     return (
       <Heading
         as="h1"
-        size="xl"
-        color="fg.900"
+        size="lg"
+        color="fg.800"
         py={2}
         fontWeight="medium"
         data-markdown
@@ -48,8 +48,8 @@ export const defaults: Components & { heading: Components['h1'] } = {
     return (
       <Heading
         as="h2"
-        size="lg"
-        color="fg.900"
+        style={{ fontSize: '26px' }}
+        color="fg.700"
         py={2}
         fontWeight="medium"
         data-markdown
@@ -63,7 +63,7 @@ export const defaults: Components & { heading: Components['h1'] } = {
       <Heading
         as="h3"
         size="md"
-        color="fg.900"
+        color="fg.600"
         py={2}
         fontWeight="medium"
         data-markdown
@@ -184,6 +184,7 @@ export const defaults: Components & { heading: Components['h1'] } = {
           colorScheme="purple"
           variant="subtle"
           data-markdown
+          fontFamily="monospace"
         >
           {children}
         </ChakraCode>
@@ -193,7 +194,14 @@ export const defaults: Components & { heading: Components['h1'] } = {
     const langauge = className?.replace('language-', '');
     const [code] = children as string[];
 
-    return <Code code={code || ''} language={langauge} data-markdown />;
+    return (
+      <Code
+        overflow="scroll"
+        code={code || ''}
+        language={langauge}
+        data-markdown
+      />
+    );
   },
   del: (props) => {
     const { children } = props;

@@ -5,6 +5,7 @@ type Props = {
   fill?: string;
   style?: CSSProperties;
   type?: 'mono' | 'color' | 'horizontal' | 'sliced' | 'dark';
+  height?: number;
 };
 
 export const ZipperLogo: React.FC<Props> = ({
@@ -12,12 +13,13 @@ export const ZipperLogo: React.FC<Props> = ({
   className,
   type = 'mono',
   style,
+  height,
 } = {}) => {
   if (type === 'horizontal')
     return (
       <svg
         width="128"
-        height="82"
+        height={height ?? '82'}
         viewBox="0 0 128 82"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
@@ -53,7 +55,7 @@ export const ZipperLogo: React.FC<Props> = ({
     return (
       <svg
         width="160"
-        height="24"
+        height={height ?? '26'}
         viewBox="0 0 160 24"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
@@ -102,7 +104,7 @@ export const ZipperLogo: React.FC<Props> = ({
     return (
       <svg
         viewBox="0.095 0.082 267.475 40"
-        height="26"
+        height={height ?? '26'}
         className={className}
         style={style}
         fill={fill}
@@ -157,7 +159,7 @@ export const ZipperLogo: React.FC<Props> = ({
   return (
     <svg
       width="160"
-      height="24"
+      height={height ?? '26'}
       viewBox="0 0 160 24"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"

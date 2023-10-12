@@ -227,6 +227,7 @@ export const foregroundColors = {
 };
 
 export const semanticTokens = {
+  ...extendTheme().semanticTokens,
   colors: {
     ...primaryColors,
     ...foregroundColors,
