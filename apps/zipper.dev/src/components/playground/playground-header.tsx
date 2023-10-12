@@ -289,18 +289,16 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
             Fork
           </Button>
         )}
-        <SignedIn>
-          <Button
-            size="sm"
-            colorScheme="gray"
-            variant="outline"
-            onClick={() => setShareModalOpen(true)}
-            fontWeight="medium"
-            leftIcon={<PiShareNetworkDuotone color={ORANGE} />}
-          >
-            <Text>Share</Text>
-          </Button>
-        </SignedIn>
+        <Button
+          size="sm"
+          colorScheme="gray"
+          variant="outline"
+          onClick={() => setShareModalOpen(true)}
+          fontWeight="medium"
+          leftIcon={<PiShareNetworkDuotone color={ORANGE} />}
+        >
+          <Text>Share</Text>
+        </Button>
         <Button
           as={Link}
           size="sm"
