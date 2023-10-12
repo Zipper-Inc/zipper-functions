@@ -71,7 +71,6 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { user, isLoaded } = useUser();
   const [editSlug, setEditSlug] = useState(false);
-
   const [isShareModalOpen, setShareModalOpen] = useState(false);
 
   const { editorIds, onlineEditorIds } = useAppEditors();
@@ -318,7 +317,7 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
           <Text>View</Text>
         </Button>
         <SignedIn>
-          <PlaygroundPublishInfo app={app} />
+          {app.canUserEdit && <PlaygroundPublishInfo app={app} />}
           <Spacer />
           <UserProfileButton showAdditionalOptions />
         </SignedIn>
