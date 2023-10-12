@@ -1,7 +1,9 @@
 import { Box, Button, Center, Heading, Link, VStack } from '@chakra-ui/react';
 import { LiveObject } from '@liveblocks/client';
+import { createServerSideHelpers } from '@trpc/react-query/server';
 import { GetServerSideProps, GetServerSidePropsContext } from 'next';
 import Head from 'next/head';
+import SuperJSON from 'superjson';
 import SignedIn from '~/components/auth/signed-in';
 import EditorContextProvider from '~/components/context/editor-context';
 import { HelpModeProvider } from '~/components/context/help-mode-context';
@@ -9,8 +11,9 @@ import Header from '~/components/header';
 import { Playground } from '~/components/playground/playground';
 import { withLiveBlocks } from '~/hocs/withLiveBlocks';
 import { NextPageWithLayout } from '~/pages/_app';
+import { createContext } from '~/server/context';
+import { trpcRouter } from '~/server/routers/_app';
 import { parsePlaygroundQuery, Props } from '~/utils/playground.utils';
-import { getValidSubdomain, removeSubdomains } from '~/utils/subdomains';
 import { trpc } from '~/utils/trpc';
 
 const PlaygroundPage: NextPageWithLayout<Props> = ({
@@ -110,26 +113,33 @@ const PlaygroundPage: NextPageWithLayout<Props> = ({
 
 export const getServerSideProps: GetServerSideProps = async ({
   req,
+  res,
   query,
-  resolvedUrl,
 }: GetServerSidePropsContext) => {
-  const { host } = req.headers;
+  const props = parsePlaygroundQuery(query);
+  const ssg = createServerSideHelpers({
+    router: trpcRouter,
+    transformer: SuperJSON,
+    ctx: await createContext({ req, res }),
+  });
 
-  // validate subdomain
-  const subdomain = getValidSubdomain(host);
+  try {
+    const result = await ssg.app.byResourceOwnerAndAppSlugs.fetch({
+      resourceOwnerSlug: props.resourceOwnerSlug,
+      appSlug: props.appSlug,
+    });
 
-  if (subdomain) {
-    return {
-      redirect: {
-        destination: `${
-          process.env.NODE_ENV === 'production' ? 'https' : 'http'
-        }://${removeSubdomains(host!)}/${resolvedUrl}`,
-      },
-      props: {},
-    };
+    if (!result?.id) {
+      return { notFound: true };
+    }
+  } catch (e: any) {
+    if (/^No\s.*\sfound$/.test(e?.message)) {
+      return { notFound: true };
+    }
+    throw e;
   }
 
-  return { props: parsePlaygroundQuery(query) };
+  return { props: { ...props, trpcState: ssg.dehydrate() } };
 };
 
 PlaygroundPage.skipAuth = true;

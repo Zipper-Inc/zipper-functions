@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import * as eszip from '@deno/eszip';
 import { BuildCache } from '~/utils/eszip-build-cache';
-import { LoadResponseModule } from '@deno/eszip/types/loader';
+import { LoadResponseModule } from '@deno/eszip/esm/loader';
 import {
   isZipperImportUrl,
   applyTsxHack,
