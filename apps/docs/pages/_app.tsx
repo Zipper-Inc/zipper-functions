@@ -10,7 +10,9 @@ function MyApp(props: AppProps) {
 
   // Make sure the `next-themes` tailwind docs theme is in sync with the rest of chakra stuff
   useEffect(() => {
-    setChakraColorMode(nextThemesTheme);
+    if (nextThemesTheme) {
+      setChakraColorMode(nextThemesTheme);
+    }
   }, [nextThemesTheme]);
 
   return <props.Component {...props.pageProps} />;

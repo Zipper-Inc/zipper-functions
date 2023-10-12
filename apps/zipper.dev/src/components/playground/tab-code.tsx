@@ -148,9 +148,9 @@ export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
         {isMarkdown && !isMarkdownEditable && (
           <VStack
             h="full"
-            w="full"
             align="stretch"
-            px="10"
+            px="4"
+            ml="4"
             overflowY="scroll"
             scrollBehavior="smooth"
             css={{

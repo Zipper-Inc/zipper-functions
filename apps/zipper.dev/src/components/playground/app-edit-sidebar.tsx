@@ -83,7 +83,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
           alignSelf="start"
           size="sm"
           fontWeight="normal"
-          ml={10}
+          ml={4}
           onClick={() => setIsMarkdownEditable(!isMarkdownEditable)}
         >
           <HStack spacing={2}>
