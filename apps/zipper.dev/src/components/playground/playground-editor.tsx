@@ -19,6 +19,7 @@ import { getPathFromUri, getUriFromPath } from '~/utils/model-uri';
 import { useEditorContext } from '../context/editor-context';
 import { useRunAppContext } from '../context/run-app-context';
 import { PlaygroundCollabCursor } from './playground-collab-cursor';
+// import { getRewriteRule } from '~/utils/rewrite-imports';
 
 type MonacoEditor = monaco.editor.IStandaloneCodeEditor;
 
@@ -37,9 +38,8 @@ const TYPESCRIPT_ERRORS_TO_IGNORE = [
   // Ignore this error so we can import Deno and Zipper URLs
   // TS2792: Cannot find module.
   2792,
-  /** @todo fix this error */
-  // Ignore this error because we don't know how to import from web correctly yet
-  // For example, this url https://esm.sh/lodash/unescape should work but it
+  // Ignore this error because we will check if modules are valid ourselves
+  // see Z001 in zipper-editor-linter
   // TS2307: Cannot find module or it's corresponding type declarations.
   2307,
   // Allow parameters to have an implicit `any` type
@@ -209,6 +209,9 @@ export default function PlaygroundEditor(
         lib: ['esnext', 'dom', 'deno.ns'],
         noResolve: true,
         jsx: monaco.languages.typescript.JsxEmit.Preserve,
+        esModuleInterop: true,
+        allowSyntheticDefaultImports: true,
+        disableSizeLimit: true,
       });
 
       monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
@@ -220,6 +223,9 @@ export default function PlaygroundEditor(
           monaco.languages.typescript.ModuleResolutionKind.NodeJs,
         lib: ['esnext', 'dom', 'deno.ns'],
         jsx: monaco.languages.typescript.JsxEmit.Preserve,
+        esModuleInterop: true,
+        allowSyntheticDefaultImports: true,
+        disableSizeLimit: true,
       });
 
       // Fallback formatter
@@ -251,6 +257,24 @@ export default function PlaygroundEditor(
         },
       );
 
+      /*
+      monaco.languages.registerDefinitionProvider('typescript', {
+        provideDefinition: function (model, position, cancellationToken) {
+          console.log('providedef', model, position, cancellationToken);
+          const word = model.getWordAtPosition(position);
+
+          const rule = getRewriteRule(word?.word);
+
+          console.log('word', word);
+          return {
+            uri: monaco.Uri.parse('http://a/different/file.txt'),
+            range: new monaco.Range(1, 1, 1, 1),
+          };
+        },
+      });
+*/
+
+      // Create models for each script
       scripts.forEach((script) => {
         const extension = script.filename.split('.').pop();
         const uri = getUriFromPath(script.filename, monaco.Uri.parse, 'tsx');
@@ -418,6 +442,14 @@ export default function PlaygroundEditor(
               }
 
               return window.open(url, '_blank');
+            },
+          },
+          editorService: {
+            openEditor: function (...args: any) {
+              console.log('open editor', args);
+            },
+            resolveEditor: function (...args: any) {
+              console.log('resolve editor', args);
             },
           },
         }}

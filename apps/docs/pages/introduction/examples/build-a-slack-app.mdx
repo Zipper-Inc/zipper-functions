@@ -1,18 +1,18 @@
-# Build a Slack App with Zipper
+# Slack App
 
-Zipper is a great option for building Slack applications for a few reasons:
+Zipper is a great option for building Slack apps! Here's why:
 
-- Zipper handles the OAuth flow for you so you can get a token for a user or workspace without having to write any code
-- You can immediately start receiving webhooks from Slack without having to set up a server or configure a tunnel from localhost to the internet
-- There's built-in storage for your app's data so you don't have to worry about setting up a database
+- Zipper handles the OAuth flow for you. You can get a token for a user or workspace without writing any code.
+- You can start receiving webhooks from Slack immediately, without needing to set up a server or configure a tunnel from localhost to the internet.
+- Zipper provides built-in storage for your app's data, so you don't have to worry about setting up a database.
 
-To demonstrate, we'll build a simple Slack app that listens for newly created channels and posts a weekly message to `#general` with a summary of the channels that were created. We'll use the [Slack Events API](https://api.slack.com/events-api) to listen for channel creation events and the [Slack Web API](https://api.slack.com/web) to post messages.
+In this example, we'll demonstrate by building a simple Slack app that listens for newly created channels, posting a weekly message to `#general` with a summary of channels that were created. We'll use the [Slack Events API](https://api.slack.com/events-api) to listen for channel creation events and the [Slack Web API](https://api.slack.com/web) to post messages.
 
-#### 1. Create a Zipper applet
+## 1. Create a new applet
 
-Head over to zipper.dev and sign in. On your dashboard, you'll see a button to create a new applet. Click it and give your applet a name (if you want).
+[Sign in](https://zipper.dev/auth/signin) to your Zipper account. On your dashboard, click the **+ Create Applet** button. Provide a name for your applet (or use the generated name). When prompted to start from a template, choose the "Hello World" template.
 
-#### 2. Prepare to receive events from Slack
+## 2. Prepare to receive events from Slack
 
 Replace the contents of `main.ts` with the following code:
 
@@ -30,27 +30,47 @@ export async function handler({ ...slackEvent }: SlackEvent) {
 }
 ```
 
-You know have a function that receives the verification challenge from Slack and responds with the challenge value. Let's create a Slack app and confirm that it works. This is the first step to being able to receive events from Slack's Events API.
+We now have a function that receives the verification challenge from Slack and responds with the challenge value.
 
-Before moving on to the next step, make sure you've published your changes to your zipper.run URL. You can do this by clicking the "Publish" button in the top right corner of the Zipper playground.
+Next, we'll create an app in Slack to confirm that our code works. This is the first step to being able to receive events from Slack's Events API.
 
-#### 3. Create a Slack app
+Before moving on to the next step, we publish our changes by clicking **Publish** and then **Update** in the top right of the page. This also shows us our applet's URL.
 
-Head over to api.slack.com/apps and create a new app. You're going to choose to configure your app "From Scratch". Give the app a name and choose a workspace. Once the app is created, you'll be taken to the app's settings page.
+## 3. Create a Slack app
 
-Click on "Event Subscriptions" in the left sidebar and enable events. You'll be asked to input a URL to send events to - you're going to enter your app's zipper.run URL followed by `/raw` (`[app-name].zipper.run/raw`). You should see a green checkmark after a few seconds indicating that Slack was able to successfully send a request to your applet.
+We head over to [api.slack.com/apps](https://api.slack.com/apps) and create a new app. We choose to create an app "From scratch," give it a name, and choose a workspace. After the app is created, we're taken to the app's settings page.
 
-On the same page, click on "Subscribe to Bot Events" and add the `channel_created` event. Click "Save Changes" again.
+### Subscribe to an event
 
-Let's add one more scope before installing the app. Click on "OAuth & Permissions" in the left sidebar and scroll down to the "Scopes" section. Click the "Add an OAuth Scope" button under "Bot scopes" and add the `chat:write` scope.
+We navigate to the "Event Subscriptions" page and click to enable events.
 
-Before you can start receiving events, you need to install your app to your workspace. Click on "Basic Information" in the left sidebar and scroll down to the "Install your app to your workspace" section. Click the "Install to Workspace" button and follow the prompts to install your app.
+For the event **Request URL**, we will enter our Zipper applet URL followed by `/raw`. Slack will send a test challenge to your applet to verify that it responds to the challenge.
 
-#### 4. Save info about new channels
+![Slack Event Subscriptions](public/images/slack-event-subscriptions.png)
 
-Now that we're able to recieve events from Slack, let's make sure we're actually saving the information we care about. We're going to save the channel's ID, name, creation date, and creator's ID. We'll also save the team ID so we can retrieve the channel info later.
+We see a green checkmark after a few seconds indicating that Slack sent a request to our applet and received a response.
 
-Replace the contents of `main.ts` with the following code:
+On the same page, we want to "Subscribe to Bot Events" and add the `channel_created` event.
+
+![Slack Subscribe to Bot Events](public/images/slack-subscribe-bot-events.png)
+
+Click **Save Changes**.
+
+### Configure OAuth
+
+Before installing our Slack app, we need to add an OAuth scope. We navigate to the "OAuth & Permissions" page and scroll down to the "Scopes" section. Under "Bot Token Scopes," we click **Add an OAuth Scope** and select the `chat:write` scope.
+
+![Slack Add OAuth Scope](public/images/slack-scopes-chat-write.png)
+
+### Install app to workspace
+
+Before we can start receiving events, we need to install our app to our workspace. We navigate to the "Basic Information" page and click **Install to Workspace**, following the remaining prompts to install our app.
+
+## 4. Save info about new channels
+
+Now that we can recieve events from Slack, let's make sure we're actually saving the information we care about—the channel's ID, name, creation date, and creator's ID. We'll also save the team ID so we can retrieve the channel info later.
+
+In our Zipper applet code, we'll replace the contents of `main.ts` with the following:
 
 ```typescript
 export type SlackChannel = {
@@ -84,19 +104,23 @@ export async function handler({ ...slackEvent }: SlackEvent) {
 }
 ```
 
-The updated `handler` function will receive the `channel_created` event and asynchronously save it to storage so that we respond to Slack before they try resend the event.
+Our updated `handler` function will receive the `channel_created` event and save it our applet's built-in storage. Our function will do this asynchronously so that it can respond to Slack right away, before Slack tries to resend the event.
 
-#### 5. Get a token for the Web API
+## 5. Get a token for the Web API
 
-Now that we're saving channel info, let's post a message to `#general` every week with a summary of the channels that were created. To do this, we'll need to get a token for the Web API.
+Now that we're saving channel info, let's post a message to the `#general` channel every week with a summary of the channels that were created. To do this, we'll need a token for the Slack Web API.
 
-Head over to your Slack app's settings page and click 'Install App' in the left sidebar. You should see an API token under the 'Bot User OAuth Token' section. Copy the token and head back to your Zipper applet.
+In our Slack app's settings, we navigate to the "Install App" page and copy the "Bot User OAuth Token".
 
-Click on Secrets and add a new secret with the key `SLACK_BOT_TOKEN` and the value of the token you copied from Slack.
+![Slack Bot User OAuth Token](public/images/slack-bot-user-oauth-token.png)
 
-#### 6. Post a message
+Back in our Zipper applet, we navigate to the "Secrets" page and add a new secret with key `SLACK_BOT_TOKEN` and paste in the value of the token we just copied from Slack. We click **Save**.
 
-Add a new file called `post-message.ts` with the following code:
+![Zipper - Slack App Secret Token](public/images/slack-app-secret-token.png)
+
+## 6. Post a message
+
+We'll add a new file called `post-message.ts` with the following code:
 
 ```typescript
 import { SlackChannel } from './main.ts';
@@ -145,14 +169,17 @@ export async function handler() {
 }
 ```
 
-The function fetches all the stored channels and filters out the ones that were created within the last 7 days. If there are any recent channels, it posts a message to `#general` with a summary of the channels that were created.
+This handler function fetches all the stored channels, filtering to retrieve those that were created within the last seven days. If there are any recent channels, it posts a message to `#general` with a summary of the channels that were created.
 
-Before running this function, make sure the Slack bot is a member of `#general` (you can do this by mentioning your bot in `#general` and clicking the "Invite to Channel" button).
+Before we can run this function, we make sure that our Slack app is a member of `#general`. We can do this by mentioning the bot in `#general` and then clicking the **Invite to Channel** button.
 
-#### 7. Test it out
+## 7. Test it out
 
-Create a new public channel on Slack and then head over to Zipper and click the "Run" button on your `post-message` file. You should see a message in `#general` with a summary of the channel you just created.
+To test out our applet from end to end, we create a new public channel in our Slack workspace. Then, we run our applet's `post-message.ts` file. Our applet posts a message in `#general` with a summary of the newly created channel.
 
-#### 8. Schedule the function
+## 8. Schedule the applet run
 
-You can create a schedule to automatically run your applet on a weekly basis. Just click the Schedule tab in the Zipper playground and add a new schedule. You can choose to run the function every week on a specific day of the week and time of day.
+With everything up and running, it's simple to schedule our applet to run on a weekly basis. We navigate to the **Schedule** page for our applet and add a new schedule.
+
+![Zipper - Slack App Add Schedule](public/images/slack-app-add-schedule.png)
+

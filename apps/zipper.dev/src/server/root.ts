@@ -29,8 +29,10 @@ const enforceAuth = t.middleware(({ ctx, next }) => {
   });
 });
 
-const enforceOrgAdmin = t.middleware(({ ctx, next }) => {
-  if (!ctx.orgId || !hasOrgAdminPermission(ctx)) {
+const enforceOrgAdmin = t.middleware(async ({ ctx, next }) => {
+  const isAdmin = await hasOrgAdminPermission(ctx);
+
+  if (!ctx.orgId || !isAdmin) {
     throw new TRPCError({ code: 'UNAUTHORIZED' });
   }
 

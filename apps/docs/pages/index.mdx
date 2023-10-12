@@ -3,49 +3,64 @@ import Features from '../components/features';
 
 # Zipper Quickstart
 
-> 👾 **Zipper is currently in private beta.**
-> If you’re interested in trying it
-> out, please [sign up for the waitlist](https://zipper.works).
-> Things might break but they mostly won't.
+> 👾 **Zipper is currently in beta.** If you’re interested in trying it out, you can [sign up to join the beta](https://zipper.dev/auth/signup). Things might break, but they mostly won't.
 
 ## What you need to know
 
-- Zipper is a platform for turning Typescript functions into web services, with UI and auth built for you.
-- Functions are encapsulated in **Applets**, small forkable packages responsible for accomplishing a specific task.
-- Applets are written in [Typescript](https://www.typescriptlang.org/docs/) and runs on [Deno](https://deno.land), an alternative runtime for JavaScript.
-- Every applet gets a working URL that you can call from anywhere, anytime.
+- Zipper is a platform for turning TypeScript functions into web services, with UI and authentication built for you.
+- Functions are encapsulated in **applets**—small forkable packages responsible for accomplishing a specific task.
+- Applets are [written in TypeScript and run on Deno](/introduction/typescript-and-deno) (an alternative runtime for JavaScript).
+- Every applet has a working URL that you can call anytime, from anywhere.
 
 ## How Zipper works
 
-First things first, Zipper is an entirely online platform. There are no local installations or command line tools. You can write, deploy, and share applets entirely from your browser.
+First things first: **Zipper is an entirely online platform.** There are no local installations or command line tools. You can write, deploy, and share applets entirely from your browser.
 
-Each applet is made up of a collection of Typescript files. There's always a `main.ts` file that serves as the entrypoint to your applet. Any other Typescript file that exports a function called `handler` will be treated as a route.
+An applet is made up of a collection of TypeScript files. Every applet has `main.ts` file, which serves as the entrypoint to your applet. Any other TypeScript file that exports a function called `handler` is treated as a route.
 
-Every time a route is hit, we run the `handler` function associated with that route. We automatically render whatever the handler function returns for you. If you need to collect information from the user, just add inputs to your function and we'll render a form to collect the inputs that get sent to the function.
+Whenever a route is hit, Zipper runs the handler function associated with that route. Zipper automatically renders whatever the handler function returns. If you need to collect information from the user, then just add inputs to your function, and Zipper will render a form to collect those inputs.
 
-#### Other applet functionality
+### Offload common concerns
 
-- **Authentication**: Applets can piggyback off of Zipper's user authentication to limit who can access an applet.
-- **UI Framework**: In most cases, Zipper can render the UI for your function's output automatically. If you need more control, you can use our UI framework to build more complex interfaces.
-- **API endpoints**: Send GET & POST requests to your applet's paths to trigger their handler functions.
-- **Import packages via URL**: No need for a package.json file. Just import packages directly from their URLs.
-- **Built-in storage**: Store data in your applet's storage and access it from any function within the applet.
+Zipper provides several features to help developers offload other concerns and focus on writing functions.
 
-## Your first Applet
+- **Authentication**: Piggyback on Zipper's user authentication to restrict who can access an applet.
+- **UI framework**: In most cases, Zipper can render the UI for your function's output automatically. If you need to build more complex interfaces, you can use Zipper's UI framework.
+- **API endpoints**: Send `GET` and `POST` requests to your applet's paths to trigger their handler functions.
+- **Import packages via URL**: No need for a `package.json` file. Just import packages directly from their URLs.
+- **Built-in storage**: Every applet has a built-in instance of key-value storage, accessible from any function in the applet.
 
-#### **Step 1**: Create an applet
+## Create your first applet
 
-Once you sign in to Zipper, you should land on a page that lists your projects. (You won’t have any since it’s a new account).
+Let's walk through a quick demo to show how easy it is to create an applet with Zipper.
 
-Click on the **+New Applet** button to create a new applet. Give your applet a name and click **Create** (this will skip the AI generation step for the sake of keeping things simple). By default your applet's code will be private (only visible to you) but anyone with the link to the published URL will be able to run it. You can change this in the applet's settings tab.
+### **Step 1**: Create an applet
 
-#### **Step 2**: Write a function
+After signing in to Zipper, you will arrive at the Dashboard page which lists your applets. (If you have a new account, you won't see any applets yet.)
 
-After creating your applet, you'll be redirect to the applet's code editor. You should see a `main.ts` file with a `handler` function. This is the function we run when someone visits your applet's published URL. The inputs to this function are rendered as a form to the user and the output is rendered as a page.
+Click the **+Create Applet** button to create a new applet.
 
-Let's go ahead and replace the contents of `main.ts` with the following:
+You can provide a name for your applet or use the automatically generated name.
 
-```ts
+By default, your applet code will only be visible to you (*not* public), and anyone with the link to the published URL will be able to run it.
+
+You can change these settings in the applet's **Settings** tab.
+
+![Create Applet: Settings](public/images/create-applet-settings.png)
+
+Click **Next**.
+
+Choose a starting template for your applet. For simplicity, we'll choose the "Hello World" template.
+
+Click **Create**.
+
+### **Step 2**: Write a function
+
+After creating your applet, you'll be redirected to the applet's code editor, where you'll see a `main.ts` file with a handler function. This is the function that Zipper runs when someone visits your applet's published URL. The inputs to this function are rendered as a form, and the output is rendered as a page.
+
+Replace the contents of `main.ts` with the following:
+
+```typescript
 enum daysOfWeek {
   Sunday,
   Monday,
@@ -61,10 +76,22 @@ export async function handler({ date }: { date: Date }) {
 }
 ```
 
+Your code editor should look like this:
+
+![Updated main.ts](public/images/first-applet-code-main.png)
+
 #### **Step 3**: Preview your applet
 
-You should now see an input called `date` on the right sidebar. Choose a date and click **Run**. You should see the day of the week that date falls on in the output section below.
+Notice that the applet preview to the right has been updated. 
+
+You should now see an input called `date` on the right sidebar. Choose a date and click **▷ Run**. The resulting output is the day of the week for the date that you chose.
+
+![Applet output](public/images/first-applet-output.png)
 
 #### **Step 4**: Deploy and share your applet
 
-Now that you've got a working version of your applet in the playground, it's time to publish it. Click the `Publish` button in the top right. It will open a menu with the URL of your published applet. Click `Update` your latest changes to the applet's URL. You can now share this URL with anyone and they'll be able to run your applet.
+Now that you have a working version of your applet in the playground, it's time to publish it! Click the **Publish** button in the top right of the page. You'll see the URL of your published applet. Share this URL with anyone, and they'll be able to run your applet.
+
+Click **Update** to publish your latest changes.
+
+![Publish applet](public/images/first-applet-publish.png)

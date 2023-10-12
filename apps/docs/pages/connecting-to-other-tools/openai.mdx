@@ -1,20 +1,24 @@
 # OpenAI
 
-At his point, the OpenAI connector is pretty simple (because connecting to OpenAI is simple).
+Currently, Zipper's OpenAI connector is pretty simple (because connecting to OpenAI is simple).
 
-### Get an API key
+## Get an API key
 
-To get started, head over to https://platform.openai.com/ and sign up for an account. Once you have an account, go to https://platform.openai.com/account/api-keys and create an API key.
+To get started, [sign up for an OpenAI account](https://platform.openai.com/signup). Then, go to [OpenAI's API keys page](https://platform.openai.com/account/api-keys) and create a new API key.
 
 ### Add the connector
 
-Create a new applet or go to an existing one. In the playground, click the `+` button in the file list and select `OpenAI` from the list of connectors. Paste your API key and click `Save`.
+Add the OpenAI connector to your applet by clicking the `+` in the file list. Then, select **OpenAI** from the list of pre-built connectors.
+
+![Add GitHub OAuth Connector](public/images/connector-menu.png)
+
+Paste in your OpenAI API key and click **Save**.
 
 ### Use the connector
 
-The OpenAI connector exports (as default) an instance of the OpenAI Deno module that's configured to use your API key. You can see examples of how to use the OpenAI module at https://deno.land/x/openai.
+The OpenAI connector exports (as default) an instance of the OpenAI Deno module that's configured to use your API key. You can see examples of how to use the OpenAI module at [https://deno.land/x/openai](https://deno.land/x/openai).
 
-```ts
+```typescript
 import openAI from './openai-connector.ts';
 
 export async function handler() {

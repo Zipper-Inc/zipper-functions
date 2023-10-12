@@ -1,5 +1,6 @@
 import { NextRouter } from 'next/router';
 import { Script } from '@prisma/client';
+import { DehydratedState } from '@tanstack/react-query';
 
 export const isConnector = (script: Script) =>
   script.filename.endsWith('-connector.ts');
@@ -27,9 +28,12 @@ export type Props = {
   appSlug: string;
   tab: PlaygroundTab;
   filename?: string;
+  trpcState: DehydratedState;
 };
 
-export const parsePlaygroundQuery = (query: NextRouter['query']): Props => {
+export const parsePlaygroundQuery = (
+  query: NextRouter['query'],
+): Omit<Props, 'trpcState'> => {
   const resourceOwnerSlug = query['resource-owner'] as string;
   const appSlug = query['app-slug'] as string;
 
