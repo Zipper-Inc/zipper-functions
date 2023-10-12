@@ -86,6 +86,16 @@ export function PrismaAdapter(p: PrismaClient): Adapter {
     deleteSession: (sessionToken) =>
       p.session.delete({ where: { sessionToken } }),
     async createVerificationToken(data) {
+      const existingToken = await p.verificationToken.findFirst({
+        where: { identifier: data.identifier },
+      });
+
+      if (existingToken) {
+        await p.verificationToken.delete({
+          where: { token: existingToken.token },
+        });
+      }
+
       const verificationToken = await p.verificationToken.create({ data });
       // @ts-expect-errors // MongoDB needs an ID, but we don't
       if (verificationToken.id) delete verificationToken.id;
@@ -196,7 +206,7 @@ export const authOptions: AuthOptions = {
       name: 'Email',
       server: '',
       from: 'Zipper<yourfriends@zipper.dev>',
-      maxAge: 600, // 10 minutes
+      maxAge: 300, // 5 minutes
       generateVerificationToken() {
         const s = crypto.randomBytes(16).toString('hex');
 
@@ -207,6 +217,7 @@ export const authOptions: AuthOptions = {
       ) => {
         try {
           const { identifier, url, token } = params;
+
           await resend.emails.send({
             to: identifier,
             from: 'Zipper <yourfriends@zipper.dev>',
@@ -384,6 +395,16 @@ If you have any questions, feedback, or general comments, we'd genuinely love to
 Regards,
 Sachin & Ibu
 `,
+        });
+      }
+      // try to find and delete any pending verification tokens
+      const verificationToken = await prisma.verificationToken.findFirst({
+        where: { identifier: user.email! },
+      });
+
+      if (verificationToken) {
+        await prisma.verificationToken.delete({
+          where: { token: verificationToken.token },
         });
       }
 
