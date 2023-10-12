@@ -2,7 +2,7 @@ import { AppRun, Prisma } from '@prisma/client';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { prisma } from '~/server/prisma';
-import { hasAppReadPermission } from '../utils/authz.utils';
+import { hasAppEditPermission } from '../utils/authz.utils';
 import { createTRPCRouter, publicProcedure } from '../root';
 
 const defaultSelect = Prisma.validator<Prisma.AppRunSelect>()({
@@ -74,7 +74,7 @@ export const appRunRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
-      await hasAppReadPermission({
+      await hasAppEditPermission({
         ctx,
         appId: input.appId,
       });

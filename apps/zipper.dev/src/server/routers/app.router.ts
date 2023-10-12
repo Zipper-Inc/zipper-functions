@@ -620,6 +620,8 @@ export const appRouter = createTRPCRouter({
         include: { scripts: true, scriptMain: true },
       });
 
+      await hasAppEditPermission({ ctx, appId: input.appId });
+
       const authToken = await getToken({ req: ctx.req! });
 
       const token = ctx.userId
