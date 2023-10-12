@@ -7,6 +7,8 @@ import {
   applyTsxHack,
   getModule,
 } from '~/utils/eszip-utils';
+import { rewriteSpecifier } from '~/utils/rewrite-imports';
+import { parseCode } from '~/utils/parse-code';
 
 enum ModMode {
   Module = 'module',
@@ -62,6 +64,21 @@ function respondWithRawModule({
     .status(200)
     .setHeader('Content-Type', 'text/typescript')
     .send(rootModule.content.toString());
+}
+
+function withPathRefs(mod?: LoadResponseModule) {
+  if (!mod?.content) return mod;
+  const { src } = parseCode({ code: mod.content });
+  if (!src) return mod;
+
+  // Gets any `/// <reference path="..." />` directives
+  const pathRefs = src.getPathReferenceDirectives().map((r) => r.getFileName());
+  const importStatements = pathRefs.map((p) => `import '${p}';`).join(' ');
+
+  return {
+    ...mod,
+    content: `${importStatements} ${mod.content}`,
+  };
 }
 
 async function respondWithBundle({
@@ -131,11 +148,6 @@ async function respondWithTypesBundle({
     typesRootUrl = new URL(typesLocation, moduleUrl).toString();
   }
 
-  const replaceRedirect = getRedirectReplacer({
-    originalUrl: typesRootUrl,
-    redirectedUrl: moduleUrl,
-  });
-
   const typesBundle: Record<string, string> = {};
 
   try {
@@ -143,14 +155,11 @@ async function respondWithTypesBundle({
       if (specifier === typesRootUrl) {
         const mod = await getModule(typesRootUrl, buildCache);
         if (mod?.content) typesBundle[moduleUrl] = mod.content;
-        return mod;
+        return withPathRefs(mod);
       } else {
-        const typesUrl = replaceRedirect
-          ? replaceRedirect(specifier)
-          : specifier;
         const mod = await getModule(specifier, buildCache);
-        if (mod?.content) typesBundle[typesUrl] = mod.content;
-        return mod;
+        if (mod?.content) typesBundle[specifier] = mod.content;
+        return withPathRefs(mod);
       }
     });
   } catch (e) {
@@ -189,7 +198,7 @@ export default async function handler(
   // commas are valid in URLs, so don't treat this as an array
   const moduleUrl = Array.isArray(x) ? x.join(',') : x;
 
-  const rootModule = await getModule(moduleUrl, buildCache);
+  const rootModule = await getModule(rewriteSpecifier(moduleUrl), buildCache);
 
   if (!rootModule) return res.status(404).send('Module not found');
 
