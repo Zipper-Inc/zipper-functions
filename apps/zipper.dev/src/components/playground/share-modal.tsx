@@ -65,7 +65,8 @@ const ShareTab: React.FC<Props> = ({ isOpen, onClose, appId }) => {
   const playgroundUrl = `${window.location.origin}/${router.query['resource-owner']}/${router.query['app-slug']}`;
   const appletUrl = `https://${router.query['app-slug']}.zipper.run`;
   const { onCopy, hasCopied } = useClipboard(playgroundUrl);
-  const { onCopyApplet, hasCopiedApplet } = useClipboard(appletUrl);
+  const { onCopy: onCopyApplet, hasCopied: hasCopiedApplet } =
+    useClipboard(appletUrl);
 
   const inviteEditor = trpc.appEditor.invite.useMutation({
     async onSuccess() {
