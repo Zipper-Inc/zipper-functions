@@ -84,8 +84,8 @@ export class BuildCache {
         module: mod,
         cachedTimestamp: Date.now(),
       };
-      this.client.set(key, JSON.stringify(record));
-      this.client.expire(key, getTtl(mod.headers || {}));
+      await this.client.set(key, JSON.stringify(record));
+      await this.client.expire(key, getTtl(mod.headers || {}));
     } catch (e) {
       // yolo cache set miss
     }
