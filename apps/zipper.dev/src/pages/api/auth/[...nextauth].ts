@@ -397,6 +397,16 @@ Sachin & Ibu
 `,
         });
       }
+      // try to find and delete any pending verification tokens
+      const verificationToken = await prisma.verificationToken.findFirst({
+        where: { identifier: user.email! },
+      });
+
+      if (verificationToken) {
+        await prisma.verificationToken.delete({
+          where: { token: verificationToken.token },
+        });
+      }
 
       trackEvent({
         userId: user.id,
