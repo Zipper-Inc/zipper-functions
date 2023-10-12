@@ -71,66 +71,78 @@ export async function build({
 
   const bundle = await eszip.build(fileUrlsToBundle, async (specifier) => {
     // if (__DEBUG__) console.debug(specifier);
-    /**
-     * Handle user's App files
-     */
-    if (specifier.startsWith(appFilesBaseUrl)) {
-      const filename = specifier.replace(`${appFilesBaseUrl}/`, '');
-      const script = tsScripts.find((s) => s.filename === filename);
+    try {
+      /**
+       * Handle user's App files
+       */
+      if (specifier.startsWith(appFilesBaseUrl)) {
+        const filename = specifier.replace(`${appFilesBaseUrl}/`, '');
+        const script = tsScripts.find((s) => s.filename === filename);
 
-      return {
-        ...applyTsxHack(specifier, rewriteImports(script?.code || '')),
-        version,
-      };
-    }
-
-    /**
-     * Handle Zipper Framework Files
-     */
-    if (specifier.startsWith(baseUrl)) {
-      const filename = specifier.replace(`${baseUrl}/`, '');
-      const isAppletIndex = filename === APPLET_INDEX_PATH;
-
-      let content = await readFrameworkFile(filename);
-
-      // Inject Env vars
-      ['PUBLICLY_ACCESSIBLE_RPC_HOST', 'HMAC_SIGNING_SECRET'].forEach((key) => {
-        content = content.replaceAll(
-          `Deno.env.get('${key}')`,
-          `'${process.env[key]}'`,
-        );
-      });
-
-      if (isAppletIndex) {
-        content = generateIndexForFramework({
-          code: content,
-          filenames: tsScripts.map((s) => s.filename),
-        });
+        return {
+          ...applyTsxHack(specifier, rewriteImports(script?.code || '')),
+          version,
+        };
       }
 
-      return {
-        kind: 'module',
-        specifier,
-        headers: TYPESCRIPT_CONTENT_HEADERS,
-        content,
-      };
-    }
+      /**
+       * Handle Zipper Framework Files
+       */
+      if (specifier.startsWith(baseUrl)) {
+        const filename = specifier.replace(`${baseUrl}/`, '');
+        const isAppletIndex = filename === APPLET_INDEX_PATH;
 
-    /**
-     * Handle Zipper Remote Imports
-     */
-    if (isZipperImportUrl(specifier)) {
-      const mod = await getModule(specifier);
-      return {
-        ...mod,
-        ...applyTsxHack(specifier, rewriteImports(mod?.content)),
-      };
-    }
+        let content = await readFrameworkFile(filename);
 
-    /**
-     * Handle remote imports
-     */
-    return getModule(specifier, buildCache);
+        // Inject Env vars
+        ['PUBLICLY_ACCESSIBLE_RPC_HOST', 'HMAC_SIGNING_SECRET'].forEach(
+          (key) => {
+            content = content.replaceAll(
+              `Deno.env.get('${key}')`,
+              `'${process.env[key]}'`,
+            );
+          },
+        );
+
+        if (isAppletIndex) {
+          content = generateIndexForFramework({
+            code: content,
+            filenames: tsScripts.map((s) => s.filename),
+          });
+        }
+
+        return {
+          kind: 'module',
+          specifier,
+          headers: TYPESCRIPT_CONTENT_HEADERS,
+          content,
+        };
+      }
+
+      /**
+       * Handle Zipper Remote Imports
+       */
+      if (isZipperImportUrl(specifier)) {
+        const mod = await getModule(specifier);
+        return {
+          ...mod,
+          ...applyTsxHack(specifier, rewriteImports(mod?.content)),
+        };
+      }
+
+      /**
+       * Handle remote imports
+       */
+      return getModule(specifier, buildCache);
+    } catch (e) {
+      if (e instanceof Error) {
+        // 🚨 Security Fix
+        // Catch file not found errors and do not leak the file system
+        if (e.message.includes('ENOENT')) e.message = `File not found`;
+        e.message = `Error building ${specifier}: ${e.message}`;
+      }
+      throw e;
+    }
   });
 
   const elapsedMs = performance.now() - startMs;
