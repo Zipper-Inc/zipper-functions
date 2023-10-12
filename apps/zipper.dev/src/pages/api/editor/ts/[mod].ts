@@ -7,6 +7,8 @@ import {
   applyTsxHack,
   getModule,
 } from '~/utils/eszip-utils';
+import { LOCALHOST_URL_REGEX, rewriteSpecifier } from '~/utils/rewrite-imports';
+import { getZipperDotDevUrlForServer } from '~/server/utils/server-url.utils';
 
 enum ModMode {
   Module = 'module',
@@ -189,7 +191,7 @@ export default async function handler(
   // commas are valid in URLs, so don't treat this as an array
   const moduleUrl = Array.isArray(x) ? x.join(',') : x;
 
-  const rootModule = await getModule(moduleUrl, buildCache);
+  const rootModule = await getModule(rewriteSpecifier(moduleUrl), buildCache);
 
   if (!rootModule) return res.status(404).send('Module not found');
 
