@@ -1,10 +1,12 @@
 import {
   Box,
-  Container,
+  Button,
   Heading,
+  HStack,
   Progress,
+  Slide,
   Stack,
-  useMediaQuery,
+  useDisclosure,
   VStack,
 } from '@chakra-ui/react';
 import {
@@ -35,6 +37,7 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { HiChevronDoubleLeft, HiChevronDoubleRight } from 'react-icons/hi2';
 import getBootInfo from '~/utils/get-boot-info';
 import { getConnectorsAuthUrl } from '~/utils/get-connectors-auth-url';
 import { getBootUrl, getRelayUrl } from '~/utils/get-relay-url';
@@ -116,16 +119,17 @@ export function AppPage({
   >(filename ? handlerConfigs?.[filename] : undefined);
 
   const [skipAuth, setSkipAuth] = useState(false);
+
+  const { isOpen, onToggle } = useDisclosure();
+
   const description = getDescription({
     applet: app,
     filename: entryPoint?.filename,
     config: currentFileConfig,
   });
   const shouldShowDescription =
-    shouldShowDescriptionPassedIn && description && screen === 'initial';
+    shouldShowDescriptionPassedIn && description && isOpen;
   const previousRouteRef = useRef(asPath);
-
-  const [isMobile] = useMediaQuery('(max-width: 600px)');
 
   // We have to do this so that the results aren't SSRed
   // (if they are DOMParser in FunctionOutput will be undefined)
@@ -333,11 +337,7 @@ export function AppPage({
   const title = description?.title || appTitle || app?.slug;
   const runContent = (
     <VStack w="full" align="stretch" spacing={4} ml={{ md: 4 }}>
-      <Heading as="h1" fontSize="4xl" fontWeight="medium">
-        {title}
-      </Heading>
       {!isEmbedded && <Box ml="4">{inputSummary}</Box>}
-      {output}
     </VStack>
   );
 
@@ -358,40 +358,80 @@ export function AppPage({
     <Stack
       as="main"
       position="relative"
-      px={{ base: 4, md: 8 }}
-      pt={4}
-      pb={8}
-      spacing={8}
       w="full"
-      direction={{ base: 'column', md: 'row' }}
-      justify="center"
+      px={{ base: 4, md: 8 }}
+      pt={0}
+      mt={0}
     >
-      {shouldShowDescription && (
-        <VStack
-          width={{ base: 'auto', md: '100%' }}
-          align="stretch"
-          minW="320px"
-          ml={{ md: 4 }}
-          flex={2}
-        >
-          <HandlerDescription
-            description={
-              screen === 'initial'
-                ? description
-                : { ...description, title: undefined }
-            }
-          />
-        </VStack>
+      {title && (
+        <Heading as="h1" fontSize="4xl" fontWeight="medium" ml={{ md: 4 }}>
+          {title}
+        </Heading>
       )}
-      <VStack
-        mx={shouldShowDescription ? 'auto' : undefined}
-        align="stretch"
-        flex={3}
+      <HStack
+        align="center"
+        alignItems="start"
+        pb={2}
+        borderBottomColor="gray.50"
+        borderBottomWidth="1px"
       >
-        {screen === 'initial' && initialContent}
+        <Button
+          variant="ghost"
+          colorScheme="purple"
+          size="sm"
+          fontWeight="normal"
+          leftIcon={
+            isOpen ? (
+              <HiChevronDoubleLeft size={12} />
+            ) : (
+              <HiChevronDoubleRight size={12} />
+            )
+          }
+          onClick={onToggle}
+        >
+          {isOpen ? 'Hide' : 'Show'} App Details
+        </Button>
         {showRunOutput && runContent}
-        {loading && loadingContent}
-      </VStack>
+      </HStack>
+      <Stack
+        as="div"
+        direction={{ base: 'column', md: 'row' }}
+        justify="center"
+        pt={4}
+        pb={8}
+        spacing={8}
+      >
+        {isOpen ? (
+          <VStack
+            width={{ base: 'auto', md: '100%' }}
+            maxW="400px"
+            align="stretch"
+            ml={{ md: 4 }}
+            flex={2}
+          >
+            <Slide direction="left" in={isOpen} style={{ position: 'static' }}>
+              <HandlerDescription
+                description={
+                  screen === 'initial'
+                    ? description
+                    : { ...description, title: undefined }
+                }
+              />
+            </Slide>
+          </VStack>
+        ) : null}
+
+        <VStack
+          mx={shouldShowDescription ? 'auto' : undefined}
+          align="stretch"
+          flex={3}
+        >
+          {screen === 'initial' && initialContent}
+
+          <VStack alignSelf="start">{showRunOutput && output}</VStack>
+          {loading && loadingContent}
+        </VStack>
+      </Stack>
     </Stack>
   );
 
