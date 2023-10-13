@@ -2,7 +2,6 @@ import type { LoadResponseModule } from '@deno/eszip/esm/loader';
 import type { NextRequest } from 'next/server';
 import fetch from 'node-fetch';
 import type { BuildCache, CacheRecord } from './eszip-build-cache';
-import { parseCode } from './parse-code';
 
 export const X_ZIPPER_ESZIP_BUILD_HEADER = 'X-Zipper-Eszip-Build';
 
