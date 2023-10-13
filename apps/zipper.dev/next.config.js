@@ -158,16 +158,52 @@ module.exports = getConfig({
             value: 'max-age=63072000; includeSubDomains; preload',
           },
           {
-            key: 'Cache-Control',
-            value: 'no-store, no-cache, must-revalidate, max-age=0',
-          },
-          {
             key: 'Referrer-Policy',
             value: 'Same-Origin',
           },
           {
             key: 'X-Frame-Options',
             value: 'DENY',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'no-store, no-cache, must-revalidate, max-age=0',
+          },
+        ],
+      },
+      {
+        source: '/home',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=86400, immutable',
+          },
+        ],
+      },
+      {
+        source: '/about',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=86400, immutable',
+          },
+        ],
+      },
+      {
+        source: '/docs/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=86400, immutable',
+          },
+        ],
+      },
+      {
+        source: '/blog/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=86400, immutable',
           },
         ],
       },
