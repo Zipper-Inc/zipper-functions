@@ -2,7 +2,6 @@ import type { LoadResponseModule } from '@deno/eszip/esm/loader';
 import type { NextRequest } from 'next/server';
 import fetch from 'node-fetch';
 import type { BuildCache, CacheRecord } from './eszip-build-cache';
-import { parseCode } from './parse-code';
 
 export const X_ZIPPER_ESZIP_BUILD_HEADER = 'X-Zipper-Eszip-Build';
 
@@ -41,11 +40,10 @@ export function addJsxPragma(code: string) {
   );
 }
 
+// tried ts-morph but it doesn't work here for some reason
+// this is fine for now...
 export function codeHasReact(code: string) {
-  if (!code.includes('React')) return false;
-  return parseCode({ code })
-    .src?.getImportDeclarations()
-    .find((i) => i.getSymbol()?.getName() === 'React');
+  return code.includes('import React from');
 }
 
 export function applyTsxHack(
