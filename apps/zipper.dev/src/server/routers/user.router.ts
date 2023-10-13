@@ -53,6 +53,49 @@ export const userRouter = createTRPCRouter({
         select: defaultSelect,
       });
     }),
+  settingValue: protectedProcedure
+    .input(
+      z.object({
+        settingName: z.string(),
+      }),
+    )
+    .query(async ({ input, ctx }) => {
+      return prisma.userSetting.findMany({
+        where: {
+          userId: ctx.userId,
+          settingName: input.settingName,
+          deletedAt: null,
+        },
+        select: {
+          settingValue: true,
+        },
+      });
+    }),
+  setSettingValue: protectedProcedure
+    .input(
+      z.object({
+        settingName: z.string(),
+        settingValue: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      return prisma.userSetting.upsert({
+        where: {
+          userId_settingName: {
+            userId: ctx.userId,
+            settingName: input.settingName,
+          },
+        },
+        create: {
+          settingName: input.settingName,
+          settingValue: input.settingValue,
+          userId: ctx.userId,
+        },
+        update: {
+          settingValue: input.settingValue,
+        },
+      });
+    }),
   getAccounts: protectedProcedure.query(async ({ ctx }) => {
     return prisma.account.findMany({
       where: {
