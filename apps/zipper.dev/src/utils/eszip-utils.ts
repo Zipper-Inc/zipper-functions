@@ -2,6 +2,7 @@ import type { LoadResponseModule } from '@deno/eszip/esm/loader';
 import type { NextRequest } from 'next/server';
 import fetch from 'node-fetch';
 import type { BuildCache, CacheRecord } from './eszip-build-cache';
+import { parseCode } from './parse-code';
 
 export const X_ZIPPER_ESZIP_BUILD_HEADER = 'X-Zipper-Eszip-Build';
 
@@ -40,6 +41,13 @@ export function addJsxPragma(code: string) {
   );
 }
 
+export function codeHasReact(code: string) {
+  if (!code.includes('React')) return false;
+  return parseCode({ code })
+    .src?.getImportDeclarations()
+    .find((i) => i.getSymbol()?.getName() === 'React');
+}
+
 export function applyTsxHack(
   specifier: string,
   code = '/* 🤷🏽‍♂️ missing code */',
@@ -49,7 +57,8 @@ export function applyTsxHack(
     // Add TSX to all files so they support JSX
     specifier: specifier.replace(/\.(ts|tsx)$|$/, '.tsx'),
     headers: TYPESCRIPT_CONTENT_HEADERS,
-    content: shouldAddJsxPragma ? addJsxPragma(code) : code,
+    content:
+      !codeHasReact(code) && shouldAddJsxPragma ? addJsxPragma(code) : code,
     kind: 'module',
   };
 }
