@@ -16,6 +16,8 @@ import { prettyLog, PRETTY_LOG_TOKENS } from './pretty-log';
 import { readFrameworkFile } from './read-file';
 import { rewriteImports } from './rewrite-imports';
 
+const FILENAME_FORBIDDEN_CHARS_REGEX = /[^a-zA-Z0-9_.-@$)]/;
+
 /**
  * @todo
  * Bundle this up or put this source somewhere else
@@ -76,7 +78,10 @@ export async function build({
        * Handle user's App files
        */
       if (specifier.startsWith(appFilesBaseUrl)) {
-        const filename = specifier.replace(`${appFilesBaseUrl}/`, '');
+        const filename = specifier
+          .replace(`${appFilesBaseUrl}/`, '')
+          .replace(FILENAME_FORBIDDEN_CHARS_REGEX, '');
+
         const script = tsScripts.find((s) => s.filename === filename);
 
         return {
