@@ -95,6 +95,7 @@ export async function relayRequest(
     };
 
   const host = request.headers.get('host') || '';
+  if (__DEBUG__) console.log('request headers', request.headers);
   const subdomain = getValidSubdomain(host);
   if (__DEBUG__) console.log('getValidSubdomain', { host, subdomain });
   if (!subdomain) return { status: 404 };
