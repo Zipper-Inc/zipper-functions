@@ -1,11 +1,13 @@
 import {
+  Avatar,
   Box,
   Button,
+  Flex,
   Heading,
   HStack,
   Progress,
-  Slide,
   Stack,
+  Text,
   useDisclosure,
   VStack,
 } from '@chakra-ui/react';
@@ -120,7 +122,9 @@ export function AppPage({
 
   const [skipAuth, setSkipAuth] = useState(false);
 
-  const { isOpen, onToggle } = useDisclosure();
+  const { isOpen, onToggle } = useDisclosure({
+    defaultIsOpen: true,
+  });
 
   const description = getDescription({
     applet: app,
@@ -199,6 +203,28 @@ export function AppPage({
         });
       }
     }
+  };
+
+  const getRelativeTime = (date: Date) => {
+    const now = new Date();
+    const secondsAgo = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+    if (secondsAgo < 60) {
+      return `Less than a minute ago`;
+    }
+
+    const minutesAgo = Math.floor(secondsAgo / 60);
+    if (minutesAgo < 60) {
+      return `${minutesAgo} minutes ago`;
+    }
+
+    const hoursAgo = Math.floor(minutesAgo / 60);
+    if (hoursAgo < 24) {
+      return `${hoursAgo} hours ago`;
+    }
+
+    const daysAgo = Math.floor(hoursAgo / 24);
+    return `${daysAgo} days ago`;
   };
 
   useCmdOrCtrl(
@@ -290,7 +316,6 @@ export function AppPage({
   if (errorCode === 'NOT_FOUND' || !app) {
     return <Error statusCode={404} />;
   }
-
   const initialContent = (
     <>
       <ConnectorsAuthInputsSection
@@ -364,7 +389,7 @@ export function AppPage({
       mt={0}
     >
       {title && (
-        <Heading as="h1" fontSize="4xl" fontWeight="medium" ml={{ md: 4 }}>
+        <Heading as="h1" fontSize="4xl" fontWeight="medium">
           {title}
         </Heading>
       )}
@@ -376,6 +401,7 @@ export function AppPage({
         borderBottomWidth="1px"
       >
         <Button
+          px={0}
           variant="ghost"
           colorScheme="purple"
           size="sm"
@@ -387,6 +413,7 @@ export function AppPage({
               <HiChevronDoubleRight size={12} />
             )
           }
+          _hover={{ bgColor: 'transparent' }}
           onClick={onToggle}
         >
           {isOpen ? 'Hide' : 'Show'} App Details
@@ -406,18 +433,45 @@ export function AppPage({
             width={{ base: 'auto', md: '100%' }}
             maxW="400px"
             align="stretch"
-            ml={{ md: 4 }}
             flex={2}
           >
-            <Slide direction="left" in={isOpen} style={{ position: 'static' }}>
-              <HandlerDescription
-                description={
-                  screen === 'initial'
-                    ? description
-                    : { ...description, title: undefined }
-                }
-              />
-            </Slide>
+            <Flex direction="row" gap={4} alignItems="center">
+              <Stack direction="row">
+                <Avatar
+                  src={app.appAuthor.image}
+                  size="xs"
+                  name={app.appAuthor.name}
+                />
+                <Text fontSize="14">
+                  by <strong>{app.appAuthor.name}</strong>
+                </Text>
+              </Stack>
+              <Stack direction="row">
+                <Avatar
+                  src={app.appAuthor.orgImage}
+                  size="xs"
+                  name={app.appAuthor.organization}
+                />
+                <Text fontSize="14" fontWeight="bold">
+                  {app.appAuthor.organization
+                    ? `${app.appAuthor.organization}`
+                    : ''}
+                </Text>
+              </Stack>
+            </Flex>
+            <Stack>
+              <Text color="fg.400">
+                Last updated at{' '}
+                {app.updatedAt && getRelativeTime(new Date(app.updatedAt))}
+              </Text>
+            </Stack>
+            <HandlerDescription
+              description={
+                screen === 'initial'
+                  ? description
+                  : { ...description, title: undefined }
+              }
+            />
           </VStack>
         ) : null}
 
@@ -481,8 +535,6 @@ export const getServerSideProps: GetServerSideProps = async ({
   query,
   resolvedUrl,
 }) => {
-  console.log({ url: req.url, resolvedUrl, query });
-
   const { host } = req.headers;
   const isEmbedUrl = /\/embed\//.test(resolvedUrl);
   const isRunUrl = /^\/run(\/|\?|$)/.test(resolvedUrl);
