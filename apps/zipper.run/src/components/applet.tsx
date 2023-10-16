@@ -460,18 +460,20 @@ export function AppPage({
               </Stack>
             </Flex>
             <Stack>
-              <Text color="fg.400">
+              <Text color="gray.500" fontSize="14">
                 Last updated at{' '}
                 {app.updatedAt && getRelativeTime(new Date(app.updatedAt))}
               </Text>
             </Stack>
-            <HandlerDescription
-              description={
-                screen === 'initial'
-                  ? description
-                  : { ...description, title: undefined }
-              }
-            />
+            <Stack>
+              <HandlerDescription
+                description={
+                  screen === 'initial'
+                    ? description
+                    : { ...description, title: undefined }
+                }
+              />
+            </Stack>
           </VStack>
         ) : null}
 
