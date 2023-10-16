@@ -654,6 +654,7 @@ export const appRouter = createTRPCRouter({
             body: '{}',
             headers: {
               authorization: token ? `Bearer ${token}` : '',
+              'x-zipper-host': `${app.slug}.zipper.run`,
             },
           },
         ).then((r) => r.json());
@@ -731,6 +732,7 @@ export const appRouter = createTRPCRouter({
         headers: {
           authorization: token ? `Bearer ${token}` : '',
           'x-zipper-run-id': input.runId,
+          'x-zipper-host': `${app.slug}.zipper.run`,
         },
       });
 

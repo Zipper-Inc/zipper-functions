@@ -94,7 +94,8 @@ export async function relayRequest(
       result: 'Missing environment variables',
     };
 
-  const host = request.headers.get('host') || '';
+  const host =
+    request.headers.get('x-zipper-host') || request.headers.get('host') || '';
   if (__DEBUG__) console.log('request headers', request.headers);
   const subdomain = getValidSubdomain(host);
   if (__DEBUG__) console.log('getValidSubdomain', { host, subdomain });

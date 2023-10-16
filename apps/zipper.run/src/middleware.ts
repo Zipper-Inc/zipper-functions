@@ -120,7 +120,8 @@ export async function serveSource({ request }: { request: NextRequest }) {
 
   if (filename && !filename.endsWith('.ts')) filename = `${filename}.ts`;
 
-  const host = request.headers.get('host') || '';
+  const host =
+    request.headers.get('x-zipper-host') || request.headers.get('host') || '';
   const subdomain = getValidSubdomain(host);
 
   if (!filename) {
