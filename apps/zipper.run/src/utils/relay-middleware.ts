@@ -262,8 +262,9 @@ export default async function serveRelay({
     },
     bootOnly,
   );
+  const updatedHeaders = new Headers(headers);
   if (request.method !== 'GET')
-    headers?.append('Access-Control-Allow-Origin', '*');
+    updatedHeaders?.append('Access-Control-Allow-Origin', '*');
 
   if (status === 404) {
     return NextResponse.rewrite(new URL('/404', request.url));
@@ -315,13 +316,13 @@ export default async function serveRelay({
       }),
       {
         status,
-        headers,
+        headers: updatedHeaders,
       },
     );
   }
 
   return new NextResponse(result, {
     status,
-    headers,
+    headers: updatedHeaders,
   });
 }
