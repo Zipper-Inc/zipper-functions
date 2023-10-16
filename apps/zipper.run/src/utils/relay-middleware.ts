@@ -218,6 +218,7 @@ export async function relayRequest(
   });
 
   const { status, headers } = response;
+  const updatedHeaders = new Headers(headers);
   const result = await response.text();
 
   if (!bootOnly) {
@@ -232,7 +233,7 @@ export async function relayRequest(
         : relayBody,
       result: app.isDataSensitive ? SENSITIVE_DATA_PLACEHOLDER : result,
     });
-    headers.set('x-zipper-run-id', await appRunRes.text());
+    updatedHeaders.set('x-zipper-run-id', await appRunRes.text());
   }
 
   return { result, status, headers };
