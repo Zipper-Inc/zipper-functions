@@ -1,3 +1,5 @@
+/// <reference lib="deno.ns" />
+
 import './zipper.d.ts';
 import { files } from './applet/generated/index.gen.ts';
 import { BOOT_PATH, ENV_BLOCKLIST, MAIN_PATH } from './lib/constants.ts';
@@ -132,7 +134,7 @@ async function runApplet({ request }: Deno.RequestEvent) {
         log: {
           id: crypto.randomUUID(),
           method,
-          timestamp: Date.now(),
+          timestamp: new Date(),
           data,
         },
       });
@@ -177,6 +179,8 @@ async function runApplet({ request }: Deno.RequestEvent) {
     });
 
     const output = await handler(inputs, context);
+
+    if (output instanceof Response) return output;
 
     // Apply response if the response is not overwritten
     if (!response.body) {

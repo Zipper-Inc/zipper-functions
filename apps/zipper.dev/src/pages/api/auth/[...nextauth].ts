@@ -5,7 +5,7 @@ import EmailProvider, {
   SendVerificationRequestParams,
 } from 'next-auth/providers/email';
 import { prisma } from '~/server/prisma';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, UserSetting } from '@prisma/client';
 import { Adapter, AdapterAccount } from 'next-auth/adapters';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime';
 import { ResourceOwnerType } from '@zipper/types';
@@ -21,9 +21,10 @@ import { captureException } from '@sentry/nextjs';
 export function PrismaAdapter(p: PrismaClient): Adapter {
   return {
     createUser: async (data, { shouldCreateResourceOwnerSlug = true } = {}) => {
+      const { settings, ...remaining } = data;
       const slug = await createUserSlug({ name: data.name, email: data.email });
       const user = await p.user.create({
-        data: { ...data, slug },
+        data: { ...remaining, slug },
       });
 
       if (process.env.DEFAULT_APP_SLUG) {
@@ -53,16 +54,19 @@ export function PrismaAdapter(p: PrismaClient): Adapter {
 
       return user;
     },
-    getUser: (id) => p.user.findUnique({ where: { id } }),
-    getUserByEmail: (email) => p.user.findUnique({ where: { email } }),
+    getUser: (id) =>
+      p.user.findUnique({ where: { id }, include: { settings: true } }),
+    getUserByEmail: (email) =>
+      p.user.findUnique({ where: { email }, include: { settings: true } }),
     async getUserByAccount(provider_providerAccountId) {
       const account = await p.account.findUnique({
         where: { provider_providerAccountId },
-        select: { user: true },
+        select: { user: { include: { settings: true } } },
       });
       return account?.user ?? null;
     },
-    updateUser: ({ id, ...data }) => p.user.update({ where: { id }, data }),
+    updateUser: ({ id, settings, ...data }) =>
+      p.user.update({ where: { id }, data }),
     deleteUser: (id) => p.user.delete({ where: { id } }),
     linkAccount: (data) => {
       return p.account.create({ data }) as unknown as AdapterAccount;
@@ -203,7 +207,6 @@ export const authOptions: AuthOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [
     EmailProvider({
-      name: 'Email',
       server: '',
       from: 'Zipper<yourfriends@zipper.dev>',
       maxAge: 300, // 5 minutes
@@ -255,9 +258,6 @@ export const authOptions: AuthOptions = {
     // ...add more providers here
   ],
   callbacks: {
-    async signIn({ user, account }) {
-      return true;
-    },
     async jwt({ token: _token, user, account, trigger, session }) {
       const token = { ..._token };
 
@@ -278,6 +278,8 @@ export const authOptions: AuthOptions = {
             user.id,
             user.email,
           ),
+          settings: user.settings,
+          userCreatedAt: user.createdAt,
         };
       }
 
@@ -298,12 +300,14 @@ export const authOptions: AuthOptions = {
         if (session.updateProfile) {
           const userUpdated = await prisma.user.findUnique({
             where: { id: token.sub },
+            include: { settings: true },
           });
 
           token.picture = userUpdated?.image;
           token.name = userUpdated?.name;
           token.email = userUpdated?.email;
           token.slug = userUpdated?.slug;
+          token.settings = userUpdated?.settings;
         }
 
         if (session.currentOrganizationId) {
@@ -339,6 +343,8 @@ export const authOptions: AuthOptions = {
           image: token.picture,
           username: token.slug,
           newUser: token.newUser,
+          settings: token.settings,
+          createdAt: token.userCreatedAt,
         };
 
         if (trigger !== 'update') {
@@ -433,6 +439,8 @@ declare module 'next-auth' {
   interface User {
     slug?: string;
     newUser?: boolean;
+    settings?: UserSetting[];
+    createdAt?: Date;
   }
 }
 
@@ -443,6 +451,8 @@ export interface SessionUser {
   username?: string | null;
   id?: string | null;
   newUser?: boolean | null;
+  settings?: UserSetting[];
+  createdAt?: Date;
 }
 
 declare module 'next-auth/jwt' {
@@ -455,6 +465,8 @@ declare module 'next-auth/jwt' {
     currentOrganizationId?: string;
     slug?: string;
     newUser?: boolean;
+    settings?: UserSetting[];
+    userCreatedAt?: Date;
   }
 }
 

@@ -281,7 +281,7 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
                 onOpen();
               } else {
                 signIn(undefined, {
-                  callbackUrl: `${window.location.pathname}?fork=1`,
+                  callbackUrl: `${window.location.href}?fork=1`,
                 });
               }
             }}
