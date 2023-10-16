@@ -130,7 +130,7 @@ export function HandlerDescription(props: Props) {
       {isMobile ? (
         <MobileView />
       ) : (
-        <VStack align="start" width="full">
+        <VStack align="start" width="full" mt={4}>
           {subtitle && (
             <Heading as="h2" fontSize="xl" fontWeight="normal" color="fg.600">
               {subtitle}
