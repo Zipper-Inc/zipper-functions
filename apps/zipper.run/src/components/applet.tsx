@@ -448,22 +448,22 @@ export function AppPage({
             <Flex direction="row" gap={4} alignItems="center">
               <Stack direction="row">
                 <Avatar
-                  src={app.appAuthor.image}
+                  src={app.appAuthor?.image}
                   size="xs"
-                  name={app.appAuthor.name}
+                  name={app.appAuthor?.name}
                 />
                 <Text fontSize="14">
-                  by <strong>{app.appAuthor.name}</strong>
+                  by <strong>{app.appAuthor?.name}</strong>
                 </Text>
               </Stack>
               <Stack direction="row">
                 <Avatar
-                  src={app.appAuthor.orgImage}
+                  src={app.appAuthor?.orgImage}
                   size="xs"
-                  name={app.appAuthor.organization}
+                  name={app.appAuthor?.organization}
                 />
                 <Text fontSize="14" fontWeight="bold">
-                  {app.appAuthor.organization
+                  {app.appAuthor?.organization
                     ? `${app.appAuthor.organization}`
                     : ''}
                 </Text>
