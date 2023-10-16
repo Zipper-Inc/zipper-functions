@@ -218,7 +218,13 @@ const checkAuthCookies = async (request: NextRequest) => {
 
 export const middleware = async (request: NextRequest) => {
   const appRoute = request.nextUrl.pathname;
-  if (__DEBUG__) console.log('middleware', { appRoute });
+  if (__DEBUG__)
+    console.log('middleware', {
+      appRoute,
+      url: request.url,
+      nextUrl: request.nextUrl,
+      headers: Object.fromEntries(request.headers.entries()),
+    });
 
   const { userId, accessToken } = await checkAuthCookies(request);
   const requestHeaders = new Headers(request.headers);
