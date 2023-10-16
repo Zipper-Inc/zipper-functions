@@ -10,6 +10,13 @@ export type UserInfoReturnType = {
   organizations?: SessionOrganizationMembership[];
 };
 
+export type AppletAuthorReturnType = {
+  name: string;
+  organization: string;
+  image: string;
+  orgImage: string;
+};
+
 export async function getUserInfo(
   token: string,
   appSlug: string,
