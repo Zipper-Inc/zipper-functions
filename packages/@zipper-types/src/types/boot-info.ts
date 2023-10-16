@@ -11,7 +11,7 @@ export type AppInfo = {
   isDataSensitive: boolean;
   playgroundVersionHash: string | null;
   publishedVersionHash: string | null;
-  appAuthor: {
+  appAuthor?: {
     name: string;
     organization: string;
     image: string;
