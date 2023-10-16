@@ -11,12 +11,6 @@ export type AppInfo = {
   isDataSensitive: boolean;
   playgroundVersionHash: string | null;
   publishedVersionHash: string | null;
-  appAuthor?: {
-    name: string;
-    organization: string;
-    image: string;
-    orgImage: string;
-  };
 };
 
 export type InputParams = InputParam[];

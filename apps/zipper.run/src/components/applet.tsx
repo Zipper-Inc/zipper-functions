@@ -1,17 +1,12 @@
 import {
-  Avatar,
   Box,
-  Button,
-  Flex,
+  Container,
   Heading,
-  HStack,
   Progress,
   Stack,
-  Text,
-  useDisclosure,
+  useMediaQuery,
   VStack,
 } from '@chakra-ui/react';
-import { motion } from 'framer-motion';
 import {
   AppInfo,
   EntryPointInfo,
@@ -40,7 +35,6 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { HiChevronDoubleLeft, HiChevronDoubleRight } from 'react-icons/hi2';
 import getBootInfo from '~/utils/get-boot-info';
 import { getConnectorsAuthUrl } from '~/utils/get-connectors-auth-url';
 import { getBootUrl, getRelayUrl } from '~/utils/get-relay-url';
@@ -122,24 +116,16 @@ export function AppPage({
   >(filename ? handlerConfigs?.[filename] : undefined);
 
   const [skipAuth, setSkipAuth] = useState(false);
-
-  const { isOpen, onToggle } = useDisclosure({
-    defaultIsOpen: true,
-  });
-
-  const variants = {
-    open: { opacity: 1, x: 0 },
-    closed: { opacity: 0, x: '-100%' },
-  };
-
   const description = getDescription({
     applet: app,
     filename: entryPoint?.filename,
     config: currentFileConfig,
   });
   const shouldShowDescription =
-    shouldShowDescriptionPassedIn && description && isOpen;
+    shouldShowDescriptionPassedIn && description && screen === 'initial';
   const previousRouteRef = useRef(asPath);
+
+  const [isMobile] = useMediaQuery('(max-width: 600px)');
 
   // We have to do this so that the results aren't SSRed
   // (if they are DOMParser in FunctionOutput will be undefined)
@@ -209,28 +195,6 @@ export function AppPage({
         });
       }
     }
-  };
-
-  const getRelativeTime = (date: Date) => {
-    const now = new Date();
-    const secondsAgo = Math.floor((now.getTime() - date.getTime()) / 1000);
-
-    if (secondsAgo < 60) {
-      return `Less than a minute ago`;
-    }
-
-    const minutesAgo = Math.floor(secondsAgo / 60);
-    if (minutesAgo < 60) {
-      return `${minutesAgo} minutes ago`;
-    }
-
-    const hoursAgo = Math.floor(minutesAgo / 60);
-    if (hoursAgo < 24) {
-      return `${hoursAgo} hours ago`;
-    }
-
-    const daysAgo = Math.floor(hoursAgo / 24);
-    return `${daysAgo} days ago`;
   };
 
   useCmdOrCtrl(
@@ -322,6 +286,7 @@ export function AppPage({
   if (errorCode === 'NOT_FOUND' || !app) {
     return <Error statusCode={404} />;
   }
+
   const initialContent = (
     <>
       <ConnectorsAuthInputsSection
@@ -368,7 +333,11 @@ export function AppPage({
   const title = description?.title || appTitle || app?.slug;
   const runContent = (
     <VStack w="full" align="stretch" spacing={4} ml={{ md: 4 }}>
+      <Heading as="h1" fontSize="4xl" fontWeight="medium">
+        {title}
+      </Heading>
       {!isEmbedded && <Box ml="4">{inputSummary}</Box>}
+      {output}
     </VStack>
   );
 
@@ -389,115 +358,40 @@ export function AppPage({
     <Stack
       as="main"
       position="relative"
-      w="full"
       px={{ base: 4, md: 8 }}
-      pt={0}
-      mt={0}
+      pt={4}
+      pb={8}
+      spacing={8}
+      w="full"
+      direction={{ base: 'column', md: 'row' }}
+      justify="center"
     >
-      {title && (
-        <Heading as="h1" fontSize="4xl" fontWeight="medium">
-          {title}
-        </Heading>
-      )}
-      <HStack
-        align="center"
-        alignItems="start"
-        pb={2}
-        borderBottomColor="gray.50"
-        borderBottomWidth="1px"
-      >
-        <Button
-          px={0}
-          variant="ghost"
-          colorScheme="purple"
-          size="sm"
-          fontWeight="normal"
-          leftIcon={
-            isOpen ? (
-              <HiChevronDoubleLeft size={12} />
-            ) : (
-              <HiChevronDoubleRight size={12} />
-            )
-          }
-          _hover={{ bgColor: 'transparent' }}
-          onClick={onToggle}
-        >
-          {isOpen ? 'Hide' : 'Show'} App Details
-        </Button>
-        {showRunOutput && runContent}
-      </HStack>
-      <Stack
-        as="div"
-        direction={{ base: 'column', md: 'row' }}
-        justify="center"
-        pt={4}
-        pb={8}
-        spacing={8}
-      >
-        {isOpen ? (
-          <VStack
-            width={{ base: 'auto', md: '100%' }}
-            maxW="400px"
-            align="stretch"
-            flex={2}
-            as={motion.div}
-            initial="closed"
-            animate={isOpen ? 'open' : 'closed'}
-            variants={variants}
-          >
-            <Flex direction="row" gap={4} alignItems="center">
-              <Stack direction="row">
-                <Avatar
-                  src={app.appAuthor?.image}
-                  size="xs"
-                  name={app.appAuthor?.name}
-                />
-                <Text fontSize="14">
-                  by <strong>{app.appAuthor?.name}</strong>
-                </Text>
-              </Stack>
-              <Stack direction="row">
-                <Avatar
-                  src={app.appAuthor?.orgImage}
-                  size="xs"
-                  name={app.appAuthor?.organization}
-                />
-                <Text fontSize="14" fontWeight="bold">
-                  {app.appAuthor?.organization
-                    ? `${app.appAuthor.organization}`
-                    : ''}
-                </Text>
-              </Stack>
-            </Flex>
-            <Stack>
-              <Text color="gray.500" fontSize="14">
-                Last updated at{' '}
-                {app.updatedAt && getRelativeTime(new Date(app.updatedAt))}
-              </Text>
-            </Stack>
-            <Stack>
-              <HandlerDescription
-                description={
-                  screen === 'initial'
-                    ? description
-                    : { ...description, title: undefined }
-                }
-              />
-            </Stack>
-          </VStack>
-        ) : null}
-
+      {shouldShowDescription && (
         <VStack
-          mx={shouldShowDescription ? 'auto' : undefined}
+          width={{ base: 'auto', md: '100%' }}
           align="stretch"
-          flex={3}
+          minW="320px"
+          ml={{ md: 4 }}
+          flex={2}
         >
-          {screen === 'initial' && initialContent}
-
-          <VStack alignSelf="start">{showRunOutput && output}</VStack>
-          {loading && loadingContent}
+          <HandlerDescription
+            description={
+              screen === 'initial'
+                ? description
+                : { ...description, title: undefined }
+            }
+          />
         </VStack>
-      </Stack>
+      )}
+      <VStack
+        mx={shouldShowDescription ? 'auto' : undefined}
+        align="stretch"
+        flex={3}
+      >
+        {screen === 'initial' && initialContent}
+        {showRunOutput && runContent}
+        {loading && loadingContent}
+      </VStack>
     </Stack>
   );
 
@@ -547,6 +441,8 @@ export const getServerSideProps: GetServerSideProps = async ({
   query,
   resolvedUrl,
 }) => {
+  console.log({ url: req.url, resolvedUrl, query });
+
   const { host } = req.headers;
   const isEmbedUrl = /\/embed\//.test(resolvedUrl);
   const isRunUrl = /^\/run(\/|\?|$)/.test(resolvedUrl);
