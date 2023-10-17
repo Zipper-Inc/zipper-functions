@@ -70,7 +70,6 @@ const getDefaultCreateAppFormValues = () => ({
 export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { user, isLoaded } = useUser();
-  const [editSlug, setEditSlug] = useState(false);
   const [isShareModalOpen, setShareModalOpen] = useState(false);
 
   const { editorIds, onlineEditorIds } = useAppEditors();
@@ -167,8 +166,8 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
             <SignedOut>
               <ZipperLogo
                 fill={BLUE}
+                height={20}
                 style={{
-                  maxHeight: '100%',
                   marginLeft: '5px',
                   width: '140px',
                 }}
@@ -282,7 +281,7 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
                 onOpen();
               } else {
                 signIn(undefined, {
-                  callbackUrl: `${window.location.pathname}?fork=1`,
+                  callbackUrl: `${window.location.href}?fork=1`,
                 });
               }
             }}
@@ -290,18 +289,16 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
             Fork
           </Button>
         )}
-        <SignedIn>
-          <Button
-            size="sm"
-            colorScheme="gray"
-            variant="outline"
-            onClick={() => setShareModalOpen(true)}
-            fontWeight="medium"
-            leftIcon={<PiShareNetworkDuotone color={ORANGE} />}
-          >
-            <Text>Share</Text>
-          </Button>
-        </SignedIn>
+        <Button
+          size="sm"
+          colorScheme="gray"
+          variant="outline"
+          onClick={() => setShareModalOpen(true)}
+          fontWeight="medium"
+          leftIcon={<PiShareNetworkDuotone color={ORANGE} />}
+        >
+          <Text>Share</Text>
+        </Button>
         <Button
           as={Link}
           size="sm"

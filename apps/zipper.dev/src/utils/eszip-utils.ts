@@ -40,6 +40,12 @@ export function addJsxPragma(code: string) {
   );
 }
 
+// tried ts-morph but it doesn't work here for some reason
+// this is fine for now...
+export function codeHasReact(code: string) {
+  return code.includes('import React from');
+}
+
 export function applyTsxHack(
   specifier: string,
   code = '/* 🤷🏽‍♂️ missing code */',
@@ -49,7 +55,8 @@ export function applyTsxHack(
     // Add TSX to all files so they support JSX
     specifier: specifier.replace(/\.(ts|tsx)$|$/, '.tsx'),
     headers: TYPESCRIPT_CONTENT_HEADERS,
-    content: shouldAddJsxPragma ? addJsxPragma(code) : code,
+    content:
+      !codeHasReact(code) && shouldAddJsxPragma ? addJsxPragma(code) : code,
     kind: 'module',
   };
 }

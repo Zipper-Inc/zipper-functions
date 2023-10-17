@@ -443,13 +443,13 @@ export const getServerSideProps: GetServerSideProps = async ({
 }) => {
   console.log({ url: req.url, resolvedUrl, query });
 
-  const { host } = req.headers;
+  const host = req.headers['x-zipper-host'] || req.headers.host;
   const isEmbedUrl = /\/embed\//.test(resolvedUrl);
   const isRunUrl = /^\/run(\/|\?|$)/.test(resolvedUrl);
   const isInitialServerSideProps = !req.url?.startsWith('/_next');
 
   // validate subdomain
-  const subdomain = getValidSubdomain(host);
+  const subdomain = getValidSubdomain(host as string);
   if (__DEBUG__) console.log('getValidSubdomain', { subdomain, host });
   if (!subdomain) return { notFound: true };
 

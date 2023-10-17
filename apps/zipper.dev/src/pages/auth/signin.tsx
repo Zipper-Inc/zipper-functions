@@ -187,6 +187,14 @@ export default function SignIn({
 
 export async function getServerSideProps(context: GetServerSidePropsContext) {
   const urlParams = new URLSearchParams(context.query as any);
+  const callbackUrl = urlParams.get('callbackUrl');
+  const allowCallback =
+    callbackUrl?.startsWith(
+      `http://${process.env.NEXT_PUBLIC_ZIPPER_DOT_DEV_HOST}`,
+    ) ||
+    callbackUrl?.startsWith(
+      `https://${process.env.NEXT_PUBLIC_ZIPPER_DOT_DEV_HOST}`,
+    );
   const session = await getServerSession(context.req, context.res, authOptions);
 
   const csrfToken = await getCsrfToken(context);
@@ -195,14 +203,7 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
   // Note: Make sure not to redirect to the same page
   // To avoid an infinite loop!
   if (session) {
-    if (session.user?.newUser) {
-      const callbackUrl = urlParams.get('callbackUrl')
-        ? `callbackUrl=${urlParams.get('callbackUrl')}`
-        : '';
-      const newUrl = `/auth/welcome${callbackUrl ? `?${callbackUrl}` : ''}`;
-      return { redirect: { destination: newUrl } };
-    }
-    return { redirect: { destination: '/' } };
+    return { redirect: { destination: allowCallback ? callbackUrl : '/' } };
   }
 
   const providers = await getProviders();

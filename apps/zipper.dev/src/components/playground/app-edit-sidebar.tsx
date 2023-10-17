@@ -24,12 +24,14 @@ type AppEditSidebarProps = {
   appSlug: string;
   isMarkdownEditable: boolean;
   setIsMarkdownEditable: (editable: boolean) => void;
+  canUserEdit: boolean;
 };
 
 export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
   appSlug,
   isMarkdownEditable,
   setIsMarkdownEditable,
+  canUserEdit,
 }) => {
   const [tabIndex, setTabIndex] = useState(0);
 
@@ -75,13 +77,13 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
           : '4px solid transparent'
       }
     >
-      {isMarkdown && (
+      {isMarkdown && canUserEdit && (
         <Button
           variant="outline"
           alignSelf="start"
           size="sm"
           fontWeight="normal"
-          ml={10}
+          ml={4}
           onClick={() => setIsMarkdownEditable(!isMarkdownEditable)}
         >
           <HStack spacing={2}>

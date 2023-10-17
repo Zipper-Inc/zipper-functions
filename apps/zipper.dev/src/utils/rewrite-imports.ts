@@ -5,7 +5,7 @@ import { getSourceFileFromCode, isExternalImport } from './parse-code';
 
 const DEFAULT_NPM_CDN = 'https://esm.sh';
 const withNpmCdn = (specifier: string) => `${DEFAULT_NPM_CDN}/${specifier}`;
-const LOCALHOST_REGEX =
+export const LOCALHOST_URL_REGEX =
   /^(?:https?:\/\/)(?:localhost|127\.0\.0\.1|10\.(?:\d{1,3}\.){2}\d{1,3}|172\.(?:1[6-9]|2\d|3[01])\.(?:\d{1,3}\.){2}\d{1,3}|192\.168\.(?:\d{1,3}\.){1}\d{1,3}|::1)(?:\:\d+)?/;
 
 export enum RewriteTo {
@@ -29,7 +29,7 @@ export enum RewriteTo {
 export function getRewriteRule(specifier: string): RewriteTo {
   // Someone clever might try to sniff out the server URL
   // Extend the metaphor by making it just be zipper.dev
-  if (specifier.startsWith('/') || LOCALHOST_REGEX.test(specifier)) {
+  if (specifier.startsWith('/') || LOCALHOST_URL_REGEX.test(specifier)) {
     return RewriteTo.ZipperDotDev;
   }
 
@@ -60,7 +60,7 @@ export function rewriteSpecifier(
 
     case RewriteTo.ZipperDotDev:
       return `${getZipperDotDevUrlForServer()}${specifier
-        .replace(LOCALHOST_REGEX, '')
+        .replace(LOCALHOST_URL_REGEX, '')
         .replace(/^\//, '')}`;
 
     case RewriteTo.NpmCdn:

@@ -14,6 +14,14 @@ const parseZipperSrcPath = (req: NextRequest) => {
 };
 
 export default async (req: NextRequest) => {
+  if (process.env.__DEBUG__) {
+    console.log('middleware', {
+      url: req.url,
+      headers: Object.fromEntries(req.headers.entries()),
+      nextUrl: req.nextUrl,
+    });
+  }
+
   const zipperSrcParams = parseZipperSrcPath(req);
   if (
     zipperSrcParams &&

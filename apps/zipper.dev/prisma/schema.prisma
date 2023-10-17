@@ -86,6 +86,21 @@ model AppSetting {
   @@map("app_settings")
 }
 
+model UserSetting {
+  settingName  String    @db.VarChar
+  settingValue String    @db.VarChar
+  createdAt    DateTime  @default(now()) @db.Timestamp(6)
+  deletedAt    DateTime? @db.Timestamp(6)
+  updatedAt    DateTime  @default(now()) @updatedAt @db.Timestamp(6)
+  userId       String
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@id([settingName, userId])
+  @@unique([userId, settingName])
+  @@map("user_settings")
+}
+
 model AppEditor {
   userId  String
   appId   String
@@ -316,6 +331,7 @@ model User {
   slug          String    @unique
   accounts      Account[]
   sessions      Session[]
+  settings      UserSetting[]
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @default(now()) @updatedAt

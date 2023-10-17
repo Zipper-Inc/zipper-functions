@@ -22,7 +22,7 @@ import { useRouter } from 'next/router';
 import { LiveObject, LsonObject } from '@liveblocks/client';
 import { getPathFromUri, getUriFromPath } from '~/utils/model-uri';
 import { InputParam } from '@zipper/types';
-import { parseCode } from '~/utils/parse-code';
+import { isExternalImport, parseCode } from '~/utils/parse-code';
 import debounce from 'lodash.debounce';
 import { uuid } from '@zipper/utils';
 import { prettyLog } from '~/utils/pretty-log';
@@ -31,6 +31,7 @@ import { getAppVersionFromHash } from '~/utils/hashing';
 import { isZipperImportUrl } from '~/utils/eszip-utils';
 import { parsePlaygroundQuery, PlaygroundTab } from '~/utils/playground.utils';
 import { runZipperLinter } from '~/utils/zipper-editor-linter';
+import { rewriteSpecifier } from '~/utils/rewrite-imports';
 
 type OnValidate = AddParameters<
   Required<EditorProps>['onValidate'],
@@ -138,12 +139,16 @@ async function fetchImport({
   uriParser,
   monacoRef,
   invalidImportUrlsRef,
+  alias,
 }: {
   importUrl: string;
   uriParser: (value: string, _strict?: boolean | undefined) => monaco.Uri;
   monacoRef: MutableRefObject<typeof monaco | undefined>;
   invalidImportUrlsRef: MutableRefObject<{ [url: string]: number }>;
+  alias?: string;
 }) {
+  if (!monacoRef?.current) return;
+
   // Don't try to fetch something we've already marked as invalid
   if ((invalidImportUrlsRef.current[importUrl] || 0) >= 3) return;
 
@@ -157,6 +162,7 @@ async function fetchImport({
 
     // Add each individual file in the bundle the model
     Object.keys(bundle).forEach((url) => {
+      if (!monacoRef?.current) return;
       console.log('[IMPORTS]', `(${importUrl})`, `Handling ${url}`);
       const src = bundle[url];
       const uri = getUriFromPath(
@@ -165,8 +171,21 @@ async function fetchImport({
         isZipperImportUrl(url) || url.endsWith('tsx') ? 'tsx' : 'ts',
       );
 
-      if (!monacoRef?.current?.editor.getModel(uri)) {
-        monacoRef?.current?.editor.createModel(src, 'typescript', uri);
+      if (!monacoRef.current.editor.getModel(uri)) {
+        monacoRef.current.editor.createModel(src, 'typescript', uri);
+        if (alias) {
+          const opts =
+            monacoRef.current.languages.typescript.typescriptDefaults.getCompilerOptions();
+          monacoRef.current.languages.typescript.typescriptDefaults.setCompilerOptions(
+            {
+              ...opts,
+              paths: {
+                ...opts.paths,
+                [alias]: [url],
+              },
+            },
+          );
+        }
       }
     });
   } catch (e) {
@@ -202,7 +221,7 @@ function handleExternalImports({
   invalidImportUrlsRef,
   currentScript,
 }: {
-  imports: string[];
+  imports: { specifier: string }[];
   monacoRef: MutableRefObject<typeof monaco | undefined>;
   externalImportModelsRef: MutableRefObject<Record<string, string[]>>;
   invalidImportUrlsRef: MutableRefObject<{ [url: string]: number }>;
@@ -210,6 +229,12 @@ function handleExternalImports({
 }) {
   if (!monacoRef?.current || !currentScript || !externalImportModelsRef.current)
     return;
+
+  const externalImportsPairs = imports
+    .map((i) => [i.specifier, rewriteSpecifier(i.specifier)] as const)
+    .filter((s) => isExternalImport(s[1]));
+
+  const externalImports = externalImportsPairs.map((s) => s[1]);
 
   const uriParser = monacoRef.current.Uri.parse;
 
@@ -221,7 +246,7 @@ function handleExternalImports({
   // First, let's cleanup anything removed from the code
   oldImportModels.forEach((importUrl) => {
     const modelToDelete =
-      !imports.includes(importUrl) &&
+      !externalImports.includes(importUrl) &&
       monacoRef?.current?.editor.getModel(
         getUriFromPath(
           importUrl,
@@ -239,7 +264,7 @@ function handleExternalImports({
   });
 
   // Handle changes in code
-  imports.forEach((importUrl, index) => {
+  externalImports.forEach((importUrl, index) => {
     // First let's move the pointer to the right spot
     newImportModels[index] = importUrl;
 
@@ -252,12 +277,21 @@ function handleExternalImports({
       (invalidImportUrlsRef.current[importUrl] || 0) <
         MAX_RETRIES_FOR_EXTERNAL_IMPORT
     ) {
-      fetchImport({
-        importUrl,
-        uriParser,
-        monacoRef,
-        invalidImportUrlsRef,
-      });
+      // check if we have an alias
+      const alias = externalImportsPairs.find(
+        ([ogSpecifier, rewrittenSpecifier]) =>
+          rewrittenSpecifier === importUrl &&
+          ogSpecifier !== rewrittenSpecifier,
+      )?.[0];
+
+      if (alias !== importUrl)
+        fetchImport({
+          importUrl,
+          uriParser,
+          monacoRef,
+          invalidImportUrlsRef,
+          alias,
+        });
     }
   });
 
@@ -302,7 +336,7 @@ function runEditorActionsOnChange({
     });
 
     handleExternalImports({
-      imports: externalImportUrls,
+      imports,
       monacoRef,
       externalImportModelsRef,
       invalidImportUrlsRef,

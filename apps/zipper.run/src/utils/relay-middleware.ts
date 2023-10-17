@@ -94,7 +94,9 @@ export async function relayRequest(
       result: 'Missing environment variables',
     };
 
-  const host = request.headers.get('host') || '';
+  const host =
+    request.headers.get('x-zipper-host') || request.headers.get('host') || '';
+  if (__DEBUG__) console.log('request headers', request.headers);
   const subdomain = getValidSubdomain(host);
   if (__DEBUG__) console.log('getValidSubdomain', { host, subdomain });
   if (!subdomain) return { status: 404 };
@@ -216,6 +218,7 @@ export async function relayRequest(
   });
 
   const { status, headers } = response;
+  const updatedHeaders = new Headers(headers);
   const result = await response.text();
 
   if (!bootOnly) {
@@ -230,7 +233,7 @@ export async function relayRequest(
         : relayBody,
       result: app.isDataSensitive ? SENSITIVE_DATA_PLACEHOLDER : result,
     });
-    headers.set('x-zipper-run-id', await appRunRes.text());
+    updatedHeaders.set('x-zipper-run-id', await appRunRes.text());
   }
 
   return { result, status, headers };
@@ -259,8 +262,9 @@ export default async function serveRelay({
     },
     bootOnly,
   );
+  const updatedHeaders = new Headers(headers);
   if (request.method !== 'GET')
-    headers?.append('Access-Control-Allow-Origin', '*');
+    updatedHeaders?.append('Access-Control-Allow-Origin', '*');
 
   if (status === 404) {
     return NextResponse.rewrite(new URL('/404', request.url));
@@ -312,13 +316,13 @@ export default async function serveRelay({
       }),
       {
         status,
-        headers,
+        headers: updatedHeaders,
       },
     );
   }
 
   return new NextResponse(result, {
     status,
-    headers,
+    headers: updatedHeaders,
   });
 }
