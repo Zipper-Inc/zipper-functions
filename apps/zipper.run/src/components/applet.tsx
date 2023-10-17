@@ -11,6 +11,7 @@ import {
   useDisclosure,
   VStack,
 } from '@chakra-ui/react';
+import { motion } from 'framer-motion';
 import {
   AppInfo,
   EntryPointInfo,
@@ -125,6 +126,11 @@ export function AppPage({
   const { isOpen, onToggle } = useDisclosure({
     defaultIsOpen: true,
   });
+
+  const variants = {
+    open: { opacity: 1, x: 0 },
+    closed: { opacity: 0, x: '-100%' },
+  };
 
   const description = getDescription({
     applet: app,
@@ -434,6 +440,10 @@ export function AppPage({
             maxW="400px"
             align="stretch"
             flex={2}
+            as={motion.div}
+            initial="closed"
+            animate={isOpen ? 'open' : 'closed'}
+            variants={variants}
           >
             <Flex direction="row" gap={4} alignItems="center">
               <Stack direction="row">
