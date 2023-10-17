@@ -43,7 +43,7 @@ export function addJsxPragma(code: string) {
 // tried ts-morph but it doesn't work here for some reason
 // this is fine for now...
 export function codeHasReact(code: string) {
-  return code.includes('import React from');
+  return /^import\s+.*React,?.*\s+from/m.test(code);
 }
 
 export function applyTsxHack(
