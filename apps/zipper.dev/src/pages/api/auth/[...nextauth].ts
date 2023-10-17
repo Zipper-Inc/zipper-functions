@@ -7,7 +7,7 @@ import EmailProvider, {
 import { prisma } from '~/server/prisma';
 import { PrismaClient, UserSetting } from '@prisma/client';
 import { Adapter, AdapterAccount } from 'next-auth/adapters';
-import { PrismaClientKnownRequestError } from '@prisma/client/runtime';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { ResourceOwnerType } from '@zipper/types';
 import { MagicLinkEmail } from '~/emails';
 import fetch from 'node-fetch';
