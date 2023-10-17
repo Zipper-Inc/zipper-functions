@@ -8,7 +8,9 @@ import {
   NextApiRequest,
   NextApiResponse,
 } from 'next';
-import { getToken } from 'next-auth/jwt';
+
+import { getServerSession } from 'next-auth';
+import { authOptions } from '../pages/api/auth/[...nextauth]';
 
 type RequestLike = GetServerSidePropsContext['req'] | NextApiRequest;
 type ResponseLike = NextApiResponse | ServerResponse;
@@ -40,15 +42,15 @@ export async function createContext(opts: {
   res: ResponseLike;
 }) {
   const getAuthAndCreateContext = async () => {
-    const token = await getToken({ req: opts.req });
+    const session = await getServerSession(opts.req, opts.res, authOptions);
     const orgMems: Record<string, string> = {};
-    token?.organizationMemberships?.forEach((m) => {
+    session?.organizationMemberships?.forEach((m) => {
       orgMems[m.organization.id] = m.role;
     });
 
     return createContextInner({
-      orgId: token?.currentOrganizationId || undefined,
-      userId: token?.sub || undefined,
+      orgId: session?.currentOrganizationId || undefined,
+      userId: session?.user?.id || undefined,
       organizations: orgMems,
       req: opts.req,
     });
