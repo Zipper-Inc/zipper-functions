@@ -254,84 +254,8 @@ export const authOptions: AuthOptions = {
         },
       },
     }),
-    // ...add more providers here
   ],
   callbacks: {
-    // async jwt({ token: _token, user, account, trigger, session }) {
-    //   const token = { ..._token };
-
-    //   // Initial sign in (only time account is not null)
-    //   if (account) {
-    //     if (trigger === 'signUp') {
-    //       user.newUser = true;
-    //     }
-    //     // Save the access token and refresh token in the JWT on the initial login
-    //     return {
-    //       ...token,
-    //       newUser: user.newUser,
-    //       access_token: account.access_token,
-    //       expires_at: account.expires_at,
-    //       refresh_token: account.refresh_token,
-    //       slug: user.slug,
-    //       organizationMemberships: await getOrganizationMemberships(
-    //         user.id,
-    //         user.email,
-    //       ),
-    //       settings: user.settings,
-    //       userCreatedAt: user.createdAt,
-    //     };
-    //   }
-
-    //   if (trigger === 'update') {
-    //     console.log('update triggered: ', session);
-
-    //     if (session.updateOrganizationList) {
-    //       token.organizationMemberships = await getOrganizationMemberships(
-    //         token.sub,
-    //         token.email,
-    //       );
-    //     }
-
-    //     if (session.currentOrganizationId === null) {
-    //       token.currentOrganizationId = undefined;
-    //     }
-
-    //     if (session.updateProfile) {
-    //       const userUpdated = await prisma.user.findUnique({
-    //         where: { id: token.sub },
-    //         include: { settings: true },
-    //       });
-
-    //       token.picture = userUpdated?.image;
-    //       token.name = userUpdated?.name;
-    //       token.email = userUpdated?.email;
-    //       token.slug = userUpdated?.slug;
-    //       token.settings = userUpdated?.settings;
-    //     }
-
-    //     if (session.currentOrganizationId) {
-    //       if (
-    //         token.organizationMemberships?.find(
-    //           (m) => m.organization.id === session.currentOrganizationId,
-    //         )
-    //       ) {
-    //         token.currentOrganizationId = session.currentOrganizationId;
-    //       }
-    //     }
-    //   }
-
-    //   if (!token.expires_at) return token;
-
-    //   // Not initial sign in
-    //   // token is still good; carry on
-    //   if (Date.now() < token.expires_at * 1000) {
-    //     // If the access token has not expired yet, return it
-    //     return token;
-    //   }
-
-    //   // If the access token has expired, try to refresh it
-    //   return refreshAccessToken(token);
-    // },
     async session({ session, user, trigger, newSession }) {
       try {
         session.user = {
