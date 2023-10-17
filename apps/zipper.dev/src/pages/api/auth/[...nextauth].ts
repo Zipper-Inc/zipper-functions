@@ -128,7 +128,7 @@ export function PrismaAdapter(p: PrismaClient): Adapter {
     },
   };
 }
-
+//
 // async function refreshAccessToken(session: Session) {
 //   try {
 //     // https://accounts.google.com/.well-known/openid-configuration
