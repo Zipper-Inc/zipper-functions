@@ -1,4 +1,4 @@
-import NextAuth, { AuthOptions, SessionStrategy } from 'next-auth';
+import NextAuth, { AuthOptions, Session, SessionStrategy } from 'next-auth';
 import GithubProvider from 'next-auth/providers/github';
 import GoogleProvider from 'next-auth/providers/google';
 import EmailProvider, {
@@ -128,42 +128,64 @@ export function PrismaAdapter(p: PrismaClient): Adapter {
     },
   };
 }
-//
-// async function refreshAccessToken(session: Session) {
-//   try {
-//     // https://accounts.google.com/.well-known/openid-configuration
-//     // We need the `token_endpoint`.
-//     if (!token.refresh_token) throw new Error('No refresh token');
 
-//     const response = await fetch('https://oauth2.googleapis.com/token', {
-//       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-//       body: new URLSearchParams({
-//         client_id: process.env.NEXTAUTH_GOOGLE_CLIENT_ID!,
-//         client_secret: process.env.NEXTAUTH_GOOGLE_CLIENT_SECRET!,
-//         grant_type: 'refresh_token',
-//         refresh_token: token.refresh_token,
-//       }),
-//       method: 'POST',
-//     });
+async function refreshAccessToken(session: Session) {
+  try {
+    // https://accounts.google.com/.well-known/openid-configuration
+    // We need the `token_endpoint`.
 
-//     const tokens = await response.json();
+    // get the refresh token from the account table
+    if (!session.user?.id) throw new Error('No user id');
 
-//     if (!response.ok) throw tokens;
+    const account = await prisma.account.findFirst({
+      where: {
+        userId: session.user.id,
+        provider: 'google',
+      },
+      select: { refresh_token: true, id: true, access_token: true },
+    });
 
-//     return {
-//       ...token, // Keep the previous token properties
-//       access_token: tokens.access_token,
-//       // expires_at: Math.floor(Date.now() / 1000 + tokens.expires_in),
-//       // Fall back to old refresh token, but note that
-//       // many providers may only allow using a refresh token once.
-//       refresh_token: tokens.refresh_token ?? token.refresh_token,
-//     };
-//   } catch (error) {
-//     console.error('Error refreshing access token', error);
-//     // The error property will be used client-side to handle the refresh token error
-//     return { ...token, error: 'RefreshAccessTokenError' as const };
-//   }
-// }
+    if (!account?.refresh_token) throw new Error('No refresh token');
+
+    const response = await fetch('https://oauth2.googleapis.com/token', {
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        client_id: process.env.NEXTAUTH_GOOGLE_CLIENT_ID!,
+        client_secret: process.env.NEXTAUTH_GOOGLE_CLIENT_SECRET!,
+        grant_type: 'refresh_token',
+        refresh_token: account.refresh_token,
+      }),
+      method: 'POST',
+    });
+
+    const tokens = await response.json();
+
+    if (!response.ok) throw tokens;
+
+    const currentTimestampInSeconds = Math.floor(Date.now() / 1000);
+    const expiresAt = currentTimestampInSeconds + tokens.expires_in;
+
+    // Refresh was successful, update the account in the database with the new tokens
+    await prisma.account.update({
+      where: {
+        id: account.id,
+      },
+      data: {
+        access_token: tokens.access_token,
+        expires_at: expiresAt,
+        refresh_token: tokens.refresh_token ?? account.refresh_token,
+      },
+    });
+
+    return {
+      ...session,
+    };
+  } catch (error) {
+    console.error('Error refreshing access token', error);
+    // The error property will be used client-side to handle the refresh token error
+    return { ...session, error: 'RefreshAccessTokenError' as const };
+  }
+}
 
 const getOrganizationMemberships = async (
   userId?: string,
@@ -312,7 +334,36 @@ export const authOptions: AuthOptions = {
           }
         }
 
-        return session;
+        // check if we need to refresh the token from google in the accounts table
+        // if the access token is expired, we need to refresh it
+        const account = await prisma.account.findFirst({
+          where: {
+            userId: user.id,
+            provider: 'google',
+          },
+          select: { refresh_token: true, expires_at: true },
+        });
+
+        if (!account?.refresh_token) return session;
+
+        if (account.expires_at) {
+          const expiresAt = new Date(account.expires_at * 1000);
+          const today = new Date();
+
+          if (today > expiresAt) {
+            return refreshAccessToken(session);
+          }
+
+          // if (expiresAt > new Date()) return session;
+        }
+
+        // session.expires is a string, need to convert it and compare it to now to see if it's expired
+        const expiresAt = new Date(session.expires);
+        if (expiresAt > new Date()) return session;
+
+        // If the access token has expired, try to refresh it
+        return refreshAccessToken(session);
+
         // Do we still need to refresh tokens? is that the OAuth tokens from external providers???
       } catch (e) {
         console.error(e);
@@ -374,6 +425,9 @@ Sachin & Ibu
           where: { token: verificationToken.token },
         });
       }
+
+      // if the account provider is google we will need to refresh the access token at some point
+      // we need to store the refresh token in the session so that we can refresh the access token
 
       trackEvent({
         userId: user.id,
