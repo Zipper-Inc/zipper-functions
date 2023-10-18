@@ -176,7 +176,7 @@ module.exports = getConfig({
         headers: [
           {
             key: 'Cache-Control',
-            value: 'public, max-age=86400, immutable',
+            value: 'public, max-age=3600, immutable',
           },
         ],
       },
@@ -185,7 +185,7 @@ module.exports = getConfig({
         headers: [
           {
             key: 'Cache-Control',
-            value: 'public, max-age=86400, immutable',
+            value: 'public, max-age=3600, immutable',
           },
         ],
       },
@@ -194,7 +194,7 @@ module.exports = getConfig({
         headers: [
           {
             key: 'Cache-Control',
-            value: 'public, max-age=86400, immutable',
+            value: 'public, max-age=3600, immutable',
           },
         ],
       },
@@ -203,7 +203,16 @@ module.exports = getConfig({
         headers: [
           {
             key: 'Cache-Control',
-            value: 'public, max-age=86400, immutable',
+            value: 'public, max-age=3600, immutable',
+          },
+        ],
+      },
+      {
+        source: '/public/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=3600, immutable',
           },
         ],
       },
