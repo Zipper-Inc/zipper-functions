@@ -434,7 +434,7 @@ export function AppPage({
         pb={8}
         spacing={8}
       >
-        {isOpen ? (
+        {shouldShowDescription ? (
           <VStack
             width={{ base: 'auto', md: '100%' }}
             maxW="400px"
@@ -612,8 +612,7 @@ export const getServerSideProps: GetServerSideProps = async ({
     return { props: { errorCode: payload } };
 
   const { configs: handlerConfigs } = JSON.parse(payload) as Zipper.BootPayload;
-
-  const config = handlerConfigs[filename];
+  const config = handlerConfigs && handlerConfigs[filename];
 
   const urlValues = getInputValuesFromUrl({
     inputs: inputParams,
