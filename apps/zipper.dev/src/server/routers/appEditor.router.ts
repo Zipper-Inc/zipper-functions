@@ -119,14 +119,13 @@ export const appEditorRouter = createTRPCRouter({
        * For pagination you can have a look at this docs site
        * @link https://trpc.io/docs/useInfiniteQuery
        */
+      const canEdit = await !hasAppEditPermission({
+        ctx,
+        appId: input.appId,
+      });
 
       // if it is a private app we should test for the canUserEdit
-      if (
-        !hasAppEditPermission({
-          ctx,
-          appId: input.appId,
-        })
-      ) {
+      if (!canEdit) {
         return {};
       }
 
