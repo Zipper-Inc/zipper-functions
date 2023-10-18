@@ -9,7 +9,7 @@ import EditorContextProvider from '~/components/context/editor-context';
 import { HelpModeProvider } from '~/components/context/help-mode-context';
 import Header from '~/components/header';
 import { Playground } from '~/components/playground/playground';
-import { withLiveBlocks } from '~/hocs/withLiveBlocks';
+import { withLiveblocksRoom } from '~/hocs/with-liveblocks';
 import { NextPageWithLayout } from '~/pages/_app';
 import { createContext } from '~/server/context';
 import { trpcRouter } from '~/server/routers/_app';
@@ -74,7 +74,7 @@ const PlaygroundPage: NextPageWithLayout<Props> = ({
     utils.app.byId.invalidate({ id: appQuery.data.id });
   };
 
-  const playground = withLiveBlocks(
+  const playground = withLiveblocksRoom(
     () => (
       <EditorContextProvider
         app={appQuery.data}
