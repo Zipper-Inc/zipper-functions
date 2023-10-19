@@ -1,19 +1,22 @@
 import * as eszip from '@deno/eszip';
 import { App, Script } from '@prisma/client';
 import { generateIndexForFramework } from '@zipper/utils';
-import { getLogger } from './app-console';
-import { prettyLog, PRETTY_LOG_TOKENS } from './pretty-log';
-import { BuildCache } from './eszip-build-cache';
-import { getModule } from './eszip-utils';
-import { readFrameworkFile } from './read-file';
-import { getAppHashAndVersion } from './hashing';
 import { prisma } from '~/server/prisma';
 import { storeVersionESZip } from '~/server/utils/r2.utils';
+import { getLogger } from './app-console';
+import { BuildCache } from './eszip-build-cache';
 import {
   applyTsxHack,
+  getModule,
   isZipperImportUrl,
   TYPESCRIPT_CONTENT_HEADERS,
 } from './eszip-utils';
+import { getAppHashAndVersion } from './hashing';
+import { prettyLog, PRETTY_LOG_TOKENS } from './pretty-log';
+import { readFrameworkFile } from './read-file';
+import { rewriteImports } from './rewrite-imports';
+
+const FILENAME_FORBIDDEN_CHARS_REGEX = /[^a-zA-Z0-9_.\-@$)]/;
 
 /**
  * @todo
@@ -70,66 +73,81 @@ export async function build({
 
   const bundle = await eszip.build(fileUrlsToBundle, async (specifier) => {
     // if (__DEBUG__) console.debug(specifier);
-    /**
-     * Handle user's App files
-     */
-    if (specifier.startsWith(appFilesBaseUrl)) {
-      const filename = specifier.replace(`${appFilesBaseUrl}/`, '');
-      const script = tsScripts.find((s) => s.filename === filename);
+    try {
+      /**
+       * Handle user's App files
+       */
+      if (specifier.startsWith(appFilesBaseUrl)) {
+        const filename = specifier
+          .replace(`${appFilesBaseUrl}/`, '')
+          .replace(FILENAME_FORBIDDEN_CHARS_REGEX, '');
 
-      return {
-        ...applyTsxHack(specifier, script?.code),
-        version,
-      };
-    }
+        const script = tsScripts.find((s) => s.filename === filename);
 
-    /**
-     * Handle Zipper Framework Files
-     */
-    if (specifier.startsWith(baseUrl)) {
-      const filename = specifier.replace(`${baseUrl}/`, '');
-      const isAppletIndex = filename === APPLET_INDEX_PATH;
-
-      let content = await readFrameworkFile(filename);
-
-      // Inject Env vars
-      ['PUBLICLY_ACCESSIBLE_RPC_HOST', 'HMAC_SIGNING_SECRET'].forEach((key) => {
-        content = content.replaceAll(
-          `Deno.env.get('${key}')`,
-          `'${process.env[key]}'`,
-        );
-      });
-
-      if (isAppletIndex) {
-        content = generateIndexForFramework({
-          code: content,
-          filenames: tsScripts.map((s) => s.filename),
-        });
+        return {
+          ...applyTsxHack(specifier, rewriteImports(script?.code || '')),
+          version,
+        };
       }
 
-      return {
-        kind: 'module',
-        specifier,
-        headers: TYPESCRIPT_CONTENT_HEADERS,
-        content,
-      };
-    }
+      /**
+       * Handle Zipper Framework Files
+       */
+      if (specifier.startsWith(baseUrl)) {
+        const filename = specifier.replace(`${baseUrl}/`, '');
+        const isAppletIndex = filename === APPLET_INDEX_PATH;
 
-    /**
-     * Handle Zipper Remote Imports
-     */
-    if (isZipperImportUrl(specifier)) {
-      const mod = await getModule(specifier);
-      return {
-        ...mod,
-        ...applyTsxHack(specifier, mod?.content),
-      };
-    }
+        let content = await readFrameworkFile(filename);
 
-    /**
-     * Handle remote imports
-     */
-    return getModule(specifier, buildCache);
+        // Inject Env vars
+        ['PUBLICLY_ACCESSIBLE_RPC_HOST', 'HMAC_SIGNING_SECRET'].forEach(
+          (key) => {
+            content = content.replaceAll(
+              `Deno.env.get('${key}')`,
+              `'${process.env[key]}'`,
+            );
+          },
+        );
+
+        if (isAppletIndex) {
+          content = generateIndexForFramework({
+            code: content,
+            filenames: tsScripts.map((s) => s.filename),
+          });
+        }
+
+        return {
+          kind: 'module',
+          specifier,
+          headers: TYPESCRIPT_CONTENT_HEADERS,
+          content,
+        };
+      }
+
+      /**
+       * Handle Zipper Remote Imports
+       */
+      if (isZipperImportUrl(specifier)) {
+        const mod = await getModule(specifier);
+        return {
+          ...mod,
+          ...applyTsxHack(specifier, rewriteImports(mod?.content)),
+        };
+      }
+
+      /**
+       * Handle remote imports
+       */
+      return getModule(specifier, buildCache);
+    } catch (e) {
+      if (e instanceof Error) {
+        // 🚨 Security Fix
+        // Catch file not found errors and do not leak the file system
+        if (e.message.includes('ENOENT')) e.message = `File not found`;
+        e.message = `Error building ${specifier}: ${e.message}`;
+      }
+      throw e;
+    }
   });
 
   const elapsedMs = performance.now() - startMs;

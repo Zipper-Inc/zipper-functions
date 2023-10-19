@@ -2,7 +2,10 @@ import { Prisma } from '@prisma/client';
 import { getZipperDotDevUrl } from '@zipper/utils';
 import { z } from 'zod';
 import { prisma } from '~/server/prisma';
-import { hasAppEditPermission } from '../utils/authz.utils';
+import {
+  hasAppEditPermission,
+  hasAppReadPermission,
+} from '../utils/authz.utils';
 import { sendInvitationEmail } from '../utils/invitation.utils';
 import { createTRPCRouter, publicProcedure } from '../root';
 
@@ -111,11 +114,20 @@ export const appEditorRouter = createTRPCRouter({
         includeUsers: z.boolean().optional().default(false),
       }),
     )
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       /**
        * For pagination you can have a look at this docs site
        * @link https://trpc.io/docs/useInfiniteQuery
        */
+      const canEdit = await !hasAppEditPermission({
+        ctx,
+        appId: input.appId,
+      });
+
+      // if it is a private app we should test for the canUserEdit
+      if (!canEdit) {
+        return {};
+      }
 
       const appEditors = await prisma.appEditor.findMany({
         where: {

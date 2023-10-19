@@ -5,6 +5,7 @@ import {
   Prisma,
   ResourceOwnerSlug,
   Script,
+  ScriptMain,
 } from '@prisma/client';
 import { TRPCError } from '@trpc/server';
 import { appSubmissionState, ResourceOwnerType } from '@zipper/types';
@@ -619,6 +620,8 @@ export const appRouter = createTRPCRouter({
         include: { scripts: true, scriptMain: true },
       });
 
+      await hasAppEditPermission({ ctx, appId: input.appId });
+
       const authToken = await getToken({ req: ctx.req! });
 
       const token = ctx.userId
@@ -651,6 +654,7 @@ export const appRouter = createTRPCRouter({
             body: '{}',
             headers: {
               authorization: token ? `Bearer ${token}` : '',
+              'x-zipper-host': `${app.slug}.zipper.run`,
             },
           },
         ).then((r) => r.json());
@@ -728,6 +732,7 @@ export const appRouter = createTRPCRouter({
         headers: {
           authorization: token ? `Bearer ${token}` : '',
           'x-zipper-run-id': input.runId,
+          'x-zipper-host': `${app.slug}.zipper.run`,
         },
       });
 
@@ -759,88 +764,12 @@ export const appRouter = createTRPCRouter({
     .mutation(async ({ input, ctx }) => {
       const { id, name, connectToParent } = input;
 
-      const app = await prisma.app.findFirstOrThrow({
-        where: { id, deletedAt: null },
-        include: { scripts: true, scriptMain: true, connectors: true },
-      });
-
-      const fork = await prisma.app.create({
-        data: {
-          slug: slugify(name),
-          name: name,
-          description: app.description,
-          parentId: connectToParent ? app.id : undefined,
-          organizationId: ctx.orgId,
-          createdById: ctx.userId,
-          editors: {
-            create: {
-              userId: ctx.userId,
-              isOwner: true,
-            },
-          },
-        },
-        select: defaultSelect,
-      });
-
-      const forkScripts: Script[] = [];
-
-      await Promise.all(
-        app.scripts.map(async (script, i) => {
-          const newId = randomUUID();
-          const forkScript = await prisma.script.create({
-            data: {
-              ...script,
-              id: newId,
-              appId: fork.id,
-              order: i,
-              hash: getScriptHash({ ...script, id: newId }),
-            },
-          });
-
-          forkScripts.push(forkScript);
-
-          if (script.id === app.scriptMain?.scriptId) {
-            await prisma.scriptMain.create({
-              data: {
-                app: { connect: { id: fork.id } },
-                script: { connect: { id: forkScript.id } },
-              },
-            });
-          }
-        }),
-      );
-
-      await Promise.all(
-        app.connectors.map(async (connector: AppConnector) => {
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          await prisma.appConnector.create({
-            data: {
-              type: connector.type,
-              isUserAuthRequired: connector.isUserAuthRequired,
-              metadata: undefined,
-              userScopes: connector.userScopes,
-              workspaceScopes: connector.workspaceScopes,
-              events: connector.events,
-              appId: fork.id,
-            },
-          });
-        }),
-      );
-
-      const { hash } = await buildAndStoreApplet({
-        app: { ...fork, scripts: forkScripts },
-        isPublished: true,
+      const { fork, updatedFork } = await forkAppletById({
+        appId: id,
+        name,
+        connectToParent,
         userId: ctx.userId,
-      });
-
-      const updatedFork = await prisma.app.update({
-        where: {
-          id: fork.id,
-        },
-        data: {
-          publishedVersionHash: hash,
-          playgroundVersionHash: hash,
-        },
+        orgId: ctx.orgId,
       });
 
       const resourceOwner = await prisma.resourceOwnerSlug.findFirstOrThrow({
@@ -1083,3 +1012,131 @@ export const appRouter = createTRPCRouter({
       });
     }),
 });
+
+async function forkAppletById(inputs: {
+  appId: string;
+  name: string;
+  connectToParent: boolean;
+  userId: string;
+  orgId?: string;
+}) {
+  const app = await prisma.app.findFirstOrThrow({
+    where: { id: inputs.appId, deletedAt: null },
+    include: { scripts: true, scriptMain: true, connectors: true },
+  });
+
+  return forkApplet({ app, ...inputs });
+}
+
+export async function forkAppletBySlug(inputs: {
+  appSlug: string;
+  name: string;
+  connectToParent: boolean;
+  userId: string;
+  orgId?: string;
+}) {
+  const app = await prisma.app.findFirstOrThrow({
+    where: { slug: inputs.appSlug, deletedAt: null },
+    include: { scripts: true, scriptMain: true, connectors: true },
+  });
+
+  return forkApplet({ app, ...inputs });
+}
+
+async function forkApplet({
+  app,
+  name,
+  connectToParent,
+  userId,
+  orgId,
+}: {
+  app: App & {
+    scripts: Script[];
+    scriptMain: ScriptMain | null;
+    connectors: AppConnector[];
+  };
+  name: string;
+  connectToParent: boolean;
+  userId: string;
+  orgId?: string;
+}) {
+  const fork = await prisma.app.create({
+    data: {
+      slug: slugify(name),
+      name: name,
+      description: app.description,
+      parentId: connectToParent ? app.id : undefined,
+      organizationId: orgId,
+      createdById: userId,
+      editors: {
+        create: {
+          userId: userId,
+          isOwner: true,
+        },
+      },
+    },
+    select: defaultSelect,
+  });
+
+  const forkScripts: Script[] = [];
+
+  await Promise.all(
+    app.scripts.map(async (script, i) => {
+      const newId = randomUUID();
+      const forkScript = await prisma.script.create({
+        data: {
+          ...script,
+          id: newId,
+          appId: fork.id,
+          order: i,
+          hash: getScriptHash({ ...script, id: newId }),
+        },
+      });
+
+      forkScripts.push(forkScript);
+
+      if (script.id === app.scriptMain?.scriptId) {
+        await prisma.scriptMain.create({
+          data: {
+            app: { connect: { id: fork.id } },
+            script: { connect: { id: forkScript.id } },
+          },
+        });
+      }
+    }),
+  );
+
+  await Promise.all(
+    app.connectors.map(async (connector: AppConnector) => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      await prisma.appConnector.create({
+        data: {
+          type: connector.type,
+          isUserAuthRequired: connector.isUserAuthRequired,
+          metadata: undefined,
+          userScopes: connector.userScopes,
+          workspaceScopes: connector.workspaceScopes,
+          events: connector.events,
+          appId: fork.id,
+        },
+      });
+    }),
+  );
+
+  const { hash } = await buildAndStoreApplet({
+    app: { ...fork, scripts: forkScripts },
+    isPublished: true,
+    userId: userId,
+  });
+
+  const updatedFork = await prisma.app.update({
+    where: {
+      id: fork.id,
+    },
+    data: {
+      publishedVersionHash: hash,
+      playgroundVersionHash: hash,
+    },
+  });
+  return { fork, updatedFork };
+}

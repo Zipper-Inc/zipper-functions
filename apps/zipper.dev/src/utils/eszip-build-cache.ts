@@ -1,5 +1,5 @@
+import type { LoadResponseModule } from '@deno/eszip/esm/loader';
 import Redis from 'ioredis';
-import type { LoadResponseModule } from '@deno/eszip/types/loader';
 
 export type CacheRecord = {
   module: LoadResponseModule;
@@ -84,8 +84,8 @@ export class BuildCache {
         module: mod,
         cachedTimestamp: Date.now(),
       };
-      this.client.set(key, JSON.stringify(record));
-      this.client.expire(key, getTtl(mod.headers || {}));
+      await this.client.set(key, JSON.stringify(record));
+      await this.client.expire(key, getTtl(mod.headers || {}));
     } catch (e) {
       // yolo cache set miss
     }

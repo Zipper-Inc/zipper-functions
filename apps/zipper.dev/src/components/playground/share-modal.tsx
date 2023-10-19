@@ -23,6 +23,8 @@ import {
   FormLabel,
   Spacer,
   useToast,
+  InputRightElement,
+  InputGroup,
 } from '@chakra-ui/react';
 import { FieldValues, FormProvider, useForm } from 'react-hook-form';
 import { trpc } from '~/utils/trpc';
@@ -60,9 +62,11 @@ const ShareTab: React.FC<Props> = ({ isOpen, onClose, appId }) => {
 
   const invitationForm = useForm();
 
-  const { onCopy, hasCopied } = useClipboard(
-    `${window.location.origin}/${router.query['resource-owner']}/${router.query['app-slug']}`,
-  );
+  const playgroundUrl = `${window.location.origin}/${router.query['resource-owner']}/${router.query['app-slug']}`;
+  const appletUrl = `https://${router.query['app-slug']}.zipper.run`;
+  const { onCopy, hasCopied } = useClipboard(playgroundUrl);
+  const { onCopy: onCopyApplet, hasCopied: hasCopiedApplet } =
+    useClipboard(appletUrl);
 
   const inviteEditor = trpc.appEditor.invite.useMutation({
     async onSuccess() {
@@ -138,178 +142,220 @@ const ShareTab: React.FC<Props> = ({ isOpen, onClose, appId }) => {
             <ModalHeader>Share</ModalHeader>
             <ModalCloseButton />
             <ModalBody p="0">
-              <VStack align={'start'}>
-                <>
-                  <Box mb={4} w="full">
-                    <VStack align={'stretch'}>
-                      <form
-                        onSubmit={invitationForm.handleSubmit(onSubmit)}
-                        style={{ width: '100%' }}
-                      >
-                        <FormControl px="6" pt="2" pb="0.5">
-                          <FormLabel>Invite someone to edit this app</FormLabel>
-                          <HStack w="full">
-                            <Input
+              {appQuery.data?.canUserEdit ? (
+                <VStack align={'start'}>
+                  <>
+                    <Box mb={4} w="full">
+                      <VStack align={'stretch'}>
+                        <form
+                          onSubmit={invitationForm.handleSubmit(onSubmit)}
+                          style={{ width: '100%' }}
+                        >
+                          <FormControl px="6" pt="2" pb="0.5">
+                            <FormLabel>
+                              Invite someone to edit this app
+                            </FormLabel>
+                            <HStack w="full">
+                              <Input
+                                fontSize="sm"
+                                {...invitationForm.register('email')}
+                                type="email"
+                                placeholder="Email"
+                              />
+                              <Button px={6} type="submit" fontSize="sm">
+                                Send invite
+                              </Button>
+                            </HStack>
+                          </FormControl>
+                        </form>
+                        <Box w="full" px="7" pb="2">
+                          <VStack align="start">
+                            <Text
+                              color="fg.500"
                               fontSize="sm"
-                              {...invitationForm.register('email')}
-                              type="email"
-                              placeholder="Email"
-                            />
-                            <Button px={6} type="submit" fontSize="sm">
-                              Send invite
-                            </Button>
-                          </HStack>
-                        </FormControl>
-                      </form>
-                      <Box w="full" px="7" pb="2">
-                        <VStack align="start">
-                          <Text
-                            color="fg.500"
-                            fontSize="sm"
-                            pt="4"
-                            fontWeight="medium"
-                          >
-                            Existing editors
-                          </Text>
-                          <Box p="2" pb="0">
-                            <>
-                              {resourceOwnerNameQuery.data && (
-                                <Box fontSize="sm" pb="2">
-                                  <HStack>
-                                    <Avatar
-                                      size="xs"
-                                      name={resourceOwnerNameQuery.data}
-                                    />
-                                    <Text>
-                                      Everyone at {resourceOwnerNameQuery.data}
-                                    </Text>
-                                  </HStack>
-                                </Box>
-                              )}
-                              {editorQuery.data &&
-                                editorQuery.data.appEditors.map((editor, i) => (
-                                  <Box
-                                    fontSize="sm"
-                                    key={editor.user?.id || i}
-                                    pb="2"
-                                  >
+                              pt="4"
+                              fontWeight="medium"
+                            >
+                              Existing editors
+                            </Text>
+                            <Box p="2" pb="0">
+                              <>
+                                {resourceOwnerNameQuery.data && (
+                                  <Box fontSize="sm" pb="2">
                                     <HStack>
                                       <Avatar
                                         size="xs"
-                                        src={editor.user?.image || undefined}
-                                        name={
-                                          editor.user?.name ||
-                                          editor.user?.email
-                                        }
+                                        name={resourceOwnerNameQuery.data}
                                       />
-                                      <Tooltip label={editor.user?.email}>
-                                        <Text>
-                                          {editor.user?.name ||
-                                            editor.user?.email}
-                                        </Text>
-                                      </Tooltip>
+                                      <Text>
+                                        Everyone at{' '}
+                                        {resourceOwnerNameQuery.data}
+                                      </Text>
                                     </HStack>
                                   </Box>
-                                ))}
-                            </>
-                          </Box>
-
-                          {editorQuery.data &&
-                            editorQuery.data.pending.length > 0 && (
-                              <VStack align="stretch" w="full">
-                                <Text
-                                  color="fg.500"
-                                  fontSize="sm"
-                                  pt="4"
-                                  fontWeight="medium"
-                                >
-                                  Pending invitations
-                                </Text>
-                                <Box p="2" pb="0" w="full">
-                                  {editorQuery.data.pending.map(({ email }) => (
-                                    <HStack w="full" pb="2">
-                                      <Text fontSize="sm" key={email}>
-                                        {email}
-                                      </Text>
-                                      <Spacer flexGrow={1} />
-                                      <Button
-                                        variant="link"
+                                )}
+                                {editorQuery.data &&
+                                  editorQuery.data.appEditors?.map(
+                                    (editor, i) => (
+                                      <Box
                                         fontSize="sm"
-                                        p="0"
-                                        onClick={() => {
-                                          removeEditor.mutateAsync({
-                                            appId,
-                                            email,
-                                          });
-                                        }}
+                                        key={editor.user?.id || i}
+                                        pb="2"
                                       >
-                                        Revoke
-                                      </Button>
-                                    </HStack>
-                                  ))}
-                                </Box>
-                              </VStack>
+                                        <HStack>
+                                          <Avatar
+                                            size="xs"
+                                            src={
+                                              editor.user?.image || undefined
+                                            }
+                                            name={
+                                              editor.user?.name ||
+                                              editor.user?.email
+                                            }
+                                          />
+                                          <Tooltip label={editor.user?.email}>
+                                            <Text>
+                                              {editor.user?.name ||
+                                                editor.user?.email}
+                                            </Text>
+                                          </Tooltip>
+                                        </HStack>
+                                      </Box>
+                                    ),
+                                  )}
+                              </>
+                            </Box>
+
+                            {editorQuery.data &&
+                              editorQuery.data.pending &&
+                              editorQuery.data.pending.length > 0 && (
+                                <VStack align="stretch" w="full">
+                                  <Text
+                                    color="fg.500"
+                                    fontSize="sm"
+                                    pt="4"
+                                    fontWeight="medium"
+                                  >
+                                    Pending invitations
+                                  </Text>
+                                  <Box p="2" pb="0" w="full">
+                                    {editorQuery.data.pending.map(
+                                      ({ email }) => (
+                                        <HStack w="full" pb="2">
+                                          <Text fontSize="sm" key={email}>
+                                            {email}
+                                          </Text>
+                                          <Spacer flexGrow={1} />
+                                          <Button
+                                            variant="link"
+                                            fontSize="sm"
+                                            p="0"
+                                            onClick={() => {
+                                              removeEditor.mutateAsync({
+                                                appId,
+                                                email,
+                                              });
+                                            }}
+                                          >
+                                            Revoke
+                                          </Button>
+                                        </HStack>
+                                      ),
+                                    )}
+                                  </Box>
+                                </VStack>
+                              )}
+                          </VStack>
+                        </Box>
+                        <Divider />
+                        <VStack align="start" px="6" w="full">
+                          <HStack pt={4} w="full">
+                            <Box mr="auto">
+                              <HStack>
+                                <VscCode />
+                                <Text>Share the code publicly</Text>
+                              </HStack>
+                            </Box>
+                            <Spacer flexGrow={1} />
+                            {appQuery.data && (
+                              <Switch
+                                isChecked={!isPrivate}
+                                onChange={async () => {
+                                  setAppVisibility.mutateAsync({
+                                    id: appId,
+                                    data: {
+                                      isPrivate: !isPrivate,
+                                    },
+                                  });
+                                  setIsPrivate(!isPrivate);
+                                }}
+                                ml="auto"
+                              />
                             )}
-                        </VStack>
-                      </Box>
-                      <Divider />
-                      <VStack align="start" px="6" w="full">
-                        <HStack pt={4} w="full">
-                          <Box mr="auto">
-                            <HStack>
-                              <VscCode />
-                              <Text>Share the code publicly</Text>
-                            </HStack>
-                          </Box>
-                          <Spacer flexGrow={1} />
-                          {appQuery.data && (
-                            <Switch
-                              isChecked={!isPrivate}
-                              onChange={async () => {
-                                setAppVisibility.mutateAsync({
-                                  id: appId,
-                                  data: {
-                                    isPrivate: !isPrivate,
-                                  },
-                                });
-                                setIsPrivate(!isPrivate);
-                              }}
-                              ml="auto"
-                            />
+                          </HStack>
+                          {isPrivate ? (
+                            <Text fontSize={'sm'} color="fg.600">
+                              When unchecked, the code is only visible to
+                              organization members and people invited to edit
+                            </Text>
+                          ) : (
+                            <Text fontSize={'sm'} color="fg.600">
+                              When checked, the code is visible to anyone on the
+                              internet with the link.
+                            </Text>
                           )}
-                        </HStack>
-                        {isPrivate ? (
-                          <Text fontSize={'sm'} color="fg.600">
-                            When unchecked, the code is only visible to
-                            organization members and people invited to edit
-                          </Text>
-                        ) : (
-                          <Text fontSize={'sm'} color="fg.600">
-                            When checked, the code is visible to anyone on the
-                            internet with the link.
-                          </Text>
-                        )}
+                        </VStack>
                       </VStack>
-                    </VStack>
-                  </Box>
-                </>
-              </VStack>
+                    </Box>
+                  </>
+                </VStack>
+              ) : (
+                <VStack align="start" px="5" gap="4">
+                  <FormControl>
+                    <FormLabel>Playground URL</FormLabel>
+                    <InputGroup size="md">
+                      <Input pr="4.5rem" readOnly value={playgroundUrl} />
+                      <InputRightElement width="4.5rem">
+                        <Button h="1.75rem" size="sm" onClick={onCopy}>
+                          {hasCopied ? 'Copied!' : 'Copy'}
+                        </Button>
+                      </InputRightElement>
+                    </InputGroup>
+                  </FormControl>
+
+                  <FormControl>
+                    <FormLabel>Applet URL</FormLabel>
+                    <InputGroup size="md">
+                      <Input pr="4.5rem" readOnly value={appletUrl} />
+                      <InputRightElement width="4.5rem">
+                        <Button h="1.75rem" size="sm" onClick={onCopyApplet}>
+                          {hasCopiedApplet ? 'Copied!' : 'Copy'}
+                        </Button>
+                      </InputRightElement>
+                    </InputGroup>
+                  </FormControl>
+                </VStack>
+              )}
             </ModalBody>
 
             <ModalFooter mt={4}>
-              <Link href="#" mr="auto" color={'blue.700'} onClick={onCopy}>
-                <CopyIcon mr={1} mb={1} />
-                {hasCopied ? 'Copied!' : 'Copy link'}
-              </Link>
-              <Button
-                type="submit"
-                colorScheme="purple"
-                onClick={() => {
-                  onClose();
-                }}
-              >
-                Close
-              </Button>
+              {appQuery.data?.canUserEdit && (
+                <>
+                  <Link href="#" mr="auto" color={'blue.700'} onClick={onCopy}>
+                    <CopyIcon mr={1} mb={1} />
+                    {hasCopied ? 'Copied!' : 'Copy link'}
+                  </Link>
+                  <Button
+                    type="submit"
+                    colorScheme="purple"
+                    onClick={() => {
+                      onClose();
+                    }}
+                  >
+                    Close
+                  </Button>
+                </>
+              )}
             </ModalFooter>
           </ModalContent>
         </FormProvider>

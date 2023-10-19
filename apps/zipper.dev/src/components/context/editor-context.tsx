@@ -22,22 +22,16 @@ import { useRouter } from 'next/router';
 import { LiveObject, LsonObject } from '@liveblocks/client';
 import { getPathFromUri, getUriFromPath } from '~/utils/model-uri';
 import { InputParam } from '@zipper/types';
-import { parseCode } from '~/utils/parse-code';
+import { isExternalImport, parseCode } from '~/utils/parse-code';
 import debounce from 'lodash.debounce';
 import { uuid } from '@zipper/utils';
 import { prettyLog } from '~/utils/pretty-log';
 import { AppQueryOutput } from '~/types/trpc';
 import { getAppVersionFromHash } from '~/utils/hashing';
 import { isZipperImportUrl } from '~/utils/eszip-utils';
-import Fuse from 'fuse.js';
 import { parsePlaygroundQuery, PlaygroundTab } from '~/utils/playground.utils';
-
-/** This string indicates which errors we own in the editor */
-const ZIPPER_LINT = 'zipper-lint';
-/** Some error codes for Zipper Linting */
-enum ZipperLintCode {
-  CannotFindModule = 'Z001',
-}
+import { runZipperLinter } from '~/utils/zipper-editor-linter';
+import { rewriteSpecifier } from '~/utils/rewrite-imports';
 
 type OnValidate = AddParameters<
   Required<EditorProps>['onValidate'],
@@ -72,7 +66,7 @@ export type EditorContextType = {
   refetchApp: () => Promise<void>;
   replaceCurrentScriptCode: (code: string) => void;
   inputParams?: InputParam[];
-  setInputParams: (inputParams: InputParam[]) => void;
+  setInputParams: (inputParams?: InputParam[]) => void;
   inputError?: string;
   monacoRef?: MutableRefObject<Monaco | undefined>;
   logs: Zipper.Log.Message[];
@@ -145,12 +139,16 @@ async function fetchImport({
   uriParser,
   monacoRef,
   invalidImportUrlsRef,
+  alias,
 }: {
   importUrl: string;
   uriParser: (value: string, _strict?: boolean | undefined) => monaco.Uri;
   monacoRef: MutableRefObject<typeof monaco | undefined>;
   invalidImportUrlsRef: MutableRefObject<{ [url: string]: number }>;
+  alias?: string;
 }) {
+  if (!monacoRef?.current) return;
+
   // Don't try to fetch something we've already marked as invalid
   if ((invalidImportUrlsRef.current[importUrl] || 0) >= 3) return;
 
@@ -164,6 +162,7 @@ async function fetchImport({
 
     // Add each individual file in the bundle the model
     Object.keys(bundle).forEach((url) => {
+      if (!monacoRef?.current) return;
       console.log('[IMPORTS]', `(${importUrl})`, `Handling ${url}`);
       const src = bundle[url];
       const uri = getUriFromPath(
@@ -172,8 +171,21 @@ async function fetchImport({
         isZipperImportUrl(url) || url.endsWith('tsx') ? 'tsx' : 'ts',
       );
 
-      if (!monacoRef?.current?.editor.getModel(uri)) {
-        monacoRef?.current?.editor.createModel(src, 'typescript', uri);
+      if (!monacoRef.current.editor.getModel(uri)) {
+        monacoRef.current.editor.createModel(src, 'typescript', uri);
+        if (alias) {
+          const opts =
+            monacoRef.current.languages.typescript.typescriptDefaults.getCompilerOptions();
+          monacoRef.current.languages.typescript.typescriptDefaults.setCompilerOptions(
+            {
+              ...opts,
+              paths: {
+                ...opts.paths,
+                [alias]: [url],
+              },
+            },
+          );
+        }
       }
     });
   } catch (e) {
@@ -209,7 +221,7 @@ function handleExternalImports({
   invalidImportUrlsRef,
   currentScript,
 }: {
-  imports: string[];
+  imports: { specifier: string }[];
   monacoRef: MutableRefObject<typeof monaco | undefined>;
   externalImportModelsRef: MutableRefObject<Record<string, string[]>>;
   invalidImportUrlsRef: MutableRefObject<{ [url: string]: number }>;
@@ -217,6 +229,12 @@ function handleExternalImports({
 }) {
   if (!monacoRef?.current || !currentScript || !externalImportModelsRef.current)
     return;
+
+  const externalImportsPairs = imports
+    .map((i) => [i.specifier, rewriteSpecifier(i.specifier)] as const)
+    .filter((s) => isExternalImport(s[1]));
+
+  const externalImports = externalImportsPairs.map((s) => s[1]);
 
   const uriParser = monacoRef.current.Uri.parse;
 
@@ -228,7 +246,7 @@ function handleExternalImports({
   // First, let's cleanup anything removed from the code
   oldImportModels.forEach((importUrl) => {
     const modelToDelete =
-      !imports.includes(importUrl) &&
+      !externalImports.includes(importUrl) &&
       monacoRef?.current?.editor.getModel(
         getUriFromPath(
           importUrl,
@@ -246,7 +264,7 @@ function handleExternalImports({
   });
 
   // Handle changes in code
-  imports.forEach((importUrl, index) => {
+  externalImports.forEach((importUrl, index) => {
     // First let's move the pointer to the right spot
     newImportModels[index] = importUrl;
 
@@ -259,20 +277,79 @@ function handleExternalImports({
       (invalidImportUrlsRef.current[importUrl] || 0) <
         MAX_RETRIES_FOR_EXTERNAL_IMPORT
     ) {
-      fetchImport({
-        importUrl,
-        uriParser,
-        monacoRef,
-        invalidImportUrlsRef,
-      });
+      // check if we have an alias
+      const alias = externalImportsPairs.find(
+        ([ogSpecifier, rewrittenSpecifier]) =>
+          rewrittenSpecifier === importUrl &&
+          ogSpecifier !== rewrittenSpecifier,
+      )?.[0];
+
+      if (alias !== importUrl)
+        fetchImport({
+          importUrl,
+          uriParser,
+          monacoRef,
+          invalidImportUrlsRef,
+          alias,
+        });
     }
   });
 
   externalImportModelsRef.current[currentScript.filename] = newImportModels;
 }
 
-const handleExternalImportsDebounced = debounce(
-  handleExternalImports,
+function runEditorActionsOnChange({
+  value,
+  setInputParams,
+  setInputError,
+  editor,
+  monacoRef,
+  currentScript,
+  externalImportModelsRef,
+  invalidImportUrlsRef,
+}: {
+  value: string;
+  setInputParams: EditorContextType['setInputParams'];
+  setInputError: (error: string | undefined) => void;
+  editor: typeof monaco.editor | undefined;
+  monacoRef: MutableRefObject<typeof monaco | undefined>;
+  currentScript: Script;
+  externalImportModelsRef: MutableRefObject<Record<string, string[]>>;
+  invalidImportUrlsRef: MutableRefObject<{ [url: string]: number }>;
+}) {
+  if (!editor || !monacoRef.current) return;
+
+  try {
+    const { inputs, externalImportUrls, imports } = parseCode({
+      code: value,
+      throwErrors: true,
+    });
+
+    setInputParams(inputs);
+    setInputError(undefined);
+
+    runZipperLinter({
+      editor,
+      imports,
+      monacoRef,
+      currentScript,
+    });
+
+    handleExternalImports({
+      imports,
+      monacoRef,
+      externalImportModelsRef,
+      invalidImportUrlsRef,
+      currentScript,
+    });
+  } catch (e: any) {
+    setInputParams(undefined);
+    setInputError(e.message);
+  }
+}
+
+const runEditorActionsOnChangeDebounced = debounce(
+  runEditorActionsOnChange,
   DEBOUNCE_DELAY_MS,
 );
 
@@ -350,88 +427,26 @@ const EditorContextProvider = ({
     [currentScript],
   );
 
-  const onChange: EditorProps['onChange'] = (value = '', event) => {
+  const onChange: EditorProps['onChange'] = async (value = '', event) => {
+    if (!editor || !monacoRef?.current || !currentScript) return;
+
+    // Sync to liveblocks
     try {
       mutateLive(value, event.versionId);
-
-      try {
-        const { inputs, externalImportUrls, localImports } = parseCode({
-          code: value,
-          throwErrors: true,
-        });
-
-        setInputParams(inputs);
-        setInputError(undefined);
-
-        editor?.removeAllMarkers(ZIPPER_LINT);
-
-        // Handle imports and check to make sure they are valid
-
-        localImports.forEach((i) => {
-          const foundUri = getUriFromPath(
-            // Remove the first two characters, which should be `./`
-            // The relative path is required by Deno/Zipper
-            i.specifier.substring(2),
-            monacoRef.current!.Uri.parse,
-            'tsx',
-          );
-          const foundModel = editor!.getModel(foundUri);
-
-          // If we can't find a model, this is an error
-          if (!foundModel) {
-            const currentUri = getUriFromPath(
-              currentScript!.filename,
-              monacoRef.current!.Uri.parse,
-              'tsx',
-            );
-            const currentModel = editor!.getModel(currentUri);
-            let message = `Cannot find module '${i.specifier}\'.`;
-
-            const localModelUris = editor!
-              .getModels()
-              .map((m) => m.uri)
-              .filter((u) => u.scheme === 'file' && u.path !== currentUri.path);
-
-            // Search through paths to see if there's somethign similar to the broken path
-            const fuse = new Fuse(localModelUris.map((u) => u.path));
-            const [topSuggestion] = fuse.search(i.specifier);
-            // If there is, lets grab the full URI based on the original index
-            const suggestedUri =
-              topSuggestion && localModelUris[topSuggestion.refIndex];
-            if (suggestedUri) {
-              // Cool, now we can make it into a relative file path
-              const path = getPathFromUri(suggestedUri);
-              message = `${message} Did you mean '.${path}'?`;
-            }
-
-            editor!.setModelMarkers(currentModel!, ZIPPER_LINT, [
-              {
-                startLineNumber: i.startLine,
-                startColumn: i.startColumn,
-                endLineNumber: i.endLine,
-                endColumn: i.endColumn,
-                severity: monacoRef.current!.MarkerSeverity.Error,
-                message,
-                code: ZipperLintCode.CannotFindModule,
-              },
-            ]);
-          }
-        });
-
-        handleExternalImportsDebounced({
-          imports: externalImportUrls,
-          monacoRef,
-          externalImportModelsRef,
-          invalidImportUrlsRef,
-          currentScript,
-        });
-      } catch (e: any) {
-        setInputParams(undefined);
-        setInputError(e.message);
-      }
     } catch (e) {
       console.error('Caught error from mutateLive:', e);
     }
+
+    runEditorActionsOnChangeDebounced({
+      value,
+      setInputParams,
+      setInputError,
+      editor,
+      monacoRef,
+      currentScript,
+      externalImportModelsRef,
+      invalidImportUrlsRef,
+    });
   };
 
   const onValidate: EditorProps['onValidate'] = (
@@ -759,5 +774,4 @@ const EditorContextProvider = ({
 };
 
 export const useEditorContext = () => useContext(EditorContext);
-
 export default EditorContextProvider;

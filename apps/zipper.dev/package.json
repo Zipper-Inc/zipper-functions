@@ -11,7 +11,7 @@
     "build:production": "yarn build:01-prisma; yarn dotenv:production -- -- next build; yarn build:03-tsc",
     "db-seed": "prisma db seed",
     "db-migrate-dev": "yarn prisma migrate dev",
-    "dev": "yarn dotenv:development -- -- yarn nodemon -x \"yarn ts-node ./src/server.ts || touch ./src/server.ts\" --watch ./src/server.ts",
+    "dev": "yarn dotenv:development -- -- yarn nodemon -x \"yarn swc-node ./src/server.ts || touch ./src/server.ts\" --watch ./src/server.ts",
     "dx": "run-s db-up db-migrate-dev db-seed dev",
     "dotenv:development": "dotenv -c $(sh ../../bin/dotenv.development.sh)",
     "dotenv:preview": "dotenv $(sh ../../bin/dotenv.preview.sh)",
@@ -20,6 +20,7 @@
     "start:preview": "yarn prisma migrate deploy && yarn dotenv:preview -- -- node ./dist/server.js",
     "start:production": "yarn prisma migrate deploy && yarn dotenv:production -- -- node ./dist/server.js",
     "start:test": "next start",
+    "swc-node": "node -r @swc-node/register",
     "lint": "eslint src",
     "lint-fix": "yarn lint --fix",
     "test-dev": "start-server-and-test dev 3000 test",
@@ -29,7 +30,7 @@
     "postinstall": "yarn prisma generate"
   },
   "prisma": {
-    "seed": "yarn ts-node prisma/seed.ts"
+    "seed": "yarn swc-node prisma/seed.ts"
   },
   "engines": {
     "node": "^18.14.0"
@@ -45,7 +46,7 @@
     "@babel/traverse": "^7.22.5",
     "@chakra-ui/icons": "^2.0.11",
     "@chakra-ui/react": "^2.4.9",
-    "@deno/eszip": "^0.40.0",
+    "@deno/eszip": "^0.54.0",
     "@emotion/react": "^11.10.5",
     "@emotion/styled": "^11.10.5",
     "@fontsource/inter": "^4.5.13",
@@ -102,7 +103,7 @@
     "ndjson": "^2.0.0",
     "next": "^13.2.0",
     "next-absolute-url": "^1.2.2",
-    "next-auth": "^4.22.1",
+    "next-auth": "^4.23.2",
     "node-fetch": "2.6.7",
     "nodemailer": "^6.9.3",
     "npm-run-all": "^4.1.5",
@@ -133,6 +134,8 @@
   },
   "devDependencies": {
     "@next/eslint-plugin-next": "^12.3.1",
+    "@swc-node/register": "^1.6.8",
+    "@swc/core": "^1.3.92",
     "@tanstack/react-query-devtools": "^4.35.3",
     "@types/bcryptjs": "^2.4.2",
     "@types/cors": "^2.8.13",

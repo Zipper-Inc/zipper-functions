@@ -21,28 +21,30 @@ export default async function handler(request: NextRequest) {
       filename,
     });
 
+    const mutableHeaders = new Headers(headers);
+
     if (status !== 200) {
       return new NextResponse(JSON.stringify({ ok: false, error: result }), {
         status,
       });
     }
 
-    headers?.set('Content-Type', 'application/json');
-    setCorsHeaders(headers);
+    mutableHeaders?.set('Content-Type', 'application/json');
+    setCorsHeaders(mutableHeaders);
 
     return new NextResponse(
       JSON.stringify(
         {
           ok: true,
           data: safeJSONParse(result, undefined, result),
-          __meta: getMetaFromHeaders(headers),
+          __meta: getMetaFromHeaders(mutableHeaders),
         },
         null,
         2,
       ),
       {
         status,
-        headers,
+        headers: mutableHeaders,
       },
     );
   } catch (e: any) {
