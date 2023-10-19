@@ -184,6 +184,9 @@ const columns = [
     cell: (info) => info.getValue(),
     header: 'Description',
   }),
+  columnHelper.accessor('slug', {
+    cell: (info) => info.getValue(),
+  }),
 ];
 
 const emptyApps: App[] = [];
@@ -202,6 +205,7 @@ export function Dashboard() {
   >({
     description: false,
     owner: false,
+    slug: false,
   });
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const { getAppOwner } = useAppOwner();
@@ -226,6 +230,7 @@ export function Dashboard() {
       description: false,
       owner: !!appSearchTerm,
       createdBy: !appSearchTerm,
+      slug: false,
     });
   }, [appSearchTerm]);
 

@@ -362,7 +362,7 @@ export const WebSiteFooter = ({
             gap={5}
           >
             <VStack
-              as="ul"
+              as="nav"
               flex={1}
               h="full"
               justify="space-between"
@@ -378,7 +378,7 @@ export const WebSiteFooter = ({
             </VStack>
 
             <VStack
-              as="ul"
+              as="nav"
               flex={1}
               h="full"
               justify="space-between"
@@ -392,10 +392,11 @@ export const WebSiteFooter = ({
                 displayActiveLink={false}
               />
             </VStack>
-            <VStack
-              as="ul"
+            {/* <VStack
+              as="nav"
               flex={1}
               h="full"
+              style={{ listStyleType: 'none' }}
               justify="space-between"
               align="flex-start"
             >
@@ -406,7 +407,7 @@ export const WebSiteFooter = ({
                 component={links?.component}
                 displayActiveLink={false}
               />
-            </VStack>
+            </VStack> */}
           </HStack>
 
           <VStack as={GridItem} colSpan={1} align="end" justify="space-between">

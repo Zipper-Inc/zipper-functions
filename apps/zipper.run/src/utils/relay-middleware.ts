@@ -218,7 +218,7 @@ export async function relayRequest(
   });
 
   const { status, headers } = response;
-  const updatedHeaders = new Headers(headers);
+  const mutableHeaders = new Headers(headers);
   const result = await response.text();
 
   if (!bootOnly) {
@@ -233,7 +233,7 @@ export async function relayRequest(
         : relayBody,
       result: app.isDataSensitive ? SENSITIVE_DATA_PLACEHOLDER : result,
     });
-    updatedHeaders.set('x-zipper-run-id', await appRunRes.text());
+    mutableHeaders.set('x-zipper-run-id', await appRunRes.text());
   }
 
   return { result, status, headers };
@@ -262,9 +262,9 @@ export default async function serveRelay({
     },
     bootOnly,
   );
-  const updatedHeaders = new Headers(headers);
+  const mutableHeaders = new Headers(headers);
   if (request.method !== 'GET')
-    updatedHeaders?.append('Access-Control-Allow-Origin', '*');
+    mutableHeaders?.append('Access-Control-Allow-Origin', '*');
 
   if (status === 404) {
     return NextResponse.rewrite(new URL('/404', request.url));
@@ -316,13 +316,13 @@ export default async function serveRelay({
       }),
       {
         status,
-        headers: updatedHeaders,
+        headers: mutableHeaders,
       },
     );
   }
 
   return new NextResponse(result, {
     status,
-    headers: updatedHeaders,
+    headers: mutableHeaders,
   });
 }

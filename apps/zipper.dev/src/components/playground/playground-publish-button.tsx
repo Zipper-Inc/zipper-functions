@@ -149,7 +149,7 @@ export const PlaygroundPublishInfo = ({ app }: { app: AppQueryOutput }) => {
                     }
                   >
                     <PiRocketLaunchDuotone />
-                    <Text>Publish</Text>
+                    <Text display={{ base: 'none', sm: 'block' }}>Publish</Text>
                   </Button>
                 </span>
               </PopoverTrigger>
