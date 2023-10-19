@@ -76,6 +76,7 @@ export function PlaygroundCollabCursor({
   connectionId: number;
   editorRef: MutableRefObject<monaco.editor.IStandaloneCodeEditor | undefined>;
 }) {
+  // liveblocks here
   const { userId, selection } = useOther(connectionId, (u) => ({
     userId: u.id,
     selection: u.presence.selection as unknown as monaco.Selection,

@@ -117,6 +117,7 @@ export default function PlaygroundEditor(
     );
 
     // set up cursor tracking
+    // liveblocks here
     editor.onDidChangeCursorSelection(({ selection }) => {
       try {
         updateMyPresence({ selection: { ...selection } });
@@ -456,6 +457,7 @@ export default function PlaygroundEditor(
         onMount={handleEditorDidMount}
         {...props}
       />
+      {/* liveblocks  here*/}
       {connectionIds.map((id) => (
         <PlaygroundCollabCursor
           connectionId={id}

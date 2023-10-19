@@ -394,10 +394,12 @@ const EditorContextProvider = ({
     Record<string, boolean>
   >({});
 
+  // liveblocks here
   const currentScriptLive: any = useLiveStorage(
     (root) => root[`script-${currentScript?.id}`],
   );
 
+  // liveblocks here
   const mutateLive = useLiveMutation(
     (context, newCode: string, newVersion: number) => {
       const { storage, self } = context;
@@ -431,6 +433,7 @@ const EditorContextProvider = ({
     if (!editor || !monacoRef?.current || !currentScript) return;
 
     // Sync to liveblocks
+    // liveblocks here
     try {
       mutateLive(value, event.versionId);
     } catch (e) {

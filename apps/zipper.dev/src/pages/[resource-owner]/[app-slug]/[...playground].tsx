@@ -52,6 +52,7 @@ const PlaygroundPage: NextPageWithLayout<Props> = ({
 
   const pageTitle = `${data.resourceOwner.slug} / ${data.name || data.slug}`;
 
+  // liveblocks here
   const initialStorage: any = {
     app: new LiveObject({
       slug: data.slug,
@@ -60,6 +61,7 @@ const PlaygroundPage: NextPageWithLayout<Props> = ({
     }),
   };
 
+  // liveblocks here
   appQuery.data?.scripts.forEach((s) => {
     initialStorage[`script-${s.id}`] = new LiveObject({
       code: s.code,
@@ -74,6 +76,7 @@ const PlaygroundPage: NextPageWithLayout<Props> = ({
     utils.app.byId.invalidate({ id: appQuery.data.id });
   };
 
+  // liveblocks here
   const playground = withLiveblocksRoom(
     () => (
       <EditorContextProvider
