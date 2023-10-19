@@ -15,8 +15,10 @@ export default async function htmlHandler(request: NextRequest) {
     filename,
   });
 
-  headers?.set('Content-Type', 'text/html');
-  setCorsHeaders(headers);
+  const mutableHeaders = new Headers(headers);
+
+  mutableHeaders?.set('Content-Type', 'text/html');
+  setCorsHeaders(mutableHeaders);
 
   if (status === 404) {
     return NextResponse.rewrite(new URL('/404', request.url));
@@ -31,6 +33,6 @@ export default async function htmlHandler(request: NextRequest) {
 
   return new NextResponse(result, {
     status,
-    headers,
+    headers: mutableHeaders,
   });
 }

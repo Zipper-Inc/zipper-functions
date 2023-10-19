@@ -22,24 +22,26 @@ export default async function handler(request: NextRequest) {
       filename,
     });
 
+    const mutableHeaders = new Headers(headers);
+
     if (status !== 200) {
       return new NextResponse(YAML.stringify({ ok: false, error: result }), {
         status,
       });
     }
 
-    headers?.set('Content-Type', 'text/yaml');
-    setCorsHeaders(headers);
+    mutableHeaders?.set('Content-Type', 'text/yaml');
+    setCorsHeaders(mutableHeaders);
 
     return new NextResponse(
       YAML.stringify({
         ok: true,
         data: safeJSONParse(result, undefined, result),
-        __meta: getMetaFromHeaders(headers),
+        __meta: getMetaFromHeaders(mutableHeaders),
       }),
       {
         status,
-        headers,
+        headers: mutableHeaders,
       },
     );
   } catch (e: any) {

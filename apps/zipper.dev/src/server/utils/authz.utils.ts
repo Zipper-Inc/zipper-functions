@@ -1,6 +1,7 @@
 import { TRPCError } from '@trpc/server';
 import { Context } from '../context';
 import { prisma } from '../prisma';
+import { UserRole } from '@zipper/types';
 
 export const hasAppEditPermission = async ({
   ctx,
@@ -91,10 +92,9 @@ export const hasOrgAdminPermission = async (ctx: Context) => {
       },
     });
 
-    if (orgMem.role === 'ADMIN') {
+    if (orgMem.role === UserRole.Admin) {
       return true;
     }
-
     return false;
   } catch (error) {
     return false;

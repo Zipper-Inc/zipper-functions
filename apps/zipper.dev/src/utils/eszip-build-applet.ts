@@ -16,7 +16,7 @@ import { prettyLog, PRETTY_LOG_TOKENS } from './pretty-log';
 import { readFrameworkFile } from './read-file';
 import { rewriteImports } from './rewrite-imports';
 
-const FILENAME_FORBIDDEN_CHARS_REGEX = /[^a-zA-Z0-9_.-@$)]/;
+const FILENAME_FORBIDDEN_CHARS_REGEX = /[^a-zA-Z0-9_.\-@$)]/;
 
 /**
  * @todo
