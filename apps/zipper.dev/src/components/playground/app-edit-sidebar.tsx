@@ -24,7 +24,7 @@ type AppEditSidebarProps = {
   appSlug: string;
   isMarkdownEditable: boolean;
   setIsMarkdownEditable: (editable: boolean) => void;
-  canUserEdit: boolean;
+  canUserEdit?: boolean;
 };
 
 export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
