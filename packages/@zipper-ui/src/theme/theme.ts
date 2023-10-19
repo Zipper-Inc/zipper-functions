@@ -279,6 +279,11 @@ export const theme = extendTheme({
         flexDirection: 'column',
         overflow: 'auto',
       },
+
+      'ol,ul': {
+        listStyle: 'none',
+      },
+
       '#__next': {
         flex: 1,
         display: 'flex',

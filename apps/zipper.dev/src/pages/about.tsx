@@ -69,7 +69,7 @@ const AboutPage: NextPageWithLayout = () => {
               fontSize={['4xl', '6xl']}
               fontWeight={400}
               textTransform="uppercase"
-              fontFamily="plak"
+              fontFamily="plaak"
               whiteSpace="pre-line"
             >
               {`There’s magic 
@@ -116,7 +116,7 @@ const AboutPage: NextPageWithLayout = () => {
               color="blue.500"
               fontSize="4xl"
               textTransform="uppercase"
-              fontFamily="plak"
+              fontFamily="plaak"
             >
               THE TEAM
             </Heading>
@@ -222,7 +222,7 @@ const AboutPage: NextPageWithLayout = () => {
               color="brandOrange.500"
               fontSize="4xl"
               textTransform="uppercase"
-              fontFamily="plak"
+              fontFamily="plaak"
             >
               OPEN ROLES
             </Heading>
@@ -285,7 +285,7 @@ const AboutPage: NextPageWithLayout = () => {
           <Container w="full" alignItems="start" maxW="container.xl">
             <a id="contact" style={{ position: 'relative', top: '-32px' }} />
 
-            <Heading color="purple.600" fontFamily="plak">
+            <Heading color="purple.600" fontFamily="plaak">
               CONTACT
             </Heading>
             <Text color="neutral.900" mt={2}>

@@ -1,4 +1,4 @@
-import { ChakraProps, Link, Text } from '@chakra-ui/react';
+import { Box, ChakraProps, Link, Text } from '@chakra-ui/react';
 import React, { useMemo } from 'react';
 
 export const Links = ({
@@ -9,6 +9,7 @@ export const Links = ({
   displayActiveLink?: boolean;
   color?: Record<'default' | 'hover', ChakraProps['color']>;
   mode?: 'dark' | 'light';
+  as?: keyof HTMLElementTagNameMap;
   textDecor?: ChakraProps['textDecor'];
   component?: any;
 }) => {
@@ -79,7 +80,7 @@ export const Links = ({
             : LINK_STYLES.idle;
 
         if (link.external === false) {
-          return (
+          const component = (
             <Text
               py={1}
               as={props.component}
@@ -90,14 +91,22 @@ export const Links = ({
               {link.label}
             </Text>
           );
+          return props.as ? <Box as={props.as}>{component}</Box> : component;
         }
 
         if (link.external === true) {
-          return (
-            <Link key={index} href={link.href} isExternal {...styles}>
+          const component = (
+            <Link
+              as={props.component}
+              key={index}
+              href={link.href}
+              isExternal
+              {...styles}
+            >
               {link.label}
             </Link>
           );
+          return props.as ? <Box as={props.as}>{component}</Box> : component;
         }
       })}
     </React.Fragment>
