@@ -254,8 +254,8 @@ const borderRadius = {
   },
 };
 export const fonts = {
-  body: '"InterVariable", sans-serif',
-  heading: '"InterVariable", sans-serif',
+  body: 'var(--font-inter), sans-serif',
+  heading: 'var(--font-plaak), sans-serif',
   mono: 'Monaco, "Monaco", monospace',
   plak: '"Plaak", sans-serif',
 };
