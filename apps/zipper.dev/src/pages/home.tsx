@@ -430,7 +430,7 @@ const Hero = () => {
         height="373px"
         animate={box1Animation}
       >
-        <img
+        <Image
           src="/static/app.png"
           style={{ objectFit: 'cover' }}
           width="536"
@@ -447,7 +447,7 @@ const Hero = () => {
         top={20}
         height="600"
       >
-        <img
+        <Image
           style={{ objectFit: 'cover' }}
           src="/static/code.png"
           width={720}
@@ -465,7 +465,7 @@ const Hero = () => {
         height="400"
         animate={box2Animation}
       >
-        <img
+        <Image
           style={{ objectFit: 'cover' }}
           src="/static/api.png"
           width="400"
@@ -700,6 +700,7 @@ const WebFirst = () => {
             return (
               <GridItem
                 colSpan={isMiddleItem ? 1 : { base: 1, md: 2 }}
+                key={index}
                 position="relative"
                 overflow="hidden"
                 pt={{ base: 9, lg: 12 }}
@@ -972,7 +973,6 @@ const AppletsGallery = () => {
           {APPLET_GALLERY_LIST.map((app) => (
             <VStack
               align="start"
-              as="li"
               minH={{ base: '524px', lg: '520px' }}
               justify={{ base: 'space-between' }}
               key={app.slug}
@@ -997,7 +997,11 @@ const AppletsGallery = () => {
                   >
                     {app.title}
                   </Heading>
-                  <Link href={app.url} target="_blank">
+                  <Link
+                    href={app.url}
+                    target="_blank"
+                    aria-label={`access ${app.slug} applet`}
+                  >
                     <Icon as={HiArrowUpRight} />
                   </Link>
                 </HStack>
