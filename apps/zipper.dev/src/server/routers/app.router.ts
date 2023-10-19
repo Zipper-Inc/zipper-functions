@@ -232,7 +232,7 @@ export const appRouter = createTRPCRouter({
         const scriptHash = getScriptHash({
           code: aiCode ?? defaultCode,
           filename: defaultMainFilename,
-          id: scriptMain.scriptId,
+          appId: app.id,
         });
         const script = await prisma.script.update({
           where: {
@@ -889,7 +889,7 @@ export const appRouter = createTRPCRouter({
                   ...data,
                   isRunnable,
                   hash: getScriptHash({
-                    id,
+                    appId: app.id,
                     filename: filenames[id]!,
                     code: data.code!,
                   }),
@@ -1089,7 +1089,7 @@ async function forkApplet({
           id: newId,
           appId: fork.id,
           order: i,
-          hash: getScriptHash({ ...script, id: newId }),
+          hash: getScriptHash({ ...script, appId: fork.id }),
         },
       });
 
