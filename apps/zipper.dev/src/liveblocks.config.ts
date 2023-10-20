@@ -45,15 +45,13 @@ export type TypedLiveblocksProvider = LiveblocksProvider<
 >;
 
 export const {
-  suspense: {
-    useStorage,
-    RoomProvider,
-    useMutation,
-    useOther,
-    useOthers,
-    useOthersConnectionIds,
-    useSelf,
-    useMyPresence,
-    useRoom,
-  },
+  useStorage,
+  RoomProvider,
+  useMutation,
+  useOther,
+  useOthers,
+  useOthersConnectionIds,
+  useSelf,
+  useMyPresence,
+  useRoom,
 } = createRoomContext<Presence, Storage, UserMeta, RoomEvent>(client);
