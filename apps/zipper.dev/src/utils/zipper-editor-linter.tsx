@@ -22,12 +22,10 @@ export enum ZipperLintCode {
 let zipperLinterLastRunTs = 0;
 
 export async function runZipperLinter({
-  editor,
   imports,
   monacoRef,
   currentScript,
 }: {
-  editor: typeof monaco.editor;
   imports: {
     specifier: string;
     startLine: number;
@@ -41,6 +39,7 @@ export async function runZipperLinter({
   currentScript: Script;
 }) {
   if (!monacoRef.current) return;
+  const { editor } = monacoRef.current;
 
   const markers: monaco.editor.IMarkerData[] = [];
 

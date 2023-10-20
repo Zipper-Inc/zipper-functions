@@ -92,7 +92,7 @@ export type EditorContextType = {
           now?: boolean;
         },
         defaults?: RunEditorActionsInputs,
-      ) => void);
+      ) => Promise<void>);
 };
 
 export const EditorContext = createContext<EditorContextType>({
@@ -139,7 +139,7 @@ export const EditorContext = createContext<EditorContextType>({
 });
 
 const MAX_RETRIES_FOR_EXTERNAL_IMPORT = 3;
-const DEBOUNCE_DELAY_MS = 250;
+const DEBOUNCE_DELAY_MS = 100;
 
 /**
  * Fetches an import and modifies refs as needed
@@ -215,20 +215,22 @@ async function fetchImport({
     );
 
     // Retry this N more times with exponential backoff
-    window.setTimeout(
-      () =>
-        fetchImport({
-          importUrl,
-          uriParser,
-          monacoRef,
-          invalidImportUrlsRef,
-        }),
-      currentRetries ** 2 * 1000,
+    return new Promise((resolve) =>
+      window.setTimeout(
+        () =>
+          fetchImport({
+            importUrl,
+            uriParser,
+            monacoRef,
+            invalidImportUrlsRef,
+          }).then(resolve),
+        currentRetries ** 2 * 1000,
+      ),
     );
   }
 }
 
-function handleExternalImports({
+async function handleExternalImports({
   imports,
   monacoRef,
   externalImportModelsRef,
@@ -278,19 +280,17 @@ function handleExternalImports({
   });
 
   // Handle changes in code
-  externalImports.forEach((importUrl, index) => {
-    // First let's move the pointer to the right spot
-    newImportModels[index] = importUrl;
+  await Promise.all(
+    externalImports.map(async (importUrl, index) => {
+      // First let's move the pointer to the right spot
+      newImportModels[index] = importUrl;
+      if (importUrl === oldImportModels[index]) return;
 
-    // Code matches what we have models for, do nothing
-    if (importUrl === oldImportModels[index]) return;
+      if (externalImportsForThisFile.includes(importUrl)) return;
 
-    // If this is net new and not already invalid, let's download it
-    if (
-      !externalImportsForThisFile.includes(importUrl) &&
-      (invalidImportUrlsRef.current[importUrl] || 0) <
-        MAX_RETRIES_FOR_EXTERNAL_IMPORT
-    ) {
+      const currentRetries = invalidImportUrlsRef.current[importUrl] || 0;
+      if (currentRetries >= MAX_RETRIES_FOR_EXTERNAL_IMPORT) return;
+
       // check if we have an alias
       const alias = externalImportsPairs.find(
         ([ogSpecifier, rewrittenSpecifier]) =>
@@ -298,25 +298,25 @@ function handleExternalImports({
           ogSpecifier !== rewrittenSpecifier,
       )?.[0];
 
-      if (alias !== importUrl)
-        fetchImport({
-          importUrl,
-          uriParser,
-          monacoRef,
-          invalidImportUrlsRef,
-          alias,
-        });
-    }
-  });
+      return fetchImport({
+        importUrl,
+        uriParser,
+        monacoRef,
+        invalidImportUrlsRef,
+        alias: alias !== importUrl ? alias : undefined,
+      }).catch((e) => {
+        console.error('Unhandled error in while fetching import', e);
+      });
+    }),
+  );
 
   externalImportModelsRef.current[currentScript.filename] = newImportModels;
 }
 
-function runEditorActionsNow({
+async function runEditorActionsNow({
   value,
   setInputParams,
   setInputError,
-  editor,
   monacoRef,
   currentScript,
   externalImportModelsRef,
@@ -326,14 +326,13 @@ function runEditorActionsNow({
   value: string;
   setInputParams: EditorContextType['setInputParams'];
   setInputError: (error: string | undefined) => void;
-  editor: typeof monaco.editor | undefined;
   monacoRef: MutableRefObject<typeof monaco | undefined>;
   currentScript: Script;
   externalImportModelsRef: MutableRefObject<Record<string, string[]>>;
   invalidImportUrlsRef: MutableRefObject<{ [url: string]: number }>;
   setModelIsDirty: (path: string, isDirty: boolean) => void;
 }) {
-  if (!editor || !monacoRef.current) return;
+  if (!monacoRef.current) return;
 
   try {
     const newHash = getScriptHash({ ...currentScript, code: value });
@@ -348,13 +347,12 @@ function runEditorActionsNow({
     setInputError(undefined);
 
     runZipperLinter({
-      editor,
       imports,
       monacoRef,
       currentScript,
     });
 
-    handleExternalImports({
+    await handleExternalImports({
       imports,
       monacoRef,
       externalImportModelsRef,
@@ -419,12 +417,11 @@ const EditorContextProvider = ({
   );
 
   const onChange: EditorProps['onChange'] = async (value = '', event) => {
-    if (!editor || !monacoRef?.current || !currentScript) return;
+    if (!monacoRef?.current || !currentScript) return;
     runEditorActionsDebounced({
       value,
       setInputParams,
       setInputError,
-      editor,
       monacoRef,
       currentScript,
       externalImportModelsRef,
@@ -745,14 +742,13 @@ const EditorContextProvider = ({
         lastReadLogsTimestamp,
         resourceOwnerSlug: resourceOwnerSlug as string,
         appSlug: appSlug as string,
-        runEditorActions: (
+        runEditorActions: async (
           { now = false, currentScript, value },
           defaults = {
             value: '',
             currentScript: {} as any,
             setInputParams,
             setInputError,
-            editor,
             monacoRef,
             externalImportModelsRef,
             invalidImportUrlsRef,
