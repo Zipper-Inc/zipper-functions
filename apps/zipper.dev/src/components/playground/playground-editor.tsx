@@ -91,6 +91,7 @@ export default function PlaygroundEditor(
     isEditorDirty,
     monacoRef,
     runEditorActions,
+    readOnly,
   } = useEditorContext();
   const { appInfo, boot } = useRunAppContext();
   const editorRef = useRef<MonacoEditor>();
@@ -292,6 +293,7 @@ export default function PlaygroundEditor(
       monaco.languages.typescript.typescriptDefaults.setEagerModelSync(true);
 
       setEditor(monaco.editor);
+      if (monacoRef) monacoRef.current = monaco;
 
       // Create models for each script
       scripts.forEach((script) => {
@@ -312,36 +314,10 @@ export default function PlaygroundEditor(
     }
   }, [monacoEditor]);
 
+  // switch files
   useEffect(() => {
     if (monacoEditor && editorRef.current && isEditorReady && currentScript) {
-      const extension = currentScript.filename.split('.').pop();
-
-      if (extension === 'md') {
-        setDefaultLanguage('markdown');
-      }
-
-      const uri = getUriFromPath(
-        currentScript.filename,
-        monaco.Uri.parse,
-        'tsx',
-      );
-      const model = monacoEditor.editor.getModel(uri);
-      if (model) {
-        editorRef.current.setModel(model);
-      }
-      if (!model && currentScript) {
-        const newModel = monacoEditor.editor.createModel(
-          currentScript.code,
-          extension === 'md' ? 'markdown' : 'typescript',
-          uri,
-        );
-        editorRef.current.setModel(newModel);
-        runEditorActions({
-          now: true,
-          value: currentScript.code,
-          currentScript,
-        });
-      }
+      editorRef.current.setModel(getOrCreateScriptModel(currentScript));
     }
   }, [currentScript, editorRef.current, isEditorReady]);
 
@@ -381,7 +357,7 @@ export default function PlaygroundEditor(
   useEffect(() => {
     const bindings: MonacoBinding[] = [];
 
-    if (isEditorReady && room && isModelReady) {
+    if (isEditorReady && room && isModelReady && !readOnly) {
       if (!yRefs.current.yDoc || !yRefs.current.yProvider) {
         yRefs.current.yDoc = new Y.Doc();
         yRefs.current.yProvider = new LiveblocksProvider(
@@ -418,7 +394,7 @@ export default function PlaygroundEditor(
       yRefs.current.yProvider?.destroy();
       bindings.forEach((b) => b?.destroy());
     };
-  }, [isEditorReady, isModelReady, room]);
+  }, [isEditorReady, isModelReady, room, readOnly]);
 
   // Short cut to reset yDoc to database
   useCmdOrCtrl(
@@ -438,7 +414,7 @@ export default function PlaygroundEditor(
         options={{
           fontSize: 13,
           automaticLayout: true,
-          readOnly: !appInfo.canUserEdit,
+          readOnly,
           fixedOverflowWidgets: true,
           renderLineHighlight: 'line',
           renderLineHighlightOnlyWhenFocus: true,

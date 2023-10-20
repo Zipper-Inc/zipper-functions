@@ -93,6 +93,7 @@ export type EditorContextType = {
         },
         defaults?: RunEditorActionsInputs,
       ) => Promise<void>);
+  readOnly: boolean;
 };
 
 export const EditorContext = createContext<EditorContextType>({
@@ -136,6 +137,7 @@ export const EditorContext = createContext<EditorContextType>({
   resourceOwnerSlug: '',
   appSlug: '',
   runEditorActions: noop,
+  readOnly: false,
 });
 
 const MAX_RETRIES_FOR_EXTERNAL_IMPORT = 3;
@@ -317,12 +319,13 @@ async function handleExternalImports({
 async function runEditorActionsNow({
   value,
   setInputParams,
-  setInputError,
+  setInputError: setInputErrorPassedIn,
   monacoRef,
   currentScript,
   externalImportModelsRef,
   invalidImportUrlsRef,
-  setModelIsDirty,
+  setModelIsDirty: setModelIsDirtyPassedIn,
+  readOnly,
 }: {
   value: string;
   setInputParams: EditorContextType['setInputParams'];
@@ -332,8 +335,13 @@ async function runEditorActionsNow({
   externalImportModelsRef: MutableRefObject<Record<string, string[]>>;
   invalidImportUrlsRef: MutableRefObject<{ [url: string]: number }>;
   setModelIsDirty: (path: string, isDirty: boolean) => void;
+  readOnly: boolean;
 }) {
   if (!monacoRef.current) return;
+
+  const setInputError = readOnly ? noop : setInputErrorPassedIn;
+  const setModelIsDirty = readOnly ? noop : setModelIsDirtyPassedIn;
+  const linter = readOnly ? noop : runZipperLinter;
 
   try {
     const newHash = getScriptHash({ ...currentScript, code: value });
@@ -347,7 +355,7 @@ async function runEditorActionsNow({
     setInputParams(inputs);
     setInputError(undefined);
 
-    runZipperLinter({
+    linter({
       imports,
       monacoRef,
       currentScript,
@@ -381,6 +389,7 @@ const EditorContextProvider = ({
   resourceOwnerSlug,
   initialScripts,
   refetchApp,
+  readOnly,
 }: {
   app: AppQueryOutput;
   children: any;
@@ -389,6 +398,7 @@ const EditorContextProvider = ({
   resourceOwnerSlug: string | undefined;
   initialScripts: Script[];
   refetchApp: () => Promise<void>;
+  readOnly: boolean;
 }) => {
   const [currentScript, setCurrentScript] = useState<Script | undefined>(
     undefined,
@@ -430,6 +440,7 @@ const EditorContextProvider = ({
       externalImportModelsRef,
       invalidImportUrlsRef,
       setModelIsDirty,
+      readOnly,
     });
   };
 
@@ -756,6 +767,7 @@ const EditorContextProvider = ({
             externalImportModelsRef,
             invalidImportUrlsRef,
             setModelIsDirty,
+            readOnly,
           },
         ) =>
           (now ? runEditorActionsNow : runEditorActionsDebounced)({
@@ -763,6 +775,7 @@ const EditorContextProvider = ({
             currentScript,
             value,
           }),
+        readOnly,
       }}
     >
       {children}

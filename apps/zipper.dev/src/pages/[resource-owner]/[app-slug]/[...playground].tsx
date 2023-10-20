@@ -1,5 +1,4 @@
 import { Box, Button, Center, Heading, Link, VStack } from '@chakra-ui/react';
-import { LiveObject } from '@liveblocks/client';
 import { createServerSideHelpers } from '@trpc/react-query/server';
 import { GetServerSideProps, GetServerSidePropsContext } from 'next';
 import Head from 'next/head';
@@ -15,7 +14,6 @@ import { createContext } from '~/server/context';
 import { trpcRouter } from '~/server/routers/_app';
 import { parsePlaygroundQuery, Props } from '~/utils/playground.utils';
 import { trpc } from '~/utils/trpc';
-import { Storage as LiveblocksStorage } from '~/liveblocks.config';
 
 const PlaygroundPage: NextPageWithLayout<Props> = ({
   resourceOwnerSlug,
@@ -53,21 +51,6 @@ const PlaygroundPage: NextPageWithLayout<Props> = ({
 
   const pageTitle = `${data.resourceOwner.slug} / ${data.name || data.slug}`;
 
-  const initialStorage: LiveblocksStorage = {
-    app: new LiveObject({
-      slug: data.slug,
-      name: data.name || '',
-      description: data.description || '',
-    }),
-  };
-
-  // liveblocks here
-  appQuery.data?.scripts.forEach((s) => {
-    initialStorage[`script-${s.id}`] = new LiveObject({
-      code: s.code,
-    });
-  });
-
   const refetchApp = async () => {
     utils.app.byResourceOwnerAndAppSlugs.invalidate({
       resourceOwnerSlug,
@@ -86,6 +69,7 @@ const PlaygroundPage: NextPageWithLayout<Props> = ({
         resourceOwnerSlug={appQuery.data.resourceOwner.slug}
         initialScripts={appQuery.data?.scripts || []}
         refetchApp={refetchApp}
+        readOnly={appQuery.data.canUserEdit === false}
       >
         <HelpModeProvider>
           <Playground app={appQuery.data} filename={filename} tab={tab} />
@@ -94,7 +78,7 @@ const PlaygroundPage: NextPageWithLayout<Props> = ({
     ),
     {
       room: `${resourceOwnerSlug}/${appSlug}`,
-      initialStorage,
+      initialStorage: {},
       initialPresence: {},
     },
   );
