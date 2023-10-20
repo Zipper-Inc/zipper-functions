@@ -18,6 +18,9 @@ export enum ZipperLintCode {
   CannotFindModule = 'Z001',
 }
 
+// A little bit of a hack. Better if this is passed in or something.
+let zipperLinterLastRunTs = 0;
+
 export async function runZipperLinter({
   editor,
   imports,
@@ -50,6 +53,9 @@ export async function runZipperLinter({
 
   // Not sure how this would happen but if there's no model, there's nothing to do
   if (!currentModel) return;
+
+  const lintRunTs = Date.now();
+  zipperLinterLastRunTs = lintRunTs;
 
   // Handle imports and check to make sure they are valid
   // Reports Z0001: Cannot find module
@@ -118,9 +124,9 @@ export async function runZipperLinter({
           .catch();
 
         message = `Cannot find module "${npmName}" on npm.`;
-        suggestion = results?.objects?.length
-          ? results.objects[0].package.name
-          : '';
+        const resultName =
+          results?.objects?.length && results.objects[0].package.name;
+        if (resultName && resultName !== npmName) suggestion = resultName;
       } else {
         const localModelUris = editor
           .getModels()
@@ -151,6 +157,11 @@ export async function runZipperLinter({
       });
     }),
   );
+
+  // Since we've waited a little for all these fetches
+  // Make sure this is the most recent lint run
+  // If not, return early
+  if (zipperLinterLastRunTs !== lintRunTs) return;
 
   editor.removeAllMarkers(ZIPPER_LINTER);
   editor.setModelMarkers(currentModel, ZIPPER_LINTER, markers);
