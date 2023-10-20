@@ -29,7 +29,11 @@ import { prettyLog } from '~/utils/pretty-log';
 import { AppQueryOutput } from '~/types/trpc';
 import { getAppVersionFromHash, getScriptHash } from '~/utils/hashing';
 import { isZipperImportUrl } from '~/utils/eszip-utils';
-import { parsePlaygroundQuery, PlaygroundTab } from '~/utils/playground.utils';
+import {
+  getOrCreateScriptModel,
+  parsePlaygroundQuery,
+  PlaygroundTab,
+} from '~/utils/playground.utils';
 import { runZipperLinter } from '~/utils/zipper-editor-linter';
 import { rewriteSpecifier } from '~/utils/rewrite-imports';
 import { rest } from 'lodash';
@@ -44,11 +48,6 @@ type RunEditorActionsInputs = Parameters<typeof runEditorActionsNow>[0];
 export type EditorContextType = {
   currentScript?: Script;
   setCurrentScript: (script: Script) => void;
-  currentScriptLive?: {
-    code: string;
-    lastLocalVersion: number;
-    lastConnectionId: number;
-  };
   onChange: EditorProps['onChange'];
   onValidate: OnValidate;
   connectionId?: number;
@@ -99,7 +98,6 @@ export type EditorContextType = {
 export const EditorContext = createContext<EditorContextType>({
   currentScript: undefined,
   setCurrentScript: noop,
-  currentScriptLive: undefined,
   onChange: noop,
   onValidate: noop,
   connectionId: undefined,
@@ -424,11 +422,6 @@ const EditorContextProvider = ({
     Record<string, boolean>
   >({});
 
-  // liveblocks here
-  const currentScriptLive: any = useLiveStorage(
-    (root) => root[`script-${currentScript?.id}`],
-  );
-
   const onChange: EditorProps['onChange'] = async (value = '', event) => {
     if (!monacoRef?.current || !currentScript) return;
     runEditorActionsDebounced({
@@ -461,6 +454,12 @@ const EditorContextProvider = ({
       const fileModels = models.filter((model) => model.uri.scheme === 'file');
       // if there are more models than scripts, it means we models to dispose of
       fileModels.forEach((model) => {
+        console.log(
+          'filename',
+          scripts[0]?.filename,
+          'path',
+          getPathFromUri(model.uri),
+        );
         // if the model is not in the scripts, dispose of it
         if (
           !scripts.find(
@@ -480,10 +479,11 @@ const EditorContextProvider = ({
   const router = useRouter();
 
   useEffect(() => {
-    if (currentScript) {
+    if (currentScript && monacoRef.current) {
       try {
+        const model = getOrCreateScriptModel(currentScript, monacoRef.current!);
         const { inputs } = parseCode({
-          code: currentScriptLive?.code || currentScript.code,
+          code: model.getValue() || currentScript.code,
           throwErrors: true,
         });
 
@@ -515,7 +515,7 @@ const EditorContextProvider = ({
         );
       }
     }
-  }, [currentScript]);
+  }, [currentScript, monacoRef.current]);
 
   useEffect(() => {
     setScripts(initialScripts);
@@ -723,7 +723,6 @@ const EditorContextProvider = ({
       value={{
         currentScript,
         setCurrentScript,
-        currentScriptLive,
         onChange,
         onValidate,
         connectionId: self?.connectionId,

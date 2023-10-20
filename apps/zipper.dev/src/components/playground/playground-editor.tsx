@@ -28,6 +28,7 @@ import LiveblocksProvider, { Awareness } from '@liveblocks/yjs';
 import { MonacoBinding } from 'y-monaco';
 
 import { PlaygroundCollabCursor } from './playground-collab-cursor';
+import { getOrCreateScriptModel } from '~/utils/playground.utils';
 import { BaseUserMeta, JsonObject, LsonObject } from '@liveblocks/client';
 import { TypedLiveblocksProvider } from '~/liveblocks.config';
 import { set } from 'lodash';
@@ -60,20 +61,6 @@ const TYPESCRIPT_ERRORS_TO_IGNORE = [
   // Allow destructured elements to have an implicit `any` type.
   7031,
 ];
-
-function getOrCreateScriptModel(script: Script) {
-  const extension = script.filename.split('.').pop();
-  const path = script.filename;
-  const uri = getUriFromPath(path, monaco.Uri.parse, 'tsx');
-  return (
-    monaco.editor.getModel(uri) ||
-    monaco.editor.createModel(
-      script.code,
-      extension === 'md' ? 'markdown' : 'typescript',
-      uri,
-    )
-  );
-}
 
 const isExternalResource = (resource: string | monaco.Uri) =>
   /^https?/.test(resource.toString());
@@ -297,7 +284,7 @@ export default function PlaygroundEditor(
 
       // Create models for each script
       scripts.forEach((script) => {
-        getOrCreateScriptModel(script);
+        getOrCreateScriptModel(script, monaco);
         runEditorActions({
           now: true,
           value: script.code,
@@ -317,7 +304,7 @@ export default function PlaygroundEditor(
   // switch files
   useEffect(() => {
     if (monacoEditor && editorRef.current && isEditorReady && currentScript) {
-      editorRef.current.setModel(getOrCreateScriptModel(currentScript));
+      editorRef.current.setModel(getOrCreateScriptModel(currentScript, monaco));
     }
   }, [currentScript, editorRef.current, isEditorReady]);
 
@@ -336,7 +323,7 @@ export default function PlaygroundEditor(
 
     const model = !!(scriptOrModel as monaco.editor.ITextModel).uri
       ? (scriptOrModel as monaco.editor.ITextModel)
-      : getOrCreateScriptModel(scriptOrModel as Script);
+      : getOrCreateScriptModel(scriptOrModel as Script, monaco);
 
     const storedScriptId: StoredScriptId = `script-${script?.id}`;
     const yText = (yRefs.current.yDoc || new Y.Doc()).getText(storedScriptId);

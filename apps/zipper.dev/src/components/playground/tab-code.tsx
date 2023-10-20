@@ -28,6 +28,7 @@ import {
 import { AppEditSidebar } from '~/components/playground/app-edit-sidebar';
 import { ConnectorId } from '~/connectors/createConnector';
 import { AppQueryOutput } from '~/types/trpc';
+import { getOrCreateScriptModel } from '~/utils/playground.utils';
 import { useEditorContext } from '../context/editor-context';
 import { useRunAppContext } from '../context/run-app-context';
 import { ConnectorForm } from './connector-form';
@@ -66,8 +67,7 @@ type CodeTabProps = {
 };
 
 export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
-  const { currentScript, onChange, onValidate, currentScriptLive } =
-    useEditorContext();
+  const { currentScript, onChange, onValidate, monacoRef } = useEditorContext();
   const { isRunning, run, boot: saveAndBoot } = useRunAppContext();
   const [expandedResult, setExpandedResult] = useState<
     AppEditSidebarContextType['expandedResult']
@@ -114,6 +114,10 @@ export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
   const currentScriptConnectorId = currentScript?.connectorId;
 
   const isMarkdown = currentScript?.filename.endsWith('.md');
+  const model =
+    currentScript && monacoRef?.current
+      ? getOrCreateScriptModel(currentScript, monacoRef.current)
+      : undefined;
 
   return (
     <>
@@ -225,9 +229,8 @@ export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
                 },
               }}
             >
-              {/** @todo use yJS here */}
               <Markdown
-                children={currentScriptLive?.code || currentScript?.code || ''}
+                children={model?.getValue() || currentScript?.code || ''}
               />
             </VStack>
           )}

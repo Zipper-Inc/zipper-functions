@@ -59,7 +59,6 @@ const PlaygroundPage: NextPageWithLayout<Props> = ({
     utils.app.byId.invalidate({ id: appQuery.data.id });
   };
 
-  // liveblocks here
   const playground = withLiveblocksRoom(
     () => (
       <EditorContextProvider
