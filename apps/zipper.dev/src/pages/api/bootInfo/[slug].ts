@@ -114,6 +114,7 @@ export default async function handler(
     isDataSensitive,
     dailyRunLimit,
     editors,
+    organizationId,
   } = appFound;
 
   const now = new Date();
@@ -196,10 +197,10 @@ export default async function handler(
     },
   });
 
-  if (authorName?.organizationMemberships[0]?.organizationId) {
+  if (organizationId) {
     const authorOrg = await prisma.organization.findUnique({
       where: {
-        id: authorName?.organizationMemberships[0]?.organizationId,
+        id: organizationId,
       },
     });
     appAuthor.organization = authorOrg?.name || '';
