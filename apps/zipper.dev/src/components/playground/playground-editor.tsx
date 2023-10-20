@@ -381,12 +381,7 @@ export default function PlaygroundEditor(
   useEffect(() => {
     const bindings: MonacoBinding[] = [];
 
-    // This is its own function so we can use async here
-    const initLiveblocks = async () => {
-      if (!isEditorReady || !room || !isModelReady) {
-        return;
-      }
-
+    if (isEditorReady && room && isModelReady) {
       if (!yRefs.current.yDoc || !yRefs.current.yProvider) {
         yRefs.current.yDoc = new Y.Doc();
         yRefs.current.yProvider = new LiveblocksProvider(
@@ -416,9 +411,7 @@ export default function PlaygroundEditor(
           }
         });
       });
-    };
-
-    initLiveblocks();
+    }
 
     return () => {
       yRefs.current.yDoc?.destroy();
