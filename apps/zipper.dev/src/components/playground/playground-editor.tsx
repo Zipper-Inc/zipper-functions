@@ -6,19 +6,32 @@ import Editor, {
 } from '@monaco-editor/react';
 import * as monaco from 'monaco-editor';
 import { buildWorkerDefinition } from 'monaco-editor-workers';
-import { useMyPresence, useOthersConnectionIds } from '~/liveblocks.config';
+import {
+  StoredScriptId,
+  useMyPresence,
+  useOthersConnectionIds,
+  useRoom,
+} from '~/liveblocks.config';
 
 import { parse } from '@babel/parser';
 import traverse from '@babel/traverse';
 import { useColorModeValue } from '@chakra-ui/react';
-import { baseColors, prettierFormat } from '@zipper/ui';
+import { baseColors, prettierFormat, useCmdOrCtrl } from '@zipper/ui';
 import MonacoJSXHighlighter from 'monaco-jsx-highlighter';
-import { useEffect, useRef, useState } from 'react';
+import { use, useEffect, useRef, useState } from 'react';
 import { useExitConfirmation } from '~/hooks/use-exit-confirmation';
 import { getPathFromUri, getUriFromPath } from '~/utils/model-uri';
 import { useEditorContext } from '../context/editor-context';
 import { useRunAppContext } from '../context/run-app-context';
+import * as Y from 'yjs';
+import LiveblocksProvider, { Awareness } from '@liveblocks/yjs';
+import { MonacoBinding } from 'y-monaco';
+
 import { PlaygroundCollabCursor } from './playground-collab-cursor';
+import { BaseUserMeta, JsonObject, LsonObject } from '@liveblocks/client';
+import { TypedLiveblocksProvider } from '~/liveblocks.config';
+import { set } from 'lodash';
+import { Script } from '@prisma/client';
 // import { getRewriteRule } from '~/utils/rewrite-imports';
 
 type MonacoEditor = monaco.editor.IStandaloneCodeEditor;
@@ -48,6 +61,20 @@ const TYPESCRIPT_ERRORS_TO_IGNORE = [
   7031,
 ];
 
+function getOrCreateScriptModel(script: Script) {
+  const extension = script.filename.split('.').pop();
+  const path = script.filename;
+  const uri = getUriFromPath(path, monaco.Uri.parse, 'tsx');
+  return (
+    monaco.editor.getModel(uri) ||
+    monaco.editor.createModel(
+      script.code,
+      extension === 'md' ? 'markdown' : 'typescript',
+      uri,
+    )
+  );
+}
+
 const isExternalResource = (resource: string | monaco.Uri) =>
   /^https?/.test(resource.toString());
 
@@ -59,18 +86,22 @@ export default function PlaygroundEditor(
   const {
     setCurrentScript,
     currentScript,
-    currentScriptLive,
     scripts,
     setEditor,
     setModelIsDirty,
     isEditorDirty,
-    connectionId,
     monacoRef,
     onValidate,
+    runEditorActions,
   } = useEditorContext();
   const { appInfo, boot } = useRunAppContext();
   const editorRef = useRef<MonacoEditor>();
+  const yRefs = useRef<{ yDoc?: Y.Doc; yProvider?: TypedLiveblocksProvider }>({
+    yDoc: undefined,
+    yProvider: undefined,
+  });
   const [isEditorReady, setIsEditorReady] = useState(false);
+  const [isModelReady, setIsModelReady] = useState(false);
   const monacoEditor = useMonaco();
   const [, updateMyPresence] = useMyPresence();
   const connectionIds = useOthersConnectionIds();
@@ -118,6 +149,7 @@ export default function PlaygroundEditor(
 
     // set up cursor tracking
     // liveblocks here
+    /*
     editor.onDidChangeCursorSelection(({ selection }) => {
       try {
         updateMyPresence({ selection: { ...selection } });
@@ -125,6 +157,7 @@ export default function PlaygroundEditor(
         console.error('Caught error in updateMyPresence', e);
       }
     });
+    */
 
     setIsEditorReady(true);
 
@@ -258,6 +291,8 @@ export default function PlaygroundEditor(
         },
       );
 
+      monaco.languages.typescript.typescriptDefaults.setEagerModelSync(true);
+
       /*
       monaco.languages.registerDefinitionProvider('typescript', {
         provideDefinition: function (model, position, cancellationToken) {
@@ -274,33 +309,19 @@ export default function PlaygroundEditor(
         },
       });
 */
+      setEditor(monaco.editor);
 
       // Create models for each script
       scripts.forEach((script) => {
-        const extension = script.filename.split('.').pop();
-        const uri = getUriFromPath(script.filename, monaco.Uri.parse, 'tsx');
-        const model = monaco.editor.getModel(uri);
-        if (!model) {
-          monaco.editor.createModel(
-            script.code,
-            extension === 'md' ? 'markdown' : 'typescript',
-            uri,
-          );
-        }
-      });
-
-      monaco.languages.typescript.typescriptDefaults.setEagerModelSync(true);
-
-      monacoEditor.editor.getModels().forEach((model) => {
-        const path = getPathFromUri(model.uri);
-        model.onDidChangeContent((e) => {
-          if (e.changes[0]?.text !== model.getValue())
-            setModelIsDirty(path, true);
+        getOrCreateScriptModel(script);
+        runEditorActions({
+          now: true,
+          value: script.code,
+          currentScript: script,
         });
-        setModelIsDirty(path, false);
       });
 
-      setEditor(monaco.editor);
+      setIsModelReady(true);
 
       if (process.env.NODE_ENV === 'development')
         (window as any).monaco = monaco;
@@ -311,6 +332,7 @@ export default function PlaygroundEditor(
    * Copy pasted/edited from react-monaco code
    * Runs the validation on start of editor for each file
    */
+  /** 
   useEffect(() => {
     if (isEditorReady) {
       const changeMarkersListener =
@@ -331,7 +353,7 @@ export default function PlaygroundEditor(
       };
     }
   }, [isEditorReady]);
-
+*/
   useEffect(() => {
     if (monacoEditor && editorRef.current && isEditorReady && currentScript) {
       const extension = currentScript.filename.split('.').pop();
@@ -355,56 +377,109 @@ export default function PlaygroundEditor(
           extension === 'md' ? 'markdown' : 'typescript',
           uri,
         );
-        const path = getPathFromUri(uri);
-        setModelIsDirty(path, false);
-        newModel.onDidChangeContent((e) => {
-          if (e.changes[0]?.text !== newModel.getValue())
-            setModelIsDirty(path, true);
-        });
         editorRef.current.setModel(newModel);
+        runEditorActions({
+          now: true,
+          value: currentScript.code,
+          currentScript,
+        });
       }
     }
   }, [currentScript, editorRef.current, isEditorReady]);
 
+  const room = useRoom();
+
+  const getStuffForScriptOrModel = (
+    scriptOrModel: Script | monaco.editor.ITextModel,
+  ) => {
+    const script = !!(scriptOrModel as Script).filename
+      ? (scriptOrModel as Script)
+      : scripts.find(
+          (s) =>
+            s.filename ===
+            getPathFromUri((scriptOrModel as monaco.editor.ITextModel).uri),
+        );
+
+    const model = !!(scriptOrModel as monaco.editor.ITextModel).uri
+      ? (scriptOrModel as monaco.editor.ITextModel)
+      : getOrCreateScriptModel(scriptOrModel as Script);
+
+    const storedScriptId: StoredScriptId = `script-${script?.id}`;
+    const yText = (yRefs.current.yDoc || new Y.Doc()).getText(storedScriptId);
+    return { script, model, storedScriptId, yText };
+  };
+
+  const resetYDocToDatabase = (
+    scriptOrModel: Script | monaco.editor.ITextModel,
+  ) => {
+    const { script, yText, model } = getStuffForScriptOrModel(scriptOrModel);
+    const { yDoc } = yRefs.current;
+    yDoc?.transact(() => {
+      yText.delete(0, yText.length);
+      yText.insert(0, script?.code || model.getValue() || '');
+    });
+  };
+
   useEffect(() => {
-    if (isEditorReady) boot();
-  }, [isEditorReady]);
+    const bindings: MonacoBinding[] = [];
 
-  // Execute edits
-  useEffect(() => {
-    if (
-      !editorRef.current ||
-      !editorRef.current.getModel() ||
-      !currentScriptLive
-    )
-      return;
+    // This is its own function so we can use async here
+    const initLiveblocks = async () => {
+      if (!isEditorReady || !room || !isModelReady) {
+        return;
+      }
 
-    // don't execute any edits if this is coming from your own connection
-    if (connectionId === currentScriptLive.lastConnectionId) return;
+      await boot();
 
-    const range = (
-      editorRef.current.getModel() as monaco.editor.ITextModel
-    ).getFullModelRange();
+      if (!yRefs.current.yDoc || !yRefs.current.yProvider) {
+        yRefs.current.yDoc = new Y.Doc();
+        yRefs.current.yProvider = new LiveblocksProvider(
+          room,
+          yRefs.current.yDoc,
+        );
+      }
 
-    const selection = editorRef.current.getSelection();
+      const { yProvider } = yRefs.current;
 
-    editorRef.current.executeEdits(
-      'zipperLiveUpdate',
-      [
-        {
-          range,
-          text: currentScriptLive?.code,
-          forceMoveMarkers: true,
-        },
-      ],
-      /**
-       * @todo resolve where the new selection might be based on the edited range
-       * just putting it here is way better for now
-       */
-      selection ? [selection] : undefined,
-    );
-    editorRef.current.pushUndoStop();
-  }, [connectionId, currentScriptLive?.code, editorRef.current]);
+      scripts.forEach((script) => {
+        const { model, yText } = getStuffForScriptOrModel(script);
+
+        bindings.push(
+          new MonacoBinding(
+            yText,
+            model,
+            new Set([editorRef.current!]),
+            yProvider.awareness as any,
+          ),
+        );
+
+        // Wait for the first sync to happen and replace empty model with script code
+        yProvider.on('synced', () => {
+          if (yText.length === 0 && script.code.trim().length > 0) {
+            resetYDocToDatabase(script);
+          }
+        });
+      });
+    };
+
+    initLiveblocks();
+
+    return () => {
+      yRefs.current.yDoc?.destroy();
+      yRefs.current.yProvider?.destroy();
+      bindings.forEach((b) => b?.destroy());
+    };
+  }, [isEditorReady, isModelReady, room]);
+
+  // Short cut to reset yDoc to database
+  useCmdOrCtrl(
+    'Shift+Option+/',
+    () => {
+      if (!currentScript) return;
+      resetYDocToDatabase(currentScript);
+    },
+    [yRefs.current.yDoc, currentScript],
+  );
 
   return (
     <>

@@ -225,6 +225,7 @@ export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
                 },
               }}
             >
+              {/** @todo use yJS here */}
               <Markdown
                 children={currentScriptLive?.code || currentScript?.code || ''}
               />

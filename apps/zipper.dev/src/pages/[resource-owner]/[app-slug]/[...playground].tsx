@@ -15,6 +15,7 @@ import { createContext } from '~/server/context';
 import { trpcRouter } from '~/server/routers/_app';
 import { parsePlaygroundQuery, Props } from '~/utils/playground.utils';
 import { trpc } from '~/utils/trpc';
+import { Storage as LiveblocksStorage } from '~/liveblocks.config';
 
 const PlaygroundPage: NextPageWithLayout<Props> = ({
   resourceOwnerSlug,
@@ -52,12 +53,11 @@ const PlaygroundPage: NextPageWithLayout<Props> = ({
 
   const pageTitle = `${data.resourceOwner.slug} / ${data.name || data.slug}`;
 
-  // liveblocks here
-  const initialStorage: any = {
+  const initialStorage: LiveblocksStorage = {
     app: new LiveObject({
       slug: data.slug,
-      name: data.name,
-      description: data.description,
+      name: data.name || '',
+      description: data.description || '',
     }),
   };
 

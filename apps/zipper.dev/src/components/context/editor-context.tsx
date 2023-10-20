@@ -27,16 +27,19 @@ import debounce from 'lodash.debounce';
 import { uuid } from '@zipper/utils';
 import { prettyLog } from '~/utils/pretty-log';
 import { AppQueryOutput } from '~/types/trpc';
-import { getAppVersionFromHash } from '~/utils/hashing';
+import { getAppVersionFromHash, getScriptHash } from '~/utils/hashing';
 import { isZipperImportUrl } from '~/utils/eszip-utils';
 import { parsePlaygroundQuery, PlaygroundTab } from '~/utils/playground.utils';
 import { runZipperLinter } from '~/utils/zipper-editor-linter';
 import { rewriteSpecifier } from '~/utils/rewrite-imports';
+import { rest } from 'lodash';
 
 type OnValidate = AddParameters<
   Required<EditorProps>['onValidate'],
   [filename?: string]
 >;
+
+type RunEditorActionsInputs = Parameters<typeof runEditorActionsNow>[0];
 
 export type EditorContextType = {
   currentScript?: Script;
@@ -82,6 +85,14 @@ export type EditorContextType = {
   ) => void;
   resourceOwnerSlug: string;
   appSlug: string;
+  runEditorActions:
+    | typeof noop
+    | ((
+        inputs: Pick<RunEditorActionsInputs, 'value' | 'currentScript'> & {
+          now?: boolean;
+        },
+        defaults?: RunEditorActionsInputs,
+      ) => void);
 };
 
 export const EditorContext = createContext<EditorContextType>({
@@ -124,6 +135,7 @@ export const EditorContext = createContext<EditorContextType>({
   setLogStore: noop,
   resourceOwnerSlug: '',
   appSlug: '',
+  runEditorActions: noop,
 });
 
 const MAX_RETRIES_FOR_EXTERNAL_IMPORT = 3;
@@ -173,6 +185,8 @@ async function fetchImport({
 
       if (!monacoRef.current.editor.getModel(uri)) {
         monacoRef.current.editor.createModel(src, 'typescript', uri);
+        // this crazy shit does the aliasing
+        // works like a reducer to update the paths object in compilerOptions
         if (alias) {
           const opts =
             monacoRef.current.languages.typescript.typescriptDefaults.getCompilerOptions();
@@ -298,7 +312,7 @@ function handleExternalImports({
   externalImportModelsRef.current[currentScript.filename] = newImportModels;
 }
 
-function runEditorActionsOnChange({
+function runEditorActionsNow({
   value,
   setInputParams,
   setInputError,
@@ -307,6 +321,7 @@ function runEditorActionsOnChange({
   currentScript,
   externalImportModelsRef,
   invalidImportUrlsRef,
+  setModelIsDirty,
 }: {
   value: string;
   setInputParams: EditorContextType['setInputParams'];
@@ -316,11 +331,15 @@ function runEditorActionsOnChange({
   currentScript: Script;
   externalImportModelsRef: MutableRefObject<Record<string, string[]>>;
   invalidImportUrlsRef: MutableRefObject<{ [url: string]: number }>;
+  setModelIsDirty: (path: string, isDirty: boolean) => void;
 }) {
   if (!editor || !monacoRef.current) return;
 
   try {
-    const { inputs, externalImportUrls, imports } = parseCode({
+    const newHash = getScriptHash({ ...currentScript, code: value });
+    setModelIsDirty(currentScript.filename, newHash !== currentScript.hash);
+
+    const { inputs, imports } = parseCode({
       code: value,
       throwErrors: true,
     });
@@ -348,8 +367,8 @@ function runEditorActionsOnChange({
   }
 }
 
-const runEditorActionsOnChangeDebounced = debounce(
-  runEditorActionsOnChange,
+const runEditorActionsDebounced = debounce(
+  runEditorActionsNow,
   DEBOUNCE_DELAY_MS,
 );
 
@@ -399,48 +418,9 @@ const EditorContextProvider = ({
     (root) => root[`script-${currentScript?.id}`],
   );
 
-  // liveblocks here
-  const mutateLive = useLiveMutation(
-    (context, newCode: string, newVersion: number) => {
-      const { storage, self } = context;
-
-      const stored = storage.get(
-        `script-${currentScript?.id}`,
-      ) as LiveObject<LsonObject>;
-
-      if (!stored) {
-        storage.set(
-          `script-${currentScript?.id}`,
-          new LiveObject<LsonObject>({
-            code: newCode,
-            lastLocalVersion: newVersion,
-            lastConnectionId: self.connectionId,
-          }),
-        );
-        return;
-      }
-
-      if (!stored || stored.get('code') === newCode) return;
-
-      stored.set('code', newCode);
-      stored.set('lastLocalVersion', newVersion);
-      stored.set('lastConnectionId', self.connectionId);
-    },
-    [currentScript],
-  );
-
   const onChange: EditorProps['onChange'] = async (value = '', event) => {
     if (!editor || !monacoRef?.current || !currentScript) return;
-
-    // Sync to liveblocks
-    // liveblocks here
-    try {
-      mutateLive(value, event.versionId);
-    } catch (e) {
-      console.error('Caught error from mutateLive:', e);
-    }
-
-    runEditorActionsOnChangeDebounced({
+    runEditorActionsDebounced({
       value,
       setInputParams,
       setInputError,
@@ -449,6 +429,7 @@ const EditorContextProvider = ({
       currentScript,
       externalImportModelsRef,
       invalidImportUrlsRef,
+      setModelIsDirty,
     });
   };
 
@@ -574,6 +555,7 @@ const EditorContextProvider = ({
     setLastReadLogsTimestamp(Date.now());
   };
 
+  /** todo test */
   const replaceCurrentScriptCode = (code: string) => {
     if (currentScript) {
       setCurrentScript({ ...currentScript, code });
@@ -588,12 +570,6 @@ const EditorContextProvider = ({
             model.getValue() !== currentScript.code
           ) {
             model.setValue(currentScript.code);
-            // Call mutateLive when the currentScript is updated
-            try {
-              mutateLive(currentScript.code, model.getVersionId());
-            } catch (e) {
-              console.error('Caught error from mutateLive:', e);
-            }
           }
         });
       }
@@ -769,6 +745,25 @@ const EditorContextProvider = ({
         lastReadLogsTimestamp,
         resourceOwnerSlug: resourceOwnerSlug as string,
         appSlug: appSlug as string,
+        runEditorActions: (
+          { now = false, currentScript, value },
+          defaults = {
+            value: '',
+            currentScript: {} as any,
+            setInputParams,
+            setInputError,
+            editor,
+            monacoRef,
+            externalImportModelsRef,
+            invalidImportUrlsRef,
+            setModelIsDirty,
+          },
+        ) =>
+          (now ? runEditorActionsNow : runEditorActionsDebounced)({
+            ...defaults,
+            currentScript,
+            value,
+          }),
       }}
     >
       {children}
