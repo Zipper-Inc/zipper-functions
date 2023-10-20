@@ -284,6 +284,7 @@ async function handleExternalImports({
     externalImports.map(async (importUrl, index) => {
       // First let's move the pointer to the right spot
       newImportModels[index] = importUrl;
+
       if (importUrl === oldImportModels[index]) return;
 
       if (externalImportsForThisFile.includes(importUrl)) return;
@@ -350,6 +351,8 @@ async function runEditorActionsNow({
       imports,
       monacoRef,
       currentScript,
+      externalImportModelsRef,
+      invalidImportUrlsRef,
     });
 
     await handleExternalImports({

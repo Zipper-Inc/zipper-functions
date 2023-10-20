@@ -25,6 +25,8 @@ export async function runZipperLinter({
   imports,
   monacoRef,
   currentScript,
+  externalImportModelsRef,
+  invalidImportUrlsRef,
 }: {
   imports: {
     specifier: string;
@@ -37,6 +39,8 @@ export async function runZipperLinter({
   }[];
   monacoRef: MutableRefObject<typeof monaco | undefined>;
   currentScript: Script;
+  externalImportModelsRef?: MutableRefObject<Record<string, string[]>>;
+  invalidImportUrlsRef?: MutableRefObject<{ [url: string]: number }>;
 }) {
   if (!monacoRef.current) return;
   const { editor } = monacoRef.current;
@@ -55,6 +59,9 @@ export async function runZipperLinter({
 
   const lintRunTs = Date.now();
   zipperLinterLastRunTs = lintRunTs;
+
+  const externalImportsForThisFile =
+    externalImportModelsRef?.current?.[currentScript.filename] || [];
 
   // Handle imports and check to make sure they are valid
   // Reports Z0001: Cannot find module
@@ -75,9 +82,14 @@ export async function runZipperLinter({
       // See if this resolves to a valid external import via our rewrites
       const rewrittenSpecifier = rewriteSpecifier(i.specifier);
 
-      // Return early if its a valid module
+      if (externalImportsForThisFile.includes(rewrittenSpecifier)) return;
+
       if (isExternalImport(rewrittenSpecifier)) {
         try {
+          // throw if we now it's invalid, and let it lint
+          if (invalidImportUrlsRef?.current?.[rewrittenSpecifier])
+            throw new Error('Previously invalidated import');
+
           const { status, headers } = await fetch(rewrittenSpecifier, {
             redirect: 'follow',
             headers: isZipperImportUrl(rewrittenSpecifier)
