@@ -88,10 +88,8 @@ export default function PlaygroundEditor(
     currentScript,
     scripts,
     setEditor,
-    setModelIsDirty,
     isEditorDirty,
     monacoRef,
-    onValidate,
     runEditorActions,
   } = useEditorContext();
   const { appInfo, boot } = useRunAppContext();
@@ -293,22 +291,6 @@ export default function PlaygroundEditor(
 
       monaco.languages.typescript.typescriptDefaults.setEagerModelSync(true);
 
-      /*
-      monaco.languages.registerDefinitionProvider('typescript', {
-        provideDefinition: function (model, position, cancellationToken) {
-          console.log('providedef', model, position, cancellationToken);
-          const word = model.getWordAtPosition(position);
-
-          const rule = getRewriteRule(word?.word);
-
-          console.log('word', word);
-          return {
-            uri: monaco.Uri.parse('http://a/different/file.txt'),
-            range: new monaco.Range(1, 1, 1, 1),
-          };
-        },
-      });
-*/
       setEditor(monaco.editor);
 
       // Create models for each script
@@ -321,6 +303,8 @@ export default function PlaygroundEditor(
         });
       });
 
+      // start the boot don't wait for it to finish
+      boot();
       setIsModelReady(true);
 
       if (process.env.NODE_ENV === 'development')
@@ -328,32 +312,6 @@ export default function PlaygroundEditor(
     }
   }, [monacoEditor]);
 
-  /**
-   * Copy pasted/edited from react-monaco code
-   * Runs the validation on start of editor for each file
-   */
-  /** 
-  useEffect(() => {
-    if (isEditorReady) {
-      const changeMarkersListener =
-        monacoRef?.current!.editor.onDidChangeMarkers((uris) => {
-          uris
-            .filter((uri) => uri.scheme === 'file')
-            .forEach((uri) => {
-              const markers = monacoRef?.current!.editor.getModelMarkers({
-                resource: uri,
-              });
-              const filename = getPathFromUri(uri).replace(/^\//, '');
-              onValidate(markers, filename);
-            });
-        });
-
-      return () => {
-        changeMarkersListener?.dispose();
-      };
-    }
-  }, [isEditorReady]);
-*/
   useEffect(() => {
     if (monacoEditor && editorRef.current && isEditorReady && currentScript) {
       const extension = currentScript.filename.split('.').pop();
@@ -428,8 +386,6 @@ export default function PlaygroundEditor(
       if (!isEditorReady || !room || !isModelReady) {
         return;
       }
-
-      await boot();
 
       if (!yRefs.current.yDoc || !yRefs.current.yProvider) {
         yRefs.current.yDoc = new Y.Doc();
@@ -518,14 +474,6 @@ export default function PlaygroundEditor(
               }
 
               return window.open(url, '_blank');
-            },
-          },
-          editorService: {
-            openEditor: function (...args: any) {
-              console.log('open editor', args);
-            },
-            resolveEditor: function (...args: any) {
-              console.log('resolve editor', args);
             },
           },
         }}
