@@ -85,7 +85,7 @@ export function FunctionOutput({
   runId,
   reloadOnClose: _reloadOnClose = false,
   zipperLocation = ZipperLocation.ZipperDotRun,
-  config,
+  config = {},
 }: FunctionOutputProps) {
   const [isExpandedResultOpen, setIsExpandedResultOpen] = useState(true);
   const [reloadOnClose, setReloadOnClose] = useState(_reloadOnClose);

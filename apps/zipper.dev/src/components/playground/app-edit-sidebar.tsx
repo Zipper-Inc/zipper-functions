@@ -24,7 +24,30 @@ type AppEditSidebarProps = {
   appSlug: string;
   isMarkdownEditable: boolean;
   setIsMarkdownEditable: (editable: boolean) => void;
-  canUserEdit: boolean;
+  canUserEdit?: boolean;
+};
+
+enum AppEditSidebarMode {
+  Handler,
+  Library,
+  Markdown,
+  Empty,
+}
+
+const useAppEditSidebarMode = () => {
+  const { inputParams, inputError, currentScript } = useEditorContext();
+
+  if (currentScript?.filename.endsWith('.md')) {
+    return AppEditSidebarMode.Markdown;
+  }
+
+  if (!inputParams && !inputError) {
+    return AppEditSidebarMode.Library;
+  }
+
+  if (currentScript) return AppEditSidebarMode.Handler;
+
+  return AppEditSidebarMode.Empty;
 };
 
 export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
@@ -44,14 +67,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
     }
   };
 
-  const {
-    inputParams,
-    inputError,
-    logs,
-    markLogsAsRead,
-    lastReadLogsTimestamp,
-    currentScript,
-  } = useEditorContext();
+  const { logs, markLogsAsRead, lastReadLogsTimestamp } = useEditorContext();
 
   const { colorMode } = useColorMode();
 
@@ -59,9 +75,8 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
     (log) => log.timestamp > new Date(lastReadLogsTimestamp),
   ).length;
 
-  const isLibrary = !inputParams && !inputError;
+  const mode = useAppEditSidebarMode();
 
-  const isMarkdown = currentScript?.filename.endsWith('.md');
   const { style, onMouseEnter, onMouseLeave } = useHelpBorder();
   const { hoveredElement } = useHelpMode();
 
@@ -77,7 +92,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
           : '4px solid transparent'
       }
     >
-      {isMarkdown && canUserEdit && (
+      {mode === AppEditSidebarMode.Markdown && canUserEdit && (
         <Button
           variant="outline"
           alignSelf="start"
@@ -92,7 +107,8 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
           </HStack>
         </Button>
       )}
-      {isLibrary && !isMarkdown && (
+
+      {mode === AppEditSidebarMode.Library && (
         <Box
           p={4}
           backgroundColor="fg.100"
@@ -112,72 +128,73 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
         </Box>
       )}
 
-      <Tabs
-        colorScheme="purple"
-        index={tabIndex}
-        onChange={handleTabsChange}
-        display="flex"
-        flexDirection="column"
-        h="full"
-        w="full"
-        hidden={isLibrary}
-      >
-        <TabList
-          border="none"
-          borderBottom="1px solid"
-          borderColor={'fg.100'}
-          color="fg.500"
-          gap={4}
-          justifyContent="space-between"
-          pb={4}
-        >
-          <HStack spacing={2}>
-            <div onMouseEnter={onMouseEnter('PreviewPanel')}>
-              <TabButton title="Preview" />
-            </div>
-            <div onMouseEnter={onMouseEnter('ConsoleTab')}>
-              <TabButton
-                title="Console"
-                badge={unreadLogs > 0 ? unreadLogs : undefined}
-              />
-            </div>
-          </HStack>
-        </TabList>
-        <TabPanels
-          as={Flex}
+      {mode === AppEditSidebarMode.Handler && (
+        <Tabs
+          colorScheme="purple"
+          index={tabIndex}
+          onChange={handleTabsChange}
+          display="flex"
           flexDirection="column"
           h="full"
-          // IDK why we need this but it works
-          maxH="calc(100% - 115px)"
+          w="full"
         >
-          {/* INPUT */}
-
-          <TabPanel
-            p={0}
-            pt={4}
-            h="full"
-            display="flex"
-            flexDir="column"
-            flex="1 1 auto"
-            overflow="auto"
-            w="full"
+          <TabList
+            border="none"
+            borderBottom="1px solid"
+            borderColor={'fg.100'}
+            color="fg.500"
+            gap={4}
+            justifyContent="space-between"
+            pb={4}
           >
-            <AppEditSidebarApplet appSlug={appSlug} />
-          </TabPanel>
-
-          {/* LOGS */}
-          <TabPanel
+            <HStack spacing={2}>
+              <div onMouseEnter={onMouseEnter('PreviewPanel')}>
+                <TabButton title="Preview" />
+              </div>
+              <div onMouseEnter={onMouseEnter('ConsoleTab')}>
+                <TabButton
+                  title="Console"
+                  badge={unreadLogs > 0 ? unreadLogs : undefined}
+                />
+              </div>
+            </HStack>
+          </TabList>
+          <TabPanels
+            as={Flex}
+            flexDirection="column"
             h="full"
-            w="full"
-            flex="1 1 auto"
-            overflow="auto"
-            p={0}
-            background="bgColor"
+            // IDK why we need this but it works
+            maxH="calc(100% - 115px)"
           >
-            <AppConsole key={colorMode} logs={logs} />
-          </TabPanel>
-        </TabPanels>
-      </Tabs>
+            {/* INPUT */}
+
+            <TabPanel
+              p={0}
+              pt={4}
+              h="full"
+              display="flex"
+              flexDir="column"
+              flex="1 1 auto"
+              overflow="auto"
+              w="full"
+            >
+              <AppEditSidebarApplet appSlug={appSlug} />
+            </TabPanel>
+
+            {/* LOGS */}
+            <TabPanel
+              h="full"
+              w="full"
+              flex="1 1 auto"
+              overflow="auto"
+              p={0}
+              background="bgColor"
+            >
+              <AppConsole key={colorMode} logs={logs} />
+            </TabPanel>
+          </TabPanels>
+        </Tabs>
+      )}
     </VStack>
   );
 };

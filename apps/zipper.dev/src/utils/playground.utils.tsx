@@ -1,6 +1,8 @@
 import { NextRouter } from 'next/router';
 import { Script } from '@prisma/client';
 import { DehydratedState } from '@tanstack/react-query';
+import { getUriFromPath } from './model-uri';
+import type { Monaco } from '@monaco-editor/react';
 
 export const isConnector = (script: Script) =>
   script.filename.endsWith('-connector.ts');
@@ -52,3 +54,17 @@ export const parsePlaygroundQuery = (
 
   return { resourceOwnerSlug, appSlug, tab, filename };
 };
+
+export function getOrCreateScriptModel(script: Script, m: Monaco) {
+  const extension = script.filename.split('.').pop();
+  const path = script.filename;
+  const uri = getUriFromPath(path, m.Uri.parse, 'tsx');
+  return (
+    m.editor.getModel(uri) ||
+    m.editor.createModel(
+      script.code,
+      extension === 'md' ? 'markdown' : 'typescript',
+      uri,
+    )
+  );
+}

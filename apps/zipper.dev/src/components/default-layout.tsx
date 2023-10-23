@@ -1,10 +1,46 @@
-import '@fontsource/inter';
-import { ChakraProvider, Flex } from '@chakra-ui/react';
+import { Inter } from 'next/font/google';
+import localFont from 'next/font/local';
+
+const inter = Inter({ subsets: ['latin'] });
+
+const plaak = localFont({
+  src: [
+    {
+      path: '../../public/fonts/plaak/Plaak - 26-Ney-Light-205TF.otf',
+      weight: '300',
+      style: 'normal',
+    },
+    {
+      path: '../../public/fonts/plaak/Plaak - 36-Ney-Regular-205TF.otf',
+      weight: '400',
+      style: 'normal',
+    },
+    {
+      path: '../../public/fonts/plaak/Plaak - 46-Ney-Bold-205TF.otf',
+      weight: '700',
+      style: 'normal',
+    },
+    {
+      path: '../../public/fonts/plaak/Plaak - 56-Ney-Heavy-205TF.otf',
+      weight: '900',
+      style: 'normal',
+    },
+  ],
+});
+
+import { ChakraProvider, extendTheme, Flex } from '@chakra-ui/react';
 import Head from 'next/head';
 import { ReactNode } from 'react';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 
 import { theme } from '@zipper/ui';
+
+const _theme = extendTheme({
+  ...theme,
+  fonts: {
+    plaak: plaak.style.fontFamily,
+  },
+});
 
 type DefaultLayoutProps = {
   children: ReactNode;
@@ -12,42 +48,6 @@ type DefaultLayoutProps = {
   header?: ReactNode;
   title?: string;
 };
-
-import { Global } from '@emotion/react';
-
-const Fonts = () => (
-  <Global
-    styles={`
-      @font-face {
-        font-family: 'Plaak';
-        font-style: normal;
-        font-weight: 300;
-        src: url('/fonts/plaak/Plaak - 26-Ney-Light-205TF.otf') format('opentype');
-      }
-
-      @font-face {
-        font-family: 'Plaak';
-        font-style: normal;
-        font-weight: 400;
-        src: url('/fonts/plaak/Plaak - 36-Ney-Regular-205TF.otf') format('opentype');
-      }
-
-      @font-face {
-        font-family: 'Plaak';
-        font-style: normal;
-        font-weight: 700;
-        src: url('/fonts/plaak/Plaak - 46-Ney-Bold-205TF.otf') format('opentype');
-      }
-
-      @font-face {
-        font-family: 'Plaak';
-        font-style: normal;
-        font-weight: 900;
-        src: url('/fonts/plaak/Plaak - 56-Ney-Heavy-205TF.otf') format('opentype');
-      }
-    `}
-  />
-);
 
 export const DefaultLayout = ({ children, header }: DefaultLayoutProps) => {
   return (
@@ -57,8 +57,8 @@ export const DefaultLayout = ({ children, header }: DefaultLayoutProps) => {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <ChakraProvider theme={theme}>
-        <Fonts />
+      <ChakraProvider theme={_theme}>
+        {/* <Fonts /> */}
         <>
           {header}
           <Flex

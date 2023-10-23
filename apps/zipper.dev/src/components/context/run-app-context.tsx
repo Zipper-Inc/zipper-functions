@@ -31,7 +31,7 @@ export type RunAppContextType = {
   userAuthConnectors: UserAuthConnector[];
   setResults: (results: Record<string, string>) => void;
   run: (isCurrentFileAsEntryPoint?: boolean) => Promise<string | undefined>;
-  boot: () => void;
+  boot: () => Promise<void>;
   configs: Zipper.BootPayload['configs'];
 };
 
@@ -44,7 +44,7 @@ export const RunAppContext = createContext<RunAppContextType>({
   userAuthConnectors: [],
   setResults: noop,
   run: () => Promise.resolve(''),
-  boot: noop,
+  boot: () => Promise.resolve(),
   configs: {},
 });
 

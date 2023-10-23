@@ -63,13 +63,6 @@ export function Gallery({
     ResourceOwnerSlug | undefined
   >();
 
-  const resourceOwnerNameQuery = trpc.resourceOwnerSlug.getName.useQuery(
-    { slug: resourceOwner?.slug as string },
-    {
-      enabled: !!resourceOwner?.slug,
-    },
-  );
-
   const acceptInvitation = trpc.organization.acceptInvitation.useMutation();
 
   const showManage =
@@ -116,7 +109,7 @@ export function Gallery({
     <HStack spacing={0} flex={1} alignItems="start" gap={16} px={10}>
       <VStack flex={1} alignItems="stretch" minW={TITLE_COLUMN_MIN_WIDTH}>
         <Heading as="h6" pb="4" fontWeight={400}>
-          {heading || resourceOwnerNameQuery.data || resourceOwner?.slug}
+          {heading || resourceOwner?.slug}
         </Heading>
         <Text color="fg.600" pb="4" whiteSpace="pre-line">
           {subheading || resourceOwner?.slug}

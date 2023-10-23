@@ -5,10 +5,8 @@ import {
   AccordionItem,
   AccordionPanel,
   Box,
-  Center,
   Flex,
   Heading,
-  IconButton,
   useMediaQuery,
   VStack,
 } from '@chakra-ui/react';
@@ -132,12 +130,7 @@ export function HandlerDescription(props: Props) {
       {isMobile ? (
         <MobileView />
       ) : (
-        <VStack align="start" width="full">
-          {title && (
-            <Heading as="h1" fontSize="4xl" fontWeight="medium">
-              {title}
-            </Heading>
-          )}
+        <VStack align="start" width="full" mt={4}>
           {subtitle && (
             <Heading as="h2" fontSize="xl" fontWeight="normal" color="fg.600">
               {subtitle}

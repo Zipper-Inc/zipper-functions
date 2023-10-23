@@ -18,13 +18,16 @@ export enum ZipperLintCode {
   CannotFindModule = 'Z001',
 }
 
+// A little bit of a hack. Better if this is passed in or something.
+let zipperLinterLastRunTs = 0;
+
 export async function runZipperLinter({
-  editor,
   imports,
   monacoRef,
   currentScript,
+  externalImportModelsRef,
+  invalidImportUrlsRef,
 }: {
-  editor: typeof monaco.editor;
   imports: {
     specifier: string;
     startLine: number;
@@ -36,8 +39,11 @@ export async function runZipperLinter({
   }[];
   monacoRef: MutableRefObject<typeof monaco | undefined>;
   currentScript: Script;
+  externalImportModelsRef?: MutableRefObject<Record<string, string[]>>;
+  invalidImportUrlsRef?: MutableRefObject<{ [url: string]: number }>;
 }) {
   if (!monacoRef.current) return;
+  const { editor } = monacoRef.current;
 
   const markers: monaco.editor.IMarkerData[] = [];
 
@@ -50,6 +56,12 @@ export async function runZipperLinter({
 
   // Not sure how this would happen but if there's no model, there's nothing to do
   if (!currentModel) return;
+
+  const lintRunTs = Date.now();
+  zipperLinterLastRunTs = lintRunTs;
+
+  const externalImportsForThisFile =
+    externalImportModelsRef?.current?.[currentScript.filename] || [];
 
   // Handle imports and check to make sure they are valid
   // Reports Z0001: Cannot find module
@@ -70,9 +82,14 @@ export async function runZipperLinter({
       // See if this resolves to a valid external import via our rewrites
       const rewrittenSpecifier = rewriteSpecifier(i.specifier);
 
-      // Return early if its a valid module
+      if (externalImportsForThisFile.includes(rewrittenSpecifier)) return;
+
       if (isExternalImport(rewrittenSpecifier)) {
         try {
+          // throw if we now it's invalid, and let it lint
+          if (invalidImportUrlsRef?.current?.[rewrittenSpecifier])
+            throw new Error('Previously invalidated import');
+
           const { status, headers } = await fetch(rewrittenSpecifier, {
             redirect: 'follow',
             headers: isZipperImportUrl(rewrittenSpecifier)
@@ -118,9 +135,9 @@ export async function runZipperLinter({
           .catch();
 
         message = `Cannot find module "${npmName}" on npm.`;
-        suggestion = results?.objects?.length
-          ? results.objects[0].package.name
-          : '';
+        const resultName =
+          results?.objects?.length && results.objects[0].package.name;
+        if (resultName && resultName !== npmName) suggestion = resultName;
       } else {
         const localModelUris = editor
           .getModels()
@@ -151,6 +168,11 @@ export async function runZipperLinter({
       });
     }),
   );
+
+  // Since we've waited a little for all these fetches
+  // Make sure this is the most recent lint run
+  // If not, return early
+  if (zipperLinterLastRunTs !== lintRunTs) return;
 
   editor.removeAllMarkers(ZIPPER_LINTER);
   editor.setModelMarkers(currentModel, ZIPPER_LINTER, markers);

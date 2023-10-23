@@ -27,25 +27,27 @@ import debounce from 'lodash.debounce';
 import { uuid } from '@zipper/utils';
 import { prettyLog } from '~/utils/pretty-log';
 import { AppQueryOutput } from '~/types/trpc';
-import { getAppVersionFromHash } from '~/utils/hashing';
+import { getAppVersionFromHash, getScriptHash } from '~/utils/hashing';
 import { isZipperImportUrl } from '~/utils/eszip-utils';
-import { parsePlaygroundQuery, PlaygroundTab } from '~/utils/playground.utils';
+import {
+  getOrCreateScriptModel,
+  parsePlaygroundQuery,
+  PlaygroundTab,
+} from '~/utils/playground.utils';
 import { runZipperLinter } from '~/utils/zipper-editor-linter';
 import { rewriteSpecifier } from '~/utils/rewrite-imports';
+import { rest } from 'lodash';
 
 type OnValidate = AddParameters<
   Required<EditorProps>['onValidate'],
   [filename?: string]
 >;
 
+type RunEditorActionsInputs = Parameters<typeof runEditorActionsNow>[0];
+
 export type EditorContextType = {
   currentScript?: Script;
   setCurrentScript: (script: Script) => void;
-  currentScriptLive?: {
-    code: string;
-    lastLocalVersion: number;
-    lastConnectionId: number;
-  };
   onChange: EditorProps['onChange'];
   onValidate: OnValidate;
   connectionId?: number;
@@ -82,12 +84,20 @@ export type EditorContextType = {
   ) => void;
   resourceOwnerSlug: string;
   appSlug: string;
+  runEditorActions:
+    | typeof noop
+    | ((
+        inputs: Pick<RunEditorActionsInputs, 'value' | 'currentScript'> & {
+          now?: boolean;
+        },
+        defaults?: RunEditorActionsInputs,
+      ) => Promise<void>);
+  readOnly: boolean;
 };
 
 export const EditorContext = createContext<EditorContextType>({
   currentScript: undefined,
   setCurrentScript: noop,
-  currentScriptLive: undefined,
   onChange: noop,
   onValidate: noop,
   connectionId: undefined,
@@ -124,10 +134,12 @@ export const EditorContext = createContext<EditorContextType>({
   setLogStore: noop,
   resourceOwnerSlug: '',
   appSlug: '',
+  runEditorActions: noop,
+  readOnly: false,
 });
 
 const MAX_RETRIES_FOR_EXTERNAL_IMPORT = 3;
-const DEBOUNCE_DELAY_MS = 250;
+const DEBOUNCE_DELAY_MS = 100;
 
 /**
  * Fetches an import and modifies refs as needed
@@ -173,6 +185,8 @@ async function fetchImport({
 
       if (!monacoRef.current.editor.getModel(uri)) {
         monacoRef.current.editor.createModel(src, 'typescript', uri);
+        // this crazy shit does the aliasing
+        // works like a reducer to update the paths object in compilerOptions
         if (alias) {
           const opts =
             monacoRef.current.languages.typescript.typescriptDefaults.getCompilerOptions();
@@ -201,20 +215,22 @@ async function fetchImport({
     );
 
     // Retry this N more times with exponential backoff
-    window.setTimeout(
-      () =>
-        fetchImport({
-          importUrl,
-          uriParser,
-          monacoRef,
-          invalidImportUrlsRef,
-        }),
-      currentRetries ** 2 * 1000,
+    return new Promise((resolve) =>
+      window.setTimeout(
+        () =>
+          fetchImport({
+            importUrl,
+            uriParser,
+            monacoRef,
+            invalidImportUrlsRef,
+          }).then(resolve),
+        currentRetries ** 2 * 1000,
+      ),
     );
   }
 }
 
-function handleExternalImports({
+async function handleExternalImports({
   imports,
   monacoRef,
   externalImportModelsRef,
@@ -264,19 +280,18 @@ function handleExternalImports({
   });
 
   // Handle changes in code
-  externalImports.forEach((importUrl, index) => {
-    // First let's move the pointer to the right spot
-    newImportModels[index] = importUrl;
+  await Promise.all(
+    externalImports.map(async (importUrl, index) => {
+      // First let's move the pointer to the right spot
+      newImportModels[index] = importUrl;
 
-    // Code matches what we have models for, do nothing
-    if (importUrl === oldImportModels[index]) return;
+      if (importUrl === oldImportModels[index]) return;
 
-    // If this is net new and not already invalid, let's download it
-    if (
-      !externalImportsForThisFile.includes(importUrl) &&
-      (invalidImportUrlsRef.current[importUrl] || 0) <
-        MAX_RETRIES_FOR_EXTERNAL_IMPORT
-    ) {
+      if (externalImportsForThisFile.includes(importUrl)) return;
+
+      const currentRetries = invalidImportUrlsRef.current[importUrl] || 0;
+      if (currentRetries >= MAX_RETRIES_FOR_EXTERNAL_IMPORT) return;
+
       // check if we have an alias
       const alias = externalImportsPairs.find(
         ([ogSpecifier, rewrittenSpecifier]) =>
@@ -284,43 +299,59 @@ function handleExternalImports({
           ogSpecifier !== rewrittenSpecifier,
       )?.[0];
 
-      if (alias !== importUrl)
-        fetchImport({
-          importUrl,
-          uriParser,
-          monacoRef,
-          invalidImportUrlsRef,
-          alias,
-        });
-    }
-  });
+      return fetchImport({
+        importUrl,
+        uriParser,
+        monacoRef,
+        invalidImportUrlsRef,
+        alias: alias !== importUrl ? alias : undefined,
+      }).catch((e) => {
+        console.error('Unhandled error in while fetching import', e);
+      });
+    }),
+  );
 
   externalImportModelsRef.current[currentScript.filename] = newImportModels;
 }
 
-function runEditorActionsOnChange({
+async function runEditorActionsNow({
   value,
   setInputParams,
-  setInputError,
-  editor,
+  setInputError: setInputErrorPassedIn,
   monacoRef,
   currentScript,
   externalImportModelsRef,
   invalidImportUrlsRef,
+  setModelIsDirty: setModelIsDirtyPassedIn,
+  readOnly,
 }: {
   value: string;
   setInputParams: EditorContextType['setInputParams'];
   setInputError: (error: string | undefined) => void;
-  editor: typeof monaco.editor | undefined;
   monacoRef: MutableRefObject<typeof monaco | undefined>;
   currentScript: Script;
   externalImportModelsRef: MutableRefObject<Record<string, string[]>>;
   invalidImportUrlsRef: MutableRefObject<{ [url: string]: number }>;
+  setModelIsDirty: (path: string, isDirty: boolean) => void;
+  readOnly: boolean;
 }) {
-  if (!editor || !monacoRef.current) return;
+  if (!monacoRef.current) return;
+
+  const setInputError = readOnly ? noop : setInputErrorPassedIn;
+  const setModelIsDirty = readOnly ? noop : setModelIsDirtyPassedIn;
+  const linter = readOnly ? noop : runZipperLinter;
 
   try {
-    const { inputs, externalImportUrls, imports } = parseCode({
+    // For purpose of checking the hash to tell if its dirty, we'll trim the end and deal with whitespace at save
+    const newHash = getScriptHash({ ...currentScript, code: value.trimEnd() });
+    const oldHash = getScriptHash({
+      ...currentScript,
+      code: currentScript.code.trimEnd(),
+    });
+
+    setModelIsDirty(currentScript.filename, newHash !== oldHash);
+
+    const { inputs, imports } = parseCode({
       code: value,
       throwErrors: true,
     });
@@ -328,14 +359,15 @@ function runEditorActionsOnChange({
     setInputParams(inputs);
     setInputError(undefined);
 
-    runZipperLinter({
-      editor,
+    linter({
       imports,
       monacoRef,
       currentScript,
+      externalImportModelsRef,
+      invalidImportUrlsRef,
     });
 
-    handleExternalImports({
+    await handleExternalImports({
       imports,
       monacoRef,
       externalImportModelsRef,
@@ -348,8 +380,8 @@ function runEditorActionsOnChange({
   }
 }
 
-const runEditorActionsOnChangeDebounced = debounce(
-  runEditorActionsOnChange,
+const runEditorActionsDebounced = debounce(
+  runEditorActionsNow,
   DEBOUNCE_DELAY_MS,
 );
 
@@ -361,6 +393,7 @@ const EditorContextProvider = ({
   resourceOwnerSlug,
   initialScripts,
   refetchApp,
+  readOnly,
 }: {
   app: AppQueryOutput;
   children: any;
@@ -369,6 +402,7 @@ const EditorContextProvider = ({
   resourceOwnerSlug: string | undefined;
   initialScripts: Script[];
   refetchApp: () => Promise<void>;
+  readOnly: boolean;
 }) => {
   const [currentScript, setCurrentScript] = useState<Script | undefined>(
     undefined,
@@ -394,58 +428,18 @@ const EditorContextProvider = ({
     Record<string, boolean>
   >({});
 
-  const currentScriptLive: any = useLiveStorage(
-    (root) => root[`script-${currentScript?.id}`],
-  );
-
-  const mutateLive = useLiveMutation(
-    (context, newCode: string, newVersion: number) => {
-      const { storage, self } = context;
-
-      const stored = storage.get(
-        `script-${currentScript?.id}`,
-      ) as LiveObject<LsonObject>;
-
-      if (!stored) {
-        storage.set(
-          `script-${currentScript?.id}`,
-          new LiveObject<LsonObject>({
-            code: newCode,
-            lastLocalVersion: newVersion,
-            lastConnectionId: self.connectionId,
-          }),
-        );
-        return;
-      }
-
-      if (!stored || stored.get('code') === newCode) return;
-
-      stored.set('code', newCode);
-      stored.set('lastLocalVersion', newVersion);
-      stored.set('lastConnectionId', self.connectionId);
-    },
-    [currentScript],
-  );
-
   const onChange: EditorProps['onChange'] = async (value = '', event) => {
-    if (!editor || !monacoRef?.current || !currentScript) return;
-
-    // Sync to liveblocks
-    try {
-      mutateLive(value, event.versionId);
-    } catch (e) {
-      console.error('Caught error from mutateLive:', e);
-    }
-
-    runEditorActionsOnChangeDebounced({
+    if (!monacoRef?.current || !currentScript) return;
+    runEditorActionsDebounced({
       value,
       setInputParams,
       setInputError,
-      editor,
       monacoRef,
       currentScript,
       externalImportModelsRef,
       invalidImportUrlsRef,
+      setModelIsDirty,
+      readOnly,
     });
   };
 
@@ -464,7 +458,7 @@ const EditorContextProvider = ({
     const models = editor?.getModels();
     if (models) {
       const fileModels = models.filter((model) => model.uri.scheme === 'file');
-      // if there are more models than scripts, it means we models to dispose of
+      // if there are more models than scripts, it means we have models to dispose of
       fileModels.forEach((model) => {
         // if the model is not in the scripts, dispose of it
         if (
@@ -485,10 +479,11 @@ const EditorContextProvider = ({
   const router = useRouter();
 
   useEffect(() => {
-    if (currentScript) {
+    if (currentScript && monacoRef.current) {
       try {
+        const model = getOrCreateScriptModel(currentScript, monacoRef.current!);
         const { inputs } = parseCode({
-          code: currentScriptLive?.code || currentScript.code,
+          code: model.getValue() || currentScript.code,
           throwErrors: true,
         });
 
@@ -520,7 +515,7 @@ const EditorContextProvider = ({
         );
       }
     }
-  }, [currentScript]);
+  }, [currentScript, monacoRef.current]);
 
   useEffect(() => {
     setScripts(initialScripts);
@@ -571,6 +566,7 @@ const EditorContextProvider = ({
     setLastReadLogsTimestamp(Date.now());
   };
 
+  /** todo test */
   const replaceCurrentScriptCode = (code: string) => {
     if (currentScript) {
       setCurrentScript({ ...currentScript, code });
@@ -585,12 +581,6 @@ const EditorContextProvider = ({
             model.getValue() !== currentScript.code
           ) {
             model.setValue(currentScript.code);
-            // Call mutateLive when the currentScript is updated
-            try {
-              mutateLive(currentScript.code, model.getVersionId());
-            } catch (e) {
-              console.error('Caught error from mutateLive:', e);
-            }
           }
         });
       }
@@ -694,6 +684,7 @@ const EditorContextProvider = ({
   };
 
   const setModelIsDirty = (path: string, isDirty: boolean) => {
+    console.log('this is called');
     if (path === 'types/zipper.d') return;
     setModelsDirtyState((previousModelsDirtyState) => {
       const newModelState = { ...previousModelsDirtyState };
@@ -733,7 +724,6 @@ const EditorContextProvider = ({
       value={{
         currentScript,
         setCurrentScript,
-        currentScriptLive,
         onChange,
         onValidate,
         connectionId: self?.connectionId,
@@ -766,6 +756,26 @@ const EditorContextProvider = ({
         lastReadLogsTimestamp,
         resourceOwnerSlug: resourceOwnerSlug as string,
         appSlug: appSlug as string,
+        runEditorActions: async (
+          { now = false, currentScript, value },
+          defaults = {
+            value: '',
+            currentScript: {} as any,
+            setInputParams,
+            setInputError,
+            monacoRef,
+            externalImportModelsRef,
+            invalidImportUrlsRef,
+            setModelIsDirty,
+            readOnly,
+          },
+        ) =>
+          (now ? runEditorActionsNow : runEditorActionsDebounced)({
+            ...defaults,
+            currentScript,
+            value,
+          }),
+        readOnly,
       }}
     >
       {children}

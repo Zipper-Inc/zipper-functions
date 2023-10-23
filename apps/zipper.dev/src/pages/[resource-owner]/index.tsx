@@ -35,7 +35,7 @@ const ResourceOwnerPage: NextPageWithLayout = () => {
           apps={appsByResourceOwnerQuery.data || []}
           subheading={
             appsByResourceOwnerQuery.data.length
-              ? `Browse through the applets created by ${slug}`
+              ? `Browse through public applets created by ${slug}`
               : ''
           }
         />

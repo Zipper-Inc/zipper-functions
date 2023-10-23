@@ -32,6 +32,7 @@ import { useUser } from '~/hooks/use-user';
 import getRunUrl from '~/utils/get-run-url';
 import { getAppVersionFromHash } from '~/utils/hashing';
 import { addParamToCode } from '~/utils/parse-code';
+import { getOrCreateScriptModel } from '~/utils/playground.utils';
 import { trpc } from '~/utils/trpc';
 import { useEditorContext } from '../context/editor-context';
 import { useRunAppContext } from '../context/run-app-context';
@@ -61,12 +62,12 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
 
   const {
     currentScript,
-    currentScriptLive,
     replaceCurrentScriptCode,
     inputParams,
     inputError,
     editorHasErrors,
     getErrorFiles,
+    monacoRef,
   } = useEditorContext();
 
   const mainApplet = useAppletContent();
@@ -132,9 +133,10 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
   }, [mainApplet.updatedAt]);
 
   const handleAddInput = () => {
-    if (currentScriptLive && currentScript) {
+    if (currentScript && monacoRef?.current) {
+      const model = getOrCreateScriptModel(currentScript, monacoRef.current);
       const codeWithInputAdded = addParamToCode({
-        code: currentScriptLive?.code || '',
+        code: model?.getValue() || currentScript.code || '',
       });
       replaceCurrentScriptCode(codeWithInputAdded);
     }
