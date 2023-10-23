@@ -116,6 +116,11 @@ export const baseColors = {
   brandGray: {
     100: '#F3F2F1',
   },
+  lightBlue: {
+    50: '#EEF8FF',
+    200: '#74BBED',
+    800: '#004A98',
+  },
 };
 
 export const brandColors = {
