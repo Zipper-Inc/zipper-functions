@@ -3,10 +3,7 @@ import * as monaco from 'monaco-editor';
 import type { MutableRefObject } from 'react';
 import { getPathFromUri, getUriFromPath } from '~/utils/model-uri';
 import { isExternalImport } from '~/utils/parse-code';
-import {
-  isZipperImportUrl,
-  X_ZIPPER_ESZIP_BUILD_HEADER,
-} from '~/utils/eszip-utils';
+import { isZipperImportUrl, X_ZIPPER_ESZIP_BUILD } from '~/utils/eszip-utils';
 import Fuse from 'fuse.js';
 import { rewriteSpecifier } from '~/utils/rewrite-imports';
 
@@ -93,7 +90,7 @@ export async function runZipperLinter({
           const { status, headers } = await fetch(rewrittenSpecifier, {
             redirect: 'follow',
             headers: isZipperImportUrl(rewrittenSpecifier)
-              ? { [X_ZIPPER_ESZIP_BUILD_HEADER]: 'true' }
+              ? { [X_ZIPPER_ESZIP_BUILD]: 'true' }
               : undefined,
           });
 
