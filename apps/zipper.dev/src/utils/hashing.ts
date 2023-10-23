@@ -4,11 +4,12 @@ import hash from 'object-hash';
 const APP_VERSION_LENGTH = 7;
 
 export function getScriptHash(
-  script: Pick<Script, 'id' | 'filename' | 'code'>,
+  script: Pick<Script, 'appId' | 'filename' | 'code'>,
 ) {
-  const { id, filename, code } = script;
+  const { appId, filename, code } = script;
+
   return hash(
-    { id, filename, code },
+    { appId, filename, code },
     {
       algorithm: 'sha1',
     },
@@ -17,16 +18,16 @@ export function getScriptHash(
 
 export function getAppHash(
   app: Pick<App, 'id' | 'slug'> & {
-    scripts: Pick<Script, 'id' | 'hash'>[];
+    scripts: Pick<Script, 'filename' | 'hash'>[];
   },
 ) {
   const scripts = JSON.stringify(
     app.scripts
-      .map(({ id, hash }) => ({
-        id,
+      .map(({ filename, hash }) => ({
+        filename,
         hash,
       }))
-      .sort((a, b) => (a.id > b.id ? 1 : -1)),
+      .sort((a, b) => (a.filename > b.filename ? 1 : -1)),
   );
 
   return hash(
@@ -39,7 +40,7 @@ export function getAppHash(
 
 export function getAppHashAndVersion(
   app: Pick<App, 'id' | 'slug'> & {
-    scripts: Pick<Script, 'id' | 'hash'>[];
+    scripts: Pick<Script, 'filename' | 'hash'>[];
   },
 ) {
   const hash = getAppHash(app);

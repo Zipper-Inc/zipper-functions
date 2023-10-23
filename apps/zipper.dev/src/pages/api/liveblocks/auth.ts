@@ -1,4 +1,4 @@
-import { authorize } from '@liveblocks/node';
+import { Liveblocks } from '@liveblocks/node';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { createContext } from '~/server/context';
 import { prisma } from '~/server/prisma';
@@ -13,7 +13,10 @@ export default async function auth(req: NextApiRequest, res: NextApiResponse) {
     });
   }
 
+  const liveblocks = new Liveblocks({ secret: LIVEBLOCKS_SECRET_KEY });
+
   const context = await createContext({ req, res });
+  const { room } = req.body;
 
   if (!context.userId) {
     return res.status(401).send({ error: 'Unauthorized' });
@@ -25,7 +28,7 @@ export default async function auth(req: NextApiRequest, res: NextApiResponse) {
     include: { editors: true },
   });
 
-  if (!applet) {
+  if (!applet || !room) {
     return res.status(404).send({ error: 'Applet not found' });
   }
 
@@ -33,11 +36,9 @@ export default async function auth(req: NextApiRequest, res: NextApiResponse) {
     return res.status(403).send({ error: 'Forbidden' });
   }
 
-  const response = await authorize({
-    room: req.body.room,
-    secret: LIVEBLOCKS_SECRET_KEY,
-    userId: context.userId,
-  });
-
-  return res.status(response.status).end(response.body);
+  const session = liveblocks.prepareSession(context.userId);
+  const { status, body } = await session
+    .allow(room, session.FULL_ACCESS)
+    .authorize();
+  return res.status(status).end(body);
 }

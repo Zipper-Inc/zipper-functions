@@ -4,7 +4,7 @@ import * as monaco from 'monaco-editor';
 import randomColor from 'randomcolor';
 
 import { Avatar } from '../avatar';
-import { useOther } from '~/liveblocks.config';
+import { Presence, useOther, Selection } from '~/liveblocks.config';
 import { Box, Flex, keyframes } from '@chakra-ui/react';
 
 const blink = keyframes`
@@ -16,12 +16,13 @@ const blink = keyframes`
     opacity: 100%;
   }
 `;
+
 export interface Position {
   lineNumber: number;
   column: number;
 }
 
-export const selectionToPosition = (selection: monaco.Selection): Position => ({
+export const selectionToPosition = (selection: Selection): Position => ({
   lineNumber: selection.positionLineNumber,
   column: selection.positionColumn,
 });
@@ -34,7 +35,7 @@ export class MonacoCursorWidget {
   };
   private domNode: HTMLDivElement | undefined;
 
-  constructor({ id, selection }: { id: number; selection: monaco.Selection }) {
+  constructor({ id, selection }: { id: number; selection: Selection }) {
     this.id = id.toString();
     this.position = selectionToPosition(selection);
   }
@@ -64,7 +65,7 @@ export class MonacoCursorWidget {
     return this.domNode;
   }
 
-  setPosition(selection: monaco.Selection) {
+  setPosition(selection: Selection) {
     this.position = selectionToPosition(selection);
   }
 }
@@ -76,9 +77,10 @@ export function PlaygroundCollabCursor({
   connectionId: number;
   editorRef: MutableRefObject<monaco.editor.IStandaloneCodeEditor | undefined>;
 }) {
+  // liveblocks here
   const { userId, selection } = useOther(connectionId, (u) => ({
     userId: u.id,
-    selection: u.presence.selection as unknown as monaco.Selection,
+    selection: u.presence.selection,
   }));
   const cursorWidgetRef = useRef<MonacoCursorWidget>();
   const timeoutRef = useRef<number>();

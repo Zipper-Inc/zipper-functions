@@ -2,7 +2,7 @@ import { ReactElement } from 'react';
 import { ClientSideSuspense } from '@liveblocks/react';
 import { RoomProvider } from '~/liveblocks.config';
 
-export const withLiveBlocks = (
+export const withLiveblocksRoom = (
   children: () => ReactElement,
   { room, initialStorage, initialPresence }: any,
 ) => (

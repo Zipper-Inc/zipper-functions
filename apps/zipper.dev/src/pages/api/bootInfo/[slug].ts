@@ -14,7 +14,11 @@ import { canUserEdit } from '~/server/routers/app.router';
 import { trackEvent } from '~/utils/api-analytics';
 import { parseCode } from '~/utils/parse-code';
 import { requiredUserAuthConnectorFilter } from '~/utils/user-auth-connector-filter';
-import { getUserInfo, UserInfoReturnType } from '../../../utils/get-user-info';
+import {
+  getUserInfo,
+  UserInfoReturnType,
+  AppletAuthorReturnType,
+} from '../../../utils/get-user-info';
 
 export default async function handler(
   req: NextApiRequest,
@@ -109,6 +113,7 @@ export default async function handler(
     scripts,
     isDataSensitive,
     dailyRunLimit,
+    editors,
   } = appFound;
 
   const now = new Date();
@@ -174,6 +179,35 @@ export default async function handler(
     organizations[mem.organization.id] = mem.role;
   });
 
+  const author = editors.find((editor) => editor.isOwner === true);
+  const appAuthor: AppletAuthorReturnType = {
+    name: '',
+    organization: '',
+    image: '',
+    orgImage: '',
+  };
+
+  const authorName = await prisma.user.findUnique({
+    where: {
+      id: author?.userId,
+    },
+    include: {
+      organizationMemberships: true,
+    },
+  });
+
+  if (authorName?.organizationMemberships[0]?.organizationId) {
+    const authorOrg = await prisma.organization.findUnique({
+      where: {
+        id: authorName?.organizationMemberships[0]?.organizationId,
+      },
+    });
+    appAuthor.organization = authorOrg?.name || '';
+  }
+
+  appAuthor.name = authorName?.name || '';
+  appAuthor.image = authorName?.image || '';
+
   const result: BootInfoResult = {
     ok: true,
     data: {
@@ -185,6 +219,7 @@ export default async function handler(
         playgroundVersionHash,
         publishedVersionHash,
         updatedAt,
+        appAuthor,
         canUserEdit: canUserEdit(appFound, {
           req,
           userId: userInfo.userId,
