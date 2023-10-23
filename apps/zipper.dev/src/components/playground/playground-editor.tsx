@@ -19,7 +19,6 @@ import { useColorModeValue } from '@chakra-ui/react';
 import { baseColors, prettierFormat, useCmdOrCtrl } from '@zipper/ui';
 import MonacoJSXHighlighter from 'monaco-jsx-highlighter';
 import { use, useEffect, useRef, useState } from 'react';
-import { useExitConfirmation } from '~/hooks/use-exit-confirmation';
 import { getPathFromUri, getUriFromPath } from '~/utils/model-uri';
 import { useEditorContext } from '../context/editor-context';
 import { useRunAppContext } from '../context/run-app-context';
@@ -95,8 +94,6 @@ export default function PlaygroundEditor(
     'typescript' | 'markdown'
   >('typescript');
   const theme = useColorModeValue('vs', 'vs-dark');
-
-  useExitConfirmation({ enable: isEditorDirty(), ignorePaths: ['/src/'] });
 
   const handleEditorDidMount = (editor: MonacoEditor, monaco: Monaco) => {
     console.log('editor mounted');
