@@ -10,7 +10,7 @@ export type CacheRecord = {
 const DEFAULT_TTL = 604800;
 
 const CACHE_KEY_PREFIX = 'eszipBuildCache';
-const CACHE_BUST_TIMESTAMP = 1681840170;
+const CACHE_BUST_TIMESTAMP = 1681840180;
 
 /**
  * Makes a cache key for a specifier url
