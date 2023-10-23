@@ -273,6 +273,7 @@ export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
               appSlug={app.slug}
               isMarkdownEditable={isMarkdownEditable}
               setIsMarkdownEditable={setIsMarkdownEditable}
+              canUserEdit={app.canUserEdit}
             />
           </AppEditSidebarProvider>
         </VStack>
