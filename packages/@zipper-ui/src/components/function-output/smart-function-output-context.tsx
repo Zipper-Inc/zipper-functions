@@ -4,14 +4,14 @@ export const SmartFunctionOutputContext = createContext<{
   outputSection: 'main' | 'expanded';
   searchQuery: string;
   setSearchQuery: (query: string) => void;
-  config?: Zipper.HandlerConfig;
+  config: Zipper.HandlerConfig;
 }>({
   outputSection: 'main',
   searchQuery: '',
   setSearchQuery: () => {
     return;
   },
-  config: undefined,
+  config: {},
 });
 
 const SmartFunctionOutputProvider = ({
@@ -21,7 +21,7 @@ const SmartFunctionOutputProvider = ({
 }: {
   outputSection: 'main' | 'expanded';
   children: any;
-  config?: Zipper.HandlerConfig;
+  config: Zipper.HandlerConfig;
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   return (
