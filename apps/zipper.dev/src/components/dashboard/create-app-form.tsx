@@ -276,7 +276,7 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
               backgroundColor="blackAlpha.600"
             />
             <AbsoluteCenter axis="both" zIndex={110}>
-              <Image src="/static/spinner@1x.gif" />
+              <Image src="https://imagedelivery.net/mehHBP8u01yKLn8uDjx8Yw/238242f9-c0f1-4bf7-3e10-98a3cba2b300/public" />
             </AbsoluteCenter>
           </Fade>
         ))}
