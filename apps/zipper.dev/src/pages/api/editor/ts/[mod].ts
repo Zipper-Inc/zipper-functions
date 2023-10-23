@@ -5,7 +5,7 @@ import { LoadResponseModule } from '@deno/eszip/esm/loader';
 import {
   isZipperImportUrl,
   applyTsxHack,
-  getModule,
+  getRemoteModule,
 } from '~/utils/eszip-utils';
 import { rewriteSpecifier } from '~/utils/rewrite-imports';
 import { parseCode } from '~/utils/parse-code';
@@ -102,7 +102,7 @@ async function respondWithBundle({
 
     // Handler Zipper Imports
     if (isZipperImportUrl(specifier)) {
-      const rawModule = await getModule(specifier);
+      const rawModule = await getRemoteModule({ specifier });
       const mod = {
         ...rawModule,
         ...applyTsxHack(specifier, rawModule?.content, false),
@@ -113,7 +113,7 @@ async function respondWithBundle({
       bundle[bundlePath] = rootModule.content;
       return rootModule;
     } else {
-      const mod = await getModule(specifier, buildCache);
+      const mod = await getRemoteModule({ specifier, buildCache });
       if (mod?.content) bundle[bundlePath] = mod.content;
       return mod;
     }
@@ -153,11 +153,14 @@ async function respondWithTypesBundle({
   try {
     await eszip.build([typesRootUrl], async (specifier) => {
       if (specifier === typesRootUrl) {
-        const mod = await getModule(typesRootUrl, buildCache);
+        const mod = await getRemoteModule({
+          specifier: typesRootUrl,
+          buildCache,
+        });
         if (mod?.content) typesBundle[moduleUrl] = mod.content;
         return withPathRefs(mod);
       } else {
-        const mod = await getModule(specifier, buildCache);
+        const mod = await getRemoteModule({ specifier, buildCache });
         if (mod?.content) typesBundle[specifier] = mod.content;
         return withPathRefs(mod);
       }
@@ -198,7 +201,10 @@ export default async function handler(
   // commas are valid in URLs, so don't treat this as an array
   const moduleUrl = Array.isArray(x) ? x.join(',') : x;
 
-  const rootModule = await getModule(rewriteSpecifier(moduleUrl), buildCache);
+  const rootModule = await getRemoteModule({
+    specifier: rewriteSpecifier(moduleUrl),
+    buildCache,
+  });
 
   if (!rootModule) return res.status(404).send('Module not found');
 

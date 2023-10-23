@@ -61,7 +61,13 @@ export function applyTsxHack(
   };
 }
 
-export async function getModule(specifier: string, buildCache?: BuildCache) {
+export async function getRemoteModule({
+  specifier,
+  buildCache,
+}: {
+  specifier: string;
+  buildCache?: BuildCache;
+}) {
   const shouldUseCache = !!buildCache && !isZipperImportUrl(specifier);
 
   if (shouldUseCache) {

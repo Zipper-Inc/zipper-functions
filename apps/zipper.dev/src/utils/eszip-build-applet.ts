@@ -7,7 +7,7 @@ import { getLogger } from './app-console';
 import { BuildCache } from './eszip-build-cache';
 import {
   applyTsxHack,
-  getModule,
+  getRemoteModule,
   isZipperImportUrl,
   TYPESCRIPT_CONTENT_HEADERS,
 } from './eszip-utils';
@@ -128,7 +128,7 @@ export async function build({
        * Handle Zipper Remote Imports
        */
       if (isZipperImportUrl(specifier)) {
-        const mod = await getModule(specifier);
+        const mod = await getRemoteModule({ specifier });
         return {
           ...mod,
           ...applyTsxHack(specifier, rewriteImports(mod?.content)),
@@ -138,7 +138,7 @@ export async function build({
       /**
        * Handle remote imports
        */
-      return getModule(specifier, buildCache);
+      return getRemoteModule({ specifier, buildCache });
     } catch (e) {
       if (e instanceof Error) {
         // 🚨 Security Fix
