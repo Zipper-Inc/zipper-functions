@@ -342,8 +342,14 @@ async function runEditorActionsNow({
   const linter = readOnly ? noop : runZipperLinter;
 
   try {
-    const newHash = getScriptHash({ ...currentScript, code: value });
-    setModelIsDirty(currentScript.filename, newHash !== currentScript.hash);
+    // For purpose of checking the hash to tell if its dirty, we'll trim the end and deal with whitespace at save
+    const newHash = getScriptHash({ ...currentScript, code: value.trimEnd() });
+    const oldHash = getScriptHash({
+      ...currentScript,
+      code: currentScript.code.trimEnd(),
+    });
+
+    setModelIsDirty(currentScript.filename, newHash !== oldHash);
 
     const { inputs, imports } = parseCode({
       code: value,
@@ -678,6 +684,7 @@ const EditorContextProvider = ({
   };
 
   const setModelIsDirty = (path: string, isDirty: boolean) => {
+    console.log('this is called');
     if (path === 'types/zipper.d') return;
     setModelsDirtyState((previousModelsDirtyState) => {
       const newModelState = { ...previousModelsDirtyState };
