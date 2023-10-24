@@ -2,6 +2,7 @@ import type { LoadResponseModule } from '@deno/eszip/esm/loader';
 import type { NextRequest } from 'next/server';
 import fetch from 'node-fetch';
 import type { BuildCache, CacheRecord } from './eszip-build-cache';
+import type { Target } from './rewrite-imports';
 
 export const X_ZIPPER_ESZIP_BUILD = 'x-zipper-eszip-build';
 
@@ -67,14 +68,16 @@ export function applyTsxHack(
 export async function getRemoteModule({
   specifier,
   buildCache,
+  target,
 }: {
   specifier: string;
   buildCache?: BuildCache;
+  target?: Target;
 }) {
   const shouldUseCache = !!buildCache && !isZipperImportUrl(specifier);
 
   if (shouldUseCache) {
-    const cachedModule = await buildCache.get(specifier);
+    const cachedModule = await buildCache.get([specifier, target]);
     if (cachedModule) return cachedModule;
   }
 
@@ -105,7 +108,7 @@ export async function getRemoteModule({
     content,
   } as CacheRecord['module'];
 
-  if (shouldUseCache) await buildCache.set(specifier, mod);
+  if (shouldUseCache) await buildCache.set([specifier, target], mod);
 
   return mod;
 }

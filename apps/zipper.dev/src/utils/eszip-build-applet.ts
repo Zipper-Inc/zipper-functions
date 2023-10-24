@@ -14,7 +14,7 @@ import {
 import { getAppHashAndVersion } from './hashing';
 import { prettyLog, PRETTY_LOG_TOKENS } from './pretty-log';
 import { readFrameworkFile } from './read-file';
-import { rewriteImports } from './rewrite-imports';
+import { rewriteImports, Target } from './rewrite-imports';
 
 const FILENAME_FORBIDDEN_CHARS_REGEX = /[^a-zA-Z0-9_.\-@$)]/;
 
@@ -42,6 +42,7 @@ export async function build({
   };
   version: string;
 }) {
+  const target = Target.Deno;
   const startMs = performance.now();
   const appName = `${app.slug}@${version}`;
   const baseUrl = _baseUrl || `file://${app.slug}/v${version}`;
@@ -128,7 +129,7 @@ export async function build({
        * Handle Zipper Remote Imports
        */
       if (isZipperImportUrl(specifier)) {
-        const mod = await getRemoteModule({ specifier });
+        const mod = await getRemoteModule({ specifier, target });
         return {
           ...mod,
           ...applyTsxHack(specifier, rewriteImports(mod?.content)),
@@ -138,7 +139,7 @@ export async function build({
       /**
        * Handle remote imports
        */
-      return getRemoteModule({ specifier, buildCache });
+      return getRemoteModule({ specifier, buildCache, target });
     } catch (e) {
       if (e instanceof Error) {
         // 🚨 Security Fix

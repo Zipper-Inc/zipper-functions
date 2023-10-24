@@ -3,10 +3,16 @@ import type { SourceFile } from 'ts-morph';
 import { getZipperDotDevUrlForServer } from '~/server/utils/server-url.utils';
 import { getSourceFileFromCode, isExternalImport } from './parse-code';
 
+export enum Target {
+  Default,
+  Deno,
+}
+
+const NPM_NODE_REGEX = /^(npm|node):/;
 const ESM_SH_ORIGN = 'https://esm.sh';
 const SKYPACK_ORIGIN = 'https://cdn.skypack.dev';
 
-const withDenoTarget = (specifier: string) => {
+export function withDenoTarget(specifier: string) {
   try {
     const url = new URL(specifier);
     if (url.origin === ESM_SH_ORIGN && !url.searchParams.has('target'))
@@ -19,10 +25,9 @@ const withDenoTarget = (specifier: string) => {
   } catch (e) {
     return specifier;
   }
-};
+}
 
-const withEsmSh = (specifier: string) =>
-  withDenoTarget(`${ESM_SH_ORIGN}/${specifier}`);
+export const withEsmSh = (specifier: string) => `${ESM_SH_ORIGN}/${specifier}`;
 
 export const LOCALHOST_URL_REGEX =
   /^(?:https?:\/\/)(?:localhost|127\.0\.0\.1|10\.(?:\d{1,3}\.){2}\d{1,3}|172\.(?:1[6-9]|2\d|3[01])\.(?:\d{1,3}\.){2}\d{1,3}|192\.168\.(?:\d{1,3}\.){1}\d{1,3}|::1)(?:\:\d+)?/;
@@ -71,6 +76,7 @@ export function getRewriteRule(specifier: string): RewriteTo {
 
 export function rewriteSpecifier(
   specifier: string,
+  target: Target = Target.Default,
   rule = getRewriteRule(specifier),
 ) {
   switch (rule) {
@@ -78,7 +84,7 @@ export function rewriteSpecifier(
       return specifier;
 
     case RewriteTo.External:
-      return withDenoTarget(specifier);
+      return target === Target.Deno ? withDenoTarget(specifier) : specifier;
 
     case RewriteTo.ZipperDotDev:
       return `${getZipperDotDevUrlForServer()}${specifier
@@ -87,11 +93,15 @@ export function rewriteSpecifier(
 
     case RewriteTo.EsmSh:
     default:
-      return withEsmSh(specifier.replace(/^(npm|node):/, ''));
+      const esmShUrl = withEsmSh(specifier.replace(NPM_NODE_REGEX, ''));
+      return target === Target.Deno ? withDenoTarget(esmShUrl) : esmShUrl;
   }
 }
 
-export function rewriteImports(src?: string | SourceFile) {
+export function rewriteImports(
+  src?: string | SourceFile,
+  target = Target.Default,
+) {
   if (!src) return src;
 
   const sourceFile = typeof src == 'string' ? getSourceFileFromCode(src) : src;
@@ -99,7 +109,9 @@ export function rewriteImports(src?: string | SourceFile) {
   sourceFile
     .getImportDeclarations()
     .forEach((i) =>
-      i.setModuleSpecifier(rewriteSpecifier(i.getModuleSpecifierValue())),
+      i.setModuleSpecifier(
+        rewriteSpecifier(i.getModuleSpecifierValue(), target),
+      ),
     );
 
   return sourceFile.getFullText();

@@ -1,6 +1,8 @@
 import type { LoadResponseModule } from '@deno/eszip/esm/loader';
+import { Target } from './rewrite-imports';
 import Redis from 'ioredis';
 
+export type CacheKeyPair = [specifier: string, target?: Target];
 export type CacheRecord = {
   module: LoadResponseModule;
   cachedTimestamp: number;
@@ -10,7 +12,7 @@ export type CacheRecord = {
 const DEFAULT_TTL = 604800;
 
 const CACHE_KEY_PREFIX = 'eszipBuildCache';
-const CACHE_BUST_TIMESTAMP = 1681840180;
+const CACHE_BUST_TIMESTAMP = 1698114625;
 
 /**
  * Makes a cache key for a specifier url
@@ -19,8 +21,8 @@ const CACHE_BUST_TIMESTAMP = 1681840180;
  * const cacheKey = getCacheKey('https://deno.land/x/oak@v3.0.0/mod.ts');
  * // cacheKey === `eszipBuildCache-1681840170[https://deno.land/x/oak@v3.0.0/mod.ts]`
  */
-const getCacheKey = (specifier: string) =>
-  `${CACHE_KEY_PREFIX}-${CACHE_BUST_TIMESTAMP}[${specifier}]`;
+const getCacheKey = ([specifier, target = Target.Default]: CacheKeyPair) =>
+  `${CACHE_KEY_PREFIX}-${CACHE_BUST_TIMESTAMP}[${specifier}][target-${target}]`;
 
 function getTtl(headers: Record<string, string>) {
   const maxAge = parseInt(
@@ -66,9 +68,9 @@ export class BuildCache {
     this.client.disconnect();
   }
 
-  async get(specifier: string) {
+  async get(keyPair: CacheKeyPair) {
     try {
-      const raw = await this.client.get(getCacheKey(specifier));
+      const raw = await this.client.get(getCacheKey(keyPair));
       if (!raw) return;
       const record: CacheRecord = JSON.parse(raw);
       return updateAgeHeader(record);
@@ -77,9 +79,9 @@ export class BuildCache {
     }
   }
 
-  async set(specifier: string, mod: LoadResponseModule) {
+  async set(keyPair: CacheKeyPair, mod: LoadResponseModule) {
     try {
-      const key = getCacheKey(specifier);
+      const key = getCacheKey(keyPair);
       const record: CacheRecord = {
         module: mod,
         cachedTimestamp: Date.now(),
