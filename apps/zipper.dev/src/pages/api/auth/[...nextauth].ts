@@ -1,4 +1,4 @@
-import NextAuth, { AuthOptions, TokenSet, SessionStrategy } from 'next-auth';
+import NextAuth, { AuthOptions, Session, SessionStrategy } from 'next-auth';
 import GithubProvider from 'next-auth/providers/github';
 import GoogleProvider from 'next-auth/providers/google';
 import EmailProvider, {
@@ -10,7 +10,6 @@ import { Adapter, AdapterAccount } from 'next-auth/adapters';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime';
 import { ResourceOwnerType } from '@zipper/types';
 import { MagicLinkEmail } from '~/emails';
-import fetch from 'node-fetch';
 import { createUserSlug } from '~/utils/create-user-slug';
 import { resend } from '~/server/resend';
 import crypto from 'crypto';
@@ -130,11 +129,23 @@ export function PrismaAdapter(p: PrismaClient): Adapter {
   };
 }
 
-async function refreshAccessToken(token: TokenSet) {
+async function refreshAccessToken(session: Session) {
   try {
     // https://accounts.google.com/.well-known/openid-configuration
     // We need the `token_endpoint`.
-    if (!token.refresh_token) throw new Error('No refresh token');
+
+    // get the refresh token from the account table
+    if (!session.user?.id) throw new Error('No user id');
+
+    const account = await prisma.account.findFirst({
+      where: {
+        userId: session.user.id,
+        provider: 'google',
+      },
+      select: { refresh_token: true, id: true, access_token: true },
+    });
+
+    if (!account?.refresh_token) throw new Error('No refresh token');
 
     const response = await fetch('https://oauth2.googleapis.com/token', {
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -142,7 +153,7 @@ async function refreshAccessToken(token: TokenSet) {
         client_id: process.env.NEXTAUTH_GOOGLE_CLIENT_ID!,
         client_secret: process.env.NEXTAUTH_GOOGLE_CLIENT_SECRET!,
         grant_type: 'refresh_token',
-        refresh_token: token.refresh_token,
+        refresh_token: account.refresh_token,
       }),
       method: 'POST',
     });
@@ -151,18 +162,28 @@ async function refreshAccessToken(token: TokenSet) {
 
     if (!response.ok) throw tokens;
 
+    const currentTimestampInSeconds = Math.floor(Date.now() / 1000);
+    const expiresAt = currentTimestampInSeconds + tokens.expires_in;
+
+    // Refresh was successful, update the account in the database with the new tokens
+    await prisma.account.update({
+      where: {
+        id: account.id,
+      },
+      data: {
+        access_token: tokens.access_token,
+        expires_at: expiresAt,
+        refresh_token: tokens.refresh_token ?? account.refresh_token,
+      },
+    });
+
     return {
-      ...token, // Keep the previous token properties
-      access_token: tokens.access_token,
-      // expires_at: Math.floor(Date.now() / 1000 + tokens.expires_in),
-      // Fall back to old refresh token, but note that
-      // many providers may only allow using a refresh token once.
-      refresh_token: tokens.refresh_token ?? token.refresh_token,
+      ...session,
     };
   } catch (error) {
     console.error('Error refreshing access token', error);
     // The error property will be used client-side to handle the refresh token error
-    return { ...token, error: 'RefreshAccessTokenError' as const };
+    return { ...session, error: 'RefreshAccessTokenError' as const };
   }
 }
 
@@ -202,7 +223,7 @@ const getOrganizationMemberships = async (
 export const authOptions: AuthOptions = {
   // Configure one or more authentication providers
   session: {
-    strategy: 'jwt' as SessionStrategy,
+    strategy: 'database' as SessionStrategy,
   },
   adapter: PrismaAdapter(prisma),
   providers: [
@@ -255,104 +276,95 @@ export const authOptions: AuthOptions = {
         },
       },
     }),
-    // ...add more providers here
   ],
   callbacks: {
-    async jwt({ token: _token, user, account, trigger, session }) {
-      const token = { ..._token };
-
-      // Initial sign in (only time account is not null)
-      if (account) {
-        if (trigger === 'signUp') {
-          user.newUser = true;
-        }
-        // Save the access token and refresh token in the JWT on the initial login
-        return {
-          ...token,
+    async session({ session, user, trigger, newSession }) {
+      try {
+        session.user = {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          image: user.image,
+          username: user.slug,
           newUser: user.newUser,
-          access_token: account.access_token,
-          expires_at: account.expires_at,
-          refresh_token: account.refresh_token,
-          slug: user.slug,
-          organizationMemberships: await getOrganizationMemberships(
-            user.id,
-            user.email,
-          ),
           settings: user.settings,
-          userCreatedAt: user.createdAt,
+          createdAt: user.createdAt,
         };
-      }
 
-      if (trigger === 'update') {
-        console.log('update triggered: ', session);
+        session.organizationMemberships = await getOrganizationMemberships(
+          user.id,
+          user.email,
+        );
 
-        if (session.updateOrganizationList) {
-          token.organizationMemberships = await getOrganizationMemberships(
-            token.sub,
-            token.email,
-          );
-        }
+        if (trigger === 'update') {
+          console.log('update triggered: ', session);
 
-        if (session.currentOrganizationId === null) {
-          token.currentOrganizationId = undefined;
-        }
+          if (newSession.updateOrganizationList) {
+            session.organizationMemberships = await getOrganizationMemberships(
+              user.id,
+              user.email,
+            );
+          }
 
-        if (session.updateProfile) {
-          const userUpdated = await prisma.user.findUnique({
-            where: { id: token.sub },
-            include: { settings: true },
-          });
+          if (newSession.currentOrganizationId === null) {
+            session.currentOrganizationId = undefined;
+          }
 
-          token.picture = userUpdated?.image;
-          token.name = userUpdated?.name;
-          token.email = userUpdated?.email;
-          token.slug = userUpdated?.slug;
-          token.settings = userUpdated?.settings;
-        }
+          if (newSession.updateProfile) {
+            const userUpdated = await prisma.user.findUnique({
+              where: { id: user.id },
+              include: { settings: true },
+            });
 
-        if (session.currentOrganizationId) {
-          if (
-            token.organizationMemberships?.find(
-              (m) => m.organization.id === session.currentOrganizationId,
-            )
-          ) {
-            token.currentOrganizationId = session.currentOrganizationId;
+            session.user.image = userUpdated?.image;
+            session.user.name = userUpdated?.name;
+            session.user.email = userUpdated?.email;
+            session.user.username = userUpdated?.slug;
+            session.user.settings = userUpdated?.settings;
+          }
+
+          if (newSession.currentOrganizationId) {
+            if (
+              session.organizationMemberships?.find(
+                (m) => m.organization.id === newSession.currentOrganizationId,
+              )
+            ) {
+              session.currentOrganizationId = newSession.currentOrganizationId;
+            }
           }
         }
-      }
 
-      if (!token.expires_at) return token;
+        // check if we need to refresh the token from google in the accounts table
+        // if the access token is expired, we need to refresh it
+        const account = await prisma.account.findFirst({
+          where: {
+            userId: user.id,
+            provider: 'google',
+          },
+          select: { refresh_token: true, expires_at: true },
+        });
 
-      // Not initial sign in
-      // token is still good; carry on
-      if (Date.now() < token.expires_at * 1000) {
-        // If the access token has not expired yet, return it
-        return token;
-      }
+        if (!account?.refresh_token) return session;
 
-      // If the access token has expired, try to refresh it
-      return refreshAccessToken(token);
-    },
-    async session({ session, token, trigger }) {
-      try {
-        session.error = token.error;
-        session.user = {
-          id: token.sub,
-          name: token.name,
-          email: token.email,
-          image: token.picture,
-          username: token.slug,
-          newUser: token.newUser,
-          settings: token.settings,
-          createdAt: token.userCreatedAt,
-        };
+        if (account.expires_at) {
+          const expiresAt = new Date(account.expires_at * 1000);
+          const today = new Date();
 
-        if (trigger !== 'update') {
-          session.organizationMemberships = token.organizationMemberships;
-          session.currentOrganizationId = token.currentOrganizationId;
+          if (today > expiresAt) {
+            return refreshAccessToken(session);
+          }
+
+          // if (expiresAt > new Date()) return session;
         }
 
-        return session;
+        // session.expires is a string, need to convert it and compare it to now to see if it's expired
+        const expiresAt = new Date(session.expires);
+        if (expiresAt > new Date()) return session;
+
+        // If the access token has expired, try to refresh it
+        return refreshAccessToken(session);
+
+        // Do we still need to refresh tokens? is that the OAuth tokens from external providers???
       } catch (e) {
         console.error(e);
         return session;
@@ -413,6 +425,9 @@ Sachin & Ibu
           where: { token: verificationToken.token },
         });
       }
+
+      // if the account provider is google we will need to refresh the access token at some point
+      // we need to store the refresh token in the session so that we can refresh the access token
 
       trackEvent({
         userId: user.id,
