@@ -409,7 +409,7 @@ export function AppPage({
       <Stack
         as="div"
         direction={{ base: 'column', md: 'row' }}
-        justify="center"
+        justify="start"
         pt={4}
         pb={8}
         spacing={8}

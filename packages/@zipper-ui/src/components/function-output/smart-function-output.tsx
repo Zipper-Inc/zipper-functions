@@ -19,18 +19,20 @@ export function SmartFunctionOutput({
   level = 0,
   tableLevel = 0,
   heading,
+  parsedResult: parsedResultPassedIn,
 }: {
   result: any;
   level: number;
   tableLevel: number;
   heading?: string;
+  parsedResult?: ReturnType<typeof parseResult>;
 }) {
   const { config } = useSmartFunctionOutputContext();
 
   // if result === 0, it'll be evaluated as falsey by !result
   if (result === undefined || result === null) return null;
 
-  const { type, data } = parseResult(result);
+  const { type, data } = parsedResultPassedIn || parseResult(result);
 
   switch (type) {
     case OutputType.String:

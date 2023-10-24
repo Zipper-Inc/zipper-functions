@@ -324,7 +324,9 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
       </Box>
 
       {currentScript && mainApplet.mainContent.output?.data && (
-        <Box mt={4}>{output}</Box>
+        <Box mt={4} h="full">
+          {output}
+        </Box>
       )}
     </>
   );

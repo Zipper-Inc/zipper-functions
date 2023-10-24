@@ -48,15 +48,10 @@ export default function Collection(props: Props) {
   const isNested = !!props.tableLevel;
 
   return (
-    <Stack
-      width="100%"
-      border={isNested ? 'none' : '1px solid'}
-      borderColor="fg.200"
-      p="2"
-    >
+    <Stack width="100%">
       {props.tableLevel === 0 && (
         <Box display="flex" justifyContent="flex-end" gap="4">
-          <InputGroup w="md" mt={2} mr={2}>
+          <InputGroup w="md">
             <InputLeftAddon>
               <Icon as={PiMagnifyingGlass} />
             </InputLeftAddon>
@@ -204,7 +199,7 @@ function TableCollection(props: Props) {
                     <Td {...cell.getCellProps()}></Td>;
                   }
                   return (
-                    <Td {...cell.getCellProps()}>
+                    <Td py={3} px={2} {...cell.getCellProps()}>
                       <SmartFunctionOutput
                         result={cell.value}
                         tableLevel={props.tableLevel + 1}
