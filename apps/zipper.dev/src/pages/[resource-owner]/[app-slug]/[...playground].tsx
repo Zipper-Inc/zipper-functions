@@ -1,5 +1,6 @@
 import { Box, Button, Center, Heading, Link, VStack } from '@chakra-ui/react';
 import { createServerSideHelpers } from '@trpc/react-query/server';
+import { TRPCError } from '@trpc/server';
 import { GetServerSideProps, GetServerSidePropsContext } from 'next';
 import Head from 'next/head';
 import SuperJSON from 'superjson';
@@ -119,7 +120,10 @@ export const getServerSideProps: GetServerSideProps = async ({
       return { notFound: true };
     }
   } catch (e: any) {
-    if (/^No\s.*\sfound$/.test(e?.message)) {
+    if (
+      /^No\s.*\sfound$/.test(e?.message) ||
+      (e instanceof TRPCError && ['NOT_FOUND', 'UNAUTHORIZED'].includes(e.code))
+    ) {
       return { notFound: true };
     }
     throw e;

@@ -62,6 +62,10 @@ export const defaultCode = [
 const defaultMainFile = 'main';
 const defaultMainFilename = `${defaultMainFile}.ts`;
 
+const ZIPPER_PLAYGROUND_USER_AGENT_HEADER = {
+  'user-agent': 'ZipperPlayground/0.1',
+};
+
 export const canUserEdit = (
   app: Pick<
     App & { editors: AppEditor[] },
@@ -655,6 +659,7 @@ export const appRouter = createTRPCRouter({
             headers: {
               authorization: token ? `Bearer ${token}` : '',
               'x-zipper-host': `${app.slug}.zipper.run`,
+              ...ZIPPER_PLAYGROUND_USER_AGENT_HEADER,
             },
           },
         ).then((r) => r.json());
@@ -733,6 +738,7 @@ export const appRouter = createTRPCRouter({
           authorization: token ? `Bearer ${token}` : '',
           'x-zipper-run-id': input.runId,
           'x-zipper-host': `${app.slug}.zipper.run`,
+          ...ZIPPER_PLAYGROUND_USER_AGENT_HEADER,
         },
       });
 
