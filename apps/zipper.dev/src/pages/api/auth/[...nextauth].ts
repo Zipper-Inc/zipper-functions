@@ -202,10 +202,10 @@ const getCurrentOrganizationId = async (
   if (!sessionToken) return;
   const query = await prisma.session.findUnique({
     where: { sessionToken },
-    select: { currentOrganiationId: true },
+    select: { currentOrganizationId: true },
   });
 
-  return query?.currentOrganiationId;
+  return query?.currentOrganizationId;
 };
 
 const getOrganizationMemberships = async (
@@ -337,7 +337,7 @@ export const authOptions: AuthOptions = {
                 sessionToken: user.sessionToken,
               },
               data: {
-                currentOrganiationId: null,
+                currentOrganizationId: null,
               },
             });
           }
@@ -367,7 +367,7 @@ export const authOptions: AuthOptions = {
                   sessionToken: user.sessionToken,
                 },
                 data: {
-                  currentOrganiationId: newSession.currentOrganizationId,
+                  currentOrganizationId: newSession.currentOrganizationId,
                 },
               });
             }
