@@ -2,12 +2,16 @@ import type { LoadResponseModule } from '@deno/eszip/esm/loader';
 import type { NextRequest } from 'next/server';
 import fetch from 'node-fetch';
 import type { BuildCache, CacheRecord } from './eszip-build-cache';
+import type { Target } from './rewrite-imports';
 
-export const X_ZIPPER_ESZIP_BUILD_HEADER = 'X-Zipper-Eszip-Build';
+export const X_ZIPPER_ESZIP_BUILD = 'x-zipper-eszip-build';
 
 export const TYPESCRIPT_CONTENT_HEADERS = {
   'content-type': 'text/typescript',
 };
+
+const X_ZIPPER_ESZIP_BUILD_HEADER = { [X_ZIPPER_ESZIP_BUILD]: 'true' };
+export const DENO_USER_AGENT_HEADER = { 'user-agent': 'Deno/1.32.0' };
 
 export const MARKDOWN_CONTENT_HEADERS = {
   'content-type': 'text/markdown',
@@ -30,7 +34,7 @@ export function isZipperImportUrl(specifier: string) {
 }
 
 export function hasZipperEszipHeader(req: NextRequest) {
-  return req.headers.get(X_ZIPPER_ESZIP_BUILD_HEADER) === 'true';
+  return req.headers.get(X_ZIPPER_ESZIP_BUILD) === 'true';
 }
 
 export function addJsxPragma(code: string) {
@@ -61,17 +65,26 @@ export function applyTsxHack(
   };
 }
 
-export async function getModule(specifier: string, buildCache?: BuildCache) {
+export async function getRemoteModule({
+  specifier,
+  buildCache,
+  target,
+}: {
+  specifier: string;
+  buildCache?: BuildCache;
+  target?: Target;
+}) {
   const shouldUseCache = !!buildCache && !isZipperImportUrl(specifier);
 
   if (shouldUseCache) {
-    const cachedModule = await buildCache.get(specifier);
+    const cachedModule = await buildCache.get([specifier, target]);
     if (cachedModule) return cachedModule;
   }
 
   const response = await fetch(specifier, {
     headers: {
-      [X_ZIPPER_ESZIP_BUILD_HEADER]: 'true',
+      ...X_ZIPPER_ESZIP_BUILD_HEADER,
+      ...DENO_USER_AGENT_HEADER,
     },
     redirect: 'follow',
   });
@@ -95,7 +108,7 @@ export async function getModule(specifier: string, buildCache?: BuildCache) {
     content,
   } as CacheRecord['module'];
 
-  if (shouldUseCache) await buildCache.set(specifier, mod);
+  if (shouldUseCache) await buildCache.set([specifier, target], mod);
 
   return mod;
 }
