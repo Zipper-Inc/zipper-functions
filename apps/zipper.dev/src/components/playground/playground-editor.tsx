@@ -21,7 +21,7 @@ import { useRunAppContext } from '../context/run-app-context';
 import { PlaygroundCollabCursor } from './playground-collab-cursor';
 // import { getRewriteRule } from '~/utils/rewrite-imports';
 
-type MonacoEditor = monaco.editor.IStandaloneCodeEditor;
+export type MonacoEditor = monaco.editor.IStandaloneCodeEditor;
 
 loader.config({ monaco });
 
