@@ -280,7 +280,11 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
                   colorScheme="purple"
                   onClick={async () => {
                     setInputsAtTimeOfRun();
-                    setRunId(await run(true));
+                    setRunId(
+                      await run({
+                        shouldSave: appInfo.canUserEdit,
+                      }),
+                    );
                   }}
                   display="flex"
                   gap={2}

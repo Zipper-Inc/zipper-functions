@@ -57,7 +57,7 @@ const ConnectorSidebarTips = (connectorId?: string | null) => {
  * figure this out nicely
  * fine to hardcode for now
  */
-const APPROXIMATE_HEADER_HEIGHT_PX = '175px';
+const APPROXIMATE_HEADER_HEIGHT_PX = '160px';
 const MAX_CODE_TAB_HEIGHT = `calc(100vh - ${APPROXIMATE_HEADER_HEIGHT_PX})`;
 
 type CodeTabProps = {
@@ -68,7 +68,7 @@ type CodeTabProps = {
 
 export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
   const { currentScript, onChange, onValidate, monacoRef } = useEditorContext();
-  const { isRunning, run, boot: saveAndBoot } = useRunAppContext();
+  const { isRunning, run, boot } = useRunAppContext();
   const [expandedResult, setExpandedResult] = useState<
     AppEditSidebarContextType['expandedResult']
   >({});
@@ -85,7 +85,7 @@ export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
     async (e: Event) => {
       e.preventDefault();
       try {
-        await saveAndBoot();
+        await boot({ shouldSave: true });
       } catch (e: any) {
         toast({
           title: 'There was an error while saving',
@@ -105,7 +105,7 @@ export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
       e.preventDefault();
       setExpandedResult({});
       if (!isRunning) {
-        run();
+        run({ shouldSave: true });
       }
     },
     [],

@@ -288,7 +288,7 @@ export default function PlaygroundEditor(
       });
 
       // start the boot don't wait for it to finish
-      boot();
+      boot({ shouldSave: false });
       setIsModelReady(true);
 
       if (process.env.NODE_ENV === 'development')

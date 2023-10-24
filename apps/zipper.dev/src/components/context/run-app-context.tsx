@@ -30,8 +30,11 @@ export type RunAppContextType = {
   results: Record<string, string>;
   userAuthConnectors: UserAuthConnector[];
   setResults: (results: Record<string, string>) => void;
-  run: (isCurrentFileAsEntryPoint?: boolean) => Promise<string | undefined>;
-  boot: () => Promise<void>;
+  run: (params?: {
+    shouldSave?: boolean;
+    isCurrentScriptEntryPoint?: boolean;
+  }) => Promise<string | undefined>;
+  boot: (params?: { shouldSave?: boolean }) => Promise<void>;
   configs: Zipper.BootPayload['configs'];
 };
 
@@ -213,9 +216,12 @@ export function RunAppProvider({
     logTimersToCleanUp.current.push(id);
   };
 
-  const boot = async () => {
+  const boot = async ({ shouldSave = false } = {}) => {
     try {
-      const hash = await saveAppBeforeRun();
+      const hash = shouldSave
+        ? await saveAppBeforeRun()
+        : app.playgroundVersionHash;
+
       const version = getAppVersionFromHash(hash);
       if (!version) throw new Error('No version found');
 
@@ -236,15 +242,17 @@ export function RunAppProvider({
     }
   };
 
-  const run = async (isCurrentFileTheEntryPoint?: boolean) => {
-    if (!inputParams) return;
+  const run: RunAppContextType['run'] = async ({ shouldSave = false } = {}) => {
+    if (!inputParams || !currentScript) return;
     if (!preserveLogs) setLogStore(() => ({}));
     setIsRunning(true);
 
     let version: string | undefined = undefined;
 
     try {
-      const hash = await saveAppBeforeRun();
+      const hash = shouldSave
+        ? await saveAppBeforeRun()
+        : app.playgroundVersionHash;
       version = getAppVersionFromHash(hash);
 
       if (!version) throw new Error('No version found');
@@ -252,9 +260,8 @@ export function RunAppProvider({
       console.log(e);
       setResults({
         ...results,
-        [isCurrentFileTheEntryPoint
-          ? currentScript?.filename || 'main.ts'
-          : 'main.ts']: 'Something went wrong. Check the console for errors.',
+        [currentScript.filename]:
+          'Something went wrong. Check the console for errors.',
       });
       setIsRunning(false);
       return;
@@ -315,7 +322,7 @@ export function RunAppProvider({
     const result = await runAppMutation.mutateAsync({
       formData: formValues,
       appId: id,
-      scriptId: isCurrentFileTheEntryPoint ? currentScript?.id : undefined,
+      scriptId: currentScript.id,
       runId,
     });
 
