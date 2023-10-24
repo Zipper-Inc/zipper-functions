@@ -60,7 +60,7 @@
     "@monaco-editor/react": "^4.4.6",
     "@next/env": "^13.2.4",
     "@nicksrandall/console-feed": "^3.5.0",
-    "@prisma/client": "^4.11.0",
+    "@prisma/client": "^5.4.2",
     "@react-email/components": "^0.0.7",
     "@sentry/nextjs": "^7.51.0",
     "@tanstack/react-query": "^4.35.3",
@@ -163,7 +163,7 @@
     "jest-mock-extended": "^3.0.1",
     "nodemon": "^2.0.22",
     "prettier": "^2.8.8",
-    "prisma": "^4.3.1",
+    "prisma": "^5.4.2",
     "raw-loader": "^4.0.2",
     "ts-jest": "^29.0.5",
     "ts-node": "^10.9.1"
