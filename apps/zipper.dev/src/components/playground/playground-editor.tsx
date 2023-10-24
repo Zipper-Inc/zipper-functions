@@ -34,7 +34,7 @@ import { set } from 'lodash';
 import { Script } from '@prisma/client';
 // import { getRewriteRule } from '~/utils/rewrite-imports';
 
-type MonacoEditor = monaco.editor.IStandaloneCodeEditor;
+export type MonacoEditor = monaco.editor.IStandaloneCodeEditor;
 
 loader.config({ monaco });
 

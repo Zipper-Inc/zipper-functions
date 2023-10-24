@@ -31,6 +31,7 @@ export * from '../src/components/website/Footer';
 export * from '../src/components/website';
 export * from '../src/components/website/Navbar';
 export * from '../src/components/website/Wrapper';
+export * from '../src/components/app-author';
 export * from '../src/components/auto-resize-text-area';
 export * from '../src/components/code';
 export * from '../src/components/error-boundary';

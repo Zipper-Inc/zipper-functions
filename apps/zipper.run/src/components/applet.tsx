@@ -1,8 +1,6 @@
 import {
-  Avatar,
   Box,
   Button,
-  Flex,
   Heading,
   HStack,
   Progress,
@@ -19,6 +17,7 @@ import {
   UserAuthConnector,
 } from '@zipper/types';
 import {
+  AppletAuthor,
   FunctionOutput,
   useAppletContent,
   useCmdOrCtrl,
@@ -58,6 +57,7 @@ import ConnectorsAuthInputsSection from './connectors-auth-inputs-section';
 import Header from './header';
 import InputSummary from './input-summary';
 import Unauthorized from './unauthorized';
+import TimeAgo from 'timeago-react';
 
 const { __DEBUG__ } = process.env;
 
@@ -138,7 +138,7 @@ export function AppPage({
     config: currentFileConfig,
   });
   const shouldShowDescription =
-    shouldShowDescriptionPassedIn && description && isOpen;
+    shouldShowDescriptionPassedIn && description && isOpen && !isEmbedded;
   const previousRouteRef = useRef(asPath);
 
   // We have to do this so that the results aren't SSRed
@@ -209,28 +209,6 @@ export function AppPage({
         });
       }
     }
-  };
-
-  const getRelativeTime = (date: Date) => {
-    const now = new Date();
-    const secondsAgo = Math.floor((now.getTime() - date.getTime()) / 1000);
-
-    if (secondsAgo < 60) {
-      return `Less than a minute ago`;
-    }
-
-    const minutesAgo = Math.floor(secondsAgo / 60);
-    if (minutesAgo < 60) {
-      return `${minutesAgo} minutes ago`;
-    }
-
-    const hoursAgo = Math.floor(minutesAgo / 60);
-    if (hoursAgo < 24) {
-      return `${hoursAgo} hours ago`;
-    }
-
-    const daysAgo = Math.floor(hoursAgo / 24);
-    return `${daysAgo} days ago`;
   };
 
   useCmdOrCtrl(
@@ -394,36 +372,39 @@ export function AppPage({
       pt={0}
       mt={0}
     >
-      {title && (
-        <Heading as="h1" fontSize="4xl" fontWeight="medium">
+      {shouldShowDescription && title && (
+        <Heading
+          as="h1"
+          fontSize="4xl"
+          fontWeight="medium"
+          borderBottomColor="gray.50"
+          borderBottomWidth="1px"
+          pb={2}
+        >
           {title}
         </Heading>
       )}
-      <HStack
-        align="center"
-        alignItems="start"
-        pb={2}
-        borderBottomColor="gray.50"
-        borderBottomWidth="1px"
-      >
-        <Button
-          px={0}
-          variant="ghost"
-          colorScheme="purple"
-          size="sm"
-          fontWeight="normal"
-          leftIcon={
-            isOpen ? (
-              <HiChevronDoubleLeft size={12} />
-            ) : (
-              <HiChevronDoubleRight size={12} />
-            )
-          }
-          _hover={{ bgColor: 'transparent' }}
-          onClick={onToggle}
-        >
-          {isOpen ? 'Hide' : 'Show'} App Details
-        </Button>
+      <HStack align="center" alignItems="start" pb={2}>
+        {shouldShowDescription && (
+          <Button
+            px={0}
+            variant="ghost"
+            colorScheme="purple"
+            size="sm"
+            fontWeight="normal"
+            leftIcon={
+              isOpen ? (
+                <HiChevronDoubleLeft size={12} />
+              ) : (
+                <HiChevronDoubleRight size={12} />
+              )
+            }
+            _hover={{ bgColor: 'transparent' }}
+            onClick={onToggle}
+          >
+            {isOpen ? 'Hide' : 'Show'} App Details
+          </Button>
+        )}
         {showRunOutput && runContent}
       </HStack>
       <Stack
@@ -445,34 +426,12 @@ export function AppPage({
             animate={isOpen ? 'open' : 'closed'}
             variants={variants}
           >
-            <Flex direction="row" gap={4} alignItems="center">
-              <Stack direction="row">
-                <Avatar
-                  src={app.appAuthor?.image}
-                  size="xs"
-                  name={app.appAuthor?.name}
-                />
-                <Text fontSize="14">
-                  by <strong>{app.appAuthor?.name}</strong>
-                </Text>
-              </Stack>
-              <Stack direction="row">
-                <Avatar
-                  src={app.appAuthor?.orgImage}
-                  size="xs"
-                  name={app.appAuthor?.organization}
-                />
-                <Text fontSize="14" fontWeight="bold">
-                  {app.appAuthor?.organization
-                    ? `${app.appAuthor.organization}`
-                    : ''}
-                </Text>
-              </Stack>
-            </Flex>
+            {app.appAuthor && <AppletAuthor author={app.appAuthor} />}
             <Stack>
-              <Text color="gray.500" fontSize="14">
-                Last updated at{' '}
-                {app.updatedAt && getRelativeTime(new Date(app.updatedAt))}
+              <Text fontSize="xs" color="fg.500">
+                <>
+                  Last published <TimeAgo datetime={app.updatedAt!} />
+                </>
               </Text>
             </Stack>
             <Stack>
