@@ -77,18 +77,23 @@ export function PrismaAdapter(p: PrismaClient): Adapter {
     async getSessionAndUser(sessionToken) {
       const userAndSession = await p.session.findUnique({
         where: { sessionToken },
-        include: { user: true },
+        include: { user: { include: { settings: true } } },
       });
       if (!userAndSession) return null;
       const { user, currentOrganizationId, ...session } = userAndSession;
-      return { user, currentOrganizationId, session };
+      return {
+        user: { ...user, sessionToken },
+        currentOrganizationId,
+        session,
+      };
     },
     createSession: (data) => p.session.create({ data }),
-    updateSession: (data) =>
-      p.session.update({
+    updateSession: (data) => {
+      return p.session.update({
         where: { sessionToken: data.sessionToken },
         data,
-      }),
+      });
+    },
     deleteSession: (sessionToken) =>
       p.session.delete({ where: { sessionToken } }),
     async createVerificationToken(data) {
@@ -190,13 +195,17 @@ async function refreshAccessToken(session: Session) {
   }
 }
 
-const getCurrentOrganizationId = async (userId: string) => {
-  const query = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { currentOrganizationId: true },
+const getCurrentOrganizationId = async (
+  userId: string,
+  sessionToken?: string,
+) => {
+  if (!sessionToken) return;
+  const query = await prisma.session.findUnique({
+    where: { sessionToken },
+    select: { currentOrganiationId: true },
   });
 
-  return query?.currentOrganizationId;
+  return query?.currentOrganiationId;
 };
 
 const getOrganizationMemberships = async (
@@ -309,7 +318,8 @@ export const authOptions: AuthOptions = {
         );
 
         session.currentOrganizationId =
-          (await getCurrentOrganizationId(user.id)) || undefined;
+          (await getCurrentOrganizationId(user.id, user.sessionToken)) ||
+          undefined;
 
         if (trigger === 'update') {
           if (newSession.updateOrganizationList) {
@@ -321,6 +331,15 @@ export const authOptions: AuthOptions = {
 
           if (newSession.currentOrganizationId === null) {
             session.currentOrganizationId = undefined;
+
+            await prisma.session.update({
+              where: {
+                sessionToken: user.sessionToken,
+              },
+              data: {
+                currentOrganiationId: null,
+              },
+            });
           }
 
           if (newSession.updateProfile) {
@@ -343,12 +362,12 @@ export const authOptions: AuthOptions = {
               )
             ) {
               session.currentOrganizationId = newSession.currentOrganizationId;
-              // update the database with the new current organization id
-
-              await prisma.user.update({
-                where: { id: user.id },
+              await prisma.session.update({
+                where: {
+                  sessionToken: user.sessionToken,
+                },
                 data: {
-                  currentOrganizationId: newSession.currentOrganizationId,
+                  currentOrganiationId: newSession.currentOrganizationId,
                 },
               });
             }
@@ -459,7 +478,7 @@ Sachin & Ibu
       });
     },
   },
-  debug: process.env.NODE_ENV === 'development',
+  // debug: process.env.NODE_ENV === 'development',
   useSecureCookies: process.env.NODE_ENV === 'production',
 };
 
@@ -479,6 +498,7 @@ declare module 'next-auth' {
     newUser?: boolean;
     settings?: UserSetting[];
     createdAt?: Date;
+    sessionToken?: string;
   }
 }
 

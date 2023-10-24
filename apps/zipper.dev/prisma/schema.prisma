@@ -317,6 +317,7 @@ model Session {
   sessionToken String   @unique
   userId       String
   expires      DateTime
+  currentOrganizationId String?
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("sessions")
