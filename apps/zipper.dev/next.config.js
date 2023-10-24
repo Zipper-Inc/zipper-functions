@@ -69,6 +69,7 @@ module.exports = getConfig({
     'monaco-languageclient',
   ],
   images: {
+    dangerouslyAllowSVG: true,
     remotePatterns: [
       {
         protocol: 'https',
@@ -77,6 +78,10 @@ module.exports = getConfig({
       {
         protocol: 'https',
         hostname: 'avatars.githubusercontent.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'imagedelivery.net',
       },
     ],
   },

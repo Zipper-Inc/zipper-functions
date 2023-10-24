@@ -154,7 +154,7 @@ const AboutPage: NextPageWithLayout = () => {
                     position="relative"
                   >
                     <Image
-                      src="/static/sachin.png"
+                      src="https://imagedelivery.net/mehHBP8u01yKLn8uDjx8Yw/6f1ce348-dde5-4e05-5328-7c19cc393d00/public"
                       fill
                       style={{
                         objectFit: 'cover',
@@ -180,7 +180,7 @@ const AboutPage: NextPageWithLayout = () => {
                     position="relative"
                   >
                     <Image
-                      src="/static/ibu.png"
+                      src="https://imagedelivery.net/mehHBP8u01yKLn8uDjx8Yw/747e75e8-fbe9-409f-6e59-f3edf26ccb00/public"
                       fill
                       style={{
                         objectFit: 'cover',

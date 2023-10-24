@@ -88,7 +88,8 @@ const WEB_FIRST_CONTENT = {
       COLOR: 'purple',
       DESCRIPTION:
         'Automate repetitive tasks and workflows or respond to triggers with the flexibility of code. You don’t have to be limited by the constraits of no-code tools.',
-      IMAGE_URL: '/static/sass_integration.png',
+      IMAGE_URL:
+        'https://imagedelivery.net/mehHBP8u01yKLn8uDjx8Yw/6a1df0d5-c709-40ba-9eec-6db93cba2700/public',
     },
     {
       ICON: <FiTool />,
@@ -96,7 +97,8 @@ const WEB_FIRST_CONTENT = {
       COLOR: 'blue',
       DESCRIPTION:
         'A better way to run scripts or create admin tools for your own APIs or databases. With auth and audit logs built-in, never build from scratch.',
-      IMAGE_URL: '/static/tool_as_service.png',
+      IMAGE_URL:
+        'https://imagedelivery.net/mehHBP8u01yKLn8uDjx8Yw/94e29273-6c81-4753-df75-ec6a61610a00/public',
     },
     {
       ICON: <FiCode />,
@@ -104,7 +106,8 @@ const WEB_FIRST_CONTENT = {
       COLOR: 'brandOrange',
       DESCRIPTION:
         'Handle expensive or unique tasks on our edge infrastructure, close to your users. Run them on a schedule or in response to an event to effortlessly scale your apps.',
-      IMAGE_URL: '/static/worker_functions.png',
+      IMAGE_URL:
+        'https://imagedelivery.net/mehHBP8u01yKLn8uDjx8Yw/463c0266-9b75-4049-b20e-850043ce8c00/public',
     },
     {
       ICON: <FiLoader />,
@@ -112,7 +115,8 @@ const WEB_FIRST_CONTENT = {
       COLOR: 'gray',
       DESCRIPTION:
         'An instant TypeScript REPL with a built-in frontend framework where you can see your results immediately. What will you build?',
-      IMAGE_URL: '/static/editor.png',
+      IMAGE_URL:
+        'https://imagedelivery.net/mehHBP8u01yKLn8uDjx8Yw/332ba10b-9ef4-4a2e-df03-2fd86da27800/public',
     },
   ],
 };
@@ -133,42 +137,48 @@ const FEATURES_CONTENT = {
       color: baseColors.purple['500'],
       description:
         'Publish your code to a public facing URL with the click of a button.  ',
-      picture: '/layout/deploy.svg',
+      picture:
+        'https://imagedelivery.net/mehHBP8u01yKLn8uDjx8Yw/8f2c712f-73e1-4248-699c-5d3b2085d800/public',
     },
     {
       title: 'A simple web framework',
       color: baseColors.brandOrange['500'],
       description:
         'Every file that exports a `handler` function automatically becomes a route in your app. Pass inputs to your handler, get back an output. ',
-      picture: '/layout/handler.svg',
+      picture:
+        'https://imagedelivery.net/mehHBP8u01yKLn8uDjx8Yw/58a167ac-6b48-42ea-c950-98b380a0be00/public',
     },
     {
       title: 'UI without any frontend code',
       color: baseColors.blue['500'],
       description:
         'The inputs to your functions become forms to collect user input and the outputs get turned into a functional UI.	  ',
-      picture: '/layout/ui.svg',
+      picture:
+        'https://imagedelivery.net/mehHBP8u01yKLn8uDjx8Yw/e1b24cae-5c03-4890-b8cf-96cd10093a00/public',
     },
     {
       title: 'API endpoints for every route',
       color: baseColors.purple['500'],
       description:
         'Every route accepts GET & POST requests that can be secured with bearer tokens. Perfect for receiving webhooks or integrating into other pieces of software.',
-      picture: '/layout/getpost.svg',
+      picture:
+        'https://imagedelivery.net/mehHBP8u01yKLn8uDjx8Yw/4c396c98-bb64-4e66-8e75-c0425eda7900/public',
     },
     {
       title: 'Built-in storage',
       color: baseColors.blue['500'],
       description:
         'Each applet has its own KV store for managing data across runs.   ',
-      picture: '/layout/storage.svg',
+      picture:
+        'https://imagedelivery.net/mehHBP8u01yKLn8uDjx8Yw/08072c02-05da-4755-47a5-3571686c6d00/public',
     },
     {
       title: 'Authentication connectors',
       color: baseColors.purple['500'],
       description:
         'Force users to sign in to other services (such as Slack or GitHub) before running your applet.',
-      picture: '/layout/auth.svg',
+      picture:
+        'https://imagedelivery.net/mehHBP8u01yKLn8uDjx8Yw/3c692d41-2053-4f20-7e85-de5ef3d80c00/public',
     },
   ],
 };
@@ -357,10 +367,10 @@ const Hero = () => {
         animate={box1Animation}
       >
         <Image
-          src="/static/animation_code.png"
+          src="https://imagedelivery.net/mehHBP8u01yKLn8uDjx8Yw/3d230f31-c026-46df-871c-1af73b0b2a00/public"
           width="440"
           height="330"
-          alt="Hero App"
+          alt="Code"
         />
       </Box>
       <Box
@@ -372,10 +382,10 @@ const Hero = () => {
         animate={box2Animation}
       >
         <Image
-          src="/static/animation_applet.png"
+          src="https://imagedelivery.net/mehHBP8u01yKLn8uDjx8Yw/0324136d-a4ab-423c-0b54-36ada8812b00/public"
           width="440"
           height="330"
-          alt="Hero App"
+          alt="Applet"
         />
       </Box>
 
@@ -430,8 +440,8 @@ const Hero = () => {
         height="373px"
         animate={box1Animation}
       >
-        <Image
-          src="/static/app.png"
+        <img
+          src="https://imagedelivery.net/mehHBP8u01yKLn8uDjx8Yw/ccf8ca49-2867-4da8-8ebb-436ed96c6900/public"
           style={{ objectFit: 'cover' }}
           width="536"
           height="373"
@@ -447,9 +457,9 @@ const Hero = () => {
         top={20}
         height="600"
       >
-        <Image
+        <img
           style={{ objectFit: 'cover' }}
-          src="/static/code.png"
+          src="https://imagedelivery.net/mehHBP8u01yKLn8uDjx8Yw/b8604b92-1682-4bcf-40fd-2f1fe310b300/public"
           width={720}
           height={480}
           alt="Editor"
@@ -465,9 +475,9 @@ const Hero = () => {
         height="400"
         animate={box2Animation}
       >
-        <Image
+        <img
           style={{ objectFit: 'cover' }}
-          src="/static/api.png"
+          src="https://imagedelivery.net/mehHBP8u01yKLn8uDjx8Yw/6230c188-d788-48f4-6cc8-8a8465d9d000/public"
           width="400"
           height="400"
           alt="Modal"
@@ -1031,7 +1041,7 @@ const AppletsGallery = () => {
                 position="relative"
               >
                 <Image
-                  src={`thumbs/${app.slug}/${
+                  src={`/thumbs/${app.slug}/${
                     isLargerThan600 && !isLargerThan880
                       ? 'md'
                       : isLargerThan880
