@@ -1,4 +1,4 @@
-import { Box, Link, Stack, StackDivider } from '@chakra-ui/react';
+import { Flex, Link, Stack, StackDivider } from '@chakra-ui/react';
 import { OutputType } from '@zipper/types';
 
 import React from 'react';
@@ -63,9 +63,9 @@ export function SmartFunctionOutput({
 
       const srcDoc = __dangerouslyAllowScripts ? data : stripJs(data);
       return (
-        <Box>
-          <iframe width="100%" height="400px" srcDoc={srcDoc} />
-        </Box>
+        <Flex height="full" width="full">
+          <iframe height="100%" width="100%`" srcDoc={srcDoc} />
+        </Flex>
       );
 
     case OutputType.Object:

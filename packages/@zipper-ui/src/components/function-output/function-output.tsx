@@ -3,6 +3,7 @@ import {
   Button,
   ChakraProps,
   Divider,
+  Flex,
   Heading,
   HStack,
   Icon,
@@ -51,7 +52,13 @@ const stickyTabsStyles: ChakraProps = {
   pt: 4,
   background: 'bgColor',
 };
-const tabsStyles: ChakraProps = { display: 'flex', flexDir: 'column', gap: 0 };
+const tabsStyles: ChakraProps = {
+  display: 'flex',
+  flexDir: 'column',
+  gap: 0,
+  width: 'full',
+  height: 'full',
+};
 const tablistStyles: ChakraProps = {
   gap: 1,
   border: '1px',
@@ -453,7 +460,11 @@ export function FunctionOutput({
       >
         <>
           <Tabs colorScheme="purple" variant="enclosed" {...tabsStyles}>
-            <Box {...(stickyTabs ? stickyTabsStyles : undefined)}>
+            <VStack
+              h="full"
+              w="full"
+              {...(stickyTabs ? stickyTabsStyles : undefined)}
+            >
               <TabList {...tablistStyles} display={showTabs ? 'flex' : 'none'}>
                 <Tab {...tabButtonStyles}>Results</Tab>
                 <Tab {...tabButtonStyles}>Raw Output</Tab>
@@ -473,6 +484,8 @@ export function FunctionOutput({
               <TabPanels
                 border={showTabs ? '1px solid' : 'none'}
                 borderColor="fg.200"
+                w="full"
+                h="full"
               >
                 <TabPanel
                   p={
@@ -480,8 +493,9 @@ export function FunctionOutput({
                       ? 0
                       : undefined
                   }
+                  h="full"
                 >
-                  <Box overflow="auto">
+                  <Box overflow="auto" h="full">
                     {applet.showGoBackLink() && (
                       <>
                         <Button
@@ -499,6 +513,7 @@ export function FunctionOutput({
                     )}
                     <Box
                       width="full"
+                      height="full"
                       data-function-output="smart"
                       whiteSpace="pre-wrap"
                     >
@@ -552,7 +567,7 @@ export function FunctionOutput({
                   />
                 </TabPanel>
               </TabPanels>
-            </Box>
+            </VStack>
           </Tabs>
           {currentContext === 'main' && (
             <Modal
