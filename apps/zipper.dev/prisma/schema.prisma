@@ -339,7 +339,6 @@ model User {
   deletedAt DateTime?
 
   organizationMemberships OrganizationMembership[]
-  currentOrganizationId   String?
 
   @@map("users")
 }
