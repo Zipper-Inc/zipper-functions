@@ -23,6 +23,7 @@ import { trackEvent } from '~/utils/api-analytics';
 import { buildAndStoreApplet } from '~/utils/eszip-build-applet';
 import { generateDefaultSlug } from '~/utils/generate-default';
 import getRunUrl, { getBootUrl } from '~/utils/get-run-url';
+import { AppletAuthorReturnType } from '~/utils/get-user-info';
 import { getAppVersionFromHash, getScriptHash } from '~/utils/hashing';
 import isCodeRunnable from '~/utils/is-code-runnable';
 import { generateAccessToken } from '~/utils/jwt-utils';
@@ -522,11 +523,39 @@ export const appRouter = createTRPCRouter({
         },
       });
 
+      const appAuthor: AppletAuthorReturnType = {
+        name: '',
+        organization: '',
+        image: '',
+        orgImage: '',
+      };
+
+      const authorName = await prisma.user.findUnique({
+        where: {
+          id: resourceOwner.resourceOwnerId,
+        },
+        include: {
+          organizationMemberships: true,
+        },
+      });
+
+      if (app.organizationId) {
+        const authorOrg = await prisma.organization.findUnique({
+          where: {
+            id: app.organizationId,
+          },
+        });
+        appAuthor.organization = authorOrg?.name || '';
+      }
+
+      appAuthor.name = authorName?.name || '';
+      appAuthor.image = authorName?.image || '';
+
       const canEdit = canUserEdit(app, ctx);
       if (app.isPrivate && !canEdit)
         throw new TRPCError({ code: 'UNAUTHORIZED' });
       // return the app
-      return { ...app, resourceOwner, canUserEdit: canEdit };
+      return { ...app, resourceOwner, canUserEdit: canEdit, appAuthor };
     }),
   byResourceOwner: publicProcedure
     .input(

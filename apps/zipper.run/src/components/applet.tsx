@@ -57,6 +57,7 @@ import ConnectorsAuthInputsSection from './connectors-auth-inputs-section';
 import Header from './header';
 import InputSummary from './input-summary';
 import Unauthorized from './unauthorized';
+import TimeAgo from 'timeago-react';
 
 const { __DEBUG__ } = process.env;
 
@@ -208,28 +209,6 @@ export function AppPage({
         });
       }
     }
-  };
-
-  const getRelativeTime = (date: Date) => {
-    const now = new Date();
-    const secondsAgo = Math.floor((now.getTime() - date.getTime()) / 1000);
-
-    if (secondsAgo < 60) {
-      return `Less than a minute ago`;
-    }
-
-    const minutesAgo = Math.floor(secondsAgo / 60);
-    if (minutesAgo < 60) {
-      return `${minutesAgo} minutes ago`;
-    }
-
-    const hoursAgo = Math.floor(minutesAgo / 60);
-    if (hoursAgo < 24) {
-      return `${hoursAgo} hours ago`;
-    }
-
-    const daysAgo = Math.floor(hoursAgo / 24);
-    return `${daysAgo} days ago`;
   };
 
   useCmdOrCtrl(
@@ -449,9 +428,10 @@ export function AppPage({
           >
             {app.appAuthor && <AppletAuthor author={app.appAuthor} />}
             <Stack>
-              <Text color="gray.500" fontSize="14">
-                Last updated at{' '}
-                {app.updatedAt && getRelativeTime(new Date(app.updatedAt))}
+              <Text fontSize="xs" color="fg.500">
+                <>
+                  Last published <TimeAgo datetime={app.updatedAt!} />
+                </>
               </Text>
             </Stack>
             <Stack>

@@ -16,12 +16,14 @@ export const AppletAuthor: React.FC<Props> = ({ author }) => {
   return (
     <>
       <Flex direction="row" gap={4} alignItems="center">
-        <Stack direction="row">
-          <Avatar src={image} size="xs" name={name} />
-          <Text fontSize="14">
-            by <strong>{name}</strong>
-          </Text>
-        </Stack>
+        {name && (
+          <Stack direction="row">
+            <Avatar src={image} size="xs" name={name} />
+            <Text fontSize="14">
+              by <strong>{name}</strong>
+            </Text>
+          </Stack>
+        )}
         {organization && (
           <Stack direction="row">
             <Avatar src={orgImage} size="xs" name={organization} />
