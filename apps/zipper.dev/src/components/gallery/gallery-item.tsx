@@ -1,4 +1,4 @@
-import NextLink from 'next/link';
+import Link from 'next/link';
 import {
   Card,
   CardBody,
@@ -7,6 +7,7 @@ import {
   Badge,
   Box,
   Text,
+  Button,
 } from '@chakra-ui/react';
 import AppAvatar from '../app-avatar';
 import { RouterOutputs } from '~/utils/trpc';
@@ -25,38 +26,41 @@ export const GalleryItem: React.FC<GalleryItemProps> = ({ app }) => {
 
   return (
     <Box>
-      <NextLink href={`/${app.resourceOwner.slug}/${app.slug}`}>
-        <Card
-          background="bgColor"
-          flexGrow={1}
-          overflow="hidden"
-          maxW="800px"
-          minH="full"
+      <Card
+        background="bgColor"
+        flexGrow={1}
+        overflow="hidden"
+        maxW="800px"
+        minH="full"
+        boxShadow="none"
+        borderWidth="1px"
+        borderColor="fg.200"
+      >
+        <CardBody
+          padding={0}
+          as={HStack}
+          alignItems="start"
+          justifyContent="stretch"
+          p={6}
+          spacing={4}
         >
-          <CardBody
-            padding={0}
-            as={HStack}
-            alignItems="start"
-            justifyContent="stretch"
-            p={6}
-            spacing={4}
-          >
-            <Box w={24}>
-              <AppAvatar nameOrSlug={nameOrSlug} />
-            </Box>
+          <Box w={24}>
+            <AppAvatar nameOrSlug={nameOrSlug} />
+          </Box>
+          <VStack alignItems="start" spacing={8} flex={1}>
             <VStack alignItems="start" spacing="-0.5" flex={1}>
               <Text as="h2" fontSize="lg" fontWeight="semibold">
                 {nameOrSlug}{' '}
               </Text>
               <HStack>
                 <Text
-                  as={'span'}
+                  as="span"
                   fontSize="md"
                   fontStyle="italic"
                   fontWeight="light"
                 >
                   by
-                </Text>{' '}
+                </Text>
                 <Text as="span" fontSize="md" fontWeight="normal">
                   {app.resourceOwner.slug}
                 </Text>
@@ -73,6 +77,7 @@ export const GalleryItem: React.FC<GalleryItemProps> = ({ app }) => {
               </HStack>
               <Text
                 pt="2"
+                color="fg.500"
                 fontSize="sm"
                 isTruncated
                 noOfLines={2}
@@ -81,9 +86,21 @@ export const GalleryItem: React.FC<GalleryItemProps> = ({ app }) => {
                 {app.description}
               </Text>
             </VStack>
-          </CardBody>
-        </Card>
-      </NextLink>
+            <HStack spacing={4}>
+              <Button variant="outline" colorScheme="purple">
+                <Link href={`/${app.resourceOwner.slug}/${app.slug}`}>
+                  Open Applet
+                </Link>
+              </Button>
+              <Button variant="ghost" colorScheme="purple">
+                <Link href={`/gallery/${app.resourceOwner.slug}/${app.slug}`}>
+                  Learn more
+                </Link>
+              </Button>
+            </HStack>
+          </VStack>
+        </CardBody>
+      </Card>
     </Box>
   );
 };
