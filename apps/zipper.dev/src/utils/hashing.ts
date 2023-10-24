@@ -3,13 +3,15 @@ import hash from 'object-hash';
 
 const APP_VERSION_LENGTH = 7;
 
+const normalizeCodeForHashing = (code = '') => code.trimEnd();
+
 export function getScriptHash(
   script: Pick<Script, 'appId' | 'filename' | 'code'>,
 ) {
   const { appId, filename, code } = script;
 
   return hash(
-    { appId, filename, code },
+    { appId, filename, code: normalizeCodeForHashing(code) },
     {
       algorithm: 'sha1',
     },

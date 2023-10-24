@@ -342,13 +342,8 @@ async function runEditorActionsNow({
   const linter = readOnly ? noop : runZipperLinter;
 
   try {
-    // For purpose of checking the hash to tell if its dirty, we'll trim the end and deal with whitespace at save
-    const newHash = getScriptHash({ ...currentScript, code: value.trimEnd() });
-    const oldHash = getScriptHash({
-      ...currentScript,
-      code: currentScript.code.trimEnd(),
-    });
-
+    const oldHash = currentScript.hash;
+    const newHash = getScriptHash({ ...currentScript, code: value });
     setModelIsDirty(currentScript.filename, newHash !== oldHash);
 
     const { inputs, imports } = parseCode({
