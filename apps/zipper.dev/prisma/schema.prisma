@@ -323,12 +323,12 @@ model Session {
 }
 
 model User {
-  id            String    @id @default(uuid())
+  id            String        @id @default(uuid())
   name          String?
-  email         String    @unique
+  email         String        @unique
   emailVerified DateTime?
   image         String?
-  slug          String    @unique
+  slug          String        @unique
   accounts      Account[]
   sessions      Session[]
   settings      UserSetting[]
@@ -338,6 +338,7 @@ model User {
   deletedAt DateTime?
 
   organizationMemberships OrganizationMembership[]
+  currentOrganizationId   String?
 
   @@map("users")
 }

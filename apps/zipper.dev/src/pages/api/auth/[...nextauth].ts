@@ -80,12 +80,15 @@ export function PrismaAdapter(p: PrismaClient): Adapter {
         include: { user: true },
       });
       if (!userAndSession) return null;
-      const { user, ...session } = userAndSession;
-      return { user, session };
+      const { user, currentOrganizationId, ...session } = userAndSession;
+      return { user, currentOrganizationId, session };
     },
     createSession: (data) => p.session.create({ data }),
     updateSession: (data) =>
-      p.session.update({ where: { sessionToken: data.sessionToken }, data }),
+      p.session.update({
+        where: { sessionToken: data.sessionToken },
+        data,
+      }),
     deleteSession: (sessionToken) =>
       p.session.delete({ where: { sessionToken } }),
     async createVerificationToken(data) {
@@ -186,6 +189,15 @@ async function refreshAccessToken(session: Session) {
     return { ...session, error: 'RefreshAccessTokenError' as const };
   }
 }
+
+const getCurrentOrganizationId = async (userId: string) => {
+  const query = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { currentOrganizationId: true },
+  });
+
+  return query?.currentOrganizationId;
+};
 
 const getOrganizationMemberships = async (
   userId?: string,
@@ -296,9 +308,10 @@ export const authOptions: AuthOptions = {
           user.email,
         );
 
-        if (trigger === 'update') {
-          console.log('update triggered: ', session);
+        session.currentOrganizationId =
+          (await getCurrentOrganizationId(user.id)) || undefined;
 
+        if (trigger === 'update') {
           if (newSession.updateOrganizationList) {
             session.organizationMemberships = await getOrganizationMemberships(
               user.id,
@@ -330,6 +343,14 @@ export const authOptions: AuthOptions = {
               )
             ) {
               session.currentOrganizationId = newSession.currentOrganizationId;
+              // update the database with the new current organization id
+
+              await prisma.user.update({
+                where: { id: user.id },
+                data: {
+                  currentOrganizationId: newSession.currentOrganizationId,
+                },
+              });
             }
           }
         }
@@ -438,6 +459,8 @@ Sachin & Ibu
       });
     },
   },
+  debug: process.env.NODE_ENV === 'development',
+  useSecureCookies: process.env.NODE_ENV === 'production',
 };
 
 export default NextAuth(authOptions);
