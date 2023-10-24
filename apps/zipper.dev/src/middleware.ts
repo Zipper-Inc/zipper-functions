@@ -14,6 +14,31 @@ const parseZipperSrcPath = (req: NextRequest) => {
 };
 
 export default async (req: NextRequest) => {
+  const nonce = Buffer.from(crypto.randomUUID()).toString('base64');
+  const cspHeader = `
+    default-src 'self';
+    script-src 'self' 'nonce-${nonce}' 'strict-dynamic';
+    style-src 'self' 'nonce-${nonce}';
+    img-src 'self' blob: data:;
+    font-src 'self';
+    object-src 'none';
+    base-uri 'self';
+    form-action 'self';
+    frame-ancestors 'none';
+    block-all-mixed-content;
+    upgrade-insecure-requests;
+`;
+
+  const requestHeaders = new Headers(req.headers);
+
+  // Setting request headers
+  requestHeaders.set('x-nonce', nonce);
+  requestHeaders.set(
+    'Content-Security-Policy',
+    // Replace newline characters and spaces
+    cspHeader.replace(/\s{2,}/g, ' ').trim(),
+  );
+
   if (process.env.__DEBUG__) {
     console.log('middleware', {
       url: req.url,
@@ -32,7 +57,13 @@ export default async (req: NextRequest) => {
     return NextResponse.rewrite(url);
   }
 
-  const res = NextResponse.next();
+  const res = NextResponse.next({
+    headers: requestHeaders,
+    request: {
+      headers: requestHeaders,
+    },
+  });
+
   if (!req.cookies.get(ZIPPER_TEMP_USER_ID_COOKIE_NAME)) {
     res.cookies.set(
       ZIPPER_TEMP_USER_ID_COOKIE_NAME,
