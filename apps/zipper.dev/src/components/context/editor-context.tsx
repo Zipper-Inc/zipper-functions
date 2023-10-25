@@ -27,7 +27,13 @@ import debounce from 'lodash.debounce';
 import { uuid } from '@zipper/utils';
 import { prettyLog } from '~/utils/pretty-log';
 import { AppQueryOutput } from '~/types/trpc';
-import { getAppVersionFromHash, getScriptHash } from '~/utils/hashing';
+import {
+  getAppHash,
+  getAppHashAndVersion,
+  getAppHashFromScripts,
+  getAppVersionFromHash,
+  getScriptHash,
+} from '~/utils/hashing';
 import { isZipperImportUrl } from '~/utils/eszip-utils';
 import {
   getOrCreateScriptModel,
@@ -423,6 +429,17 @@ const EditorContextProvider = ({
     Record<string, boolean>
   >({});
 
+  const resetDirtyState = () => {
+    setModelsDirtyState(
+      (Object.keys(modelsDirtyState) as string[]).reduce((acc, elem) => {
+        return {
+          ...acc,
+          [elem]: false,
+        };
+      }, {} as Record<string, boolean>),
+    );
+  };
+
   const onChange: EditorProps['onChange'] = async (value = '', event) => {
     if (!monacoRef?.current || !currentScript) return;
     runEditorActionsDebounced({
@@ -582,47 +599,70 @@ const EditorContextProvider = ({
     }
   };
 
-  const saveOpenModels = async () => {
-    if (!appId || !currentScript)
-      throw new Error('Something went wrong while saving');
-
-    setIsSaving(true);
-    const version = getAppVersionFromHash(app.playgroundVersionHash);
-    addLog(
-      'info',
-      prettyLog({
-        badge: 'Save',
-        topic: `${appSlug}@${version}`,
-        subtopic: 'Pending',
-      }),
-    );
-
-    try {
+  const getCodeByFilename = async (applyFormatting = true) => {
+    if (applyFormatting) {
       const formatPromises = editor
         ?.getEditors()
         .map((e) => e.getAction('editor.action.formatDocument')?.run());
 
       if (formatPromises && formatPromises.length)
         await Promise.all(formatPromises).catch();
+    }
 
-      const fileValues: Record<string, string> = {};
-
-      editor?.getModels().map((model) => {
+    return (
+      editor?.getModels().reduce<Record<string, string>>((files, model) => {
         if (model.uri.scheme === 'file') {
           // Strip the extra '.ts' that's required by intellisense
-          fileValues[getPathFromUri(model.uri)] = model.getValue();
+          files[getPathFromUri(model.uri).replace(/^\//, '')] =
+            model.getValue();
         }
-      });
+        return files;
+      }, {}) || {}
+    );
+  };
 
-      setModelsDirtyState(
-        (Object.keys(modelsDirtyState) as string[]).reduce((acc, elem) => {
-          return {
-            ...acc,
-            [elem]: false,
-          };
-        }, {} as Record<string, boolean>),
+  const saveOpenModels = async () => {
+    if (!appId || !currentScript)
+      throw new Error('Something went wrong while saving');
+
+    const codeByFilename = await getCodeByFilename();
+
+    const hash = getAppHashFromScripts(
+      app,
+      scripts.map((s) => ({
+        ...s,
+        code: codeByFilename[s.filename] || '',
+      })),
+    );
+
+    if (hash === app.playgroundVersionHash) {
+      addLog(
+        'info',
+        prettyLog({
+          badge: 'Save',
+          topic: `${appSlug}@${getAppVersionFromHash(hash)}`,
+          subtopic: 'DONE',
+          msg: 'No changes detected',
+        }),
       );
+      resetDirtyState();
+      return hash;
+    }
 
+    setIsSaving(true);
+
+    const upcomingVersion = getAppVersionFromHash(hash);
+
+    addLog(
+      'info',
+      prettyLog({
+        badge: 'Save',
+        topic: `${appSlug}@${upcomingVersion}`,
+        subtopic: 'Pending',
+      }),
+    );
+
+    try {
       const newApp = await editAppMutation.mutateAsync({
         id: appId,
         data: {
@@ -631,20 +671,24 @@ const EditorContextProvider = ({
             data: {
               name: script.name,
               description: script.description || '',
-              code: fileValues[`/${script.filename}`],
+              code: codeByFilename[script.filename],
               filename: script.filename,
             },
           })),
         },
       });
-      refetchApp();
+
       setIsSaving(false);
 
-      if (!newApp.playgroundVersionHash) {
+      if (newApp.playgroundVersionHash !== hash) {
         throw new Error('Something went wrong while saving the applet');
       }
 
+      resetDirtyState();
+      await refetchApp();
+
       const newVersion = getAppVersionFromHash(newApp.playgroundVersionHash);
+
       addLog(
         'info',
         prettyLog({
@@ -652,9 +696,9 @@ const EditorContextProvider = ({
           topic: `${appSlug}@${newVersion}`,
           subtopic: 'Done',
           msg:
-            newVersion !== version
+            newVersion !== upcomingVersion
               ? 'You saved a new version.'
-              : 'No changes, the version is the same.',
+              : undefined,
         }),
       );
 
@@ -665,7 +709,7 @@ const EditorContextProvider = ({
         'error',
         prettyLog({
           badge: 'SAVE',
-          topic: `${appSlug}@${version}`,
+          topic: `${appSlug}@${upcomingVersion}`,
           subtopic: 'ERROR',
           msg: e.toString(),
         }),
@@ -679,7 +723,6 @@ const EditorContextProvider = ({
   };
 
   const setModelIsDirty = (path: string, isDirty: boolean) => {
-    console.log('this is called');
     if (path === 'types/zipper.d') return;
     setModelsDirtyState((previousModelsDirtyState) => {
       const newModelState = { ...previousModelsDirtyState };
