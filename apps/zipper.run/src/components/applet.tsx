@@ -57,7 +57,7 @@ import ConnectorsAuthInputsSection from './connectors-auth-inputs-section';
 import Header from './header';
 import InputSummary from './input-summary';
 import Unauthorized from './unauthorized';
-import TimeAgo from 'timeago-react';
+import TimeAgo from 'react-timeago';
 
 const { __DEBUG__ } = process.env;
 
@@ -67,7 +67,7 @@ const RUN_PATH_NAME = '/run/[[...versionAndFilename]]';
 
 export type AppPageProps = {
   isEmbedded?: boolean;
-  shouldShowDescription?: boolean;
+  shouldShowChrome?: boolean;
   app?: AppInfo;
   inputs: InputParams;
   userAuthConnectors: UserAuthConnector[];
@@ -88,7 +88,7 @@ export type AppPageProps = {
 
 export function AppPage({
   isEmbedded,
-  shouldShowDescription: shouldShowDescriptionPassedIn = true,
+  shouldShowChrome = true,
   app,
   inputs,
   userAuthConnectors,
@@ -124,7 +124,7 @@ export function AppPage({
   const [skipAuth, setSkipAuth] = useState(false);
 
   const { isOpen, onToggle } = useDisclosure({
-    defaultIsOpen: true,
+    defaultIsOpen: !isEmbedded,
   });
 
   const variants = {
@@ -137,8 +137,7 @@ export function AppPage({
     filename: entryPoint?.filename,
     config: currentFileConfig,
   });
-  const shouldShowDescription =
-    shouldShowDescriptionPassedIn && description && isOpen && !isEmbedded;
+
   const previousRouteRef = useRef(asPath);
 
   // We have to do this so that the results aren't SSRed
@@ -335,7 +334,7 @@ export function AppPage({
         delete query.versionAndFilename;
 
         await router.push({
-          pathname: `/${filename}`,
+          pathname: isEmbedded ? `/embed/${filename}` : `/${filename}`,
           query,
         });
         setScreen('initial');
@@ -346,7 +345,7 @@ export function AppPage({
   const title = description?.title || appTitle || app?.slug;
   const runContent = (
     <VStack w="full" align="stretch" spacing={4} ml={{ md: 4 }}>
-      {!isEmbedded && <Box ml="4">{inputSummary}</Box>}
+      {<Box ml="4">{inputSummary}</Box>}
     </VStack>
   );
 
@@ -372,7 +371,7 @@ export function AppPage({
       pt={0}
       mt={0}
     >
-      {shouldShowDescription && title && (
+      {title && (
         <Heading
           as="h1"
           fontSize="4xl"
@@ -385,26 +384,25 @@ export function AppPage({
         </Heading>
       )}
       <HStack align="center" alignItems="start" pb={2}>
-        {shouldShowDescription && (
-          <Button
-            px={0}
-            variant="ghost"
-            colorScheme="purple"
-            size="sm"
-            fontWeight="normal"
-            leftIcon={
-              isOpen ? (
-                <HiChevronDoubleLeft size={12} />
-              ) : (
-                <HiChevronDoubleRight size={12} />
-              )
-            }
-            _hover={{ bgColor: 'transparent' }}
-            onClick={onToggle}
-          >
-            {isOpen ? 'Hide' : 'Show'} App Details
-          </Button>
-        )}
+        <Button
+          px={0}
+          variant="ghost"
+          colorScheme="purple"
+          size="sm"
+          fontWeight="normal"
+          leftIcon={
+            isOpen ? (
+              <HiChevronDoubleLeft size={12} />
+            ) : (
+              <HiChevronDoubleRight size={12} />
+            )
+          }
+          _hover={{ bgColor: 'transparent' }}
+          onClick={onToggle}
+        >
+          {isOpen ? 'Hide' : 'Show'} App Details
+        </Button>
+
         {showRunOutput && runContent}
       </HStack>
       <Stack
@@ -415,7 +413,7 @@ export function AppPage({
         pb={8}
         spacing={8}
       >
-        {shouldShowDescription ? (
+        {isOpen ? (
           <VStack
             width={{ base: 'auto', md: '100%' }}
             maxW="400px"
@@ -430,7 +428,23 @@ export function AppPage({
             <Stack>
               <Text fontSize="xs" color="fg.500">
                 <>
-                  Last published <TimeAgo datetime={app.updatedAt!} />
+                  Last published{' '}
+                  <TimeAgo
+                    date={app.updatedAt!}
+                    formatter={(value, unit, suffix) => {
+                      if (unit !== 'second') {
+                        return [
+                          value,
+                          unit + (value !== 1 ? 's' : ''),
+                          suffix,
+                        ].join(' ');
+                      }
+
+                      if (suffix === 'ago') {
+                        return 'a few seconds ago';
+                      }
+                    }}
+                  />
                 </>
               </Text>
             </Stack>
@@ -446,11 +460,7 @@ export function AppPage({
           </VStack>
         ) : null}
 
-        <VStack
-          mx={shouldShowDescription ? 'auto' : undefined}
-          align="stretch"
-          flex={3}
-        >
+        <VStack mx="auto" align="stretch" flex={3}>
           {screen === 'initial' && initialContent}
 
           <VStack alignSelf="start">{showRunOutput && output}</VStack>
@@ -662,7 +672,7 @@ export const getServerSideProps: GetServerSideProps = async ({
   const propsToReturn = {
     props: {
       isEmbedded: isEmbedUrl,
-      shouldShowDescription: !(isEmbedUrl && isRunUrl),
+      shouldShowChrome: !isEmbedUrl,
       app,
       inputs: inputParams,
       version,
