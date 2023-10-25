@@ -906,19 +906,18 @@ export const appRouter = createTRPCRouter({
         filenames[s.id] = s.filename;
       });
 
-      const updatedScripts: Script[] = [];
-      if (scripts) {
-        await Promise.all(
-          scripts.map(async (script) => {
-            const { id, data } = script;
+      const updatedScripts = !scripts
+        ? app.scripts
+        : await Promise.all(
+            scripts.map(async (script) => {
+              const { id, data } = script;
 
-            let isRunnable: boolean | undefined = undefined;
-            if (data.code && endsWithTs(data.filename)) {
-              isRunnable = isCodeRunnable(data.code);
-            }
+              let isRunnable: boolean | undefined = undefined;
+              if (data.code && endsWithTs(data.filename)) {
+                isRunnable = isCodeRunnable(data.code);
+              }
 
-            updatedScripts.push(
-              await prisma.script.update({
+              return prisma.script.update({
                 where: { id },
                 data: {
                   ...data,
@@ -929,15 +928,13 @@ export const appRouter = createTRPCRouter({
                     code: data.code!,
                   }),
                 },
-              }),
-            );
-          }),
-        );
-      }
+              });
+            }),
+          );
 
       if (input.data.slug || input.data.scripts) {
         const { hash } = await buildAndStoreApplet({
-          app: { ...app, scripts: scripts ? updatedScripts : app.scripts },
+          app: { ...app, scripts: updatedScripts },
           userId: ctx.userId,
         });
 

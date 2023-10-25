@@ -10,7 +10,7 @@ import {
   useMediaQuery,
   VStack,
 } from '@chakra-ui/react';
-import { AppInfo } from '@zipper/types';
+import { AppInfo, ZipperLocation } from '@zipper/types';
 import { Markdown } from './markdown';
 
 type HandlerDescription = {
@@ -131,6 +131,11 @@ export function HandlerDescription(props: Props) {
         <MobileView />
       ) : (
         <VStack align="start" width="full" mt={4}>
+          {window.ZipperLocation === ZipperLocation.ZipperDotDev && title && (
+            <Heading as="h1" fontSize="4xl" fontWeight="medium">
+              {title}
+            </Heading>
+          )}
           {subtitle && (
             <Heading as="h2" fontSize="xl" fontWeight="normal" color="fg.600">
               {subtitle}

@@ -89,7 +89,15 @@ export default async function handler(
                 select: { name: true },
               });
 
-              if (app) {
+              // We don't need to log deno regular info level stuff since we do it from the framework
+              // Errors will still be logged
+              const ignoreLog =
+                !process.env.__DEBUG__ &&
+                ['log', 'info', 'debug', 'boot'].includes(
+                  (event.event_type as string).toLowerCase(),
+                );
+
+              if (app && !ignoreLog) {
                 logger.info(
                   ...prettyLog(
                     {

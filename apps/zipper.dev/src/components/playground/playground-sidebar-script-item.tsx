@@ -133,7 +133,7 @@ export const ScriptItem: React.FC<ScriptItemProps> = ({
               <ScriptIcon script={script} />
             </Flex>
             <Text
-              fontWeight={isDirty || hasErrors ? 900 : 'medium'}
+              fontWeight={isDirty || hasErrors ? 900 : 'normal'}
               fontSize="xs"
               fontFamily="mono"
               color={hasErrors ? errorColor : 'inherit'}

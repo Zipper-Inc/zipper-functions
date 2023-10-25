@@ -2,7 +2,7 @@ import { AppConnectorUserAuth } from '@prisma/client';
 import { generateReactHelpers } from '@uploadthing/react/hooks';
 import { AppInfo, InputParam, UserAuthConnectorType } from '@zipper/types';
 import { getInputsFromFormData, safeJSONParse, uuid } from '@zipper/utils';
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { OurFileRouter } from '~/pages/api/uploadthing';
 import { AppQueryOutput } from '~/types/trpc';
@@ -30,8 +30,11 @@ export type RunAppContextType = {
   results: Record<string, string>;
   userAuthConnectors: UserAuthConnector[];
   setResults: (results: Record<string, string>) => void;
-  run: (isCurrentFileAsEntryPoint?: boolean) => Promise<string | undefined>;
-  boot: () => Promise<void>;
+  run: (params?: {
+    shouldSave?: boolean;
+    isCurrentScriptEntryPoint?: boolean;
+  }) => Promise<string | undefined>;
+  boot: (params?: { shouldSave?: boolean }) => Promise<void>;
   configs: Zipper.BootPayload['configs'];
 };
 
@@ -48,7 +51,22 @@ export const RunAppContext = createContext<RunAppContextType>({
   configs: {},
 });
 
-const oneSecondAgo = Date.now() - 1 * 1000;
+const getLogTs = ({ timestamp }: Pick<Zipper.Log.Message, 'timestamp'>) =>
+  new Date(timestamp).getTime();
+
+const sortLogs: Parameters<Zipper.Log.Message[]['sort']>[0] = (a, b) =>
+  getLogTs(a) - getLogTs(b);
+
+const uniqueLogs = (logs: Zipper.Log.Message[]) =>
+  Object.values(
+    logs.reduce(
+      (prev: Record<string, Zipper.Log.Message>, curr) => ({
+        ...prev,
+        [curr.id]: curr,
+      }),
+      {},
+    ),
+  ).sort(sortLogs);
 
 export function RunAppProvider({
   app,
@@ -89,6 +107,14 @@ export function RunAppProvider({
   const utils = trpc.useContext();
   const { useUploadThing } = generateReactHelpers<OurFileRouter>();
   const { isUploading, startUpload } = useUploadThing('imageUploader');
+  const logTimersToCleanUp = useRef<number[]>([]);
+
+  const cleanUpLogTimers = () => {
+    logTimersToCleanUp.current.forEach((id) => window.clearTimeout(id));
+  };
+
+  // clean up when unmounting
+  useEffect(() => cleanUpLogTimers, []);
 
   const runAppMutation = trpc.app.run.useMutation({
     async onSuccess() {
@@ -112,43 +138,95 @@ export function RunAppProvider({
 
   const { currentScript, inputParams } = useEditorContext();
 
-  const boot = async () => {
+  const updateLogs = async ({
+    version = app.playgroundVersionHash || '',
+    oneSecondAgo = Date.now() - 1 * 1000,
+    fromTimestamp = oneSecondAgo,
+    runId,
+  }: {
+    version?: string;
+    oneSecondAgo?: number;
+    fromTimestamp?: number;
+    runId?: string;
+  } = {}) => {
+    const [logs, runLogs] = await Promise.all([
+      logMutation.mutateAsync({
+        appId: app.id,
+        version,
+        fromTimestamp,
+      }),
+
+      runId
+        ? await logMutation.mutateAsync({
+            appId: app.id,
+            version,
+            runId,
+            fromTimestamp,
+          })
+        : Promise.resolve([]),
+    ]).catch(() => [[], []]);
+
+    // wait a tick to prevent doing to much in a frame
+    await Promise.resolve();
+
+    setLogStore((prev) => {
+      const logsKey = `${app.id}@${version}`;
+      const prevLogs = prev[logsKey] || [];
+      const newLogs = uniqueLogs([...prevLogs, ...logs]);
+
+      const prevRunLogs = (runId && prev[runId]) || [];
+      const newRunLogs = runId ? uniqueLogs([...prevRunLogs, ...runLogs]) : [];
+
+      const logsHaveUpdate = newLogs.length !== prevLogs.length;
+      const runLogsHaveUpdate = runId
+        ? newRunLogs.length !== prevRunLogs.length
+        : false;
+
+      if (!logsHaveUpdate && !runLogsHaveUpdate) return prev;
+
+      const store = { ...prev, [logsKey]: newLogs };
+
+      if (runId) {
+        store[runId] = newRunLogs;
+      }
+
+      // Only update the store if anything has changed
+      // This is for performance reasons
+      if (
+        newLogs.length !== prevLogs.length ||
+        (runId && newRunLogs.length !== prevRunLogs.length)
+      ) {
+        return store;
+      }
+
+      return prev;
+    });
+  };
+
+  const startPollingUpdateLogs: typeof updateLogs = async ({
+    runId,
+    version,
+    fromTimestamp,
+  } = {}) => {
+    await updateLogs({ runId });
+    const id = window.setTimeout(
+      () => updateLogs({ runId, version, fromTimestamp }),
+      1000,
+    );
+    logTimersToCleanUp.current.push(id);
+  };
+
+  const boot = async ({ shouldSave = false } = {}) => {
     try {
-      const hash = await saveAppBeforeRun();
+      const hash = shouldSave
+        ? await saveAppBeforeRun()
+        : app.playgroundVersionHash;
+
       const version = getAppVersionFromHash(hash);
       if (!version) throw new Error('No version found');
 
-      const logs = await logMutation.mutateAsync({
-        appId: app.id,
-        version,
-        fromTimestamp: Date.now(),
-      });
-
-      const logsToIgnore = logs;
-
-      const updateLogs = async () => {
-        const logs = await logMutation.mutateAsync({
-          appId: app.id,
-          version,
-          fromTimestamp: oneSecondAgo,
-        });
-        if (!logs.length) return;
-        if (logsToIgnore.length) logs.splice(0, logsToIgnore.length);
-
-        setLogStore((prev) => {
-          const prevLogs = prev[`${app.id}@${version}`] || [];
-          const newLogs = prevLogs.length > logs.length ? prevLogs : logs;
-          return { ...prev, [`${app.id}@${version}`]: newLogs };
-        });
-      };
-
-      // Start polling for logs
-      let currentPoll;
-      const pollLogs = async () => {
-        await updateLogs();
-        currentPoll = setTimeout(() => pollLogs, 500);
-      };
-      pollLogs();
+      const oneSecondAgo = Date.now() - 1 * 1000;
+      startPollingUpdateLogs({ version, fromTimestamp: oneSecondAgo });
 
       const { configs } = await bootAppMutation.mutateAsync({
         appId: id,
@@ -156,24 +234,25 @@ export function RunAppProvider({
 
       if (configs) setConfigs(configs);
 
-      // stop polling and do one last update
-      // do it once more just time
-      clearTimeout(currentPoll);
-      updateLogs();
+      // stop any polling and do one last update
+      cleanUpLogTimers();
+      updateLogs({ version, fromTimestamp: oneSecondAgo });
     } catch (e) {
       return;
     }
   };
 
-  const run = async (isCurrentFileTheEntryPoint?: boolean) => {
-    if (!inputParams) return;
+  const run: RunAppContextType['run'] = async ({ shouldSave = false } = {}) => {
+    if (!inputParams || !currentScript) return;
     if (!preserveLogs) setLogStore(() => ({}));
     setIsRunning(true);
 
     let version: string | undefined = undefined;
 
     try {
-      const hash = await saveAppBeforeRun();
+      const hash = shouldSave
+        ? await saveAppBeforeRun()
+        : app.playgroundVersionHash;
       version = getAppVersionFromHash(hash);
 
       if (!version) throw new Error('No version found');
@@ -181,64 +260,17 @@ export function RunAppProvider({
       console.log(e);
       setResults({
         ...results,
-        [isCurrentFileTheEntryPoint
-          ? currentScript?.filename || 'main.ts'
-          : 'main.ts']: 'Something went wrong. Check the console for errors.',
+        [currentScript.filename]:
+          'Something went wrong. Check the console for errors.',
       });
       setIsRunning(false);
       return;
     }
 
     const runId = uuid();
+    const oneSecondAgo = Date.now() - 1 * 1000;
 
-    // fetch deploy logs so we don't display them again
-    const vLogsToIgnore = await logMutation.mutateAsync({
-      appId: app.id,
-      version: version!,
-      fromTimestamp: Date.now(),
-    });
-
-    // Start fetching logs
-    const updateLogs = async () => {
-      const vLogs = await logMutation.mutateAsync({
-        appId: app.id,
-        version: version!,
-        fromTimestamp: oneSecondAgo,
-      });
-      const rLogs = await logMutation.mutateAsync({
-        appId: app.id,
-        version: version!,
-        runId: runId,
-        fromTimestamp: oneSecondAgo,
-      });
-
-      if (!vLogs?.length && !rLogs?.length) return;
-
-      if (vLogsToIgnore.length) vLogs.splice(0, vLogsToIgnore.length);
-
-      // We use a log store because the log fetcher grabs all the logs for a given object
-      // This way, we always update the store with the freshest logs without duplicating
-      setLogStore((prev) => {
-        const prevVLogs = prev[`${app.id}@${version}`] || [];
-        const prevRLogs = prev[runId] || [];
-
-        const newVLogs = prevVLogs.length > vLogs.length ? prevVLogs : vLogs;
-        const newRLogs = prevRLogs.length > rLogs.length ? prevRLogs : rLogs;
-        return {
-          ...prev,
-          [`${app.id}@${version}`]: newVLogs,
-          [runId]: newRLogs,
-        };
-      });
-    };
-
-    // Start polling for logs
-    let currentPoll;
-    const pollLogs = async () => {
-      await updateLogs();
-      currentPoll = setTimeout(pollLogs, 500);
-    };
-    pollLogs();
+    startPollingUpdateLogs({ version, runId, fromTimestamp: oneSecondAgo });
 
     const runStart = performance.now();
     const formValues = formMethods.getValues();
@@ -290,7 +322,7 @@ export function RunAppProvider({
     const result = await runAppMutation.mutateAsync({
       formData: formValues,
       appId: id,
-      scriptId: isCurrentFileTheEntryPoint ? currentScript?.id : undefined,
+      scriptId: currentScript.id,
       runId,
     });
 
@@ -314,10 +346,8 @@ export function RunAppProvider({
 
     setIsRunning(false);
 
-    // stop polling and do one last update
-    // do it once more just time
-    clearTimeout(currentPoll);
-    updateLogs();
+    cleanUpLogTimers();
+    updateLogs({ version, runId, fromTimestamp: oneSecondAgo });
 
     await onAfterRun();
 
