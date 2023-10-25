@@ -3,8 +3,8 @@
  */
 import { captureException } from '@sentry/nextjs';
 import { createNextApiHandler } from '@trpc/server/adapters/next';
+import { getServerSession } from 'next-auth';
 
-import { getToken } from 'next-auth/jwt';
 import { createContext } from '~/server/context';
 import { trpcRouter } from '~/server/routers/_app';
 
@@ -17,7 +17,7 @@ export default createNextApiHandler({
   /**
    * @link https://trpc.io/docs/error-handling
    */
-  onError(data) {
+  async onError(data) {
     const { error, type, path, input, req } = data;
     console.log('------------------------');
     console.log(`Error below happened here: ${type} -> ${path}`);
@@ -27,7 +27,7 @@ export default createNextApiHandler({
       captureException(error, { extra: data });
       console.error(error);
     } else {
-      console.log(getToken({ req }));
+      console.log(await getServerSession());
     }
     // if (error.code === 'INTERNAL_SERVER_ERROR') {
     //   // send to bug reporting

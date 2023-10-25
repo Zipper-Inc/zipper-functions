@@ -1,7 +1,9 @@
-import { OrganizationMembership, User } from '@prisma/client';
-import { Jwt, JwtPayload, sign, verify } from 'jsonwebtoken';
-import { JWT } from 'next-auth/jwt';
-import { SessionOrganizationMembership } from '~/pages/api/auth/[...nextauth]';
+import { User } from '@prisma/client';
+import { JwtPayload, sign, verify } from 'jsonwebtoken';
+import {
+  SessionOrganizationMembership,
+  SessionUser,
+} from '~/pages/api/auth/[...nextauth]';
 
 const JWT_ACCESS_TOKEN_EXPIRY = '15m';
 const JWT_REFRESH_TOKEN_EXPIRY = '7d';
@@ -11,12 +13,12 @@ export const generateAccessToken = (
     userId,
     profile,
     orgMemberships,
-    authToken,
+    sessionUser,
   }: {
     userId: string;
     profile?: Pick<User, 'name' | 'email' | 'image' | 'slug'>;
     orgMemberships?: SessionOrganizationMembership[];
-    authToken?: JWT | null;
+    sessionUser?: SessionUser | null;
   },
   options?: { expiresIn?: string },
 ) => {
@@ -31,12 +33,11 @@ export const generateAccessToken = (
     payload.username = profile.slug;
   }
 
-  if (authToken) {
-    payload.email = authToken.email!;
-    payload.image = authToken.picture || null;
-    payload.name = authToken.name || null;
-    payload.username = authToken.slug!;
-    payload.organizations = authToken.organizationMemberhips;
+  if (sessionUser) {
+    payload.email = sessionUser.email!;
+    payload.image = sessionUser.image || null;
+    payload.name = sessionUser.name || null;
+    payload.username = sessionUser.username!;
   }
 
   if (orgMemberships) {

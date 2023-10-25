@@ -15,7 +15,7 @@ import {
 } from '@zipper/utils';
 import { randomUUID } from 'crypto';
 import JSZip from 'jszip';
-import { getToken } from 'next-auth/jwt';
+import { getServerSession } from 'next-auth';
 import fetch from 'node-fetch';
 import { z } from 'zod';
 import { prisma } from '~/server/prisma';
@@ -655,13 +655,14 @@ export const appRouter = createTRPCRouter({
 
       await hasAppEditPermission({ ctx, appId: input.appId });
 
-      const authToken = await getToken({ req: ctx.req! });
+      const authToken = await getServerSession();
 
       const token = ctx.userId
         ? generateAccessToken(
             {
               userId: ctx.userId,
-              authToken,
+              sessionUser: authToken?.user,
+              orgMemberships: authToken?.organizationMemberships,
             },
             { expiresIn: '30s' },
           )
@@ -748,13 +749,14 @@ export const appRouter = createTRPCRouter({
 
       const inputs = getInputsFromFormData(input.formData, inputParams);
 
-      const authToken = await getToken({ req: ctx.req! });
+      const authToken = await getServerSession();
 
       const token = ctx.userId
         ? generateAccessToken(
             {
               userId: ctx.userId,
-              authToken,
+              sessionUser: authToken?.user,
+              orgMemberships: authToken?.organizationMemberships,
             },
             { expiresIn: '30s' },
           )

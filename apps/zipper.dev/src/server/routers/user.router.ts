@@ -12,6 +12,7 @@ import { initApplet } from '@zipper-inc/client-js';
 import { captureMessage } from '@sentry/nextjs';
 import { trackEvent } from '~/utils/api-analytics';
 import { createTRPCRouter, protectedProcedure } from '../root';
+import { getServerSession } from 'next-auth';
 
 const defaultSelect = Prisma.validator<Prisma.UserSelect>()({
   id: true,
@@ -127,12 +128,13 @@ export const userRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const token = await getToken({ req: ctx.req! });
+      const token = await getServerSession();
 
       return generateAccessToken(
         {
           userId: ctx.userId,
-          authToken: token,
+          sessionUser: token?.user,
+          orgMemberships: token?.organizationMemberships,
         },
         { expiresIn: input.expiresIn },
       );
