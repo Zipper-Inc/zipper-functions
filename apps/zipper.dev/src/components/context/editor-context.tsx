@@ -527,10 +527,6 @@ const EditorContextProvider = ({
     }
   }, [currentScript, monacoRef.current]);
 
-  useEffect(() => {
-    setScripts(initialScripts);
-  }, [initialScripts]);
-
   const editAppMutation = trpc.app.edit.useMutation({
     async onSuccess() {
       refetchApp();
