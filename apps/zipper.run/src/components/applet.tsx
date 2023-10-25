@@ -67,7 +67,7 @@ const RUN_PATH_NAME = '/run/[[...versionAndFilename]]';
 
 export type AppPageProps = {
   isEmbedded?: boolean;
-  shouldShowDescription?: boolean;
+  shouldShowChrome?: boolean;
   app?: AppInfo;
   inputs: InputParams;
   userAuthConnectors: UserAuthConnector[];
@@ -88,7 +88,7 @@ export type AppPageProps = {
 
 export function AppPage({
   isEmbedded,
-  shouldShowDescription: shouldShowDescriptionPassedIn = true,
+  shouldShowChrome = true,
   app,
   inputs,
   userAuthConnectors,
@@ -137,7 +137,7 @@ export function AppPage({
     filename: entryPoint?.filename,
     config: currentFileConfig,
   });
-  const shouldShowDescription = shouldShowDescriptionPassedIn && description;
+
   const previousRouteRef = useRef(asPath);
 
   // We have to do this so that the results aren't SSRed
@@ -334,7 +334,7 @@ export function AppPage({
         delete query.versionAndFilename;
 
         await router.push({
-          pathname: `/${filename}`,
+          pathname: isEmbedded ? `/embed/${filename}` : `/${filename}`,
           query,
         });
         setScreen('initial');
@@ -345,7 +345,7 @@ export function AppPage({
   const title = description?.title || appTitle || app?.slug;
   const runContent = (
     <VStack w="full" align="stretch" spacing={4} ml={{ md: 4 }}>
-      {!isEmbedded && <Box ml="4">{inputSummary}</Box>}
+      {<Box ml="4">{inputSummary}</Box>}
     </VStack>
   );
 
@@ -384,26 +384,25 @@ export function AppPage({
         </Heading>
       )}
       <HStack align="center" alignItems="start" pb={2}>
-        {shouldShowDescription && (
-          <Button
-            px={0}
-            variant="ghost"
-            colorScheme="purple"
-            size="sm"
-            fontWeight="normal"
-            leftIcon={
-              isOpen ? (
-                <HiChevronDoubleLeft size={12} />
-              ) : (
-                <HiChevronDoubleRight size={12} />
-              )
-            }
-            _hover={{ bgColor: 'transparent' }}
-            onClick={onToggle}
-          >
-            {isOpen ? 'Hide' : 'Show'} App Details
-          </Button>
-        )}
+        <Button
+          px={0}
+          variant="ghost"
+          colorScheme="purple"
+          size="sm"
+          fontWeight="normal"
+          leftIcon={
+            isOpen ? (
+              <HiChevronDoubleLeft size={12} />
+            ) : (
+              <HiChevronDoubleRight size={12} />
+            )
+          }
+          _hover={{ bgColor: 'transparent' }}
+          onClick={onToggle}
+        >
+          {isOpen ? 'Hide' : 'Show'} App Details
+        </Button>
+
         {showRunOutput && runContent}
       </HStack>
       <Stack
@@ -461,11 +460,7 @@ export function AppPage({
           </VStack>
         ) : null}
 
-        <VStack
-          mx={shouldShowDescription ? 'auto' : undefined}
-          align="stretch"
-          flex={3}
-        >
+        <VStack mx="auto" align="stretch" flex={3}>
           {screen === 'initial' && initialContent}
 
           <VStack alignSelf="start">{showRunOutput && output}</VStack>
@@ -677,7 +672,7 @@ export const getServerSideProps: GetServerSideProps = async ({
   const propsToReturn = {
     props: {
       isEmbedded: isEmbedUrl,
-      shouldShowDescription: !(isEmbedUrl && isRunUrl),
+      shouldShowChrome: !isEmbedUrl,
       app,
       inputs: inputParams,
       version,
