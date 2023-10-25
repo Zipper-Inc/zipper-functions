@@ -168,6 +168,7 @@ const VersionsTab: React.FC<VersionsTabProps> = ({ appId, slug }) => {
           const restoreMutation = trpc.version.restore.useMutation({
             onSuccess: () => {
               context.version.all.invalidate({ appId, limit: 100 });
+              context.app.byId.invalidate({ id: appId });
               context.app.byResourceOwnerAndAppSlugs.invalidate({
                 appSlug: slug,
                 resourceOwnerSlug: router.query['resource-owner'] as string,
@@ -177,6 +178,7 @@ const VersionsTab: React.FC<VersionsTabProps> = ({ appId, slug }) => {
           const promoteMutation = trpc.version.promote.useMutation({
             onSuccess: () => {
               context.version.all.invalidate({ appId, limit: 100 });
+              context.app.byId.invalidate({ id: appId });
               context.app.byResourceOwnerAndAppSlugs.invalidate({
                 appSlug: slug,
                 resourceOwnerSlug: router.query['resource-owner'] as string,
