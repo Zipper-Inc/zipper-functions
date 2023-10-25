@@ -1,5 +1,6 @@
 import { User } from '@prisma/client';
 import { JwtPayload, sign, verify } from 'jsonwebtoken';
+import { Session } from 'next-auth';
 import {
   SessionOrganizationMembership,
   SessionUser,
@@ -13,12 +14,12 @@ export const generateAccessToken = (
     userId,
     profile,
     orgMemberships,
-    sessionUser,
+    session,
   }: {
     userId: string;
     profile?: Pick<User, 'name' | 'email' | 'image' | 'slug'>;
     orgMemberships?: SessionOrganizationMembership[];
-    sessionUser?: SessionUser | null;
+    session?: Session | null;
   },
   options?: { expiresIn?: string },
 ) => {
@@ -33,11 +34,15 @@ export const generateAccessToken = (
     payload.username = profile.slug;
   }
 
-  if (sessionUser) {
-    payload.email = sessionUser.email!;
-    payload.image = sessionUser.image || null;
-    payload.name = sessionUser.name || null;
-    payload.username = sessionUser.username!;
+  if (session?.user) {
+    payload.email = session.user.email!;
+    payload.image = session.user.image || null;
+    payload.name = session.user.name || null;
+    payload.username = session.user.username!;
+  }
+
+  if (session?.organizationMemberships) {
+    payload.organizations = session.organizationMemberships;
   }
 
   if (orgMemberships) {

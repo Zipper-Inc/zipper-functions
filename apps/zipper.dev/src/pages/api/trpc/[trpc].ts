@@ -27,7 +27,7 @@ export default createNextApiHandler({
       captureException(error, { extra: data });
       console.error(error);
     } else {
-      console.log(await getServerSession());
+      console.log(data);
     }
     // if (error.code === 'INTERNAL_SERVER_ERROR') {
     //   // send to bug reporting
