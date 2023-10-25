@@ -485,7 +485,7 @@ Sachin & Ibu
 export default NextAuth(authOptions);
 
 declare module 'next-auth' {
-  export interface Session {
+  interface Session {
     error?: 'RefreshAccessTokenError';
     username?: string;
     organizationMemberships?: SessionOrganizationMembership[];

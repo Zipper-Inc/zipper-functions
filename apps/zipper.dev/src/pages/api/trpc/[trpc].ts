@@ -17,7 +17,7 @@ export default createNextApiHandler({
   /**
    * @link https://trpc.io/docs/error-handling
    */
-  async onError(data) {
+  onError(data) {
     const { error, type, path, input, req } = data;
     console.log('------------------------');
     console.log(`Error below happened here: ${type} -> ${path}`);
