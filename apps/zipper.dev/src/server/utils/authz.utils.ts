@@ -46,7 +46,7 @@ export const hasAppReadPermission = async ({
   appId: string;
 }) => {
   try {
-    await prisma.app.findFirstOrThrow({
+    const appLog = await prisma.app.findFirstOrThrow({
       where: {
         id: appId,
         OR: [
@@ -56,7 +56,7 @@ export const hasAppReadPermission = async ({
             OR: [
               {
                 editors: {
-                  some: { userId: ctx.userId },
+                  some: { userId: ctx.userId || Date.now.toString() },
                 },
               },
               {
@@ -67,6 +67,8 @@ export const hasAppReadPermission = async ({
         ],
       },
     });
+
+    console.log('appLog', appLog);
 
     return true;
   } catch (error) {
