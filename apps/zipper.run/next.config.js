@@ -117,7 +117,11 @@ module.exports = getConfig({
           },
           {
             key: 'X-Frame-Options',
-            value: 'DENY',
+            value: `ALLOW FROM ${
+              process.env.NODE_ENV === 'production'
+                ? 'https://zipper.dev/*'
+                : 'http://localhost:3000/*'
+            }`,
           },
           {
             key: 'Cache-Control',
