@@ -40,6 +40,19 @@ export function getAppHash(
   );
 }
 
+export function getAppHashFromScripts(
+  app: Pick<App, 'id' | 'slug'>,
+  scripts: Pick<Script, 'appId' | 'filename' | 'code'>[],
+) {
+  return getAppHash({
+    ...app,
+    scripts: scripts.map((script) => ({
+      filename: script.filename,
+      hash: getScriptHash(script),
+    })),
+  });
+}
+
 export function getAppHashAndVersion(
   app: Pick<App, 'id' | 'slug'> & {
     scripts: Pick<Script, 'filename' | 'hash'>[];
