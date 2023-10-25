@@ -5,9 +5,9 @@ const { withSentryConfig } = require('@sentry/nextjs');
 
 const ZIPPER_DOT_DEV_PROTOCOL =
   process.env.NODE_ENV === 'development' &&
-    /^(localhost|127\.0.0.1)/.test(
-      process.env.NEXT_PUBLIC_ZIPPER_DOT_DEV_HOST || '',
-    )
+  /^(localhost|127\.0.0.1)/.test(
+    process.env.NEXT_PUBLIC_ZIPPER_DOT_DEV_HOST || '',
+  )
     ? 'http'
     : 'https';
 const ZIPPER_DOT_DEV_URL = `${ZIPPER_DOT_DEV_PROTOCOL}://${process.env.NEXT_PUBLIC_ZIPPER_DOT_DEV_HOST}`;
@@ -99,6 +99,31 @@ module.exports = getConfig({
       {
         source: '/run/history/:runId.png',
         destination: '/api/runs/:runId/png',
+      },
+    ];
+  },
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          {
+            key: 'Strict-Transport-Security',
+            value: 'max-age=63072000; includeSubDomains; preload',
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'Same-Origin',
+          },
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'no-store, no-cache, must-revalidate, max-age=0',
+          },
+        ],
       },
     ];
   },
