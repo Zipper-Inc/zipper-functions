@@ -197,7 +197,7 @@ const APPLET_GALLERY_LIST = [
     description:
       "Easily reference important messages, threads, or documents with a click, keeping your team's communication organized and efficient.",
     slug: 'slack-backlinker',
-    url: 'https://zipper.dev/zipper-inc/slack-github-backlinks/edit/readme.md',
+    url: 'https://zipper.dev/zipper-inc/slack-github-backlinks/src/readme.md',
   },
   {
     title: 'Team Bookmarks',
@@ -253,7 +253,7 @@ const APPLET_GALLERY_LIST = [
     description:
       "Sync your team's musical vibes. This app integrates with Spotify API to curate and share what your team is currently jamming to, fostering a shared musical experience within your workspace.",
     slug: 'what-team-listening-to',
-    url: 'https://zipper.dev/zipper-inc/song-monitor/edit/readme.md',
+    url: 'https://zipper.dev/zipper-inc/song-monitor/src/readme.md',
   },
   {
     title: 'Natural language to crontab',

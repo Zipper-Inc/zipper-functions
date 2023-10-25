@@ -17,7 +17,7 @@ const GitHubManifestRedirect: NextPageWithLayout = () => {
         } else {
           router.push(
             data.redirectTo ||
-              `/${data.app.resourceOwner.slug}/${data.app.slug}/edit/main.ts`,
+              `/${data.app.resourceOwner.slug}/${data.app.slug}/src/main.ts`,
           );
         }
       },
