@@ -23,7 +23,7 @@ import { trpc } from '~/utils/trpc';
 import { useRunAppContext } from '../context/run-app-context';
 import SignedIn from '../auth/signed-in';
 import { useState } from 'react';
-import TimeAgo from 'timeago-react';
+import TimeAgo from 'react-timeago';
 
 import {
   PiAppWindowDuotone,
@@ -177,7 +177,7 @@ export const PlaygroundPublishInfo = ({ app }: { app: AppQueryOutput }) => {
                       <Text fontSize="xs" color="fg.500">
                         <>
                           Last published{' '}
-                          <TimeAgo datetime={app.publishedVersion?.createdAt} />
+                          <TimeAgo date={app.publishedVersion?.createdAt} />
                         </>
                       </Text>
                     )}

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 
 import {
@@ -20,10 +20,11 @@ import {
   TabPanels,
   TabPanel,
   Flex,
+  Icon,
 } from '@chakra-ui/react';
 import { Script } from '@prisma/client';
 import Editor, { EditorProps, Monaco } from '@monaco-editor/react';
-import { HiChevronDown, HiOutlineTemplate } from 'react-icons/hi';
+import { HiArrowLeft, HiChevronDown, HiOutlineTemplate } from 'react-icons/hi';
 import Link from 'next/link';
 import { baseColors, Markdown, AppletAuthor, TabButton } from '@zipper/ui';
 import { NextPageWithLayout } from '~/pages/_app';
@@ -39,7 +40,7 @@ const EDITOR_OPTIONS = {
   minimap: {
     enabled: false,
   },
-  fontSize: 16,
+  fontSize: 13,
   automaticLayout: true,
   readOnly: true,
   renderLineHighlight: 'none',
@@ -66,6 +67,14 @@ const AppletLandingPage: NextPageWithLayout = () => {
     { resourceOwnerSlug, appSlug },
     { retry: false },
   );
+
+  useEffect(() => {
+    if (appQuery.data) {
+      setCurrentScriptState(
+        appQuery.data.scripts.find((s) => s.filename === 'main.ts'),
+      );
+    }
+  }, [appQuery.data]);
 
   if (appQuery.isLoading || !appQuery.data) {
     return <></>;
@@ -113,12 +122,21 @@ const AppletLandingPage: NextPageWithLayout = () => {
 
   return (
     <VStack alignItems="start" flex={1} px={10}>
+      {data.submissionState === 3 && (
+        <Button variant="link" as={Link} href="/gallery">
+          <HStack>
+            <Icon as={HiArrowLeft} />
+            <Text>Back to Gallery</Text>
+          </HStack>
+        </Button>
+      )}
       <HStack spacing={8} pb={6} justifyContent="space-between" w="full">
         <Heading>{data.name ?? data.slug}</Heading>
         <Button
           variant="solid"
           colorScheme="purple"
           leftIcon={<HiOutlineTemplate size={20} />}
+          fontSize="sm"
         >
           <Link href={`/${data.resourceOwner.slug}/${data.slug}/src`}>
             Open in Playground
@@ -166,11 +184,15 @@ const AppletLandingPage: NextPageWithLayout = () => {
                 />
                 <Text
                   as="h6"
-                  fontWeight="600"
+                  fontWeight="medium"
                   color="lightBlue.800"
                   fontSize={18}
                 >
-                  Take {data.name || data.slug} for a test drive
+                  Take{' '}
+                  <Text as="span" fontWeight="bold">
+                    {data.name || data.slug}
+                  </Text>{' '}
+                  for a test drive
                 </Text>
                 <Text color="lightBlue.800" fontWeight="400">
                   Run the applet preview below or explore the code to see if it
@@ -231,7 +253,9 @@ const AppletLandingPage: NextPageWithLayout = () => {
                         </MenuList>
                       </Menu>
                       <HStack>
-                        <TabButton title="Preview" />
+                        {currentScriptState?.isRunnable && (
+                          <TabButton title="Preview" />
+                        )}
                         <TabButton title="Code" />
                       </HStack>
                     </HStack>
@@ -242,7 +266,9 @@ const AppletLandingPage: NextPageWithLayout = () => {
                     h="full"
                     spacing={0}
                   >
-                    <TabPanel p={0}>{runIframe()}</TabPanel>
+                    {currentScriptState?.isRunnable && (
+                      <TabPanel p={0}>{runIframe()}</TabPanel>
+                    )}
                     <TabPanel p={0}>
                       <Flex
                         p={0}
