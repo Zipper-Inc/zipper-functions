@@ -62,12 +62,12 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
 
   const {
     currentScript,
-    replaceCurrentScriptCode,
     inputParams,
     inputError,
     editorHasErrors,
     getErrorFiles,
     monacoRef,
+    editor,
   } = useEditorContext();
 
   const mainApplet = useAppletContent();
@@ -136,9 +136,15 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
     if (currentScript && monacoRef?.current) {
       const model = getOrCreateScriptModel(currentScript, monacoRef.current);
       const codeWithInputAdded = addParamToCode({
-        code: model?.getValue() || currentScript.code || '',
+        code: model.getValue() || currentScript.code || '',
       });
-      replaceCurrentScriptCode(codeWithInputAdded);
+
+      const editor = monacoRef.current.editor
+        .getEditors()
+        .find((e) => e.getModel() === model);
+
+      editor?.pushUndoStop();
+      model.setValue(codeWithInputAdded);
     }
   };
 

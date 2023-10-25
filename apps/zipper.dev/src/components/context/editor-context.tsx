@@ -72,7 +72,6 @@ export type EditorContextType = {
   setIsSaving: (isSaving: boolean) => void;
   save: () => Promise<string>;
   refetchApp: () => Promise<void>;
-  replaceCurrentScriptCode: (code: string) => void;
   inputParams?: InputParam[];
   setInputParams: (inputParams?: InputParam[]) => void;
   inputError?: string;
@@ -126,7 +125,6 @@ export const EditorContext = createContext<EditorContextType>({
   refetchApp: async () => {
     return;
   },
-  replaceCurrentScriptCode: noop,
   inputParams: undefined,
   setInputParams: noop,
   inputError: undefined,
@@ -578,27 +576,6 @@ const EditorContextProvider = ({
     setLastReadLogsTimestamp(Date.now());
   };
 
-  /** todo test */
-  const replaceCurrentScriptCode = (code: string) => {
-    if (currentScript) {
-      setCurrentScript({ ...currentScript, code });
-      const models = editor?.getModels();
-      if (models) {
-        const fileModels = models.filter(
-          (model) => model.uri.scheme === 'file',
-        );
-        fileModels.forEach((model) => {
-          if (
-            `/${currentScript.filename}` === getPathFromUri(model.uri) &&
-            model.getValue() !== currentScript.code
-          ) {
-            model.setValue(currentScript.code);
-          }
-        });
-      }
-    }
-  };
-
   const getCodeByFilename = async (applyFormatting = true) => {
     if (applyFormatting) {
       const formatPromises = editor
@@ -780,7 +757,6 @@ const EditorContextProvider = ({
         setIsSaving,
         save: saveOpenModels,
         refetchApp,
-        replaceCurrentScriptCode,
         inputParams,
         setInputParams,
         inputError,
