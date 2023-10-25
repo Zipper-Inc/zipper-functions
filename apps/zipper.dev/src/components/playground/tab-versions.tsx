@@ -165,25 +165,22 @@ const VersionsTab: React.FC<VersionsTabProps> = ({ appId, slug }) => {
           const { isOpen, onOpen, onClose } = useDisclosure();
           const cancelRef =
             useRef() as React.MutableRefObject<HTMLButtonElement>;
-          const restoreMutation = trpc.version.restore.useMutation({
-            onSuccess: () => {
-              context.version.all.invalidate({ appId, limit: 100 });
-              context.app.byId.invalidate({ id: appId });
+
+          const invalidate = async () =>
+            Promise.all([
+              context.version.all.invalidate({ appId, limit: 100 }),
+              context.app.byId.invalidate({ id: appId }),
               context.app.byResourceOwnerAndAppSlugs.invalidate({
                 appSlug: slug,
                 resourceOwnerSlug: router.query['resource-owner'] as string,
-              });
-            },
+              }),
+            ]);
+
+          const restoreMutation = trpc.version.restore.useMutation({
+            onSuccess: () => invalidate(),
           });
           const promoteMutation = trpc.version.promote.useMutation({
-            onSuccess: () => {
-              context.version.all.invalidate({ appId, limit: 100 });
-              context.app.byId.invalidate({ id: appId });
-              context.app.byResourceOwnerAndAppSlugs.invalidate({
-                appSlug: slug,
-                resourceOwnerSlug: router.query['resource-owner'] as string,
-              });
-            },
+            onSuccess: () => invalidate(),
           });
 
           return (
@@ -306,20 +303,18 @@ const VersionsTab: React.FC<VersionsTabProps> = ({ appId, slug }) => {
             {getHeaderGroups().map((headerGroup) => (
               <Tr key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
-                  <>
-                    <Th
-                      key={header.id}
-                      fontWeight="normal"
-                      fontSize="sm"
-                      textTransform="none"
-                      _notFirst={{ pl: 0 }}
-                    >
-                      {flexRender(
-                        header.column.columnDef.header,
-                        header.getContext(),
-                      )}
-                    </Th>
-                  </>
+                  <Th
+                    key={header.id}
+                    fontWeight="normal"
+                    fontSize="sm"
+                    textTransform="none"
+                    _notFirst={{ pl: 0 }}
+                  >
+                    {flexRender(
+                      header.column.columnDef.header,
+                      header.getContext(),
+                    )}
+                  </Th>
                 ))}
               </Tr>
             ))}
