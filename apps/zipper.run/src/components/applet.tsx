@@ -124,7 +124,7 @@ export function AppPage({
   const [skipAuth, setSkipAuth] = useState(false);
 
   const { isOpen, onToggle } = useDisclosure({
-    defaultIsOpen: true,
+    defaultIsOpen: !isEmbedded,
   });
 
   const variants = {
@@ -137,8 +137,7 @@ export function AppPage({
     filename: entryPoint?.filename,
     config: currentFileConfig,
   });
-  const shouldShowDescription =
-    shouldShowDescriptionPassedIn && description && isOpen && !isEmbedded;
+  const shouldShowDescription = shouldShowDescriptionPassedIn && description;
   const previousRouteRef = useRef(asPath);
 
   // We have to do this so that the results aren't SSRed
@@ -385,7 +384,7 @@ export function AppPage({
         </Heading>
       )}
       <HStack align="center" alignItems="start" pb={2}>
-        {
+        {shouldShowDescription && (
           <Button
             px={0}
             variant="ghost"
@@ -404,7 +403,7 @@ export function AppPage({
           >
             {isOpen ? 'Hide' : 'Show'} App Details
           </Button>
-        }
+        )}
         {showRunOutput && runContent}
       </HStack>
       <Stack
@@ -415,7 +414,7 @@ export function AppPage({
         pb={8}
         spacing={8}
       >
-        {shouldShowDescription ? (
+        {isOpen ? (
           <VStack
             width={{ base: 'auto', md: '100%' }}
             maxW="400px"
