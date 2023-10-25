@@ -57,7 +57,7 @@ import ConnectorsAuthInputsSection from './connectors-auth-inputs-section';
 import Header from './header';
 import InputSummary from './input-summary';
 import Unauthorized from './unauthorized';
-import TimeAgo from 'timeago-react';
+import TimeAgo from 'react-timeago';
 
 const { __DEBUG__ } = process.env;
 
@@ -372,7 +372,7 @@ export function AppPage({
       pt={0}
       mt={0}
     >
-      {shouldShowDescription && title && (
+      {title && (
         <Heading
           as="h1"
           fontSize="4xl"
@@ -385,7 +385,7 @@ export function AppPage({
         </Heading>
       )}
       <HStack align="center" alignItems="start" pb={2}>
-        {shouldShowDescription && (
+        {
           <Button
             px={0}
             variant="ghost"
@@ -404,7 +404,7 @@ export function AppPage({
           >
             {isOpen ? 'Hide' : 'Show'} App Details
           </Button>
-        )}
+        }
         {showRunOutput && runContent}
       </HStack>
       <Stack
@@ -430,7 +430,23 @@ export function AppPage({
             <Stack>
               <Text fontSize="xs" color="fg.500">
                 <>
-                  Last published <TimeAgo datetime={app.updatedAt!} />
+                  Last published{' '}
+                  <TimeAgo
+                    date={app.updatedAt!}
+                    formatter={(value, unit, suffix) => {
+                      if (unit !== 'second') {
+                        return [
+                          value,
+                          unit + (value !== 1 ? 's' : ''),
+                          suffix,
+                        ].join(' ');
+                      }
+
+                      if (suffix === 'ago') {
+                        return 'a few seconds ago';
+                      }
+                    }}
+                  />
                 </>
               </Text>
             </Stack>
