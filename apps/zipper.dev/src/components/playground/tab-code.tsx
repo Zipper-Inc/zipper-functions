@@ -6,7 +6,6 @@ import {
   HStack,
   Menu,
   MenuButton,
-  MenuItem,
   MenuList,
   Text,
   useToast,
@@ -51,14 +50,6 @@ const ConnectorSidebarTips = (connectorId?: string | null) => {
     </>
   );
 };
-
-/**
- * @todo
- * figure this out nicely
- * fine to hardcode for now
- */
-const APPROXIMATE_HEADER_HEIGHT_PX = '160px';
-const MAX_CODE_TAB_HEIGHT = `calc(100vh - ${APPROXIMATE_HEADER_HEIGHT_PX})`;
 
 type CodeTabProps = {
   app: AppQueryOutput;
@@ -128,6 +119,7 @@ export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
         justify="space-between"
         display={{ base: 'flex', xl: 'none' }}
         mb={10}
+        data-tab-code="menu"
       >
         <Menu>
           {({ isOpen }) => (
@@ -181,41 +173,36 @@ export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
         </Menu>
       </HStack>
       <HStack
-        flex={1}
-        h="full"
-        p="none"
-        pl="1"
+        justify="stretch"
         spacing={0}
-        alignItems="stretch"
-        pb={3}
-        maxH={app.canUserEdit ? MAX_CODE_TAB_HEIGHT : MAX_CODE_TAB_HEIGHT + 50}
-        minH="350px"
-        overflow="hidden"
+        align="stretch"
+        h="full"
+        w="full"
+        data-tab-code="body"
       >
         <VStack
           flex={1}
           alignItems="stretch"
           minWidth="250px"
           display={{ base: 'none', xl: 'flex' }}
-          maxH="400px"
+          maxH="420px"
           minH="fit-content"
-          mt={1}
         >
           <PlaygroundSidebar app={app} mainScript={mainScript} />
         </VStack>
         <VStack
           flex={3}
-          alignItems="stretch"
-          spacing={0}
+          align="stretch"
+          justify="stretch"
           minW="sm"
           w="full"
-          overflow="auto"
+          spacing={0}
           onMouseEnter={onMouseEnter('PlaygroundCode')}
           onMouseLeave={onMouseLeave}
           border={
             hoveredElement === 'PlaygroundCode'
               ? style('PlaygroundCode').border
-              : '4px solid transparent'
+              : 'none'
           }
         >
           {isMarkdown && !isMarkdownEditable && (

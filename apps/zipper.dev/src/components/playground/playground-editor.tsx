@@ -90,6 +90,7 @@ export default function PlaygroundEditor(
     yProvider: undefined,
     bindings: {},
   });
+  const wrapperRef = useRef<HTMLDivElement>(null);
   const [isEditorReady, setIsEditorReady] = useState(false);
   const [isModelReady, setIsModelReady] = useState(false);
   const [isLiveblocksReady, setIsLiveblocksReady] = useState(false);
@@ -100,6 +101,8 @@ export default function PlaygroundEditor(
     'typescript' | 'markdown'
   >('typescript');
   const theme = useColorModeValue('vs', 'vs-dark');
+
+  console.log(wrapperRef);
 
   const handleEditorDidMount = (editor: MonacoEditor, monaco: Monaco) => {
     console.log('[EDITOR]', 'Editor is mounted');
@@ -376,6 +379,11 @@ export default function PlaygroundEditor(
     }
   }, [currentScript, editorRef.current, isEditorReady, isModelReady]);
 
+  useEffect(() => {
+    if (wrapperRef.current) {
+      const { top } = wrapperRef.current.getBoundingClientRect();
+    }
+  }, [wrapperRef.current]);
   const room = useRoom();
 
   /**
@@ -522,9 +530,19 @@ export default function PlaygroundEditor(
       <Editor
         defaultLanguage={defaultLanguage}
         theme={theme}
+        width="100%"
+        height={
+          wrapperRef.current
+            ? `calc(100vh - ${
+                wrapperRef.current.getBoundingClientRect().top
+              }px)`
+            : '99%'
+        }
+        wrapperProps={{
+          ref: wrapperRef,
+        }}
         options={{
           fontSize: 13,
-          automaticLayout: true,
           readOnly,
           fixedOverflowWidgets: true,
           renderLineHighlight: 'line',
