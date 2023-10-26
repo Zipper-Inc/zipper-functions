@@ -55,16 +55,21 @@ export const parsePlaygroundQuery = (
   return { resourceOwnerSlug, appSlug, tab, filename };
 };
 
-export function getOrCreateScriptModel(script: Script, m: Monaco) {
+export function getOrCreateScriptModel(
+  script: Script,
+  { Uri, editor }: Monaco,
+) {
   const extension = script.filename.split('.').pop();
   const path = script.filename;
-  const uri = getUriFromPath(path, m.Uri.parse, 'tsx');
-  return (
-    m.editor.getModel(uri) ||
-    m.editor.createModel(
-      script.code,
-      extension === 'md' ? 'markdown' : 'typescript',
-      uri,
-    )
+  const uri = getUriFromPath(path, Uri.parse, 'tsx');
+
+  const existingModel = editor.getModel(uri);
+  if (existingModel) return existingModel;
+
+  console.log('[EDITOR]', `Creating model for ${script.filename}`);
+  return editor.createModel(
+    script.code,
+    extension === 'md' ? 'markdown' : 'typescript',
+    uri,
   );
 }
