@@ -1,5 +1,6 @@
 import { App, Script } from '@prisma/client';
 import hash from 'object-hash';
+import { frameworkHash } from 'framework-hash';
 
 const APP_VERSION_LENGTH = 7;
 
@@ -33,7 +34,7 @@ export function getAppHash(
   );
 
   return hash(
-    { id: app.id, slug: app.slug, scripts },
+    { id: app.id, slug: app.slug, scripts, frameworkHash },
     {
       algorithm: 'sha1',
     },

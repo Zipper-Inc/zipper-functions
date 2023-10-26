@@ -1,5 +1,9 @@
 #!/bin/deno
 import { generateIndexForFramework } from '../../@zipper-utils/src/utils/generate-for-framework.ts';
+import {
+  crypto,
+  toHashString,
+} from 'https://deno.land/std@0.204.0/crypto/mod.ts';
 
 export const APPLET_ROOT = './deno/applet';
 export const SRC_DIR = `${APPLET_ROOT}/src`;
