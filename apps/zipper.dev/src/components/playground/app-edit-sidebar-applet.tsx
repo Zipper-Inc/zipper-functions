@@ -183,7 +183,10 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
     <>
       {description && (
         <Box mb="6">
-          <HandlerDescription description={description} />
+          <HandlerDescription
+            description={description}
+            location={ZipperLocation.ZipperDotDev}
+          />
         </Box>
       )}
       <Box

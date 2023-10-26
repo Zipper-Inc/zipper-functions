@@ -15,6 +15,7 @@ import {
   EntryPointInfo,
   InputParams,
   UserAuthConnector,
+  ZipperLocation,
 } from '@zipper/types';
 import {
   AppletAuthor,
@@ -457,6 +458,7 @@ export function AppPage({
                     ? description
                     : { ...description, title: undefined }
                 }
+                location={ZipperLocation.ZipperDotRun}
               />
             </Stack>
           </VStack>
