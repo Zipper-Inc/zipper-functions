@@ -226,6 +226,7 @@ export default async function handler(
           userId: userInfo.userId,
           orgId: undefined,
           organizations: organizations,
+          session: undefined,
         }),
         isDataSensitive,
       },

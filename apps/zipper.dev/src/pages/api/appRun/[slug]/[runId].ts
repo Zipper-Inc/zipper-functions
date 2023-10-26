@@ -147,6 +147,7 @@ export default async function handler(
           userId: userInfo.userId,
           orgId: undefined,
           organizations,
+          session: undefined,
         }),
         isDataSensitive,
       },
