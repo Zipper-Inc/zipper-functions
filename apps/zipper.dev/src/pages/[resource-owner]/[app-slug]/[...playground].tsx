@@ -26,6 +26,7 @@ const PlaygroundPage: NextPageWithLayout<Props> = ({
     { resourceOwnerSlug, appSlug },
     { retry: false },
   );
+
   const utils = trpc.useContext();
 
   if (appQuery.error) {
@@ -52,12 +53,14 @@ const PlaygroundPage: NextPageWithLayout<Props> = ({
 
   const pageTitle = `${data.resourceOwner.slug} / ${data.name || data.slug}`;
 
-  const refetchApp = async () => {
+  const refetchApp: typeof appQuery.refetch = async (options) => {
+    console.log('[EDITOR]', 'Refetching applet from database');
     utils.app.byResourceOwnerAndAppSlugs.invalidate({
       resourceOwnerSlug,
       appSlug,
     });
     utils.app.byId.invalidate({ id: appQuery.data.id });
+    return appQuery.refetch(options);
   };
 
   const playground = withLiveblocksRoom(
@@ -67,7 +70,6 @@ const PlaygroundPage: NextPageWithLayout<Props> = ({
         appId={appQuery.data?.id}
         appSlug={appQuery.data.slug}
         resourceOwnerSlug={appQuery.data.resourceOwner.slug}
-        initialScripts={appQuery.data?.scripts || []}
         refetchApp={refetchApp}
         readOnly={appQuery.data.canUserEdit === false}
       >
