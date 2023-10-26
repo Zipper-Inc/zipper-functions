@@ -60,11 +60,11 @@ import {
 } from 'react-icons/pi';
 
 const tabPanelStyles: ChakraProps = {
-  flex: 1,
   p: 0,
-  pt: 5,
+  pt: 2,
   display: 'flex',
   flexDirection: 'column',
+  h: 'full',
 };
 
 export function Playground({
@@ -153,12 +153,7 @@ export function Playground({
       onAfterRun={onAfterRun}
       preserveLogs={preserveLogs}
     >
-      <VStack
-        flex={1}
-        paddingX={{ base: 4, md: 10 }}
-        alignItems="stretch"
-        spacing={0}
-      >
+      <VStack align="stretch" spacing={0} h="full" w="full" data-playground>
         <PlaygroundHeader app={app} />
 
         <Tabs
@@ -173,6 +168,7 @@ export function Playground({
           justifyContent="stretch"
           flex={1}
           isLazy
+          data-playground-nav-tabs
         >
           <TabList
             borderBottom="1px solid"
@@ -258,7 +254,11 @@ export function Playground({
           {/* TAB PANELS */}
           <TabPanels as={VStack} alignItems="stretch" h="full" spacing={0}>
             {/* CODE */}
-            <TabPanel position="relative" {...tabPanelStyles}>
+            <TabPanel
+              position="relative"
+              {...tabPanelStyles}
+              data-playground-nav-tab="code"
+            >
               {isSaving && (
                 <Progress
                   isIndeterminate
