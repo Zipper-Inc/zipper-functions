@@ -179,4 +179,5 @@ export const getOmniContext = (req: NextApiRequest): Context => ({
   orgId: undefined,
   organizations: undefined,
   req,
+  session: undefined,
 });

@@ -1,7 +1,7 @@
-import { getToken } from 'next-auth/jwt';
 import { prisma } from '~/server/prisma';
 import { createUploadthing, type FileRouter } from 'uploadthing/next-legacy';
 import { createNextPageApiHandler } from 'uploadthing/next-legacy';
+import { getServerSession } from 'next-auth';
 
 const f = createUploadthing();
 
@@ -12,16 +12,18 @@ export const ourFileRouter = {
     // Set permissions and file types for this FileRoute
     .middleware(async ({ req }) => {
       // This code runs on your server before upload
-      const user = await getToken({ req });
+      const session = await getServerSession();
 
       // If you throw, the user will not be able to upload
-      if (!user) throw new Error('Unauthorized');
+      if (!session?.user) throw new Error('Unauthorized');
 
       // Whatever is returned here is accessible in onUploadComplete as `metadata`
-      return { userId: user.sub };
+      return { userId: session.user.id };
     })
     .onUploadComplete(async ({ metadata, file }) => {
       // This code RUNS ON YOUR SERVER after upload
+      if (!metadata.userId)
+        throw new Error('Missing userId on UploadThing upload complete');
       await prisma.user.update({
         where: { id: metadata.userId },
         data: {
