@@ -27,10 +27,11 @@ import LiveblocksProvider, { Awareness } from '@liveblocks/yjs';
 import { MonacoBinding } from 'y-monaco';
 
 import { PlaygroundCollabCursor } from './playground-collab-cursor';
-import { getOrCreateScriptModel } from '~/utils/playground.utils';
-import { BaseUserMeta, JsonObject, LsonObject } from '@liveblocks/client';
+import {
+  getModelFromScript,
+  getOrCreateScriptModel,
+} from '~/utils/playground.utils';
 import { TypedLiveblocksProvider } from '~/liveblocks.config';
-import { set } from 'lodash';
 import { Script } from '@prisma/client';
 // import { getRewriteRule } from '~/utils/rewrite-imports';
 
@@ -306,6 +307,56 @@ export default function PlaygroundEditor(
     }
   }, [monacoEditor]);
 
+  // Load new scripts
+  // Purges old scripts and reconnects to liveblocks
+  useEffect(() => {
+    if (!monacoRef?.current) return;
+
+    const monacoModels = monacoRef.current.editor
+      ?.getModels()
+      .filter((model) => model.uri.scheme === 'file');
+
+    if (monacoModels && scripts) {
+      const newModelsCreated: {
+        model: monaco.editor.ITextModel;
+        script: Script;
+      }[] = [];
+
+      const scriptModels = scripts.map((script) => {
+        const existingModel = getModelFromScript(script, monacoRef.current!);
+        if (existingModel) return existingModel;
+        const newModel = getOrCreateScriptModel(script, monacoRef.current!);
+        newModelsCreated.push({ model: newModel, script });
+        return newModel;
+      });
+
+      const modelsToPurge = monacoModels
+        .filter((m) => !scriptModels.includes(m))
+        .map((m) => ({
+          model: m,
+          bindingEntry: Object.entries(yRefs.current.bindings).find(
+            ([k, b]) => b.monacoModel === m,
+          ),
+        }));
+
+      if (modelsToPurge.length) {
+        modelsToPurge.forEach(({ model, bindingEntry }) => {
+          const [id, binding] = bindingEntry || [];
+          if (binding && id) {
+            delete yRefs.current.bindings[id];
+            yRefs.current.bindings[id];
+            binding?.destroy();
+          }
+          model.dispose();
+        });
+      }
+
+      newModelsCreated.forEach(async ({ script }) => {
+        maybeResyncScript(script);
+      });
+    }
+  }, [scripts, monacoRef]);
+
   // switch files
   useEffect(() => {
     if (
@@ -316,9 +367,12 @@ export default function PlaygroundEditor(
       isModelReady
     ) {
       const model = getOrCreateScriptModel(currentScript, monaco);
+      if (model === editorRef.current.getModel()) return;
+
       console.log('[EDITOR]', `Setting model to ${currentScript.filename}`);
-      maybeResyncScript(currentScript);
+
       editorRef.current.setModel(model);
+      maybeResyncScript(currentScript).then(() => {});
     }
   }, [currentScript, editorRef.current, isEditorReady, isModelReady]);
 
@@ -387,21 +441,22 @@ export default function PlaygroundEditor(
     );
 
     return new Promise<void>((resolve) =>
-      yProvider.once('synced', (args: any) => {
-        // Wait for the first sync to happen and replace empty model with script code
+      yProvider.once('synced', (_args: true | [string, any][]) => {
+        // If the sync event is empty then we need to reset the script
         if (yText.length === 0 && script.code.trim().length > 0) {
           resetSyncedScript(script);
         } else {
-          console.log(
-            '[EDITOR]',
-            '(liveblocks)',
-            `${script.filename}`,
-            'synced',
-          );
+          console.log('[EDITOR]', '(liveblocks)', script.filename, 'synced');
         }
         resolve();
       }),
-    );
+    ).then(() => {
+      runEditorActions({
+        now: true,
+        value: model.getValue(),
+        currentScript: script,
+      });
+    });
   };
 
   /**
@@ -412,7 +467,7 @@ export default function PlaygroundEditor(
     const { yProvider, bindings } = yRefs.current;
     if (!yProvider || bindings[script.id]) return;
     const syncPromise = syncScriptOnce(script);
-    yProvider.emit('synced', [['resync', true]]);
+    yProvider.emit('synced', Object.entries({ resync: script.id }));
     return syncPromise;
   };
 
