@@ -5,7 +5,8 @@
   "deno.unstable": true,
   "deno.enablePaths": [
     "./packages/@zipper-framework/bin",
-    "./packages/@zipper-framework/deno"
+    "./packages/@zipper-framework/deno",
+    "./packages/@zipper-framework/generated"
   ],
   "[mdx]": {
     "editor.wordWrap": "on"
