@@ -372,7 +372,7 @@ export default function PlaygroundEditor(
       console.log('[EDITOR]', `Setting model to ${currentScript.filename}`);
 
       editorRef.current.setModel(model);
-      maybeResyncScript(currentScript).then(() => {});
+      maybeResyncScript(currentScript);
     }
   }, [currentScript, editorRef.current, isEditorReady, isModelReady]);
 
