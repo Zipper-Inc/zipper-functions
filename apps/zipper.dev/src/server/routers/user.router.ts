@@ -127,12 +127,10 @@ export const userRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const token = await getToken({ req: ctx.req! });
-
       return generateAccessToken(
         {
           userId: ctx.userId,
-          authToken: token,
+          session: ctx.session,
         },
         { expiresIn: input.expiresIn },
       );

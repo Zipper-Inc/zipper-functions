@@ -3,8 +3,8 @@
  */
 import { captureException } from '@sentry/nextjs';
 import { createNextApiHandler } from '@trpc/server/adapters/next';
+import { getServerSession } from 'next-auth';
 
-import { getToken } from 'next-auth/jwt';
 import { createContext } from '~/server/context';
 import { trpcRouter } from '~/server/routers/_app';
 
@@ -27,7 +27,7 @@ export default createNextApiHandler({
       captureException(error, { extra: data });
       console.error(error);
     } else {
-      console.log(getToken({ req }));
+      console.log(data);
     }
     // if (error.code === 'INTERNAL_SERVER_ERROR') {
     //   // send to bug reporting
