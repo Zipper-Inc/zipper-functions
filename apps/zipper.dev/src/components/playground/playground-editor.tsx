@@ -78,6 +78,7 @@ export default function PlaygroundEditor(
     monacoRef,
     runEditorActions,
     readOnly,
+    onValidate,
   } = useEditorContext();
   const { appInfo, boot } = useRunAppContext();
   const editorRef = useRef<MonacoEditor>();
@@ -306,6 +307,31 @@ export default function PlaygroundEditor(
         (window as any).monaco = monaco;
     }
   }, [monacoEditor]);
+
+  /**
+   * Copy pasted/edited from react-monaco code
+   * Runs the validation on start of editor for each file
+   */
+  useEffect(() => {
+    if (isEditorReady) {
+      const changeMarkersListener =
+        monacoRef?.current!.editor.onDidChangeMarkers((uris) => {
+          uris
+            .filter((uri) => uri.scheme === 'file')
+            .forEach((uri) => {
+              const markers = monacoRef?.current!.editor.getModelMarkers({
+                resource: uri,
+              });
+              const filename = getPathFromUri(uri).replace(/^\//, '');
+              onValidate(markers, filename);
+            });
+        });
+
+      return () => {
+        changeMarkersListener?.dispose();
+      };
+    }
+  }, [isEditorReady]);
 
   // Load new scripts
   // Purges old scripts and reconnects to liveblocks
