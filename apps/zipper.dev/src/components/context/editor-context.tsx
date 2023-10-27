@@ -335,7 +335,8 @@ async function runEditorActionsNow({
   const currentModel = monacoRef.current.editor.getEditors()[0]?.getModel();
 
   const isVisible =
-    currentModel && getPathFromUri(currentModel.uri) === currentScript.filename;
+    currentModel &&
+    getPathFromUri(currentModel.uri) === `/${currentScript.filename}`;
 
   const setInputParams = !isVisible || readOnly ? noop : setInputParamsPassedIn;
   const setInputError = !isVisible || readOnly ? noop : setInputErrorPassedIn;
