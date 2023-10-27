@@ -185,6 +185,7 @@ export async function buildAndStoreApplet({
     id: app.id,
     slug: app.slug,
     scripts: app.scripts,
+    secretsHash: app.secretsHash,
   });
 
   const buildBuffer = async () => {

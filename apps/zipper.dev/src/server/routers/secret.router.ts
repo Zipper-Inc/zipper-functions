@@ -4,6 +4,7 @@ import { prisma } from '~/server/prisma';
 import { hasAppEditPermission } from '../utils/authz.utils';
 import { encryptToBase64 } from '@zipper/utils';
 import { createTRPCRouter, publicProcedure } from '../root';
+import hash from 'object-hash';
 
 const defaultSelect = Prisma.validator<Prisma.SecretSelect>()({
   id: true,
@@ -11,6 +12,30 @@ const defaultSelect = Prisma.validator<Prisma.SecretSelect>()({
   key: true,
   encryptedValue: true,
 });
+
+const updateAppSecretsHash = async (appId: string) => {
+  const secrets = await prisma.secret.findMany({
+    where: {
+      appId,
+    },
+    orderBy: {
+      key: 'asc',
+    },
+    select: {
+      key: true,
+      encryptedValue: true,
+    },
+  });
+  const secretsHash = hash(secrets);
+  await prisma.app.update({
+    where: {
+      id: appId,
+    },
+    data: {
+      secretsHash,
+    },
+  });
+};
 
 export const secretRouter = createTRPCRouter({
   add: publicProcedure
@@ -34,7 +59,7 @@ export const secretRouter = createTRPCRouter({
 
       const encryptedValue = encryptToBase64(value, process.env.ENCRYPTION_KEY);
 
-      return prisma.secret.upsert({
+      const secret = await prisma.secret.upsert({
         where: {
           appId_key: {
             appId,
@@ -51,6 +76,10 @@ export const secretRouter = createTRPCRouter({
         },
         select: defaultSelect,
       });
+
+      await updateAppSecretsHash(appId);
+
+      return secret;
     }),
   get: publicProcedure
     .input(
@@ -117,6 +146,8 @@ export const secretRouter = createTRPCRouter({
           },
         });
 
+        await updateAppSecretsHash(input.appId);
+
         return {
           id: input.id,
         };
@@ -129,6 +160,8 @@ export const secretRouter = createTRPCRouter({
             appId: input.appId,
           },
         });
+
+        await updateAppSecretsHash(input.appId);
 
         return {
           key: input.key,

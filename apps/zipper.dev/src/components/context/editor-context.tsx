@@ -19,7 +19,6 @@ import {
 
 import { trpc } from '~/utils/trpc';
 import { useRouter } from 'next/router';
-import { LiveObject, LsonObject } from '@liveblocks/client';
 import { getPathFromUri, getUriFromPath } from '~/utils/model-uri';
 import { InputParam } from '@zipper/types';
 import { isExternalImport, parseCode } from '~/utils/parse-code';
@@ -28,8 +27,6 @@ import { uuid } from '@zipper/utils';
 import { prettyLog } from '~/utils/pretty-log';
 import { AppQueryOutput } from '~/types/trpc';
 import {
-  getAppHash,
-  getAppHashAndVersion,
   getAppHashFromScripts,
   getAppVersionFromHash,
   getScriptHash,
@@ -42,7 +39,6 @@ import {
 } from '~/utils/playground.utils';
 import { runZipperLinter } from '~/utils/zipper-editor-linter';
 import { rewriteSpecifier } from '~/utils/rewrite-imports';
-import { rest } from 'lodash';
 
 type OnValidate = AddParameters<
   Required<EditorProps>['onValidate'],

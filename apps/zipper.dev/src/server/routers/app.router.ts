@@ -51,6 +51,7 @@ const defaultSelect = Prisma.validator<Prisma.AppSelect>()({
   createdById: true,
   requiresAuthToRun: true,
   isDataSensitive: true,
+  secretsHash: true,
 });
 
 export const defaultCode = [

@@ -31,6 +31,7 @@ model App {
   isDataSensitive       Boolean   @default(false)
   isTemplate            Boolean   @default(false)
   dailyRunLimit         Int       @default(1000)
+  secretsHash           String?
 
   scriptMain ScriptMain?
 
