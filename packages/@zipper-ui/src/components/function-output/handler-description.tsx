@@ -131,7 +131,7 @@ export function HandlerDescription(props: Props) {
         <MobileView />
       ) : (
         <VStack align="start" width="full" mt={4}>
-          {window.ZipperLocation === ZipperLocation.ZipperDotDev && title && (
+          {title && (
             <Heading as="h1" fontSize="4xl" fontWeight="medium">
               {title}
             </Heading>
