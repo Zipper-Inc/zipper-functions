@@ -65,8 +65,7 @@ export function PlaygroundSidebar({
   app: AppQueryOutput;
   mainScript: Script;
 }) {
-  const { currentScript, setCurrentScript } = useEditorContext();
-  const { refetchApp } = useEditorContext();
+  const { currentScript, setCurrentScript, refetchApp } = useEditorContext();
 
   const renameForm: ScriptItemProps['renameForm'] = useForm();
 
@@ -86,7 +85,7 @@ export function PlaygroundSidebar({
 
   const editScriptQuery = trpc.script.edit.useMutation({
     async onSuccess() {
-      refetchApp();
+      await refetchApp();
     },
   });
 
@@ -102,7 +101,7 @@ export function PlaygroundSidebar({
 
   const addScript = trpc.script.add.useMutation({
     async onSuccess() {
-      refetchApp();
+      await refetchApp();
     },
   });
 
