@@ -311,7 +311,7 @@ async function handleExternalImports({
 
 async function runEditorActionsNow({
   value,
-  setInputParams,
+  setInputParams: setInputParamsPassedIn,
   setInputError: setInputErrorPassedIn,
   monacoRef,
   currentScript,
@@ -332,7 +332,13 @@ async function runEditorActionsNow({
 }) {
   if (!monacoRef.current) return;
 
-  const setInputError = readOnly ? noop : setInputErrorPassedIn;
+  const currentModel = monacoRef.current.editor.getEditors()[0]?.getModel();
+
+  const isVisible =
+    currentModel && getPathFromUri(currentModel.uri) === currentScript.filename;
+
+  const setInputParams = !isVisible || readOnly ? noop : setInputParamsPassedIn;
+  const setInputError = !isVisible || readOnly ? noop : setInputErrorPassedIn;
   const setModelIsDirty = readOnly ? noop : setModelIsDirtyPassedIn;
   const linter = readOnly ? noop : runZipperLinter;
 
@@ -454,28 +460,6 @@ const EditorContextProvider = ({
     );
     setModelHasErrors(filename, !!errorMarker);
   };
-
-  useEffect(() => {
-    const models = editor?.getModels();
-    if (models && scripts.length) {
-      const fileModels = models.filter((model) => model.uri.scheme === 'file');
-      // if there are more models than scripts, it means we have models to dispose of
-      fileModels.forEach((model) => {
-        // if the model is not in the scripts, dispose of it
-        if (
-          !scripts.find(
-            (script) => `/${script.filename}` === getPathFromUri(model.uri),
-          )
-        ) {
-          // if the model is the script that has been deleted, set the current script to the first script
-          if (`/${currentScript?.filename}` === getPathFromUri(model.uri)) {
-            setCurrentScript(scripts[0]!);
-          }
-          model.dispose();
-        }
-      });
-    }
-  }, [scripts]);
 
   const router = useRouter();
 
@@ -649,7 +633,6 @@ const EditorContextProvider = ({
       }
 
       resetDirtyState();
-      await refetchApp();
 
       const newVersion = getAppVersionFromHash(newApp.playgroundVersionHash);
 
