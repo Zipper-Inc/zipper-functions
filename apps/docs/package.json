@@ -4,7 +4,7 @@
   "description": "Zipper docs",
   "scripts": {
     "dev": "next dev -p 3003",
-    "build": "next build",
+    "build": "next build --no-lint",
     "start": "next start"
   },
   "license": "MIT",

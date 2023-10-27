@@ -33,7 +33,7 @@ export default function AddScriptForm({
   connectors: Pick<AppConnector, 'type'>[];
   onCreate: (script: Script) => void;
 }) {
-  const { register, handleSubmit, reset, watch } = useForm();
+  const { register, handleSubmit, reset: resetForm, watch } = useForm();
   const { setCurrentScript, scripts, refetchApp } = useEditorContext();
 
   const addScript = trpc.script.add.useMutation({
@@ -41,7 +41,7 @@ export default function AddScriptForm({
       // refetches posts after a post is added
       await refetchApp();
       setCurrentScript(script as Script);
-      reset();
+      resetForm();
       onCreate(script as Script);
     },
   });

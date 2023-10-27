@@ -299,7 +299,6 @@ export const defaults: Components & { heading: Components['h1'] } = {
     );
   },
   heading: (props) => {
-    console.log('heading props', props);
     const { level, children } = props;
     const sizes = ['xl', 'lg', 'md', 'sm', 'xs', '2xs'];
     return (

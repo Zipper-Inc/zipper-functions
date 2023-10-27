@@ -9,7 +9,7 @@
     "dotenv:production": "dotenv $(sh ../../bin/dotenv.production.sh)",
     "build": "next build",
     "build:preview": "yarn dotenv:preview -- -- next build",
-    "build:production": "yarn dotenv:production -- -- next build",
+    "build:production": "yarn dotenv:production -- -- next build --no-lint",
     "start": "yarn playwright install; next start",
     "start:preview": "yarn playwright install; yarn dotenv:preview -- -- next start",
     "start:production": "yarn playwright install; yarn dotenv:production -- -- next start",

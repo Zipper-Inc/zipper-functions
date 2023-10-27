@@ -47,6 +47,7 @@ export * from '../src/hooks/use-applet-content';
 export * from '../src/hooks/use-array';
 export * from '../src/hooks/use-cmd-or-ctrl';
 export * from '../src/hooks/use-effect-once';
+export * from '../src/hooks/use-previous';
 export * from '../src/hooks/use-select';
 export * from '../src/theme/multiSelectTheme';
 export { default as multiSelectTheme } from '../src/theme/multiSelectTheme';

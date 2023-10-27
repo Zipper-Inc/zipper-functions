@@ -11,11 +11,7 @@ import {
 } from 'react';
 import noop from '~/utils/noop';
 
-import {
-  useSelf,
-  useStorage as useLiveStorage,
-  useMutation as useLiveMutation,
-} from '~/liveblocks.config';
+import { useSelf } from '~/liveblocks.config';
 
 import { trpc } from '~/utils/trpc';
 import { useRouter } from 'next/router';
@@ -28,8 +24,6 @@ import { uuid } from '@zipper/utils';
 import { prettyLog } from '~/utils/pretty-log';
 import { AppQueryOutput } from '~/types/trpc';
 import {
-  getAppHash,
-  getAppHashAndVersion,
   getAppHashFromScripts,
   getAppVersionFromHash,
   getScriptHash,
@@ -42,7 +36,6 @@ import {
 } from '~/utils/playground.utils';
 import { runZipperLinter } from '~/utils/zipper-editor-linter';
 import { rewriteSpecifier } from '~/utils/rewrite-imports';
-import { rest } from 'lodash';
 
 type OnValidate = AddParameters<
   Required<EditorProps>['onValidate'],
@@ -58,7 +51,6 @@ export type EditorContextType = {
   onValidate: OnValidate;
   connectionId?: number;
   scripts: Script[];
-  setScripts: (scripts: Script[]) => void;
   editor?: typeof monaco.editor;
   setEditor: (editor: typeof monaco.editor) => void;
   isModelDirty: (path: string) => boolean;
@@ -71,7 +63,7 @@ export type EditorContextType = {
   isSaving: boolean;
   setIsSaving: (isSaving: boolean) => void;
   save: () => Promise<string>;
-  refetchApp: () => Promise<void>;
+  refetchApp: () => Promise<any>;
   inputParams?: InputParam[];
   setInputParams: (inputParams?: InputParam[]) => void;
   inputError?: string;
@@ -107,7 +99,6 @@ export const EditorContext = createContext<EditorContextType>({
   onValidate: noop,
   connectionId: undefined,
   scripts: [],
-  setScripts: noop,
   editor: undefined,
   setEditor: noop,
   isModelDirty: () => false,
@@ -320,7 +311,7 @@ async function handleExternalImports({
 
 async function runEditorActionsNow({
   value,
-  setInputParams,
+  setInputParams: setInputParamsPassedIn,
   setInputError: setInputErrorPassedIn,
   monacoRef,
   currentScript,
@@ -341,7 +332,13 @@ async function runEditorActionsNow({
 }) {
   if (!monacoRef.current) return;
 
-  const setInputError = readOnly ? noop : setInputErrorPassedIn;
+  const currentModel = monacoRef.current.editor.getEditors()[0]?.getModel();
+
+  const isVisible =
+    currentModel && getPathFromUri(currentModel.uri) === currentScript.filename;
+
+  const setInputParams = !isVisible || readOnly ? noop : setInputParamsPassedIn;
+  const setInputError = !isVisible || readOnly ? noop : setInputErrorPassedIn;
   const setModelIsDirty = readOnly ? noop : setModelIsDirtyPassedIn;
   const linter = readOnly ? noop : runZipperLinter;
 
@@ -390,7 +387,6 @@ const EditorContextProvider = ({
   appId,
   appSlug,
   resourceOwnerSlug,
-  initialScripts,
   refetchApp,
   readOnly,
 }: {
@@ -399,18 +395,14 @@ const EditorContextProvider = ({
   appId: string | undefined;
   appSlug: string | undefined;
   resourceOwnerSlug: string | undefined;
-  initialScripts: Script[];
-  refetchApp: () => Promise<void>;
+  refetchApp: () => Promise<any>;
   readOnly: boolean;
 }) => {
-  const [currentScript, setCurrentScript] = useState<Script | undefined>(
-    undefined,
-  );
+  const [currentScriptId, setCurrentScriptId] = useState<string>();
 
   const [inputParams, setInputParams] = useState<InputParam[] | undefined>([]);
   const [inputError, setInputError] = useState<string | undefined>();
 
-  const [scripts, setScripts] = useState<Script[]>(initialScripts);
   const [isSaving, setIsSaving] = useState(false);
 
   const [editor, setEditor] = useState<typeof monaco.editor | undefined>();
@@ -426,6 +418,11 @@ const EditorContextProvider = ({
   const [modelsErrorState, setModelsErrorState] = useState<
     Record<string, boolean>
   >({});
+
+  const { scripts } = app;
+
+  const currentScript = scripts.find((s) => s.id === currentScriptId);
+  const setCurrentScript = (s: Script) => setCurrentScriptId(s.id);
 
   const resetDirtyState = () => {
     setModelsDirtyState(
@@ -463,28 +460,6 @@ const EditorContextProvider = ({
     );
     setModelHasErrors(filename, !!errorMarker);
   };
-
-  useEffect(() => {
-    const models = editor?.getModels();
-    if (models) {
-      const fileModels = models.filter((model) => model.uri.scheme === 'file');
-      // if there are more models than scripts, it means we have models to dispose of
-      fileModels.forEach((model) => {
-        // if the model is not in the scripts, dispose of it
-        if (
-          !scripts.find(
-            (script) => `/${script.filename}` === getPathFromUri(model.uri),
-          )
-        ) {
-          // if the model is the script that has been deleted, set the current script to the first script
-          if (`/${currentScript?.filename}` === getPathFromUri(model.uri)) {
-            setCurrentScript(scripts[0]);
-          }
-          model.dispose();
-        }
-      });
-    }
-  }, [scripts]);
 
   const router = useRouter();
 
@@ -658,7 +633,6 @@ const EditorContextProvider = ({
       }
 
       resetDirtyState();
-      await refetchApp();
 
       const newVersion = getAppVersionFromHash(newApp.playgroundVersionHash);
 
@@ -739,7 +713,6 @@ const EditorContextProvider = ({
         onValidate,
         connectionId: self?.connectionId,
         scripts,
-        setScripts,
         editor,
         setEditor,
         isModelDirty,

@@ -114,10 +114,13 @@ export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
   const currentScriptConnectorId = currentScript?.connectorId;
 
   const isMarkdown = currentScript?.filename.endsWith('.md');
-  const model =
-    currentScript && monacoRef?.current
-      ? getOrCreateScriptModel(currentScript, monacoRef.current)
-      : undefined;
+  const getMarkdownBody = () => {
+    if (currentScript && monacoRef?.current) {
+      const model = getOrCreateScriptModel(currentScript, monacoRef.current);
+      if (model) return model.getValue();
+    }
+    return currentScript?.code || '';
+  };
 
   return (
     <>
@@ -229,9 +232,7 @@ export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
                 },
               }}
             >
-              <Markdown
-                children={model?.getValue() || currentScript?.code || ''}
-              />
+              <Markdown children={getMarkdownBody()} />
             </VStack>
           )}
 

@@ -27,10 +27,11 @@ import LiveblocksProvider, { Awareness } from '@liveblocks/yjs';
 import { MonacoBinding } from 'y-monaco';
 
 import { PlaygroundCollabCursor } from './playground-collab-cursor';
-import { getOrCreateScriptModel } from '~/utils/playground.utils';
-import { BaseUserMeta, JsonObject, LsonObject } from '@liveblocks/client';
+import {
+  getModelFromScript,
+  getOrCreateScriptModel,
+} from '~/utils/playground.utils';
 import { TypedLiveblocksProvider } from '~/liveblocks.config';
-import { set } from 'lodash';
 import { Script } from '@prisma/client';
 // import { getRewriteRule } from '~/utils/rewrite-imports';
 
@@ -83,11 +84,11 @@ export default function PlaygroundEditor(
   const yRefs = useRef<{
     yDoc?: Y.Doc;
     yProvider?: TypedLiveblocksProvider;
-    bindings: MonacoBinding[];
+    bindings: Record<string, MonacoBinding>;
   }>({
     yDoc: undefined,
     yProvider: undefined,
-    bindings: [],
+    bindings: {},
   });
   const [isEditorReady, setIsEditorReady] = useState(false);
   const [isModelReady, setIsModelReady] = useState(false);
@@ -101,7 +102,7 @@ export default function PlaygroundEditor(
   const theme = useColorModeValue('vs', 'vs-dark');
 
   const handleEditorDidMount = (editor: MonacoEditor, monaco: Monaco) => {
-    console.log('[EDITOR] Editor is mounted');
+    console.log('[EDITOR]', 'Editor is mounted');
 
     monaco.editor.defineTheme('vs-dark', {
       inherit: true,
@@ -145,7 +146,7 @@ export default function PlaygroundEditor(
       }
     });
 
-    console.log('[EDITOR] Editor is ready');
+    console.log('[EDITOR]', 'Editor is ready');
     setIsEditorReady(true);
 
     // A hack to take over the opening of models by trying to cmd+click
@@ -295,16 +296,66 @@ export default function PlaygroundEditor(
 
       // start the boot don't wait for it to finish
       boot({ shouldSave: false }).then(() =>
-        console.log('[EDITOR] Applet is booted'),
+        console.log('[EDITOR]', 'Applet is booted'),
       );
 
-      console.log('[EDITOR] Models are ready');
+      console.log('[EDITOR]', 'Models are ready');
       setIsModelReady(true);
 
       if (process.env.NODE_ENV === 'development')
         (window as any).monaco = monaco;
     }
   }, [monacoEditor]);
+
+  // Load new scripts
+  // Purges old scripts and reconnects to liveblocks
+  useEffect(() => {
+    if (!monacoRef?.current) return;
+
+    const monacoModels = monacoRef.current.editor
+      ?.getModels()
+      .filter((model) => model.uri.scheme === 'file');
+
+    if (monacoModels && scripts) {
+      const newModelsCreated: {
+        model: monaco.editor.ITextModel;
+        script: Script;
+      }[] = [];
+
+      const scriptModels = scripts.map((script) => {
+        const existingModel = getModelFromScript(script, monacoRef.current!);
+        if (existingModel) return existingModel;
+        const newModel = getOrCreateScriptModel(script, monacoRef.current!);
+        newModelsCreated.push({ model: newModel, script });
+        return newModel;
+      });
+
+      const modelsToPurge = monacoModels
+        .filter((m) => !scriptModels.includes(m))
+        .map((m) => ({
+          model: m,
+          bindingEntry: Object.entries(yRefs.current.bindings).find(
+            ([k, b]) => b.monacoModel === m,
+          ),
+        }));
+
+      if (modelsToPurge.length) {
+        modelsToPurge.forEach(({ model, bindingEntry }) => {
+          const [id, binding] = bindingEntry || [];
+          if (binding && id) {
+            delete yRefs.current.bindings[id];
+            yRefs.current.bindings[id];
+            binding?.destroy();
+          }
+          model.dispose();
+        });
+      }
+
+      newModelsCreated.forEach(async ({ script }) => {
+        maybeResyncScript(script);
+      });
+    }
+  }, [scripts, monacoRef]);
 
   // switch files
   useEffect(() => {
@@ -315,12 +366,21 @@ export default function PlaygroundEditor(
       currentScript &&
       isModelReady
     ) {
-      editorRef.current.setModel(getOrCreateScriptModel(currentScript, monaco));
+      const model = getOrCreateScriptModel(currentScript, monaco);
+      if (model === editorRef.current.getModel()) return;
+
+      console.log('[EDITOR]', `Setting model to ${currentScript.filename}`);
+
+      editorRef.current.setModel(model);
+      maybeResyncScript(currentScript);
     }
   }, [currentScript, editorRef.current, isEditorReady, isModelReady]);
 
   const room = useRoom();
 
+  /**
+   * Generic helper to convert between the things we likely need
+   */
   const getStuffForScriptOrModel = (
     scriptOrModel: Script | monaco.editor.ITextModel,
   ) => {
@@ -341,19 +401,74 @@ export default function PlaygroundEditor(
     return { script, model, storedScriptId, yText };
   };
 
-  const resetYDocToDatabase = (
+  /**
+   * Reset a synced script or model
+   * can set a prefernce to use the script object or the model
+   * Defaults to what you pass in
+   */
+  const resetSyncedScript = (
     scriptOrModel: Script | monaco.editor.ITextModel,
+    preferScript = Object.keys(scriptOrModel).includes('filename'),
   ) => {
     const { script, yText, model } = getStuffForScriptOrModel(scriptOrModel);
     console.log(
       '[EDITOR]',
-      `Missing YDoc content for ${script?.filename}. Resetting from DB.`,
+      '(liveblocks)',
+      (preferScript && script?.filename) || model.uri.path,
+      'No content to sync, resetting',
     );
     const { yDoc } = yRefs.current;
     yDoc?.transact(() => {
       yText.delete(0, yText.length);
-      yText.insert(0, script?.code || model.getValue() || '');
+      yText.insert(0, (preferScript && script?.code) || model.getValue() || '');
     });
+  };
+
+  /**
+   * Syncs scripts to liveblocks and adds bindings
+   * Only does this once per script
+   */
+  const syncScriptOnce = async (script: Script) => {
+    const { yProvider, bindings } = yRefs.current;
+    if (!yProvider || bindings[script.id]) return;
+    const { model, yText } = getStuffForScriptOrModel(script);
+
+    bindings[script.id] = new MonacoBinding(
+      yText,
+      model,
+      new Set([editorRef.current!]),
+      yProvider.awareness as any,
+    );
+
+    return new Promise<void>((resolve) =>
+      yProvider.once('synced', (_args: true | [string, any][]) => {
+        // If the sync event is empty then we need to reset the script
+        if (yText.length === 0 && script.code.trim().length > 0) {
+          resetSyncedScript(script);
+        } else {
+          console.log('[EDITOR]', '(liveblocks)', script.filename, 'synced');
+        }
+        resolve();
+      }),
+    ).then(() => {
+      runEditorActions({
+        now: true,
+        value: model.getValue(),
+        currentScript: script,
+      });
+    });
+  };
+
+  /**
+   * Try to sync a script if hasn't been synced or if the bindings are gone
+   * Mostly should pick up new scripts
+   */
+  const maybeResyncScript = async (script: Script) => {
+    const { yProvider, bindings } = yRefs.current;
+    if (!yProvider || bindings[script.id]) return;
+    const syncPromise = syncScriptOnce(script);
+    yProvider.emit('synced', Object.entries({ resync: script.id }));
+    return syncPromise;
   };
 
   useEffect(() => {
@@ -361,46 +476,21 @@ export default function PlaygroundEditor(
       if (
         !yRefs.current.yDoc ||
         !yRefs.current.yProvider ||
-        !yRefs.current.bindings.length
+        !Object.values(yRefs.current.bindings).length
       ) {
-        console.log('[EDITOR]', 'Creating YDoc and binding to Liveblocks');
+        console.log('[EDITOR]', '(liveblocks)', 'Syncing models');
         yRefs.current.yDoc = new Y.Doc();
         yRefs.current.yProvider = new LiveblocksProvider(
           room,
           yRefs.current.yDoc,
         );
-        yRefs.current.bindings = [];
+        yRefs.current.bindings = {};
       }
 
-      const { yProvider } = yRefs.current;
-
-      const syncPromises = scripts.map((script) => {
-        const { model, yText } = getStuffForScriptOrModel(script);
-
-        yRefs.current.bindings.push(
-          new MonacoBinding(
-            yText,
-            model,
-            new Set([editorRef.current!]),
-            yProvider.awareness as any,
-          ),
-        );
-
-        return new Promise<void>((resolve) =>
-          yProvider.on('synced', () => {
-            // Wait for the first sync to happen and replace empty model with script code
-            if (yText.length === 0 && script.code.trim().length > 0) {
-              resetYDocToDatabase(script);
-            } else {
-              console.log('[EDITOR]', `${script.filename} synced`);
-            }
-            resolve();
-          }),
-        );
-      });
+      const syncPromises = scripts.map(syncScriptOnce);
 
       Promise.all(syncPromises).then(() => {
-        console.log('[EDITOR]', 'Synced all models with Liveblocks');
+        console.log('[EDITOR]', '(liveblocks)', 'Syncing is done');
         setIsLiveblocksReady(true);
       });
     }
@@ -409,10 +499,10 @@ export default function PlaygroundEditor(
       if (
         Object.values(yRefs.current).filter((truthy) => !!truthy).length === 3
       ) {
-        console.log('[EDITOR]', 'Cleaning up YDoc and YProvider');
+        console.log('[EDITOR]', '(liveblocks)', 'Cleaning up');
         yRefs.current.yDoc?.destroy();
         yRefs.current.yProvider?.destroy();
-        yRefs.current.bindings.forEach((b) => b?.destroy());
+        Object.values(yRefs.current.bindings).forEach((b) => b?.destroy());
       }
     };
   }, [isEditorReady, isModelReady, room, readOnly]);
@@ -422,7 +512,7 @@ export default function PlaygroundEditor(
     'Shift+Option+/',
     () => {
       if (!currentScript) return;
-      resetYDocToDatabase(currentScript);
+      resetSyncedScript(currentScript);
     },
     [yRefs.current.yDoc, currentScript],
   );
