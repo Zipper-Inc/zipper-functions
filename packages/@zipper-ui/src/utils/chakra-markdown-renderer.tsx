@@ -199,6 +199,8 @@ export const defaults: Components & { heading: Components['h1'] } = {
         overflow="scroll"
         code={code || ''}
         language={langauge}
+        w="full"
+        whiteSpace="pre-wrap"
         data-markdown
       />
     );

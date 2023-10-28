@@ -153,7 +153,14 @@ export function Playground({
       onAfterRun={onAfterRun}
       preserveLogs={preserveLogs}
     >
-      <VStack align="stretch" spacing={0} h="full" w="full" data-playground>
+      <VStack
+        align="stretch"
+        spacing={0}
+        h="full"
+        w="full"
+        p={5}
+        data-playground
+      >
         <PlaygroundHeader app={app} />
 
         <Tabs

@@ -14,7 +14,7 @@ import {
 import { Script } from '@prisma/client';
 import { Markdown, useCmdOrCtrl } from '@zipper/ui';
 import dynamic from 'next/dynamic';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { FiEye } from 'react-icons/fi';
 import {
   AppEditSidebarContextType,
@@ -70,6 +70,15 @@ export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
 
   const { hoveredElement } = useHelpMode();
   const { style, onMouseEnter, onMouseLeave } = useHelpBorder();
+
+  useEffect(() => {
+    window.document.body.style.overflow = 'hidden';
+    window.document.body.style.height = '100vh';
+    return () => {
+      window.document.body.style.overflow = 'initial';
+      window.document.body.style.height = '100%';
+    };
+  }, [currentScript]);
 
   useCmdOrCtrl(
     'S',
@@ -152,7 +161,7 @@ export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
               >
                 Preview
               </MenuButton>
-              <MenuList p={0} width="320px">
+              <MenuList p={0} width="420px">
                 <AppEditSidebarProvider
                   value={{
                     expandedResult,
@@ -248,7 +257,14 @@ export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
             )}
           </FormControl>
         </VStack>
-        <VStack display={{ base: 'none', lg: 'flex' }} flex={2} minW="220px">
+        <VStack
+          display={{ base: 'none', lg: 'flex' }}
+          flex={2}
+          minW="220px"
+          position="relative"
+          h="full"
+          w="full"
+        >
           <AppEditSidebarProvider
             value={{
               expandedResult,

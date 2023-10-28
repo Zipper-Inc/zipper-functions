@@ -15,7 +15,7 @@ import {
 
 import { parse } from '@babel/parser';
 import traverse from '@babel/traverse';
-import { useColorModeValue } from '@chakra-ui/react';
+import { useBreakpoint, useColorModeValue } from '@chakra-ui/react';
 import { baseColors, prettierFormat, useCmdOrCtrl } from '@zipper/ui';
 import MonacoJSXHighlighter from 'monaco-jsx-highlighter';
 import { use, useEffect, useRef, useState } from 'react';
@@ -102,8 +102,6 @@ export default function PlaygroundEditor(
   >('typescript');
   const theme = useColorModeValue('vs', 'vs-dark');
 
-  console.log(wrapperRef);
-
   const handleEditorDidMount = (editor: MonacoEditor, monaco: Monaco) => {
     console.log('[EDITOR]', 'Editor is mounted');
 
@@ -181,6 +179,8 @@ export default function PlaygroundEditor(
       return result;
     };
   };
+
+  const breakpoint = useBreakpoint();
 
   useEffect(() => {
     if (monacoEditor) {

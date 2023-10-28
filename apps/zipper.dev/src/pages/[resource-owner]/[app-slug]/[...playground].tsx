@@ -138,14 +138,7 @@ export const getServerSideProps: GetServerSideProps = async ({
 PlaygroundPage.skipAuth = true;
 PlaygroundPage.header = () => <></>;
 PlaygroundPage.getLayout = (page) => (
-  <DefaultLayout
-    header={<></>}
-    maxH="100vh"
-    minH="100vh"
-    h="100%"
-    p="20px"
-    overflow="hidden"
-  >
+  <DefaultLayout header={<></>} p="0" h="full" w="full">
     {page}
   </DefaultLayout>
 );
