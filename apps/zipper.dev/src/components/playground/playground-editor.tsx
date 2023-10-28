@@ -180,7 +180,13 @@ export default function PlaygroundEditor(
     };
   };
 
-  const breakpoint = useBreakpoint();
+  // Even though we don't return anything
+  // This hook will force a re-render when the breakpoint changes
+  // Which causes this height to be recalculated
+  useBreakpoint();
+  const calculatedHeight = wrapperRef.current
+    ? `calc(100vh - ${wrapperRef.current.getBoundingClientRect().top}px)`
+    : '100vh';
 
   useEffect(() => {
     if (monacoEditor) {
@@ -531,13 +537,7 @@ export default function PlaygroundEditor(
         defaultLanguage={defaultLanguage}
         theme={theme}
         width="100%"
-        height={
-          wrapperRef.current
-            ? `calc(100vh - ${
-                wrapperRef.current.getBoundingClientRect().top
-              }px)`
-            : '99%'
-        }
+        height={calculatedHeight}
         wrapperProps={{
           ref: wrapperRef,
         }}

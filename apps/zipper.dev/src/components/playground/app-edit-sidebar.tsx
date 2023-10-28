@@ -61,7 +61,14 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
   const ref = useRef<HTMLDivElement>(null);
 
   const consoleTabIndex = 1;
+
+  // Even though we don't return anything
+  // This hook will force a re-render when the breakpoint changes
+  // Which causes this height to be recalculated
   useBreakpoint();
+  const calculatedBaseHeight = ref?.current
+    ? `calc(100vh - ${ref.current.getBoundingClientRect().top}px)`
+    : '100vh';
 
   const handleTabsChange = (index: number) => {
     setTabIndex(index);
@@ -90,9 +97,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
       inset={0}
       backgroundColor="bgColor"
       h={{
-        base: `calc(100vh - ${
-          ref?.current?.getBoundingClientRect().top || 1
-        }px)`,
+        base: calculatedBaseHeight,
         lg: 'full',
       }}
       w="full"
