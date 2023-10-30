@@ -292,7 +292,14 @@ export function FunctionOutput({
               <Tab {...tabButtonStyles}>Raw Output</Tab>
             </TabList>
             <TabPanels border="1px solid" borderColor="fg.200">
-              <TabPanel>
+              <TabPanel
+                p={
+                  safelyParseResult(applet.expandedContent.output.data)
+                    ?.type === 'html'
+                    ? 0
+                    : 4
+                }
+              >
                 <Box
                   width="full"
                   data-function-output="smart"
@@ -301,6 +308,7 @@ export function FunctionOutput({
                   <SmartFunctionOutputProvider
                     outputSection="expanded"
                     config={config}
+                    location={zipperLocation}
                   >
                     <SmartFunctionOutput
                       result={applet.expandedContent.output.data}
@@ -311,7 +319,9 @@ export function FunctionOutput({
                 </Box>
               </TabPanel>
               <TabPanel backgroundColor="fg.100">
-                <RawFunctionOutput result={applet?.mainContent.output?.data} />
+                <RawFunctionOutput
+                  result={applet?.expandedContent.output?.data}
+                />
               </TabPanel>
             </TabPanels>
           </Tabs>
@@ -498,8 +508,9 @@ export function FunctionOutput({
               >
                 <TabPanel
                   p={
-                    zipperLocation === ZipperLocation.ZipperDotRun ||
-                    parsedResult?.type === 'html'
+                    parsedResult?.type === 'html' ||
+                    (currentContext === 'main' &&
+                      zipperLocation === ZipperLocation.ZipperDotRun)
                       ? 0
                       : 4
                   }
@@ -508,6 +519,7 @@ export function FunctionOutput({
                   <Box
                     h="full"
                     overflow={
+                      currentContext === 'main' &&
                       zipperLocation === ZipperLocation.ZipperDotRun
                         ? 'auto'
                         : undefined
@@ -537,6 +549,7 @@ export function FunctionOutput({
                       <SmartFunctionOutputProvider
                         config={config}
                         outputSection="main"
+                        location={zipperLocation}
                       >
                         <SmartFunctionOutput
                           parsedResult={parsedResult}
@@ -545,39 +558,40 @@ export function FunctionOutput({
                           tableLevel={0}
                         />
                       </SmartFunctionOutputProvider>
+                      {(applet?.expandedContent.output ||
+                        applet?.expandedContent.inputs) && (
+                        <Box
+                          borderLeft={'5px solid'}
+                          borderColor={'purple.300'}
+                          mt={8}
+                          pl={3}
+                          mb={4}
+                        >
+                          <HStack align={'center'} my={2}>
+                            <Heading flexGrow={1} size="sm" ml={1}>
+                              Additional Results
+                            </Heading>
+                            <IconButton
+                              aria-label="hide"
+                              icon={
+                                isExpandedResultOpen ? (
+                                  <HiOutlineChevronUp />
+                                ) : (
+                                  <HiOutlineChevronDown />
+                                )
+                              }
+                              onClick={() =>
+                                setIsExpandedResultOpen(!isExpandedResultOpen)
+                              }
+                            />
+                          </HStack>
+                          {isExpandedResultOpen && (
+                            <>{expandedOutputComponent()}</>
+                          )}
+                        </Box>
+                      )}
                     </Box>
                   </Box>
-
-                  {(applet?.expandedContent.output ||
-                    applet?.expandedContent.inputs) && (
-                    <Box
-                      borderLeft={'5px solid'}
-                      borderColor={'purple.300'}
-                      mt={8}
-                      pl={3}
-                      mb={4}
-                    >
-                      <HStack align={'center'} my={2}>
-                        <Heading flexGrow={1} size="sm" ml={1}>
-                          Additional Results
-                        </Heading>
-                        <IconButton
-                          aria-label="hide"
-                          icon={
-                            isExpandedResultOpen ? (
-                              <HiOutlineChevronUp />
-                            ) : (
-                              <HiOutlineChevronDown />
-                            )
-                          }
-                          onClick={() =>
-                            setIsExpandedResultOpen(!isExpandedResultOpen)
-                          }
-                        />
-                      </HStack>
-                      {isExpandedResultOpen && <>{expandedOutputComponent()}</>}
-                    </Box>
-                  )}
                 </TabPanel>
                 <TabPanel p={0}>
                   <RawFunctionOutput
