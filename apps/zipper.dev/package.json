@@ -8,7 +8,7 @@
     "build:03-tsc": "tsc --project tsconfig.server.json",
     "build": "run-s build:0*",
     "build:preview": "yarn build:01-prisma; yarn dotenv:preview -- -- next build; yarn build:03-tsc",
-    "build:production": "yarn build:01-prisma; yarn dotenv:production -- -- next build; yarn build:03-tsc",
+    "build:production": "yarn build:01-prisma; yarn dotenv:production -- -- next build --no-lint; yarn build:03-tsc",
     "db-seed": "prisma db seed",
     "db-migrate-dev": "yarn prisma migrate dev",
     "dev": "yarn dotenv:development -- -- yarn nodemon -x \"yarn swc-node ./src/server.ts || touch ./src/server.ts\" --watch ./src/server.ts",

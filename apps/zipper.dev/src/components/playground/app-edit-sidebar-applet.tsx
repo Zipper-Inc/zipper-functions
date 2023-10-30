@@ -183,7 +183,10 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
     <>
       {description && (
         <Box mb="6">
-          <HandlerDescription description={description} />
+          <HandlerDescription
+            description={description}
+            location={ZipperLocation.ZipperDotDev}
+          />
         </Box>
       )}
       <Box
@@ -324,7 +327,9 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
       </Box>
 
       {currentScript && mainApplet.mainContent.output?.data && (
-        <Box mt={4}>{output}</Box>
+        <VStack mt={4} align="stretch">
+          {output}
+        </VStack>
       )}
     </>
   );

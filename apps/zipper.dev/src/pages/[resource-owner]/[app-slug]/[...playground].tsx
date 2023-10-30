@@ -7,6 +7,7 @@ import SuperJSON from 'superjson';
 import SignedIn from '~/components/auth/signed-in';
 import EditorContextProvider from '~/components/context/editor-context';
 import { HelpModeProvider } from '~/components/context/help-mode-context';
+import { DefaultLayout } from '~/components/default-layout';
 import Header from '~/components/header';
 import { Playground } from '~/components/playground/playground';
 import { withLiveblocksRoom } from '~/hocs/with-liveblocks';
@@ -26,6 +27,7 @@ const PlaygroundPage: NextPageWithLayout<Props> = ({
     { resourceOwnerSlug, appSlug },
     { retry: false },
   );
+
   const utils = trpc.useContext();
 
   if (appQuery.error) {
@@ -52,12 +54,14 @@ const PlaygroundPage: NextPageWithLayout<Props> = ({
 
   const pageTitle = `${data.resourceOwner.slug} / ${data.name || data.slug}`;
 
-  const refetchApp = async () => {
+  const refetchApp: typeof appQuery.refetch = async (options) => {
+    console.log('[EDITOR]', 'Refetching applet from database');
     utils.app.byResourceOwnerAndAppSlugs.invalidate({
       resourceOwnerSlug,
       appSlug,
     });
     utils.app.byId.invalidate({ id: appQuery.data.id });
+    return appQuery.refetch(options);
   };
 
   const playground = withLiveblocksRoom(
@@ -67,7 +71,6 @@ const PlaygroundPage: NextPageWithLayout<Props> = ({
         appId={appQuery.data?.id}
         appSlug={appQuery.data.slug}
         resourceOwnerSlug={appQuery.data.resourceOwner.slug}
-        initialScripts={appQuery.data?.scripts || []}
         refetchApp={refetchApp}
         readOnly={appQuery.data.canUserEdit === false}
       >
@@ -133,6 +136,11 @@ export const getServerSideProps: GetServerSideProps = async ({
 };
 
 PlaygroundPage.skipAuth = true;
-PlaygroundPage.header = () => <Box pt="20px"></Box>;
+PlaygroundPage.header = () => <></>;
+PlaygroundPage.getLayout = (page) => (
+  <DefaultLayout header={<></>} p="0" h="full" w="full">
+    {page}
+  </DefaultLayout>
+);
 
 export default PlaygroundPage;

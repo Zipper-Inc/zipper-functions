@@ -42,7 +42,9 @@ export const getDescription = ({ applet, config, filename }: Props) => {
     return { title, subtitle, body } as HandlerDescription;
 };
 
-export function HandlerDescription(props: Props) {
+export function HandlerDescription(
+  props: Props & { location: ZipperLocation },
+) {
   const description = props.description || getDescription(props);
   if (!description) return null;
 
@@ -131,7 +133,7 @@ export function HandlerDescription(props: Props) {
         <MobileView />
       ) : (
         <VStack align="start" width="full" mt={4}>
-          {window.ZipperLocation === ZipperLocation.ZipperDotDev && title && (
+          {props.location === ZipperLocation.ZipperDotDev && title && (
             <Heading as="h1" fontSize="4xl" fontWeight="medium">
               {title}
             </Heading>

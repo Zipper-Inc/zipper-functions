@@ -199,6 +199,8 @@ export const defaults: Components & { heading: Components['h1'] } = {
         overflow="scroll"
         code={code || ''}
         language={langauge}
+        w="full"
+        whiteSpace="pre-wrap"
         data-markdown
       />
     );
@@ -299,7 +301,6 @@ export const defaults: Components & { heading: Components['h1'] } = {
     );
   },
   heading: (props) => {
-    console.log('heading props', props);
     const { level, children } = props;
     const sizes = ['xl', 'lg', 'md', 'sm', 'xs', '2xs'];
     return (

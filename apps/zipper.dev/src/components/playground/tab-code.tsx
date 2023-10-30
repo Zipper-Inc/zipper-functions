@@ -6,7 +6,6 @@ import {
   HStack,
   Menu,
   MenuButton,
-  MenuItem,
   MenuList,
   Text,
   useToast,
@@ -15,7 +14,7 @@ import {
 import { Script } from '@prisma/client';
 import { Markdown, useCmdOrCtrl } from '@zipper/ui';
 import dynamic from 'next/dynamic';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { FiEye } from 'react-icons/fi';
 import {
   AppEditSidebarContextType,
@@ -52,14 +51,6 @@ const ConnectorSidebarTips = (connectorId?: string | null) => {
   );
 };
 
-/**
- * @todo
- * figure this out nicely
- * fine to hardcode for now
- */
-const APPROXIMATE_HEADER_HEIGHT_PX = '160px';
-const MAX_CODE_TAB_HEIGHT = `calc(100vh - ${APPROXIMATE_HEADER_HEIGHT_PX})`;
-
 type CodeTabProps = {
   app: AppQueryOutput;
   mainScript: Script;
@@ -79,6 +70,15 @@ export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
 
   const { hoveredElement } = useHelpMode();
   const { style, onMouseEnter, onMouseLeave } = useHelpBorder();
+
+  useEffect(() => {
+    window.document.body.style.overflow = 'hidden';
+    window.document.body.style.height = '100vh';
+    return () => {
+      window.document.body.style.overflow = 'initial';
+      window.document.body.style.height = '100%';
+    };
+  }, [currentScript]);
 
   useCmdOrCtrl(
     'S',
@@ -114,10 +114,13 @@ export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
   const currentScriptConnectorId = currentScript?.connectorId;
 
   const isMarkdown = currentScript?.filename.endsWith('.md');
-  const model =
-    currentScript && monacoRef?.current
-      ? getOrCreateScriptModel(currentScript, monacoRef.current)
-      : undefined;
+  const getMarkdownBody = () => {
+    if (currentScript && monacoRef?.current) {
+      const model = getOrCreateScriptModel(currentScript, monacoRef.current);
+      if (model) return model.getValue();
+    }
+    return currentScript?.code || '';
+  };
 
   return (
     <>
@@ -125,6 +128,7 @@ export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
         justify="space-between"
         display={{ base: 'flex', xl: 'none' }}
         mb={10}
+        data-tab-code="menu"
       >
         <Menu>
           {({ isOpen }) => (
@@ -157,7 +161,7 @@ export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
               >
                 Preview
               </MenuButton>
-              <MenuList p={0} width="320px">
+              <MenuList p={0} width="420px">
                 <AppEditSidebarProvider
                   value={{
                     expandedResult,
@@ -178,41 +182,36 @@ export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
         </Menu>
       </HStack>
       <HStack
-        flex={1}
-        h="full"
-        p="none"
-        pl="1"
+        justify="stretch"
         spacing={0}
-        alignItems="stretch"
-        pb={3}
-        maxH={app.canUserEdit ? MAX_CODE_TAB_HEIGHT : MAX_CODE_TAB_HEIGHT + 50}
-        minH="350px"
-        overflow="hidden"
+        align="stretch"
+        h="full"
+        w="full"
+        data-tab-code="body"
       >
         <VStack
           flex={1}
           alignItems="stretch"
           minWidth="250px"
           display={{ base: 'none', xl: 'flex' }}
-          maxH="400px"
+          maxH="420px"
           minH="fit-content"
-          mt={1}
         >
           <PlaygroundSidebar app={app} mainScript={mainScript} />
         </VStack>
         <VStack
           flex={3}
-          alignItems="stretch"
-          spacing={0}
+          align="stretch"
+          justify="stretch"
           minW="sm"
           w="full"
-          overflow="auto"
+          spacing={0}
           onMouseEnter={onMouseEnter('PlaygroundCode')}
           onMouseLeave={onMouseLeave}
           border={
             hoveredElement === 'PlaygroundCode'
               ? style('PlaygroundCode').border
-              : '4px solid transparent'
+              : 'none'
           }
         >
           {isMarkdown && !isMarkdownEditable && (
@@ -229,9 +228,7 @@ export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
                 },
               }}
             >
-              <Markdown
-                children={model?.getValue() || currentScript?.code || ''}
-              />
+              <Markdown children={getMarkdownBody()} />
             </VStack>
           )}
 
@@ -260,7 +257,14 @@ export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
             )}
           </FormControl>
         </VStack>
-        <VStack display={{ base: 'none', lg: 'flex' }} flex={2} minW="220px">
+        <VStack
+          display={{ base: 'none', lg: 'flex' }}
+          flex={2}
+          minW="220px"
+          position="relative"
+          h="full"
+          w="full"
+        >
           <AppEditSidebarProvider
             value={{
               expandedResult,

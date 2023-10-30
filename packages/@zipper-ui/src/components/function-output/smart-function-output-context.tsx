@@ -1,3 +1,4 @@
+import { ZipperLocation } from '@zipper/types';
 import { createContext, useContext, useState } from 'react';
 
 export const SmartFunctionOutputContext = createContext<{
@@ -5,6 +6,7 @@ export const SmartFunctionOutputContext = createContext<{
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   config: Zipper.HandlerConfig;
+  location: ZipperLocation;
 }>({
   outputSection: 'main',
   searchQuery: '',
@@ -12,16 +14,19 @@ export const SmartFunctionOutputContext = createContext<{
     return;
   },
   config: {},
+  location: ZipperLocation.ZipperDotRun,
 });
 
 const SmartFunctionOutputProvider = ({
   children,
   outputSection,
   config,
+  location = ZipperLocation.ZipperDotRun,
 }: {
   outputSection: 'main' | 'expanded';
   children: any;
   config: Zipper.HandlerConfig;
+  location?: ZipperLocation;
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   return (
@@ -31,6 +36,7 @@ const SmartFunctionOutputProvider = ({
         searchQuery,
         setSearchQuery,
         config,
+        location,
       }}
     >
       {children}

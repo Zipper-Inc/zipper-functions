@@ -49,19 +49,6 @@ export default function Array(props: Props) {
             </InputLeftAddon>
             <Input onChange={(e) => setSearchQuery(e.target.value)} />
           </InputGroup>
-          <IconButton
-            aria-label="Table view"
-            icon={<HiTable />}
-            onClick={() => setView('table')}
-            colorScheme={view === 'table' ? 'blue' : 'gray'}
-          />
-          <IconButton
-            aria-label="Card view"
-            icon={<HiViewGrid />}
-            onClick={() => setView('cards')}
-            colorScheme={view === 'cards' ? 'blue' : 'gray'}
-            ml={2}
-          />
         </Box>
       )}
 
@@ -110,7 +97,11 @@ function TableArray(props: Props) {
     useTable({ columns, data }, useSortBy);
 
   if (!props.data.length) {
-    return <Text color="fg.500">No results</Text>;
+    return (
+      <Text color="fg.500" py={2}>
+        No results
+      </Text>
+    );
   }
 
   if (props.heading && expandable) {
