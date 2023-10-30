@@ -1,9 +1,7 @@
 import { App, Script } from '@prisma/client';
 import hash from 'object-hash';
-import { frameworkHash } from '~/../framework-hash';
 
 const APP_VERSION_LENGTH = 7;
-const OG_HASH = 'ed40886d6bd876dd9da27fdc90883ca0';
 
 const normalizeCodeForHashing = (code = '') => code.trimEnd();
 
@@ -34,14 +32,12 @@ export function getAppHash(
       .sort((a, b) => (a.filename > b.filename ? 1 : -1)),
   );
 
-  const hashContent: any = { id: app.id, slug: app.slug, scripts };
-  if (frameworkHash !== (OG_HASH as string)) {
-    hashContent.frameworkHash = frameworkHash;
-  }
-
-  return hash(hashContent, {
-    algorithm: 'sha1',
-  });
+  return hash(
+    { id: app.id, slug: app.slug, scripts },
+    {
+      algorithm: 'sha1',
+    },
+  );
 }
 
 export function getAppHashFromScripts(
