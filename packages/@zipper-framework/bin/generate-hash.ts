@@ -3,7 +3,7 @@ import {
   toHashString,
 } from 'https://deno.land/std@0.204.0/crypto/mod.ts';
 
-const HASH_FILE_PATH = `../../apps/zipper.dev/framework-hash.ts`;
+const HASH_FILE_PATH = `../../apps/zipper.dev/src/framework-hash.ts`;
 
 const readFiles = (dir = './deno', code = '') => {
   for (const dirEntry of Deno.readDirSync(dir)) {
