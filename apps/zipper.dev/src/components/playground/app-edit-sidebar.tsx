@@ -9,11 +9,12 @@ import {
   TabPanels,
   Tabs,
   Text,
+  useBreakpoint,
   useColorMode,
   VStack,
 } from '@chakra-ui/react';
 import { TabButton } from '@zipper/ui';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { HiEye, HiPencil } from 'react-icons/hi2';
 import { useEditorContext } from '../context/editor-context';
 import { useHelpBorder, useHelpMode } from '../context/help-mode-context';
@@ -57,8 +58,17 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
   canUserEdit,
 }) => {
   const [tabIndex, setTabIndex] = useState(0);
+  const ref = useRef<HTMLDivElement>(null);
 
   const consoleTabIndex = 1;
+
+  // Even though we don't return anything
+  // This hook will force a re-render when the breakpoint changes
+  // Which causes this height to be recalculated
+  useBreakpoint();
+  const calculatedBaseHeight = ref?.current
+    ? `calc(100vh - ${ref.current.getBoundingClientRect().top}px)`
+    : '100vh';
 
   const handleTabsChange = (index: number) => {
     setTabIndex(index);
@@ -82,7 +92,14 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
 
   return (
     <VStack
-      h="full"
+      position={{ base: 'initial', lg: 'absolute' }}
+      p={{ base: 2, lg: 0 }}
+      inset={0}
+      backgroundColor="bgColor"
+      h={{
+        base: calculatedBaseHeight,
+        lg: 'full',
+      }}
       w="full"
       onMouseEnter={onMouseEnter('PreviewPanel')}
       onMouseLeave={onMouseLeave()}
@@ -91,6 +108,8 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
           ? style('PreviewPanel').border
           : '4px solid transparent'
       }
+      data-app-edit-sidebar
+      ref={ref}
     >
       {mode === AppEditSidebarMode.Markdown && canUserEdit && (
         <Button
@@ -159,24 +178,16 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
               </div>
             </HStack>
           </TabList>
-          <TabPanels
-            as={Flex}
-            flexDirection="column"
-            h="full"
-            // IDK why we need this but it works
-            maxH="calc(100% - 115px)"
-          >
+          <TabPanels as={Flex} flexDirection="column" h="full" w="full">
             {/* INPUT */}
 
             <TabPanel
               p={0}
               pt={4}
-              h="full"
+              pb={20}
               display="flex"
               flexDir="column"
-              flex="1 1 auto"
               overflow="auto"
-              w="full"
             >
               <AppEditSidebarApplet appSlug={appSlug} />
             </TabPanel>

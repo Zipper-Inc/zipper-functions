@@ -7,6 +7,7 @@ import SuperJSON from 'superjson';
 import SignedIn from '~/components/auth/signed-in';
 import EditorContextProvider from '~/components/context/editor-context';
 import { HelpModeProvider } from '~/components/context/help-mode-context';
+import { DefaultLayout } from '~/components/default-layout';
 import Header from '~/components/header';
 import { Playground } from '~/components/playground/playground';
 import { withLiveblocksRoom } from '~/hocs/with-liveblocks';
@@ -135,6 +136,11 @@ export const getServerSideProps: GetServerSideProps = async ({
 };
 
 PlaygroundPage.skipAuth = true;
-PlaygroundPage.header = () => <Box pt="20px"></Box>;
+PlaygroundPage.header = () => <></>;
+PlaygroundPage.getLayout = (page) => (
+  <DefaultLayout header={<></>} p="0" h="full" w="full">
+    {page}
+  </DefaultLayout>
+);
 
 export default PlaygroundPage;

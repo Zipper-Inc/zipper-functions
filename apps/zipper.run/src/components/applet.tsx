@@ -15,6 +15,7 @@ import {
   EntryPointInfo,
   InputParams,
   UserAuthConnector,
+  ZipperLocation,
 } from '@zipper/types';
 import {
   AppletAuthor,
@@ -99,7 +100,7 @@ export function AppPage({
   githubAuthUrl,
   errorCode,
   entryPoint,
-  result: paramResult,
+  result: resultPassedIn,
   runnableScripts,
   metadata,
   handlerConfigs,
@@ -110,10 +111,10 @@ export function AppPage({
   const { asPath } = router;
   const appTitle = app?.name || app?.slug || 'Zipper';
   const formContext = useForm({ defaultValues });
-  const [result, setResult] = useState(paramResult);
+  const [result, setResult] = useState(resultPassedIn);
   const [loading, setLoading] = useState(false);
   const [screen, setScreen] = useState<Screen>(
-    paramResult ? 'output' : 'initial',
+    resultPassedIn ? 'output' : 'initial',
   );
   const [latestRunId] = useState<string | undefined>(metadata?.runId);
   const [expandInputsSection, setExpandInputsSection] = useState(false);
@@ -143,11 +144,11 @@ export function AppPage({
   // We have to do this so that the results aren't SSRed
   // (if they are DOMParser in FunctionOutput will be undefined)
   useEffect(() => {
-    if (paramResult) {
-      setResult(paramResult);
+    if (resultPassedIn) {
+      setResult(resultPassedIn);
       setScreen('output');
     }
-  }, [paramResult]);
+  }, [resultPassedIn]);
 
   useEffect(() => {
     if (
@@ -367,6 +368,7 @@ export function AppPage({
       as="main"
       position="relative"
       w="full"
+      h="full"
       px={{ base: 4, md: 8 }}
       pt={0}
       mt={0}
@@ -408,10 +410,11 @@ export function AppPage({
       <Stack
         as="div"
         direction={{ base: 'column', md: 'row' }}
-        justify="center"
+        justify="start"
         pt={4}
         pb={8}
         spacing={8}
+        h="full"
       >
         {isOpen ? (
           <VStack
@@ -455,15 +458,18 @@ export function AppPage({
                     ? description
                     : { ...description, title: undefined }
                 }
+                location={ZipperLocation.ZipperDotRun}
               />
             </Stack>
           </VStack>
         ) : null}
 
-        <VStack mx="auto" align="stretch" flex={3}>
+        <VStack mx="auto" align="stretch" flex={3} height="full">
           {screen === 'initial' && initialContent}
 
-          <VStack alignSelf="start">{showRunOutput && output}</VStack>
+          <VStack alignSelf="start" width="full" height="full">
+            {showRunOutput && output}
+          </VStack>
           {loading && loadingContent}
         </VStack>
       </Stack>

@@ -28,7 +28,12 @@ const plaak = localFont({
   ],
 });
 
-import { ChakraProvider, extendTheme, Flex } from '@chakra-ui/react';
+import {
+  ChakraProps,
+  ChakraProvider,
+  extendTheme,
+  Flex,
+} from '@chakra-ui/react';
 import Head from 'next/head';
 import { ReactNode } from 'react';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
@@ -47,13 +52,18 @@ type DefaultLayoutProps = {
   protected?: boolean;
   header?: ReactNode;
   title?: string;
-};
+} & ChakraProps;
 
-export const DefaultLayout = ({ children, header }: DefaultLayoutProps) => {
+export const DefaultLayout = ({
+  children,
+  header,
+  title,
+  ...chakraProps
+}: DefaultLayoutProps) => {
   return (
     <>
       <Head>
-        <title>Zipper</title>
+        <title>{title || 'Zipper'}</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
@@ -66,7 +76,7 @@ export const DefaultLayout = ({ children, header }: DefaultLayoutProps) => {
             flex={1}
             flexDirection="column"
             justifyContent="start"
-            alignItems="stretch"
+            {...chakraProps}
           >
             {children}
           </Flex>

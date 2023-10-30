@@ -15,7 +15,7 @@ import {
 
 import { parse } from '@babel/parser';
 import traverse from '@babel/traverse';
-import { useColorModeValue } from '@chakra-ui/react';
+import { useBreakpoint, useColorModeValue } from '@chakra-ui/react';
 import { baseColors, prettierFormat, useCmdOrCtrl } from '@zipper/ui';
 import MonacoJSXHighlighter from 'monaco-jsx-highlighter';
 import { use, useEffect, useRef, useState } from 'react';
@@ -91,6 +91,7 @@ export default function PlaygroundEditor(
     yProvider: undefined,
     bindings: {},
   });
+  const wrapperRef = useRef<HTMLDivElement>(null);
   const [isEditorReady, setIsEditorReady] = useState(false);
   const [isModelReady, setIsModelReady] = useState(false);
   const [isLiveblocksReady, setIsLiveblocksReady] = useState(false);
@@ -179,6 +180,14 @@ export default function PlaygroundEditor(
       return result;
     };
   };
+
+  // Even though we don't return anything
+  // This hook will force a re-render when the breakpoint changes
+  // Which causes this height to be recalculated
+  useBreakpoint();
+  const calculatedHeight = wrapperRef.current
+    ? `calc(100vh - ${wrapperRef.current.getBoundingClientRect().top}px)`
+    : '100vh';
 
   useEffect(() => {
     if (monacoEditor) {
@@ -402,6 +411,11 @@ export default function PlaygroundEditor(
     }
   }, [currentScript, editorRef.current, isEditorReady, isModelReady]);
 
+  useEffect(() => {
+    if (wrapperRef.current) {
+      const { top } = wrapperRef.current.getBoundingClientRect();
+    }
+  }, [wrapperRef.current]);
   const room = useRoom();
 
   /**
@@ -548,9 +562,13 @@ export default function PlaygroundEditor(
       <Editor
         defaultLanguage={defaultLanguage}
         theme={theme}
+        width="100%"
+        height={calculatedHeight}
+        wrapperProps={{
+          ref: wrapperRef,
+        }}
         options={{
           fontSize: 13,
-          automaticLayout: true,
           readOnly,
           fixedOverflowWidgets: true,
           renderLineHighlight: 'line',

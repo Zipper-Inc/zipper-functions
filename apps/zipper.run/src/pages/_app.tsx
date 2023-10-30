@@ -16,11 +16,9 @@ function MyApp({ Component, pageProps }: AppProps) {
 
   useEffect(() => {
     const start = () => {
-      console.log('started');
       setLoading(true);
     };
     const end = () => {
-      console.log('ended');
       setLoading(false);
     };
 

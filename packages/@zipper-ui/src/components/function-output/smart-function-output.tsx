@@ -1,12 +1,12 @@
-import { Box, Link, Stack, StackDivider } from '@chakra-ui/react';
+import { Link, Stack, StackDivider } from '@chakra-ui/react';
 import { OutputType } from '@zipper/types';
 
 import React from 'react';
-import stripJs from 'strip-js';
 import { defaults as defaultElements } from '../../utils/chakra-markdown-renderer';
 import { ActionComponent } from './action-component';
 import Array from './array';
 import Collection from './collection';
+import { HtmlOutput } from './html-output';
 import { Markdown } from './markdown';
 import { ObjectExplorer } from './object-explorer';
 import { RawFunctionOutput } from './raw-function-output';
@@ -19,18 +19,20 @@ export function SmartFunctionOutput({
   level = 0,
   tableLevel = 0,
   heading,
+  parsedResult: parsedResultPassedIn,
 }: {
   result: any;
   level: number;
   tableLevel: number;
   heading?: string;
+  parsedResult?: ReturnType<typeof parseResult>;
 }) {
   const { config } = useSmartFunctionOutputContext();
 
   // if result === 0, it'll be evaluated as falsey by !result
   if (result === undefined || result === null) return null;
 
-  const { type, data } = parseResult(result);
+  const { type, data } = parsedResultPassedIn || parseResult(result);
 
   switch (type) {
     case OutputType.String:
@@ -57,16 +59,7 @@ export function SmartFunctionOutput({
        * this is a secret config value to allow scripts, just in case
        * snitches get stitches
        */
-      const { __dangerouslyAllowScripts } = config as Zipper.HandlerConfig & {
-        __dangerouslyAllowScripts: boolean;
-      };
-
-      const srcDoc = __dangerouslyAllowScripts ? data : stripJs(data);
-      return (
-        <Box>
-          <iframe width="100%" height="400px" srcDoc={srcDoc} />
-        </Box>
-      );
+      return <HtmlOutput config={config} data={data} />;
 
     case OutputType.Object:
       return (

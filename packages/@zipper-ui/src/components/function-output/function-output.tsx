@@ -3,6 +3,7 @@ import {
   Button,
   ChakraProps,
   Divider,
+  Flex,
   Heading,
   HStack,
   Icon,
@@ -44,14 +45,20 @@ import { RawFunctionOutput } from './raw-function-output';
 import { SmartFunctionOutput } from './smart-function-output';
 import SmartFunctionOutputProvider from './smart-function-output-context';
 import { FunctionOutputProps } from './types';
+import { parseResult } from './utils';
 
 const stickyTabsStyles: ChakraProps = {
   top: -4,
   position: 'sticky',
-  pt: 4,
-  background: 'bgColor',
+  zIndex: 1,
 };
-const tabsStyles: ChakraProps = { display: 'flex', flexDir: 'column', gap: 0 };
+const tabsStyles: ChakraProps = {
+  display: 'flex',
+  flexDir: 'column',
+  gap: 0,
+  width: 'full',
+  height: 'full',
+};
 const tablistStyles: ChakraProps = {
   gap: 1,
   border: '1px',
@@ -72,6 +79,14 @@ const tabButtonStyles: ChakraProps = {
   _hover: {
     backgroundColor: 'fg.200',
   },
+};
+
+const safelyParseResult = (result: any) => {
+  try {
+    return parseResult(result);
+  } catch (e) {
+    return undefined;
+  }
 };
 
 export function FunctionOutput({
@@ -277,28 +292,36 @@ export function FunctionOutput({
               <Tab {...tabButtonStyles}>Raw Output</Tab>
             </TabList>
             <TabPanels border="1px solid" borderColor="fg.200">
-              <TabPanel>
-                <Box overflow="auto">
-                  <Box
-                    width="full"
-                    data-function-output="smart"
-                    whiteSpace="pre-wrap"
+              <TabPanel
+                p={
+                  safelyParseResult(applet.expandedContent.output.data)
+                    ?.type === 'html'
+                    ? 0
+                    : 4
+                }
+              >
+                <Box
+                  width="full"
+                  data-function-output="smart"
+                  whiteSpace="pre-wrap"
+                >
+                  <SmartFunctionOutputProvider
+                    outputSection="expanded"
+                    config={config}
+                    location={zipperLocation}
                   >
-                    <SmartFunctionOutputProvider
-                      outputSection="expanded"
-                      config={config}
-                    >
-                      <SmartFunctionOutput
-                        result={applet.expandedContent.output.data}
-                        level={0}
-                        tableLevel={0}
-                      />
-                    </SmartFunctionOutputProvider>
-                  </Box>
+                    <SmartFunctionOutput
+                      result={applet.expandedContent.output.data}
+                      level={0}
+                      tableLevel={0}
+                    />
+                  </SmartFunctionOutputProvider>
                 </Box>
               </TabPanel>
               <TabPanel backgroundColor="fg.100">
-                <RawFunctionOutput result={applet?.mainContent.output?.data} />
+                <RawFunctionOutput
+                  result={applet?.expandedContent.output?.data}
+                />
               </TabPanel>
             </TabPanels>
           </Tabs>
@@ -424,6 +447,10 @@ export function FunctionOutput({
     if (window.ZipperLocation === ZipperLocation.ZipperDotDev)
       setStickyTabs(true);
   });
+
+  const parsedResult =
+    safelyParseResult(applet?.mainContent.output?.data) || undefined;
+
   return (
     <FunctionOutputProvider
       showSecondaryOutput={showSecondaryOutput}
@@ -443,18 +470,20 @@ export function FunctionOutput({
             <TabList {...tablistStyles}>
               <Tab {...tabButtonStyles}>Raw Output</Tab>
             </TabList>
-            <TabPanels border="1px solid" borderColor="fg.200">
-              <TabPanel backgroundColor="fg.100">
-                <RawFunctionOutput result={applet?.mainContent.output?.data} />
-              </TabPanel>
+            <TabPanels p={0} style={{ marginTop: 0 }}>
+              <RawFunctionOutput result={applet?.mainContent.output?.data} />
             </TabPanels>
           </Tabs>
         }
       >
         <>
           <Tabs colorScheme="purple" variant="enclosed" {...tabsStyles}>
-            <Box {...(stickyTabs ? stickyTabsStyles : undefined)}>
-              <TabList {...tablistStyles} display={showTabs ? 'flex' : 'none'}>
+            <VStack h="full" w="full" gap={0}>
+              <TabList
+                {...tablistStyles}
+                display={showTabs ? 'flex' : 'none'}
+                {...(stickyTabs ? stickyTabsStyles : undefined)}
+              >
                 <Tab {...tabButtonStyles}>Results</Tab>
                 <Tab {...tabButtonStyles}>Raw Output</Tab>
                 <Spacer />
@@ -471,17 +500,31 @@ export function FunctionOutput({
                 </Link>
               </TabList>
               <TabPanels
+                w="full"
+                h="full"
                 border={showTabs ? '1px solid' : 'none'}
                 borderColor="fg.200"
+                style={{ marginTop: 0 }}
               >
                 <TabPanel
                   p={
-                    zipperLocation === ZipperLocation.ZipperDotRun
+                    parsedResult?.type === 'html' ||
+                    (currentContext === 'main' &&
+                      zipperLocation === ZipperLocation.ZipperDotRun)
                       ? 0
-                      : undefined
+                      : 4
                   }
+                  h="full"
                 >
-                  <Box overflow="auto">
+                  <Box
+                    h="full"
+                    overflow={
+                      currentContext === 'main' &&
+                      zipperLocation === ZipperLocation.ZipperDotRun
+                        ? 'auto'
+                        : undefined
+                    }
+                  >
                     {applet.showGoBackLink() && (
                       <>
                         <Button
@@ -499,60 +542,64 @@ export function FunctionOutput({
                     )}
                     <Box
                       width="full"
+                      height="full"
                       data-function-output="smart"
                       whiteSpace="pre-wrap"
                     >
                       <SmartFunctionOutputProvider
                         config={config}
                         outputSection="main"
+                        location={zipperLocation}
                       >
                         <SmartFunctionOutput
+                          parsedResult={parsedResult}
                           result={applet?.mainContent.output?.data}
                           level={0}
                           tableLevel={0}
                         />
                       </SmartFunctionOutputProvider>
+                      {(applet?.expandedContent.output ||
+                        applet?.expandedContent.inputs) && (
+                        <Box
+                          borderLeft={'5px solid'}
+                          borderColor={'purple.300'}
+                          mt={8}
+                          pl={3}
+                          mb={4}
+                        >
+                          <HStack align={'center'} my={2}>
+                            <Heading flexGrow={1} size="sm" ml={1}>
+                              Additional Results
+                            </Heading>
+                            <IconButton
+                              aria-label="hide"
+                              icon={
+                                isExpandedResultOpen ? (
+                                  <HiOutlineChevronUp />
+                                ) : (
+                                  <HiOutlineChevronDown />
+                                )
+                              }
+                              onClick={() =>
+                                setIsExpandedResultOpen(!isExpandedResultOpen)
+                              }
+                            />
+                          </HStack>
+                          {isExpandedResultOpen && (
+                            <>{expandedOutputComponent()}</>
+                          )}
+                        </Box>
+                      )}
                     </Box>
                   </Box>
-
-                  {(applet?.expandedContent.output ||
-                    applet?.expandedContent.inputs) && (
-                    <Box
-                      borderLeft={'5px solid'}
-                      borderColor={'purple.300'}
-                      mt={8}
-                      pl={3}
-                      mb={4}
-                    >
-                      <HStack align={'center'} my={2}>
-                        <Heading flexGrow={1} size="sm" ml={1}>
-                          Additional Results
-                        </Heading>
-                        <IconButton
-                          aria-label="hide"
-                          icon={
-                            isExpandedResultOpen ? (
-                              <HiOutlineChevronUp />
-                            ) : (
-                              <HiOutlineChevronDown />
-                            )
-                          }
-                          onClick={() =>
-                            setIsExpandedResultOpen(!isExpandedResultOpen)
-                          }
-                        />
-                      </HStack>
-                      {isExpandedResultOpen && <>{expandedOutputComponent()}</>}
-                    </Box>
-                  )}
                 </TabPanel>
-                <TabPanel backgroundColor="fg.100">
+                <TabPanel p={0}>
                   <RawFunctionOutput
                     result={applet?.mainContent.output?.data}
                   />
                 </TabPanel>
               </TabPanels>
-            </Box>
+            </VStack>
           </Tabs>
           {currentContext === 'main' && (
             <Modal

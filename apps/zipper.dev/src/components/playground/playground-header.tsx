@@ -148,6 +148,7 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
       justifyContent="center"
       pt="1"
       pb="1"
+      data-playground-header
     >
       <HStack spacing={4} alignItems="center" flex={1} minW={0}>
         <Box
