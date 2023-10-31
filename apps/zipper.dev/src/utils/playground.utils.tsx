@@ -15,6 +15,8 @@ export const isLib = (script: Script) =>
   !isMain(script);
 export const isHandler = (script: Script) =>
   !isMain(script) && !isConnector(script) && script.isRunnable;
+export const isTypescript = (script: Script) =>
+  script.filename.endsWith('.ts') || script.filename.endsWith('.tsx');
 
 export enum PlaygroundTab {
   Code = 'src',
