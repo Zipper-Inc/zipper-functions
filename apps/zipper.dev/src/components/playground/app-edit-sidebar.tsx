@@ -66,7 +66,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
   // This hook will force a re-render when the breakpoint changes
   // Which causes this height to be recalculated
   useBreakpoint();
-  const calculatedBaseHeight = ref?.current
+  const calculatedHeight = ref?.current
     ? `calc(100vh - ${ref.current.getBoundingClientRect().top}px)`
     : '100vh';
 
@@ -96,10 +96,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
       p={{ base: 2, lg: 0 }}
       inset={0}
       backgroundColor="bgColor"
-      h={{
-        base: calculatedBaseHeight,
-        lg: 'full',
-      }}
+      h={calculatedHeight}
       w="full"
       onMouseEnter={onMouseEnter('PreviewPanel')}
       onMouseLeave={onMouseLeave()}

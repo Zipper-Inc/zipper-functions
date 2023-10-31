@@ -91,7 +91,7 @@ export function AppConsole({
   const colorToken = colorMode === 'light' ? 'default' : '_dark';
 
   return (
-    <Box id="app-console">
+    <Box id="app-console" mb={100}>
       {showPreserveLogsToggle && (
         <Box
           position="sticky"
