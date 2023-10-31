@@ -15,7 +15,6 @@ import { useSelf } from '~/liveblocks.config';
 
 import { trpc } from '~/utils/trpc';
 import { useRouter } from 'next/router';
-import { LiveObject, LsonObject } from '@liveblocks/client';
 import { getPathFromUri, getUriFromPath } from '~/utils/model-uri';
 import { InputParam } from '@zipper/types';
 import { isExternalImport, parseCode } from '~/utils/parse-code';

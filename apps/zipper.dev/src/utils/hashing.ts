@@ -21,7 +21,7 @@ export function getScriptHash(
 }
 
 export function getAppHash(
-  app: Pick<App, 'id' | 'slug'> & {
+  app: Pick<App, 'id' | 'slug' | 'secretsHash'> & {
     scripts: Pick<Script, 'filename' | 'hash'>[];
   },
 ) {
@@ -34,9 +34,17 @@ export function getAppHash(
       .sort((a, b) => (a.filename > b.filename ? 1 : -1)),
   );
 
-  const hashContent: any = { id: app.id, slug: app.slug, scripts };
+  const hashContent: any = {
+    id: app.id,
+    slug: app.slug,
+    scripts,
+  };
   if (frameworkHash !== (OG_HASH as string)) {
     hashContent.frameworkHash = frameworkHash;
+  }
+
+  if (app.secretsHash) {
+    hashContent.secretsHash = app.secretsHash;
   }
 
   return hash(hashContent, {
@@ -45,7 +53,7 @@ export function getAppHash(
 }
 
 export function getAppHashFromScripts(
-  app: Pick<App, 'id' | 'slug'>,
+  app: Pick<App, 'id' | 'slug' | 'secretsHash'>,
   scripts: Pick<Script, 'appId' | 'filename' | 'code'>[],
 ) {
   return getAppHash({
@@ -58,7 +66,7 @@ export function getAppHashFromScripts(
 }
 
 export function getAppHashAndVersion(
-  app: Pick<App, 'id' | 'slug'> & {
+  app: Pick<App, 'id' | 'slug' | 'secretsHash'> & {
     scripts: Pick<Script, 'filename' | 'hash'>[];
   },
 ) {
