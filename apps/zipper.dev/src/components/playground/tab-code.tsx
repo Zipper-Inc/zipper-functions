@@ -8,13 +8,14 @@ import {
   MenuButton,
   MenuList,
   Text,
+  useBreakpoint,
   useToast,
   VStack,
 } from '@chakra-ui/react';
 import { Script } from '@prisma/client';
 import { Markdown, useCmdOrCtrl } from '@zipper/ui';
 import dynamic from 'next/dynamic';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { FiEye } from 'react-icons/fi';
 import {
   AppEditSidebarContextType,
@@ -58,6 +59,7 @@ type CodeTabProps = {
 };
 
 export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
+  const ref = useRef<HTMLDivElement>(null);
   const { currentScript, onChange, onValidate, monacoRef } = useEditorContext();
   const { isRunning, run, boot } = useRunAppContext();
   const [expandedResult, setExpandedResult] = useState<
@@ -70,6 +72,14 @@ export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
 
   const { hoveredElement } = useHelpMode();
   const { style, onMouseEnter, onMouseLeave } = useHelpBorder();
+
+  // Even though we don't return anything here
+  // This hook will force a re-render when the breakpoint changes
+  // Which causes this height to be recalculated
+  useBreakpoint();
+  const calculatedHeight = ref.current
+    ? `calc(100vh - ${ref.current.getBoundingClientRect().top}px)`
+    : '100%';
 
   useEffect(() => {
     window.document.body.style.overflow = 'hidden';
@@ -188,6 +198,8 @@ export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
         h="full"
         w="full"
         data-tab-code="body"
+        height={calculatedHeight}
+        ref={ref}
       >
         <VStack
           flex={1}

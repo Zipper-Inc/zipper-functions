@@ -30,6 +30,7 @@ import {
 import { isZipperImportUrl } from '~/utils/eszip-utils';
 import {
   getOrCreateScriptModel,
+  isTypescript,
   parsePlaygroundQuery,
   PlaygroundTab,
 } from '~/utils/playground.utils';
@@ -329,7 +330,7 @@ async function runEditorActionsNow({
   setModelIsDirty: (path: string, isDirty: boolean) => void;
   readOnly: boolean;
 }) {
-  if (!monacoRef.current) return;
+  if (!monacoRef.current || !isTypescript(currentScript)) return;
 
   const currentModel = monacoRef.current.editor.getEditors()[0]?.getModel();
 
