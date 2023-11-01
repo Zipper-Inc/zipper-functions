@@ -11,6 +11,7 @@ import {
   Icon,
   useColorModeValue,
 } from '@chakra-ui/react';
+import NextLink from 'next/link';
 import { Script } from '@prisma/client';
 import { UseFormReturn } from 'react-hook-form';
 import {
@@ -66,8 +67,14 @@ export const ScriptItem: React.FC<ScriptItemProps> = ({
   onEndRenaming,
   canUserEdit,
 }) => {
-  const { currentScript, setCurrentScript, isModelDirty, modelHasErrors } =
-    useEditorContext();
+  const {
+    resourceOwnerSlug,
+    appSlug,
+    currentScript,
+    setCurrentScript,
+    isModelDirty,
+    modelHasErrors,
+  } = useEditorContext();
 
   const isDirty = isModelDirty(script.filename);
   const hasErrors = modelHasErrors(script.filename);
@@ -116,9 +123,12 @@ export const ScriptItem: React.FC<ScriptItemProps> = ({
         </Flex>
       ) : (
         <Link
+          as={NextLink}
           style={{ width: '100%' }}
           _hover={{ textDecoration: 'none' }}
-          onClick={() => {
+          href={`/${resourceOwnerSlug}/${appSlug}/src/${script.filename}`}
+          onClick={(e) => {
+            e.preventDefault();
             setCurrentScript(script);
           }}
         >
