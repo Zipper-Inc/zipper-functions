@@ -12,6 +12,8 @@ import {
   ArrowFunction,
   EnumMember,
   TypeNode,
+  CallExpression,
+  FunctionExpression,
 } from 'ts-morph';
 
 export const isExternalImport = (specifier: string) =>
@@ -177,6 +179,71 @@ export function getSourceFileFromCode(code = '', filename = 'main.ts') {
   return project.createSourceFile(filename, code);
 }
 
+type HandlerFn = FunctionDeclaration | ArrowFunction | FunctionExpression;
+type HandlerNode = HandlerFn | CallExpression | undefined;
+
+const HANDLER_KINDS = [
+  SyntaxKind.FunctionDeclaration,
+  SyntaxKind.ArrowFunction,
+  SyntaxKind.FunctionExpression,
+  SyntaxKind.VariableDeclaration,
+  SyntaxKind.CallExpression,
+];
+
+function findHandlerFunction({
+  src,
+  name = 'handler',
+  node = src?.getFunction(name) || src.getVariableDeclaration(name),
+}: {
+  src: SourceFile;
+  name?: string;
+  node?: any;
+}): void | HandlerFn {
+  if (!node) return;
+
+  // ✅ function handler() {}
+  if (node.isKind(SyntaxKind.FunctionDeclaration)) return node;
+
+  // ✅ const handler = ???
+  if (node.isKind(SyntaxKind.VariableDeclaration)) {
+    const child = node.getFirstChild((c: HandlerFn) =>
+      HANDLER_KINDS.includes(c.getKind()),
+    );
+
+    // covers the rest of the cases below starting with arrow functions
+    if (child) return findHandlerFunction({ src, node: child });
+
+    const identifier = node
+      .getChildrenOfKind(SyntaxKind.Identifier)
+      ?.pop()
+      ?.getText();
+
+    // ✅ const handler = anotherFunction
+    if (identifier && identifier !== name) {
+      return findHandlerFunction({ src, name: identifier });
+    }
+  }
+
+  // ✅ const handler = () => {}
+  if (node.isKind(SyntaxKind.ArrowFunction)) return node;
+
+  // ✅ const handler = function() {}
+  if (node.isKind(SyntaxKind.FunctionExpression)) return node;
+
+  // ✅ const handler = withThing(???)
+  if (node.isKind(SyntaxKind.CallExpression) && node.getArguments()?.[0]) {
+    return findHandlerFunction({
+      src,
+      node: node.getArguments()[0],
+    });
+  }
+
+  // ✅ const handler = withThing(anotherFunction)
+  if (node.isKind(SyntaxKind.Identifier) && node.getText() !== name) {
+    return findHandlerFunction({ src, name: node.getText() });
+  }
+}
+
 // returns undefined if the file isn't runnable (no handler function)
 export function parseInputForTypes({
   code = '',
@@ -190,25 +257,26 @@ export function parseInputForTypes({
   try {
     const src = srcPassedIn || getSourceFileFromCode(code);
 
-    // Determine if there's a function handler
-    let handlerFn: FunctionDeclaration | ArrowFunction | undefined =
-      src.getFunction('handler');
-
-    // If not, determine if there's a variable that's a handler arrow function
-    const handlerNode = handlerFn || src.getVariableDeclaration('handler');
-    handlerFn =
-      handlerFn || handlerNode?.getFirstChildByKind(SyntaxKind.ArrowFunction);
+    const rootHandlerNode =
+      src.getFunction('handler') || src.getVariableDeclaration('handler');
 
     // All good, this is a lib file!
-    if (!handlerNode || !handlerFn) {
+    if (!rootHandlerNode) {
+      return undefined;
+    }
+
+    const handlerFn = findHandlerFunction({ src, node: rootHandlerNode });
+
+    // Something went wrong here, there's a handler but we can't find the inner function
+    if (!handlerFn) {
       return undefined;
     }
 
     // Now make sure it gets exported and is not the default
-    if (!handlerNode.hasExportKeyword() && throwErrors) {
+    if (!rootHandlerNode.hasExportKeyword() && throwErrors) {
       throw new Error('The handler function must be exported.');
     }
-    if (handlerNode.hasDefaultKeyword() && throwErrors) {
+    if (rootHandlerNode.hasDefaultKeyword() && throwErrors) {
       throw new Error('The handler function cannot be the default export.');
     }
 
