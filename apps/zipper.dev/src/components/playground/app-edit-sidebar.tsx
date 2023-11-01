@@ -13,7 +13,7 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { TabButton } from '@zipper/ui';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { HiEye, HiPencil } from 'react-icons/hi2';
 import { useEditorContext } from '../context/editor-context';
 import { useHelpBorder, useHelpMode } from '../context/help-mode-context';
@@ -37,17 +37,19 @@ enum AppEditSidebarMode {
 const useAppEditSidebarMode = () => {
   const { inputParams, inputError, currentScript } = useEditorContext();
 
-  if (currentScript?.filename.endsWith('.md')) {
-    return AppEditSidebarMode.Markdown;
-  }
+  return useMemo(() => {
+    if (currentScript?.filename.endsWith('.md')) {
+      return AppEditSidebarMode.Markdown;
+    }
 
-  if (!inputParams && !inputError) {
-    return AppEditSidebarMode.Library;
-  }
+    if (!inputParams && !inputError) {
+      return AppEditSidebarMode.Library;
+    }
 
-  if (currentScript) return AppEditSidebarMode.Handler;
+    if (currentScript) return AppEditSidebarMode.Handler;
 
-  return AppEditSidebarMode.Empty;
+    return AppEditSidebarMode.Empty;
+  }, [currentScript?.filename, inputError, inputParams]);
 };
 
 export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
