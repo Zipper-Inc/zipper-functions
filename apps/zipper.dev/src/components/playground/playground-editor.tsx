@@ -383,7 +383,7 @@ export default function PlaygroundEditor(
     }
   }, [scripts, monacoRef]);
 
-  // switch files
+  // switch files when you set the current script
   useEffect(() => {
     if (
       monacoEditor &&
@@ -398,6 +398,7 @@ export default function PlaygroundEditor(
       console.log('[EDITOR]', `Setting model to ${currentScript.filename}`);
 
       editorRef.current.setModel(model);
+      runEditorActions({ now: true, value: model.getValue(), currentScript });
       maybeResyncScript(currentScript);
     }
   }, [currentScript, editorRef.current, isEditorReady, isModelReady]);
