@@ -72,7 +72,6 @@ export function RunAppProvider({
   app,
   children,
   saveAppBeforeRun,
-  onAfterRun,
   addLog,
   setLogStore,
   preserveLogs,
@@ -80,7 +79,6 @@ export function RunAppProvider({
   app: AppQueryOutput;
   children: any;
   saveAppBeforeRun: () => Promise<string>;
-  onAfterRun: () => Promise<void>;
   addLog: (method: Zipper.Log.Method, data: Zipper.Serializable[]) => void;
   setLogStore: (
     cb: (
@@ -348,8 +346,6 @@ export function RunAppProvider({
 
     cleanUpLogTimers();
     updateLogs({ version, runId, fromTimestamp: oneSecondAgo });
-
-    await onAfterRun();
 
     return runId;
   };
