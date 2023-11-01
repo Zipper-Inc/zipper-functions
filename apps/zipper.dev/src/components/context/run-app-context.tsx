@@ -243,6 +243,8 @@ export function RunAppProvider({
   const run: RunAppContextType['run'] = async ({ shouldSave = false } = {}) => {
     if (!inputParams || !currentScript) return;
     if (!preserveLogs) setLogStore(() => ({}));
+
+    setResults({ ...results, [currentScript.filename]: '' });
     setIsRunning(true);
 
     let version: string | undefined = undefined;
@@ -324,6 +326,8 @@ export function RunAppProvider({
       runId,
     });
 
+    setIsRunning(false);
+
     if (result.ok && result.filename) {
       setResults({ ...results, [result.filename]: result.result });
     }
@@ -341,8 +345,6 @@ export function RunAppProvider({
       ),
       safeJSONParse(result.result, undefined, result.result) || undefined,
     ]);
-
-    setIsRunning(false);
 
     cleanUpLogTimers();
     updateLogs({ version, runId, fromTimestamp: oneSecondAgo });

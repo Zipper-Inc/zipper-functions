@@ -107,9 +107,12 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
 
   const isHandler = inputParams || inputError;
 
+  // There are dragons here 👇
+  // It's easy to break things 🙈
   const output = useMemo(() => {
     return (
       <FunctionOutput
+        key={runId}
         applet={mainApplet}
         config={configs?.[currentScript?.filename || '']}
         getRunUrl={(scriptName: string) => {
