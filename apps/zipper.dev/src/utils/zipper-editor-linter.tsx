@@ -171,6 +171,5 @@ export async function runZipperLinter({
   // If not, return early
   if (zipperLinterLastRunTs !== lintRunTs) return;
 
-  editor.removeAllMarkers(ZIPPER_LINTER);
   editor.setModelMarkers(currentModel, ZIPPER_LINTER, markers);
 }
