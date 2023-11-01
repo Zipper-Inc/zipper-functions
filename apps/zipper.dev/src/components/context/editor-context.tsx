@@ -466,20 +466,6 @@ const EditorContextProvider = ({
 
   useEffect(() => {
     if (currentScript && monacoRef.current) {
-      try {
-        const model = getOrCreateScriptModel(currentScript, monacoRef.current!);
-        const { inputs } = parseCode({
-          code: model.getValue() || currentScript.code,
-          throwErrors: true,
-        });
-
-        setInputParams(inputs);
-        setInputError(undefined);
-      } catch (e: any) {
-        setInputParams(undefined);
-        setInputError(e.message);
-      }
-
       const { tab: playgroundTab, filename: playgroundFilename } =
         parsePlaygroundQuery(router.query);
 
