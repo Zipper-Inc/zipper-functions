@@ -283,12 +283,13 @@ export function parseInputForTypes({
     const inputs = handlerFn.getParameters();
     const params = inputs[0] as ParameterDeclaration;
 
-    if (!params) {
+    if (!params || params.getText().startsWith('_')) {
       return [];
     }
 
     const typeNode = params.getTypeNode();
-    if (typeNode?.isKind(SyntaxKind.AnyKeyword)) {
+
+    if (!typeNode || typeNode?.isKind(SyntaxKind.AnyKeyword)) {
       return [
         {
           key: params.getName(),
