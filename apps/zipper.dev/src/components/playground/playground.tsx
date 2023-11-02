@@ -119,9 +119,6 @@ export function Playground({
     const { tab: currentTab } = parsePlaygroundQuery(router.query);
     setTabIndex(Object.values(PlaygroundTab).indexOf(currentTab));
   }, [router.query]);
-  const onAfterRun = async () => {
-    setTabIndex(0);
-  };
 
   const saveAppBeforeRun = async () => {
     if (app.canUserEdit) {
@@ -150,7 +147,6 @@ export function Playground({
       saveAppBeforeRun={saveAppBeforeRun}
       addLog={addLog}
       setLogStore={setLogStore}
-      onAfterRun={onAfterRun}
       preserveLogs={preserveLogs}
     >
       <VStack

@@ -263,7 +263,6 @@ export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
               <PlaygroundEditor
                 key={app.id}
                 onChange={onChange}
-                onValidate={onValidate}
                 appName={app.slug}
               />
             )}
