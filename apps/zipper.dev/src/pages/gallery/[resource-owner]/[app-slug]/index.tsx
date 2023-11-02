@@ -152,7 +152,7 @@ const AppletLandingPage: NextPageWithLayout = () => {
           alignContent="start"
           alignItems="start"
         >
-          <VStack align="start" minW={400}>
+          <VStack align="start" minW={400} maxW={1000}>
             <AppletAuthor
               author={{
                 name: data.appAuthor.name,
