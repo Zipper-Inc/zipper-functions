@@ -371,7 +371,7 @@ export function AppPage({
       h="full"
       px={{ base: 4, md: 8 }}
       pt={0}
-      mt={0}
+      mt={isEmbedded ? 4 : 0}
     >
       {title && (
         <Heading
@@ -601,7 +601,9 @@ export const getServerSideProps: GetServerSideProps = async ({
 
   if (shouldRedirect) {
     const runUrl = new URL(resolvedUrl || '', bootUrl);
-    runUrl.pathname = `/run/${filename}`;
+    runUrl.pathname = isEmbedUrl
+      ? `/run/embed/${filename}`
+      : `/run/${filename}`;
 
     if (isAutoRun) {
       const runValues = getRunValues({ inputParams, url: req.url, config });
