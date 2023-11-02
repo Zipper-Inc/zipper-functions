@@ -99,7 +99,7 @@ const AppletLandingPage: NextPageWithLayout = () => {
       <iframe
         width="100%"
         height="500"
-        src={`${getAppRunUrl}/embed/run/${
+        src={`${getAppRunUrl}/run/embed/${
           currentScriptState?.filename || 'main.ts'
         }`}
       ></iframe>

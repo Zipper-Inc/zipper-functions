@@ -121,6 +121,11 @@ export function getRandomColor() {
 
 const useComponents = (): Components => {
   const { config } = useBlogContext();
+  const length = COLORS.length;
+
+  // Generate a random number between 0 and the length of the array, inclusive.
+  const randomIndex = Math.floor(Math.random() * length);
+  const randomIndex2 = Math.floor(Math.random() * length);
 
   return ChakraUIRenderer({
     p: (props: TextProps) => <Text {...props} color="gray.900" mb="8" />,
@@ -129,22 +134,36 @@ const useComponents = (): Components => {
     h2: (props: HeadingProps) => (
       <HeadingLink
         as="h2"
-        size="2xl"
-        color={getRandomColor()?.color}
-        mt={8}
-        mb={8}
+        size="xl"
+        color={COLORS[randomIndex]?.color || COLORS[0]?.color}
+        mt={4}
+        mb={4}
         {...props}
       />
     ),
     li: (props: TextProps) => <Text as="li" {...props} color="gray.900" />,
     h3: (props: HeadingProps) => (
-      <Heading as="h3" size="xl" mt={6} mb={6} {...props} />
+      <Heading
+        as="h3"
+        size="lg"
+        mt={6}
+        mb={6}
+        color={COLORS[randomIndex2]?.color || COLORS[1]?.color}
+        {...props}
+      />
     ),
     h4: (props: HeadingProps) => (
-      <HeadingLink as="h4" size="lg" mt={8} mb={4} {...props} />
+      <HeadingLink
+        as="h4"
+        size="md"
+        mt={4}
+        mb={4}
+        color={'gray.600'}
+        {...props}
+      />
     ),
     h5: (props: HeadingProps) => (
-      <HeadingLink as="h5" size="md" my={2} {...props} />
+      <HeadingLink as="h5" size="sm" my={2} {...props} />
     ),
     h6: (props: HeadingProps) => (
       <HeadingLink as="h6" size="sm" my={2} {...props} />

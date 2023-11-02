@@ -123,6 +123,7 @@ export const BasicLayout = ({ children }: { children: ReactNode }) => {
                     color="primary"
                     margin="0"
                     fontSize={{ base: '4xl', lg: '64px' }}
+                    maxW="container.lg"
                   >
                     {opts.title}
                   </Heading>
