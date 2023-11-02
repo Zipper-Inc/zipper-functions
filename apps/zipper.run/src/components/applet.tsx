@@ -30,6 +30,7 @@ import {
 } from '@zipper/ui/src/components/function-output/handler-description';
 import {
   getInputsFromFormData,
+  getScreenshotUrl,
   ZIPPER_TEMP_USER_ID_COOKIE_NAME,
   ZIPPER_TEMP_USER_ID_HEADER,
 } from '@zipper/utils';
@@ -478,6 +479,8 @@ export function AppPage({
 
   if (isEmbedded) return content;
 
+  const appletUrl = `https://${app.slug}.zipper.run`;
+
   return (
     <>
       <Head>
@@ -486,8 +489,8 @@ export function AppPage({
           property="og:image"
           content={
             latestRunId
-              ? `https://api.urlbox.io/v1/yp9laCbg58Haq8m1/png?url=https://${app.slug}.zipper.run/run/history/${latestRunId}&thumb_width=1200`
-              : undefined
+              ? getScreenshotUrl(`${appletUrl}/run/history/${latestRunId}`)
+              : getScreenshotUrl(`${appletUrl}/embed/run/main.ts`)
           }
         />
         <meta name="description" content={app.description || app.slug} />
@@ -495,11 +498,7 @@ export function AppPage({
         <meta property="og:description" content={app.description || app.slug} />
         <meta property="og:site_name" content="Zipper" />
         <meta property="og:type" content="website" />
-        {runUrl && (
-          <>
-            <meta property="og:url" content={runUrl} />
-          </>
-        )}
+        <meta property="og:url" content={runUrl || appletUrl} />
       </Head>
       <VStack flex={1} alignItems="stretch" spacing={4}>
         <Header
