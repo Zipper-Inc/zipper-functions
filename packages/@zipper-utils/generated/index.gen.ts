@@ -9,6 +9,7 @@ export * from '../src/utils/form';
 export * from '../src/utils/generate-for-framework';
 export * from '../src/utils/get-app-link';
 export * from '../src/utils/get-edit-applet-link';
+export * from '../src/utils/get-screenshot-url';
 export * from '../src/utils/object';
 export * from '../src/utils/parseBody';
 export * from '../src/utils/safe-json';
