@@ -1,3 +1,5 @@
+// deno-lint-ignore-file no-explicit-any
+
 // *
 // * 🛑 DO NOT IMPORT ANYTHING INTO THIS FILE
 // * 💾 It needs to be readable as is from the Monaco editor
@@ -95,7 +97,21 @@ declare namespace Zipper {
      */
     userConnectorTokens: { [service: string]: string };
 
+    // internal comment: this is the zipper.run request URL
+
+    /**
+     * URL and method of the original origin request
+     */
     originalRequest: Relay.RequestBody['originalRequest'];
+
+    /**
+     * A generic stash for anything that needs to persist across handlers
+     */
+    stash: {
+      readonly get: <T = any>(key: string) => T | undefined;
+      readonly set: <T = any>(key: string, value: T) => void;
+      [key: string]: any;
+    };
   };
 
   /**
@@ -366,7 +382,10 @@ declare namespace Zipper {
    * @category Runtime
    */
   export type UserInfo = {
+    userId?: string;
     email?: string;
+    displayName?: string;
+    canUserEdit?: boolean;
   };
 
   /**

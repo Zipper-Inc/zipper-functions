@@ -30,10 +30,7 @@ export type BootInfo = {
   app: AppInfo;
   userAuthConnectors: UserAuthConnector[];
   inputs: InputParams;
-  userInfo: {
-    email?: string;
-    userId?: string;
-  };
+  userInfo: Zipper.UserInfo;
   runnableScripts: string[];
   metadata?: Record<string, string | undefined>;
   entryPoint: EntryPointInfo;

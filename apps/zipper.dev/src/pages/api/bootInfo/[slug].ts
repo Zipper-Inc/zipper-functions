@@ -209,6 +209,14 @@ export default async function handler(
   appAuthor.name = authorName?.name || '';
   appAuthor.image = authorName?.image || '';
 
+  const canUserEditBool = canUserEdit(appFound, {
+    req,
+    userId: userInfo.userId,
+    orgId: undefined,
+    organizations: organizations,
+    session: undefined,
+  });
+
   const result: BootInfoResult = {
     ok: true,
     data: {
@@ -221,13 +229,7 @@ export default async function handler(
         publishedVersionHash,
         updatedAt,
         appAuthor,
-        canUserEdit: canUserEdit(appFound, {
-          req,
-          userId: userInfo.userId,
-          orgId: undefined,
-          organizations: organizations,
-          session: undefined,
-        }),
+        canUserEdit: canUserEditBool,
         isDataSensitive,
       },
       inputs: parsedCode.inputs || [],
@@ -246,8 +248,9 @@ export default async function handler(
         requiredUserAuthConnectorFilter,
       ) as UserAuthConnector[],
       userInfo: {
-        email: userInfo?.email,
+        email: userInfo.email,
         userId: userInfo.userId,
+        canUserEdit: canUserEditBool,
       },
       entryPoint: {
         filename: entryPoint.filename,

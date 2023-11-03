@@ -210,7 +210,10 @@ export async function relayRequest(
   };
 
   relayBody.userInfo = {
+    userId: userInfo.userId || tempUserId || '',
     email: userInfo.email,
+    displayName: '',
+    canUserEdit: userInfo.canUserEdit,
   };
 
   relayBody.path = filename;

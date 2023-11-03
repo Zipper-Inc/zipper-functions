@@ -40,13 +40,8 @@ async function runApplet({ request }: Deno.RequestEvent) {
     delete env[key];
   });
 
-  const {
-    appInfo,
-    userInfo,
-    runId,
-    userConnectorTokens,
-    originalRequest,
-  } = body;
+  const { appInfo, userInfo, runId, userConnectorTokens, originalRequest } =
+    body;
 
   // Handle booting seperately
   // This way, we can deploy without running Applet code
@@ -164,6 +159,10 @@ async function runApplet({ request }: Deno.RequestEvent) {
      */
     const response: Zipper.HandlerContext['response'] = {};
 
+    const stash: Zipper.HandlerContext['stash'] = {
+      get: (key) => stash[key],
+      set: (key, value) => (stash[key] = value),
+    };
     const context: Zipper.HandlerContext = {
       userInfo,
       appInfo,
@@ -172,6 +171,7 @@ async function runApplet({ request }: Deno.RequestEvent) {
       response,
       userConnectorTokens,
       originalRequest,
+      stash,
     };
 
     const inputs = JSON.parse(JSON.stringify(body.inputs), (key, value) => {
