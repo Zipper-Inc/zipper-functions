@@ -660,6 +660,27 @@ export const getServerSideProps: GetServerSideProps = async ({
       });
 
     hideRun = true;
+
+    // Might as well handle any router redirects server side
+    // Let's see if this string looks like one before parsing
+    if (typeof result === 'string' && result.includes('Zipper.Router')) {
+      try {
+        const {
+          $zipperType,
+          redirect,
+          notFound,
+          error,
+        }: Zipper.Router.Redirect &
+          Zipper.Router.NotFound &
+          Zipper.Router.Error = JSON.parse(result);
+        if ($zipperType !== 'Zipper.Router') {
+          if (redirect)
+            return { redirect: { destination: redirect, permanent: false } };
+          if (notFound) return { notFound };
+          if (error) return { error };
+        }
+      } catch (e) {}
+    }
   }
 
   const defaultValues = {
