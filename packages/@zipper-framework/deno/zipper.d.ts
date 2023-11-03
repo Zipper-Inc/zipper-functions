@@ -94,6 +94,8 @@ declare namespace Zipper {
      * Auth tokens for each service the user has individually authed against
      */
     userConnectorTokens: { [service: string]: string };
+
+    originalRequest: Relay.RequestBody['originalRequest'];
   };
 
   /**
@@ -395,7 +397,11 @@ declare namespace Zipper {
       runId: string;
       inputs: Inputs;
       userInfo?: UserInfo;
-      originalRequest: { url: string; method: string };
+      originalRequest: {
+        url: string;
+        method: string;
+        headers: Record<string, string>;
+      };
       path?: string;
       userId: string;
       userConnectorTokens: Record<string, string>;

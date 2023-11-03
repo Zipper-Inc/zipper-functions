@@ -40,7 +40,13 @@ async function runApplet({ request }: Deno.RequestEvent) {
     delete env[key];
   });
 
-  const { appInfo, userInfo, runId, userId, userConnectorTokens } = body;
+  const {
+    appInfo,
+    userInfo,
+    runId,
+    userConnectorTokens,
+    originalRequest,
+  } = body;
 
   // Handle booting seperately
   // This way, we can deploy without running Applet code
@@ -165,6 +171,7 @@ async function runApplet({ request }: Deno.RequestEvent) {
       request,
       response,
       userConnectorTokens,
+      originalRequest,
     };
 
     const inputs = JSON.parse(JSON.stringify(body.inputs), (key, value) => {
