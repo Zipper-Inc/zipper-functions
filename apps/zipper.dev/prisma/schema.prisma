@@ -417,6 +417,19 @@ model SlackZipperSlashCommandInstall {
   @@map("slack_zipper_slash_command_installs")
 }
 
+model DiscordZipperSlashCommandInstall {
+  teamId            String
+  appId             String
+  encryptedBotToken String
+  createdAt         DateTime @default(now())
+  installers        String[]
+  teamName          String
+  botUserId         String
+
+  @@unique([teamId, appId])
+  @@map("discord_zipper_slash_command_installs")
+}
+
 model AppLog {
   id        String   @id @default(uuid())
   method    String

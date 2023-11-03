@@ -3,9 +3,10 @@ export type ConnectorType =
   | 'github-app'
   | 'slack'
   | 'openai'
-  | 'zendesk';
+  | 'zendesk'
+  | 'discord';
 
-export type UserAuthConnectorType = 'github' | 'slack';
+export type UserAuthConnectorType = 'github' | 'slack' | 'discord';
 
 export type UserAuthConnector = {
   type: UserAuthConnectorType;
