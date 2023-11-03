@@ -669,7 +669,6 @@ export const getServerSideProps: GetServerSideProps = async ({
           $zipperType,
           redirect,
           notFound,
-          error,
         }: Zipper.Router.Redirect &
           Zipper.Router.NotFound &
           Zipper.Router.Error = JSON.parse(result);
@@ -677,7 +676,6 @@ export const getServerSideProps: GetServerSideProps = async ({
           if (redirect)
             return { redirect: { destination: redirect, permanent: false } };
           if (notFound) return { notFound };
-          if (error) return { error };
         }
       } catch (e) {}
     }
