@@ -9,7 +9,6 @@ import { PostsLayout } from './posts-layout';
 import type { LayoutProps } from './types';
 import { ChakraProvider } from '@chakra-ui/react';
 import { theme } from '@zipper/ui';
-import { AnalyticsHead } from '@zipper/utils';
 
 const layoutMap = {
   post: ArticleLayout,
@@ -33,7 +32,6 @@ const BlogLayout = ({
   return (
     <ChakraProvider theme={theme}>
       <BlogProvider opts={opts} config={config}>
-        <AnalyticsHead tagId={process.env.NEXT_PUBLIC_BLOG_GA_MEASUREMENT_ID} />
         <Layout>{children}</Layout>
       </BlogProvider>
     </ChakraProvider>

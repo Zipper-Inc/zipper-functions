@@ -19,6 +19,7 @@ import { useRouter } from 'next/router';
 import { FiChevronLeft } from 'react-icons/fi';
 import NextLink from 'next/link';
 import { split } from './utils/get-tags';
+import { AnalyticsHead } from '@zipper/utils';
 
 export const BasicLayout = ({ children }: { children: ReactNode }) => {
   const { config, opts } = useBlogContext();
@@ -66,6 +67,7 @@ export const BasicLayout = ({ children }: { children: ReactNode }) => {
         <meta name="twitter:image" content={image} />
         {config.head?.({ title, meta: opts.frontMatter })}
       </Head>
+      <AnalyticsHead tagId={process.env.NEXT_PUBLIC_BLOG_GA_MEASUREMENT_ID} />
       <Website>
         <LightMode>
           <Website.Navbar links={{ component: Link }} site={SiteType.Blog} />
