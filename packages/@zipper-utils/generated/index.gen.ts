@@ -1,5 +1,6 @@
 // created from ctix
 
+export * from '../src/utils/analytics-head';
 export * from '../src/utils/connector';
 export * from '../src/utils/crypto.utils';
 export { default as cryptoUtils } from '../src/utils/crypto.utils';

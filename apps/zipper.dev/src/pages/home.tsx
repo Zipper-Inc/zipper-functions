@@ -48,7 +48,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from './api/auth/[...nextauth]';
 import Head from 'next/head';
 import { PiPlayCircle } from 'react-icons/pi';
-import { AnalyticsHead } from '~/components/analytics';
+import { AnalyticsHead } from '@zipper/utils';
 
 /* -------------------------------------------- */
 /* Content                                      */

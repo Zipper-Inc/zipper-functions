@@ -8,7 +8,7 @@ import { createServerSideHelpers } from '@trpc/react-query/server';
 import { trpcRouter } from '~/server/routers/_app';
 import SuperJSON from 'superjson';
 import { createContext } from '~/server/context';
-import { AnalyticsHead } from '~/components/analytics';
+import { AnalyticsHead } from '@zipper/utils';
 
 const GalleryPage: NextPageWithLayout = () => {
   const galleryApps = trpc.app.allApproved.useQuery();
