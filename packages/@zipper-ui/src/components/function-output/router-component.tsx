@@ -1,4 +1,4 @@
-import { Box, Heading, Progress } from '@chakra-ui/react';
+import { Box, Heading, Link, Progress } from '@chakra-ui/react';
 import { ZipperLocation } from '@zipper/types';
 import { useEffectOnce } from '../../hooks/use-effect-once';
 import { useState } from 'react';
@@ -11,19 +11,20 @@ export function RedirectComponent({ redirect }: Zipper.Router.Redirect) {
     if (window.ZipperLocation === ZipperLocation.ZipperDotRun) {
       /** @todo handle internal URL's */
       window.location.href = redirect.toString();
-    } else {
-      window.open(redirect, 'BLANK');
     }
   });
 
-  return (
+  return loc === ZipperLocation.ZipperDotDev ? (
+    <Box pt={2}>
+      Redirect to{' '}
+      <Link href={redirect} fontWeight="semibold" target="_blank">
+        {redirect}
+      </Link>
+    </Box>
+  ) : (
     <>
       <Progress colorScheme="purple" size="xs" isIndeterminate width="full" />
-      {loc === ZipperLocation.ZipperDotDev ? (
-        <Box pt={2}>Opening redirect in a new window</Box>
-      ) : (
-        <Box p={4}>Redirecting...</Box>
-      )}
+      <Box p={4}>Redirecting...</Box>
     </>
   );
 }
