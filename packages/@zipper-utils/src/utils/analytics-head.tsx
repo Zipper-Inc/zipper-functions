@@ -1,11 +1,13 @@
 import Head from 'next/head';
 
-const AnalyticsHead = () => {
+const AnalyticsHead = ({ tagId }: { tagId?: string }) => {
   return (
     <Head>
       <script
         async
-        src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID}`}
+        src={`https://www.googletagmanager.com/gtag/js?id=${
+          tagId || process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID
+        }`}
       />
       <script
         dangerouslySetInnerHTML={{
@@ -14,7 +16,7 @@ const AnalyticsHead = () => {
         function gtag(){dataLayer.push(arguments);}
         gtag('js', new Date());
 
-        gtag('config', ${process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID}, {
+        gtag('config', ${tagId || process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID}, {
           page_path: window.location.pathname,
         });
         `,

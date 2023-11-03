@@ -31,7 +31,7 @@ import { NextPageWithLayout } from '~/pages/_app';
 import { trpc } from '~/utils/trpc';
 import { isReadme } from '~/utils/playground.utils';
 import type { MonacoEditor } from '~/components/playground/playground-editor';
-import { AnalyticsHead } from '~/components/analytics';
+import { AnalyticsHead } from '@zipper/utils';
 
 const EDITOR_OPTIONS = {
   fixedOverflowWidgets: true,
