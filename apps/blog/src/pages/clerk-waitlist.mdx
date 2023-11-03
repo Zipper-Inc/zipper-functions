@@ -18,7 +18,7 @@ If you haven't played around with Zipper yet, it's a platform for building and d
 
 The baseline functionality for a waitlist is to collect email addresses and then approve or reject them. We’ve built an [applet that does exactly that](https://zipper.dev/gallery/zipper-inc/clerk-waitlist). It collects an email address, adds it to a waitlist, and then sends a Slack notification to your team. The email address can be approved or rejected from the web UI or directly from Slack.
 
-To illustrate how the applet works, we've got a sample website below. It's hooked up to our waitlist management applet, so you can see how the two work together. You can try it out by submitting a fake email address and then visting https://clerk-waitlist.zipper.run/run.
+To illustrate how the applet works, we've got a sample website below. It's hooked up to our waitlist management applet, so you can see how the two work together. You can try it out by submitting a fake email address and then visting [https://clerk-waitlist.zipper.run](https://clerk-waitlist.zipper.run/run/main.ts).
 
 <iframe
   width="100%"
@@ -26,9 +26,9 @@ To illustrate how the applet works, we've got a sample website below. It's hooke
   src="https://clerk-waitlist-demo.zipper.run/embed/run/main.ts"
 ></iframe>
 *Demo website hooked up to our waitlist management applet -
-[Code](https://zipper.dev/zipper-inc/clerk-waitlist-demo.zipper.run)*
+[Code](https://zipper.dev/zipper-inc/clerk-waitlist-demo/src/main.ts)*
 
-Once you've submitted your fake email address, visit https://clerk-waitlist.zipper.run/run to see the waitlist management applet in action. You'll see a list of all the email addresses that have been submitted and you can approve or reject them (there's no auth in this particular example). If you approve an email address, a new user will appear in our Clerk dashboard and they'll immediately receive an invitation email.
+Once you've submitted your fake email address, visit [https://clerk-waitlist.zipper.run](https://clerk-waitlist.zipper.run/run/main.ts) to see the waitlist management applet in action. You'll see a list of all the email addresses that have been submitted and you can approve or reject them (there's no auth in this particular example). If you approve an email address, a new user will appear in our Clerk dashboard and they'll immediately receive an invitation email.
 
 ## Inviting your friends to the party
 
