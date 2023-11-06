@@ -199,14 +199,21 @@ export async function relayRequest(
       request.method === 'GET'
         ? Object.fromEntries(relayUrl.searchParams.entries())
         : await parseBody(request),
-    originalRequest: { url: request.url, method: request.method },
+    originalRequest: {
+      url: request.nextUrl.toString(),
+      method: request.method,
+      headers: Object.fromEntries(request.headers.entries()),
+    },
     runId,
     userId: userInfo.userId || tempUserId || '',
     userConnectorTokens,
   };
 
   relayBody.userInfo = {
+    userId: userInfo.userId || tempUserId || '',
     email: userInfo.email,
+    displayName: '',
+    canUserEdit: userInfo.canUserEdit,
   };
 
   relayBody.path = filename;

@@ -5,7 +5,6 @@ import Document, {
   NextScript,
   DocumentContext,
 } from 'next/document';
-import { Analytics } from '~/components/analytics';
 
 class MyDocument extends Document {
   static async getInitialProps(ctx: DocumentContext) {
@@ -15,13 +14,11 @@ class MyDocument extends Document {
 
   render() {
     const meta = {
-      title: 'Zipper Blog',
-      description: 'From idea to implementation, in minutes.',
-      image:
-        'https://framerusercontent.com/images/rmB1OJPLRpupHh3xVP1SajRkWGI.png',
+      title: 'Zipper',
+      description:
+        'Zipper turns your business logic into serverless apps with automatically generated UI, auth, and APIs straight out of the box.',
+      image: '',
     };
-
-    const isHomePage = this.props.__NEXT_DATA__.page === '/home';
 
     return (
       <Html lang="en">
@@ -41,7 +38,6 @@ class MyDocument extends Document {
         <body>
           <Main />
           <NextScript />
-          {isHomePage && <Analytics />}
         </body>
       </Html>
     );

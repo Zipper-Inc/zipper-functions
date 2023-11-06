@@ -1,9 +1,9 @@
 import { App, Script } from '@prisma/client';
 import hash from 'object-hash';
-import { frameworkHash } from '~/framework-hash';
+import { frameworkHash } from '../framework-hash';
 
 const APP_VERSION_LENGTH = 7;
-const OG_HASH = 'ed40886d6bd876dd9da27fdc90883ca0';
+const OG_HASH = '9de4ad2c34a94edc2e86a826531b8db2';
 
 const normalizeCodeForHashing = (code = '') => code.trimEnd();
 
