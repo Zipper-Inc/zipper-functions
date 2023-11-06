@@ -105,7 +105,7 @@ export const discordConnectorRouter = createTRPCRouter({
       const tokens = await prisma.secret.findMany({
         where: {
           appId: input.appId,
-          key: { in: ['SLACK_DISCORD_TOKEN'] },
+          key: { in: ['DISCORD_BOT_TOKEN'] },
         },
       });
 
@@ -113,7 +113,7 @@ export const discordConnectorRouter = createTRPCRouter({
         where: {
           appId: input.appId,
           key: {
-            in: ['SLACK_BOT_TOKEN', 'SLACK_CLIENT_SECRET'],
+            in: ['DISOCRD_BOT_TOKEN', 'DISCORD_CLIENT_SECRET'],
           },
         },
       });
@@ -168,12 +168,12 @@ export const discordConnectorRouter = createTRPCRouter({
       const clientSecretRecord = await prisma.secret.findFirst({
         where: {
           appId,
-          key: 'SLACK_CLIENT_SECRET',
+          key: 'DISCORD_CLIENT_SECRET',
         },
       });
 
       let clientId = process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID!;
-      let clientSecret = process.env.DISCORD_CLIENT_SECRET!;
+      let clientSecret = process.env.NEXT_PUBLIC_DISCORD_CLIENT_SECRET!;
 
       if (appConnector?.clientId && clientSecretRecord) {
         clientId = appConnector?.clientId;
@@ -192,82 +192,22 @@ export const discordConnectorRouter = createTRPCRouter({
           client_id: clientId,
           client_secret: clientSecret,
           code: input.code,
+          grant_type: 'authorization_code',
         }),
       });
 
-      const json = await res.json();
+      const accessJson = await res.json();
 
-      if (!json.ok) {
+      if (!accessJson.access_token) {
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
-          message: `Something went wrong while exchanging the code for a token: ${json.error}`,
+          message: `Something went wrong while exchanging the code for a token: ${accessJson.error}`,
         });
       }
 
-      const jsonWithoutTokens = filterTokenFields(json);
+      const jsonWithoutTokens = filterTokenFields(accessJson);
 
-      let appConnectorUserAuth: AppConnectorUserAuth | undefined = undefined;
-
-      const userIdOrTempId =
-        userId ||
-        ctx.userId ||
-        (ctx.req?.cookies as any)[ZIPPER_TEMP_USER_ID_COOKIE_NAME];
-
-      if (appId && json.authed_user.scope && userIdOrTempId) {
-        // Perform a POST request to Discord's user information endpoint
-
-        try {
-          const response = await fetch(
-            'https://discord.com/api/v10/users/@me',
-            {
-              method: 'GET', // Use GET for user information
-              headers: {
-                Authorization: `Bearer ${json.authed_user.access_token}`, // Set the access token in the Authorization header
-              },
-            },
-          );
-
-          if (response.ok) {
-            const userInfoJson = await response.json();
-
-            appConnectorUserAuth = await prisma.appConnectorUserAuth.upsert({
-              where: {
-                appId_connectorType_userIdOrTempId: {
-                  appId,
-                  connectorType: 'discord',
-                  userIdOrTempId,
-                },
-              },
-              create: {
-                appId,
-                connectorType: 'slack',
-                userIdOrTempId,
-                metadata: userInfoJson,
-                encryptedAccessToken: encryptToBase64(
-                  json.authed_user.access_token,
-                  process.env.ENCRYPTION_KEY!,
-                ),
-              },
-              update: {
-                metadata: jsonWithoutTokens.authed_user,
-                encryptedAccessToken: encryptToBase64(
-                  json.authed_user.access_token,
-                  process.env.ENCRYPTION_KEY!,
-                ),
-              },
-            });
-            // You can use userInfo as needed
-          } else {
-            console.error(
-              'Failed to fetch user information from Discord:',
-              response.status,
-              response.statusText,
-            );
-          }
-        } catch (error) {
-          console.error('Error fetching user information from Discord:', error);
-        }
-      }
+      const appConnectorUserAuth: AppConnectorUserAuth | undefined = undefined;
 
       await prisma.appConnector.update({
         where: {
@@ -281,9 +221,9 @@ export const discordConnectorRouter = createTRPCRouter({
         },
       });
 
-      if (json.access_token) {
+      if (accessJson.access_token) {
         const encryptedValue = encryptToBase64(
-          json.access_token,
+          accessJson.access_token,
           process.env.ENCRYPTION_KEY,
         );
 

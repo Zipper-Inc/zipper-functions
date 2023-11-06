@@ -1,16 +1,25 @@
-export const code = `
-import { Client, GatewayIntentBits } from 'https://deno.land/x/discord_js@v12.5.1-Deno-0.3/mod.ts'
+export const code = `import {
+  Client,
+  Intents,
+  Message,
+} from "https://deno.land/x/harmony@v2.6.0/mod.ts";
 
 /**
- * This is an Discord API client intialized with the applet developer's Discord Token
- * WARNING: THIS CLIENT DOES NOT USE THE USER TOKEN
- * All requests using this client will use the same token. Be careful if sharing publicly!
- */
-const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages] });
+* This is an Discord API client intialized with the applet developer's Discord Token
+* WARNING: THIS CLIENT DOES NOT USE THE USER TOKEN
+* All requests using this client will use the same token. Be careful if sharing publicly!
+*/
+const client = new Client();
 
-client.login(Deno.env.get('DISCORD_BOT_TOKEN'));
+client.on("messageCreate", (msg: Message): void => {
+  const content = msg.content;
+});
 
-export default client
+const token = Deno.env.get("DISCORD_BOT_TOKEN");
+
+client.connect(token, Intents.None);
+
+export default client;
 `;
 
 export const workspaceScopes = [

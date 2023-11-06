@@ -10,14 +10,14 @@ const DiscordAuth: NextPageWithLayout = () => {
   const { code, state, error, error_description } = router.query;
   const [errorMessage, setErrorMessage] = useState<string | undefined>();
 
-  const sendWelcomeMessage =
-    trpc.zipperDiscordIntegration.sendWelcomeMessage.useMutation();
+  // const sendWelcomeMessage =
+  //   trpc.zipperDiscordIntegration.sendWelcomeMessage.useMutation();
 
   const exchangeMutation =
-    trpc.zipperDiscordIntegration.exchangeCodeForToken.useMutation({
+    trpc.discordConnector.exchangeCodeForToken.useMutation({
       onSuccess: (data) => {
-        sendWelcomeMessage.mutateAsync(data);
-        router.push('/');
+        // sendWelcomeMessage.mutateAsync(data);
+        router.push(data.redirectTo as string);
       },
       onError: (error) => {
         setErrorMessage(error.message);
@@ -39,7 +39,7 @@ const DiscordAuth: NextPageWithLayout = () => {
 
   useEffect(() => {
     if (process.env.NODE_ENV === 'development') {
-      // Slack has to redirect to an https url (usually ngrok)
+      // Discord has to redirect to an https url (usually ngrok)
       // so we have to redirect to localhost:3000 so that the cookie gets
       // set properly
       if (window.location.host !== 'localhost:3000') {

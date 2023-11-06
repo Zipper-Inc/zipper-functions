@@ -34,7 +34,6 @@ import { MultiSelect, SelectOnChange, useMultiSelect } from '@zipper/ui';
 import { useRouter } from 'next/router';
 import { useEffect, useRef, useState } from 'react';
 import { HiOutlineTrash } from 'react-icons/hi';
-import { PiDiscordLogo } from 'react-icons/pi';
 import { SiDiscord } from 'react-icons/si';
 import { useRunAppContext } from '~/components/context/run-app-context';
 import { useUser } from '~/hooks/use-user';
@@ -94,6 +93,10 @@ function DiscordConnectorForm({ appId }: { appId: string }) {
     { enabled: !!user },
   );
 
+  console.log(appId);
+
+  console.log('secret', existingSecret.data);
+
   const [isOwnClientIdRequired, setIsOwnClientIdRequired] =
     useState<boolean>(false);
 
@@ -145,9 +148,9 @@ function DiscordConnectorForm({ appId }: { appId: string }) {
     }
   }, [discordAuthInProgress, discordAuthURL.data?.url]);
 
-  const existingInstallation = existingSecret.data && connector.data?.metadata;
+  const existingInstallation = existingSecret.data && connector.data?.appId;
 
-  console.log(existingSecret.data, connector.data);
+  // console.log('installation', connector.data?.metadata);
 
   if (
     // existingUserSecret.isLoading ||
@@ -254,7 +257,7 @@ function DiscordConnectorForm({ appId }: { appId: string }) {
                                   color={'fg.900'}
                                 >
                                   {
-                                    (connector.data?.metadata as any)['team'][
+                                    (connector.data?.metadata as any)['guild'][
                                       'name'
                                     ]
                                   }
