@@ -9,12 +9,12 @@ const readFiles = (dir = './deno', code = '') => {
   for (const dirEntry of Deno.readDirSync(dir)) {
     if (dirEntry.isFile) {
       const content = Deno.readTextFileSync(`${dir}/${dirEntry.name}`);
-      code = code + content;
+      code = code + content.trim();
     } else {
       code = code + readFiles(`${dir}/${dirEntry.name}`, code);
     }
   }
-  return code;
+  return code.trim();
 };
 
 export function generateHash() {

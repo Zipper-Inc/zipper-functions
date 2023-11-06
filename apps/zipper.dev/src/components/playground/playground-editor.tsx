@@ -23,7 +23,7 @@ import { getPathFromUri, getUriFromPath } from '~/utils/model-uri';
 import { useEditorContext } from '../context/editor-context';
 import { useRunAppContext } from '../context/run-app-context';
 import * as Y from 'yjs';
-import LiveblocksProvider, { Awareness } from '@liveblocks/yjs';
+import LiveblocksProvider from '@liveblocks/yjs';
 import { MonacoBinding } from 'y-monaco';
 
 import { PlaygroundCollabCursor } from './playground-collab-cursor';
@@ -33,7 +33,6 @@ import {
 } from '~/utils/playground.utils';
 import { TypedLiveblocksProvider } from '~/liveblocks.config';
 import { Script } from '@prisma/client';
-// import { getRewriteRule } from '~/utils/rewrite-imports';
 
 export type MonacoEditor = monaco.editor.IStandaloneCodeEditor;
 
@@ -80,7 +79,7 @@ export default function PlaygroundEditor(
     readOnly,
     onValidate,
   } = useEditorContext();
-  const { appInfo, boot } = useRunAppContext();
+  const { boot, run, configs } = useRunAppContext();
   const editorRef = useRef<MonacoEditor>();
   const yRefs = useRef<{
     yDoc?: Y.Doc;
@@ -93,13 +92,11 @@ export default function PlaygroundEditor(
   });
   const [isEditorReady, setIsEditorReady] = useState(false);
   const [isModelReady, setIsModelReady] = useState(false);
-  const [isLiveblocksReady, setIsLiveblocksReady] = useState(false);
+  const [, setIsLiveblocksReady] = useState(false);
   const monacoEditor = useMonaco();
   const [, updateMyPresence] = useMyPresence();
   const connectionIds = useOthersConnectionIds();
-  const [defaultLanguage, setDefaultLanguage] = useState<
-    'typescript' | 'markdown'
-  >('typescript');
+  const [defaultLanguage] = useState<'typescript' | 'markdown'>('typescript');
   const theme = useColorModeValue('vs', 'vs-dark');
 
   const handleEditorDidMount = (editor: MonacoEditor, monaco: Monaco) => {
@@ -402,6 +399,21 @@ export default function PlaygroundEditor(
       maybeResyncScript(currentScript);
     }
   }, [currentScript, editorRef.current, isEditorReady, isModelReady]);
+
+  // A little love for `run: true`
+  const lastAutoRunHash = useRef<Record<string, string>>({});
+  useEffect(() => {
+    if (currentScript?.hash && configs) {
+      const config = configs[currentScript.filename];
+      if (
+        config?.run &&
+        currentScript.hash !== lastAutoRunHash.current[currentScript.filename]
+      ) {
+        run({ shouldSave: false });
+        lastAutoRunHash.current[currentScript.filename] = currentScript.hash;
+      }
+    }
+  }, [currentScript?.hash, configs]);
 
   const room = useRoom();
 

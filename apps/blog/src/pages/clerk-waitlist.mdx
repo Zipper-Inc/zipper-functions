@@ -12,13 +12,13 @@ A waitlist is a great way for your startup or new product to gather hype at the 
 
 Today we’re excited to share two Zipper applets to help you manage your waitlist directly from Slack. They're both tightly integrated with Clerk to automate adding users to your system and sending them invitation emails. If you're not familiar with Clerk, it's a great way to add authentication and user management to your app. You can learn more about Clerk [here](https://clerk.dev).
 
-If you haven't played around with Zipper yet, it's a platform for building and deploying web services quickly. Every applet has a working frontend, router, and datastore out-of-the-box. All you need is a browser and some basic Typescript or Javascript knowledge to get started. You can learn more about Zipper [here](https://zipper.dev).
+If you haven't played around with Zipper yet, it's a platform for building and deploying web services quickly. Every applet has a working frontend, router, and datastore out-of-the-box. All you need is a browser and some basic Typescript or Javascript knowledge to get started.
 
 ## Approving and Rejecting Waitlist Requests
 
-The baseline functionality for a waitlist management tool is the ability to collect email addresses and then approve or reject them. We’ve built an applet that does exactly that. It’s a simple form that collects an email address, adds it to a waitlist, and then sends a Slack notification to your team. You can then approve or reject any email address on the waitlist from the web UI or directly from Slack.
+The baseline functionality for a waitlist is to collect email addresses and then approve or reject them. We’ve built an [applet that does exactly that](https://zipper.dev/gallery/zipper-inc/clerk-waitlist). It collects an email address, adds it to a waitlist, and then sends a Slack notification to your team. The email address can be approved or rejected from the web UI or directly from Slack.
 
-To illustrate how the applet works, we've got a sample website below. It's hooked up to our waitlist management applet, so you can see how the two work together. You can try it out by submitting a fake email address in the iframe below.
+To illustrate how the applet works, we've got a sample website below. It's hooked up to our waitlist management applet, so you can see how the two work together. You can try it out by submitting a fake email address and then visting [https://clerk-waitlist.zipper.run](https://clerk-waitlist.zipper.run/run/main.ts).
 
 <iframe
   width="100%"
@@ -26,15 +26,17 @@ To illustrate how the applet works, we've got a sample website below. It's hooke
   src="https://clerk-waitlist-demo.zipper.run/embed/run/main.ts"
 ></iframe>
 *Demo website hooked up to our waitlist management applet -
-[Code](https://zipper.dev/zipper-inc/clerk-waitlist-demo.zipper.run)*
+[Code](https://zipper.dev/zipper-inc/clerk-waitlist-demo/src/main.ts)*
 
-Once you've submitted your fake email address, visit https://clerk-waitlist.zipper.run/run to see the waitlist management applet in action. You'll see a list of all the email addresses that have been submitted, and you can approve or reject them. If you approve an email address, a new user will appear in our Clerk dashboard and they'll immediately receive an invitation email.
+Once you've submitted your fake email address, visit [https://clerk-waitlist.zipper.run](https://clerk-waitlist.zipper.run/run/main.ts) to see the waitlist management applet in action. You'll see a list of all the email addresses that have been submitted and you can approve or reject them (there's no auth in this particular example). If you approve an email address, a new user will appear in our Clerk dashboard and they'll immediately receive an invitation email.
 
 ## Inviting your friends to the party
 
-In the most basic case, you want a waitlist where everyone is treated equally. However, there are often times when you want to make it really easy for people to add their colleagues and friends to your application. In these cases, you want to be able to generate invitation codes that each new user can use to let people they know bypass the waitlist.
+In the example above, everyone that joins the waitlist has to be approved manually. This can be a challenge in situations where you want users to be able to collaborate with their colleagues or friends within your application. In these cases, you want to be able to generate invitation codes that each new user can use to let people they know bypass the waitlist.
 
-We've built https://clerk-invite-codes.zipper.run [[code](https://zipper.dev/zipper-inc/clerk-invite-codes/src/readme.md)] with this use case in mind. Every approved email address gets n invitation codes that they can share with their friends. When a new user signs up with an invitation code, they're automatically approved and added to your system via Clerk.
+We've built [an applet](https://zipper.dev/gallery/zipper-inc/clerk-invite-codes) with this use case in mind. Every approved email address gets a handful of invitation codes that they can share with their friends. When a new user signs up with an invitation code, they're automatically approved and added to your system via Clerk.
+
+You can play around with the published version of the applet [here](https://clerk-invite-codes.zipper.run/run/main.ts). If you were to integrate this applet into you product, the built-in API for the applet can be used to get the invitation codes for a particular email address: `https://clerk-invite-codes.zipper.run/invite-codes.ts/api?email=sachin.ranchod@gmail.com`
 
 ```JSON
 {
@@ -65,7 +67,7 @@ We've built https://clerk-invite-codes.zipper.run [[code](https://zipper.dev/zip
 
 ## Fork and customize to your needs
 
-The code for both applets is open source and can be easily forked. Once forked, there are a handful of steps to follow in the readme to get the Slack app and the Clerk API key configured.
+The code for both applets is open source and can be easily forked. Just follow the steps in the readmes of each applet to get the Slack and Clerk configured.
 
 Once your code has been published, you can add email addresses to the waitlist by POSTing to your applet’s `/add` endpoint.
 
@@ -84,3 +86,5 @@ There’s a lot more we want to add to both of these applets. In the coming week
 - Bypassing the waitlist for target accounts
 
 If you have any other ideas of what would make these applets better, don’t hesitate to let us know. You can also fork either applet and customize it to your needs.
+
+You can find more information on how to use Zipper [here](https://zipper.dev/docs). If you have any questions, don't hesitate to reach out to us at [hello@zipper.works](mailto:hello@zipper.works)

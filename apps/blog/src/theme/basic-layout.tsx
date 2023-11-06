@@ -19,6 +19,7 @@ import { useRouter } from 'next/router';
 import { FiChevronLeft } from 'react-icons/fi';
 import NextLink from 'next/link';
 import { split } from './utils/get-tags';
+import { AnalyticsHead } from '@zipper/utils';
 
 export const BasicLayout = ({ children }: { children: ReactNode }) => {
   const { config, opts } = useBlogContext();
@@ -47,13 +48,26 @@ export const BasicLayout = ({ children }: { children: ReactNode }) => {
   const title = isIndex
     ? 'Zipper Blog | Updates from Zipper Inc.'
     : `${opts.title}${config.titleSuffix || ''} | Zipper Blog`;
+  const description = opts.frontMatter.description || opts.description || '';
+  const image = '';
 
   return (
     <>
       <Head>
         <title>{title}</title>
+        <meta name="description" content={description} />
+        <meta property="og:site_name" content="Zipper Blog" />
+        <meta property="og:description" content={description} />
+        <meta property="og:title" content={title} />
+        <meta property="og:image" content={image} />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:site" content="@zipper_inc" />
+        <meta name="twitter:title" content={title} />
+        <meta name="twitter:description" content={description} />
+        <meta name="twitter:image" content={image} />
         {config.head?.({ title, meta: opts.frontMatter })}
       </Head>
+      <AnalyticsHead tagId={process.env.NEXT_PUBLIC_BLOG_GA_MEASUREMENT_ID} />
       <Website>
         <LightMode>
           <Website.Navbar links={{ component: Link }} site={SiteType.Blog} />

@@ -48,6 +48,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from './api/auth/[...nextauth]';
 import Head from 'next/head';
 import { PiPlayCircle } from 'react-icons/pi';
+import { AnalyticsHead } from '@zipper/utils';
 
 /* -------------------------------------------- */
 /* Content                                      */
@@ -56,7 +57,7 @@ import { PiPlayCircle } from 'react-icons/pi';
 const HERO_CONTENT = {
   TITLE: 'Forget about \n your toolchain',
 
-  DESCRIPTION: `Zipper turns your business logic into running apps with 
+  DESCRIPTION: `Zipper turns your business logic into running apps with
   automatically generated UI, auth, and APIs straight out of the box.`,
   LIST: [
     {
@@ -76,9 +77,9 @@ const HERO_CONTENT = {
 
 const WEB_FIRST_CONTENT = {
   TITLE: 'Build for the web',
-  DESCRIPTION: `Zipper is designed for building web services quickly. Every applet is 
-  deployed to a public-facing URL and can immediately start receiving 
-  GET & POST requests. Perfect for building user-facing web applications 
+  DESCRIPTION: `Zipper is designed for building web services quickly. Every applet is
+  deployed to a public-facing URL and can immediately start receiving
+  GET & POST requests. Perfect for building user-facing web applications
   or API-based integrations.`,
 
   LIST: [
@@ -1231,6 +1232,7 @@ const HomePage: NextPageWithLayout = () => {
       <Head>
         <link rel="canonical" href="https://zipper.dev/" />
       </Head>
+      <AnalyticsHead />
       <Website mode="dark">
         <Website.Navbar mode="dark" links={{ component: NextLink }} />
         <Box
