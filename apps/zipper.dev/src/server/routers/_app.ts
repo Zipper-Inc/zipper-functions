@@ -21,7 +21,6 @@ import { zipperSlackIntegrationRouter } from './zipperSlackIntegration.router';
 import { appLogRouter } from './appLog.router';
 import { createTRPCRouter, publicProcedure } from '../root';
 import { discordConnectorRouter } from './discordConnector.router';
-import { zipperDiscordIntegrationRouter } from './zipperDiscordIntegration.router';
 
 export const trpcRouter = createTRPCRouter({
   healthz: publicProcedure.query(() => 'yay!'),
@@ -33,7 +32,6 @@ export const trpcRouter = createTRPCRouter({
   appRun: appRunRouter,
   slackConnector: slackConnectorRouter,
   zipperSlackIntegration: zipperSlackIntegrationRouter,
-  zipperDiscordIntegration: zipperDiscordIntegrationRouter,
   githubConnector: githubConnectorRouter,
   discordConnector: discordConnectorRouter,
   githubAppConnector: githubAppConnectorRouter,

@@ -8,7 +8,7 @@ type ConnectorActionProps = {
 
 type FunctionUserConnectorsProps = {
   userAuthConnectors: UserAuthConnector[];
-  actions: Record<UserAuthConnectorType, ConnectorActionProps>;
+  actions: Record<'github' | 'slack', ConnectorActionProps>;
 };
 
 export const FunctionUserConnectors: React.FC<FunctionUserConnectorsProps> = ({
@@ -18,12 +18,13 @@ export const FunctionUserConnectors: React.FC<FunctionUserConnectorsProps> = ({
   return (
     <>
       {userAuthConnectors.map((c) => {
-        const ConnectorInput = userConnectorInputs[c.type];
+        const ConnectorInput =
+          userConnectorInputs[c.type as keyof typeof userConnectorInputs];
         return (
           <ConnectorInput
             key={`${c.appId}+${c.type}`}
             connector={c}
-            {...actions[c.type]}
+            {...actions[c.type as keyof typeof actions]}
           />
         );
       })}

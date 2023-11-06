@@ -256,6 +256,21 @@ export function AppPage({
           router.reload();
         },
       },
+      discord: {
+        authUrl: slackAuthUrl || '#',
+        onDelete: async () => {
+          if (token) {
+            await removeAppConnectorUserAuth({
+              appId,
+              type: 'discord',
+              token,
+            });
+          } else {
+            deleteCookie(ZIPPER_TEMP_USER_ID_COOKIE_NAME);
+          }
+          router.reload();
+        },
+      },
     };
   };
 

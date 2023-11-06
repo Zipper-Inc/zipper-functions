@@ -4,7 +4,7 @@ import { SlackUserConnectorInput } from './slack-user-connector-input';
 import { ConnectorInputProps } from './types';
 
 export const userConnectorInputs: Record<
-  UserAuthConnectorType,
+  'github' | 'slack',
   React.FC<ConnectorInputProps>
 > = {
   github: GitHubUserConnectorInput,
