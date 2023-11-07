@@ -1,0 +1,47 @@
+---
+title: Product's incidents management made easy with Zipper
+date: 2023/11/07
+description: A detailed review on how Zipper can automate your on call proccess
+tag: build-process
+author: Matheus Littig
+summary: |
+  We’ve released two applets that make it really easy to manage your product’s waitlist directly from Slack. We’ve integrated them into Clerk so that approved users can be automatically invited into your system.
+---
+
+During your day-a-day inside your company, have you been faced with a emergencial incident related to your product and have no idea from where start to solve it? Which people to invite for the problem discuss? Who gonna be ahead to solve this issue, from start to end? If there's a historic relating the same issue and how the company solved it in this past? So how about automate and to document it proccess with a internal tool dedicated for this incidents?! 
+
+Based on this that we're exicited to share our Incident Manegment Bot! In a few words, it's a Slack-bot that facilitate create, update and close new incidents, but at the same time it provides an overview of: On-hold, Closed and In-progress incidents. Follow bellow some of the main features: 
+
+- Providing slash commands to create, update, and add contextual info to incidents.
+- Creating a incident channel for each incident.
+- Broadcasting updates to multiple channels.
+- Allowing you to capture contextual information that might be helpful during the post-mortem.
+
+## Setting Up Slack Bot
+
+Before we start to properly create new incidents, it's important to know that integrate your Zipper's applet with Slack API is a crucial part of the proccess, so let's start first with it. 
+
+1. Access [Slack API apps](https://api.slack.com/apps) and create a new app from scratch. 
+2. Get the App Credentials: **Client ID** and **Client Secret** and in the _Basic Information_ menu. 
+3. Go _Oauth & Permissions_ menu and paste the following url: https://zipper.dev/connectors/slack/auth in the **Redirect URLs** section.
+4. In the Slash Commands menu, let's create a new command called `/incident` with the following configuration: 
+_img_here_
+4. Paste **Client ID** and **Client Secret** in the `slack-connector.ts`, setup the bot-scopes: `channels:history`, `channels:join`, `channels:manage`, `channels:write.invites`, `channels:read`, `chat:write`, `commands,` `users:read`, `users:read.email` and `users:write`. And finally, click in **Save and Install**.
+_img_here_
+
+After installed the bot in the desired slack channel, we're all setted to start to create new incidents.
+
+## Creating a new Incident
+
+In the slack channel that the incident bot has been added, write in the in chat _/incident create_ and it will open a modal like this:
+_img_here_
+
+Fill the modal with Incident information and click to **Save**. 
+
+Forward it, the bot will sent a message to the pre-selected broadcast channels, alerting then that a new incident has been created and invite then to join to the discussion channel about it.
+
+
+
+
+
+

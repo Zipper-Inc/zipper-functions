@@ -27,6 +27,7 @@ import {
   List,
   ListItemProps,
   ListItem,
+  UnorderedList,
 } from '@chakra-ui/react';
 import { ChakraUIRenderer } from '@zipper/ui';
 
@@ -151,6 +152,12 @@ const useComponents = (): Components => {
         color={COLORS[randomIndex2]?.color || COLORS[1]?.color}
         {...props}
       />
+    ),
+    ul: (props: ListProps) => (
+      <UnorderedList marginBottom={8} spacing={2} {...props} />
+    ),
+    ol: (props: ListProps) => (
+      <OrderedList marginBottom={8} spacing={2} {...props} />
     ),
     h4: (props: HeadingProps) => (
       <HeadingLink
