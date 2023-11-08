@@ -1,44 +1,139 @@
 ---
-title: Product's incidents management made easy with Zipper
+title: Incidents management made easy with Zipper
 date: 2023/11/07
-description: A detailed review on how Zipper can automate your on call proccess
+description: A comprehensive review of how Zipper can streamline your product incidents process.
 tag: build-process
 author: Matheus Littig
 summary: |
-  We’ve released two applets that make it really easy to manage your product’s waitlist directly from Slack. We’ve integrated them into Clerk so that approved users can be automatically invited into your system.
+  Hello! We'ew thrilled to announce that our company has developed an innovative solution to streamline incident management processes. Introducing the Incident Management Bot, a Slack bot designed to simplify the creation, updates, and closure of incidents, and provide a comprehensive overview of on-hold, closed, and in-progress incidents.
 ---
 
-During your day-a-day inside your company, have you been faced with a emergencial incident related to your product and have no idea from where start to solve it? Which people to invite for the problem discuss? Who gonna be ahead to solve this issue, from start to end? If there's a historic relating the same issue and how the company solved it in this past? So how about automate and to document it proccess with a internal tool dedicated for this incidents?! 
+Have you ever found yourself facing an urgent incident related to your product within your company, unsure of where to start to resolve it? Who should be involved in the discussion? Who will take charge of resolving the issue from beginning to end? Is there a historical record of similar issues and how they were previously resolved? What if you could automate and document this process using a dedicated internal tool for handling incidents?
 
-Based on this that we're exicited to share our Incident Manegment Bot! In a few words, it's a Slack-bot that facilitate create, update and close new incidents, but at the same time it provides an overview of: On-hold, Closed and In-progress incidents. Follow bellow some of the main features: 
+That's precisely why we're thrilled to introduce our Incident Management Bot! In a nutshell, it's a Slack bot designed to simplify the creation, updates, and closure of incidents while providing an overview of on-hold, closed, and in-progress incidents. Below are some of the key features:
 
-- Providing slash commands to create, update, and add contextual info to incidents.
-- Creating a incident channel for each incident.
-- Broadcasting updates to multiple channels.
-- Allowing you to capture contextual information that might be helpful during the post-mortem.
+- Provides slash commands for creating, updating, and adding contextual information to incidents.
+- Creates a dedicated incident channel for each incident.
+- Broadcasts updates to multiple channels.
+- Captures contextual information that may be useful during post-mortem analysis.
 
 ## Setting Up Slack Bot
 
-Before we start to properly create new incidents, it's important to know that integrate your Zipper's applet with Slack API is a crucial part of the proccess, so let's start first with it. 
+Before we delve into creating new incidents, it's crucial to integrate your Zipper applet with the Slack API. Let's get started with the setup:
 
-1. Access [Slack API apps](https://api.slack.com/apps) and create a new app from scratch. 
-2. Get the App Credentials: **Client ID** and **Client Secret** and in the _Basic Information_ menu. 
-3. Go _Oauth & Permissions_ menu and paste the following url: https://zipper.dev/connectors/slack/auth in the **Redirect URLs** section.
-4. In the Slash Commands menu, let's create a new command called `/incident` with the following configuration: 
-_img_here_
-4. Paste **Client ID** and **Client Secret** in the `slack-connector.ts`, setup the bot-scopes: `channels:history`, `channels:join`, `channels:manage`, `channels:write.invites`, `channels:read`, `chat:write`, `commands,` `users:read`, `users:read.email` and `users:write`. And finally, click in **Save and Install**.
-_img_here_
+1. Access [Slack API apps](https://api.slack.com/apps) and create a new app from scratch.
+  <img src="https://imagedelivery.net/mehHBP8u01yKLn8uDjx8Yw/fe21b048-b57f-4611-4967-5d16f6179700/public" style={{ borderRadius: '8px', marginBottom: '32px' }} width="480px" alt="slack-new-app" />
+2. Obtain the App Credentials: **Client ID** and **Client Secret** from the _Basic Information_ menu.
+ <img src="https://imagedelivery.net/mehHBP8u01yKLn8uDjx8Yw/e656e42d-f61e-4cf9-78ba-b68e49e09c00/public" style={{ borderRadius: '8px', marginBottom: '32px' }} width="480px" alt="slack-credentials" />
+3. In the _OAuth & Permissions_ menu, paste the following URL: https://zipper.dev/connectors/slack/auth into the **Redirect URLs** section.
+ <img src="https://imagedelivery.net/mehHBP8u01yKLn8uDjx8Yw/d49401e7-05e2-43cc-8830-709355b86300/public" style={{ borderRadius: '8px', marginBottom: '32px' }} width="480px" alt="slack-permissions" />
+4. In the Slash Commands menu, create a new command called `/incident` with the specified configuration.
+ <img src="https://imagedelivery.net/mehHBP8u01yKLn8uDjx8Yw/a5a69e04-e166-4b92-ac90-261f46b9b800/public" style={{ borderRadius: '8px', marginBottom: '32px' }} width="480px" alt="slack-slash-commands" />
 
-After installed the bot in the desired slack channel, we're all setted to start to create new incidents.
+   
+5. Paste the **Client ID** and **Client Secret** into the `slack-connector.ts`, configure the bot-scopes as follows: `channels:history`, `channels:join`, `channels:manage`, `channels:write.invites`, `channels:read`, `chat:write`, `commands,` `users:read`, `users:read.email`, and `users:write`. Finally, click on **Submit**.
+
+Once the bot is installed in the desired Slack channel, we're all set to start creating new incidents.
 
 ## Creating a new Incident
 
-In the slack channel that the incident bot has been added, write in the in chat _/incident create_ and it will open a modal like this:
-_img_here_
+In the Slack channel where the incident bot has been added, simply type `/incident create` in the chat. This will open a modal like the one shown below:
 
-Fill the modal with Incident information and click to **Save**. 
+<img src="https://imagedelivery.net/mehHBP8u01yKLn8uDjx8Yw/bce08b7b-001b-4e53-4049-6b331e64c500/public" style={{ borderRadius: '8px', marginBottom: '32px' }} width="480px" alt="incident-create" />
 
-Forward it, the bot will sent a message to the pre-selected broadcast channels, alerting then that a new incident has been created and invite then to join to the discussion channel about it.
+Fill in the modal with incident information, and click **Submit**. The following JSON objects will be stored within Zipper's applet.
+
+_Incidents store_
+
+```JSON
+{
+  "ok": true,
+  "data": {
+    "id": "15ce61ff-a80a-466d-9b53-7fafadcc4968",
+    "name": "Critical Database Outage",
+    "closedAt": null,
+    "channelId": "https://zipperworkspace.slack.com/archives/C05QZTFC02D",
+    "createdAt": "2023-09-01T13:42:06.477Z",
+    "broadCastChannels": [
+      "C05KX9B6WAD"
+    ]
+  },
+  "__meta": {
+    "request": {
+      "executionId": "ec86af3e-905f-471a-bb59-a883379e6cf8",
+      "server": "cloudflare",
+      "timing": "system;dur=0,deployment;dur=52"
+    }
+  }
+}
+```
+
+Once you've created an incident, the bot will send a message to the pre-selected broadcast channels, notifying them of the new incident and inviting them to join the discussion in the incident channel.
+
+In the incident channel, the bot will post a summary containing the main information about the incident and a direct link to access further details within Zipper's applet.
+
+## Updating an Incident
+
+Within the incident's channel, you can use the slash command /incident update to update an incident. Executing this command will open a modal with the following fields.
+
+<img src="https://imagedelivery.net/mehHBP8u01yKLn8uDjx8Yw/bce08b7b-001b-4e53-4049-6b331e64c500/public" style={{ borderRadius: '8px', marginBottom: '32px' }} width="480px" alt="incident-create" />
+
+After filling in the modal's fields with the most recent incident statistics and saving the changes, this update will be automatically linked to the incident's history within the Zipper storage, as shown in the following JSON object.
+
+_Updates store_
+
+```JSON
+{
+  "ok": true,
+  "data": {
+    "id": "682c8fe0-7e32-11ee-b962-0242ac120002",
+    "incident_id": "15ce61ff-a80a-466d-9b53-7fafadcc4968",
+    "history": [
+      {
+        "stage": "in_progress",
+        "summary": "Our Bug Tracking System is currently experiencing a critical database outage. This incident is impacting our ability to track and manage bugs effectively, which may result in delays in resolving issues and potential data loss.",
+        "severity": "high",
+        "commander": "littig.works",
+        "commsLead": "sachin.ranchod"
+      },
+    ],
+   "createdAt": "2023-11-08T13:42:06.477Z",
+  },
+  "__meta": {
+    "request": {
+      "executionId": "de82e3d8-7e32-11ee-b962-0242ac120002",
+      "server": "cloudflare",
+      "timing": "system;dur=0,deployment;dur=32"
+    }
+  }
+}
+```
+
+## Closing an Incident
+
+Just like `/incident update`, the slash command to close an incident `/incident close` is only available for execution within the incident's channel.
+
+Upon executing this command, a confirmation modal will appear, and when submitted, the incident's status will be updated as "closed" with the current date.
+
+## Getting Incidents Summary
+
+In the `main.ts` file of the applet workspace, you will find three list of incidents categorized by their current status from the last history update of then. 
+
+<iframe
+  width="100%"
+  height="600"
+  src="https://incident-bot.zipper.run/embed/run/main.ts"
+></iframe>
+
+#### _“That's all folks”_
+
+This bot is just one of the amazing bots you can build with Zipper, not only for Slack but also for Github, OpenAI, Discord, and many other connector types that you can easily set up within Zipper! 
+
+The sky's the limit. Would you like to be one of the crew members who will build the ship to reach it?! Subscribe to Zipper's [open beta](https://zipper.dev/home) right now!
+
+For more information on how to use Zipper, visit [here](https://zipper.dev/docs). If you have any questions, don't hesitate to reach out to us at [hello@zipper.works](mailto:hello@zipper.works)
+
+
 
 
 
