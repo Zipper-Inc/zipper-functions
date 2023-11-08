@@ -24,10 +24,9 @@ import {
   OrderedList,
   TextProps,
   ListProps,
-  List,
-  ListItemProps,
-  ListItem,
   UnorderedList,
+  Image,
+  ImageProps,
 } from '@chakra-ui/react';
 import { ChakraUIRenderer } from '@zipper/ui';
 
@@ -132,6 +131,7 @@ const useComponents = (): Components => {
     p: (props: TextProps) => <Text {...props} color="gray.900" mb="8" />,
     a: A,
     h1: H1,
+    img: (props: ImageProps) => <Image {...props} borderRadius="lg" mb={8} />,
     h2: (props: HeadingProps) => (
       <HeadingLink
         as="h2"

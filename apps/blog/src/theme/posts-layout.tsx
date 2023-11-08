@@ -137,7 +137,7 @@ export function PostsLayout(): ReactElement {
   };
 
   const postList = otherPosts.map((post, index) => (
-    <Post key={index} {...post} index={index} />
+    <Post key={index} {...post} index={index + 2} />
   ));
 
   return (
@@ -155,6 +155,7 @@ export function PostsLayout(): ReactElement {
             gridTemplateColumns={{ base: '1fr', lg: 'repeat(2, 1fr)' }}
             as="ul"
             gap={3}
+            columnGap={4}
             flex={1}
           >
             <Post {...(firstPost as any)} index={1} />
