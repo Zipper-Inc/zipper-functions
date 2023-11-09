@@ -1,22 +1,32 @@
 #!/bin/deno
 import { debounce } from 'https://deno.land/std@0.181.0/async/debounce.ts';
-import { generateHash } from './generate-hash.ts';
-import { generate } from './generate.ts';
+import { generate, SRC_DIR } from './generate.ts';
+import file from '../package.json' assert { type: 'json' };
+
+const HASH_FILE_PATH = `../../apps/zipper.dev/src/framework-version.ts`;
+
+export function writeVersion() {
+  Deno.writeTextFileSync(
+    HASH_FILE_PATH,
+    `//generated - don't edit
+export const frameworkVersion = "${file.version}"`,
+  );
+
+  Deno.run({
+    cmd: ['yarn', 'prettier', HASH_FILE_PATH, '-w'],
+  });
+}
 
 // Run on start
+writeVersion();
 generate();
-generateHash();
 
-// Re-run when the directory changes
-const debouncedGenerate = debounce(() => {
-  generate();
-  generateHash();
-}, 1000);
+const srcWatcher = Deno.watchFs(SRC_DIR);
+for await (const _e of srcWatcher) {
+  debounce(generate, 1000)();
+}
 
-const watcher = Deno.watchFs('./deno');
-for await (const _e of watcher) {
-  if (_e.paths.some((path) => path.includes('/deno/applet/generated/'))) {
-    continue;
-  }
-  debouncedGenerate();
+const versionWatcher = Deno.watchFs('../package.json');
+for await (const _e of versionWatcher) {
+  debounce(writeVersion, 1000);
 }
