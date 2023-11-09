@@ -21,8 +21,10 @@ export function JSONEditor(props: EditorProps) {
 export function JSONViewer(props: EditorProps) {
   const value = props.value || props.defaultValue || '';
   const lines = (value.match(/\n/g) || '').length + 1;
-  // const height = `${(lines + 1) * 18}px`;
-  return <JSONEditor {...props} options={{ ...props.options }} />;
+  const height = `${(lines + 1) * 18}px`;
+  return (
+    <JSONEditor {...props} height={height} options={{ ...props.options }} />
+  );
 }
 
 export default JSONEditor;
