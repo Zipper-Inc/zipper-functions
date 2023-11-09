@@ -1,0 +1,43 @@
+---
+title: 'SimpleRequest: A Custom HTTP Client Tool'
+date: 2023/11/08
+description: A developer tool for testing and developing APIs, leveraging the power of Zipper.
+tag: API, Zipper
+author: Antoniel Magalhães
+summary: |
+  SimpleRequest is a developer tool for testing and developing APIs, leveraging the power of Zipper. It's a custom HTTP client that allows you to make requests and see the results in real-time. It's perfect for testing and debugging because you can make changes and see the results immediately.
+---
+
+## Introduction to SimpleRequest: A Custom HTTP Client Tool
+
+API development often necessitates the ability to send requests and confirm that everything is functioning as expected. SimpleRequest is a developer tool for testing and developing APIs, leveraging the power of Zipper. Our goal with SimpleRequest is to demonstrate the ease of crafting such tools using Zipper.
+
+## SimpleRequest Usage
+
+SimpleRequest disposes two interfaces to the user to interact with the tool: manual request construction and curl command parsing. Developers have the liberty to detail every part of their HTTP request. This includes specifying the request method—GET, POST, PUT, DELETE, etc.—and finely tuning the URL, headers, and body data. It's an interactive mode where each parameter can be adjusted to test various scenarios.
+
+`main.ts` facilitates manual HTTP request construction, allowing the specification of methods, URLs, headers, and body content
+
+<iframe
+  width="100%"
+  height="600"
+  src="https://simple-requester.zipper.run/embed/run/main.ts"
+></iframe>
+
+`curl.ts` provides an interface that requires only a curl command. The application parses this command to build and execute the HTTP request.
+
+<iframe
+  width="100%"
+  height="400"
+  src="https://simple-requester.zipper.run/embed/run/curl.ts"
+></iframe>
+
+Every request you make is converted into a URL with all the necessary information. This means you can save it, share it, and revisit it anytime you need to make the same request again. It's perfect for testing and debugging because you can make changes and see the results immediately.
+
+For collaboration, this feature is invaluable. You can send a colleague the URL, and they'll see the same setup you have, enabling them to execute the exact request you did. No more back-and-forth explaining what you did; just send the link, and they're up to speed.
+
+Take this example URL: `https://simple-requester.zipper.run/run/main.ts?method=GET&url=https://pokeapi.co/api/v2/pokemon` It encapsulates a GET request to the Pokémon API. Anyone with the link can execute the same request and see the results in real-time, which is not only efficient for testing but also effective for demonstrations.
+
+## Code Structure
+
+SimpleRequest is structured into three core files: `main.ts`, `curl.ts`, and `utils.ts`. `main.ts` and `curl.ts` represent the two modes in which SimpleRequest operates, whereas `utils.ts` houses utility functions that both modes utilize.
