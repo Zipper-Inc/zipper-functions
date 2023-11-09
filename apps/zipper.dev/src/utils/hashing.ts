@@ -1,8 +1,9 @@
 import { App, Script } from '@prisma/client';
 import hash from 'object-hash';
-import { version as frameworkVersion } from '../../../../packages/@zipper-framework/package.json';
+import { frameworkHash } from '../framework-hash';
 
 const APP_VERSION_LENGTH = 7;
+const OG_HASH = '9de4ad2c34a94edc2e86a826531b8db2';
 
 const normalizeCodeForHashing = (code = '') => code.trimEnd();
 
@@ -38,9 +39,8 @@ export function getAppHash(
     slug: app.slug,
     scripts,
   };
-
-  if (frameworkVersion !== '0.0.0') {
-    hashContent.frameworkVersion = frameworkVersion;
+  if (frameworkHash !== (OG_HASH as string)) {
+    hashContent.frameworkHash = frameworkHash;
   }
 
   if (app.secretsHash) {
