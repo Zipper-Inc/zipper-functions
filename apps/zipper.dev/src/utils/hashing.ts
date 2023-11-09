@@ -1,9 +1,8 @@
 import { App, Script } from '@prisma/client';
 import hash from 'object-hash';
-import { frameworkHash } from '../framework-hash';
+import { frameworkVersion } from '../framework-version';
 
 const APP_VERSION_LENGTH = 7;
-const OG_HASH = '9de4ad2c34a94edc2e86a826531b8db2';
 
 const normalizeCodeForHashing = (code = '') => code.trimEnd();
 
@@ -39,8 +38,8 @@ export function getAppHash(
     slug: app.slug,
     scripts,
   };
-  if (frameworkHash !== (OG_HASH as string)) {
-    hashContent.frameworkHash = frameworkHash;
+  if (frameworkVersion !== '0.0.0') {
+    hashContent.frameworkVersion = frameworkVersion;
   }
 
   if (app.secretsHash) {
