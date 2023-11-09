@@ -26,6 +26,7 @@ import {
   Avatar,
   Button,
   Spacer,
+  Code,
 } from '@chakra-ui/react';
 import { useRouter } from 'next/router';
 import {
@@ -46,6 +47,7 @@ import { JSONViewer } from '../json-editor';
 import { AppConsole } from './app-console';
 import { LogMessage } from '@zipper/types';
 import { TITLE_COLUMN_MIN_WIDTH } from './constants';
+import { Markdown } from '@zipper/ui';
 
 type HistoryTabProps = {
   appId: string;
@@ -372,7 +374,9 @@ const HistoryTab: React.FC<HistoryTabProps> = ({ appId }) => {
             <Heading fontSize="md" mb="4">
               Inputs
             </Heading>
-            <JSONViewer value={modalValue} options={{ readOnly: true }} />
+            <Markdown>{`\`\`\`js
+${modalValue}
+\`\`\``}</Markdown>
             {logValue.length > 0 && (
               <>
                 <Heading fontSize="md" my="4">
