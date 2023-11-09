@@ -102,13 +102,6 @@ export const slackConnectorRouter = createTRPCRouter({
         },
       });
 
-      const tokens = await prisma.secret.findMany({
-        where: {
-          appId: input.appId,
-          key: { in: ['SLACK_BOT_TOKEN', 'SLACK_USER_TOKEN'] },
-        },
-      });
-
       await prisma.secret.deleteMany({
         where: {
           appId: input.appId,
@@ -116,18 +109,6 @@ export const slackConnectorRouter = createTRPCRouter({
             in: ['SLACK_BOT_TOKEN', 'SLACK_USER_TOKEN', 'SLACK_CLIENT_SECRET'],
           },
         },
-      });
-
-      tokens.forEach((secret) => {
-        fetch('https://slack.com/api/auth.revoke', {
-          method: 'POST',
-          body: new URLSearchParams({
-            token: decryptFromBase64(
-              secret.encryptedValue,
-              process.env.ENCRYPTION_KEY!,
-            ),
-          }),
-        });
       });
 
       return true;
