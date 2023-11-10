@@ -21,7 +21,7 @@ export async function getVersionCode({
     throw new Error('No zip file found');
   }
 
-  const versionScripts: Omit<Script, 'id' | 'order' | 'connectorId'>[] = [];
+  const versionScripts: Omit<Script, 'id' | 'order'>[] = [];
   const versionZip = new JSZip();
 
   await versionZip.loadAsync(zipFile.Body.transformToByteArray());
@@ -43,6 +43,7 @@ export async function getVersionCode({
           createdAt: jsonContent.createdAt,
           updatedAt: jsonContent.updatedAt,
           name: jsonContent.name,
+          connectorId: jsonContent.connectorId,
         });
       }),
     );
