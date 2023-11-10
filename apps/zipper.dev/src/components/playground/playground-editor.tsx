@@ -581,7 +581,7 @@ export default function PlaygroundEditor(
           openerService: {
             open: function (url: string) {
               const ext =
-                isExternalResource(url) && !url.endsWith('tsx') ? 'ts' : 'tsx';
+                isExternalResource(url) && url.endsWith('ts') ? 'ts' : 'tsx';
               const resource = getUriFromPath(url, monaco.Uri.parse, ext);
               // Don't try to open URLs that have models
               // They will open from the defintion code

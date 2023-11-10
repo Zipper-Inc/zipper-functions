@@ -50,7 +50,7 @@ export default function AddScriptForm({
 
   // Get extension from filename
   const extension = scriptFilename
-    ? scriptFilename.match(/\.[^.]+$/)?.[0] ?? '.ts'
+    ? scriptFilename.match(/\.[^.]+$/)?.[0] ?? '.tsx'
     : '.ts';
 
   const slugifiedName = slugifyAllowDot(
@@ -60,6 +60,7 @@ export default function AddScriptForm({
   const slugifiedFilename = slugifiedName + extension;
 
   const { isFilenameValid } = useScriptFilename(scriptFilename, appId, [
+    '.tsx',
     '.ts',
     '.md',
   ]);

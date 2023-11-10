@@ -50,17 +50,18 @@ export function codeHasReact(code: string) {
   return /^import\s+.*React,?.*\s+from/m.test(code);
 }
 
-export function applyTsxHack(
+export function handleJSXModule(
   specifier: string,
   code = '/* 🤷🏽‍♂️ missing code */',
   shouldAddJsxPragma = true,
 ): LoadResponseModule {
   return {
-    // Add TSX to all files so they support JSX
-    specifier: specifier.replace(/\.(ts|tsx)$|$/, '.tsx'),
+    specifier,
     headers: TYPESCRIPT_CONTENT_HEADERS,
     content:
-      !codeHasReact(code) && shouldAddJsxPragma ? addJsxPragma(code) : code,
+      specifier.endsWith('.tsx') && shouldAddJsxPragma
+        ? addJsxPragma(code)
+        : code,
     kind: 'module',
   };
 }

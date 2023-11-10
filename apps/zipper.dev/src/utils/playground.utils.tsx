@@ -58,9 +58,15 @@ export const parsePlaygroundQuery = (
 };
 
 function parseScriptForModel(script: Script, { Uri }: Monaco) {
-  const extension = script.filename.split('.').pop();
+  // TODO: zod or a with possible extensions
+  const extension = script.filename.split('.').pop() as
+    | 'md'
+    | 'ts'
+    | 'tsx'
+    | undefined;
+
   const path = script.filename;
-  const uri = getUriFromPath(path, Uri.parse, 'tsx');
+  const uri = getUriFromPath(path, Uri.parse, extension || 'tsx');
   return { extension, path, uri };
 }
 

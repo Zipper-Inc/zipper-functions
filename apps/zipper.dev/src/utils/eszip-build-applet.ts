@@ -6,7 +6,7 @@ import { storeVersionESZip } from '~/server/utils/r2.utils';
 import { getLogger } from './app-console';
 import { BuildCache } from './eszip-build-cache';
 import {
-  applyTsxHack,
+  handleJSXModule,
   getRemoteModule,
   isZipperImportUrl,
   TYPESCRIPT_CONTENT_HEADERS,
@@ -86,7 +86,7 @@ export async function build({
         const script = tsScripts.find((s) => s.filename === filename);
 
         return {
-          ...applyTsxHack(specifier, rewriteImports(script?.code || '')),
+          ...handleJSXModule(specifier, rewriteImports(script?.code || '')),
           version,
         };
       }
@@ -132,7 +132,7 @@ export async function build({
         const mod = await getRemoteModule({ specifier, target });
         return {
           ...mod,
-          ...applyTsxHack(specifier, rewriteImports(mod?.content)),
+          ...handleJSXModule(specifier, rewriteImports(mod?.content)),
         };
       }
 

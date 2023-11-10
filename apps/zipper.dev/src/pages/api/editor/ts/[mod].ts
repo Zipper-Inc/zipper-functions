@@ -4,7 +4,7 @@ import { BuildCache } from '~/utils/eszip-build-cache';
 import { LoadResponseModule } from '@deno/eszip/esm/loader';
 import {
   isZipperImportUrl,
-  applyTsxHack,
+  handleJSXModule,
   getRemoteModule,
 } from '~/utils/eszip-utils';
 import { rewriteSpecifier } from '~/utils/rewrite-imports';
@@ -105,7 +105,7 @@ async function respondWithBundle({
       const rawModule = await getRemoteModule({ specifier });
       const mod = {
         ...rawModule,
-        ...applyTsxHack(specifier, rawModule?.content, false),
+        ...handleJSXModule(specifier, rawModule?.content, false),
       };
       if (mod?.content) bundle[bundlePath] = mod.content;
       return mod;
