@@ -7,6 +7,7 @@ import htmlHandler from './api-handlers/html.handler';
 
 import {
   getZipperApiUrl,
+  hasBrowserLikeUserAgent,
   ZIPPER_TEMP_USER_ID_COOKIE_NAME,
 } from '@zipper/utils';
 import { jwtVerify } from 'jose';
@@ -93,6 +94,16 @@ async function maybeGetCustomResponse(
       if (request.method === 'GET') {
         const url = new URL('/main.ts', request.url);
         return NextResponse.rewrite(url, { request: { headers } });
+      }
+    }
+
+    default: {
+      if (!hasBrowserLikeUserAgent(request.headers)) {
+        console.log('not a browser so returning the relay');
+        return serveRelay({
+          request,
+          bootOnly: false,
+        });
       }
     }
   }

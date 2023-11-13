@@ -18,7 +18,9 @@ export const Code = ({
       language.toLowerCase(),
     )
   ) {
-    code = prettierFormat(code);
+    try {
+      code = prettierFormat(code);
+    } catch (e) {}
   }
 
   return (
