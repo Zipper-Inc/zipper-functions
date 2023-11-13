@@ -1,4 +1,5 @@
 import { type Uri } from 'monaco-editor/esm/vs/editor/editor.api';
+import { AllowedExtension } from '~/server/utils/scripts.utils';
 
 /**
  * In Deno, imports look like `import { foo } from './foo.ts'`
@@ -17,7 +18,7 @@ type DENO_REQUIRED_FILE_EXTENSION = 'ts' | 'tsx';
 export const getUriFromPath = (
   path: string,
   parseFn: (path: string) => Uri,
-  extension: DENO_REQUIRED_FILE_EXTENSION | 'md',
+  extension: DENO_REQUIRED_FILE_EXTENSION | AllowedExtension,
 ) => {
   if (path.endsWith('md') || extension === 'md') return parseFn(`${path}`);
   return parseFn(`${path}.${extension}`);

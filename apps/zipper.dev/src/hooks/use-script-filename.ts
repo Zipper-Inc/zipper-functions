@@ -1,4 +1,5 @@
 import { useDebounce } from 'use-debounce';
+import { AllowedExtensionWithDot } from '~/server/utils/scripts.utils';
 import { slugifyAllowDot } from '~/utils/slugify';
 import { trpc } from '~/utils/trpc';
 
@@ -7,7 +8,7 @@ export const MIN_SLUG_LENGTH = 5;
 export const useScriptFilename = (
   filename = '',
   appId: string,
-  extensions = ['.ts'],
+  extensions: AllowedExtensionWithDot[] = ['.ts'],
 ) => {
   const filenameWithoutExt = filename.replace(
     new RegExp(`\\${extensions.join('$|\\')}$`),
@@ -16,10 +17,11 @@ export const useScriptFilename = (
 
   const [debouncedFilename] = useDebounce(filenameWithoutExt, 500);
 
+  // Flename should be unique, the extension here doesn't matter
   const validateFilenameQuery = trpc.script.validateFilename.useQuery(
     {
       appId,
-      newFilename: slugifyAllowDot(debouncedFilename || '') + extensions[0],
+      newFilename: slugifyAllowDot(debouncedFilename || ''),
     },
     { enabled: !!debouncedFilename },
   );

@@ -3,6 +3,11 @@ import { Script } from '@prisma/client';
 import { DehydratedState } from '@tanstack/react-query';
 import { getUriFromPath } from './model-uri';
 import type { Monaco } from '@monaco-editor/react';
+import {
+  AllowedExtension,
+  AllowedExtensionSchema,
+} from '~/server/utils/scripts.utils';
+import { fallback } from './zod-utils';
 
 export const isConnector = (script: Script) =>
   script.filename.endsWith('-connector.ts');
@@ -58,12 +63,12 @@ export const parsePlaygroundQuery = (
 };
 
 function parseScriptForModel(script: Script, { Uri }: Monaco) {
-  // TODO: zod or a with possible extensions
-  const extension = script.filename.split('.').pop() as
-    | 'md'
-    | 'ts'
-    | 'tsx'
-    | undefined;
+  const isMainScript = script.filename === 'main.ts';
+  const extension = isMainScript
+    ? 'tsx'
+    : AllowedExtensionSchema.or(fallback(undefined)).parse(
+        script.filename.split('.').pop(),
+      );
 
   const path = script.filename;
   const uri = getUriFromPath(path, Uri.parse, extension || 'tsx');
@@ -84,7 +89,13 @@ export function getOrCreateScriptModel(script: Script, m: Monaco) {
 
   return m.editor.createModel(
     script.code,
-    extension === 'md' ? 'markdown' : 'typescript',
+    extension ? extensionToLanguage[extension] : 'ts',
     uri,
   );
 }
+
+const extensionToLanguage: Record<AllowedExtension, string> = {
+  ts: 'typescript',
+  tsx: 'typescript',
+  md: 'markdown',
+};

@@ -59,7 +59,7 @@ export function handleJSXModule(
     specifier,
     headers: TYPESCRIPT_CONTENT_HEADERS,
     content:
-      specifier.endsWith('.tsx') && shouldAddJsxPragma
+      !codeHasReact(code) && specifier.endsWith('.tsx') && shouldAddJsxPragma
         ? addJsxPragma(code)
         : code,
     kind: 'module',

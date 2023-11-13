@@ -7,6 +7,10 @@ import { slugifyAllowDot } from '~/utils/slugify';
 import { hasAppEditPermission } from '../utils/authz.utils';
 import { kebabCase } from '~/utils/kebab-case';
 import { createTRPCRouter, publicProcedure } from '../root';
+import {
+  RunnableExtensionSchema,
+  AllowedExtensionSchema,
+} from '../utils/scripts.utils';
 
 const defaultSelect = Prisma.validator<Prisma.ScriptSelect>()({
   id: true,
@@ -59,22 +63,27 @@ export const scriptRouter = createTRPCRouter({
       const { appId, ...data } = input;
       await hasAppEditPermission({ ctx, appId });
 
-      const extension = data.name.includes('.md') ? '.md' : '.ts';
-      const slugifiedName = slugifyAllowDot(data.name.replace(/\..+$/, ''));
-      const filename = `${slugifiedName}${extension}`;
-      const code =
-        extension === '.ts'
-          ? data.code
-          : extension === '.md'
-          ? DEFAULT_MD
-          : DEFAULT_CODE;
+      const filenameWithoutExtension = data.name.replace(/\..+$/, '');
+      const extension = AllowedExtensionSchema.parse(
+        data.name.split('.').pop(),
+      );
+      const isRunnableExtension =
+        RunnableExtensionSchema.safeParse(extension).success;
+
+      const slugifiedName = slugifyAllowDot(filenameWithoutExtension);
+      const filename = `${slugifiedName}.${extension}`;
+      const code = (() => {
+        if (isRunnableExtension) return data.code;
+        if (extension === 'md') return DEFAULT_MD;
+        return DEFAULT_CODE;
+      })();
 
       const script = await prisma.script.create({
         data: {
           ...data,
           code,
           filename,
-          isRunnable: extension === '.ts' ? isCodeRunnable(data.code) : false,
+          isRunnable: isRunnableExtension ? isCodeRunnable(data.code) : false,
           app: {
             connect: { id: appId },
           },
@@ -187,7 +196,7 @@ export const scriptRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const { appId, newFilename } = input;
 
-      if (newFilename.length < 4) return false;
+      if (newFilename.length <= 0) return false;
 
       await hasAppEditPermission({
         ctx,
@@ -197,7 +206,9 @@ export const scriptRouter = createTRPCRouter({
       const scripts = await prisma.script.findMany({
         where: {
           appId,
-          filename: `${newFilename}.ts`,
+          filename: {
+            startsWith: `${newFilename}.%`,
+          },
         },
         select: {
           filename: true,

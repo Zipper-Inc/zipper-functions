@@ -23,6 +23,7 @@ import { Connector } from '~/connectors/createConnector';
 import { kebabCase } from '~/utils/kebab-case';
 import { cloneElement } from 'react';
 import { foregroundColors } from '@zipper/ui';
+import { allowedExtensionsWithDot } from '~/server/utils/scripts.utils';
 
 export default function AddScriptForm({
   appId,
@@ -59,11 +60,11 @@ export default function AddScriptForm({
 
   const slugifiedFilename = slugifiedName + extension;
 
-  const { isFilenameValid } = useScriptFilename(scriptFilename, appId, [
-    '.tsx',
-    '.ts',
-    '.md',
-  ]);
+  const { isFilenameValid } = useScriptFilename(
+    scriptFilename,
+    appId,
+    allowedExtensionsWithDot,
+  );
 
   const { colorMode } = useColorMode();
 
