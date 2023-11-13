@@ -22,6 +22,9 @@ export function formatValueFromUrl(input: InputParam, value: string | null) {
       if (Array.isArray(safeJSONParse(value))) return value;
       return JSON.stringify(value.split(','));
 
+    case InputType.any:
+      return safeJSONParse(value, undefined, {});
+
     default:
       return value;
   }

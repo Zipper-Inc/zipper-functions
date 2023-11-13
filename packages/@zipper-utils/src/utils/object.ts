@@ -1,10 +1,10 @@
-import { InputParams, InputType, JSONEditorInputTypes } from '@zipper/types';
+import { InputParam, InputType, JSONEditorInputTypes } from '@zipper/types';
 import { getFieldName, parseFieldName } from './form';
 import { safeJSONParse } from './safe-json';
 
 export const getInputsFromFormData = (
   formData: Record<string, any>,
-  inputParams: InputParams,
+  inputParams: Array<Pick<InputParam, 'key' | 'type'>>,
 ) => {
   const formKeys = inputParams.map(({ key, type }) => getFieldName(key, type));
   return Object.keys(formData)
