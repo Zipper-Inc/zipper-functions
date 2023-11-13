@@ -202,7 +202,7 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
         </Box>
         <Heading
           size="md"
-          overflow="auto"
+          lineHeight="base"
           whiteSpace="nowrap"
           display={{ base: 'none', md: 'block' }}
           fontWeight="medium"
@@ -214,7 +214,7 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
           <Heading
             size="md"
             display={{ base: 'none', md: 'block' }}
-            overflow="auto"
+            lineHeight="base"
             whiteSpace="nowrap"
             fontWeight="medium"
             color="fg.600"
@@ -225,7 +225,7 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
 
         <Heading
           size="md"
-          overflow="auto"
+          lineHeight="base"
           display={{ base: 'none', md: 'block' }}
           whiteSpace="nowrap"
           fontWeight="medium"
@@ -242,7 +242,7 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
           <Heading
             as="h1"
             size="md"
-            overflow="auto"
+            lineHeight="base"
             textOverflow={{ base: 'ellipsis', md: undefined }}
             whiteSpace="nowrap"
             fontWeight="semibold"
