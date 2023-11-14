@@ -6,7 +6,7 @@ export type ConnectorType =
   | 'zendesk'
   | 'discord';
 
-export type UserAuthConnectorType = 'github' | 'slack' | 'discord';
+export type UserAuthConnectorType = 'github' | 'slack';
 
 export type UserAuthConnector = {
   type: UserAuthConnectorType;

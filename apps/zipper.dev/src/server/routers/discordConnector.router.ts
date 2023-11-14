@@ -5,7 +5,6 @@ import {
   decryptFromHex,
   encryptToBase64,
   encryptToHex,
-  ZIPPER_TEMP_USER_ID_COOKIE_NAME,
 } from '@zipper/utils';
 import { z } from 'zod';
 import { prisma } from '../prisma';
@@ -63,8 +62,7 @@ export const discordConnectorRouter = createTRPCRouter({
         },
       });
 
-      const clientId =
-        appConnector?.clientId || process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID!;
+      const clientId = appConnector?.clientId || process.env.DISCORD_CLIENT_ID!;
 
       const url = new URL('https://discord.com/api/oauth2/authorize');
       url.searchParams.set('client_id', clientId);
@@ -172,8 +170,8 @@ export const discordConnectorRouter = createTRPCRouter({
         },
       });
 
-      let clientId = process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID!;
-      let clientSecret = process.env.NEXT_PUBLIC_DISCORD_CLIENT_SECRET!;
+      let clientId = process.env.DISCORD_CLIENT_ID!;
+      let clientSecret = process.env.DISCORD_CLIENT_SECRET!;
 
       if (appConnector?.clientId && clientSecretRecord) {
         clientId = appConnector?.clientId;
@@ -244,30 +242,6 @@ export const discordConnectorRouter = createTRPCRouter({
           },
         });
       }
-
-      // if (json.authed_user.access_token) {
-      //   const encryptedValue = encryptToBase64(
-      //     json.authed_user.access_token,
-      //     process.env.ENCRYPTION_KEY,
-      //   );
-
-      //   await prisma.secret.upsert({
-      //     where: {
-      //       appId_key: {
-      //         appId: appId!,
-      //         key: 'DISCORD_USER_TOKEN',
-      //       },
-      //     },
-      //     create: {
-      //       appId,
-      //       key: 'DISCORD_USER_TOKEN',
-      //       encryptedValue,
-      //     },
-      //     update: {
-      //       encryptedValue,
-      //     },
-      //   });
-      // }
 
       return {
         appId,

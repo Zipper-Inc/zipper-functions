@@ -305,26 +305,6 @@ function DiscordConnectorForm({ appId }: { appId: string }) {
                                           ))}
                                       </Box>
                                     </HStack>
-
-                                    {/* {(connector.data?.metadata as any)[
-                                      'authed_user'
-                                    ] &&
-                                      (connector.data?.metadata as any)[
-                                        'authed_user'
-                                      ]['scope'] && (
-                                        <HStack>
-                                          <Text>User Scopes:</Text>
-                                          <Box>
-                                            {(connector.data?.metadata as any)[
-                                              'authed_user'
-                                            ]['scope']
-                                              .split(',')
-                                              .map((scope: string) => (
-                                                <Code key={scope}>{scope}</Code>
-                                              ))}
-                                          </Box>
-                                        </HStack>
-                                      )} */}
                                   </VStack>
                                 </PopoverBody>
                               </PopoverContent>
@@ -400,16 +380,6 @@ function DiscordConnectorForm({ appId }: { appId: string }) {
                               onChange={botOnChange as SelectOnChange}
                             />
                           </FormControl>
-
-                          <FormControl pt="4">
-                            <FormLabel>User Scopes</FormLabel>
-
-                            {/* <MultiSelect
-                              options={userOptions}
-                              value={userValue}
-                              onChange={userOnChange as SelectOnChange}
-                            /> */}
-                          </FormControl>
                           {/* {userAuthSwitch()} */}
                           {requiresOwnClientIdSwitch()}
 
@@ -477,15 +447,6 @@ function DiscordConnectorForm({ appId }: { appId: string }) {
                               <Code key={scope}>{scope}</Code>
                             ),
                           )}
-                        </Box>
-                      </HStack>
-
-                      <HStack>
-                        <Text>User Scopes:</Text>
-                        <Box>
-                          {connector.data?.userScopes.map((scope: string) => (
-                            <Code key={scope}>{scope}</Code>
-                          ))}
                         </Box>
                       </HStack>
 
