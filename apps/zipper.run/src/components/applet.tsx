@@ -549,7 +549,6 @@ export const getServerSideProps: GetServerSideProps = async ({
   query,
   resolvedUrl,
 }) => {
-  console.log({ url: req.url, resolvedUrl, query });
   const host = req.headers['x-zipper-host'] || req.headers.host;
   const isEmbedUrl = /\/embed\//.test(resolvedUrl);
   const isRunUrl = /^\/run(\/|\?|$)/.test(resolvedUrl);
