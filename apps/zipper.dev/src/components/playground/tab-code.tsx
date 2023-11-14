@@ -14,6 +14,7 @@ import {
 } from '@chakra-ui/react';
 import { Script } from '@prisma/client';
 import { Markdown, useCmdOrCtrl } from '@zipper/ui';
+import { useSession } from 'next-auth/react';
 import dynamic from 'next/dynamic';
 import { useEffect, useRef, useState } from 'react';
 import { FiEye } from 'react-icons/fi';
@@ -27,6 +28,7 @@ import {
 } from '~/components/context/help-mode-context';
 import { AppEditSidebar } from '~/components/playground/app-edit-sidebar';
 import { ConnectorId } from '~/connectors/createConnector';
+import { useUser } from '~/hooks/use-user';
 import { AppQueryOutput } from '~/types/trpc';
 import { getOrCreateScriptModel } from '~/utils/playground.utils';
 import { useEditorContext } from '../context/editor-context';
@@ -72,6 +74,7 @@ export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
 
   const { hoveredElement } = useHelpMode();
   const { style, onMouseEnter, onMouseLeave } = useHelpBorder();
+  const { user } = useUser();
 
   // Even though we don't return anything here
   // This hook will force a re-render when the breakpoint changes
@@ -241,7 +244,13 @@ export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
                 },
               }}
             >
-              <Markdown children={getMarkdownBody()} />
+              <Markdown
+                children={getMarkdownBody()}
+                appInfo={{ name: app.name || app.slug, slug: app.slug }}
+                currentUser={{
+                  username: user?.username || 'Anonymous',
+                }}
+              />
             </VStack>
           )}
 
