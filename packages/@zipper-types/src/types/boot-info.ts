@@ -31,6 +31,7 @@ export type BootInfo = {
   userAuthConnectors: UserAuthConnector[];
   inputs: InputParams;
   userInfo: Zipper.UserInfo;
+  parsedScripts: Record<string, Record<string, any>>;
   runnableScripts: string[];
   metadata?: Record<string, string | undefined>;
   entryPoint: EntryPointInfo;
