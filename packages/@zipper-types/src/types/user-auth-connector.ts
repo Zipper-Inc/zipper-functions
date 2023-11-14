@@ -3,7 +3,8 @@ export type ConnectorType =
   | 'github-app'
   | 'slack'
   | 'openai'
-  | 'zendesk';
+  | 'zendesk'
+  | 'notion';
 
 export type UserAuthConnectorType = 'github' | 'slack';
 
