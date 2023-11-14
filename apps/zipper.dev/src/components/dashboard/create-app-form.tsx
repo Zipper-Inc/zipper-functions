@@ -223,13 +223,14 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
           }
           if (aiOutput) {
             const otherFiles = aiOutput.filter(
-              (output) => output.filename !== 'main.ts',
+              (output) =>
+                output.filename !== 'main.ts' && output.filename !== 'main.tsx',
             );
 
             await Promise.allSettled(
               otherFiles.map((output) => {
                 return addScript.mutateAsync({
-                  name: output.filename,
+                  filename: output.filename,
                   appId: applet!.id,
                   order: scripts.length + 1,
                   code: output.code,

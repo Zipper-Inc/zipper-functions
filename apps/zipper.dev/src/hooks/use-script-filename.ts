@@ -1,5 +1,5 @@
 import { useDebounce } from 'use-debounce';
-import { AllowedExtensionWithDot } from '~/server/utils/scripts.utils';
+import { AllowedExtensionWithDot } from '~/utils/file-extension';
 import { slugifyAllowDot } from '~/utils/slugify';
 import { trpc } from '~/utils/trpc';
 

@@ -6,7 +6,7 @@ import { isExternalImport } from '~/utils/parse-code';
 import { isZipperImportUrl, X_ZIPPER_ESZIP_BUILD } from '~/utils/eszip-utils';
 import Fuse from 'fuse.js';
 import { rewriteSpecifier } from '~/utils/rewrite-imports';
-import { AllowedExtensionSchema } from '~/server/utils/scripts.utils';
+import { AllowedExtensionSchema, getFileExtension } from './file-extension';
 
 /** This string indicates which errors we own in the editor */
 export const ZIPPER_LINTER = 'zipper-linter';
@@ -68,7 +68,7 @@ export async function runZipperLinter({
       if (!monacoRef.current) return;
 
       const parsedExtension = AllowedExtensionSchema.safeParse(
-        i.specifier.split('.').pop(),
+        getFileExtension(i.specifier),
       );
 
       const potentialModelUri = getUriFromPath(

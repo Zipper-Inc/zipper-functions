@@ -1,6 +1,5 @@
 import { Script } from '@prisma/client';
 import { createHash } from 'crypto';
-import { z } from 'zod';
 
 async function generateHash(opts: Script): Promise<string>;
 async function generateHash(opts: {
@@ -17,17 +16,3 @@ async function generateHash(opts: any) {
 }
 
 export const createScriptHash = generateHash;
-
-export const RunnableExtensionSchema = z.enum(['ts', 'tsx']);
-
-export const allowedExtensionsWithDot: AllowedExtensionWithDot[] = [
-  '.ts',
-  '.tsx',
-  '.md',
-];
-
-export const AllowedExtensionSchema = z.enum(['ts', 'tsx', 'md']);
-
-export type RunnableExtension = z.infer<typeof RunnableExtensionSchema>;
-export type AllowedExtension = z.infer<typeof AllowedExtensionSchema>;
-export type AllowedExtensionWithDot = `.${AllowedExtension}`;

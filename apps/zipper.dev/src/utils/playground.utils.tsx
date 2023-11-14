@@ -3,11 +3,12 @@ import { Script } from '@prisma/client';
 import { DehydratedState } from '@tanstack/react-query';
 import { getUriFromPath } from './model-uri';
 import type { Monaco } from '@monaco-editor/react';
-import {
-  AllowedExtension,
-  AllowedExtensionSchema,
-} from '~/server/utils/scripts.utils';
 import { fallback } from './zod-utils';
+import {
+  AllowedExtensionSchema,
+  AllowedExtension,
+  getFileExtension,
+} from './file-extension';
 
 export const isConnector = (script: Script) =>
   script.filename.endsWith('-connector.ts');
@@ -67,7 +68,7 @@ function parseScriptForModel(script: Script, { Uri }: Monaco) {
   const extension = isMainScript
     ? 'tsx'
     : AllowedExtensionSchema.or(fallback(undefined)).parse(
-        script.filename.split('.').pop(),
+        getFileExtension(script.filename),
       );
 
   const path = script.filename;

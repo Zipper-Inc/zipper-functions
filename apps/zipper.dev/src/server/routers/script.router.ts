@@ -8,9 +8,9 @@ import { hasAppEditPermission } from '../utils/authz.utils';
 import { kebabCase } from '~/utils/kebab-case';
 import { createTRPCRouter, publicProcedure } from '../root';
 import {
+  getFileExtension,
   RunnableExtensionSchema,
-  AllowedExtensionSchema,
-} from '../utils/scripts.utils';
+} from '~/utils/file-extension';
 
 const defaultSelect = Prisma.validator<Prisma.ScriptSelect>()({
   id: true,
@@ -49,7 +49,20 @@ export const scriptRouter = createTRPCRouter({
   add: publicProcedure
     .input(
       z.object({
-        name: z.string().min(1).max(255).transform(kebabCase),
+        filename: z
+          .string()
+          .min(1)
+          .max(255)
+          .transform((filename) => {
+            const extension = getFileExtension(filename);
+            const name = filename.replace(/\..+$/, '');
+
+            return {
+              full: `${kebabCase(name)}.${extension}`,
+              extension,
+              name,
+            };
+          }),
         description: z.string().optional(),
         appId: z.string().uuid(),
         code: z.string().default(DEFAULT_CODE),
@@ -60,21 +73,16 @@ export const scriptRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const { appId, ...data } = input;
+      const { appId, filename, ...data } = input;
       await hasAppEditPermission({ ctx, appId });
 
-      const filenameWithoutExtension = data.name.replace(/\..+$/, '');
-      const extension = AllowedExtensionSchema.parse(
-        data.name.split('.').pop(),
-      );
-      const isRunnableExtension =
-        RunnableExtensionSchema.safeParse(extension).success;
+      const isRunnableExtension = RunnableExtensionSchema.safeParse(
+        filename.extension,
+      ).success;
 
-      const slugifiedName = slugifyAllowDot(filenameWithoutExtension);
-      const filename = `${slugifiedName}.${extension}`;
       const code = (() => {
         if (isRunnableExtension) return data.code;
-        if (extension === 'md') return DEFAULT_MD;
+        if (filename.extension === 'md') return DEFAULT_MD;
         return DEFAULT_CODE;
       })();
 
@@ -82,7 +90,8 @@ export const scriptRouter = createTRPCRouter({
         data: {
           ...data,
           code,
-          filename,
+          name: filename.name,
+          filename: filename.full,
           isRunnable: isRunnableExtension ? isCodeRunnable(data.code) : false,
           app: {
             connect: { id: appId },

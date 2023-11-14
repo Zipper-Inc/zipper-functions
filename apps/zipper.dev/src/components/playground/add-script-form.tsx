@@ -23,7 +23,7 @@ import { Connector } from '~/connectors/createConnector';
 import { kebabCase } from '~/utils/kebab-case';
 import { cloneElement } from 'react';
 import { foregroundColors } from '@zipper/ui';
-import { allowedExtensionsWithDot } from '~/server/utils/scripts.utils';
+import { allowedExtensionsWithDot } from '~/utils/file-extension';
 
 export default function AddScriptForm({
   appId,
@@ -75,10 +75,10 @@ export default function AddScriptForm({
           Create a script
         </Text>
         <form
-          onSubmit={handleSubmit(({ name, description }) => {
+          onSubmit={handleSubmit(({ description }) => {
             if (isFilenameValid) {
               addScript.mutateAsync({
-                name,
+                filename: slugifiedFilename,
                 description,
                 appId,
                 order: scripts.length + connectors.length + 1,
@@ -152,7 +152,7 @@ export default function AddScriptForm({
                     py="3"
                     onClick={() => {
                       addScript.mutateAsync({
-                        name: `${connector.id}-connector`,
+                        filename: `${connector.id}-connector.tsx`,
                         code: connector.code,
                         appId,
                         order: scripts.length + connectors.length + 1,
