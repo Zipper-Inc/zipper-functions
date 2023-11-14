@@ -21,7 +21,6 @@ export const AppEditSidebarAppletConnectors = () => {
   // state to hold whether user needs to authenticate with github
   const [githubAuthRequired, setGitHubAuthRequired] = useState(false);
   // state to hold whether user needs to authenticate with github
-  const [discordAuthRequired, setDiscordAuthRequired] = useState(false);
 
   // get the existing Slack connector data from the database
   const slackConnector = trpc.slackConnector.get.useQuery(
@@ -35,13 +34,6 @@ export const AppEditSidebarAppletConnectors = () => {
     { appId: appInfo.id },
     {
       enabled: githubAuthRequired,
-    },
-  );
-  // get the existing Slack connector data from the database
-  const discordConnector = trpc.discordConnector.get.useQuery(
-    { appId: appInfo.id },
-    {
-      enabled: discordAuthRequired,
     },
   );
 
@@ -108,21 +100,6 @@ export const AppEditSidebarAppletConnectors = () => {
     },
   );
 
-  // get the Discord auth URL -- if required --from the backend
-  // (it includes an encrypted state value that links the auth request to the app)
-  const discordAuthURL = trpc.discordConnector.getAuthUrl.useQuery(
-    {
-      appId,
-      scopes: {
-        bot: discordConnector.data?.workspaceScopes || [],
-      },
-      postInstallationRedirect: window.location.href,
-    },
-    {
-      enabled: discordConnector.isFetched,
-    },
-  );
-
   // get the Github auth URL -- if required --from the backend
   // (it includes an encrypted state value that links the auth request to the app)
   const githubAuthURL = trpc.githubConnector.getAuthUrl.useQuery(
@@ -142,9 +119,6 @@ export const AppEditSidebarAppletConnectors = () => {
     }
     if (userAuthConnectors.find((c) => c.type === 'github')) {
       setGitHubAuthRequired(true);
-    }
-    if (userAuthConnectors.find((c) => c.type === 'discord')) {
-      setDiscordAuthRequired(true);
     }
   }, []);
 
