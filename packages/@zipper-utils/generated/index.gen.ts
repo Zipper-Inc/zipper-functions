@@ -16,5 +16,6 @@ export * from '../src/utils/parseBody';
 export * from '../src/utils/safe-json';
 export * from '../src/utils/settings';
 export * from '../src/utils/url';
+export * from '../src/utils/user-agent';
 export * from '../src/utils/uuid';
 export * from '../src/constants';

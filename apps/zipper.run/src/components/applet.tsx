@@ -204,9 +204,19 @@ export function AppPage({
           query: JSON.parse(JSON.stringify(values)),
         });
       } else {
+        const stringifiedValuesIfObject = Object.entries(values).reduce(
+          (acc, [key, value]) => {
+            acc[key] =
+              typeof value === 'object'
+                ? JSON.stringify(value)
+                : (value as string | number | boolean);
+            return acc;
+          },
+          {} as Record<string, string | number | boolean>,
+        );
         router.push({
           pathname: `/run/${embedPath}${filename}`,
-          query: JSON.parse(JSON.stringify(values)),
+          query: stringifiedValuesIfObject,
         });
       }
     }
@@ -380,6 +390,8 @@ export function AppPage({
   );
 
   const content = (
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     <Stack
       as="main"
       position="relative"
