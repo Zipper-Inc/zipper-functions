@@ -232,6 +232,7 @@ export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
               w="full"
               align="stretch"
               px="10"
+              pb="16"
               overflowY="scroll"
               scrollBehavior="smooth"
               css={{

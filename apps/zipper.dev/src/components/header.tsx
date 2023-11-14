@@ -125,7 +125,7 @@ const Header: React.FC<HeaderProps> = ({
 
                       <Heading
                         size="md"
-                        overflow="auto"
+                        lineHeight="base"
                         whiteSpace="nowrap"
                         fontWeight="medium"
                         color="fg.400"
