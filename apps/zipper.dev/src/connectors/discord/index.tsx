@@ -45,7 +45,7 @@ export const discordConnector = createConnector({
   id: 'discord',
   name: 'Discord',
   description: "Use Discord's APIs to build interactive apps.",
-  icon: <SiDiscord fill="black" />,
+  icon: <SiDiscord />,
   code,
   workspaceScopes,
 });
