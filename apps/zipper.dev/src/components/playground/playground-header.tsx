@@ -464,13 +464,6 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
                   isDisabled={isDisabled}
                   onClick={forkAppForm.handleSubmit(async ({ name }) => {
                     if (user) {
-                      if (
-                        (selectedOrganizationId ?? null) !==
-                          (organization?.id ?? null) &&
-                        setActive
-                      ) {
-                        setActive(selectedOrganizationId || null);
-                      }
                       forkApp.mutateAsync(
                         {
                           id: app.id,
