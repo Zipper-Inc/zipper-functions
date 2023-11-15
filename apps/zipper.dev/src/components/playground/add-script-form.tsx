@@ -97,7 +97,6 @@ export default function AddScriptForm({
                 color={'fg.800'}
                 disabled={addScript.isLoading}
                 isInvalid={scriptFilename && !isFilenameValid}
-                autoComplete="off"
                 data-form-type="other"
                 {...register('name')}
               />
