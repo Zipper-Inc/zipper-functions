@@ -472,7 +472,11 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
                         setActive(selectedOrganizationId || null);
                       }
                       forkApp.mutateAsync(
-                        { id: app.id, name },
+                        {
+                          id: app.id,
+                          name,
+                          organizationId: selectedOrganizationId || undefined,
+                        },
                         {
                           onSuccess: (fork) => {
                             router.push(
