@@ -2,6 +2,7 @@ import { prisma } from '~/server/prisma';
 import { createUploadthing, type FileRouter } from 'uploadthing/next-legacy';
 import { createNextPageApiHandler } from 'uploadthing/next-legacy';
 import { getServerSession } from 'next-auth';
+import { authOptions } from './auth/[...nextauth]';
 
 const f = createUploadthing();
 
@@ -9,10 +10,17 @@ const f = createUploadthing();
 export const ourFileRouter = {
   // Define as many FileRoutes as you like, each with a unique routeSlug
   imageUploader: f({ image: { maxFileSize: '4MB' } })
+    .onUploadError(({ error }) => {
+      console.log('error', error);
+    })
+    .onUploadComplete(async ({ file }) => {
+      return { url: file.url };
+    }),
+  avatarUploader: f({ image: { maxFileSize: '4MB' } })
     // Set permissions and file types for this FileRoute
-    .middleware(async ({ req }) => {
+    .middleware(async ({ req, res }) => {
       // This code runs on your server before upload
-      const session = await getServerSession();
+      const session = await getServerSession(req, res, authOptions);
 
       // If you throw, the user will not be able to upload
       if (!session?.user) throw new Error('Unauthorized');
