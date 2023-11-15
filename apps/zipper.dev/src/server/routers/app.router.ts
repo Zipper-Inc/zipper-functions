@@ -1099,7 +1099,9 @@ async function forkApplet({
     data: {
       slug: slugify(name),
       name: name,
-      description: `Fork of ${app.name || app.slug}: ${app.description}`,
+      description: `Fork of ${app.name || app.slug}${
+        app.description ? `: ${app.description}` : ''
+      }`,
       parentId: connectToParent ? app.id : undefined,
       organizationId: orgId,
       createdById: userId,
