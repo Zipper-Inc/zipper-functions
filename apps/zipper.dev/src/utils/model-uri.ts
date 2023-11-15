@@ -1,5 +1,5 @@
 import { type Uri } from 'monaco-editor/esm/vs/editor/editor.api';
-import { AllowedExtension } from '~/server/utils/scripts.utils';
+import { AllowedExtension } from './file-extension';
 
 /**
  * In Deno, imports look like `import { foo } from './foo.ts'`
