@@ -12,11 +12,11 @@ Anyone that's been involved in dealing with a serious incident or outage will te
 
 One of the ways that you can make the lives of on-call teams easier ris by implementing a clear incident management process that includes:
 
-- well-defined roles for the incident manager and the communications lead
-- a clear communication plan with regular updates
-- dedicated space for the team to work
-- ways for people to ramp up quickly
-- timelines for post-mortems
+- Well-defined roles for the incident manager and the communications lead
+- A clear communication plan with regular updates
+- Dedicated space for the team to work
+- Ways for people to ramp up quickly
+- Timelines for post-mortems
 
 We all know that having a plan is great. We also know that plans tend to go out the window when you're scrambling to fix an outage. That's why we built a Slack bot that helps manage the process for you - all you need to remember is a single slash command.
 
@@ -31,36 +31,82 @@ The Incident Management Bot we built using Zipper is designed to simplify and st
 
 Before we delve into creating new incidents, it's crucial to integrate your Zipper applet with the Slack API. Let's get started with the setup:
 
-1. Fork the Incident Management Bot applet.
-1. Access [Slack API apps](https://api.slack.com/apps) and create a new Slack app from .
-   <img
-     src="https://imagedelivery.net/mehHBP8u01yKLn8uDjx8Yw/fe21b048-b57f-4611-4967-5d16f6179700/public"
-     style={{ borderRadius: '8px', marginBottom: '32px' }}
-     width="480px"
-     alt="slack-new-app"
-   />
-1. Obtain the App Credentials: **Client ID** and **Client Secret** from the _Basic Information_ menu.
-   <img
-     src="https://imagedelivery.net/mehHBP8u01yKLn8uDjx8Yw/e656e42d-f61e-4cf9-78ba-b68e49e09c00/public"
-     style={{ borderRadius: '8px', marginBottom: '32px' }}
-     width="480px"
-     alt="slack-credentials"
-   />
-1. In the _OAuth & Permissions_ menu, paste the following URL: https://zipper.dev/connectors/slack/auth into the **Redirect URLs** section (Zipper manages the Slack OAuth process for you).
-   <img
-     src="https://imagedelivery.net/mehHBP8u01yKLn8uDjx8Yw/d49401e7-05e2-43cc-8830-709355b86300/public"
-     style={{ borderRadius: '8px', marginBottom: '32px' }}
-     width="480px"
-     alt="slack-permissions"
-   />
-1. In the Slash Commands menu, create a new command called `/incident` with the specified configuration.
-   <img
-     src="https://imagedelivery.net/mehHBP8u01yKLn8uDjx8Yw/a5a69e04-e166-4b92-ac90-261f46b9b800/public"
-     style={{ borderRadius: '8px', marginBottom: '32px' }}
-     width="480px"
-     alt="slack-slash-commands"
-   />
-1. Paste the **Client ID** and **Client Secret** into the `slack-connector.ts`, configure the bot-scopes as follows: `channels:history`, `channels:join`, `channels:manage`, `channels:write.invites`, `channels:read`, `chat:write`, `commands,` `users:read`, `users:read.email`, and `users:write`. Finally, click on **Submit**.
+1. **Fork the Incident Management Bot applet.**
+
+2. **Create a new Slack app:**
+   - Visit [Slack API apps](https://api.slack.com/apps).
+   - Choose "Create New App" and select "From an App Manifest."
+   - Paste the provided JSON object:
+```JSON
+{
+    "display_information": {
+        "name": "Incident-Bot"
+    },
+    "features": {
+        "bot_user": {
+            "display_name": "Incident-Bot",
+            "always_online": false
+        },
+        "slash_commands": [
+            {
+                "command": "/incident",
+                "url": "https://{your-forked-applet-name}.zipper.run/slack-commands.ts/relay",
+                "description": "Manage incidents inside Zipper",
+                "usage_hint": "create, update, close, summary",
+                "should_escape": false
+            }
+        ]
+    },
+    "oauth_config": {
+        "redirect_urls": [
+            "https://zipper.dev/connectors/slack/auth"
+        ],
+        "scopes": {
+            "bot": [
+                "channels:history",
+                "channels:join",
+                "channels:manage",
+                "channels:read",
+                "channels:write.invites",
+                "chat:write",
+                "chat:write.public",
+                "commands",
+                "incoming-webhook",
+                "usergroups:read",
+                "users.profile:read",
+                "users:read",
+                "users:read.email",
+                "users:write",
+                "usergroups:write",
+                "groups:read"
+            ]
+        }
+    },
+    "settings": {
+        "event_subscriptions": {
+            "request_url": "https://{your-forked-applet-name}.zipper.run/slack-commands.ts/relay",
+            "bot_events": [
+                "message.channels"
+            ]
+        },
+        "interactivity": {
+            "is_enabled": true,
+            "request_url": "https://{your-forked-applet-name}.zipper.run/slack-interactivity.ts/relay"
+        },
+        "org_deploy_enabled": false,
+        "socket_mode_enabled": false,
+        "token_rotation_enabled": false
+    }
+}
+```
+3. **Obtain App Credentials:**
+    - In the Slack app, go to the _Basic Information_ menu.
+    - Retrieve the **Client ID** and **Client Secret.**
+
+4. **Configure Slack Connector:**
+    - Paste the **Client ID** and **Client Secret** into `slack-connector.ts`.
+    - Configure bot-scopes as specified in the app manifest.
+    - Click on **Save and Install.**
 
 Once the bot is installed in the desired Slack channel, we're all set to start creating new incidents.
 
