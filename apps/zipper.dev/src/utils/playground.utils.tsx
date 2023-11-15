@@ -3,12 +3,7 @@ import { Script } from '@prisma/client';
 import { DehydratedState } from '@tanstack/react-query';
 import { getUriFromPath } from './model-uri';
 import type { Monaco } from '@monaco-editor/react';
-import { fallback } from './zod-utils';
-import {
-  AllowedExtensionSchema,
-  AllowedExtension,
-  getFileExtension,
-} from './file-extension';
+import { AllowedExtension, getFileExtension } from './file-extension';
 
 export const isConnector = (script: Script) =>
   script.filename.endsWith('-connector.ts');
@@ -65,11 +60,7 @@ export const parsePlaygroundQuery = (
 
 function parseScriptForModel(script: Script, { Uri }: Monaco) {
   const isMainScript = script.filename === 'main.ts';
-  const extension = isMainScript
-    ? 'tsx'
-    : AllowedExtensionSchema.or(fallback(undefined)).parse(
-        getFileExtension(script.filename),
-      );
+  const extension = isMainScript ? 'tsx' : getFileExtension(script.filename);
 
   const path = script.filename;
   const uri = getUriFromPath(path, Uri.parse, extension || 'tsx');

@@ -55,6 +55,9 @@ export const scriptRouter = createTRPCRouter({
           .max(255)
           .transform((filename) => {
             const extension = getFileExtension(filename);
+            if (!extension)
+              throw new Error(`Extension from ${filename} isnt allowed`);
+
             const name = filename.replace(/\..+$/, '');
 
             return {

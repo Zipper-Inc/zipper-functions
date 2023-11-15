@@ -6,7 +6,7 @@ import { isExternalImport } from '~/utils/parse-code';
 import { isZipperImportUrl, X_ZIPPER_ESZIP_BUILD } from '~/utils/eszip-utils';
 import Fuse from 'fuse.js';
 import { rewriteSpecifier } from '~/utils/rewrite-imports';
-import { AllowedExtensionSchema, getFileExtension } from './file-extension';
+import { getFileExtension } from './file-extension';
 
 /** This string indicates which errors we own in the editor */
 export const ZIPPER_LINTER = 'zipper-linter';
@@ -67,16 +67,14 @@ export async function runZipperLinter({
     imports.map(async (i) => {
       if (!monacoRef.current) return;
 
-      const parsedExtension = AllowedExtensionSchema.safeParse(
-        getFileExtension(i.specifier),
-      );
+      const extension = getFileExtension(i.specifier);
 
       const potentialModelUri = getUriFromPath(
         // Remove the first two characters, which should be `./`
         // The relative path is required by Deno/Zipper
         i.specifier.substring(2),
         monacoRef.current.Uri.parse,
-        parsedExtension.success ? parsedExtension.data : 'tsx',
+        extension || 'tsx',
       );
 
       // If we can find a model, we're good

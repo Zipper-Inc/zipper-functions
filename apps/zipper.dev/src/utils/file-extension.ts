@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { fallback } from './zod-utils';
 
 export const RunnableExtensionSchema = z.enum(['ts', 'tsx']);
 
@@ -16,5 +17,6 @@ export type AllowedExtensionWithDot = `.${AllowedExtension}`;
 
 export const getFileExtension = (filename: string) => {
   const extension = filename.split('.').pop();
-  return AllowedExtensionSchema.parse(extension);
+  const parsed = AllowedExtensionSchema.safeParse(extension);
+  return parsed.success ? parsed.data : undefined;
 };
