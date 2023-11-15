@@ -19,6 +19,7 @@ import {
 import { signOut } from 'next-auth/react';
 import {
   PiGearDuotone,
+  PiHouse,
   PiLifebuoyDuotone,
   PiMegaphoneSimpleDuotone,
   PiMoonDuotone,
@@ -50,6 +51,21 @@ export function UserProfileButton(props: { showAdditionalOptions?: boolean }) {
             <AvatarForCurrentUser size="sm" referrerPolicy="no-referrer" />
           </MenuButton>
           <MenuList zIndex="popover">
+            {props.showAdditionalOptions && (
+              <>
+                <MenuItem
+                  as={Link}
+                  href="/dashboard"
+                  _hover={{ textDecoration: 'none' }}
+                >
+                  <Stack gap={1} direction="row" alignItems="center">
+                    <PiHouse />
+                    <Text>Dashboard</Text>
+                  </Stack>
+                </MenuItem>
+                <MenuDivider />
+              </>
+            )}
             <MenuGroup title="Settings">
               <MenuItem onClick={userSettingsModal.onOpen}>
                 <Stack gap={1} direction="row" alignItems="center">

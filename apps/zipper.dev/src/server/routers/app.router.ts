@@ -789,18 +789,25 @@ export const appRouter = createTRPCRouter({
       z.object({
         id: z.string().uuid(),
         name: z.string().min(3).max(50),
+        organizationId: z.string().uuid().optional(),
         connectToParent: z.boolean().optional().default(true),
       }),
     )
     .mutation(async ({ input, ctx }) => {
-      const { id, name, connectToParent } = input;
+      const { id, name, connectToParent, organizationId } = input;
+      if (
+        organizationId &&
+        !Object.keys(ctx.organizations || {}).includes(organizationId)
+      ) {
+        throw new Error('Invalid organizationId');
+      }
 
       const { fork, updatedFork } = await forkAppletById({
         appId: id,
         name,
         connectToParent,
         userId: ctx.userId,
-        orgId: ctx.orgId,
+        orgId: organizationId || ctx.orgId,
       });
 
       const resourceOwner = await prisma.resourceOwnerSlug.findFirstOrThrow({
@@ -1092,7 +1099,9 @@ async function forkApplet({
     data: {
       slug: slugify(name),
       name: name,
-      description: app.description,
+      description: `Fork of ${app.name || app.slug}${
+        app.description ? `: ${app.description}` : ''
+      }`,
       parentId: connectToParent ? app.id : undefined,
       organizationId: orgId,
       createdById: userId,
