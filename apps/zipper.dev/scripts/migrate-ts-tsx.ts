@@ -1,6 +1,6 @@
+import { Script } from '@prisma/client';
 import { withParser } from 'jscodeshift';
 import { prisma } from '~/server/prisma';
-import { Script } from '@prisma/client';
 import { buildAndStoreApplet } from '~/utils/eszip-build-applet';
 
 const renameTsImportsToTsx = async (code: string) => {
@@ -31,12 +31,11 @@ const renameTsImportsToTsx = async (code: string) => {
       id: true,
     },
   });
-
   // for each applet
   //   for each script in applet
   //     rename each script filename
   //     update the code with morph
-  //     create new playgroundHash based on your new script content and filenames
+  //     create new version and update the app playgroundHash based on your new script content and filenames
   for (const { id: appletId } of appletsIds) {
     const updatedScripts: Script[] = [];
 
@@ -45,29 +44,73 @@ const renameTsImportsToTsx = async (code: string) => {
       include: { scripts: true },
     });
 
-    // TODO: this block should be a prisma transaction?
-    for (const script of app.scripts) {
-      // rename script
-      const newFilename = script.filename.replace(/\.ts$/, '.tsx');
-      await prisma.script.update({
-        where: { id: script.id },
-        data: { filename: newFilename },
-      });
+    const runnableScripts = app.scripts.filter(
+      (script) =>
+        script.filename.endsWith('.ts') && script.filename !== 'main.ts',
+    );
 
-      // update code
-      const newCode = await renameTsImportsToTsx(script.code);
-      updatedScripts.push({ ...script, code: newCode });
+    const main = app.scripts.find((script) => script.filename === 'main.ts');
+
+    if (!main) {
+      throw new Error(`main.ts not found appletName: ${app.name}`);
     }
 
-    // --- VERSION HASHING ---
-    // get new hash
-    const { hash } = await buildAndStoreApplet({
-      app: { ...app, scripts: updatedScripts },
-    });
-    // update in the db
-    await prisma.app.update({
-      where: { id: appletId },
-      data: { playgroundVersionHash: hash },
-    });
+    for (const script of runnableScripts) {
+      // rename script that arent main
+      const newFilename = script.filename.replace(/\.ts$/, '.tsx');
+
+      // update code that arent main
+      await renameTsImportsToTsx(script.code).then((newCode) =>
+        updatedScripts.push({
+          ...script,
+          code: newCode,
+          filename: newFilename,
+        }),
+      );
+    }
+
+    const hasUpdated = updatedScripts.length > 0;
+
+    if (hasUpdated) {
+      // update main code imports
+      await renameTsImportsToTsx(main.code).then((newMainCode) =>
+        updatedScripts.push({ ...main, code: newMainCode }),
+      );
+    }
+
+    // TODO: prisma.$transaction
+
+    // Rename and code updates
+    await Promise.all(
+      updatedScripts.map((script) =>
+        prisma.script.update({
+          where: { id: script.id },
+          data: { code: script.code },
+        }),
+      ),
+    );
+
+    if (hasUpdated) {
+      // get new hash
+      const { hash } = await buildAndStoreApplet({
+        app: { ...app, scripts: updatedScripts },
+      });
+
+      if (hash !== app.playgroundVersionHash) {
+        // create a new version
+        await prisma.version.create({
+          data: {
+            appId: app.id,
+            hash: hash,
+          },
+        });
+
+        // update the playground hash to use the new version
+        await prisma.app.update({
+          where: { id: appletId },
+          data: { playgroundVersionHash: hash },
+        });
+      }
+    }
   }
 })();
