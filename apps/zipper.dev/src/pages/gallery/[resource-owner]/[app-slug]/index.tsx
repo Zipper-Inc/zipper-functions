@@ -32,6 +32,7 @@ import { trpc } from '~/utils/trpc';
 import { isReadme } from '~/utils/playground.utils';
 import type { MonacoEditor } from '~/components/playground/playground-editor';
 import { AnalyticsHead } from '@zipper/utils';
+import { useUser } from '~/hooks/use-user';
 
 const EDITOR_OPTIONS = {
   fixedOverflowWidgets: true,
@@ -61,6 +62,7 @@ const AppletLandingPage: NextPageWithLayout = () => {
     Script | undefined
   >(undefined);
   const [isBoxVisible, setIsBoxVisible] = useState(true);
+  const { user } = useUser();
 
   const theme = useColorModeValue('vs', 'vs-dark');
 
@@ -165,7 +167,10 @@ const AppletLandingPage: NextPageWithLayout = () => {
                 }}
               />
               <Stack pt={4}>
-                <Markdown>
+                <Markdown
+                  appInfo={{ name: data.name || data.slug, slug: data.slug }}
+                  currentUser={{ username: user?.username || 'Anonymous' }}
+                >
                   {getScriptCode('readme.md') ?? 'No readme found'}
                 </Markdown>
               </Stack>
