@@ -220,8 +220,7 @@ const useComponents = (): Components => {
           background="white"
           border="1px solid"
           borderColor="gray.200"
-          ml="-1rem"
-          mr="-1rem"
+          fontFamily="monospace"
           my="1rem"
         >
           {React.Children.map(props.children, (child) => (
