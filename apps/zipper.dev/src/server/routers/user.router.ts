@@ -277,21 +277,6 @@ export const userRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const user = await prisma.user.findUniqueOrThrow({
-        where: {
-          id: ctx.userId,
-        },
-      });
-
-      await prisma.resourceOwnerSlug.update({
-        where: {
-          slug: user.slug,
-        },
-        data: {
-          resourceOwnerId: null,
-        },
-      });
-
       await prisma.resourceOwnerSlug.create({
         data: {
           slug: input.slug,
