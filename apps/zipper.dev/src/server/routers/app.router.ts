@@ -941,6 +941,7 @@ export const appRouter = createTRPCRouter({
         const { hash } = await buildAndStoreApplet({
           app: { ...app, scripts: updatedScripts },
           userId: ctx.userId,
+          isPublished: app.isAutoPublished,
         });
 
         // if the code has changed, send the latest code to R2
@@ -965,13 +966,19 @@ export const appRouter = createTRPCRouter({
           });
         }
 
+        const appHashUpdateData: any = {
+          playgroundVersionHash: hash,
+        };
+
+        if (app.isAutoPublished) {
+          appHashUpdateData.publishedVersionHash = hash;
+        }
+
         const appWithUpdatedHash = await prisma.app.update({
           where: {
             id,
           },
-          data: {
-            playgroundVersionHash: hash,
-          },
+          data: appHashUpdateData,
           select: defaultSelect,
         });
 
