@@ -37,7 +37,7 @@ import { HiOutlineTrash } from 'react-icons/hi';
 import { useEffect, useRef, useState } from 'react';
 import { MultiSelect, SelectOnChange, useMultiSelect } from '@zipper/ui';
 import { useRouter } from 'next/router';
-import { code, userScopes, workspaceScopes } from './constants';
+import { code } from './constants';
 import { useRunAppContext } from '~/components/context/run-app-context';
 import { useUser } from '~/hooks/use-user';
 
@@ -48,8 +48,6 @@ export const postgresConnector = createConnector({
   description: `Connect to a Postgres database and run queries.`,
   icon: <FiDatabase fill="black" />,
   code,
-  userScopes,
-  workspaceScopes,
 });
 
 function PostgresConnectorForm({ appId }: { appId: string }) {
@@ -62,82 +60,44 @@ function PostgresConnectorForm({ appId }: { appId: string }) {
   const [clientId, setClientId] = useState<string>('');
   const [clientSecret, setClientSecret] = useState<string>('');
 
-  // convert the scopes to options for the multi-select menus
-  const __bot_options = workspaceScopes.map((scope) => ({
-    label: scope,
-    value: scope,
-  }));
-  const __user_options = userScopes.map((scope) => ({
-    label: scope,
-    value: scope,
-  }));
-
-  const defaultBotScope = 'channels:read';
-  const botTokenName = 'SLACK_BOT_TOKEN';
-  const userTokenName = 'SLACK_USER_TOKEN';
-
-  // useMultiSelect hook gives us the value state and the onChange and setValue methods
-  // for the multi-select menus
-  const {
-    value: botValue,
-    options: botOptions,
-    onChange: botOnChange,
-    setValue: setBotValue,
-  } = useMultiSelect({
-    options: __bot_options,
-    value: [defaultBotScope],
-  });
-
-  const {
-    value: userValue,
-    options: userOptions,
-    onChange: userOnChange,
-    setValue: setUserValue,
-  } = useMultiSelect({
-    options: __user_options,
-    value: [],
-  });
-
   // get the existing Slack connector data from the database
-  const connector = trpc.slackConnector.get.useQuery(
-    { appId },
-    {
-      onSuccess: (data) => {
-        if (data && setBotValue && setUserValue) {
-          setBotValue(data.workspaceScopes || [defaultBotScope]);
-          setUserValue(data?.userScopes || []);
-        }
-      },
-    },
-  );
 
-  const [isUserAuthRequired, setIsUserAuthRequired] = useState(
-    connector.data?.isUserAuthRequired,
-  );
+  // TODO: CREATE THIS TRPC QUERY
 
-  const [isOwnClientIdRequired, setIsOwnClientIdRequired] =
-    useState<boolean>(false);
+  // const connector = trpc.slackConnector.get.useQuery(
+  //   { appId },
+  //   {
+  //     onSuccess: (data) => {
+  //       if (data && setBotValue && setUserValue) {
+  //         setBotValue(data.workspaceScopes || [defaultBotScope]);
+  //         setUserValue(data?.userScopes || []);
+  //       }
+  //     },
+  //   },
+  // );
 
   const [isSaving, setIsSaving] = useState(false);
 
   // get the existing Slack bot token from the database
-  const existingSecret = trpc.secret.get.useQuery(
-    { appId, key: botTokenName },
-    { enabled: !!user },
-  );
 
-  const existingUserSecret = trpc.secret.get.useQuery(
-    { appId, key: userTokenName },
-    { enabled: !!user },
-  );
+  // TODO: WE NEED TO GET AND SET THE SECRETS FROM THE APPLET IN THE DATABASE AND SHOW THEM AS A FORM
+  //   return {
+  //    Deno.env.get("POSTGRES_HOST"),
+  //    Deno.env.get("POSTGRES_PORT") || "5432"),
+  //    Deno.env.get("POSTGRES_USER"),
+  //    Deno.env.get("POSTGRES_DATABASE"),
+  //    Deno.env.get("POSTGRES_PASSWORD"),
+  // };
 
-  // get the Slack auth URL from the backend (it includes an encrypted state value that links
-  // the auth request to the app)
-  const slackAuthURL = trpc.slackConnector.getAuthUrl.useQuery({
-    appId,
-    scopes: { bot: botValue as string[], user: userValue as string[] },
-    postInstallationRedirect: window.location.href,
-  });
+  // const existingSecret = trpc.secret.get.useQuery(
+  //   { appId, key: botTokenName },
+  //   { enabled: !!user },
+  // );
+
+  // const existingUserSecret = trpc.secret.get.useQuery(
+  //   { appId, key: userTokenName },
+  //   { enabled: !!user },
+  // );
 
   const [slackAuthInProgress, setSlackAuthInProgress] = useState(false);
 
