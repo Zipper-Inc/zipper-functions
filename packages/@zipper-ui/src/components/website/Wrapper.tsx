@@ -17,11 +17,11 @@ export const Wrapper = ({
         as="main"
         m="0 auto"
         position="relative"
-        // bg={
-        //   mode === 'light'
-        //     ? 'gray.100'
-        //     : 'linear-gradient(to top left, #1789DC, #0766B7)'
-        // }
+        bg={
+          mode === 'light'
+            ? 'gray.100'
+            : 'linear-gradient(to top left, #1789DC, #0766B7)'
+        }
         overflowY="hidden"
         overflowX="hidden"
       >
