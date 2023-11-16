@@ -156,9 +156,21 @@ const useComponents = (): Components => {
     ul: (props: ListProps) => (
       <UnorderedList marginBottom={8} spacing={2} {...props} />
     ),
-    ol: (props: ListProps) => (
-      <OrderedList marginBottom={8} spacing={2} {...props} />
-    ),
+    ol: (props: ListProps) => {
+      return (
+        <OrderedList
+          marginBottom={
+            ['li', 'code', 'ul'].includes(
+              (props.children as any)[1].type().props.as,
+            )
+              ? 2
+              : 8
+          }
+          spacing={2}
+          {...props}
+        />
+      );
+    },
     h4: (props: HeadingProps) => (
       <HeadingLink
         as="h4"
@@ -229,7 +241,8 @@ const useComponents = (): Components => {
           borderColor="gray.200"
           ml="-1rem"
           mr="-1rem"
-          my="1rem"
+          mb="1.5rem"
+          overflowX="auto"
         >
           {React.Children.map(props.children, (child) => (
             <span>{child}</span>
