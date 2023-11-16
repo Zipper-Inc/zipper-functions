@@ -37,21 +37,22 @@ import { DEFAULT_MD } from './script.router';
 
 const defaultSelect = Prisma.validator<Prisma.AppSelect>()({
   id: true,
-  name: true,
-  slug: true,
-  description: true,
-  isPrivate: true,
-  publishedVersionHash: true,
-  playgroundVersionHash: true,
-  parentId: true,
-  submissionState: true,
   createdAt: true,
-  updatedAt: true,
-  organizationId: true,
   createdById: true,
-  requiresAuthToRun: true,
+  description: true,
+  isAutoPublished: true,
   isDataSensitive: true,
+  isPrivate: true,
+  name: true,
+  organizationId: true,
+  parentId: true,
+  playgroundVersionHash: true,
+  publishedVersionHash: true,
+  requiresAuthToRun: true,
   secretsHash: true,
+  slug: true,
+  submissionState: true,
+  updatedAt: true,
 });
 
 export const defaultCode = [
@@ -845,6 +846,7 @@ export const appRouter = createTRPCRouter({
           isPrivate: z.boolean().optional(),
           requiresAuthToRun: z.boolean().optional(),
           isDataSensitive: z.boolean().optional(),
+          isAutoPublished: z.boolean().optional(),
           scripts: z
             .array(
               z.object({
