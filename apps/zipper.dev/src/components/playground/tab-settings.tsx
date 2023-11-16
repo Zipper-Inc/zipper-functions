@@ -54,6 +54,7 @@ import {
   PiLockLaminatedOpen,
   PiLockSimple,
   PiLockSimpleOpen,
+  PiRocketLaunchDuotone,
   PiTrashSimpleBold,
 } from 'react-icons/pi';
 import slugify from 'slugify';
@@ -71,6 +72,7 @@ type Props = {
     | 'requiresAuthToRun'
     | 'isPrivate'
     | 'isDataSensitive'
+    | 'isAutoPublished'
   >;
 };
 
@@ -121,6 +123,7 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
       requiresAuthToRun: app.requiresAuthToRun,
       isPrivate: app.isPrivate,
       isDataSensitive: app.isDataSensitive,
+      isAutoPublished: app.isAutoPublished,
     },
   });
   const model = settingsForm.watch();
@@ -141,7 +144,8 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
       model.description !== appQuery.data.description ||
       model.requiresAuthToRun !== appQuery.data.requiresAuthToRun ||
       model.isPrivate !== appQuery.data.isPrivate ||
-      model.isDataSensitive !== appQuery.data.isDataSensitive
+      model.isDataSensitive !== appQuery.data.isDataSensitive ||
+      model.isAutoPublished !== appQuery.data.isAutoPublished
     );
   };
 
@@ -160,6 +164,7 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
           requiresAuthToRun: data.requiresAuthToRun,
           isPrivate: data.isPrivate,
           isDataSensitive: data.isDataSensitive,
+          isAutoPublished: data.isAutoPublished,
         },
       },
       {
@@ -331,6 +336,29 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
                   </Flex>
                   <Switch {...settingsForm.register('isPrivate')} ml="auto" />
                 </HStack>
+
+                <VStack
+                  w="full"
+                  p="4"
+                  align="start"
+                  borderBottom="1px solid"
+                  borderColor={'fg.200'}
+                >
+                  <VStack align="start" w="full">
+                    <HStack w="full">
+                      <PiRocketLaunchDuotone />
+                      <Text>Is the code auto-published?</Text>
+                      <Spacer flexGrow={1} />
+                      <Switch {...settingsForm.register('isAutoPublished')} />
+                    </HStack>
+                  </VStack>
+
+                  <FormHelperText maxW="xl">{`Since this is ${
+                    settingsForm.watch('isAutoPublished')
+                      ? `checked, code will automatically be published to ${app.slug}.zipper.run on save.`
+                      : `not checked, code will not be automatically published to ${app.slug}.zipper.run on save.`
+                  }`}</FormHelperText>
+                </VStack>
 
                 <VStack
                   w="full"
