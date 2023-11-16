@@ -204,9 +204,19 @@ export function AppPage({
           query: JSON.parse(JSON.stringify(values)),
         });
       } else {
+        const stringifiedValuesIfObject = Object.entries(values).reduce(
+          (acc, [key, value]) => {
+            acc[key] =
+              typeof value === 'object'
+                ? JSON.stringify(value)
+                : (value as string | number | boolean);
+            return acc;
+          },
+          {} as Record<string, string | number | boolean>,
+        );
         router.push({
           pathname: `/run/${embedPath}${filename}`,
-          query: JSON.parse(JSON.stringify(values)),
+          query: stringifiedValuesIfObject,
         });
       }
     }
@@ -365,6 +375,8 @@ export function AppPage({
   );
 
   const content = (
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     <Stack
       as="main"
       position="relative"
@@ -427,6 +439,7 @@ export function AppPage({
             initial="closed"
             animate={isOpen ? 'open' : 'closed'}
             variants={variants}
+            maxH="fit-content"
           >
             {app.appAuthor && <AppletAuthor author={app.appAuthor} />}
             <Stack>
@@ -465,7 +478,7 @@ export function AppPage({
           </VStack>
         ) : null}
 
-        <VStack mx="auto" align="stretch" flex={3} height="full">
+        <VStack mx="auto" align="stretch" flex={3} height="full" w="full">
           {screen === 'initial' && initialContent}
 
           <VStack alignSelf="start" width="full" height="full">

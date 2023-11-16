@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { ZIPPER_TEMP_USER_ID_COOKIE_NAME } from '@zipper/utils';
+import {
+  hasBrowserLikeUserAgent,
+  ZIPPER_TEMP_USER_ID_COOKIE_NAME,
+} from '@zipper/utils';
 import { hasZipperEszipHeader } from '~/utils/eszip-utils';
-import { hasBrowserLikeUserAgent } from '~/utils/user-agent';
 
 const parseZipperSrcPath = (req: NextRequest) => {
   const matches = req.nextUrl.pathname.match(
@@ -25,7 +27,7 @@ export default async (req: NextRequest) => {
   const zipperSrcParams = parseZipperSrcPath(req);
   if (
     zipperSrcParams &&
-    (!hasBrowserLikeUserAgent(req) || hasZipperEszipHeader(req))
+    (!hasBrowserLikeUserAgent(req.headers) || hasZipperEszipHeader(req))
   ) {
     const { appSlug, filename } = zipperSrcParams;
     const url = new URL(`/api/src/${appSlug}/latest/${filename}`, req.url);

@@ -243,6 +243,7 @@ const useComponents = (): Components => {
           mr="-1rem"
           mb="1.5rem"
           overflowX="auto"
+          fontFamily="monospace"
         >
           {React.Children.map(props.children, (child) => (
             <span>{child}</span>
