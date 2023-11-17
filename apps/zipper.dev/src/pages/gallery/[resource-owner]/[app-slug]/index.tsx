@@ -21,11 +21,11 @@ import {
   TabPanel,
   Flex,
   Icon,
+  Link,
 } from '@chakra-ui/react';
 import { Script } from '@prisma/client';
 import Editor, { EditorProps, Monaco } from '@monaco-editor/react';
 import { HiArrowLeft, HiChevronDown, HiOutlineTemplate } from 'react-icons/hi';
-import Link from 'next/link';
 import { baseColors, Markdown, AppletAuthor, TabButton } from '@zipper/ui';
 import { NextPageWithLayout } from '~/pages/_app';
 import { trpc } from '~/utils/trpc';
@@ -102,7 +102,7 @@ const AppletLandingPage: NextPageWithLayout = () => {
       <iframe
         width="100%"
         height="500"
-        src={`${getAppRunUrl}/run/embed/${
+        src={`${getAppRunUrl}/embed/run/${
           currentScriptState?.filename || 'main.ts'
         }`}
       ></iframe>
@@ -143,7 +143,7 @@ const AppletLandingPage: NextPageWithLayout = () => {
             leftIcon={<HiOutlineTemplate size={20} />}
             fontSize="sm"
           >
-            <Link href={`/${data.resourceOwner.slug}/${data.slug}/src`}>
+            <Link href={`/${data.resourceOwner.slug}/${data.slug}/src/main.ts`}>
               Open in Playground
             </Link>
           </Button>
