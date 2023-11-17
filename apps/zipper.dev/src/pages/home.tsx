@@ -57,7 +57,7 @@ import { AnalyticsHead } from '@zipper/utils';
 const HERO_CONTENT = {
   TITLE: 'Complexity-free\nWeb Development',
 
-  DESCRIPTION: `Zipper helps you turn Typescript functions into modern web applications. No local setup, boilerplate, or frontend code required. Perfect for rapidly building or prototyping internal tools, SaaS integrations, or micro-services.`,
+  DESCRIPTION: `Zipper helps you turn Typescript functions into modern web applications. No local setup, boilerplate, or frontend code required. Perfect for rapidly building or prototyping internal tools, SaaS integrations, and micro-services.`,
   LIST: [
     {
       description: 'Turn TypeScript functions into serverless web apps',
