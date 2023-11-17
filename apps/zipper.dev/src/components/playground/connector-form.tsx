@@ -1,6 +1,7 @@
 import { ConnectorId } from '~/connectors/createConnector';
 import GitHubConnectorForm from '~/connectors/github';
 import GitHubAppConnectorForm from '~/connectors/github-app';
+import NotionConnectorForm from '~/connectors/notion';
 import OpenAIConnectorForm from '~/connectors/openai';
 import SlackConnectorForm from '~/connectors/slack';
 import ZendeskConnectorForm from '~/connectors/zendesk';
@@ -30,6 +31,10 @@ export function ConnectorForm({
 
   if (connectorId === 'github-app') {
     return <GitHubAppConnectorForm appId={appId} />;
+  }
+
+  if (connectorId === 'notion') {
+    return <NotionConnectorForm appId={appId} />;
   }
   return <></>;
 }
