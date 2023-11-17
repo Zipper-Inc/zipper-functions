@@ -742,6 +742,7 @@ const WebFirst = () => {
                   <VStack align="start" color="white" w="full" h="full">
                     {React.cloneElement(item.ICON, {
                       size: 36,
+                      style: { minHeight: 36 },
                     })}
                     <Flex
                       direction={{
