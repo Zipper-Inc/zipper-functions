@@ -4,6 +4,7 @@ import { generateIndexForFramework } from '@zipper/utils';
 import { prisma } from '~/server/prisma';
 import { storeVersionESZip } from '~/server/utils/r2.utils';
 import { getLogger } from './app-console';
+import { collectBootInfo } from './boot-info-utils';
 import { BuildCache } from './eszip-build-cache';
 import {
   applyTsxHack,
@@ -25,8 +26,29 @@ const FILENAME_FORBIDDEN_CHARS_REGEX = /[^a-zA-Z0-9_.\-@$)]/;
  */
 export const FRAMEWORK_ENTRYPOINT = 'run.ts';
 export const APPLET_INDEX_PATH = 'applet/generated/index.gen.ts';
+export const BOOT_INFO_PATH = 'applet/generated/boot-info.gen.ts';
 
 const buildCache = new BuildCache();
+
+async function getFrameworkFileContent(
+  slug: string,
+  filename: string,
+  scripts: Script[],
+) {
+  switch (filename) {
+    case APPLET_INDEX_PATH:
+      return generateIndexForFramework({
+        code: await readFrameworkFile(filename),
+        filenames: scripts.map((s) => s.filename),
+      });
+    case BOOT_INFO_PATH:
+      const bootInfo = await collectBootInfo({ slugFromUrl: slug });
+      if (bootInfo instanceof Error) throw bootInfo;
+      return `export default ${JSON.stringify(bootInfo)};`;
+    default:
+      return readFrameworkFile(filename);
+  }
+}
 
 export async function build({
   baseUrl: _baseUrl,
@@ -96,9 +118,12 @@ export async function build({
        */
       if (specifier.startsWith(baseUrl)) {
         const filename = specifier.replace(`${baseUrl}/`, '');
-        const isAppletIndex = filename === APPLET_INDEX_PATH;
 
-        let content = await readFrameworkFile(filename);
+        let content = await getFrameworkFileContent(
+          app.slug,
+          filename,
+          tsScripts,
+        );
 
         // Inject Env vars
         ['PUBLICLY_ACCESSIBLE_RPC_HOST', 'HMAC_SIGNING_SECRET'].forEach(
@@ -109,13 +134,6 @@ export async function build({
             );
           },
         );
-
-        if (isAppletIndex) {
-          content = generateIndexForFramework({
-            code: content,
-            filenames: tsScripts.map((s) => s.filename),
-          });
-        }
 
         return {
           kind: 'module',

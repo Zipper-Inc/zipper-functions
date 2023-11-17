@@ -1,9 +1,9 @@
 import { Script } from '@prisma/client';
-import { BootInfo, BootInfoResult, UserAuthConnector } from '@zipper/types';
+import { BootInfo } from '@zipper/types';
 import { getZipperDotDevUrl } from '@zipper/utils';
 import { prisma } from '~/server/prisma';
 import { trackEvent } from '~/utils/api-analytics';
-import { parseCode } from '~/utils/parse-code';
+import { parseCodeSerializable } from '~/utils/parse-code';
 import { AppletAuthorReturnType } from '~/utils/get-user-info';
 
 const bootInfoError = (msg: string, status: number) => {
@@ -121,11 +121,11 @@ export async function collectBootInfo({
   }
 
   const parsedScripts = scripts.reduce<
-    Record<string, ReturnType<typeof parseCode>>
+    Record<string, ReturnType<typeof parseCodeSerializable>>
   >(
     (parsed, script) => ({
       ...parsed,
-      [script.filename]: parseCode({ code: script.code }),
+      [script.filename]: parseCodeSerializable({ code: script.code }),
     }),
     {},
   );
