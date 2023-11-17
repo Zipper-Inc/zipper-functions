@@ -62,6 +62,7 @@ export function PostsLayout(): ReactElement {
         className="post-item"
         flexDir="column"
         py={10}
+        pr={post.index > 1 ? 5 : 0}
         alignItems="start"
         justifyContent="space-between"
         gap={3}
@@ -137,7 +138,7 @@ export function PostsLayout(): ReactElement {
   };
 
   const postList = otherPosts.map((post, index) => (
-    <Post key={index} {...post} index={index} />
+    <Post key={index} {...post} index={index + 2} />
   ));
 
   return (

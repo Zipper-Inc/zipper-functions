@@ -56,7 +56,8 @@ export const getInputSummary = (
         if (
           type === InputType.date &&
           Boolean(value) &&
-          value.toString() !== 'Invalid Date'
+          value.toString() !== 'Invalid Date' &&
+          value.toString() !== 'null'
         ) {
           value = parseDate(value).toLocaleDateString().split('T')[0] || value;
         } else if (type === InputType.boolean) {

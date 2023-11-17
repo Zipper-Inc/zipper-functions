@@ -29,6 +29,7 @@ model App {
   createdById           String?
   requiresAuthToRun     Boolean   @default(false)
   isDataSensitive       Boolean   @default(false)
+  isAutoPublished       Boolean   @default(true)
   isTemplate            Boolean   @default(false)
   dailyRunLimit         Int       @default(1000)
   secretsHash           String?

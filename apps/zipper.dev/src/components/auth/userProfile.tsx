@@ -252,12 +252,12 @@ export default function UserProfile() {
               <Box width="100%">
                 <Collapse in={showUploadThing} animateOpacity>
                   <UploadDropzone
-                    endpoint="imageUploader"
+                    endpoint="avatarUploader"
                     onClientUploadComplete={() => {
                       session.update({ updateProfile: true });
                       setShowUploadThing(false);
                     }}
-                    onUploadError={() => {
+                    onUploadError={(e) => {
                       setShowUploadThing(false);
                     }}
                   />

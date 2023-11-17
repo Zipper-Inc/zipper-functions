@@ -5681,23 +5681,25 @@
   resolved "https://registry.yarnpkg.com/@ungap/structured-clone/-/structured-clone-1.2.0.tgz#756641adb587851b5ccb3e095daf27ae581c8406"
   integrity sha512-zuVdFrMJiuCDQUMCzQaD6KL28MjnqqN8XnAqiEq9PNm/hCPTSGfrXCOfwj1ow4LFb/tNymJPwsNbVePc1xFqrQ==
 
-"@uploadthing/mime-types@^0.2.1":
-  version "0.2.1"
-  resolved "https://registry.yarnpkg.com/@uploadthing/mime-types/-/mime-types-0.2.1.tgz#ee9daf91e30943a324d31f21a4b5ee9c7cd1076d"
-  integrity sha512-UDySsPbdi7wp52WG7mp5CiZwaTvokDubqhm1xhFm73Bqhp0PsGbwSSF5PdCXH4fe8Y4EKGrMyWQ4i1fF9+DVVQ==
+"@uploadthing/mime-types@^0.2.2":
+  version "0.2.2"
+  resolved "https://registry.yarnpkg.com/@uploadthing/mime-types/-/mime-types-0.2.2.tgz#94ec59c61729f6bef5662d8b222831e8afd59369"
+  integrity sha512-ZUo1JHOPPMZDsUw1mOhhVDIvJGlsjj6T0xJ/YJtulyJwL43S9B5pxg1cHcRuTEgjaxj7B55jiqQ6r9mDrrjH9A==
 
-"@uploadthing/react@^5.3.0":
-  version "5.5.0"
-  resolved "https://registry.yarnpkg.com/@uploadthing/react/-/react-5.5.0.tgz#d9f948b12dedae01a6e20f39e5f70afa62bd5cf8"
-  integrity sha512-50VduVEqDJwEyT9GDxCAzI5V28/5tD9Rddsmwt/ciCJG8J+sg3C9oHAvhEm9MWYf3h0YVi/fgtpYLg64Y8PSAA==
+"@uploadthing/react@^6.0.0":
+  version "6.0.0"
+  resolved "https://registry.yarnpkg.com/@uploadthing/react/-/react-6.0.0.tgz#53bf28577b7288ebf0e40851e917d6c66350a8b4"
+  integrity sha512-s+6crwgoXRY9opip7S3g6iV1dIR2uMedXjlfQfMRM6GkVUmwHp8hkjtutpcnsdm37SukjubWuaAlqbUAmxYB5g==
   dependencies:
-    "@uploadthing/shared" "^5.2.1"
+    "@uploadthing/shared" "^6.0.0"
+    attr-accept "^2.2.2"
+    file-selector "^0.6.0"
     tailwind-merge "^1.13.2"
 
-"@uploadthing/shared@^5.2.1":
-  version "5.2.1"
-  resolved "https://registry.yarnpkg.com/@uploadthing/shared/-/shared-5.2.1.tgz#525f4943c98f02128f5ea56953c803078b00047e"
-  integrity sha512-ISb78wuHqU5F/7TVw/3eO0VHQdSx3qdN7I4R4knHynuWFjgJjfUsc+zAAAtpo0UZlwfjIQIv/WtSwxdlNxRPGw==
+"@uploadthing/shared@^6.0.0":
+  version "6.0.0"
+  resolved "https://registry.yarnpkg.com/@uploadthing/shared/-/shared-6.0.0.tgz#1ed565748c05b2b73c2cdfff6cc9e80465474d46"
+  integrity sha512-1utPnQxluUxShO095IGOeU3NT0nERVSlY97R8c0dcIoDc689CRX7BFrBws58PuWuAhmPp2Mjyo1e9wn3rSBjgg==
 
 "@zag-js/element-size@0.3.0":
   version "0.3.0"
@@ -15062,13 +15064,13 @@ update-browserslist-db@^1.0.9:
     escalade "^3.1.1"
     picocolors "^1.0.0"
 
-uploadthing@^5.3.0:
-  version "5.5.3"
-  resolved "https://registry.yarnpkg.com/uploadthing/-/uploadthing-5.5.3.tgz#10248023244de037618cb006848b460eb7f37328"
-  integrity sha512-ixqkQ7q5LVe2BQ99nwkdD7ChVQ1bfl/eFVotvJAUjdlXvXPWLE6gqHtNh5ijgVOIAU+7clRSvbRUHPq3AZLSbw==
+uploadthing@^6.0.1:
+  version "6.0.1"
+  resolved "https://registry.yarnpkg.com/uploadthing/-/uploadthing-6.0.1.tgz#8f2ded58f717798f0526ba24307b4781b06a9c4a"
+  integrity sha512-1gXOTAbRx/l27TLZlZCOhucOxIwGCR6H865AgYQuWQQaYmg/EvS94udcu/+cRKHvjEvDEclUE20qCDXrROTSUg==
   dependencies:
-    "@uploadthing/mime-types" "^0.2.1"
-    "@uploadthing/shared" "^5.2.1"
+    "@uploadthing/mime-types" "^0.2.2"
+    "@uploadthing/shared" "^6.0.0"
 
 upper-case-first@^2.0.2:
   version "2.0.2"

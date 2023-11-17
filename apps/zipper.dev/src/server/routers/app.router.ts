@@ -37,21 +37,22 @@ import { DEFAULT_MD } from './script.router';
 
 const defaultSelect = Prisma.validator<Prisma.AppSelect>()({
   id: true,
-  name: true,
-  slug: true,
-  description: true,
-  isPrivate: true,
-  publishedVersionHash: true,
-  playgroundVersionHash: true,
-  parentId: true,
-  submissionState: true,
   createdAt: true,
-  updatedAt: true,
-  organizationId: true,
   createdById: true,
-  requiresAuthToRun: true,
+  description: true,
+  isAutoPublished: true,
   isDataSensitive: true,
+  isPrivate: true,
+  name: true,
+  organizationId: true,
+  parentId: true,
+  playgroundVersionHash: true,
+  publishedVersionHash: true,
+  requiresAuthToRun: true,
   secretsHash: true,
+  slug: true,
+  submissionState: true,
+  updatedAt: true,
 });
 
 export const defaultCode = [
@@ -789,18 +790,25 @@ export const appRouter = createTRPCRouter({
       z.object({
         id: z.string().uuid(),
         name: z.string().min(3).max(50),
+        organizationId: z.string().uuid().optional(),
         connectToParent: z.boolean().optional().default(true),
       }),
     )
     .mutation(async ({ input, ctx }) => {
-      const { id, name, connectToParent } = input;
+      const { id, name, connectToParent, organizationId } = input;
+      if (
+        organizationId &&
+        !Object.keys(ctx.organizations || {}).includes(organizationId)
+      ) {
+        throw new Error('Invalid organizationId');
+      }
 
       const { fork, updatedFork } = await forkAppletById({
         appId: id,
         name,
         connectToParent,
         userId: ctx.userId,
-        orgId: ctx.orgId,
+        orgId: organizationId || ctx.orgId,
       });
 
       const resourceOwner = await prisma.resourceOwnerSlug.findFirstOrThrow({
@@ -838,6 +846,7 @@ export const appRouter = createTRPCRouter({
           isPrivate: z.boolean().optional(),
           requiresAuthToRun: z.boolean().optional(),
           isDataSensitive: z.boolean().optional(),
+          isAutoPublished: z.boolean().optional(),
           scripts: z
             .array(
               z.object({
@@ -932,6 +941,7 @@ export const appRouter = createTRPCRouter({
         const { hash } = await buildAndStoreApplet({
           app: { ...app, scripts: updatedScripts },
           userId: ctx.userId,
+          isPublished: app.isAutoPublished,
         });
 
         // if the code has changed, send the latest code to R2
@@ -956,13 +966,19 @@ export const appRouter = createTRPCRouter({
           });
         }
 
+        const appHashUpdateData: any = {
+          playgroundVersionHash: hash,
+        };
+
+        if (app.isAutoPublished) {
+          appHashUpdateData.publishedVersionHash = hash;
+        }
+
         const appWithUpdatedHash = await prisma.app.update({
           where: {
             id,
           },
-          data: {
-            playgroundVersionHash: hash,
-          },
+          data: appHashUpdateData,
           select: defaultSelect,
         });
 
@@ -1092,7 +1108,9 @@ async function forkApplet({
     data: {
       slug: slugify(name),
       name: name,
-      description: app.description,
+      description: `Fork of ${app.name || app.slug}${
+        app.description ? `: ${app.description}` : ''
+      }`,
       parentId: connectToParent ? app.id : undefined,
       organizationId: orgId,
       createdById: userId,

@@ -454,6 +454,7 @@ export function AppPage({
             initial="closed"
             animate={isOpen ? 'open' : 'closed'}
             variants={variants}
+            maxH="fit-content"
           >
             {app.appAuthor && <AppletAuthor author={app.appAuthor} />}
             <Stack>
@@ -492,7 +493,7 @@ export function AppPage({
           </VStack>
         ) : null}
 
-        <VStack mx="auto" align="stretch" flex={3} height="full">
+        <VStack mx="auto" align="stretch" flex={3} height="full" w="full">
           {screen === 'initial' && initialContent}
 
           <VStack alignSelf="start" width="full" height="full">

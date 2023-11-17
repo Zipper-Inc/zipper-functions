@@ -228,7 +228,7 @@ function FunctionParamInput({
       };
 
       const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        formProps.onChange(event);
+        formContext.setValue(name, event.target.files);
       };
 
       return (
