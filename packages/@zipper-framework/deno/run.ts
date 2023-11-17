@@ -2,6 +2,7 @@
 
 import './zipper.d.ts';
 import { files } from './applet/generated/index.gen.ts';
+import bootInfoCached from './applet/generated/boot-info.gen.ts';
 import { BOOT_PATH, ENV_BLOCKLIST, MAIN_PATH } from './lib/constants.ts';
 import { ZipperStorage } from './lib/storage.ts';
 import { sendLog, methods } from './lib/console.ts';
@@ -66,6 +67,7 @@ async function runApplet({ request: relayRequest }: Deno.RequestEvent) {
       appId: id,
       deploymentId: `${id}@${version}`,
       configs,
+      bootInfo: bootInfoCached,
     };
 
     return new Response(JSON.stringify(bootPayload), { status: 200 });

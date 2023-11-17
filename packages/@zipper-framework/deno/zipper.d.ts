@@ -163,6 +163,57 @@ declare namespace Zipper {
     appId: string;
     deploymentId: string;
     configs: { [path: string]: HandlerConfig };
+    bootInfo?: {
+      app: {
+        id: string;
+        slug: string;
+        name: string | null;
+        description: string | null;
+        updatedAt: Date | string | null;
+        isPrivate: boolean;
+        requiresAuthToRun: boolean;
+        organizationId: string | null;
+        isDataSensitive: boolean;
+        playgroundVersionHash: string | null;
+        publishedVersionHash: string | null;
+        editors: { userId: string; appId: string; isOwner: boolean }[];
+        appAuthor?: {
+          name: string;
+          organization: string;
+          image: string;
+          orgImage: string;
+        };
+      };
+      inputs: {
+        key: string;
+        type:
+          | 'string'
+          | 'number'
+          | 'boolean'
+          | 'date'
+          | 'array'
+          | 'object'
+          | 'any'
+          | 'enum'
+          | 'FileUrl'
+          | 'unknown';
+        optional: boolean;
+        name?: string;
+        label?: string;
+        placeholder?: string;
+        description?: string;
+        defaultValue?: Zipper.Serializable;
+        value?: Zipper.Serializable;
+        details?: Zipper.Serializable;
+      }[];
+      parsedScripts: Record<string, Record<string, any>>;
+      runnableScripts: string[];
+      metadata?: Record<string, string | undefined>;
+      entryPoint: {
+        filename: string;
+        editUrl: string;
+      };
+    };
   };
 
   /**
