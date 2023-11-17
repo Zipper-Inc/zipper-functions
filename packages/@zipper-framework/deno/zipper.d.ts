@@ -65,10 +65,16 @@ declare namespace Zipper {
    * @see Handler
    */
   export type HandlerContext = {
+    // internal comment: this is the zipper.run request URL
     /**
-     * The request object sent to this handler
+     * Metadata about the original request
      */
-    request: Request;
+    request: Relay.RequestBody['originalRequest'];
+
+    /**
+     * The request object sent to this handler by the relay middleware
+     */
+    relayRequest: Request;
 
     /**
      * An editable response object
@@ -96,13 +102,6 @@ declare namespace Zipper {
      * Auth tokens for each service the user has individually authed against
      */
     userConnectorTokens: { [service: string]: string };
-
-    // internal comment: this is the zipper.run request URL
-
-    /**
-     * URL and method of the original origin request
-     */
-    originalRequest: Relay.RequestBody['originalRequest'];
 
     /**
      * A generic stash for anything that needs to persist across handlers
