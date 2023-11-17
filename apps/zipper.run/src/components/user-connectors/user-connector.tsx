@@ -4,7 +4,6 @@ import {
   UserAuthConnector,
   UserAuthConnectorType,
 } from '@zipper/types';
-import { SiOpenai, SiZendesk } from 'react-icons/si';
 import { FiGithub } from 'react-icons/fi';
 import { BsSlack } from 'react-icons/bs';
 import { IconBaseProps, IconType } from 'react-icons';

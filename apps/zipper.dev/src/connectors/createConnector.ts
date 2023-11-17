@@ -9,6 +9,8 @@ export type Connector = {
   code?: string;
   workspaceScopes?: string[];
   userScopes?: string[];
+  scopes?: string[];
+  botPermissions?: string[];
   events?: string[];
 };
 
@@ -22,6 +24,8 @@ export const createConnector = ({
   icon,
   workspaceScopes,
   userScopes,
+  botPermissions,
+  scopes,
   events,
 }: Connector): Connector => {
   return {
@@ -32,6 +36,8 @@ export const createConnector = ({
     icon,
     workspaceScopes,
     userScopes,
+    botPermissions,
+    scopes,
     events,
   };
 };

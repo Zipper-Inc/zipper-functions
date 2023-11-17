@@ -4,6 +4,7 @@ import { slackConnector } from './slack';
 import { openaiConnector } from './openai';
 import { zendeskConnector } from './zendesk';
 import { githubAppConnector } from './github-app';
+import { discordConnector } from './discord';
 import { notionConnectorMetadata } from './notion';
 
 export const connectors: Record<ConnectorId, Connector> = {
@@ -12,6 +13,7 @@ export const connectors: Record<ConnectorId, Connector> = {
   slack: slackConnector,
   openai: openaiConnector,
   zendesk: zendeskConnector,
+  discord: discordConnector,
   notion: notionConnectorMetadata,
 };
 

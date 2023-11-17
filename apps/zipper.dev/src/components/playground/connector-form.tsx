@@ -1,4 +1,5 @@
 import { ConnectorId } from '~/connectors/createConnector';
+import DiscordConnectorForm from '~/connectors/discord';
 import GitHubConnectorForm from '~/connectors/github';
 import GitHubAppConnectorForm from '~/connectors/github-app';
 import NotionConnectorForm from '~/connectors/notion';
@@ -31,6 +32,10 @@ export function ConnectorForm({
 
   if (connectorId === 'github-app') {
     return <GitHubAppConnectorForm appId={appId} />;
+  }
+
+  if (connectorId === 'discord') {
+    return <DiscordConnectorForm appId={appId} />;
   }
 
   if (connectorId === 'notion') {
