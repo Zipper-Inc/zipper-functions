@@ -331,6 +331,7 @@ model User {
   email         String        @unique
   emailVerified DateTime?
   image         String?
+  displayName   String?
   slug          String        @unique
   accounts      Account[]
   sessions      Session[]
