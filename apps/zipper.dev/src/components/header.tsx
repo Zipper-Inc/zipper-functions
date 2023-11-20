@@ -83,7 +83,7 @@ const Header: React.FC<HeaderProps> = ({
         pt="20px"
         maxW="full"
         minW="md"
-        paddingX={10}
+        paddingX={{ base: '4', md: '10' }}
         justifyContent="center"
       >
         <HStack spacing={3}>
@@ -228,6 +228,7 @@ const Header: React.FC<HeaderProps> = ({
                     size="sm"
                     variant={'outline'}
                     color="textAlt"
+                    display={{ base: 'none', md: 'flex' }}
                     onClick={feedbackModal.onOpen}
                   >
                     Feedback
@@ -237,7 +238,12 @@ const Header: React.FC<HeaderProps> = ({
               )}
               <UserProfileButton />
             </HStack>
-            {!isTablet && <MobileMenu navRoutes={navRoutes} />}
+            {!isTablet && (
+              <MobileMenu
+                navRoutes={navRoutes}
+                feedbackModal={user ? feedbackModal : null}
+              />
+            )}
           </Flex>
         )}
       </Flex>

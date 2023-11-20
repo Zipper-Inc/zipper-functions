@@ -4,15 +4,23 @@ import {
   IconButton,
   MenuList,
   MenuItem,
+  UseDisclosureReturn,
 } from '@chakra-ui/react';
 import { useRouter } from 'next/router';
 import { FiMinimize2, FiMenu } from 'react-icons/fi';
+import { FeedbackModal } from './auth/feedback-modal';
 
 export type NavRoutes = { href: string; text: string };
 
-type MobileMenuProps = { navRoutes: NavRoutes[] };
+type MobileMenuProps = {
+  navRoutes: NavRoutes[];
+  feedbackModal: UseDisclosureReturn | null;
+};
 
-export const MobileMenu: React.FC<MobileMenuProps> = ({ navRoutes }) => {
+export const MobileMenu: React.FC<MobileMenuProps> = ({
+  navRoutes,
+  feedbackModal,
+}) => {
   const router = useRouter();
   return (
     <Menu>
@@ -39,7 +47,11 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({ navRoutes }) => {
                   </MenuItem>
                 );
               })}
+              {feedbackModal && (
+                <MenuItem onClick={feedbackModal.onOpen}>Feedback</MenuItem>
+              )}
             </MenuList>
+            {feedbackModal && <FeedbackModal {...feedbackModal} />}
           </>
         );
       }}
