@@ -15,19 +15,33 @@ import {
 } from '@chakra-ui/react';
 import { Website } from '@zipper/ui';
 import NextLink from 'next/link';
+import { useEffect, useState } from 'react';
 import { NextPageWithLayout } from './_app';
 
 const PrivacyPage: NextPageWithLayout = () => {
+  const [mode, setMode] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Ensure this code runs only on the client side
+    if (typeof window !== 'undefined') {
+      const savedMode = localStorage.getItem('theme');
+      setMode(savedMode);
+    }
+  }, []);
+
   return (
     <>
-      <Website.Navbar links={{ component: NextLink }} />
+      {mode ? (
+        <Website.Navbar mode={mode as any} links={{ component: NextLink }} />
+      ) : (
+        <></>
+      )}
       <Box
         display="flex"
         flexDir="column"
         alignItems="start"
         as="main"
         w="full"
-        bg="white"
         py={8}
         margin="0 auto"
       >
