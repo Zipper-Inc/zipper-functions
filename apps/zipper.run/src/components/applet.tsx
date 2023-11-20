@@ -44,7 +44,9 @@ import { useRouter } from 'next/router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { HiChevronDoubleLeft, HiChevronDoubleRight } from 'react-icons/hi2';
-import { fetchUserInfoFromBootInfo } from '~/utils/get-boot-info';
+import fetchBootInfo, {
+  fetchUserInfoFromBootInfo,
+} from '~/utils/get-boot-info';
 import { getConnectorsAuthUrl } from '~/utils/get-connectors-auth-url';
 import { getBootUrl, getRelayUrl } from '~/utils/get-relay-url';
 import getValidSubdomain from '~/utils/get-valid-subdomain';
@@ -569,6 +571,7 @@ export const getServerSideProps: GetServerSideProps = async ({
   if (__DEBUG__) console.log({ versionFromUrl, filename: filenameFromUrl });
 
   const { token, userId } = await getZipperAuth(req);
+  const tempUserId = req.cookies[ZIPPER_TEMP_USER_ID_COOKIE_NAME];
 
   const bootUrl = getBootUrl({ slug: subdomain });
   const rawPayload = await fetch(bootUrl, {
@@ -580,11 +583,23 @@ export const getServerSideProps: GetServerSideProps = async ({
   if (rawPayload === 'UNAUTHORIZED' || rawPayload === 'INVALID_VERSION')
     return { props: { errorCode: rawPayload } };
 
+  let bootInfo: BootInfo | BootInfoWithUserInfo | undefined;
   const bootPayload = JSON.parse(rawPayload) as Zipper.BootPayload;
-  let { bootInfo } = bootPayload as { bootInfo: BootInfo };
+  bootInfo = bootPayload.bootInfo as BootInfo;
 
-  const tempUserId = req.cookies[ZIPPER_TEMP_USER_ID_COOKIE_NAME];
-  if (
+  if (!bootInfo) {
+    // If we don't have boot info in the payload
+    // Then this is an old app and we need to just fetch it
+    const result = await fetchBootInfo({
+      subdomain,
+      tempUserId,
+      filename: filenameFromUrl,
+      token,
+    });
+
+    if (result.ok) bootInfo = result.data;
+    else return { props: { errorCode: result.error } };
+  } else if (
     bootInfo.app.requiresAuthToRun ||
     bootInfo.connectors.find((c) => c.isUserAuthRequired)
   ) {
@@ -596,7 +611,7 @@ export const getServerSideProps: GetServerSideProps = async ({
       bootInfo,
     });
 
-    if (result.ok) bootInfo = result.data as BootInfoWithUserInfo;
+    if (result.ok) bootInfo = result.data;
     else return { props: { errorCode: result.error } };
   }
 
