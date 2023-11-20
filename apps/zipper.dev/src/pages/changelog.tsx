@@ -44,7 +44,11 @@ const ChangelogPage: NextPageWithLayout = () => {
                 w="prose"
               >
                 <Text fontSize="sm" fontFamily="mono">
-                  {entry.date.split('T')[0]}
+                  {new Date(entry.date).toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric',
+                  })}
                 </Text>
                 <Markdown>{entry.content}</Markdown>
                 <details>
