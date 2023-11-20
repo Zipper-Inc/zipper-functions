@@ -171,11 +171,12 @@ export async function getExtendedUserInfo({
       ...appInfo,
       canUserEdit,
     },
-    userAuthConnectors: await getUserAuthConnectors({
-      appInfo,
-      userInfo,
-      req,
-    }),
+    userAuthConnectors:
+      (await getUserAuthConnectors({
+        appInfo,
+        userInfo,
+        req,
+      })) || [],
     userInfo: {
       ...userInfo,
       canUserEdit,
@@ -366,7 +367,7 @@ export async function getBootInfoFromPrisma({
       editors,
       organizationId,
     },
-    connectors: connectors as Connector[],
+    connectors: (connectors || []) as Connector[],
     inputs: parsedEntryPoint?.inputs || [],
     metadata: {
       h1: parsedEntryPoint?.comments?.tags.find(
