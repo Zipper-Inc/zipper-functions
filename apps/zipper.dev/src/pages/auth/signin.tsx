@@ -13,6 +13,8 @@ import {
   CardBody,
   CardHeader,
   Center,
+  Checkbox,
+  Flex,
   FormControl,
   FormLabel,
   Heading,
@@ -22,13 +24,13 @@ import {
   Stack,
   Text,
   VStack,
+  Link,
 } from '@chakra-ui/react';
 import { ZipperLogo } from '@zipper/ui';
 import { SiGithub } from 'react-icons/si';
 import { FcGoogle } from 'react-icons/fc';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useRouter } from 'next/router';
-import Link from 'next/link';
 
 export const renderIcon = (providerName: string) => {
   switch (providerName) {
@@ -48,12 +50,45 @@ export default function SignIn({
   const [email, setEmail] = useState<string>('');
   const router = useRouter();
   const { error, callbackUrl } = router.query;
+  const [agreedTermsAndPolicies, setAgreedTermsAndPolicies] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
   const callbackURIComponent = callbackUrl
     ? `&callbackUrl=${encodeURIComponent(callbackUrl as string)}`
     : '';
 
   const emailError = error === 'EmailSignin';
+
+  const onContinue = useCallback(
+    (e: any) => {
+      e.preventDefault();
+
+      const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+      if (email.length < 1 || !emailPattern.test(email)) {
+        setFormError('Invalid email address.');
+        return;
+      }
+
+      if (!agreedTermsAndPolicies) {
+        setFormError('Please agree to the Terms of Use and Privacy Policy.');
+        return;
+      }
+
+      setFormError(null);
+
+      signIn('email', {
+        email,
+        redirect: false,
+      });
+      router.push(
+        `/auth/verify-request?email=${encodeURIComponent(
+          email,
+        )}${callbackURIComponent}`,
+      );
+    },
+    [email, router, encodeURIComponent, callbackURIComponent, signIn],
+  );
 
   return (
     <>
@@ -93,8 +128,8 @@ export default function SignIn({
                         gap={4}
                         variant="ghost"
                         border="1px"
-                        borderColor="fg.200"
                         borderRadius="none"
+                        borderColor="fg.200"
                         onClick={() => signIn(provider.id)}
                       >
                         <Icon>{renderIcon(provider.name)}</Icon>
@@ -146,34 +181,43 @@ export default function SignIn({
                       variant="solid"
                       colorScheme="purple"
                       rounded="none"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        signIn('email', {
-                          email,
-                          redirect: false,
-                        });
-                        router.push(
-                          `/auth/verify-request?email=${encodeURIComponent(
-                            email,
-                          )}${callbackURIComponent}`,
-                        );
-                      }}
+                      onClick={onContinue}
                     >
                       Continue
                     </Button>
-                    <Text fontSize="xs" color="fg.800" mt={4}>
-                      By continuing, you agree to our{' '}
-                      <Text
-                        as="span"
-                        fontSize="xs"
-                        color="fg.800"
-                        textDecoration="underline"
-                      >
-                        <Link href="https://zipper.dev/terms">
-                          terms and conditions
+                    {formError && (
+                      <Text fontSize="xs" color="red.500" pt={2}>
+                        {formError}
+                      </Text>
+                    )}
+                    <Flex align="center" gap={2} py={2}>
+                      <Checkbox
+                        checked={agreedTermsAndPolicies}
+                        onChange={() =>
+                          setAgreedTermsAndPolicies(!agreedTermsAndPolicies)
+                        }
+                        colorScheme="purple"
+                      />
+                      <Text fontSize="xs">
+                        I agree to the{' '}
+                        <Link
+                          href="https://zipper.dev/terms"
+                          textDecor="underline"
+                          color="primary"
+                        >
+                          Terms of Use
+                        </Link>{' '}
+                        and{' '}
+                        <Link
+                          href="https://zipper.dev/privacy"
+                          target="_blank"
+                          textDecor="underline"
+                          color="primary"
+                        >
+                          Privacy Policy.
                         </Link>
                       </Text>
-                    </Text>
+                    </Flex>
                   </form>
                 </Stack>
               </Stack>
