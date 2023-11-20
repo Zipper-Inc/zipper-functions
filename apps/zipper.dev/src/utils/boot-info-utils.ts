@@ -7,10 +7,9 @@ import {
   UserInfoForBoot,
 } from '@zipper/types';
 import { getZipperDotDevUrl, ZIPPER_TEMP_USER_ID_HEADER } from '@zipper/utils';
-import { get } from 'http';
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '~/server/prisma';
-import { canUserEdit } from '~/server/routers/app.router';
+import { canUserEdit as canUserEditFn } from '~/server/routers/app.router';
 import { trackEvent } from '~/utils/api-analytics';
 import {
   AppletAuthorReturnType,
@@ -104,7 +103,7 @@ export async function getCanUserEdit({
     {},
   );
 
-  return canUserEdit(appInfo, {
+  return canUserEditFn(appInfo, {
     req,
     userId: userInfo.userId,
     orgId: undefined,
@@ -164,7 +163,13 @@ export async function getExtendedUserInfo({
     return bootInfoError('Missing user info', 400);
   }
 
+  const canUserEdit = await getCanUserEdit({ appInfo, userInfo, req });
+
   return {
+    appInfo: {
+      ...appInfo,
+      canUserEdit,
+    },
     userAuthConnectors: await getUserAuthConnectors({
       appInfo,
       userInfo,
@@ -172,7 +177,7 @@ export async function getExtendedUserInfo({
     }),
     userInfo: {
       ...userInfo,
-      canUserEdit: await getCanUserEdit({ appInfo, userInfo, req }),
+      canUserEdit,
     },
   };
 }

@@ -24,6 +24,7 @@ type UserAuthConnector = {
 
 export type RunAppContextType = {
   appInfo: AppInfo;
+  canUserEdit?: boolean;
   formMethods: any;
   inputParams?: InputParam[];
   isRunning: boolean;
@@ -40,6 +41,7 @@ export type RunAppContextType = {
 
 export const RunAppContext = createContext<RunAppContextType>({
   appInfo: {} as AppInfo,
+  canUserEdit: false,
   formMethods: {},
   inputParams: undefined,
   isRunning: false,
@@ -363,7 +365,6 @@ export function RunAppProvider({
           updatedAt,
           playgroundVersionHash,
           publishedVersionHash,
-          canUserEdit,
           isDataSensitive,
         },
         formMethods,

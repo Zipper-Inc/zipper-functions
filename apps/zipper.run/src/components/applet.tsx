@@ -13,6 +13,7 @@ import { motion } from 'framer-motion';
 import {
   AppInfo,
   BootInfo,
+  BootInfoWithUserInfo,
   EntryPointInfo,
   InputParams,
   UserAuthConnector,
@@ -43,9 +44,7 @@ import { useRouter } from 'next/router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { HiChevronDoubleLeft, HiChevronDoubleRight } from 'react-icons/hi2';
-import fetchBootInfo, {
-  fetchUserInfoFromBootInfo,
-} from '~/utils/get-boot-info';
+import { fetchUserInfoFromBootInfo } from '~/utils/get-boot-info';
 import { getConnectorsAuthUrl } from '~/utils/get-connectors-auth-url';
 import { getBootUrl, getRelayUrl } from '~/utils/get-relay-url';
 import getValidSubdomain from '~/utils/get-valid-subdomain';
@@ -594,7 +593,7 @@ export const getServerSideProps: GetServerSideProps = async ({
       bootInfo,
     });
 
-    if (result.ok) bootInfo = result.data;
+    if (result.ok) bootInfo = result.data as BootInfoWithUserInfo;
     else return { props: { errorCode: result.error } };
   }
 
@@ -603,8 +602,9 @@ export const getServerSideProps: GetServerSideProps = async ({
     inputs: inputParams,
     entryPoint,
     runnableScripts,
-    metadata,
   } = bootInfo || {};
+
+  const metadata = bootInfo.metadata || {};
 
   const headers: Record<string, string> = {
     Authorization: `Bearer ${token || ''}`,
@@ -735,7 +735,8 @@ export const getServerSideProps: GetServerSideProps = async ({
       inputs: inputParams,
       version,
       defaultValues: isRunUrl ? urlValues : defaultValues,
-      userAuthConnectors,
+      userAuthConnectors:
+        (bootInfo as BootInfoWithUserInfo).userAuthConnectors || [],
       entryPoint,
       runnableScripts,
       metadata,
@@ -749,7 +750,8 @@ export const getServerSideProps: GetServerSideProps = async ({
   };
 
   const { githubAuthUrl, slackAuthUrl } = getConnectorsAuthUrl({
-    userAuthConnectors,
+    userAuthConnectors:
+      (bootInfo as BootInfoWithUserInfo).userAuthConnectors || [],
     userId: userId || (req.cookies[ZIPPER_TEMP_USER_ID_COOKIE_NAME] as string),
     appId: app.id,
     host: req.headers.host,

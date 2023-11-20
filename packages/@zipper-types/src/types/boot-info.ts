@@ -20,6 +20,7 @@ export type AppInfo = {
     image: string;
     orgImage: string;
   };
+  canUserEdit?: boolean;
 };
 
 export type InputParams = InputParam[];
@@ -39,6 +40,7 @@ export type BootInfo = {
 };
 
 export type UserInfoForBoot = {
+  appInfo: AppInfo & { canUserEdit: boolean };
   userInfo: Zipper.UserInfo;
   userAuthConnectors: UserAuthConnector[];
 };
