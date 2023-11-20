@@ -1,7 +1,7 @@
 import { RunInfoResult } from '@zipper/types';
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '~/server/prisma';
-import { getBootInfoWithUserFromRequest } from '../../bootInfo/[slug]';
+import { getBootInfoWithUserInfo } from '~/utils/boot-info-utils';
 
 export default async function handler(
   req: NextApiRequest,
@@ -12,7 +12,7 @@ export default async function handler(
     return res.status(500).send({ ok: false, error: 'Invalid run id' });
   }
 
-  const bootInfo = await getBootInfoWithUserFromRequest(req, res);
+  const bootInfo = await getBootInfoWithUserInfo(req, res);
   if (!bootInfo)
     return res.status(500).send({ ok: false, error: 'Invalid boot info' });
 

@@ -4,7 +4,7 @@ import { generateIndexForFramework } from '@zipper/utils';
 import { prisma } from '~/server/prisma';
 import { storeVersionESZip } from '~/server/utils/r2.utils';
 import { getLogger } from './app-console';
-import { collectBootInfo } from './boot-info-utils';
+import { getBootInfoFromPrisma } from './boot-info-utils';
 import { BuildCache } from './eszip-build-cache';
 import {
   applyTsxHack,
@@ -42,7 +42,7 @@ async function getFrameworkFileContent(
         filenames: scripts.map((s) => s.filename),
       });
     case BOOT_INFO_PATH:
-      const bootInfo = await collectBootInfo({ slugFromUrl: slug });
+      const bootInfo = await getBootInfoFromPrisma({ slugFromUrl: slug });
       if (bootInfo instanceof Error) throw bootInfo;
       return `export default ${JSON.stringify(bootInfo)};`;
     default:

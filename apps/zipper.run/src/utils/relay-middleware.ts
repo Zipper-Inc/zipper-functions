@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { NextRequest } from 'next/server';
 import * as jose from 'jose';
 import addAppRun from './add-app-run';
-import getBootInfo from './get-boot-info';
+import { fetchBootInfo } from './get-boot-info';
 import getValidSubdomain from './get-valid-subdomain';
 import { getFilenameAndVersionFromPath } from './get-values-from-url';
 import {
@@ -119,14 +119,14 @@ export async function relayRequest(
     filename = `${filename}.ts`;
   }
 
-  const bootInfoResult = await getBootInfo({
+  const bootInfoResult = await fetchBootInfo({
     subdomain,
     tempUserId,
     filename,
     token,
   });
 
-  if (__DEBUG__) console.log('getBootInfo', { result: bootInfoResult });
+  if (__DEBUG__) console.log('fetchBootInfo', { result: bootInfoResult });
 
   if (!bootInfoResult.ok) {
     const errorStatus = bootInfoResult.status || 500;

@@ -1,12 +1,31 @@
 import { Script } from '@prisma/client';
-import { BootInfo } from '@zipper/types';
-import { getZipperDotDevUrl } from '@zipper/utils';
+import {
+  AppInfo,
+  BootInfo,
+  BootInfoWithUserInfo,
+  UserAuthConnector,
+  UserInfoForBoot,
+} from '@zipper/types';
+import { getZipperDotDevUrl, ZIPPER_TEMP_USER_ID_HEADER } from '@zipper/utils';
+import { get } from 'http';
+import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '~/server/prisma';
+import { canUserEdit } from '~/server/routers/app.router';
 import { trackEvent } from '~/utils/api-analytics';
+import {
+  AppletAuthorReturnType,
+  getUserInfo,
+  UserInfoReturnType,
+} from '~/utils/get-user-info';
 import { parseCodeSerializable } from '~/utils/parse-code';
-import { AppletAuthorReturnType } from '~/utils/get-user-info';
 
-const bootInfoError = (msg: string, status: number) => {
+type BootInfoError = Error & { status?: number };
+
+const EMPTY_USER_INFO: UserInfoReturnType = {
+  organizations: [],
+};
+
+const bootInfoError = (msg: string, status: number): BootInfoError => {
   const error: Error & { status?: number } = new Error(msg);
   error.status = status;
   return error;
@@ -56,13 +75,158 @@ export async function assertRunLimit({
   }
 }
 
-export async function collectBootInfo({
+export async function getUserInfoFromRequest(
+  req: NextApiRequest,
+): Promise<UserInfoReturnType> {
+  const token = req.headers.authorization?.replace('Bearer', '').trim();
+  const slugFromUrl = req.query.slug as string;
+  return token && token.length > 0
+    ? getUserInfo(token, slugFromUrl)
+    : EMPTY_USER_INFO;
+}
+
+export async function getCanUserEdit({
+  appInfo,
+  userInfo,
+  req,
+}: {
+  appInfo: AppInfo;
+  userInfo: UserInfoReturnType;
+  req: NextApiRequest;
+}) {
+  const organizations = userInfo.organizations?.reduce<Record<string, string>>(
+    (orgs, mem) => {
+      return {
+        ...orgs,
+        [mem.organization.id]: mem.role,
+      };
+    },
+    {},
+  );
+
+  return canUserEdit(appInfo, {
+    req,
+    userId: userInfo.userId,
+    orgId: undefined,
+    organizations: organizations,
+    session: undefined,
+  });
+}
+
+export async function getUserAuthConnectors({
+  appInfo,
+  userInfo,
+  req,
+}: {
+  appInfo: AppInfo;
+  userInfo: UserInfoReturnType;
+  req: NextApiRequest;
+}) {
+  return prisma.appConnector.findMany({
+    where: { appId: appInfo.id, isUserAuthRequired: true },
+    include: {
+      appConnectorUserAuths: {
+        where: {
+          userIdOrTempId:
+            userInfo.userId ||
+            (req.headers[ZIPPER_TEMP_USER_ID_HEADER] as string) ||
+            '',
+        },
+      },
+    },
+  }) as Promise<UserAuthConnector[]>;
+}
+
+export async function getExtendedUserInfo({
+  appInfo: appInfoPassedIn,
+  userInfo: userInfoPassedIn,
+  req,
+}: {
+  appInfo?: AppInfo;
+  userInfo?: UserInfoReturnType;
+  req: NextApiRequest;
+}): Promise<UserInfoForBoot | BootInfoError> {
+  let appInfo: AppInfo | undefined;
+  try {
+    appInfo = appInfoPassedIn || JSON.parse(req.body).appInfo;
+  } catch (e) {}
+
+  if (!appInfo) {
+    return bootInfoError('Missing app info', 400);
+  }
+
+  let userInfo: UserInfoReturnType | undefined;
+  try {
+    userInfo = userInfoPassedIn || (await getUserInfoFromRequest(req));
+  } catch (e) {}
+
+  if (!userInfo) {
+    return bootInfoError('Missing user info', 400);
+  }
+
+  return {
+    userAuthConnectors: await getUserAuthConnectors({
+      appInfo,
+      userInfo,
+      req,
+    }),
+    userInfo: {
+      ...userInfo,
+      canUserEdit: await getCanUserEdit({ appInfo, userInfo, req }),
+    },
+  };
+}
+
+export async function getBootInfoWithUserInfo(
+  req: NextApiRequest,
+  res: NextApiResponse,
+): Promise<BootInfoWithUserInfo | void> {
+  const slugFromUrl = req.query.slug as string;
+  const body = JSON.parse(req.body);
+
+  const [bootInfo, userInfo] = await Promise.all([
+    getBootInfoFromPrisma({ slugFromUrl, filename: body.filename }),
+    getUserInfoFromRequest(req),
+  ]);
+
+  if (!bootInfo || bootInfo instanceof Error) {
+    res.status(bootInfo?.status || 500).send(
+      JSON.stringify({
+        ok: false,
+        error: bootInfo?.message || 'Missing boot info',
+      }),
+    );
+    return;
+  }
+  const extendedUserInfo = await getExtendedUserInfo({
+    appInfo: bootInfo.app,
+    userInfo,
+    req,
+  });
+
+  if (extendedUserInfo instanceof Error) {
+    res.status(extendedUserInfo?.status || 500).send(
+      JSON.stringify({
+        ok: false,
+        error: extendedUserInfo?.message || 'Missing user info',
+      }),
+    );
+    return;
+  }
+
+  return {
+    ...extendedUserInfo,
+    ...bootInfo,
+  };
+}
+
+export async function getBootInfoFromPrisma({
   slugFromUrl,
   filename,
 }: {
   slugFromUrl: string;
   filename?: string;
-}) {
+}): Promise<BootInfo | BootInfoError> {
   const appFound = await prisma.app.findUnique({
     where: { slug: slugFromUrl },
     include: {
@@ -161,7 +325,7 @@ export async function collectBootInfo({
   appAuthor.name = authorName?.name || '';
   appAuthor.image = authorName?.image || '';
 
-  const bootInfo: BootInfo = {
+  return {
     app: {
       id,
       name,
@@ -195,6 +359,4 @@ export async function collectBootInfo({
       }/src/${entryPoint.filename}`,
     },
   };
-
-  return bootInfo;
 }

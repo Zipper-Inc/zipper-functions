@@ -38,18 +38,22 @@ export type BootInfo = {
   entryPoint: EntryPointInfo;
 };
 
-export type BootInfoWithUser = BootInfo & {
+export type UserInfoForBoot = {
   userInfo: Zipper.UserInfo;
   userAuthConnectors: UserAuthConnector[];
 };
 
-export type BootInfoResult<WithUser extends boolean = false> =
+export type BootInfoWithUserInfo = BootInfo & UserInfoForBoot;
+
+export type BootInfoResult<WithUserInfo extends boolean = false> =
   | {
       ok: true;
-      data: WithUser extends false ? BootInfo : BootInfoWithUser;
+      data: WithUserInfo extends false ? BootInfo : BootInfoWithUserInfo;
     }
   | {
       ok: false;
       status: number;
       error: string;
     };
+
+export type BootInfoWithUserResult = BootInfoResult<true>;

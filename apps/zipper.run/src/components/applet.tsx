@@ -12,6 +12,7 @@ import {
 import { motion } from 'framer-motion';
 import {
   AppInfo,
+  BootInfo,
   EntryPointInfo,
   InputParams,
   UserAuthConnector,
@@ -42,7 +43,9 @@ import { useRouter } from 'next/router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { HiChevronDoubleLeft, HiChevronDoubleRight } from 'react-icons/hi2';
-import getBootInfo from '~/utils/get-boot-info';
+import fetchBootInfo, {
+  fetchUserInfoFromBootInfo,
+} from '~/utils/get-boot-info';
 import { getConnectorsAuthUrl } from '~/utils/get-connectors-auth-url';
 import { getBootUrl, getRelayUrl } from '~/utils/get-relay-url';
 import getValidSubdomain from '~/utils/get-valid-subdomain';
@@ -568,58 +571,60 @@ export const getServerSideProps: GetServerSideProps = async ({
 
   const { token, userId } = await getZipperAuth(req);
 
-  // grab the app if it exists
-  const bootInfoResult = await getBootInfo({
-    subdomain,
-    tempUserId: req.cookies[ZIPPER_TEMP_USER_ID_COOKIE_NAME],
-    filename: filenameFromUrl,
-    token,
-  });
-
-  if (__DEBUG__) console.log('getBootInfo', { result: bootInfoResult });
-  if (!bootInfoResult.ok) {
-    return { props: { errorCode: bootInfoResult.error } };
-  }
-
-  const {
-    app,
-    inputs: inputParams,
-    userAuthConnectors,
-    entryPoint,
-    runnableScripts,
-  } = bootInfoResult.data;
-
-  const metadata = bootInfoResult.data.metadata || {};
-
-  const headers: Record<string, string> = {
-    Authorization: `Bearer ${token || ''}`,
-    [ZIPPER_TEMP_USER_ID_HEADER]:
-      req.cookies[ZIPPER_TEMP_USER_ID_COOKIE_NAME] || '',
-  };
-
-  const version = versionFromUrl || 'latest';
-  const filename = filenameFromUrl || 'main.ts';
-
-  // boot it up
-  // todo cache this
-  const bootUrl = getBootUrl({ slug: bootInfoResult.data.app.slug });
-  const payload = await fetch(bootUrl, {
+  const bootUrl = getBootUrl({ slug: subdomain });
+  const rawPayload = await fetch(bootUrl, {
     headers: {
       Authorization: `Bearer ${token || ''}`,
     },
   }).then((r) => r.text());
 
-  if (payload === 'UNAUTHORIZED' || payload === 'INVALID_VERSION')
-    return { props: { errorCode: payload } };
+  if (rawPayload === 'UNAUTHORIZED' || rawPayload === 'INVALID_VERSION')
+    return { props: { errorCode: rawPayload } };
 
-  const { configs: handlerConfigs } = JSON.parse(payload) as Zipper.BootPayload;
+  const bootPayload = JSON.parse(rawPayload) as Zipper.BootPayload;
+  let { bootInfo } = bootPayload as { bootInfo: BootInfo };
+
+  const tempUserId = req.cookies[ZIPPER_TEMP_USER_ID_COOKIE_NAME];
+  if (bootInfo.app.requiresAuthToRun) {
+    const result = await fetchUserInfoFromBootInfo({
+      subdomain,
+      tempUserId,
+      filename: filenameFromUrl,
+      token,
+      bootInfo,
+    });
+
+    if (result.ok) bootInfo = result.data;
+    else return { props: { errorCode: result.error } };
+  }
+
+  const {
+    app,
+    inputs: inputParams,
+    entryPoint,
+    runnableScripts,
+    metadata,
+  } = bootInfo || {};
+
+  const headers: Record<string, string> = {
+    Authorization: `Bearer ${token || ''}`,
+    [ZIPPER_TEMP_USER_ID_HEADER]: tempUserId || '',
+  };
+
+  const version = versionFromUrl || 'latest';
+  const filename = filenameFromUrl || 'main.ts';
+
+  const { configs: handlerConfigs } = bootPayload;
+
   const config = handlerConfigs && handlerConfigs[filename];
 
-  const urlValues = getInputValuesFromUrl({
-    inputs: inputParams,
-    query,
-    url: req.url,
-  });
+  const urlValues = inputParams
+    ? getInputValuesFromUrl({
+        inputs: inputParams,
+        query,
+        url: req.url,
+      })
+    : {};
 
   const isAutoRun = config?.run && !isRunUrl && isInitialServerSideProps;
   const isRunPathMissing = isRunUrl && !query.versionAndFilename;
