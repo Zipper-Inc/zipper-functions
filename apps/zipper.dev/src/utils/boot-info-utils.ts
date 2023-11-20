@@ -1,10 +1,11 @@
-import { Script } from '@prisma/client';
+import { App, AppEditor, Script } from '@prisma/client';
 import {
   AppInfo,
   BootInfo,
   BootInfoWithUserInfo,
   UserAuthConnector,
   UserInfoForBoot,
+  Connector,
 } from '@zipper/types';
 import { getZipperDotDevUrl, ZIPPER_TEMP_USER_ID_HEADER } from '@zipper/utils';
 import type { NextApiRequest, NextApiResponse } from 'next';
@@ -220,9 +221,56 @@ export async function getBootInfoWithUserInfo(
   }
 
   return {
-    ...extendedUserInfo,
     ...bootInfo,
+    ...extendedUserInfo,
   };
+}
+
+export async function getResourceOwnerSlug({
+  organizationId,
+  createdById,
+}: App) {
+  return prisma.resourceOwnerSlug.findFirst({
+    where: {
+      resourceOwnerId: organizationId || createdById,
+    },
+  });
+}
+
+export async function getAppAuthor({
+  editors,
+  organizationId,
+}: App & { editors: AppEditor[] }) {
+  const author = editors.find((editor) => editor.isOwner === true);
+  const appAuthor: AppletAuthorReturnType = {
+    name: '',
+    organization: '',
+    image: '',
+    orgImage: '',
+  };
+
+  const authorName = await prisma.user.findUnique({
+    where: {
+      id: author?.userId,
+    },
+    include: {
+      organizationMemberships: true,
+    },
+  });
+
+  if (organizationId) {
+    const authorOrg = await prisma.organization.findUnique({
+      where: {
+        id: organizationId,
+      },
+    });
+    appAuthor.organization = authorOrg?.name || '';
+  }
+
+  appAuthor.name = authorName?.name || '';
+  appAuthor.image = authorName?.image || '';
+
+  return appAuthor;
 }
 
 export async function getBootInfoFromPrisma({
@@ -235,6 +283,7 @@ export async function getBootInfoFromPrisma({
   const appFound = await prisma.app.findUnique({
     where: { slug: slugFromUrl },
     include: {
+      connectors: true,
       editors: true,
       scripts: true,
       scriptMain: true,
@@ -244,12 +293,6 @@ export async function getBootInfoFromPrisma({
   if (!appFound) {
     return bootInfoError('App not found', 404);
   }
-
-  const resourceOwner = await prisma.resourceOwnerSlug.findFirst({
-    where: {
-      resourceOwnerId: appFound.organizationId || appFound.createdById,
-    },
-  });
 
   const {
     id,
@@ -266,6 +309,7 @@ export async function getBootInfoFromPrisma({
     isDataSensitive,
     editors,
     organizationId,
+    connectors,
   } = appFound;
 
   assertRunLimit({ appId: id, slug });
@@ -301,34 +345,10 @@ export async function getBootInfoFromPrisma({
 
   const parsedEntryPoint = parsedScripts[entryPoint.filename];
 
-  const author = editors.find((editor) => editor.isOwner === true);
-  const appAuthor: AppletAuthorReturnType = {
-    name: '',
-    organization: '',
-    image: '',
-    orgImage: '',
-  };
-
-  const authorName = await prisma.user.findUnique({
-    where: {
-      id: author?.userId,
-    },
-    include: {
-      organizationMemberships: true,
-    },
-  });
-
-  if (organizationId) {
-    const authorOrg = await prisma.organization.findUnique({
-      where: {
-        id: organizationId,
-      },
-    });
-    appAuthor.organization = authorOrg?.name || '';
-  }
-
-  appAuthor.name = authorName?.name || '';
-  appAuthor.image = authorName?.image || '';
+  const [resourceOwner, appAuthor] = await Promise.all([
+    getResourceOwnerSlug(appFound),
+    getAppAuthor(appFound),
+  ]);
 
   return {
     app: {
@@ -346,6 +366,7 @@ export async function getBootInfoFromPrisma({
       editors,
       organizationId,
     },
+    connectors: connectors as Connector[],
     inputs: parsedEntryPoint?.inputs || [],
     metadata: {
       h1: parsedEntryPoint?.comments?.tags.find(

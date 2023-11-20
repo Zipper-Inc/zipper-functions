@@ -1,5 +1,5 @@
 import { InputParam } from './input-params';
-import { UserAuthConnector } from './user-auth-connector';
+import { Connector, UserAuthConnector } from './user-auth-connector';
 
 export type AppInfo = {
   id: string;
@@ -37,6 +37,7 @@ export type BootInfo = {
   runnableScripts: string[];
   metadata?: Record<string, string | undefined>;
   entryPoint: EntryPointInfo;
+  connectors: Connector[];
 };
 
 export type UserInfoForBoot = {

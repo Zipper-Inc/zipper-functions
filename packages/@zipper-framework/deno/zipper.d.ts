@@ -183,7 +183,16 @@ declare namespace Zipper {
           image: string;
           orgImage: string;
         };
+        canUserEdit: boolean;
       };
+      connectors: {
+        type: string;
+        appId: string;
+        isUserAuthRequired: boolean;
+        clientId?: string;
+        userScopes: string[];
+        workspaceScopes: string[];
+      }[];
       inputs: {
         key: string;
         type:

@@ -584,7 +584,10 @@ export const getServerSideProps: GetServerSideProps = async ({
   let { bootInfo } = bootPayload as { bootInfo: BootInfo };
 
   const tempUserId = req.cookies[ZIPPER_TEMP_USER_ID_COOKIE_NAME];
-  if (bootInfo.app.requiresAuthToRun) {
+  if (
+    bootInfo.app.requiresAuthToRun ||
+    bootInfo.connectors.find((c) => c.isUserAuthRequired)
+  ) {
     const result = await fetchUserInfoFromBootInfo({
       subdomain,
       tempUserId,
