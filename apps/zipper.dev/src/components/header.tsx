@@ -144,7 +144,10 @@ const Header: React.FC<HeaderProps> = ({
                         }}
                       />
                       {showNav && (
-                        <HStack spacing={1}>
+                        <HStack
+                          spacing={1}
+                          display={{ base: 'none', sm: 'flex' }}
+                        >
                           <Icon as={PiHouseSimple} />
                           <Text fontSize="sm">Dashboard</Text>
                         </HStack>
