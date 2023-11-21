@@ -1,4 +1,4 @@
-import { kv } from '@vercel/kv';
+import { createClient } from '@vercel/kv';
 import { BootInfo } from '../../../@zipper-types/src/types/boot-info';
 import { formatDeploymentId } from './deployment-id';
 
@@ -12,6 +12,11 @@ export type DeploymentParams = {
 };
 
 type BootPayload = Zipper.BootPayload & { bootInfo: BootInfo };
+
+const kv = createClient({
+  url: process.env.BOOT_PAYLOAD_KV_REST_API_URL as string,
+  token: process.env.BOOT_PAYLOAD_KV_REST_API_TOKEN as string,
+});
 
 const makeDeploymentId = ({
   deploymentId: deploymentIdPassedIn = '',
