@@ -31,13 +31,15 @@ export type EntryPointInfo = {
 };
 
 export type BootInfo = {
-  app: AppInfo;
+  app: AppInfo & { canUserEdit?: undefined };
   inputs: InputParams;
   parsedScripts: Record<string, Record<string, any>>;
   runnableScripts: string[];
   metadata?: Record<string, string | undefined>;
   entryPoint: EntryPointInfo;
   connectors: Connector[];
+  userInfo?: never;
+  userAuthConnectors?: never;
 };
 
 export type UserInfoForBoot = {
@@ -46,7 +48,11 @@ export type UserInfoForBoot = {
   userAuthConnectors: UserAuthConnector[];
 };
 
-export type BootInfoWithUserInfo = BootInfo & UserInfoForBoot;
+export type BootInfoWithUserInfo = Omit<
+  BootInfo,
+  'userInfo' | 'userAuthConnectors'
+> &
+  UserInfoForBoot;
 
 export type BootInfoResult<WithUserInfo extends boolean = false> =
   | {

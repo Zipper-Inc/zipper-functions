@@ -1,20 +1,23 @@
 import { kv } from '@vercel/kv';
+import { BootInfo } from '../../../@zipper-types/src/types/boot-info';
 import { formatDeploymentId } from './deployment-id';
 
 const DEPLOYMENT_FOR_SUBDOMAIN = 'DEPLOYMENT-FOR-SUBDOMAIN';
 const BOOT_PAYLOAD = 'BOOT-PAYLOAD';
 
-type DeploymentParams = {
-  deploymentId?: string;
-  appId?: string;
-  version?: string;
+export type DeploymentParams = {
+  deploymentId: string;
+  appId: string;
+  version: string;
 };
+
+type BootPayload = Zipper.BootPayload & { bootInfo: BootInfo };
 
 const makeDeploymentId = ({
   deploymentId: deploymentIdPassedIn = '',
   appId = '',
   version = '',
-}: DeploymentParams) =>
+}: Partial<DeploymentParams>) =>
   deploymentIdPassedIn ||
   formatDeploymentId({
     appId: appId,
@@ -24,17 +27,16 @@ const makeDeploymentId = ({
 export const cacheDeployment = {
   key: (subdomain: string) => `${DEPLOYMENT_FOR_SUBDOMAIN}[${subdomain}]`,
 
-  get: async (subdomain: string) => {
-    const deploymentId = (await kv.get(
-      cacheDeployment.key(subdomain),
-    )) as string;
+  get: async (subdomain: string): Promise<DeploymentParams> => {
+    const deploymentId =
+      (await kv.get<string>(cacheDeployment.key(subdomain))) || '';
     const [appId, version] = deploymentId.split('@');
-    return { deploymentId, appId, version };
+    return { deploymentId, appId: appId || '', version: version || '' };
   },
 
   set: async (
     subdomain: string,
-    { deploymentId, appId = '', version = '' }: DeploymentParams,
+    { deploymentId, appId = '', version = '' }: Partial<DeploymentParams>,
   ) => {
     return kv.set(
       `${DEPLOYMENT_FOR_SUBDOMAIN}[${subdomain}]`,
@@ -44,14 +46,19 @@ export const cacheDeployment = {
 };
 
 export const cacheBootPayload = {
-  key: ({ deploymentId, appId = '', version = '' }: DeploymentParams) =>
+  key: ({
+    deploymentId,
+    appId = '',
+    version = '',
+  }: Partial<DeploymentParams>) =>
     `${BOOT_PAYLOAD}[${makeDeploymentId({ deploymentId, appId, version })}]`,
 
-  get: async (args: DeploymentParams) => {
+  get: async (args: Partial<DeploymentParams>) => {
     const key = cacheBootPayload.key(args);
-    return kv.get(key) as Promise<Zipper.BootPayload>;
+    return kv.get<BootPayload>(key);
   },
-  set: async (args: DeploymentParams, payload: Zipper.BootPayload) => {
+
+  set: async (args: Partial<DeploymentParams>, payload: BootPayload) => {
     const key = cacheBootPayload.key(args);
     return kv.set(key, payload);
   },

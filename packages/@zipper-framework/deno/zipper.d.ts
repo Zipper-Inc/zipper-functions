@@ -183,7 +183,7 @@ declare namespace Zipper {
           image: string;
           orgImage: string;
         };
-        canUserEdit: boolean;
+        canUserEdit?: boolean;
       };
       connectors: {
         type: string;
