@@ -148,7 +148,7 @@ export function Gallery({
             </Button>
           )}
           {isPublicGallery && (
-            <Accordion pt="10" allowMultiple allowToggle>
+            <Accordion pt="10" allowMultiple>
               <AccordionItem>
                 <AccordionButton>
                   <Box
