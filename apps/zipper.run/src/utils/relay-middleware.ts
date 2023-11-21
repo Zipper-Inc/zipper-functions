@@ -187,6 +187,9 @@ export async function relayRequest(
     }
   }
 
+  const body = await parseBody(request);
+  const queryParameters = Object.fromEntries(relayUrl.searchParams.entries());
+
   const relayBody: Zipper.Relay.RequestBody = {
     appInfo: {
       id: app.id,
@@ -195,14 +198,13 @@ export async function relayRequest(
       url: `https://${getAppLink(app.slug)}`,
       connectorsWithUserAuth: Object.keys(userConnectorTokens),
     },
-    inputs:
-      request.method === 'GET'
-        ? Object.fromEntries(relayUrl.searchParams.entries())
-        : await parseBody(request),
+    inputs: request.method === 'GET' ? queryParameters : body,
     originalRequest: {
       url: request.nextUrl.toString(),
       method: request.method,
       headers: Object.fromEntries(request.headers.entries()),
+      body: body,
+      queryParameters,
     },
     runId,
     userId: userInfo.userId || tempUserId || '',

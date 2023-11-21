@@ -13,13 +13,13 @@ const PORT = 8888;
 /**
  * Run the applet with the given RequestEvent
  */
-async function runApplet({ request }: Deno.RequestEvent) {
+async function runApplet({ request: relayRequest }: Deno.RequestEvent) {
   let body;
   let error;
 
   // Parse the body
   try {
-    body = (await request.json()) as Zipper.Relay.RequestBody;
+    body = (await relayRequest.json()) as Zipper.Relay.RequestBody;
   } catch (e) {
     error = e;
   }
@@ -45,7 +45,7 @@ async function runApplet({ request }: Deno.RequestEvent) {
 
   // Handle booting seperately
   // This way, we can deploy without running Applet code
-  if (new URL(request.url).pathname === `/${BOOT_PATH}`) {
+  if (new URL(relayRequest.url).pathname === `/${BOOT_PATH}`) {
     const { id, slug, version } = appInfo;
 
     const configs = Object.entries(files).reduce(
@@ -167,10 +167,10 @@ async function runApplet({ request }: Deno.RequestEvent) {
       userInfo,
       appInfo,
       runId,
-      request,
+      request: originalRequest,
       response,
       userConnectorTokens,
-      originalRequest,
+      relayRequest: relayRequest,
       stash,
     };
 
