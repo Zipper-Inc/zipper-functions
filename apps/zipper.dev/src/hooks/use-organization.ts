@@ -44,7 +44,11 @@ export const useOrganization = (props?: Props) => {
     | (OrganizationMembership & {
         user: Omit<
           User,
-          'emailVerified' | 'createdAt' | 'updatedAt' | 'deletedAt'
+          | 'emailVerified'
+          | 'createdAt'
+          | 'updatedAt'
+          | 'deletedAt'
+          | 'displayName'
         >;
         destroy: () => Promise<boolean>;
       })[]

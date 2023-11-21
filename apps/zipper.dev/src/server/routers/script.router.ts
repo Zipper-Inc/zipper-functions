@@ -58,6 +58,8 @@ export const scriptRouter = createTRPCRouter({
             'zendesk',
             'github-app',
             'postgres',
+            'discord',
+            'notion',
           ])
           .optional(),
       }),

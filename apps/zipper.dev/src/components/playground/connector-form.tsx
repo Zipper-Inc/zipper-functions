@@ -1,6 +1,8 @@
 import { ConnectorId } from '~/connectors/createConnector';
+import DiscordConnectorForm from '~/connectors/discord';
 import GitHubConnectorForm from '~/connectors/github';
 import GitHubAppConnectorForm from '~/connectors/github-app';
+import NotionConnectorForm from '~/connectors/notion';
 import OpenAIConnectorForm from '~/connectors/openai';
 import PostgresConnectorForm from '~/connectors/postgres';
 import SlackConnectorForm from '~/connectors/slack';
@@ -36,5 +38,14 @@ export function ConnectorForm({
   if (connectorId === 'postgres') {
     return <PostgresConnectorForm appId={appId} />;
   }
+
+  if (connectorId === 'discord') {
+    return <DiscordConnectorForm appId={appId} />;
+  }
+
+  if (connectorId === 'notion') {
+    return <NotionConnectorForm appId={appId} />;
+  }
+
   return <></>;
 }

@@ -4,7 +4,9 @@ export type ConnectorType =
   | 'slack'
   | 'openai'
   | 'zendesk'
-  | 'postgres';
+  | 'postgres'
+  | 'discord'
+  | 'notion';
 
 export type UserAuthConnectorType = 'github' | 'slack';
 

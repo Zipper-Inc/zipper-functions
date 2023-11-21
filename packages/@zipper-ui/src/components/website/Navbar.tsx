@@ -28,20 +28,23 @@ type Props = {
 
 const LINKS = {
   [SiteType.Home]: [
-    { label: 'Features', href: '/home', external: false },
+    { label: 'Gallery', href: '/gallery', external: false },
     { label: 'About', href: '/about', external: false },
+    { label: 'Changelog', href: '/changelog', external: false },
     { label: 'Docs', href: '/docs', external: true },
     { label: 'Blog', href: '/blog', external: false },
   ],
   [SiteType.Docs]: [
+    { label: 'Home', href: '/home', external: false },
+    { label: 'Gallery', href: '/gallery', external: false },
     { label: 'Docs', href: '/docs', external: true },
-    { label: 'Features', href: '/home', external: false },
     { label: 'About', href: '/about', external: false },
     { label: 'Blog', href: '/blog', external: false },
   ],
   [SiteType.Blog]: [
+    { label: 'Home', href: '/home', external: false },
     { label: 'Blog', href: '/blog', external: false },
-    { label: 'Features', href: '/home', external: false },
+    { label: 'Gallery', href: '/gallery', external: false },
     { label: 'About', href: '/about', external: false },
     { label: 'Docs', href: '/docs', external: true },
   ],

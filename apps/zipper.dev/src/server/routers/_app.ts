@@ -20,6 +20,8 @@ import { githubAppConnectorRouter } from './githubAppConnector.router';
 import { zipperSlackIntegrationRouter } from './zipperSlackIntegration.router';
 import { appLogRouter } from './appLog.router';
 import { createTRPCRouter, publicProcedure } from '../root';
+import { discordConnectorRouter } from './discordConnector.router';
+import { notionConnectorRouter } from './notion.connector.router';
 
 export const trpcRouter = createTRPCRouter({
   healthz: publicProcedure.query(() => 'yay!'),
@@ -32,8 +34,10 @@ export const trpcRouter = createTRPCRouter({
   slackConnector: slackConnectorRouter,
   zipperSlackIntegration: zipperSlackIntegrationRouter,
   githubConnector: githubConnectorRouter,
+  discordConnector: discordConnectorRouter,
   githubAppConnector: githubAppConnectorRouter,
   resourceOwnerSlug: resourceOwnerSlugRouter,
+  notionConnector: notionConnectorRouter,
   secret: secretRouter,
   script: scriptRouter,
   schedule: scheduleRouter,

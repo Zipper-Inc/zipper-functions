@@ -5,6 +5,8 @@ import { openaiConnector } from './openai';
 import { zendeskConnector } from './zendesk';
 import { githubAppConnector } from './github-app';
 import { postgresConnector } from './postgres';
+import { discordConnector } from './discord';
+import { notionConnectorMetadata } from './notion';
 
 export const connectors: Record<ConnectorId, Connector> = {
   github: githubConnector,
@@ -13,6 +15,8 @@ export const connectors: Record<ConnectorId, Connector> = {
   openai: openaiConnector,
   zendesk: zendeskConnector,
   postgres: postgresConnector,
+  discord: discordConnector,
+  notion: notionConnectorMetadata,
 };
 
 export default connectors;
