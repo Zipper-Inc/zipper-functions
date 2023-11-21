@@ -18,4 +18,5 @@ export * from '../src/utils/settings';
 export * from '../src/utils/url';
 export * from '../src/utils/user-agent';
 export * from '../src/utils/uuid';
+export * from '../src/utils/zipper-run-cache';
 export * from '../src/constants';

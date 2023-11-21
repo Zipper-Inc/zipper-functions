@@ -12,6 +12,9 @@ import { appSubmissionState, ResourceOwnerType } from '@zipper/types';
 import {
   getInputsFromFormData,
   ZIPPER_TEMP_USER_ID_COOKIE_NAME,
+  formatDeploymentId,
+  cacheDeployment,
+  cacheBootPayload,
 } from '@zipper/utils';
 import { randomUUID } from 'crypto';
 import JSZip from 'jszip';
@@ -279,6 +282,8 @@ export const appRouter = createTRPCRouter({
             usedAI: !!aiCode,
           },
         });
+
+        cacheDeployment.set(app.slug, { appId: app.id, version: hash });
 
         return { ...app, scriptMain, resourceOwner };
       },
@@ -711,6 +716,11 @@ export const appRouter = createTRPCRouter({
           );
         }
 
+        cacheBootPayload.set(
+          { deploymentId: bootPayload.deploymentId },
+          bootPayload,
+        );
+
         return bootPayload;
       } catch (e: any) {
         return { ok: false, error: e.toString(), configs: {} };
@@ -993,6 +1003,14 @@ export const appRouter = createTRPCRouter({
           select: defaultSelect,
         });
 
+        const {
+          slug: subdomain,
+          id: appId,
+          playgroundVersionHash: version,
+        } = appWithUpdatedHash;
+
+        cacheDeployment.set(subdomain, { appId, version: version as string });
+
         return { ...appWithUpdatedHash, resourceOwner };
       }
 
@@ -1055,6 +1073,8 @@ export const appRouter = createTRPCRouter({
           appletId: app.id,
         },
       });
+
+      cacheDeployment.set(app.slug, { appId: app.id, version: hash });
 
       return prisma.app.update({
         where: {
