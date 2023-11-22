@@ -21,14 +21,14 @@ const handler: NextApiHandler = async (req, res) => {
   const version = getAppVersionFromHash(result.publishedVersionHash) || '';
   const deploymentId = formatDeploymentId({ appId, version });
 
-  return {
+  return res.status(200).json({
     ok: true,
     data: {
       appId,
       version,
       deploymentId,
     },
-  };
+  });
 };
 
 export default handler;
