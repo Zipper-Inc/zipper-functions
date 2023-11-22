@@ -29,7 +29,7 @@ export type EntryPointInfo = {
 };
 
 export type BootInfo = {
-  app: AppInfo & { version: string; canUserEdit?: undefined };
+  app: AppInfo;
   inputs: InputParams;
   parsedScripts: Record<string, Record<string, any>>;
   runnableScripts: string[];
@@ -41,7 +41,7 @@ export type BootInfo = {
 };
 
 export type UserInfoForBoot = {
-  appInfo: AppInfo & { version: string; canUserEdit: boolean };
+  app: AppInfo & { canUserEdit: boolean };
   userInfo: Zipper.UserInfo;
   userAuthConnectors: UserAuthConnector[];
 };

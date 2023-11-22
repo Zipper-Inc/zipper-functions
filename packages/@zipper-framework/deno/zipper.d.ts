@@ -167,7 +167,6 @@ declare namespace Zipper {
       app: {
         id: string;
         slug: string;
-        version: string;
         name: string | null;
         description: string | null;
         updatedAt: Date | string | null;
@@ -182,7 +181,7 @@ declare namespace Zipper {
           image: string;
           orgImage: string;
         };
-        canUserEdit?: boolean;
+        canUserEdit?: boolean | undefined;
       };
       connectors: {
         type: string;

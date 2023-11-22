@@ -167,7 +167,7 @@ export async function getExtendedUserInfo({
   const canUserEdit = await getCanUserEdit({ appInfo, userInfo, req });
 
   return {
-    appInfo: {
+    app: {
       ...appInfo,
       canUserEdit,
     },
