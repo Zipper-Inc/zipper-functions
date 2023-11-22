@@ -217,7 +217,6 @@ export async function fetchBootPayloadCachedWithUserInfoOrThrow(
 export async function fetchBootInfoCachedWithUserOrThrow(
   params: BootInfoParams & { bootInfo?: BootInfo },
 ): Promise<BootInfoWithUserInfo> {
-  console.log('fetchBootInfoCachedWithUserOrThrow()', '>', params);
   return fetchBootPayloadCachedWithUserInfoOrThrow(params).then(
     (r) => r.bootInfo,
   );

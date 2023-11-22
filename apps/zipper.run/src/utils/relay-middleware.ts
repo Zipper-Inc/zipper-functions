@@ -126,7 +126,6 @@ export async function relayRequest(
   const patchedUrl = getPatchedUrl(request);
   const relayUrl = !bootOnly ? patchedUrl : new URL('/__BOOT__', patchedUrl);
 
-  console.log('relayUrl', relayUrl.toString());
   const deployment = await fetchDeploymentCachedOrThrow(subdomain).catch(noop);
   if (!deployment || !deployment.appId) return { status: 404 };
 
@@ -165,7 +164,6 @@ export async function relayRequest(
 
   let bootInfo;
   try {
-    console.log('relayUrl', relayUrl.toString());
     bootInfo = await fetchBootInfoCachedWithUserOrThrow({
       subdomain,
       tempUserId,

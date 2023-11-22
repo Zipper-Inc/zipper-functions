@@ -572,7 +572,6 @@ export const getServerSideProps: GetServerSideProps = async ({
 
   let bootPayload;
   try {
-    console.log('applet > fetchBootPayloadCachedWithUserInfoOrThrow()');
     bootPayload = await fetchBootPayloadCachedWithUserInfoOrThrow({
       subdomain,
       version: versionFromUrl,
