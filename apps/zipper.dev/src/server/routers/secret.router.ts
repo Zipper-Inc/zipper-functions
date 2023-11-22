@@ -85,7 +85,7 @@ export const secretRouter = createTRPCRouter({
     .input(
       z.object({
         appId: z.string(),
-        key: z.string(),
+        key: z.string().or(z.array(z.string())),
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -94,13 +94,42 @@ export const secretRouter = createTRPCRouter({
         appId: input.appId,
       });
 
-      return prisma.secret.findFirst({
+      // If the key is a single string, perform a simple findFirst operation
+      if (typeof input.key === 'string') {
+        return prisma.secret.findFirst({
+          where: {
+            appId: input.appId,
+            key: input.key,
+          },
+          select: defaultSelect,
+        });
+      }
+
+      // If the key is an array of strings, count the matching records
+      const count = await prisma.secret.count({
         where: {
           appId: input.appId,
-          key: input.key,
+          key: {
+            in: input.key,
+          },
         },
-        select: defaultSelect,
       });
+
+      // If count matches the length of input keys, return all matching records
+      if (count === input.key.length) {
+        return prisma.secret.findMany({
+          where: {
+            appId: input.appId,
+            key: {
+              in: input.key,
+            },
+          },
+          select: defaultSelect,
+        });
+      }
+
+      // Return null or an appropriate response if not all keys are found
+      return null;
     }),
   all: publicProcedure
     .input(

@@ -7,8 +7,10 @@ import {
   FormControl,
   FormLabel,
   Heading,
+  HStack,
   Input,
   InputProps,
+  Spacer,
   Text,
   VStack,
 } from '@chakra-ui/react';
@@ -16,6 +18,8 @@ import { FiDatabase } from 'react-icons/fi';
 import { trpc } from '~/utils/trpc';
 import { code } from './constants';
 import { useForm } from 'react-hook-form';
+import { useMemo } from 'react';
+import { HiOutlineTrash } from 'react-icons/hi';
 
 // configure the Slack connectorAl
 export const postgresConnector = createConnector({
@@ -31,6 +35,26 @@ function PostgresConnectorForm({ appId }: { appId: string }) {
     return null;
   }
 
+  const existingSecret = trpc.secret.get.useQuery(
+    {
+      appId,
+      key: [
+        'POSTGRES_HOST',
+        'POSTGRES_USER',
+        'POSTGRES_DATABASE',
+        'POSTGRES_PORT',
+        'POSTGRES_PASSWORD',
+      ],
+    },
+    { enabled: !!appId },
+  );
+
+  /* ------------------- Memos ------------------ */
+  const existingInstallation = useMemo(
+    () => !!existingSecret.data || false,
+    [existingSecret.data],
+  );
+
   return (
     <Box px="6" w="full">
       <Box mb="5">
@@ -41,7 +65,27 @@ function PostgresConnectorForm({ appId }: { appId: string }) {
           <CardBody color="fg.600">
             <VStack align="start" w="full" overflow="visible">
               <Heading size="sm">Configuration</Heading>
-              <Form appId={appId} />
+              {existingInstallation ? (
+                <HStack w="full" pt="2" spacing="1">
+                  <FormLabel m="0">Installed!</FormLabel>
+                  <Spacer />
+
+                  <Button
+                    variant="unstyled"
+                    color="red.600"
+                    onClick={() => {
+                      console.log('uninstall');
+                    }}
+                  >
+                    <HStack>
+                      <HiOutlineTrash />
+                      <Text>Uninstall</Text>
+                    </HStack>
+                  </Button>
+                </HStack>
+              ) : (
+                <Form appId={appId} />
+              )}
             </VStack>
           </CardBody>
         </Card>
@@ -52,6 +96,7 @@ function PostgresConnectorForm({ appId }: { appId: string }) {
     </Box>
   );
 }
+
 type PostgresInputsNames =
   | 'POSTGRES_HOST'
   | 'POSTGRES_PORT'
@@ -63,6 +108,7 @@ type PostgresInputs = {
   name: PostgresInputsNames;
 } & InputProps;
 type PostgresForm = Record<PostgresInputs['name'], string>;
+
 const inputs: PostgresInputs[] = [
   { formLabel: 'Host', name: 'POSTGRES_HOST' },
   { formLabel: 'Port', name: 'POSTGRES_PORT' },
