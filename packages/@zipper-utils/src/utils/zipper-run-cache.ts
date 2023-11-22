@@ -1,4 +1,4 @@
-import { createClient } from '@vercel/kv';
+import { createClient, VercelKV } from '@vercel/kv';
 import { BootInfo } from '../../../@zipper-types/src/types/boot-info';
 import { formatDeploymentId } from './deployment-id';
 
@@ -13,10 +13,18 @@ export type DeploymentParams = {
 
 type BootPayload = Zipper.BootPayload & { bootInfo: BootInfo };
 
-const kv = createClient({
-  url: process.env.BOOT_PAYLOAD_KV_REST_API_URL as string,
-  token: process.env.BOOT_PAYLOAD_KV_REST_API_TOKEN as string,
-});
+let client: VercelKV;
+
+const getClient = () => {
+  if (!client) {
+    client = createClient({
+      url: process.env.BOOT_PAYLOAD_KV_REST_API_URL as string,
+      token: process.env.BOOT_PAYLOAD_KV_REST_API_TOKEN as string,
+      automaticDeserialization: true,
+    });
+  }
+  return client;
+};
 
 const makeDeploymentId = ({
   deploymentId: deploymentIdPassedIn = '',
@@ -32,9 +40,11 @@ const makeDeploymentId = ({
 export const cacheDeployment = {
   key: (subdomain: string) => `${DEPLOYMENT_FOR_SUBDOMAIN}[${subdomain}]`,
 
-  get: async (subdomain: string): Promise<DeploymentParams> => {
-    const deploymentId =
-      (await kv.get<string>(cacheDeployment.key(subdomain))) || '';
+  get: async (subdomain: string): Promise<DeploymentParams | void> => {
+    const kv = getClient();
+    const deploymentId = await kv.get<string>(cacheDeployment.key(subdomain));
+    if (!deploymentId) return;
+
     const [appId, version] = deploymentId.split('@');
     return { deploymentId, appId: appId || '', version: version || '' };
   },
@@ -43,6 +53,7 @@ export const cacheDeployment = {
     subdomain: string,
     { deploymentId, appId = '', version = '' }: Partial<DeploymentParams>,
   ) => {
+    const kv = getClient();
     return kv.set(
       `${DEPLOYMENT_FOR_SUBDOMAIN}[${subdomain}]`,
       makeDeploymentId({ deploymentId, appId, version }),
@@ -59,11 +70,13 @@ export const cacheBootPayload = {
     `${BOOT_PAYLOAD}[${makeDeploymentId({ deploymentId, appId, version })}]`,
 
   get: async (args: Partial<DeploymentParams>) => {
+    const kv = getClient();
     const key = cacheBootPayload.key(args);
     return kv.get<BootPayload>(key);
   },
 
   set: async (args: Partial<DeploymentParams>, payload: BootPayload) => {
+    const kv = getClient();
     const key = cacheBootPayload.key(args);
     return kv.set(key, payload);
   },
