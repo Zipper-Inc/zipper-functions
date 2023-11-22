@@ -1,0 +1,51 @@
+---
+title: 'Introducing Zipper Raycast extension'
+date: 2023/11/20
+description: Run any applet directly from Raycast using Zipper extension.
+tag: Raycast, Zipper
+author: Ariel Conti
+summary: |
+  We've built a new extension for Raycast that allows you to run any Zipper applet directly from Raycast. It's a great way to quickly test and debug your Zipper applets so you can increase your productivity even more.
+---
+
+Raycast is a well-known productivity tool for macOS that allows you to quickly run commands and scripts. It's a great tool for developers to quickly run commands and scripts. We've built a new extension for Raycast that allows you to run any Zipper applet directly from Raycast. It's a great way to quickly test and debug your Zipper applets so you can increase your productivity even more.
+
+We are going to show you how to install the extension and how to use it to run your Zipper applets.
+
+### The requirements
+
+To use the Zipper extension for Raycast you'll need to have [Raycast](https://raycast.com/) previously installed on your Mac.
+If you already have Raycast installed you can simply navigate to the store on Raycast and search for Zipper. You'll see the Zipper extension and you can install it from there.
+Otherwise, you can grab it from [here](https://www.raycast.com/raycast/zipper).
+
+### Key Features
+
+- Run Any Applet: Easily execute any applet from Zipper.dev with a simple command. Whether you're working on a complex data processing task or managing a waitlist, the extension has got you covered.
+- Automatic Fetching: The extension automatically fetches and displays the necessary inputs for each applet, reducing the time and effort needed to get things up and running.
+- Direct Results in Raycast: Results are displayed within Raycast, making for a seamless and integrated experience. This feature is particularly useful for quickly viewing outcomes and making informed decisions on the fly.
+
+### Usage
+
+Once you've installed the extension, you can run any applet by typing `zipper` or `run applet` in Raycast. You should type the name of the applet you want to run, let's try it with the [Simple HTTP Client](https://zipper.dev/zipper-inc/simple-http-client) we showed you in the previous [post](https://zipper.dev/blog/simple-http-client).
+
+![Zipper initial screen](/initial-screen.png)
+
+<br />
+After you select the applet you want to run, you'll see the list of scripts available
+to run in that applet. In this case, we have two scripts: `curl` and `main`. Let's
+try running the `main` script.
+
+![Zipper main script](/scripts-list.png)
+
+After selecting the script we want to run, we'll see the inputs that the script needs to run. Note that if the script doesn't need any inputs, it will run automatically.
+I've already filled the inputs with the values I want to use, let's try to get some information from the PokeAPI.
+
+![Zipper inputs](/inputs-list.png)
+
+Then we can just hit cmd+enter or click on the submit button to run the script and see the results 🎉, easy right?
+
+![Zipper results](/results.png)
+
+### Feedback
+
+We are currently working on adding more features to the extension, but we would love to hear your feedback. If you have any suggestions or ideas, please let us know by sending us an [email](mailto:contact@zipper.works)
