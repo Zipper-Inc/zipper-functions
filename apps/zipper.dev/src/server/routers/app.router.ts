@@ -8,11 +8,10 @@ import {
   ScriptMain,
 } from '@prisma/client';
 import { TRPCError } from '@trpc/server';
-import { appSubmissionState, ResourceOwnerType } from '@zipper/types';
+import { appSubmissionState, BootInfo, ResourceOwnerType } from '@zipper/types';
 import {
   getInputsFromFormData,
   ZIPPER_TEMP_USER_ID_COOKIE_NAME,
-  formatDeploymentId,
   cacheDeployment,
   cacheBootPayload,
 } from '@zipper/utils';
@@ -283,7 +282,7 @@ export const appRouter = createTRPCRouter({
           },
         });
 
-        cacheDeployment.set(app.slug, { appId: app.id, version: hash });
+        await cacheDeployment.set(app.slug, { appId: app.id, version: hash });
 
         return { ...app, scriptMain, resourceOwner };
       },
@@ -695,9 +694,8 @@ export const appRouter = createTRPCRouter({
       console.log('Boot version: ', version);
 
       try {
-        const bootPayload: Zipper.BootPayload = await fetch(
-          getBootUrl(app.slug, version),
-          {
+        const bootPayload: Zipper.BootPayload & { bootInfo: BootInfo } =
+          await fetch(getBootUrl(app.slug, version), {
             method: 'POST',
             body: '{}',
             headers: {
@@ -705,8 +703,7 @@ export const appRouter = createTRPCRouter({
               'x-zipper-host': `${app.slug}.zipper.run`,
               ...ZIPPER_PLAYGROUND_USER_AGENT_HEADER,
             },
-          },
-        ).then((r) => r.json());
+          }).then((r) => r.json());
 
         if (!bootPayload.ok || bootPayload.version !== version) {
           throw new Error(
@@ -716,7 +713,7 @@ export const appRouter = createTRPCRouter({
           );
         }
 
-        cacheBootPayload.set(
+        await cacheBootPayload.set(
           { deploymentId: bootPayload.deploymentId },
           bootPayload,
         );
@@ -1009,7 +1006,10 @@ export const appRouter = createTRPCRouter({
           playgroundVersionHash: version,
         } = appWithUpdatedHash;
 
-        cacheDeployment.set(subdomain, { appId, version: version as string });
+        await cacheDeployment.set(subdomain, {
+          appId,
+          version: version as string,
+        });
 
         return { ...appWithUpdatedHash, resourceOwner };
       }
@@ -1074,7 +1074,7 @@ export const appRouter = createTRPCRouter({
         },
       });
 
-      cacheDeployment.set(app.slug, { appId: app.id, version: hash });
+      await cacheDeployment.set(app.slug, { appId: app.id, version: hash });
 
       return prisma.app.update({
         where: {
