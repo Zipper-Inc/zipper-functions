@@ -167,7 +167,7 @@ async function runApplet({ request: relayRequest }: Deno.RequestEvent) {
     };
     const context: Zipper.HandlerContext = {
       userInfo,
-      appInfo,
+      appInfo: body.appInfo,
       runId,
       request: originalRequest,
       response,

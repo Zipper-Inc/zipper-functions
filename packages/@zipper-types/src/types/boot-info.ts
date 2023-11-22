@@ -11,8 +11,6 @@ export type AppInfo = {
   requiresAuthToRun: boolean;
   organizationId: string | null;
   isDataSensitive: boolean;
-  playgroundVersionHash: string | null;
-  publishedVersionHash: string | null;
   editors: { userId: string; appId: string; isOwner: boolean }[];
   appAuthor?: {
     name: string;
@@ -31,7 +29,7 @@ export type EntryPointInfo = {
 };
 
 export type BootInfo = {
-  app: AppInfo & { canUserEdit?: undefined };
+  app: AppInfo & { version: string; canUserEdit?: undefined };
   inputs: InputParams;
   parsedScripts: Record<string, Record<string, any>>;
   runnableScripts: string[];
@@ -43,7 +41,7 @@ export type BootInfo = {
 };
 
 export type UserInfoForBoot = {
-  appInfo: AppInfo & { canUserEdit: boolean };
+  appInfo: AppInfo & { version: string; canUserEdit: boolean };
   userInfo: Zipper.UserInfo;
   userAuthConnectors: UserAuthConnector[];
 };

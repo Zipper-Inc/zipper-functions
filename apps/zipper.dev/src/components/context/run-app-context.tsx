@@ -22,8 +22,13 @@ type UserAuthConnector = {
   appConnectorUserAuths: AppConnectorUserAuth[];
 };
 
+type AppInfoWithHashes = AppInfo & {
+  playgroundVersionHash: string | null;
+  publishedVersionHash: string | null;
+};
+
 export type RunAppContextType = {
-  appInfo: AppInfo;
+  appInfo: AppInfoWithHashes;
   canUserEdit?: boolean;
   formMethods: any;
   inputParams?: InputParam[];
@@ -40,7 +45,7 @@ export type RunAppContextType = {
 };
 
 export const RunAppContext = createContext<RunAppContextType>({
-  appInfo: {} as AppInfo,
+  appInfo: {} as AppInfoWithHashes,
   canUserEdit: false,
   formMethods: {},
   inputParams: undefined,
@@ -97,8 +102,12 @@ export function RunAppProvider({
     updatedAt,
     playgroundVersionHash,
     publishedVersionHash,
-    canUserEdit,
     isDataSensitive,
+    isPrivate,
+    requiresAuthToRun,
+    editors,
+    createdById,
+    organizationId,
   } = app;
   const formMethods = useForm();
   const [isRunning, setIsRunning] = useState(false);
@@ -366,6 +375,10 @@ export function RunAppProvider({
           playgroundVersionHash,
           publishedVersionHash,
           isDataSensitive,
+          isPrivate,
+          requiresAuthToRun,
+          editors,
+          organizationId,
         },
         formMethods,
         isRunning,

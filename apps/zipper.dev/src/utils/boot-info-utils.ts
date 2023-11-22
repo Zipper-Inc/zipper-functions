@@ -230,7 +230,7 @@ export async function getBootInfoWithUserInfo(
 export async function getResourceOwnerSlug({
   organizationId,
   createdById,
-}: App) {
+}: Pick<App, 'organizationId' | 'createdById'>) {
   return prisma.resourceOwnerSlug.findFirst({
     where: {
       resourceOwnerId: organizationId || createdById,
@@ -241,7 +241,7 @@ export async function getResourceOwnerSlug({
 export async function getAppAuthor({
   editors,
   organizationId,
-}: App & { editors: AppEditor[] }) {
+}: Pick<App, 'organizationId'> & { editors: AppEditor[] }) {
   const author = editors.find((editor) => editor.isOwner === true);
   const appAuthor: AppletAuthorReturnType = {
     name: '',
@@ -282,13 +282,22 @@ export async function getBootInfoFromPrisma({
   filename?: string;
 }): Promise<BootInfo | BootInfoError> {
   const appFound = await prisma.app.findUnique({
-    where: { slug: slugFromUrl },
-    include: {
-      connectors: true,
-      editors: true,
-      scripts: true,
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      description: true,
+      updatedAt: true,
       scriptMain: true,
+      scripts: true,
+      isPrivate: true,
+      requiresAuthToRun: true,
+      isDataSensitive: true,
+      editors: true,
+      organizationId: true,
+      connectors: true,
     },
+    where: { slug: slugFromUrl },
   });
 
   if (!appFound) {
@@ -301,8 +310,6 @@ export async function getBootInfoFromPrisma({
     slug,
     description,
     updatedAt,
-    publishedVersionHash,
-    playgroundVersionHash,
     scriptMain,
     scripts,
     isPrivate,
@@ -357,8 +364,6 @@ export async function getBootInfoFromPrisma({
       name,
       slug,
       description,
-      playgroundVersionHash,
-      publishedVersionHash,
       updatedAt,
       appAuthor,
       isDataSensitive,

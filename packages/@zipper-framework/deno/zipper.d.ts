@@ -91,7 +91,7 @@ declare namespace Zipper {
     /**
      * Meta info about the applet itself
      */
-    appInfo: AppInfo;
+    appInfo: RelayAppInfo;
 
     /**
      * The ID for this particular run
@@ -167,6 +167,7 @@ declare namespace Zipper {
       app: {
         id: string;
         slug: string;
+        version: string;
         name: string | null;
         description: string | null;
         updatedAt: Date | string | null;
@@ -174,8 +175,6 @@ declare namespace Zipper {
         requiresAuthToRun: boolean;
         organizationId: string | null;
         isDataSensitive: boolean;
-        playgroundVersionHash: string | null;
-        publishedVersionHash: string | null;
         editors: { userId: string; appId: string; isOwner: boolean }[];
         appAuthor?: {
           name: string;
@@ -451,12 +450,12 @@ declare namespace Zipper {
    * Meta info about the app itself
    * @category Runtime
    */
-  export type AppInfo = {
+  export type RelayAppInfo = {
     id: string;
     slug: string;
     version: string;
-    url: string;
-    connectorsWithUserAuth: string[];
+    url?: string;
+    connectorsWithUserAuth?: string[];
   };
 
   /**
@@ -471,7 +470,7 @@ declare namespace Zipper {
      */
     export type RequestBody = {
       error?: string;
-      appInfo: AppInfo;
+      appInfo: RelayAppInfo;
       runId: string;
       inputs: Inputs;
       userInfo?: UserInfo;
