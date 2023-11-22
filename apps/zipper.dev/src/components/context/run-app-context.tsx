@@ -1,8 +1,20 @@
 import { AppConnectorUserAuth } from '@prisma/client';
 import { generateReactHelpers } from '@uploadthing/react/hooks';
-import { AppInfo, InputParam, UserAuthConnectorType } from '@zipper/types';
+import {
+  AppInfo,
+  BootInfo,
+  InputParam,
+  UserAuthConnectorType,
+} from '@zipper/types';
 import { getInputsFromFormData, safeJSONParse, uuid } from '@zipper/utils';
-import { createContext, useContext, useEffect, useRef, useState } from 'react';
+import {
+  createContext,
+  MutableRefObject,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import { useForm } from 'react-hook-form';
 import { OurFileRouter } from '~/pages/api/uploadthing';
 import { AppQueryOutput } from '~/types/trpc';
@@ -40,7 +52,10 @@ export type RunAppContextType = {
     shouldSave?: boolean;
     isCurrentScriptEntryPoint?: boolean;
   }) => Promise<string | undefined>;
-  boot: (params?: { shouldSave?: boolean }) => Promise<void>;
+  boot: (params?: {
+    shouldSave?: boolean;
+  }) => Promise<Zipper.BootPayload & { bootInfo: BootInfo }>;
+  bootPromise: MutableRefObject<Promise<any>>;
   configs: Zipper.BootPayload['configs'];
 };
 
@@ -53,6 +68,7 @@ export const RunAppContext = createContext<RunAppContextType>({
   results: {},
   userAuthConnectors: [],
   setResults: noop,
+  bootPromise: { current: Promise.resolve() },
   run: () => Promise.resolve(''),
   boot: () => Promise.resolve(),
   configs: {},
@@ -117,6 +133,7 @@ export function RunAppProvider({
   const { useUploadThing } = generateReactHelpers<OurFileRouter>();
   const { isUploading, startUpload } = useUploadThing('imageUploader');
   const logTimersToCleanUp = useRef<number[]>([]);
+  const bootPromise = useRef<Promise<any>>(Promise.resolve());
 
   const cleanUpLogTimers = () => {
     logTimersToCleanUp.current.forEach((id) => window.clearTimeout(id));
@@ -226,29 +243,40 @@ export function RunAppProvider({
   };
 
   const boot = async ({ shouldSave = false } = {}) => {
-    try {
-      const hash = shouldSave
-        ? await saveAppBeforeRun()
-        : app.playgroundVersionHash;
+    const promise = new Promise<Zipper.BootPayload & { bootInfo: BootInfo }>(
+      async (resolve, reject) => {
+        try {
+          const hash = shouldSave
+            ? await saveAppBeforeRun()
+            : app.playgroundVersionHash;
 
-      const version = getAppVersionFromHash(hash);
-      if (!version) throw new Error('No version found');
+          const version = getAppVersionFromHash(hash);
+          if (!version) throw new Error('No version found');
 
-      const oneSecondAgo = Date.now() - 1 * 1000;
-      startPollingUpdateLogs({ version, fromTimestamp: oneSecondAgo });
+          const oneSecondAgo = Date.now() - 1 * 1000;
+          startPollingUpdateLogs({ version, fromTimestamp: oneSecondAgo });
 
-      const { configs } = await bootAppMutation.mutateAsync({
-        appId: id,
-      });
+          const bootPayload = await bootAppMutation.mutateAsync({
+            appId: id,
+          });
 
-      if (configs) setConfigs(configs);
+          if (!bootPayload.ok) throw new Error('Boot failed');
 
-      // stop any polling and do one last update
-      cleanUpLogTimers();
-      updateLogs({ version, fromTimestamp: oneSecondAgo });
-    } catch (e) {
-      return;
-    }
+          if (bootPayload.configs) setConfigs(bootPayload.configs);
+
+          // stop any polling and do one last update
+          cleanUpLogTimers();
+          updateLogs({ version, fromTimestamp: oneSecondAgo });
+          resolve(bootPayload as any);
+        } catch (e) {
+          reject(e);
+        } finally {
+          bootPromise.current = Promise.resolve();
+        }
+      },
+    );
+    bootPromise.current = promise;
+    return promise;
   };
 
   const run: RunAppContextType['run'] = async ({ shouldSave = false } = {}) => {
@@ -389,6 +417,7 @@ export function RunAppProvider({
         setResults,
         run,
         boot,
+        bootPromise,
         configs,
       }}
     >

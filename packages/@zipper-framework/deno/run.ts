@@ -17,7 +17,7 @@ const PORT = 8888;
 async function runApplet({ request: relayRequest }: Deno.RequestEvent) {
   const deploymentId = relayRequest.headers.get('x-zipper-deployment-id');
   const slug = relayRequest.headers.get('x-zipper-subdomain') as string;
-  const [appId, version] = deploymentId?.split('@') as [string, string];
+  let [appId, version] = deploymentId?.split('@') as [string, string];
 
   // Handle booting seperately
   // This way, we can deploy without running Applet code
@@ -64,6 +64,9 @@ async function runApplet({ request: relayRequest }: Deno.RequestEvent) {
       { status: 400 },
     );
   }
+
+  appId = body.appInfo.id || appId;
+  version = body.appInfo.version || version;
 
   // Clean up env object
   const env = Deno.env.toObject();

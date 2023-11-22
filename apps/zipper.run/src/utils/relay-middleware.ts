@@ -123,9 +123,12 @@ export async function relayRequest(
     tempUserId ||
     request.cookies.get(ZIPPER_TEMP_USER_ID_COOKIE_NAME)?.value.toString();
 
-  const relayUrl = getPatchedUrl(request);
+  const patchedUrl = getPatchedUrl(request);
+  const relayUrl = !bootOnly ? patchedUrl : new URL('/__BOOT__', patchedUrl);
+
+  console.log('relayUrl', relayUrl.toString());
   const deployment = await fetchDeploymentCachedOrThrow(subdomain).catch(noop);
-  if (!deployment?.appId) return { status: 404 };
+  if (!deployment || !deployment.appId) return { status: 404 };
 
   const { appId, version: latestVersion } = deployment;
   const version = versionPassedIn || latestVersion;
@@ -140,7 +143,7 @@ export async function relayRequest(
   });
 
   if (bootOnly) {
-    const response = await fetch(new URL('/__BOOT__', relayUrl), {
+    const response = await fetch(relayUrl, {
       method: 'POST',
       headers: await getPatchedHeaders(
         request,
@@ -162,11 +165,13 @@ export async function relayRequest(
 
   let bootInfo;
   try {
+    console.log('relayUrl', relayUrl.toString());
     bootInfo = await fetchBootInfoCachedWithUserOrThrow({
       subdomain,
       tempUserId,
       filename,
       token,
+      deploymentId,
     });
   } catch (e: any) {
     const errorStatus = e?.status || 500;

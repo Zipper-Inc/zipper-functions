@@ -9,10 +9,8 @@ import {
   useDisclosure,
   VStack,
 } from '@chakra-ui/react';
-import { motion } from 'framer-motion';
 import {
   AppInfo,
-  BootInfo,
   BootInfoWithUserInfo,
   EntryPointInfo,
   InputParams,
@@ -37,6 +35,7 @@ import {
   ZIPPER_TEMP_USER_ID_HEADER,
 } from '@zipper/utils';
 import { deleteCookie } from 'cookies-next';
+import { motion } from 'framer-motion';
 import { GetServerSideProps } from 'next';
 import Error from 'next/error';
 import Head from 'next/head';
@@ -44,11 +43,10 @@ import { useRouter } from 'next/router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { HiChevronDoubleLeft, HiChevronDoubleRight } from 'react-icons/hi2';
-import fetchBootInfo, {
-  fetchUserInfoFromBootInfo,
-} from '~/utils/get-boot-info';
+import TimeAgo from 'react-timeago';
+import { fetchBootPayloadCachedWithUserInfoOrThrow } from '~/utils/get-boot-info';
 import { getConnectorsAuthUrl } from '~/utils/get-connectors-auth-url';
-import { getBootUrl, getRelayUrl } from '~/utils/get-relay-url';
+import { getRelayUrl } from '~/utils/get-relay-url';
 import getValidSubdomain from '~/utils/get-valid-subdomain';
 import { getFilenameAndVersionFromPath } from '~/utils/get-values-from-url';
 import { getZipperAuth } from '~/utils/get-zipper-auth';
@@ -63,7 +61,6 @@ import ConnectorsAuthInputsSection from './connectors-auth-inputs-section';
 import Header from './header';
 import InputSummary from './input-summary';
 import Unauthorized from './unauthorized';
-import TimeAgo from 'react-timeago';
 
 const { __DEBUG__ } = process.env;
 
@@ -573,54 +570,25 @@ export const getServerSideProps: GetServerSideProps = async ({
   const { token, userId } = await getZipperAuth(req);
   const tempUserId = req.cookies[ZIPPER_TEMP_USER_ID_COOKIE_NAME];
 
-  const bootUrl = getBootUrl({ slug: subdomain });
-  const rawPayload = await fetch(bootUrl, {
-    headers: {
-      Authorization: `Bearer ${token || ''}`,
-    },
-  }).then((r) => r.text());
-
-  if (rawPayload === 'UNAUTHORIZED' || rawPayload === 'INVALID_VERSION')
-    return { props: { errorCode: rawPayload } };
-
-  let bootInfo: BootInfo | BootInfoWithUserInfo | undefined;
-  const bootPayload = JSON.parse(rawPayload) as Zipper.BootPayload;
-  bootInfo = bootPayload.bootInfo as BootInfo;
-
-  if (!bootInfo) {
-    // If we don't have boot info in the payload
-    // Then this is an old app and we need to just fetch it
-    const result = await fetchBootInfo({
+  let bootPayload;
+  try {
+    console.log('applet > fetchBootPayloadCachedWithUserInfoOrThrow()');
+    bootPayload = await fetchBootPayloadCachedWithUserInfoOrThrow({
       subdomain,
-      tempUserId,
+      version: versionFromUrl,
       filename: filenameFromUrl,
       token,
     });
-
-    if (result.ok) bootInfo = result.data;
-    else return { props: { errorCode: result.error } };
-  } else if (
-    bootInfo.app.requiresAuthToRun ||
-    bootInfo.connectors.find((c) => c.isUserAuthRequired)
-  ) {
-    const result = await fetchUserInfoFromBootInfo({
-      subdomain,
-      tempUserId,
-      filename: filenameFromUrl,
-      token,
-      bootInfo,
-    });
-
-    if (result.ok) bootInfo = result.data;
-    else return { props: { errorCode: result.error } };
+  } catch (e: any) {
+    return {
+      props: { errorCode: e?.message || e || 'Error fetching payload' },
+    };
   }
 
-  const {
-    app,
-    inputs: inputParams,
-    entryPoint,
-    runnableScripts,
-  } = bootInfo || {};
+  if (!bootPayload) return { notFound: true };
+
+  const { bootInfo } = bootPayload;
+  const { app, inputs: inputParams, entryPoint, runnableScripts } = bootInfo;
 
   const metadata = bootInfo.metadata || {};
 
@@ -649,7 +617,7 @@ export const getServerSideProps: GetServerSideProps = async ({
   const shouldRedirect = isAutoRun || isRunPathMissing;
 
   if (shouldRedirect) {
-    const runUrl = new URL(resolvedUrl || '', bootUrl);
+    const runUrl = new URL(resolvedUrl || '', resolvedUrl);
     runUrl.pathname = isEmbedUrl
       ? `/run/embed/${filename}`
       : `/run/${filename}`;
