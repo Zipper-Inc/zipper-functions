@@ -2,7 +2,10 @@ import { NextResponse } from 'next/server';
 import { NextRequest } from 'next/server';
 import * as jose from 'jose';
 import addAppRun from './add-app-run';
-import { fetchBootInfo } from './get-boot-info';
+import {
+  fetchBootInfoCachedWithUserOrThrow,
+  fetchDeploymentCachedOrThrow,
+} from './get-boot-info';
 import getValidSubdomain from './get-valid-subdomain';
 import { getFilenameAndVersionFromPath } from './get-values-from-url';
 import {
@@ -13,6 +16,7 @@ import {
   ZIPPER_TEMP_USER_ID_HEADER,
   webCryptoDecryptFromBase64,
   parseBody,
+  noop,
 } from '@zipper/utils';
 import Zipper from '@zipper/framework';
 import { getZipperAuth } from './get-zipper-auth';
@@ -28,6 +32,8 @@ const SENSITIVE_DATA_PLACEHOLDER = '********';
 
 const X_FORWARDED_HOST = 'x-forwarded-host';
 const X_DENO_SUBHOST = 'x-deno-subhost';
+const X_ZIPPER_DEPLOYMENT_ID = 'x-zipper-deployment-id';
+const X_ZIPPER_SUBDOMAIN = 'x-zipper-subdomain';
 
 const HEALTH_CHECK_SLUG = 'healthcheck';
 
@@ -44,6 +50,7 @@ async function getPatchedHeaders(
   request: NextRequest,
   deploymentId: string,
   xHost: string,
+  subdomain: string,
 ) {
   const originalHeaders = Object.fromEntries(request.headers.entries());
   const xDeno = await encodeJWT(deploymentId);
@@ -57,6 +64,8 @@ async function getPatchedHeaders(
     ...originalHeaders,
     [X_FORWARDED_HOST]: xHost,
     [X_DENO_SUBHOST]: xDeno,
+    [X_ZIPPER_DEPLOYMENT_ID]: deploymentId,
+    [X_ZIPPER_SUBDOMAIN]: subdomain,
   };
 }
 
@@ -79,8 +88,8 @@ function encodeJWT(deploymentId: string) {
 export async function relayRequest(
   {
     request,
-    version: _version,
-    filename: _filename,
+    version: versionPassedIn,
+    filename: filenamePassedIn,
   }: {
     request: NextRequest;
     version?: string;
@@ -114,53 +123,69 @@ export async function relayRequest(
     tempUserId ||
     request.cookies.get(ZIPPER_TEMP_USER_ID_COOKIE_NAME)?.value.toString();
 
-  let filename = _filename || 'main.ts';
+  const relayUrl = getPatchedUrl(request);
+  const deployment = await fetchDeploymentCachedOrThrow(subdomain).catch(noop);
+  if (!deployment?.appId) return { status: 404 };
+
+  const { appId, version: latestVersion } = deployment;
+  const version = versionPassedIn || latestVersion;
+
+  const deploymentId = formatDeploymentId({
+    appId: appId,
+    version,
+    uniqueOverride:
+      !bootOnly && subdomain === HEALTH_CHECK_SLUG
+        ? Date.now().toString(32)
+        : undefined,
+  });
+
+  if (bootOnly) {
+    const response = await fetch(new URL('/__BOOT__', relayUrl), {
+      method: 'POST',
+      headers: await getPatchedHeaders(
+        request,
+        deploymentId,
+        relayUrl.hostname,
+        subdomain,
+      ),
+    });
+    const { status, headers } = response;
+    const mutableHeaders = new Headers(headers);
+    const result = await response.text();
+    return { result, status, headers: mutableHeaders };
+  }
+
+  let filename = filenamePassedIn || 'main.ts';
   if (!filename.endsWith('.ts')) {
     filename = `${filename}.ts`;
   }
 
-  const bootInfoResult = await fetchBootInfo({
-    subdomain,
-    tempUserId,
-    filename,
-    token,
-  });
-
-  if (__DEBUG__) console.log('fetchBootInfo', { result: bootInfoResult });
-
-  if (!bootInfoResult.ok) {
-    const errorStatus = bootInfoResult.status || 500;
+  let bootInfo;
+  try {
+    bootInfo = await fetchBootInfoCachedWithUserOrThrow({
+      subdomain,
+      tempUserId,
+      filename,
+      token,
+    });
+  } catch (e: any) {
+    const errorStatus = e?.status || 500;
     return {
       status: errorStatus,
       result: JSON.stringify({
         ok: false,
         status: errorStatus,
-        error: bootInfoResult.error,
+        error: e.message,
         errorClass: 'Boot',
       }),
     };
   }
 
-  const { app, userAuthConnectors, userInfo } = bootInfoResult.data;
-
-  // Get a version from URL or use the latest
-  const version = _version || app.publishedVersionHash?.slice(0, 7) || 'latest';
-
-  const deploymentId = formatDeploymentId({
-    appId: app.id,
-    version,
-    uniqueOverride:
-      app.slug === HEALTH_CHECK_SLUG ? Date.now().toString(32) : undefined,
-  });
-
-  let relayUrl = getPatchedUrl(request);
-
-  if (bootOnly) {
-    relayUrl = new URL('/__BOOT__', relayUrl);
-  }
+  const { app, userAuthConnectors, userInfo } = bootInfo;
 
   const runId = request.headers.get('x-zipper-run-id') || uuid();
   const userConnectorTokens: Record<string, string> = {};
+
   await Promise.all(
     userAuthConnectors
       .filter((uac) => uac.isUserAuthRequired)
@@ -177,14 +202,12 @@ export async function relayRequest(
       }),
   );
 
-  if (!bootOnly) {
-    if (
-      Object.keys(userConnectorTokens).length > 0 &&
-      !userInfo.userId &&
-      !tempUserId
-    ) {
-      throw new Error('missing user ID');
-    }
+  if (
+    Object.keys(userConnectorTokens).length > 0 &&
+    !userInfo.userId &&
+    !tempUserId
+  ) {
+    throw new Error('missing user ID');
   }
 
   const body = await parseBody(request);
@@ -223,27 +246,30 @@ export async function relayRequest(
   const response = await fetch(relayUrl, {
     method: 'POST',
     body: JSON.stringify(relayBody),
-    headers: await getPatchedHeaders(request, deploymentId, relayUrl.hostname),
+    headers: await getPatchedHeaders(
+      request,
+      deploymentId,
+      relayUrl.hostname,
+      subdomain,
+    ),
   });
 
   const { status, headers } = response;
   const mutableHeaders = new Headers(headers);
   const result = await response.text();
 
-  if (!bootOnly) {
-    const appRunRes = await addAppRun({
-      id: runId,
-      appId: app.id,
-      deploymentId,
-      success: response.status === 200,
-      scheduleId: request.headers.get('x-zipper-schedule-id') || undefined,
-      rpcBody: app.isDataSensitive
-        ? { ...relayBody, inputs: { [SENSITIVE_DATA_PLACEHOLDER]: '' } }
-        : relayBody,
-      result: app.isDataSensitive ? SENSITIVE_DATA_PLACEHOLDER : result,
-    });
-    mutableHeaders.set('x-zipper-run-id', await appRunRes.text());
-  }
+  const appRunRes = await addAppRun({
+    id: runId,
+    appId: app.id,
+    deploymentId,
+    success: response.status === 200,
+    scheduleId: request.headers.get('x-zipper-schedule-id') || undefined,
+    rpcBody: app.isDataSensitive
+      ? { ...relayBody, inputs: { [SENSITIVE_DATA_PLACEHOLDER]: '' } }
+      : relayBody,
+    result: app.isDataSensitive ? SENSITIVE_DATA_PLACEHOLDER : result,
+  });
+  mutableHeaders.set('x-zipper-run-id', await appRunRes.text());
 
   return { result, status, headers };
 }
@@ -260,8 +286,8 @@ export default async function serveRelay({
     bootOnly ? ['boot'] : ['relay', 'raw'],
   );
 
-  console.log('version: ', version);
-  console.log('filename: ', filename);
+  console.log('version: ', version || 'latest');
+  if (!bootOnly) console.log('filename: ', filename);
 
   const { result, status, headers } = await relayRequest(
     {
@@ -271,6 +297,7 @@ export default async function serveRelay({
     },
     bootOnly,
   );
+
   const mutableHeaders = new Headers(headers);
   if (request.method !== 'GET')
     mutableHeaders?.append('Access-Control-Allow-Origin', '*');

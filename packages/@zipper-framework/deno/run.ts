@@ -15,6 +15,45 @@ const PORT = 8888;
  * Run the applet with the given RequestEvent
  */
 async function runApplet({ request: relayRequest }: Deno.RequestEvent) {
+  const bootInfo = bootInfoCached as Zipper.BootPayload['bootInfo'];
+  const deploymentId = relayRequest.headers.get('x-zipper-deployment-id');
+  const slug = relayRequest.headers.get('x-zipper-subdomain') as string;
+  const [id, version] = deploymentId?.split('@') as [string, string];
+
+  const appInfo = {
+    ...bootInfo?.app,
+    id,
+    slug,
+    version,
+  };
+
+  // Handle booting seperately
+  // This way, we can deploy without running Applet code
+  if (new URL(relayRequest.url).pathname === `/${BOOT_PATH}`) {
+    const configs = Object.entries(files).reduce(
+      (map, [path, { config }]) =>
+        config
+          ? {
+              ...map,
+              [path]: config,
+            }
+          : map,
+      {},
+    );
+
+    const bootPayload: Zipper.BootPayload = {
+      ok: true,
+      slug,
+      version,
+      appId: id,
+      deploymentId: deploymentId || `${id}@${version}`,
+      configs,
+      bootInfo: bootInfoCached,
+    };
+
+    return new Response(JSON.stringify(bootPayload), { status: 200 });
+  }
+
   let body;
   let error;
 
@@ -41,37 +80,7 @@ async function runApplet({ request: relayRequest }: Deno.RequestEvent) {
     delete env[key];
   });
 
-  const { appInfo, userInfo, runId, userConnectorTokens, originalRequest } =
-    body;
-
-  // Handle booting seperately
-  // This way, we can deploy without running Applet code
-  if (new URL(relayRequest.url).pathname === `/${BOOT_PATH}`) {
-    const { id, slug, version } = appInfo;
-
-    const configs = Object.entries(files).reduce(
-      (map, [path, { config }]) =>
-        config
-          ? {
-              ...map,
-              [path]: config,
-            }
-          : map,
-      {},
-    );
-
-    const bootPayload: Zipper.BootPayload = {
-      ok: true,
-      slug,
-      version,
-      appId: id,
-      deploymentId: `${id}@${version}`,
-      configs,
-      bootInfo: bootInfoCached,
-    };
-
-    return new Response(JSON.stringify(bootPayload), { status: 200 });
-  }
+  const { userInfo, runId, userConnectorTokens, originalRequest } = body;
 
   // Attach ZipperGlobal
   window.Zipper = {
