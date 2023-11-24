@@ -1,4 +1,4 @@
-import { ZIPPER_TEMP_USER_ID_COOKIE_NAME } from '@zipper/utils';
+import { UNAUTHORIZED, ZIPPER_TEMP_USER_ID_COOKIE_NAME } from '@zipper/utils';
 import { GetServerSideProps } from 'next';
 import { getConnectorsAuthUrl } from '~/utils/get-connectors-auth-url';
 import { getInputValuesFromAppRun } from '~/utils/get-input-values-from-url';
@@ -29,7 +29,7 @@ export const getServerSideProps: GetServerSideProps = async ({
   });
 
   if (!result.ok) {
-    if (result.error === 'UNAUTHORIZED') return { props: { statusCode: 401 } };
+    if (result.error === UNAUTHORIZED) return { props: { statusCode: 401 } };
     return { notFound: true };
   }
 

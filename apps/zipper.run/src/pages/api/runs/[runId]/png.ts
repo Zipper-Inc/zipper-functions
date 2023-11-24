@@ -1,4 +1,4 @@
-import { ZIPPER_TEMP_USER_ID_COOKIE_NAME } from '@zipper/utils';
+import { UNAUTHORIZED, ZIPPER_TEMP_USER_ID_COOKIE_NAME } from '@zipper/utils';
 import { chromium } from 'playwright';
 import type { NextApiRequest, NextApiResponse } from 'next';
 import getRunInfo from '~/utils/get-run-info';
@@ -53,7 +53,7 @@ export default async function handler(
   });
 
   if (!result.ok) {
-    if (result.error === 'UNAUTHORIZED') return { props: { statusCode: 401 } };
+    if (result.error === UNAUTHORIZED) return { props: { statusCode: 401 } };
     return { notFound: true };
   }
 

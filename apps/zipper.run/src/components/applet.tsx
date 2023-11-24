@@ -31,6 +31,8 @@ import {
 import {
   getInputsFromFormData,
   getScreenshotUrl,
+  NOT_FOUND,
+  UNAUTHORIZED,
   ZIPPER_TEMP_USER_ID_COOKIE_NAME,
   ZIPPER_TEMP_USER_ID_HEADER,
 } from '@zipper/utils';
@@ -316,7 +318,7 @@ export function AppPage({
     });
   }, [userAuthConnectors]);
 
-  if (errorCode === 'UNAUTHORIZED') {
+  if (errorCode === UNAUTHORIZED) {
     return <Unauthorized />;
   }
 
@@ -324,7 +326,7 @@ export function AppPage({
     return <Error statusCode={404} title={'App not published yet'} />;
   }
 
-  if (errorCode === 'NOT_FOUND' || !app) {
+  if (errorCode === NOT_FOUND || !app) {
     return <Error statusCode={404} />;
   }
   const initialContent = (
