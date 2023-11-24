@@ -14,7 +14,7 @@ export const postgresConnector = createConnector({
   id: 'postgres',
   name: 'Postgres',
   description: `Connect to a Postgres database and run queries.`,
-  icon: <FiDatabase fill="black" />,
+  icon: <FiDatabase />,
   code,
 });
 
