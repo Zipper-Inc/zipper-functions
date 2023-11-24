@@ -26,7 +26,7 @@ export const getAuthedSlackUser = (
 
 export type AuthedConnectorType = Exclude<
   ConnectorType,
-  'openai' | 'zendesk' | 'github-app' | 'notion' | 'discord'
+  'openai' | 'zendesk' | 'github-app' | 'notion' | 'discord' | 'postgres'
 >;
 
 export const authedUserGetters: Record<
