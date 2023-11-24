@@ -2,59 +2,76 @@ import {
   Button,
   Card,
   CardBody,
-  Code,
-  Collapse,
   FormControl,
   FormHelperText,
   FormLabel,
   Heading,
   HStack,
   Input,
-  Spacer,
-  Switch,
-  Text,
+  InputProps,
   VStack,
 } from '@chakra-ui/react';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { trpc } from '~/utils/trpc';
 
 /* -------------------------------------------- */
 /* Constants                                    */
 /* -------------------------------------------- */
-
 const CLIENT_ID_FORM = {
-  LABEL: `Custom client ID?`,
-  DESCRIPTION:
-    'When checked, you can specify your own Notion client ID and secret.',
-  REDIRECT_URL:
-    process.env.NODE_ENV === 'development'
-      ? 'https://redirectmeto.com/http://localhost:3000/connectors/notion/auth'
-      : 'https://zipper.dev/connectors/notion/auth',
+  LABEL: `Postgres database connection`,
+  DESCRIPTION: 'Add your postgres database configuration.',
 };
+
+type PostgresInputsNames =
+  | 'POSTGRES_HOST'
+  | 'POSTGRES_PORT'
+  | 'POSTGRES_USER'
+  | 'POSTGRES_DATABASE'
+  | 'POSTGRES_PASSWORD';
+type PostgresInputs = {
+  formLabel: string;
+  name: PostgresInputsNames;
+} & InputProps;
+type PostgresForm = Record<PostgresInputs['name'], string>;
+
+const inputs: PostgresInputs[] = [
+  { formLabel: 'Host', name: 'POSTGRES_HOST' },
+  { formLabel: 'Port', name: 'POSTGRES_PORT' },
+  { formLabel: 'User', name: 'POSTGRES_USER' },
+  { formLabel: 'Database', name: 'POSTGRES_DATABASE' },
+  { formLabel: 'Password', name: 'POSTGRES_PASSWORD', type: 'password' },
+];
 
 /* -------------------------------------------- */
 /* Main                                         */
 /* -------------------------------------------- */
 
-const NotionConnect: React.FC<{ appId: string }> = ({ appId }) => {
+const PostgresConnect: React.FC<{ appId: string }> = ({ appId }) => {
   /* ------------------ States ------------------ */
-  const [isOwnClientIdRequired, setIsOwnClientIdRequired] = useState(false);
-  const [client, setClient] = useState({ secret: '', id: '' });
   const [isSubmiting, setIsSubmiting] = useState<null | string>(null);
 
   /* ------------------- Hooks ------------------ */
+  const { handleSubmit, register } = useForm<PostgresForm>({});
   const context = trpc.useContext();
   const router = useRouter();
 
-  /* ------------------ Queries ----------------- */
-  const authURL = trpc.notionConnector.getAuthUrl.useQuery({
-    appId,
-    postInstallationRedirect: window.location.href,
-  });
-
   /* ----------------- Mutations ---------------- */
-  const addSecretMutation = trpc.secret.add.useMutation();
+  const addSecretMutation = trpc.secret.add.useMutation({
+    async onSuccess() {
+      context.secret.get.invalidate({
+        appId,
+        key: [
+          'POSTGRES_HOST',
+          'POSTGRES_USER',
+          'POSTGRES_DATABASE',
+          'POSTGRES_PORT',
+          'POSTGRES_PASSWORD',
+        ],
+      });
+    },
+  });
 
   const updateAppConnectorMutation = trpc.appConnector.update.useMutation({
     onSuccess: () => {
@@ -66,83 +83,57 @@ const NotionConnect: React.FC<{ appId: string }> = ({ appId }) => {
   });
 
   /* ----------------- Callbacks ---------------- */
-  async function onConnectClientOwnClientId() {
+  const onSubmit = async (data: PostgresForm) => {
     setIsSubmiting('Saving');
-
-    await Promise.all([
+    const entries = Object.entries(data);
+    const mutationPromises = entries.map(([key, value]) =>
       addSecretMutation.mutateAsync({
         appId,
-        key: 'NOTION_CLIENT_SECRET',
-        value: client.secret,
+        key,
+        value,
       }),
+    );
+    await Promise.all([
       updateAppConnectorMutation.mutateAsync({
         appId,
-        type: 'notion',
-        data: { isUserAuthRequired: false, clientId: client.id },
+        type: 'postgres',
+        data: { isUserAuthRequired: false },
       }),
+      ...mutationPromises,
     ]);
 
-    setIsSubmiting('Redirecting');
-
-    router.push(authURL.data?.href as string);
-
     return setIsSubmiting(null);
-  }
+  };
 
   /* ------------------ Render ------------------ */
   return (
     <Card w="full">
       <CardBody color="fg.600">
-        <VStack as="form" align="start" w="full" overflow="visible">
+        <VStack
+          as="form"
+          align="start"
+          w="full"
+          overflow="visible"
+          onSubmit={handleSubmit(onSubmit)}
+        >
           <Heading size="sm">Configuration</Heading>
           <HStack pt="4" pb="4" w="full">
             <FormControl>
-              <HStack w="full">
-                <FormLabel>{CLIENT_ID_FORM.LABEL}</FormLabel>
-                <Spacer flexGrow={1} />
-                <Switch
-                  isChecked={isOwnClientIdRequired}
-                  ml="auto"
-                  onChange={(e) => setIsOwnClientIdRequired(e.target.checked)}
-                />
-              </HStack>
               <FormHelperText maxW="xl" mb="2">
                 {CLIENT_ID_FORM.DESCRIPTION}
               </FormHelperText>
-
-              <Collapse in={isOwnClientIdRequired} animateOpacity>
+              {inputs.map((input) => (
                 <FormControl>
-                  <FormLabel color={'fg.500'}>Client ID</FormLabel>
+                  <FormLabel color={'fg.500'}>{input.formLabel}</FormLabel>
                   <Input
+                    w={'full'}
                     autoComplete="new-password"
-                    value={client.id}
-                    onChange={(e) =>
-                      setClient({ ...client, id: e.target.value })
-                    }
+                    spellCheck="false"
+                    {...register(input.name)}
+                    {...input}
                   />
                 </FormControl>
-
-                <FormControl pt="2">
-                  <FormLabel color={'fg.500'}>Client Secret</FormLabel>
-
-                  <Input
-                    autoComplete="new-password"
-                    type="password"
-                    value={client.secret}
-                    onChange={(e) =>
-                      setClient({ ...client, secret: e.target.value })
-                    }
-                  />
-                </FormControl>
-
-                <FormControl pt="2">
-                  <FormLabel>Redirect URL</FormLabel>
-                  <Text>
-                    Set your Notion app's redirect URL to:{' '}
-                    <Code>{CLIENT_ID_FORM.REDIRECT_URL}</Code>
-                  </Text>
-                </FormControl>
-              </Collapse>
+              ))}
             </FormControl>
           </HStack>
           <Button
@@ -150,7 +141,8 @@ const NotionConnect: React.FC<{ appId: string }> = ({ appId }) => {
             colorScheme="purple"
             isLoading={!!isSubmiting}
             loadingText={isSubmiting!}
-            onClick={onConnectClientOwnClientId}
+            disabled={!!isSubmiting}
+            type="submit"
           >
             Save & Install
           </Button>
@@ -160,4 +152,4 @@ const NotionConnect: React.FC<{ appId: string }> = ({ appId }) => {
   );
 };
 
-export default NotionConnect;
+export default PostgresConnect;

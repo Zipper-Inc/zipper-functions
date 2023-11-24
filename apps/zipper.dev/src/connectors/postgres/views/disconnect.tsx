@@ -4,16 +4,6 @@ import {
   VStack,
   Heading,
   HStack,
-  FormLabel,
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
-  PopoverArrow,
-  PopoverHeader,
-  PopoverBody,
-  StackDivider,
-  Code,
-  Spacer,
   Text,
   Button,
   useDisclosure,
@@ -41,10 +31,19 @@ const PostgresDisconect: React.FC<{
 
   /* ----------------- Mutations ---------------- */
   const deleteConnectorMutation =
-    trpc.notionConnector.deleteInstallation.useMutation({
+    trpc.postgresConnector.deleteInstallation.useMutation({
       async onSuccess() {
-        await utils.notionConnector.get.invalidate({ appId });
-        await utils.secret.get.invalidate({ appId, key: 'NOTION_BOT_TOKEN' });
+        utils.postgresConnector.get.invalidate({ appId });
+        utils.secret.get.invalidate({
+          appId,
+          key: [
+            'POSTGRES_HOST',
+            'POSTGRES_USER',
+            'POSTGRES_DATABASE',
+            'POSTGRES_PORT',
+            'POSTGRES_PASSWORD',
+          ],
+        });
       },
     });
 
@@ -59,8 +58,6 @@ const PostgresDisconect: React.FC<{
     return setIsSaving(false), onClose();
   }
 
-  console.log(metadata);
-
   /* ------------------ Render ------------------ */
   return (
     <React.Fragment>
@@ -68,39 +65,7 @@ const PostgresDisconect: React.FC<{
         <CardBody color="fg.600">
           <VStack as="form" align="start" w="full" overflow="visible">
             <Heading size="sm">Configuration</Heading>
-            <HStack pt="4" pb="4" w="full">
-              <FormLabel m="0">Installed to</FormLabel>
-              <Popover trigger="hover">
-                <PopoverTrigger>
-                  <FormLabel
-                    cursor="context-menu"
-                    textDecor="underline"
-                    textDecorationStyle="dotted"
-                    color={'fg.900'}
-                  >
-                    {metadata['workspace_name']}
-                  </FormLabel>
-                </PopoverTrigger>
-                <PopoverContent w="sm">
-                  <PopoverArrow />
-                  <PopoverHeader>Installation details</PopoverHeader>
-                  <PopoverBody>
-                    <VStack
-                      align="start"
-                      divider={<StackDivider />}
-                      fontSize="sm"
-                      py="2"
-                    >
-                      <HStack>
-                        <Text>Bot User ID:</Text>
-                        <Code>{metadata['bot_id']}</Code>
-                      </HStack>
-                    </VStack>
-                  </PopoverBody>
-                </PopoverContent>
-              </Popover>
-              <Spacer />
-            </HStack>
+
             <Button variant="unstyled" color="red.600" onClick={onOpen}>
               <HStack>
                 <HiOutlineTrash />
@@ -118,7 +83,7 @@ const PostgresDisconect: React.FC<{
         <AlertDialogOverlay>
           <AlertDialogContent>
             <AlertDialogHeader fontSize="lg" fontWeight="bold">
-              Uninstall Notion App
+              Uninstall Postgres
             </AlertDialogHeader>
 
             <AlertDialogBody>
@@ -145,4 +110,4 @@ const PostgresDisconect: React.FC<{
   );
 };
 
-export default NotionDisconnect;
+export default PostgresDisconect;
