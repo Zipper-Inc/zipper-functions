@@ -1,5 +1,7 @@
 // created from ctix
 
+export * from '../src/constants/errors';
+export * from '../src/constants/headers';
 export * from '../src/utils/analytics-head';
 export * from '../src/utils/connector';
 export * from '../src/utils/crypto.utils';
@@ -21,4 +23,3 @@ export * from '../src/utils/url';
 export * from '../src/utils/user-agent';
 export * from '../src/utils/uuid';
 export * from '../src/utils/zipper-run-cache';
-export * from '../src/constants';
