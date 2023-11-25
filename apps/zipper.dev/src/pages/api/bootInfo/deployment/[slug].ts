@@ -1,4 +1,4 @@
-import { formatDeploymentId, type DeploymentParams } from '@zipper/utils';
+import { formatDeploymentId, NOT_FOUND } from '@zipper/utils';
 import { NextApiHandler } from 'next';
 import { prisma } from '~/server/prisma';
 import { getAppVersionFromHash } from '~/utils/hashing';
@@ -15,7 +15,7 @@ const handler: NextApiHandler = async (req, res) => {
     .catch(noop);
 
   if (!result || !result.id || !result.publishedVersionHash)
-    return res.status(404).json({ ok: false, error: 'Not found', status: 404 });
+    return res.status(404).json({ ok: false, error: NOT_FOUND, status: 404 });
 
   const appId = result.id;
   const version = getAppVersionFromHash(result.publishedVersionHash) || '';
