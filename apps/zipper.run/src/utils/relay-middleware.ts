@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { NextRequest } from 'next/server';
 import * as jose from 'jose';
 import addAppRun from './add-app-run';
-import {
+import fetchBootInfo, {
   fetchBootInfoCachedWithUserOrThrow,
   fetchDeploymentCachedOrThrow,
   fetchBasicUserInfo,
@@ -146,6 +146,11 @@ export async function relayRequest(
   tempUserId =
     tempUserId || request.cookies.get(__ZIPPER_TEMP_USER_ID)?.value.toString();
 
+  let filename = filenamePassedIn || 'main.ts';
+  if (!filename.endsWith('.ts')) {
+    filename = `${filename}.ts`;
+  }
+
   if (bootOnly) {
     const bootUrl = new URL('/__BOOT__', relayUrl);
     const [bootRelayResponse, userInfoResponse] = await Promise.all([
@@ -158,6 +163,25 @@ export async function relayRequest(
     ]);
 
     const bootPayload = bootRelayResponse.json as BootPayload;
+
+    // Fill in missing boot info
+    if (bootPayload.ok && !bootPayload.bootInfo) {
+      const result = await fetchBootInfo({
+        subdomain,
+        version,
+        token,
+        tempUserId,
+      });
+
+      if (!result.ok) {
+        return {
+          result: JSON.stringify(result.error) || 'Unknown boot info error',
+          status: result.status || 500,
+        };
+      }
+
+      bootPayload.bootInfo = result.data as any;
+    }
 
     const hasRunAccess =
       bootPayload.ok &&
@@ -179,11 +203,6 @@ export async function relayRequest(
       status,
       headers: mutableHeaders,
     };
-  }
-
-  let filename = filenamePassedIn || 'main.ts';
-  if (!filename.endsWith('.ts')) {
-    filename = `${filename}.ts`;
   }
 
   let bootInfo;
