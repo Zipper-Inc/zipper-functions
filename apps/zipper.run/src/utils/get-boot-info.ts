@@ -11,7 +11,8 @@ import {
   getZipperApiUrl,
   noop,
   parseDeploymentId,
-  ZIPPER_TEMP_USER_ID_HEADER,
+  UNAUTHORIZED,
+  X_ZIPPER_TEMP_USER_ID,
 } from '@zipper/utils';
 import { getBootUrl } from './get-relay-url';
 
@@ -24,26 +25,45 @@ type BootInfoParams = {
   deploymentId?: string;
 };
 
-const debug = () => process?.env?.__DEBUG__;
+const debug = (...args: any[]) =>
+  process?.env?.__DEBUG__ && console.log(...args);
 
 const buildHeaders = (token?: string | null, tempUserId?: string) => {
   const headers: Record<string, string> = {
     Authorization: `Bearer ${token || ''}`,
   };
   if (tempUserId) {
-    headers[ZIPPER_TEMP_USER_ID_HEADER] = tempUserId;
+    headers[X_ZIPPER_TEMP_USER_ID] = tempUserId;
   }
   return headers;
 };
 
-export async function fetchUserInfoFromBootInfo({
+export async function fetchBasicUserInfo({
+  subdomain,
+  tempUserId,
+  token,
+}: BootInfoParams) {
+  if (!token) return { ok: false, status: 401, error: UNAUTHORIZED };
+  return fetch(`${getZipperApiUrl()}/bootInfo/basicUserInfo/${subdomain}`, {
+    method: 'POST',
+    headers: buildHeaders(token, tempUserId),
+    credentials: 'include',
+  })
+    .then((r) => r.json())
+    .catch((e) => ({ ok: false, error: e.message, status: 500 }));
+}
+
+export async function fetchExtendedUserInfo({
   subdomain,
   tempUserId,
   filename,
   token,
   bootInfo,
 }: BootInfoParams & { bootInfo: BootInfo }): Promise<BootInfoWithUserResult> {
-  return fetch(`${getZipperApiUrl()}/bootInfo/userInfo/${subdomain}`, {
+  if (bootInfo.app.requiresAuthToRun && !token)
+    return { ok: false, status: 401, error: UNAUTHORIZED };
+
+  return fetch(`${getZipperApiUrl()}/bootInfo/extendedUserInfo/${subdomain}`, {
     method: 'POST',
     body: JSON.stringify({ filename, appInfo: bootInfo.app }),
     headers: buildHeaders(token, tempUserId),
@@ -71,17 +91,24 @@ export async function fetchBootInfo({
     .catch((e) => ({ ok: false, error: e.message, status: 500 }));
 }
 
+/**
+ * Gets minimum amount of information we need from a subdomain to run an applet
+ *
+ * @note This doesn't check auth at all so it's cachable
+ * @todo Maybe it should be secure?
+ */
 export async function fetchDeploymentCachedOrThrow(
   subdomain: string,
 ): Promise<DeploymentParams> {
   const cached = await cacheDeployment.get(subdomain).catch(noop);
-  if (debug())
-    console.log(
-      `fetchDeploymentCachedOrThrow(${subdomain})`,
-      '>',
-      cached ? '✅ CACHE HIT' : '❌ CACHE MISSED',
-      cached,
-    );
+
+  debug(
+    `fetchDeploymentCachedOrThrow(${subdomain})`,
+    '>',
+    cached ? '✅ CACHE HIT' : '❌ CACHE MISSED',
+    cached,
+  );
+
   if (cached && cached.deploymentId) return cached;
 
   const result = await fetch(
@@ -90,13 +117,13 @@ export async function fetchDeploymentCachedOrThrow(
     .then((r) => r.json())
     .catch((e) => ({ ok: false, error: e.message, status: 500 }));
 
-  if (debug())
-    console.log(
-      `fetchDeploymentCachedOrThrow(${subdomain})`,
-      '>',
-      result.ok ? '✅ FETCH OK' : '❌ FETCH NOT OK',
-      result,
-    );
+  debug(
+    `fetchDeploymentCachedOrThrow(${subdomain})`,
+    '>',
+    result.ok ? '✅ FETCH OK' : '❌ FETCH NOT OK',
+    result,
+  );
+
   if (!result.ok) {
     throw new Error(result.error || 'Error getting deployment', {
       cause: result,
@@ -115,12 +142,12 @@ export async function fetchBootPayloadCachedOrThrow({
   version: versionPassedIn,
   deploymentId: deploymentIdPassedIn,
 }: BootInfoParams): Promise<Zipper.BootPayload & { bootInfo: BootInfo }> {
-  if (debug())
-    console.log('fetchBootPayloadCachedOrThrow()', '>', {
-      subdomain,
-      versionPassedIn,
-      deploymentIdPassedIn,
-    });
+  debug('fetchBootPayloadCachedOrThrow()', '>', {
+    subdomain,
+    versionPassedIn,
+    deploymentIdPassedIn,
+  });
+
   const deployment = deploymentIdPassedIn
     ? parseDeploymentId(deploymentIdPassedIn)
     : await fetchDeploymentCachedOrThrow(subdomain);
@@ -131,38 +158,39 @@ export async function fetchBootPayloadCachedOrThrow({
   const deploymentId = formatDeploymentId({ ...deployment, version });
 
   const cached = await cacheBootPayload.get({ deploymentId }).catch(noop);
-  if (debug())
-    console.log(
-      `fetchBootPayloadCachedOrThrow(${deploymentId})`,
-      '>',
-      cached ? '✅ CACHE HIT' : '❌ CACHE MISSED',
-      cached,
-    );
+
+  debug(
+    `fetchBootPayloadCachedOrThrow(${deploymentId})`,
+    '>',
+    cached ? '✅ cache HIT' : '❌ cache MISSED',
+    cached,
+  );
+
   if (cached) return cached;
 
   const bootPayload: Zipper.BootPayload & { bootInfo: BootInfo } = await fetch(
     getBootUrl({ slug: subdomain, version }),
   ).then((r) => r.json());
 
-  if (debug())
-    console.log(
-      `fetchBootPayloadCachedOrThrow(${deploymentId})`,
-      '>',
-      bootPayload.ok ? '✅ FETCH OK' : '❌ FETCH NOT OK',
-      bootPayload,
-    );
+  debug(
+    `fetchBootPayloadCachedOrThrow(${deploymentId})`,
+    '>',
+    bootPayload.ok ? '✅ fetch OK' : '❌ fetch NOT OK',
+    bootPayload,
+  );
+
   if (!bootPayload.ok) {
     throw new Error('Error getting boot payload');
   }
 
   // Handle older applets with no bootInfo
   if (!bootPayload.bootInfo) {
-    if (debug())
-      console.log(
-        `fetchBootPayloadCachedOrThrow(${deploymentId})`,
-        '>',
-        '👴🏽 Older version',
-      );
+    debug(
+      `fetchBootPayloadCachedOrThrow(${deploymentId})`,
+      '>',
+      '📼 Legacy version',
+    );
+
     const result = await fetchBootInfo({
       subdomain,
       tempUserId,
@@ -192,20 +220,20 @@ export async function fetchBootPayloadCachedWithUserInfoOrThrow(
   const bootPayload = await fetchBootPayloadCachedOrThrow(params);
 
   // This is the non-cachable part (user specific)
-  const result = await fetchUserInfoFromBootInfo({
+  const result = await fetchExtendedUserInfo({
     ...params,
     bootInfo: params.bootInfo || bootPayload.bootInfo,
   });
 
-  if (debug())
-    console.log(
-      `fetchUserInfoFromBootInfo(${params.deploymentId})`,
-      '>',
-      result.ok ? '✅ FETCH OK' : '❌ FETCH NOT OK',
-      result,
-    );
+  debug(
+    `fetchUserInfoFromBootInfo(${params.deploymentId})`,
+    '>',
+    result.ok ? '✅ fetch OK' : '❌ fetch NOT OK',
+    result,
+  );
+
   if (!result.ok) {
-    throw new Error(result.error || 'Error getting user boot info');
+    throw new Error(result.error || 'UNKNOWN_ERROR');
   }
 
   return {
