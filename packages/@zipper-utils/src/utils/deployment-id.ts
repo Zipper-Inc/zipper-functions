@@ -14,6 +14,6 @@ export const formatDeploymentId = ({
 };
 
 export const parseDeploymentId = (deploymentId: string) => {
-  const [appId, version] = deploymentId.split(SEPARATOR) as [string, string];
-  return { appId, version, deploymentId };
+  const [appId, version] = deploymentId.split(SEPARATOR);
+  return { appId, version };
 };

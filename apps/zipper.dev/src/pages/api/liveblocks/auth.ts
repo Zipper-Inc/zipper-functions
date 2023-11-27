@@ -1,5 +1,4 @@
 import { Liveblocks } from '@liveblocks/node';
-import { UNAUTHORIZED } from '@zipper/utils';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { createContext } from '~/server/context';
 import { prisma } from '~/server/prisma';
@@ -20,7 +19,7 @@ export default async function auth(req: NextApiRequest, res: NextApiResponse) {
   const { room } = req.body;
 
   if (!context.userId) {
-    return res.status(401).json({ error: UNAUTHORIZED });
+    return res.status(401).send({ error: 'Unauthorized' });
   }
 
   const [, appSlug] = req.body.room.split('/') as [string, string];
