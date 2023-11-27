@@ -568,7 +568,14 @@ export const getServerSideProps: GetServerSideProps = async ({
       ((query.versionAndFilename as string[]) || []).join('/'),
       [],
     );
-  if (__DEBUG__) console.log({ versionFromUrl, filename: filenameFromUrl });
+  if (__DEBUG__)
+    console.log({
+      versionFromUrl,
+      filename: filenameFromUrl,
+      host,
+      reqUrl: req.url,
+      resolvedUrl,
+    });
 
   const { token, userId } = await getZipperAuth(req);
   const tempUserId = req.cookies[__ZIPPER_TEMP_USER_ID];
@@ -590,7 +597,7 @@ export const getServerSideProps: GetServerSideProps = async ({
   if (!bootPayload) return { notFound: true };
 
   if (__DEBUG__)
-    console.log(`bootPayload for ${resolvedUrl.toString()}`, bootPayload);
+    console.log(`bootPayload for ${req.url?.toString()}`, bootPayload);
 
   const { bootInfo } = bootPayload;
   const { app, inputs: inputParams, entryPoint, runnableScripts } = bootInfo;
@@ -625,7 +632,7 @@ export const getServerSideProps: GetServerSideProps = async ({
     if (__DEBUG__)
       console.log('shouldRedirect', { isAutoRun, isRunPathMissing });
 
-    const runUrl = new URL(resolvedUrl || '', resolvedUrl);
+    const runUrl = new URL(req.url || '', req.url);
     runUrl.pathname = isEmbedUrl
       ? `/run/embed/${filename}`
       : `/run/${filename}`;
