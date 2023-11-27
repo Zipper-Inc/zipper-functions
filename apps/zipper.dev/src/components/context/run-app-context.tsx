@@ -3,6 +3,7 @@ import { generateReactHelpers } from '@uploadthing/react/hooks';
 import {
   AppInfo,
   BootInfo,
+  BootPayload,
   InputParam,
   UserAuthConnectorType,
 } from '@zipper/types';
@@ -52,10 +53,8 @@ export type RunAppContextType = {
     shouldSave?: boolean;
     isCurrentScriptEntryPoint?: boolean;
   }) => Promise<string | undefined>;
-  boot: (params?: {
-    shouldSave?: boolean;
-  }) => Promise<Zipper.BootPayload & { bootInfo: BootInfo }>;
-  bootPromise: MutableRefObject<Promise<any>>;
+  boot: (params?: { shouldSave?: boolean }) => Promise<BootPayload>;
+  bootPromise: MutableRefObject<Promise<BootPayload>>;
   configs: Zipper.BootPayload['configs'];
 };
 
@@ -68,9 +67,9 @@ export const RunAppContext = createContext<RunAppContextType>({
   results: {},
   userAuthConnectors: [],
   setResults: noop,
-  bootPromise: { current: Promise.resolve() },
+  bootPromise: { current: Promise.resolve({} as BootPayload) },
   run: () => Promise.resolve(''),
-  boot: () => Promise.resolve(),
+  boot: () => Promise.resolve({} as BootPayload),
   configs: {},
 });
 
@@ -243,38 +242,36 @@ export function RunAppProvider({
   };
 
   const boot = async ({ shouldSave = false } = {}) => {
-    const promise = new Promise<Zipper.BootPayload & { bootInfo: BootInfo }>(
-      async (resolve, reject) => {
-        try {
-          const hash = shouldSave
-            ? await saveAppBeforeRun()
-            : app.playgroundVersionHash;
+    const promise = new Promise<BootPayload>(async (resolve, reject) => {
+      try {
+        const hash = shouldSave
+          ? await saveAppBeforeRun()
+          : app.playgroundVersionHash;
 
-          const version = getAppVersionFromHash(hash);
-          if (!version) throw new Error('No version found');
+        const version = getAppVersionFromHash(hash);
+        if (!version) throw new Error('No version found');
 
-          const oneSecondAgo = Date.now() - 1 * 1000;
-          startPollingUpdateLogs({ version, fromTimestamp: oneSecondAgo });
+        const oneSecondAgo = Date.now() - 1 * 1000;
+        startPollingUpdateLogs({ version, fromTimestamp: oneSecondAgo });
 
-          const bootPayload = await bootAppMutation.mutateAsync({
-            appId: id,
-          });
+        const bootPayload = await bootAppMutation.mutateAsync({
+          appId: id,
+        });
 
-          if (!bootPayload.ok) throw new Error('Boot failed');
+        if (!bootPayload.ok) throw new Error('Boot failed');
 
-          if (bootPayload.configs) setConfigs(bootPayload.configs);
+        if (bootPayload.configs) setConfigs(bootPayload.configs);
 
-          // stop any polling and do one last update
-          cleanUpLogTimers();
-          updateLogs({ version, fromTimestamp: oneSecondAgo });
-          resolve(bootPayload as any);
-        } catch (e) {
-          reject(e);
-        } finally {
-          bootPromise.current = Promise.resolve();
-        }
-      },
-    );
+        // stop any polling and do one last update
+        cleanUpLogTimers();
+        updateLogs({ version, fromTimestamp: oneSecondAgo });
+        resolve(bootPayload as any);
+      } catch (e) {
+        reject(e);
+      } finally {
+        bootPromise.current = Promise.resolve();
+      }
+    });
     bootPromise.current = promise;
     return promise;
   };
@@ -397,6 +394,7 @@ export function RunAppProvider({
         appInfo: {
           id,
           name,
+          createdById,
           description,
           slug,
           updatedAt,

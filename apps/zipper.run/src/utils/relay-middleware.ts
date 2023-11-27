@@ -22,7 +22,7 @@ import {
 } from '@zipper/utils';
 import Zipper from '@zipper/framework';
 import { getZipperAuth } from './get-zipper-auth';
-import { BootInfo } from '@zipper/types';
+import { BootInfo, BootPayload } from '@zipper/types';
 
 const { __DEBUG__, DENO_DEPLOY_SECRET, PUBLICLY_ACCESSIBLE_RPC_HOST } =
   process.env;
@@ -157,9 +157,7 @@ export async function relayRequest(
       fetchBasicUserInfo({ subdomain, tempUserId, token }),
     ]);
 
-    const bootPayload = bootRelayResponse.json as Zipper.BootPayload & {
-      bootInfo: BootInfo;
-    };
+    const bootPayload = bootRelayResponse.json as BootPayload;
 
     const hasRunAccess =
       bootPayload.ok &&

@@ -1,5 +1,5 @@
 import { createClient, VercelKV } from '@vercel/kv';
-import { BootInfo } from '../../../@zipper-types/src/types/boot-info';
+import { BootPayload } from '@zipper/types';
 import { formatDeploymentId } from './deployment-id';
 
 const DEPLOYMENT_FOR_SUBDOMAIN = 'DEPLOYMENT-FOR-SUBDOMAIN';
@@ -10,8 +10,6 @@ export type DeploymentParams = {
   appId: string;
   version: string;
 };
-
-type BootPayload = Zipper.BootPayload & { bootInfo: BootInfo };
 
 let client: VercelKV;
 

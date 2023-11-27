@@ -8,7 +8,12 @@ import {
   ScriptMain,
 } from '@prisma/client';
 import { TRPCError } from '@trpc/server';
-import { appSubmissionState, BootInfo, ResourceOwnerType } from '@zipper/types';
+import {
+  appSubmissionState,
+  BootInfo,
+  BootPayload,
+  ResourceOwnerType,
+} from '@zipper/types';
 import {
   getInputsFromFormData,
   __ZIPPER_TEMP_USER_ID,
@@ -694,8 +699,9 @@ export const appRouter = createTRPCRouter({
       console.log('Boot version: ', version);
 
       try {
-        const bootPayload: Zipper.BootPayload & { bootInfo: BootInfo } =
-          await fetch(getBootUrl(app.slug, version), {
+        const bootPayload: BootPayload = await fetch(
+          getBootUrl(app.slug, version),
+          {
             method: 'POST',
             body: '{}',
             headers: {
@@ -703,7 +709,8 @@ export const appRouter = createTRPCRouter({
               'x-zipper-host': `${app.slug}.zipper.run`,
               ...ZIPPER_PLAYGROUND_USER_AGENT_HEADER,
             },
-          }).then((r) => r.json());
+          },
+        ).then((r) => r.json());
 
         if (!bootPayload.ok || bootPayload.version !== version) {
           throw new Error(

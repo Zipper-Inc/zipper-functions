@@ -2,6 +2,7 @@ import {
   BootInfo,
   BootInfoWithUserInfo,
   BootInfoWithUserResult,
+  BootPayload,
 } from '@zipper/types';
 import {
   cacheBootPayload,
@@ -141,7 +142,7 @@ export async function fetchBootPayloadCachedOrThrow({
   token,
   version: versionPassedIn,
   deploymentId: deploymentIdPassedIn,
-}: BootInfoParams): Promise<Zipper.BootPayload & { bootInfo: BootInfo }> {
+}: BootInfoParams): Promise<BootPayload> {
   debug('fetchBootPayloadCachedOrThrow()', '>', {
     subdomain,
     versionPassedIn,
@@ -168,7 +169,7 @@ export async function fetchBootPayloadCachedOrThrow({
 
   if (cached) return cached;
 
-  const bootPayload: Zipper.BootPayload & { bootInfo: BootInfo } = await fetch(
+  const bootPayload: BootPayload = await fetch(
     getBootUrl({ slug: subdomain, version }),
   ).then((r) => r.json());
 
@@ -216,7 +217,7 @@ export async function fetchBootPayloadCachedOrThrow({
 
 export async function fetchBootPayloadCachedWithUserInfoOrThrow(
   params: BootInfoParams & { bootInfo?: BootInfo },
-): Promise<Zipper.BootPayload & { bootInfo: BootInfoWithUserInfo }> {
+): Promise<BootPayload<true>> {
   const bootPayload = await fetchBootPayloadCachedOrThrow(params);
 
   // This is the non-cachable part (user specific)

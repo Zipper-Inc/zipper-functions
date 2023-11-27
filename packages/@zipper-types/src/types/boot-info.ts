@@ -65,3 +65,8 @@ export type BootInfoResult<WithUserInfo extends boolean = false> =
     };
 
 export type BootInfoWithUserResult = BootInfoResult<true>;
+
+export type BootPayload<WithUserInfo extends boolean = false> =
+  Zipper.BootPayload & {
+    bootInfo: WithUserInfo extends false ? BootInfo : BootInfoWithUserInfo;
+  };

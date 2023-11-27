@@ -20,7 +20,6 @@ export type Connector = {
 
 export type UserAuthConnector = Connector & {
   type: UserAuthConnectorType;
-  isUserAuthRequired: true;
   appConnectorUserAuths: Required<{
     encryptedAccessToken: string;
     connectorType: string;
