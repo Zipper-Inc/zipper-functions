@@ -7,7 +7,11 @@ import {
   UserInfoForBoot,
   Connector,
 } from '@zipper/types';
-import { getZipperDotDevUrl, ZIPPER_TEMP_USER_ID_HEADER } from '@zipper/utils';
+import {
+  getZipperDotDevUrl,
+  UNAUTHORIZED,
+  X_ZIPPER_TEMP_USER_ID,
+} from '@zipper/utils';
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '~/server/prisma';
 import { canUserEdit as canUserEditFn } from '~/server/routers/app.router';
@@ -129,7 +133,7 @@ export async function getUserAuthConnectors({
         where: {
           userIdOrTempId:
             userInfo.userId ||
-            (req.headers[ZIPPER_TEMP_USER_ID_HEADER] as string) ||
+            (req.headers[X_ZIPPER_TEMP_USER_ID] as string) ||
             '',
         },
       },
@@ -152,7 +156,7 @@ export async function getExtendedUserInfo({
   } catch (e) {}
 
   if (!appInfo) {
-    return bootInfoError('Missing app info', 400);
+    return bootInfoError('MISSING_APP_INFO_IN_BODY', 400);
   }
 
   let userInfo: UserInfoReturnType | undefined;
@@ -161,7 +165,11 @@ export async function getExtendedUserInfo({
   } catch (e) {}
 
   if (!userInfo) {
-    return bootInfoError('Missing user info', 400);
+    return bootInfoError('MISSING_USER_INFO', 400);
+  }
+
+  if (appInfo.requiresAuthToRun && !userInfo.userId) {
+    return bootInfoError(UNAUTHORIZED, 401);
   }
 
   const canUserEdit = await getCanUserEdit({ appInfo, userInfo, req });
@@ -189,20 +197,22 @@ export async function getBootInfoWithUserInfo(
   res: NextApiResponse,
 ): Promise<BootInfoWithUserInfo | void> {
   const slugFromUrl = req.query.slug as string;
-  const body = JSON.parse(req.body);
-
+  let body;
+  try {
+    body = JSON.parse(req.body);
+  } catch (e) {
+    res.status(400).json({ ok: false, error: 'MISSING_BODY', status: 400 });
+  }
   const [bootInfo, userInfo] = await Promise.all([
     getBootInfoFromPrisma({ slugFromUrl, filename: body.filename }),
     getUserInfoFromRequest(req),
   ]);
 
   if (!bootInfo || bootInfo instanceof Error) {
-    res.status(bootInfo?.status || 500).send(
-      JSON.stringify({
-        ok: false,
-        error: bootInfo?.message || 'Missing boot info',
-      }),
-    );
+    res.status(bootInfo?.status || 500).json({
+      ok: false,
+      error: bootInfo?.message || 'MISSING_BOOT_INFO',
+    });
     return;
   }
   const extendedUserInfo = await getExtendedUserInfo({
@@ -212,18 +222,20 @@ export async function getBootInfoWithUserInfo(
   });
 
   if (extendedUserInfo instanceof Error) {
-    res.status(extendedUserInfo?.status || 500).send(
-      JSON.stringify({
-        ok: false,
-        error: extendedUserInfo?.message || 'Missing user info',
-      }),
-    );
+    res.status(extendedUserInfo?.status || 500).json({
+      ok: false,
+      error: extendedUserInfo?.message || 'MISSING_USER_INFO',
+    });
     return;
   }
 
   return {
     ...bootInfo,
     ...extendedUserInfo,
+    app: {
+      ...bootInfo.app,
+      ...extendedUserInfo.app,
+    },
   };
 }
 
@@ -296,12 +308,13 @@ export async function getBootInfoFromPrisma({
       editors: true,
       organizationId: true,
       connectors: true,
+      createdById: true,
     },
     where: { slug: slugFromUrl },
   });
 
   if (!appFound) {
-    return bootInfoError('App not found', 404);
+    return bootInfoError('NOT_FOUND', 404);
   }
 
   const {
@@ -318,6 +331,7 @@ export async function getBootInfoFromPrisma({
     editors,
     organizationId,
     connectors,
+    createdById,
   } = appFound;
 
   assertRunLimit({ appId: id, slug });
@@ -338,7 +352,7 @@ export async function getBootInfoFromPrisma({
   }
 
   if (!entryPoint || !entryPoint.code) {
-    return bootInfoError(`Can't get entry point for app: ${slug}`, 500);
+    return bootInfoError('MISSING_ENTRY_POINT', 500);
   }
 
   const parsedScripts = scripts.reduce<
@@ -371,6 +385,7 @@ export async function getBootInfoFromPrisma({
       requiresAuthToRun,
       editors,
       organizationId,
+      createdById,
     },
     connectors: (connectors || []) as Connector[],
     inputs: parsedEntryPoint?.inputs || [],

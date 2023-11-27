@@ -8,7 +8,10 @@ import htmlHandler from './api-handlers/html.handler';
 import {
   getZipperApiUrl,
   hasBrowserLikeUserAgent,
-  ZIPPER_TEMP_USER_ID_COOKIE_NAME,
+  X_ZIPPER_ACCESS_TOKEN,
+  __ZIPPER_REFRESH,
+  __ZIPPER_TEMP_USER_ID,
+  __ZIPPER_TOKEN,
 } from '@zipper/utils';
 import { jwtVerify } from 'jose';
 import getValidSubdomain from './utils/get-valid-subdomain';
@@ -189,7 +192,7 @@ const checkAuthCookies = async (request: NextRequest) => {
       );
       userId = payload.sub;
     } catch (e) {
-      const refreshToken = request.cookies.get('__zipper_refresh')?.value;
+      const refreshToken = request.cookies.get(__ZIPPER_REFRESH)?.value;
 
       if (refreshToken) {
         try {
@@ -254,28 +257,28 @@ export const middleware = async (request: NextRequest) => {
     });
 
   const { userId, accessToken } = await checkAuthCookies(request);
-  const requestHeaders = new Headers(request.headers);
-  requestHeaders.set('x-nonce', nonce);
-  requestHeaders.set(
+  console.log('middleware', { userId, accessToken });
+  request.headers.set('x-nonce', nonce);
+  request.headers.set(
     'Content-Security-Policy',
     // Replace newline characters and spaces
     cspHeader.replace(/\s{2,}/g, ' ').trim(),
   );
-  if (accessToken) requestHeaders.set('x-zipper-access-token', accessToken);
+  if (accessToken) request.headers.set(X_ZIPPER_ACCESS_TOKEN, accessToken);
 
   const customResponse = await maybeGetCustomResponse(
     appRoute,
     request,
-    requestHeaders,
+    request.headers,
   );
 
   const response =
     customResponse ||
-    NextResponse.next({ request: { headers: requestHeaders } });
+    NextResponse.next({ request: { headers: new Headers(request.headers) } });
 
   if (accessToken) {
     response.cookies.set({
-      name: '__zipper_token',
+      name: __ZIPPER_TOKEN,
       value: accessToken,
       httpOnly: true,
       sameSite: 'lax',
@@ -283,13 +286,13 @@ export const middleware = async (request: NextRequest) => {
       path: '/',
     });
   } else {
-    response.cookies.set('__zipper_token', '', {
+    response.cookies.set(__ZIPPER_TOKEN, '', {
       expires: new Date(Date.now()),
       httpOnly: true,
       sameSite: 'lax',
       secure: process.env.NODE_ENV === 'production',
     });
-    response.cookies.set('__zipper_refresh', '', {
+    response.cookies.set(__ZIPPER_REFRESH, '', {
       expires: new Date(Date.now()),
       httpOnly: true,
       sameSite: 'lax',
@@ -297,9 +300,9 @@ export const middleware = async (request: NextRequest) => {
     });
   }
 
-  if (!userId && !request.cookies.get(ZIPPER_TEMP_USER_ID_COOKIE_NAME)) {
+  if (!userId && !request.cookies.get(__ZIPPER_TEMP_USER_ID)) {
     const tempId = `temp__${crypto.randomUUID()}`;
-    response.cookies.set(ZIPPER_TEMP_USER_ID_COOKIE_NAME, tempId);
+    response.cookies.set(__ZIPPER_TEMP_USER_ID, tempId);
   }
 
   return response;

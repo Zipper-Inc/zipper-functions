@@ -1,5 +1,6 @@
 // created from ctix
 
+export * from '../src/constants/cookies';
 export * from '../src/constants/errors';
 export * from '../src/constants/headers';
 export * from '../src/utils/analytics-head';

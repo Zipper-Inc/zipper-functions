@@ -11,7 +11,7 @@ import { TRPCError } from '@trpc/server';
 import { appSubmissionState, BootInfo, ResourceOwnerType } from '@zipper/types';
 import {
   getInputsFromFormData,
-  ZIPPER_TEMP_USER_ID_COOKIE_NAME,
+  __ZIPPER_TEMP_USER_ID,
   cacheDeployment,
   cacheBootPayload,
 } from '@zipper/utils';
@@ -535,7 +535,7 @@ export const appRouter = createTRPCRouter({
                 where: {
                   userIdOrTempId:
                     ctx.userId ||
-                    (ctx.req?.cookies as any)[ZIPPER_TEMP_USER_ID_COOKIE_NAME],
+                    (ctx.req?.cookies as any)[__ZIPPER_TEMP_USER_ID],
                 },
               },
             },

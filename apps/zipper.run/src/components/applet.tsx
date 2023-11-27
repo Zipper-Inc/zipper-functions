@@ -33,8 +33,9 @@ import {
   getScreenshotUrl,
   NOT_FOUND,
   UNAUTHORIZED,
-  ZIPPER_TEMP_USER_ID_COOKIE_NAME,
-  ZIPPER_TEMP_USER_ID_HEADER,
+  __ZIPPER_TEMP_USER_ID,
+  X_ZIPPER_TEMP_USER_ID,
+  X_ZIPPER_ACCESS_TOKEN,
 } from '@zipper/utils';
 import { deleteCookie } from 'cookies-next';
 import { motion } from 'framer-motion';
@@ -250,7 +251,7 @@ export function AppPage({
               token,
             });
           } else {
-            deleteCookie(ZIPPER_TEMP_USER_ID_COOKIE_NAME);
+            deleteCookie(__ZIPPER_TEMP_USER_ID);
           }
           router.reload();
         },
@@ -265,7 +266,7 @@ export function AppPage({
               token,
             });
           } else {
-            deleteCookie(ZIPPER_TEMP_USER_ID_COOKIE_NAME);
+            deleteCookie(__ZIPPER_TEMP_USER_ID);
           }
           router.reload();
         },
@@ -280,7 +281,7 @@ export function AppPage({
               token,
             });
           } else {
-            deleteCookie(ZIPPER_TEMP_USER_ID_COOKIE_NAME);
+            deleteCookie(__ZIPPER_TEMP_USER_ID);
           }
           router.reload();
         },
@@ -570,7 +571,7 @@ export const getServerSideProps: GetServerSideProps = async ({
   if (__DEBUG__) console.log({ versionFromUrl, filename: filenameFromUrl });
 
   const { token, userId } = await getZipperAuth(req);
-  const tempUserId = req.cookies[ZIPPER_TEMP_USER_ID_COOKIE_NAME];
+  const tempUserId = req.cookies[__ZIPPER_TEMP_USER_ID];
 
   let bootPayload;
   try {
@@ -595,7 +596,7 @@ export const getServerSideProps: GetServerSideProps = async ({
 
   const headers: Record<string, string> = {
     Authorization: `Bearer ${token || ''}`,
-    [ZIPPER_TEMP_USER_ID_HEADER]: tempUserId || '',
+    [X_ZIPPER_TEMP_USER_ID]: tempUserId || '',
   };
 
   const version = versionFromUrl || 'latest';
@@ -731,7 +732,7 @@ export const getServerSideProps: GetServerSideProps = async ({
       handlerConfigs,
       hideRun,
       result,
-      token: req.headers['x-zipper-access-token'] || null,
+      token: req.headers[X_ZIPPER_ACCESS_TOKEN] || null,
       key: resolvedUrl,
     },
   };
@@ -739,7 +740,7 @@ export const getServerSideProps: GetServerSideProps = async ({
   const { githubAuthUrl, slackAuthUrl } = getConnectorsAuthUrl({
     userAuthConnectors:
       (bootInfo as BootInfoWithUserInfo).userAuthConnectors || [],
-    userId: userId || (req.cookies[ZIPPER_TEMP_USER_ID_COOKIE_NAME] as string),
+    userId: userId || (req.cookies[__ZIPPER_TEMP_USER_ID] as string),
     appId: app.id,
     host: req.headers.host,
   });
