@@ -227,7 +227,7 @@ export async function fetchBootPayloadCachedWithUserInfoOrThrow(
   });
 
   debug(
-    `fetchUserInfoFromBootInfo(${params.deploymentId})`,
+    `fetchExtenedUserInfo(${params.deploymentId})`,
     '>',
     result.ok ? '✅ fetch OK' : '❌ fetch NOT OK',
     result,

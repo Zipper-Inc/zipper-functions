@@ -589,6 +589,9 @@ export const getServerSideProps: GetServerSideProps = async ({
 
   if (!bootPayload) return { notFound: true };
 
+  if (__DEBUG__)
+    console.log(`bootPayload for ${resolvedUrl.toString()}`, bootPayload);
+
   const { bootInfo } = bootPayload;
   const { app, inputs: inputParams, entryPoint, runnableScripts } = bootInfo;
 
@@ -619,6 +622,9 @@ export const getServerSideProps: GetServerSideProps = async ({
   const shouldRedirect = isAutoRun || isRunPathMissing;
 
   if (shouldRedirect) {
+    if (__DEBUG__)
+      console.log('shouldRedirect', { isAutoRun, isRunPathMissing });
+
     const runUrl = new URL(resolvedUrl || '', resolvedUrl);
     runUrl.pathname = isEmbedUrl
       ? `/run/embed/${filename}`
@@ -652,6 +658,13 @@ export const getServerSideProps: GetServerSideProps = async ({
   if (isRunUrl) {
     // now that we're on a run URL, run it!
     const inputs = getRunValues({ inputParams, url: req.url, query });
+    if (__DEBUG__)
+      console.log('run url inputs', {
+        inputParams,
+        url: req.url,
+        query,
+        inputs,
+      });
 
     result = await fetch(
       getRelayUrl({
@@ -706,7 +719,7 @@ export const getServerSideProps: GetServerSideProps = async ({
     ...urlValues,
   };
 
-  if (__DEBUG__) console.log({ defaultValues });
+  if (__DEBUG__) console.log('run url default values', defaultValues);
 
   inputParams.forEach((i) => {
     const inputConfig = config?.inputs?.[i.key];
