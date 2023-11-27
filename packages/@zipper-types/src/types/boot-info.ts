@@ -11,6 +11,7 @@ export type AppInfo = {
   requiresAuthToRun: boolean;
   organizationId: string | null;
   isDataSensitive: boolean;
+  createdById: string | null;
   editors: { userId: string; appId: string; isOwner: boolean }[];
   appAuthor?: {
     name: string;
