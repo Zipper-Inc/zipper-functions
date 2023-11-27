@@ -2,7 +2,7 @@
   "name": "@zipper/framework",
   "description": "The Zipper framework for Deno Deploy",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.0.1",
   "scripts": {
     "build:deno": "deno run -A ./bin/generate.ts",
     "build:watch": "deno run -A ./bin/generate-watch.ts",
