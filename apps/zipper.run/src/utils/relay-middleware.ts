@@ -5,21 +5,24 @@ import addAppRun from './add-app-run';
 import {
   fetchBootInfoCachedWithUserOrThrow,
   fetchDeploymentCachedOrThrow,
+  fetchBasicUserInfo,
 } from './get-boot-info';
 import getValidSubdomain from './get-valid-subdomain';
 import { getFilenameAndVersionFromPath } from './get-values-from-url';
 import {
   formatDeploymentId,
   getAppLink,
-  ZIPPER_TEMP_USER_ID_COOKIE_NAME,
+  __ZIPPER_TEMP_USER_ID,
   uuid,
-  ZIPPER_TEMP_USER_ID_HEADER,
+  X_ZIPPER_TEMP_USER_ID,
   webCryptoDecryptFromBase64,
   parseBody,
   noop,
+  UNAUTHORIZED,
 } from '@zipper/utils';
 import Zipper from '@zipper/framework';
 import { getZipperAuth } from './get-zipper-auth';
+import { BootInfo } from '@zipper/types';
 
 const { __DEBUG__, DENO_DEPLOY_SECRET, PUBLICLY_ACCESSIBLE_RPC_HOST } =
   process.env;
@@ -110,22 +113,6 @@ export async function relayRequest(
   if (__DEBUG__) console.log('getValidSubdomain', { host, subdomain });
   if (!subdomain) return { status: 404 };
 
-  // Get the user's JWT token from the session if there is one
-  const zipperAuth = await getZipperAuth(request as any);
-  let token = request.headers
-    .get('Authorization')
-    ?.replace('Bearer', '')
-    .trim();
-  token = token || zipperAuth.token || undefined;
-
-  let tempUserId = request.headers.get(ZIPPER_TEMP_USER_ID_HEADER) || undefined;
-  tempUserId =
-    tempUserId ||
-    request.cookies.get(ZIPPER_TEMP_USER_ID_COOKIE_NAME)?.value.toString();
-
-  const patchedUrl = getPatchedUrl(request);
-  const relayUrl = !bootOnly ? patchedUrl : new URL('/__BOOT__', patchedUrl);
-
   const deployment = await fetchDeploymentCachedOrThrow(subdomain).catch(noop);
   if (!deployment || !deployment.appId) return { status: 404 };
 
@@ -141,20 +128,59 @@ export async function relayRequest(
         : undefined,
   });
 
+  const relayUrl = getPatchedUrl(request);
+
+  const [zipperAuth, relayHeaders] = await Promise.all([
+    getZipperAuth(request as any),
+    getPatchedHeaders(request, deploymentId, relayUrl.host, subdomain),
+  ]);
+
+  // Get the user's JWT token from the session if there is one
+  let token = request.headers
+    .get('Authorization')
+    ?.replace('Bearer', '')
+    .trim();
+  token = token || zipperAuth.token || undefined;
+
+  let tempUserId = request.headers.get(X_ZIPPER_TEMP_USER_ID) || undefined;
+  tempUserId =
+    tempUserId || request.cookies.get(__ZIPPER_TEMP_USER_ID)?.value.toString();
+
   if (bootOnly) {
-    const response = await fetch(relayUrl, {
-      method: 'POST',
-      headers: await getPatchedHeaders(
-        request,
-        deploymentId,
-        relayUrl.hostname,
-        subdomain,
-      ),
-    });
-    const { status, headers } = response;
+    const bootUrl = new URL('/__BOOT__', relayUrl);
+    const [bootRelayResponse, userInfoResponse] = await Promise.all([
+      fetch(bootUrl, {
+        method: 'POST',
+        headers: relayHeaders,
+        credentials: 'include',
+      }).then(async (response) => ({ response, json: await response.json() })),
+      fetchBasicUserInfo({ subdomain, tempUserId, token }),
+    ]);
+
+    const bootPayload = bootRelayResponse.json as Zipper.BootPayload & {
+      bootInfo: BootInfo;
+    };
+
+    const hasRunAccess =
+      bootPayload.ok &&
+      (bootPayload.bootInfo.app.requiresAuthToRun
+        ? userInfoResponse.ok && userInfoResponse.data?.userId
+        : true);
+
+    if (!hasRunAccess)
+      return {
+        result: JSON.stringify({ ok: false, error: UNAUTHORIZED, status: 401 }),
+        status: 401,
+      };
+
+    const { status, headers } = bootRelayResponse.response;
     const mutableHeaders = new Headers(headers);
-    const result = await response.text();
-    return { result, status, headers: mutableHeaders };
+
+    return {
+      result: JSON.stringify(bootPayload),
+      status,
+      headers: mutableHeaders,
+    };
   }
 
   let filename = filenamePassedIn || 'main.ts';
@@ -284,6 +310,7 @@ export default async function serveRelay({
   request: NextRequest;
   bootOnly: boolean;
 }) {
+  console.log({ requestHeaders: request.headers });
   const { version, filename } = getFilenameAndVersionFromPath(
     request.nextUrl.pathname,
     bootOnly ? ['boot'] : ['relay', 'raw'],

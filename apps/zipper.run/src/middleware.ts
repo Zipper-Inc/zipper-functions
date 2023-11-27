@@ -182,7 +182,7 @@ const generateHMAC = async (input: string) => {
 };
 
 const checkAuthCookies = async (request: NextRequest) => {
-  const zipperAccessToken = request.cookies.get('__zipper_token')?.value;
+  const zipperAccessToken = request.cookies.get(__ZIPPER_TOKEN)?.value;
   let userId: string | undefined = undefined;
   if (zipperAccessToken) {
     try {
@@ -257,13 +257,14 @@ export const middleware = async (request: NextRequest) => {
     });
 
   const { userId, accessToken } = await checkAuthCookies(request);
-  console.log('middleware', { userId, accessToken });
   request.headers.set('x-nonce', nonce);
   request.headers.set(
     'Content-Security-Policy',
     // Replace newline characters and spaces
     cspHeader.replace(/\s{2,}/g, ' ').trim(),
   );
+
+  // Forward token as a header
   if (accessToken) request.headers.set(X_ZIPPER_ACCESS_TOKEN, accessToken);
 
   const customResponse = await maybeGetCustomResponse(
