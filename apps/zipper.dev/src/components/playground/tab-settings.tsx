@@ -565,6 +565,7 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
                 <FormControl isRequired>
                   <FormLabel>Description</FormLabel>
                   <Input
+                    spellCheck="true"
                     backgroundColor="bgColor"
                     {...appAccessTokenForm.register('description')}
                   />
