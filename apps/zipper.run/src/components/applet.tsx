@@ -632,7 +632,7 @@ export const getServerSideProps: GetServerSideProps = async ({
     if (__DEBUG__)
       console.log('shouldRedirect', { isAutoRun, isRunPathMissing });
 
-    const runUrl = new URL(req.url || '', req.url);
+    const runUrl = new URL(resolvedUrl || '', getRelayUrl({ slug: subdomain }));
     runUrl.pathname = isEmbedUrl
       ? `/run/embed/${filename}`
       : `/run/${filename}`;
