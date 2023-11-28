@@ -11,7 +11,7 @@ import {
   decryptFromHex,
   encryptToBase64,
   encryptToHex,
-  ZIPPER_TEMP_USER_ID_COOKIE_NAME,
+  __ZIPPER_TEMP_USER_ID,
 } from '@zipper/utils';
 import fetch from 'node-fetch';
 import { AppConnectorUserAuth, Prisma } from '@prisma/client';
@@ -121,8 +121,7 @@ export const slackConnectorRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       const userIdOrTempId =
-        ctx.userId ||
-        (ctx.req?.cookies as any)[ZIPPER_TEMP_USER_ID_COOKIE_NAME];
+        ctx.userId || (ctx.req?.cookies as any)[__ZIPPER_TEMP_USER_ID];
 
       const { appId } = input;
 
@@ -222,7 +221,7 @@ export const slackConnectorRouter = createTRPCRouter({
       const userIdOrTempId =
         userId ||
         ctx.userId ||
-        (ctx.req?.cookies as any)[ZIPPER_TEMP_USER_ID_COOKIE_NAME];
+        (ctx.req?.cookies as any)[__ZIPPER_TEMP_USER_ID];
       if (appId && json.authed_user.scope && userIdOrTempId) {
         const userInfoRes = await fetch('https://slack.com/api/auth.test', {
           method: 'POST',

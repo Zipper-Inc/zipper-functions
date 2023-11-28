@@ -1,5 +1,5 @@
 import { RunInfoResult } from '@zipper/types';
-import { getZipperApiUrl, ZIPPER_TEMP_USER_ID_HEADER } from '@zipper/utils';
+import { getZipperApiUrl, X_ZIPPER_TEMP_USER_ID } from '@zipper/utils';
 
 /**
  * App info endpoint url
@@ -22,7 +22,7 @@ export default async function getRunInfo({
     Authorization: `Bearer ${token || ''}`,
   };
   if (tempUserId) {
-    headers[ZIPPER_TEMP_USER_ID_HEADER] = tempUserId;
+    headers[X_ZIPPER_TEMP_USER_ID] = tempUserId;
   }
   return fetch(`${APP_INFO_URL}/${subdomain}/${runId}`, {
     method: 'POST',

@@ -1,6 +1,6 @@
 import { App, Script } from '@prisma/client';
 import hash from 'object-hash';
-import { frameworkVersion } from '../framework-version';
+import { frameworkVersion } from '../framework-version.gen';
 
 const APP_VERSION_LENGTH = 7;
 
