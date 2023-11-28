@@ -163,7 +163,8 @@ declare namespace Zipper {
     appId: string;
     deploymentId: string;
     configs: { [path: string]: HandlerConfig };
-    bootInfo?: {
+    frameworkVersion: string;
+    bootInfo: {
       app: {
         id: string;
         slug: string;
