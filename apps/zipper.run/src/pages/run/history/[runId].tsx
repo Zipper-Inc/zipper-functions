@@ -1,8 +1,4 @@
-import {
-  UNAUTHORIZED,
-  X_ZIPPER_ACCESS_TOKEN,
-  __ZIPPER_TEMP_USER_ID,
-} from '@zipper/utils';
+import { ZIPPER_TEMP_USER_ID_COOKIE_NAME } from '@zipper/utils';
 import { GetServerSideProps } from 'next';
 import { getConnectorsAuthUrl } from '~/utils/get-connectors-auth-url';
 import { getInputValuesFromAppRun } from '~/utils/get-input-values-from-url';
@@ -29,11 +25,11 @@ export const getServerSideProps: GetServerSideProps = async ({
     subdomain,
     token,
     runId: query.runId as string,
-    tempUserId: req.cookies[__ZIPPER_TEMP_USER_ID],
+    tempUserId: req.cookies[ZIPPER_TEMP_USER_ID_COOKIE_NAME],
   });
 
   if (!result.ok) {
-    if (result.error === UNAUTHORIZED) return { props: { statusCode: 401 } };
+    if (result.error === 'UNAUTHORIZED') return { props: { statusCode: 401 } };
     return { notFound: true };
   }
 
@@ -51,7 +47,7 @@ export const getServerSideProps: GetServerSideProps = async ({
   const { githubAuthUrl, slackAuthUrl } = getConnectorsAuthUrl({
     appId: app.id,
     userAuthConnectors,
-    userId: userId || (req.cookies[__ZIPPER_TEMP_USER_ID] as string),
+    userId: userId || (req.cookies[ZIPPER_TEMP_USER_ID_COOKIE_NAME] as string),
     host: req.headers.host,
   });
 
@@ -75,7 +71,7 @@ export const getServerSideProps: GetServerSideProps = async ({
       runnableScripts,
       githubAuthUrl,
       slackAuthUrl,
-      token: req.headers[X_ZIPPER_ACCESS_TOKEN] || null,
+      token: req.headers['x-zipper-access-token'] || null,
       runUrl,
     } as AppPageProps,
   };

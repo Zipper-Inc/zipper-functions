@@ -30,7 +30,7 @@ async function buildHeaders(appId: string, teamId: string) {
   };
 }
 
-export async function fetchBootInfo(slug: string, filename?: string) {
+export async function getBootInfo(slug: string, filename?: string) {
   const appInfoUrl = `${ZIPPER_APP_INFO_URL}/${slug}`;
   const appInfoResponse = await fetch(appInfoUrl, {
     method: 'POST',
@@ -358,7 +358,7 @@ export async function buildInputModal(
   viewId: string,
   viewHash: string,
 ) {
-  const appInfo = await fetchBootInfo(slug, filename);
+  const appInfo = await getBootInfo(slug, filename);
 
   const blocks = [
     ...buildFilenameSelect(appInfo.data.runnableScripts, filename),
