@@ -26,8 +26,7 @@ type BootInfoParams = {
   deploymentId?: string;
 };
 
-const debug = (...args: any[]) =>
-  process?.env?.__DEBUG__ && console.log(...args);
+const { __DEBUG__ } = process.env;
 
 const buildHeaders = (token?: string | null, tempUserId?: string) => {
   const headers: Record<string, string> = {
@@ -103,12 +102,14 @@ export async function fetchDeploymentCachedOrThrow(
 ): Promise<DeploymentParams> {
   const cached = await cacheDeployment.get(subdomain).catch(noop);
 
-  debug(
-    `fetchDeploymentCachedOrThrow(${subdomain})`,
-    '>',
-    cached ? '✅ CACHE HIT' : '❌ CACHE MISSED',
-    cached,
-  );
+  if (__DEBUG__) {
+    console.log(
+      `fetchDeploymentCachedOrThrow(${subdomain})`,
+      '>',
+      cached ? '✅ CACHE HIT' : '❌ CACHE MISSED',
+      cached,
+    );
+  }
 
   if (cached && cached.deploymentId) return cached;
 
@@ -118,12 +119,14 @@ export async function fetchDeploymentCachedOrThrow(
     .then((r) => r.json())
     .catch((e) => ({ ok: false, error: e.message, status: 500 }));
 
-  debug(
-    `fetchDeploymentCachedOrThrow(${subdomain})`,
-    '>',
-    result.ok ? '✅ FETCH OK' : '❌ FETCH NOT OK',
-    result,
-  );
+  if (__DEBUG__) {
+    console.log(
+      `fetchDeploymentCachedOrThrow(${subdomain})`,
+      '>',
+      result.ok ? '✅ FETCH OK' : '❌ FETCH NOT OK',
+      result,
+    );
+  }
 
   if (!result.ok) {
     throw new Error(result.error || 'Error getting deployment', {
@@ -143,11 +146,13 @@ export async function fetchBootPayloadCachedOrThrow({
   version: versionPassedIn,
   deploymentId: deploymentIdPassedIn,
 }: BootInfoParams): Promise<BootPayload> {
-  debug('fetchBootPayloadCachedOrThrow()', '>', {
-    subdomain,
-    versionPassedIn,
-    deploymentIdPassedIn,
-  });
+  if (__DEBUG__) {
+    console.log('fetchBootPayloadCachedOrThrow()', '>', {
+      subdomain,
+      versionPassedIn,
+      deploymentIdPassedIn,
+    });
+  }
 
   const deployment = deploymentIdPassedIn
     ? parseDeploymentId(deploymentIdPassedIn)
@@ -160,12 +165,14 @@ export async function fetchBootPayloadCachedOrThrow({
 
   const cached = await cacheBootPayload.get({ deploymentId }).catch(noop);
 
-  debug(
-    `fetchBootPayloadCachedOrThrow(${deploymentId})`,
-    '>',
-    cached ? '✅ cache HIT' : '❌ cache MISSED',
-    cached,
-  );
+  if (__DEBUG__) {
+    console.log(
+      `fetchBootPayloadCachedOrThrow(${deploymentId})`,
+      '>',
+      cached ? '✅ cache HIT' : '❌ cache MISSED',
+      cached,
+    );
+  }
 
   if (cached) return cached;
 
@@ -173,12 +180,14 @@ export async function fetchBootPayloadCachedOrThrow({
     getBootUrl({ slug: subdomain, version }),
   ).then((r) => r.json());
 
-  debug(
-    `fetchBootPayloadCachedOrThrow(${deploymentId})`,
-    '>',
-    bootPayload.ok ? '✅ fetch OK' : '❌ fetch NOT OK',
-    bootPayload,
-  );
+  if (__DEBUG__) {
+    console.log(
+      `fetchBootPayloadCachedOrThrow(${deploymentId})`,
+      '>',
+      bootPayload.ok ? '✅ fetch OK' : '❌ fetch NOT OK',
+      bootPayload,
+    );
+  }
 
   if (!bootPayload.ok) {
     throw new Error('Error getting boot payload');
@@ -186,11 +195,13 @@ export async function fetchBootPayloadCachedOrThrow({
 
   // Handle older applets with no bootInfo
   if (!bootPayload.bootInfo) {
-    debug(
-      `fetchBootPayloadCachedOrThrow(${deploymentId})`,
-      '>',
-      '📼 Legacy version',
-    );
+    if (__DEBUG__) {
+      console.log(
+        `fetchBootPayloadCachedOrThrow(${deploymentId})`,
+        '>',
+        '📼 Legacy version',
+      );
+    }
 
     const result = await fetchBootInfo({
       subdomain,
@@ -226,12 +237,14 @@ export async function fetchBootPayloadCachedWithUserInfoOrThrow(
     bootInfo: params.bootInfo || bootPayload.bootInfo,
   });
 
-  debug(
-    `fetchExtenedUserInfo(${params.deploymentId})`,
-    '>',
-    result.ok ? '✅ fetch OK' : '❌ fetch NOT OK',
-    result,
-  );
+  if (__DEBUG__) {
+    console.log(
+      `fetchExtenedUserInfo(${params.deploymentId})`,
+      '>',
+      result.ok ? '✅ fetch OK' : '❌ fetch NOT OK',
+      result,
+    );
+  }
 
   if (!result.ok) {
     throw new Error(result.error || 'UNKNOWN_ERROR');
