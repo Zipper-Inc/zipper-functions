@@ -19,7 +19,6 @@ import {
   Box,
   Flex,
   useDisclosure,
-  SimpleGrid,
   IconButton,
 } from '@chakra-ui/react';
 import React, { useEffect, useMemo, useState } from 'react';
@@ -50,7 +49,6 @@ import UserSettings from './user-settings';
 import AppAvatar from '../app-avatar';
 import { useOrganization } from '~/hooks/use-organization';
 import { getEditAppletLink } from '@zipper/utils';
-import { GalleryItem } from '../gallery/gallery-item';
 import Carousel from 'nuka-carousel';
 import { FiArrowRight } from 'react-icons/fi';
 
@@ -207,7 +205,7 @@ export function Dashboard() {
   });
 
   const galleryApps = trpc.app.allApproved.useQuery({
-    ammout: 6,
+    amount: 6,
   });
 
   const { onOpen, isOpen, onClose } = useDisclosure();
@@ -302,7 +300,7 @@ export function Dashboard() {
                     <CreateAppForm onClose={onClose} />
                   </VStack>
                 ) : (
-                  <VStack flex={3} w="full">
+                  <VStack flex={3} w="full" overflow="hidden">
                     <HStack w="full" spacing={4} pb="4">
                       <Input
                         placeholder="Search applets (name, slug or description)"
@@ -351,12 +349,17 @@ export function Dashboard() {
 
                         {apps.length <= 3 && (
                           <Flex direction="column" w="full" gap={4}>
-                            <Heading size="md" fontWeight="semibold">
-                              Try these applets
+                            <Heading
+                              size="md"
+                              fontWeight="semibold"
+                              color="fg.700"
+                            >
+                              Looking for inspiration?
                             </Heading>
 
                             <Flex
                               direction="column"
+                              display={{ base: 'none', md: 'flex' }}
                               gap={4}
                               w="calc(100% + 24px)"
                               marginLeft={-3}
@@ -410,7 +413,7 @@ export function Dashboard() {
                                     </Box>
                                     <Flex direction="column" h="full" flex={1}>
                                       <Box h="50%">
-                                        <Heading size="md">
+                                        <Heading size="sm" color="fg.700">
                                           {app.name ?? app.slug}
                                         </Heading>
                                         <Text fontSize="sm">
@@ -418,7 +421,7 @@ export function Dashboard() {
                                         </Text>
                                       </Box>
 
-                                      <Text color="fg.500">
+                                      <Text color="fg.500" fontSize="sm">
                                         {app.description}
                                       </Text>
                                     </Flex>

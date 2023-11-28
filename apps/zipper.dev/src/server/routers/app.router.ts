@@ -298,7 +298,7 @@ export const appRouter = createTRPCRouter({
     .input(
       z
         .object({
-          ammout: z.number(),
+          amount: z.number(),
         })
         .optional(),
     )
@@ -343,7 +343,7 @@ export const appRouter = createTRPCRouter({
           // prettier-ignore
           [] as ((typeof apps)[0] & { resourceOwner: ResourceOwnerSlug })[],
         )
-        .slice(0, input?.ammout ?? apps.length + 1);
+        .slice(0, input?.amount ?? apps.length + 1);
     }),
   byAuthedUser: protectedProcedure
     .input(
