@@ -1,9 +1,11 @@
 import { useToast } from '@chakra-ui/react';
+import { useQuery } from '@tanstack/react-query';
 import { FunctionUserConnectors } from '@zipper/ui';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { trpc } from '~/utils/trpc';
 import { useRunAppContext } from '../context/run-app-context';
+import { initApplet } from '@zipper-inc/client-js';
 
 export const AppEditSidebarAppletConnectors = () => {
   const toast = useToast();
@@ -86,19 +88,27 @@ export const AppEditSidebarAppletConnectors = () => {
 
   // get the Slack auth URL -- if required --from the backend
   // (it includes an encrypted state value that links the auth request to the app)
-  const slackAuthURL = trpc.slackConnector.getAuthUrl.useQuery(
-    {
-      appId,
-      scopes: {
-        bot: slackConnector.data?.workspaceScopes || [],
-        user: slackConnector.data?.userScopes || [],
+  const slackAuthURL = useQuery({
+    queryKey: [
+      'slackAuthURL',
+      {
+        appId,
+        botScopes: slackConnector.data?.workspaceScopes || [],
+        userScopes: slackConnector.data?.userScopes || [],
+        postInstallationRedirect: window.location.href,
+        // TODO: Where I can get clientId & clientSecret ?
       },
-      postInstallationRedirect: window.location.href,
-    },
-    {
-      enabled: slackConnector.isFetched,
-    },
-  );
+    ],
+    queryFn: () =>
+      initApplet('slack-config').run({
+        appId,
+        botScopes: slackConnector.data?.workspaceScopes || [],
+        userScopes: slackConnector.data?.userScopes || [],
+        postInstallationRedirect: window.location.href,
+        // TODO: Where I can get clientId & clientSecret ?
+      }),
+    enabled: slackConnector.isFetched,
+  });
 
   // get the Github auth URL -- if required --from the backend
   // (it includes an encrypted state value that links the auth request to the app)

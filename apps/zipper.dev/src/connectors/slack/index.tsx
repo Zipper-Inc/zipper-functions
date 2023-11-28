@@ -40,6 +40,8 @@ import { useRouter } from 'next/router';
 import { code, userScopes, workspaceScopes } from './constants';
 import { useRunAppContext } from '~/components/context/run-app-context';
 import { useUser } from '~/hooks/use-user';
+import { useQuery } from '@tanstack/react-query';
+import { initApplet } from '@zipper-inc/client-js';
 
 // configure the Slack connector
 export const slackConnector = createConnector({
@@ -133,11 +135,26 @@ function SlackConnectorForm({ appId }: { appId: string }) {
 
   // get the Slack auth URL from the backend (it includes an encrypted state value that links
   // the auth request to the app)
-  const slackAuthURL = trpc.slackConnector.getAuthUrl.useQuery({
-    appId,
-    scopes: { bot: botValue as string[], user: userValue as string[] },
-    postInstallationRedirect: window.location.href,
+  const slackAuthURL = useQuery({
+    queryKey: [
+      'slackAuthURL',
+      { appId, clientId, clientSecret, botValue, userValue },
+    ],
+    queryFn: () =>
+      initApplet('slack-config').run({
+        clientId,
+        clientSecret,
+        botScopes: botValue,
+        userScopes: userValue,
+        postInstallRedirect: window.location.href,
+      }),
+    enabled: !!clientId && !!clientSecret,
   });
+  // const slackAuthURL = trpc.slackConnector.getAuthUrl.useQuery({
+  //   appId,
+  //   scopes: { bot: botValue as string[], user: userValue as string[] },
+  //   postInstallationRedirect: window.location.href,
+  // });
 
   const [slackAuthInProgress, setSlackAuthInProgress] = useState(false);
 
