@@ -2,8 +2,6 @@
 
 import './zipper.d.ts';
 import { files } from './applet/generated/index.gen.ts';
-import bootInfoCached from './applet/generated/boot-info.gen.ts';
-import { frameworkVersion } from './applet/generated/framework-version.gen.ts';
 import { BOOT_PATH, ENV_BLOCKLIST, MAIN_PATH } from './lib/constants.ts';
 import { ZipperStorage } from './lib/storage.ts';
 import { sendLog, methods } from './lib/console.ts';
@@ -12,52 +10,10 @@ import './lib/global-components.ts';
 
 const PORT = 8888;
 
-const RESPONSE_HEADERS = {
-  'x-zipper-framework-version': frameworkVersion,
-};
-
 /**
  * Run the applet with the given RequestEvent
  */
 async function runApplet({ request: relayRequest }: Deno.RequestEvent) {
-  const deploymentId = relayRequest.headers.get('x-zipper-deployment-id');
-  const slug = relayRequest.headers.get('x-zipper-subdomain') as string;
-  let [appId, version] = deploymentId?.split('@') as [string, string];
-
-  // Handle booting seperately
-  // This way, we can deploy without running Applet code
-  if (new URL(relayRequest.url).pathname === `/${BOOT_PATH}`) {
-    const configs = Object.entries(files).reduce(
-      (map, [path, { config }]) =>
-        config
-          ? {
-              ...map,
-              [path]: config,
-            }
-          : map,
-      {},
-    );
-
-    const bootPayload: Zipper.BootPayload = {
-      ok: true,
-      slug,
-      version,
-      appId,
-      deploymentId: deploymentId || `${appId}@${version}`,
-      configs,
-      bootInfo: bootInfoCached,
-      frameworkVersion,
-    };
-
-    return new Response(JSON.stringify(bootPayload), {
-      status: 200,
-      headers: {
-        ...RESPONSE_HEADERS,
-        'x-zipper-boot': deploymentId || `${appId}@${version}`,
-      },
-    });
-  }
-
   let body;
   let error;
 
@@ -73,12 +29,9 @@ async function runApplet({ request: relayRequest }: Deno.RequestEvent) {
     const errorString = error ? `\n${error.toString()}` : '';
     return new Response(
       `Zipper Error 400: Missing body ${errorString}`.trim(),
-      { status: 400, headers: RESPONSE_HEADERS },
+      { status: 400 },
     );
   }
-
-  appId = body.appInfo?.id || appId;
-  version = body.appInfo?.version || version;
 
   // Clean up env object
   const env = Deno.env.toObject();
@@ -87,12 +40,41 @@ async function runApplet({ request: relayRequest }: Deno.RequestEvent) {
     delete env[key];
   });
 
-  const { userInfo, runId, userConnectorTokens, originalRequest } = body;
+  const { appInfo, userInfo, runId, userConnectorTokens, originalRequest } =
+    body;
+
+  // Handle booting seperately
+  // This way, we can deploy without running Applet code
+  if (new URL(relayRequest.url).pathname === `/${BOOT_PATH}`) {
+    const { id, slug, version } = appInfo;
+
+    const configs = Object.entries(files).reduce(
+      (map, [path, { config }]) =>
+        config
+          ? {
+              ...map,
+              [path]: config,
+            }
+          : map,
+      {},
+    );
+
+    const bootPayload: Zipper.BootPayload = {
+      ok: true,
+      slug,
+      version,
+      appId: id,
+      deploymentId: `${id}@${version}`,
+      configs,
+    };
+
+    return new Response(JSON.stringify(bootPayload), { status: 200 });
+  }
 
   // Attach ZipperGlobal
   window.Zipper = {
     env,
-    storage: new ZipperStorage(appId),
+    storage: new ZipperStorage(appInfo.id),
     Component: {
       create: (component) => ({
         $zipperType: 'Zipper.Component',
@@ -147,8 +129,8 @@ async function runApplet({ request: relayRequest }: Deno.RequestEvent) {
     console[method] = (...data) => {
       originalMethod(...data);
       sendLog({
-        appId,
-        version,
+        appId: appInfo.id,
+        version: appInfo.version,
         runId,
         log: {
           id: crypto.randomUUID(),
@@ -166,10 +148,7 @@ async function runApplet({ request: relayRequest }: Deno.RequestEvent) {
 
   // Handle missing paths
   if (!handler) {
-    return new Response(`Zipper Error 404: Path not found`, {
-      status: 404,
-      headers: RESPONSE_HEADERS,
-    });
+    return new Response(`Zipper Error 404: Path not found`, { status: 404 });
   }
 
   // Run the handler
@@ -178,9 +157,7 @@ async function runApplet({ request: relayRequest }: Deno.RequestEvent) {
      * A blank slate for a response object
      * Can be written to from inside a handler
      */
-    const response: Zipper.HandlerContext['response'] = {
-      headers: { ...RESPONSE_HEADERS },
-    };
+    const response: Zipper.HandlerContext['response'] = {};
 
     const stash: Zipper.HandlerContext['stash'] = {
       get: (key) => stash[key],
@@ -188,12 +165,12 @@ async function runApplet({ request: relayRequest }: Deno.RequestEvent) {
     };
     const context: Zipper.HandlerContext = {
       userInfo,
-      appInfo: body.appInfo,
+      appInfo,
       runId,
       request: originalRequest,
       response,
       userConnectorTokens,
-      relayRequest,
+      relayRequest: relayRequest,
       stash,
     };
 
@@ -227,7 +204,7 @@ async function runApplet({ request: relayRequest }: Deno.RequestEvent) {
     const errorString = e ? `\n${e.toString()}` : '';
     return new Response(
       `Zipper Error 500: Error running handler ${errorString}`.trim(),
-      { status: 500, headers: RESPONSE_HEADERS },
+      { status: 500 },
     );
   }
 }

@@ -1,19 +1,14 @@
-const HASH_FILE_PATHS = [
-  `../../apps/zipper.dev/src/framework-version.gen.ts`,
-  `./deno/applet/generated/framework-version.gen.ts`,
-];
+const HASH_FILE_PATH = `../../apps/zipper.dev/src/framework-version.ts`;
 
 export async function writeVersion() {
   const packageJson = JSON.parse(await Deno.readTextFile('./package.json'));
-  HASH_FILE_PATHS.forEach((path) => {
-    Deno.writeTextFileSync(
-      path,
-      `//generated - don't edit
-export const frameworkVersion = "${packageJson.version}" as string;`,
-    );
+  Deno.writeTextFileSync(
+    HASH_FILE_PATH,
+    `//generated - don't edit
+export const frameworkVersion = "${packageJson.version}"`,
+  );
 
-    Deno.run({
-      cmd: ['yarn', 'prettier', path, '-w'],
-    });
+  Deno.run({
+    cmd: ['yarn', 'prettier', HASH_FILE_PATH, '-w'],
   });
 }

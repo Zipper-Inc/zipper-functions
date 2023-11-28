@@ -8,10 +8,7 @@ import htmlHandler from './api-handlers/html.handler';
 import {
   getZipperApiUrl,
   hasBrowserLikeUserAgent,
-  X_ZIPPER_ACCESS_TOKEN,
-  __ZIPPER_REFRESH,
-  __ZIPPER_TEMP_USER_ID,
-  __ZIPPER_TOKEN,
+  ZIPPER_TEMP_USER_ID_COOKIE_NAME,
 } from '@zipper/utils';
 import { jwtVerify } from 'jose';
 import getValidSubdomain from './utils/get-valid-subdomain';
@@ -182,7 +179,7 @@ const generateHMAC = async (input: string) => {
 };
 
 const checkAuthCookies = async (request: NextRequest) => {
-  const zipperAccessToken = request.cookies.get(__ZIPPER_TOKEN)?.value;
+  const zipperAccessToken = request.cookies.get('__zipper_token')?.value;
   let userId: string | undefined = undefined;
   if (zipperAccessToken) {
     try {
@@ -192,7 +189,7 @@ const checkAuthCookies = async (request: NextRequest) => {
       );
       userId = payload.sub;
     } catch (e) {
-      const refreshToken = request.cookies.get(__ZIPPER_REFRESH)?.value;
+      const refreshToken = request.cookies.get('__zipper_refresh')?.value;
 
       if (refreshToken) {
         try {
@@ -257,29 +254,28 @@ export const middleware = async (request: NextRequest) => {
     });
 
   const { userId, accessToken } = await checkAuthCookies(request);
-  request.headers.set('x-nonce', nonce);
-  request.headers.set(
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set('x-nonce', nonce);
+  requestHeaders.set(
     'Content-Security-Policy',
     // Replace newline characters and spaces
     cspHeader.replace(/\s{2,}/g, ' ').trim(),
   );
-
-  // Forward token as a header
-  if (accessToken) request.headers.set(X_ZIPPER_ACCESS_TOKEN, accessToken);
+  if (accessToken) requestHeaders.set('x-zipper-access-token', accessToken);
 
   const customResponse = await maybeGetCustomResponse(
     appRoute,
     request,
-    request.headers,
+    requestHeaders,
   );
 
   const response =
     customResponse ||
-    NextResponse.next({ request: { headers: new Headers(request.headers) } });
+    NextResponse.next({ request: { headers: requestHeaders } });
 
   if (accessToken) {
     response.cookies.set({
-      name: __ZIPPER_TOKEN,
+      name: '__zipper_token',
       value: accessToken,
       httpOnly: true,
       sameSite: 'lax',
@@ -287,13 +283,13 @@ export const middleware = async (request: NextRequest) => {
       path: '/',
     });
   } else {
-    response.cookies.set(__ZIPPER_TOKEN, '', {
+    response.cookies.set('__zipper_token', '', {
       expires: new Date(Date.now()),
       httpOnly: true,
       sameSite: 'lax',
       secure: process.env.NODE_ENV === 'production',
     });
-    response.cookies.set(__ZIPPER_REFRESH, '', {
+    response.cookies.set('__zipper_refresh', '', {
       expires: new Date(Date.now()),
       httpOnly: true,
       sameSite: 'lax',
@@ -301,9 +297,9 @@ export const middleware = async (request: NextRequest) => {
     });
   }
 
-  if (!userId && !request.cookies.get(__ZIPPER_TEMP_USER_ID)) {
+  if (!userId && !request.cookies.get(ZIPPER_TEMP_USER_ID_COOKIE_NAME)) {
     const tempId = `temp__${crypto.randomUUID()}`;
-    response.cookies.set(__ZIPPER_TEMP_USER_ID, tempId);
+    response.cookies.set(ZIPPER_TEMP_USER_ID_COOKIE_NAME, tempId);
   }
 
   return response;
