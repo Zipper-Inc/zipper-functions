@@ -91,7 +91,7 @@ declare namespace Zipper {
     /**
      * Meta info about the applet itself
      */
-    appInfo: AppInfo;
+    appInfo: RelayAppInfo;
 
     /**
      * The ID for this particular run
@@ -163,6 +163,65 @@ declare namespace Zipper {
     appId: string;
     deploymentId: string;
     configs: { [path: string]: HandlerConfig };
+    bootInfo?: {
+      app: {
+        id: string;
+        slug: string;
+        name: string | null;
+        description: string | null;
+        updatedAt: Date | string | null;
+        isPrivate: boolean;
+        requiresAuthToRun: boolean;
+        organizationId: string | null;
+        isDataSensitive: boolean;
+        createdById: string | null;
+        editors: { userId: string; appId: string; isOwner: boolean }[];
+        appAuthor?: {
+          name: string;
+          organization: string;
+          image: string;
+          orgImage: string;
+        };
+        canUserEdit?: boolean | undefined;
+      };
+      connectors: {
+        type: string;
+        appId: string;
+        isUserAuthRequired: boolean;
+        clientId?: string;
+        userScopes: string[];
+        workspaceScopes: string[];
+      }[];
+      inputs: {
+        key: string;
+        type:
+          | 'string'
+          | 'number'
+          | 'boolean'
+          | 'date'
+          | 'array'
+          | 'object'
+          | 'any'
+          | 'enum'
+          | 'FileUrl'
+          | 'unknown';
+        optional: boolean;
+        name?: string;
+        label?: string;
+        placeholder?: string;
+        description?: string;
+        defaultValue?: Zipper.Serializable;
+        value?: Zipper.Serializable;
+        details?: Zipper.Serializable;
+      }[];
+      parsedScripts: Record<string, Record<string, any>>;
+      runnableScripts: string[];
+      metadata?: Record<string, string | undefined>;
+      entryPoint: {
+        filename: string;
+        editUrl: string;
+      };
+    };
   };
 
   /**
@@ -391,12 +450,12 @@ declare namespace Zipper {
    * Meta info about the app itself
    * @category Runtime
    */
-  export type AppInfo = {
+  export type RelayAppInfo = {
     id: string;
     slug: string;
     version: string;
-    url: string;
-    connectorsWithUserAuth: string[];
+    url?: string;
+    connectorsWithUserAuth?: string[];
   };
 
   /**
@@ -411,7 +470,7 @@ declare namespace Zipper {
      */
     export type RequestBody = {
       error?: string;
-      appInfo: AppInfo;
+      appInfo: RelayAppInfo;
       runId: string;
       inputs: Inputs;
       userInfo?: UserInfo;

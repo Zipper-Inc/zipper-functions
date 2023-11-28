@@ -1,14 +1,21 @@
+import { X_ZIPPER_ACCESS_TOKEN } from '@zipper/utils';
 import { IncomingMessage } from 'http';
 import { jwtVerify } from 'jose';
+import { NextRequest } from 'next/server';
 
-export const getZipperAuth = async (
-  request: IncomingMessage & {
-    cookies: Partial<{
-      [key: string]: string;
-    }>;
-  },
-) => {
-  const zipperAccessToken = request.headers['x-zipper-access-token'];
+type RequestLike =
+  | NextRequest
+  | (IncomingMessage & {
+      cookies: Partial<{
+        [key: string]: string;
+      }>;
+    });
+
+export const getZipperAuth = async (request: RequestLike) => {
+  const zipperAccessToken =
+    typeof request.headers.get === 'function'
+      ? request.headers.get(X_ZIPPER_ACCESS_TOKEN)
+      : (request.headers as Record<string, string>)[X_ZIPPER_ACCESS_TOKEN];
 
   if (zipperAccessToken) {
     const { payload } = await jwtVerify(
