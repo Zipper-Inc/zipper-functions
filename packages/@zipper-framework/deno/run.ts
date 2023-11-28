@@ -12,6 +12,10 @@ import './lib/global-components.ts';
 
 const PORT = 8888;
 
+const RESPONSE_HEADERS = {
+  'x-zipper-framework-version': frameworkVersion,
+};
+
 /**
  * Run the applet with the given RequestEvent
  */
@@ -45,7 +49,13 @@ async function runApplet({ request: relayRequest }: Deno.RequestEvent) {
       frameworkVersion,
     };
 
-    return new Response(JSON.stringify(bootPayload), { status: 200 });
+    return new Response(JSON.stringify(bootPayload), {
+      status: 200,
+      headers: {
+        ...RESPONSE_HEADERS,
+        'x-zipper-boot': deploymentId || `${appId}@${version}`,
+      },
+    });
   }
 
   let body;
@@ -63,12 +73,12 @@ async function runApplet({ request: relayRequest }: Deno.RequestEvent) {
     const errorString = error ? `\n${error.toString()}` : '';
     return new Response(
       `Zipper Error 400: Missing body ${errorString}`.trim(),
-      { status: 400 },
+      { status: 400, headers: RESPONSE_HEADERS },
     );
   }
 
-  appId = body.appInfo.id || appId;
-  version = body.appInfo.version || version;
+  appId = body.appInfo?.id || appId;
+  version = body.appInfo?.version || version;
 
   // Clean up env object
   const env = Deno.env.toObject();
@@ -156,7 +166,10 @@ async function runApplet({ request: relayRequest }: Deno.RequestEvent) {
 
   // Handle missing paths
   if (!handler) {
-    return new Response(`Zipper Error 404: Path not found`, { status: 404 });
+    return new Response(`Zipper Error 404: Path not found`, {
+      status: 404,
+      headers: RESPONSE_HEADERS,
+    });
   }
 
   // Run the handler
@@ -165,7 +178,9 @@ async function runApplet({ request: relayRequest }: Deno.RequestEvent) {
      * A blank slate for a response object
      * Can be written to from inside a handler
      */
-    const response: Zipper.HandlerContext['response'] = {};
+    const response: Zipper.HandlerContext['response'] = {
+      headers: { ...RESPONSE_HEADERS },
+    };
 
     const stash: Zipper.HandlerContext['stash'] = {
       get: (key) => stash[key],
@@ -212,7 +227,7 @@ async function runApplet({ request: relayRequest }: Deno.RequestEvent) {
     const errorString = e ? `\n${e.toString()}` : '';
     return new Response(
       `Zipper Error 500: Error running handler ${errorString}`.trim(),
-      { status: 500 },
+      { status: 500, headers: RESPONSE_HEADERS },
     );
   }
 }
