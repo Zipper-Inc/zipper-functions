@@ -610,7 +610,10 @@ export const getServerSideProps: GetServerSideProps = async ({
   };
 
   const version = versionFromUrl || 'latest';
-  const filename = filenameFromUrl || 'main.ts';
+  let filename = filenameFromUrl || 'main.ts';
+  if (!filename.endsWith('.ts')) filename = `${filename}.ts}`;
+
+  if (!runnableScripts.includes(filename)) return { notFound: true };
 
   const { configs: handlerConfigs } = bootPayload;
 
