@@ -152,11 +152,12 @@ export async function relayRequest(
   }
 
   if (bootOnly) {
+    const bootBody = { appInfo: { id: appId, version } };
     const bootUrl = new URL('/__BOOT__', relayUrl);
     const [bootRelayResponse, userInfoResponse] = await Promise.all([
       fetch(bootUrl, {
         method: 'POST',
-        body: '{}',
+        body: JSON.stringify(bootBody),
         headers: relayHeaders,
         credentials: 'include',
       }).then(async (response) => ({ response, json: await response.json() })),
