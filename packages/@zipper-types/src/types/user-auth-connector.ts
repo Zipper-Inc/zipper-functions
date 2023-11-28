@@ -9,17 +9,13 @@ export type ConnectorType =
 
 export type UserAuthConnectorType = 'github' | 'slack';
 
-export type Connector = {
-  type: ConnectorType;
+export type UserAuthConnector = {
+  type: UserAuthConnectorType;
   appId: string;
   isUserAuthRequired: boolean;
   clientId?: string;
   userScopes: string[];
   workspaceScopes: string[];
-};
-
-export type UserAuthConnector = Connector & {
-  type: UserAuthConnectorType;
   appConnectorUserAuths: Required<{
     encryptedAccessToken: string;
     connectorType: string;

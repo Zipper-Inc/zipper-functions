@@ -5,7 +5,7 @@ export async function writeVersion() {
   Deno.writeTextFileSync(
     HASH_FILE_PATH,
     `//generated - don't edit
-export const frameworkVersion = "${packageJson.version}" as string;`,
+export const frameworkVersion = "${packageJson.version}"`,
   );
 
   Deno.run({
