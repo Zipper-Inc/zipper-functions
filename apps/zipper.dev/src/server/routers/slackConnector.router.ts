@@ -17,7 +17,7 @@ import fetch from 'node-fetch';
 import { AppConnectorUserAuth, Prisma } from '@prisma/client';
 import { filterTokenFields } from '~/server/utils/json';
 import { createTRPCRouter, publicProcedure } from '../root';
-import { getSlackConfig } from '../utils/getSlackConfig';
+import { getSlackConfig } from '../utils/getConnectorConfig';
 
 export const slackConnectorRouter = createTRPCRouter({
   get: publicProcedure
