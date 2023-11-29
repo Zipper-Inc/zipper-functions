@@ -2,7 +2,6 @@ import { AppConnectorUserAuth } from '@prisma/client';
 import { generateReactHelpers } from '@uploadthing/react/hooks';
 import {
   AppInfo,
-  BootInfo,
   BootPayload,
   InputParam,
   UserAuthConnectorType,
@@ -123,6 +122,7 @@ export function RunAppProvider({
     editors,
     createdById,
     organizationId,
+    canUserEdit,
   } = app;
   const formMethods = useForm();
   const [isRunning, setIsRunning] = useState(false);
@@ -140,7 +140,6 @@ export function RunAppProvider({
 
   // clean up when unmounting
   useEffect(() => cleanUpLogTimers, []);
-
   const runAppMutation = trpc.app.run.useMutation({
     async onSuccess() {
       await utils.app.byResourceOwnerAndAppSlugs.invalidate({
@@ -405,6 +404,7 @@ export function RunAppProvider({
           requiresAuthToRun,
           editors,
           organizationId,
+          canUserEdit,
         },
         formMethods,
         isRunning,
@@ -417,6 +417,7 @@ export function RunAppProvider({
         boot,
         bootPromise,
         configs,
+        canUserEdit,
       }}
     >
       {children}
