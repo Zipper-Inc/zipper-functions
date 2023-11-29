@@ -17,6 +17,7 @@ import fetch from 'node-fetch';
 import { AppConnectorUserAuth, Prisma } from '@prisma/client';
 import { filterTokenFields } from '~/server/utils/json';
 import { createTRPCRouter, publicProcedure } from '../root';
+import { getSlackConfig } from '../utils/getSlackConfig';
 
 export const slackConnectorRouter = createTRPCRouter({
   get: publicProcedure
@@ -193,7 +194,23 @@ export const slackConnectorRouter = createTRPCRouter({
     .input(z.object({ appId: z.string() }))
     .mutation(async ({ ctx, input }) => {
       // get slack-connector file code
-      // parse slackConnectorConfig
+      const script = await prisma.script.findFirst({
+        where: {
+          name: 'slack-connector',
+        },
+        select: {
+          code: true,
+          id: true,
+        },
+      });
+      if (!script?.code) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'No slack-connector script found',
+        });
+      }
+      const slackConfig = getSlackConfig(script.code);
+      return slackConfig;
     }),
   exchangeCodeForToken: publicProcedure
     .input(
