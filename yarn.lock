@@ -5701,6 +5701,11 @@
   resolved "https://registry.yarnpkg.com/@uploadthing/shared/-/shared-6.0.0.tgz#1ed565748c05b2b73c2cdfff6cc9e80465474d46"
   integrity sha512-1utPnQxluUxShO095IGOeU3NT0nERVSlY97R8c0dcIoDc689CRX7BFrBws58PuWuAhmPp2Mjyo1e9wn3rSBjgg==
 
+"@uploadthing/shared@^6.0.2":
+  version "6.0.2"
+  resolved "https://registry.yarnpkg.com/@uploadthing/shared/-/shared-6.0.2.tgz#8c804ee087b76254f06d76792967515bd12e6971"
+  integrity sha512-yFOhvzBG8VB2qmEGWDuW/tV/ZcfRZ4a6rX7i9/ZS3IqHA0FO7CKa8yitltAl3yRdSI9it88iMEQg7Ah/ve8D4A==
+
 "@zag-js/element-size@0.3.0":
   version "0.3.0"
   resolved "https://registry.npmjs.org/@zag-js/element-size/-/element-size-0.3.0.tgz"
@@ -15064,13 +15069,13 @@ update-browserslist-db@^1.0.9:
     escalade "^3.1.1"
     picocolors "^1.0.0"
 
-uploadthing@^6.0.1:
-  version "6.0.1"
-  resolved "https://registry.yarnpkg.com/uploadthing/-/uploadthing-6.0.1.tgz#8f2ded58f717798f0526ba24307b4781b06a9c4a"
-  integrity sha512-1gXOTAbRx/l27TLZlZCOhucOxIwGCR6H865AgYQuWQQaYmg/EvS94udcu/+cRKHvjEvDEclUE20qCDXrROTSUg==
+uploadthing@^6.0.3:
+  version "6.0.3"
+  resolved "https://registry.yarnpkg.com/uploadthing/-/uploadthing-6.0.3.tgz#5883ce72b4d26625a20261cc50b939bff79209c8"
+  integrity sha512-KH+FWHUg9zsJT+pYcVOa3p6WiPBJ8Qdgv+HUArkW8C5wF6nnDFhBFIg6hEa499Q5mcO4UOY5hLeBGMJu/C+abQ==
   dependencies:
     "@uploadthing/mime-types" "^0.2.2"
-    "@uploadthing/shared" "^6.0.0"
+    "@uploadthing/shared" "^6.0.2"
 
 upper-case-first@^2.0.2:
   version "2.0.2"
