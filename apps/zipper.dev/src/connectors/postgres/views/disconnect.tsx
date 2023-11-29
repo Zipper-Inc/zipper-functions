@@ -36,13 +36,7 @@ const PostgresDisconect: React.FC<{
         utils.postgresConnector.get.invalidate({ appId });
         utils.secret.get.invalidate({
           appId,
-          key: [
-            'POSTGRES_HOST',
-            'POSTGRES_USER',
-            'POSTGRES_DATABASE',
-            'POSTGRES_PORT',
-            'POSTGRES_PASSWORD',
-          ],
+          key: ['POSTGRES_CONNECTION_STRING'],
         });
       },
     });

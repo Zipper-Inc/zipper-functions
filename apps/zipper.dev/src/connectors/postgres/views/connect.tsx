@@ -28,14 +28,7 @@ const CLIENT_ID_FORM = {
   DESCRIPTION: 'Add your postgres database configuration.',
 };
 
-type PostgresInputsNames =
-  // | 'POSTGRES_CONNECTION_STRING'
-  | 'POSTGRES_HOST'
-  | 'POSTGRES_HOST'
-  | 'POSTGRES_PORT'
-  | 'POSTGRES_USER'
-  | 'POSTGRES_DATABASE'
-  | 'POSTGRES_PASSWORD';
+type PostgresInputsNames = 'POSTGRES_CONNECTION_STRING';
 
 type PostgresInputs = {
   formLabel: string;
@@ -45,12 +38,7 @@ type PostgresInputs = {
 type PostgresForm = Record<PostgresInputs['name'], string>;
 
 const inputs: PostgresInputs[] = [
-  // { formLabel: 'Connection String', name: 'POSTGRES_CONNECTION_STRING' },
-  { formLabel: 'Host', name: 'POSTGRES_HOST' },
-  { formLabel: 'Port', name: 'POSTGRES_PORT' },
-  { formLabel: 'User', name: 'POSTGRES_USER' },
-  { formLabel: 'Database', name: 'POSTGRES_DATABASE' },
-  { formLabel: 'Password', name: 'POSTGRES_PASSWORD', type: 'password' },
+  { formLabel: 'Connection String', name: 'POSTGRES_CONNECTION_STRING' },
 ];
 
 /* -------------------------------------------- */
@@ -75,14 +63,7 @@ const PostgresConnect: React.FC<{ appId: string }> = ({ appId }) => {
     async onSuccess() {
       context.secret.get.invalidate({
         appId,
-        key: [
-          'POSTGRES_CONNECTION_STRING',
-          'POSTGRES_HOST',
-          'POSTGRES_USER',
-          'POSTGRES_DATABASE',
-          'POSTGRES_PORT',
-          'POSTGRES_PASSWORD',
-        ],
+        key: ['POSTGRES_CONNECTION_STRING'],
       });
     },
   });
@@ -124,7 +105,7 @@ const PostgresConnect: React.FC<{ appId: string }> = ({ appId }) => {
     const formData = getValues();
 
     // Construct connection string or use individual parts
-    const connectionString = `postgres://${formData.POSTGRES_USER}:${formData.POSTGRES_PASSWORD}@${formData.POSTGRES_HOST}:${formData.POSTGRES_PORT}/${formData.POSTGRES_DATABASE}?sslmode=require`;
+    const connectionString = `${formData.POSTGRES_CONNECTION_STRING}?sslmode=require`;
 
     try {
       const response = await fetch('/api/testConnection', {
@@ -151,7 +132,7 @@ const PostgresConnect: React.FC<{ appId: string }> = ({ appId }) => {
     isTestingConnection === 'Connected!' ? 'success' : 'error';
   const connectionMessage =
     isTestingConnection === 'Connected!'
-      ? 'Your connection to the database was successful!'
+      ? 'Connection successfull!'
       : errorMessage;
 
   /* ------------------ Render ------------------ */
@@ -207,13 +188,12 @@ const PostgresConnect: React.FC<{ appId: string }> = ({ appId }) => {
               Save & Install
             </Button>
           </HStack>
-          {isTestingConnection !== 'Testing' && (
+          {isTestingConnection && isTestingConnection !== 'Testing' && (
             <Alert status={connectionStatus}>
               <AlertIcon />
               <AlertTitle mr={2}>{connectionMessage}</AlertTitle>
               <AlertDescription>
-                {connectionMessage ===
-                'Your connection to the database was successful!'
+                {connectionMessage === 'Connection successfull!'
                   ? 'You can now install the connector.'
                   : 'Please check your connection details and try again.'}
               </AlertDescription>

@@ -35,13 +35,7 @@ function PostgresConnectorForm({ appId }: { appId: string }) {
   const existingSecret = trpc.secret.get.useQuery(
     {
       appId,
-      key: [
-        'POSTGRES_HOST',
-        'POSTGRES_USER',
-        'POSTGRES_DATABASE',
-        'POSTGRES_PORT',
-        'POSTGRES_PASSWORD',
-      ],
+      key: ['POSTGRES_CONNECTION_STRING'],
     },
     { enabled: !!appId },
   );
