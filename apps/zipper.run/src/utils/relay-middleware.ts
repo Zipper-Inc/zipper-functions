@@ -22,7 +22,7 @@ import {
 } from '@zipper/utils';
 import Zipper from '@zipper/framework';
 import { getZipperAuth } from './get-zipper-auth';
-import { BootInfo, BootPayload } from '@zipper/types';
+import { BootPayload } from '@zipper/types';
 
 const { __DEBUG__, DENO_DEPLOY_SECRET, PUBLICLY_ACCESSIBLE_RPC_HOST } =
   process.env;
@@ -329,7 +329,6 @@ export default async function serveRelay({
   request: NextRequest;
   bootOnly: boolean;
 }) {
-  console.log({ requestHeaders: request.headers });
   const { version, filename } = getFilenameAndVersionFromPath(
     request.nextUrl.pathname,
     bootOnly ? ['boot'] : ['relay', 'raw'],
