@@ -1,5 +1,16 @@
 export const code = `import { WebClient } from "https://deno.land/x/slack_web_api@6.7.2/mod.js";
 
+
+export const slackConnectorConfig = UPDATE_MY_CONFIG_HERE
+
+// export const slackConnectorConfig = {
+//   clientId: undefined
+//   userScopes: [],
+//   workspaceScopes: [],
+// }
+
+
+
 // This is an Slack API client intialized with the applet developer's Slack token
 // THIS CLIENT DOES NOT USE THE USER TOKEN
 // All requests using this client will use the same token. Be careful if sharing publicly!

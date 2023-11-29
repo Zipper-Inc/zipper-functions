@@ -5992,7 +5992,7 @@
 
 "@uploadthing/shared@^6.0.2":
   version "6.0.2"
-  resolved "https://registry.npmjs.org/@uploadthing/shared/-/shared-6.0.2.tgz"
+  resolved "https://registry.yarnpkg.com/@uploadthing/shared/-/shared-6.0.2.tgz#8c804ee087b76254f06d76792967515bd12e6971"
   integrity sha512-yFOhvzBG8VB2qmEGWDuW/tV/ZcfRZ4a6rX7i9/ZS3IqHA0FO7CKa8yitltAl3yRdSI9it88iMEQg7Ah/ve8D4A==
 
 "@upstash/redis@1.24.3":

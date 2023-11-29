@@ -153,6 +153,12 @@ function SlackConnectorForm({ appId }: { appId: string }) {
   });
 
   const addSecretMutation = trpc.secret.add.useMutation();
+  const updateCodeWithConfig = trpc.slackConnector.updateConfigCode.useMutation(
+    {
+      onSuccess: async ({ scriptId }) =>
+        await context.script.byId.invalidate({ id: scriptId }),
+    },
+  );
 
   const deleteConnectorMutation = trpc.slackConnector.delete.useMutation({
     async onSuccess() {
@@ -490,19 +496,26 @@ function SlackConnectorForm({ appId }: { appId: string }) {
                                     key: 'SLACK_CLIENT_SECRET',
                                     value: clientSecret,
                                   });
-                                }
-                                await updateAppConnectorMutation.mutateAsync({
-                                  appId,
-                                  type: 'slack',
-                                  data: {
-                                    isUserAuthRequired,
+
+                                  await updateCodeWithConfig.mutateAsync({
+                                    clientId,
+                                    botScopes: botValue as string[],
                                     userScopes: userValue as string[],
-                                    workspaceScopes: botValue as string[],
-                                    clientId: isOwnClientIdRequired
-                                      ? clientId || undefined
-                                      : null,
-                                  },
-                                });
+                                  });
+                                }
+                                // TODO: think about isUserAuthRequired,
+                                // await updateAppConnectorMutation.mutateAsync({
+                                //   appId,
+                                //   type: 'slack',
+                                //   data: {
+                                //     isUserAuthRequired,
+                                //     userScopes: userValue as string[],
+                                //     workspaceScopes: botValue as string[],
+                                //     clientId: isOwnClientIdRequired
+                                //       ? clientId || undefined
+                                //       : null,
+                                //   },
+                                // });
                                 await slackAuthURL.refetch();
                                 setSlackAuthInProgress(true);
                               }
