@@ -30,7 +30,7 @@ async function buildHeaders(appId: string, teamId: string) {
   };
 }
 
-export async function getBootInfo(slug: string, filename?: string) {
+export async function fetchBootInfo(slug: string, filename?: string) {
   const appInfoUrl = `${ZIPPER_APP_INFO_URL}/${slug}`;
   const appInfoResponse = await fetch(appInfoUrl, {
     method: 'POST',
@@ -110,7 +110,7 @@ export async function sendMessage(
 }
 
 export function acknowledgeSlack(res: NextApiResponse) {
-  return res.status(200).send('ok');
+  return res.send('');
 }
 
 function buildSelectOption(text: string, value: string) {
@@ -358,7 +358,7 @@ export async function buildInputModal(
   viewId: string,
   viewHash: string,
 ) {
-  const appInfo = await getBootInfo(slug, filename);
+  const appInfo = await fetchBootInfo(slug, filename);
 
   const blocks = [
     ...buildFilenameSelect(appInfo.data.runnableScripts, filename),
@@ -386,7 +386,12 @@ export async function buildInputModal(
   };
 }
 
-export function buildRunResultView(slug: string, filename: string, data: any) {
+export function buildRunResultView(
+  slug: string,
+  filename: string,
+  data: any,
+  runId: string,
+) {
   // Slack has a 250kb limit on view size so trim the response if needed.
   const fullText = JSON.stringify(data);
   const truncateText = fullText.length > MAX_TEXT_LENGTH;

@@ -55,12 +55,30 @@ async function processFilenameSelection(res: NextApiResponse, payload: any) {
 async function submissionHandler(res: NextApiResponse, payload: any) {
   const { slug, filename } = JSON.parse(payload.view.private_metadata);
   const inputs = buildRunUrlBodyParams(payload);
-  const response = await initApplet(slug)
-    .path(filename)
-    .run(inputs)
-    .catch((e) => `invalid response ${e}`);
+  const runId = crypto.randomUUID();
 
-  const view = buildRunResultView(slug, filename, response);
+  const response = await fetch(
+    `${process.env.NODE_ENV === 'development' ? 'http' : 'https'}://${slug}.${
+      process.env.NEXT_PUBLIC_ZIPPER_DOT_RUN_HOST
+    }/${filename || 'main.ts'}`,
+    {
+      method: 'POST',
+      body: JSON.stringify(inputs),
+      headers: {
+        'x-zipper-run-id': runId,
+      },
+    },
+  )
+    .then((response) => response.text())
+    .then((text) => {
+      try {
+        return JSON.parse(text);
+      } catch (e) {
+        return text;
+      }
+    });
+
+  const view = buildRunResultView(slug, filename, response, runId);
 
   return res.status(200).json({
     response_action: 'update',
