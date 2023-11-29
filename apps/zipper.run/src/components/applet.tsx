@@ -584,6 +584,7 @@ export const getServerSideProps: GetServerSideProps = async ({
   try {
     bootPayload = await fetchBootPayloadCachedWithUserInfoOrThrow({
       subdomain,
+      tempUserId,
       version: versionFromUrl,
       filename: filenameFromUrl,
       token,
