@@ -86,11 +86,12 @@ export const AppEditSidebarAppletConnectors = () => {
 
   // get the Slack auth URL -- if required --from the backend
   // (it includes an encrypted state value that links the auth request to the app)
+  // TODO: get from slack-get-install-link applet?
   const slackAuthURL = trpc.slackConnector.getAuthUrl.useQuery(
     {
       appId,
       scopes: {
-        bot: slackConnector.data?.workspaceScopes || [],
+        bot: slackConnector.data?.botScopes || [],
         user: slackConnector.data?.userScopes || [],
       },
       postInstallationRedirect: window.location.href,
