@@ -104,8 +104,14 @@ function SlackConnectorForm({ appId }: { appId: string }) {
     {
       onSuccess: (data) => {
         if (data && setBotValue && setUserValue) {
-          setBotValue(botValue || data.workspaceScopes || [defaultBotScope]);
+          setBotValue(botValue || data.botScopes || [defaultBotScope]);
           setUserValue(userValue || data?.userScopes || []);
+
+          // do we want to set this?
+          if (data?.clientId) {
+            setIsOwnClientIdRequired(true);
+            setClientId(data?.clientId || '');
+          }
         }
       },
     },
@@ -545,11 +551,9 @@ function SlackConnectorForm({ appId }: { appId: string }) {
                       <HStack>
                         <Text>Bot Scopes:</Text>
                         <Box>
-                          {connector.data?.workspaceScopes.map(
-                            (scope: string) => (
-                              <Code key={scope}>{scope}</Code>
-                            ),
-                          )}
+                          {connector.data?.botScopes.map((scope: string) => (
+                            <Code key={scope}>{scope}</Code>
+                          ))}
                         </Box>
                       </HStack>
 

@@ -29,12 +29,42 @@ export const slackConnectorRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       await hasAppReadPermission({ ctx, appId: input.appId });
 
-      return prisma.appConnector.findFirst({
+      // get slack-connector file code
+      const script = await prisma.script.findFirst({
+        where: {
+          id: input.appId,
+          name: 'slack-connector',
+        },
+        select: {
+          code: true,
+          id: true,
+        },
+      });
+      if (!script?.code) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'No slack-connector script found',
+        });
+      }
+      const slackConfig = getSlackConfig(script.code);
+
+      const appConnectorFromDB = await prisma.appConnector.findFirst({
         where: {
           appId: input.appId,
           type: 'slack',
         },
+        select: {
+          events: true,
+          type: true,
+          isUserAuthRequired: true,
+          metadata: true,
+        },
       });
+
+      return {
+        ...slackConfig,
+        ...appConnectorFromDB,
+      };
     }),
   getAuthUrl: publicProcedure
     .input(
@@ -188,28 +218,6 @@ export const slackConnectorRouter = createTRPCRouter({
       return {
         scriptId: script?.id,
       };
-    }),
-  getConfig: publicProcedure
-    .input(z.object({ appId: z.string() }))
-    .mutation(async ({ ctx, input }) => {
-      // get slack-connector file code
-      const script = await prisma.script.findFirst({
-        where: {
-          name: 'slack-connector',
-        },
-        select: {
-          code: true,
-          id: true,
-        },
-      });
-      if (!script?.code) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'No slack-connector script found',
-        });
-      }
-      const slackConfig = getSlackConfig(script.code);
-      return slackConfig;
     }),
   exchangeCodeForToken: publicProcedure
     .input(
