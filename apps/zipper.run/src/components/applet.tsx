@@ -90,6 +90,7 @@ export type AppPageProps = {
   handlerConfigs?: Record<string, Zipper.HandlerConfig>;
   token?: string;
   runUrl?: string;
+  softRedirect?: string | null;
 };
 
 export function AppPage({
@@ -111,6 +112,7 @@ export function AppPage({
   handlerConfigs,
   token,
   runUrl,
+  softRedirect,
 }: AppPageProps) {
   const router = useRouter();
   const { asPath } = router;
@@ -145,6 +147,13 @@ export function AppPage({
   });
 
   const previousRouteRef = useRef(asPath);
+
+  // Perform a soft redirect if we have this prop
+  useEffect(() => {
+    if (softRedirect) {
+      window.history.replaceState({}, '', softRedirect);
+    }
+  }, []);
 
   // We have to do this so that the results aren't SSRed
   // (if they are DOMParser in FunctionOutput will be undefined)
@@ -618,7 +627,7 @@ export const getServerSideProps: GetServerSideProps = async ({
     [X_ZIPPER_TEMP_USER_ID]: tempUserId || '',
   };
 
-  const version = versionFromUrl || 'latest';
+  const version = (versionFromUrl || 'latest').replace(/^@/, '');
   let filename = filenameFromUrl || 'main.ts';
   if (!filename.endsWith('.ts')) filename = `${filename}.ts}`;
 
@@ -639,6 +648,8 @@ export const getServerSideProps: GetServerSideProps = async ({
   const isAutoRun = config?.run && !isRunUrl && isInitialServerSideProps;
   const isRunPathMissing = isRunUrl && !query.versionAndFilename;
   const shouldRedirect = isAutoRun || isRunPathMissing;
+
+  let softRedirect = null;
 
   if (shouldRedirect) {
     if (__DEBUG__)
@@ -663,24 +674,24 @@ export const getServerSideProps: GetServerSideProps = async ({
       });
     }
 
-    return {
-      redirect: {
-        destination: runUrl.toString(),
-        permanent: false,
-      },
-    };
+    softRedirect = runUrl.toString();
   }
 
   let hideRun = false;
   let result = null;
 
-  if (isRunUrl) {
-    // now that we're on a run URL, run it!
-    const inputs = getRunValues({ inputParams, url: req.url, query });
+  if (isAutoRun || isRunUrl) {
+    const url = softRedirect || req.url;
+    const inputs = getRunValues({
+      inputParams,
+      url,
+      query,
+    });
+
     if (__DEBUG__)
       console.log('applet.tsx | getServerSideProps | isRunUrl', {
         inputParams,
-        url: req.url,
+        url,
         query,
         inputs,
       });
@@ -688,9 +699,7 @@ export const getServerSideProps: GetServerSideProps = async ({
     result = await fetch(
       getRelayUrl({
         slug: app.slug,
-        path: Array.isArray(query.versionAndFilename)
-          ? query.versionAndFilename.join('/')
-          : query.versionAndFilename,
+        path: [version, filename].join('/'),
       }),
       {
         method: 'POST',
@@ -769,6 +778,7 @@ export const getServerSideProps: GetServerSideProps = async ({
       handlerConfigs,
       hideRun,
       result,
+      softRedirect,
       token: req.headers[X_ZIPPER_ACCESS_TOKEN] || null,
       key: resolvedUrl,
     },
