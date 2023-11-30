@@ -87,16 +87,28 @@ export const slackConnectorRouter = createTRPCRouter({
         process.env.ENCRYPTION_KEY || '',
       );
 
-      // check if we have a client id for this app in the appConnector table
-      const appConnector = await prisma.appConnector.findFirst({
+      // TODO: until we move to slack-get-install-link applet, we need to grab the client id from the config code
+      const connectorScript = await prisma.script.findFirst({
         where: {
           appId,
-          type: 'slack',
+          name: 'slack-connector',
+        },
+        select: {
+          code: true,
         },
       });
 
+      if (!connectorScript?.code) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'No slack-connector script found',
+        });
+      }
+
+      const codeConfig = getSlackConfig(connectorScript.code);
+
       const clientId =
-        appConnector?.clientId || process.env.NEXT_PUBLIC_SLACK_CLIENT_ID!;
+        codeConfig.clientId || process.env.NEXT_PUBLIC_SLACK_CLIENT_ID!;
 
       const url = new URL('https://slack.com/oauth/v2/authorize');
       url.searchParams.set('client_id', clientId);
@@ -240,10 +252,13 @@ export const slackConnectorRouter = createTRPCRouter({
         throw new TRPCError({ code: 'UNAUTHORIZED' });
       }
 
-      const appConnector = await prisma.appConnector.findFirst({
+      const connectorScript = await prisma.script.findFirst({
         where: {
           appId,
-          type: 'slack',
+          name: 'slack-connector',
+        },
+        select: {
+          code: true,
         },
       });
 
@@ -257,8 +272,15 @@ export const slackConnectorRouter = createTRPCRouter({
       let clientId = process.env.NEXT_PUBLIC_SLACK_CLIENT_ID!;
       let clientSecret = process.env.SLACK_CLIENT_SECRET!;
 
-      if (appConnector?.clientId && clientSecretRecord) {
-        clientId = appConnector?.clientId;
+      if (!connectorScript?.code) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'No slack-connector script found',
+        });
+      }
+      const codeConfig = getSlackConfig(connectorScript.code);
+      if (codeConfig.clientId && clientSecretRecord) {
+        clientId = codeConfig.clientId;
         clientSecret = decryptFromBase64(
           clientSecretRecord.encryptedValue,
           process.env.ENCRYPTION_KEY,
