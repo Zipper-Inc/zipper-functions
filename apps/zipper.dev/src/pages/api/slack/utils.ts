@@ -46,6 +46,7 @@ type BuildSlackViewInputs = {
   blocks: any[];
   privateMetadata: string;
   showSubmit: boolean;
+  submitString?: string;
 };
 
 export function buildSlackModalView({
@@ -54,6 +55,7 @@ export function buildSlackModalView({
   blocks,
   privateMetadata,
   showSubmit,
+  submitString,
 }: BuildSlackViewInputs) {
   return {
     type: 'modal',
@@ -65,7 +67,7 @@ export function buildSlackModalView({
     submit: showSubmit
       ? {
           type: 'plain_text',
-          text: 'Run Applet',
+          text: submitString || 'Run Applet',
         }
       : undefined,
     private_metadata: privateMetadata,
@@ -385,12 +387,13 @@ export function buildRunResultView(
   // Slack has a 250kb limit on view size so trim the response if needed.
   const fullText = JSON.stringify(data);
   const truncateText = fullText.length > MAX_TEXT_LENGTH;
+  const runUrl = `https://${slug}.zipper.run/run/history/${runId}`;
 
   const resultsBlocks: any[] = [
     {
       type: 'image',
       image_url: `https://screenshots.zipper.run/?url=${encodeURI(
-        `https://${slug}.zipper.run/run/history/${runId}`,
+        runUrl,
       )}&format=png&thumb_width=1200`,
       alt_text: runId,
     },
@@ -408,26 +411,13 @@ export function buildRunResultView(
   //   },
   // ];
 
-  // if (truncateText) {
-  //   resultsBlocks.push({
-  //     type: 'section',
-  //     text: {
-  //       type: 'mrkdwn',
-  //       text: 'Showing truncated results',
-  //     },
-  //     accessory: {
-  //       type: 'button',
-  //       text: {
-  //         type: 'plain_text',
-  //         text: 'Full results',
-  //         emoji: true,
-  //       },
-  //       value: 'full_results',
-  //       url: `https://${slug}.zipper.run/run/${filename}`,
-  //       action_id: 'zipper_link',
-  //     },
-  //   });
-  // }
+  resultsBlocks.push({
+    type: 'section',
+    text: {
+      type: 'mrkdwn',
+      text: `<${runUrl}|View results>`,
+    },
+  });
 
   const blocks = [
     ...resultsBlocks,
@@ -453,7 +443,8 @@ export function buildRunResultView(
     title: `${slug}`,
     callbackId: 'view-zipper-app-results',
     blocks,
-    privateMetadata: `{ "slug": "${slug}", "filename": "${filename}" }`,
+    privateMetadata: `{ "slug": "${slug}", "filename": "${filename}", "runUrl": "${runUrl}" }`,
     showSubmit: false,
+    submitString: 'Post to channel',
   });
 }
