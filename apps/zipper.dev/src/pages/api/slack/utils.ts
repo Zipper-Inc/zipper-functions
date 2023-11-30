@@ -46,6 +46,7 @@ type BuildSlackViewInputs = {
   blocks: any[];
   privateMetadata: string;
   showSubmit: boolean;
+  submitString?: string;
 };
 
 export function buildSlackModalView({
@@ -54,6 +55,7 @@ export function buildSlackModalView({
   blocks,
   privateMetadata,
   showSubmit,
+  submitString,
 }: BuildSlackViewInputs) {
   return {
     type: 'modal',
@@ -65,7 +67,7 @@ export function buildSlackModalView({
     submit: showSubmit
       ? {
           type: 'plain_text',
-          text: 'Run Applet',
+          text: submitString || 'Run Applet',
         }
       : undefined,
     private_metadata: privateMetadata,
@@ -110,7 +112,7 @@ export async function sendMessage(
 }
 
 export function acknowledgeSlack(res: NextApiResponse) {
-  return res.status(200).send('ok');
+  return res.send('');
 }
 
 function buildSelectOption(text: string, value: string) {
@@ -352,17 +354,19 @@ export function buildPrivateMetadata(privateMetadata: PrivateMetadata) {
   return JSON.stringify(privateMetadata);
 }
 
-export async function buildInputModal(
-  slug: string,
-  filename: string,
-  viewId: string,
-  viewHash: string,
-) {
+export async function buildInputModal(slug: string, filename: string) {
   const appInfo = await fetchBootInfo(slug, filename);
+  let blocks: any[] = [];
 
-  const blocks = [
-    ...buildFilenameSelect(appInfo.data.runnableScripts, filename),
-    { type: 'divider' },
+  if (appInfo.data.runnableScripts.length > 1) {
+    blocks = [
+      ...buildFilenameSelect(appInfo.data.runnableScripts, filename),
+      { type: 'divider' },
+    ];
+  }
+
+  return [
+    ...blocks,
     {
       type: 'section',
       text: {
@@ -372,57 +376,48 @@ export async function buildInputModal(
     },
     ...buildViewInputBlock(appInfo.data.inputs),
   ];
-
-  return {
-    view_id: viewId,
-    hash: viewHash,
-    view: buildSlackModalView({
-      title: `${appInfo.data.app.name}`,
-      callbackId: 'view-run-zipper-app',
-      blocks,
-      privateMetadata: buildPrivateMetadata({ slug, filename }),
-      showSubmit: true,
-    }),
-  };
 }
 
-export function buildRunResultView(slug: string, filename: string, data: any) {
+export function buildRunResultView(
+  slug: string,
+  filename: string,
+  data: any,
+  runId: string,
+) {
   // Slack has a 250kb limit on view size so trim the response if needed.
   const fullText = JSON.stringify(data);
   const truncateText = fullText.length > MAX_TEXT_LENGTH;
+  const runUrl = `https://${slug}.zipper.run/run/history/${runId}`;
 
   const resultsBlocks: any[] = [
     {
-      type: 'section',
-      text: {
-        type: 'plain_text',
-        text: truncateText
-          ? `${fullText.substring(0, MAX_TEXT_LENGTH)}...`
-          : fullText,
-      },
+      type: 'image',
+      image_url: `https://screenshots.zipper.run/?url=${encodeURI(
+        runUrl,
+      )}&format=png&thumb_width=1200`,
+      alt_text: runId,
     },
   ];
 
-  if (truncateText) {
-    resultsBlocks.push({
-      type: 'section',
-      text: {
-        type: 'mrkdwn',
-        text: 'Showing truncated results',
-      },
-      accessory: {
-        type: 'button',
-        text: {
-          type: 'plain_text',
-          text: 'Full results',
-          emoji: true,
-        },
-        value: 'full_results',
-        url: `https://${slug}.zipper.run/run/${filename}`,
-        action_id: 'zipper_link',
-      },
-    });
-  }
+  // const resultsBlocks: any[] = [
+  //   {
+  //     type: 'section',
+  //     text: {
+  //       type: 'plain_text',
+  //       text: truncateText
+  //         ? `${fullText.substring(0, MAX_TEXT_LENGTH)}...`
+  //         : fullText,
+  //     },
+  //   },
+  // ];
+
+  resultsBlocks.push({
+    type: 'section',
+    text: {
+      type: 'mrkdwn',
+      text: `<${runUrl}|View results>`,
+    },
+  });
 
   const blocks = [
     ...resultsBlocks,
@@ -448,7 +443,8 @@ export function buildRunResultView(slug: string, filename: string, data: any) {
     title: `${slug}`,
     callbackId: 'view-zipper-app-results',
     blocks,
-    privateMetadata: `{ "slug": "${slug}", "filename": "${filename}" }`,
+    privateMetadata: `{ "slug": "${slug}", "filename": "${filename}", "runUrl": "${runUrl}" }`,
     showSubmit: false,
+    submitString: 'Post to channel',
   });
 }

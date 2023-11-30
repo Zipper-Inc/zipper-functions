@@ -1,12 +1,13 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
+import crypto from 'crypto';
 import {
   acknowledgeSlack,
   buildRunResultView,
   updateSlackModal,
   buildRunUrlBodyParams,
   buildInputModal,
+  buildSlackModalView,
 } from './utils';
-import { initApplet } from '@zipper-inc/client-js';
 
 const { __DEBUG__ } = process.env;
 
@@ -18,7 +19,20 @@ async function processRerun(res: NextApiResponse, payload: any) {
     view: { id: viewId, hash: viewHash },
   } = payload;
 
-  const newView = await buildInputModal(slug, filename, viewId, viewHash);
+  const blocks = await buildInputModal(slug, filename);
+
+  const newView = {
+    view_id: viewId,
+    hash: viewHash,
+    view: buildSlackModalView({
+      title: payload.view.title.text,
+      callbackId: 'view-run-zipper-app',
+      blocks,
+      privateMetadata: payload.view.private_metadata,
+      showSubmit: true,
+    }),
+  };
+
   const updateResponse = await updateSlackModal(newView, appId, teamId);
 
   if (__DEBUG__) {
@@ -41,7 +55,20 @@ async function processFilenameSelection(res: NextApiResponse, payload: any) {
     return a.action_id === 'filename_select_action';
   })?.selected_option.value;
 
-  const newView = await buildInputModal(slug, filename, viewId, viewHash);
+  const blocks = await buildInputModal(slug, filename);
+
+  const newView = {
+    view_id: viewId,
+    hash: viewHash,
+    view: buildSlackModalView({
+      title: payload.view.title.text,
+      callbackId: 'view-run-zipper-app',
+      blocks,
+      privateMetadata: payload.view.private_metadata,
+      showSubmit: true,
+    }),
+  };
+
   const updateResponse = await updateSlackModal(newView, appId, teamId);
 
   if (__DEBUG__) {
@@ -55,12 +82,30 @@ async function processFilenameSelection(res: NextApiResponse, payload: any) {
 async function submissionHandler(res: NextApiResponse, payload: any) {
   const { slug, filename } = JSON.parse(payload.view.private_metadata);
   const inputs = buildRunUrlBodyParams(payload);
-  const response = await initApplet(slug)
-    .path(filename)
-    .run(inputs)
-    .catch((e) => `invalid response ${e}`);
+  const runId = crypto.randomUUID();
 
-  const view = buildRunResultView(slug, filename, response);
+  const response = await fetch(
+    `${process.env.NODE_ENV === 'development' ? 'http' : 'https'}://${slug}.${
+      process.env.NEXT_PUBLIC_ZIPPER_DOT_RUN_HOST
+    }/${filename || 'main.ts'}`,
+    {
+      method: 'POST',
+      body: JSON.stringify(inputs),
+      headers: {
+        'x-zipper-run-id': runId,
+      },
+    },
+  )
+    .then((response) => response.text())
+    .then((text) => {
+      try {
+        return JSON.parse(text);
+      } catch (e) {
+        return text;
+      }
+    });
+
+  const view = buildRunResultView(slug, filename, response, runId);
 
   return res.status(200).json({
     response_action: 'update',
