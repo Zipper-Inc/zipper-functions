@@ -543,7 +543,13 @@ declare namespace Zipper {
     slug: string;
     version: string;
     url?: string;
-    connectorsWithUserAuth?: string[];
+    connectorsWithUserAuth: string[];
+    author?: {
+      name: string;
+      organization: string;
+      image: string;
+      orgImage: string;
+    };
   };
 
   /**
