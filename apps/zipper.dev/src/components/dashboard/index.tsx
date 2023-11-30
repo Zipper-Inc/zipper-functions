@@ -19,9 +19,11 @@ import {
   Box,
   Flex,
   useDisclosure,
+  IconButton,
 } from '@chakra-ui/react';
 import React, { useEffect, useMemo, useState } from 'react';
 import { CreateAppForm } from './create-app-form';
+import NextLink from 'next/link';
 
 import { DataTable } from './table';
 import {
@@ -47,6 +49,8 @@ import UserSettings from './user-settings';
 import AppAvatar from '../app-avatar';
 import { useOrganization } from '~/hooks/use-organization';
 import { getEditAppletLink } from '@zipper/utils';
+import Carousel from 'nuka-carousel';
+import { FiArrowRight } from 'react-icons/fi';
 
 type _App = Unpack<RouterOutputs['app']['byAuthedUser']>;
 type App = _App & {
@@ -195,8 +199,13 @@ export function Dashboard() {
   const [tabIndex, setTabIndex] = useState(0);
   const { organization } = useOrganization();
   const [appSearchTerm, setAppSearchTerm] = useState('');
+
   const appQuery = trpc.app.byAuthedUser.useQuery({
     filterByOrganization: !appSearchTerm,
+  });
+
+  const galleryApps = trpc.app.allApproved.useQuery({
+    amount: 6,
   });
 
   const { onOpen, isOpen, onClose } = useDisclosure();
@@ -279,7 +288,7 @@ export function Dashboard() {
                 alignItems="start"
                 gap={{ base: 10, xl: 16 }}
               >
-                <VStack flex={1} alignItems="stretch">
+                <VStack flex={1} minW={320} alignItems="stretch">
                   <HStack pb="4">
                     <Heading as="h6" fontWeight={400}>
                       Applets
@@ -296,7 +305,7 @@ export function Dashboard() {
                     <CreateAppForm onClose={onClose} />
                   </VStack>
                 ) : (
-                  <VStack flex={3} w="full">
+                  <VStack flex={3} w="full" overflow="hidden">
                     <HStack w="full" spacing={4} pb="4">
                       <Input
                         placeholder="Search applets (name, slug or description)"
@@ -323,7 +332,7 @@ export function Dashboard() {
                     )}
 
                     {!appQuery.isLoading && apps && apps.length > 0 && (
-                      <>
+                      <Flex direction="column" gap={32} w="full">
                         <TableContainer w="full">
                           <DataTable
                             columns={columns}
@@ -342,7 +351,104 @@ export function Dashboard() {
                             }}
                           />
                         </TableContainer>
-                      </>
+
+                        {apps.length <= 3 && (
+                          <Flex direction="column" w="full" gap={4}>
+                            <Heading
+                              size="md"
+                              fontWeight="semibold"
+                              color="fg.700"
+                            >
+                              Looking for inspiration?
+                            </Heading>
+
+                            <Flex
+                              direction="column"
+                              display={{ base: 'none', md: 'flex' }}
+                              gap={4}
+                              w="calc(100% + 24px)"
+                              marginLeft={-3}
+                            >
+                              <Carousel
+                                cellSpacing={24}
+                                style={{
+                                  position: 'relative',
+                                  width: '100%',
+                                }}
+                                slidesToShow={3}
+                                wrapAround
+                                renderBottomCenterControls={() => <></>}
+                                renderCenterLeftControls={() => <></>}
+                                renderCenterRightControls={(ctrl) => (
+                                  <IconButton
+                                    variant="outline"
+                                    bg="bgColor"
+                                    border="1px"
+                                    borderColor="fg.200"
+                                    _hover={{
+                                      opacity: '100%',
+                                      borderColor: 'fg.500',
+                                    }}
+                                    aria-label="Next Slide"
+                                    onClick={ctrl.nextSlide}
+                                    icon={<FiArrowRight />}
+                                  />
+                                )}
+                              >
+                                {(galleryApps.data || []).map((app) => (
+                                  <HStack
+                                    minH={40}
+                                    h="full"
+                                    as={NextLink}
+                                    href={`/gallery/${app.resourceOwner.slug}/${app.slug}`}
+                                    align="flex-start"
+                                    textDecoration="none"
+                                    transition="all .2s ease-in-out"
+                                    _hover={{
+                                      borderColor: 'fg.500',
+                                    }}
+                                    key={app.id}
+                                    gap={3}
+                                    border="1px"
+                                    p={5}
+                                    borderColor="fg.200"
+                                  >
+                                    <Box as="figure" w={10} h={10}>
+                                      <AppAvatar nameOrSlug={app.slug} />
+                                    </Box>
+                                    <Flex direction="column" h="full" flex={1}>
+                                      <Box h="50%">
+                                        <Heading size="sm" color="fg.700">
+                                          {app.name ?? app.slug}
+                                        </Heading>
+                                        <Text fontSize="sm">
+                                          By {app.resourceOwner.slug}
+                                        </Text>
+                                      </Box>
+
+                                      <Text color="fg.500" fontSize="sm">
+                                        {app.description}
+                                      </Text>
+                                    </Flex>
+                                  </HStack>
+                                ))}
+                              </Carousel>
+                            </Flex>
+
+                            <Text
+                              as={Link}
+                              href="/gallery"
+                              color="primary"
+                              display="flex"
+                              alignItems="center"
+                              gap={1}
+                            >
+                              View more in the applet gallery
+                              <FiArrowRight size={20} />
+                            </Text>
+                          </Flex>
+                        )}
+                      </Flex>
                     )}
 
                     {appQuery.isSuccess && apps && apps.length === 0 && (

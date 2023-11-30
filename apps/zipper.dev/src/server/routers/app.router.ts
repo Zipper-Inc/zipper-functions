@@ -16,7 +16,7 @@ import {
 import { randomUUID } from 'crypto';
 import JSZip from 'jszip';
 import fetch from 'node-fetch';
-import { z } from 'zod';
+import { array, z } from 'zod';
 import { prisma } from '~/server/prisma';
 import { trackEvent } from '~/utils/api-analytics';
 import { buildAndStoreApplet } from '~/utils/eszip-build-applet';
@@ -294,46 +294,57 @@ export const appRouter = createTRPCRouter({
 
     return apps;
   }),
-  allApproved: publicProcedure.query(async () => {
-    /**
-     * For pagination you can have a look at this docs site
-     * @link https://trpc.io/docs/useInfiniteQuery
-     */
+  allApproved: publicProcedure
+    .input(
+      z
+        .object({
+          amount: z.number(),
+        })
+        .optional(),
+    )
+    .query(async ({ input }) => {
+      /**
+       * For pagination you can have a look at this docs site
+       * @link https://trpc.io/docs/useInfiniteQuery
+       */
 
-    const apps = await prisma.app.findMany({
-      where: {
-        isPrivate: false,
-        submissionState: appSubmissionState.approved,
-        deletedAt: null,
-      },
-      select: defaultSelect,
-    });
-
-    const resourceOwners = await prisma.resourceOwnerSlug.findMany({
-      where: {
-        resourceOwnerId: {
-          in: apps
-            .map((a) => a.organizationId || a.createdById)
-            .filter((i) => !!i) as string[],
+      const apps = await prisma.app.findMany({
+        where: {
+          isPrivate: false,
+          submissionState: appSubmissionState.approved,
+          deletedAt: null,
         },
-      },
-    });
+        select: defaultSelect,
+      });
 
-    return apps.reduce(
-      (arr, app) => {
-        const resourceOwner = resourceOwners.find(
-          (r) => r.resourceOwnerId === (app.organizationId || app.createdById),
-        );
+      const resourceOwners = await prisma.resourceOwnerSlug.findMany({
+        where: {
+          resourceOwnerId: {
+            in: apps
+              .map((a) => a.organizationId || a.createdById)
+              .filter((i) => !!i) as string[],
+          },
+        },
+      });
 
-        if (resourceOwner) {
-          arr.push({ ...app, resourceOwner });
-        }
-        return arr;
-      },
-      // prettier-ignore
-      [] as ((typeof apps)[0] & { resourceOwner: ResourceOwnerSlug })[],
-    );
-  }),
+      return apps
+        .reduce(
+          (arr, app) => {
+            const resourceOwner = resourceOwners.find(
+              (r) =>
+                r.resourceOwnerId === (app.organizationId || app.createdById),
+            );
+
+            if (resourceOwner) {
+              arr.push({ ...app, resourceOwner });
+            }
+            return arr;
+          },
+          // prettier-ignore
+          [] as ((typeof apps)[0] & { resourceOwner: ResourceOwnerSlug })[],
+        )
+        .slice(0, input?.amount ?? apps.length + 1);
+    }),
   byAuthedUser: protectedProcedure
     .input(
       z
