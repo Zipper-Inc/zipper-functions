@@ -197,14 +197,13 @@ export async function getBootInfoWithUserInfo(
   res: NextApiResponse,
 ): Promise<BootInfoWithUserInfo | void> {
   const slugFromUrl = req.query.slug as string;
-  let body;
+  let body: { filename?: string } | undefined;
   try {
     body = JSON.parse(req.body);
-  } catch (e) {
-    res.status(400).json({ ok: false, error: 'MISSING_BODY', status: 400 });
-  }
+  } catch (e) {}
+
   const [bootInfo, userInfo] = await Promise.all([
-    getBootInfoFromPrisma({ slugFromUrl, filename: body.filename }),
+    getBootInfoFromPrisma({ slugFromUrl, filename: body?.filename }),
     getUserInfoFromRequest(req),
   ]);
 
