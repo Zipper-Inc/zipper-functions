@@ -514,10 +514,17 @@ declare namespace Zipper {
 
   /**
    * An object containing useful environment variables
+   * You can also add a variable with the .set method
    *
-   * @example const myEnvVariable = Zipper.env.MY_ENV_VARIABLE;
+   * @example
+   * const myEnvVariable = Zipper.env.MY_ENV_VARIABLE;
+   * const myEnvVariable = Zipper.env.get('MY_ENV_VARIABLE');
+   * Zipper.env.set('MY_ENV_VARIABLE', 'my value'); // value on next run
    */
-  export const env: Record<string, string>;
+  export const env: Omit<Record<string, string>, 'get' | 'set'> & {
+    get: (key: string) => string | void;
+    set: (key: string, value: string) => Promise<void>;
+  };
 
   /**
    * Simple async key value store, one per app

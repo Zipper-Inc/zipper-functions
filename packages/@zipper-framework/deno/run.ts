@@ -6,6 +6,7 @@ import bootInfoCached from './applet/generated/boot-info.gen.ts';
 import { frameworkVersion } from './applet/generated/framework-version.gen.ts';
 import { BOOT_PATH, ENV_BLOCKLIST, MAIN_PATH } from './lib/constants.ts';
 import { ZipperStorage } from './lib/storage.ts';
+import { envSet } from './lib/env.ts';
 import { sendLog, methods } from './lib/console.ts';
 
 import './lib/global-components.ts';
@@ -81,17 +82,22 @@ async function runApplet({ request: relayRequest }: Deno.RequestEvent) {
   version = body.appInfo?.version || version;
 
   // Clean up env object
-  const env = Deno.env.toObject();
+  const envValues = Deno.env.toObject();
   ENV_BLOCKLIST.forEach((key) => {
-    env[key] = '';
-    delete env[key];
+    envValues[key] = '';
+    delete envValues[key];
   });
 
   const { userInfo, runId, userConnectorTokens, originalRequest } = body;
 
   // Attach ZipperGlobal
   window.Zipper = {
-    env,
+    env: {
+      ...envValues,
+      get: (key) => envValues[key],
+      set: (key, value) =>
+        envSet({ appId, key, value, userId: userInfo?.userId }),
+    } as typeof Zipper.env,
     storage: new ZipperStorage(appId),
     Component: {
       create: (component) => ({
