@@ -352,17 +352,19 @@ export function buildPrivateMetadata(privateMetadata: PrivateMetadata) {
   return JSON.stringify(privateMetadata);
 }
 
-export async function buildInputModal(
-  slug: string,
-  filename: string,
-  viewId: string,
-  viewHash: string,
-) {
+export async function buildInputModal(slug: string, filename: string) {
   const appInfo = await fetchBootInfo(slug, filename);
+  let blocks: any[] = [];
 
-  const blocks = [
-    ...buildFilenameSelect(appInfo.data.runnableScripts, filename),
-    { type: 'divider' },
+  if (appInfo.data.runnableScripts.length > 1) {
+    blocks = [
+      ...buildFilenameSelect(appInfo.data.runnableScripts, filename),
+      { type: 'divider' },
+    ];
+  }
+
+  return [
+    ...blocks,
     {
       type: 'section',
       text: {
@@ -372,18 +374,6 @@ export async function buildInputModal(
     },
     ...buildViewInputBlock(appInfo.data.inputs),
   ];
-
-  return {
-    view_id: viewId,
-    hash: viewHash,
-    view: buildSlackModalView({
-      title: `${appInfo.data.app.name}`,
-      callbackId: 'view-run-zipper-app',
-      blocks,
-      privateMetadata: buildPrivateMetadata({ slug, filename }),
-      showSubmit: true,
-    }),
-  };
 }
 
 export function buildRunResultView(
@@ -398,36 +388,46 @@ export function buildRunResultView(
 
   const resultsBlocks: any[] = [
     {
-      type: 'section',
-      text: {
-        type: 'plain_text',
-        text: truncateText
-          ? `${fullText.substring(0, MAX_TEXT_LENGTH)}...`
-          : fullText,
-      },
+      type: 'image',
+      image_url: `https://screenshots.zipper.run/?url=${encodeURI(
+        `https://${slug}.zipper.run/run/history/${runId}`,
+      )}&format=png&thumb_width=1200`,
+      alt_text: runId,
     },
   ];
 
-  if (truncateText) {
-    resultsBlocks.push({
-      type: 'section',
-      text: {
-        type: 'mrkdwn',
-        text: 'Showing truncated results',
-      },
-      accessory: {
-        type: 'button',
-        text: {
-          type: 'plain_text',
-          text: 'Full results',
-          emoji: true,
-        },
-        value: 'full_results',
-        url: `https://${slug}.zipper.run/run/${filename}`,
-        action_id: 'zipper_link',
-      },
-    });
-  }
+  // const resultsBlocks: any[] = [
+  //   {
+  //     type: 'section',
+  //     text: {
+  //       type: 'plain_text',
+  //       text: truncateText
+  //         ? `${fullText.substring(0, MAX_TEXT_LENGTH)}...`
+  //         : fullText,
+  //     },
+  //   },
+  // ];
+
+  // if (truncateText) {
+  //   resultsBlocks.push({
+  //     type: 'section',
+  //     text: {
+  //       type: 'mrkdwn',
+  //       text: 'Showing truncated results',
+  //     },
+  //     accessory: {
+  //       type: 'button',
+  //       text: {
+  //         type: 'plain_text',
+  //         text: 'Full results',
+  //         emoji: true,
+  //       },
+  //       value: 'full_results',
+  //       url: `https://${slug}.zipper.run/run/${filename}`,
+  //       action_id: 'zipper_link',
+  //     },
+  //   });
+  // }
 
   const blocks = [
     ...resultsBlocks,

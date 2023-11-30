@@ -6,6 +6,7 @@ import {
   buildSlackModalView,
   openSlackModal,
   buildPrivateMetadata,
+  buildInputModal,
 } from './utils';
 
 const { __DEBUG__ } = process.env;
@@ -23,14 +24,15 @@ export default async function handler(
 
   if (!appInfo.ok) return res.status(200).send(`Error: ${appInfo.error}`);
 
-  const blocks = buildFilenameSelect(appInfo.data.runnableScripts);
-  const privateMetadata = buildPrivateMetadata({ slug });
+  // const blocks = buildFilenameSelect(appInfo.data.runnableScripts);
+  const blocks = await buildInputModal(slug, 'main.ts');
+  const privateMetadata = buildPrivateMetadata({ slug, filename: 'main.ts' });
   const view = buildSlackModalView({
     title: appInfo.data.app.name,
     callbackId: 'view-run-zipper-app',
     blocks,
     privateMetadata,
-    showSubmit: false,
+    showSubmit: true,
   });
   const modal = {
     trigger_id: triggerId,
