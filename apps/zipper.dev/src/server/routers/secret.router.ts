@@ -5,6 +5,7 @@ import { hasAppEditPermission } from '../utils/authz.utils';
 import { encryptToBase64 } from '@zipper/utils';
 import { createTRPCRouter, publicProcedure } from '../root';
 import hash from 'object-hash';
+import { buildAndStoreNewAppVersion } from './app.router';
 
 const defaultSelect = Prisma.validator<Prisma.SecretSelect>()({
   id: true,
@@ -13,7 +14,7 @@ const defaultSelect = Prisma.validator<Prisma.SecretSelect>()({
   encryptedValue: true,
 });
 
-const updateAppSecretsHash = async (appId: string) => {
+const updateAppSecretsHash = async (appId: string, userId?: string) => {
   const secrets = await prisma.secret.findMany({
     where: {
       appId,
@@ -27,6 +28,7 @@ const updateAppSecretsHash = async (appId: string) => {
     },
   });
   const secretsHash = hash(secrets);
+
   await prisma.app.update({
     where: {
       id: appId,
@@ -35,7 +37,48 @@ const updateAppSecretsHash = async (appId: string) => {
       secretsHash,
     },
   });
+
+  await buildAndStoreNewAppVersion(appId, { userId });
 };
+
+export async function upsertSecret(
+  input: {
+    key: string;
+    appId: string;
+    value: string;
+  },
+  { userId }: { userId?: string },
+) {
+  if (!process.env.ENCRYPTION_KEY) {
+    throw new Error('ENCRYPTION_KEY not set');
+  }
+
+  const { appId, key, value } = input;
+
+  const encryptedValue = encryptToBase64(value, process.env.ENCRYPTION_KEY);
+
+  const secret = await prisma.secret.upsert({
+    where: {
+      appId_key: {
+        appId,
+        key,
+      },
+    },
+    create: {
+      appId,
+      key,
+      encryptedValue,
+    },
+    update: {
+      encryptedValue,
+    },
+    select: defaultSelect,
+  });
+
+  await updateAppSecretsHash(appId, userId);
+
+  return secret;
+}
 
 export const secretRouter = createTRPCRouter({
   add: publicProcedure
@@ -51,35 +94,8 @@ export const secretRouter = createTRPCRouter({
         ctx,
         appId: input.appId,
       });
-      if (!process.env.ENCRYPTION_KEY) {
-        throw new Error('ENCRYPTION_KEY not set');
-      }
 
-      const { appId, key, value } = input;
-
-      const encryptedValue = encryptToBase64(value, process.env.ENCRYPTION_KEY);
-
-      const secret = await prisma.secret.upsert({
-        where: {
-          appId_key: {
-            appId,
-            key,
-          },
-        },
-        create: {
-          appId,
-          key,
-          encryptedValue,
-        },
-        update: {
-          encryptedValue,
-        },
-        select: defaultSelect,
-      });
-
-      await updateAppSecretsHash(appId);
-
-      return secret;
+      return upsertSecret(input, ctx);
     }),
   get: publicProcedure
     .input(
@@ -146,7 +162,7 @@ export const secretRouter = createTRPCRouter({
           },
         });
 
-        await updateAppSecretsHash(input.appId);
+        await updateAppSecretsHash(input.appId, ctx.userId);
 
         return {
           id: input.id,
@@ -161,7 +177,7 @@ export const secretRouter = createTRPCRouter({
           },
         });
 
-        await updateAppSecretsHash(input.appId);
+        await updateAppSecretsHash(input.appId, ctx.userId);
 
         return {
           key: input.key,
