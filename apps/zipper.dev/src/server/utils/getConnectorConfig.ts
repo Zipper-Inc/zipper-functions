@@ -2,7 +2,7 @@ import { Project, SyntaxKind } from 'ts-morph';
 import { safeJSONParse } from '@zipper/utils';
 
 type SlackConfig = {
-  clientId: string;
+  clientId?: string;
   userScopes: string[];
   botScopes: string[];
 };
