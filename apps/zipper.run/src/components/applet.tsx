@@ -560,7 +560,11 @@ export const getServerSideProps: GetServerSideProps = async ({
 
   // validate subdomain
   const subdomain = getValidSubdomain(host as string);
-  if (__DEBUG__) console.log('getValidSubdomain', { subdomain, host });
+  if (__DEBUG__)
+    console.log('applet.tsx | getServerSideProps | getValidSubdomain', {
+      subdomain,
+      host,
+    });
   if (!subdomain) return { notFound: true };
 
   const { version: versionFromUrl, filename: filenameFromUrl } =
@@ -569,7 +573,7 @@ export const getServerSideProps: GetServerSideProps = async ({
       [],
     );
   if (__DEBUG__)
-    console.log({
+    console.log('applet.tsx | getServerSideProps', {
       versionFromUrl,
       filename: filenameFromUrl,
       host,
@@ -598,7 +602,11 @@ export const getServerSideProps: GetServerSideProps = async ({
   if (!bootPayload) return { notFound: true };
 
   if (__DEBUG__)
-    console.log(`bootPayload for ${req.url?.toString()}`, bootPayload);
+    console.log(
+      'applet.tsx | getServerSideProps',
+      `bootPayload for ${req.url?.toString()}`,
+      bootPayload,
+    );
 
   const { bootInfo } = bootPayload;
   const { app, inputs: inputParams, entryPoint, runnableScripts } = bootInfo;
@@ -670,7 +678,7 @@ export const getServerSideProps: GetServerSideProps = async ({
     // now that we're on a run URL, run it!
     const inputs = getRunValues({ inputParams, url: req.url, query });
     if (__DEBUG__)
-      console.log('run url inputs', {
+      console.log('applet.tsx | getServerSideProps | isRunUrl', {
         inputParams,
         url: req.url,
         query,
@@ -730,7 +738,12 @@ export const getServerSideProps: GetServerSideProps = async ({
     ...urlValues,
   };
 
-  if (__DEBUG__) console.log('run url default values', defaultValues);
+  if (__DEBUG__)
+    console.log(
+      'applet.tsx | getServerSideProps ',
+      'run url default values',
+      defaultValues,
+    );
 
   inputParams.forEach((i) => {
     const inputConfig = config?.inputs?.[i.key];
