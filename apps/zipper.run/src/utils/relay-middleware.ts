@@ -122,10 +122,6 @@ export async function relayRequest(
   const deploymentId = formatDeploymentId({
     appId: appId,
     version,
-    uniqueOverride:
-      !bootOnly && subdomain === HEALTH_CHECK_SLUG
-        ? Date.now().toString(32)
-        : undefined,
   });
 
   const relayUrl = getPatchedUrl(request);
