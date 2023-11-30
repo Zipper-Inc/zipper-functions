@@ -197,6 +197,7 @@ export async function relayRequest(
       version,
       url: `https://${getAppLink(app.slug)}`,
       connectorsWithUserAuth: Object.keys(userConnectorTokens),
+      author: app.appAuthor,
     },
     inputs: request.method === 'GET' ? queryParameters : body,
     originalRequest: {

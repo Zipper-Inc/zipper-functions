@@ -397,6 +397,12 @@ declare namespace Zipper {
     version: string;
     url: string;
     connectorsWithUserAuth: string[];
+    author?: {
+      name: string;
+      organization: string;
+      image: string;
+      orgImage: string;
+    };
   };
 
   /**
