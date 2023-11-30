@@ -5,6 +5,7 @@ export type ConnectorType =
   | 'openai'
   | 'zendesk'
   | 'postgres'
+  | 'mysql'
   | 'discord'
   | 'notion';
 

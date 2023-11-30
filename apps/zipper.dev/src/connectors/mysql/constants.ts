@@ -3,16 +3,21 @@ import * as sql from "https://esm.sh/sql-bricks";
 
 // Define a function to load configuration from the environment
 function loadConfig() {
-  return Deno.env.get("POSTGRES_CONNECTION_STRING")
+  return {
+    hostname: Deno.env.get("MYSQL_HOST"),
+    username: Deno.env.get("MYSQL_USER"),
+    db: Deno.env.get("MYSQL_DATABASE"),
+    password: Deno.env.get("MYSQL_PASSWORD"), 
+  };
 }
 
-// Initialize a new Postgres client
+// Initialize a new Mysql client
 const config = loadConfig();
-const client = new Client(config);
+const client = new Client();
 
 // Wrap connection logic in an async function
 async function connectClient() {
-  await client.connect();
+  await client.connect({config});
 }
 
 // Call the connectClient function
@@ -28,7 +33,7 @@ async function executeQuery(
 ) {
   const queryString = query.toString();
   try {
-    const result = await client.queryArray(queryString);
+    const result = await client.execute(queryString);
     return result.rows;
   } catch (error) {
     console.error("Error executing query:", error);

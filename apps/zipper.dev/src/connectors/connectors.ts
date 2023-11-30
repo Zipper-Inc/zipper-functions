@@ -5,6 +5,7 @@ import { openaiConnector } from './openai';
 import { zendeskConnector } from './zendesk';
 import { githubAppConnector } from './github-app';
 import { postgresConnector } from './postgres';
+import { mysqlConnector } from './mysql';
 import { discordConnector } from './discord';
 import { notionConnectorMetadata } from './notion';
 
@@ -15,6 +16,7 @@ export const connectors: Record<ConnectorId, Connector> = {
   openai: openaiConnector,
   zendesk: zendeskConnector,
   postgres: postgresConnector,
+  mysql: mysqlConnector,
   discord: discordConnector,
   notion: notionConnectorMetadata,
 };
