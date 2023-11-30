@@ -75,6 +75,7 @@
     "@types/react": "^18.0.9",
     "@types/react-timeago": "^4.1.5",
     "@uploadthing/react": "^6.0.0",
+    "@vercel/kv": "^1.0.0",
     "@zipper-inc/client-js": "^0.1.6",
     "@zipper/types": "*",
     "@zipper/ui": "*",

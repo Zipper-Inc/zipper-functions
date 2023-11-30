@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import {
   acknowledgeSlack,
-  getBootInfo,
+  fetchBootInfo,
   buildFilenameSelect,
   buildSlackModalView,
   openSlackModal,
@@ -19,7 +19,7 @@ export default async function handler(
   const slackTeamId = req.body.team_id;
   const slackAppId = req.body.api_app_id;
 
-  const appInfo = await getBootInfo(slug);
+  const appInfo = await fetchBootInfo(slug);
 
   if (!appInfo.ok) return res.status(200).send(`Error: ${appInfo.error}`);
 
