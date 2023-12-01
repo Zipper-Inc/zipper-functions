@@ -1,6 +1,6 @@
 // middleware.ts
 import { NextRequest, NextResponse } from 'next/server';
-import serveRelay from './utils/relay-middleware';
+import serveRelay, { serveNonBrowserRelay } from './utils/relay-middleware';
 import jsonHandler from './api-handlers/json.handler';
 import yamlHandler from './api-handlers/yaml.handler';
 import htmlHandler from './api-handlers/html.handler';
@@ -103,9 +103,8 @@ async function maybeGetCustomResponse(
     default: {
       if (!hasBrowserLikeUserAgent(request.headers)) {
         console.log('not a browser so returning the relay');
-        return serveRelay({
+        return serveNonBrowserRelay({
           request,
-          bootOnly: false,
         });
       }
     }

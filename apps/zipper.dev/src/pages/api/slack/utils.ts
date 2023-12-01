@@ -384,32 +384,17 @@ export function buildRunResultView(
   data: any,
   runId: string,
 ) {
-  // Slack has a 250kb limit on view size so trim the response if needed.
-  const fullText = JSON.stringify(data);
-  const truncateText = fullText.length > MAX_TEXT_LENGTH;
-  const runUrl = `https://${slug}.zipper.run/run/history/${runId}`;
+  const runUrl = `https://${slug}.zipper.run/run/history/${
+    runId.split('-')[0]
+  }`;
 
   const resultsBlocks: any[] = [
     {
       type: 'image',
-      image_url: `https://screenshots.zipper.run/?url=${encodeURI(
-        runUrl,
-      )}&format=png&thumb_width=1200`,
-      alt_text: runId,
+      image_url: runUrl,
+      alt_text: 'screenshot of Zipper run',
     },
   ];
-
-  // const resultsBlocks: any[] = [
-  //   {
-  //     type: 'section',
-  //     text: {
-  //       type: 'plain_text',
-  //       text: truncateText
-  //         ? `${fullText.substring(0, MAX_TEXT_LENGTH)}...`
-  //         : fullText,
-  //     },
-  //   },
-  // ];
 
   resultsBlocks.push({
     type: 'section',

@@ -406,3 +406,49 @@ export default async function serveRelay({
     headers: mutableHeaders,
   });
 }
+
+export async function serveNonBrowserRelay({
+  request,
+}: {
+  request: NextRequest;
+}) {
+  const { version, filename } = getFilenameAndVersionFromPath(
+    request.nextUrl.pathname,
+    ['relay', 'raw'],
+  );
+
+  console.log('version: ', version);
+  console.log('filename: ', filename);
+
+  const { result, status, headers } = await relayRequest(
+    {
+      request,
+      version,
+      filename,
+    },
+    false,
+  );
+  const mutableHeaders = new Headers(headers);
+  if (request.method !== 'GET')
+    mutableHeaders?.append('Access-Control-Allow-Origin', '*');
+
+  if (typeof result === 'string' && result.includes('Zipper.Router')) {
+    try {
+      const {
+        $zipperType,
+        redirect,
+        notFound,
+      }: Zipper.Router.Redirect & Zipper.Router.NotFound & Zipper.Router.Error =
+        JSON.parse(result);
+      if ($zipperType === 'Zipper.Router') {
+        if (redirect) return NextResponse.redirect(redirect);
+        if (notFound) return NextResponse.rewrite(new URL('/404', request.url));
+      }
+    } catch (e) {}
+  }
+
+  return new NextResponse(result, {
+    status,
+    headers: mutableHeaders,
+  });
+}
