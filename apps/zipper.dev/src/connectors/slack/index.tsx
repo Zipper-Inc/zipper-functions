@@ -149,14 +149,6 @@ function SlackConnectorForm({ appId }: { appId: string }) {
 
   const context = trpc.useContext();
   const router = useRouter();
-  const updateAppConnectorMutation = trpc.appConnector.update.useMutation({
-    onSuccess: () => {
-      context.app.byResourceOwnerAndAppSlugs.invalidate({
-        appSlug: router.query['app-slug'] as string,
-        resourceOwnerSlug: router.query['resource-owner'] as string,
-      });
-    },
-  });
 
   const addSecretMutation = trpc.secret.add.useMutation();
   const updateCodeWithConfig = trpc.slackConnector.updateConfigCode.useMutation(
@@ -186,10 +178,6 @@ function SlackConnectorForm({ appId }: { appId: string }) {
     }
   }, [slackAuthInProgress, slackAuthURL.data?.url]);
 
-  const existingInstallation =
-    (existingSecret.data || existingUserSecret.data) &&
-    connector.data?.metadata;
-
   if (
     existingUserSecret.isLoading ||
     existingSecret.isLoading ||
@@ -197,42 +185,6 @@ function SlackConnectorForm({ appId }: { appId: string }) {
   ) {
     return <></>;
   }
-
-  const userAuthSwitch = (mutateOnChange?: boolean) => {
-    return (
-      <HStack w="full" pt="4" pb="4">
-        <FormControl>
-          <HStack w="full">
-            <FormLabel>Require users to auth?</FormLabel>
-            <Spacer flexGrow={1} />
-            <Switch
-              isChecked={isUserAuthRequired}
-              isDisabled={!userValue || userValue.length === 0}
-              ml="auto"
-              onChange={(e) => {
-                if (mutateOnChange) {
-                  updateAppConnectorMutation.mutate({
-                    appId,
-                    type: 'slack',
-                    data: {
-                      isUserAuthRequired: e.target.checked,
-                    },
-                  });
-                }
-                setIsUserAuthRequired(e.target.checked);
-              }}
-            />
-          </HStack>
-          <FormHelperText maxW="xl">
-            When checked, users will have to authorize the Slack integration
-            before they're able to run this Zipper app and see the output.
-            Requires at least 1 user scope. The user's Slack token will be
-            available via the HandlerContext at runtime.
-          </FormHelperText>
-        </FormControl>
-      </HStack>
-    );
-  };
 
   const requiresOwnClientIdSwitch = () => {
     return (
@@ -311,231 +263,7 @@ function SlackConnectorForm({ appId }: { appId: string }) {
           </Box>
           <VStack align="start">
             {appInfo.canUserEdit ? (
-              <>
-                {existingInstallation ? (
-                  <>
-                    <Card w="full">
-                      <CardBody color="fg.600">
-                        <VStack align="stretch">
-                          <Heading size="sm">Configuration</Heading>
-                          <HStack w="full" pt="2" spacing="1">
-                            <FormLabel m="0">Installed to</FormLabel>
-                            <Popover trigger="hover">
-                              <PopoverTrigger>
-                                <FormLabel
-                                  cursor="context-menu"
-                                  textDecor="underline"
-                                  textDecorationStyle="dotted"
-                                  color={'fg.900'}
-                                >
-                                  {
-                                    (connector.data?.metadata as any)['team'][
-                                      'name'
-                                    ]
-                                  }
-                                </FormLabel>
-                              </PopoverTrigger>
-                              <PopoverContent w="sm">
-                                <PopoverArrow />
-                                <PopoverHeader>
-                                  Installation details
-                                </PopoverHeader>
-                                <PopoverBody>
-                                  <VStack
-                                    align="start"
-                                    divider={<StackDivider />}
-                                    fontSize="sm"
-                                    py="2"
-                                  >
-                                    {connector.data?.clientId && (
-                                      <HStack>
-                                        <Text>Client ID:</Text>
-                                        <Code>{connector.data?.clientId}</Code>
-                                      </HStack>
-                                    )}
-                                    <HStack>
-                                      <Text>Bot User ID:</Text>
-                                      <Code>
-                                        {
-                                          (connector.data?.metadata as any)[
-                                            'bot_user_id'
-                                          ]
-                                        }
-                                      </Code>
-                                    </HStack>
-                                    <HStack>
-                                      <Text>Bot Scopes:</Text>
-                                      <Box>
-                                        {(
-                                          (connector.data?.metadata as any)[
-                                            'scope'
-                                          ] || ''
-                                        )
-                                          .split(',')
-                                          .map((scope: string) => (
-                                            <Code key={scope}>{scope}</Code>
-                                          ))}
-                                      </Box>
-                                    </HStack>
-
-                                    {(connector.data?.metadata as any)[
-                                      'authed_user'
-                                    ] &&
-                                      (connector.data?.metadata as any)[
-                                        'authed_user'
-                                      ]['scope'] && (
-                                        <HStack>
-                                          <Text>User Scopes:</Text>
-                                          <Box>
-                                            {(connector.data?.metadata as any)[
-                                              'authed_user'
-                                            ]['scope']
-                                              .split(',')
-                                              .map((scope: string) => (
-                                                <Code key={scope}>{scope}</Code>
-                                              ))}
-                                          </Box>
-                                        </HStack>
-                                      )}
-                                  </VStack>
-                                </PopoverBody>
-                              </PopoverContent>
-                            </Popover>
-                            <Spacer />
-                            {slackAuthURL.data && (
-                              <Button
-                                variant="unstyled"
-                                color="red.600"
-                                onClick={onOpen}
-                              >
-                                <HStack>
-                                  <HiOutlineTrash />
-                                  <Text>Uninstall</Text>
-                                </HStack>
-                              </Button>
-                            )}
-                          </HStack>
-                          {userAuthSwitch(true)}
-                        </VStack>
-                      </CardBody>
-                    </Card>
-                    <AlertDialog
-                      isOpen={isOpen}
-                      leastDestructiveRef={cancelRef}
-                      onClose={onClose}
-                    >
-                      <AlertDialogOverlay>
-                        <AlertDialogContent>
-                          <AlertDialogHeader fontSize="lg" fontWeight="bold">
-                            Uninstall Slack App
-                          </AlertDialogHeader>
-
-                          <AlertDialogBody>
-                            Are you sure? You can't undo this action afterwards.
-                          </AlertDialogBody>
-
-                          <AlertDialogFooter>
-                            <Button ref={cancelRef} onClick={onClose}>
-                              Cancel
-                            </Button>
-                            <Button
-                              colorScheme="red"
-                              isDisabled={isSaving}
-                              onClick={async () => {
-                                setIsSaving(true);
-                                await deleteConnectorMutation.mutateAsync({
-                                  appId,
-                                });
-                                setIsSaving(false);
-                                onClose();
-                              }}
-                              ml={3}
-                            >
-                              Uninstall
-                            </Button>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialogOverlay>
-                    </AlertDialog>
-                  </>
-                ) : (
-                  <Card w="full">
-                    <CardBody color="fg.600">
-                      <VStack align="start" w="full" overflow="visible">
-                        <Heading size="sm">Configuration</Heading>
-                        <FormControl>
-                          <FormControl>
-                            <FormLabel>Bot Scopes</FormLabel>
-                            <MultiSelect
-                              options={botOptions}
-                              value={botValue}
-                              onChange={botOnChange as SelectOnChange}
-                            />
-                          </FormControl>
-
-                          <FormControl pt="4">
-                            <FormLabel>User Scopes</FormLabel>
-
-                            <MultiSelect
-                              options={userOptions}
-                              value={userValue}
-                              onChange={userOnChange as SelectOnChange}
-                            />
-                          </FormControl>
-                          {userAuthSwitch()}
-                          {requiresOwnClientIdSwitch()}
-
-                          <Button
-                            mt="6"
-                            colorScheme={'purple'}
-                            isDisabled={isSaving || !slackAuthURL.data}
-                            onClick={async () => {
-                              if (slackAuthURL.data) {
-                                setIsSaving(true);
-                                if (
-                                  isOwnClientIdRequired &&
-                                  clientId &&
-                                  clientSecret
-                                ) {
-                                  await addSecretMutation.mutateAsync({
-                                    appId: appId,
-                                    key: 'SLACK_CLIENT_SECRET',
-                                    value: clientSecret,
-                                  });
-
-                                  await updateCodeWithConfig.mutateAsync({
-                                    clientId,
-                                    botScopes: botValue as string[],
-                                    userScopes: userValue as string[],
-                                  });
-                                }
-                                // TODO: think about isUserAuthRequired,
-                                // await updateAppConnectorMutation.mutateAsync({
-                                //   appId,
-                                //   type: 'slack',
-                                //   data: {
-                                //     isUserAuthRequired,
-                                //     userScopes: userValue as string[],
-                                //     workspaceScopes: botValue as string[],
-                                //     clientId: isOwnClientIdRequired
-                                //       ? clientId || undefined
-                                //       : null,
-                                //   },
-                                // });
-                                await slackAuthURL.refetch();
-                                setSlackAuthInProgress(true);
-                              }
-                              setIsSaving(false);
-                            }}
-                          >
-                            Save & Install
-                          </Button>
-                        </FormControl>
-                      </VStack>
-                    </CardBody>
-                  </Card>
-                )}
-              </>
+              <SlackConnectorFormConUserEdit />
             ) : (
               <VStack align="stretch" w="full">
                 <Card w="full">
@@ -586,5 +314,261 @@ function SlackConnectorForm({ appId }: { appId: string }) {
     </Box>
   );
 }
+
+type UserAuthSwitch = {
+  isUserAuthRequired: any;
+  setIsUserAuthRequired: any;
+  userValue: any;
+};
+const UserAuthSwitch = ({
+  isUserAuthRequired,
+  setIsUserAuthRequired,
+  userValue,
+}: UserAuthSwitch) => {
+  return (
+    <HStack w="full" pt="4" pb="4">
+      <FormControl>
+        <HStack w="full">
+          <FormLabel>Require users to auth?</FormLabel>
+          <Spacer flexGrow={1} />
+          <Switch
+            isChecked={isUserAuthRequired}
+            isDisabled={!userValue || userValue.length === 0}
+            ml="auto"
+            onChange={(e) => {
+              setIsUserAuthRequired(e.target.checked);
+            }}
+          />
+        </HStack>
+        <FormHelperText maxW="xl">
+          When checked, users will have to authorize the Slack integration
+          before they're able to run this Zipper app and see the output.
+          Requires at least 1 user scope. The user's Slack token will be
+          available via the HandlerContext at runtime.
+        </FormHelperText>
+      </FormControl>
+    </HStack>
+  );
+};
+
+const SlackConnectorFormConUserEdit = ({ appId }: { appId: string }) => {
+  const existingInstallation =
+    (existingSecret.data || existingUserSecret.data) &&
+    connector.data?.metadata;
+  return (
+    <>
+      {existingInstallation ? (
+        <>
+          <Card w="full">
+            <CardBody color="fg.600">
+              <VStack align="stretch">
+                <Heading size="sm">Configuration</Heading>
+                <HStack w="full" pt="2" spacing="1">
+                  <FormLabel m="0">Installed to</FormLabel>
+                  <Popover trigger="hover">
+                    <PopoverTrigger>
+                      <FormLabel
+                        cursor="context-menu"
+                        textDecor="underline"
+                        textDecorationStyle="dotted"
+                        color={'fg.900'}
+                      >
+                        {(connector.data?.metadata as any)['team']['name']}
+                      </FormLabel>
+                    </PopoverTrigger>
+                    <PopoverContent w="sm">
+                      <PopoverArrow />
+                      <PopoverHeader>Installation details</PopoverHeader>
+                      <PopoverBody>
+                        <VStack
+                          align="start"
+                          divider={<StackDivider />}
+                          fontSize="sm"
+                          py="2"
+                        >
+                          {connector.data?.clientId && (
+                            <HStack>
+                              <Text>Client ID:</Text>
+                              <Code>{connector.data?.clientId}</Code>
+                            </HStack>
+                          )}
+                          <HStack>
+                            <Text>Bot User ID:</Text>
+                            <Code>
+                              {(connector.data?.metadata as any)['bot_user_id']}
+                            </Code>
+                          </HStack>
+                          <HStack>
+                            <Text>Bot Scopes:</Text>
+                            <Box>
+                              {(
+                                (connector.data?.metadata as any)['scope'] || ''
+                              )
+                                .split(',')
+                                .map((scope: string) => (
+                                  <Code key={scope}>{scope}</Code>
+                                ))}
+                            </Box>
+                          </HStack>
+
+                          {(connector.data?.metadata as any)['authed_user'] &&
+                            (connector.data?.metadata as any)['authed_user'][
+                              'scope'
+                            ] && (
+                              <HStack>
+                                <Text>User Scopes:</Text>
+                                <Box>
+                                  {(connector.data?.metadata as any)[
+                                    'authed_user'
+                                  ]['scope']
+                                    .split(',')
+                                    .map((scope: string) => (
+                                      <Code key={scope}>{scope}</Code>
+                                    ))}
+                                </Box>
+                              </HStack>
+                            )}
+                        </VStack>
+                      </PopoverBody>
+                    </PopoverContent>
+                  </Popover>
+                  <Spacer />
+                  {slackAuthURL.data && (
+                    <Button variant="unstyled" color="red.600" onClick={onOpen}>
+                      <HStack>
+                        <HiOutlineTrash />
+                        <Text>Uninstall</Text>
+                      </HStack>
+                    </Button>
+                  )}
+                </HStack>
+                <UserAuthSwitch
+                  isUserAuthRequired={isUserAuthRequired}
+                  setIsUserAuthRequired={setIsUserAuthRequired}
+                  userValue={userValue}
+                />
+              </VStack>
+            </CardBody>
+          </Card>
+          <AlertDialog
+            isOpen={isOpen}
+            leastDestructiveRef={cancelRef}
+            onClose={onClose}
+          >
+            <AlertDialogOverlay>
+              <AlertDialogContent>
+                <AlertDialogHeader fontSize="lg" fontWeight="bold">
+                  Uninstall Slack App
+                </AlertDialogHeader>
+
+                <AlertDialogBody>
+                  Are you sure? You can't undo this action afterwards.
+                </AlertDialogBody>
+
+                <AlertDialogFooter>
+                  <Button ref={cancelRef} onClick={onClose}>
+                    Cancel
+                  </Button>
+                  <Button
+                    colorScheme="red"
+                    isDisabled={isSaving}
+                    onClick={async () => {
+                      setIsSaving(true);
+                      await deleteConnectorMutation.mutateAsync({
+                        appId,
+                      });
+                      setIsSaving(false);
+                      onClose();
+                    }}
+                    ml={3}
+                  >
+                    Uninstall
+                  </Button>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialogOverlay>
+          </AlertDialog>
+        </>
+      ) : (
+        <Card w="full">
+          <CardBody color="fg.600">
+            <VStack align="start" w="full" overflow="visible">
+              <Heading size="sm">Configuration</Heading>
+              <FormControl>
+                <FormControl>
+                  <FormLabel>Bot Scopes</FormLabel>
+                  <MultiSelect
+                    options={botOptions}
+                    value={botValue}
+                    onChange={botOnChange as SelectOnChange}
+                  />
+                </FormControl>
+
+                <FormControl pt="4">
+                  <FormLabel>User Scopes</FormLabel>
+
+                  <MultiSelect
+                    options={userOptions}
+                    value={userValue}
+                    onChange={userOnChange as SelectOnChange}
+                  />
+                </FormControl>
+                <UserAuthSwitch
+                  appId={appId}
+                  isUserAuthRequired={isUserAuthRequired}
+                  setIsUserAuthRequired={setIsUserAuthRequired}
+                  userValue={userValue}
+                />
+                {requiresOwnClientIdSwitch()}
+
+                <Button
+                  mt="6"
+                  colorScheme={'purple'}
+                  isDisabled={isSaving || !slackAuthURL.data}
+                  onClick={async () => {
+                    if (slackAuthURL.data) {
+                      setIsSaving(true);
+                      if (isOwnClientIdRequired && clientId && clientSecret) {
+                        await addSecretMutation.mutateAsync({
+                          appId: appId,
+                          key: 'SLACK_CLIENT_SECRET',
+                          value: clientSecret,
+                        });
+
+                        await updateCodeWithConfig.mutateAsync({
+                          clientId,
+                          botScopes: botValue as string[],
+                          userScopes: userValue as string[],
+                        });
+                      }
+                      // TODO: think about isUserAuthRequired,
+                      // await updateAppConnectorMutation.mutateAsync({
+                      //   appId,
+                      //   type: 'slack',
+                      //   data: {
+                      //     isUserAuthRequired,
+                      //     userScopes: userValue as string[],
+                      //     workspaceScopes: botValue as string[],
+                      //     clientId: isOwnClientIdRequired
+                      //       ? clientId || undefined
+                      //       : null,
+                      //   },
+                      // });
+                      await slackAuthURL.refetch();
+                      setSlackAuthInProgress(true);
+                    }
+                    setIsSaving(false);
+                  }}
+                >
+                  Save & Install
+                </Button>
+              </FormControl>
+            </VStack>
+          </CardBody>
+        </Card>
+      )}
+    </>
+  );
+};
 
 export default SlackConnectorForm;
