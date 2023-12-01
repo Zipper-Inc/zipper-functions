@@ -1,6 +1,6 @@
 import type { NextApiResponse } from 'next';
 import { prisma } from '../../../server/prisma';
-import { decryptFromBase64 } from '@zipper/utils';
+import { decryptFromBase64, getScreenshotUrl } from '@zipper/utils';
 import { getZipperDotDevUrlForServer } from '~/server/utils/server-url.utils';
 
 const SLACK_VIEW_UPDATE_URL = 'https://slack.com/api/views.update';
@@ -391,7 +391,7 @@ export function buildRunResultView(
   const resultsBlocks: any[] = [
     {
       type: 'image',
-      image_url: runUrl,
+      image_url: getScreenshotUrl(runUrl),
       alt_text: 'screenshot of Zipper run',
     },
   ];
