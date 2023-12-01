@@ -2,7 +2,6 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import {
   acknowledgeSlack,
   fetchBootInfo,
-  buildFilenameSelect,
   buildSlackModalView,
   openSlackModal,
   buildPrivateMetadata,

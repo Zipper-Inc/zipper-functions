@@ -1,7 +1,7 @@
 export function getScreenshotUrl(urlToScreenshot: string): string {
   const imgUrl = new URL(
     process.env.NEXT_PUBLIC_ZIPPER_SCREENSHOTS_URL ||
-      'https://screenshots.zipper.run',
+      'https://screenshots.zipper.run/main.ts',
   );
   imgUrl.searchParams.set('url', urlToScreenshot);
   imgUrl.searchParams.set('format', 'png');

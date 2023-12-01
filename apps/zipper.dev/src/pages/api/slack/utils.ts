@@ -388,6 +388,8 @@ export function buildRunResultView(
     runId.split('-')[0]
   }`;
 
+  console.log('IMAGE_URL: ', getScreenshotUrl(runUrl));
+
   const resultsBlocks: any[] = [
     {
       type: 'image',
