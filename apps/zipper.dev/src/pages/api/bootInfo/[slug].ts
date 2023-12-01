@@ -5,7 +5,7 @@ import { getBootInfoWithUserInfo } from '~/utils/boot-info-utils';
 const handler: NextApiHandler = async (req, res) => {
   try {
     const data = await getBootInfoWithUserInfo(req, res);
-    if (data?.app && (!data.app.isPrivate || data.app.canUserEdit)) {
+    if (data?.app && (!data.app.requiresAuthToRun || data.app.canUserEdit)) {
       res.status(200).json({ ok: true, data });
     } else {
       res.status(404).json({ ok: false, error: NOT_FOUND });
