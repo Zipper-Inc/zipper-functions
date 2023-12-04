@@ -91,6 +91,7 @@ export type AppPageProps = {
   token?: string;
   runUrl?: string;
   softRedirect?: string | null;
+  resultOnly?: boolean;
 };
 
 export function AppPage({
@@ -113,6 +114,7 @@ export function AppPage({
   token,
   runUrl,
   softRedirect,
+  resultOnly,
 }: AppPageProps) {
   const router = useRouter();
   const { asPath } = router;
@@ -519,6 +521,12 @@ export function AppPage({
   );
 
   if (isEmbedded) return content;
+  if (resultOnly)
+    return (
+      <div className="result" style={{ width: 'fit-content' }}>
+        {output}
+      </div>
+    );
 
   const appletUrl = `https://${app.slug}.zipper.run`;
 

@@ -16,6 +16,7 @@ export const getServerSideProps: GetServerSideProps = async ({
   req,
   query,
 }) => {
+  const { resultOnly } = query;
   const { host } = req.headers;
 
   // validate subdomain
@@ -77,6 +78,7 @@ export const getServerSideProps: GetServerSideProps = async ({
       slackAuthUrl,
       token: req.headers[X_ZIPPER_ACCESS_TOKEN] || null,
       runUrl,
+      resultOnly: !!resultOnly,
     } as AppPageProps,
   };
 };
