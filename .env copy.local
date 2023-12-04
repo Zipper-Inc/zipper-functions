@@ -1,0 +1,84 @@
+# Make sure to override these in deployment
+DATABASE_URL=postgres://zipper_user:zipper_password@localhost:35432/zipper_functions_dev
+
+
+# Get one from https://dash.deno.com/account#access-tokens
+DENO_DEPLOY_TOKEN=ddp_UnEzUMqiRvy6mdXtwn2u3bxDLmr1sv02gRPW
+
+# Run `node -e "console.log(crypto.randomBytes(32).toString('hex'))"`
+ENCRYPTION_KEY=c236aae4dd8ff30fcb851f459628f1e247778b8ab610f92bba2c8b280d677a5b
+
+NODE_ENV=development
+
+# Get this from https://liveblocks.io/docs/get-started/react
+LIVEBLOCKS_PUBLIC_KEY=pk_dev_WaQ9OrYRc8p-PmBFJeYpLguPZfhANQWyjsLuYYnxKIQxXD8gnJ0VlUYSCW4I3Vwa
+LIVEBLOCKS_SECRET_KEY=sk_dev_C8Ue_sCKFvbg6jB94VP9iD1vcMLxZMWcPOxuk2wvc_hLEjbu_SCN1R5dGhCsaUvE
+
+# yarn deno:dev or yarn deno:deploy ./src/workers/parse-inputs-for-types.deno.ts
+PARSE_INPUT_URL=https://z-parse-input-for-types.deno.dev
+
+REDIS_HOST=localhost
+REDIS_PORT=36379
+
+# yarn deno:dev or yarn deno:deploy ./src/workers/subhosting-relay.deno.ts
+RELAY_URL=https://z-subhosting-relay.deno.dev
+
+# The URL where your enviroment is running, must be public
+RPC_HOST=https://ariel.zipper.ngrok.app
+
+# Deno shared secret
+SHARED_SECRET=2099c4ecc8de11f286480a16e4cb8edad9b3931029fe1682a80721f311c74a1d157e067712edefc94753ac9408c4b6d7d5c31fc28ba80af01f4b26653b58a60d
+
+# The URL where your local environment is running. Could be locahost or ngrok
+NEXT_PUBLIC_HOST=localhost
+
+# hostname of server that renders function
+NEXT_PUBLIC_OUTPUT_SERVER_HOSTNAME=localdev.me:3002
+
+# We use Clerk.dev to handle auth and session. Get an API key from someone who has access to the Zipper account on clerk.dev
+NEXT_PUBLIC_CLERK_FRONTEND_API=clerk.evolving.lioness-62.lcl.dev
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_Y2xlcmsuZXZvbHZpbmcubGlvbmVzcy02Mi5sY2wuZGV2JA
+CLERK_SECRET_KEY=sk_test_8EP9b0QnO9Qwk4wKvoZaxuLTpHpIj02vTG5aUmtccS
+CLERK_JWT_KEY=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAt7POmBX0bKmF1Hd5aLKELsJ0/Z4szmdGp/iOxVQJf60LfEBd4oNYaE8nfNl7JAv0cqIZVaniuYTCv/KAA6RCCRNdH5w5n27XOKG1C0ef7lGCP7gNSz1RELpZZciHq/dduI+QgiAn/5Kn8Ra6nno+FOZxJDstvu5UZTvIDs8fwSH+aZ0jxNFiiWy7gdRvCUaDPx0lWAqcREBI1nBteRo3H+GU/ZRSPmEEbxj11PLj/rOQfr83u+Ci7FDUQXjzR1HqIEUtCmjw3/wEIzaSgU6fA2cSRsF25/tKy9JBtS4LBRh52YzlVSajMlnKVZBWSNT9U4bVEEwxvksKuAY7QzJ4jwIDAQAB
+
+# Connect to our LSP server (zipper-lsp)
+NEXT_PUBLIC_LSP=wss://zipper-lsp.onrender.com/deno_lsp
+
+# Zipper Slack app
+NEXT_PUBLIC_SLACK_CLIENT_ID=4971108331095.4998283620865
+SLACK_CLIENT_SECRET=94644f3301959908072fb0484a6f14f1
+# The URL for the Zipper API
+NEXT_PUBLIC_ZIPPER_API_URL=http://localhost:3000/api
+HMAC_SIGNING_SECRET=qf+pd/8PSYvM0sijT1H9rrH0qzDh2jzq6ZtWpl3wrXE=
+JWT_REFRESH_SIGNING_SECRET=C73LBdd7cO9vyC0eZ0YjYKNnW3lNly6bzA9dO09ynZ4=
+JWT_SIGNING_SECRET=mw5jDDhJM0WI4S88+In7Y+IvL6Bjncri5LCN8CDBdzE=
+NEXT_PUBLIC_ZIPPER_DOT_DEV_URL=http://localhost:3000/
+
+FEEDBACK_TRACKER_API_KEY=zaat.1989521acdf646e58f428.b509100c179f46dfa0d78c
+OPENAI_API_KEY=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
+OPENAI=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
+
+CLOUDFLARE_ACCESS_KEY_ID=357c3afde76e73258308f5bf7d1eebe2
+CLOUDFLARE_ACCESS_KEY_SECRET=02f9e4c3a39d13a883302eaa92ac74898323b3b09cadae41cc91de8b7d1fc9a8
+CLOUDFLARE_ACCOUNT_ID=123
+CLOUDFLARE_APPLET_SRC_BUCKET_NAME=123
+CLOUDFLARE_BUILD_FILE_BUCKET_NAME=123
+
+NEXTAUTH_GITHUB_CLIENT_ID=c53cbe7c46b4662f4760
+NEXTAUTH_GITHUB_CLIENT_SECRET=3d34c511fabfa6e12fb1ac59080ddef7d06aeed0
+NEXTAUTH_SECRET=B/78lzDW28JxdVfj+pg9gYqKKLzMRJFZOaqvZYq8sio=
+
+NEXTAUTH_GOOGLE_CLIENT_ID=801947780904-39tnvs86rcc79p5ds28cc55ii2t6pijc.apps.googleusercontent.com
+NEXTAUTH_GOOGLE_CLIENT_SECRET=JYE9gJTeyQDqrNr5bj2sCR7P
+
+RESEND_API_KEY=re_Nw9PQc5x_KkVEp3jNmrQCdG4VxeLvzrpu
+NEXTAUTH_EMAIL_PROVIDER_SECRET=whateversecret
+NEXTAUTH_URL=http://localhost:3000
+IGNORE_ALLOW_LIST=1
+
+UPLOADTHING_SECRET=sk_live_8320c9b9ea550b261da9ab4e491bda4ea7bb08ab28e0e40546ef575f9b6ef847
+UPLOADTHING_APP_ID=q6yid1ghon
+
+PINECONE_API_KEY=f4d139de-f3be-48f0-8766-cb33e749c993
+PINECONE_ENVIRONMENT=us-west1-gcp-free
+

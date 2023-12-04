@@ -59,6 +59,7 @@ export const scriptRouter = createTRPCRouter({
             'github-app',
             'postgres',
             'mysql',
+            'mongodb',
             'discord',
             'notion',
           ])

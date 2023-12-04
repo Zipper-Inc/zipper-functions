@@ -6,6 +6,7 @@ export type ConnectorType =
   | 'zendesk'
   | 'postgres'
   | 'mysql'
+  | 'mongodb'
   | 'discord'
   | 'notion';
 

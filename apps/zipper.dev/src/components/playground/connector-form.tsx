@@ -5,6 +5,7 @@ import GitHubAppConnectorForm from '~/connectors/github-app';
 import NotionConnectorForm from '~/connectors/notion';
 import OpenAIConnectorForm from '~/connectors/openai';
 import PostgresConnectorForm from '~/connectors/postgres';
+import MongodbConnectorForm from '~/connectors/mongodb';
 import MysqlConnectorForm from '~/connectors/mysql';
 import SlackConnectorForm from '~/connectors/slack';
 import ZendeskConnectorForm from '~/connectors/zendesk';
@@ -38,6 +39,10 @@ export function ConnectorForm({
 
   if (connectorId === 'postgres') {
     return <PostgresConnectorForm appId={appId} />;
+  }
+
+  if (connectorId === 'mongodb') {
+    return <MongodbConnectorForm appId={appId} />;
   }
 
   if (connectorId === 'mysql') {

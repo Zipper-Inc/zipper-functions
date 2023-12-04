@@ -103,6 +103,8 @@
     "monaco-editor": "^0.34.1",
     "monaco-editor-workers": "^0.34.2",
     "monaco-jsx-highlighter": "^2.0.4",
+    "mongodb": "^6.3.0",
+    "mysql2": "^3.6.5",
     "ndjson": "^2.0.0",
     "next": "^13.2.0",
     "next-absolute-url": "^1.2.2",
