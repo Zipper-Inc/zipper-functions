@@ -40,6 +40,7 @@ import { useRouter } from 'next/router';
 import { code, userScopes, workspaceScopes } from './constants';
 import { useRunAppContext } from '~/components/context/run-app-context';
 import { useUser } from '~/hooks/use-user';
+import { useEditorContext } from '~/components/context/editor-context';
 
 // configure the Slack connector
 export const slackConnector = createConnector({
@@ -260,12 +261,6 @@ function SlackConnectorFormConUserEdit({
   );
 
   const addSecretMutation = trpc.secret.add.useMutation();
-  const updateCodeWithConfig = trpc.slackConnector.updateConfigCode.useMutation(
-    {
-      onSuccess: async ({ scriptId }) =>
-        await context.script.byId.invalidate({ id: scriptId }),
-    },
-  );
 
   const deleteConnectorMutation = trpc.slackConnector.delete.useMutation({
     async onSuccess() {
@@ -275,6 +270,9 @@ function SlackConnectorFormConUserEdit({
   });
 
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const { getModelByFilename } = useEditorContext();
+
+  const { run } = useRunAppContext();
 
   const existingInstallation =
     (existingSecret.data || existingUserSecret.data) &&
@@ -348,15 +346,15 @@ function SlackConnectorFormConUserEdit({
     );
   };
 
-  const slackAuthURL = trpc.slackConnector.getAuthUrl.useQuery({
-    appId,
-    scopes: { bot: botValue as string[], user: userValue as string[] },
-    postInstallationRedirect: window.location.href,
-  });
+  // const slackAuthURL = trpc.slackConnector.getAuthUrl.useQuery({
+  //   appId,
+  //   scopes: { bot: botValue as string[], user: userValue as string[] },
+  //   postInstallationRedirect: window.location.href,
+  // });
 
-  const [slackAuthInProgress, setSlackAuthInProgress] = useState(false);
+  // const [slackAuthInProgress, setSlackAuthInProgress] = useState(false);
 
-  const router = useRouter();
+  // const router = useRouter();
 
   useEffect(() => {
     setIsUserAuthRequired(connector.data?.isUserAuthRequired);
@@ -364,12 +362,12 @@ function SlackConnectorFormConUserEdit({
     setIsOwnClientIdRequired(!!connector.data?.clientId);
   }, [connector.isSuccess]);
 
-  useEffect(() => {
-    if (slackAuthInProgress && slackAuthURL.data?.url) {
-      router.push(slackAuthURL.data?.url);
-      setSlackAuthInProgress(false);
-    }
-  }, [slackAuthInProgress, slackAuthURL.data?.url]);
+  // useEffect(() => {
+  //   if (slackAuthInProgress && slackAuthURL.data?.url) {
+  //     router.push(slackAuthURL.data?.url);
+  //     setSlackAuthInProgress(false);
+  //   }
+  // }, [slackAuthInProgress, slackAuthURL.data?.url]);
 
   if (existingInstallation) {
     return (
@@ -446,14 +444,15 @@ function SlackConnectorFormConUserEdit({
                   </PopoverContent>
                 </Popover>
                 <Spacer />
-                {slackAuthURL.data && (
+                {/* TODO: Uninstall */}
+                {/* {slackAuthURL.data && (
                   <Button variant="unstyled" color="red.600" onClick={onOpen}>
                     <HStack>
                       <HiOutlineTrash />
                       <Text>Uninstall</Text>
                     </HStack>
                   </Button>
-                )}
+                )} */}
               </HStack>
               <UserAuthSwitch
                 isUserAuthRequired={isUserAuthRequired}
@@ -540,39 +539,63 @@ function SlackConnectorFormConUserEdit({
               <Button
                 mt="6"
                 colorScheme={'purple'}
-                isDisabled={isSaving || !slackAuthURL.data}
+                isDisabled={isSaving}
                 onClick={async () => {
-                  if (slackAuthURL.data) {
-                    setIsSaving(true);
-                    if (isOwnClientIdRequired && clientId && clientSecret) {
-                      await addSecretMutation.mutateAsync({
-                        appId: appId,
-                        key: 'SLACK_CLIENT_SECRET',
-                        value: clientSecret,
-                      });
+                  setIsSaving(true);
+                  if (isOwnClientIdRequired && clientId && clientSecret) {
+                    await addSecretMutation.mutateAsync({
+                      appId: appId,
+                      key: 'SLACK_CLIENT_SECRET',
+                      value: clientSecret,
+                    });
 
-                      await updateCodeWithConfig.mutateAsync({
-                        clientId,
-                        botScopes: botValue as string[],
-                        userScopes: userValue as string[],
-                      });
-                    }
+                    // This should update the Monaco model, instead of the code column in the database
+                    // Update monaco model will update Yjs doc (solving sync issue). The code column will be updated on save
+                    const slackConnectorModel =
+                      getModelByFilename('slack-connector.ts');
+
+                    const code = slackConnectorModel?.getValue();
+                    if (!code) return;
+
                     // TODO: think about isUserAuthRequired,
-                    // await updateAppConnectorMutation.mutateAsync({
-                    //   appId,
-                    //   type: 'slack',
-                    //   data: {
-                    //     isUserAuthRequired,
-                    //     userScopes: userValue as string[],
-                    //     workspaceScopes: botValue as string[],
-                    //     clientId: isOwnClientIdRequired
-                    //       ? clientId || undefined
-                    //       : null,
-                    //   },
-                    // });
-                    await slackAuthURL.refetch();
-                    setSlackAuthInProgress(true);
+                    slackConnectorModel?.setValue(
+                      code.replace(
+                        'UPDATE_MY_CONFIG_HERE',
+                        JSON.stringify(
+                          {
+                            clientId,
+                            botScopes: botValue as string[],
+                            userScopes: userValue as string[],
+                          },
+                          null,
+                          2,
+                        ),
+                      ),
+                    );
+
+                    // TODO: first run fails -- save is failing?
+                    // slack-connector.ts a handler returns a link to install the app
+                    const link = await run({ shouldSave: true });
+                    // Redirect to link
+                    // router.push(link);
                   }
+                  // await updateAppConnectorMutation.mutateAsync({
+                  //   appId,
+                  //   type: 'slack',
+                  //   data: {
+                  //     isUserAuthRequired,
+                  //     userScopes: userValue as string[],
+                  //     workspaceScopes: botValue as string[],
+                  //     clientId: isOwnClientIdRequired
+                  //       ? clientId || undefined
+                  //       : null,
+                  //   },
+                  // });
+
+                  // TODO: ?
+                  // await slackAuthURL.refetch();
+                  // setSlackAuthInProgress(true);
+                  // }
                   setIsSaving(false);
                 }}
               >
