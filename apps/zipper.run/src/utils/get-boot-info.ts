@@ -26,6 +26,8 @@ type BootInfoParams = {
   deploymentId?: string;
 };
 
+type BootFetcher = () => Promise<BootPayload>;
+
 const { __DEBUG__ } = process.env;
 
 const buildHeaders = (token?: string | null, tempUserId?: string) => {
@@ -145,7 +147,10 @@ export async function fetchBootPayloadCachedOrThrow({
   token,
   version: versionPassedIn,
   deploymentId: deploymentIdPassedIn,
-}: BootInfoParams): Promise<BootPayload> {
+  bootFetcher: bootFetcherPassedIn,
+}: BootInfoParams & {
+  bootFetcher?: BootFetcher;
+}): Promise<BootPayload> {
   if (__DEBUG__) {
     console.log('fetchBootPayloadCachedOrThrow()', '>', {
       subdomain,
@@ -176,9 +181,12 @@ export async function fetchBootPayloadCachedOrThrow({
 
   if (cached) return cached;
 
-  const bootPayload: BootPayload = await fetch(
-    getBootUrl({ slug: subdomain, version }),
-  ).then((r) => r.json());
+  const bootFetcher =
+    bootFetcherPassedIn ||
+    (() =>
+      fetch(getBootUrl({ slug: subdomain, version })).then((r) => r.json()));
+
+  const bootPayload: BootPayload = await bootFetcher();
 
   if (__DEBUG__) {
     console.log(
@@ -227,7 +235,10 @@ export async function fetchBootPayloadCachedOrThrow({
 }
 
 export async function fetchBootPayloadCachedWithUserInfoOrThrow(
-  params: BootInfoParams & { bootInfo?: BootInfo },
+  params: BootInfoParams & {
+    bootInfo?: BootInfo;
+    bootFetcher?: BootFetcher;
+  },
 ): Promise<BootPayload<true>> {
   const bootPayload = await fetchBootPayloadCachedOrThrow(params);
 
@@ -257,7 +268,10 @@ export async function fetchBootPayloadCachedWithUserInfoOrThrow(
 }
 
 export async function fetchBootInfoCachedWithUserOrThrow(
-  params: BootInfoParams & { bootInfo?: BootInfo },
+  params: BootInfoParams & {
+    bootInfo?: BootInfo;
+    bootFetcher?: BootFetcher;
+  },
 ): Promise<BootInfoWithUserInfo> {
   return fetchBootPayloadCachedWithUserInfoOrThrow(params).then(
     (r) => r.bootInfo,
