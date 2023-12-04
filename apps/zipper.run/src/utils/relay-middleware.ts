@@ -19,6 +19,7 @@ import {
   parseBody,
   noop,
   UNAUTHORIZED,
+  NOT_FOUND,
 } from '@zipper/utils';
 import Zipper from '@zipper/framework';
 import { getZipperAuth } from './get-zipper-auth';
@@ -108,11 +109,13 @@ export async function bootRelayRequest({
   tempUserId: string | undefined;
   token: string | undefined;
 }) {
-  if (!subdomain)
+  if (!subdomain) {
     return {
-      result: 'No subdomain',
+      result: NOT_FOUND,
+      headers: new Headers(),
       status: 404,
     };
+  }
 
   const bootBody = { appInfo: { id: appId, version } };
   const bootUrl = new URL('/__BOOT__', relayUrl);
@@ -144,6 +147,7 @@ export async function bootRelayRequest({
       return {
         result: JSON.stringify(result.error) || 'Unknown boot info error',
         status: result.status || 500,
+        headers: new Headers(),
       };
     }
 
@@ -164,6 +168,7 @@ export async function bootRelayRequest({
         status: 401,
       }),
       status: 401,
+      headers: new Headers(),
     };
 
   const { status, headers } = bootRelayResponse.response;
@@ -187,7 +192,7 @@ export async function relayRequest(
     filename?: string;
   },
   bootOnly = false,
-) {
+): Promise<{ status: number; headers?: Headers; result: string }> {
   if (!DENO_DEPLOY_SECRET || !PUBLICLY_ACCESSIBLE_RPC_HOST)
     return {
       status: 500,
@@ -199,10 +204,16 @@ export async function relayRequest(
   if (__DEBUG__) console.log('request headers', request.headers);
   const subdomain = getValidSubdomain(host);
   if (__DEBUG__) console.log('getValidSubdomain', { host, subdomain });
-  if (!subdomain) return { status: 404 };
+  if (!subdomain)
+    return {
+      status: 404,
+      headers: new Headers(),
+      result: NOT_FOUND,
+    };
 
   const deployment = await fetchDeploymentCachedOrThrow(subdomain).catch(noop);
-  if (!deployment || !deployment.appId) return { status: 404 };
+  if (!deployment || !deployment.appId)
+    return { status: 404, result: NOT_FOUND, headers: new Headers() };
 
   const { appId, version: latestVersion } = deployment;
   const version = versionPassedIn || latestVersion;
@@ -266,7 +277,7 @@ export async function relayRequest(
       },
     });
   } catch (e: any) {
-    const errorStatus = e?.status || 500;
+    const errorStatus = parseInt(e?.status, 10) || 500;
     return {
       status: errorStatus,
       result: JSON.stringify({
@@ -275,6 +286,7 @@ export async function relayRequest(
         error: e.message,
         errorClass: 'Boot',
       }),
+      headers: new Headers(),
     };
   }
 
