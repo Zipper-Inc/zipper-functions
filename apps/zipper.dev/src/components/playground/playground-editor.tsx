@@ -18,7 +18,7 @@ import traverse from '@babel/traverse';
 import { useColorModeValue } from '@chakra-ui/react';
 import { baseColors, prettierFormat, useCmdOrCtrl } from '@zipper/ui';
 import MonacoJSXHighlighter from 'monaco-jsx-highlighter';
-import { use, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { getPathFromUri, getUriFromPath } from '~/utils/model-uri';
 import { useEditorContext } from '../context/editor-context';
 import { useRunAppContext } from '../context/run-app-context';

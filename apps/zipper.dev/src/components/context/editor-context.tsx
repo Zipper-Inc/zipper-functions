@@ -57,6 +57,7 @@ export type EditorContextType = {
   setModelIsDirty: (path: string, isDirty: boolean) => void;
   isEditorDirty: () => boolean;
   modelHasErrors: (path: string) => boolean;
+  getModelByFilename: (filename: string) => monaco.editor.ITextModel | null;
   setModelHasErrors: (path: string, isErroring: boolean) => void;
   editorHasErrors: () => boolean;
   getErrorFiles: () => string[];
@@ -108,6 +109,7 @@ export const EditorContext = createContext<EditorContextType>({
   setModelIsDirty: noop,
   isEditorDirty: () => false,
   modelHasErrors: () => false,
+  getModelByFilename: () => null,
   setModelHasErrors: () => false,
   editorHasErrors: () => false,
   getErrorFiles: () => [],
@@ -699,6 +701,15 @@ const EditorContextProvider = ({
       .filter(([, value]) => value)
       .map(([filename]) => filename);
 
+  const getModelByFilename = (filename: string) => {
+    const filenameWithTsxHack = filename.endsWith('.md')
+      ? filename
+      : `${filename}.tsx`;
+    const uri = monacoRef.current?.Uri.parse(`file:///${filenameWithTsxHack}`);
+    if (!uri || !editor) return null;
+    return editor.getModel(uri);
+  };
+
   return (
     <EditorContext.Provider
       value={{
@@ -714,6 +725,7 @@ const EditorContextProvider = ({
         setModelIsDirty,
         isEditorDirty,
         modelHasErrors,
+        getModelByFilename,
         setModelHasErrors,
         editorHasErrors,
         getErrorFiles,
