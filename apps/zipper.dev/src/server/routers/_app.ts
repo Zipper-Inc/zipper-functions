@@ -24,6 +24,7 @@ import { discordConnectorRouter } from './discordConnector.router';
 import { notionConnectorRouter } from './notion.connector.router';
 import { postgresConnectorRouter } from './postgres.connector.router';
 import { mysqlConnectorRouter } from './mysql.connector.router';
+import { mongodbConnectorRouter } from './mongo.connector.router';
 
 export const trpcRouter = createTRPCRouter({
   healthz: publicProcedure.query(() => 'yay!'),
@@ -42,6 +43,7 @@ export const trpcRouter = createTRPCRouter({
   notionConnector: notionConnectorRouter,
   postgresConnector: postgresConnectorRouter,
   mysqlConnector: mysqlConnectorRouter,
+  mongodbConnector: mongodbConnectorRouter,
   secret: secretRouter,
   script: scriptRouter,
   schedule: scheduleRouter,

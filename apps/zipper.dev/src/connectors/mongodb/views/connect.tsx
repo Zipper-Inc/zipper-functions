@@ -111,7 +111,7 @@ const MongoConnect: React.FC<{ appId: string }> = ({ appId }) => {
       const response = await fetch('/api/testConnection', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ connectionString }),
+        body: JSON.stringify({ connectionString, dbType: 'mongodb' }),
       });
 
       const result = await response.json();

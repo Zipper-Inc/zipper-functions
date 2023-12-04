@@ -29,7 +29,7 @@ const deleteInstallation = publicProcedure
       where: {
         appId_type: {
           appId: input.appId,
-          type: 'mysql',
+          type: 'postgres',
         },
       },
       data: {
@@ -43,16 +43,11 @@ const deleteInstallation = publicProcedure
       where: {
         appId: input.appId,
         key: {
-          in: [
-            'MYSQL_HOSTNAME',
-            'MYSQL_USERNAME',
-            'MYSQL_PASSWORD',
-            'MYSQL_DB',
-          ],
+          in: ['MONGO_CONNECTION_STRING'],
         },
       },
     });
-    console.log('deleted');
+
     return true;
   });
 

@@ -5,7 +5,7 @@ import * as sql from "https://esm.sh/sql-bricks";
 function loadConfig() {
   return {
     hostname: Deno.env.get("MYSQL_HOST"),
-    username: Deno.env.get("MYSQL_USER"),
+    username: Deno.env.get("MYSQL_USERNAME"),
     db: Deno.env.get("MYSQL_DATABASE"),
     password: Deno.env.get("MYSQL_PASSWORD"), 
   };

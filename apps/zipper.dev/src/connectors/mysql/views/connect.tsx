@@ -70,7 +70,7 @@ const MysqlConnect: React.FC<{ appId: string }> = ({ appId }) => {
     async onSuccess() {
       context.secret.get.invalidate({
         appId,
-        key: ['MYSQL_CONNECTION_STRING'],
+        key: ['MYSQL_DB', 'MYSQL_HOSTNAME', 'MYSQL_USERNAME', 'MYSQL_PASSWORD'],
       });
     },
   });
@@ -98,7 +98,7 @@ const MysqlConnect: React.FC<{ appId: string }> = ({ appId }) => {
     await Promise.all([
       updateAppConnectorMutation.mutateAsync({
         appId,
-        type: 'postgres',
+        type: 'mysql',
         data: { isUserAuthRequired: false },
       }),
       ...mutationPromises,
@@ -110,18 +110,15 @@ const MysqlConnect: React.FC<{ appId: string }> = ({ appId }) => {
   const testConnection = async () => {
     setIsTestingConnection('Testing');
     const formData = getValues();
-
-    // Construct connection string or use individual parts
-
     try {
-      const response = await fetch('/api/testConnection?dbtype=mysql', {
+      const connectionString = `mysql://${formData.MYSQL_USERNAME}:${formData.MYSQL_PASSWORD}@${formData.MYSQL_HOSTNAME}`;
+
+      const response = await fetch('/api/testConnection', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          host: formData.MYSQL_HOSTNAME,
-          user: formData.MYSQL_USERNAME,
-          password: formData.MYSQL_PASSWORD,
-          database: formData.MYSQL_DB,
+          connectionString,
+          dbType: 'mysql',
         }),
       });
 

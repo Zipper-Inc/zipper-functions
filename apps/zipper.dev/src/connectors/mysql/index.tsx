@@ -35,11 +35,10 @@ function MysqlConnectorForm({ appId }: { appId: string }) {
   const existingSecret = trpc.secret.get.useQuery(
     {
       appId,
-      key: ['MYSQL_HOST', 'MYSQL_USERNAME', 'MYSQL_DB', 'MYSQL_PASSWORD'],
+      key: ['MYSQL_HOSTNAME', 'MYSQL_USERNAME', 'MYSQL_DB', 'MYSQL_PASSWORD'],
     },
     { enabled: !!appId },
   );
-
   /* ------------------- Memos ------------------ */
   const existingInstallation = useMemo(
     () => !!existingSecret.data || false,

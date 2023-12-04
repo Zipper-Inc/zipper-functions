@@ -36,7 +36,12 @@ const MysqlDisconect: React.FC<{
         utils.mysqlConnector.get.invalidate({ appId });
         utils.secret.get.invalidate({
           appId,
-          key: ['MYSQL_HOST', 'MYSQL_USERNAME', 'MYSQL_DB', 'MYSQL_PASSWORDH'],
+          key: [
+            'MYSQL_HOSTNAME',
+            'MYSQL_USERNAME',
+            'MYSQL_DB',
+            'MYSQL_PASSWORD',
+          ],
         });
       },
     });

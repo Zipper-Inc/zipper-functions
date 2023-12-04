@@ -31,12 +31,12 @@ const PostgresDisconect: React.FC<{
 
   /* ----------------- Mutations ---------------- */
   const deleteConnectorMutation =
-    trpc.postgresConnector.deleteInstallation.useMutation({
+    trpc.mongodbConnector.deleteInstallation.useMutation({
       async onSuccess() {
-        utils.postgresConnector.get.invalidate({ appId });
+        utils.mongodbConnector.get.invalidate({ appId });
         utils.secret.get.invalidate({
           appId,
-          key: ['POSTGRES_CONNECTION_STRING'],
+          key: ['MONGO_CONNECTION_STRING'],
         });
       },
     });
