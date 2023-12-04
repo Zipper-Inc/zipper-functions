@@ -12,6 +12,7 @@ export type UserInfoReturnType = {
 
 export type AppletAuthorReturnType = {
   name: string;
+  slug: string;
   organization: string;
   image: string;
   orgImage: string;

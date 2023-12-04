@@ -13,6 +13,7 @@ export type AppInfo = {
   publishedVersionHash: string | null;
   appAuthor?: {
     name: string;
+    slug: string;
     organization: string;
     image: string;
     orgImage: string;

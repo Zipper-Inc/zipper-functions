@@ -183,6 +183,7 @@ export default async function handler(
   const author = editors.find((editor) => editor.isOwner === true);
   const appAuthor: AppletAuthorReturnType = {
     name: '',
+    slug: '',
     organization: '',
     image: '',
     orgImage: '',
@@ -208,6 +209,7 @@ export default async function handler(
 
   appAuthor.name = authorName?.name || '';
   appAuthor.image = authorName?.image || '';
+  appAuthor.slug = authorName?.slug || '';
 
   const canUserEditBool = canUserEdit(appFound, {
     req,

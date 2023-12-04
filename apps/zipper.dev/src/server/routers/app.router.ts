@@ -541,6 +541,7 @@ export const appRouter = createTRPCRouter({
 
       const appAuthor: AppletAuthorReturnType = {
         name: '',
+        slug: '',
         organization: '',
         image: '',
         orgImage: '',
@@ -566,6 +567,7 @@ export const appRouter = createTRPCRouter({
 
       appAuthor.name = authorName?.name || '';
       appAuthor.image = authorName?.image || '';
+      appAuthor.slug = authorName?.slug || '';
 
       const canEdit = canUserEdit(app, ctx);
       if (app.isPrivate && !canEdit)
