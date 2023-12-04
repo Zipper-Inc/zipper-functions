@@ -43,35 +43,20 @@ async function processRerun(res: NextApiResponse, payload: any) {
   return acknowledgeSlack(res);
 }
 
-async function processUpdatedOutput(res: NextApiResponse, payload: any) {
-  const { slug, filename } = JSON.parse(payload.view.private_metadata);
-  const {
-    api_app_id: appId,
-    team: { id: teamId },
-    view: { id: viewId, hash: viewHash },
-  } = payload;
+async function processUpdatedOutput(
+  res: NextApiResponse,
+  payload: any,
+  showRawOutput: boolean,
+) {
+  const view = (await buildRunResultView({
+    ...(await getResults(payload)),
+    showRawOutput,
+  })) as any;
 
-  const blocks = await buildInputModal(slug, filename);
+  view.view_id = payload.view.id;
+  view.hash = payload.view.hash;
 
-  const newView = {
-    view_id: viewId,
-    hash: viewHash,
-    view: buildSlackModalView({
-      title: payload.view.title.text,
-      callbackId: 'view-run-zipper-app',
-      blocks,
-      privateMetadata: payload.view.private_metadata,
-      showSubmit: true,
-    }),
-  };
-
-  const updateResponse = await updateSlackModal(newView, appId, teamId);
-
-  if (__DEBUG__) {
-    console.log('slack update response for rerun');
-    console.log(await updateResponse.json());
-  }
-
+  await updateSlackModal(view, payload.api_app_id, payload.team.id);
   return acknowledgeSlack(res);
 }
 
@@ -166,31 +151,11 @@ async function blockActionHandler(res: NextApiResponse, payload: any) {
   }
 
   if (actionId === 'view_raw_output_button') {
-    const view = (await buildRunResultView({
-      ...(await getResults(payload)),
-      showRawOutput: true,
-    })) as any;
-
-    view.view_id = payload.view.id;
-    view.hash = payload.view.hash;
-
-    await updateSlackModal(view, payload.api_app_id, payload.team.id);
-    return acknowledgeSlack(res);
+    return processUpdatedOutput(res, payload, true);
   }
 
   if (actionId === 'view_screenshot_output_button') {
-    const view = (await buildRunResultView(await getResults(payload))) as any;
-
-    view.view_id = payload.view.id;
-    view.hash = payload.view.hash;
-
-    const updateRes = await updateSlackModal(
-      view,
-      payload.api_app_id,
-      payload.team.id,
-    );
-    console.log(await updateRes.json());
-    return acknowledgeSlack(res);
+    return processUpdatedOutput(res, payload, false);
   }
 
   //ignore other interaction types
