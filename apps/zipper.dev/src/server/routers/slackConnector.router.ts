@@ -191,47 +191,6 @@ export const slackConnectorRouter = createTRPCRouter({
 
       return true;
     }),
-  updateConfigCode: publicProcedure
-    .input(
-      z.object({
-        clientId: z.string(),
-        userScopes: z.array(z.string()),
-        botScopes: z.array(z.string()),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      // get slack-connector file code
-      const script = await prisma.script.findFirst({
-        where: {
-          name: 'slack-connector',
-        },
-        select: {
-          code: true,
-          id: true,
-        },
-      });
-
-      // update slackConnectorConfig
-      const slackConnectorConfig = script?.code.replace(
-        'UPDATE_MY_CONFIG_HERE',
-        JSON.stringify(input, null, 2),
-      );
-
-      // update code in db
-      await prisma.script.update({
-        where: {
-          id: script?.id,
-          name: 'slack-connector',
-        },
-        data: {
-          code: slackConnectorConfig,
-        },
-      });
-
-      return {
-        scriptId: script?.id,
-      };
-    }),
   exchangeCodeForToken: publicProcedure
     .input(
       z.object({
