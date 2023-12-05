@@ -37,6 +37,10 @@ function parseTypeNode(type: TypeNode, src: SourceFile): ParsedNode {
   if (text.toLowerCase() === 'unknown') return { type: InputType.unknown };
   if (text.toLowerCase() === 'any') return { type: InputType.any };
   if (text.toLowerCase() === 'zipper.fileurl') return { type: InputType.file };
+  if (text.toLocaleLowerCase().match(/"\w+"(\s*\|\s*"\w+")*/g))
+    return { type: InputType.string };
+  if (text.toLocaleLowerCase().match(/\d+(\s*\|\s*\d+)*/g))
+    return { type: InputType.number };
 
   if (type.isKind(SyntaxKind.ArrayType) || text.startsWith('Array'))
     return { type: InputType.array };
@@ -337,6 +341,8 @@ export function parseInputForTypes({
 
       const typeDetails = parseTypeNode(typeNode, src);
 
+      console.log('typeDetails', typeDetails);
+
       return {
         key: prop.getName(),
         type: typeDetails.type,
@@ -408,6 +414,8 @@ export function parseCode({
     code,
     srcPassedIn: src,
   });
+
+  console.log('inputs', inputs);
 
   const imports = parseImports({ code, srcPassedIn: src });
 
