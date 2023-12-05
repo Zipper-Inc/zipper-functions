@@ -238,7 +238,7 @@ export const slackConnectorRouter = createTRPCRouter({
         });
       }
       const codeConfig = getSlackConfig(connectorScript.code);
-      if (codeConfig.clientId && clientSecretRecord) {
+      if (codeConfig?.clientId && clientSecretRecord) {
         clientId = codeConfig.clientId;
         clientSecret = decryptFromBase64(
           clientSecretRecord.encryptedValue,
