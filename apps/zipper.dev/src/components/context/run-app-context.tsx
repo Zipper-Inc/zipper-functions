@@ -22,6 +22,16 @@ type UserAuthConnector = {
   appConnectorUserAuths: AppConnectorUserAuth[];
 };
 
+type RunResult =
+  | { ok: false; runId: string }
+  | {
+      ok: true;
+      filename: string;
+      version?: string;
+      result: string;
+      runId: string;
+    };
+
 export type RunAppContextType = {
   appInfo: AppInfo;
   formMethods: any;
@@ -33,7 +43,7 @@ export type RunAppContextType = {
   run: (params?: {
     shouldSave?: boolean;
     isCurrentScriptEntryPoint?: boolean;
-  }) => Promise<string | undefined>;
+  }) => Promise<RunResult | undefined>;
   boot: (params?: { shouldSave?: boolean }) => Promise<void>;
   configs: Zipper.BootPayload['configs'];
 };
@@ -46,7 +56,7 @@ export const RunAppContext = createContext<RunAppContextType>({
   results: {},
   userAuthConnectors: [],
   setResults: noop,
-  run: () => Promise.resolve(''),
+  run: () => Promise.resolve(undefined),
   boot: () => Promise.resolve(),
   configs: {},
 });
@@ -349,7 +359,7 @@ export function RunAppProvider({
     cleanUpLogTimers();
     updateLogs({ version, runId, fromTimestamp: oneSecondAgo });
 
-    return runId;
+    return { ...result, runId };
   };
 
   return (

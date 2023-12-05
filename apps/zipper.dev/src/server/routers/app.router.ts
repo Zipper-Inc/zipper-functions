@@ -756,7 +756,7 @@ export const appRouter = createTRPCRouter({
       console.log('---FILENAME---', script.filename);
       const inputParams = parseInputForTypes({ code: script.code });
 
-      if (!inputParams) return { ok: false };
+      if (!inputParams) return { ok: false } as const;
 
       const inputs = getInputsFromFormData(input.formData, inputParams);
 
@@ -796,7 +796,7 @@ export const appRouter = createTRPCRouter({
         },
       });
 
-      return { ok: true, filename: script.filename, version, result };
+      return { ok: true, filename: script.filename, version, result } as const;
     }),
   fork: protectedProcedure
     .input(
