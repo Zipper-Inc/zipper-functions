@@ -354,7 +354,7 @@ function SlackConnectorFormConUserEdit({
 
   // const [slackAuthInProgress, setSlackAuthInProgress] = useState(false);
 
-  // const router = useRouter();
+  const router = useRouter();
 
   useEffect(() => {
     setIsUserAuthRequired(connector.data?.isUserAuthRequired);
@@ -573,11 +573,12 @@ function SlackConnectorFormConUserEdit({
                       ),
                     );
 
-                    // TODO: first run fails -- save is failing?
                     // slack-connector.ts a handler returns a link to install the app
-                    const link = await run({ shouldSave: true });
+                    const installLinkApplet = await run();
+                    if (installLinkApplet?.ok) {
+                      router.push(installLinkApplet.result);
+                    }
                     // Redirect to link
-                    // router.push(link);
                   }
                   // await updateAppConnectorMutation.mutateAsync({
                   //   appId,
