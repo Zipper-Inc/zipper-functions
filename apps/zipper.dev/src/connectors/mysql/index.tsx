@@ -39,6 +39,7 @@ function MysqlConnectorForm({ appId }: { appId: string }) {
     },
     { enabled: !!appId },
   );
+
   /* ------------------- Memos ------------------ */
   const existingInstallation = useMemo(
     () => !!existingSecret.data || false,

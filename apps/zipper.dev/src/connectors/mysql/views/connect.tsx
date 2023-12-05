@@ -25,14 +25,14 @@ import { trpc } from '~/utils/trpc';
 /* -------------------------------------------- */
 const CLIENT_ID_FORM = {
   LABEL: `Mysql database connection`,
-  DESCRIPTION: 'Add your Mysql database configuration.',
+  DESCRIPTION: 'Add your mysql database configuration.',
 };
 
 type MysqlInputsNames =
   | 'MYSQL_HOSTNAME'
   | 'MYSQL_USERNAME'
-  | 'MYSQL_PASSWORD'
-  | 'MYSQL_DB';
+  | 'MYSQL_DB'
+  | 'MYSQL_PASSWORD';
 
 type MysqlInputs = {
   formLabel: string;
@@ -42,10 +42,10 @@ type MysqlInputs = {
 type MysqlForm = Record<MysqlInputs['name'], string>;
 
 const inputs: MysqlInputs[] = [
-  { formLabel: 'Host Name', name: 'MYSQL_HOSTNAME' },
-  { formLabel: 'Username', name: 'MYSQL_USERNAME' },
-  { formLabel: 'Password', name: 'MYSQL_PASSWORD' },
-  { formLabel: 'Database name', name: 'MYSQL_DB' },
+  { formLabel: 'Your mysql host address', name: 'MYSQL_HOSTNAME' },
+  { formLabel: 'Your mysql username', name: 'MYSQL_USERNAME' },
+  { formLabel: 'Your mysql database name', name: 'MYSQL_DB' },
+  { formLabel: 'Your mysql password', name: 'MYSQL_PASSWORD' },
 ];
 
 /* -------------------------------------------- */
@@ -70,7 +70,7 @@ const MysqlConnect: React.FC<{ appId: string }> = ({ appId }) => {
     async onSuccess() {
       context.secret.get.invalidate({
         appId,
-        key: ['MYSQL_DB', 'MYSQL_HOSTNAME', 'MYSQL_USERNAME', 'MYSQL_PASSWORD'],
+        key: ['MYSQL_HOSTNAME', 'MYSQL_USERNAME', 'MYSQL_DB', 'MYSQL_PASSWORD'],
       });
     },
   });
@@ -110,16 +110,15 @@ const MysqlConnect: React.FC<{ appId: string }> = ({ appId }) => {
   const testConnection = async () => {
     setIsTestingConnection('Testing');
     const formData = getValues();
-    try {
-      const connectionString = `mysql://${formData.MYSQL_USERNAME}:${formData.MYSQL_PASSWORD}@${formData.MYSQL_HOSTNAME}`;
 
+    // Construct connection string or use individual parts
+    const connectionString = `mysql://${formData.MYSQL_USERNAME}:${formData.MYSQL_PASSWORD}@${formData.MYSQL_HOSTNAME}/${formData.MYSQL_DB}`;
+
+    try {
       const response = await fetch('/api/testConnection', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          connectionString,
-          dbType: 'mysql',
-        }),
+        body: JSON.stringify({ connectionString, dbType: 'mysql' }),
       });
 
       const result = await response.json();
@@ -140,7 +139,7 @@ const MysqlConnect: React.FC<{ appId: string }> = ({ appId }) => {
     isTestingConnection === 'Connected!' ? 'success' : 'error';
   const connectionMessage =
     isTestingConnection === 'Connected!'
-      ? 'Your connection to the database was successful!'
+      ? 'Connection successfull!'
       : errorMessage;
 
   /* ------------------ Render ------------------ */
@@ -196,21 +195,17 @@ const MysqlConnect: React.FC<{ appId: string }> = ({ appId }) => {
               Save & Install
             </Button>
           </HStack>
-          {
-            // we should only display the alert if we're not testing the connection
-            isTestingConnection !== 'Testing' && (
-              <Alert status={connectionStatus}>
-                <AlertIcon />
-                <AlertTitle mr={2}>{connectionMessage}</AlertTitle>
-                <AlertDescription>
-                  {connectionMessage ===
-                  'Your connection to the database was successful!'
-                    ? 'You can now install the connector.'
-                    : 'Please check your connection details and try again.'}
-                </AlertDescription>
-              </Alert>
-            )
-          }
+          {isTestingConnection && isTestingConnection !== 'Testing' && (
+            <Alert status={connectionStatus}>
+              <AlertIcon />
+              <AlertTitle mr={2}>{connectionMessage}</AlertTitle>
+              <AlertDescription>
+                {connectionMessage === 'Connection successfull!'
+                  ? 'You can now install the connector.'
+                  : 'Please check your connection details and try again.'}
+              </AlertDescription>
+            </Alert>
+          )}
         </VStack>
       </CardBody>
     </Card>
