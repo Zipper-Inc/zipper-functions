@@ -523,7 +523,15 @@ export function AppPage({
   if (isEmbedded) return content;
   if (resultOnly)
     return (
-      <div className="result" style={{ width: 'fit-content' }}>
+      <div
+        className="result"
+        style={{
+          width: 'fit-content',
+          minWidth: '600px',
+          minHeight: '600px',
+          padding: 2,
+        }}
+      >
         {output}
       </div>
     );

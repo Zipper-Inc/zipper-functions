@@ -430,7 +430,10 @@ export async function buildRunResultView({
 
   try {
     if (showRawOutput) throw new Error();
-    const screenshotUrl = getScreenshotUrl(`${runUrl}?resultOnly=true`);
+    const screenshotUrl = getScreenshotUrl(
+      `${runUrl}?resultOnly=true`,
+      '.result',
+    );
     const response = await fetchWithTimeout(screenshotUrl);
     blocks.push({
       type: 'image',
