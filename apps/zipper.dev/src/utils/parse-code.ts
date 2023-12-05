@@ -539,3 +539,11 @@ export function parseComments({
 
   return;
 }
+
+export function parseCodeSerializable(...args: Parameters<typeof parseCode>) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { src: _ignore, ...rest } = parseCode(...args);
+  return {
+    ...rest,
+  };
+}

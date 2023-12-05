@@ -8,15 +8,21 @@ import {
   ScriptMain,
 } from '@prisma/client';
 import { TRPCError } from '@trpc/server';
-import { appSubmissionState, ResourceOwnerType } from '@zipper/types';
+import {
+  appSubmissionState,
+  BootPayload,
+  ResourceOwnerType,
+} from '@zipper/types';
 import {
   getInputsFromFormData,
-  ZIPPER_TEMP_USER_ID_COOKIE_NAME,
+  __ZIPPER_TEMP_USER_ID,
+  cacheDeployment,
+  cacheBootPayload,
 } from '@zipper/utils';
 import { randomUUID } from 'crypto';
 import JSZip from 'jszip';
 import fetch from 'node-fetch';
-import { array, z } from 'zod';
+import { z } from 'zod';
 import { prisma } from '~/server/prisma';
 import { trackEvent } from '~/utils/api-analytics';
 import { buildAndStoreApplet } from '~/utils/eszip-build-applet';
@@ -280,6 +286,8 @@ export const appRouter = createTRPCRouter({
           },
         });
 
+        await cacheDeployment.set(app.slug, { appId: app.id, version: hash });
+
         return { ...app, scriptMain, resourceOwner };
       },
     ),
@@ -531,7 +539,7 @@ export const appRouter = createTRPCRouter({
                 where: {
                   userIdOrTempId:
                     ctx.userId ||
-                    (ctx.req?.cookies as any)[ZIPPER_TEMP_USER_ID_COOKIE_NAME],
+                    (ctx.req?.cookies as any)[__ZIPPER_TEMP_USER_ID],
                 },
               },
             },
@@ -690,7 +698,7 @@ export const appRouter = createTRPCRouter({
       console.log('Boot version: ', version);
 
       try {
-        const bootPayload: Zipper.BootPayload = await fetch(
+        const bootPayload: BootPayload = await fetch(
           getBootUrl(app.slug, version),
           {
             method: 'POST',
@@ -710,6 +718,11 @@ export const appRouter = createTRPCRouter({
             }`,
           );
         }
+
+        await cacheBootPayload.set(
+          { deploymentId: bootPayload.deploymentId },
+          bootPayload,
+        );
 
         return bootPayload;
       } catch (e: any) {
@@ -949,50 +962,11 @@ export const appRouter = createTRPCRouter({
           );
 
       if (input.data.slug || input.data.scripts) {
-        const { hash } = await buildAndStoreApplet({
-          app: { ...app, scripts: updatedScripts },
+        const appWithUpdatedHash = await buildAndStoreNewAppVersion(id, {
+          app,
+          scripts: updatedScripts,
           userId: ctx.userId,
-          isPublished: app.isAutoPublished,
         });
-
-        // if the code has changed, send the latest code to R2
-        if (hash !== app.playgroundVersionHash) {
-          const zip = new JSZip();
-          (updatedScripts.length > 0 ? updatedScripts : app.scripts).map(
-            (s) => {
-              zip.file(s.filename, JSON.stringify(s));
-            },
-          );
-
-          const version = getAppVersionFromHash(hash);
-
-          if (!version) throw new Error('Invalid hash');
-
-          zip.generateAsync({ type: 'uint8array' }).then((content) => {
-            storeVersionCode({
-              appId: app.id,
-              version,
-              zip: content,
-            });
-          });
-        }
-
-        const appHashUpdateData: any = {
-          playgroundVersionHash: hash,
-        };
-
-        if (app.isAutoPublished) {
-          appHashUpdateData.publishedVersionHash = hash;
-        }
-
-        const appWithUpdatedHash = await prisma.app.update({
-          where: {
-            id,
-          },
-          data: appHashUpdateData,
-          select: defaultSelect,
-        });
-
         return { ...appWithUpdatedHash, resourceOwner };
       }
 
@@ -1056,6 +1030,8 @@ export const appRouter = createTRPCRouter({
         },
       });
 
+      await cacheDeployment.set(app.slug, { appId: app.id, version: hash });
+
       return prisma.app.update({
         where: {
           id: input.id,
@@ -1067,6 +1043,83 @@ export const appRouter = createTRPCRouter({
       });
     }),
 });
+
+export async function buildAndStoreNewAppVersion(
+  id: string,
+  {
+    app: appPassedIn,
+    scripts: scriptsPassedIn,
+    userId,
+  }: {
+    app?: App & { scripts: Script[] };
+    scripts?: Script[];
+    userId?: string;
+  },
+) {
+  const app =
+    appPassedIn ||
+    (await prisma.app.findFirstOrThrow({
+      where: { id },
+      include: { scripts: true },
+    }));
+
+  const scripts = scriptsPassedIn || app.scripts;
+
+  const { hash } = await buildAndStoreApplet({
+    app: { ...app, scripts },
+    userId,
+    isPublished: app.isAutoPublished,
+  });
+
+  // if the code has changed, send the latest code to R2
+  if (hash !== app.playgroundVersionHash) {
+    const zip = new JSZip();
+    (scripts.length > 0 ? scripts : app.scripts).map((s) => {
+      zip.file(s.filename, JSON.stringify(s));
+    });
+
+    const version = getAppVersionFromHash(hash);
+
+    if (!version) throw new Error('Invalid hash');
+
+    zip.generateAsync({ type: 'uint8array' }).then((content) => {
+      storeVersionCode({
+        appId: app.id,
+        version,
+        zip: content,
+      });
+    });
+  }
+
+  const appHashUpdateData: any = {
+    playgroundVersionHash: hash,
+  };
+
+  if (app.isAutoPublished) {
+    appHashUpdateData.publishedVersionHash = hash;
+  }
+
+  const appWithUpdatedHash = await prisma.app.update({
+    where: {
+      id,
+    },
+    data: appHashUpdateData,
+    select: defaultSelect,
+  });
+
+  const {
+    slug: subdomain,
+    id: appId,
+    playgroundVersionHash: version,
+  } = appWithUpdatedHash;
+
+  await cacheDeployment.set(subdomain, {
+    appId,
+    version: version as string,
+  });
+
+  return { ...appWithUpdatedHash };
+}
 
 async function forkAppletById(inputs: {
   appId: string;

@@ -5733,6 +5733,19 @@
   version "6.0.2"
   resolved "https://registry.yarnpkg.com/@uploadthing/shared/-/shared-6.0.2.tgz#8c804ee087b76254f06d76792967515bd12e6971"
   integrity sha512-yFOhvzBG8VB2qmEGWDuW/tV/ZcfRZ4a6rX7i9/ZS3IqHA0FO7CKa8yitltAl3yRdSI9it88iMEQg7Ah/ve8D4A==
+"@upstash/redis@1.24.3":
+  version "1.24.3"
+  resolved "https://registry.yarnpkg.com/@upstash/redis/-/redis-1.24.3.tgz#0247250f7e26b6923e6ce4f348ce08f7bbdc6222"
+  integrity sha512-gw6d4IA1biB4eye5ESaXc0zOlVQI94aptsBvVcTghYWu1kRmOrJFoMFEDCa8p5uzluyYAOFCuY2GWLR6O4ZoIw==
+  dependencies:
+    crypto-js "^4.2.0"
+
+"@vercel/kv@^1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@vercel/kv/-/kv-1.0.0.tgz#9ae4716dd01f097aaab25259217c13a9d18ef922"
+  integrity sha512-StouXunmEqUfKE+1joSYfELWEEnI1MhTnzUdarHtv6H18RAm3cf5u5g9ElvA1DJNHcrMT6g5yVAhZcYRbk6lvg==
+  dependencies:
+    "@upstash/redis" "1.24.3"
 
 "@zag-js/element-size@0.3.0":
   version "0.3.0"
@@ -6971,6 +6984,11 @@ crypt@0.0.2:
   version "0.0.2"
   resolved "https://registry.yarnpkg.com/crypt/-/crypt-0.0.2.tgz#88d7ff7ec0dfb86f713dc87bbb42d044d3e6c41b"
   integrity sha512-mCxBlsHFYh9C+HVpiEacem8FEBnMXgU9gy4zmNC+SXAZNB/1idgp/aulFJ4FgCi7GPEVbfyng092GqL2k2rmow==
+
+crypto-js@^4.2.0:
+  version "4.2.0"
+  resolved "https://registry.yarnpkg.com/crypto-js/-/crypto-js-4.2.0.tgz#4d931639ecdfd12ff80e8186dba6af2c2e856631"
+  integrity sha512-KALDyEYgpY+Rlob/iriUtjV6d5Eq+Y191A5g4UqLAi8CyGP9N1+FdVbkc1SxKc2r4YAYqG8JzO2KGL+AizD70Q==
 
 css-box-model@1.2.1:
   version "1.2.1"

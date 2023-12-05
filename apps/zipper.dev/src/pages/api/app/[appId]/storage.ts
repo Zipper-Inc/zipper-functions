@@ -23,7 +23,7 @@ export default async function handler(
     return;
   }
 
-  console.log('HMAC verified');
+  console.log('[Zipper.storage] HMAC verified');
 
   const { appId } = query;
 

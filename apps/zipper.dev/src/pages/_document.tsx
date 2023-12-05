@@ -14,10 +14,11 @@ class MyDocument extends Document {
 
   render() {
     const meta = {
-      title: 'Zipper',
+      title: 'Zipper: Complexity-free web development',
       description:
-        'Zipper turns your business logic into serverless apps with automatically generated UI, auth, and APIs straight out of the box.',
-      image: '',
+        'Zipper helps you turn Typescript functions into modern web applications. No local setup, boilerplate, or frontend code required.',
+      image:
+        'https://imagedelivery.net/mehHBP8u01yKLn8uDjx8Yw/d93faf59-5b19-482a-336d-9afeafe6b500/public',
     };
 
     return (

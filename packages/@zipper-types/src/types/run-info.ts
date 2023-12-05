@@ -1,6 +1,6 @@
-import { BootInfo } from './boot-info';
+import { BootInfoWithUserInfo } from './boot-info';
 
-export type RunInfo = BootInfo & {
+export type RunInfo = BootInfoWithUserInfo & {
   appRun: {
     path: string;
     version: string;
