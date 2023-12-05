@@ -1,8 +1,9 @@
-export const code = `import { WebClient } from "https://deno.land/x/slack_web_api@6.7.2/mod.js";
-import { initApplet } from "https://deno.land/x/zipper_client_js@v0.1.6/mod.ts";
-import { SlackUserAuth } from "https://zipper.dev/zipper-inc/slack-install-link/src/main.ts";
+export const code = `import { WebClient } from 'https://deno.land/x/slack_web_api@6.7.2/mod.js';
+import { initApplet } from 'https://deno.land/x/zipper_client_js@v0.1.6/mod.ts';
+import { SlackUserAuth } from 'https://zipper.dev/zipper-inc/slack-install-link/src/main.ts';
 
-export const slackConnectorConfig: Partial<SlackUserAuth> = UPDATE_MY_CONFIG_HERE
+export const slackConnectorConfig: Partial<SlackUserAuth> =
+  UPDATE_MY_CONFIG_HERE;
 
 // This is an Slack API client intialized with the applet developer's Slack token
 // THIS CLIENT DOES NOT USE THE USER TOKEN
@@ -19,24 +20,41 @@ client.sendToChannel = async (text: string, channelName: string) => {
 // The current user's Slack token is available in the context of a handler function
 export const getUserClient = (userToken: string) => new WebClient(userToken);
 
-export default client;
+type SlackConnectorInput = {
+  action:
+    | 'get-auth-url' // Install the app
+    | 'get-config'; // Needed to exchange code for token
+};
 
-export async function handler(handlerInput: any, ctx: Zipper.HandlerContext) {
-   const thisAppletPlaygroundUrl = \`https://zipper.dev/\${
+export async function handler(
+  input: SlackConnectorInput,
+  ctx: Zipper.HandlerContext,
+) {
+  const thisAppletPlaygroundUrl = \`https://zipper.dev/\${
     ctx.appInfo.author?.organization || ctx.appInfo.author?.slug
-  }/\${ctx.appInfo.slug}/src/slack-connector.ts\`;
+  }\${ctx.appInfo.slug}/src/slack-connector.ts\`;
 
-  const link = await initApplet("slack-install-link")
-    .path("link-only")
-    .run({
-      ...slackConnectorConfig,
-      zipperAppId: ctx.appInfo.id,
-      postInstallRedirect: thisAppletPlaygroundUrl,
-    });
+  const config = {
+    ...slackConnectorConfig,
+    zipperAppId: ctx.appInfo.id,
+    postInstallRedirect: thisAppletPlaygroundUrl,
+  };
 
-  return link;
+  switch (input.action) {
+    case 'get-auth-url': {
+      const link = await initApplet('slack-install-link')
+        .path('link-only')
+        .run(config);
+
+      return link;
+    }
+    case 'get-config': {
+      return config;
+    }
+  }
 }
 
+export default client;
 `;
 
 export const userScopes = [

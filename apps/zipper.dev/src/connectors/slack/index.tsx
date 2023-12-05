@@ -41,6 +41,7 @@ import { code, userScopes, workspaceScopes } from './constants';
 import { useRunAppContext } from '~/components/context/run-app-context';
 import { useUser } from '~/hooks/use-user';
 import { useEditorContext } from '~/components/context/editor-context';
+import { initApplet } from '@zipper-inc/client-js';
 
 // configure the Slack connector
 export const slackConnector = createConnector({
@@ -261,6 +262,7 @@ function SlackConnectorFormConUserEdit({
   );
 
   const addSecretMutation = trpc.secret.add.useMutation();
+  const getAppById = trpc.app.byId.useQuery({ id: appId });
 
   const deleteConnectorMutation = trpc.slackConnector.delete.useMutation({
     async onSuccess() {
@@ -270,9 +272,7 @@ function SlackConnectorFormConUserEdit({
   });
 
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const { getModelByFilename } = useEditorContext();
-
-  const { run } = useRunAppContext();
+  const { getModelByFilename, save } = useEditorContext();
 
   const existingInstallation =
     (existingSecret.data || existingUserSecret.data) &&
@@ -539,7 +539,7 @@ function SlackConnectorFormConUserEdit({
               <Button
                 mt="6"
                 colorScheme={'purple'}
-                isDisabled={isSaving}
+                isDisabled={false}
                 onClick={async () => {
                   setIsSaving(true);
                   if (isOwnClientIdRequired && clientId && clientSecret) {
@@ -573,30 +573,26 @@ function SlackConnectorFormConUserEdit({
                       ),
                     );
 
-                    // slack-connector.ts a handler returns a link to install the app
-                    const installLinkApplet = await run();
-                    if (installLinkApplet?.ok) {
-                      router.push(installLinkApplet.result);
+                    let appInfo = getAppById.data;
+                    if (!appInfo) {
+                      const { data } = await getAppById.refetch();
+                      if (!data) return;
+                      appInfo = data;
                     }
-                    // Redirect to link
-                  }
-                  // await updateAppConnectorMutation.mutateAsync({
-                  //   appId,
-                  //   type: 'slack',
-                  //   data: {
-                  //     isUserAuthRequired,
-                  //     userScopes: userValue as string[],
-                  //     workspaceScopes: botValue as string[],
-                  //     clientId: isOwnClientIdRequired
-                  //       ? clientId || undefined
-                  //       : null,
-                  //   },
-                  // });
 
-                  // TODO: ?
-                  // await slackAuthURL.refetch();
-                  // setSlackAuthInProgress(true);
-                  // }
+                    await save();
+
+                    // slack-connector.ts a handler returns a link to install the app
+
+                    console.log('[appInfo]', appInfo);
+                    const installLink = await initApplet(appInfo.slug)
+                      .path('slack-connector')
+                      .run({ action: 'get-auth-url' });
+
+                    console.log('[installLink]', installLink);
+                    // Redirect to link
+                    // router.push(installLinkApplet);
+                  }
                   setIsSaving(false);
                 }}
               >
