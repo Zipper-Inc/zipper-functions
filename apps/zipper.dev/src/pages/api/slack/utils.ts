@@ -364,21 +364,25 @@ export async function buildInputModal(slug: string, filename: string) {
     ];
   }
 
-  return [
-    ...blocks,
-    {
-      type: 'section',
-      text: {
-        type: 'mrkdwn',
-        text: '*Inputs:*',
+  if (appInfo.data.inputs.length > 0) {
+    const inputUI = [
+      {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: '*Inputs:*',
+        },
       },
-    },
-    ...buildViewInputBlock(appInfo.data.inputs),
-  ];
+      ...buildViewInputBlock(appInfo.data.inputs),
+    ];
+    return [...blocks, ...inputUI];
+  }
+
+  return blocks;
 }
 
 async function fetchWithTimeout(resource: string, options: any = {}) {
-  const { timeout = 6000 } = options;
+  const { timeout = 8000 } = options;
 
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeout);
@@ -398,12 +402,14 @@ export async function buildRunResultView({
   data,
   runId,
   showRawOutput,
+  length,
 }: {
   slug: string;
   filename: string;
   data: any;
   runId: string;
   showRawOutput?: boolean;
+  length: number;
 }) {
   const runUrl = `https://${slug}.zipper.run/run/history/${
     runId.split('-')[0]
@@ -441,31 +447,41 @@ export async function buildRunResultView({
       alt_text: 'screenshot of Zipper run',
     });
 
-    blocks.push({
-      type: 'actions',
-      elements: [
-        {
-          type: 'button',
-          text: {
-            type: 'plain_text',
-            text: 'View Raw Output',
-            emoji: true,
+    if (length < 3000) {
+      blocks.push({
+        type: 'actions',
+        elements: [
+          {
+            type: 'button',
+            text: {
+              type: 'plain_text',
+              text: 'View Raw Output',
+              emoji: true,
+            },
+            value: runId,
+            action_id: 'view_raw_output_button',
           },
-          value: runId,
-          action_id: 'view_raw_output_button',
-        },
-      ],
-    });
+        ],
+      });
+    }
   } catch (e) {
-    blocks.push({
-      type: 'section',
-      text: {
-        type: 'mrkdwn',
-        text: `\`\`\`${
-          typeof data === 'object' ? JSON.stringify(data, null, 2) : data
-        }\`\`\``,
-      },
-    });
+    length >= 3000
+      ? blocks.push({
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: `*Too much data for Slack. View the result <${runUrl}|here>.`,
+          },
+        })
+      : blocks.push({
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: `\`\`\`${
+              typeof data === 'object' ? JSON.stringify(data, null, 2) : data
+            }\`\`\``,
+          },
+        });
 
     blocks.push({
       type: 'actions',
@@ -493,7 +509,8 @@ export async function buildRunResultView({
       filename,
       runUrl,
       runId,
-      data,
+      data: length > 3000 ? {} : data,
+      length,
     }),
     showSubmit: false,
   });
