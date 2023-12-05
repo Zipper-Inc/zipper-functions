@@ -32,8 +32,8 @@ export const slackConnectorRouter = createTRPCRouter({
       // get slack-connector file code
       const script = await prisma.script.findFirst({
         where: {
-          id: input.appId,
-          name: 'slack-connector',
+          appId: input.appId,
+          name: 'slack-connector.ts',
         },
         select: {
           code: true,
