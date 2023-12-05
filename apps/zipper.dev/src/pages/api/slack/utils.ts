@@ -378,7 +378,7 @@ export async function buildInputModal(slug: string, filename: string) {
 }
 
 async function fetchWithTimeout(resource: string, options: any = {}) {
-  const { timeout = 2000 } = options;
+  const { timeout = 6000 } = options;
 
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeout);
@@ -437,12 +437,21 @@ export async function buildRunResultView({
       image_url: response.url,
       alt_text: 'screenshot of Zipper run',
     });
+
     blocks.push({
-      type: 'section',
-      text: {
-        type: 'mrkdwn',
-        text: `\`${screenshotUrl}\``,
-      },
+      type: 'actions',
+      elements: [
+        {
+          type: 'button',
+          text: {
+            type: 'plain_text',
+            text: 'View Raw Output',
+            emoji: true,
+          },
+          value: runId,
+          action_id: 'view_raw_output_button',
+        },
+      ],
     });
   } catch (e) {
     blocks.push({
@@ -476,7 +485,13 @@ export async function buildRunResultView({
     title: `${slug}`,
     callbackId: 'view-zipper-app-results',
     blocks,
-    privateMetadata: `{ "slug": "${slug}", "filename": "${filename}", "runUrl": "${runUrl}" }`,
+    privateMetadata: JSON.stringify({
+      slug,
+      filename,
+      runUrl,
+      runId,
+      data,
+    }),
     showSubmit: false,
   });
 }

@@ -49,7 +49,7 @@ async function processUpdatedOutput(
   showRawOutput: boolean,
 ) {
   const view = (await buildRunResultView({
-    ...(await getResults(payload)),
+    ...JSON.parse(payload.view.private_metadata),
     showRawOutput,
   })) as any;
 
@@ -127,12 +127,32 @@ async function getResults(payload: any, existingRunId?: string) {
 
 async function submissionHandler(res: NextApiResponse, payload: any) {
   if (payload.view.callback_id === 'view-run-zipper-app') {
-    const view = await buildRunResultView(await getResults(payload));
-
-    return res.status(200).json({
-      response_action: 'update',
-      view,
+    const loadingView = buildSlackModalView({
+      title: `${payload.view.title.text}`,
+      callbackId: 'view-zipper-app-loading',
+      blocks: [
+        {
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: 'loading...',
+          },
+        },
+      ],
+      showSubmit: false,
+      privateMetadata: payload.view.privateMetadata,
     });
+
+    res.status(200).json({
+      response_action: 'update',
+      view: loadingView,
+    });
+
+    const view = (await buildRunResultView(await getResults(payload))) as any;
+
+    view.view_id = payload.view.id;
+
+    await updateSlackModal(view, payload.api_app_id, payload.team.id);
   }
 }
 
