@@ -222,6 +222,8 @@ export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
           w="full"
           spacing={0}
           onMouseEnter={onMouseEnter('PlaygroundCode')}
+          overflow="scroll"
+          pb="4"
           onMouseLeave={onMouseLeave}
           border={
             hoveredElement === 'PlaygroundCode'
