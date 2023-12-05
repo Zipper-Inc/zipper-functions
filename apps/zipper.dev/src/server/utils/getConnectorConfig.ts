@@ -17,7 +17,7 @@ export const getSlackConfig = (scriptCode: string) => {
     'slack-connector.ts',
     scriptCode || '',
   );
-  const slackConfigText = safeJSONParse<SlackConfig>(
+  const slackConfigText = safeJSONParse<SlackConfig | undefined>(
     sourceFile
       .getVariableDeclaration('slackConnectorConfig')
       ?.getChildren()
