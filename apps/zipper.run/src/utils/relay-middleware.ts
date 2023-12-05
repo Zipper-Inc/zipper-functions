@@ -19,6 +19,7 @@ import {
   parseBody,
   noop,
   UNAUTHORIZED,
+  NOT_FOUND,
 } from '@zipper/utils';
 import Zipper from '@zipper/framework';
 import { getZipperAuth } from './get-zipper-auth';
@@ -37,8 +38,6 @@ const X_FORWARDED_HOST = 'x-forwarded-host';
 const X_DENO_SUBHOST = 'x-deno-subhost';
 const X_ZIPPER_DEPLOYMENT_ID = 'x-zipper-deployment-id';
 const X_ZIPPER_SUBDOMAIN = 'x-zipper-subdomain';
-
-const HEALTH_CHECK_SLUG = 'healthcheck';
 
 function getPatchedUrl(req: NextRequest) {
   // preserve path and querystring)
@@ -88,6 +87,100 @@ function encodeJWT(deploymentId: string) {
   return new jose.SignJWT(claims).setProtectedHeader(header).sign(secretKey);
 }
 
+export async function bootRelayRequest({
+  appId,
+  version,
+  relayUrl,
+  relayHeaders,
+  subdomain,
+  tempUserId,
+  token,
+}: {
+  appId: string;
+  version: string;
+  relayUrl: URL;
+  relayHeaders: {
+    'x-forwarded-host': string;
+    'x-deno-subhost': string;
+    'x-zipper-deployment-id': string;
+    'x-zipper-subdomain': string;
+  };
+  subdomain: string | void;
+  tempUserId: string | undefined;
+  token: string | undefined;
+}) {
+  if (!subdomain) {
+    return {
+      result: NOT_FOUND,
+      headers: new Headers(),
+      status: 404,
+    };
+  }
+
+  const bootBody = { appInfo: { id: appId, version } };
+  const bootUrl = new URL('/__BOOT__', relayUrl);
+  const [bootRelayResponse, userInfoResponse] = await Promise.all([
+    fetch(bootUrl, {
+      method: 'POST',
+      body: JSON.stringify(bootBody),
+      headers: relayHeaders,
+      credentials: 'include',
+    }).then(async (response) => ({
+      response,
+      json: await response.json(),
+    })),
+    fetchBasicUserInfo({ subdomain, tempUserId, token }),
+  ]);
+
+  const bootPayload = bootRelayResponse.json as BootPayload;
+
+  // Fill in missing boot info
+  if (bootPayload.ok && !bootPayload.bootInfo) {
+    const result = await fetchBootInfo({
+      subdomain,
+      version,
+      token,
+      tempUserId,
+    });
+
+    if (!result.ok) {
+      return {
+        result: JSON.stringify(result.error) || 'Unknown boot info error',
+        status: result.status || 500,
+        headers: new Headers(),
+      };
+    }
+
+    bootPayload.bootInfo = result.data as any;
+  }
+
+  const hasRunAccess =
+    bootPayload.ok &&
+    (bootPayload.bootInfo.app.requiresAuthToRun
+      ? userInfoResponse.ok && userInfoResponse.data?.userId
+      : true);
+
+  if (!hasRunAccess)
+    return {
+      result: JSON.stringify({
+        ok: false,
+        error: UNAUTHORIZED,
+        status: 401,
+      }),
+      status: 401,
+      headers: new Headers(),
+    };
+
+  const { status, headers } = bootRelayResponse.response;
+  const mutableHeaders = new Headers(headers);
+
+  return {
+    result: JSON.stringify(bootPayload),
+    status,
+    headers: mutableHeaders,
+  };
+}
+
 export async function relayRequest(
   {
     request,
@@ -99,7 +192,7 @@ export async function relayRequest(
     filename?: string;
   },
   bootOnly = false,
-) {
+): Promise<{ status: number; headers?: Headers; result: string }> {
   if (!DENO_DEPLOY_SECRET || !PUBLICLY_ACCESSIBLE_RPC_HOST)
     return {
       status: 500,
@@ -111,10 +204,16 @@ export async function relayRequest(
   if (__DEBUG__) console.log('request headers', request.headers);
   const subdomain = getValidSubdomain(host);
   if (__DEBUG__) console.log('getValidSubdomain', { host, subdomain });
-  if (!subdomain) return { status: 404 };
+  if (!subdomain)
+    return {
+      status: 404,
+      headers: new Headers(),
+      result: NOT_FOUND,
+    };
 
   const deployment = await fetchDeploymentCachedOrThrow(subdomain).catch(noop);
-  if (!deployment || !deployment.appId) return { status: 404 };
+  if (!deployment || !deployment.appId)
+    return { status: 404, result: NOT_FOUND, headers: new Headers() };
 
   const { appId, version: latestVersion } = deployment;
   const version = versionPassedIn || latestVersion;
@@ -147,60 +246,18 @@ export async function relayRequest(
     filename = `${filename}.ts`;
   }
 
+  const bootArgs = {
+    appId,
+    version,
+    relayUrl,
+    relayHeaders,
+    subdomain,
+    tempUserId,
+    token,
+  };
+
   if (bootOnly) {
-    const bootBody = { appInfo: { id: appId, version } };
-    const bootUrl = new URL('/__BOOT__', relayUrl);
-    const [bootRelayResponse, userInfoResponse] = await Promise.all([
-      fetch(bootUrl, {
-        method: 'POST',
-        body: JSON.stringify(bootBody),
-        headers: relayHeaders,
-        credentials: 'include',
-      }).then(async (response) => ({ response, json: await response.json() })),
-      fetchBasicUserInfo({ subdomain, tempUserId, token }),
-    ]);
-
-    const bootPayload = bootRelayResponse.json as BootPayload;
-
-    // Fill in missing boot info
-    if (bootPayload.ok && !bootPayload.bootInfo) {
-      const result = await fetchBootInfo({
-        subdomain,
-        version,
-        token,
-        tempUserId,
-      });
-
-      if (!result.ok) {
-        return {
-          result: JSON.stringify(result.error) || 'Unknown boot info error',
-          status: result.status || 500,
-        };
-      }
-
-      bootPayload.bootInfo = result.data as any;
-    }
-
-    const hasRunAccess =
-      bootPayload.ok &&
-      (bootPayload.bootInfo.app.requiresAuthToRun
-        ? userInfoResponse.ok && userInfoResponse.data?.userId
-        : true);
-
-    if (!hasRunAccess)
-      return {
-        result: JSON.stringify({ ok: false, error: UNAUTHORIZED, status: 401 }),
-        status: 401,
-      };
-
-    const { status, headers } = bootRelayResponse.response;
-    const mutableHeaders = new Headers(headers);
-
-    return {
-      result: JSON.stringify(bootPayload),
-      status,
-      headers: mutableHeaders,
-    };
+    return bootRelayRequest(bootArgs);
   }
 
   let bootInfo;
@@ -211,9 +268,16 @@ export async function relayRequest(
       filename,
       token,
       deploymentId,
+      bootFetcher: async () => {
+        const { status, result } = await bootRelayRequest(bootArgs);
+        if (status !== 200) throw new Error(result);
+        const bootPayload = JSON.parse(result);
+        if (bootPayload.ok) return bootPayload;
+        else throw new Error(bootPayload.error);
+      },
     });
   } catch (e: any) {
-    const errorStatus = e?.status || 500;
+    const errorStatus = parseInt(e?.status, 10) || 500;
     return {
       status: errorStatus,
       result: JSON.stringify({
@@ -222,6 +286,7 @@ export async function relayRequest(
         error: e.message,
         errorClass: 'Boot',
       }),
+      headers: new Headers(),
     };
   }
 
@@ -351,6 +416,7 @@ export default async function serveRelay({
   }
 
   if (status >= 500) {
+    console.log('relay error', result, { version, filename });
     return new NextResponse(
       JSON.stringify({
         $zipperType: 'Zipper.Component',

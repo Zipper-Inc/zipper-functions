@@ -272,9 +272,9 @@ export const middleware = async (request: NextRequest) => {
     request.headers,
   );
 
-  const response =
-    customResponse ||
-    NextResponse.next({ request: { headers: new Headers(request.headers) } });
+  const response = !!customResponse
+    ? customResponse
+    : NextResponse.next({ request: { headers: new Headers(request.headers) } });
 
   if (accessToken) {
     response.cookies.set({
