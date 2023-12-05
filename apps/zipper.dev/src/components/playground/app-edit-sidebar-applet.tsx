@@ -246,7 +246,7 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
                     setRunId(
                       await run({
                         shouldSave: appInfo.canUserEdit,
-                      }),
+                      }).then((r) => r?.runId),
                     );
                   }}
                   display="flex"

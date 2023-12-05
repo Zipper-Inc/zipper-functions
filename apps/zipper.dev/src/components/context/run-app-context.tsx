@@ -38,6 +38,15 @@ type AppInfoWithHashes = AppInfo & {
   playgroundVersionHash: string | null;
   publishedVersionHash: string | null;
 };
+type RunResult =
+  | { ok: false; runId: string }
+  | {
+      ok: true;
+      filename: string;
+      version?: string;
+      result: string;
+      runId: string;
+    };
 
 export type RunAppContextType = {
   appInfo: AppInfoWithHashes;
@@ -51,7 +60,7 @@ export type RunAppContextType = {
   run: (params?: {
     shouldSave?: boolean;
     isCurrentScriptEntryPoint?: boolean;
-  }) => Promise<string | undefined>;
+  }) => Promise<RunResult | undefined>;
   boot: (params?: { shouldSave?: boolean }) => Promise<BootPayload>;
   bootPromise: MutableRefObject<Promise<BootPayload>>;
   configs: Zipper.BootPayload['configs'];
@@ -67,7 +76,7 @@ export const RunAppContext = createContext<RunAppContextType>({
   userAuthConnectors: [],
   setResults: noop,
   bootPromise: { current: Promise.resolve({} as BootPayload) },
-  run: () => Promise.resolve(''),
+  run: () => Promise.resolve(undefined),
   boot: () => Promise.resolve({} as BootPayload),
   configs: {},
 });
@@ -391,7 +400,7 @@ export function RunAppProvider({
     cleanUpLogTimers();
     updateLogs({ version, runId, fromTimestamp: oneSecondAgo });
 
-    return runId;
+    return { ...result, runId };
   };
 
   return (
