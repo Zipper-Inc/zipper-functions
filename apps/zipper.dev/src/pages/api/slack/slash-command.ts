@@ -15,6 +15,10 @@ export default async function handler(
   res: NextApiResponse,
 ) {
   const slug = req.body.text;
+  if (!slug)
+    return res.send(
+      'Missing applet slug - try something like `/zipper json-parser`',
+    );
   const triggerId = req.body.trigger_id;
   const slackTeamId = req.body.team_id;
   const slackAppId = req.body.api_app_id;
