@@ -247,7 +247,6 @@ function SlackConnectorFormConUserEdit({
   );
   const utils = trpc.useContext();
   const cancelRef = useRef() as React.MutableRefObject<HTMLButtonElement>;
-  const context = trpc.useContext();
   const [isSaving, setIsSaving] = useState(false);
   const [clientSecret, setClientSecret] = useState<string>('');
 
@@ -271,8 +270,9 @@ function SlackConnectorFormConUserEdit({
     },
   });
 
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  const { getModelByFilename, save } = useEditorContext();
+  const { isOpen, onClose } = useDisclosure();
+  const { getModelByFilename } = useEditorContext();
+  const { boot } = useRunAppContext();
 
   const existingInstallation =
     (existingSecret.data || existingUserSecret.data) &&
@@ -565,8 +565,7 @@ function SlackConnectorFormConUserEdit({
                       appInfo = data;
                     }
 
-                    // FIXME: save isnt working
-                    // await save();
+                    await boot({ shouldSave: true });
 
                     // slack-connector.ts a handler returns a link to install the app
                     initLocalApplet(appInfo.slug)
