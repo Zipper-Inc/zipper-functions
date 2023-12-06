@@ -100,6 +100,7 @@ async function getResults(payload: any, existingRunId?: string) {
   const { slug, filename } = JSON.parse(payload.view.private_metadata);
   const inputs = buildRunUrlBodyParams(payload);
   const runId = existingRunId || crypto.randomUUID();
+  let length = 0;
 
   const data = await fetch(
     `${process.env.NODE_ENV === 'development' ? 'http' : 'https'}://${slug}.${
@@ -115,6 +116,7 @@ async function getResults(payload: any, existingRunId?: string) {
   )
     .then((response) => response.text())
     .then((text) => {
+      length = text.length;
       try {
         return JSON.parse(text);
       } catch (e) {
@@ -122,7 +124,7 @@ async function getResults(payload: any, existingRunId?: string) {
       }
     });
 
-  return { slug, filename, data, runId };
+  return { slug, filename, data, runId, length };
 }
 
 async function submissionHandler(res: NextApiResponse, payload: any) {
