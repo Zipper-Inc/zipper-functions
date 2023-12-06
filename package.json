@@ -15,6 +15,7 @@
   "scripts": {
     "build": "yarn install; yarn env:link; turbo run build",
     "dev": "yarn install; yarn env:update; yarn env:link; yarn migrate; turbo run dev --parallel",
+    "postinstall": "patch-package",
     "env:link": "sh ./bin/link-env-files.sh",
     "env:update": "yarn dotenv -c .env.local yarn swc-node ./bin/ts/env-update.ts",
     "get-started": "yarn install; yarn env:update; yarn env:link; yarn migrate; yarn seed",
@@ -35,6 +36,7 @@
     "dotenv": "^16.0.3",
     "dotenv-cli": "^7.2.1",
     "get-port-please": "^3.0.1",
+    "patch-package": "^8.0.0",
     "prettier": "latest",
     "signale": "^1.4.0",
     "turbo": "^1.7.3"
