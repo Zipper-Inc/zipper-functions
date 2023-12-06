@@ -341,8 +341,6 @@ export function parseInputForTypes({
 
       const typeDetails = parseTypeNode(typeNode, src);
 
-      console.log('typeDetails', typeDetails);
-
       return {
         key: prop.getName(),
         type: typeDetails.type,
@@ -415,8 +413,6 @@ export function parseCode({
     srcPassedIn: src,
   });
 
-  console.log('inputs', inputs);
-
   const imports = parseImports({ code, srcPassedIn: src });
 
   const comments = parseComments({ code, srcPassedIn: src });
@@ -455,6 +451,21 @@ export function addParamToCode({
 }): string {
   const src = getSourceFileFromCode(code);
   const handler = src.getFunction('handler');
+  const handlerComment = handler
+    ?.getFullText()
+    .split('\n')
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    //@ts-ignore
+    .reduce((acc, curr) => {
+      if (curr.trim().startsWith('/**') || curr.trim().startsWith('*')) {
+        return [...acc, curr.trim()];
+      } else if (curr.trim().startsWith('export async function handler')) {
+        return acc; // Stop processing comments after reaching the function definition
+      } else {
+        return acc;
+      }
+    }, [] as string[])
+    .map((line) => (line.startsWith('*') ? ' ' + line : line));
 
   if (!handler) {
     console.error('You must define a handler function');
@@ -469,7 +480,9 @@ export function addParamToCode({
     }`;
 
     handler.replaceWithText(
-      handler.getText().replace(/\(\)/, `(${newParamString})`),
+      handlerComment?.join('\n') +
+        '\n' +
+        handler.getText().replace(/\(\)/, `(${newParamString})`),
     );
 
     return src.getFullText();
