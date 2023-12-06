@@ -346,14 +346,6 @@ function SlackConnectorFormConUserEdit({
     );
   };
 
-  // const slackAuthURL = trpc.slackConnector.getAuthUrl.useQuery({
-  //   appId,
-  //   scopes: { bot: botValue as string[], user: userValue as string[] },
-  //   postInstallationRedirect: window.location.href,
-  // });
-
-  // const [slackAuthInProgress, setSlackAuthInProgress] = useState(false);
-
   const router = useRouter();
 
   useEffect(() => {
@@ -361,13 +353,6 @@ function SlackConnectorFormConUserEdit({
     setClientId(connector.data?.clientId || '');
     setIsOwnClientIdRequired(!!connector.data?.clientId);
   }, [connector.isSuccess]);
-
-  // useEffect(() => {
-  //   if (slackAuthInProgress && slackAuthURL.data?.url) {
-  //     router.push(slackAuthURL.data?.url);
-  //     setSlackAuthInProgress(false);
-  //   }
-  // }, [slackAuthInProgress, slackAuthURL.data?.url]);
 
   if (existingInstallation) {
     return (
@@ -539,7 +524,7 @@ function SlackConnectorFormConUserEdit({
               <Button
                 mt="6"
                 colorScheme={'purple'}
-                isDisabled={false}
+                isDisabled={false} // TODO: disabled
                 onClick={async () => {
                   setIsSaving(true);
                   if (isOwnClientIdRequired && clientId && clientSecret) {
@@ -580,16 +565,19 @@ function SlackConnectorFormConUserEdit({
                       appInfo = data;
                     }
 
-                    await save();
+                    // FIXME: save isnt working
+                    // await save();
 
                     // slack-connector.ts a handler returns a link to install the app
                     initLocalApplet(appInfo.slug)
                       .path('slack-connector')
                       .run({ action: 'get-auth-url' })
-                      .then((installLink) => {
-                        // Redirect to link
-                        router.push(installLink);
-                      });
+                      .then((link) => {
+                        if (link) {
+                          router.push(link);
+                        }
+                      })
+                      .catch(() => undefined);
                   }
                   setIsSaving(false);
                 }}

@@ -10,7 +10,6 @@ import {
   decryptFromBase64,
   decryptFromHex,
   encryptToBase64,
-  encryptToHex,
   __ZIPPER_TEMP_USER_ID,
 } from '@zipper/utils';
 import fetch from 'node-fetch';
@@ -18,6 +17,7 @@ import { AppConnectorUserAuth, Prisma } from '@prisma/client';
 import { filterTokenFields } from '~/server/utils/json';
 import { createTRPCRouter, publicProcedure } from '../root';
 import { getSlackConfig } from '~/utils/connectors';
+import { initLocalApplet } from '~/utils/local-applet';
 
 export const slackConnectorRouter = createTRPCRouter({
   get: publicProcedure
@@ -70,58 +70,38 @@ export const slackConnectorRouter = createTRPCRouter({
     .input(
       z.object({
         appId: z.string(),
-        scopes: z.object({
-          bot: z.array(z.string()),
-          user: z.array(z.string()),
-        }),
-        postInstallationRedirect: z.string().optional(),
-        redirectUri: z.string().optional(),
       }),
     )
     .query(async ({ ctx, input }) => {
       await hasAppReadPermission({ ctx, appId: input.appId });
 
-      const { appId, scopes, postInstallationRedirect, redirectUri } = input;
-      const state = encryptToHex(
-        `${appId}::${postInstallationRedirect || ''}`,
-        process.env.ENCRYPTION_KEY || '',
-      );
-
-      // TODO: until we move to slack-get-install-link applet, we need to grab the client id from the config code
-      const connectorScript = await prisma.script.findFirst({
+      const appInfo = await prisma.app.findFirst({
         where: {
-          appId,
-          name: 'slack-connector',
+          id: input.appId,
         },
         select: {
-          code: true,
+          slug: true,
         },
       });
 
-      if (!connectorScript?.code) {
+      if (!appInfo?.slug) {
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
-          message: 'No slack-connector script found',
+          message: 'App not found',
         });
       }
 
-      const codeConfig = getSlackConfig(connectorScript.code);
+      const url = await initLocalApplet(appInfo!.slug)
+        .path('slack-connector')
+        .run({ action: 'get-auth-url' })
+        .catch(() => {
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: `Something went wrong while trying to get the connector config for ${appInfo.slug}`,
+          });
+        });
 
-      const clientId =
-        codeConfig.clientId || process.env.NEXT_PUBLIC_SLACK_CLIENT_ID!;
-
-      const url = new URL('https://slack.com/oauth/v2/authorize');
-      url.searchParams.set('client_id', clientId);
-      url.searchParams.set('scope', scopes.bot.join(','));
-      url.searchParams.set('user_scope', scopes.user.join(','));
-      url.searchParams.set('state', state);
-      if (redirectUri) {
-        url.searchParams.set('redirect_uri', redirectUri);
-      }
-
-      return {
-        url: url.toString(),
-      };
+      return { url };
     }),
   delete: publicProcedure
     .input(
@@ -246,7 +226,6 @@ export const slackConnectorRouter = createTRPCRouter({
         });
       }
 
-      // const codeConfig = getSlackConfig(connectorScript.code);
       if (slackConfig.clientId && clientSecretRecord) {
         clientId = slackConfig.clientId;
         clientSecret = decryptFromBase64(
