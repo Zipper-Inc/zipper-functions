@@ -1,5 +1,5 @@
 export const code = `import { WebClient } from 'https://deno.land/x/slack_web_api@6.7.2/mod.js';
-import { initApplet } from 'https://deno.land/x/zipper_client_js@v0.1.6/mod.ts';
+import { initApplet } from 'https://deno.land/x/zipper_client_js@v0.1.7/mod.ts';
 import { SlackUserAuth } from 'https://zipper.dev/zipper-inc/slack-install-link/src/main.ts';
 
 export const slackConnectorConfig: Partial<SlackUserAuth> =

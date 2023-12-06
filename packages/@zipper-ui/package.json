@@ -18,7 +18,7 @@
     "@chakra-ui/react": "^2.4.9",
     "@emotion/react": "^11.10.5",
     "@emotion/styled": "^11.10.5",
-    "@zipper-inc/client-js": "^0.1.6",
+    "@zipper-inc/client-js": "^0.1.7",
     "@zipper/types": "*",
     "@zipper/utils": "*",
     "framer-motion": "^9.0.0",
