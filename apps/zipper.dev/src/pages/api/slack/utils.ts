@@ -355,17 +355,18 @@ export function buildPrivateMetadata(privateMetadata: PrivateMetadata) {
 
 export async function buildInputModal(slug: string, filename: string) {
   const appInfo = await fetchBootInfo(slug, filename);
-  let blocks: any[] = [];
+  let filenameBlocks: any[] = [];
 
   if (appInfo.data.runnableScripts.length > 1) {
-    blocks = [
-      ...buildFilenameSelect(appInfo.data.runnableScripts, filename),
-      { type: 'divider' },
-    ];
+    filenameBlocks = buildFilenameSelect(
+      appInfo.data.runnableScripts,
+      filename,
+    );
   }
 
   if (appInfo.data.inputs.length > 0) {
     const inputUI = [
+      { type: 'divider' },
       {
         type: 'section',
         text: {
@@ -375,14 +376,14 @@ export async function buildInputModal(slug: string, filename: string) {
       },
       ...buildViewInputBlock(appInfo.data.inputs),
     ];
-    return [...blocks, ...inputUI];
+    return [...filenameBlocks, ...inputUI];
   }
 
-  return blocks;
+  return filenameBlocks;
 }
 
 async function fetchWithTimeout(resource: string, options: any = {}) {
-  const { timeout = 8000 } = options;
+  const { timeout = 5000 } = options;
 
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeout);
@@ -432,6 +433,7 @@ export async function buildRunResultView({
         action_id: 'edit_and_rerun_button',
       },
     },
+    { type: 'divider' },
   ];
 
   try {
@@ -470,7 +472,7 @@ export async function buildRunResultView({
           type: 'section',
           text: {
             type: 'mrkdwn',
-            text: `*Too much data for Slack. View the result <${runUrl}|here>.`,
+            text: `*Too much data for Slack*. View the result <${runUrl}|here>.`,
           },
         })
       : blocks.push({
