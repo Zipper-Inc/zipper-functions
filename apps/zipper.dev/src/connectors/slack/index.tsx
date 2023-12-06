@@ -41,7 +41,7 @@ import { code, userScopes, workspaceScopes } from './constants';
 import { useRunAppContext } from '~/components/context/run-app-context';
 import { useUser } from '~/hooks/use-user';
 import { useEditorContext } from '~/components/context/editor-context';
-import { initApplet } from '@zipper-inc/client-js';
+import { initLocalApplet } from '~/utils/local-applet';
 
 // configure the Slack connector
 export const slackConnector = createConnector({
@@ -170,12 +170,12 @@ function SlackConnectorForm({ appId }: { appId: string }) {
                         </Box>
                       </HStack>
 
-                      <HStack>
+                      {/* <HStack>
                         <Text>User auth required?</Text>
                         <Code>
                           {connector.data?.isUserAuthRequired ? 'Yes' : 'No'}
                         </Code>
-                      </HStack>
+                      </HStack> */}
                     </VStack>
                   </CardBody>
                 </Card>
@@ -583,15 +583,13 @@ function SlackConnectorFormConUserEdit({
                     await save();
 
                     // slack-connector.ts a handler returns a link to install the app
-
-                    console.log('[appInfo]', appInfo);
-                    const installLink = await initApplet(appInfo.slug)
+                    initLocalApplet(appInfo.slug)
                       .path('slack-connector')
-                      .run({ action: 'get-auth-url' });
-
-                    console.log('[installLink]', installLink);
-                    // Redirect to link
-                    // router.push(installLinkApplet);
+                      .run({ action: 'get-auth-url' })
+                      .then((installLink) => {
+                        // Redirect to link
+                        router.push(installLink);
+                      });
                   }
                   setIsSaving(false);
                 }}

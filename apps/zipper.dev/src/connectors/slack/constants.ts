@@ -32,7 +32,7 @@ export async function handler(
 ) {
   const thisAppletPlaygroundUrl = \`https://zipper.dev/\${
     ctx.appInfo.author?.organization || ctx.appInfo.author?.slug
-  }\${ctx.appInfo.slug}/src/slack-connector.ts\`;
+  }/\${ctx.appInfo.slug}/src/slack-connector.ts\`;
 
   const config = {
     ...slackConnectorConfig,
