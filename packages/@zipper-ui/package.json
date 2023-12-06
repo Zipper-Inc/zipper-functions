@@ -19,7 +19,7 @@
     "@emotion/react": "^11.10.5",
     "@emotion/styled": "^11.10.5",
     "@uploadthing/react": "6.0.2",
-    "@zipper-inc/client-js": "^0.1.6",
+    "@zipper-inc/client-js": "^0.1.7",
     "@zipper/types": "*",
     "@zipper/utils": "*",
     "framer-motion": "^9.0.0",

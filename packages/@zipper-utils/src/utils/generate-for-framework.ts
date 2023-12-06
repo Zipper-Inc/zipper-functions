@@ -14,7 +14,7 @@ const EXPORTS_REG_EXP = new RegExp(
 );
 
 const ZIPPER_CLIENT_JS_URL =
-  'https://deno.land/x/zipper_client_js@v0.1.6/mod.ts';
+  'https://deno.land/x/zipper_client_js@v0.1.7/mod.ts';
 
 const NEWLINE = '\n';
 
