@@ -6,7 +6,7 @@ export const initLocalApplet = (slug: string, options?: AppletOptions) =>
     process.env.NODE_ENV === 'development'
       ? {
           ...options,
-          overrideZipperRun: `http://${process.env.NEXT_PUBLIC_ZIPPER_DOT_RUN_HOST}`,
+          overrideZipperRunUrl: `http://${process.env.NEXT_PUBLIC_ZIPPER_DOT_RUN_HOST}`,
         }
       : options,
   );
