@@ -1,0 +1,302 @@
+diff --git a/node_modules/@zipper-inc/client-js/esm/src/client.js b/node_modules/@zipper-inc/client-js/esm/src/client.js
+index 9ac122c..0290a2a 100644
+--- a/node_modules/@zipper-inc/client-js/esm/src/client.js
++++ b/node_modules/@zipper-inc/client-js/esm/src/client.js
+@@ -20,7 +20,7 @@ class Applet {
+             writable: true,
+             value: void 0
+         });
+-        this.baseUrl = getBaseUrlFromIndentifier(indentifier, options?.overrideHost);
++        this.baseUrl = getBaseUrlFromIndentifier(indentifier, options?.overrideZipperRunUrl);
+         this.isDebugMode = !!options?.debug;
+         if (options?.token)
+             this.token = options.token;
+diff --git a/node_modules/@zipper-inc/client-js/esm/src/types.d.ts b/node_modules/@zipper-inc/client-js/esm/src/types.d.ts
+index d345c97..1a8b8c3 100644
+--- a/node_modules/@zipper-inc/client-js/esm/src/types.d.ts
++++ b/node_modules/@zipper-inc/client-js/esm/src/types.d.ts
+@@ -24,13 +24,15 @@ export type Inputs = {
+     [key: string]: Serializable | undefined;
+ };
+ export type Output = Serializable | void;
++type Protocol = 'http' | 'https';
++type Port = number;
+ /**
+  * Passed in when creating an Applet
+  */
+ export type AppletOptions = {
+     debug?: boolean;
+-    overrideHost?: string;
+     token?: string;
++    overrideZipperRunUrl?: `${Protocol}://${string}` | `${Protocol}://${string}:${Port}`;
+ };
+ /**
+  * The API Response from a Zipper Applet
+diff --git a/node_modules/@zipper-inc/client-js/esm/src/url.d.ts b/node_modules/@zipper-inc/client-js/esm/src/url.d.ts
+index 2bfbbc7..1ddb1e2 100644
+--- a/node_modules/@zipper-inc/client-js/esm/src/url.d.ts
++++ b/node_modules/@zipper-inc/client-js/esm/src/url.d.ts
+@@ -1 +1,2 @@
+-export declare function getBaseUrlFromIndentifier(identifier: string, overrideHost?: string): URL;
++import { AppletOptions } from './index.js';
++export declare function getBaseUrlFromIndentifier(identifier: string, overrideZipperRunUrl?: AppletOptions['overrideZipperRunUrl']): URL;
+diff --git a/node_modules/@zipper-inc/client-js/esm/src/url.js b/node_modules/@zipper-inc/client-js/esm/src/url.js
+index aff1df5..0a707b0 100644
+--- a/node_modules/@zipper-inc/client-js/esm/src/url.js
++++ b/node_modules/@zipper-inc/client-js/esm/src/url.js
+@@ -1,19 +1,40 @@
+ import { DEFAULT_ZIPPER_DOT_RUN_HOST } from './constants.js';
+-export function getBaseUrlFromIndentifier(identifier, overrideHost) {
++export function getBaseUrlFromIndentifier(identifier, overrideZipperRunUrl) {
+     let url;
++    let port;
+     // If the identifier is a URL, we have what we need
+     // Note: If the URL is not a zipper.run applet, it will def fail
+     try {
+         // Remove anything that looks like a port temporarily since it confuses the URL parser
+-        url = new URL(identifier.replace(/:[0-9]+$/, ``));
++        // We'll add it back later
++        const portMatch = identifier.match(/:[0-9]+$/);
++        if (portMatch) {
++            port = portMatch[0];
++            identifier = identifier.replace(port, '');
++        }
++        url = new URL(identifier);
++        // In this case, identifier is a full URL
++        if (overrideZipperRunUrl) {
++            const override = new URL(overrideZipperRunUrl);
++            const subdomain = url.host.split('.')[0];
++            const newUrl = new URL(`${override.protocol}//${subdomain}.${override.host}`);
++            // Here, we gonna use the port from the override
++            return newUrl;
++        }
++        return new URL(`${url.origin}${port || ''}`);
+     }
+     catch (_e) {
+-        // If it looks like a host, add a protocol, other let's assume it's a slug
++        // Identifier is not a URL, but if it looks like a host, we can add a protocol, other let's assume it's a slug
+         url = /\.|:/.test(identifier)
+             ? new URL(`https://${identifier}`)
+             : new URL(`https://${identifier}.${DEFAULT_ZIPPER_DOT_RUN_HOST}`);
+     }
+-    if (overrideHost)
+-        url.host = overrideHost;
+-    return new URL(url.origin);
++    // If we have an override, we need to use it, the identifier itself is our subdomain
++    if (overrideZipperRunUrl) {
++        const override = new URL(overrideZipperRunUrl);
++        url = new URL(`${override.protocol}//${identifier}.${override.host}`);
++        // Here, we gonna use the port from the override
++        return new URL(url.origin);
++    }
++    return new URL(`${url.origin}${port || ''}`);
+ }
+diff --git a/node_modules/@zipper-inc/client-js/esm/src/url.test.d.ts b/node_modules/@zipper-inc/client-js/esm/src/url.test.d.ts
+new file mode 100644
+index 0000000..cb0ff5c
+--- /dev/null
++++ b/node_modules/@zipper-inc/client-js/esm/src/url.test.d.ts
+@@ -0,0 +1 @@
++export {};
+diff --git a/node_modules/@zipper-inc/client-js/esm/src/url.test.js b/node_modules/@zipper-inc/client-js/esm/src/url.test.js
+new file mode 100644
+index 0000000..9db9ef2
+--- /dev/null
++++ b/node_modules/@zipper-inc/client-js/esm/src/url.test.js
+@@ -0,0 +1,31 @@
++import * as dntShim from "../_dnt.test_shims.js";
++import { assertEquals } from '../deps/deno.land/std@0.167.0/testing/asserts.js';
++import { getBaseUrlFromIndentifier } from './url.js';
++dntShim.Deno.test(function usesDefaultHost() {
++    const url = getBaseUrlFromIndentifier('zipper-client-test').toString();
++    assertEquals(url, 'https://zipper-client-test.zipper.run/');
++});
++dntShim.Deno.test(function respectsHostStrings() {
++    const url = getBaseUrlFromIndentifier('zipper-client-test.localdev.me:3000').toString();
++    assertEquals(url, 'https://zipper-client-test.localdev.me:3000/');
++});
++dntShim.Deno.test(function respectsWholeUrl() {
++    const url = getBaseUrlFromIndentifier('https://applet.zipper.host/more/paths').toString();
++    assertEquals(url, 'https://applet.zipper.host/');
++});
++dntShim.Deno.test(function respectUrlWithPort() {
++    const url = getBaseUrlFromIndentifier('https://hello-world.localdev.me:3002').toString();
++    assertEquals(url, 'https://hello-world.localdev.me:3002/');
++});
++dntShim.Deno.test(function overrideZipperRunUrl() {
++    const url = getBaseUrlFromIndentifier('zipper-client-test', 'https://localdev.me:3002').toString();
++    assertEquals(url, 'https://zipper-client-test.localdev.me:3002/');
++});
++dntShim.Deno.test(function overrideWithoutPort() {
++    const url = getBaseUrlFromIndentifier('zipper-client-test', 'http://localdev.me').toString();
++    assertEquals(url, 'http://zipper-client-test.localdev.me/');
++});
++dntShim.Deno.test(function overrideFullUrl() {
++    const url = getBaseUrlFromIndentifier('https://zipper-client-test.zipper.run:3000/', 'http://localdev.me:8080').toString();
++    assertEquals(url, 'http://zipper-client-test.localdev.me:8080/');
++});
+diff --git a/node_modules/@zipper-inc/client-js/script/src/client.js b/node_modules/@zipper-inc/client-js/script/src/client.js
+index 2180817..72134db 100644
+--- a/node_modules/@zipper-inc/client-js/script/src/client.js
++++ b/node_modules/@zipper-inc/client-js/script/src/client.js
+@@ -23,7 +23,7 @@ class Applet {
+             writable: true,
+             value: void 0
+         });
+-        this.baseUrl = (0, url_js_1.getBaseUrlFromIndentifier)(indentifier, options?.overrideHost);
++        this.baseUrl = (0, url_js_1.getBaseUrlFromIndentifier)(indentifier, options?.overrideZipperRunUrl);
+         this.isDebugMode = !!options?.debug;
+         if (options?.token)
+             this.token = options.token;
+diff --git a/node_modules/@zipper-inc/client-js/script/src/types.d.ts b/node_modules/@zipper-inc/client-js/script/src/types.d.ts
+index d345c97..1a8b8c3 100644
+--- a/node_modules/@zipper-inc/client-js/script/src/types.d.ts
++++ b/node_modules/@zipper-inc/client-js/script/src/types.d.ts
+@@ -24,13 +24,15 @@ export type Inputs = {
+     [key: string]: Serializable | undefined;
+ };
+ export type Output = Serializable | void;
++type Protocol = 'http' | 'https';
++type Port = number;
+ /**
+  * Passed in when creating an Applet
+  */
+ export type AppletOptions = {
+     debug?: boolean;
+-    overrideHost?: string;
+     token?: string;
++    overrideZipperRunUrl?: `${Protocol}://${string}` | `${Protocol}://${string}:${Port}`;
+ };
+ /**
+  * The API Response from a Zipper Applet
+diff --git a/node_modules/@zipper-inc/client-js/script/src/url.d.ts b/node_modules/@zipper-inc/client-js/script/src/url.d.ts
+index 2bfbbc7..1ddb1e2 100644
+--- a/node_modules/@zipper-inc/client-js/script/src/url.d.ts
++++ b/node_modules/@zipper-inc/client-js/script/src/url.d.ts
+@@ -1 +1,2 @@
+-export declare function getBaseUrlFromIndentifier(identifier: string, overrideHost?: string): URL;
++import { AppletOptions } from './index.js';
++export declare function getBaseUrlFromIndentifier(identifier: string, overrideZipperRunUrl?: AppletOptions['overrideZipperRunUrl']): URL;
+diff --git a/node_modules/@zipper-inc/client-js/script/src/url.js b/node_modules/@zipper-inc/client-js/script/src/url.js
+index 8efc8ff..7cbabfa 100644
+--- a/node_modules/@zipper-inc/client-js/script/src/url.js
++++ b/node_modules/@zipper-inc/client-js/script/src/url.js
+@@ -2,22 +2,43 @@
+ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.getBaseUrlFromIndentifier = void 0;
+ const constants_js_1 = require("./constants.js");
+-function getBaseUrlFromIndentifier(identifier, overrideHost) {
++function getBaseUrlFromIndentifier(identifier, overrideZipperRunUrl) {
+     let url;
++    let port;
+     // If the identifier is a URL, we have what we need
+     // Note: If the URL is not a zipper.run applet, it will def fail
+     try {
+         // Remove anything that looks like a port temporarily since it confuses the URL parser
+-        url = new URL(identifier.replace(/:[0-9]+$/, ``));
++        // We'll add it back later
++        const portMatch = identifier.match(/:[0-9]+$/);
++        if (portMatch) {
++            port = portMatch[0];
++            identifier = identifier.replace(port, '');
++        }
++        url = new URL(identifier);
++        // In this case, identifier is a full URL
++        if (overrideZipperRunUrl) {
++            const override = new URL(overrideZipperRunUrl);
++            const subdomain = url.host.split('.')[0];
++            const newUrl = new URL(`${override.protocol}//${subdomain}.${override.host}`);
++            // Here, we gonna use the port from the override
++            return newUrl;
++        }
++        return new URL(`${url.origin}${port || ''}`);
+     }
+     catch (_e) {
+-        // If it looks like a host, add a protocol, other let's assume it's a slug
++        // Identifier is not a URL, but if it looks like a host, we can add a protocol, other let's assume it's a slug
+         url = /\.|:/.test(identifier)
+             ? new URL(`https://${identifier}`)
+             : new URL(`https://${identifier}.${constants_js_1.DEFAULT_ZIPPER_DOT_RUN_HOST}`);
+     }
+-    if (overrideHost)
+-        url.host = overrideHost;
+-    return new URL(url.origin);
++    // If we have an override, we need to use it, the identifier itself is our subdomain
++    if (overrideZipperRunUrl) {
++        const override = new URL(overrideZipperRunUrl);
++        url = new URL(`${override.protocol}//${identifier}.${override.host}`);
++        // Here, we gonna use the port from the override
++        return new URL(url.origin);
++    }
++    return new URL(`${url.origin}${port || ''}`);
+ }
+ exports.getBaseUrlFromIndentifier = getBaseUrlFromIndentifier;
+diff --git a/node_modules/@zipper-inc/client-js/script/src/url.test.d.ts b/node_modules/@zipper-inc/client-js/script/src/url.test.d.ts
+new file mode 100644
+index 0000000..cb0ff5c
+--- /dev/null
++++ b/node_modules/@zipper-inc/client-js/script/src/url.test.d.ts
+@@ -0,0 +1 @@
++export {};
+diff --git a/node_modules/@zipper-inc/client-js/script/src/url.test.js b/node_modules/@zipper-inc/client-js/script/src/url.test.js
+new file mode 100644
+index 0000000..942b1eb
+--- /dev/null
++++ b/node_modules/@zipper-inc/client-js/script/src/url.test.js
+@@ -0,0 +1,56 @@
++"use strict";
++var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
++    if (k2 === undefined) k2 = k;
++    var desc = Object.getOwnPropertyDescriptor(m, k);
++    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
++      desc = { enumerable: true, get: function() { return m[k]; } };
++    }
++    Object.defineProperty(o, k2, desc);
++}) : (function(o, m, k, k2) {
++    if (k2 === undefined) k2 = k;
++    o[k2] = m[k];
++}));
++var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
++    Object.defineProperty(o, "default", { enumerable: true, value: v });
++}) : function(o, v) {
++    o["default"] = v;
++});
++var __importStar = (this && this.__importStar) || function (mod) {
++    if (mod && mod.__esModule) return mod;
++    var result = {};
++    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
++    __setModuleDefault(result, mod);
++    return result;
++};
++Object.defineProperty(exports, "__esModule", { value: true });
++const dntShim = __importStar(require("../_dnt.test_shims.js"));
++const asserts_js_1 = require("../deps/deno.land/std@0.167.0/testing/asserts.js");
++const url_js_1 = require("./url.js");
++dntShim.Deno.test(function usesDefaultHost() {
++    const url = (0, url_js_1.getBaseUrlFromIndentifier)('zipper-client-test').toString();
++    (0, asserts_js_1.assertEquals)(url, 'https://zipper-client-test.zipper.run/');
++});
++dntShim.Deno.test(function respectsHostStrings() {
++    const url = (0, url_js_1.getBaseUrlFromIndentifier)('zipper-client-test.localdev.me:3000').toString();
++    (0, asserts_js_1.assertEquals)(url, 'https://zipper-client-test.localdev.me:3000/');
++});
++dntShim.Deno.test(function respectsWholeUrl() {
++    const url = (0, url_js_1.getBaseUrlFromIndentifier)('https://applet.zipper.host/more/paths').toString();
++    (0, asserts_js_1.assertEquals)(url, 'https://applet.zipper.host/');
++});
++dntShim.Deno.test(function respectUrlWithPort() {
++    const url = (0, url_js_1.getBaseUrlFromIndentifier)('https://hello-world.localdev.me:3002').toString();
++    (0, asserts_js_1.assertEquals)(url, 'https://hello-world.localdev.me:3002/');
++});
++dntShim.Deno.test(function overrideZipperRunUrl() {
++    const url = (0, url_js_1.getBaseUrlFromIndentifier)('zipper-client-test', 'https://localdev.me:3002').toString();
++    (0, asserts_js_1.assertEquals)(url, 'https://zipper-client-test.localdev.me:3002/');
++});
++dntShim.Deno.test(function overrideWithoutPort() {
++    const url = (0, url_js_1.getBaseUrlFromIndentifier)('zipper-client-test', 'http://localdev.me').toString();
++    (0, asserts_js_1.assertEquals)(url, 'http://zipper-client-test.localdev.me/');
++});
++dntShim.Deno.test(function overrideFullUrl() {
++    const url = (0, url_js_1.getBaseUrlFromIndentifier)('https://zipper-client-test.zipper.run:3000/', 'http://localdev.me:8080').toString();
++    (0, asserts_js_1.assertEquals)(url, 'http://zipper-client-test.localdev.me:8080/');
++});
