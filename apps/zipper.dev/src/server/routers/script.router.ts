@@ -57,6 +57,9 @@ export const scriptRouter = createTRPCRouter({
             'openai',
             'zendesk',
             'github-app',
+            'postgres',
+            'mysql',
+            'mongodb',
             'discord',
             'notion',
           ])
