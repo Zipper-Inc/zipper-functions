@@ -65,12 +65,12 @@ const defaultTemplates = [
     description: '👋',
     shouldFork: false,
   },
-  {
-    id: 'ai',
-    name: 'AI Generated Code',
-    description: '🤖✨',
-    shouldFork: false,
-  },
+  // {
+  //   id: 'ai',
+  //   name: 'AI Generated Code',
+  //   description: '🤖✨',
+  //   shouldFork: false,
+  // },
 ];
 
 export const CreateAppForm: React.FC<{ onClose: () => void }> = ({

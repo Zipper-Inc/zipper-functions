@@ -162,7 +162,12 @@ const ShareTab: React.FC<Props> = ({ isOpen, onClose, appId }) => {
                                 type="email"
                                 placeholder="Email"
                               />
-                              <Button px={6} type="submit" fontSize="sm">
+                              <Button
+                                px={6}
+                                type="submit"
+                                fontSize="sm"
+                                colorScheme="purple"
+                              >
                                 Send invite
                               </Button>
                             </HStack>
@@ -347,7 +352,7 @@ const ShareTab: React.FC<Props> = ({ isOpen, onClose, appId }) => {
                   </Link>
                   <Button
                     type="submit"
-                    colorScheme="purple"
+                    colorScheme="gray"
                     onClick={() => {
                       onClose();
                     }}
