@@ -17,7 +17,7 @@ import fetch from 'node-fetch';
 import { AppConnectorUserAuth, Prisma } from '@prisma/client';
 import { filterTokenFields } from '~/server/utils/json';
 import { createTRPCRouter, publicProcedure } from '../root';
-import { getSlackConfig } from '../utils/getConnectorConfig';
+import { getSlackConfig } from '~/utils/connectors';
 
 export const slackConnectorRouter = createTRPCRouter({
   get: publicProcedure
@@ -212,15 +212,21 @@ export const slackConnectorRouter = createTRPCRouter({
         throw new TRPCError({ code: 'UNAUTHORIZED' });
       }
 
-      const connectorScript = await prisma.script.findFirst({
+      const appInfo = await prisma.app.findFirst({
         where: {
-          appId,
-          name: 'slack-connector',
+          id: appId,
         },
         select: {
-          code: true,
+          slug: true,
         },
       });
+
+      if (!appInfo) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'App not found',
+        });
+      }
 
       const clientSecretRecord = await prisma.secret.findFirst({
         where: {
@@ -232,15 +238,18 @@ export const slackConnectorRouter = createTRPCRouter({
       let clientId = process.env.NEXT_PUBLIC_SLACK_CLIENT_ID!;
       let clientSecret = process.env.SLACK_CLIENT_SECRET!;
 
-      if (!connectorScript?.code) {
+      const slackConfig = await getSlackConfig(appInfo.slug);
+      if (!slackConfig) {
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
-          message: 'No slack-connector script found',
+          message:
+            'Something went wrong while trying to get the connector config',
         });
       }
-      const codeConfig = getSlackConfig(connectorScript.code);
-      if (codeConfig?.clientId && clientSecretRecord) {
-        clientId = codeConfig.clientId;
+
+      // const codeConfig = getSlackConfig(connectorScript.code);
+      if (slackConfig.clientId && clientSecretRecord) {
+        clientId = slackConfig.clientId;
         clientSecret = decryptFromBase64(
           clientSecretRecord.encryptedValue,
           process.env.ENCRYPTION_KEY,
