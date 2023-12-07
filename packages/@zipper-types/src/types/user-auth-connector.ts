@@ -4,6 +4,9 @@ export type ConnectorType =
   | 'slack'
   | 'openai'
   | 'zendesk'
+  | 'postgres'
+  | 'mysql'
+  | 'mongodb'
   | 'discord'
   | 'notion';
 
