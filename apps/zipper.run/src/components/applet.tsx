@@ -133,7 +133,9 @@ export function AppPage({
 
   const [skipAuth, setSkipAuth] = useState(false);
 
-  const { isOpen, onToggle } = useDisclosure({
+  const showRunOutput = (['output'] as Screen[]).includes(screen);
+
+  const { isOpen, onToggle, onClose } = useDisclosure({
     defaultIsOpen: !isEmbedded,
   });
 
@@ -183,6 +185,7 @@ export function AppPage({
   const mainApplet = useAppletContent();
 
   useEffect(() => {
+    if (JSON.stringify(result || {}).length > 100) onClose();
     mainApplet.reset();
     const inputParamsWithValues = inputs?.map((i) => {
       if (defaultValues) {
@@ -299,8 +302,6 @@ export function AppPage({
       },
     };
   };
-
-  const showRunOutput = (['output'] as Screen[]).includes(screen);
 
   const output = useMemo(() => {
     if (!app?.slug) return <></>;
@@ -462,6 +463,7 @@ export function AppPage({
         {isOpen ? (
           <VStack
             width={{ base: 'auto', md: '100%' }}
+            minW="300px"
             maxW="400px"
             align="stretch"
             flex={2}

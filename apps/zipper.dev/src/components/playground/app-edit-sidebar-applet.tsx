@@ -67,7 +67,6 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
     editorHasErrors,
     getErrorFiles,
     monacoRef,
-    editor,
   } = useEditorContext();
 
   const mainApplet = useAppletContent();

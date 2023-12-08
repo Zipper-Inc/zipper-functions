@@ -66,7 +66,7 @@ export function ObjectExplorerRow({
             display="flex"
             size="md"
             pl={0}
-            pr={4}
+            pr={1}
             onClick={onToggle}
             minWidth="unset"
             justifyContent="start"
@@ -86,9 +86,10 @@ export function ObjectExplorerRow({
               </Text>
             )}
             {headingMode === HeadingMode.ExpandableTableCell && (
-              <Text size="xs" color="fg.500" fontWeight={300}>
-                {!isOpen ? `Expand ${heading}` : `Collapse`}
-              </Text>
+              <></>
+              // <Text size="xs" color="fg.500" fontWeight={300}>
+              //   {!isOpen ? `Expand ${heading}` : `Collapse`}
+              // </Text>
             )}
             <Box
               transitionDuration="100ms"
@@ -96,6 +97,7 @@ export function ObjectExplorerRow({
               color="fg.600"
               justifySelf="right"
               ml="auto"
+              pt={0.5}
             >
               <PiCaretRight />
             </Box>
@@ -106,7 +108,7 @@ export function ObjectExplorerRow({
           </Text>
         )}
       </Td>
-      <Td border="none" p={0} pl={4}>
+      <Td border="none" p={0} pl={2}>
         {shouldCollapse ? (
           <Flex
             height="100%"
