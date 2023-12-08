@@ -85,7 +85,15 @@ function FunctionParamInput({
   switch (type) {
     case InputType.boolean: {
       return (
-        <Switch colorScheme="purple" {...formProps} isDisabled={isDisabled} />
+        <Switch
+          colorScheme="purple"
+          {...formProps}
+          onChange={(e) => {
+            console.log(e.target.checked);
+            formContext.setValue(name, e.target.checked);
+          }}
+          isDisabled={isDisabled}
+        />
       );
     }
 
