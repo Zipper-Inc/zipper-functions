@@ -451,6 +451,12 @@ export function FunctionOutput({
   const parsedResult =
     safelyParseResult(applet?.mainContent.output?.data) || undefined;
 
+  const runHistoryUrl: string | undefined =
+    runId &&
+    `${
+      process.env.NODE_ENV === 'production' ? 'https://' : 'http://'
+    }${getAppLink(appSlug)}/run/history/${runId?.split('-')[0]}`;
+
   return (
     <FunctionOutputProvider
       showSecondaryOutput={showSecondaryOutput}
@@ -487,15 +493,7 @@ export function FunctionOutput({
                 <Tab {...tabButtonStyles}>Results</Tab>
                 <Tab {...tabButtonStyles}>Raw Output</Tab>
                 <Spacer />
-                <Link
-                  href={`${
-                    process.env.NODE_ENV === 'production'
-                      ? 'https://'
-                      : 'http://'
-                  }${getAppLink(appSlug)}/run/history/${runId?.split('-')[0]}`}
-                  target="_blank"
-                  p={2}
-                >
+                <Link href={runHistoryUrl} target="_new" p={2}>
                   <HiArrowTopRightOnSquare />
                 </Link>
               </TabList>
@@ -550,6 +548,7 @@ export function FunctionOutput({
                         config={config}
                         outputSection="main"
                         location={zipperLocation}
+                        runHistoryUrl={runHistoryUrl}
                       >
                         <SmartFunctionOutput
                           parsedResult={parsedResult}
