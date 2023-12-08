@@ -26,6 +26,19 @@ export enum HeadingMode {
   ExpandableTableCell,
 }
 
+function getMaxKeys(obj: Record<string, any>): number {
+  let maxKeys = Object.keys(obj || {}).length;
+
+  for (const key in obj) {
+    if (obj.hasOwnProperty(key) && typeof obj[key] === 'object') {
+      const childMaxKeys = getMaxKeys(obj[key]);
+      maxKeys = Math.max(maxKeys, childMaxKeys);
+    }
+  }
+
+  return maxKeys;
+}
+
 export function ObjectExplorerRow({
   heading,
   data,
@@ -46,6 +59,8 @@ export function ObjectExplorerRow({
     level <= AUTO_OPEN_MAX_LEVELS_DEEP &&
     tableLevel <= AUTO_OPEN_MAX_LEVELS_DEEP &&
     Object.keys(dataWithoutNull).length <= AUTO_OPEN_MAX_ITEMS;
+
+  const maxKeys = getMaxKeys(dataWithoutNull);
 
   const { isOpen, onToggle } = useDisclosure({
     defaultIsOpen: shouldAutoOpen || !collapse,
@@ -85,19 +100,14 @@ export function ObjectExplorerRow({
                 {heading}
               </Text>
             )}
-            {headingMode === HeadingMode.ExpandableTableCell && (
-              <></>
-              // <Text size="xs" color="fg.500" fontWeight={300}>
-              //   {!isOpen ? `Expand ${heading}` : `Collapse`}
-              // </Text>
-            )}
             <Box
               transitionDuration="100ms"
               transform={isOpen ? 'rotate(90deg)' : 'none'}
+              display={maxKeys > 1 ? 'flex' : 'none'}
               color="fg.600"
               justifySelf="right"
               ml="auto"
-              pt={0.5}
+              pt={1}
             >
               <PiCaretRight />
             </Box>
@@ -153,9 +163,6 @@ export function ObjectExplorerRow({
               level={level + 1}
               tableLevel={tableLevel + 1}
             />
-            {/* <Text size="sm" whiteSpace="normal" textAlign="right">
-              {data?.toString() || 'null'}
-            </Text> */}
           </Flex>
         )}
       </Td>
