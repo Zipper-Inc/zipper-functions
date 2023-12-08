@@ -58,20 +58,19 @@ export const slackConnector = createConnector({
 const defaultBotScope = 'channels:read';
 const botTokenName = 'SLACK_BOT_TOKEN';
 const userTokenName = 'SLACK_USER_TOKEN';
+// convert the scopes to options for the multi-select menus
+const __bot_options = workspaceScopes.map((scope) => ({
+  label: scope,
+  value: scope,
+}));
+const __user_options = userScopes.map((scope) => ({
+  label: scope,
+  value: scope,
+}));
 function SlackConnectorForm({ appId }: { appId: string }) {
   const { appInfo } = useRunAppContext();
   const { user } = useUser();
   const [clientId, setClientId] = useState<string>('');
-
-  // convert the scopes to options for the multi-select menus
-  const __bot_options = workspaceScopes.map((scope) => ({
-    label: scope,
-    value: scope,
-  }));
-  const __user_options = userScopes.map((scope) => ({
-    label: scope,
-    value: scope,
-  }));
 
   // useMultiSelect hook gives us the value state and the onChange and setValue methods
   // for the multi-select menus
@@ -247,7 +246,6 @@ function SlackConnectorFormConUserEdit({
     connector.data?.isUserAuthRequired,
   );
   const utils = trpc.useContext();
-  const cancelRef = useRef() as React.MutableRefObject<HTMLButtonElement>;
   const [isSaving, setIsSaving] = useState(false);
   const [clientSecret, setClientSecret] = useState<string>('');
 
@@ -271,81 +269,12 @@ function SlackConnectorFormConUserEdit({
     },
   });
 
-  const { isOpen, onClose } = useDisclosure();
   const { getModelByFilename } = useEditorContext();
   const { boot } = useRunAppContext();
 
   const existingInstallation =
     (existingSecret.data || existingUserSecret.data) &&
     connector.data?.metadata;
-
-  const requiresOwnClientIdSwitch = () => {
-    return (
-      <HStack w="full" pt="4" pb="4">
-        <FormControl>
-          <HStack w="full">
-            <FormLabel>Custom client ID?</FormLabel>
-            <Spacer flexGrow={1} />
-            <Switch
-              isChecked={isOwnClientIdRequired}
-              ml="auto"
-              onChange={(e) => {
-                setIsOwnClientIdRequired(e.target.checked);
-              }}
-            />
-          </HStack>
-          <FormHelperText maxW="xl" mb="2">
-            When checked, you can specify your own Slack client ID and secret.
-            Useful if you need to enable features like the Events API or Slash
-            Commands.
-          </FormHelperText>
-
-          <Collapse in={isOwnClientIdRequired} animateOpacity>
-            <FormControl>
-              <FormLabel color={'fg.500'}>Client ID</FormLabel>
-              <Input
-                value={clientId}
-                onChange={(e) => setClientId(e.target.value)}
-              />
-            </FormControl>
-
-            <FormControl pt="2">
-              <FormLabel color={'fg.500'}>
-                Client Secret
-                <Text
-                  as="span"
-                  fontFamily="mono"
-                  color="fg.400"
-                  fontSize="sm"
-                  ml="2"
-                >
-                  SLACK_CLIENT_SECRET
-                </Text>
-              </FormLabel>
-
-              <Input
-                type="password"
-                value={clientSecret}
-                onChange={(e) => setClientSecret(e.target.value)}
-              />
-            </FormControl>
-
-            <FormControl pt="2">
-              <FormLabel>Redirect URL</FormLabel>
-              <Text>
-                Set your Slack app's redirect URL to:{' '}
-                {process.env.NODE_ENV === 'development' ? (
-                  <Code>https://your.ngrok.url/connectors/slack/auth</Code>
-                ) : (
-                  <Code>https://zipper.dev/connectors/slack/auth</Code>
-                )}
-              </Text>
-            </FormControl>
-          </Collapse>
-        </FormControl>
-      </HStack>
-    );
-  };
 
   const router = useRouter();
 
@@ -357,136 +286,16 @@ function SlackConnectorFormConUserEdit({
 
   if (existingInstallation) {
     return (
-      <>
-        <Card w="full">
-          <CardBody color="fg.600">
-            <VStack align="stretch">
-              <Heading size="sm">Configuration</Heading>
-              <HStack w="full" pt="2" spacing="1">
-                <FormLabel m="0">Installed to</FormLabel>
-                <Popover trigger="hover">
-                  <PopoverTrigger>
-                    <FormLabel
-                      cursor="context-menu"
-                      textDecor="underline"
-                      textDecorationStyle="dotted"
-                      color={'fg.900'}
-                    >
-                      {(connector.data?.metadata as any)['team']['name']}
-                    </FormLabel>
-                  </PopoverTrigger>
-                  <PopoverContent w="sm">
-                    <PopoverArrow />
-                    <PopoverHeader>Installation details</PopoverHeader>
-                    <PopoverBody>
-                      <VStack
-                        align="start"
-                        divider={<StackDivider />}
-                        fontSize="sm"
-                        py="2"
-                      >
-                        {connector.data?.clientId && (
-                          <HStack>
-                            <Text>Client ID:</Text>
-                            <Code>{connector.data?.clientId}</Code>
-                          </HStack>
-                        )}
-                        <HStack>
-                          <Text>Bot User ID:</Text>
-                          <Code>
-                            {(connector.data?.metadata as any)['bot_user_id']}
-                          </Code>
-                        </HStack>
-                        <HStack>
-                          <Text>Bot Scopes:</Text>
-                          <Box>
-                            {((connector.data?.metadata as any)['scope'] || '')
-                              .split(',')
-                              .map((scope: string) => (
-                                <Code key={scope}>{scope}</Code>
-                              ))}
-                          </Box>
-                        </HStack>
-
-                        {(connector.data?.metadata as any)['authed_user'] &&
-                          (connector.data?.metadata as any)['authed_user'][
-                            'scope'
-                          ] && (
-                            <HStack>
-                              <Text>User Scopes:</Text>
-                              <Box>
-                                {(connector.data?.metadata as any)[
-                                  'authed_user'
-                                ]['scope']
-                                  .split(',')
-                                  .map((scope: string) => (
-                                    <Code key={scope}>{scope}</Code>
-                                  ))}
-                              </Box>
-                            </HStack>
-                          )}
-                      </VStack>
-                    </PopoverBody>
-                  </PopoverContent>
-                </Popover>
-                <Spacer />
-                {/* TODO: Uninstall */}
-                {/* {slackAuthURL.data && (
-                  <Button variant="unstyled" color="red.600" onClick={onOpen}>
-                    <HStack>
-                      <HiOutlineTrash />
-                      <Text>Uninstall</Text>
-                    </HStack>
-                  </Button>
-                )} */}
-              </HStack>
-              <UserAuthSwitch
-                isUserAuthRequired={isUserAuthRequired}
-                setIsUserAuthRequired={setIsUserAuthRequired}
-                userValue={userValue}
-              />
-            </VStack>
-          </CardBody>
-        </Card>
-        <AlertDialog
-          isOpen={isOpen}
-          leastDestructiveRef={cancelRef}
-          onClose={onClose}
-        >
-          <AlertDialogOverlay>
-            <AlertDialogContent>
-              <AlertDialogHeader fontSize="lg" fontWeight="bold">
-                Uninstall Slack App
-              </AlertDialogHeader>
-
-              <AlertDialogBody>
-                Are you sure? You can't undo this action afterwards.
-              </AlertDialogBody>
-
-              <AlertDialogFooter>
-                <Button ref={cancelRef} onClick={onClose}>
-                  Cancel
-                </Button>
-                <Button
-                  colorScheme="red"
-                  isDisabled={isSaving}
-                  onClick={async () => {
-                    setIsSaving(true);
-                    await deleteConnectorMutation.mutateAsync({
-                      appId,
-                    });
-                    setIsSaving(false);
-                    onClose();
-                  }}
-                  ml={3}
-                >
-                  Uninstall
-                </Button>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialogOverlay>
-        </AlertDialog>
-      </>
+      <SlackConnectorExistingInstalation
+        connector={connector}
+        isUserAuthRequired={isUserAuthRequired}
+        setIsUserAuthRequired={setIsUserAuthRequired}
+        userValue={userValue}
+        isSaving={isSaving}
+        setIsSaving={setIsSaving}
+        deleteConnectorMutation={deleteConnectorMutation}
+        appId={appId}
+      />
     );
   }
 
@@ -505,10 +314,8 @@ function SlackConnectorFormConUserEdit({
                   onChange={botOnChange as SelectOnChange}
                 />
               </FormControl>
-
               <FormControl pt="4">
                 <FormLabel>User Scopes</FormLabel>
-
                 <MultiSelect
                   options={userOptions}
                   value={userValue}
@@ -520,8 +327,15 @@ function SlackConnectorFormConUserEdit({
                 setIsUserAuthRequired={setIsUserAuthRequired}
                 userValue={userValue}
               />
-              {requiresOwnClientIdSwitch()}
-
+              {/* {requiresOwnClientIdSwitch()} */}
+              <RequireOwnClientIdSwitch
+                isOwnClientIdRequired={isOwnClientIdRequired}
+                setIsOwnClientIdRequired={setIsOwnClientIdRequired}
+                clientId={clientId}
+                setClientId={setClientId}
+                clientSecret={clientSecret}
+                setClientSecret={setClientSecret}
+              />
               <Button
                 mt="6"
                 colorScheme={'purple'}
@@ -585,6 +399,238 @@ function SlackConnectorFormConUserEdit({
         </CardBody>
       </Card>
     </>
+  );
+}
+type SlackCOnnectorExistingInstalationP = {
+  connector: any;
+  isUserAuthRequired: any;
+  setIsUserAuthRequired: any;
+  userValue: any;
+  isSaving: boolean;
+  setIsSaving: any;
+  deleteConnectorMutation: any;
+  appId: any;
+};
+function SlackConnectorExistingInstalation(
+  props: SlackCOnnectorExistingInstalationP,
+) {
+  const cancelRef = useRef() as React.MutableRefObject<HTMLButtonElement>;
+  const { isOpen, onClose } = useDisclosure();
+
+  return (
+    <>
+      <Card w="full">
+        <CardBody color="fg.600">
+          <VStack align="stretch">
+            <Heading size="sm">Configuration</Heading>
+            <HStack w="full" pt="2" spacing="1">
+              <FormLabel m="0">Installed to</FormLabel>
+              <Popover trigger="hover">
+                <PopoverTrigger>
+                  <FormLabel
+                    cursor="context-menu"
+                    textDecor="underline"
+                    textDecorationStyle="dotted"
+                    color={'fg.900'}
+                  >
+                    {(props.connector.data?.metadata as any)['team']['name']}
+                  </FormLabel>
+                </PopoverTrigger>
+                <PopoverContent w="sm">
+                  <PopoverArrow />
+                  <PopoverHeader>Installation details</PopoverHeader>
+                  <PopoverBody>
+                    <VStack
+                      align="start"
+                      divider={<StackDivider />}
+                      fontSize="sm"
+                      py="2"
+                    >
+                      {props.connector.data?.clientId && (
+                        <HStack>
+                          <Text>Client ID:</Text>
+                          <Code>{props.connector.data?.clientId}</Code>
+                        </HStack>
+                      )}
+                      <HStack>
+                        <Text>Bot User ID:</Text>
+                        <Code>
+                          {
+                            (props.connector.data?.metadata as any)[
+                              'bot_user_id'
+                            ]
+                          }
+                        </Code>
+                      </HStack>
+                      <HStack>
+                        <Text>Bot Scopes:</Text>
+                        <Box>
+                          {(
+                            (props.connector.data?.metadata as any)['scope'] ||
+                            ''
+                          )
+                            .split(',')
+                            .map((scope: string) => (
+                              <Code key={scope}>{scope}</Code>
+                            ))}
+                        </Box>
+                      </HStack>
+
+                      {(props.connector.data?.metadata as any)['authed_user'] &&
+                        (props.connector.data?.metadata as any)['authed_user'][
+                          'scope'
+                        ] && (
+                          <HStack>
+                            <Text>User Scopes:</Text>
+                            <Box>
+                              {(props.connector.data?.metadata as any)[
+                                'authed_user'
+                              ]['scope']
+                                .split(',')
+                                .map((scope: string) => (
+                                  <Code key={scope}>{scope}</Code>
+                                ))}
+                            </Box>
+                          </HStack>
+                        )}
+                    </VStack>
+                  </PopoverBody>
+                </PopoverContent>
+              </Popover>
+              <Spacer />
+              {/* TODO: Uninstall */}
+              {/* {slackAuthURL.data && (
+          <Button variant="unstyled" color="red.600" onClick={onOpen}>
+            <HStack>
+              <HiOutlineTrash />
+              <Text>Uninstall</Text>
+            </HStack>
+          </Button>
+        )} */}
+            </HStack>
+            <UserAuthSwitch
+              isUserAuthRequired={props.isUserAuthRequired}
+              setIsUserAuthRequired={props.setIsUserAuthRequired}
+              userValue={props.userValue}
+            />
+          </VStack>
+        </CardBody>
+      </Card>
+      <AlertDialog
+        isOpen={isOpen}
+        leastDestructiveRef={cancelRef}
+        onClose={onClose}
+      >
+        <AlertDialogOverlay>
+          <AlertDialogContent>
+            <AlertDialogHeader fontSize="lg" fontWeight="bold">
+              Uninstall Slack App
+            </AlertDialogHeader>
+
+            <AlertDialogBody>
+              Are you sure? You can't undo this action afterwards.
+            </AlertDialogBody>
+
+            <AlertDialogFooter>
+              <Button ref={cancelRef} onClick={onClose}>
+                Cancel
+              </Button>
+              <Button
+                colorScheme="red"
+                isDisabled={props.isSaving}
+                onClick={async () => {
+                  props.setIsSaving(true);
+                  await props.deleteConnectorMutation.mutateAsync({
+                    appId: props.appId,
+                  });
+                  props.setIsSaving(false);
+                  onClose();
+                }}
+                ml={3}
+              >
+                Uninstall
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogOverlay>
+      </AlertDialog>
+    </>
+  );
+}
+
+type RequireOwnClientIdSwitchP = {
+  isOwnClientIdRequired: any;
+  setIsOwnClientIdRequired: any;
+  clientId: any;
+  setClientId: any;
+  clientSecret: string;
+  setClientSecret: any;
+};
+function RequireOwnClientIdSwitch(props: RequireOwnClientIdSwitchP) {
+  return (
+    <HStack w="full" pt="4" pb="4">
+      <FormControl>
+        <HStack w="full">
+          <FormLabel>Custom client ID?</FormLabel>
+          <Spacer flexGrow={1} />
+          <Switch
+            isChecked={props.isOwnClientIdRequired}
+            ml="auto"
+            onChange={(e) => {
+              props.setIsOwnClientIdRequired(e.target.checked);
+            }}
+          />
+        </HStack>
+        <FormHelperText maxW="xl" mb="2">
+          When checked, you can specify your own Slack client ID and secret.
+          Useful if you need to enable features like the Events API or Slash
+          Commands.
+        </FormHelperText>
+
+        <Collapse in={props.isOwnClientIdRequired} animateOpacity>
+          <FormControl>
+            <FormLabel color={'fg.500'}>Client ID</FormLabel>
+            <Input
+              value={props.clientId}
+              onChange={(e) => props.setClientId(e.target.value)}
+            />
+          </FormControl>
+
+          <FormControl pt="2">
+            <FormLabel color={'fg.500'}>
+              Client Secret
+              <Text
+                as="span"
+                fontFamily="mono"
+                color="fg.400"
+                fontSize="sm"
+                ml="2"
+              >
+                SLACK_CLIENT_SECRET
+              </Text>
+            </FormLabel>
+
+            <Input
+              type="password"
+              value={props.clientSecret}
+              onChange={(e) => props.setClientSecret(e.target.value)}
+            />
+          </FormControl>
+
+          <FormControl pt="2">
+            <FormLabel>Redirect URL</FormLabel>
+            <Text>
+              Set your Slack app's redirect URL to:{' '}
+              {process.env.NODE_ENV === 'development' ? (
+                <Code>https://your.ngrok.url/connectors/slack/auth</Code>
+              ) : (
+                <Code>https://zipper.dev/connectors/slack/auth</Code>
+              )}
+            </Text>
+          </FormControl>
+        </Collapse>
+      </FormControl>
+    </HStack>
   );
 }
 
