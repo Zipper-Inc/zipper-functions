@@ -1,4 +1,4 @@
-export function safeJSONParse<T extends any>(
+export function safeJSONParse<T = any>(
   json = '',
   reviver?: (key: string, value: any) => any,
   fallback?: any,
