@@ -42,6 +42,7 @@ import { useRunAppContext } from '~/components/context/run-app-context';
 import { useUser } from '~/hooks/use-user';
 import { useEditorContext } from '~/components/context/editor-context';
 import { initLocalApplet } from '~/utils/local-applet';
+import { updateConnectorConfig } from '~/utils/connector-codemod';
 
 // configure the Slack connector
 export const slackConnector = createConnector({
@@ -527,6 +528,7 @@ function SlackConnectorFormConUserEdit({
                 isDisabled={false} // TODO: disabled
                 onClick={async () => {
                   setIsSaving(true);
+                  // TODO: think about isUserAuthRequired,
                   if (isOwnClientIdRequired && clientId && clientSecret) {
                     await addSecretMutation.mutateAsync({
                       appId: appId,
@@ -542,21 +544,16 @@ function SlackConnectorFormConUserEdit({
                     const code = slackConnectorModel?.getValue();
                     if (!code) return;
 
-                    // TODO: think about isUserAuthRequired,
-                    slackConnectorModel?.setValue(
-                      code.replace(
-                        'UPDATE_MY_CONFIG_HERE',
-                        JSON.stringify(
-                          {
-                            clientId,
-                            botScopes: botValue as string[],
-                            userScopes: userValue as string[],
-                          },
-                          null,
-                          2,
-                        ),
-                      ),
+                    const newCode = updateConnectorConfig(
+                      code,
+                      'slackConnectorConfig',
+                      {
+                        clientId,
+                        botScopes: botValue,
+                        userScopes: userValue,
+                      },
                     );
+                    slackConnectorModel?.setValue(newCode);
 
                     let appInfo = getAppById.data;
                     if (!appInfo) {
