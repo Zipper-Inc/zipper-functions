@@ -37,6 +37,10 @@ function parseTypeNode(type: TypeNode, src: SourceFile): ParsedNode {
   if (text.toLowerCase() === 'unknown') return { type: InputType.unknown };
   if (text.toLowerCase() === 'any') return { type: InputType.any };
   if (text.toLowerCase() === 'zipper.fileurl') return { type: InputType.file };
+  if (text.toLocaleLowerCase().match(/"\w+"(\s*\|\s*"\w+")*/g))
+    return { type: InputType.string };
+  if (text.toLocaleLowerCase().match(/\d+(\s*\|\s*\d+)*/g))
+    return { type: InputType.number };
 
   if (type.isKind(SyntaxKind.ArrayType) || text.startsWith('Array'))
     return { type: InputType.array };
@@ -447,6 +451,21 @@ export function addParamToCode({
 }): string {
   const src = getSourceFileFromCode(code);
   const handler = src.getFunction('handler');
+  const handlerComment = handler
+    ?.getFullText()
+    .split('\n')
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    //@ts-ignore
+    .reduce((acc, curr) => {
+      if (curr.trim().startsWith('/**') || curr.trim().startsWith('*')) {
+        return [...acc, curr.trim()];
+      } else if (curr.trim().startsWith('export async function handler')) {
+        return acc; // Stop processing comments after reaching the function definition
+      } else {
+        return acc;
+      }
+    }, [] as string[])
+    .map((line) => (line.startsWith('*') ? ' ' + line : line));
 
   if (!handler) {
     console.error('You must define a handler function');
@@ -461,7 +480,9 @@ export function addParamToCode({
     }`;
 
     handler.replaceWithText(
-      handler.getText().replace(/\(\)/, `(${newParamString})`),
+      handlerComment?.join('\n') +
+        '\n' +
+        handler.getText().replace(/\(\)/, `(${newParamString})`),
     );
 
     return src.getFullText();

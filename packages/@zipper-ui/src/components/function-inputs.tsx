@@ -36,6 +36,16 @@ interface Props {
   hasResult?: boolean;
 }
 
+// const uploadButton = <F extends Record<string, any>, T extends React.FC<F>>({
+//   children,
+// }: {
+//   children: T;
+// }) => {
+//   return React.cloneElement(children, {
+//     onClick: () =>
+//   })
+// };
+
 /*
 const withOptional =
   (InnerComponent: (props: any) => ReactElement) => (componentProps: any) => {
@@ -68,7 +78,7 @@ function FunctionParamInput({
   isDisabled?: boolean;
   details?: any;
 }) {
-  const { register, watch } = formContext;
+  const { register, watch, getValues } = formContext;
 
   const name = getFieldName(inputKey, type);
   const formFieldOptions: RegisterOptions<FieldValues, string> = {
@@ -86,7 +96,15 @@ function FunctionParamInput({
   switch (type) {
     case InputType.boolean: {
       return (
-        <Switch colorScheme="purple" {...formProps} isDisabled={isDisabled} />
+        <Switch
+          colorScheme="purple"
+          {...formProps}
+          onChange={(e) => {
+            console.log(e.target.checked);
+            formContext.setValue(name, e.target.checked);
+          }}
+          isDisabled={isDisabled}
+        />
       );
     }
 
@@ -125,12 +143,19 @@ function FunctionParamInput({
     }
 
     case InputType.date: {
+      const value = getValues(name);
+
+      const formattedDate =
+        JSON.stringify(value) !== 'null'
+          ? value && value.toISOString().split('T')[0]
+          : new Date().toISOString().split('T')[0];
+
       return (
         <Input
           backgroundColor="bgColor"
           type="date"
           {...formProps}
-          isDisabled={isDisabled}
+          value={formattedDate}
           placeholder={placeholder}
         />
       );
