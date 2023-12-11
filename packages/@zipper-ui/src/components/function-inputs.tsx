@@ -233,6 +233,9 @@ function FunctionParamInput({
         >
           <UploadButton
             endpoint="imageUploader"
+            onUploadBegin={() => {
+              // Do something when upload begins.
+            }}
             onClientUploadComplete={(res) => {
               formContext.setValue(name, res[0]?.url);
             }}
