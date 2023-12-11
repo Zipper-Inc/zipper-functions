@@ -1,12 +1,13 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
+import crypto from 'crypto';
 import {
   acknowledgeSlack,
   buildRunResultView,
   updateSlackModal,
   buildRunUrlBodyParams,
   buildInputModal,
+  buildSlackModalView,
 } from './utils';
-import { initApplet } from '@zipper-inc/client-js';
 
 const { __DEBUG__ } = process.env;
 
@@ -18,7 +19,20 @@ async function processRerun(res: NextApiResponse, payload: any) {
     view: { id: viewId, hash: viewHash },
   } = payload;
 
-  const newView = await buildInputModal(slug, filename, viewId, viewHash);
+  const blocks = await buildInputModal(slug, filename);
+
+  const newView = {
+    view_id: viewId,
+    hash: viewHash,
+    view: buildSlackModalView({
+      title: payload.view.title.text,
+      callbackId: 'view-run-zipper-app',
+      blocks,
+      privateMetadata: payload.view.private_metadata,
+      showSubmit: true,
+    }),
+  };
+
   const updateResponse = await updateSlackModal(newView, appId, teamId);
 
   if (__DEBUG__) {
@@ -26,6 +40,23 @@ async function processRerun(res: NextApiResponse, payload: any) {
     console.log(await updateResponse.json());
   }
 
+  return acknowledgeSlack(res);
+}
+
+async function processUpdatedOutput(
+  res: NextApiResponse,
+  payload: any,
+  showRawOutput: boolean,
+) {
+  const view = (await buildRunResultView({
+    ...JSON.parse(payload.view.private_metadata),
+    showRawOutput,
+  })) as any;
+
+  view.view_id = payload.view.id;
+  view.hash = payload.view.hash;
+
+  await updateSlackModal(view, payload.api_app_id, payload.team.id);
   return acknowledgeSlack(res);
 }
 
@@ -41,7 +72,20 @@ async function processFilenameSelection(res: NextApiResponse, payload: any) {
     return a.action_id === 'filename_select_action';
   })?.selected_option.value;
 
-  const newView = await buildInputModal(slug, filename, viewId, viewHash);
+  const blocks = await buildInputModal(slug, filename);
+
+  const newView = {
+    view_id: viewId,
+    hash: viewHash,
+    view: buildSlackModalView({
+      title: payload.view.title.text,
+      callbackId: 'view-run-zipper-app',
+      blocks,
+      privateMetadata: payload.view.private_metadata,
+      showSubmit: true,
+    }),
+  };
+
   const updateResponse = await updateSlackModal(newView, appId, teamId);
 
   if (__DEBUG__) {
@@ -52,23 +96,69 @@ async function processFilenameSelection(res: NextApiResponse, payload: any) {
   return acknowledgeSlack(res);
 }
 
-async function submissionHandler(res: NextApiResponse, payload: any) {
+async function getResults(payload: any, existingRunId?: string) {
   const { slug, filename } = JSON.parse(payload.view.private_metadata);
   const inputs = buildRunUrlBodyParams(payload);
-  const response = await initApplet(slug)
-    .path(filename)
-    .run(inputs)
-    .catch((e) => `invalid response ${e}`);
+  const runId = existingRunId || crypto.randomUUID();
+  let length = 0;
 
-  const view = buildRunResultView(slug, filename, response);
+  const data = await fetch(
+    `${process.env.NODE_ENV === 'development' ? 'http' : 'https'}://${slug}.${
+      process.env.NEXT_PUBLIC_ZIPPER_DOT_RUN_HOST
+    }/${filename || 'main.ts'}`,
+    {
+      method: 'POST',
+      body: JSON.stringify(inputs),
+      headers: {
+        'x-zipper-run-id': runId,
+      },
+    },
+  )
+    .then((response) => response.text())
+    .then((text) => {
+      length = text.length;
+      try {
+        return JSON.parse(text);
+      } catch (e) {
+        return text;
+      }
+    });
 
-  return res.status(200).json({
-    response_action: 'update',
-    view,
-  });
+  return { slug, filename, data, runId, length };
 }
 
-function blockActionHandler(res: NextApiResponse, payload: any) {
+async function submissionHandler(res: NextApiResponse, payload: any) {
+  if (payload.view.callback_id === 'view-run-zipper-app') {
+    const loadingView = buildSlackModalView({
+      title: `${payload.view.title.text}`,
+      callbackId: 'view-zipper-app-loading',
+      blocks: [
+        {
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: 'loading...',
+          },
+        },
+      ],
+      showSubmit: false,
+      privateMetadata: payload.view.privateMetadata,
+    });
+
+    res.status(200).json({
+      response_action: 'update',
+      view: loadingView,
+    });
+
+    const view = (await buildRunResultView(await getResults(payload))) as any;
+
+    view.view_id = payload.view.id;
+
+    await updateSlackModal(view, payload.api_app_id, payload.team.id);
+  }
+}
+
+async function blockActionHandler(res: NextApiResponse, payload: any) {
   if (
     payload.actions[0]?.type === 'static_select' &&
     payload.actions[0]?.block_id === 'filename_select'
@@ -76,8 +166,18 @@ function blockActionHandler(res: NextApiResponse, payload: any) {
     return processFilenameSelection(res, payload);
   }
 
-  if (payload.actions[0]?.action_id === 'edit_and_rerun_button') {
+  const actionId = payload.actions[0]?.action_id;
+
+  if (actionId === 'edit_and_rerun_button') {
     return processRerun(res, payload);
+  }
+
+  if (actionId === 'view_raw_output_button') {
+    return processUpdatedOutput(res, payload, true);
+  }
+
+  if (actionId === 'view_screenshot_output_button') {
+    return processUpdatedOutput(res, payload, false);
   }
 
   //ignore other interaction types

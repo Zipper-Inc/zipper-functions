@@ -1,13 +1,12 @@
 import type { NextApiResponse } from 'next';
 import { prisma } from '../../../server/prisma';
-import { decryptFromBase64 } from '@zipper/utils';
+import { decryptFromBase64, getScreenshotUrl } from '@zipper/utils';
 import { getZipperDotDevUrlForServer } from '~/server/utils/server-url.utils';
 
 const SLACK_VIEW_UPDATE_URL = 'https://slack.com/api/views.update';
 const SLACK_VIEW_OPEN_URL = 'https://slack.com/api/views.open';
 const SLACK_POST_MESSAGE_URL = 'https://slack.com/api/chat.postMessage';
 const ZIPPER_APP_INFO_URL = `${getZipperDotDevUrlForServer()}/api/bootInfo`;
-const MAX_TEXT_LENGTH = 2000;
 
 async function buildHeaders(appId: string, teamId: string) {
   const installation = await prisma.slackZipperSlashCommandInstall.findFirst({
@@ -30,7 +29,7 @@ async function buildHeaders(appId: string, teamId: string) {
   };
 }
 
-export async function getBootInfo(slug: string, filename?: string) {
+export async function fetchBootInfo(slug: string, filename?: string) {
   const appInfoUrl = `${ZIPPER_APP_INFO_URL}/${slug}`;
   const appInfoResponse = await fetch(appInfoUrl, {
     method: 'POST',
@@ -46,6 +45,7 @@ type BuildSlackViewInputs = {
   blocks: any[];
   privateMetadata: string;
   showSubmit: boolean;
+  submitString?: string;
 };
 
 export function buildSlackModalView({
@@ -54,6 +54,7 @@ export function buildSlackModalView({
   blocks,
   privateMetadata,
   showSubmit,
+  submitString,
 }: BuildSlackViewInputs) {
   return {
     type: 'modal',
@@ -65,7 +66,7 @@ export function buildSlackModalView({
     submit: showSubmit
       ? {
           type: 'plain_text',
-          text: 'Run Applet',
+          text: submitString || 'Run Applet',
         }
       : undefined,
     private_metadata: privateMetadata,
@@ -110,7 +111,7 @@ export async function sendMessage(
 }
 
 export function acknowledgeSlack(res: NextApiResponse) {
-  return res.status(200).send('ok');
+  return res.send('');
 }
 
 function buildSelectOption(text: string, value: string) {
@@ -352,85 +353,75 @@ export function buildPrivateMetadata(privateMetadata: PrivateMetadata) {
   return JSON.stringify(privateMetadata);
 }
 
-export async function buildInputModal(
-  slug: string,
-  filename: string,
-  viewId: string,
-  viewHash: string,
-) {
-  const appInfo = await getBootInfo(slug, filename);
+export async function buildInputModal(slug: string, filename: string) {
+  const appInfo = await fetchBootInfo(slug, filename);
+  let filenameBlocks: any[] = [];
 
-  const blocks = [
-    ...buildFilenameSelect(appInfo.data.runnableScripts, filename),
-    { type: 'divider' },
-    {
-      type: 'section',
-      text: {
-        type: 'mrkdwn',
-        text: '*Inputs:*',
-      },
-    },
-    ...buildViewInputBlock(appInfo.data.inputs),
-  ];
-
-  return {
-    view_id: viewId,
-    hash: viewHash,
-    view: buildSlackModalView({
-      title: `${appInfo.data.app.name}`,
-      callbackId: 'view-run-zipper-app',
-      blocks,
-      privateMetadata: buildPrivateMetadata({ slug, filename }),
-      showSubmit: true,
-    }),
-  };
-}
-
-export function buildRunResultView(slug: string, filename: string, data: any) {
-  // Slack has a 250kb limit on view size so trim the response if needed.
-  const fullText = JSON.stringify(data);
-  const truncateText = fullText.length > MAX_TEXT_LENGTH;
-
-  const resultsBlocks: any[] = [
-    {
-      type: 'section',
-      text: {
-        type: 'plain_text',
-        text: truncateText
-          ? `${fullText.substring(0, MAX_TEXT_LENGTH)}...`
-          : fullText,
-      },
-    },
-  ];
-
-  if (truncateText) {
-    resultsBlocks.push({
-      type: 'section',
-      text: {
-        type: 'mrkdwn',
-        text: 'Showing truncated results',
-      },
-      accessory: {
-        type: 'button',
-        text: {
-          type: 'plain_text',
-          text: 'Full results',
-          emoji: true,
-        },
-        value: 'full_results',
-        url: `https://${slug}.zipper.run/run/${filename}`,
-        action_id: 'zipper_link',
-      },
-    });
+  if (appInfo.data.runnableScripts.length > 1) {
+    filenameBlocks = buildFilenameSelect(
+      appInfo.data.runnableScripts,
+      filename,
+    );
   }
 
-  const blocks = [
-    ...resultsBlocks,
+  if (appInfo.data.inputs.length > 0) {
+    const inputUI = [
+      { type: 'divider' },
+      {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: '*Inputs:*',
+        },
+      },
+      ...buildViewInputBlock(appInfo.data.inputs),
+    ];
+    return [...filenameBlocks, ...inputUI];
+  }
+
+  return filenameBlocks;
+}
+
+async function fetchWithTimeout(resource: string, options: any = {}) {
+  const { timeout = 5000 } = options;
+
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeout);
+
+  const response = await fetch(resource, {
+    ...options,
+    signal: controller.signal,
+  });
+  clearTimeout(id);
+
+  return response;
+}
+
+export async function buildRunResultView({
+  slug,
+  filename,
+  data,
+  runId,
+  showRawOutput,
+  length,
+}: {
+  slug: string;
+  filename: string;
+  data: any;
+  runId: string;
+  showRawOutput?: boolean;
+  length: number;
+}) {
+  const runUrl = `https://${slug}.zipper.run/run/history/${
+    runId.split('-')[0]
+  }`;
+
+  const blocks: any[] = [
     {
       type: 'section',
       text: {
-        type: 'plain_text',
-        text: ' ',
+        type: 'mrkdwn',
+        text: `<${runUrl}|View results>`,
       },
       accessory: {
         type: 'button',
@@ -442,13 +433,87 @@ export function buildRunResultView(slug: string, filename: string, data: any) {
         action_id: 'edit_and_rerun_button',
       },
     },
+    { type: 'divider' },
   ];
+
+  try {
+    if (showRawOutput) throw new Error();
+    const screenshotUrl = getScreenshotUrl(
+      `${runUrl}?resultOnly=true`,
+      '.result',
+    );
+    const response = await fetchWithTimeout(screenshotUrl);
+    blocks.push({
+      type: 'image',
+      image_url: response.url,
+      alt_text: 'screenshot of Zipper run',
+    });
+
+    if (length < 3000) {
+      blocks.push({
+        type: 'actions',
+        elements: [
+          {
+            type: 'button',
+            text: {
+              type: 'plain_text',
+              text: 'View Raw Output',
+              emoji: true,
+            },
+            value: runId,
+            action_id: 'view_raw_output_button',
+          },
+        ],
+      });
+    }
+  } catch (e) {
+    length >= 3000
+      ? blocks.push({
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: `*Too much data for Slack*. View the result <${runUrl}|here>.`,
+          },
+        })
+      : blocks.push({
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: `\`\`\`${
+              typeof data === 'object' ? JSON.stringify(data, null, 2) : data
+            }\`\`\``,
+          },
+        });
+
+    blocks.push({
+      type: 'actions',
+      elements: [
+        {
+          type: 'button',
+          text: {
+            type: 'plain_text',
+            text: 'View Screenshot',
+            emoji: true,
+          },
+          value: runId,
+          action_id: 'view_screenshot_output_button',
+        },
+      ],
+    });
+  }
 
   return buildSlackModalView({
     title: `${slug}`,
     callbackId: 'view-zipper-app-results',
     blocks,
-    privateMetadata: `{ "slug": "${slug}", "filename": "${filename}" }`,
+    privateMetadata: JSON.stringify({
+      slug,
+      filename,
+      runUrl,
+      runId,
+      data: length > 3000 ? {} : data,
+      length,
+    }),
     showSubmit: false,
   });
 }

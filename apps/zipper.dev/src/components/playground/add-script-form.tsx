@@ -10,6 +10,12 @@ import {
   Divider,
   Button,
   useColorMode,
+  Accordion,
+  AccordionButton,
+  AccordionIcon,
+  AccordionItem,
+  AccordionPanel,
+  Box,
 } from '@chakra-ui/react';
 import { useForm } from 'react-hook-form';
 import { trpc } from '~/utils/trpc';
@@ -21,7 +27,7 @@ import { useScriptFilename } from '~/hooks/use-script-filename';
 import { HiCheck } from 'react-icons/hi';
 import { Connector } from '~/connectors/createConnector';
 import { kebabCase } from '~/utils/kebab-case';
-import { cloneElement } from 'react';
+import { cloneElement, useMemo } from 'react';
 import { foregroundColors } from '@zipper/ui';
 
 export default function AddScriptForm({
@@ -64,7 +70,107 @@ export default function AddScriptForm({
     '.md',
   ]);
 
+  const connectorsList = useMemo(() => {
+    const connectors_data = {
+      databases: [],
+      appsOauth: [],
+    } as Record<'databases' | 'appsOauth', Connector[]>;
+
+    Object.values(defaultConnectors)
+      .reduce((acc, curr) => {
+        if (!connectors.find((c: any) => c.type === curr.id)) {
+          acc.unshift(curr);
+        } else {
+          acc.push(curr);
+        }
+        return acc;
+      }, [] as Array<Connector>)
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .forEach((connector) => {
+        if (['mongodb', 'postgres', 'mysql'].includes(connector.id)) {
+          return connectors_data.databases.push(connector);
+        }
+        return connectors_data.appsOauth.push(connector);
+      });
+
+    return connectors_data;
+  }, [defaultConnectors, connectors]);
+
   const { colorMode } = useColorMode();
+
+  const ConnectorLine = (connector: Connector) => {
+    if (!connectors.find((c: any) => c.type === connector.id)) {
+      return (
+        <Button
+          variant="ghost"
+          key={connector.id}
+          justifyContent="start"
+          fontWeight="normal"
+          height="3.2rem"
+          py="3"
+          w="full"
+          onClick={() => {
+            addScript.mutateAsync({
+              name: `${connector.id}-connector`,
+              code: connector.code,
+              appId,
+              order: scripts.length + connectors.length + 1,
+              connectorId: connector.id,
+            });
+          }}
+        >
+          <VStack align="start" spacing="0.5">
+            <HStack key={connector.id}>
+              {connector.icon &&
+                cloneElement(connector.icon, {
+                  color:
+                    colorMode === 'light'
+                      ? foregroundColors['fg.800'].default
+                      : foregroundColors['fg.800']._dark,
+                })}
+              <Text color="fg.600">{connector.name}</Text>
+            </HStack>
+            {connector.description && (
+              <Text fontSize="xs" color="fg.500" pl="6">
+                {connector.description}
+              </Text>
+            )}
+          </VStack>
+        </Button>
+      );
+    } else {
+      return (
+        <Button
+          key={connector.id}
+          variant="ghost"
+          justifyContent="start"
+          fontWeight="normal"
+          onClick={() => undefined}
+          color="fg.400"
+          _hover={{
+            bg: 'bg.50',
+            cursor: 'default',
+          }}
+        >
+          <HStack
+            key={connector.id}
+            w="full"
+            justifyContent="space-between"
+            spacing={4}
+          >
+            <HStack>
+              {connector.icon}
+              <Text>{connector.name}</Text>
+            </HStack>
+            <HStack color="fg.400" spacing={1} fontSize="xs">
+              <Text>CONNECTED</Text>
+              <HiCheck />
+            </HStack>
+          </HStack>
+        </Button>
+      );
+    }
+  };
 
   return (
     <VStack alignItems="stretch" spacing={0} gap={4} minW={0}>
@@ -121,94 +227,57 @@ export default function AddScriptForm({
           </VStack>
         </form>
       </VStack>
-      <Divider />
       <VStack alignItems="stretch">
-        <Text size="sm" color="fg.700" fontWeight="medium" px="3" pb="1">
-          Add a pre-built connector
-        </Text>
-        <VStack align="stretch" spacing="0" pb="4">
-          {Object.values(defaultConnectors)
-            .reduce((acc, curr) => {
-              if (!connectors.find((c: any) => c.type === curr.id)) {
-                acc.unshift(curr);
-              } else {
-                acc.push(curr);
-              }
-              return acc;
-            }, [] as Array<Connector>)
-            .sort((a, b) => a.name.localeCompare(b.name))
-            .map((connector) => {
-              if (!connectors.find((c: any) => c.type === connector.id)) {
-                return (
-                  <Button
-                    variant="ghost"
-                    key={connector.id}
-                    justifyContent="start"
-                    fontWeight="normal"
-                    height="3.2rem"
-                    py="3"
-                    onClick={() => {
-                      addScript.mutateAsync({
-                        name: `${connector.id}-connector`,
-                        code: connector.code,
-                        appId,
-                        order: scripts.length + connectors.length + 1,
-                        connectorId: connector.id,
-                      });
-                    }}
+        <VStack align="stretch" spacing="0">
+          <Accordion defaultIndex={[0]} allowMultiple>
+            <AccordionItem>
+              <h2>
+                <AccordionButton bg="fg.100" _hover={{ bg: 'fg.200' }} h={6}>
+                  <Box
+                    as="span"
+                    flex="1"
+                    textAlign="left"
+                    fontSize="sm"
+                    color="fg.600"
+                    fontWeight="bold"
+                    textTransform="uppercase"
                   >
-                    <VStack align="start" spacing="0.5">
-                      <HStack key={connector.id}>
-                        {connector.icon &&
-                          cloneElement(connector.icon, {
-                            color:
-                              colorMode === 'light'
-                                ? foregroundColors['fg.800'].default
-                                : foregroundColors['fg.800']._dark,
-                          })}
-                        <Text color="fg.600">{connector.name}</Text>
-                      </HStack>
-                      {connector.description && (
-                        <Text fontSize="xs" color="fg.500" pl="6">
-                          {connector.description}
-                        </Text>
-                      )}
-                    </VStack>
-                  </Button>
-                );
-              } else {
-                return (
-                  <Button
-                    key={connector.id}
-                    variant="ghost"
-                    justifyContent="start"
-                    fontWeight="normal"
-                    onClick={() => undefined}
-                    color="fg.400"
-                    _hover={{
-                      bg: 'bg.100',
-                      cursor: 'default',
-                    }}
+                    Apps & Oauth
+                  </Box>
+                  <AccordionIcon />
+                </AccordionButton>
+              </h2>
+              <AccordionPanel px={0} py={0}>
+                {connectorsList.appsOauth.map((connector) => (
+                  <ConnectorLine key={connector.id} {...connector} />
+                ))}
+              </AccordionPanel>
+            </AccordionItem>
+
+            <AccordionItem>
+              <h2>
+                <AccordionButton bg="fg.100" _hover={{ bg: 'fg.200' }} h={6}>
+                  <Box
+                    as="span"
+                    flex="1"
+                    textAlign="left"
+                    fontSize="sm"
+                    color="fg.600"
+                    fontWeight="bold"
+                    textTransform="uppercase"
                   >
-                    <HStack
-                      key={connector.id}
-                      w="full"
-                      justifyContent="space-between"
-                      spacing={4}
-                    >
-                      <HStack>
-                        {connector.icon}
-                        <Text>{connector.name}</Text>
-                      </HStack>
-                      <HStack color="fg.400" spacing={1} fontSize="xs">
-                        <Text>CONNECTED</Text>
-                        <HiCheck />
-                      </HStack>
-                    </HStack>
-                  </Button>
-                );
-              }
-            })}
+                    Databases
+                  </Box>
+                  <AccordionIcon />
+                </AccordionButton>
+              </h2>
+              <AccordionPanel px={0} py={0}>
+                {connectorsList.databases.map((connector) => (
+                  <ConnectorLine key={connector.id} {...connector} />
+                ))}
+              </AccordionPanel>
+            </AccordionItem>
+          </Accordion>
         </VStack>
       </VStack>
     </VStack>

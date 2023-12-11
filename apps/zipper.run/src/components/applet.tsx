@@ -9,9 +9,9 @@ import {
   useDisclosure,
   VStack,
 } from '@chakra-ui/react';
-import { motion } from 'framer-motion';
 import {
   AppInfo,
+  BootInfoWithUserInfo,
   EntryPointInfo,
   InputParams,
   UserAuthConnector,
@@ -31,10 +31,14 @@ import {
 import {
   getInputsFromFormData,
   getScreenshotUrl,
-  ZIPPER_TEMP_USER_ID_COOKIE_NAME,
-  ZIPPER_TEMP_USER_ID_HEADER,
+  NOT_FOUND,
+  UNAUTHORIZED,
+  __ZIPPER_TEMP_USER_ID,
+  X_ZIPPER_TEMP_USER_ID,
+  X_ZIPPER_ACCESS_TOKEN,
 } from '@zipper/utils';
 import { deleteCookie } from 'cookies-next';
+import { motion } from 'framer-motion';
 import { GetServerSideProps } from 'next';
 import Error from 'next/error';
 import Head from 'next/head';
@@ -42,9 +46,10 @@ import { useRouter } from 'next/router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { HiChevronDoubleLeft, HiChevronDoubleRight } from 'react-icons/hi2';
-import getBootInfo from '~/utils/get-boot-info';
+import TimeAgo from 'react-timeago';
+import { fetchBootPayloadCachedWithUserInfoOrThrow } from '~/utils/get-boot-info';
 import { getConnectorsAuthUrl } from '~/utils/get-connectors-auth-url';
-import { getBootUrl, getRelayUrl } from '~/utils/get-relay-url';
+import { getRelayUrl } from '~/utils/get-relay-url';
 import getValidSubdomain from '~/utils/get-valid-subdomain';
 import { getFilenameAndVersionFromPath } from '~/utils/get-values-from-url';
 import { getZipperAuth } from '~/utils/get-zipper-auth';
@@ -59,7 +64,6 @@ import ConnectorsAuthInputsSection from './connectors-auth-inputs-section';
 import Header from './header';
 import InputSummary from './input-summary';
 import Unauthorized from './unauthorized';
-import TimeAgo from 'react-timeago';
 
 const { __DEBUG__ } = process.env;
 
@@ -86,6 +90,8 @@ export type AppPageProps = {
   handlerConfigs?: Record<string, Zipper.HandlerConfig>;
   token?: string;
   runUrl?: string;
+  softRedirect?: string | null;
+  resultOnly?: boolean;
 };
 
 export function AppPage({
@@ -107,6 +113,8 @@ export function AppPage({
   handlerConfigs,
   token,
   runUrl,
+  softRedirect,
+  resultOnly,
 }: AppPageProps) {
   const router = useRouter();
   const { asPath } = router;
@@ -141,6 +149,13 @@ export function AppPage({
   });
 
   const previousRouteRef = useRef(asPath);
+
+  // Perform a soft redirect if we have this prop
+  useEffect(() => {
+    if (softRedirect) {
+      window.history.replaceState({}, '', softRedirect);
+    }
+  }, []);
 
   // We have to do this so that the results aren't SSRed
   // (if they are DOMParser in FunctionOutput will be undefined)
@@ -247,7 +262,7 @@ export function AppPage({
               token,
             });
           } else {
-            deleteCookie(ZIPPER_TEMP_USER_ID_COOKIE_NAME);
+            deleteCookie(__ZIPPER_TEMP_USER_ID);
           }
           router.reload();
         },
@@ -262,7 +277,7 @@ export function AppPage({
               token,
             });
           } else {
-            deleteCookie(ZIPPER_TEMP_USER_ID_COOKIE_NAME);
+            deleteCookie(__ZIPPER_TEMP_USER_ID);
           }
           router.reload();
         },
@@ -277,7 +292,7 @@ export function AppPage({
               token,
             });
           } else {
-            deleteCookie(ZIPPER_TEMP_USER_ID_COOKIE_NAME);
+            deleteCookie(__ZIPPER_TEMP_USER_ID);
           }
           router.reload();
         },
@@ -315,7 +330,7 @@ export function AppPage({
     });
   }, [userAuthConnectors]);
 
-  if (errorCode === 'UNAUTHORIZED') {
+  if (errorCode === UNAUTHORIZED) {
     return <Unauthorized />;
   }
 
@@ -323,7 +338,7 @@ export function AppPage({
     return <Error statusCode={404} title={'App not published yet'} />;
   }
 
-  if (errorCode === 'NOT_FOUND' || !app) {
+  if (errorCode === NOT_FOUND || !app) {
     return <Error statusCode={404} />;
   }
   const initialContent = (
@@ -506,6 +521,20 @@ export function AppPage({
   );
 
   if (isEmbedded) return content;
+  if (resultOnly)
+    return (
+      <div
+        className="result"
+        style={{
+          width: 'fit-content',
+          minWidth: '600px',
+          minHeight: '600px',
+          padding: 2,
+        }}
+      >
+        {output}
+      </div>
+    );
 
   const appletUrl = `https://${app.slug}.zipper.run`;
 
@@ -549,7 +578,6 @@ export const getServerSideProps: GetServerSideProps = async ({
   query,
   resolvedUrl,
 }) => {
-  console.log({ url: req.url, resolvedUrl, query });
   const host = req.headers['x-zipper-host'] || req.headers.host;
   const isEmbedUrl = /\/embed\//.test(resolvedUrl);
   const isRunUrl = /^\/run(\/|\?|$)/.test(resolvedUrl);
@@ -557,7 +585,11 @@ export const getServerSideProps: GetServerSideProps = async ({
 
   // validate subdomain
   const subdomain = getValidSubdomain(host as string);
-  if (__DEBUG__) console.log('getValidSubdomain', { subdomain, host });
+  if (__DEBUG__)
+    console.log('applet.tsx | getServerSideProps | getValidSubdomain', {
+      subdomain,
+      host,
+    });
   if (!subdomain) return { notFound: true };
 
   const { version: versionFromUrl, filename: filenameFromUrl } =
@@ -565,69 +597,81 @@ export const getServerSideProps: GetServerSideProps = async ({
       ((query.versionAndFilename as string[]) || []).join('/'),
       [],
     );
-  if (__DEBUG__) console.log({ versionFromUrl, filename: filenameFromUrl });
+  if (__DEBUG__)
+    console.log('applet.tsx | getServerSideProps', {
+      versionFromUrl,
+      filename: filenameFromUrl,
+      host,
+      reqUrl: req.url,
+      resolvedUrl,
+    });
 
   const { token, userId } = await getZipperAuth(req);
+  const tempUserId = req.cookies[__ZIPPER_TEMP_USER_ID];
 
-  // grab the app if it exists
-  const bootInfoResult = await getBootInfo({
-    subdomain,
-    tempUserId: req.cookies[ZIPPER_TEMP_USER_ID_COOKIE_NAME],
-    filename: filenameFromUrl,
-    token,
-  });
-
-  if (__DEBUG__) console.log('getBootInfo', { result: bootInfoResult });
-  if (!bootInfoResult.ok) {
-    return { props: { errorCode: bootInfoResult.error } };
+  let bootPayload;
+  try {
+    bootPayload = await fetchBootPayloadCachedWithUserInfoOrThrow({
+      subdomain,
+      tempUserId,
+      version: versionFromUrl,
+      filename: filenameFromUrl,
+      token,
+    });
+  } catch (e: any) {
+    return {
+      props: { errorCode: e?.message || e || 'Error fetching payload' },
+    };
   }
 
-  const {
-    app,
-    inputs: inputParams,
-    userAuthConnectors,
-    entryPoint,
-    runnableScripts,
-  } = bootInfoResult.data;
+  if (!bootPayload) return { notFound: true };
 
-  const metadata = bootInfoResult.data.metadata || {};
+  if (__DEBUG__)
+    console.log(
+      'applet.tsx | getServerSideProps',
+      `bootPayload for ${req.url?.toString()}`,
+      bootPayload,
+    );
+
+  const { bootInfo } = bootPayload;
+  const { app, inputs: inputParams, entryPoint, runnableScripts } = bootInfo;
+
+  const metadata = bootInfo.metadata || {};
 
   const headers: Record<string, string> = {
     Authorization: `Bearer ${token || ''}`,
-    [ZIPPER_TEMP_USER_ID_HEADER]:
-      req.cookies[ZIPPER_TEMP_USER_ID_COOKIE_NAME] || '',
+    [X_ZIPPER_TEMP_USER_ID]: tempUserId || '',
   };
 
-  const version = versionFromUrl || 'latest';
-  const filename = filenameFromUrl || 'main.ts';
+  const version = (versionFromUrl || 'latest').replace(/^@/, '');
+  let filename = filenameFromUrl || 'main.ts';
+  if (!filename.endsWith('.ts')) filename = `${filename}.ts}`;
 
-  // boot it up
-  // todo cache this
-  const bootUrl = getBootUrl({ slug: bootInfoResult.data.app.slug });
-  const payload = await fetch(bootUrl, {
-    headers: {
-      Authorization: `Bearer ${token || ''}`,
-    },
-  }).then((r) => r.text());
+  if (!runnableScripts.includes(filename)) return { notFound: true };
 
-  if (payload === 'UNAUTHORIZED' || payload === 'INVALID_VERSION')
-    return { props: { errorCode: payload } };
+  const { configs: handlerConfigs } = bootPayload;
 
-  const { configs: handlerConfigs } = JSON.parse(payload) as Zipper.BootPayload;
   const config = handlerConfigs && handlerConfigs[filename];
 
-  const urlValues = getInputValuesFromUrl({
-    inputs: inputParams,
-    query,
-    url: req.url,
-  });
+  const urlValues = inputParams
+    ? getInputValuesFromUrl({
+        inputs: inputParams,
+        query,
+        url: req.url,
+      })
+    : {};
 
   const isAutoRun = config?.run && !isRunUrl && isInitialServerSideProps;
   const isRunPathMissing = isRunUrl && !query.versionAndFilename;
   const shouldRedirect = isAutoRun || isRunPathMissing;
 
+  let softRedirect = null;
+
   if (shouldRedirect) {
-    const runUrl = new URL(resolvedUrl || '', bootUrl);
+    if (__DEBUG__)
+      console.log('shouldRedirect', { isAutoRun, isRunPathMissing });
+
+    const runUrl = new URL(resolvedUrl || '', getRelayUrl({ slug: subdomain }));
     runUrl.pathname = isEmbedUrl
       ? `/run/embed/${filename}`
       : `/run/${filename}`;
@@ -646,27 +690,32 @@ export const getServerSideProps: GetServerSideProps = async ({
       });
     }
 
-    return {
-      redirect: {
-        destination: runUrl.toString(),
-        permanent: false,
-      },
-    };
+    softRedirect = runUrl.toString();
   }
 
   let hideRun = false;
   let result = null;
 
-  if (isRunUrl) {
-    // now that we're on a run URL, run it!
-    const inputs = getRunValues({ inputParams, url: req.url, query });
+  if (isAutoRun || isRunUrl) {
+    const url = softRedirect || req.url;
+    const inputs = getRunValues({
+      inputParams,
+      url,
+      query,
+    });
+
+    if (__DEBUG__)
+      console.log('applet.tsx | getServerSideProps | isRunUrl', {
+        inputParams,
+        url,
+        query,
+        inputs,
+      });
 
     result = await fetch(
       getRelayUrl({
         slug: app.slug,
-        path: Array.isArray(query.versionAndFilename)
-          ? query.versionAndFilename.join('/')
-          : query.versionAndFilename,
+        path: [version, filename].join('/'),
       }),
       {
         method: 'POST',
@@ -714,7 +763,12 @@ export const getServerSideProps: GetServerSideProps = async ({
     ...urlValues,
   };
 
-  if (__DEBUG__) console.log({ defaultValues });
+  if (__DEBUG__)
+    console.log(
+      'applet.tsx | getServerSideProps ',
+      'run url default values',
+      defaultValues,
+    );
 
   inputParams.forEach((i) => {
     const inputConfig = config?.inputs?.[i.key];
@@ -731,7 +785,8 @@ export const getServerSideProps: GetServerSideProps = async ({
       inputs: inputParams,
       version,
       defaultValues: isRunUrl ? urlValues : defaultValues,
-      userAuthConnectors,
+      userAuthConnectors:
+        (bootInfo as BootInfoWithUserInfo).userAuthConnectors || [],
       entryPoint,
       runnableScripts,
       metadata,
@@ -739,14 +794,16 @@ export const getServerSideProps: GetServerSideProps = async ({
       handlerConfigs,
       hideRun,
       result,
-      token: req.headers['x-zipper-access-token'] || null,
+      softRedirect,
+      token: req.headers[X_ZIPPER_ACCESS_TOKEN] || null,
       key: resolvedUrl,
     },
   };
 
   const { githubAuthUrl, slackAuthUrl } = getConnectorsAuthUrl({
-    userAuthConnectors,
-    userId: userId || (req.cookies[ZIPPER_TEMP_USER_ID_COOKIE_NAME] as string),
+    userAuthConnectors:
+      (bootInfo as BootInfoWithUserInfo).userAuthConnectors || [],
+    userId: userId || (req.cookies[__ZIPPER_TEMP_USER_ID] as string),
     appId: app.id,
     host: req.headers.host,
   });

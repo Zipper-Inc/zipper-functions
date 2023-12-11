@@ -4,18 +4,25 @@ export type ConnectorType =
   | 'slack'
   | 'openai'
   | 'zendesk'
+  | 'postgres'
+  | 'mysql'
+  | 'mongodb'
   | 'discord'
   | 'notion';
 
 export type UserAuthConnectorType = 'github' | 'slack';
 
-export type UserAuthConnector = {
-  type: UserAuthConnectorType;
+export type Connector = {
+  type: ConnectorType;
   appId: string;
   isUserAuthRequired: boolean;
   clientId?: string;
   userScopes: string[];
   workspaceScopes: string[];
+};
+
+export type UserAuthConnector = Connector & {
+  type: UserAuthConnectorType;
   appConnectorUserAuths: Required<{
     encryptedAccessToken: string;
     connectorType: string;
