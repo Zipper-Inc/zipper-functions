@@ -113,9 +113,7 @@ function UserSettings() {
                           </Td>
                           <Td textAlign="end">
                             <Button
-                              onClick={() =>
-                                setActive && setActive(organization.id)
-                              }
+                              onClick={() => setActive?.(organization.id)}
                               variant="outline"
                               size="sm"
                               colorScheme="purple"

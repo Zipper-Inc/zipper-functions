@@ -6,7 +6,6 @@ import {
   Text,
   VStack,
 } from '@chakra-ui/react';
-import { TITLE_COLUMN_MIN_WIDTH } from '~/components/playground/constants';
 import { NextPageWithLayout } from './_app';
 
 import { useEffect, useState } from 'react';
@@ -23,8 +22,15 @@ const ChangelogPage: NextPageWithLayout = () => {
   }, []);
 
   return (
-    <HStack spacing={0} flex={1} alignItems="start" gap={16} px={10}>
-      <VStack flex={1} alignItems="stretch" minW={TITLE_COLUMN_MIN_WIDTH}>
+    <HStack
+      spacing={0}
+      flex={1}
+      alignItems="start"
+      gap={{ base: 8, sm: 16 }}
+      px={{ base: 4, sm: 10 }}
+      flexDirection={{ base: 'column', sm: 'row' }}
+    >
+      <VStack flex={1} alignItems="stretch">
         <Heading as="h6" pb="4" fontWeight={400}>
           Changelog
         </Heading>
@@ -41,10 +47,14 @@ const ChangelogPage: NextPageWithLayout = () => {
                 key={entry.id}
                 _notFirst={{ pt: '10' }}
                 pb="10"
-                w="prose"
+                w={{ sm: 'prose' }}
               >
                 <Text fontSize="sm" fontFamily="mono">
-                  {entry.date.split('T')[0]}
+                  {new Date(entry.date).toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric',
+                  })}
                 </Text>
                 <Markdown>{entry.content}</Markdown>
                 <details>

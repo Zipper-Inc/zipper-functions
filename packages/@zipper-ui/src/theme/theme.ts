@@ -278,11 +278,11 @@ export const theme = extendTheme({
         boxSizing: 'border-box',
       },
       body: {
-        height: '100vh',
+        height: '100%',
+        maxHeight: '100dvh',
         padding: 0,
         margin: 0,
         display: 'flex',
-        flexDirection: 'column',
         overflow: 'auto',
       },
 

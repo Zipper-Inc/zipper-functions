@@ -54,7 +54,7 @@ export function Gallery({
   const { organizationList, setActive } = useOrganizationList();
   const [isNavigating, setIsNavigating] = useState(false);
   const [appSearchTerm, setAppSearchTerm] = useState<string | undefined>();
-  const { isOpen, onClose, onOpen } = useDisclosure();
+  const createAppModal = useDisclosure();
   const [resourceOwner, setResourceOwner] = useState<
     ResourceOwnerSlug | undefined
   >();
@@ -113,7 +113,14 @@ export function Gallery({
           {heading || resourceOwner?.slug}
         </Heading>
       </VStack>
-      <HStack spacing={0} flex={1} alignItems="start" gap={16} w="full">
+      <HStack
+        spacing={0}
+        flex={1}
+        alignItems="start"
+        gap={16}
+        w="full"
+        flexDirection={{ base: 'column', sm: 'row' }}
+      >
         <VStack flex={1} alignItems="stretch" minW={TITLE_COLUMN_MIN_WIDTH}>
           <Text color="fg.600" pb="4" whiteSpace="pre-line">
             {subheading || resourceOwner?.slug}
@@ -141,7 +148,7 @@ export function Gallery({
             </Button>
           )}
           {isPublicGallery && (
-            <Accordion pt="10" allowMultiple allowToggle>
+            <Accordion pt="10" allowMultiple>
               <AccordionItem>
                 <AccordionButton>
                   <Box
@@ -184,13 +191,17 @@ export function Gallery({
         <VStack align="stretch" flex={3} pb="10">
           {showManage && setActive && (
             <>
-              <Modal isOpen={isOpen} onClose={onClose} size="4xl">
+              <Modal
+                isOpen={createAppModal.isOpen}
+                onClose={createAppModal.onClose}
+                size="4xl"
+              >
                 <ModalOverlay />
                 <ModalContent h="2xl">
                   <ModalCloseButton />
                   <ModalBody>
                     <Center mt="6">
-                      <CreateAppForm onClose={onClose} />
+                      <CreateAppForm onClose={createAppModal.onClose} />
                     </Center>
                   </ModalBody>
                 </ModalContent>
@@ -215,7 +226,7 @@ export function Gallery({
                         ? resourceOwner?.resourceOwnerId
                         : null,
                     );
-                    onOpen();
+                    createAppModal.onOpen();
                   }}
                 >
                   <Icon as={HiPlus} mr="2" />
@@ -224,11 +235,7 @@ export function Gallery({
               </HStack>
             </>
           )}
-          <SimpleGrid
-            minChildWidth="500px"
-            gridGap={6}
-            // bgColor="fg.50"
-          >
+          <SimpleGrid minChildWidth={{ sm: '500px' }} gridGap={6}>
             {(apps || [])
               .filter((app) => {
                 if (!appSearchTerm) return true;
