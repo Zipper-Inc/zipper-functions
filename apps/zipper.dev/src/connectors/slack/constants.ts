@@ -2,8 +2,7 @@ export const code = `import { WebClient } from 'https://deno.land/x/slack_web_ap
 import { initApplet } from 'https://deno.land/x/zipper_client_js@v0.1.7/mod.ts';
 import { SlackUserAuth } from 'https://zipper.dev/zipper-inc/slack-install-link/src/main.ts';
 
-export const slackConnectorConfig: Partial<SlackUserAuth> =
-  UPDATE_MY_CONFIG_HERE;
+export const slackConnectorConfig: Partial<SlackUserAuth> = {};
 
 // This is an Slack API client intialized with the applet developer's Slack token
 // THIS CLIENT DOES NOT USE THE USER TOKEN
