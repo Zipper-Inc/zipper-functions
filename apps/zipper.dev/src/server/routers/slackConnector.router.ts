@@ -29,42 +29,22 @@ export const slackConnectorRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       await hasAppReadPermission({ ctx, appId: input.appId });
 
-      // get slack-connector file code
-      const script = await prisma.script.findFirst({
+      const app = await prisma.app.findFirst({
         where: {
-          appId: input.appId,
-          name: 'slack-connector.ts',
+          id: input.appId,
         },
         select: {
-          code: true,
-          id: true,
+          slug: true,
         },
       });
-      if (!script?.code) {
+      if (!app?.slug) {
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
-          message: 'No slack-connector script found',
+          message: 'No app found',
         });
       }
-      const slackConfig = getSlackConfig(script.code);
-
-      const appConnectorFromDB = await prisma.appConnector.findFirst({
-        where: {
-          appId: input.appId,
-          type: 'slack',
-        },
-        select: {
-          events: true,
-          type: true,
-          isUserAuthRequired: true,
-          metadata: true,
-        },
-      });
-
-      return {
-        ...slackConfig,
-        ...appConnectorFromDB,
-      };
+      const slackConfig = getSlackConfig(app?.slug);
+      return slackConfig || null;
     }),
   getAuthUrl: publicProcedure
     .input(
