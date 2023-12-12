@@ -13,6 +13,7 @@ import {
   AppInfo,
   BootInfoWithUserInfo,
   EntryPointInfo,
+  InputParam,
   InputParams,
   UserAuthConnector,
   ZipperLocation,
@@ -561,7 +562,10 @@ export function AppPage({
         <Header
           {...app}
           token={token}
-          entryPoint={entryPoint}
+          entryPoint={{
+            filename: filename!,
+            editUrl: entryPoint!.editUrl.replace('main.ts', filename!),
+          }}
           runnableScripts={runnableScripts}
           runId={latestRunId}
           setScreen={setScreen}
@@ -634,20 +638,21 @@ export const getServerSideProps: GetServerSideProps = async ({
     );
 
   const { bootInfo } = bootPayload;
-  const { app, inputs: inputParams, entryPoint, runnableScripts } = bootInfo;
-
-  const metadata = bootInfo.metadata || {};
-
-  const headers: Record<string, string> = {
-    Authorization: `Bearer ${token || ''}`,
-    [X_ZIPPER_TEMP_USER_ID]: tempUserId || '',
-  };
+  const { app, entryPoint, parsedScripts, runnableScripts } = bootInfo;
 
   const version = (versionFromUrl || 'latest').replace(/^@/, '');
   let filename = filenameFromUrl || 'main.ts';
   if (!filename.endsWith('.ts')) filename = `${filename}.ts}`;
 
   if (!runnableScripts.includes(filename)) return { notFound: true };
+
+  const inputParams: InputParams = parsedScripts[filename]?.inputs || {};
+  const metadata = bootInfo.metadata || {};
+
+  const headers: Record<string, string> = {
+    Authorization: `Bearer ${token || ''}`,
+    [X_ZIPPER_TEMP_USER_ID]: tempUserId || '',
+  };
 
   const { configs: handlerConfigs } = bootPayload;
 
