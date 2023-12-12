@@ -13,6 +13,7 @@ import {
   AppInfo,
   BootInfoWithUserInfo,
   EntryPointInfo,
+  InputParam,
   InputParams,
   UserAuthConnector,
   ZipperLocation,
@@ -645,7 +646,7 @@ export const getServerSideProps: GetServerSideProps = async ({
 
   if (!runnableScripts.includes(filename)) return { notFound: true };
 
-  const inputParams = parsedScripts[filename]?.inputs || {};
+  const inputParams: InputParams = parsedScripts[filename]?.inputs || {};
   const metadata = bootInfo.metadata || {};
 
   const headers: Record<string, string> = {
