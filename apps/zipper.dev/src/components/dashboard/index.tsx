@@ -245,7 +245,12 @@ export function Dashboard() {
 
   return (
     <>
-      <VStack flex={1} paddingX={10} alignItems="stretch" spacing={0}>
+      <VStack
+        flex={1}
+        paddingX={{ base: 4, md: 10 }}
+        alignItems="stretch"
+        spacing={0}
+      >
         <Tabs
           colorScheme="purple"
           flex={1}

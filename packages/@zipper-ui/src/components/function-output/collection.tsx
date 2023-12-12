@@ -118,7 +118,14 @@ function TableCollection(props: Props) {
         if (!keys.includes(key)) keys.push(key);
       });
     });
-    return keys.map((key) => ({ Header: key, accessor: key }));
+    return keys
+      .filter((key) => {
+        return !props.data.every((record) => record[key] === null);
+      })
+      .map((key) => ({
+        Header: key.replaceAll('_', ' '),
+        accessor: key,
+      }));
   }, [props.data]);
 
   const data = useMemo(
@@ -199,7 +206,7 @@ function TableCollection(props: Props) {
                     <Td {...cell.getCellProps()}></Td>;
                   }
                   return (
-                    <Td py={3} px={2} {...cell.getCellProps()}>
+                    <Td py={4} px={4} {...cell.getCellProps()}>
                       <SmartFunctionOutput
                         result={cell.value}
                         tableLevel={props.tableLevel + 1}

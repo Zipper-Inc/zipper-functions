@@ -97,11 +97,7 @@ function TableArray(props: Props) {
     useTable({ columns, data }, useSortBy);
 
   if (!props.data.length) {
-    return (
-      <Text color="fg.500" py={2}>
-        No results
-      </Text>
-    );
+    return <Text color="fg.500">No results</Text>;
   }
 
   if (props.heading && expandable) {

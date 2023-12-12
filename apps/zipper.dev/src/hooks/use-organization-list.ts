@@ -48,9 +48,8 @@ export const useOrganizationList = () => {
     isLoaded,
     currentOrganizationId,
     setActive: isAuthed
-      ? (organizationId: string | null) => {
-          session.update({ currentOrganizationId: organizationId });
-        }
+      ? (organizationId: string | null) =>
+          session.update({ currentOrganizationId: organizationId })
       : undefined,
   };
 };

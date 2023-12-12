@@ -137,7 +137,7 @@ export const OrganizationSwitcher: React.FC<ButtonProps> = (props) => {
                   if (org.pending) {
                     router.push(`/${org.organization.slug}`);
                   } else {
-                    setActive && setActive(org.organization.id);
+                    await setActive?.(org.organization.id);
                   }
                 }}
                 backgroundColor="fg.50"

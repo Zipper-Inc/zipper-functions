@@ -27,10 +27,30 @@ export function SmartFunctionOutput({
   heading?: string;
   parsedResult?: ReturnType<typeof parseResult>;
 }) {
-  const { config } = useSmartFunctionOutputContext();
+  const { config, runHistoryUrl } = useSmartFunctionOutputContext();
 
   // if result === 0, it'll be evaluated as falsey by !result
   if (result === undefined || result === null) return null;
+
+  if (
+    window.location.href.includes('zipper.dev') ||
+    window.location.href.includes('localhost')
+  ) {
+    const len = JSON.stringify(result || {}).length;
+    if (len > 6000) {
+      return (
+        <>
+          <p>
+            Too large to preview inline. Open in a{' '}
+            <Link target="_new" href={runHistoryUrl} textDecor="underline">
+              new tab
+            </Link>
+            .
+          </p>
+        </>
+      );
+    }
+  }
 
   const { type, data } = parsedResultPassedIn || parseResult(result);
 
