@@ -1,9 +1,11 @@
 import {
   Box,
   Button,
+  Center,
   Heading,
   HStack,
   Progress,
+  Spinner,
   Stack,
   Text,
   useDisclosure,
@@ -22,6 +24,7 @@ import {
   FunctionOutput,
   useAppletContent,
   useCmdOrCtrl,
+  useUploadContext,
   withDefaultTheme,
 } from '@zipper/ui';
 import {
@@ -150,6 +153,9 @@ export function AppPage({
 
   const previousRouteRef = useRef(asPath);
 
+  const { isUploading } = useUploadContext();
+  const [isWaitingForUpload, setIsWaitingForUpload] = useState(false);
+
   // Perform a soft redirect if we have this prop
   useEffect(() => {
     if (softRedirect) {
@@ -207,7 +213,20 @@ export function AppPage({
     }
   }, [handlerConfigs, filename]);
 
+  useEffect(() => {
+    if (!isUploading && isWaitingForUpload) {
+      setIsWaitingForUpload(false);
+      runApp();
+    }
+  }, [isUploading, isWaitingForUpload]);
+
   const runApp = async () => {
+    if (isUploading) {
+      // If an upload is in progress, wait for it to finish
+      setIsWaitingForUpload(true);
+      return;
+    }
+
     const embedPath = isEmbedded ? 'embed/' : '';
     if (!loading) {
       setLoading(true);
@@ -405,8 +424,6 @@ export function AppPage({
   );
 
   const content = (
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
     <Stack
       as="main"
       position="relative"
@@ -557,18 +574,26 @@ export function AppPage({
         <meta property="og:type" content="website" />
         <meta property="og:url" content={runUrl || appletUrl} />
       </Head>
-      <VStack flex={1} alignItems="stretch" spacing={4}>
-        <Header
-          {...app}
-          token={token}
-          entryPoint={entryPoint}
-          runnableScripts={runnableScripts}
-          runId={latestRunId}
-          setScreen={setScreen}
-          setLoading={setLoading}
-        />
-        {content}
-      </VStack>
+      {isWaitingForUpload ? (
+        <Box w="100%" h="100vh">
+          <Center h="100%">
+            <Spinner color="purple" w="20px" h="20px" />
+          </Center>
+        </Box>
+      ) : (
+        <VStack flex={1} alignItems="stretch" spacing={4}>
+          <Header
+            {...app}
+            token={token}
+            entryPoint={entryPoint}
+            runnableScripts={runnableScripts}
+            runId={latestRunId}
+            setScreen={setScreen}
+            setLoading={setLoading}
+          />
+          {content}
+        </VStack>
+      )}
     </>
   );
 }

@@ -27,6 +27,7 @@ import { getFieldName } from '@zipper/utils';
 import { ErrorBoundary } from './error-boundary';
 import { AutoResizeTextarea } from './auto-resize-text-area';
 import { UploadButton } from './file-upload/uploadthing';
+import { useUploadContext } from './upload-button-context';
 
 interface Props {
   params: InputParam[];
@@ -79,6 +80,7 @@ function FunctionParamInput({
   details?: any;
 }) {
   const { register, watch, getValues } = formContext;
+  const { isUploading, setIsUploading } = useUploadContext();
 
   const name = getFieldName(inputKey, type);
   const formFieldOptions: RegisterOptions<FieldValues, string> = {
@@ -257,12 +259,16 @@ function FunctionParamInput({
           gap={2}
         >
           <UploadButton
-            endpoint="imageUploader"
-            onUploadBegin={() => {
-              // Do something when upload begins
+            onUploadProgress={() => {
+              setIsUploading(true);
             }}
+            onUploadBegin={() => {
+              setIsUploading(true);
+            }}
+            endpoint="imageUploader"
             onClientUploadComplete={(res) => {
               formContext.setValue(name, res[0]?.url);
+              setIsUploading(false);
             }}
             onUploadError={(error: Error) => {
               // Do something with the error.

@@ -1,7 +1,8 @@
 import type { AppProps } from 'next/app';
 import '@fontsource/inter';
 import '@fontsource/inter/variable.css';
-import { useEffectOnce } from '@zipper/ui';
+import '@uploadthing/react/styles.css';
+import { UploadProvider, useEffectOnce } from '@zipper/ui';
 import { ZipperLocation } from '@zipper/types';
 import { useEffect, useState } from 'react';
 import { Router } from 'next/router';
@@ -42,7 +43,9 @@ function MyApp({ Component, pageProps }: AppProps) {
           </Center>
         </Box>
       ) : (
-        <Component {...pageProps} />
+        <UploadProvider>
+          <Component {...pageProps} />
+        </UploadProvider>
       )}
     </>
   );

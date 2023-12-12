@@ -255,6 +255,12 @@ export const middleware = async (request: NextRequest) => {
       headers: Object.fromEntries(request.headers.entries()),
     });
 
+  if (request.url.includes('/api/uploadthing')) {
+    return NextResponse.next({
+      request: { headers: new Headers(request.headers) },
+    });
+  }
+
   const { userId, accessToken } = await checkAuthCookies(request);
   request.headers.set('x-nonce', nonce);
   request.headers.set(

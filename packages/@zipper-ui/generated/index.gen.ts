@@ -42,6 +42,7 @@ export * from '../src/components/function-user-connectors-input';
 export * from '../src/components/MultiSelect';
 export * from '../src/components/simple-site-header';
 export * from '../src/components/tab-button';
+export * from '../src/components/upload-button-context';
 export * from '../src/components/zipper-logo';
 export * from '../src/components/zipperSymbol';
 export * from '../src/hocs/with-chakra-provider';
