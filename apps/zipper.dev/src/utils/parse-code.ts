@@ -400,6 +400,31 @@ export function parseImports({
   });
 }
 
+const USE_DIRECTIVE_REGEX = /^use\s/;
+const USE_CLIENT = 'use client';
+
+export function parseUseDirective({
+  code = '',
+  throwErrors = false,
+  srcPassedIn,
+}: { code?: string; throwErrors?: boolean; srcPassedIn?: SourceFile } = {}) {
+  if (!code) return null;
+  const src: SourceFile = srcPassedIn || getSourceFileFromCode(code);
+
+  const syntaxList = src?.getChildAtIndexIfKind(0, SyntaxKind.SyntaxList);
+
+  const rootNode = syntaxList || src;
+
+  const maybeDirective = rootNode
+    ?.getChildAtIndexIfKind(0, SyntaxKind.ExpressionStatement)
+    ?.getChildAtIndexIfKind(0, SyntaxKind.StringLiteral)
+    ?.getLiteralText();
+
+  return maybeDirective && USE_DIRECTIVE_REGEX.test(maybeDirective)
+    ? maybeDirective
+    : null;
+}
+
 export function parseCode({
   code = '',
   throwErrors = false,
@@ -428,6 +453,9 @@ export function parseCode({
       return { ...i, name, description };
     });
   }
+
+  const directive = parseUseDirective({ code, throwErrors, srcPassedIn: src });
+
   return {
     inputs,
     externalImportUrls,
@@ -436,6 +464,7 @@ export function parseCode({
       ({ specifier }) => !isExternalImport(specifier),
     ),
     imports,
+    useClient: directive === USE_CLIENT,
     src,
   };
 }
