@@ -12,10 +12,11 @@ import {
   useOthersConnectionIds,
   useRoom,
 } from '~/liveblocks.config';
+import styles from './playground-styles.module.css';
 
 import { parse } from '@babel/parser';
 import traverse from '@babel/traverse';
-import { useColorModeValue } from '@chakra-ui/react';
+import { IconButton, Tooltip, useColorModeValue } from '@chakra-ui/react';
 import { baseColors, prettierFormat, useCmdOrCtrl } from '@zipper/ui';
 import MonacoJSXHighlighter from 'monaco-jsx-highlighter';
 import { use, useEffect, useRef, useState } from 'react';
@@ -33,6 +34,7 @@ import {
 } from '~/utils/playground.utils';
 import { TypedLiveblocksProvider } from '~/liveblocks.config';
 import { Script } from '@prisma/client';
+import { ChatIcon } from '@chakra-ui/icons';
 
 export type MonacoEditor = monaco.editor.IStandaloneCodeEditor;
 
@@ -92,12 +94,22 @@ export default function PlaygroundEditor(
   });
   const [isEditorReady, setIsEditorReady] = useState(false);
   const [isModelReady, setIsModelReady] = useState(false);
-  const [, setIsLiveblocksReady] = useState(false);
+  const [isliveBlocksReady, setIsLiveblocksReady] = useState(false);
   const monacoEditor = useMonaco();
   const [, updateMyPresence] = useMyPresence();
   const connectionIds = useOthersConnectionIds();
   const [defaultLanguage] = useState<'typescript' | 'markdown'>('typescript');
   const theme = useColorModeValue('vs', 'vs-dark');
+
+  type Comment = {
+    line_start: number;
+    line_end: number;
+    content: string;
+  };
+
+  const [comments, setComments] = useState<Comment[]>([]);
+
+  const [isShowingCommentButton, setIsShowingCommentButton] = useState(false);
 
   const handleEditorDidMount = (editor: MonacoEditor, monaco: Monaco) => {
     console.log('[EDITOR]', 'Editor is mounted');
@@ -111,6 +123,15 @@ export default function PlaygroundEditor(
         'dropdown.background': baseColors.gray[800],
         'editorWidget.background': baseColors.gray[800],
         'input.background': baseColors.gray[800],
+      },
+    });
+
+    monacoRef?.current?.editor.addEditorAction({
+      id: 'create-documentation-block',
+      label: 'Create Documentation Block',
+      contextMenuGroupId: '9_cutcopypaste',
+      run: () => {
+        return;
       },
     });
 
@@ -328,7 +349,7 @@ export default function PlaygroundEditor(
         changeMarkersListener?.dispose();
       };
     }
-  }, [isEditorReady]);
+  }, [isEditorReady, editorRef]);
 
   // Load new scripts
   // Purges old scripts and reconnects to liveblocks
@@ -559,6 +580,59 @@ export default function PlaygroundEditor(
     [yRefs.current.yDoc, currentScript],
   );
 
+  useEffect(() => {
+    if (isliveBlocksReady) {
+      editorRef.current?.createDecorationsCollection([
+        {
+          range: {
+            startLineNumber: 22,
+            startColumn: 1,
+            endLineNumber: 24,
+            endColumn: Number.MAX_SAFE_INTEGER,
+          },
+          options: {
+            isWholeLine: true,
+            className: styles['tutorial-line'],
+          },
+        },
+      ]);
+    }
+  }, [isliveBlocksReady, editorRef]);
+
+  const CommentButton = (props: { line_start: number }) => {
+    return (
+      <Tooltip label="Add a comment">
+        <IconButton
+          colorScheme="brandOrange"
+          aria-label="Add a doc"
+          borderRadius="full"
+          size="xs"
+          icon={<ChatIcon />}
+          position="absolute"
+          zIndex={1000}
+          left={10}
+          top={`calc(${props.line_start} * 20px - 30px)`}
+        />
+      </Tooltip>
+    );
+  };
+
+  const foldAll = editorRef.current?.getAction('editor.foldAllMarkerRegions');
+
+  // console.log(editorRef.current?.getSupportedActions().map((a) => a.id));
+
+  const selection = editorRef?.current?.getSelection();
+
+  const selectionText = editorRef.current
+    ?.getModel()
+    ?.getValueInRange(selection!);
+
+  // editorRef?.current?.onDidChangeCursorSelection((event) => {
+  //   if (selection?.isEmpty()) {
+  //     return; // skip if nothing is selected
+  //   }
+  // });
+
   return (
     <>
       <Editor
@@ -609,6 +683,9 @@ export default function PlaygroundEditor(
           key={id}
         />
       ))}
+      {selection?.startLineNumber && selectionText !== '' && (
+        <CommentButton line_start={selection.startLineNumber} />
+      )}
     </>
   );
 }

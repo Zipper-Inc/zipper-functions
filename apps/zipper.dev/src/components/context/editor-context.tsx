@@ -8,6 +8,7 @@ import {
   useState,
   useRef,
   MutableRefObject,
+  useMemo,
 } from 'react';
 import noop from '~/utils/noop';
 
@@ -49,6 +50,7 @@ export type EditorContextType = {
   setCurrentScript: (script: Script) => void;
   onChange: EditorProps['onChange'];
   onValidate: OnValidate;
+  onChangeSelectedDoc: (docIndex: number) => void;
   connectionId?: number;
   scripts: Script[];
   editor?: typeof monaco.editor;
@@ -65,6 +67,12 @@ export type EditorContextType = {
   save: () => Promise<string>;
   refetchApp: () => Promise<any>;
   inputParams?: InputParam[];
+  scriptDocs: {
+    type: string;
+    title: string;
+    description: string;
+    isSelected: boolean;
+  }[];
   setInputParams: (inputParams?: InputParam[]) => void;
   inputError?: string;
   monacoRef?: MutableRefObject<Monaco | undefined>;
@@ -107,6 +115,8 @@ export const EditorContext = createContext<EditorContextType>({
   modelHasErrors: () => false,
   setModelHasErrors: () => false,
   editorHasErrors: () => false,
+  scriptDocs: [],
+  onChangeSelectedDoc: () => false,
   getErrorFiles: () => [],
   isSaving: false,
   setIsSaving: noop,
@@ -348,7 +358,7 @@ async function runEditorActionsNow({
     const newHash = getScriptHash({ ...currentScript, code: value });
     setModelIsDirty(currentScript.filename, newHash !== oldHash);
 
-    const { inputs, imports } = parseCode({
+    const { inputs, imports, comments } = parseCode({
       code: value,
       throwErrors: true,
     });
@@ -424,6 +434,81 @@ const EditorContextProvider = ({
 
   const currentScript = scripts.find((s) => s.id === currentScriptId);
   const setCurrentScript = (s: Script) => setCurrentScriptId(s.id);
+
+  const [selectedDocIndex, setSelectedDocIndex] = useState<number | null>(null);
+
+  const scriptDocs = useMemo(() => {
+    const customOrder = ['title', 'heading_1', 'heading_2', 'heading_3'];
+
+    const docs = currentScript?.code
+      .split('\n')
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      //@ts-ignore
+      .reduce((acc, curr) => {
+        if (curr.trim().startsWith('/**') || curr.trim().startsWith('*')) {
+          return [...acc, curr.trim()];
+        } else if (curr.trim().startsWith('export async function handler')) {
+          return acc;
+        } else {
+          return acc;
+        }
+      }, [] as string[])
+      .map((line) => (line.startsWith('*') ? ' ' + line : line))
+      .join('\n')
+      .split('/**')
+      .filter((line) => line !== '' && line.includes('----'))
+      .map((line) => String('/**' + '\n' + line).split('\n'))
+      .reduce(
+        (acc, curr) => [
+          ...acc,
+          {
+            type: curr
+              .map((line) => line.trim())
+              .find((line) => line.trim().startsWith('* type:'))
+              ?.replace('* type: ', '')
+              .replace(' ', ''),
+            description: curr
+              .filter(
+                (line) =>
+                  !line.trim().includes('----') &&
+                  !line.trim().startsWith('* name:') &&
+                  !line.trim().startsWith('* type:') &&
+                  line.trim().startsWith('*'),
+              )
+              .map((line) => line.trim())
+              .join('\n')
+              .replace(/^\* /gm, '')
+              .replace(/\*\/|\/\*/g, ''),
+            title: curr
+              .map((line) => line.trim())
+              .find((line) => line.trim().startsWith('* name:'))
+              ?.replace('* name: ', '')
+              .replace(' ', ''),
+          },
+        ],
+        [] as any[],
+      ) as {
+      type: string;
+      title: string;
+      description: string;
+      isSelected: boolean;
+    }[];
+
+    return docs
+      ?.sort((a, b) => {
+        const typeA = a.type;
+        const typeB = b.type;
+
+        return customOrder.indexOf(typeA) - customOrder.indexOf(typeB);
+      })
+      .map((doc, index) => ({
+        ...doc,
+        isSelected: index === selectedDocIndex,
+      }));
+  }, [currentScript, selectedDocIndex]);
+
+  const onChangeSelectedDoc = (docIndex: number) =>
+    setSelectedDocIndex(docIndex);
 
   const resetDirtyState = () => {
     setModelsDirtyState(
@@ -705,6 +790,7 @@ const EditorContextProvider = ({
         isModelDirty,
         setModelIsDirty,
         isEditorDirty,
+        scriptDocs,
         modelHasErrors,
         setModelHasErrors,
         editorHasErrors,
@@ -721,6 +807,7 @@ const EditorContextProvider = ({
         addLog,
         setLogStore,
         markLogsAsRead,
+        onChangeSelectedDoc,
         preserveLogs,
         setPreserveLogs,
         lastReadLogsTimestamp,

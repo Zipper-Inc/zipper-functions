@@ -17,6 +17,14 @@ import {
   AlertDialogFooter,
   Button,
   useColorModeValue,
+  Heading,
+  Box,
+  Accordion,
+  AccordionIcon,
+  AccordionItem,
+  // AccordionHeader,
+  AccordionPanel,
+  AccordionButton,
 } from '@chakra-ui/react';
 import React, { useEffect, useRef, useState } from 'react';
 import AddScriptForm from '~/components/playground/add-script-form';
@@ -36,6 +44,7 @@ import {
   isLib,
   isConnector,
 } from '~/utils/playground.utils';
+import { Markdown } from '@zipper/ui';
 
 // Order should always be:
 // - README.md
@@ -65,7 +74,13 @@ export function PlaygroundSidebar({
   app: AppQueryOutput;
   mainScript: Script;
 }) {
-  const { currentScript, setCurrentScript, refetchApp } = useEditorContext();
+  const {
+    currentScript,
+    setCurrentScript,
+    refetchApp,
+    scriptDocs,
+    onChangeSelectedDoc,
+  } = useEditorContext();
 
   const renameForm: ScriptItemProps['renameForm'] = useForm();
 
@@ -207,6 +222,66 @@ export function PlaygroundSidebar({
             />
           ))}
         </VStack>
+      </VStack>
+      <VStack mr={{ base: '0', xl: 2 }} paddingRight={2} paddingY={4}>
+        <Accordion allowMultiple width="100%">
+          <AccordionItem>
+            <h2>
+              <AccordionButton bg="fg.100" _hover={{ bg: 'fg.200' }} h={6}>
+                <Box
+                  as="span"
+                  flex="1"
+                  textAlign="left"
+                  fontSize="sm"
+                  color="fg.600"
+                  fontWeight="bold"
+                  textTransform="uppercase"
+                >
+                  Guide
+                </Box>
+                <AccordionIcon />
+              </AccordionButton>
+            </h2>
+            <AccordionPanel px={0} py={0}>
+              {scriptDocs?.length >= 1 &&
+                scriptDocs.map((doc, index) => (
+                  <HStack
+                    p={3}
+                    bg={doc.isSelected ? 'yellow.100' : 'white'}
+                    _hover={{
+                      bg: doc.isSelected ? 'yellow.100' : 'yellow.50',
+                    }}
+                    position="relative"
+                    onClick={() => onChangeSelectedDoc(index)}
+                    cursor="pointer"
+                  >
+                    <Box
+                      as="span"
+                      position="absolute"
+                      top={4}
+                      right={3}
+                      fontSize="sm"
+                      fontWeight="medium"
+                      fontFamily="mono"
+                    >
+                      {1}
+                    </Box>
+                    <Box>
+                      <Heading
+                        fontSize={doc.type.includes('title') ? '2xl' : 'lg'}
+                        maxW="80%"
+                      >
+                        {doc.title}
+                      </Heading>
+                      <Box fontSize="sm">
+                        <Markdown>{doc.description}</Markdown>
+                      </Box>
+                    </Box>
+                  </HStack>
+                ))}
+            </AccordionPanel>
+          </AccordionItem>
+        </Accordion>
       </VStack>
       <AlertDialog
         isOpen={isOpen}
