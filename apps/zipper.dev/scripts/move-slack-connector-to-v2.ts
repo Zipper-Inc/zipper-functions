@@ -7,10 +7,6 @@ import { prisma } from '~/server/prisma';
 import { code as SLACK_CONNECTOR_V2_CODE } from '~/connectors/slack/constants';
 import { updateConnectorConfig } from '~/utils/connector-codemod';
 
-// Currently, Zipper itself doesnt have a user.
-// Should we create a ziper/zipper-codemod user? I suggest this.
-const ZIPPER_USER_ID = '000000000-0000-0000-0000-00000000000';
-
 const script = async () => {
   const allSlackScripts = await prisma.script.findMany({
     where: { filename: 'slack-connector.ts' },
@@ -55,10 +51,15 @@ const script = async () => {
       include: { scripts: true },
     });
 
-    if (!app) throw new Error(`App not found for script ${script.id}`);
+    const zipperCodemodUser = await prisma.user.findFirst({
+      where: { slug: 'zipper-codemods' },
+      select: { id: true },
+    });
 
-    // TODO: what userId should we use?
-    await buildAndStoreApplet({ app, userId: ZIPPER_USER_ID });
+    if (!app || !zipperCodemodUser?.id)
+      throw new Error(`App not found for script ${script.id}`);
+
+    await buildAndStoreApplet({ app, userId: zipperCodemodUser?.id });
   }
 };
 
