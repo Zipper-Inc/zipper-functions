@@ -1,3 +1,8 @@
+const redirectHost =
+  process.env.NODE_ENV === 'development'
+    ? process.env.NEXT_PUBLIC_ZIPPER_DOT_DEV_HOST
+    : 'https://zipper.dev';
+
 export const code = `import { WebClient } from 'https://deno.land/x/slack_web_api@6.7.2/mod.js';
 import { initApplet } from 'https://deno.land/x/zipper_client_js@v0.1.7/mod.ts';
 import { SlackUserAuth } from 'https://zipper.dev/zipper-inc/slack-install-link/src/main.ts';
@@ -29,7 +34,7 @@ export async function handler(
   input: SlackConnectorInput,
   ctx: Zipper.HandlerContext,
 ) {
-  const thisAppletPlaygroundUrl = \`https://zipper.dev/\${
+  const thisAppletPlaygroundUrl = \`${redirectHost}/\${
     ctx.appInfo.author?.organization || ctx.appInfo.author?.slug
   }/\${ctx.appInfo.slug}/src/slack-connector.ts\`;
 
