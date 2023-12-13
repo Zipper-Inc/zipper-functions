@@ -1,21 +1,14 @@
 import { prisma } from '~/server/prisma';
-import { createUploadthing, type FileRouter } from 'uploadthing/next-legacy';
+import { createUploadthing } from 'uploadthing/next-legacy';
 import { createNextPageApiHandler } from 'uploadthing/next-legacy';
 import { getServerSession } from 'next-auth';
 import { authOptions } from './auth/[...nextauth]';
+import { ourFileRouter } from '@zipper/utils';
 
 const f = createUploadthing();
 
-// FileRouter for your app, can contain multiple FileRoutes
-export const ourFileRouter = {
-  // Define as many FileRoutes as you like, each with a unique routeSlug
-  imageUploader: f({ image: { maxFileSize: '4MB' } })
-    .onUploadError(({ error }) => {
-      console.log('error', error);
-    })
-    .onUploadComplete(async ({ file }) => {
-      return { url: file.url };
-    }),
+const zipperDevUploadRouter = {
+  ...ourFileRouter,
   avatarUploader: f({ image: { maxFileSize: '4MB' } })
     // Set permissions and file types for this FileRoute
     .middleware(async ({ req, res }) => {
@@ -39,12 +32,12 @@ export const ourFileRouter = {
         },
       });
     }),
-} satisfies FileRouter;
+};
 
-export type OurFileRouter = typeof ourFileRouter;
+export type OurFileRouter = typeof zipperDevUploadRouter;
 
 const handler = createNextPageApiHandler({
-  router: ourFileRouter,
+  router: zipperDevUploadRouter,
 });
 
 export default handler;

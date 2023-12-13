@@ -8,6 +8,8 @@ import {
   Text,
   useDisclosure,
   VStack,
+  Center,
+  Spinner,
 } from '@chakra-ui/react';
 import {
   AppInfo,
@@ -24,6 +26,7 @@ import {
   useAppletContent,
   useCmdOrCtrl,
   withDefaultTheme,
+  useUploadContext,
 } from '@zipper/ui';
 import {
   getDescription,
@@ -134,6 +137,9 @@ export function AppPage({
 
   const [skipAuth, setSkipAuth] = useState(false);
 
+  const { isUploading } = useUploadContext();
+  const [isWaitingForUpload, setIsWaitingForUpload] = useState(false);
+
   const showRunOutput = (['output'] as Screen[]).includes(screen);
 
   const { isOpen, onToggle, onClose } = useDisclosure({
@@ -211,7 +217,19 @@ export function AppPage({
     }
   }, [handlerConfigs, filename]);
 
+  useEffect(() => {
+    if (!isUploading && isWaitingForUpload) {
+      setIsWaitingForUpload(false);
+      runApp();
+    }
+  }, [isUploading, isWaitingForUpload]);
+
   const runApp = async () => {
+    if (isUploading) {
+      // If an upload is in progress, wait for it to finish
+      setIsWaitingForUpload(true);
+      return;
+    }
     const embedPath = isEmbedded ? 'embed/' : '';
     if (!loading) {
       setLoading(true);
@@ -407,8 +425,6 @@ export function AppPage({
   );
 
   const content = (
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
     <Stack
       as="main"
       position="relative"
@@ -560,21 +576,29 @@ export function AppPage({
         <meta property="og:type" content="website" />
         <meta property="og:url" content={runUrl || appletUrl} />
       </Head>
-      <VStack flex={1} alignItems="stretch" spacing={4}>
-        <Header
-          {...app}
-          token={token}
-          entryPoint={{
-            filename: filename!,
-            editUrl: entryPoint!.editUrl.replace('main.ts', filename!),
-          }}
-          runnableScripts={runnableScripts}
-          runId={latestRunId}
-          setScreen={setScreen}
-          setLoading={setLoading}
-        />
-        {content}
-      </VStack>
+      {isWaitingForUpload ? (
+        <Box w="100%" h="100vh">
+          <Center h="100%">
+            <Spinner color="purple" w="20px" h="20px" />
+          </Center>
+        </Box>
+      ) : (
+        <VStack flex={1} alignItems="stretch" spacing={4}>
+          <Header
+            {...app}
+            token={token}
+            entryPoint={{
+              filename: filename!,
+              editUrl: entryPoint!.editUrl.replace('main.ts', filename!),
+            }}
+            runnableScripts={runnableScripts}
+            runId={latestRunId}
+            setScreen={setScreen}
+            setLoading={setLoading}
+          />
+          {content}
+        </VStack>
+      )}
     </>
   );
 }
