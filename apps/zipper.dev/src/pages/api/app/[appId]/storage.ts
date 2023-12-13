@@ -38,7 +38,7 @@ export default async function handler(
     case 'GET': {
       const k = query.key as string;
       if (k && datastore) {
-        res.send({ key: k, value: datastore[k] || '' });
+        res.send({ key: k, value: datastore[k] || undefined });
         break;
       }
       res.send(datastore || {});
