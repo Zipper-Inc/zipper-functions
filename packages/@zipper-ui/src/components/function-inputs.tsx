@@ -38,16 +38,6 @@ interface Props {
   hasResult?: boolean;
 }
 
-// const uploadButton = <F extends Record<string, any>, T extends React.FC<F>>({
-//   children,
-// }: {
-//   children: T;
-// }) => {
-//   return React.cloneElement(children, {
-//     onClick: () =>
-//   })
-// };
-
 /*
 const withOptional =
   (InnerComponent: (props: any) => ReactElement) => (componentProps: any) => {
@@ -251,6 +241,12 @@ function FunctionParamInput({
     case InputType.file: {
       return (
         <UploadButton
+          appearance={{
+            button: {
+              backgroundColor: '#9B26B6',
+              color: '#fff',
+            },
+          }}
           onUploadProgress={() => {
             setIsUploading(true);
           }}
