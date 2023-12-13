@@ -15355,7 +15355,7 @@ update-browserslist-db@^1.0.9:
     escalade "^3.1.1"
     picocolors "^1.0.0"
 
-uploadthing@^6.0.4, uploadthing@^6.1.0:
+uploadthing@^6.0.4:
   version "6.1.0"
   resolved "https://registry.yarnpkg.com/uploadthing/-/uploadthing-6.1.0.tgz#2f34b13948dd6852fb6361bef3cbed3720e274be"
   integrity sha512-3OhxRxY+cOoA+g5kAkuYo/pIyOJKZR6+iUt077QkfhmN8GCjekFyiQDAmH/X1IQ29U8lMpMkgcxHx9HetkPtdw==
