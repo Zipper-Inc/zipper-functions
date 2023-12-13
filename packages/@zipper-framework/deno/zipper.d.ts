@@ -427,7 +427,7 @@ declare namespace Zipper {
   export interface Storage<Value extends Serializable = Serializable> {
     appId: string;
     getAll<V extends Value = Value>(): Promise<{ [k: string]: V }>;
-    get<V extends Value = Value>(key: string): Promise<V>;
+    get<V extends Value = Value>(key: string): Promise<V> | undefined;
     set<V extends Value = Value>(
       key: string,
       value: V,
