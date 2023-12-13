@@ -1,7 +1,9 @@
-import { Link, Stack, StackDivider } from '@chakra-ui/react';
+import { Box, Link, Stack, StackDivider } from '@chakra-ui/react';
 import { OutputType } from '@zipper/types';
 
 import React from 'react';
+import dynamic from 'next/dynamic';
+
 import { defaults as defaultElements } from '../../utils/chakra-markdown-renderer';
 import { ActionComponent } from './action-component';
 import Array from './array';
@@ -112,6 +114,148 @@ export function SmartFunctionOutput({
       const component = data as Zipper.Component;
 
       switch (component.type) {
+        case 'barChart': {
+          const ResponsiveBar = dynamic(
+            () => import('@nivo/bar').then((m) => m.ResponsiveBar),
+            { ssr: true },
+          );
+
+          return (
+            <Box minH="400px" height="100%">
+              <ResponsiveBar
+                keys={Object.keys(component.props.data[0] || {}).filter(
+                  (k: any) => k !== 'id',
+                )}
+                margin={{ top: 50, right: 130, bottom: 50, left: 60 }}
+                padding={0.3}
+                valueScale={{ type: 'linear' }}
+                indexScale={{ type: 'band', round: true }}
+                colors={{ scheme: 'nivo' }}
+                borderColor={{
+                  from: 'color',
+                  modifiers: [['darker', 1.6]],
+                }}
+                axisTop={null}
+                axisRight={null}
+                labelSkipWidth={12}
+                labelSkipHeight={12}
+                labelTextColor={{
+                  from: 'color',
+                  modifiers: [['darker', 1.6]],
+                }}
+                legends={[
+                  {
+                    dataFrom: 'keys',
+                    anchor: 'bottom-right',
+                    direction: 'column',
+                    justify: false,
+                    translateX: 120,
+                    translateY: 0,
+                    itemsSpacing: 2,
+                    itemWidth: 100,
+                    itemHeight: 20,
+                    itemDirection: 'left-to-right',
+                    itemOpacity: 0.85,
+                    symbolSize: 20,
+                    effects: [
+                      {
+                        on: 'hover',
+                        style: {
+                          itemOpacity: 1,
+                        },
+                      },
+                    ],
+                  },
+                ]}
+                {...component.props}
+                axisBottom={{
+                  legendOffset: 36,
+                  legendPosition: 'middle',
+                  ...component.props?.axisBottom,
+                }}
+                axisLeft={{
+                  tickSize: 5,
+                  tickPadding: 5,
+                  tickRotation: 0,
+                  legendOffset: -40,
+                  legendPosition: 'middle',
+                  ...component.props?.axisLeft,
+                }}
+              />
+            </Box>
+          );
+        }
+        case 'lineChart': {
+          const ResponsiveLine = dynamic(
+            () => import('@nivo/line').then((m) => m.ResponsiveLine),
+            { ssr: true },
+          );
+
+          return (
+            <Box height="100%" minH="400px">
+              <ResponsiveLine
+                margin={{ top: 50, right: 110, bottom: 50, left: 60 }}
+                xScale={{ type: 'point' }}
+                yScale={{
+                  type: 'linear',
+                  min: 'auto',
+                  max: 'auto',
+                  stacked: true,
+                  reverse: false,
+                }}
+                yFormat=" >-.2f"
+                axisTop={null}
+                axisRight={null}
+                pointSize={10}
+                pointColor={{ theme: 'background' }}
+                pointBorderWidth={2}
+                pointBorderColor={{ from: 'serieColor' }}
+                pointLabelYOffset={-12}
+                useMesh={true}
+                legends={[
+                  {
+                    anchor: 'bottom-right',
+                    direction: 'column',
+                    justify: false,
+                    translateX: 100,
+                    translateY: 0,
+                    itemsSpacing: 0,
+                    itemDirection: 'left-to-right',
+                    itemWidth: 80,
+                    itemHeight: 20,
+                    itemOpacity: 0.75,
+                    symbolSize: 12,
+                    symbolShape: 'circle',
+                    symbolBorderColor: 'rgba(0, 0, 0, .5)',
+                    effects: [
+                      {
+                        on: 'hover',
+                        style: {
+                          itemBackground: 'rgba(0, 0, 0, .03)',
+                          itemOpacity: 1,
+                        },
+                      },
+                    ],
+                  },
+                ]}
+                {...component.props}
+                axisBottom={{
+                  legendOffset: 36,
+                  legendPosition: 'middle',
+                  ...component.props?.axisBottom,
+                }}
+                axisLeft={{
+                  tickSize: 5,
+                  tickPadding: 5,
+                  tickRotation: 0,
+                  legendOffset: -40,
+                  legendPosition: 'middle',
+                  ...component.props?.axisLeft,
+                }}
+              />
+            </Box>
+          );
+        }
         case 'stack': {
           return (
             <Stack

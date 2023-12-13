@@ -60,6 +60,8 @@
     "@monaco-editor/react": "^4.4.6",
     "@next/env": "^13.2.4",
     "@nicksrandall/console-feed": "^3.5.0",
+    "@nivo/bar": "^0.84.0",
+    "@nivo/line": "^0.84.0",
     "@prisma/client": "^5.4.2",
     "@react-email/components": "^0.0.7",
     "@sentry/nextjs": "^7.51.0",
