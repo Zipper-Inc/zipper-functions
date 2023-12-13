@@ -3,11 +3,11 @@
 export const BarChart = ({ ...props }: any) =>
   Zipper.Component.create({
     type: 'barChart',
-    ...props,
+    props: { ...props },
   });
 
 export const LineChart = ({ ...props }: any) =>
   Zipper.Component.create({
     type: 'lineChart',
-    ...props,
+    props: { ...props },
   });
