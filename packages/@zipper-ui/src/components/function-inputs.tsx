@@ -1,3 +1,4 @@
+import './file-upload/uploadthing.css';
 import { Select, Spinner } from '@chakra-ui/react';
 import { Suspense, useRef, useState } from 'react';
 import {
@@ -71,7 +72,7 @@ function FunctionParamInput({
   details?: any;
 }) {
   const { register, watch, getValues } = formContext;
-  const { isUploading, setIsUploading } = useUploadContext();
+  const { setIsUploading } = useUploadContext();
   const name = getFieldName(inputKey, type);
   const formFieldOptions: RegisterOptions<FieldValues, string> = {
     required: !optional,
@@ -242,10 +243,13 @@ function FunctionParamInput({
       return (
         <UploadButton
           appearance={{
-            button: {
-              backgroundColor: '#9B26B6',
-              color: '#fff',
+            button({ ready, isUploading }) {
+              return `custom-button ${
+                ready ? 'custom-button-ready' : 'custom-button-not-ready'
+              } ${isUploading ? 'custom-button-uploading' : ''}`;
             },
+            container: 'custom-container',
+            allowedContent: 'custom-allowed-content',
           }}
           onUploadProgress={() => {
             setIsUploading(true);
