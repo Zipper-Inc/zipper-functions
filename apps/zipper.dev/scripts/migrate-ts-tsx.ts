@@ -91,20 +91,17 @@ const renameTsImportsToTsx = async (code: string) => {
     );
 
     if (hasUpdated) {
+      const zipperCodemodUser = await prisma.user.findFirst({
+        where: { slug: 'zipper-codemods' },
+        select: { id: true },
+      });
       // get new hash
       const { hash } = await buildAndStoreApplet({
         app: { ...app, scripts: updatedScripts },
+        userId: zipperCodemodUser?.id,
       });
 
       if (hash !== app.playgroundVersionHash) {
-        // create a new version
-        await prisma.version.create({
-          data: {
-            appId: app.id,
-            hash: hash,
-          },
-        });
-
         // update the playground hash to use the new version
         await prisma.app.update({
           where: { id: appletId },
