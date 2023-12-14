@@ -64,7 +64,7 @@ export default createOmniApiHandler(async (req, res) => {
           });
 
           // TODO: this block should be a prisma transaction?
-          const runnableScripts = app.scripts.filter(
+          const nonMainTsScripts = app.scripts.filter(
             (script) =>
               script.filename.endsWith('.ts') && script.filename !== 'main.ts',
           );
@@ -77,7 +77,7 @@ export default createOmniApiHandler(async (req, res) => {
             errors.push({ message: 'main.ts not found', appletName: app.name });
           }
 
-          for (const script of runnableScripts) {
+          for (const script of nonMainTsScripts) {
             // rename script that arent main
             const newFilename = script.filename.replace(/\.ts$/, '.tsx');
 
@@ -136,6 +136,8 @@ export default createOmniApiHandler(async (req, res) => {
               where: { slug: 'zipper-codemods' },
               select: { id: true },
             });
+
+            console.log('PLS PLS PLS', zipperCodemodUser);
             // get new hash
             const { hash } = await buildAndStoreApplet({
               app: { ...app, scripts: updatedScripts },
