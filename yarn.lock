@@ -5975,20 +5975,15 @@
   resolved "https://registry.yarnpkg.com/@uploadthing/mime-types/-/mime-types-0.2.2.tgz#94ec59c61729f6bef5662d8b222831e8afd59369"
   integrity sha512-ZUo1JHOPPMZDsUw1mOhhVDIvJGlsjj6T0xJ/YJtulyJwL43S9B5pxg1cHcRuTEgjaxj7B55jiqQ6r9mDrrjH9A==
 
-"@uploadthing/react@^6.0.0":
-  version "6.0.0"
-  resolved "https://registry.yarnpkg.com/@uploadthing/react/-/react-6.0.0.tgz#53bf28577b7288ebf0e40851e917d6c66350a8b4"
-  integrity sha512-s+6crwgoXRY9opip7S3g6iV1dIR2uMedXjlfQfMRM6GkVUmwHp8hkjtutpcnsdm37SukjubWuaAlqbUAmxYB5g==
+"@uploadthing/react@6.0.2", "@uploadthing/react@^6.0.2":
+  version "6.0.2"
+  resolved "https://registry.yarnpkg.com/@uploadthing/react/-/react-6.0.2.tgz#a75986f504019c9cc6e778627ebc7a78d3375fa8"
+  integrity sha512-gUJwNvSFs0bg4m0c6wlFo1Fe3uyGTmAp0BESkRZvqyN4hNhIcxMY0TxjqxCKsYkv1T0/y3dHgN/XU2BDAQQh7w==
   dependencies:
-    "@uploadthing/shared" "^6.0.0"
+    "@uploadthing/shared" "^6.0.2"
     attr-accept "^2.2.2"
     file-selector "^0.6.0"
     tailwind-merge "^1.13.2"
-
-"@uploadthing/shared@^6.0.0":
-  version "6.0.0"
-  resolved "https://registry.yarnpkg.com/@uploadthing/shared/-/shared-6.0.0.tgz#1ed565748c05b2b73c2cdfff6cc9e80465474d46"
-  integrity sha512-1utPnQxluUxShO095IGOeU3NT0nERVSlY97R8c0dcIoDc689CRX7BFrBws58PuWuAhmPp2Mjyo1e9wn3rSBjgg==
 
 "@uploadthing/shared@^6.0.2":
   version "6.0.2"
@@ -15722,10 +15717,10 @@ update-browserslist-db@^1.0.9:
     escalade "^3.1.1"
     picocolors "^1.0.0"
 
-uploadthing@^6.0.3:
-  version "6.0.3"
-  resolved "https://registry.yarnpkg.com/uploadthing/-/uploadthing-6.0.3.tgz#5883ce72b4d26625a20261cc50b939bff79209c8"
-  integrity sha512-KH+FWHUg9zsJT+pYcVOa3p6WiPBJ8Qdgv+HUArkW8C5wF6nnDFhBFIg6hEa499Q5mcO4UOY5hLeBGMJu/C+abQ==
+uploadthing@^6.0.4:
+  version "6.1.0"
+  resolved "https://registry.yarnpkg.com/uploadthing/-/uploadthing-6.1.0.tgz#2f34b13948dd6852fb6361bef3cbed3720e274be"
+  integrity sha512-3OhxRxY+cOoA+g5kAkuYo/pIyOJKZR6+iUt077QkfhmN8GCjekFyiQDAmH/X1IQ29U8lMpMkgcxHx9HetkPtdw==
   dependencies:
     "@uploadthing/mime-types" "^0.2.2"
     "@uploadthing/shared" "^6.0.2"
