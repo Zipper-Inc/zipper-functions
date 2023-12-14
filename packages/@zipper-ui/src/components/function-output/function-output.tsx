@@ -3,7 +3,6 @@ import {
   Button,
   ChakraProps,
   Divider,
-  Flex,
   Heading,
   HStack,
   Icon,

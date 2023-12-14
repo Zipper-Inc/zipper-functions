@@ -121,7 +121,7 @@ export function SmartFunctionOutput({
           );
 
           return (
-            <Box minH="400px" height="100%">
+            <Box height={component.props.boxHeight || '400px'}>
               <ResponsiveBar
                 keys={Object.keys(component.props.data[0] || {}).filter(
                   (k: any) => k !== 'id',
@@ -192,7 +192,7 @@ export function SmartFunctionOutput({
           );
 
           return (
-            <Box height="100%" minH="400px">
+            <Box height={component.props.boxHeight || '400px'}>
               <ResponsiveLine
                 margin={{ top: 50, right: 110, bottom: 50, left: 60 }}
                 xScale={{ type: 'point' }}

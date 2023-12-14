@@ -352,22 +352,10 @@ declare namespace Zipper {
     type: `html.${HtmlTag}`;
   }
 
-  export interface BarChartComponent extends ComponentBase {
-    type: 'barChart';
+  export interface ChartBase extends ComponentBase {
     props: {
-      data: { [key: string]: string | number }[];
-      keys?: string[];
-      groupMode?: 'grouped' | 'stacked';
-      layout?: 'horizontal' | 'vertical';
-      reverse?: boolean;
-      margin?: Partial<{
-        bottom: number;
-        left: number;
-        right: number;
-        top: number;
-      }>;
-      enableLabel?: boolean;
-      label?: string;
+      boxHeight?: number | string;
+
       enableGridX?: boolean;
       enableGridY?: boolean;
 
@@ -383,9 +371,28 @@ declare namespace Zipper {
     };
   }
 
-  export interface LineChartComponent extends ComponentBase {
+  export interface BarChartComponent extends ChartBase {
+    type: 'barChart';
+    props: ChartBase['props'] & {
+      data: { [key: string]: string | number }[];
+      keys?: string[];
+      groupMode?: 'grouped' | 'stacked';
+      layout?: 'horizontal' | 'vertical';
+      reverse?: boolean;
+      margin?: Partial<{
+        bottom: number;
+        left: number;
+        right: number;
+        top: number;
+      }>;
+      enableLabel?: boolean;
+      label?: string;
+    };
+  }
+
+  export interface LineChartComponent extends ChartBase {
     type: 'lineChart';
-    props: {
+    props: ChartBase['props'] & {
       data: {
         id: string | number;
         data: {
@@ -395,13 +402,6 @@ declare namespace Zipper {
         }[];
         [key: string]: any;
       }[];
-
-      margin?: Partial<{
-        bottom: number;
-        left: number;
-        right: number;
-        top: number;
-      }>;
 
       curve?:
         | 'basis'
@@ -421,17 +421,6 @@ declare namespace Zipper {
       enableArea?: boolean;
       enablePoints?: boolean;
       pointSize?: number;
-      enableGridX?: boolean;
-      enableGridY?: boolean;
-      axisBottom?: Partial<{
-        legend: string;
-        [key: string]: any;
-      }>;
-      axisLeft?: Partial<{
-        legend: string;
-        [key: string]: any;
-      }>;
-      [key: string]: any;
     };
   }
 
