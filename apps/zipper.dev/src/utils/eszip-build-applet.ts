@@ -6,8 +6,8 @@ import { storeVersionESZip } from '~/server/utils/r2.utils';
 import { getLogger } from './app-console';
 import { BuildCache } from './eszip-build-cache';
 import {
+  applyTsxHack,
   getRemoteModule,
-  handleJSXContent,
   isZipperImportUrl,
   TYPESCRIPT_CONTENT_HEADERS,
 } from './eszip-utils';
@@ -77,8 +77,6 @@ export async function build({
   const bundle = await eszip.build(fileUrlsToBundle, async (specifier) => {
     // if (__DEBUG__) console.debug(specifier);
     try {
-      const isJSX =
-        specifier.endsWith('.tsx') || specifier.includes('applet/src/main.ts');
       /**
        * Handle user's App files
        */
@@ -91,12 +89,11 @@ export async function build({
         const script = tsScripts.find((s) => s.filename === filename);
 
         return {
-          specifier,
-          headers: TYPESCRIPT_CONTENT_HEADERS,
-          kind: 'module',
-          content: isJSX
-            ? handleJSXContent(rewriteImports(script?.code || ''))
-            : rewriteImports(script?.code) || '',
+          ...applyTsxHack({
+            specifier,
+            code: rewriteImports(script?.code || ''),
+            isMain: specifier.includes('applet/src/main.ts'),
+          }),
           version,
         };
       }
@@ -142,12 +139,11 @@ export async function build({
         const mod = await getRemoteModule({ specifier, target });
         return {
           ...mod,
-          specifier,
-          headers: TYPESCRIPT_CONTENT_HEADERS,
-          kind: 'module',
-          content: isJSX
-            ? handleJSXContent(rewriteImports(mod?.content))
-            : rewriteImports(mod?.content) || '',
+          ...applyTsxHack({
+            specifier,
+            code: rewriteImports(mod?.content),
+            isMain: specifier === frameworkEntrypointUrl,
+          }),
         };
       }
 

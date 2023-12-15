@@ -5,8 +5,7 @@ import { LoadResponseModule } from '@deno/eszip/esm/loader';
 import {
   isZipperImportUrl,
   getRemoteModule,
-  TYPESCRIPT_CONTENT_HEADERS,
-  handleJSXContent,
+  applyTsxHack,
 } from '~/utils/eszip-utils';
 import { rewriteSpecifier } from '~/utils/rewrite-imports';
 import { parseCode } from '~/utils/parse-code';
@@ -100,20 +99,18 @@ async function respondWithBundle({
 
   await eszip.build([rootModule.specifier], async (specifier) => {
     const bundlePath = replaceRedirect ? replaceRedirect(specifier) : specifier;
-    const isJSX =
-      bundlePath.endsWith('.tsx') || bundlePath.includes('applet/src/main.ts');
 
     // Handler Zipper Imports
     if (isZipperImportUrl(specifier)) {
       const rawModule = await getRemoteModule({ specifier });
       const mod = {
         ...rawModule,
-        specifier,
-        headers: TYPESCRIPT_CONTENT_HEADERS,
-        kind: 'module' as const,
-        content: isJSX
-          ? handleJSXContent(rawModule?.content || '', false)
-          : rawModule?.content || '',
+        ...applyTsxHack({
+          specifier,
+          code: rawModule?.content,
+          shouldAddJsxPragma: false,
+          isMain: bundlePath.includes('applet/src/main.ts'), // ?
+        }),
       };
       if (mod?.content) bundle[bundlePath] = mod.content;
       return mod;

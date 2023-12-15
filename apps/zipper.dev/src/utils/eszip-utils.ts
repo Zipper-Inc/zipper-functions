@@ -50,11 +50,28 @@ export function codeHasReact(code: string) {
   return /^import\s+.*React,?.*\s+from/m.test(code);
 }
 
-export function handleJSXContent(
+export function applyTsxHack({
+  specifier,
   code = '/* 🤷🏽‍♂️ missing code */',
   shouldAddJsxPragma = true,
-) {
-  return !codeHasReact(code) && shouldAddJsxPragma ? addJsxPragma(code) : code;
+  isMain = false,
+}: {
+  specifier: string;
+  code?: string;
+  shouldAddJsxPragma?: boolean;
+  isMain?: boolean;
+}): LoadResponseModule {
+  const requiresJsxPragma =
+    shouldAddJsxPragma &&
+    !codeHasReact(code) &&
+    (isMain || specifier.endsWith('.tsx'));
+
+  return {
+    specifier: isMain ? specifier.replace(/\.(ts|tsx)$|$/, '.tsx') : specifier,
+    headers: TYPESCRIPT_CONTENT_HEADERS,
+    content: requiresJsxPragma ? addJsxPragma(code) : code,
+    kind: 'module',
+  };
 }
 
 export async function getRemoteModule({
