@@ -264,7 +264,7 @@ export function PlaygroundSidebar({
                       fontWeight="medium"
                       fontFamily="mono"
                     >
-                      {1}
+                      {doc.highlight_line.start}
                     </Box>
                     <Box>
                       <Heading

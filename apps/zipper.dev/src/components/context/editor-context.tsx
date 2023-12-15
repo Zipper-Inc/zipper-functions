@@ -43,6 +43,15 @@ type OnValidate = AddParameters<
   [filename?: string]
 >;
 
+type Doc = {
+  type: string;
+  title: string;
+  description: string;
+  isSelected: boolean;
+  highlight_line: { start: number; end: number };
+  index: number;
+};
+
 type RunEditorActionsInputs = Parameters<typeof runEditorActionsNow>[0];
 
 export type EditorContextType = {
@@ -53,6 +62,7 @@ export type EditorContextType = {
   onChangeSelectedDoc: (docIndex: number) => void;
   connectionId?: number;
   scripts: Script[];
+  selectedDoc: Doc;
   editor?: typeof monaco.editor;
   setEditor: (editor: typeof monaco.editor) => void;
   isModelDirty: (path: string) => boolean;
@@ -67,12 +77,7 @@ export type EditorContextType = {
   save: () => Promise<string>;
   refetchApp: () => Promise<any>;
   inputParams?: InputParam[];
-  scriptDocs: {
-    type: string;
-    title: string;
-    description: string;
-    isSelected: boolean;
-  }[];
+  scriptDocs: Doc[];
   setInputParams: (inputParams?: InputParam[]) => void;
   inputError?: string;
   monacoRef?: MutableRefObject<Monaco | undefined>;
@@ -109,6 +114,7 @@ export const EditorContext = createContext<EditorContextType>({
   scripts: [],
   editor: undefined,
   setEditor: noop,
+  selectedDoc: {} as Doc,
   isModelDirty: () => false,
   setModelIsDirty: noop,
   isEditorDirty: () => false,
@@ -435,7 +441,7 @@ const EditorContextProvider = ({
   const currentScript = scripts.find((s) => s.id === currentScriptId);
   const setCurrentScript = (s: Script) => setCurrentScriptId(s.id);
 
-  const [selectedDocIndex, setSelectedDocIndex] = useState<number | null>(null);
+  const [selectedDoc, setSelectedDoc] = useState<Doc>({} as Doc);
 
   const scriptDocs = useMemo(() => {
     const customOrder = ['title', 'heading_1', 'heading_2', 'heading_3'];
@@ -473,6 +479,7 @@ const EditorContextProvider = ({
                   !line.trim().includes('----') &&
                   !line.trim().startsWith('* name:') &&
                   !line.trim().startsWith('* type:') &&
+                  !line.trim().startsWith('* highlight:') &&
                   line.trim().startsWith('*'),
               )
               .map((line) => line.trim())
@@ -484,15 +491,23 @@ const EditorContextProvider = ({
               .find((line) => line.trim().startsWith('* name:'))
               ?.replace('* name: ', '')
               .replace(' ', ''),
+            highlight_line: curr
+              .map((line) => line.trim())
+              .find((line) => line.trim().startsWith('* highlight:'))
+              ?.replace('* highlight: ', '')
+              .split('-')
+              .map((data, index) => ({ value: Number(data), index }))
+              .reduce(
+                (acc, curr) =>
+                  curr.index === 0
+                    ? { ...acc, start: curr.value }
+                    : { ...acc, end: curr.value },
+                {},
+              ),
           },
         ],
         [] as any[],
-      ) as {
-      type: string;
-      title: string;
-      description: string;
-      isSelected: boolean;
-    }[];
+      ) as Doc[];
 
     return docs
       ?.sort((a, b) => {
@@ -503,12 +518,19 @@ const EditorContextProvider = ({
       })
       .map((doc, index) => ({
         ...doc,
-        isSelected: index === selectedDocIndex,
+        isSelected: index === selectedDoc?.index,
+        index,
       }));
-  }, [currentScript, selectedDocIndex]);
+  }, [currentScript, selectedDoc]);
 
-  const onChangeSelectedDoc = (docIndex: number) =>
-    setSelectedDocIndex(docIndex);
+  const onChangeSelectedDoc = (docIndex: number) => {
+    if (docIndex === selectedDoc.index) {
+      setSelectedDoc({} as Doc);
+      return;
+    }
+
+    setSelectedDoc({ ...scriptDocs[docIndex]! });
+  };
 
   const resetDirtyState = () => {
     setModelsDirtyState(
@@ -781,6 +803,7 @@ const EditorContextProvider = ({
       value={{
         currentScript,
         setCurrentScript,
+        selectedDoc,
         onChange,
         onValidate,
         connectionId: self?.connectionId,

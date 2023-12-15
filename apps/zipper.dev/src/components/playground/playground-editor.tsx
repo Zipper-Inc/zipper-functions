@@ -16,7 +16,26 @@ import styles from './playground-styles.module.css';
 
 import { parse } from '@babel/parser';
 import traverse from '@babel/traverse';
-import { IconButton, Tooltip, useColorModeValue } from '@chakra-ui/react';
+import {
+  baseTheme,
+  Box,
+  Button,
+  Flex,
+  HStack,
+  IconButton,
+  Input,
+  Popover,
+  PopoverArrow,
+  PopoverBody,
+  PopoverCloseButton,
+  PopoverContent,
+  PopoverHeader,
+  PopoverTrigger,
+  Select,
+  Stack,
+  Tooltip,
+  useColorModeValue,
+} from '@chakra-ui/react';
 import { baseColors, prettierFormat, useCmdOrCtrl } from '@zipper/ui';
 import MonacoJSXHighlighter from 'monaco-jsx-highlighter';
 import { use, useEffect, useRef, useState } from 'react';
@@ -80,6 +99,8 @@ export default function PlaygroundEditor(
     runEditorActions,
     readOnly,
     onValidate,
+    selectedDoc,
+    scriptDocs,
   } = useEditorContext();
   const { boot, bootPromise, run, configs } = useRunAppContext();
   const editorRef = useRef<MonacoEditor>();
@@ -197,7 +218,6 @@ export default function PlaygroundEditor(
       return result;
     };
   };
-
   useEffect(() => {
     if (monacoEditor) {
       monacoEditor.languages.register({
@@ -416,6 +436,18 @@ export default function PlaygroundEditor(
       console.log('[EDITOR]', `Setting model to ${currentScript.filename}`);
 
       editorRef.current.setModel(model);
+      editorRef.current?.getAction('editor.foldAllMarkerRegions')?.run();
+      editorRef.current.addAction({
+        id: 'custom-action',
+        label: 'Custom Action',
+        keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyK],
+        contextMenuGroupId: 'navigation',
+        contextMenuOrder: 1.5,
+        run: function (ed) {
+          // Your custom action logic here
+          alert('Custom Action Clicked!');
+        },
+      });
       runEditorActions({ now: true, value: model.getValue(), currentScript });
       maybeResyncScript(currentScript);
     }
@@ -581,45 +613,77 @@ export default function PlaygroundEditor(
   );
 
   useEffect(() => {
-    if (isliveBlocksReady) {
-      editorRef.current?.createDecorationsCollection([
-        {
+    if (
+      isliveBlocksReady &&
+      scriptDocs.length > 1 &&
+      !selectedDoc.highlight_line?.start
+    ) {
+      const editor = editorRef.current!;
+      const highLightDecorations = editor
+        .getModel()
+        ?.getAllDecorations()
+        .filter(
+          (deco) =>
+            scriptDocs
+              .map((line) => line.highlight_line.start)
+              .includes(deco.range.startLineNumber) &&
+            scriptDocs
+              .map((line) => line.highlight_line.end)
+              .includes(deco.range.endLineNumber),
+        );
+
+      editor.removeDecorations(
+        highLightDecorations?.map((deco) => deco.id) as string[],
+      );
+    }
+
+    if (
+      isliveBlocksReady &&
+      scriptDocs.length > 1 &&
+      !!selectedDoc.highlight_line?.start
+    ) {
+      const editor = editorRef.current!;
+
+      const decorations: monaco.editor.IModelDeltaDecoration[] = scriptDocs.map(
+        (script) => ({
           range: {
-            startLineNumber: 22,
+            startLineNumber: script.highlight_line.start,
             startColumn: 1,
-            endLineNumber: 24,
+            endLineNumber: script.highlight_line.end,
             endColumn: Number.MAX_SAFE_INTEGER,
           },
           options: {
             isWholeLine: true,
-            className: styles['tutorial-line'],
+            className: script.isSelected
+              ? styles['tutorial-line-enable']
+              : styles['tutorial-line-unable'],
+            marginClassName: script.isSelected
+              ? styles['tutorial-line-margin-enable']
+              : styles['tutorial-line-margin-unable'],
           },
-        },
-      ]);
+        }),
+      );
+
+      const highLightDecorations = editor
+        .getModel()
+        ?.getAllDecorations()
+        .filter(
+          (deco) =>
+            scriptDocs
+              .map((line) => line.highlight_line.start)
+              .includes(deco.range.startLineNumber) &&
+            scriptDocs
+              .map((line) => line.highlight_line.end)
+              .includes(deco.range.endLineNumber),
+        );
+
+      editor.removeDecorations(
+        highLightDecorations?.map((deco) => deco.id) as string[],
+      );
+
+      editor.createDecorationsCollection().set(decorations);
     }
-  }, [isliveBlocksReady, editorRef]);
-
-  const CommentButton = (props: { line_start: number }) => {
-    return (
-      <Tooltip label="Add a comment">
-        <IconButton
-          colorScheme="brandOrange"
-          aria-label="Add a doc"
-          borderRadius="full"
-          size="xs"
-          icon={<ChatIcon />}
-          position="absolute"
-          zIndex={1000}
-          left={10}
-          top={`calc(${props.line_start} * 20px - 30px)`}
-        />
-      </Tooltip>
-    );
-  };
-
-  const foldAll = editorRef.current?.getAction('editor.foldAllMarkerRegions');
-
-  // console.log(editorRef.current?.getSupportedActions().map((a) => a.id));
+  }, [isliveBlocksReady, editorRef, scriptDocs, selectedDoc]);
 
   const selection = editorRef?.current?.getSelection();
 
@@ -627,11 +691,87 @@ export default function PlaygroundEditor(
     ?.getModel()
     ?.getValueInRange(selection!);
 
-  // editorRef?.current?.onDidChangeCursorSelection((event) => {
-  //   if (selection?.isEmpty()) {
-  //     return; // skip if nothing is selected
-  //   }
-  // });
+  const addCommentBlock = (name: string, type: string) => {
+    const currCode = editorRef.current!.getValue();
+
+    const separator = currCode.split('\n')[selection!.startLineNumber - 1];
+
+    const [start, rest] = currCode.split(separator!);
+
+    const docComment = `// #region ${name}
+      /**
+       * ----
+       * name: ${name}
+       * type: ${type}
+       * highlight: ${selection!.startLineNumber + 10}-${
+      selection!.endLineNumber + 10
+    } 
+       * ----
+       * This is your documentation block description.
+       */
+      // #endregion
+    `;
+
+    const newCode = [start, docComment, separator, rest].join('');
+
+    editorRef.current?.setValue(prettierFormat(newCode));
+  };
+
+  const CommentButton = (props: { line_start: number }) => {
+    const [selectValue, setSelectValue] = useState('');
+    const [nameValue, setNameValue] = useState('');
+    return (
+      <Popover>
+        <PopoverTrigger>
+          {/* <Tooltip label="Add a doc comment"> */}
+          <IconButton
+            colorScheme="brandOrange"
+            aria-label="Add a doc"
+            borderRadius="full"
+            size="xs"
+            icon={<ChatIcon />}
+            position="absolute"
+            zIndex={100}
+            left={10}
+            top={`calc(${props.line_start} * 20px - 30px)`}
+          />
+          {/* </Tooltip> */}
+        </PopoverTrigger>
+        <PopoverContent zIndex={100} width="fit-content">
+          <PopoverArrow />
+          {/* <PopoverCloseButton /> */}
+          <PopoverBody as={Flex} alignItems="center" gap={2}>
+            <HStack>
+              <Input
+                placeholder="Name"
+                size="sm"
+                onChange={(e) => setNameValue(e.target.value)}
+              />
+              <Select
+                placeholder="Type"
+                size="sm"
+                onChange={(e) => setSelectValue(e.target.value)}
+              >
+                <option value="title">Title</option>
+                <option value="heading_1">Heading 1</option>
+                <option value="heding_2">Heading 2</option>
+              </Select>
+            </HStack>
+
+            <Button
+              size="sm"
+              px={2}
+              colorScheme="brandOrange"
+              isDisabled={nameValue === '' || selectValue === ''}
+              onClick={() => addCommentBlock(nameValue, selectValue)}
+            >
+              Create
+            </Button>
+          </PopoverBody>
+        </PopoverContent>
+      </Popover>
+    );
+  };
 
   return (
     <>

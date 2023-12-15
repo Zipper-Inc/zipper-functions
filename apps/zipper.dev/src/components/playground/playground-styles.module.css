@@ -1,3 +1,17 @@
-.tutorial-line {
-  background-color: yellow;
+.tutorial-line-enable {
+  background-color: #FEF0C7;
+}
+
+.tutorial-line-unable {
+  background-color: transparent;
+}
+
+.tutorial-line-margin-enable {
+  background-color: #FEF0C7;
+  color: #DC6803;
+}
+
+.tutorial-line-margin-unable {
+  background-color: transparent;
+  color: default;
 }
