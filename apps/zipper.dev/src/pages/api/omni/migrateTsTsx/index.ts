@@ -125,15 +125,9 @@ export default createOmniApiHandler(async (req, res) => {
           );
 
           if (hasUpdated) {
-            const zipperCodemodUser = await prisma.user.findFirst({
-              where: { slug: 'zipper-codemods' },
-              select: { id: true },
-            });
-
             // get new hash
             const { hash } = await buildAndStoreApplet({
               app: { ...app, scripts: updatedScripts },
-              userId: zipperCodemodUser?.id,
             });
 
             if (hash !== app.playgroundVersionHash) {

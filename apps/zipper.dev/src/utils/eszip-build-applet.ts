@@ -102,7 +102,6 @@ export async function build({
       /**
        * Handle user's App files
        */
-
       if (specifier.startsWith(appFilesBaseUrl)) {
         const filename = specifier
           .replace(`${appFilesBaseUrl}/`, '')
