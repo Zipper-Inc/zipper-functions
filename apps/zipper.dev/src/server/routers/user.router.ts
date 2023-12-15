@@ -308,7 +308,7 @@ export const userRouter = createTRPCRouter({
         },
       });
 
-      await prisma.resourceOwnerSlug.update({
+      await prisma.resourceOwnerSlug.updateMany({
         where: {
           slug: user.slug,
         },
