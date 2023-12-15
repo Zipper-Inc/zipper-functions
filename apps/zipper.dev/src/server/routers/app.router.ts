@@ -4,6 +4,7 @@ import {
   AppEditor,
   Prisma,
   ResourceOwnerSlug,
+  Schedule,
   Script,
   ScriptMain,
 } from '@prisma/client';
@@ -11,6 +12,7 @@ import { TRPCError } from '@trpc/server';
 import {
   appSubmissionState,
   BootPayload,
+  InputParam,
   ResourceOwnerType,
 } from '@zipper/types';
 import {
@@ -23,6 +25,7 @@ import { randomUUID } from 'crypto';
 import JSZip from 'jszip';
 import fetch from 'node-fetch';
 import { z } from 'zod';
+import parser from 'cron-parser';
 import { prisma } from '~/server/prisma';
 import { trackEvent } from '~/utils/api-analytics';
 import { buildAndStoreApplet } from '~/utils/eszip-build-applet';
@@ -709,7 +712,12 @@ export const appRouter = createTRPCRouter({
               ...ZIPPER_PLAYGROUND_USER_AGENT_HEADER,
             },
           },
-        ).then((r) => r.json());
+        )
+          .then((r) => r.json())
+          .catch((e) => {
+            console.error(e);
+            throw new Error(e);
+          });
 
         if (!bootPayload.ok || bootPayload.version !== version) {
           throw new Error(
@@ -719,6 +727,92 @@ export const appRouter = createTRPCRouter({
           );
         }
 
+        await Promise.all(
+          Object.keys(bootPayload.configs).map(async (filename) => {
+            const config = bootPayload.configs[filename];
+            let existingSchedules: Schedule[] = [];
+            const foundIds: string[] = [];
+
+            // there are no scheldules in the config, so delete all existing
+            // schedules that came from the file's configs
+            if (!config?.schedules) {
+              await prisma.schedule.deleteMany({
+                where: {
+                  appId: app.id,
+                  filename,
+                  fromConfig: true,
+                },
+              });
+            } else {
+              // get existing schedules that we may be deleting or updating
+              existingSchedules = await prisma.schedule.findMany({
+                where: {
+                  appId: app.id,
+                  filename,
+                  fromConfig: true,
+                },
+              });
+            }
+
+            await Promise.all(
+              Object.keys(config?.schedules || {}).map(async (name) => {
+                const schedule = config?.schedules?.[name];
+                if (!schedule) return;
+
+                const parsedInputs: InputParam[] =
+                  bootPayload.bootInfo.parsedScripts[filename]?.inputs;
+                const inputsWithTypes: Record<string, any> = {};
+
+                if (schedule.inputs) {
+                  Object.keys(schedule.inputs).forEach((inputKey) => {
+                    const type =
+                      parsedInputs.find((i) => i.key === inputKey)?.type ||
+                      'unknown';
+
+                    inputsWithTypes[`${inputKey}:${type}`] =
+                      schedule.inputs?.[inputKey];
+                  });
+                }
+
+                const existingSchedule = existingSchedules.find((s) => {
+                  return (
+                    s.name === name &&
+                    s.crontab === schedule.cron &&
+                    JSON.stringify(s.inputs) === JSON.stringify(inputsWithTypes)
+                  );
+                });
+
+                if (existingSchedule) {
+                  foundIds.push(existingSchedule.id);
+                } else {
+                  const newSchedule = await prisma.schedule.create({
+                    data: {
+                      appId: app.id,
+                      filename,
+                      crontab: parser
+                        .parseExpression(schedule.cron)
+                        .stringify(),
+                      inputs: JSON.parse(JSON.stringify(inputsWithTypes)),
+                      userId: ctx.userId,
+                      fromConfig: true,
+                      name,
+                    },
+                  });
+                  foundIds.push(newSchedule.id);
+                }
+              }),
+            );
+
+            await prisma.schedule.deleteMany({
+              where: {
+                appId: app.id,
+                filename,
+                id: { notIn: foundIds },
+              },
+            });
+          }),
+        );
+
         await cacheBootPayload.set(
           { deploymentId: bootPayload.deploymentId },
           bootPayload,
@@ -726,6 +820,7 @@ export const appRouter = createTRPCRouter({
 
         return bootPayload;
       } catch (e: any) {
+        console.error(e);
         return { ok: false, error: e.toString(), configs: {} };
       }
     }),
