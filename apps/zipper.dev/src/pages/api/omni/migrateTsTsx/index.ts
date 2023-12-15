@@ -1,7 +1,9 @@
-// BAD STUFF
-// pls dont do this!!!
-
-// TODO: move it to scripts/migrate-ts-tsx.ts
+import {
+  successResponse,
+  methodNotAllowed,
+  createOmniApiHandler,
+} from '~/server/utils/omni.utils';
+import { HttpMethod } from '@zipper/types';
 import { withParser } from 'jscodeshift';
 import { prisma } from '~/server/prisma';
 import { Script } from '@prisma/client';
@@ -29,17 +31,8 @@ const renameTsImportsToTsx = async (code: string) => {
     .toSource();
 };
 
-import {
-  successResponse,
-  methodNotAllowed,
-  createOmniApiHandler,
-} from '~/server/utils/omni.utils';
-import { HttpMethod } from '@zipper/types';
-
 export default createOmniApiHandler(async (req, res) => {
   switch (req.method) {
-    case HttpMethod.PATCH:
-    case HttpMethod.PUT:
     case HttpMethod.POST:
       const errors = [];
 
@@ -137,19 +130,11 @@ export default createOmniApiHandler(async (req, res) => {
               select: { id: true },
             });
 
-            console.log('PLS PLS PLS', zipperCodemodUser);
             // get new hash
             const { hash } = await buildAndStoreApplet({
               app: { ...app, scripts: updatedScripts },
               userId: zipperCodemodUser?.id,
             });
-
-            console.log(
-              '[Check Hash]',
-              hash,
-              app.playgroundVersionHash,
-              hash !== app.playgroundVersionHash,
-            );
 
             if (hash !== app.playgroundVersionHash) {
               // update db version hash
