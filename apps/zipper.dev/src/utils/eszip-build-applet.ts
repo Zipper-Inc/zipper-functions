@@ -6,8 +6,8 @@ import { storeVersionESZip } from '~/server/utils/r2.utils';
 import { getLogger } from './app-console';
 import { BuildCache } from './eszip-build-cache';
 import {
-  handleJSXModule,
   getRemoteModule,
+  handleJSXContent,
   isZipperImportUrl,
   TYPESCRIPT_CONTENT_HEADERS,
 } from './eszip-utils';
@@ -64,7 +64,9 @@ export async function build({
   const appFilesBaseUrl = `${baseUrl}/applet/src`;
   const frameworkEntrypointUrl = `${baseUrl}/${FRAMEWORK_ENTRYPOINT}`;
 
-  const tsScripts = app.scripts.filter((s) => s.filename.endsWith('.ts'));
+  const tsScripts = app.scripts.filter(
+    (s) => s.filename.endsWith('.ts') || s.filename.endsWith('.tsx'),
+  );
 
   const appFileUrls = tsScripts.map(
     ({ filename }) => `${appFilesBaseUrl}/${filename}`,
@@ -75,9 +77,12 @@ export async function build({
   const bundle = await eszip.build(fileUrlsToBundle, async (specifier) => {
     // if (__DEBUG__) console.debug(specifier);
     try {
+      const isJSX =
+        specifier.endsWith('.tsx') || specifier.includes('applet/src/main.ts');
       /**
        * Handle user's App files
        */
+
       if (specifier.startsWith(appFilesBaseUrl)) {
         const filename = specifier
           .replace(`${appFilesBaseUrl}/`, '')
@@ -86,7 +91,12 @@ export async function build({
         const script = tsScripts.find((s) => s.filename === filename);
 
         return {
-          ...handleJSXModule(specifier, rewriteImports(script?.code || '')),
+          specifier,
+          headers: TYPESCRIPT_CONTENT_HEADERS,
+          kind: 'module',
+          content: isJSX
+            ? handleJSXContent(rewriteImports(script?.code || ''))
+            : rewriteImports(script?.code) || '',
           version,
         };
       }
@@ -132,7 +142,12 @@ export async function build({
         const mod = await getRemoteModule({ specifier, target });
         return {
           ...mod,
-          ...handleJSXModule(specifier, rewriteImports(mod?.content)),
+          specifier,
+          headers: TYPESCRIPT_CONTENT_HEADERS,
+          kind: 'module',
+          content: isJSX
+            ? handleJSXContent(rewriteImports(mod?.content))
+            : rewriteImports(mod?.content) || '',
         };
       }
 
@@ -197,6 +212,8 @@ export async function buildAndStoreApplet({
     );
   };
 
+  const buildFile = await buildBuffer();
+
   const savedVersion = await prisma.version.upsert({
     where: {
       hash,
@@ -204,7 +221,7 @@ export async function buildAndStoreApplet({
     create: {
       app: { connect: { id: app.id } },
       hash,
-      buildFile: await buildBuffer(),
+      buildFile,
       isPublished: !!isPublished,
       userId,
     },
