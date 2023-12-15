@@ -219,7 +219,7 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
             (selectedOrganizationId ?? null) !== (organization?.id ?? null) &&
             setActive
           ) {
-            setActive(selectedOrganizationId || null);
+            await setActive(selectedOrganizationId || null);
           }
           if (aiOutput) {
             const otherFiles = aiOutput.filter(

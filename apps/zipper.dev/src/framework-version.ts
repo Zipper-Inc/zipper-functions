@@ -1,2 +1,2 @@
 //generated - don't edit
-export const frameworkVersion = '0.0.0';
+export const frameworkVersion = '0.1.1';

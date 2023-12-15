@@ -1,8 +1,20 @@
 import { AppConnectorUserAuth } from '@prisma/client';
 import { generateReactHelpers } from '@uploadthing/react/hooks';
-import { AppInfo, InputParam, UserAuthConnectorType } from '@zipper/types';
+import {
+  AppInfo,
+  BootPayload,
+  InputParam,
+  UserAuthConnectorType,
+} from '@zipper/types';
 import { getInputsFromFormData, safeJSONParse, uuid } from '@zipper/utils';
-import { createContext, useContext, useEffect, useRef, useState } from 'react';
+import {
+  createContext,
+  MutableRefObject,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import { useForm } from 'react-hook-form';
 import { OurFileRouter } from '~/pages/api/uploadthing';
 import { AppQueryOutput } from '~/types/trpc';
@@ -22,8 +34,14 @@ type UserAuthConnector = {
   appConnectorUserAuths: AppConnectorUserAuth[];
 };
 
+type AppInfoWithHashes = AppInfo & {
+  playgroundVersionHash: string | null;
+  publishedVersionHash: string | null;
+};
+
 export type RunAppContextType = {
-  appInfo: AppInfo;
+  appInfo: AppInfoWithHashes;
+  canUserEdit?: boolean;
   formMethods: any;
   inputParams?: InputParam[];
   isRunning: boolean;
@@ -34,20 +52,23 @@ export type RunAppContextType = {
     shouldSave?: boolean;
     isCurrentScriptEntryPoint?: boolean;
   }) => Promise<string | undefined>;
-  boot: (params?: { shouldSave?: boolean }) => Promise<void>;
+  boot: (params?: { shouldSave?: boolean }) => Promise<BootPayload>;
+  bootPromise: MutableRefObject<Promise<BootPayload>>;
   configs: Zipper.BootPayload['configs'];
 };
 
 export const RunAppContext = createContext<RunAppContextType>({
-  appInfo: {} as AppInfo,
+  appInfo: {} as AppInfoWithHashes,
+  canUserEdit: false,
   formMethods: {},
   inputParams: undefined,
   isRunning: false,
   results: {},
   userAuthConnectors: [],
   setResults: noop,
+  bootPromise: { current: Promise.resolve({} as BootPayload) },
   run: () => Promise.resolve(''),
-  boot: () => Promise.resolve(),
+  boot: () => Promise.resolve({} as BootPayload),
   configs: {},
 });
 
@@ -95,8 +116,13 @@ export function RunAppProvider({
     updatedAt,
     playgroundVersionHash,
     publishedVersionHash,
-    canUserEdit,
     isDataSensitive,
+    isPrivate,
+    requiresAuthToRun,
+    editors,
+    createdById,
+    organizationId,
+    canUserEdit,
   } = app;
   const formMethods = useForm();
   const [isRunning, setIsRunning] = useState(false);
@@ -106,6 +132,7 @@ export function RunAppProvider({
   const { useUploadThing } = generateReactHelpers<OurFileRouter>();
   const { isUploading, startUpload } = useUploadThing('imageUploader');
   const logTimersToCleanUp = useRef<number[]>([]);
+  const bootPromise = useRef<Promise<any>>(Promise.resolve());
 
   const cleanUpLogTimers = () => {
     logTimersToCleanUp.current.forEach((id) => window.clearTimeout(id));
@@ -113,7 +140,6 @@ export function RunAppProvider({
 
   // clean up when unmounting
   useEffect(() => cleanUpLogTimers, []);
-
   const runAppMutation = trpc.app.run.useMutation({
     async onSuccess() {
       await utils.app.byResourceOwnerAndAppSlugs.invalidate({
@@ -215,29 +241,38 @@ export function RunAppProvider({
   };
 
   const boot = async ({ shouldSave = false } = {}) => {
-    try {
-      const hash = shouldSave
-        ? await saveAppBeforeRun()
-        : app.playgroundVersionHash;
+    const promise = new Promise<BootPayload>(async (resolve, reject) => {
+      try {
+        const hash = shouldSave
+          ? await saveAppBeforeRun()
+          : app.playgroundVersionHash;
 
-      const version = getAppVersionFromHash(hash);
-      if (!version) throw new Error('No version found');
+        const version = getAppVersionFromHash(hash);
+        if (!version) throw new Error('No version found');
 
-      const oneSecondAgo = Date.now() - 1 * 1000;
-      startPollingUpdateLogs({ version, fromTimestamp: oneSecondAgo });
+        const oneSecondAgo = Date.now() - 1 * 1000;
+        startPollingUpdateLogs({ version, fromTimestamp: oneSecondAgo });
 
-      const { configs } = await bootAppMutation.mutateAsync({
-        appId: id,
-      });
+        const bootPayload = await bootAppMutation.mutateAsync({
+          appId: id,
+        });
 
-      if (configs) setConfigs(configs);
+        if (!bootPayload.ok) throw new Error('Boot failed');
 
-      // stop any polling and do one last update
-      cleanUpLogTimers();
-      updateLogs({ version, fromTimestamp: oneSecondAgo });
-    } catch (e) {
-      return;
-    }
+        if (bootPayload.configs) setConfigs(bootPayload.configs);
+
+        // stop any polling and do one last update
+        cleanUpLogTimers();
+        updateLogs({ version, fromTimestamp: oneSecondAgo });
+        resolve(bootPayload as any);
+      } catch (e) {
+        reject(e);
+      } finally {
+        bootPromise.current = Promise.resolve();
+      }
+    });
+    bootPromise.current = promise;
+    return promise;
   };
 
   const run: RunAppContextType['run'] = async ({ shouldSave = false } = {}) => {
@@ -358,13 +393,18 @@ export function RunAppProvider({
         appInfo: {
           id,
           name,
+          createdById,
           description,
           slug,
           updatedAt,
           playgroundVersionHash,
           publishedVersionHash,
-          canUserEdit,
           isDataSensitive,
+          isPrivate,
+          requiresAuthToRun,
+          editors,
+          organizationId,
+          canUserEdit,
         },
         formMethods,
         isRunning,
@@ -375,7 +415,9 @@ export function RunAppProvider({
         setResults,
         run,
         boot,
+        bootPromise,
         configs,
+        canUserEdit,
       }}
     >
       {children}

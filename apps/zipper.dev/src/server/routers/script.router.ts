@@ -71,7 +71,18 @@ export const scriptRouter = createTRPCRouter({
         code: z.string().default(DEFAULT_CODE),
         order: z.number(),
         connectorId: z
-          .enum(['github', 'slack', 'openai', 'zendesk', 'github-app'])
+          .enum([
+            'github',
+            'slack',
+            'openai',
+            'zendesk',
+            'github-app',
+            'postgres',
+            'mysql',
+            'mongodb',
+            'discord',
+            'notion',
+          ])
           .optional(),
       }),
     )

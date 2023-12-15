@@ -29,6 +29,7 @@ model App {
   createdById           String?
   requiresAuthToRun     Boolean   @default(false)
   isDataSensitive       Boolean   @default(false)
+  isAutoPublished       Boolean   @default(true)
   isTemplate            Boolean   @default(false)
   dailyRunLimit         Int       @default(1000)
   secretsHash           String?
@@ -330,6 +331,7 @@ model User {
   email         String        @unique
   emailVerified DateTime?
   image         String?
+  displayName   String?
   slug          String        @unique
   accounts      Account[]
   sessions      Session[]
@@ -415,6 +417,16 @@ model SlackZipperSlashCommandInstall {
 
   @@unique([teamId, appId])
   @@map("slack_zipper_slash_command_installs")
+}
+
+model DiscordZipperSlashCommandInstall {
+  guildId           String
+  encryptedBotToken String
+  createdAt         DateTime @default(now())
+  guildName         String
+
+  @@unique([guildId])
+  @@map("discord_zipper_slash_command_installs")
 }
 
 model AppLog {

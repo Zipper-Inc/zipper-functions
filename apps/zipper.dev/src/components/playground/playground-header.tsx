@@ -66,6 +66,7 @@ import { PlaygroundPublishInfo } from './playground-publish-button';
 import { getAppLink } from '@zipper/utils';
 import { UserProfileButton } from '../auth/user-profile-button';
 import { FiMoreHorizontal } from 'react-icons/fi';
+import { useEditorContext } from '../context/editor-context';
 
 const getDefaultCreateAppFormValues = () => ({
   name: generateDefaultSlug(),
@@ -77,6 +78,7 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { user, isLoaded } = useUser();
   const [isShareModalOpen, setShareModalOpen] = useState(false);
+  const { currentScript } = useEditorContext();
 
   const { editorIds, onlineEditorIds } = useAppEditors();
   const router = useRouter();
@@ -138,6 +140,13 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
     if (superTokenId && !onlineEditorIds.includes(superTokenId))
       editorIds.push(superTokenId);
   });
+
+  const getViewLink = () =>
+    `${
+      process.env.NODE_ENV === 'production' ? 'https://' : 'http://'
+    }${getAppLink(app.slug)}/${
+      currentScript?.isRunnable ? currentScript?.filename : ''
+    }`;
 
   return (
     <Flex
@@ -323,9 +332,7 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
               icon={<PiBrowserDuotone />}
               display={{ base: 'flex', md: 'none' }}
               as={Link}
-              href={`${
-                process.env.NODE_ENV === 'production' ? 'https://' : 'http://'
-              }${getAppLink(app.slug)}`}
+              href={getViewLink()}
             >
               View
             </MenuItem>
@@ -372,9 +379,7 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
           colorScheme="gray"
           display={{ base: 'none', md: 'flex' }}
           variant="outline"
-          href={`${
-            process.env.NODE_ENV === 'production' ? 'https://' : 'http://'
-          }${getAppLink(app.slug)}`}
+          href={getViewLink()}
           target="_blank"
           leftIcon={<PiBrowserDuotone color={BLUE} />}
           fontWeight="medium"
@@ -464,15 +469,12 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
                   isDisabled={isDisabled}
                   onClick={forkAppForm.handleSubmit(async ({ name }) => {
                     if (user) {
-                      if (
-                        (selectedOrganizationId ?? null) !==
-                          (organization?.id ?? null) &&
-                        setActive
-                      ) {
-                        setActive(selectedOrganizationId || null);
-                      }
                       forkApp.mutateAsync(
-                        { id: app.id, name },
+                        {
+                          id: app.id,
+                          name,
+                          organizationId: selectedOrganizationId || undefined,
+                        },
                         {
                           onSuccess: (fork) => {
                             router.push(

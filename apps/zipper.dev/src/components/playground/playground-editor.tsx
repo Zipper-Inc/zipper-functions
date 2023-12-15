@@ -79,7 +79,7 @@ export default function PlaygroundEditor(
     readOnly,
     onValidate,
   } = useEditorContext();
-  const { boot, run, configs } = useRunAppContext();
+  const { boot, bootPromise, run, configs } = useRunAppContext();
   const editorRef = useRef<MonacoEditor>();
   const yRefs = useRef<{
     yDoc?: Y.Doc;
@@ -293,9 +293,9 @@ export default function PlaygroundEditor(
       });
 
       // start the boot don't wait for it to finish
-      boot({ shouldSave: false }).then(() =>
-        console.log('[EDITOR]', 'Applet is booted'),
-      );
+      boot({ shouldSave: false }).then(() => {
+        console.log('[EDITOR]', 'Applet is booted');
+      });
 
       console.log('[EDITOR]', 'Models are ready');
       setIsModelReady(true);
@@ -403,16 +403,19 @@ export default function PlaygroundEditor(
   // A little love for `run: true`
   const lastAutoRunHash = useRef<Record<string, string>>({});
   useEffect(() => {
-    if (currentScript?.hash && configs) {
-      const config = configs[currentScript.filename];
-      if (
-        config?.run &&
-        currentScript.hash !== lastAutoRunHash.current[currentScript.filename]
-      ) {
-        run({ shouldSave: false });
-        lastAutoRunHash.current[currentScript.filename] = currentScript.hash;
+    bootPromise.current.then((bootPayload) => {
+      const configFiles = bootPayload?.configs || configs;
+      if (currentScript?.hash && configFiles) {
+        const config = configFiles[currentScript.filename];
+        if (
+          config?.run &&
+          currentScript.hash !== lastAutoRunHash.current[currentScript.filename]
+        ) {
+          run({ shouldSave: false });
+          lastAutoRunHash.current[currentScript.filename] = currentScript.hash;
+        }
       }
-    }
+    });
   }, [currentScript?.hash, configs]);
 
   const room = useRoom();

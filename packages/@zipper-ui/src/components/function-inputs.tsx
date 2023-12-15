@@ -1,3 +1,4 @@
+import './file-upload/uploadthing.css';
 import { Select, Spinner } from '@chakra-ui/react';
 import { Suspense, useRef, useState } from 'react';
 import {
@@ -20,12 +21,15 @@ import {
   useDisclosure,
   Text,
 } from '@chakra-ui/react';
+import { UploadButton } from './file-upload/uploadthing';
+import { useUploadContext } from './upload-button-context';
 import { VscAdd } from 'react-icons/vsc';
 import { FieldValues, UseFormReturn, RegisterOptions } from 'react-hook-form';
 import { InputType, InputParam } from '@zipper/types';
 import { getFieldName } from '@zipper/utils';
 import { ErrorBoundary } from './error-boundary';
 import { AutoResizeTextarea } from './auto-resize-text-area';
+import React from 'react';
 
 interface Props {
   params: InputParam[];
@@ -67,8 +71,8 @@ function FunctionParamInput({
   isDisabled?: boolean;
   details?: any;
 }) {
-  const { register, watch } = formContext;
-
+  const { register, watch, getValues } = formContext;
+  const { setIsUploading } = useUploadContext();
   const name = getFieldName(inputKey, type);
   const formFieldOptions: RegisterOptions<FieldValues, string> = {
     required: !optional,
@@ -85,7 +89,15 @@ function FunctionParamInput({
   switch (type) {
     case InputType.boolean: {
       return (
-        <Switch colorScheme="purple" {...formProps} isDisabled={isDisabled} />
+        <Switch
+          colorScheme="purple"
+          {...formProps}
+          onChange={(e) => {
+            console.log(e.target.checked);
+            formContext.setValue(name, e.target.checked);
+          }}
+          isDisabled={isDisabled}
+        />
       );
     }
 
@@ -124,12 +136,19 @@ function FunctionParamInput({
     }
 
     case InputType.date: {
+      const value = getValues(name);
+
+      const formattedDate =
+        JSON.stringify(value) !== 'null'
+          ? value && value.toISOString().split('T')[0]
+          : new Date().toISOString().split('T')[0];
+
       return (
         <Input
           backgroundColor="bgColor"
           type="date"
           {...formProps}
-          isDisabled={isDisabled}
+          value={formattedDate}
           placeholder={placeholder}
         />
       );
@@ -221,47 +240,33 @@ function FunctionParamInput({
       );
     }
     case InputType.file: {
-      const fileInputRef = useRef<HTMLInputElement>(null);
-
-      const handleButtonClick = () => {
-        fileInputRef.current?.click();
-      };
-
-      const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        formProps.onChange(event);
-      };
-
       return (
-        <VStack
-          align="start"
-          alignItems={'center'}
-          w="full"
-          display={'flex'}
-          flexDirection={'row'}
-          gap={2}
-        >
-          <Button
-            onClick={handleButtonClick}
-            isDisabled={isDisabled}
-            backgroundColor="bgColor"
-            _hover={{ bg: 'primary', color: 'fg.50' }}
-            mt={2}
-          >
-            <Text>Choose File</Text>
-            <Input
-              type="file"
-              style={{ display: 'none' }}
-              isDisabled={isDisabled}
-              placeholder={placeholder}
-              {...formProps}
-              ref={fileInputRef}
-              onChange={handleChange}
-            />
-          </Button>
-          <Text fontSize="sm" color="gray.500">
-            {fileInputRef.current?.files?.[0]?.name || 'No file chosen'}
-          </Text>
-        </VStack>
+        <UploadButton
+          appearance={{
+            button({ ready, isUploading }) {
+              return `custom-button ${
+                ready ? 'custom-button-ready' : 'custom-button-not-ready'
+              } ${isUploading ? 'custom-button-uploading' : ''}`;
+            },
+            container: 'custom-container',
+            allowedContent: 'custom-allowed-content',
+          }}
+          onUploadProgress={() => {
+            setIsUploading(true);
+          }}
+          onUploadBegin={() => {
+            setIsUploading(true);
+          }}
+          endpoint="imageUploader"
+          onClientUploadComplete={(res) => {
+            formContext.setValue(name, res[0]?.url);
+            setIsUploading(false);
+          }}
+          onUploadError={(error: Error) => {
+            // Do something with the error.
+            console.error(`ERROR! ${error.message}`);
+          }}
+        />
       );
     }
     case InputType.any: {

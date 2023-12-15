@@ -2,6 +2,7 @@ import { extendTheme } from '@chakra-ui/react';
 import multiSelectTheme from './multiSelectTheme';
 import Gradient from 'javascript-color-gradient';
 import { switchTheme } from './switch';
+import { Input } from '@chakra-ui/react';
 
 export const DARK_PURPLE = '#3C1053';
 export const PURPLE = '#9B26B6';
@@ -277,11 +278,11 @@ export const theme = extendTheme({
         boxSizing: 'border-box',
       },
       body: {
-        height: '100vh',
+        height: '100%',
+        maxHeight: '100dvh',
         padding: 0,
         margin: 0,
         display: 'flex',
-        flexDirection: 'column',
         overflow: 'auto',
       },
 
@@ -337,3 +338,11 @@ export const theme = extendTheme({
   },
   ...borderRadius,
 });
+
+// Inputs should disable spellcheck and autocomplete attributes most of the time
+// Enable them explicitly when needed
+Input.defaultProps = {
+  ...Input.defaultProps,
+  autoComplete: 'off',
+  spellCheck: 'false',
+};

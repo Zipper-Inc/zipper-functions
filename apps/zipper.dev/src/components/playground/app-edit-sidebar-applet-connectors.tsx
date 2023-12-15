@@ -20,6 +20,7 @@ export const AppEditSidebarAppletConnectors = () => {
   const [slackAuthRequired, setSlackAuthRequired] = useState(false);
   // state to hold whether user needs to authenticate with github
   const [githubAuthRequired, setGitHubAuthRequired] = useState(false);
+  // state to hold whether user needs to authenticate with github
 
   // get the existing Slack connector data from the database
   const slackConnector = trpc.slackConnector.get.useQuery(

@@ -21,17 +21,18 @@ import {
   TabPanel,
   Flex,
   Icon,
+  Link,
 } from '@chakra-ui/react';
 import { Script } from '@prisma/client';
 import Editor, { EditorProps, Monaco } from '@monaco-editor/react';
 import { HiArrowLeft, HiChevronDown, HiOutlineTemplate } from 'react-icons/hi';
-import Link from 'next/link';
 import { baseColors, Markdown, AppletAuthor, TabButton } from '@zipper/ui';
 import { NextPageWithLayout } from '~/pages/_app';
 import { trpc } from '~/utils/trpc';
 import { isReadme } from '~/utils/playground.utils';
 import type { MonacoEditor } from '~/components/playground/playground-editor';
 import { AnalyticsHead } from '@zipper/utils';
+import { useUser } from '~/hooks/use-user';
 
 const EDITOR_OPTIONS = {
   fixedOverflowWidgets: true,
@@ -61,6 +62,7 @@ const AppletLandingPage: NextPageWithLayout = () => {
     Script | undefined
   >(undefined);
   const [isBoxVisible, setIsBoxVisible] = useState(true);
+  const { user } = useUser();
 
   const theme = useColorModeValue('vs', 'vs-dark');
 
@@ -100,7 +102,7 @@ const AppletLandingPage: NextPageWithLayout = () => {
       <iframe
         width="100%"
         height="500"
-        src={`${getAppRunUrl}/run/embed/${
+        src={`${getAppRunUrl}/embed/run/${
           currentScriptState?.filename || 'main.ts'
         }`}
       ></iframe>
@@ -141,7 +143,7 @@ const AppletLandingPage: NextPageWithLayout = () => {
             leftIcon={<HiOutlineTemplate size={20} />}
             fontSize="sm"
           >
-            <Link href={`/${data.resourceOwner.slug}/${data.slug}/src`}>
+            <Link href={`/${data.resourceOwner.slug}/${data.slug}/src/main.ts`}>
               Open in Playground
             </Link>
           </Button>
@@ -165,7 +167,10 @@ const AppletLandingPage: NextPageWithLayout = () => {
                 }}
               />
               <Stack pt={4}>
-                <Markdown>
+                <Markdown
+                  appInfo={{ name: data.name || data.slug, slug: data.slug }}
+                  currentUser={{ username: user?.username || 'Anonymous' }}
+                >
                   {getScriptCode('readme.md') ?? 'No readme found'}
                 </Markdown>
               </Stack>

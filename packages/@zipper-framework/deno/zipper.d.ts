@@ -65,10 +65,16 @@ declare namespace Zipper {
    * @see Handler
    */
   export type HandlerContext = {
+    // internal comment: this is the zipper.run request URL
     /**
-     * The request object sent to this handler
+     * Metadata about the original request
      */
-    request: Request;
+    request: Relay.RequestBody['originalRequest'];
+
+    /**
+     * The request object sent to this handler by the relay middleware
+     */
+    relayRequest: Request;
 
     /**
      * An editable response object
@@ -85,7 +91,7 @@ declare namespace Zipper {
     /**
      * Meta info about the applet itself
      */
-    appInfo: AppInfo;
+    appInfo: RelayAppInfo;
 
     /**
      * The ID for this particular run
@@ -96,13 +102,6 @@ declare namespace Zipper {
      * Auth tokens for each service the user has individually authed against
      */
     userConnectorTokens: { [service: string]: string };
-
-    // internal comment: this is the zipper.run request URL
-
-    /**
-     * URL and method of the original origin request
-     */
-    originalRequest: Relay.RequestBody['originalRequest'];
 
     /**
      * A generic stash for anything that needs to persist across handlers
@@ -164,6 +163,66 @@ declare namespace Zipper {
     appId: string;
     deploymentId: string;
     configs: { [path: string]: HandlerConfig };
+    frameworkVersion: string;
+    bootInfo: {
+      app: {
+        id: string;
+        slug: string;
+        name: string | null;
+        description: string | null;
+        updatedAt: Date | string | null;
+        isPrivate: boolean;
+        requiresAuthToRun: boolean;
+        organizationId: string | null;
+        isDataSensitive: boolean;
+        createdById: string | null;
+        editors: { userId: string; appId: string; isOwner: boolean }[];
+        appAuthor?: {
+          name: string;
+          organization: string;
+          image: string;
+          orgImage: string;
+        };
+        canUserEdit?: boolean | undefined;
+      };
+      connectors: {
+        type: string;
+        appId: string;
+        isUserAuthRequired: boolean;
+        clientId?: string;
+        userScopes: string[];
+        workspaceScopes: string[];
+      }[];
+      inputs: {
+        key: string;
+        type:
+          | 'string'
+          | 'number'
+          | 'boolean'
+          | 'date'
+          | 'array'
+          | 'object'
+          | 'any'
+          | 'enum'
+          | 'FileUrl'
+          | 'unknown';
+        optional: boolean;
+        name?: string;
+        label?: string;
+        placeholder?: string;
+        description?: string;
+        defaultValue?: Zipper.Serializable;
+        value?: Zipper.Serializable;
+        details?: Zipper.Serializable;
+      }[];
+      parsedScripts: Record<string, Record<string, any>>;
+      runnableScripts: string[];
+      metadata?: Record<string, string | undefined>;
+      entryPoint: {
+        filename: string;
+        editUrl: string;
+      };
+    };
   };
 
   /**
@@ -231,7 +290,14 @@ declare namespace Zipper {
     (ButtonAction<I> | DropdownAction<I>);
 
   export type Component = SpecialOutput<'Zipper.Component'> &
-    (StackComponent | LinkComponent | MarkdownComponent | HtmlElement);
+    (
+      | StackComponent
+      | LinkComponent
+      | MarkdownComponent
+      | HtmlElement
+      | LineChartComponent
+      | BarChartComponent
+    );
 
   export interface ComponentBase {
     type: string;
@@ -286,6 +352,78 @@ declare namespace Zipper {
     type: `html.${HtmlTag}`;
   }
 
+  export interface ChartBase extends ComponentBase {
+    props: {
+      boxHeight?: number | string;
+
+      enableGridX?: boolean;
+      enableGridY?: boolean;
+
+      axisBottom?: Partial<{
+        legend: string;
+        [key: string]: any;
+      }>;
+      axisLeft?: Partial<{
+        legend: string;
+        [key: string]: any;
+      }>;
+      [key: string]: any;
+    };
+  }
+
+  export interface BarChartComponent extends ChartBase {
+    type: 'barChart';
+    props: ChartBase['props'] & {
+      data: { [key: string]: string | number }[];
+      keys?: string[];
+      groupMode?: 'grouped' | 'stacked';
+      layout?: 'horizontal' | 'vertical';
+      reverse?: boolean;
+      margin?: Partial<{
+        bottom: number;
+        left: number;
+        right: number;
+        top: number;
+      }>;
+      enableLabel?: boolean;
+      label?: string;
+    };
+  }
+
+  export interface LineChartComponent extends ChartBase {
+    type: 'lineChart';
+    props: ChartBase['props'] & {
+      data: {
+        id: string | number;
+        data: {
+          x?: string | number | Date | null;
+          y?: string | number | Date | null;
+          [key: string]: any;
+        }[];
+        [key: string]: any;
+      }[];
+
+      curve?:
+        | 'basis'
+        | 'cardinal'
+        | 'catmullRom'
+        | 'linear'
+        | 'monotoneX'
+        | 'monotoneY'
+        | 'natural'
+        | 'step'
+        | 'stepAfter'
+        | 'stepBefore';
+
+      lineWidth?: number;
+
+      colors?: string;
+      enableArea?: boolean;
+      enablePoints?: boolean;
+      pointSize?: number;
+    };
+  }
+
   export namespace Component {
     /**
      * Creates an action
@@ -295,7 +433,9 @@ declare namespace Zipper {
         | StackComponent
         | LinkComponent
         | MarkdownComponent
-        | HtmlElement,
+        | HtmlElement
+        | LineChartComponent
+        | BarChartComponent,
     ): Component;
   }
 
@@ -368,7 +508,7 @@ declare namespace Zipper {
   export interface Storage<Value extends Serializable = Serializable> {
     appId: string;
     getAll<V extends Value = Value>(): Promise<{ [k: string]: V }>;
-    get<V extends Value = Value>(key: string): Promise<V>;
+    get<V extends Value = Value>(key: string): Promise<V> | undefined;
     set<V extends Value = Value>(
       key: string,
       value: V,
@@ -392,12 +532,12 @@ declare namespace Zipper {
    * Meta info about the app itself
    * @category Runtime
    */
-  export type AppInfo = {
+  export type RelayAppInfo = {
     id: string;
     slug: string;
     version: string;
-    url: string;
-    connectorsWithUserAuth: string[];
+    url?: string;
+    connectorsWithUserAuth?: string[];
   };
 
   /**
@@ -412,7 +552,7 @@ declare namespace Zipper {
      */
     export type RequestBody = {
       error?: string;
-      appInfo: AppInfo;
+      appInfo: RelayAppInfo;
       runId: string;
       inputs: Inputs;
       userInfo?: UserInfo;
@@ -420,6 +560,8 @@ declare namespace Zipper {
         url: string;
         method: string;
         headers: Record<string, string>;
+        body: Record<string, any>;
+        queryParameters: Record<string, string>;
       };
       path?: string;
       userId: string;
@@ -453,10 +595,17 @@ declare namespace Zipper {
 
   /**
    * An object containing useful environment variables
+   * You can also add a variable with the .set method
    *
-   * @example const myEnvVariable = Zipper.env.MY_ENV_VARIABLE;
+   * @example
+   * const myEnvVariable = Zipper.env.MY_ENV_VARIABLE;
+   * const myEnvVariable = Zipper.env.get('MY_ENV_VARIABLE');
+   * Zipper.env.set('MY_ENV_VARIABLE', 'my value'); // value on next run
    */
-  export const env: Record<string, string>;
+  export const env: Omit<Record<string, string>, 'get' | 'set'> & {
+    get: (key: string) => string | void;
+    set: (key: string, value: string) => Promise<void>;
+  };
 
   /**
    * Simple async key value store, one per app
@@ -493,6 +642,12 @@ type ButtonProps<I> = Omit<Zipper.ButtonAction<I>, 'actionType' | 'text'>;
 declare function Button<I = Zipper.Inputs>(
   props: ButtonProps<I> & Zipper.ButtonComponentProps,
 ): Zipper.Action;
+
+type LineChartProps = Zipper.LineChartComponent['props'];
+declare function LineChart(props: LineChartProps): Zipper.Component;
+
+type BarChartProps = Zipper.BarChartComponent['props'];
+declare function BarChart(props: BarChartProps): Zipper.Component;
 
 type MarkdownProps = { text?: string };
 declare function Markdown(props: MarkdownProps): Zipper.Component;

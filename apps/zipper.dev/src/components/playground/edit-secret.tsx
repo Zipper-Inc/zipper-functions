@@ -37,14 +37,9 @@ export const EditSecret: React.FC<EditSecretProps> = (props) => {
         <Box color="fg.400">
           <PiKey />
         </Box>
-        <Input
-          placeholder="Key"
-          spellCheck="false"
-          {...register(`secrets.${index}.key`, {})}
-        />
+        <Input placeholder="Key" {...register(`secrets.${index}.key`, {})} />
         <Input
           placeholder="Value"
-          autoComplete="off"
           {...register(`secrets.${index}.value`, {})}
         />
 

@@ -8,10 +8,16 @@ import {
   ScriptMain,
 } from '@prisma/client';
 import { TRPCError } from '@trpc/server';
-import { appSubmissionState, ResourceOwnerType } from '@zipper/types';
+import {
+  appSubmissionState,
+  BootPayload,
+  ResourceOwnerType,
+} from '@zipper/types';
 import {
   getInputsFromFormData,
-  ZIPPER_TEMP_USER_ID_COOKIE_NAME,
+  __ZIPPER_TEMP_USER_ID,
+  cacheDeployment,
+  cacheBootPayload,
 } from '@zipper/utils';
 import { randomUUID } from 'crypto';
 import JSZip from 'jszip';
@@ -37,21 +43,22 @@ import { DEFAULT_MD } from './script.router';
 
 const defaultSelect = Prisma.validator<Prisma.AppSelect>()({
   id: true,
-  name: true,
-  slug: true,
-  description: true,
-  isPrivate: true,
-  publishedVersionHash: true,
-  playgroundVersionHash: true,
-  parentId: true,
-  submissionState: true,
   createdAt: true,
-  updatedAt: true,
-  organizationId: true,
   createdById: true,
-  requiresAuthToRun: true,
+  description: true,
+  isAutoPublished: true,
   isDataSensitive: true,
+  isPrivate: true,
+  name: true,
+  organizationId: true,
+  parentId: true,
+  playgroundVersionHash: true,
+  publishedVersionHash: true,
+  requiresAuthToRun: true,
   secretsHash: true,
+  slug: true,
+  submissionState: true,
+  updatedAt: true,
 });
 
 export const defaultCode = [
@@ -279,6 +286,8 @@ export const appRouter = createTRPCRouter({
           },
         });
 
+        await cacheDeployment.set(app.slug, { appId: app.id, version: hash });
+
         return { ...app, scriptMain, resourceOwner };
       },
     ),
@@ -293,46 +302,57 @@ export const appRouter = createTRPCRouter({
 
     return apps;
   }),
-  allApproved: publicProcedure.query(async () => {
-    /**
-     * For pagination you can have a look at this docs site
-     * @link https://trpc.io/docs/useInfiniteQuery
-     */
+  allApproved: publicProcedure
+    .input(
+      z
+        .object({
+          amount: z.number(),
+        })
+        .optional(),
+    )
+    .query(async ({ input }) => {
+      /**
+       * For pagination you can have a look at this docs site
+       * @link https://trpc.io/docs/useInfiniteQuery
+       */
 
-    const apps = await prisma.app.findMany({
-      where: {
-        isPrivate: false,
-        submissionState: appSubmissionState.approved,
-        deletedAt: null,
-      },
-      select: defaultSelect,
-    });
-
-    const resourceOwners = await prisma.resourceOwnerSlug.findMany({
-      where: {
-        resourceOwnerId: {
-          in: apps
-            .map((a) => a.organizationId || a.createdById)
-            .filter((i) => !!i) as string[],
+      const apps = await prisma.app.findMany({
+        where: {
+          isPrivate: false,
+          submissionState: appSubmissionState.approved,
+          deletedAt: null,
         },
-      },
-    });
+        select: defaultSelect,
+      });
 
-    return apps.reduce(
-      (arr, app) => {
-        const resourceOwner = resourceOwners.find(
-          (r) => r.resourceOwnerId === (app.organizationId || app.createdById),
-        );
+      const resourceOwners = await prisma.resourceOwnerSlug.findMany({
+        where: {
+          resourceOwnerId: {
+            in: apps
+              .map((a) => a.organizationId || a.createdById)
+              .filter((i) => !!i) as string[],
+          },
+        },
+      });
 
-        if (resourceOwner) {
-          arr.push({ ...app, resourceOwner });
-        }
-        return arr;
-      },
-      // prettier-ignore
-      [] as ((typeof apps)[0] & { resourceOwner: ResourceOwnerSlug })[],
-    );
-  }),
+      return apps
+        .reduce(
+          (arr, app) => {
+            const resourceOwner = resourceOwners.find(
+              (r) =>
+                r.resourceOwnerId === (app.organizationId || app.createdById),
+            );
+
+            if (resourceOwner) {
+              arr.push({ ...app, resourceOwner });
+            }
+            return arr;
+          },
+          // prettier-ignore
+          [] as ((typeof apps)[0] & { resourceOwner: ResourceOwnerSlug })[],
+        )
+        .slice(0, input?.amount ?? apps.length + 1);
+    }),
   byAuthedUser: protectedProcedure
     .input(
       z
@@ -519,7 +539,7 @@ export const appRouter = createTRPCRouter({
                 where: {
                   userIdOrTempId:
                     ctx.userId ||
-                    (ctx.req?.cookies as any)[ZIPPER_TEMP_USER_ID_COOKIE_NAME],
+                    (ctx.req?.cookies as any)[__ZIPPER_TEMP_USER_ID],
                 },
               },
             },
@@ -678,7 +698,7 @@ export const appRouter = createTRPCRouter({
       console.log('Boot version: ', version);
 
       try {
-        const bootPayload: Zipper.BootPayload = await fetch(
+        const bootPayload: BootPayload = await fetch(
           getBootUrl(app.slug, version),
           {
             method: 'POST',
@@ -698,6 +718,11 @@ export const appRouter = createTRPCRouter({
             }`,
           );
         }
+
+        await cacheBootPayload.set(
+          { deploymentId: bootPayload.deploymentId },
+          bootPayload,
+        );
 
         return bootPayload;
       } catch (e: any) {
@@ -789,18 +814,25 @@ export const appRouter = createTRPCRouter({
       z.object({
         id: z.string().uuid(),
         name: z.string().min(3).max(50),
+        organizationId: z.string().uuid().optional(),
         connectToParent: z.boolean().optional().default(true),
       }),
     )
     .mutation(async ({ input, ctx }) => {
-      const { id, name, connectToParent } = input;
+      const { id, name, connectToParent, organizationId } = input;
+      if (
+        organizationId &&
+        !Object.keys(ctx.organizations || {}).includes(organizationId)
+      ) {
+        throw new Error('Invalid organizationId');
+      }
 
       const { fork, updatedFork } = await forkAppletById({
         appId: id,
         name,
         connectToParent,
         userId: ctx.userId,
-        orgId: ctx.orgId,
+        orgId: organizationId || ctx.orgId,
       });
 
       const resourceOwner = await prisma.resourceOwnerSlug.findFirstOrThrow({
@@ -838,6 +870,7 @@ export const appRouter = createTRPCRouter({
           isPrivate: z.boolean().optional(),
           requiresAuthToRun: z.boolean().optional(),
           isDataSensitive: z.boolean().optional(),
+          isAutoPublished: z.boolean().optional(),
           scripts: z
             .array(
               z.object({
@@ -929,43 +962,11 @@ export const appRouter = createTRPCRouter({
           );
 
       if (input.data.slug || input.data.scripts) {
-        const { hash } = await buildAndStoreApplet({
-          app: { ...app, scripts: updatedScripts },
+        const appWithUpdatedHash = await buildAndStoreNewAppVersion(id, {
+          app,
+          scripts: updatedScripts,
           userId: ctx.userId,
         });
-
-        // if the code has changed, send the latest code to R2
-        if (hash !== app.playgroundVersionHash) {
-          const zip = new JSZip();
-          (updatedScripts.length > 0 ? updatedScripts : app.scripts).map(
-            (s) => {
-              zip.file(s.filename, JSON.stringify(s));
-            },
-          );
-
-          const version = getAppVersionFromHash(hash);
-
-          if (!version) throw new Error('Invalid hash');
-
-          zip.generateAsync({ type: 'uint8array' }).then((content) => {
-            storeVersionCode({
-              appId: app.id,
-              version,
-              zip: content,
-            });
-          });
-        }
-
-        const appWithUpdatedHash = await prisma.app.update({
-          where: {
-            id,
-          },
-          data: {
-            playgroundVersionHash: hash,
-          },
-          select: defaultSelect,
-        });
-
         return { ...appWithUpdatedHash, resourceOwner };
       }
 
@@ -1029,6 +1030,8 @@ export const appRouter = createTRPCRouter({
         },
       });
 
+      await cacheDeployment.set(app.slug, { appId: app.id, version: hash });
+
       return prisma.app.update({
         where: {
           id: input.id,
@@ -1040,6 +1043,83 @@ export const appRouter = createTRPCRouter({
       });
     }),
 });
+
+export async function buildAndStoreNewAppVersion(
+  id: string,
+  {
+    app: appPassedIn,
+    scripts: scriptsPassedIn,
+    userId,
+  }: {
+    app?: App & { scripts: Script[] };
+    scripts?: Script[];
+    userId?: string;
+  },
+) {
+  const app =
+    appPassedIn ||
+    (await prisma.app.findFirstOrThrow({
+      where: { id },
+      include: { scripts: true },
+    }));
+
+  const scripts = scriptsPassedIn || app.scripts;
+
+  const { hash } = await buildAndStoreApplet({
+    app: { ...app, scripts },
+    userId,
+    isPublished: app.isAutoPublished,
+  });
+
+  // if the code has changed, send the latest code to R2
+  if (hash !== app.playgroundVersionHash) {
+    const zip = new JSZip();
+    (scripts.length > 0 ? scripts : app.scripts).map((s) => {
+      zip.file(s.filename, JSON.stringify(s));
+    });
+
+    const version = getAppVersionFromHash(hash);
+
+    if (!version) throw new Error('Invalid hash');
+
+    zip.generateAsync({ type: 'uint8array' }).then((content) => {
+      storeVersionCode({
+        appId: app.id,
+        version,
+        zip: content,
+      });
+    });
+  }
+
+  const appHashUpdateData: any = {
+    playgroundVersionHash: hash,
+  };
+
+  if (app.isAutoPublished) {
+    appHashUpdateData.publishedVersionHash = hash;
+  }
+
+  const appWithUpdatedHash = await prisma.app.update({
+    where: {
+      id,
+    },
+    data: appHashUpdateData,
+    select: defaultSelect,
+  });
+
+  const {
+    slug: subdomain,
+    id: appId,
+    playgroundVersionHash: version,
+  } = appWithUpdatedHash;
+
+  await cacheDeployment.set(subdomain, {
+    appId,
+    version: version as string,
+  });
+
+  return { ...appWithUpdatedHash };
+}
 
 async function forkAppletById(inputs: {
   appId: string;
@@ -1092,7 +1172,9 @@ async function forkApplet({
     data: {
       slug: slugify(name),
       name: name,
-      description: app.description,
+      description: `Fork of ${app.name || app.slug}${
+        app.description ? `: ${app.description}` : ''
+      }`,
       parentId: connectToParent ? app.id : undefined,
       organizationId: orgId,
       createdById: userId,

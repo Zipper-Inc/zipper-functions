@@ -55,10 +55,9 @@ import { AnalyticsHead } from '@zipper/utils';
 /* -------------------------------------------- */
 
 const HERO_CONTENT = {
-  TITLE: 'Forget about \n your toolchain',
+  TITLE: 'Complexity-free\nWeb Development',
 
-  DESCRIPTION: `Zipper turns your business logic into running apps with
-  automatically generated UI, auth, and APIs straight out of the box.`,
+  DESCRIPTION: `Zipper helps you turn Typescript functions into modern web applications. No local setup, boilerplate, or frontend code required. Perfect for rapidly building or prototyping internal tools, SaaS integrations, and micro-services.`,
   LIST: [
     {
       description: 'Turn TypeScript functions into serverless web apps',
@@ -86,29 +85,32 @@ const WEB_FIRST_CONTENT = {
     {
       ICON: <FiSettings />,
       TITLE: 'Code-first SaaS Integrations',
-      COLOR: 'purple',
+      COLOR: 'blue',
       DESCRIPTION:
         'Automate repetitive tasks and workflows or respond to triggers with the flexibility of code. You don’t have to be limited by the constraits of no-code tools.',
       IMAGE_URL:
-        'https://imagedelivery.net/mehHBP8u01yKLn8uDjx8Yw/6a1df0d5-c709-40ba-9eec-6db93cba2700/public',
+        'https://imagedelivery.net/mehHBP8u01yKLn8uDjx8Yw/211e9adc-3f4c-4c2e-9dd6-5a0adf8d5700/w=1000',
+      IMAGE_WIDTH: 700,
     },
     {
       ICON: <FiTool />,
       TITLE: 'Internal Tools as a Service',
-      COLOR: 'blue',
+      COLOR: 'brandOrange',
       DESCRIPTION:
         'A better way to run scripts or create admin tools for your own APIs or databases. With auth and audit logs built-in, never build from scratch.',
       IMAGE_URL:
-        'https://imagedelivery.net/mehHBP8u01yKLn8uDjx8Yw/94e29273-6c81-4753-df75-ec6a61610a00/public',
+        'https://imagedelivery.net/mehHBP8u01yKLn8uDjx8Yw/11b63372-4d13-4c4b-f7f3-912da40b7800/w=1000',
+      IMAGE_WIDTH: 500,
     },
     {
       ICON: <FiCode />,
       TITLE: 'Worker Functions',
-      COLOR: 'brandOrange',
+      COLOR: 'purple',
       DESCRIPTION:
         'Handle expensive or unique tasks on our edge infrastructure, close to your users. Run them on a schedule or in response to an event to effortlessly scale your apps.',
       IMAGE_URL:
-        'https://imagedelivery.net/mehHBP8u01yKLn8uDjx8Yw/463c0266-9b75-4049-b20e-850043ce8c00/public',
+        'https://imagedelivery.net/mehHBP8u01yKLn8uDjx8Yw/8439e4a6-927e-4740-8a4b-edfa2325a900/w=1000',
+      IMAGE_WIDTH: 500,
     },
     {
       ICON: <FiLoader />,
@@ -117,7 +119,8 @@ const WEB_FIRST_CONTENT = {
       DESCRIPTION:
         'An instant TypeScript REPL with a built-in frontend framework where you can see your results immediately. What will you build?',
       IMAGE_URL:
-        'https://imagedelivery.net/mehHBP8u01yKLn8uDjx8Yw/332ba10b-9ef4-4a2e-df03-2fd86da27800/public',
+        'https://imagedelivery.net/mehHBP8u01yKLn8uDjx8Yw/253fbbfa-2d03-40d8-e464-19030c7d1800/w=3000',
+      IMAGE_WIDTH: 1500,
     },
   ],
 };
@@ -318,6 +321,11 @@ const HEADLINE_CONTENT = {
   SPAN: 'Overheard from some developers you definitely know:',
 };
 
+const cloudflareAccountId = 'mehHBP8u01yKLn8uDjx8Yw';
+const getCloudflareImageUrl = (imageId: string, w: number) => {
+  return `https://imagedelivery.net/${cloudflareAccountId}/${imageId}/w=${w}`;
+};
+
 /* -------------------------------------------- */
 /* Components                                   */
 /* -------------------------------------------- */
@@ -353,48 +361,30 @@ const Hero = () => {
     <Box
       display={{ base: 'flex', lg: 'none' }}
       position="relative"
-      width={{ base: 'full', md: '535px' }}
-      height={{ base: '260px', md: '445px' }}
+      w="full"
       mt={{ base: 8, lg: 0 }}
       as={motion.div}
     >
       <Box
         as={motion.div}
-        position="absolute"
-        top="0"
-        left={{ base: '-25px', md: '0' }}
-        width={{ md: '440px' }}
-        height="330px"
         animate={box1Animation}
+        width="calc(100% + 100px)"
+        mr="-25px"
+        ml="-25px"
       >
-        <Image
-          src="https://imagedelivery.net/mehHBP8u01yKLn8uDjx8Yw/3d230f31-c026-46df-871c-1af73b0b2a00/public"
-          width="440"
-          height="330"
+        <img
+          src={getCloudflareImageUrl(
+            '6d291ad6-7741-4698-0d73-8df36281fb00',
+            1000,
+          )}
           alt="Code"
-        />
-      </Box>
-      <Box
-        as={motion.div}
-        position="absolute"
-        bottom={-10}
-        right={{ base: '-45px', md: '0' }}
-        width={{ md: '440px' }}
-        animate={box2Animation}
-      >
-        <Image
-          src="https://imagedelivery.net/mehHBP8u01yKLn8uDjx8Yw/0324136d-a4ab-423c-0b54-36ada8812b00/public"
-          width="440"
-          height="330"
-          alt="Applet"
+          width="100%"
         />
       </Box>
 
       <Box
         as={motion.div}
         whileHover={{ scale: 1.2 }}
-        onHoverStart={onHoverStart}
-        onHoverEnd={onHoverEnd}
         onClick={onOpen}
         cursor="pointer"
         animate="rest"
@@ -422,7 +412,7 @@ const Hero = () => {
   const DesktopVideoFigure = () => (
     <Box
       display={{ base: 'none', lg: 'flex' }}
-      flexDir="column"
+      flexDir="row"
       justifyContent="center"
       transition="1.5s ease-in-out"
       alignItems="center"
@@ -435,17 +425,19 @@ const Hero = () => {
       <Box
         as={motion.div}
         position="absolute"
-        top="-120px"
-        left={{ base: '-25px', md: '0px' }}
-        width={{ md: '536px' }}
-        height="373px"
+        top="-150px"
+        left={{ base: '-15px', md: '0px' }}
+        maxWidth={{ md: '480' }}
         animate={box1Animation}
+        flexShrink={2}
       >
         <img
-          src="https://imagedelivery.net/mehHBP8u01yKLn8uDjx8Yw/ccf8ca49-2867-4da8-8ebb-436ed96c6900/public"
+          src={getCloudflareImageUrl(
+            '168dffcc-8c44-4615-e2d6-7bed90191f00',
+            780,
+          )}
           style={{ objectFit: 'cover' }}
-          width="536"
-          height="373"
+          width="480"
           alt="App"
         />
       </Box>
@@ -453,16 +445,18 @@ const Hero = () => {
       <Box
         as={motion.div}
         position="absolute"
-        width={{ md: '1000px' }}
+        width={{ md: '780' }}
         left={280}
-        top={20}
-        height="600"
+        top={-20}
+        flexShrink={0}
       >
         <img
           style={{ objectFit: 'cover' }}
-          src="https://imagedelivery.net/mehHBP8u01yKLn8uDjx8Yw/b8604b92-1682-4bcf-40fd-2f1fe310b300/public"
-          width={720}
-          height={480}
+          src={getCloudflareImageUrl(
+            'b6a1c508-fcc2-40a9-21ab-93ea59394700',
+            1700,
+          )}
+          width={780}
           alt="Editor"
         />
       </Box>
@@ -470,7 +464,7 @@ const Hero = () => {
       <Box
         as={motion.div}
         position="absolute"
-        bottom="0px"
+        bottom="-100px"
         right={{ base: '-45px', md: '0px' }}
         width={{ md: '291' }}
         height="400"
@@ -478,9 +472,11 @@ const Hero = () => {
       >
         <img
           style={{ objectFit: 'cover' }}
-          src="https://imagedelivery.net/mehHBP8u01yKLn8uDjx8Yw/6230c188-d788-48f4-6cc8-8a8465d9d000/public"
-          width="400"
-          height="400"
+          src={getCloudflareImageUrl(
+            '072a0be4-5e5d-4ef4-47d8-a093fa3e2c00',
+            700,
+          )}
+          width="380"
           alt="Modal"
         />
       </Box>
@@ -519,7 +515,7 @@ const Hero = () => {
       as="section"
       aria-label="hero-container"
       w="full"
-      pt={{ base: '52px', md: '8rem' }}
+      pt={{ base: '52px', md: '3rem' }}
       mt={{ base: 0, md: 0 }}
       px={['24px', 0]}
       position="relative"
@@ -547,20 +543,25 @@ const Hero = () => {
             py={{ lg: 10 }}
           >
             <Heading
+              as={'h1'}
               fontFamily="plaak"
-              fontSize={['40px', '7xl']}
-              lineHeight={{ base: '48px', md: '72px' }}
-              fontWeight="normal"
+              fontSize={['3xl', '5xl', '7xl']}
+              lineHeight={['31px', '50px', '72px']}
+              fontWeight="bold"
               textAlign="center"
               whiteSpace={{ base: 'pre-line' }}
+              bgGradient="linear(to-l, #d4d3d2, #EEE)"
+              bgClip="text"
             >
               {HERO_CONTENT.TITLE}
             </Heading>
             <Text
-              fontSize="lg"
+              fontSize="xl"
+              color="gray.200"
               css={{ margin: 0 }}
               textAlign="center"
               whiteSpace={{ lg: 'pre-line' }}
+              maxW="container.md"
             >
               {HERO_CONTENT.DESCRIPTION}
             </Text>
@@ -647,7 +648,7 @@ const WebFirst = () => {
       as="section"
       aria-label="features"
       w="full"
-      pt={{ base: '8rem', md: '20rem' }}
+      pt={{ base: '8rem', md: '12rem' }}
       pb={{ base: '52px', md: '9rem' }}
       position="relative"
       bg="white"
@@ -729,58 +730,95 @@ const WebFirst = () => {
                   zIndex={0}
                 />
                 <Stack
-                  direction={{ base: 'column', md: isFirst ? 'row' : 'column' }}
+                  direction="column"
                   as="article"
                   position="relative"
                   zIndex={1}
                   w="full"
                   h="full"
                   align="start"
+                  gap={10}
                 >
-                  <VStack align="start" color="white" w="full">
+                  <VStack align="start" color="white" w="full" h="full">
                     {React.cloneElement(item.ICON, {
                       size: 36,
+                      style: { minHeight: 36 },
                     })}
-                    <Heading as="h3" fontWeight={600} fontSize="4xl">
-                      {item.TITLE}
-                    </Heading>
-                    <Text color="white" fontSize="xl">
-                      {item.DESCRIPTION}
-                    </Text>
-                  </VStack>
-
-                  {isMobile || isMiddleItem ? (
-                    <Box
-                      as="figure"
-                      position="absolute"
-                      w="calc(100% + 100px)"
-                      height="300px"
-                      left={{ base: -6, lg: -10 }}
-                      bottom={{ base: -40, lg: -20 }}
+                    <Flex
+                      direction={{
+                        md: isFirst ? 'row' : 'column',
+                        base: 'column',
+                      }}
+                      h="full"
+                      gap="10"
+                      maxW="100%"
                     >
-                      <Image
-                        fill
-                        src={item.IMAGE_URL}
-                        alt={item.TITLE}
-                        style={{
-                          objectFit: 'cover',
-                          objectPosition: 'left top',
-                        }}
-                      />
-                    </Box>
-                  ) : (
-                    <Box h="full" w="full" position="relative">
-                      <Image
-                        fill
-                        src={item.IMAGE_URL}
-                        alt={item.TITLE}
-                        style={{
-                          objectFit: 'cover',
-                          objectPosition: isLast ? 'center top' : undefined,
-                        }}
-                      />
-                    </Box>
-                  )}
+                      <VStack align={'start'} h="full" maxW="container.lg">
+                        <Heading as="h3" fontWeight={600} fontSize="4xl">
+                          {item.TITLE}
+                        </Heading>
+                        <Text color="white" fontSize="xl">
+                          {item.DESCRIPTION}
+                        </Text>
+                      </VStack>
+                      {isMobile || isMiddleItem ? (
+                        <Box
+                          mr="-48px"
+                          w={isLast ? 'calc(100% + 100px)' : undefined}
+                          ml={isLast ? '-48px' : undefined}
+                        >
+                          <img
+                            src={item.IMAGE_URL}
+                            alt={item.TITLE}
+                            style={{
+                              objectFit: 'cover',
+                              objectPosition: 'left top',
+                            }}
+                          />
+                        </Box>
+                      ) : (
+                        <>
+                          {isFirst && (
+                            <Box w={item.IMAGE_WIDTH} position="relative">
+                              <img
+                                src={item.IMAGE_URL}
+                                width={item.IMAGE_WIDTH}
+                                alt={item.TITLE}
+                                style={{
+                                  objectFit: 'contain',
+                                  objectPosition: isLast
+                                    ? 'center top'
+                                    : undefined,
+                                }}
+                              />
+                            </Box>
+                          )}
+                          {isLast && (
+                            <Box
+                              w="calc(100%+100px)"
+                              position="relative"
+                              ml="-48px"
+                              mr="-48px"
+                            >
+                              <img
+                                src={item.IMAGE_URL}
+                                width={item.IMAGE_WIDTH}
+                                alt={item.TITLE}
+                                style={{
+                                  minHeight: '300px',
+                                  maxWidth: '2000px !important',
+                                  objectFit: 'contain',
+                                  objectPosition: isLast
+                                    ? 'center top'
+                                    : undefined,
+                                }}
+                              />
+                            </Box>
+                          )}
+                        </>
+                      )}
+                    </Flex>
+                  </VStack>
                 </Stack>
               </GridItem>
             );

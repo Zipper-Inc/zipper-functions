@@ -1,0 +1,27 @@
+/* applied to container */
+.custom-container {
+  background-color: none;
+  margin-top: 1rem;
+}
+
+/* applied to container when readying */
+.custom-container[data-state='readying'] {
+  background-color: none;
+}
+
+/* applied to button */
+.custom-button {
+  color: #ffffff;
+  background-color: #9b26b6;
+}
+
+/* applied to button when uploading */
+.custom-button-uploading {
+  background-color: #9b26b6;
+  color: rgb(255 255 255 / 0.5);
+  cursor: not-allowed;
+}
+
+.custom-button-uploading::after {
+  background-color: #3c1053 !important;
+}

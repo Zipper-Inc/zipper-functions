@@ -32,7 +32,6 @@ export const getDescription = ({ applet, config, filename }: Props) => {
   );
   const { title, subtitle, body } = {
     title: applet?.name,
-    subtitle: filename && filename !== 'main.ts' && filename.replace('.ts', ''),
     body:
       !hasConfigDescription && filename === 'main.ts' && applet?.description,
     ...config?.description,

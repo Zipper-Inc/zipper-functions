@@ -1,9 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import {
-  hasBrowserLikeUserAgent,
-  ZIPPER_TEMP_USER_ID_COOKIE_NAME,
-} from '@zipper/utils';
+import { hasBrowserLikeUserAgent, __ZIPPER_TEMP_USER_ID } from '@zipper/utils';
 import { hasZipperEszipHeader } from '~/utils/eszip-utils';
 
 const parseZipperSrcPath = (req: NextRequest) => {
@@ -36,11 +33,8 @@ export default async (req: NextRequest) => {
 
   const res = NextResponse.next();
 
-  if (!req.cookies.get(ZIPPER_TEMP_USER_ID_COOKIE_NAME)) {
-    res.cookies.set(
-      ZIPPER_TEMP_USER_ID_COOKIE_NAME,
-      `temp__${crypto.randomUUID()}`,
-    );
+  if (!req.cookies.get(__ZIPPER_TEMP_USER_ID)) {
+    res.cookies.set(__ZIPPER_TEMP_USER_ID, `temp__${crypto.randomUUID()}`);
   }
 
   return res;

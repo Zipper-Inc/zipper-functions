@@ -26,7 +26,6 @@ export const useAppletContent = (): AppletContentReturnType => {
     setUpdatedAt(Date.now());
   }, [
     output,
-    inputs,
     path,
     isLoading,
     expandedOutput,

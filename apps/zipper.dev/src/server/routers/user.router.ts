@@ -19,6 +19,7 @@ const defaultSelect = Prisma.validator<Prisma.UserSelect>()({
   email: true,
   image: true,
   slug: true,
+  displayName: true,
 });
 
 export const userRouter = createTRPCRouter({
@@ -270,6 +271,30 @@ export const userRouter = createTRPCRouter({
 
       return !slug;
     }),
+
+  updateDisplayName: protectedProcedure
+    .input(
+      z.object({
+        displayName: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const user = await prisma.user.findUniqueOrThrow({
+        where: {
+          id: ctx.userId,
+        },
+      });
+
+      return prisma.user.update({
+        where: {
+          id: user.id,
+        },
+
+        data: {
+          displayName: input.displayName,
+        },
+      });
+    }),
   updateUserSlug: protectedProcedure
     .input(
       z.object({
@@ -283,7 +308,7 @@ export const userRouter = createTRPCRouter({
         },
       });
 
-      await prisma.resourceOwnerSlug.update({
+      await prisma.resourceOwnerSlug.updateMany({
         where: {
           slug: user.slug,
         },

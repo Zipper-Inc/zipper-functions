@@ -14,10 +14,11 @@ class MyDocument extends Document {
 
   render() {
     const meta = {
-      title: 'Zipper',
+      title: 'Zipper: Complexity-free web development',
       description:
-        'Zipper turns your business logic into serverless apps with automatically generated UI, auth, and APIs straight out of the box.',
-      image: '',
+        'Zipper helps you turn Typescript functions into modern web applications. No local setup, boilerplate, or frontend code required.',
+      image:
+        'https://imagedelivery.net/mehHBP8u01yKLn8uDjx8Yw/d93faf59-5b19-482a-336d-9afeafe6b500/public',
     };
 
     return (
@@ -30,7 +31,7 @@ class MyDocument extends Document {
           <meta property="og:title" content={meta.title} />
           <meta property="og:image" content={meta.image} />
           <meta name="twitter:card" content="summary_large_image" />
-          <meta name="twitter:site" content="@zipper_inc" />
+          <meta name="twitter:site" content="@ZipperDev" />
           <meta name="twitter:title" content={meta.title} />
           <meta name="twitter:description" content={meta.description} />
           <meta name="twitter:image" content={meta.image} />

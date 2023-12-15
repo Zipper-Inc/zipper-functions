@@ -44,13 +44,27 @@ export default function UserProfile() {
     enabled: isLoaded,
   });
 
+  const utils = trpc.useContext();
+
+  const { data: userData } = trpc.user.profileForUserId.useQuery({
+    id: user?.id as string,
+  });
+
   const [isEditingUsername, setIsEditingUsername] = useState(false);
   const [username, setUsername] = useState('');
+
+  const [isEditingDisplayName, setIsEditingDisplayName] = useState(false);
+  const [displayName, setDisplayName] = useState('');
+
   useEffect(() => {
     if (isLoaded && user?.username) {
       setUsername(user.username);
     }
-  }, [user]);
+
+    if (isLoaded && userData?.displayName) {
+      setDisplayName(userData.displayName);
+    }
+  }, [user, userData]);
 
   const isSlugValid = !!username && username.length >= MIN_SLUG_LENGTH;
 
@@ -73,11 +87,28 @@ export default function UserProfile() {
       session.update({ updateProfile: true });
     },
   });
+
+  const updateDisplayName = trpc.user.updateDisplayName.useMutation({
+    async onSuccess() {
+      session.update({ updateProfile: true });
+      await utils.user.profileForUserId.invalidate({
+        id: user?.id as string,
+      });
+    },
+  });
+
   const handleSaveUsername = async () => {
     if (username.length < MIN_SLUG_LENGTH) {
       return;
     }
     await updateUsername.mutateAsync({ slug: username });
+  };
+
+  const handleSaveDisplayName = async () => {
+    if (displayName.length < 1) {
+      return;
+    }
+    await updateDisplayName.mutateAsync({ displayName });
   };
   const session = useSession();
 
@@ -173,6 +204,7 @@ export default function UserProfile() {
 
                         {isSlugValid && !updateUsername.isLoading && (
                           <InputRightElement
+                            h="full"
                             children={
                               isSlugAvailableQuery.data ||
                               username === user.username ? (
@@ -195,6 +227,53 @@ export default function UserProfile() {
                         onClick={() => {
                           handleSaveUsername();
                           setIsEditingUsername(false);
+                        }}
+                      >
+                        Save
+                      </Button>
+                    </HStack>
+                  )}
+                </Stack>
+              </Stack>
+
+              <Stack p={4}>
+                <Text fontSize="md" fontWeight="bold">
+                  Display Name
+                </Text>
+                <Stack>
+                  {!isEditingDisplayName ? (
+                    <HStack
+                      _hover={{ cursor: 'pointer' }}
+                      onClick={() => {
+                        setIsEditingDisplayName(true);
+                      }}
+                    >
+                      <Text fontSize="sm">{displayName}</Text>
+                      <HiPencil />
+                    </HStack>
+                  ) : (
+                    <HStack maxW={200}>
+                      <InputGroup>
+                        <Input
+                          size="sm"
+                          placeholder={user.name ?? 'Your display name' + '...'}
+                          value={displayName}
+                          onChange={(e) => {
+                            setDisplayName(e.target.value);
+                          }}
+                        />
+                      </InputGroup>
+                      <Button
+                        size="sm"
+                        variant="link"
+                        colorScheme="purple"
+                        isDisabled={
+                          displayName.length < 1 ||
+                          displayName === userData?.displayName
+                        }
+                        onClick={() => {
+                          handleSaveDisplayName();
+                          setIsEditingDisplayName(false);
                         }}
                       >
                         Save
@@ -252,12 +331,12 @@ export default function UserProfile() {
               <Box width="100%">
                 <Collapse in={showUploadThing} animateOpacity>
                   <UploadDropzone
-                    endpoint="imageUploader"
+                    endpoint="avatarUploader"
                     onClientUploadComplete={() => {
                       session.update({ updateProfile: true });
                       setShowUploadThing(false);
                     }}
-                    onUploadError={() => {
+                    onUploadError={(e) => {
                       setShowUploadThing(false);
                     }}
                   />

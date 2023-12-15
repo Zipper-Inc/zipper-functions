@@ -337,7 +337,7 @@ async function runEditorActionsNow({
     currentModel &&
     getPathFromUri(currentModel.uri) === `/${currentScript.filename}`;
 
-  const setInputParams = !isVisible || readOnly ? noop : setInputParamsPassedIn;
+  const setInputParams = !isVisible ? noop : setInputParamsPassedIn;
   const setInputError = !isVisible || readOnly ? noop : setInputErrorPassedIn;
   const setModelIsDirty = readOnly ? noop : setModelIsDirtyPassedIn;
   const linter = readOnly ? noop : runZipperLinter;
