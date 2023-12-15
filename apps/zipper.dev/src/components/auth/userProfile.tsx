@@ -256,7 +256,7 @@ export default function UserProfile() {
                       <InputGroup>
                         <Input
                           size="sm"
-                          placeholder={user.name + '...'}
+                          placeholder={user.name ?? 'Your display name' + '...'}
                           value={displayName}
                           onChange={(e) => {
                             setDisplayName(e.target.value);
