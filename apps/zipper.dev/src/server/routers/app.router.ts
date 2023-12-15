@@ -876,7 +876,7 @@ export const appRouter = createTRPCRouter({
               z.object({
                 id: z.string().uuid(),
                 data: z.object({
-                  name: z.string().min(3).max(255).optional(),
+                  name: z.string().min(1).max(255).optional(),
                   code: z.string().optional(),
                   filename: z.string(),
                 }),
