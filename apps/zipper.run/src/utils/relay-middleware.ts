@@ -115,7 +115,7 @@ export async function relayRequest(
     request.cookies.get(ZIPPER_TEMP_USER_ID_COOKIE_NAME)?.value.toString();
 
   let filename = _filename || 'main.ts';
-  if (!filename.endsWith('.ts')) {
+  if (!filename.endsWith('.ts') && !filename.endsWith('.tsx')) {
     filename = `${filename}.ts`;
   }
 

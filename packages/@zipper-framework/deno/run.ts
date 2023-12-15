@@ -143,7 +143,7 @@ async function runApplet({ request }: Deno.RequestEvent) {
   });
 
   // Grab the handler
-  const path: string = (body.path || MAIN_PATH).replace(/\.(ts|tsx)$|$/, '.ts');
+  const path: string = body.path || MAIN_PATH.replace(/\.(ts|tsx)$|$/, '.ts');
   const { handler } = files[path];
 
   // Handle missing paths
