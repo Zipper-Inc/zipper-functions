@@ -223,17 +223,19 @@ model Secret {
 }
 
 model Schedule {
-  id        String    @id @default(uuid())
-  createdAt DateTime  @default(now())
-  updatedAt DateTime? @default(now())
-  filename  String    @default("main.ts")
-  crontab   String
-  inputs    Json?
-  userId    String?
+  id          String    @id @default(uuid())
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime? @default(now())
+  filename    String    @default("main.ts")
+  crontab     String
+  inputs      Json?
+  userId      String?
+  name        String?
+  fromConfig  Boolean   @default(false)
 
-  appId   String
-  app     App?     @relation(fields: [appId], references: [id])
-  appRuns AppRun[]
+  appId       String
+  app         App?      @relation(fields: [appId], references: [id])
+  appRuns     AppRun[]
 
   @@map("schedules")
 }

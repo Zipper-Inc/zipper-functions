@@ -154,6 +154,12 @@ declare namespace Zipper {
         placeholder: string;
       }>;
     };
+    schedules: {
+      [scheduleName: string]: {
+        cron: string;
+        inputs?: I;
+      };
+    };
   }>;
 
   export type BootPayload = {
