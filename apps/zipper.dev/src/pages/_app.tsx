@@ -1,3 +1,4 @@
+import '@zipper/ui/src/globals.css';
 import { NextPage } from 'next';
 import { AppProps } from 'next/app';
 import { AppType } from 'next/dist/shared/lib/utils';
@@ -8,6 +9,8 @@ import { SessionProvider } from 'next-auth/react';
 import { DefaultLayout } from '~/components/default-layout';
 
 import '@fontsource/inter/variable.css';
+import { Inter } from 'next/font/google';
+
 import Header from '~/components/header';
 import { useEffectOnce } from '@zipper/ui';
 import { ZipperLocation } from '@zipper/types';
@@ -31,6 +34,11 @@ type AppPropsWithLayout = AppProps & {
   pageProps: Record<string, unknown>;
 };
 
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-inter',
+});
+
 const MyApp = (({ Component, pageProps }: AppPropsWithLayout) => {
   const getLayout =
     Component.getLayout ??
@@ -48,7 +56,7 @@ const MyApp = (({ Component, pageProps }: AppPropsWithLayout) => {
     window.ZipperLocation = ZipperLocation.ZipperDotDev;
   });
   return (
-    <>
+    <main className={`${inter.variable} font-body`}>
       <SessionProvider session={pageProps.session}>
         {Component.skipAuth ? (
           getLayout(<Component {...pageProps} />)
@@ -61,7 +69,7 @@ const MyApp = (({ Component, pageProps }: AppPropsWithLayout) => {
           </>
         )}
       </SessionProvider>
-    </>
+    </main>
   );
 }) as AppType;
 

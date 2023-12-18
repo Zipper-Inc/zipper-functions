@@ -17,12 +17,15 @@ import {
   useToken,
   SimpleGrid,
   Input,
-  Accordion,
-  AccordionItem,
-  AccordionButton,
-  AccordionIcon,
-  AccordionPanel,
 } from '@chakra-ui/react';
+
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@zipper/ui';
+
 import { ResourceOwnerSlug } from '@prisma/client';
 import { ResourceOwnerType } from '@zipper/types';
 import { ZipperSymbol } from '@zipper/ui';
@@ -148,44 +151,65 @@ export function Gallery({
             </Button>
           )}
           {isPublicGallery && (
-            <Accordion pt="10" allowMultiple>
-              <AccordionItem>
-                <AccordionButton>
-                  <Box
-                    fontWeight="semibold"
-                    as="span"
-                    flex="1"
-                    textAlign="left"
-                  >
-                    What are Applets?
-                  </Box>
-                  <AccordionIcon />
-                </AccordionButton>
-                <AccordionPanel pb={4}>
-                  Applets are web-services that have been built and deployed on
-                  Zipper. Applets can be forked and customized to your needs.
-                </AccordionPanel>
-              </AccordionItem>
+            <>
+              <Accordion type="single" collapsible className="w-full">
+                <AccordionItem value="item-1">
+                  <AccordionTrigger> What are Applets?</AccordionTrigger>
+                  <AccordionContent>
+                    Applets are web-services that have been built and deployed
+                    on Zipper. Applets can be forked and customized to your
+                    needs.
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="item-2">
+                  <AccordionTrigger> What is Zipper?</AccordionTrigger>
+                  <AccordionContent>
+                    Zipper is a platform for building web services using simple
+                    Typescript functions. We take care of UI, APIs, and auth for
+                    you.
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+              {/* <Accordion>
+                <AccordionItem>
+                  <AccordionButton>
+                    <Box
+                      fontWeight="semibold"
+                      as="span"
+                      flex="1"
+                      textAlign="left"
+                    >
+                      What are Applets?
+                    </Box>
+                    <AccordionIcon />
+                  </AccordionButton>
+                  <AccordionPanel pb={4}>
+                    Applets are web-services that have been built and deployed
+                    on Zipper. Applets can be forked and customized to your
+                    needs.
+                  </AccordionPanel>
+                </AccordionItem>
 
-              <AccordionItem>
-                <AccordionButton>
-                  <Box
-                    fontWeight="semibold"
-                    as="span"
-                    flex="1"
-                    textAlign="left"
-                  >
-                    What is Zipper?
-                  </Box>
-                  <AccordionIcon />
-                </AccordionButton>
-                <AccordionPanel pb={4}>
-                  Zipper is a platform for building web services using simple
-                  Typescript functions. We take care of UI, APIs, and auth for
-                  you.
-                </AccordionPanel>
-              </AccordionItem>
-            </Accordion>
+                <AccordionItem>
+                  <AccordionButton>
+                    <Box
+                      fontWeight="semibold"
+                      as="span"
+                      flex="1"
+                      textAlign="left"
+                    >
+                      What is Zipper?
+                    </Box>
+                    <AccordionIcon />
+                  </AccordionButton>
+                  <AccordionPanel pb={4}>
+                    Zipper is a platform for building web services using simple
+                    Typescript functions. We take care of UI, APIs, and auth for
+                    you.
+                  </AccordionPanel>
+                </AccordionItem>
+              </Accordion> */}
+            </>
           )}
         </VStack>
         <VStack align="stretch" flex={3} pb="10">

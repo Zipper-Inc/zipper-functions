@@ -2,9 +2,9 @@ import {
   Tab,
   ChakraProps,
   UseTabOptions,
-  Badge,
   useColorModeValue,
 } from '@chakra-ui/react';
+import { Badge } from './badge';
 import Link from 'next/link';
 
 type TabButtonProps = UseTabOptions &
@@ -25,11 +25,7 @@ export const TabButton: React.FC<TabButtonProps> = ({
   const inner = (
     <>
       {title}
-      {badge && (
-        <Badge ml={2} colorScheme="purple">
-          {badge}
-        </Badge>
-      )}
+      {badge && <Badge className="ml-2">{badge}</Badge>}
     </>
   );
 
