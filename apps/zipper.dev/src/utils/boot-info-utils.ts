@@ -1,4 +1,5 @@
 import { App, AppEditor, Script } from '@prisma/client';
+import parser from 'cron-parser';
 import {
   AppInfo,
   BootInfo,
@@ -6,6 +7,8 @@ import {
   UserAuthConnector,
   UserInfoForBoot,
   Connector,
+  BootPayload,
+  InputParam,
 } from '@zipper/types';
 import {
   getZipperDotDevUrl,
@@ -22,6 +25,10 @@ import {
   UserInfoReturnType,
 } from '~/utils/get-user-info';
 import { parseCodeSerializable } from '~/utils/parse-code';
+import {
+  createScheduleAndAddToQueue,
+  deleteSchedulesAndRemoveFromQueue,
+} from './schedule-utils';
 
 type BootInfoError = Error & { status?: number };
 
@@ -406,3 +413,106 @@ export async function getBootInfoFromPrisma({
     },
   };
 }
+
+export const processSchedulesInBootpayload = async (
+  bootPayload: BootPayload<false>,
+  app: App,
+  currentUserId?: string,
+) => {
+  const addTypeToInputs = (
+    scheduleInputs: Record<string, any> = {},
+    parsedInputs: InputParam[],
+  ) => {
+    const inputsWithTypes: Record<string, any> = {};
+
+    if (scheduleInputs) {
+      Object.keys(scheduleInputs).forEach((inputKey) => {
+        const type =
+          parsedInputs.find((i) => i.key === inputKey)?.type || 'unknown';
+
+        inputsWithTypes[`${inputKey}:${type}`] = scheduleInputs?.[inputKey];
+      });
+    }
+
+    return inputsWithTypes;
+  };
+
+  const deleteSchedulesForFile = async (
+    filename: string,
+    exceptIds: string[] = [],
+  ) => {
+    const deleteWhere = {
+      appId: app.id,
+      filename,
+      fromConfig: true,
+      id: { notIn: exceptIds },
+    };
+
+    return deleteSchedulesAndRemoveFromQueue({ where: deleteWhere });
+  };
+
+  const processConfigForFile = async (filename: string) => {
+    const config = bootPayload.configs[filename];
+    const schedules = config?.schedules;
+    const foundIds: string[] = [];
+
+    // there are no schedules in the config, so delete all existing
+    // schedules that came from the file's configs
+    if (!schedules) {
+      await deleteSchedulesForFile(filename);
+      return;
+    }
+    // get existing schedules that we may be deleting or updating
+    const existingSchedules = await prisma.schedule.findMany({
+      where: {
+        appId: app.id,
+        filename,
+        fromConfig: true,
+      },
+    });
+
+    for await (const scheduleName of Object.keys(schedules)) {
+      const schedule = config?.schedules?.[scheduleName];
+      if (!schedule) return;
+
+      const inputsWithTypes = addTypeToInputs(
+        schedule.inputs,
+        bootPayload.bootInfo.parsedScripts[filename]?.inputs,
+      );
+
+      const existingSchedule = existingSchedules.find((s) => {
+        return (
+          s.name === scheduleName &&
+          s.crontab === schedule.cron &&
+          JSON.stringify(s.inputs) === JSON.stringify(inputsWithTypes)
+        );
+      });
+
+      if (existingSchedule) {
+        foundIds.push(existingSchedule.id);
+      } else {
+        const newSchedule = await createScheduleAndAddToQueue({
+          data: {
+            appId: app.id,
+            filename,
+            crontab: parser.parseExpression(schedule.cron).stringify(),
+            inputs: JSON.parse(JSON.stringify(inputsWithTypes)),
+            userId: currentUserId,
+            fromConfig: true,
+            name: scheduleName,
+          },
+        });
+
+        foundIds.push(newSchedule.id);
+      }
+    }
+
+    await deleteSchedulesForFile(filename, foundIds);
+  };
+
+  for await (const filename of Object.keys(
+    bootPayload.bootInfo.parsedScripts,
+  )) {
+    await processConfigForFile(filename);
+  }
+};
