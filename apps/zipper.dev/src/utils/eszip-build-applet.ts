@@ -1,6 +1,7 @@
 import * as eszip from '@deno/eszip';
 import { App, Script } from '@prisma/client';
 import { generateIndexForFramework } from '@zipper/utils';
+import { SourceFile, Statement } from 'ts-morph';
 import { prisma } from '~/server/prisma';
 import { storeVersionESZip } from '~/server/utils/r2.utils';
 import { getLogger } from './app-console';
@@ -13,6 +14,7 @@ import {
   TYPESCRIPT_CONTENT_HEADERS,
 } from './eszip-utils';
 import { getAppHashAndVersion } from './hashing';
+import { getSourceFileFromCode, isClientModule } from './parse-code';
 import { prettyLog, PRETTY_LOG_TOKENS } from './pretty-log';
 import { readFrameworkFile } from './read-file';
 import { rewriteImports, Target } from './rewrite-imports';
@@ -107,8 +109,19 @@ export async function build({
 
         const script = tsScripts.find((s) => s.filename === filename);
 
+        const src = getSourceFileFromCode(script?.code || '');
+
+        let rewrittenCode = rewriteImports(src);
+        if (isClientModule({ src })) {
+          rewrittenCode = `/// <reference lib="dom" />\n${rewrittenCode}`;
+          return {
+            ...applyTsxHack(specifier, rewrittenCode),
+            version,
+          };
+        }
+
         return {
-          ...applyTsxHack(specifier, rewriteImports(script?.code || '')),
+          ...applyTsxHack(specifier, rewrittenCode),
           version,
         };
       }
