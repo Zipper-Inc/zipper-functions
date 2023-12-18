@@ -7,6 +7,7 @@ import {
   applyTsxHack,
   getRemoteModule,
 } from '~/utils/eszip-utils';
+import { isSSRFSafeURL } from 'ssrfcheck';
 import { rewriteSpecifier } from '~/utils/rewrite-imports';
 import { parseCode } from '~/utils/parse-code';
 
@@ -200,6 +201,10 @@ export default async function handler(
 
   // commas are valid in URLs, so don't treat this as an array
   const moduleUrl = Array.isArray(x) ? x.join(',') : x;
+
+  if (!isSSRFSafeURL(moduleUrl, { allowedProtocols: ['https'], noIP: true })) {
+    return res.status(500).send('Invalid module URL');
+  }
 
   const rootModule = await getRemoteModule({
     specifier: rewriteSpecifier(moduleUrl),
