@@ -140,7 +140,7 @@ export const defaults: Components & { heading: Components['h1'] } = {
       );
     }
     return (
-      <Text mb={2} mt={1} whiteSpace={'pre-wrap'} color="fg.900" data-markdown>
+      <Text mb={2} mt={1} color="fg.900" data-markdown>
         {children}
       </Text>
     );
