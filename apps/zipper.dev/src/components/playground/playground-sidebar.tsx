@@ -78,7 +78,7 @@ export function PlaygroundSidebar({
     currentScript,
     setCurrentScript,
     refetchApp,
-    scriptDocs,
+    docs,
     onChangeSelectedDoc,
   } = useEditorContext();
 
@@ -243,8 +243,8 @@ export function PlaygroundSidebar({
               </AccordionButton>
             </h2>
             <AccordionPanel px={0} py={0}>
-              {scriptDocs?.length >= 1 &&
-                scriptDocs.map((doc, index) => (
+              {!!docs[0]?.startLine &&
+                docs.map((doc) => (
                   <HStack
                     p={3}
                     bg={doc.isSelected ? 'yellow.100' : 'white'}
@@ -252,7 +252,7 @@ export function PlaygroundSidebar({
                       bg: doc.isSelected ? 'yellow.100' : 'yellow.50',
                     }}
                     position="relative"
-                    onClick={() => onChangeSelectedDoc(index)}
+                    onClick={() => onChangeSelectedDoc(doc.index)}
                     cursor="pointer"
                   >
                     <Box
@@ -264,17 +264,11 @@ export function PlaygroundSidebar({
                       fontWeight="medium"
                       fontFamily="mono"
                     >
-                      {doc.highlight_line.start}
+                      {doc.startLine}
                     </Box>
                     <Box>
-                      <Heading
-                        fontSize={doc.type.includes('title') ? '2xl' : 'lg'}
-                        maxW="80%"
-                      >
-                        {doc.title}
-                      </Heading>
                       <Box fontSize="sm">
-                        <Markdown>{doc.description}</Markdown>
+                        <Markdown>{doc.content}</Markdown>
                       </Box>
                     </Box>
                   </HStack>

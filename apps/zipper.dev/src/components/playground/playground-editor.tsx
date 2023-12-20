@@ -54,6 +54,7 @@ import {
 import { TypedLiveblocksProvider } from '~/liveblocks.config';
 import { Script } from '@prisma/client';
 import { ChatIcon } from '@chakra-ui/icons';
+import { usePlaygroundDocs } from '~/hooks/use-playground-docs';
 
 export type MonacoEditor = monaco.editor.IStandaloneCodeEditor;
 
@@ -100,7 +101,7 @@ export default function PlaygroundEditor(
     readOnly,
     onValidate,
     selectedDoc,
-    scriptDocs,
+    docs,
   } = useEditorContext();
   const { boot, bootPromise, run, configs } = useRunAppContext();
   const editorRef = useRef<MonacoEditor>();
@@ -121,6 +122,7 @@ export default function PlaygroundEditor(
   const connectionIds = useOthersConnectionIds();
   const [defaultLanguage] = useState<'typescript' | 'markdown'>('typescript');
   const theme = useColorModeValue('vs', 'vs-dark');
+  // const { docs } = usePlaygroundDocs(currentScript!.code, editorRef);
 
   type Comment = {
     line_start: number;
@@ -436,7 +438,7 @@ export default function PlaygroundEditor(
       console.log('[EDITOR]', `Setting model to ${currentScript.filename}`);
 
       editorRef.current.setModel(model);
-      editorRef.current?.getAction('editor.foldAllMarkerRegions')?.run();
+      editorRef.current?.getAction('editor.foldAllBlockComments').run();
       editorRef.current.addAction({
         id: 'custom-action',
         label: 'Custom Action',
@@ -613,23 +615,17 @@ export default function PlaygroundEditor(
   );
 
   useEffect(() => {
-    if (
-      isliveBlocksReady &&
-      scriptDocs.length > 1 &&
-      !selectedDoc.highlight_line?.start
-    ) {
+    if (isliveBlocksReady && docs.length >= 1 && !selectedDoc.startLine) {
       const editor = editorRef.current!;
       const highLightDecorations = editor
         .getModel()
         ?.getAllDecorations()
         .filter(
           (deco) =>
-            scriptDocs
-              .map((line) => line.highlight_line.start)
+            docs
+              .map((line) => line.startLine)
               .includes(deco.range.startLineNumber) &&
-            scriptDocs
-              .map((line) => line.highlight_line.end)
-              .includes(deco.range.endLineNumber),
+            docs.map((line) => line.endLine).includes(deco.range.endLineNumber),
         );
 
       editor.removeDecorations(
@@ -637,19 +633,15 @@ export default function PlaygroundEditor(
       );
     }
 
-    if (
-      isliveBlocksReady &&
-      scriptDocs.length > 1 &&
-      !!selectedDoc.highlight_line?.start
-    ) {
+    if (isliveBlocksReady && docs.length >= 1 && !!selectedDoc.startLine) {
       const editor = editorRef.current!;
 
-      const decorations: monaco.editor.IModelDeltaDecoration[] = scriptDocs.map(
+      const decorations: monaco.editor.IModelDeltaDecoration[] = docs.map(
         (script) => ({
           range: {
-            startLineNumber: script.highlight_line.start,
+            startLineNumber: script.startLine!,
             startColumn: 1,
-            endLineNumber: script.highlight_line.end,
+            endLineNumber: script.endLine!,
             endColumn: Number.MAX_SAFE_INTEGER,
           },
           options: {
@@ -669,12 +661,10 @@ export default function PlaygroundEditor(
         ?.getAllDecorations()
         .filter(
           (deco) =>
-            scriptDocs
-              .map((line) => line.highlight_line.start)
+            docs
+              .map((line) => line.startLine)
               .includes(deco.range.startLineNumber) &&
-            scriptDocs
-              .map((line) => line.highlight_line.end)
-              .includes(deco.range.endLineNumber),
+            docs.map((line) => line.endLine).includes(deco.range.endLineNumber),
         );
 
       editor.removeDecorations(
@@ -683,7 +673,7 @@ export default function PlaygroundEditor(
 
       editor.createDecorationsCollection().set(decorations);
     }
-  }, [isliveBlocksReady, editorRef, scriptDocs, selectedDoc]);
+  }, [isliveBlocksReady, editorRef, docs, selectedDoc]);
 
   const selection = editorRef?.current?.getSelection();
 
@@ -773,6 +763,21 @@ export default function PlaygroundEditor(
     );
   };
 
+  const toggleComments = () => {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-non-null-asserted-optional-chain
+    const editor = editorRef?.current!;
+
+    // Define a range for the comment block
+    const commentRange = new monaco.Range(1, 1, 5, 1);
+
+    editor.removeDecorations(editor.getModel()?.getAllDecorations() as any[]);
+    const lineNumber = 5;
+    editor.trigger('fold', 'editor.fold', {
+      lineNumber: lineNumber,
+      levels: 1,
+    });
+  };
+
   return (
     <>
       <Editor
@@ -823,9 +828,9 @@ export default function PlaygroundEditor(
           key={id}
         />
       ))}
-      {selection?.startLineNumber && selectionText !== '' && (
+      {/* {selection?.startLineNumber && selectionText !== '' && (
         <CommentButton line_start={selection.startLineNumber} />
-      )}
+      )} */}
     </>
   );
 }

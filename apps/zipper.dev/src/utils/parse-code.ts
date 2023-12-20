@@ -539,6 +539,22 @@ export function addParamToCode({
   return newCode;
 }
 
+export function getJSDocInfo({ code, jsdoc }: { code: string; jsdoc: string }) {
+  const src = getSourceFileFromCode(code);
+
+  const findedFn = src.getFunctions().find((fn) => {
+    const fnText = fn.getJsDocs()[0]?.getFullText().replace(/\s+/g, ' ').trim();
+    const jsDocText = jsdoc.replace(/\s+/g, ' ').trim();
+
+    return fnText === jsDocText;
+  });
+
+  return {
+    startLine: findedFn?.getStartLineNumber(),
+    endLine: findedFn?.getEndLineNumber(),
+  };
+}
+
 export function parseComments({
   code,
   srcPassedIn,

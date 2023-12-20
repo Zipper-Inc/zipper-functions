@@ -30,13 +30,13 @@ import {
 } from '~/utils/hashing';
 import { isZipperImportUrl } from '~/utils/eszip-utils';
 import {
-  getOrCreateScriptModel,
   isTypescript,
   parsePlaygroundQuery,
   PlaygroundTab,
 } from '~/utils/playground.utils';
 import { runZipperLinter } from '~/utils/zipper-editor-linter';
 import { rewriteSpecifier } from '~/utils/rewrite-imports';
+import { usePlaygroundDocs } from '~/hooks/use-playground-docs';
 
 type OnValidate = AddParameters<
   Required<EditorProps>['onValidate'],
@@ -44,11 +44,10 @@ type OnValidate = AddParameters<
 >;
 
 type Doc = {
-  type: string;
-  title: string;
-  description: string;
+  startLine?: number;
+  endLine?: number;
+  content: string;
   isSelected: boolean;
-  highlight_line: { start: number; end: number };
   index: number;
 };
 
@@ -63,6 +62,14 @@ export type EditorContextType = {
   connectionId?: number;
   scripts: Script[];
   selectedDoc: Doc;
+  docs: {
+    startLine?: number;
+    endLine?: number;
+    content: string;
+    isSelected: boolean;
+    index: number;
+  }[];
+  // jsdocs: string[];
   editor?: typeof monaco.editor;
   setEditor: (editor: typeof monaco.editor) => void;
   isModelDirty: (path: string) => boolean;
@@ -77,7 +84,7 @@ export type EditorContextType = {
   save: () => Promise<string>;
   refetchApp: () => Promise<any>;
   inputParams?: InputParam[];
-  scriptDocs: Doc[];
+  // scriptDocs: Doc[];
   setInputParams: (inputParams?: InputParam[]) => void;
   inputError?: string;
   monacoRef?: MutableRefObject<Monaco | undefined>;
@@ -114,6 +121,7 @@ export const EditorContext = createContext<EditorContextType>({
   scripts: [],
   editor: undefined,
   setEditor: noop,
+  docs: [],
   selectedDoc: {} as Doc,
   isModelDirty: () => false,
   setModelIsDirty: noop,
@@ -121,7 +129,7 @@ export const EditorContext = createContext<EditorContextType>({
   modelHasErrors: () => false,
   setModelHasErrors: () => false,
   editorHasErrors: () => false,
-  scriptDocs: [],
+  // scriptDocs: [],
   onChangeSelectedDoc: () => false,
   getErrorFiles: () => [],
   isSaving: false,
@@ -441,96 +449,98 @@ const EditorContextProvider = ({
   const currentScript = scripts.find((s) => s.id === currentScriptId);
   const setCurrentScript = (s: Script) => setCurrentScriptId(s.id);
 
-  const [selectedDoc, setSelectedDoc] = useState<Doc>({} as Doc);
+  const { docs, onChangeSelectedDoc, selectedDoc } = usePlaygroundDocs(
+    currentScript?.code ?? '',
+  );
 
-  const scriptDocs = useMemo(() => {
-    const customOrder = ['title', 'heading_1', 'heading_2', 'heading_3'];
+  // const scriptDocs = useMemo(() => {
+  //   const customOrder = ['title', 'heading_1', 'heading_2', 'heading_3'];
 
-    const docs = currentScript?.code
-      .split('\n')
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      //@ts-ignore
-      .reduce((acc, curr) => {
-        if (curr.trim().startsWith('/**') || curr.trim().startsWith('*')) {
-          return [...acc, curr.trim()];
-        } else if (curr.trim().startsWith('export async function handler')) {
-          return acc;
-        } else {
-          return acc;
-        }
-      }, [] as string[])
-      .map((line) => (line.startsWith('*') ? ' ' + line : line))
-      .join('\n')
-      .split('/**')
-      .filter((line) => line !== '' && line.includes('----'))
-      .map((line) => String('/**' + '\n' + line).split('\n'))
-      .reduce(
-        (acc, curr) => [
-          ...acc,
-          {
-            type: curr
-              .map((line) => line.trim())
-              .find((line) => line.trim().startsWith('* type:'))
-              ?.replace('* type: ', '')
-              .replace(' ', ''),
-            description: curr
-              .filter(
-                (line) =>
-                  !line.trim().includes('----') &&
-                  !line.trim().startsWith('* name:') &&
-                  !line.trim().startsWith('* type:') &&
-                  !line.trim().startsWith('* highlight:') &&
-                  line.trim().startsWith('*'),
-              )
-              .map((line) => line.trim())
-              .join('\n')
-              .replace(/^\* /gm, '')
-              .replace(/\*\/|\/\*/g, ''),
-            title: curr
-              .map((line) => line.trim())
-              .find((line) => line.trim().startsWith('* name:'))
-              ?.replace('* name: ', '')
-              .replace(' ', ''),
-            highlight_line: curr
-              .map((line) => line.trim())
-              .find((line) => line.trim().startsWith('* highlight:'))
-              ?.replace('* highlight: ', '')
-              .split('-')
-              .map((data, index) => ({ value: Number(data), index }))
-              .reduce(
-                (acc, curr) =>
-                  curr.index === 0
-                    ? { ...acc, start: curr.value }
-                    : { ...acc, end: curr.value },
-                {},
-              ),
-          },
-        ],
-        [] as any[],
-      ) as Doc[];
+  //   const docs = currentScript?.code
+  //     .split('\n')
+  //     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  //     //@ts-ignore
+  //     .reduce((acc, curr) => {
+  //       if (curr.trim().startsWith('/**') || curr.trim().startsWith('*')) {
+  //         return [...acc, curr.trim()];
+  //       } else if (curr.trim().startsWith('export async function handler')) {
+  //         return acc;
+  //       } else {
+  //         return acc;
+  //       }
+  //     }, [] as string[])
+  //     .map((line) => (line.startsWith('*') ? ' ' + line : line))
+  //     .join('\n')
+  //     .split('/**')
+  //     .filter((line) => line !== '' && line.includes('----'))
+  //     .map((line) => String('/**' + '\n' + line).split('\n'))
+  //     .reduce(
+  //       (acc, curr) => [
+  //         ...acc,
+  //         {
+  //           type: curr
+  //             .map((line) => line.trim())
+  //             .find((line) => line.trim().startsWith('* type:'))
+  //             ?.replace('* type: ', '')
+  //             .replace(' ', ''),
+  //           description: curr
+  //             .filter(
+  //               (line) =>
+  //                 !line.trim().includes('----') &&
+  //                 !line.trim().startsWith('* name:') &&
+  //                 !line.trim().startsWith('* type:') &&
+  //                 !line.trim().startsWith('* highlight:') &&
+  //                 line.trim().startsWith('*'),
+  //             )
+  //             .map((line) => line.trim())
+  //             .join('\n')
+  //             .replace(/^\* /gm, '')
+  //             .replace(/\*\/|\/\*/g, ''),
+  //           title: curr
+  //             .map((line) => line.trim())
+  //             .find((line) => line.trim().startsWith('* name:'))
+  //             ?.replace('* name: ', '')
+  //             .replace(' ', ''),
+  //           highlight_line: curr
+  //             .map((line) => line.trim())
+  //             .find((line) => line.trim().startsWith('* highlight:'))
+  //             ?.replace('* highlight: ', '')
+  //             .split('-')
+  //             .map((data, index) => ({ value: Number(data), index }))
+  //             .reduce(
+  //               (acc, curr) =>
+  //                 curr.index === 0
+  //                   ? { ...acc, start: curr.value }
+  //                   : { ...acc, end: curr.value },
+  //               {},
+  //             ),
+  //         },
+  //       ],
+  //       [] as any[],
+  //     ) as Doc[];
 
-    return docs
-      ?.sort((a, b) => {
-        const typeA = a.type;
-        const typeB = b.type;
+  //   return docs
+  //     ?.sort((a, b) => {
+  //       const typeA = a.type;
+  //       const typeB = b.type;
 
-        return customOrder.indexOf(typeA) - customOrder.indexOf(typeB);
-      })
-      .map((doc, index) => ({
-        ...doc,
-        isSelected: index === selectedDoc?.index,
-        index,
-      }));
-  }, [currentScript, selectedDoc]);
+  //       return customOrder.indexOf(typeA) - customOrder.indexOf(typeB);
+  //     })
+  //     .map((doc, index) => ({
+  //       ...doc,
+  //       isSelected: index === selectedDoc?.index,
+  //       index,
+  //     }));
+  // }, [currentScript, selectedDoc]);
 
-  const onChangeSelectedDoc = (docIndex: number) => {
-    if (docIndex === selectedDoc.index) {
-      setSelectedDoc({} as Doc);
-      return;
-    }
+  // const onChangeSelectedDoc = (docIndex: number) => {
+  //   if (docIndex === selectedDoc.index) {
+  //     setSelectedDoc({} as Doc);
+  //     return;
+  //   }
 
-    setSelectedDoc({ ...scriptDocs[docIndex]! });
-  };
+  //   setSelectedDoc({ ...scriptDocs[docIndex]! });
+  // };
 
   const resetDirtyState = () => {
     setModelsDirtyState(
@@ -804,6 +814,8 @@ const EditorContextProvider = ({
         currentScript,
         setCurrentScript,
         selectedDoc,
+        // jsdocs,
+        docs,
         onChange,
         onValidate,
         connectionId: self?.connectionId,
@@ -813,7 +825,7 @@ const EditorContextProvider = ({
         isModelDirty,
         setModelIsDirty,
         isEditorDirty,
-        scriptDocs,
+        // scriptDocs,
         modelHasErrors,
         setModelHasErrors,
         editorHasErrors,
