@@ -36,7 +36,7 @@ export const defaults: Components & { heading: Components['h1'] } = {
         as="h1"
         size="lg"
         color="fg.800"
-        py={2}
+        py={3}
         fontWeight="medium"
         data-markdown
       >
@@ -50,7 +50,7 @@ export const defaults: Components & { heading: Components['h1'] } = {
         as="h2"
         style={{ fontSize: '26px' }}
         color="fg.700"
-        py={2}
+        py={3}
         fontWeight="medium"
         data-markdown
       >
