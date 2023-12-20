@@ -83,7 +83,10 @@ export type EditorContextType = {
   runEditorActions:
     | typeof noop
     | ((
-        inputs: Pick<RunEditorActionsInputs, 'value' | 'currentScript'> & {
+        inputs: Pick<
+          RunEditorActionsInputs,
+          'value' | 'currentScript' | 'shouldFetchImports'
+        > & {
           now?: boolean;
         },
         defaults?: RunEditorActionsInputs,
@@ -318,6 +321,7 @@ async function runEditorActionsNow({
   invalidImportUrlsRef,
   setModelIsDirty: setModelIsDirtyPassedIn,
   readOnly,
+  shouldFetchImports,
 }: {
   value: string;
   setInputParams: EditorContextType['setInputParams'];
@@ -328,6 +332,7 @@ async function runEditorActionsNow({
   invalidImportUrlsRef: MutableRefObject<{ [url: string]: number }>;
   setModelIsDirty: (path: string, isDirty: boolean) => void;
   readOnly: boolean;
+  shouldFetchImports: boolean;
 }) {
   if (!monacoRef.current || !isTypescript(currentScript)) return;
 
@@ -363,13 +368,15 @@ async function runEditorActionsNow({
       invalidImportUrlsRef,
     });
 
-    await handleExternalImports({
-      imports,
-      monacoRef,
-      externalImportModelsRef,
-      invalidImportUrlsRef,
-      currentScript,
-    });
+    if (shouldFetchImports) {
+      await handleExternalImports({
+        imports,
+        monacoRef,
+        externalImportModelsRef,
+        invalidImportUrlsRef,
+        currentScript,
+      });
+    }
   } catch (e: any) {
     setInputParams(undefined);
     setInputError(e.message);
@@ -447,6 +454,7 @@ const EditorContextProvider = ({
       invalidImportUrlsRef,
       setModelIsDirty,
       readOnly,
+      shouldFetchImports: true,
     });
   };
 
@@ -726,7 +734,7 @@ const EditorContextProvider = ({
         resourceOwnerSlug: resourceOwnerSlug as string,
         appSlug: appSlug as string,
         runEditorActions: async (
-          { now = false, currentScript, value },
+          { now = false, currentScript, value, shouldFetchImports },
           defaults = {
             value: '',
             currentScript: {} as any,
@@ -737,6 +745,7 @@ const EditorContextProvider = ({
             invalidImportUrlsRef,
             setModelIsDirty,
             readOnly,
+            shouldFetchImports,
           },
         ) =>
           (now ? runEditorActionsNow : runEditorActionsDebounced)({

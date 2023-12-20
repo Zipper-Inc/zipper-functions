@@ -92,7 +92,7 @@ export default function PlaygroundEditor(
   });
   const [isEditorReady, setIsEditorReady] = useState(false);
   const [isModelReady, setIsModelReady] = useState(false);
-  const [, setIsLiveblocksReady] = useState(false);
+  const [isLiveblocksReady, setIsLiveblocksReady] = useState(false);
   const monacoEditor = useMonaco();
   const [, updateMyPresence] = useMyPresence();
   const connectionIds = useOthersConnectionIds();
@@ -289,6 +289,7 @@ export default function PlaygroundEditor(
           now: true,
           value: script.code,
           currentScript: script,
+          shouldFetchImports: isLiveblocksReady,
         });
       });
 
@@ -395,10 +396,21 @@ export default function PlaygroundEditor(
       console.log('[EDITOR]', `Setting model to ${currentScript.filename}`);
 
       editorRef.current.setModel(model);
-      runEditorActions({ now: true, value: model.getValue(), currentScript });
+      runEditorActions({
+        now: true,
+        value: model.getValue(),
+        currentScript,
+        shouldFetchImports: isLiveblocksReady,
+      });
       maybeResyncScript(currentScript);
     }
-  }, [currentScript, editorRef.current, isEditorReady, isModelReady]);
+  }, [
+    currentScript,
+    editorRef.current,
+    isEditorReady,
+    isModelReady,
+    isLiveblocksReady,
+  ]);
 
   // A little love for `run: true`
   const lastAutoRunHash = useRef<Record<string, string>>({});
@@ -497,6 +509,7 @@ export default function PlaygroundEditor(
         now: true,
         value: model.getValue(),
         currentScript: script,
+        shouldFetchImports: true,
       });
     });
   };
