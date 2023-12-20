@@ -214,7 +214,7 @@ export const defaults: Components & { heading: Components['h1'] } = {
     );
   },
   hr: () => {
-    return <Divider style={{ marginBottom: '10px' }} data-markdown />;
+    return <Divider py={4} data-markdown />;
   },
   a: (props) => {
     return (
