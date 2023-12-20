@@ -200,6 +200,7 @@ export const defaults: Components & { heading: Components['h1'] } = {
         code={code || ''}
         language={langauge}
         w="full"
+        my={3}
         whiteSpace="pre-wrap"
         data-markdown
       />
@@ -250,6 +251,8 @@ export const defaults: Components & { heading: Components['h1'] } = {
         as={ordered ? 'ol' : 'ul'}
         styleType={styleType}
         pl={4}
+        pt={1}
+        pb={2}
         {...attrs}
         data-markdown
       >
