@@ -12,6 +12,7 @@ export function getParsedPath(path: string, endings: string[] = []) {
 
   let filename = 'main.ts';
   let version: string | undefined;
+  let action: string | undefined;
 
   // split the path without endings on / - remove any empty parts
   const parts = newPath.split('/').filter((s) => s.length !== 0);
@@ -29,7 +30,7 @@ export function getParsedPath(path: string, endings: string[] = []) {
 
   if (!filename.endsWith('.ts')) filename = `${filename}.ts`;
 
-  return { filename, version };
+  return { filename, version, action };
 }
 
 export default {

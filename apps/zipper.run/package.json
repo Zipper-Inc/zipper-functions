@@ -13,7 +13,8 @@
     "start": "yarn playwright install; next start",
     "start:preview": "yarn playwright install; yarn dotenv:preview -- -- next start",
     "start:production": "yarn playwright install; yarn dotenv:production -- -- next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test:unit": "jest -i --detectOpenHandles"
   },
   "prettier": {
     "printWidth": 80,
