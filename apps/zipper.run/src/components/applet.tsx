@@ -55,7 +55,7 @@ import { fetchBootPayloadCachedWithUserInfoOrThrow } from '~/utils/get-boot-info
 import { getConnectorsAuthUrl } from '~/utils/get-connectors-auth-url';
 import { getRelayUrl } from '~/utils/get-relay-url';
 import getValidSubdomain from '~/utils/get-valid-subdomain';
-import { getFilenameAndVersionFromPath } from '~/utils/get-values-from-url';
+import { getParsedPath } from '~/utils/get-parsed-path';
 import { getZipperAuth } from '~/utils/get-zipper-auth';
 import removeAppConnectorUserAuth from '~/utils/remove-app-connector-user-auth';
 import { getShortRunId } from '~/utils/run-id';
@@ -622,11 +622,10 @@ export const getServerSideProps: GetServerSideProps = async ({
     });
   if (!subdomain) return { notFound: true };
 
-  const { version: versionFromUrl, filename: filenameFromUrl } =
-    getFilenameAndVersionFromPath(
-      ((query.versionAndFilename as string[]) || []).join('/'),
-      [],
-    );
+  const { version: versionFromUrl, filename: filenameFromUrl } = getParsedPath(
+    ((query.versionAndFilename as string[]) || []).join('/'),
+    [],
+  );
   if (__DEBUG__)
     console.log('applet.tsx | getServerSideProps', {
       versionFromUrl,

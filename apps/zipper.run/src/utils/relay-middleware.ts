@@ -8,7 +8,7 @@ import fetchBootInfo, {
   fetchBasicUserInfo,
 } from './get-boot-info';
 import getValidSubdomain from './get-valid-subdomain';
-import { getFilenameAndVersionFromPath } from './get-values-from-url';
+import { getParsedPath } from './get-parsed-path';
 import {
   formatDeploymentId,
   getAppLink,
@@ -390,7 +390,7 @@ export default async function serveRelay({
   request: NextRequest;
   bootOnly: boolean;
 }) {
-  const { version, filename } = getFilenameAndVersionFromPath(
+  const { version, filename } = getParsedPath(
     request.nextUrl.pathname,
     bootOnly ? ['boot'] : ['relay', 'raw'],
   );
@@ -478,10 +478,10 @@ export async function serveNonBrowserRelay({
 }: {
   request: NextRequest;
 }) {
-  const { version, filename } = getFilenameAndVersionFromPath(
-    request.nextUrl.pathname,
-    ['relay', 'raw'],
-  );
+  const { version, filename } = getParsedPath(request.nextUrl.pathname, [
+    'relay',
+    'raw',
+  ]);
 
   console.log('version: ', version);
   console.log('filename: ', filename);

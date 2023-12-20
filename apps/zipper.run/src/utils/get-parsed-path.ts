@@ -1,7 +1,4 @@
-export function getFilenameAndVersionFromPath(
-  path: string,
-  endings: string[] = [],
-) {
+export function getParsedPath(path: string, endings: string[] = []) {
   let newPath = path;
   const descEndings = endings.sort((a, b) => b.length - a.length);
 
@@ -36,5 +33,5 @@ export function getFilenameAndVersionFromPath(
 }
 
 export default {
-  getFilenameAndVersionFromPath,
+  getFilenameAndVersionFromPath: getParsedPath,
 };
