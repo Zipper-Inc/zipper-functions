@@ -13,7 +13,7 @@ const NOTION = {
   AUTH_URL: 'https://api.notion.com/v1/oauth/authorize',
   CLIENT_SECRET: process.env.NOTION_CLIENT_SECRET!,
   CLIENT_ID: process.env.NOTION_CLIENT_ID!,
-  REDIRECT_URL:
+  REDIRECT_URI:
     process.env.NODE_ENV === 'development'
       ? 'https://redirectmeto.com/http://localhost:3000/connectors/notion/auth'
       : 'https://zipper.dev/connectors/notion/auth',
