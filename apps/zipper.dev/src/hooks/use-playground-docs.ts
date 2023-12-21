@@ -1,8 +1,11 @@
-import * as monaco from 'monaco-editor';
-import { MutableRefObject, useMemo, useState } from 'react';
-import { getJSDocInfo } from '~/utils/parse-code';
+import { useMemo, useState } from 'react';
+import { getJSDocEndStarLine } from '~/utils/parse-code';
 
-type Doc = {
+/* -------------------------------------------- */
+/* Types                                        */
+/* -------------------------------------------- */
+
+export type Doc = {
   isSelected: boolean;
   startLine: number;
   endLine: number;
@@ -10,12 +13,11 @@ type Doc = {
   index: number;
 };
 
-const usePlaygroundDocs = (
-  code: string,
-  editorRef?: MutableRefObject<monaco.editor.IStandaloneCodeEditor | undefined>,
-) => {
+const usePlaygroundDocs = (code: string) => {
+  /* ------------------ States ------------------ */
   const [selectedDoc, setSelectedDoc] = useState<Doc>({} as Doc);
 
+  /* ------------------- Memos ------------------ */
   const docs = useMemo(() => {
     if (code?.length > 1) {
       const jsdocs = code
@@ -40,12 +42,20 @@ const usePlaygroundDocs = (
           const content = jsdoc
             .split('\n')
             .filter((line) => !line.includes('/**'))
+            /**
+             * formating text from block comment to
+             * markdown string
+             * */
             .map((splitedLine) =>
               splitedLine.replace(/\/\*\*|\* | \*\//g, '').replace('*/', ''),
             )
             .join('\n');
 
-          const range = getJSDocInfo({ code, jsdoc });
+          /**
+           * gets start-line and end-line from each function that
+           * jsdocs from block comment refers.
+           */
+          const range = getJSDocEndStarLine({ code, jsdoc });
 
           return {
             ...range,
@@ -62,15 +72,16 @@ const usePlaygroundDocs = (
     return { jsdocs: [], docs: [] };
   }, [code, selectedDoc]);
 
+  /* ----------------- Callbacks ---------------- */
   const onChangeSelectedDoc = (docIndex: number) => {
     if (docIndex === selectedDoc.index) {
-      setSelectedDoc({} as Doc);
-      return;
+      return setSelectedDoc({} as Doc);
     }
 
-    setSelectedDoc({ ...docs.docs[docIndex]! });
+    return setSelectedDoc({ ...docs.docs[docIndex]! });
   };
 
+  /* ------------------ Render ------------------ */
   return {
     ...docs,
     onChangeSelectedDoc,

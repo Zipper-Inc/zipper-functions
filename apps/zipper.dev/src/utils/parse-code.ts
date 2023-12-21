@@ -539,20 +539,45 @@ export function addParamToCode({
   return newCode;
 }
 
-export function getJSDocInfo({ code, jsdoc }: { code: string; jsdoc: string }) {
+export function getJSDocEndStarLine({
+  code,
+  jsdoc,
+}: {
+  code: string;
+  jsdoc: string;
+}) {
   const src = getSourceFileFromCode(code);
+  const jsDocText = jsdoc.replace(/\s+/g, ' ').trim();
+
+  const findedVariable = src.getVariableStatements().find((variable) => {
+    const variableJSDoc = variable
+      .getJsDocs()[0]
+      ?.getFullText()
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    return variableJSDoc === jsDocText;
+  });
+
+  if (findedVariable) {
+    return {
+      startLine: findedVariable?.getStartLineNumber(),
+      endLine: findedVariable?.getEndLineNumber(),
+    };
+  }
 
   const findedFn = src.getFunctions().find((fn) => {
     const fnText = fn.getJsDocs()[0]?.getFullText().replace(/\s+/g, ' ').trim();
-    const jsDocText = jsdoc.replace(/\s+/g, ' ').trim();
 
     return fnText === jsDocText;
   });
 
-  return {
-    startLine: findedFn?.getStartLineNumber(),
-    endLine: findedFn?.getEndLineNumber(),
-  };
+  if (findedFn) {
+    return {
+      startLine: findedFn?.getStartLineNumber(),
+      endLine: findedFn?.getEndLineNumber(),
+    };
+  }
 }
 
 export function parseComments({
