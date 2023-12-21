@@ -13,12 +13,10 @@ import {
   Spinner,
 } from '@chakra-ui/react';
 import { useState } from 'react';
-import { useUser } from '~/hooks/use-user';
 import { trpc } from '~/utils/trpc';
 
 export function FeedbackModal({
   isOpen,
-  onOpen,
   onClose,
 }: {
   isOpen: boolean;
@@ -26,7 +24,6 @@ export function FeedbackModal({
   onClose: () => void;
 }) {
   const [feedback, setFeedback] = useState('');
-  const { user } = useUser();
   const [submittingFeedback, setSubmittingFeedback] = useState(false);
 
   const feedbackMutation = trpc.user.submitFeedback.useMutation();

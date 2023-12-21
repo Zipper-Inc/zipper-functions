@@ -117,7 +117,7 @@ export default function PlaygroundEditor(
   });
   const [isEditorReady, setIsEditorReady] = useState(false);
   const [isModelReady, setIsModelReady] = useState(false);
-  const [isliveBlocksReady, setIsLiveblocksReady] = useState(false);
+  const [isLiveblocksReady, setIsLiveblocksReady] = useState(false);
   const monacoEditor = useMonaco();
   const [, updateMyPresence] = useMyPresence();
   const connectionIds = useOthersConnectionIds();
@@ -334,6 +334,7 @@ export default function PlaygroundEditor(
           now: true,
           value: script.code,
           currentScript: script,
+          shouldFetchImports: isLiveblocksReady,
         });
       });
 
@@ -452,10 +453,21 @@ export default function PlaygroundEditor(
           alert('Custom Action Clicked!');
         },
       });
-      runEditorActions({ now: true, value: model.getValue(), currentScript });
+      runEditorActions({
+        now: true,
+        value: model.getValue(),
+        currentScript,
+        shouldFetchImports: isLiveblocksReady,
+      });
       maybeResyncScript(currentScript);
     }
-  }, [currentScript, editorRef.current, isEditorReady, isModelReady]);
+  }, [
+    currentScript,
+    editorRef.current,
+    isEditorReady,
+    isModelReady,
+    isLiveblocksReady,
+  ]);
 
   // A little love for `run: true`
   const lastAutoRunHash = useRef<Record<string, string>>({});
@@ -554,6 +566,7 @@ export default function PlaygroundEditor(
         now: true,
         value: model.getValue(),
         currentScript: script,
+        shouldFetchImports: true,
       });
     });
   };
@@ -617,7 +630,7 @@ export default function PlaygroundEditor(
   );
 
   useEffect(() => {
-    if (isliveBlocksReady && docs.length >= 1 && !selectedDoc.startLine) {
+    if (isLiveblocksReady && docs.length >= 1 && !selectedDoc.startLine) {
       const editor = editorRef.current!;
       const highLightDecorations = editor
         .getModel()
@@ -635,7 +648,7 @@ export default function PlaygroundEditor(
       );
     }
 
-    if (isliveBlocksReady && docs.length >= 1 && !!selectedDoc.startLine) {
+    if (isLiveblocksReady && docs.length >= 1 && !!selectedDoc.startLine) {
       const editor = editorRef.current!;
 
       console.log(`${colorMode === 'dark' ? 'dark-' : ''}tutorial-line-enable`);
@@ -683,7 +696,7 @@ export default function PlaygroundEditor(
 
       editor.createDecorationsCollection().set(decorations);
     }
-  }, [isliveBlocksReady, editorRef, docs, selectedDoc, colorMode]);
+  }, [isLiveblocksReady, editorRef, docs, selectedDoc, colorMode]);
 
   const selection = editorRef?.current?.getSelection();
 

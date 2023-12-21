@@ -7,6 +7,7 @@ export const SmartFunctionOutputContext = createContext<{
   setSearchQuery: (query: string) => void;
   config: Zipper.HandlerConfig;
   location: ZipperLocation;
+  runHistoryUrl?: string;
 }>({
   outputSection: 'main',
   searchQuery: '',
@@ -22,11 +23,13 @@ const SmartFunctionOutputProvider = ({
   outputSection,
   config,
   location = ZipperLocation.ZipperDotRun,
+  runHistoryUrl,
 }: {
   outputSection: 'main' | 'expanded';
   children: any;
   config: Zipper.HandlerConfig;
   location?: ZipperLocation;
+  runHistoryUrl?: string;
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   return (
@@ -37,6 +40,7 @@ const SmartFunctionOutputProvider = ({
         setSearchQuery,
         config,
         location,
+        runHistoryUrl,
       }}
     >
       {children}

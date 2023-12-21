@@ -1,6 +1,6 @@
 import { InputParam, InputType, ParsedNode } from '@zipper/types';
 import { parse } from 'comment-parser';
-
+import stripComments from 'strip-comments';
 import {
   ParameterDeclaration,
   Project,
@@ -15,6 +15,12 @@ import {
   CallExpression,
   FunctionExpression,
 } from 'ts-morph';
+
+type ParseCodeParameters = {
+  code?: string;
+  throwErrors?: boolean;
+  src?: SourceFile;
+};
 
 export const isExternalImport = (specifier: string) =>
   /^https?:\/\//.test(specifier);
@@ -252,10 +258,8 @@ function findHandlerFunction({
 export function parseInputForTypes({
   code = '',
   throwErrors = false,
-  srcPassedIn,
-}: { code?: string; throwErrors?: boolean; srcPassedIn?: SourceFile } = {}):
-  | undefined
-  | InputParam[] {
+  src: srcPassedIn,
+}: ParseCodeParameters = {}): undefined | InputParam[] {
   if (!code) return undefined;
 
   try {
@@ -374,11 +378,8 @@ export function parseExternalImportUrls({
 
 export function parseImports({
   code = '',
-  srcPassedIn,
-}: {
-  code?: string;
-  srcPassedIn?: SourceFile;
-} = {}) {
+  src: srcPassedIn,
+}: ParseCodeParameters = {}) {
   if (!code) return [];
   const src = srcPassedIn || getSourceFileFromCode(code);
   return src.getImportDeclarations().map((i) => {
@@ -400,22 +401,63 @@ export function parseImports({
   });
 }
 
+export const USE_DIRECTIVE_REGEX = /^use\s/;
+export const USE_CLIENT_DIRECTIVE = 'use client';
+
+function getSourceWithoutComments(srcPassedIn: string | SourceFile = '') {
+  return getSourceFileFromCode(
+    stripComments(
+      typeof srcPassedIn === 'string' ? srcPassedIn : srcPassedIn.getText(),
+    ),
+  );
+}
+
+/**
+ * The "directive prologue" is the first line of a file that starts with "use ___"
+ * This is a special comment that tells the compiler to do something special
+ * @example
+ * "use client";
+ */
+export function parseDirectivePrologue({
+  code = '',
+  throwErrors = false,
+  src: srcPassedIn,
+}: ParseCodeParameters = {}) {
+  const src = getSourceWithoutComments(srcPassedIn || code);
+
+  const syntaxList = src?.getChildAtIndexIfKind(0, SyntaxKind.SyntaxList);
+
+  const rootNode = syntaxList || src;
+
+  const maybeDirective = rootNode
+    ?.getChildAtIndexIfKind(0, SyntaxKind.ExpressionStatement)
+    ?.getChildAtIndexIfKind(0, SyntaxKind.StringLiteral)
+    ?.getLiteralText();
+
+  return maybeDirective && USE_DIRECTIVE_REGEX.test(maybeDirective)
+    ? maybeDirective
+    : undefined;
+}
+
+export const isClientModule = (inputs: ParseCodeParameters) =>
+  parseDirectivePrologue(inputs) === USE_CLIENT_DIRECTIVE;
+
 export function parseCode({
   code = '',
   throwErrors = false,
-  srcPassedIn,
-}: { code?: string; throwErrors?: boolean; srcPassedIn?: SourceFile } = {}) {
+  src: srcPassedIn,
+}: ParseCodeParameters = {}) {
   const src: SourceFile | undefined =
     srcPassedIn || (code ? getSourceFileFromCode(code) : undefined);
-  let inputs = parseInputForTypes({ code, throwErrors, srcPassedIn: src });
+  let inputs = parseInputForTypes({ code, throwErrors, src });
   const externalImportUrls = parseExternalImportUrls({
     code,
     srcPassedIn: src,
   });
 
-  const imports = parseImports({ code, srcPassedIn: src });
+  const imports = parseImports({ code, src });
 
-  const comments = parseComments({ code, srcPassedIn: src });
+  const comments = parseComments({ code, src });
   if (comments) {
     inputs = inputs?.map((i) => {
       const matchingTag = comments.tags.find(
@@ -428,6 +470,9 @@ export function parseCode({
       return { ...i, name, description };
     });
   }
+
+  const directivePrologue = parseDirectivePrologue({ code, throwErrors, src });
+
   return {
     inputs,
     externalImportUrls,
@@ -436,6 +481,7 @@ export function parseCode({
       ({ specifier }) => !isExternalImport(specifier),
     ),
     imports,
+    directivePrologue,
     src,
   };
 }
@@ -559,18 +605,18 @@ export function getJSDocEndStarLine({
     return variableJSDoc === jsDocText;
   });
 
+  const findedFn = src.getFunctions().find((fn) => {
+    const fnText = fn.getJsDocs()[0]?.getFullText().replace(/\s+/g, ' ').trim();
+
+    return fnText === jsDocText;
+  });
+
   if (findedVariable) {
     return {
       startLine: findedVariable?.getStartLineNumber(),
       endLine: findedVariable?.getEndLineNumber(),
     };
   }
-
-  const findedFn = src.getFunctions().find((fn) => {
-    const fnText = fn.getJsDocs()[0]?.getFullText().replace(/\s+/g, ' ').trim();
-
-    return fnText === jsDocText;
-  });
 
   if (findedFn) {
     return {
@@ -580,13 +626,7 @@ export function getJSDocEndStarLine({
   }
 }
 
-export function parseComments({
-  code,
-  srcPassedIn,
-}: {
-  code?: string;
-  srcPassedIn?: SourceFile;
-}) {
+export function parseComments({ code, src: srcPassedIn }: ParseCodeParameters) {
   if (!code) return;
 
   const src = srcPassedIn || getSourceFileFromCode(code);
@@ -602,9 +642,9 @@ export function parseComments({
   return;
 }
 
-export function parseCodeSerializable(...args: Parameters<typeof parseCode>) {
+export function parseCodeSerializable(params: ParseCodeParameters) {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { src: _ignore, ...rest } = parseCode(...args);
+  const { src: _ignore, ...rest } = parseCode(params);
   return {
     ...rest,
   };

@@ -229,7 +229,12 @@ export default function AddScriptForm({
       </VStack>
       <VStack alignItems="stretch">
         <VStack align="stretch" spacing="0">
-          <Accordion defaultIndex={[0]} allowMultiple>
+          <Accordion
+            defaultIndex={[0]}
+            allowMultiple
+            overflow="auto"
+            maxH="420px"
+          >
             <AccordionItem>
               <h2>
                 <AccordionButton bg="fg.100" _hover={{ bg: 'fg.200' }} h={6}>

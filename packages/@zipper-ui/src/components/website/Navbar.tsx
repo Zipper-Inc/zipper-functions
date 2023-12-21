@@ -59,7 +59,7 @@ export const WebSiteNavbar = ({
 
   const NavDrawer = () => {
     const { isOpen, onOpen, onClose } = useDisclosure();
-    const btnRef = useRef();
+    const btnRef = useRef<HTMLButtonElement | null>(null);
 
     return (
       <>
@@ -67,7 +67,7 @@ export const WebSiteNavbar = ({
           display={['flex', 'flex', 'none']}
           aria-label="menu"
           icon={<FiMenu size={24} />}
-          ref={btnRef as any}
+          ref={btnRef}
           color="gray.50"
           bg="none"
           onClick={onOpen}
@@ -77,12 +77,11 @@ export const WebSiteNavbar = ({
           isOpen={isOpen}
           placement="right"
           onClose={onClose}
-          finalFocusRef={btnRef as any}
+          finalFocusRef={btnRef}
         >
           <DrawerOverlay />
           <DrawerContent>
             <DrawerCloseButton />
-            {/* <DrawerHeader>Create your account</DrawerHeader> */}
 
             <DrawerBody>
               <VStack mt={6} gap={4}>
@@ -103,8 +102,6 @@ export const WebSiteNavbar = ({
                 </Button>
               </VStack>
             </DrawerBody>
-
-            <DrawerFooter></DrawerFooter>
           </DrawerContent>
         </Drawer>
       </>

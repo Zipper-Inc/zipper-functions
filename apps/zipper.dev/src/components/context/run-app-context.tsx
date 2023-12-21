@@ -150,11 +150,18 @@ export function RunAppProvider({
   });
 
   const bootAppMutation = trpc.app.boot.useMutation({
-    async onSuccess() {
+    async onSuccess(data) {
+      if (!data.ok) {
+        console.error(data.error);
+        return;
+      }
       await utils.app.byResourceOwnerAndAppSlugs.invalidate({
         resourceOwnerSlug: app.resourceOwner.slug,
         appSlug: slug,
       });
+    },
+    onError(error) {
+      console.error(error);
     },
   });
 
