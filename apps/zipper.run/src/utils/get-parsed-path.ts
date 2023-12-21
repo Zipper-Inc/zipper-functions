@@ -1,36 +1,33 @@
-export function getParsedPath(path: string, endings: string[] = []) {
-  let newPath = path;
-  const descEndings = endings.sort((a, b) => b.length - a.length);
+// This beast of a regex parses the path into the following groups:
+// - version: 7 character git has, must be the first thing in the url
+// - isEmbed: matches the 'embed' token if its there (optional)
+// - isRun: matches the 'run' token if its there (optional), can be used with isEmbed
+// - path: the path to the file, can be empty cause we just assume its main.ts
+//    - this can be anything except for $ and api, which tells us its an action or api request
+// - action: the action to run, must be prefixed with a $
+// - isApi: matches the 'api' token if its there (optional)
+// - apiFormat: the format of the api request, must be one of json, yaml, or html, optional since we default to json
+const PATH_PARSE_REGEX =
+  /^\/?(?:(?:@(?<version>[0-9a-f]{7}))?(?:\/?(?<isEmbed>embed))?(?:\/?(?<isRun>run))?\/?(?<path>(?!\$)(?!\api).*?)?(?:\/?\$(?<action>.+?)?)?(?<isApi>\/?api\/?(?<apiFormat>.+)?)?)$/;
 
-  //find longest ending that the path ends with - '/api/json' will match before '/json'
-  descEndings.find((ending) => {
-    if (path.endsWith(ending)) {
-      newPath = path.replace(ending, '');
-      return true;
-    }
-  });
-
-  let filename = 'main.ts';
-  let version: string | undefined;
-  let action: string | undefined;
+export function getParsedPath(path: string) {
+  // remove double slashes cause they mess up the regex
+  const matches =
+    path.replace(/\/\/+/, '/').match(PATH_PARSE_REGEX)?.groups || {};
 
   // split the path without endings on / - remove any empty parts
-  const parts = newPath.split('/').filter((s) => s.length !== 0);
+  // assume the last part of the path is the filename for now
+  const filename =
+    matches.path
+      ?.split('/')
+      .filter((s) => s.length > 0)
+      .pop() || 'main.ts';
 
-  // for each part, check if it's a version (based on @) otherwise assume it's a filename
-  // if there are multiple parts, the last part is the filename
-  parts.forEach((part) => {
-    if (part[0] === '@') version = part.slice(1);
-    else filename = part;
-  });
-
-  if (version === 'latest') {
-    version = undefined;
-  }
-
-  if (!filename.endsWith('.ts')) filename = `${filename}.ts`;
-
-  return { filename, version, action };
+  return {
+    filename: filename.endsWith('.ts') ? filename : `${filename}.ts`,
+    version: matches.version === 'latest' ? undefined : matches.version,
+    action: matches.action,
+  };
 }
 
 export default {
