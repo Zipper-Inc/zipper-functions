@@ -135,6 +135,18 @@ declare namespace Zipper {
     context: HandlerContext,
   ) => Output | Promise<Output>;
 
+  /** A specific action unique to this handler. Exported with on the actions object. */
+  export type HandlerAction<I = Inputs> = {
+    /** The handler's name */
+    name: string;
+    /** Path to call the handler */
+    path: string;
+    /** The handler function to run when this action is called */
+    handler: Handler<I>;
+    /** The configuration for this action */
+    config?: HandlerConfig<I>;
+  };
+
   /**
    * The configuration for how each Handler is displayed or run
    * Can be exported at the page level
@@ -570,6 +582,7 @@ declare namespace Zipper {
         queryParameters: Record<string, string>;
       };
       path?: string;
+      action?: string;
       userId: string;
       userConnectorTokens: Record<string, string>;
     };

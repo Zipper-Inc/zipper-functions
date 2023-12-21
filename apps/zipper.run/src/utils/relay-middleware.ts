@@ -186,10 +186,12 @@ export async function relayRequest(
     request,
     version: versionPassedIn,
     filename: filenamePassedIn,
+    action,
   }: {
     request: NextRequest;
     version?: string;
     filename?: string;
+    action?: string;
   },
   bootOnly = false,
 ): Promise<{ status: number; headers?: Headers; result: string }> {
@@ -331,6 +333,7 @@ export async function relayRequest(
       connectorsWithUserAuth: Object.keys(userConnectorTokens),
     },
     inputs: request.method === 'GET' ? queryParameters : body,
+    action,
     originalRequest: {
       url: request.nextUrl.toString(),
       method: request.method,
@@ -390,7 +393,7 @@ export default async function serveRelay({
   request: NextRequest;
   bootOnly: boolean;
 }) {
-  const { version, filename } = getParsedPath(request.nextUrl.pathname);
+  const { version, filename, action } = getParsedPath(request.nextUrl.pathname);
 
   console.log('version: ', version || 'latest');
   if (!bootOnly) console.log('filename: ', filename);
@@ -400,6 +403,7 @@ export default async function serveRelay({
       request,
       version,
       filename,
+      action,
     },
     bootOnly,
   );
@@ -475,7 +479,7 @@ export async function serveNonBrowserRelay({
 }: {
   request: NextRequest;
 }) {
-  const { version, filename } = getParsedPath(request.nextUrl.pathname);
+  const { version, filename, action } = getParsedPath(request.nextUrl.pathname);
 
   console.log('version: ', version);
   console.log('filename: ', filename);
@@ -485,6 +489,7 @@ export async function serveNonBrowserRelay({
       request,
       version,
       filename,
+      action,
     },
     false,
   );

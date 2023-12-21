@@ -1,4 +1,5 @@
 /// <reference lib="deno.ns" />
+/// <reference lib="dom" />
 
 import './zipper.d.ts';
 import { files } from './applet/generated/index.gen.ts';
@@ -166,9 +167,12 @@ async function runApplet({ request: relayRequest }: Deno.RequestEvent) {
     };
   });
 
-  // Grab the handler
+  // Grab the handler from either the exported handler or an action
   const path: string = (body.path || MAIN_PATH).replace(/\.(ts|tsx)$|$/, '.ts');
-  const { handler } = files[path];
+  const { handler: exportedHandler, actions: exportedActions } = files[path];
+  const handler = body.action
+    ? exportedActions?.[body.action]?.handler
+    : exportedHandler;
 
   // Handle missing paths
   if (!handler) {
