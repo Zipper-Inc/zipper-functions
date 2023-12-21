@@ -390,10 +390,7 @@ export default async function serveRelay({
   request: NextRequest;
   bootOnly: boolean;
 }) {
-  const { version, filename } = getParsedPath(
-    request.nextUrl.pathname,
-    bootOnly ? ['boot'] : ['relay', 'raw'],
-  );
+  const { version, filename } = getParsedPath(request.nextUrl.pathname);
 
   console.log('version: ', version || 'latest');
   if (!bootOnly) console.log('filename: ', filename);
@@ -478,10 +475,7 @@ export async function serveNonBrowserRelay({
 }: {
   request: NextRequest;
 }) {
-  const { version, filename } = getParsedPath(request.nextUrl.pathname, [
-    'relay',
-    'raw',
-  ]);
+  const { version, filename } = getParsedPath(request.nextUrl.pathname);
 
   console.log('version: ', version);
   console.log('filename: ', filename);

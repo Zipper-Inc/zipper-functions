@@ -8,7 +8,10 @@
 // - isApi: matches the 'api' token if its there (optional)
 // - apiFormat: the format of the api request, must be one of json, yaml, or html, optional since we default to json
 const PATH_PARSE_REGEX =
-  /^\/?(?:(?:@(?<version>[0-9a-f]{7}))?(?:\/?(?<isEmbed>embed))?(?:\/?(?<isRun>run))?\/?(?<path>(?!\$)(?!\api).*?)?(?:\/?\$(?<action>.+?)?)?(?<isApi>\/?api\/?(?<apiFormat>.+)?)?)$/;
+  /^\/?(?:(?:@(?<version>[0-9a-f]{7}))?(?:\/?(?<isEmbed>embed))?(?:\/?(?<isRun>run))?\/?(?<path>(?!\$|relay|raw|api).*?)?(?:\/?\$(?<action>.+?)?\/?)?(?<responseModifier>\/?(?<isRelay>(?:raw|relay))|(?<isApi>api\/?(?<apiFormat>.+)?))?)$/;
+
+const ensureTsExtension = (filename: string) =>
+  filename.endsWith('.ts') ? filename : `${filename}.ts`;
 
 export function getParsedPath(path: string) {
   // remove double slashes cause they mess up the regex
@@ -17,14 +20,15 @@ export function getParsedPath(path: string) {
 
   // split the path without endings on / - remove any empty parts
   // assume the last part of the path is the filename for now
-  const filename =
+  const filename = ensureTsExtension(
     matches.path
       ?.split('/')
       .filter((s) => s.length > 0)
-      .pop() || 'main.ts';
+      .pop() || 'main',
+  );
 
   return {
-    filename: filename.endsWith('.ts') ? filename : `${filename}.ts`,
+    filename: filename === 'boot.ts' ? '__BOOT__' : filename,
     version: matches.version === 'latest' ? undefined : matches.version,
     action: matches.action,
   };

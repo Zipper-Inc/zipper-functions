@@ -10,10 +10,7 @@ export default async function handler(request: NextRequest) {
     // request ends in /api/json or /json
     // anything before that should be treated as filename and/or version
 
-    const { version, filename } = getParsedPath(request.nextUrl.pathname, [
-      'api/json',
-      'api',
-    ]);
+    const { version, filename } = getParsedPath(request.nextUrl.pathname);
 
     const { result, status, headers } = await relayRequest({
       request,

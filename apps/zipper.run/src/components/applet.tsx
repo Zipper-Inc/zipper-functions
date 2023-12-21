@@ -624,7 +624,6 @@ export const getServerSideProps: GetServerSideProps = async ({
 
   const { version: versionFromUrl, filename: filenameFromUrl } = getParsedPath(
     ((query.versionAndFilename as string[]) || []).join('/'),
-    [],
   );
   if (__DEBUG__)
     console.log('applet.tsx | getServerSideProps', {

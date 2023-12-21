@@ -4,9 +4,7 @@ import { relayRequest } from '~/utils/relay-middleware';
 import { setCorsHeaders } from '~/utils/cors';
 
 export default async function htmlHandler(request: NextRequest) {
-  const { version, filename } = getParsedPath(request.nextUrl.pathname, [
-    'api/html',
-  ]);
+  const { version, filename } = getParsedPath(request.nextUrl.pathname);
 
   const { result, status, headers } = await relayRequest({
     request,
