@@ -34,6 +34,7 @@ import {
   Select,
   Stack,
   Tooltip,
+  useColorMode,
   useColorModeValue,
 } from '@chakra-ui/react';
 import { baseColors, prettierFormat, useCmdOrCtrl } from '@zipper/ui';
@@ -122,6 +123,7 @@ export default function PlaygroundEditor(
   const connectionIds = useOthersConnectionIds();
   const [defaultLanguage] = useState<'typescript' | 'markdown'>('typescript');
   const theme = useColorModeValue('vs', 'vs-dark');
+  const { colorMode } = useColorMode();
   // const { docs } = usePlaygroundDocs(currentScript!.code, editorRef);
 
   type Comment = {
@@ -636,6 +638,8 @@ export default function PlaygroundEditor(
     if (isliveBlocksReady && docs.length >= 1 && !!selectedDoc.startLine) {
       const editor = editorRef.current!;
 
+      console.log(`${colorMode === 'dark' ? 'dark-' : ''}tutorial-line-enable`);
+
       const decorations: monaco.editor.IModelDeltaDecoration[] = docs.map(
         (script) => ({
           range: {
@@ -647,10 +651,16 @@ export default function PlaygroundEditor(
           options: {
             isWholeLine: true,
             className: script.isSelected
-              ? styles['tutorial-line-enable']
+              ? styles[
+                  `${colorMode === 'dark' ? 'dark-' : ''}tutorial-line-enable`
+                ]
               : styles['tutorial-line-unable'],
             marginClassName: script.isSelected
-              ? styles['tutorial-line-margin-enable']
+              ? styles[
+                  `${
+                    colorMode === 'dark' ? 'dark-' : ''
+                  }tutorial-line-margin-enable`
+                ]
               : styles['tutorial-line-margin-unable'],
           },
         }),
@@ -673,7 +683,7 @@ export default function PlaygroundEditor(
 
       editor.createDecorationsCollection().set(decorations);
     }
-  }, [isliveBlocksReady, editorRef, docs, selectedDoc]);
+  }, [isliveBlocksReady, editorRef, docs, selectedDoc, colorMode]);
 
   const selection = editorRef?.current?.getSelection();
 

@@ -25,6 +25,7 @@ import {
   // AccordionHeader,
   AccordionPanel,
   AccordionButton,
+  useColorMode,
 } from '@chakra-ui/react';
 import React, { useEffect, useRef, useState } from 'react';
 import AddScriptForm from '~/components/playground/add-script-form';
@@ -155,6 +156,7 @@ export function PlaygroundSidebar({
   };
 
   const { style, onMouseEnter, onMouseLeave } = useHelpBorder();
+  const { colorMode } = useColorMode();
 
   return (
     <>
@@ -247,9 +249,22 @@ export function PlaygroundSidebar({
                 docs.map((doc) => (
                   <HStack
                     p={3}
-                    bg={doc.isSelected ? 'yellow.100' : 'white'}
+                    color="fg.400"
+                    bg={
+                      doc.isSelected
+                        ? colorMode === 'dark'
+                          ? '#413C26'
+                          : 'yellow.100'
+                        : 'bg.50'
+                    }
                     _hover={{
-                      bg: doc.isSelected ? 'yellow.100' : 'yellow.50',
+                      bg: doc.isSelected
+                        ? colorMode === 'dark'
+                          ? '#413C26'
+                          : 'yellow.100'
+                        : colorMode === 'dark'
+                        ? '#413C26'
+                        : 'yellow.100',
                     }}
                     position="relative"
                     onClick={() => onChangeSelectedDoc(doc.index)}
@@ -263,6 +278,7 @@ export function PlaygroundSidebar({
                       fontSize="sm"
                       fontWeight="medium"
                       fontFamily="mono"
+                      color="yellow.600"
                     >
                       {doc.startLine}
                     </Box>
