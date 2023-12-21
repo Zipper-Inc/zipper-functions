@@ -36,8 +36,13 @@ export const defaults: Components & { heading: Components['h1'] } = {
         as="h1"
         size="lg"
         color="fg.800"
-        py={3}
-        fontWeight="medium"
+        fontWeight="bold"
+        lineHeight={1.25}
+        pb={2}
+        mt={6}
+        mb={4}
+        borderBottom="1px solid"
+        borderColor="fg.200"
         data-markdown
       >
         {props.children}
@@ -50,8 +55,12 @@ export const defaults: Components & { heading: Components['h1'] } = {
         as="h2"
         style={{ fontSize: '26px' }}
         color="fg.700"
-        py={3}
-        fontWeight="medium"
+        fontWeight="bold"
+        lineHeight={1.25}
+        mt={6}
+        mb={4}
+        borderBottom="1px solid"
+        borderColor="fg.200"
         data-markdown
       >
         {props.children}
@@ -64,8 +73,10 @@ export const defaults: Components & { heading: Components['h1'] } = {
         as="h3"
         size="md"
         color="fg.600"
-        py={2}
-        fontWeight="medium"
+        lineHeight={1.25}
+        mt={6}
+        mb={4}
+        fontWeight="bold"
         data-markdown
       >
         {props.children}
@@ -78,8 +89,10 @@ export const defaults: Components & { heading: Components['h1'] } = {
         as="h4"
         size="sm"
         color="fg.900"
-        py={2}
-        fontWeight="medium"
+        lineHeight={1.25}
+        mt={6}
+        mb={4}
+        fontWeight="bold"
         data-markdown
       >
         {props.children}
@@ -92,7 +105,10 @@ export const defaults: Components & { heading: Components['h1'] } = {
         as="h5"
         size="xs"
         color="fg.900"
-        fontWeight="medium"
+        fontWeight="bold"
+        lineHeight={1.25}
+        mt={6}
+        mb={4}
         data-markdown
       >
         {props.children}
@@ -101,7 +117,15 @@ export const defaults: Components & { heading: Components['h1'] } = {
   },
   h6: (props) => {
     return (
-      <Heading as="h6" size="xs" fontWeight="medium" data-markdown>
+      <Heading
+        as="h6"
+        size="xs"
+        fontWeight="bold"
+        lineHeight={1.25}
+        mt={6}
+        mb={4}
+        data-markdown
+      >
         {props.children}
       </Heading>
     );
@@ -140,7 +164,7 @@ export const defaults: Components & { heading: Components['h1'] } = {
       );
     }
     return (
-      <Text mb={2} mt={1} color="fg.900" data-markdown>
+      <Text mb={4} mt={2} color="fg.900" data-markdown>
         {children}
       </Text>
     );
@@ -200,7 +224,7 @@ export const defaults: Components & { heading: Components['h1'] } = {
         code={code || ''}
         language={langauge}
         w="full"
-        my={3}
+        mb={4}
         whiteSpace="pre-wrap"
         data-markdown
       />
@@ -219,12 +243,18 @@ export const defaults: Components & { heading: Components['h1'] } = {
   },
   a: (props) => {
     return (
-      <Link color="primary" {...props} data-markdown>
+      <Link
+        color="primary"
+        {...props}
+        textDecor="underline"
+        textUnderlineOffset={2}
+        data-markdown
+      >
         {props.children}
       </Link>
     );
   },
-  img: Image,
+  img: (props) => <Image display="inline-block" data-markdown {...props} />,
   text: (props) => {
     const { children } = props;
     return (
