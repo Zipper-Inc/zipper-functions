@@ -1,3 +1,4 @@
+import './table.css';
 import {
   Box,
   Card,
@@ -11,13 +12,8 @@ import {
   InputLeftAddon,
   SimpleGrid,
   Stack,
-  Table,
-  TableContainer,
-  Tbody,
   Td,
   Text,
-  Th,
-  Thead,
   Tr,
 } from '@chakra-ui/react';
 import styled from '@emotion/styled';
@@ -29,7 +25,15 @@ import {
   PiMagnifyingGlass,
   PiXCircleFill,
 } from 'react-icons/pi';
-import { useSortBy, useTable } from 'react-table';
+
+import {
+  useReactTable,
+  getCoreRowModel,
+  getSortedRowModel,
+  createColumnHelper,
+  flexRender,
+} from '@tanstack/react-table';
+
 import { SmartFunctionOutput } from './smart-function-output';
 import { useSmartFunctionOutputContext } from './smart-function-output-context';
 import { isAction, isPrimitive } from './utils';
@@ -70,13 +74,6 @@ export default function Collection(props: Props) {
   );
 }
 
-const StyledTr = styled(Tr)`
-  vertical-align: top;
-  &:last-of-type td {
-    border-bottom: none;
-  }
-`;
-
 function filterData(
   data: Array<any>,
   searchQuery: string,
@@ -110,78 +107,129 @@ function filterData(
 }
 
 function TableCollection(props: Props) {
+  const columnHelper = createColumnHelper<Record<string, any>>();
+
   const { searchQuery } = useSmartFunctionOutputContext();
+
   const columns = useMemo(() => {
-    const keys: Array<string> = [];
+    const keys: string[] = [];
     props.data.forEach((record) => {
       Object.keys(record).forEach((key) => {
         if (!keys.includes(key)) keys.push(key);
       });
     });
+
     return keys
       .filter((key) => {
         return !props.data.every((record) => record[key] === null);
       })
-      .map((key) => ({
-        Header: key.replaceAll('_', ' '),
-        accessor: key,
-      }));
+      .map((key) =>
+        columnHelper.accessor(key, {
+          header: key.replaceAll('_', ' '),
+          size: props.data.reduce((acc, record) => {
+            const value = record[key];
+            if (isPrimitive(value)) {
+              if (typeof value === 'boolean') {
+                return Math.max(acc, 5);
+              }
+              return Math.max(acc, value.length);
+            }
+            return acc;
+          }, 0),
+        }),
+      );
   }, [props.data]);
 
   const data = useMemo(
     () =>
-      filterData(props.data, searchQuery, props.tableLevel, columns[0]?.Header),
+      filterData(
+        props.data,
+        searchQuery,
+        props.tableLevel,
+        columns[0]?.header?.toString(),
+      ),
     [props.data, searchQuery],
   );
 
-  const { getTableProps, getTableBodyProps, headers, rows, prepareRow } =
-    useTable({ columns, data }, useSortBy);
+  const tableInstance = useReactTable({
+    columns,
+    data,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    enableColumnResizing: true,
+    columnResizeMode: 'onChange',
+    debugTable: true,
+    debugHeaders: true,
+    debugColumns: true,
+  });
 
   return (
-    <TableContainer>
-      <Table {...getTableProps()}>
-        <Thead>
-          <Tr>
-            {headers.map((column: any) => {
-              return (
-                <Th {...column.getHeaderProps(column.getSortByToggleProps())}>
-                  {column.render('Header')}
-                  {
-                    <Text
-                      as="span"
-                      fontSize="xx-small"
-                      textAlign="center"
-                      height="full"
-                      pl={1}
-                    >
-                      {column.isSorted ? (
-                        column.isSortedDesc ? (
-                          <PiCaretDownFill
-                            style={{ display: 'inline-block' }}
-                          />
+    <div style={{ width: '100%' }}>
+      <table
+        {...{
+          style: {
+            width: '100%',
+          },
+        }}
+      >
+        <thead>
+          {tableInstance.getHeaderGroups().map((headerGroup) => (
+            <tr>
+              {headerGroup.headers.map((header) => {
+                return (
+                  <th>
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext(),
+                        )}
+                    <div
+                      onMouseDown={header.getResizeHandler()}
+                      onTouchStart={header.getResizeHandler()}
+                      className={`resizer ${
+                        header.column.getIsResizing() ? 'isResizing' : ''
+                      }`}
+                    />
+
+                    {
+                      <Text
+                        as="span"
+                        fontSize="xx-small"
+                        textAlign="center"
+                        height="full"
+                        pl={1}
+                      >
+                        {header.column.getIsSorted() ? (
+                          header.column.getIsSorted() === 'asc' ? (
+                            <PiCaretDownFill
+                              style={{ display: 'inline-block' }}
+                            />
+                          ) : (
+                            <PiCaretUpFill
+                              style={{ display: 'inline-block' }}
+                            />
+                          )
                         ) : (
-                          <PiCaretUpFill style={{ display: 'inline-block' }} />
-                        )
-                      ) : (
-                        ''
-                      )}
-                    </Text>
-                  }
-                </Th>
-              );
-            })}
-          </Tr>
-        </Thead>
-        <Tbody {...getTableBodyProps()}>
-          {rows.map((row) => {
-            prepareRow(row);
+                          ''
+                        )}
+                      </Text>
+                    }
+                  </th>
+                );
+              })}
+            </tr>
+          ))}
+        </thead>
+        <tbody>
+          {tableInstance.getRowModel().rows.map((row) => {
             return (
-              <StyledTr {...row.getRowProps()}>
-                {row.cells.map((cell) => {
-                  if (isPrimitive(cell.value)) {
-                    if (typeof cell.value === 'boolean') {
+              <tr>
+                {row.getVisibleCells().map((cell) => {
+                  if (isPrimitive(cell.getValue())) {
+                    if (typeof cell.getValue() === 'boolean') {
                       return (
-                        <Td {...cell.getCellProps()}>
+                        <td>
                           <HStack
                             w="full"
                             h="full"
@@ -189,39 +237,47 @@ function TableCollection(props: Props) {
                             justify="center"
                             height={5}
                           >
-                            {cell.value ? (
+                            {cell.getValue() ? (
                               <PiCheckCircleFill height={4} />
                             ) : (
                               <PiXCircleFill height={4} />
                             )}
                           </HStack>
-                        </Td>
+                        </td>
                       );
                     }
-                    return (
-                      <Td {...cell.getCellProps()}>{cell.render('Cell')}</Td>
-                    );
+                    // return <Td>{cell.render('Cell')}</Td>;
                   }
-                  if (cell.value === null) {
-                    <Td {...cell.getCellProps()}></Td>;
+                  if (cell.getValue() === null) {
+                    <Td></Td>;
                   }
+                  // console.log('size column', cell.getValue().length);
                   return (
-                    <Td py={4} px={4} {...cell.getCellProps()}>
+                    <td
+                      {...{
+                        key: cell.id,
+                        style: {
+                          width: cell.column.getSize(),
+                        },
+                      }}
+                    >
                       <SmartFunctionOutput
-                        result={cell.value}
+                        result={cell.getValue()}
                         tableLevel={props.tableLevel + 1}
                         level={props.level + 1}
-                        heading={cell.column.Header?.toString()}
+                        heading={cell.column.columnDef.header
+                          ?.valueOf()
+                          .toString()}
                       />
-                    </Td>
+                    </td>
                   );
                 })}
-              </StyledTr>
+              </tr>
             );
           })}
-        </Tbody>
-      </Table>
-    </TableContainer>
+        </tbody>
+      </table>
+    </div>
   );
 }
 

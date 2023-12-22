@@ -1,16 +1,10 @@
+import './table.css';
 import {
   useDisclosure,
   Button,
   Collapse,
   Box,
   Text,
-  TableContainer,
-  Thead,
-  Tr,
-  Th,
-  Tbody,
-  Table,
-  Td,
   Flex,
 } from '@chakra-ui/react';
 import { PiCaretRight } from 'react-icons/pi';
@@ -68,13 +62,8 @@ export function ObjectExplorerRow({
   const shouldCollapse = !isPrimitive(data) && data && !data['$zipperType'];
 
   return (
-    <Tr
-      borderBottom="1px"
-      borderColor="fg.200"
-      _last={{ borderBottom: 'none' }}
-      verticalAlign="top"
-    >
-      <Td border={'none'} p="0">
+    <tr>
+      <td>
         {shouldCollapse ? (
           <Button
             variant="link"
@@ -117,8 +106,8 @@ export function ObjectExplorerRow({
             {heading}
           </Text>
         )}
-      </Td>
-      <Td border="none" p={0} pl={2}>
+      </td>
+      <td>
         {shouldCollapse ? (
           <Flex
             height="100%"
@@ -165,8 +154,8 @@ export function ObjectExplorerRow({
             />
           </Flex>
         )}
-      </Td>
-    </Tr>
+      </td>
+    </tr>
   );
 }
 
@@ -199,15 +188,9 @@ export function ObjectExplorer({
   }
 
   return (
-    <TableContainer w="100%" position="relative">
-      <Table height="fit-content">
-        <Thead display="none">
-          <Tr>
-            <Th width="max-content"></Th>
-            <Th width="auto"></Th>
-          </Tr>
-        </Thead>
-        <Tbody>
+    <div>
+      <table>
+        <tbody>
           {Object.keys(dataWithoutNull).map((key) => (
             <ObjectExplorerRow
               key={key}
@@ -218,8 +201,8 @@ export function ObjectExplorer({
               collapse={Object.keys(dataWithoutNull).length > 1}
             />
           ))}
-        </Tbody>
-      </Table>
-    </TableContainer>
+        </tbody>
+      </table>
+    </div>
   );
 }
