@@ -3,6 +3,14 @@
   "git.ignoreLimitWarning": true,
   "deno.enable": true,
   "deno.unstable": true,
+  "material-icon-theme.folders.associations": {
+    "@zipper-ui": "mjml",
+    "@zipper-framework": "core",
+    "@zipper-types": "typescript",
+    "@zipper-utils": "Utils",
+    "deno-types": "Lib",
+    "tsconfig": "Less"
+  },
   "deno.enablePaths": [
     "./packages/@zipper-framework/bin",
     "./packages/@zipper-framework/deno",
