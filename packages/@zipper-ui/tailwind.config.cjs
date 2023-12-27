@@ -1,11 +1,22 @@
+function genHslCollorPallet(var_name) {
+  return [50, 100, 200, 300, 400, 500, 600, 800, 900, 950].reduce(
+    (acc, curr) => ({
+      ...acc,
+      [curr]: `hsl(var(--${var_name}-${curr}))`,
+    }),
+    {},
+  );
+}
+
 /** @type {import('tailwindcss').Config} */
-module.exports = {
+const config = {
   darkMode: ['class'],
   content: [
     './pages/**/*.{ts,tsx}',
     './components/**/*.{ts,tsx}',
     './app/**/*.{ts,tsx}',
     './src/**/*.{ts,tsx}',
+    '../../packages/@zipper-ui/src/**/*.{ts,tsx}',
   ],
   theme: {
     container: {
@@ -17,30 +28,29 @@ module.exports = {
     },
     extend: {
       colors: {
+        'primary-purple': genHslCollorPallet('primary-purple'),
+        'primary-blue': genHslCollorPallet('primary-blue'),
+        'primary-red': genHslCollorPallet('primary-red'),
+        'secondary-gray': genHslCollorPallet('secondary-gray'),
+        'secondary-blue': genHslCollorPallet('secondary-blue'),
+        'secondary-purple': genHslCollorPallet('secondary-purple'),
+        'secondary-pink': genHslCollorPallet('secondary-pink'),
+        'secondary-green': genHslCollorPallet('secondary-green'),
+        'secondary-yellow': genHslCollorPallet('secondary-yellow'),
         border: 'hsl(var(--border))',
-        input: 'hsl(var(--input))',
-        ring: 'hsl(var(--ring))',
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
-        success: {
-          DEFAULT: 'hsl(var(--success))',
-          foreground: 'hsl(var(--success-foreground))',
-        },
+        success: 'hsl(var(--success))',
+        success: 'hsl(var(---success))',
+        error: 'hsl(var(---error))',
+        warning: 'hsl(var(---warning))',
         primary: {
           DEFAULT: 'hsl(var(--primary))',
           foreground: 'hsl(var(--primary-foreground))',
         },
-        secondary: {
-          DEFAULT: 'hsl(var(--secondary))',
-          foreground: 'hsl(var(--secondary-foreground))',
-        },
         destructive: {
           DEFAULT: 'hsl(var(--destructive))',
           foreground: 'hsl(var(--destructive-foreground))',
-        },
-        muted: {
-          DEFAULT: 'hsl(var(--muted))',
-          foreground: 'hsl(var(--muted-foreground))',
         },
         accent: {
           DEFAULT: 'hsl(var(--accent))',
@@ -54,11 +64,6 @@ module.exports = {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',
         },
-      },
-      borderRadius: {
-        lg: 'var(--radius)',
-        md: 'calc(var(--radius) - 2px)',
-        sm: 'calc(var(--radius) - 4px)',
       },
       keyframes: {
         'accordion-down': {
@@ -84,3 +89,5 @@ module.exports = {
   },
   plugins: [require('tailwindcss-animate')],
 };
+
+module.exports = config;
