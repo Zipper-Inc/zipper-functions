@@ -129,11 +129,12 @@
 
     --background: 0, 0%, 97%;
     --foreground: 0, 1%, 15%;
-    --border: 30, 2%, 51%;
+    --border: 20, 2%, 71%;
 
     --success: 152, 100%, 38%;
     --error: 1, 79%, 51%;
     --warning: 34, 94%, 50%;
+    --destructive: 1, 79%, 51%
 
     --accent: 296, 50%, 52%;
     --accent-foreground: 291, 64%, 98%;

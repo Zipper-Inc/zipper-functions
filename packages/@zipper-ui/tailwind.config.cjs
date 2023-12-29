@@ -44,13 +44,14 @@ const config = {
         success: 'hsl(var(---success))',
         error: 'hsl(var(---error))',
         warning: 'hsl(var(---warning))',
+        destructive: 'hsl(var(---destructive))',
         primary: {
           DEFAULT: 'hsl(var(--primary))',
           foreground: 'hsl(var(--primary-foreground))',
         },
         destructive: {
-          DEFAULT: 'hsl(var(--destructive))',
-          foreground: 'hsl(var(--destructive-foreground))',
+          DEFAULT: 'hsl(var(--primary-red-600))',
+          foreground: 'hsl(var(--foreground))',
         },
         accent: {
           DEFAULT: 'hsl(var(--accent))',

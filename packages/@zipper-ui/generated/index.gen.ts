@@ -1,5 +1,13 @@
 // created from ctix
 
+export * from '../src/components/ds/common/Avatar';
+export * from '../src/components/ds/common/Button';
+export * from '../src/components/ds/common/Checkbox';
+export * from '../src/components/ds/common/Input';
+export * from '../src/components/ds/common/Label';
+export * from '../src/components/ds/common/Switch';
+export * from '../src/components/ds/modules/List';
+export * from '../src/components/ds/modules/Show';
 export * from '../src/components/website/common/Layouts';
 export * from '../src/components/website/common/Links';
 export * from '../src/components/website/common/SiteType';
@@ -36,7 +44,6 @@ export * from '../src/components/website/Wrapper';
 export * from '../src/components/accordion';
 export * from '../src/components/app-author';
 export * from '../src/components/auto-resize-text-area';
-export * from '../src/components/badge';
 export * from '../src/components/code';
 export * from '../src/components/error-boundary';
 export * from '../src/components/function-inputs';
