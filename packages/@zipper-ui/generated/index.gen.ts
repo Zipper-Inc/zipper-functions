@@ -1,6 +1,7 @@
 // created from ctix
 
 export * from '../src/components/ds/common/Avatar';
+export * from '../src/components/ds/common/Badge';
 export * from '../src/components/ds/common/Button';
 export * from '../src/components/ds/common/Checkbox';
 export * from '../src/components/ds/common/Input';
