@@ -1,4 +1,9 @@
-import NextAuth, { AuthOptions, Session, SessionStrategy } from 'next-auth';
+import NextAuth, {
+  AuthOptions,
+  getServerSession,
+  Session,
+  SessionStrategy,
+} from 'next-auth';
 import GithubProvider from 'next-auth/providers/github';
 import GoogleProvider from 'next-auth/providers/google';
 import EmailProvider, {
@@ -539,3 +544,5 @@ export interface SessionOrganization {
   name: string;
   slug: string;
 }
+
+export const getServerAuthSession = () => getServerSession(authOptions);

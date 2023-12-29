@@ -1,4 +1,4 @@
-import '@zipper/ui/src/globals.css';
+import '@zipper/ui/globals.css';
 import { NextPage } from 'next';
 import { AppProps } from 'next/app';
 import { AppType } from 'next/dist/shared/lib/utils';
