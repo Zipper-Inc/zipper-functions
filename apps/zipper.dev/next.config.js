@@ -58,6 +58,7 @@ module.exports = getConfig({
   experimental: {
     webpackBuildWorker: true,
     esmExternals: false,
+    appDir: true,
   },
   publicRuntimeConfig: {
     NODE_ENV: env.NODE_ENV,
@@ -106,43 +107,51 @@ module.exports = getConfig({
       },
       {
         source: '/docs',
-        destination: `${process.env.NODE_ENV === 'production'
-          ? 'https://zipper-docs-production.onrender.com/docs'
-          : 'http://localhost:3003/docs'
-          }`,
+        destination: `${
+          process.env.NODE_ENV === 'production'
+            ? 'https://zipper-docs-production.onrender.com/docs'
+            : 'http://localhost:3003/docs'
+        }`,
       },
       {
         source: '/docs/:path*',
-        destination: `${process.env.NODE_ENV === 'production'
-          ? 'https://zipper-docs-production.onrender.com/docs/:path*'
-          : 'http://localhost:3003/docs/:path*'
-          }`,
+        destination: `${
+          process.env.NODE_ENV === 'production'
+            ? 'https://zipper-docs-production.onrender.com/docs/:path*'
+            : 'http://localhost:3003/docs/:path*'
+        }`,
       },
       {
         source: '/blog',
-        destination: `${process.env.NODE_ENV === 'production'
-          ? 'https://zipper-blog.onrender.com/blog'
-          : 'http://localhost:3004/blog'
-          }`,
+        destination: `${
+          process.env.NODE_ENV === 'production'
+            ? 'https://zipper-blog.onrender.com/blog'
+            : 'http://localhost:3004/blog'
+        }`,
       },
       {
         source: '/blog/:path*',
-        destination: `${process.env.NODE_ENV === 'production'
-          ? 'https://zipper-blog.onrender.com/blog/:path*'
-          : 'http://localhost:3004/blog/:path*'
-          }`,
+        destination: `${
+          process.env.NODE_ENV === 'production'
+            ? 'https://zipper-blog.onrender.com/blog/:path*'
+            : 'http://localhost:3004/blog/:path*'
+        }`,
       },
       {
         source: '/run/:slug/:version/:filename/:path*',
-        destination: `${process.env.NODE_ENV === 'production' ? 'https' : 'http'
-          }://:slug.${process.env.NEXT_PUBLIC_ZIPPER_DOT_RUN_HOST
-          }/@:version/:filename/relay`,
+        destination: `${
+          process.env.NODE_ENV === 'production' ? 'https' : 'http'
+        }://:slug.${
+          process.env.NEXT_PUBLIC_ZIPPER_DOT_RUN_HOST
+        }/@:version/:filename/relay`,
       },
       {
         source: '/boot/:slug/:version/:path*',
-        destination: `${process.env.NODE_ENV === 'production' ? 'https' : 'http'
-          }://:slug.${process.env.NEXT_PUBLIC_ZIPPER_DOT_RUN_HOST
-          }/@:version/boot`,
+        destination: `${
+          process.env.NODE_ENV === 'production' ? 'https' : 'http'
+        }://:slug.${
+          process.env.NEXT_PUBLIC_ZIPPER_DOT_RUN_HOST
+        }/@:version/boot`,
       },
     ];
   },
