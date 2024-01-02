@@ -200,7 +200,7 @@ const Header: React.FC<HeaderProps> = ({
         onClick={copyLink}
       >
         <FiLink />
-        <Text>Share Link</Text>
+        <Text>Copy Link</Text>
       </Button>
 
       {canUserEdit && entryPoint.editUrl && (
