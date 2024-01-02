@@ -57,6 +57,7 @@ export const defaults: Components & { heading: Components['h1'] } = {
         color="fg.700"
         fontWeight="bold"
         lineHeight={1.25}
+        pb={2}
         mt={6}
         mb={4}
         borderBottom="1px solid"
