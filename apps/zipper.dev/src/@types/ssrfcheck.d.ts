@@ -3,7 +3,7 @@ declare module 'ssrfcheck' {
     /**
      * When an error occurs the function will only return false and wont throw it
      * @type {boolean}
-     * @default false
+     * @default true
      */
     quiet?: boolean;
     /**
@@ -19,7 +19,7 @@ declare module 'ssrfcheck' {
      */
     allowUsername?: boolean;
     /**
-     * Protocols accepted by the validator. Default protocols are http, https, ftp, ftps, ws, wss
+     * Protocols accepted by the validator. Default protocols are http, https
      * @type {string[]}
      */
     allowedProtocols?: string[];

@@ -202,7 +202,13 @@ export default async function handler(
   // commas are valid in URLs, so don't treat this as an array
   const moduleUrl = Array.isArray(x) ? x.join(',') : x;
 
-  if (!isSSRFSafeURL(moduleUrl, { allowedProtocols: ['https'], noIP: true })) {
+  if (
+    !isSSRFSafeURL(moduleUrl, {
+      allowedProtocols:
+        process.env.NODE_ENV === 'development' ? ['http', 'https'] : ['https'],
+      noIP: true,
+    })
+  ) {
     return res.status(500).send('Invalid module URL');
   }
 
