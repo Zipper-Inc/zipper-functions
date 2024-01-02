@@ -191,7 +191,6 @@ const Header: React.FC<HeaderProps> = ({
   const AppletActions = () => (
     <HStack gap={0}>
       <Button
-        // colorScheme="purple"
         variant="ghost"
         display="flex"
         size="sm"
@@ -205,7 +204,6 @@ const Header: React.FC<HeaderProps> = ({
 
       {canUserEdit && entryPoint.editUrl && (
         <Button
-          // colorScheme="purple"
           variant="outline"
           display="flex"
           size="sm"
