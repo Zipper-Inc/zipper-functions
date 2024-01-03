@@ -2,7 +2,7 @@ import { safeJSONParse } from '@zipper/utils';
 import { NextRequest, NextResponse } from 'next/server';
 import { setCorsHeaders } from '~/utils/cors';
 import { getMetaFromHeaders } from '~/utils/get-meta-from-headers';
-import { getParsedPath } from '~/utils/get-parsed-path';
+import { parseAppletPath } from '@zipper/utils';
 import { relayRequest } from '../utils/relay-middleware';
 
 export default async function handler(request: NextRequest) {
@@ -10,7 +10,7 @@ export default async function handler(request: NextRequest) {
     // request ends in /api/json or /json
     // anything before that should be treated as filename and/or version
 
-    const { version, filename } = getParsedPath(request.nextUrl.pathname);
+    const { version, filename } = parseAppletPath(request.nextUrl.pathname);
 
     const { result, status, headers } = await relayRequest({
       request,

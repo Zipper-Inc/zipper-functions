@@ -17,6 +17,7 @@ export * from '../src/utils/get-screenshot-url';
 export * from '../src/utils/noop';
 export { default as noop } from '../src/utils/noop';
 export * from '../src/utils/object';
+export * from '../src/utils/parse-applet-path';
 export * from '../src/utils/parseBody';
 export * from '../src/utils/safe-json';
 export * from '../src/utils/settings';

@@ -13,7 +13,7 @@ const PATH_PARSE_REGEX =
 const ensureTsExtension = (filename: string) =>
   filename.endsWith('.ts') ? filename : `${filename}.ts`;
 
-export function getParsedPath(path: string) {
+export function parseAppletPath(path: string) {
   // remove double slashes cause they mess up the regex
   const matches =
     path.replace(/\/\/+/, '/').match(PATH_PARSE_REGEX)?.groups || {};
@@ -33,7 +33,3 @@ export function getParsedPath(path: string) {
     action: matches.action,
   };
 }
-
-export default {
-  getFilenameAndVersionFromPath: getParsedPath,
-};

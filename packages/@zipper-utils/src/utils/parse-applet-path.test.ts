@@ -1,5 +1,4 @@
-import { add } from 'lodash';
-import { getParsedPath } from './get-parsed-path';
+import { parseAppletPath } from './parse-applet-path';
 
 const ACTION = 'actionName';
 const VERSION = 'a1b2c3d';
@@ -127,7 +126,7 @@ const PATHS_TO_TEST: TestCase[] = [
 describe('Gets the correct filename, action, and version from a URL in the following cases:', () => {
   PATHS_TO_TEST.forEach(([description, path, expected]) => {
     test(`${description} (${path})`, () => {
-      expect(getParsedPath(path)).toEqual(expected);
+      expect(parseAppletPath(path)).toEqual(expected);
     });
   });
 });
