@@ -2,7 +2,6 @@ import { TRPCError, initTRPC, inferAsyncReturnType } from '@trpc/server';
 import superjson from 'superjson';
 import { hasOrgAdminPermission } from './utils/authz.utils';
 import { getServerAuthSession } from '~/pages/api/auth/[...nextauth]';
-// import { db } from '@/server/db';
 
 export const createTRPCContext = async (opts: { headers: Headers }) => {
   const session = (await getServerAuthSession()) || undefined;
