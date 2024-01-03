@@ -10,7 +10,7 @@ export const isConnector = (script: Script) =>
 export const isReadme = (script: Script) => script.filename === 'readme.md';
 export const isMain = (script: Script) => script.filename === 'main.ts';
 export const isLib = (script: Script) =>
-  script.filename.endsWith('.ts') &&
+  isTypescript(script) &&
   !script.isRunnable &&
   !isConnector(script) &&
   !isMain(script);
