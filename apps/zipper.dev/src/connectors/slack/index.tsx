@@ -104,8 +104,8 @@ function SlackConnectorForm({ appId }: { appId: string }) {
     {
       onSuccess: (data) => {
         if (data && setBotValue && setUserValue) {
-          setBotValue(data.workspaceScopes || [defaultBotScope]);
-          setUserValue(data?.userScopes || []);
+          setBotValue(botValue || data.workspaceScopes || [defaultBotScope]);
+          setUserValue(userValue || data?.userScopes || []);
         }
       },
     },
