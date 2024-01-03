@@ -247,7 +247,6 @@ function SlackConnectorForm({ appId }: { appId: string }) {
             <FormControl>
               <FormLabel color={'fg.500'}>Client ID</FormLabel>
               <Input
-                autoComplete="new-password"
                 value={clientId}
                 onChange={(e) => setClientId(e.target.value)}
               />
@@ -268,7 +267,6 @@ function SlackConnectorForm({ appId }: { appId: string }) {
               </FormLabel>
 
               <Input
-                autoComplete="new-password"
                 type="password"
                 value={clientSecret}
                 onChange={(e) => setClientSecret(e.target.value)}
