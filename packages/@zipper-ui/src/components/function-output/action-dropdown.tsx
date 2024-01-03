@@ -12,7 +12,7 @@ export function ActionDropdown({ action }: { action: Zipper.DropdownAction }) {
   const {
     getRunUrl,
     showSecondaryOutput,
-    appInfoUrl: bootInfoUrl,
+    bootInfoUrl,
     applet,
     generateUserToken,
   } = useContext(FunctionOutputContext) as FunctionOutputContextType;

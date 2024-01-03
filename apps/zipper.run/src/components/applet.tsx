@@ -334,7 +334,7 @@ export function AppPage({
         getRunUrl={(scriptName: string) => {
           return getRunUrl(scriptName);
         }}
-        appInfoUrl={`/_zipper/bootInfo/${app?.slug}`}
+        bootInfoUrl={`/_zipper/bootInfo/${app?.slug}`}
         currentContext={'main'}
         appSlug={app.slug}
         showTabs={false}
