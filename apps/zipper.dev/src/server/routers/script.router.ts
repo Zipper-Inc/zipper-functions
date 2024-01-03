@@ -186,7 +186,6 @@ export const scriptRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       const { id, data } = input;
-      debugger;
 
       const script = await prisma.script.findFirstOrThrow({
         where: { id },
