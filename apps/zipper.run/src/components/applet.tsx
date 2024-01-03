@@ -53,7 +53,7 @@ import { HiChevronDoubleLeft, HiChevronDoubleRight } from 'react-icons/hi2';
 import TimeAgo from 'react-timeago';
 import { fetchBootPayloadCachedWithUserInfoOrThrow } from '~/utils/get-boot-info';
 import { getConnectorsAuthUrl } from '~/utils/get-connectors-auth-url';
-import { getRelayUrl } from '~/utils/get-relay-url';
+import { getAppletUrl, getRelayUrl } from '~/utils/get-relay-url';
 import getValidSubdomain from '~/utils/get-valid-subdomain';
 import { getParsedPath } from '~/utils/get-parsed-path';
 import { getZipperAuth } from '~/utils/get-zipper-auth';
@@ -96,6 +96,7 @@ export type AppPageProps = {
   runUrl?: string;
   softRedirect?: string | null;
   resultOnly?: boolean;
+  action?: string;
 };
 
 export function AppPage({
@@ -119,6 +120,7 @@ export function AppPage({
   runUrl,
   softRedirect,
   resultOnly,
+  action,
 }: AppPageProps) {
   const router = useRouter();
   const { asPath } = router;
@@ -230,32 +232,33 @@ export function AppPage({
       setIsWaitingForUpload(true);
       return;
     }
-    const embedPath = isEmbedded ? 'embed/' : '';
+
     if (!loading) {
       setLoading(true);
       const rawValues = formContext.getValues();
       const values = getInputsFromFormData(rawValues, inputs);
-      if (version !== 'latest') {
-        router.push({
-          pathname: `/run/${embedPath}${filename}/@${version}`,
-          query: JSON.parse(JSON.stringify(values)),
-        });
-      } else {
-        const stringifiedValuesIfObject = Object.entries(values).reduce(
-          (acc, [key, value]) => {
-            acc[key] =
-              typeof value === 'object'
-                ? JSON.stringify(value)
-                : (value as string | number | boolean);
-            return acc;
-          },
-          {} as Record<string, string | number | boolean>,
-        );
-        router.push({
-          pathname: `/run/${embedPath}${filename}`,
-          query: stringifiedValuesIfObject,
-        });
-      }
+      const stringifiedValuesIfObject = Object.entries(values).reduce(
+        (acc, [key, value]) => {
+          acc[key] =
+            typeof value === 'object'
+              ? JSON.stringify(value)
+              : (value as string | number | boolean);
+          return acc;
+        },
+        {} as Record<string, string | number | boolean>,
+      );
+
+      router.push({
+        pathname: getAppletUrl({
+          name: app?.slug || '',
+          version,
+          isEmbed: isEmbedded,
+          isRun: true,
+          filename,
+          action,
+        }).pathname,
+        query: stringifiedValuesIfObject,
+      });
     }
   };
 
@@ -622,9 +625,11 @@ export const getServerSideProps: GetServerSideProps = async ({
     });
   if (!subdomain) return { notFound: true };
 
-  const { version: versionFromUrl, filename: filenameFromUrl } = getParsedPath(
-    ((query.versionAndFilename as string[]) || []).join('/'),
-  );
+  const {
+    version: versionFromUrl,
+    filename: filenameFromUrl,
+    action: actionFromUrl,
+  } = getParsedPath(((query.versionAndFilename as string[]) || []).join('/'));
   if (__DEBUG__)
     console.log('applet.tsx | getServerSideProps', {
       versionFromUrl,
@@ -670,7 +675,11 @@ export const getServerSideProps: GetServerSideProps = async ({
 
   if (!runnableScripts.includes(filename)) return { notFound: true };
 
-  const inputParams: InputParams = parsedScripts[filename]?.inputs || {};
+  const inputParams: InputParams =
+    (actionFromUrl
+      ? parsedScripts[filename]?.actions?.[actionFromUrl]
+      : parsedScripts[filename]?.inputs) || {};
+
   const metadata = bootInfo.metadata || {};
 
   const headers: Record<string, string> = {
@@ -700,10 +709,14 @@ export const getServerSideProps: GetServerSideProps = async ({
     if (__DEBUG__)
       console.log('shouldRedirect', { isAutoRun, isRunPathMissing });
 
-    const runUrl = new URL(resolvedUrl || '', getRelayUrl({ slug: subdomain }));
-    runUrl.pathname = isEmbedUrl
-      ? `/run/embed/${filename}`
-      : `/run/${filename}`;
+    const runUrl = getAppletUrl({
+      name: subdomain,
+      version,
+      isEmbed: isEmbedUrl,
+      isRun: true,
+      filename,
+      action: actionFromUrl,
+    });
 
     if (isAutoRun) {
       const runValues = getRunValues({ inputParams, url: req.url, config });
@@ -744,7 +757,9 @@ export const getServerSideProps: GetServerSideProps = async ({
     result = await fetch(
       getRelayUrl({
         slug: app.slug,
-        path: [version, filename].join('/'),
+        action: actionFromUrl,
+        version,
+        path: filename,
       }),
       {
         method: 'POST',
@@ -826,6 +841,7 @@ export const getServerSideProps: GetServerSideProps = async ({
       softRedirect,
       token: req.headers[X_ZIPPER_ACCESS_TOKEN] || null,
       key: resolvedUrl,
+      action: actionFromUrl || null,
     },
   };
 

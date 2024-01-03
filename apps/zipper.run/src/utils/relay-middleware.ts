@@ -370,6 +370,7 @@ export async function relayRequest(
   const mutableHeaders = new Headers(headers);
   const result = await response.text();
 
+  console.log('relay response', result, { status, headers });
   const appRunRes = await addAppRun({
     id: runId,
     appId: app.id,
@@ -397,6 +398,7 @@ export default async function serveRelay({
 
   console.log('version: ', version || 'latest');
   if (!bootOnly) console.log('filename: ', filename);
+  if (action) console.log('action: ', action);
 
   const { result, status, headers } = await relayRequest(
     {
@@ -483,6 +485,7 @@ export async function serveNonBrowserRelay({
 
   console.log('version: ', version);
   console.log('filename: ', filename);
+  if (action) console.log('action: ', action);
 
   const { result, status, headers } = await relayRequest(
     {
