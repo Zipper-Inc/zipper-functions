@@ -13,7 +13,7 @@ const PATH_PARSE_REGEX =
 const ensureTsExtension = (filename: string) =>
   filename.endsWith('.ts') ? filename : `${filename}.ts`;
 
-export function parseAppletPath(path: string) {
+export function parseRunUrlPath(path: string) {
   // remove double slashes cause they mess up the regex
   const matches =
     path.replace(/\/\/+/, '/').match(PATH_PARSE_REGEX)?.groups || {};
@@ -27,9 +27,18 @@ export function parseAppletPath(path: string) {
       .pop() || 'main',
   );
 
+  const isBoot = filename === 'boot.ts';
+
   return {
-    filename: filename === 'boot.ts' ? '__BOOT__' : filename,
     version: matches.version === 'latest' ? undefined : matches.version,
+    isBoot,
+    isEmbed: !!matches.isEmbed,
+    isRun: !!matches.isRun,
+    filename: isBoot ? '__BOOT__' : filename,
     action: matches.action,
+    responseModifier: matches.responseModifier,
+    isRelay: !!matches.isRelay,
+    isApi: !!matches.isApi,
+    apiFormat: !matches.isApi ? undefined : matches.apiFormat || 'json',
   };
 }

@@ -8,7 +8,7 @@ import fetchBootInfo, {
   fetchBasicUserInfo,
 } from './get-boot-info';
 import getValidSubdomain from './get-valid-subdomain';
-import { parseAppletPath } from '@zipper/utils';
+import { parseRunUrlPath } from '@zipper/utils';
 import {
   formatDeploymentId,
   getAppLink,
@@ -394,7 +394,7 @@ export default async function serveRelay({
   request: NextRequest;
   bootOnly: boolean;
 }) {
-  const { version, filename, action } = parseAppletPath(
+  const { version, filename, action } = parseRunUrlPath(
     request.nextUrl.pathname,
   );
 
@@ -483,7 +483,7 @@ export async function serveNonBrowserRelay({
 }: {
   request: NextRequest;
 }) {
-  const { version, filename, action } = parseAppletPath(
+  const { version, filename, action } = parseRunUrlPath(
     request.nextUrl.pathname,
   );
 

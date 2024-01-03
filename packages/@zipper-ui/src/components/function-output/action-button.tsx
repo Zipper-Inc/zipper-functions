@@ -1,13 +1,12 @@
 import { Button, Flex, Spinner } from '@chakra-ui/react';
 import { useContext, useState } from 'react';
-import { normalizeAppPath } from '@zipper/utils';
+import { normalizeAppPath, parseRunUrlPath } from '@zipper/utils';
 import {
   FunctionOutputContext,
   FunctionOutputContextType,
 } from './function-output-context';
 import { BootInfoResult, InputParam, InputParams } from '@zipper/types';
 import { SmartFunctionOutputContext } from './smart-function-output-context';
-import Zipper from '../../../../@zipper-framework';
 
 export function ActionButton({
   action,
@@ -65,6 +64,9 @@ export function ActionButton({
 
   async function runScript() {
     const runPath = action.path;
+
+    const { filename, action: actionFromPath } = parseRunUrlPath(runPath || '');
+
     const actionInputs: Zipper.Inputs = action.inputs || {};
     const userToken = await generateUserToken();
     let inputParamsWithValues: InputParams = [];
@@ -83,13 +85,19 @@ export function ActionButton({
 
     const bootInfo = (await bootInfoRes.json()) as BootInfoResult;
     if (bootInfo.ok) {
-      inputParamsWithValues = bootInfo.data.inputs.map((i) => {
-        i.value = actionInputs[i.key];
-        return i;
-      });
+      const { inputs: fileInputs, actions } = bootInfo.data.parsedScripts[
+        filename || 'main.ts'
+      ] || { actions: [], fileInputs: [] };
+
+      const inputs = actionFromPath ? actions[actionFromPath] : fileInputs;
+      inputParamsWithValues =
+        inputs?.map((input: InputParam) => {
+          input.value = actionInputs[input.key];
+          return input;
+        }) || [];
     }
 
-    const res = await fetch(getRunUrl(runPath || 'main.ts'), {
+    const res = await fetch(, {
       method: 'POST',
       body: JSON.stringify(actionInputs),
       headers,

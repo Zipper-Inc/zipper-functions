@@ -3,7 +3,7 @@ import YAML from 'yaml';
 import { NextRequest, NextResponse } from 'next/server';
 import { relayRequest } from '../utils/relay-middleware';
 import { getMetaFromHeaders } from '../utils/get-meta-from-headers';
-import { parseAppletPath } from '@zipper/utils';
+import { parseRunUrlPath } from '@zipper/utils';
 import { setCorsHeaders } from '~/utils/cors';
 
 export default async function handler(request: NextRequest) {
@@ -11,7 +11,7 @@ export default async function handler(request: NextRequest) {
     // request ends in /api/json or /json
     // anything before that should be treated as filename and/or version
 
-    const { version, filename } = parseAppletPath(request.nextUrl.pathname);
+    const { version, filename } = parseRunUrlPath(request.nextUrl.pathname);
 
     const { result, status, headers } = await relayRequest({
       request,

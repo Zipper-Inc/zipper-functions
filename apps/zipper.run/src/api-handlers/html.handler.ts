@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { parseAppletPath } from '@zipper/utils';
+import { parseRunUrlPath } from '@zipper/utils';
 import { relayRequest } from '~/utils/relay-middleware';
 import { setCorsHeaders } from '~/utils/cors';
 
 export default async function htmlHandler(request: NextRequest) {
-  const { version, filename } = parseAppletPath(request.nextUrl.pathname);
+  const { version, filename } = parseRunUrlPath(request.nextUrl.pathname);
 
   const { result, status, headers } = await relayRequest({
     request,

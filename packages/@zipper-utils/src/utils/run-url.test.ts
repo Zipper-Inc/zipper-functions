@@ -1,4 +1,4 @@
-import { parseAppletPath } from './parse-applet-path';
+import { parseRunUrlPath } from './run-url';
 
 const ACTION = 'actionName';
 const VERSION = 'a1b2c3d';
@@ -126,7 +126,7 @@ const PATHS_TO_TEST: TestCase[] = [
 describe('Gets the correct filename, action, and version from a URL in the following cases:', () => {
   PATHS_TO_TEST.forEach(([description, path, expected]) => {
     test(`${description} (${path})`, () => {
-      expect(parseAppletPath(path)).toEqual(expected);
+      expect(parseRunUrlPath(path)).toEqual(expected);
     });
   });
 });
