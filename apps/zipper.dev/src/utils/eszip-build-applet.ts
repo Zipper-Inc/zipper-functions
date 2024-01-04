@@ -120,7 +120,7 @@ export async function build({
             ...applyTsxHack({
               specifier,
               code: rewrittenCode,
-              isMain: specifier.includes('applet/src/main.ts'),
+              isMain: specifier.endsWith('main.ts'),
             }),
             version,
           };
@@ -130,7 +130,7 @@ export async function build({
           ...applyTsxHack({
             specifier,
             code: rewrittenCode,
-            isMain: specifier.includes('applet/src/main.ts'),
+            isMain: specifier.endsWith('main.ts'),
           }),
           version,
         };
@@ -176,7 +176,7 @@ export async function build({
           ...applyTsxHack({
             specifier,
             code: rewriteImports(mod?.content),
-            isMain: specifier === frameworkEntrypointUrl,
+            isMain: specifier.endsWith('main.ts'),
           }),
         };
       }

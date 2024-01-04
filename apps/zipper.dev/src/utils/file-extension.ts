@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { fallback } from './zod-utils';
 
 export const RunnableExtensionSchema = z.enum(['ts', 'tsx']);
 

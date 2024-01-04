@@ -108,8 +108,7 @@ async function respondWithBundle({
         ...applyTsxHack({
           specifier,
           code: rawModule?.content,
-          shouldAddJsxPragma: false,
-          isMain: bundlePath.includes('applet/src/main.ts'), // ?
+          isMain: specifier.endsWith('main.ts'),
         }),
       };
       if (mod?.content) bundle[bundlePath] = mod.content;
