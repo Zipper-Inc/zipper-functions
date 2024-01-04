@@ -27,6 +27,7 @@ import {
   useCmdOrCtrl,
   withDefaultTheme,
   useUploadContext,
+  findFileInParsedScripts,
 } from '@zipper/ui';
 import {
   getDescription,
@@ -675,10 +676,10 @@ export const getServerSideProps: GetServerSideProps = async ({
 
   if (!runnableScripts.includes(filename)) return { notFound: true };
 
+  const file = findFileInParsedScripts(filename, parsedScripts);
   const inputParams: InputParams =
-    (actionFromUrl
-      ? parsedScripts[filename]?.actions?.[actionFromUrl]
-      : parsedScripts[filename]?.inputs) || {};
+    (actionFromUrl ? file?.actions?.[actionFromUrl]?.inputs : file?.inputs) ||
+    [];
 
   const metadata = bootInfo.metadata || {};
 

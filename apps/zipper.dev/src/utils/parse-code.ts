@@ -370,7 +370,7 @@ export function parseActions({
   code = '',
   throwErrors = false,
   src: srcPassedIn,
-}: ParseCodeParameters = {}): undefined | Record<string, InputParam[]> {
+}: ParseCodeParameters = {}) {
   if (!code || !srcPassedIn) return undefined;
 
   try {
@@ -408,9 +408,12 @@ export function parseActions({
 
       return {
         ...actionsSoFar,
-        [name]: parseHandlerInputs(handlerFn, src, throwErrors),
+        [name]: {
+          name,
+          inputs: parseHandlerInputs(handlerFn, src, throwErrors),
+        },
       };
-    }, {} as Record<string, InputParam[]>);
+    }, {} as Record<string, { name: string; inputs: InputParam[] }>);
 
     return Object.keys(actions).length ? actions : undefined;
   } catch (e) {
