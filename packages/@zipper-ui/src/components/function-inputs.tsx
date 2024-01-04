@@ -32,7 +32,7 @@ import { AutoResizeTextarea } from './auto-resize-text-area';
 import React from 'react';
 
 interface Props {
-  params: InputParam[];
+  params: InputParam[] | undefined;
   defaultValues?: any;
   formContext: UseFormReturn<FieldValues, any>;
   isDisabled?: boolean;
@@ -326,13 +326,6 @@ function SingleInput({
   hasResult?: boolean;
   details?: any;
 }): JSX.Element {
-  const formName = getFieldName(name, type);
-
-  const { isOpen, onOpen, onClose } = useDisclosure({
-    defaultIsOpen: !optional,
-  });
-  const lastValue = useRef<any>(formContext.getValues()[formName]);
-
   const open = () => {
     formContext.setValue(formName, lastValue.current);
     onOpen();
@@ -343,6 +336,15 @@ function SingleInput({
     formContext.setValue(formName, undefined);
     onClose();
   };
+
+  const formName = getFieldName(name, type);
+  const lastValue = useRef<any>(formContext.getValues()[formName]);
+  const { isOpen, onOpen, onClose } = useDisclosure({
+    defaultIsOpen: !optional,
+  });
+  if (!optional && !isOpen) {
+    open();
+  }
 
   return (
     <Box width="100%" position="relative">
@@ -463,6 +465,9 @@ export function FunctionInputs({
   isDisabled,
   hasResult = true,
 }: Props) {
+  if (!params) {
+    return null;
+  }
   const inputs = params.map(
     (
       { key, name, label, description, type, optional, placeholder, details },

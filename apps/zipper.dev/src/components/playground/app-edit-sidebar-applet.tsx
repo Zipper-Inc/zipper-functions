@@ -209,12 +209,10 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
               {userAuthConnectors.length > 0 && (
                 <AppEditSidebarAppletConnectors />
               )}
-              {mainApplet.mainContent.inputs && (
-                <FunctionInputs
-                  params={mainApplet.mainContent.inputs}
-                  formContext={formMethods}
-                />
-              )}
+              <FunctionInputs
+                params={mainApplet.mainContent.inputs}
+                formContext={formMethods}
+              />
             </>
           ) : (
             <>
@@ -223,57 +221,11 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
                   <Heading size="sm" mb="4">
                     Inputs
                   </Heading>
-                  {inputError && (
-                    <HStack
-                      border="1px solid"
-                      p="4"
-                      borderColor="red.200"
-                      backgroundColor="bgColor"
-                      boxShadow="sm"
-                      alignItems="start"
-                    >
-                      <Icon as={HiExclamationCircle} color="red.500" m="2" />
-                      <VStack align="start">
-                        <Text>
-                          There was an error while parsing your handler
-                          function.
-                        </Text>
-                        <Text color="red.500">{inputError}</Text>
-                      </VStack>
-                    </HStack>
-                  )}
+                  <MaybeErrorWhileParsingHandlerFunction
+                    inputError={inputError}
+                  />
                   {!inputError && appInfo.canUserEdit && (
-                    <Popover trigger="hover" openDelay={600}>
-                      <PopoverTrigger>
-                        <Button
-                          colorScheme="purple"
-                          bg="bgColor"
-                          border="1px solid"
-                          borderColor="purple.100"
-                          _hover={{ bg: 'purple.100' }}
-                          w="full"
-                          variant="ghost"
-                          fontWeight="500"
-                          onClick={handleAddInput}
-                        >
-                          Add an input
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent>
-                        <PopoverHeader fontWeight="semibold">
-                          <HStack>
-                            <Icon as={HiOutlineLightBulb} />
-                            <Text>Add an input</Text>
-                          </HStack>
-                        </PopoverHeader>
-                        <PopoverArrow />
-                        <PopoverBody>
-                          Need to collect inputs from your users? Add an object
-                          parameter to your handler function and we'll
-                          automatically generate a form for you.
-                        </PopoverBody>
-                      </PopoverContent>
-                    </Popover>
+                    <UserCanEditHandler handleAddInput={handleAddInput} />
                   )}
                 </>
               )}
@@ -336,5 +288,62 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
     </>
   );
 };
+
+function MaybeErrorWhileParsingHandlerFunction(props: {
+  inputError: string | undefined;
+}) {
+  if (!props.inputError) return null;
+  return (
+    <HStack
+      border="1px solid"
+      p="4"
+      borderColor="red.200"
+      backgroundColor="bgColor"
+      boxShadow="sm"
+      alignItems="start"
+    >
+      <Icon as={HiExclamationCircle} color="red.500" m="2" />
+      <VStack align="start">
+        <Text>There was an error while parsing your handler function.</Text>
+        <Text color="red.500">{props.inputError}</Text>
+      </VStack>
+    </HStack>
+  );
+}
+
+function UserCanEditHandler(props: { handleAddInput: () => void }) {
+  return (
+    <Popover trigger="hover" openDelay={600}>
+      <PopoverTrigger>
+        <Button
+          colorScheme="purple"
+          bg="bgColor"
+          border="1px solid"
+          borderColor="purple.100"
+          _hover={{ bg: 'purple.100' }}
+          w="full"
+          variant="ghost"
+          fontWeight="500"
+          onClick={props.handleAddInput}
+        >
+          Add an input
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent>
+        <PopoverHeader fontWeight="semibold">
+          <HStack>
+            <Icon as={HiOutlineLightBulb} />
+            <Text>Add an input</Text>
+          </HStack>
+        </PopoverHeader>
+        <PopoverArrow />
+        <PopoverBody>
+          Need to collect inputs from your users? Add an object parameter to
+          your handler function and we'll automatically generate a form for you.
+        </PopoverBody>
+      </PopoverContent>
+    </Popover>
+  );
+}
 
 export default AppEditSidebarApplet;
