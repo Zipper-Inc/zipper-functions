@@ -32,7 +32,7 @@ import { AutoResizeTextarea } from './auto-resize-text-area';
 import React from 'react';
 
 interface Props {
-  params: InputParam[];
+  params: InputParam[] | undefined;
   defaultValues?: any;
   formContext: UseFormReturn<FieldValues, any>;
   isDisabled?: boolean;
@@ -463,6 +463,9 @@ export function FunctionInputs({
   isDisabled,
   hasResult = true,
 }: Props) {
+  if (!params) {
+    return null;
+  }
   const inputs = params.map(
     (
       { key, name, label, description, type, optional, placeholder, details },
