@@ -3,11 +3,9 @@ import {
   Input,
   FormControl,
   HStack,
-  Link,
   VStack,
   Text,
   Flex,
-  Divider,
   Button,
   useColorMode,
   Accordion,
@@ -29,6 +27,7 @@ import { Connector } from '~/connectors/createConnector';
 import { kebabCase } from '~/utils/kebab-case';
 import { cloneElement, useMemo } from 'react';
 import { foregroundColors } from '@zipper/ui';
+import { allowedExtensionsWithDot } from '~/utils/file-extension';
 
 export default function AddScriptForm({
   appId,
@@ -56,7 +55,7 @@ export default function AddScriptForm({
 
   // Get extension from filename
   const extension = scriptFilename
-    ? scriptFilename.match(/\.[^.]+$/)?.[0] ?? '.ts'
+    ? scriptFilename.match(/\.[^.]+$/)?.[0] ?? '.tsx'
     : '.ts';
 
   const slugifiedName = slugifyAllowDot(
@@ -65,10 +64,11 @@ export default function AddScriptForm({
 
   const slugifiedFilename = slugifiedName + extension;
 
-  const { isFilenameValid } = useScriptFilename(scriptFilename, appId, [
-    '.ts',
-    '.md',
-  ]);
+  const { isFilenameValid } = useScriptFilename(
+    scriptFilename,
+    appId,
+    allowedExtensionsWithDot,
+  );
 
   const connectorsList = useMemo(() => {
     const connectors_data = {
@@ -111,7 +111,7 @@ export default function AddScriptForm({
           w="full"
           onClick={() => {
             addScript.mutateAsync({
-              name: `${connector.id}-connector`,
+              filename: `${connector.id}-connector.tsx`,
               code: connector.code,
               appId,
               order: scripts.length + connectors.length + 1,
@@ -179,10 +179,10 @@ export default function AddScriptForm({
           Create a script
         </Text>
         <form
-          onSubmit={handleSubmit(({ name, description }) => {
+          onSubmit={handleSubmit(({ description }) => {
             if (isFilenameValid) {
               addScript.mutateAsync({
-                name,
+                filename: slugifiedFilename,
                 description,
                 appId,
                 order: scripts.length + connectors.length + 1,

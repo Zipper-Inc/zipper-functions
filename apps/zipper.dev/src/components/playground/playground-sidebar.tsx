@@ -36,6 +36,7 @@ import {
   isLib,
   isConnector,
 } from '~/utils/playground.utils';
+import { getFileExtension } from '~/utils/file-extension';
 
 // Order should always be:
 // - README.md
@@ -119,8 +120,10 @@ export function PlaygroundSidebar({
 
     if (!toDupe) return;
 
+    const extension = getFileExtension(toDupe.filename);
+
     addScript.mutateAsync({
-      name: `${toDupe.name}-copy`,
+      filename: `${toDupe.name}-copy.${extension}`,
       appId: app.id,
       code: toDupe.code,
       order: app.scripts.length + 1,

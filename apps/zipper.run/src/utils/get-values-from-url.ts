@@ -30,7 +30,8 @@ export function getFilenameAndVersionFromPath(
     version = undefined;
   }
 
-  if (!filename.endsWith('.ts')) filename = `${filename}.ts`;
+  if (!filename.endsWith('.ts') && !filename.endsWith('.tsx'))
+    filename = `${filename}.ts`;
 
   return { filename, version };
 }
