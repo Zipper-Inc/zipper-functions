@@ -45,7 +45,7 @@ import {
   useMultiSelect,
 } from '@zipper/ui';
 import { HiOutlineTrash } from 'react-icons/hi';
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useRunAppContext } from '~/components/context/run-app-context';
 import { GithubAppConnectorInstallationMetadata } from '@zipper/types';
@@ -146,9 +146,14 @@ function GitHubAppConnectorForm({ appId }: { appId: string }) {
   );
 
   const [isSaving, setIsSaving] = useState(false);
-  const [webhookPath, setWebhookPath] = useState<string>(
-    'github-app-connector.ts',
+  const [webhookName, setWebhookName] = useState<string>(
+    'github-app-connector',
   );
+
+  const selectedWebhookScript = useMemo(
+    () => scripts.find((s) => s.name === webhookName),
+    [webhookName],
+  )!;
 
   const toast = useToast();
 
@@ -191,7 +196,7 @@ function GitHubAppConnectorForm({ appId }: { appId: string }) {
         redirect_url: `${getZipperDotDevUrl()}/connectors/github-app/manifest-redirect`,
         callback_urls: [`${getZipperDotDevUrl()}/connectors/github-app/auth`],
         hook_attributes: {
-          url: `https://${appInfo.slug}.${process.env.NEXT_PUBLIC_ZIPPER_DOT_RUN_HOST}/${webhookPath}/raw`,
+          url: `https://${appInfo.slug}.${process.env.NEXT_PUBLIC_ZIPPER_DOT_RUN_HOST}/${selectedWebhookScript.filename}/raw`,
         },
         public: true,
         default_events: eventsValue,
@@ -394,18 +399,18 @@ function GitHubAppConnectorForm({ appId }: { appId: string }) {
                                   Webhook Handler
                                 </FormLabel>
                                 <Select
-                                  defaultValue={'github-app-connector.ts'}
+                                  defaultValue={'github-app-connector'}
                                   onChange={(e) => {
-                                    setWebhookPath(e.target.value);
+                                    setWebhookName(e.target.value);
                                   }}
                                 >
                                   {scripts
                                     .filter((s) => s.isRunnable)
                                     .map((s) => (
                                       <option
-                                        value={s.filename}
+                                        value={s.name}
                                         key={s.id}
-                                        selected={s.filename === webhookPath}
+                                        selected={s.name === webhookName}
                                       >
                                         {s.filename}
                                       </option>

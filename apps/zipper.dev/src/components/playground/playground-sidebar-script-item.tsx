@@ -50,8 +50,8 @@ const ScriptIcon = ({ script, ...propsPassedIn }: { script: Script } & any) => {
   if (isReadme(script)) return <PiNote {...props} />;
   else if (isMain(script)) return <PiCode {...props} size="16px" />;
   else if (isHandler(script)) return <PiCodeSimpleDuotone {...props} />;
-  else if (isLib(script)) return <PiCodeSimple {...props} />;
   else if (isConnector(script)) return <PiPlugsDuotone {...props} />;
+  else if (isLib(script)) return <PiCodeSimple {...props} />;
   else return <PiQuestion {...props} />;
 };
 
