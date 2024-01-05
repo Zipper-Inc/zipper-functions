@@ -20,7 +20,6 @@ async function main() {
     templateScriptId,
     templateScriptId2,
     templateScriptId3,
-    zipperCodemodUserId,
   ] = [...Array(10)].map(() => crypto.randomUUID());
 
   await prisma.organization.createMany({
@@ -52,15 +51,6 @@ async function main() {
         resourceOwnerType: 0,
       },
     ],
-  });
-
-  await prisma.user.create({
-    data: {
-      id: zipperCodemodUserId,
-      email: 'codemods@zipper.works',
-      slug: 'zipper-codemods',
-      name: 'Zipper Codemods',
-    },
   });
 
   const seedApp1 = await prisma.app.create({
