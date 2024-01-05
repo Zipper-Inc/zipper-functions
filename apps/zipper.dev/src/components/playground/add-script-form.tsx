@@ -63,7 +63,7 @@ export default function AddScriptForm({
 
   const slugifiedFilename = slugifiedName + extension;
 
-  const { isFilenameValid } = useScriptFilename(scriptFilename, appId);
+  const { isFilenameValid } = useScriptFilename(slugifiedFilename, appId);
 
   const connectorsList = useMemo(() => {
     const connectors_data = {
