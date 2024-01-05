@@ -17,6 +17,5 @@ export const slugifyAllowDot: typeof slugify = (string, options) =>
   ogSlugify(string, {
     ...DEFAULT_OPTIONS,
     ...options,
-    strict: false,
     remove: /[*+~()'"!:@]/g,
   });

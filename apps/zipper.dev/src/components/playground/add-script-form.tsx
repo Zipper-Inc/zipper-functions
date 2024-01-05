@@ -27,6 +27,7 @@ import { Connector } from '~/connectors/createConnector';
 import { kebabCase } from '~/utils/kebab-case';
 import { cloneElement, useMemo } from 'react';
 import { foregroundColors } from '@zipper/ui';
+import { allowedExtensionsWithDot } from '~/utils/file-extension';
 
 export default function AddScriptForm({
   appId,
@@ -63,7 +64,11 @@ export default function AddScriptForm({
 
   const slugifiedFilename = slugifiedName + extension;
 
-  const { isFilenameValid } = useScriptFilename(scriptFilename, appId);
+  const { isFilenameValid } = useScriptFilename(
+    scriptFilename,
+    appId,
+    allowedExtensionsWithDot,
+  );
 
   const connectorsList = useMemo(() => {
     const connectors_data = {

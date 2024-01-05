@@ -90,11 +90,11 @@ export function PlaygroundSidebar({
     },
   });
 
-  const renameScript = (id: string, fileName: string) => {
+  const renameScript = (id: string, name: string) => {
     editScriptQuery.mutateAsync({
       id: id,
       data: {
-        filename: fileName,
+        name,
       },
     });
     endRenaming();
@@ -133,8 +133,7 @@ export function PlaygroundSidebar({
   const startRenaming: ScriptItemProps['onStartRenaming'] = (scriptId) => {
     setIsRenamingId(scriptId);
     renameForm.reset({
-      fileName: app.scripts.find((script: Script) => script.id === scriptId)
-        ?.filename,
+      name: app.scripts.find((script: Script) => script.id === scriptId)?.name,
     });
   };
 

@@ -224,7 +224,6 @@ export default function PlaygroundEditor(
         isolatedModules: true,
         target: monaco.languages.typescript.ScriptTarget.ES2020,
         allowNonTsExtensions: true,
-        resolveJsonModule: true,
         moduleResolution:
           monaco.languages.typescript.ModuleResolutionKind.NodeJs,
         lib: ['esnext', 'dom', 'deno.ns'],
@@ -240,7 +239,6 @@ export default function PlaygroundEditor(
         isolatedModules: true,
         target: monaco.languages.typescript.ScriptTarget.ES2020,
         allowNonTsExtensions: true,
-        resolveJsonModule: true,
         moduleResolution:
           monaco.languages.typescript.ModuleResolutionKind.NodeJs,
         lib: ['esnext', 'dom', 'deno.ns'],

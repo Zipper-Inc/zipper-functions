@@ -36,7 +36,7 @@ export type ScriptItemProps = {
   script: Script;
   isEditable: boolean;
   isRenaming: boolean;
-  renameForm: UseFormReturn<{ fileName: string }>;
+  renameForm: UseFormReturn<{ name: string }>;
   renameScript: (id: string, name: string) => void;
   onDelete: (id: string) => void;
   onDuplicate: (id: string) => void;
@@ -97,11 +97,11 @@ export const ScriptItem: React.FC<ScriptItemProps> = ({
       {isRenaming ? (
         <Flex grow={1}>
           <form
-            onSubmit={renameForm.handleSubmit(({ fileName }) => {
-              if (fileName.length === 0) {
+            onSubmit={renameForm.handleSubmit(({ name }) => {
+              if (name.length === 0) {
                 return;
               }
-              renameScript(script.id, fileName);
+              renameScript(script.id, name);
             })}
           >
             <Input
@@ -117,7 +117,7 @@ export const ScriptItem: React.FC<ScriptItemProps> = ({
               onKeyDown={(e) => {
                 if (e.key === 'Escape') onEndRenaming();
               }}
-              {...renameForm.register('fileName', { value: script.filename })}
+              {...renameForm.register('name', { value: script.name })}
             />
           </form>
         </Flex>

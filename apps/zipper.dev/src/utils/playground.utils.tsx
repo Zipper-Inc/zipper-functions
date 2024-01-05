@@ -3,7 +3,7 @@ import { Script } from '@prisma/client';
 import { DehydratedState } from '@tanstack/react-query';
 import { getUriFromPath } from './model-uri';
 import type { Monaco } from '@monaco-editor/react';
-import { getFileExtension } from './file-extension';
+import { AllowedExtension, getFileExtension } from './file-extension';
 
 export const isConnector = (script: Script) =>
   script.filename.endsWith('-connector.ts');
@@ -75,14 +75,19 @@ export function getModelFromScript(script: Script, m: Monaco) {
 export function getOrCreateScriptModel(script: Script, m: Monaco) {
   const existingModel = getModelFromScript(script, m);
   if (existingModel) return existingModel;
-  const { uri } = parseScriptForModel(script, m);
+  const { extension, uri } = parseScriptForModel(script, m);
 
   console.log('[EDITOR]', `Creating model for ${script.filename}`);
 
   return m.editor.createModel(
     script.code,
-    // The language may be inferred from the `uri`
-    undefined,
+    extension ? extensionToLanguage[extension] : 'ts',
     uri,
   );
 }
+
+const extensionToLanguage: Record<AllowedExtension, string> = {
+  ts: 'typescript',
+  tsx: 'typescript',
+  md: 'markdown',
+};

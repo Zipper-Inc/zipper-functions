@@ -95,19 +95,9 @@ export const scriptRouter = createTRPCRouter({
       ).success;
 
       const code = (() => {
-        if (isRunnableExtension) {
-          return data.code;
-        }
-        if (filename.extension === 'md') {
-          return DEFAULT_MD;
-        }
-        if (filename.extension === 'json') {
-          return '{}';
-        }
-        if (filename.extension === 'ts' || filename.extension === 'tsx') {
-          return DEFAULT_CODE;
-        }
-        return '';
+        if (isRunnableExtension) return data.code;
+        if (filename.extension === 'md') return DEFAULT_MD;
+        return DEFAULT_CODE;
       })();
 
       const script = await prisma.script.create({
@@ -179,7 +169,7 @@ export const scriptRouter = createTRPCRouter({
       z.object({
         id: z.string().uuid(),
         data: z.object({
-          filename: z.string().min(1).max(255).optional(),
+          name: z.string().min(1).max(255).optional(),
           description: z.string().optional().nullable(),
         }),
       }),
@@ -197,8 +187,8 @@ export const scriptRouter = createTRPCRouter({
         appId: script.appId,
       });
 
-      const filename = data.filename
-        ? `${slugifyAllowDot(data.filename)}`
+      const filename = data.name
+        ? `${slugifyAllowDot(data.name)}.ts`
         : undefined;
       const hash = filename
         ? getScriptHash({
