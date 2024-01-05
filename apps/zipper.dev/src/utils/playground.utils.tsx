@@ -6,7 +6,8 @@ import type { Monaco } from '@monaco-editor/react';
 import { getFileExtension } from './file-extension';
 
 export const isConnector = (script: Script) =>
-  script.filename.endsWith('-connector.ts');
+  script.filename.endsWith('-connector.ts') ||
+  script.filename.endsWith('-connector.tsx');
 export const isReadme = (script: Script) => script.filename === 'readme.md';
 export const isMain = (script: Script) => script.filename === 'main.ts';
 export const isLib = (script: Script) =>
