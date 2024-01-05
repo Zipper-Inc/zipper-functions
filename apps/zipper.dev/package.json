@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
+    "next:dev": "next dev",
     "build:01-prisma": "prisma generate",
     "build:02-next": "next build",
     "build:03-tsc": "tsc --project tsconfig.server.json",
@@ -144,7 +145,7 @@
     "tailwind-merge": "^2.1.0",
     "tailwindcss": "^3.3.6",
     "tailwindcss-animate": "^1.0.7",
-    "ts-morph": "^17.0.1",
+    "ts-morph": "^21.0.1",
     "typescript": "4.9.5",
     "uploadthing": "^6.0.4",
     "use-debounce": "^9.0.3",

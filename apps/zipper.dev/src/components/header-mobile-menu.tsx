@@ -1,3 +1,4 @@
+'use client';
 import {
   Menu,
   MenuButton,
@@ -6,7 +7,7 @@ import {
   MenuItem,
   UseDisclosureReturn,
 } from '@chakra-ui/react';
-import { useRouter } from 'next/router';
+import { useRouter } from 'next/navigation';
 import { FiMinimize2, FiMenu } from 'react-icons/fi';
 import { FeedbackModal } from './auth/feedback-modal';
 

@@ -95,6 +95,10 @@ module.exports = getConfig({
       config.module.noParse.push(
         require.resolve('@ts-morph/common/dist/typescript.js'),
       );
+    config.module = {
+      ...config.module,
+      exprContextCritical: false,
+    };
     return config;
   },
   // old url: https://similar-years-645746.framer.app (for rollbacks if necessary)
