@@ -1,5 +1,10 @@
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import rehypeRaw from 'rehype-raw';
+import remarkGemoji from 'remark-gemoji';
+
+import rehypeSanitize from 'rehype-sanitize';
+
 import ChakraUIRenderer from '../../utils/chakra-markdown-renderer';
 import React from 'react';
 
@@ -34,7 +39,8 @@ export const Markdown = ({
     <ReactMarkdown
       components={ChakraUIRenderer()}
       children={content}
-      remarkPlugins={[remarkGfm as any]}
+      remarkPlugins={[remarkGfm as any, remarkGemoji as any]}
+      rehypePlugins={[rehypeSanitize(), rehypeRaw as any]}
     />
   );
 };
