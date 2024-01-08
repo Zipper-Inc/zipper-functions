@@ -295,6 +295,17 @@ export function parseInputForTypes({
       return [];
     }
 
+    const paramsWithDefaultValue = params
+      .getFirstChildByKind(SyntaxKind.ObjectBindingPattern)
+      ?.getElements()
+      .reduce((acc, curr) => {
+        const key = curr.getFirstChildByKind(SyntaxKind.Identifier)?.getText();
+        const value = curr.getInitializer();
+        if (key && value) {
+          return { ...acc, [key]: value.getText() };
+        }
+        return acc;
+      }, {} as Record<string, string>);
     const typeNode = params.getTypeNode();
 
     if (!typeNode || typeNode?.isKind(SyntaxKind.AnyKeyword)) {
@@ -332,6 +343,8 @@ export function parseInputForTypes({
     }
 
     return props.map((prop) => {
+      const isOptional =
+        prop.hasQuestionToken() || !!paramsWithDefaultValue?.[prop.getName()];
       const typeNode = prop.getTypeNode();
       if (!typeNode) {
         // Typescript defaults to any if it can't find the type
@@ -339,18 +352,19 @@ export function parseInputForTypes({
         return {
           key: prop.getName(),
           type: InputType.any,
-          optional: prop.hasQuestionToken(),
+          optional: isOptional,
         };
       }
 
       const typeDetails = parseTypeNode(typeNode, src);
 
-      return {
+      const result = {
         key: prop.getName(),
         type: typeDetails.type,
-        optional: prop.hasQuestionToken(),
+        optional: isOptional,
         ...('details' in typeDetails && { details: typeDetails.details }),
       };
+      return result;
     });
   } catch (e) {
     if (throwErrors) throw e;

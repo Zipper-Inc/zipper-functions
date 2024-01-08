@@ -88,7 +88,9 @@ export async function build({
   const appFilesBaseUrl = `${baseUrl}/applet/src`;
   const frameworkEntrypointUrl = `${baseUrl}/${FRAMEWORK_ENTRYPOINT}`;
 
-  const tsScripts = app.scripts.filter((s) => s.filename.endsWith('.ts'));
+  const tsScripts = app.scripts.filter(
+    (s) => s.filename.endsWith('.ts') || s.filename.endsWith('.tsx'),
+  );
 
   const appFileUrls = tsScripts.map(
     ({ filename }) => `${appFilesBaseUrl}/${filename}`,
@@ -115,13 +117,21 @@ export async function build({
         if (isClientModule({ src })) {
           rewrittenCode = `/// <reference lib="dom" />\n${rewrittenCode}`;
           return {
-            ...applyTsxHack(specifier, rewrittenCode),
+            ...applyTsxHack({
+              specifier,
+              code: rewrittenCode,
+              isMain: specifier.endsWith('main.ts'),
+            }),
             version,
           };
         }
 
         return {
-          ...applyTsxHack(specifier, rewrittenCode),
+          ...applyTsxHack({
+            specifier,
+            code: rewrittenCode,
+            isMain: specifier.endsWith('main.ts'),
+          }),
           version,
         };
       }
@@ -163,7 +173,11 @@ export async function build({
         const mod = await getRemoteModule({ specifier, target });
         return {
           ...mod,
-          ...applyTsxHack(specifier, rewriteImports(mod?.content)),
+          ...applyTsxHack({
+            specifier,
+            code: rewriteImports(mod?.content),
+            isMain: specifier.endsWith('main.ts'),
+          }),
         };
       }
 
@@ -228,6 +242,8 @@ export async function buildAndStoreApplet({
     );
   };
 
+  const buildFile = await buildBuffer();
+
   const savedVersion = await prisma.version.upsert({
     where: {
       hash,
@@ -235,7 +251,7 @@ export async function buildAndStoreApplet({
     create: {
       app: { connect: { id: app.id } },
       hash,
-      buildFile: await buildBuffer(),
+      buildFile,
       isPublished: !!isPublished,
       userId,
     },

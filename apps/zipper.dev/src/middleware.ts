@@ -5,7 +5,7 @@ import { hasZipperEszipHeader } from '~/utils/eszip-utils';
 
 const parseZipperSrcPath = (req: NextRequest) => {
   const matches = req.nextUrl.pathname.match(
-    /^\/([^\s]*)\/([^\s]*)\/src\/([^\s]*.tsx?)$/,
+    /^\/([^\s]*)\/([^\s]*)\/src\/(([^\s]*.tsx?)|([^\s]*.ts?))$/,
   );
   if (!matches) return false;
   const [, resourceOwnerSlug = '', appSlug = '', filename = ''] = matches;

@@ -6,6 +6,7 @@ import { isExternalImport } from '~/utils/parse-code';
 import { isZipperImportUrl, X_ZIPPER_ESZIP_BUILD } from '~/utils/eszip-utils';
 import Fuse from 'fuse.js';
 import { rewriteSpecifier } from '~/utils/rewrite-imports';
+import { getFileExtension } from './file-extension';
 
 /** This string indicates which errors we own in the editor */
 export const ZIPPER_LINTER = 'zipper-linter';
@@ -65,12 +66,16 @@ export async function runZipperLinter({
   await Promise.all(
     imports.map(async (i) => {
       if (!monacoRef.current) return;
+
+      const extension = getFileExtension(i.specifier);
+      const isMain = i.specifier.endsWith('main.ts');
+
       const potentialModelUri = getUriFromPath(
         // Remove the first two characters, which should be `./`
         // The relative path is required by Deno/Zipper
         i.specifier.substring(2),
         monacoRef.current.Uri.parse,
-        'tsx',
+        (!isMain ? extension : 'tsx') || 'tsx',
       );
 
       // If we can find a model, we're good
@@ -136,17 +141,20 @@ export async function runZipperLinter({
           results?.objects?.length && results.objects[0].package.name;
         if (resultName && resultName !== npmName) suggestion = resultName;
       } else {
-        const localModelUris = editor
+        const otherFilesUri = editor
           .getModels()
-          .map((m) => m.uri)
-          .filter((u) => u.scheme === 'file' && u.path !== currentUri.path);
+          .flatMap((m) =>
+            m.uri.scheme === 'file' && m.uri.path !== currentUri.path
+              ? [m.uri]
+              : [],
+          );
 
-        // Search through paths to see if there's somethign similar to the broken path
-        const fuse = new Fuse(localModelUris.map((u) => u.path));
+        // Search through paths to see if there's something similar to the broken path
+        const fuse = new Fuse(otherFilesUri.map((u) => u.path));
         const [topSuggestion] = fuse.search(i.specifier);
         // If there is, lets grab the full URI based on the original index
         const suggestedUri =
-          topSuggestion && localModelUris[topSuggestion.refIndex];
+          topSuggestion && otherFilesUri[topSuggestion.refIndex];
         suggestion = suggestedUri ? `.${getPathFromUri(suggestedUri)}` : '';
       }
 

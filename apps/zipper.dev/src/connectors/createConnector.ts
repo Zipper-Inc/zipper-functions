@@ -5,6 +5,7 @@ export type Connector = {
   id: ConnectorId;
   name: string;
   description?: string;
+  helperText?: string;
   icon?: ReactElement;
   code?: string;
   workspaceScopes?: string[];
@@ -20,6 +21,7 @@ export const createConnector = ({
   id,
   name,
   description,
+  helperText,
   code,
   icon,
   workspaceScopes,
@@ -32,6 +34,7 @@ export const createConnector = ({
     id,
     name,
     description,
+    helperText,
     code,
     icon,
     workspaceScopes,
