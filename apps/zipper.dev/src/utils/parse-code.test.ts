@@ -1,6 +1,6 @@
 import { parseInputForTypes } from './parse-code';
 
-test('parseInputForTypes should return as optional params that have default valeus', () => {
+test('parseInputForTypes should return as optional params that have default values', () => {
   const result = parseInputForTypes({
     code: `export async function handler({
       test = 3,
@@ -25,6 +25,201 @@ test('parseInputForTypes should return as optional params that have default vale
       key: 'test',
       optional: true,
       type: 'number',
+    },
+  ]);
+});
+
+test('parseInputForTypes string', () => {
+  const result = parseInputForTypes({
+    code: `export const handler = ({ param }: { param: string }) => param`,
+    throwErrors: true,
+  });
+  expect(result).toEqual([
+    {
+      key: 'param',
+      optional: false,
+      type: 'string',
+    },
+  ]);
+});
+
+// ✅ New Feature
+test('parseInputForTypes string literal', () => {
+  const result = parseInputForTypes({
+    code: `export const handler = ({ param }: { param: "hey" }) => param`,
+    throwErrors: true,
+  });
+  expect(result).toEqual([
+    {
+      key: 'param',
+      optional: false,
+      type: 'string',
+      details: { literal: 'hey' },
+    },
+  ]);
+});
+
+test('parseInputForTypes number', () => {
+  const result = parseInputForTypes({
+    code: `export const handler = ({ param }: { param: number }) => param`,
+    throwErrors: true,
+  });
+  expect(result).toEqual([
+    {
+      key: 'param',
+      optional: false,
+      type: 'number',
+    },
+  ]);
+});
+
+// ✅ New Feature
+test('parseInputForTypes literal number', () => {
+  const result = parseInputForTypes({
+    code: `export const handler = ({ param }: { param: 1 }) => param`,
+    throwErrors: true,
+  });
+  expect(result).toEqual([
+    {
+      key: 'param',
+      optional: false,
+      type: 'number',
+      details: { literal: '1' },
+    },
+  ]);
+});
+
+test('parseInputForTypes boolean', () => {
+  const result = parseInputForTypes({
+    code: `export const handler = ({ param }: { param: boolean }) => param`,
+    throwErrors: true,
+  });
+  expect(result).toEqual([
+    {
+      key: 'param',
+      optional: false,
+      type: 'boolean',
+    },
+  ]);
+});
+
+// ✅ New Feature
+test('parseInputForTypes boolean literal true', () => {
+  const result = parseInputForTypes({
+    code: `export const handler = ({ param }: { param: true }) => param`,
+    throwErrors: true,
+  });
+  expect(result).toEqual([
+    {
+      key: 'param',
+      optional: false,
+      type: 'boolean',
+      details: { literal: 'true' },
+    },
+  ]);
+});
+
+// ✅ New Feature
+test('parseInputForTypes boolean literal false', () => {
+  const result = parseInputForTypes({
+    code: `export const handler = ({ param }: { param: false }) => param`,
+    throwErrors: true,
+  });
+  expect(result).toEqual([
+    {
+      key: 'param',
+      optional: false,
+      type: 'boolean',
+      details: { literal: 'false' },
+    },
+  ]);
+});
+
+// ✅ New Feature
+test('parseInputForTypes should solve string literals', () => {
+  const result = parseInputForTypes({
+    code: `export async function handler({ type }: { type: "get-config" | "get-auth-url" }) {
+      console.log(type);
+      return type;
+    }
+    `,
+    throwErrors: true,
+  });
+  expect(result).toEqual([
+    {
+      key: 'type',
+      optional: false,
+      type: 'union',
+      details: {
+        values: [
+          { type: 'string', details: { literal: 'get-config' } },
+          { type: 'string', details: { literal: 'get-auth-url' } },
+        ],
+      },
+    },
+  ]);
+});
+
+test('parseInputForTypes should solve Date', () => {
+  const result = parseInputForTypes({
+    code: `export async function handler({ type }: { type: Date }) {
+      console.log(type);
+      return type;
+    }
+    `,
+    throwErrors: true,
+  });
+  expect(result).toEqual([
+    {
+      key: 'type',
+      optional: false,
+      type: 'date',
+    },
+  ]);
+});
+
+// ✅ New Feature
+test('parseInputForTypes should solve Object { foo: string } ', () => {
+  const result = parseInputForTypes({
+    code: `export async function handler({ type }: { type: { foo: string } }) {
+      console.log(type);
+      return type;
+    }
+    `,
+    throwErrors: true,
+  });
+  expect(result).toEqual([
+    {
+      key: 'type',
+      optional: false,
+      type: 'object',
+      details: { properties: [{ key: 'foo', details: { type: 'string' } }] },
+    },
+  ]);
+});
+
+// ✅ New Feature
+test('parseInputForTypes should solve Array of literal "view:history" OR "edit:bookmark"', () => {
+  const result = parseInputForTypes({
+    code: `export async function handler({ type }: { type: ("view:history" | "edit:bookmark")[] }) {
+      console.log(type);
+      return type;
+    }
+    `,
+    throwErrors: true,
+  });
+  console.log(result);
+  expect(result).toEqual([
+    {
+      key: 'type',
+      optional: false,
+      type: 'array',
+      details: {
+        values: [
+          { key: 'string', details: { literal: 'view:history' } },
+          { key: 'string', details: { literal: 'edit:bookmark' } },
+        ],
+      },
     },
   ]);
 });

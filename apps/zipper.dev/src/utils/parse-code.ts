@@ -37,8 +37,23 @@ function removeTsExtension(moduleName: string) {
 function parsePrimitiveType(type: Type): ParsedNode {
   // Typescript default types
   if (type.isBoolean()) return { type: InputType.boolean };
+  if (type.isBooleanLiteral())
+    return {
+      type: InputType.boolean,
+      details: { literal: type.getText() },
+    };
   if (type.isNumber()) return { type: InputType.number };
+  if (type.isNumberLiteral())
+    return {
+      type: InputType.number,
+      details: { literal: String(type.getLiteralValue()) },
+    };
   if (type.isString()) return { type: InputType.string };
+  if (type.isStringLiteral())
+    return {
+      type: InputType.string,
+      details: { literal: String(type.getLiteralValue()) },
+    };
   if (type.isUnknown()) return { type: InputType.unknown };
   if (type.isAny()) return { type: InputType.any };
 

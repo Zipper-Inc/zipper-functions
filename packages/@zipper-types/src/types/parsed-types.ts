@@ -1,9 +1,9 @@
 import { InputType } from './input-type';
 
 export type ParsedNode =
-  | { type: InputType.boolean }
-  | { type: InputType.number }
-  | { type: InputType.string }
+  | { type: InputType.boolean; details?: { literal: string } }
+  | { type: InputType.number; details?: { literal: string } }
+  | { type: InputType.string; details?: { literal: string } }
   | { type: InputType.date }
   | { type: InputType.array }
   | { type: InputType.any }
