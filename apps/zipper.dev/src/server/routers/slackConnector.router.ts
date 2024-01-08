@@ -43,8 +43,8 @@ export const slackConnectorRouter = createTRPCRouter({
           message: 'No app found',
         });
       }
-      const slackConfig = getSlackConfig(app?.slug);
-      return slackConfig || null;
+      const slackConfig = await getSlackConfig(app?.slug);
+      return slackConfig;
     }),
   getAuthUrl: publicProcedure
     .input(

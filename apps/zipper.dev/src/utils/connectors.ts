@@ -14,13 +14,14 @@ type SlackConfig = {
  */
 export const getSlackConfig = async (
   appSlug: string,
-): Promise<SlackConfig | undefined> => {
+): Promise<SlackConfig | null> => {
+  // A good otimization step here would be avoid calling the applet if we know that the route is not available
   try {
     const res = await initLocalApplet(appSlug)
       .path('slack-connector')
       .run({ action: 'get-config' });
     return res as SlackConfig;
   } catch {
-    return undefined;
+    return null;
   }
 };

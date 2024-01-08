@@ -113,6 +113,8 @@ function SlackConnectorForm({ appId }: { appId: string }) {
     },
   );
 
+  const A = trpc.slackConnector.get;
+
   const [isOwnClientIdRequired, setIsOwnClientIdRequired] =
     useState<boolean>(false);
 
@@ -383,7 +385,8 @@ function SlackConnectorFormConUserEdit({
                     initLocalApplet(appInfo.slug)
                       .path('slack-connector')
                       .run({ action: 'get-auth-url' })
-                      .then((link) => {
+                      .then(async (link) => {
+                        await utils.slackConnector.get.invalidate({ appId });
                         if (link) {
                           router.push(link);
                         }
