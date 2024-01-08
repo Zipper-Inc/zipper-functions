@@ -277,6 +277,7 @@ function parseHandlerInputs(
       }
       return acc;
     }, {} as Record<string, string>);
+
   const typeNode = params.getTypeNode();
 
   if (!typeNode || typeNode?.isKind(SyntaxKind.AnyKeyword)) {

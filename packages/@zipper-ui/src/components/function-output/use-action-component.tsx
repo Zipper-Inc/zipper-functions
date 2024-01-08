@@ -69,7 +69,7 @@ export const useActionComponent = (
     };
 
     return (
-      (actionFromPath ? file.actions[actionFromPath]?.inputs : file.inputs) ||
+      (actionFromPath ? file.actions?.[actionFromPath]?.inputs : file.inputs) ||
       []
     );
   };
