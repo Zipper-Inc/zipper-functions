@@ -14,6 +14,7 @@ import {
   TypeNode,
   CallExpression,
   FunctionExpression,
+  Type,
 } from 'ts-morph';
 
 type ParseCodeParameters = {
@@ -33,27 +34,48 @@ function removeTsExtension(moduleName: string) {
   return moduleName;
 }
 
+function parsePrimitiveType(type: Type): ParsedNode {
+  // Typescript default types
+  if (type.isBoolean()) return { type: InputType.boolean };
+  if (type.isNumber()) return { type: InputType.number };
+  if (type.isString()) return { type: InputType.string };
+  if (type.isUnknown()) return { type: InputType.unknown };
+  if (type.isAny()) return { type: InputType.any };
+
+  if (type.isArray() || type.isReadonlyArray())
+    return { type: InputType.array, details: { values: [] } };
+
+
+  if (type.getText().toLowerCase() === 'zipper.fileurl')
+    return { type: InputType.file };
+  if (type.getText().toLowerCase() === 'date') return { type: InputType.date };
+
+  return { type: InputType.unknown };
+}
+
 // Determine the Zipper type from the Typescript type
-function parseTypeNode(type: TypeNode, src: SourceFile): ParsedNode {
-  const text = type.getText();
-  if (text.toLowerCase() === 'boolean') return { type: InputType.boolean };
-  if (text.toLowerCase() === 'number') return { type: InputType.number };
-  if (text.toLowerCase() === 'string') return { type: InputType.string };
-  if (text.toLowerCase() === 'date') return { type: InputType.date };
-  if (text.toLowerCase() === 'unknown') return { type: InputType.unknown };
-  if (text.toLowerCase() === 'any') return { type: InputType.any };
-  if (text.toLowerCase() === 'zipper.fileurl') return { type: InputType.file };
-  if (text.toLocaleLowerCase().match(/"\w+"(\s*\|\s*"\w+")*/g))
-    return { type: InputType.string };
-  if (text.toLocaleLowerCase().match(/\d+(\s*\|\s*\d+)*/g))
-    return { type: InputType.number };
+function parseTypeNode(typeNode: TypeNode, src: SourceFile): ParsedNode {
+  // Lets add priority for Zipper defined types, since they can overlap with other types
+  const type = typeNode.getType();
+  if (type.getText().toLowerCase() === 'zipper.fileurl')
+    return { type: InputType.file };
+  if (type.getText().toLowerCase() === 'date') return { type: InputType.date };
 
-  if (type.isKind(SyntaxKind.ArrayType) || text.startsWith('Array'))
-    return { type: InputType.array };
+  // Parses a union type: Foo | Bar
+  if (typeNode.isKind(SyntaxKind.UnionType)) {
+    return {
+      type: InputType.union,
+      details: {
+        values: typeNode.getType().getUnionTypes().map(parsePrimitiveType),
+      },
+    };
+  }
 
-  if (type.isKind(SyntaxKind.TypeReference)) {
+
+  // Solves the case of a type reference, like: type Foo = { foo: string, bar: string } in { input : Foo }
+  if (typeNode.isKind(SyntaxKind.TypeReference)) {
     // we have a type reference
-    const typeReference = type.getTypeName();
+    const typeReference = typeNode.getTypeName();
     const typeReferenceText = typeReference.getText();
 
     // find in the code the declaration of the typeReferenceText, this can be a type, a interface, a enum, etc.
@@ -139,8 +161,8 @@ function parseTypeNode(type: TypeNode, src: SourceFile): ParsedNode {
   }
 
   // Handle keyof typeof Category type
-  if (type.isKind(SyntaxKind.TypeOperator)) {
-    const typeText = type.getText();
+  if (typeNode.isKind(SyntaxKind.TypeOperator)) {
+    const typeText = typeNode.getText();
     const match = typeText.match(/keyof typeof (\w+)/);
     if (match && match[1]) {
       const enumName = match[1];
@@ -157,7 +179,9 @@ function parseTypeNode(type: TypeNode, src: SourceFile): ParsedNode {
       }
     }
   }
-  return { type: InputType.unknown };
+
+  // If its not a type reference/structure node, we parse the primitive type
+  return parsePrimitiveType(typeNode.getType());
 }
 
 export function getSourceFileFromCode(code = '', filename = 'main.ts') {

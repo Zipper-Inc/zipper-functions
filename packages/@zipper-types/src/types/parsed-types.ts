@@ -9,6 +9,7 @@ export type ParsedNode =
   | { type: InputType.any }
   | { type: InputType.file }
   | { type: InputType.unknown }
+  | { type: InputType.union; details: { values: ParsedNode[] } }
   | {
       type: InputType.enum;
       details: {
