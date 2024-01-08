@@ -35,6 +35,7 @@ import {
 } from '~/utils/playground.utils';
 import { runZipperLinter } from '~/utils/zipper-editor-linter';
 import { rewriteSpecifier } from '~/utils/rewrite-imports';
+import { getFileExtension } from '~/utils/file-extension';
 
 type OnValidate = AddParameters<
   Required<EditorProps>['onValidate'],
@@ -701,11 +702,12 @@ const EditorContextProvider = ({
       .map(([filename]) => filename);
 
   const getModelByFilename = (filename: string) => {
-    const filenameWithTsxHack = filename.endsWith('.md')
-      ? filename
-      : `${filename}.tsx`;
-    const uri = monacoRef.current?.Uri.parse(`file:///${filenameWithTsxHack}`);
-    if (!uri || !editor) return null;
+    if (!monacoRef?.current || !editor) return null;
+    const uri = getUriFromPath(
+      `file:///${filename}`,
+      monacoRef.current.Uri.parse,
+      getFileExtension(filename) || 'tsx',
+    );
     return editor.getModel(uri);
   };
 

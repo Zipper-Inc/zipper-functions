@@ -353,7 +353,8 @@ function SlackConnectorFormConUserEdit({
                     // This should update the Monaco model, instead of the code column in the database
                     // Update monaco model will update Yjs doc (solving sync issue). The code column will be updated on save
                     const slackConnectorModel =
-                      getModelByFilename('slack-connector.ts');
+                      getModelByFilename('slack-connector.ts') ||
+                      getModelByFilename('slack-connector.tsx');
 
                     const code = slackConnectorModel?.getValue();
                     if (!code) return;
