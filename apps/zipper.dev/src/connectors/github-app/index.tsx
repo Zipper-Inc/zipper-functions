@@ -48,10 +48,16 @@ import { HiOutlineTrash } from 'react-icons/hi';
 import { useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useRunAppContext } from '~/components/context/run-app-context';
-import { GithubAppConnectorInstallationMetadata } from '@zipper/types';
+import {
+  BootPayload,
+  GithubAppConnectorInstallationMetadata,
+} from '@zipper/types';
 import { getZipperDotDevUrl } from '@zipper/utils';
 import { HiOutlineCog, HiOutlineInformationCircle } from 'react-icons/hi2';
 import { useEditorContext } from '~/components/context/editor-context';
+import { updateConnectorConfig } from '~/utils/connector-codemod';
+import { editor } from 'monaco-editor';
+import { useMutation } from '@tanstack/react-query';
 
 export const githubAppConnector = createConnector({
   id: 'github-app',
@@ -69,8 +75,8 @@ The pre-filled code below will help you call GitHub's API on behalf of a specifi
   events,
 });
 
-function GitHubAppConnectorForm({ appId }: { appId: string }) {
-  const { scripts } = useEditorContext();
+export default function GitHubAppConnectorForm({ appId }: { appId: string }) {
+  const { scripts, getModelByFilename } = useEditorContext();
   const { isOpen, onClose, onOpen } = useDisclosure();
   const __scope_options = scopes.map((scope) => ({
     label: scope,
@@ -102,12 +108,14 @@ function GitHubAppConnectorForm({ appId }: { appId: string }) {
     value: [],
   });
 
+  const { boot } = useRunAppContext();
   const connectorForm = useForm({
     defaultValues: {
       isUserAuthRequired: false,
       organization: '',
     },
   });
+  const organizationValue = connectorForm.getValues('organization');
 
   const manifestForm = useForm({
     defaultValues: {
@@ -155,42 +163,21 @@ function GitHubAppConnectorForm({ appId }: { appId: string }) {
     [webhookName],
   )!;
 
-  const toast = useToast();
-
-  const context = trpc.useContext();
-  const router = useRouter();
-  const updateAppConnectorMutation = trpc.appConnector.update.useMutation({
-    onSuccess: () => {
-      context.app.byResourceOwnerAndAppSlugs.invalidate({
-        appSlug: router.query['app-slug'] as string,
-        resourceOwnerSlug: router.query['resource-owner'] as string,
-      });
-
-      context.githubAppConnector.get.invalidate({ appId });
-      toast({
-        title: 'GitHub Appconfig updated.',
-        status: 'success',
-        duration: 1500,
-        isClosable: true,
-      });
-    },
-  });
-
   const existingInstallation = connector.data?.metadata;
 
-  const saveConnector = async (data: any) => {
+  const connectorV2UpdateMutation = useConnectorV2UpdateMutation({
+    getModelByFilename,
+    scopesValue,
+    organizationValue,
+    eventsValue,
+    boot,
+    appId,
+  });
+
+  const saveConnector = async () => {
     if (stateValueQuery.data) {
       setIsSaving(true);
-
-      await updateAppConnectorMutation.mutateAsync({
-        appId,
-        type: 'github-app',
-        data: {
-          userScopes: scopesValue as string[],
-          events: eventsValue as string[],
-        },
-      });
-
+      await connectorV2UpdateMutation.mutateAsync();
       const manifest = JSON.stringify({
         url: `https://${appInfo.slug}.${process.env.NEXT_PUBLIC_ZIPPER_DOT_RUN_HOST}`,
         redirect_url: `${getZipperDotDevUrl()}/connectors/github-app/manifest-redirect`,
@@ -208,8 +195,8 @@ function GitHubAppConnectorForm({ appId }: { appId: string }) {
         }, {} as Record<string, string>),
       });
 
-      manifestForm.setValue('manifest', manifest);
-      manifestFormRef.current?.submit();
+      // manifestForm.setValue('manifest', manifest);
+      // manifestFormRef.current?.submit();
 
       setIsSaving(false);
     }
@@ -343,7 +330,7 @@ function GitHubAppConnectorForm({ appId }: { appId: string }) {
                           <form
                             ref={manifestFormRef}
                             action={
-                              connectorForm.getValues('organization').length > 0
+                              organizationValue.length > 0
                                 ? `https://github.com/organizations/${connectorForm.getValues(
                                     'organization',
                                   )}/settings/apps/new?state=${
@@ -488,4 +475,49 @@ function GitHubAppConnectorForm({ appId }: { appId: string }) {
   );
 }
 
-export default GitHubAppConnectorForm;
+const useConnectorV2UpdateMutation = (params: {
+  getModelByFilename: (filename: string) => editor.ITextModel | null;
+  scopesValue: string | string[] | undefined;
+  organizationValue: string;
+  eventsValue: string | string[] | undefined;
+  appId: string;
+  boot: (
+    params?: { shouldSave?: boolean | undefined } | undefined,
+  ) => Promise<BootPayload<false>>;
+}) => {
+  const context = trpc.useContext();
+  const router = useRouter();
+  const toast = useToast();
+
+  return useMutation({
+    mutationFn: async () => {
+      const githubAppConnectorModel =
+        params.getModelByFilename('github-app-connector.ts') ||
+        params.getModelByFilename('github-app-connector.tsx');
+
+      const code = githubAppConnectorModel?.getValue();
+      if (!code) return;
+      const newCode = updateConnectorConfig(code, 'githubAppConnectorConfig', {
+        scopes: params.scopesValue,
+        organization: params.organizationValue,
+        events: params.eventsValue,
+      });
+      githubAppConnectorModel?.setValue(newCode);
+      await params.boot({ shouldSave: true });
+    },
+    onSuccess: () => {
+      context.app.byResourceOwnerAndAppSlugs.invalidate({
+        appSlug: router.query['app-slug'] as string,
+        resourceOwnerSlug: router.query['resource-owner'] as string,
+      });
+
+      context.githubAppConnector.get.invalidate({ appId: params.appId });
+      toast({
+        title: 'GitHub Appconfig updated.',
+        status: 'success',
+        duration: 1500,
+        isClosable: true,
+      });
+    },
+  });
+};
