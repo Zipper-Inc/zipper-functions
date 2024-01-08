@@ -7,6 +7,10 @@ import { slugifyAllowDot } from '~/utils/slugify';
 import { hasAppEditPermission } from '../utils/authz.utils';
 import { kebabCase } from '~/utils/kebab-case';
 import { createTRPCRouter, publicProcedure } from '../root';
+import {
+  getFileExtension,
+  RunnableExtensionSchema,
+} from '~/utils/file-extension';
 
 const defaultSelect = Prisma.validator<Prisma.ScriptSelect>()({
   id: true,
@@ -45,7 +49,23 @@ export const scriptRouter = createTRPCRouter({
   add: publicProcedure
     .input(
       z.object({
-        name: z.string().min(1).max(255).transform(kebabCase),
+        filename: z
+          .string()
+          .min(1)
+          .max(255)
+          .transform((filename) => {
+            const extension = getFileExtension(filename);
+            if (!extension)
+              throw new Error(`Extension from ${filename} isnt allowed`);
+
+            const name = filename.replace(/\..+$/, '');
+
+            return {
+              full: `${kebabCase(name)}.${extension}`,
+              extension,
+              name,
+            };
+          }),
         description: z.string().optional(),
         appId: z.string().uuid(),
         code: z.string().default(DEFAULT_CODE),
@@ -67,25 +87,36 @@ export const scriptRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const { appId, ...data } = input;
+      const { appId, filename, ...data } = input;
       await hasAppEditPermission({ ctx, appId });
 
-      const extension = data.name.includes('.md') ? '.md' : '.ts';
-      const slugifiedName = slugifyAllowDot(data.name.replace(/\..+$/, ''));
-      const filename = `${slugifiedName}${extension}`;
-      const code =
-        extension === '.ts'
-          ? data.code
-          : extension === '.md'
-          ? DEFAULT_MD
-          : DEFAULT_CODE;
+      const isRunnableExtension = RunnableExtensionSchema.safeParse(
+        filename.extension,
+      ).success;
+
+      const code = (() => {
+        if (isRunnableExtension) {
+          return data.code;
+        }
+        if (filename.extension === 'md') {
+          return DEFAULT_MD;
+        }
+        if (filename.extension === 'json') {
+          return '{}';
+        }
+        if (filename.extension === 'ts' || filename.extension === 'tsx') {
+          return DEFAULT_CODE;
+        }
+        return '';
+      })();
 
       const script = await prisma.script.create({
         data: {
           ...data,
           code,
-          filename,
-          isRunnable: extension === '.ts' ? isCodeRunnable(data.code) : false,
+          name: filename.name,
+          filename: filename.full,
+          isRunnable: isRunnableExtension ? isCodeRunnable(data.code) : false,
           app: {
             connect: { id: appId },
           },
@@ -148,7 +179,7 @@ export const scriptRouter = createTRPCRouter({
       z.object({
         id: z.string().uuid(),
         data: z.object({
-          name: z.string().min(1).max(255).optional(),
+          filename: z.string().min(1).max(255).optional(),
           description: z.string().optional().nullable(),
         }),
       }),
@@ -166,8 +197,8 @@ export const scriptRouter = createTRPCRouter({
         appId: script.appId,
       });
 
-      const filename = data.name
-        ? `${slugifyAllowDot(data.name)}.ts`
+      const filename = data.filename
+        ? `${slugifyAllowDot(data.filename)}`
         : undefined;
       const hash = filename
         ? getScriptHash({
@@ -198,7 +229,7 @@ export const scriptRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const { appId, newFilename } = input;
 
-      if (newFilename.length < 4) return false;
+      if (newFilename.length <= 0) return false;
 
       await hasAppEditPermission({
         ctx,
@@ -208,7 +239,9 @@ export const scriptRouter = createTRPCRouter({
       const scripts = await prisma.script.findMany({
         where: {
           appId,
-          filename: `${newFilename}.ts`,
+          filename: {
+            startsWith: `${newFilename}.%`,
+          },
         },
         select: {
           filename: true,

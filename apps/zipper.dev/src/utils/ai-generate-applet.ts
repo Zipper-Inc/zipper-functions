@@ -714,7 +714,8 @@ export const codeOutputParser = StructuredOutputParser.fromZodSchema(
       filename: z
         .string()
         .endsWith('.ts')
-        .transform((filename) => filename.replace('.ts', ''))
+        .or(z.string().endsWith('.tsx'))
+        .transform((filename) => filename.replace(/\.(ts|tsx)$|$/, ''))
         .describe('The filename of the typescript code in kebab-case'),
       code: z.string().describe('The code that got generated'),
     }),

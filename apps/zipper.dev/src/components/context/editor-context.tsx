@@ -29,7 +29,6 @@ import {
 } from '~/utils/hashing';
 import { isZipperImportUrl } from '~/utils/eszip-utils';
 import {
-  getOrCreateScriptModel,
   isTypescript,
   parsePlaygroundQuery,
   PlaygroundTab,

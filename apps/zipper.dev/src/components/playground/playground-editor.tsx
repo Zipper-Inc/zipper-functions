@@ -224,6 +224,7 @@ export default function PlaygroundEditor(
         isolatedModules: true,
         target: monaco.languages.typescript.ScriptTarget.ES2020,
         allowNonTsExtensions: true,
+        resolveJsonModule: true,
         moduleResolution:
           monaco.languages.typescript.ModuleResolutionKind.NodeJs,
         lib: ['esnext', 'dom', 'deno.ns'],
@@ -239,6 +240,7 @@ export default function PlaygroundEditor(
         isolatedModules: true,
         target: monaco.languages.typescript.ScriptTarget.ES2020,
         allowNonTsExtensions: true,
+        resolveJsonModule: true,
         moduleResolution:
           monaco.languages.typescript.ModuleResolutionKind.NodeJs,
         lib: ['esnext', 'dom', 'deno.ns'],
@@ -597,7 +599,7 @@ export default function PlaygroundEditor(
           openerService: {
             open: function (url: string) {
               const ext =
-                isExternalResource(url) && !url.endsWith('tsx') ? 'ts' : 'tsx';
+                isExternalResource(url) && url.endsWith('ts') ? 'ts' : 'tsx';
               const resource = getUriFromPath(url, monaco.Uri.parse, ext);
               // Don't try to open URLs that have models
               // They will open from the defintion code
