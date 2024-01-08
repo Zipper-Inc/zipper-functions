@@ -182,7 +182,6 @@ test('parseInputForTypes should solve Date', () => {
 test('parseInputForTypes should solve Object { foo: string } ', () => {
   const result = parseInputForTypes({
     code: `export async function handler({ type }: { type: { foo: string } }) {
-      console.log(type);
       return type;
     }
     `,
@@ -199,25 +198,86 @@ test('parseInputForTypes should solve Object { foo: string } ', () => {
 });
 
 // ✅ New Feature
-test('parseInputForTypes should solve Array of literal "view:history" OR "edit:bookmark"', () => {
+test('parseInputForTypes should solve array<number> ', () => {
   const result = parseInputForTypes({
-    code: `export async function handler({ type }: { type: ("view:history" | "edit:bookmark")[] }) {
-      console.log(type);
+    code: `export async function handler({ type }: { type: Array<number> }) {
       return type;
     }
     `,
     throwErrors: true,
   });
-  console.log(result);
   expect(result).toEqual([
     {
       key: 'type',
       optional: false,
       type: 'array',
       details: {
+        isUnion: false,
+        values: { type: 'number' },
+      },
+    },
+  ]);
+});
+
+// ✅ New Feature
+test('parseInputForTypes should solve array<{ ok: true; data: string[] } |  { ok: false }> ', () => {
+  const result = parseInputForTypes({
+    code: `export const handler = ({ type }: { type: Array<{ ok: true; data: string[] } | { ok: false }>; }) => type`,
+    throwErrors: true,
+  });
+  expect(result).toEqual([
+    {
+      key: 'type',
+      optional: false,
+      type: 'array',
+      details: {
+        isUnion: true,
         values: [
-          { key: 'string', details: { literal: 'view:history' } },
-          { key: 'string', details: { literal: 'edit:bookmark' } },
+          {
+            type: 'object',
+            details: {
+              properties: {
+                ok: { type: 'boolean', details: { literal: 'true' } },
+                data: {
+                  type: 'array',
+                  details: {
+                    isUnion: false,
+                    values: { type: 'string' },
+                  },
+                },
+              },
+            },
+          },
+          {
+            type: 'object',
+            details: {
+              properties: {
+                ok: { type: 'boolean', details: { literal: 'false' } },
+              },
+            },
+          },
+        ],
+      },
+    },
+  ]);
+});
+
+// ✅ New Feature
+test('parseInputForTypes should solve Array of literal "view:history" OR "edit:bookmark"', () => {
+  const result = parseInputForTypes({
+    code: `export const handler = ({ type }: { type: ("view:history" | "edit:bookmark")[] }) => type`,
+    throwErrors: true,
+  });
+  expect(result).toEqual([
+    {
+      key: 'type',
+      optional: false,
+      type: 'array',
+      details: {
+        isUnion: true,
+        values: [
+          { type: 'string', details: { literal: 'view:history' } },
+          { type: 'string', details: { literal: 'edit:bookmark' } },
         ],
       },
     },

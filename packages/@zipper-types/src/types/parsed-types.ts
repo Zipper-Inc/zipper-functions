@@ -5,7 +5,12 @@ export type ParsedNode =
   | { type: InputType.number; details?: { literal: string } }
   | { type: InputType.string; details?: { literal: string } }
   | { type: InputType.date }
-  | { type: InputType.array }
+  | {
+      type: InputType.array;
+      details?:
+        | { isUnion: true; values: ParsedNode[] }
+        | { isUnion: false; values: ParsedNode };
+    }
   | { type: InputType.any }
   | { type: InputType.file }
   | { type: InputType.unknown }

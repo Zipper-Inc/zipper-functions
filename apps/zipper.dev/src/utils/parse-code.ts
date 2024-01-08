@@ -57,12 +57,16 @@ function parsePrimitiveType(type: Type): ParsedNode {
   if (type.isUnknown()) return { type: InputType.unknown };
   if (type.isAny()) return { type: InputType.any };
 
-  if (type.isArray() || type.isReadonlyArray())
-    return { type: InputType.array, details: { values: [] } };
-
+  // For Array and Object, I would like to wrap the inner type in a TypeNode and call parseTypeNode recursively
+  // How?
+  // if (type.isArray())
+  // return { type: InputType.array, details: { values: [] } };
+  // if (type.isObject())
+  // return { type: InputType.object, details: { properties: [] } };
 
   if (type.getText().toLowerCase() === 'zipper.fileurl')
     return { type: InputType.file };
+
   if (type.getText().toLowerCase() === 'date') return { type: InputType.date };
 
   return { type: InputType.unknown };
@@ -86,6 +90,52 @@ function parseTypeNode(typeNode: TypeNode, src: SourceFile): ParsedNode {
     };
   }
 
+  // Parses an object like: { foo: string, bar: string }
+  if (typeNode.isKind(SyntaxKind.TypeLiteral)) {
+    const typeLiteralProperties = typeNode.getProperties();
+
+    const propDetails = typeLiteralProperties.map((prop) => {
+      const propTypeNode = prop.getTypeNode();
+      return {
+        key: prop.getName(),
+        details: propTypeNode
+          ? parseTypeNode(propTypeNode, src)
+          : ({
+              type: InputType.unknown,
+            } satisfies ParsedNode),
+      };
+    });
+    return {
+      type: InputType.object,
+      details: { properties: propDetails },
+    };
+  }
+
+  if (type.isArray() || type.isReadonlyArray()) {
+    const insideArray = type.getArrayElementType();
+
+    // If the array is a union, we need to parse the union types
+    if (insideArray?.isUnion()) {
+      const unionValues = insideArray.getUnionTypes().map(parsePrimitiveType);
+      return {
+        type: InputType.array,
+        details: {
+          isUnion: true,
+          values: unionValues,
+        },
+      };
+    }
+
+    return {
+      type: InputType.array,
+      details: {
+        isUnion: false,
+        values: insideArray
+          ? parsePrimitiveType(insideArray)
+          : { type: InputType.unknown },
+      },
+    };
+  }
 
   // Solves the case of a type reference, like: type Foo = { foo: string, bar: string } in { input : Foo }
   if (typeNode.isKind(SyntaxKind.TypeReference)) {
@@ -216,6 +266,8 @@ export function getSourceFileFromCode(code = '', filename = 'main.ts') {
               moduleResolutionHost,
             );
             if (result.resolvedModule)
+              // TODO -- check if Monaco remote Uri files are included here
+              // if not, this may be the reason of why we cant solve input for imported files
               resolvedModules.push(result.resolvedModule);
           }
 
