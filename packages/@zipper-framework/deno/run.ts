@@ -60,12 +60,12 @@ async function runApplet({ request: relayRequest }: Deno.RequestEvent) {
     });
   }
 
-  let body;
+  let body: Zipper.Relay.RequestBody | undefined;
   let error;
 
   // Parse the body
   try {
-    body = (await relayRequest.json()) as Zipper.Relay.RequestBody;
+    body = await relayRequest.json();
   } catch (e) {
     error = e;
   }
@@ -99,19 +99,23 @@ async function runApplet({ request: relayRequest }: Deno.RequestEvent) {
       set: (key, value) =>
         envSet({ appId, key, value, userId: userInfo?.userId }),
     } as typeof Zipper.env,
+
     storage: new ZipperStorage(appId),
+
     Component: {
       create: (component) => ({
         $zipperType: 'Zipper.Component',
         ...component,
       }),
     },
+
     Action: {
       create: (action) => ({
         $zipperType: 'Zipper.Action',
         ...action,
       }),
     },
+
     Router: {
       redirect: (url) => ({
         $zipperType: 'Zipper.Router',
@@ -132,6 +136,7 @@ async function runApplet({ request: relayRequest }: Deno.RequestEvent) {
           .join(' '),
       }),
     },
+
     JSX: {
       createElement: (tag, props, ...children) => {
         if (typeof tag === 'function') {
@@ -171,10 +176,22 @@ async function runApplet({ request: relayRequest }: Deno.RequestEvent) {
   const path: string = (body.path || MAIN_PATH).replace(/\.(ts|tsx)$|$/, '.ts');
   const { handler: exportedHandler, actions: exportedActions } = files[path];
 
+  let handler;
+
   // Use the action handler if this is an action request
-  const handler = body.action
-    ? exportedActions?.[body.action]
-    : exportedHandler;
+  if (body.action && exportedActions?.[body.action]) {
+    const action = exportedActions[body.action];
+    /**
+     * @todo
+     * decide which way we like better
+     */
+    handler =
+      typeof action === 'function'
+        ? (action as Zipper.Handler)
+        : (action as Zipper.HandlerAction).handler;
+  } else {
+    handler = exportedHandler;
+  }
 
   // Handle missing paths
   if (!handler) {
@@ -198,6 +215,7 @@ async function runApplet({ request: relayRequest }: Deno.RequestEvent) {
       get: (key) => stash[key],
       set: (key, value) => (stash[key] = value),
     };
+
     const context: Zipper.HandlerContext = {
       userInfo,
       appInfo: body.appInfo,

@@ -667,7 +667,7 @@ export const getServerSideProps: GetServerSideProps = async ({
       bootPayload,
     );
 
-  const { bootInfo } = bootPayload;
+  const { bootInfo, configs: handlerConfigs } = bootPayload;
   const { app, entryPoint, parsedScripts, runnableScripts } = bootInfo;
 
   const version = (versionFromUrl || 'latest').replace(/^@/, '');
@@ -676,10 +676,10 @@ export const getServerSideProps: GetServerSideProps = async ({
 
   if (!runnableScripts.includes(filename)) return { notFound: true };
 
-  const file = findFileInParsedScripts(filename, parsedScripts);
+  const parsedFile = findFileInParsedScripts(filename, parsedScripts);
+  const parsedAction = actionFromUrl && parsedFile?.actions?.[actionFromUrl];
   const inputParams: InputParams =
-    (actionFromUrl ? file?.actions?.[actionFromUrl]?.inputs : file?.inputs) ||
-    [];
+    parsedAction?.inputs || parsedFile?.inputs || [];
 
   const metadata = bootInfo.metadata || {};
 
@@ -688,9 +688,7 @@ export const getServerSideProps: GetServerSideProps = async ({
     [X_ZIPPER_TEMP_USER_ID]: tempUserId || '',
   };
 
-  const { configs: handlerConfigs } = bootPayload;
-
-  const config = handlerConfigs && handlerConfigs[filename];
+  const config = parsedAction?.config || handlerConfigs?.[filename] || {};
 
   const urlValues = inputParams
     ? getInputValuesFromUrl({

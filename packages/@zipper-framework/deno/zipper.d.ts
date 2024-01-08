@@ -135,6 +135,7 @@ declare namespace Zipper {
     context: HandlerContext,
   ) => Output | Promise<Output>;
 
+  /** @todo we don't have an easy way to create these yet, but leaving the type in here for future us.  */
   /** A specific action unique to this handler. Exported with on the actions object. */
   export type HandlerAction<I = Inputs> = {
     /** The handler's name */
@@ -145,6 +146,10 @@ declare namespace Zipper {
     handler: Handler<I>;
     /** The configuration for this action */
     config?: HandlerConfig<I>;
+
+    (action: Omit<ButtonAction<I> | DropdownAction<I>, 'path' | 'actionType'>):
+      | ButtonAction<I>
+      | DropdownAction<I>;
   };
 
   /**
