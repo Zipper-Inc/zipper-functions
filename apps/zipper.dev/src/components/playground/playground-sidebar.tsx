@@ -46,6 +46,7 @@ import {
   isConnector,
 } from '~/utils/playground.utils';
 import { Markdown } from '@zipper/ui';
+import { getFileExtension } from '~/utils/file-extension';
 
 // Order should always be:
 // - README.md
