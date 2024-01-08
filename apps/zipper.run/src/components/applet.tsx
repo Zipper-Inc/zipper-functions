@@ -434,7 +434,7 @@ export function AppPage({
       position="relative"
       w="full"
       h="full"
-      px={{ base: 4, md: 8 }}
+      px={{ base: '4', md: '10' }}
       pt={0}
       mt={isEmbedded ? 4 : 0}
     >

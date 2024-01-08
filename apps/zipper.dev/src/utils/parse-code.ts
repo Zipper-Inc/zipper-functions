@@ -266,6 +266,17 @@ function parseHandlerInputs(
     return [];
   }
 
+  const paramsWithDefaultValue = params
+    .getFirstChildByKind(SyntaxKind.ObjectBindingPattern)
+    ?.getElements()
+    .reduce((acc, curr) => {
+      const key = curr.getFirstChildByKind(SyntaxKind.Identifier)?.getText();
+      const value = curr.getInitializer();
+      if (key && value) {
+        return { ...acc, [key]: value.getText() };
+      }
+      return acc;
+    }, {} as Record<string, string>);
   const typeNode = params.getTypeNode();
 
   if (!typeNode || typeNode?.isKind(SyntaxKind.AnyKeyword)) {
@@ -285,7 +296,6 @@ function parseHandlerInputs(
       ? // A type literal, like `params: { foo: string, bar: string }`
         (typeNode as any)?.getProperties()
       : // A type reference, like `params: Params`
-
         // Finds the type alias by its name and grabs the node from there
         (
           src.getTypeAlias(typeNode?.getText() as string)?.getTypeNode() as any
@@ -302,6 +312,8 @@ function parseHandlerInputs(
   }
 
   return props.map((prop) => {
+    const isOptional =
+      prop.hasQuestionToken() || !!paramsWithDefaultValue?.[prop.getName()];
     const typeNode = prop.getTypeNode();
     if (!typeNode) {
       // Typescript defaults to any if it can't find the type
@@ -309,18 +321,19 @@ function parseHandlerInputs(
       return {
         key: prop.getName(),
         type: InputType.any,
-        optional: prop.hasQuestionToken(),
+        optional: isOptional,
       };
     }
 
     const typeDetails = parseTypeNode(typeNode, src);
 
-    return {
+    const result = {
       key: prop.getName(),
       type: typeDetails.type,
-      optional: prop.hasQuestionToken(),
+      optional: isOptional,
       ...('details' in typeDetails && { details: typeDetails.details }),
     };
+    return result;
   });
 }
 

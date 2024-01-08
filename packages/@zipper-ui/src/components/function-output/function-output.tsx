@@ -299,11 +299,7 @@ export function FunctionOutput({
                     : 4
                 }
               >
-                <Box
-                  width="full"
-                  data-function-output="smart"
-                  whiteSpace="pre-wrap"
-                >
+                <Box width="full" data-function-output="smart">
                   <SmartFunctionOutputProvider
                     outputSection="expanded"
                     config={config}
@@ -541,7 +537,6 @@ export function FunctionOutput({
                       width="full"
                       height="full"
                       data-function-output="smart"
-                      whiteSpace="pre-wrap"
                     >
                       <SmartFunctionOutputProvider
                         config={config}

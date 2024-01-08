@@ -36,7 +36,7 @@ export type ScriptItemProps = {
   script: Script;
   isEditable: boolean;
   isRenaming: boolean;
-  renameForm: UseFormReturn<{ name: string }>;
+  renameForm: UseFormReturn<{ fileName: string }>;
   renameScript: (id: string, name: string) => void;
   onDelete: (id: string) => void;
   onDuplicate: (id: string) => void;
@@ -50,8 +50,8 @@ const ScriptIcon = ({ script, ...propsPassedIn }: { script: Script } & any) => {
   if (isReadme(script)) return <PiNote {...props} />;
   else if (isMain(script)) return <PiCode {...props} size="16px" />;
   else if (isHandler(script)) return <PiCodeSimpleDuotone {...props} />;
-  else if (isLib(script)) return <PiCodeSimple {...props} />;
   else if (isConnector(script)) return <PiPlugsDuotone {...props} />;
+  else if (isLib(script)) return <PiCodeSimple {...props} />;
   else return <PiQuestion {...props} />;
 };
 
@@ -97,11 +97,11 @@ export const ScriptItem: React.FC<ScriptItemProps> = ({
       {isRenaming ? (
         <Flex grow={1}>
           <form
-            onSubmit={renameForm.handleSubmit(({ name }) => {
-              if (name.length === 0) {
+            onSubmit={renameForm.handleSubmit(({ fileName }) => {
+              if (fileName.length === 0) {
                 return;
               }
-              renameScript(script.id, name);
+              renameScript(script.id, fileName);
             })}
           >
             <Input
@@ -117,7 +117,7 @@ export const ScriptItem: React.FC<ScriptItemProps> = ({
               onKeyDown={(e) => {
                 if (e.key === 'Escape') onEndRenaming();
               }}
-              {...renameForm.register('name', { value: script.name })}
+              {...renameForm.register('fileName', { value: script.filename })}
             />
           </form>
         </Flex>
