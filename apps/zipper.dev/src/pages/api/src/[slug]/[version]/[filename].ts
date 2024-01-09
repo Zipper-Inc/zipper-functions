@@ -46,8 +46,7 @@ export default async function handler(
       return (
         loweredScriptFilename === loweredQueryFilename ||
         loweredScriptFilename === `${loweredQueryFilename}.ts` ||
-        loweredScriptFilename === `${loweredQueryFilename}.tsx` ||
-        loweredScriptFilename === `${loweredQueryFilename}x`
+        loweredScriptFilename === `${loweredQueryFilename}.tsx`
       );
     });
 
