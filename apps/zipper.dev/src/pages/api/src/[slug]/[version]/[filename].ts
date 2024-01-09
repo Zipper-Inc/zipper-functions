@@ -45,7 +45,9 @@ export default async function handler(
       const loweredScriptFilename = script.filename.toLowerCase();
       return (
         loweredScriptFilename === loweredQueryFilename ||
-        loweredScriptFilename === `${loweredQueryFilename}.ts`
+        loweredScriptFilename === `${loweredQueryFilename}.ts` ||
+        loweredScriptFilename === `${loweredQueryFilename}.tsx` ||
+        loweredScriptFilename === `${loweredQueryFilename}x`
       );
     });
 
