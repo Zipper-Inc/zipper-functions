@@ -139,6 +139,17 @@ async function runApplet({ request: relayRequest }: Deno.RequestEvent) {
 
     JSX: {
       createElement: (tag, props, ...children) => {
+        // serialize action prop if it exists
+        if (
+          props?.handler &&
+          typeof props.handler === 'function' &&
+          typeof (props.handler as Zipper.Handler).__handlerMeta === 'object'
+        ) {
+          props.handler = {
+            __handlerMeta: (props.handler as Zipper.Handler).__handlerMeta,
+          };
+        }
+
         if (typeof tag === 'function') {
           return tag({ ...props, children });
         } else {
@@ -180,15 +191,7 @@ async function runApplet({ request: relayRequest }: Deno.RequestEvent) {
 
   // Use the action handler if this is an action request
   if (body.action && exportedActions?.[body.action]) {
-    const action = exportedActions[body.action];
-    /**
-     * @todo
-     * decide which way we like better
-     */
-    handler =
-      typeof action === 'function'
-        ? (action as Zipper.Handler)
-        : (action as Zipper.HandlerAction).handler;
+    handler = exportedActions[body.action] as Zipper.Handler;
   } else {
     handler = exportedHandler;
   }

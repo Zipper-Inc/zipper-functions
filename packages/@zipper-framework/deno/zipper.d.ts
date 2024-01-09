@@ -130,26 +130,13 @@ declare namespace Zipper {
    *   worldString,
    * }) => `Hello ${worldString}`;
    */
-  export type Handler<I = Inputs> = (
-    inputs: I,
-    context: HandlerContext,
-  ) => Output | Promise<Output>;
-
-  /** @todo we don't have an easy way to create these yet, but leaving the type in here for future us.  */
-  /** A specific action unique to this handler. Exported with on the actions object. */
-  export type HandlerAction<I = Inputs> = {
-    /** The handler's name */
-    name: string;
-    /** Path to call the handler */
-    path: string;
-    /** The handler function to run when this action is called */
-    handler: Handler<I>;
-    /** The configuration for this action */
+  export type Handler<I = Inputs> = {
+    (inputs: I, context: HandlerContext): Output | Promise<Output>;
+    __handlerMeta?: {
+      name: string;
+      path: string;
+    };
     config?: HandlerConfig<I>;
-
-    (action: Omit<ButtonAction<I> | DropdownAction<I>, 'path' | 'actionType'>):
-      | ButtonAction<I>
-      | DropdownAction<I>;
   };
 
   /**
@@ -281,6 +268,10 @@ declare namespace Zipper {
      * The inputs to run the function with
      */
     inputs?: I;
+    /**
+     * The handler meta object
+     */
+    handler?: Pick<Zipper.Handler<I>, '__handlerMeta'>;
   }
 
   interface ButtonAction<I = Inputs>
@@ -663,9 +654,30 @@ type LinkProps = Zipper.LinkComponent['props'];
 declare function Link(props: LinkProps): Zipper.Component;
 
 type ButtonProps<I> = Omit<Zipper.ButtonAction<I>, 'actionType' | 'text'>;
+type ButtonPropsWithHandler<I> = Omit<ButtonProps<I>, 'path'> & {
+  handler: Zipper.Handler<I>;
+};
+
 declare function Button<I = Zipper.Inputs>(
   props: ButtonProps<I> & Zipper.ButtonComponentProps,
-): Zipper.Action;
+): Zipper.Action<I>;
+
+declare function Button<I = Zipper.Inputs>(
+  props: ButtonPropsWithHandler<I> & Zipper.ButtonComponentProps,
+): Zipper.Action<I>;
+
+type DropdownProps<I> = Omit<Zipper.DropdownAction<I>, 'actionType'>;
+type DropdownPropsWithHandler<I> = Omit<DropdownProps<I>, 'path'> & {
+  handler: Zipper.Handler<I>;
+};
+
+declare function Dropdown<I = Zipper.Inputs>(
+  props: DropdownProps<I>,
+): Zipper.Action<I>;
+
+declare function Dropdown<I = Zipper.Inputs>(
+  props: DropdownPropsWithHandler<I>,
+): Zipper.Action<I>;
 
 type LineChartProps = Zipper.LineChartComponent['props'];
 declare function LineChart(props: LineChartProps): Zipper.Component;
@@ -679,11 +691,6 @@ declare function md(
   strings: TemplateStringsArray,
   ...expr: string[]
 ): Zipper.Component;
-
-type DropdownProps<I> = Omit<Zipper.DropdownAction<I>, 'actionType'>;
-declare function Dropdown<I = Zipper.Inputs>(
-  props: DropdownProps<I>,
-): Zipper.Action;
 
 // All HTML Tags
 type HtmlTag =

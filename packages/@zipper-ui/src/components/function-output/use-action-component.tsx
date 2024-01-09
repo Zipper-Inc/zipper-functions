@@ -22,6 +22,9 @@ export const findFileInParsedScripts = (
   return found ? found[1] : undefined;
 };
 
+const getActionPath = (action: Zipper.ButtonAction | Zipper.DropdownAction) =>
+  ((action as any)?.handler?.__handlerMeta?.path as string) || action.path;
+
 export const useActionComponent = (
   action: Zipper.ButtonAction | Zipper.DropdownAction,
 ) => {
@@ -96,12 +99,12 @@ export const useActionComponent = (
         }),
         defaultValues: defaultValues,
       },
-      path: action.path,
+      path: getActionPath(action),
     });
   };
 
   const runScript = async () => {
-    const runPath = action.path;
+    const runPath = getActionPath(action);
     const inputs = await getInputsFromPath();
 
     const {

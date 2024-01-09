@@ -16,7 +16,7 @@ export const files: {
     handler?: Zipper.Handler<any>;
     config?: Zipper.HandlerConfig<any>;
     /** @todo decide what makes sense here */
-    actions?: Record<string, Zipper.Handler | Zipper.HandlerAction<any>>;
+    actions?: Record<string, Zipper.Handler<any>>;
   };
 } = {
   [MAIN_PATH]: main,

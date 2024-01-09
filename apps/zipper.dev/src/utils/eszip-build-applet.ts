@@ -1,6 +1,7 @@
 import * as eszip from '@deno/eszip';
 import { App, Script } from '@prisma/client';
 import { generateIndexForFramework } from '@zipper/utils';
+import { parse } from 'path';
 import { SourceFile, Statement } from 'ts-morph';
 import { prisma } from '~/server/prisma';
 import { storeVersionESZip } from '~/server/utils/r2.utils';
@@ -14,7 +15,12 @@ import {
   TYPESCRIPT_CONTENT_HEADERS,
 } from './eszip-utils';
 import { getAppHashAndVersion } from './hashing';
-import { getSourceFileFromCode, isClientModule } from './parse-code';
+import {
+  getSourceFileFromCode,
+  isClientModule,
+  parseActions,
+  parseInputForTypes,
+} from './parse-code';
 import { prettyLog, PRETTY_LOG_TOKENS } from './pretty-log';
 import { readFrameworkFile } from './read-file';
 import { rewriteImports, Target } from './rewrite-imports';
@@ -114,16 +120,51 @@ export async function build({
         const src = getSourceFileFromCode(script?.code || '');
 
         let rewrittenCode = rewriteImports(src);
+
         if (isClientModule({ src })) {
           rewrittenCode = `/// <reference lib="dom" />\n${rewrittenCode}`;
-          return {
-            ...applyTsxHack({
-              specifier,
-              code: rewrittenCode,
-              isMain: specifier.endsWith('main.ts'),
-            }),
-            version,
-          };
+        }
+
+        const hasHandler = !!parseInputForTypes({
+          code: src.getText(),
+          src,
+          throwErrors: false,
+        });
+
+        if (hasHandler) {
+          const handlerMeta = `handler.__handlerMeta = ${JSON.stringify({
+            name: filename.replace(/\.tsx?$/, ''),
+            path: `/${filename}`,
+          })}`;
+          const inputTypes = `export type __handlerInputs = Parameters<typeof handler>[0]`;
+          rewrittenCode = `${rewrittenCode}\n${handlerMeta};${inputTypes};`;
+        }
+
+        const actions = parseActions({
+          code: src.getText(),
+          src,
+          throwErrors: false,
+        });
+        const actionNames = Object.keys(actions || {});
+
+        if (actionNames?.length) {
+          const actionsMeta = actionNames.map((name) => {
+            const meta = JSON.stringify({
+              name,
+              path: `/${filename}/$${name}`,
+            });
+
+            return `actions['${name}'].__handlerMeta = ${meta}`;
+          });
+
+          const actionInputTypes = actionNames.map(
+            (name) =>
+              `export type __$${name}Inputs = Parameters<typeof actions['${name}']>[0]`,
+          );
+
+          rewrittenCode = `${rewrittenCode}\n${actionsMeta
+            .concat(...actionInputTypes)
+            .join(';')};`;
         }
 
         return {
