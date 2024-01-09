@@ -16,12 +16,12 @@ import {
   useMediaQuery,
   Flex,
 } from '@chakra-ui/react';
-import { getAppLink, getZipperDotDevUrl } from '@zipper/utils';
+import { getAppLink, getZipperDotDevUrl, removeExtension } from '@zipper/utils';
 import { BLUE, useEffectOnce, ZipperSymbol } from '@zipper/ui';
 import { HiOutlinePencilAlt } from 'react-icons/hi';
 import { MdLogin } from 'react-icons/md';
 import { AppInfo, EntryPointInfo } from '@zipper/types';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/router';
 import { FiChevronDown, FiChevronUp, FiLink } from 'react-icons/fi';
 import { readJWT } from '~/utils/get-zipper-auth';
@@ -87,6 +87,11 @@ const Header: React.FC<HeaderProps> = ({
     return <></>;
   }
 
+  const entryPointName = useMemo(
+    () => removeExtension(entryPoint.filename),
+    [entryPoint],
+  );
+
   /* -------------------------------------------- */
   /* Components                                   */
   /* -------------------------------------------- */
@@ -108,7 +113,7 @@ const Header: React.FC<HeaderProps> = ({
                     fontWeight="semibold"
                     color="fg.800"
                   >
-                    {entryPoint.filename.slice(0, -3)}
+                    {entryPointName}
                   </Text>
                   {isOpen ? <FiChevronUp /> : <FiChevronDown />}
                 </HStack>
@@ -125,7 +130,7 @@ const Header: React.FC<HeaderProps> = ({
                     }}
                     _hover={{ background: 'none' }}
                   >
-                    {entryPoint.filename.slice(0, -3)}
+                    {entryPointName}
                   </Link>
                 </Box>
 
@@ -141,16 +146,16 @@ const Header: React.FC<HeaderProps> = ({
                   <Text>Other paths:</Text>
                 </Box>
                 {runnableScripts
-                  .filter((s) => s !== entryPoint.filename)
+                  .filter((filename) => filename !== entryPoint.filename)
                   .sort()
-                  .map((s, i) => {
+                  .map((filename, i) => {
                     return (
                       <MenuItem
-                        key={`${s}-${i}`}
+                        key={`${filename}-${i}`}
                         onClick={() => {
                           onClose();
                           setLoading(true);
-                          router.push(`/${s}`);
+                          router.push(`/${filename}`);
                         }}
                         backgroundColor="fg.50"
                         px="4"
@@ -161,7 +166,7 @@ const Header: React.FC<HeaderProps> = ({
                           pb: 4,
                         }}
                       >
-                        {s.slice(0, -3)}
+                        {removeExtension(filename)}
                       </MenuItem>
                     );
                   })}
