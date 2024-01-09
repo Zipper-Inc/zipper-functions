@@ -1,12 +1,13 @@
-function genHslCollorPallet(var_name) {
-  return [50, 100, 200, 300, 400, 500, 600, 800, 900, 950].reduce(
-    (acc, curr) => ({
-      ...acc,
-      [curr]: `hsl(var(--${var_name}-${curr}))`,
-    }),
-    {},
-  );
-}
+import {
+  brand,
+  neutral,
+  primary,
+  secondary,
+  status,
+  layout,
+} from './src/tokens/colors';
+import { animation, keyframes } from './src/tokens/animation';
+import { fontFamily } from './src/tokens/fonts';
 
 /** @type {import('tailwindcss').Config} */
 const config = {
@@ -21,70 +22,23 @@ const config = {
   theme: {
     container: {
       center: true,
-      padding: '2rem',
+      padding: '1rem',
       screens: {
         '2xl': '1400px',
       },
     },
+    colors: {
+      ...primary,
+      ...secondary,
+      ...neutral,
+      ...brand,
+      ...status,
+      ...layout,
+    },
     extend: {
-      colors: {
-        'primary-purple': genHslCollorPallet('primary-purple'),
-        'primary-blue': genHslCollorPallet('primary-blue'),
-        'primary-red': genHslCollorPallet('primary-red'),
-        'secondary-gray': genHslCollorPallet('secondary-gray'),
-        'secondary-blue': genHslCollorPallet('secondary-blue'),
-        'secondary-purple': genHslCollorPallet('secondary-purple'),
-        'secondary-pink': genHslCollorPallet('secondary-pink'),
-        'secondary-green': genHslCollorPallet('secondary-green'),
-        'secondary-yellow': genHslCollorPallet('secondary-yellow'),
-        border: 'hsl(var(--border))',
-        background: 'hsl(var(--background))',
-        foreground: 'hsl(var(--foreground))',
-        success: 'hsl(var(--success))',
-        success: 'hsl(var(---success))',
-        error: 'hsl(var(---error))',
-        warning: 'hsl(var(---warning))',
-        primary: {
-          DEFAULT: 'hsl(var(--primary))',
-          foreground: 'hsl(var(--primary-foreground))',
-        },
-        destructive: {
-          DEFAULT: 'hsl(var(--destructive))',
-          foreground: 'hsl(var(--destructive-foreground))',
-        },
-        accent: {
-          DEFAULT: 'hsl(var(--accent))',
-          foreground: 'hsl(var(--accent-foreground))',
-        },
-        popover: {
-          DEFAULT: 'hsl(var(--popover))',
-          foreground: 'hsl(var(--popover-foreground))',
-        },
-        card: {
-          DEFAULT: 'hsl(var(--card))',
-          foreground: 'hsl(var(--card-foreground))',
-        },
-      },
-      keyframes: {
-        'accordion-down': {
-          from: { height: 0 },
-          to: { height: 'var(--radix-accordion-content-height)' },
-        },
-        'accordion-up': {
-          from: { height: 'var(--radix-accordion-content-height)' },
-          to: { height: 0 },
-        },
-      },
-      animation: {
-        'accordion-down': 'accordion-down 0.2s ease-out',
-        'accordion-up': 'accordion-up 0.2s ease-out',
-      },
-      fontFamily: {
-        body: ['var(--font-inter)'],
-        heading: ['var(--font-plaak)', 'sans-serif'],
-        mono: ['Monaco', 'Monaco', 'monospace'],
-        plak: ['"Plaak"', 'sans-serif'],
-      },
+      keyframes,
+      animation,
+      fontFamily,
     },
   },
   plugins: [require('tailwindcss-animate')],
