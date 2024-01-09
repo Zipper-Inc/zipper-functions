@@ -36,7 +36,7 @@ import {
   isLib,
   isConnector,
 } from '~/utils/playground.utils';
-import { getFileExtension } from '~/utils/file-extension';
+import { getFileExtension } from '@zipper/utils';
 
 // Order should always be:
 // - README.md

@@ -9,6 +9,7 @@ export * from '../src/utils/crypto.utils';
 export { default as cryptoUtils } from '../src/utils/crypto.utils';
 export * from '../src/utils/datetime';
 export * from '../src/utils/deployment-id';
+export * from '../src/utils/file-extensions';
 export * from '../src/utils/form';
 export * from '../src/utils/generate-for-framework';
 export * from '../src/utils/get-app-link';

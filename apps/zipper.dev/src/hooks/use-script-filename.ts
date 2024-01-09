@@ -1,3 +1,4 @@
+import { removeExtension } from '@zipper/utils';
 import { useDebounce } from 'use-debounce';
 import { slugifyAllowDot } from '~/utils/slugify';
 import { trpc } from '~/utils/trpc';
@@ -5,7 +6,7 @@ import { trpc } from '~/utils/trpc';
 export const MIN_SLUG_LENGTH = 5;
 
 export const useScriptFilename = (filename = '', appId: string) => {
-  const filenameWithoutExt = filename.split('.').slice(0, -1).join('.');
+  const filenameWithoutExt = removeExtension(filename);
 
   const [debouncedFilename] = useDebounce(filenameWithoutExt, 500);
 

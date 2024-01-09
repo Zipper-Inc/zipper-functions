@@ -7,10 +7,8 @@ import { slugifyAllowDot } from '~/utils/slugify';
 import { hasAppEditPermission } from '../utils/authz.utils';
 import { kebabCase } from '~/utils/kebab-case';
 import { createTRPCRouter, publicProcedure } from '../root';
-import {
-  getFileExtension,
-  RunnableExtensionSchema,
-} from '~/utils/file-extension';
+import { RunnableExtensionSchema } from '~/utils/file-extension';
+import { getFileExtension } from '@zipper/utils';
 
 const defaultSelect = Prisma.validator<Prisma.ScriptSelect>()({
   id: true,
