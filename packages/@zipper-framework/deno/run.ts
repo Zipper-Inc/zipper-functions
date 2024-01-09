@@ -184,7 +184,7 @@ async function runApplet({ request: relayRequest }: Deno.RequestEvent) {
   });
 
   // Grab the handler from either the exported handler or an action
-  const path: string = (body.path || MAIN_PATH).replace(/\.(ts|tsx)$|$/, '.ts');
+  const path: string = body.path || MAIN_PATH;
   const { handler: exportedHandler, actions: exportedActions } = files[path];
 
   let handler;

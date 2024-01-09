@@ -6,7 +6,7 @@ import { isExternalImport } from '~/utils/parse-code';
 import { isZipperImportUrl, X_ZIPPER_ESZIP_BUILD } from '~/utils/eszip-utils';
 import Fuse from 'fuse.js';
 import { rewriteSpecifier } from '~/utils/rewrite-imports';
-import { getFileExtension } from './file-extension';
+import { getFileExtension } from '@zipper/utils';
 
 /** This string indicates which errors we own in the editor */
 export const ZIPPER_LINTER = 'zipper-linter';

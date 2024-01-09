@@ -3,7 +3,7 @@ import { Script } from '@prisma/client';
 import { DehydratedState } from '@tanstack/react-query';
 import { getUriFromPath } from './model-uri';
 import type { Monaco } from '@monaco-editor/react';
-import { getFileExtension } from './file-extension';
+import { getFileExtension } from '@zipper/utils';
 
 export const isConnector = (script: Script) =>
   script.filename.endsWith('-connector.ts') ||

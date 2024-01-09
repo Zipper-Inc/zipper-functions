@@ -671,10 +671,17 @@ export const getServerSideProps: GetServerSideProps = async ({
   const { app, entryPoint, parsedScripts, runnableScripts } = bootInfo;
 
   const version = (versionFromUrl || 'latest').replace(/^@/, '');
-  let filename = filenameFromUrl || 'main.ts';
-  if (!filename.endsWith('.ts')) filename = `${filename}.ts}`;
+  const filename = filenameFromUrl || 'main';
+  // if (!filename.endsWith('.ts')) filename = `${filename}.ts}`;
 
-  if (!runnableScripts.includes(filename)) return { notFound: true };
+  if (
+    !runnableScripts.find((f) => {
+      return (
+        f === filename || f === `${filename}.ts` || f === `${filename}.tsx`
+      );
+    })
+  )
+    return { notFound: true };
 
   const parsedFile = findFileInParsedScripts(filename, parsedScripts);
   const parsedAction = actionFromUrl && parsedFile?.actions?.[actionFromUrl];
