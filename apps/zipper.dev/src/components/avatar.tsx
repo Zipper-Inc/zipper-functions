@@ -1,5 +1,6 @@
 import { trpc } from '~/utils/trpc';
 import { Avatar as BaseAvatar, AvatarProps } from '@chakra-ui/react';
+import { Avatar as ShadAvatar } from '@zipper/ui';
 import { useUser } from '~/hooks/use-user';
 
 export function AvatarForUserId({
@@ -7,24 +8,46 @@ export function AvatarForUserId({
   ...props
 }: { userId: string } & AvatarProps) {
   const userQuery = trpc.user.profileForUserId.useQuery({ id: userId });
+  // return (
+  //   <BaseAvatar
+  //     name={userQuery?.data?.name || ''}
+  //     src={userQuery?.data?.image || undefined}
+  //     {...props}
+  //   />
+  // );
+
   return (
-    <BaseAvatar
-      name={userQuery?.data?.name || ''}
-      src={userQuery?.data?.image || undefined}
-      {...props}
-    />
+    <ShadAvatar>
+      <ShadAvatar.Image
+        src={userQuery.data?.image as string}
+        alt={userQuery.data?.name as string}
+      />
+      <ShadAvatar.Fallback>
+        {userQuery.data?.name?.charAt(0)}
+      </ShadAvatar.Fallback>
+    </ShadAvatar>
   );
 }
 
 export function AvatarForCurrentUser(props: AvatarProps) {
   const { user } = useUser();
+  // return (
+  //   <BaseAvatar
+  //     name={user?.name || ''}
+  //     referrerPolicy="no-referrer"
+  //     {...props}
+  //     src={user?.image || ''}
+  //   />
+  // );
+
   return (
-    <BaseAvatar
-      name={user?.name || ''}
-      referrerPolicy="no-referrer"
-      {...props}
-      src={user?.image || ''}
-    />
+    <ShadAvatar>
+      <ShadAvatar.Image
+        src={user?.image as string}
+        alt={user?.name as string}
+      />
+      <ShadAvatar.Fallback>{user?.image}</ShadAvatar.Fallback>
+    </ShadAvatar>
   );
 }
 
