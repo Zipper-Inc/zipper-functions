@@ -254,6 +254,90 @@ function findHandlerFunction({
   }
 }
 
+function parseHandlerInputs(
+  handlerFn: HandlerFn,
+  src: SourceFile,
+  throwErrors: boolean,
+) {
+  const inputs = handlerFn.getParameters();
+  const params = inputs[0] as ParameterDeclaration;
+
+  if (!params || params.getText().startsWith('_')) {
+    return [];
+  }
+
+  const paramsWithDefaultValue = params
+    .getFirstChildByKind(SyntaxKind.ObjectBindingPattern)
+    ?.getElements()
+    .reduce((acc, curr) => {
+      const key = curr.getFirstChildByKind(SyntaxKind.Identifier)?.getText();
+      const value = curr.getInitializer();
+      if (key && value) {
+        return { ...acc, [key]: value.getText() };
+      }
+      return acc;
+    }, {} as Record<string, string>);
+
+  const typeNode = params.getTypeNode();
+
+  if (!typeNode || typeNode?.isKind(SyntaxKind.AnyKeyword)) {
+    return [
+      {
+        key: params.getName(),
+        type: InputType.any,
+        optional: params.hasQuestionToken(),
+      },
+    ];
+  }
+
+  let props: PropertySignature[] = [];
+
+  try {
+    props = typeNode?.isKind(SyntaxKind.TypeLiteral)
+      ? // A type literal, like `params: { foo: string, bar: string }`
+        (typeNode as any)?.getProperties()
+      : // A type reference, like `params: Params`
+        // Finds the type alias by its name and grabs the node from there
+        (
+          src.getTypeAlias(typeNode?.getText() as string)?.getTypeNode() as any
+        )?.getProperties();
+  } catch (e) {
+    if (throwErrors) {
+      throw new Error('Cannot get the properties of the object parameter.');
+    }
+    return [];
+  }
+
+  if (!typeNode || !props) {
+    console.error('No types, treating input as any');
+  }
+
+  return props.map((prop) => {
+    const isOptional =
+      prop.hasQuestionToken() || !!paramsWithDefaultValue?.[prop.getName()];
+    const typeNode = prop.getTypeNode();
+    if (!typeNode) {
+      // Typescript defaults to any if it can't find the type
+      // type Input = { foo } // foo is any
+      return {
+        key: prop.getName(),
+        type: InputType.any,
+        optional: isOptional,
+      };
+    }
+
+    const typeDetails = parseTypeNode(typeNode, src);
+
+    const result = {
+      key: prop.getName(),
+      type: typeDetails.type,
+      optional: isOptional,
+      ...('details' in typeDetails && { details: typeDetails.details }),
+    };
+    return result;
+  });
+}
+
 // returns undefined if the file isn't runnable (no handler function)
 export function parseInputForTypes({
   code = '',
@@ -288,89 +372,68 @@ export function parseInputForTypes({
       throw new Error('The handler function cannot be the default export.');
     }
 
-    const inputs = handlerFn.getParameters();
-    const params = inputs[0] as ParameterDeclaration;
-
-    if (!params || params.getText().startsWith('_')) {
-      return [];
-    }
-
-    const paramsWithDefaultValue = params
-      .getFirstChildByKind(SyntaxKind.ObjectBindingPattern)
-      ?.getElements()
-      .reduce((acc, curr) => {
-        const key = curr.getFirstChildByKind(SyntaxKind.Identifier)?.getText();
-        const value = curr.getInitializer();
-        if (key && value) {
-          return { ...acc, [key]: value.getText() };
-        }
-        return acc;
-      }, {} as Record<string, string>);
-    const typeNode = params.getTypeNode();
-
-    if (!typeNode || typeNode?.isKind(SyntaxKind.AnyKeyword)) {
-      return [
-        {
-          key: params.getName(),
-          type: InputType.any,
-          optional: params.hasQuestionToken(),
-        },
-      ];
-    }
-
-    let props: PropertySignature[] = [];
-
-    try {
-      props = typeNode?.isKind(SyntaxKind.TypeLiteral)
-        ? // A type literal, like `params: { foo: string, bar: string }`
-          (typeNode as any)?.getProperties()
-        : // A type reference, like `params: Params`
-          // Finds the type alias by its name and grabs the node from there
-          (
-            src
-              .getTypeAlias(typeNode?.getText() as string)
-              ?.getTypeNode() as any
-          )?.getProperties();
-    } catch (e) {
-      if (throwErrors) {
-        throw new Error('Cannot get the properties of the object parameter.');
-      }
-      return [];
-    }
-
-    if (!typeNode || !props) {
-      console.error('No types, treating input as any');
-    }
-
-    return props.map((prop) => {
-      const isOptional =
-        prop.hasQuestionToken() || !!paramsWithDefaultValue?.[prop.getName()];
-      const typeNode = prop.getTypeNode();
-      if (!typeNode) {
-        // Typescript defaults to any if it can't find the type
-        // type Input = { foo } // foo is any
-        return {
-          key: prop.getName(),
-          type: InputType.any,
-          optional: isOptional,
-        };
-      }
-
-      const typeDetails = parseTypeNode(typeNode, src);
-
-      const result = {
-        key: prop.getName(),
-        type: typeDetails.type,
-        optional: isOptional,
-        ...('details' in typeDetails && { details: typeDetails.details }),
-      };
-      return result;
-    });
+    return parseHandlerInputs(handlerFn, src, throwErrors);
   } catch (e) {
     if (throwErrors) throw e;
     console.error('caught during parseInputForTypes', e);
   }
   return [];
+}
+
+export function parseActions({
+  code = '',
+  throwErrors = false,
+  src: srcPassedIn,
+}: ParseCodeParameters = {}) {
+  if (!code || !srcPassedIn) return undefined;
+
+  try {
+    const src = srcPassedIn || getSourceFileFromCode(code);
+    const actionsDeclaration = src.getVariableDeclaration('actions');
+    if (!actionsDeclaration) return undefined;
+
+    const actionsObject = actionsDeclaration.getInitializerIfKind(
+      SyntaxKind.ObjectLiteralExpression,
+    );
+
+    if (!actionsObject) return undefined;
+
+    // Now make sure it gets exported and is not the default
+    if (!actionsDeclaration.hasExportKeyword() && throwErrors) {
+      throw new Error('The actions object must be exported.');
+    }
+    if (actionsDeclaration.hasDefaultKeyword() && throwErrors) {
+      throw new Error('The actions object cannot be the default export.');
+    }
+
+    const actionsProperties = actionsObject.getProperties();
+
+    const actions = actionsProperties.reduce((actionsSoFar, property) => {
+      const name = property
+        .getFirstChildIfKind(SyntaxKind.Identifier)
+        ?.getText();
+
+      const handlerFn =
+        property.getLastChildIfKind(SyntaxKind.ArrowFunction) ||
+        property.getLastChildIfKind(SyntaxKind.FunctionExpression) ||
+        property.getLastChildIfKind(SyntaxKind.FunctionDeclaration);
+
+      if (!name || !handlerFn) return actionsSoFar;
+
+      return {
+        ...actionsSoFar,
+        [name]: {
+          name,
+          inputs: parseHandlerInputs(handlerFn, src, throwErrors),
+        },
+      };
+    }, {} as Record<string, { name: string; inputs: InputParam[] }>);
+
+    return Object.keys(actions).length ? actions : undefined;
+  } catch (e) {
+    if (throwErrors) throw e;
+    console.error('caught during parseActions', e);
+  }
 }
 
 export function parseExternalImportUrls({
@@ -464,6 +527,9 @@ export function parseCode({
   const src: SourceFile | undefined =
     srcPassedIn || (code ? getSourceFileFromCode(code) : undefined);
   let inputs = parseInputForTypes({ code, throwErrors, src });
+
+  const actions = parseActions({ code, throwErrors, src });
+
   const externalImportUrls = parseExternalImportUrls({
     code,
     srcPassedIn: src,
@@ -489,6 +555,7 @@ export function parseCode({
 
   return {
     inputs,
+    actions,
     externalImportUrls,
     comments,
     localImports: imports.filter(

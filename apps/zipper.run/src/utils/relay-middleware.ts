@@ -8,7 +8,7 @@ import fetchBootInfo, {
   fetchBasicUserInfo,
 } from './get-boot-info';
 import getValidSubdomain from './get-valid-subdomain';
-import { getFilenameAndVersionFromPath } from './get-values-from-url';
+import { parseRunUrlPath } from '@zipper/utils';
 import {
   formatDeploymentId,
   getAppLink,
@@ -186,10 +186,12 @@ export async function relayRequest(
     request,
     version: versionPassedIn,
     filename: filenamePassedIn,
+    action,
   }: {
     request: NextRequest;
     version?: string;
     filename?: string;
+    action?: string;
   },
   bootOnly = false,
 ): Promise<{ status: number; headers?: Headers; result: string }> {
@@ -331,6 +333,7 @@ export async function relayRequest(
       connectorsWithUserAuth: Object.keys(userConnectorTokens),
     },
     inputs: request.method === 'GET' ? queryParameters : body,
+    action,
     originalRequest: {
       url: request.nextUrl.toString(),
       method: request.method,
@@ -367,6 +370,7 @@ export async function relayRequest(
   const mutableHeaders = new Headers(headers);
   const result = await response.text();
 
+  console.log('relay response', result, { status, headers });
   const appRunRes = await addAppRun({
     id: runId,
     appId: app.id,
@@ -390,19 +394,20 @@ export default async function serveRelay({
   request: NextRequest;
   bootOnly: boolean;
 }) {
-  const { version, filename } = getFilenameAndVersionFromPath(
+  const { version, filename, action } = parseRunUrlPath(
     request.nextUrl.pathname,
-    bootOnly ? ['boot'] : ['relay', 'raw'],
   );
 
   console.log('version: ', version || 'latest');
   if (!bootOnly) console.log('filename: ', filename);
+  if (action) console.log('action: ', action);
 
   const { result, status, headers } = await relayRequest(
     {
       request,
       version,
       filename,
+      action,
     },
     bootOnly,
   );
@@ -478,19 +483,20 @@ export async function serveNonBrowserRelay({
 }: {
   request: NextRequest;
 }) {
-  const { version, filename } = getFilenameAndVersionFromPath(
+  const { version, filename, action } = parseRunUrlPath(
     request.nextUrl.pathname,
-    ['relay', 'raw'],
   );
 
   console.log('version: ', version);
   console.log('filename: ', filename);
+  if (action) console.log('action: ', action);
 
   const { result, status, headers } = await relayRequest(
     {
       request,
       version,
       filename,
+      action,
     },
     false,
   );

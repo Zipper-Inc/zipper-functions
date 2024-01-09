@@ -30,13 +30,13 @@ async function buildHeaders(appId: string, teamId: string) {
 }
 
 export async function fetchBootInfo(slug: string, filename?: string) {
-  const appInfoUrl = `${ZIPPER_APP_INFO_URL}/${slug}`;
-  const appInfoResponse = await fetch(appInfoUrl, {
+  const bootInfoUrl = `${ZIPPER_APP_INFO_URL}/${slug}`;
+  const bootInfoResponse = await fetch(bootInfoUrl, {
     method: 'POST',
     body: JSON.stringify({ filename }),
   });
 
-  return appInfoResponse.json();
+  return bootInfoResponse.json();
 }
 
 type BuildSlackViewInputs = {
