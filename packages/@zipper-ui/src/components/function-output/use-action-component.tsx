@@ -152,7 +152,8 @@ export const useActionComponent = (
       refreshInputParams.forEach((i) => (originalInputs[i.key] = i.value));
 
       const refreshRes = await fetch(
-        getRunUrl({ ...refreshPathProps, subdomain: '', isRelay: true }),
+        getRunUrl({ ...refreshPathProps, subdomain: '', isRelay: true })
+          .pathname,
         {
           method: 'POST',
           body: JSON.stringify(originalInputs),
