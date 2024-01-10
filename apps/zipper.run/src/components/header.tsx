@@ -16,6 +16,7 @@ import {
   useMediaQuery,
   Flex,
 } from '@chakra-ui/react';
+import NextLink from 'next/link';
 import { getAppLink, getZipperDotDevUrl, removeExtension } from '@zipper/utils';
 import { BLUE, useEffectOnce, ZipperSymbol } from '@zipper/ui';
 import { HiOutlinePencilAlt } from 'react-icons/hi';
@@ -121,12 +122,13 @@ const Header: React.FC<HeaderProps> = ({
               <MenuList pb={0}>
                 <Box pb="4" pt="2" px={4}>
                   <Link
+                    as={NextLink}
                     fontSize="sm"
                     fontWeight="medium"
+                    href={`/${entryPoint.filename}`}
                     onClick={() => {
                       onClose();
                       setLoading(true);
-                      router.push(`/${entryPoint.filename}`);
                     }}
                     _hover={{ background: 'none' }}
                   >
@@ -151,11 +153,12 @@ const Header: React.FC<HeaderProps> = ({
                   .map((filename, i) => {
                     return (
                       <MenuItem
+                        as={NextLink}
+                        href={`/${filename}`}
                         key={`${filename}-${i}`}
                         onClick={() => {
                           onClose();
                           setLoading(true);
-                          router.push(`/${filename}`);
                         }}
                         backgroundColor="fg.50"
                         px="4"
@@ -246,7 +249,7 @@ const Header: React.FC<HeaderProps> = ({
           minW={0}
         >
           <HStack spacing={4}>
-            <Link href={getZipperDotDevUrl().origin}>
+            <Link as={NextLink} href={getZipperDotDevUrl().origin}>
               <HStack spacing={2}>
                 <ZipperSymbol
                   fill={BLUE}
@@ -282,6 +285,7 @@ const Header: React.FC<HeaderProps> = ({
             </Heading>
             <Box>
               <Link
+                as={NextLink}
                 href="/"
                 _hover={{
                   textDecor: 'none',
@@ -335,12 +339,14 @@ const Header: React.FC<HeaderProps> = ({
                     <MenuList>
                       <MenuItem>
                         <Button
+                          as={NextLink}
+                          href="/logout"
                           variant="link"
                           color="inherit"
                           fontWeight="normal"
                           leftIcon={<PiSignOutDuotone />}
                         >
-                          <Link href="/logout">Sign out</Link>
+                          Sign out
                         </Button>
                       </MenuItem>
                     </MenuList>
@@ -348,10 +354,14 @@ const Header: React.FC<HeaderProps> = ({
                 )}
               </Menu>
             ) : (
-              <Button variant="outline" size="sm" leftIcon={<MdLogin />}>
-                <Link href={`${getZipperDotDevUrl().origin}/auth/from/${slug}`}>
-                  Sign In
-                </Link>
+              <Button
+                as={NextLink}
+                href={`${getZipperDotDevUrl().origin}/auth/from/${slug}`}
+                variant="outline"
+                size="sm"
+                leftIcon={<MdLogin />}
+              >
+                Sign In
               </Button>
             )}
           </HStack>

@@ -15,7 +15,6 @@ import {
   AppInfo,
   BootInfoWithUserInfo,
   EntryPointInfo,
-  InputParam,
   InputParams,
   UserAuthConnector,
   ZipperLocation,
@@ -35,6 +34,8 @@ import {
 } from '@zipper/ui/src/components/function-output/handler-description';
 import {
   getInputsFromFormData,
+  getRunUrl,
+  parseRunUrlPath,
   getScreenshotUrl,
   NOT_FOUND,
   UNAUTHORIZED,
@@ -56,7 +57,6 @@ import { fetchBootPayloadCachedWithUserInfoOrThrow } from '~/utils/get-boot-info
 import { getConnectorsAuthUrl } from '~/utils/get-connectors-auth-url';
 import { getAppletUrl, getRelayUrl } from '~/utils/get-relay-url';
 import getValidSubdomain from '~/utils/get-valid-subdomain';
-import { parseRunUrlPath } from '@zipper/utils';
 import { getZipperAuth } from '~/utils/get-zipper-auth';
 import removeAppConnectorUserAuth from '~/utils/remove-app-connector-user-auth';
 import { getShortRunId } from '~/utils/run-id';
@@ -272,10 +272,6 @@ export function AppPage({
     [],
   );
 
-  function getRunUrl(scriptName: string) {
-    return `/${scriptName}/relay`;
-  }
-
   const connectorActions = (appId: string) => {
     return {
       github: {
@@ -332,9 +328,13 @@ export function AppPage({
       <FunctionOutput
         applet={mainApplet}
         config={currentFileConfig}
-        getRunUrl={(scriptName: string) => {
-          return getRunUrl(scriptName);
-        }}
+        getRunUrl={(path: string) =>
+          getRunUrl({
+            ...parseRunUrlPath(path),
+            subdomain: app.slug,
+            isRelay: true,
+          }).pathname
+        }
         bootInfoUrl={`/_zipper/bootInfo/${app?.slug}`}
         currentContext={'main'}
         appSlug={app.slug}
@@ -695,7 +695,8 @@ export const getServerSideProps: GetServerSideProps = async ({
     [X_ZIPPER_TEMP_USER_ID]: tempUserId || '',
   };
 
-  const config = parsedAction?.config || handlerConfigs?.[filename] || {};
+  const config =
+    (actionFromUrl ? parsedAction?.config : handlerConfigs?.[filename]) || {};
 
   const urlValues = inputParams
     ? getInputValuesFromUrl({

@@ -7,8 +7,7 @@ import { slugifyAllowDot } from '~/utils/slugify';
 import { hasAppEditPermission } from '../utils/authz.utils';
 import { kebabCase } from '~/utils/kebab-case';
 import { createTRPCRouter, publicProcedure } from '../root';
-import { RunnableExtensionSchema } from '~/utils/file-extension';
-import { getFileExtension } from '@zipper/utils';
+import { getFileExtension, isRunnableExtension } from '@zipper/utils';
 
 const defaultSelect = Prisma.validator<Prisma.ScriptSelect>()({
   id: true,
@@ -88,12 +87,9 @@ export const scriptRouter = createTRPCRouter({
       const { appId, filename, ...data } = input;
       await hasAppEditPermission({ ctx, appId });
 
-      const isRunnableExtension = RunnableExtensionSchema.safeParse(
-        filename.extension,
-      ).success;
-
+      const isExtensionFromRunnable = isRunnableExtension(filename.extension);
       const code = (() => {
-        if (isRunnableExtension) {
+        if (isExtensionFromRunnable) {
           return data.code;
         }
         if (filename.extension === 'md') {
@@ -101,9 +97,6 @@ export const scriptRouter = createTRPCRouter({
         }
         if (filename.extension === 'json') {
           return '{}';
-        }
-        if (filename.extension === 'ts' || filename.extension === 'tsx') {
-          return DEFAULT_CODE;
         }
         return '';
       })();
@@ -114,7 +107,9 @@ export const scriptRouter = createTRPCRouter({
           code,
           name: filename.name,
           filename: filename.full,
-          isRunnable: isRunnableExtension ? isCodeRunnable(data.code) : false,
+          isRunnable: isExtensionFromRunnable
+            ? isCodeRunnable(data.code)
+            : false,
           app: {
             connect: { id: appId },
           },
