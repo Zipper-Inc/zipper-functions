@@ -220,7 +220,8 @@ export const AddScheduleModal: React.FC<AddScheduleModalProps> = ({
             flex={1}
             fontWeight="medium"
             onClick={() => {
-              const { filename, ...inputs } = addModalForm.getValues();
+              const { filename, cronDesc, ...inputs } =
+                addModalForm.getValues();
               onCreate({ filename, crontab, inputs }, addModalForm.reset);
             }}
           >

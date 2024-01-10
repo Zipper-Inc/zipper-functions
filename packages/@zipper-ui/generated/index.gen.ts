@@ -23,6 +23,7 @@ export * from '../src/components/function-output/smart-function-output-context';
 export { default as SmartFunctionOutputProvider } from '../src/components/function-output/smart-function-output-context';
 export * from '../src/components/function-output/smart-function-output';
 export * from '../src/components/function-output/types';
+export * from '../src/components/function-output/use-action-component';
 export * from '../src/components/function-output/utils';
 export * from '../src/components/ui/avatar';
 export * from '../src/components/ui/button';

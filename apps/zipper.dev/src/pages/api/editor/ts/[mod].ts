@@ -4,9 +4,10 @@ import { BuildCache } from '~/utils/eszip-build-cache';
 import { LoadResponseModule } from '@deno/eszip/esm/loader';
 import {
   isZipperImportUrl,
-  applyTsxHack,
   getRemoteModule,
+  applyTsxHack,
 } from '~/utils/eszip-utils';
+import { isSSRFSafeURL } from 'ssrfcheck';
 import { rewriteSpecifier } from '~/utils/rewrite-imports';
 import { parseCode } from '~/utils/parse-code';
 
@@ -105,7 +106,11 @@ async function respondWithBundle({
       const rawModule = await getRemoteModule({ specifier });
       const mod = {
         ...rawModule,
-        ...applyTsxHack(specifier, rawModule?.content, false),
+        ...applyTsxHack({
+          specifier,
+          code: rawModule?.content,
+          isMain: specifier.endsWith('main.ts'),
+        }),
       };
       if (mod?.content) bundle[bundlePath] = mod.content;
       return mod;
@@ -200,6 +205,16 @@ export default async function handler(
 
   // commas are valid in URLs, so don't treat this as an array
   const moduleUrl = Array.isArray(x) ? x.join(',') : x;
+
+  if (
+    !isSSRFSafeURL(moduleUrl, {
+      allowedProtocols:
+        process.env.NODE_ENV === 'development' ? ['http', 'https'] : ['https'],
+      noIP: true,
+    })
+  ) {
+    return res.status(500).send('Invalid module URL');
+  }
 
   const rootModule = await getRemoteModule({
     specifier: rewriteSpecifier(moduleUrl),

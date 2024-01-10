@@ -50,17 +50,26 @@ export function codeHasReact(code: string) {
   return /^import\s+.*React,?.*\s+from/m.test(code);
 }
 
-export function applyTsxHack(
-  specifier: string,
+export function applyTsxHack({
+  specifier,
   code = '/* 🤷🏽‍♂️ missing code */',
   shouldAddJsxPragma = true,
-): LoadResponseModule {
+  isMain = false,
+}: {
+  specifier: string;
+  code?: string;
+  shouldAddJsxPragma?: boolean;
+  isMain?: boolean;
+}): LoadResponseModule {
+  const requiresJsxPragma =
+    shouldAddJsxPragma &&
+    !codeHasReact(code) &&
+    (isMain || specifier.endsWith('.tsx'));
+
   return {
-    // Add TSX to all files so they support JSX
-    specifier: specifier.replace(/\.(ts|tsx)$|$/, '.tsx'),
+    specifier: isMain ? specifier.replace(/\.(ts|tsx)$|$/, '.tsx') : specifier,
     headers: TYPESCRIPT_CONTENT_HEADERS,
-    content:
-      !codeHasReact(code) && shouldAddJsxPragma ? addJsxPragma(code) : code,
+    content: requiresJsxPragma ? addJsxPragma(code) : code,
     kind: 'module',
   };
 }

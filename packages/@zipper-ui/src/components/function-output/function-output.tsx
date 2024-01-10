@@ -90,7 +90,7 @@ const safelyParseResult = (result: any) => {
 
 export function FunctionOutput({
   getRunUrl,
-  appInfoUrl,
+  bootInfoUrl,
   applet,
   currentContext,
   appSlug,
@@ -299,11 +299,7 @@ export function FunctionOutput({
                     : 4
                 }
               >
-                <Box
-                  width="full"
-                  data-function-output="smart"
-                  whiteSpace="pre-wrap"
-                >
+                <Box width="full" data-function-output="smart">
                   <SmartFunctionOutputProvider
                     outputSection="expanded"
                     config={config}
@@ -391,7 +387,7 @@ export function FunctionOutput({
           <FunctionOutput
             applet={modalApplet}
             getRunUrl={getRunUrl}
-            appInfoUrl={appInfoUrl}
+            bootInfoUrl={bootInfoUrl}
             currentContext="modal"
             appSlug={appSlug}
             showTabs={showTabs}
@@ -460,7 +456,7 @@ export function FunctionOutput({
     <FunctionOutputProvider
       showSecondaryOutput={showSecondaryOutput}
       getRunUrl={getRunUrl}
-      appInfoUrl={appInfoUrl}
+      bootInfoUrl={bootInfoUrl}
       applet={applet}
       modalApplet={modalApplet}
       currentContext={currentContext}
@@ -541,7 +537,6 @@ export function FunctionOutput({
                       width="full"
                       height="full"
                       data-function-output="smart"
-                      whiteSpace="pre-wrap"
                     >
                       <SmartFunctionOutputProvider
                         config={config}

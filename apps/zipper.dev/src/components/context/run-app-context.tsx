@@ -54,6 +54,7 @@ export type RunAppContextType = {
   }) => Promise<string | undefined>;
   boot: (params?: { shouldSave?: boolean }) => Promise<BootPayload>;
   bootPromise: MutableRefObject<Promise<BootPayload>>;
+  bootPayload?: BootPayload;
   configs: Zipper.BootPayload['configs'];
 };
 
@@ -69,6 +70,7 @@ export const RunAppContext = createContext<RunAppContextType>({
   bootPromise: { current: Promise.resolve({} as BootPayload) },
   run: () => Promise.resolve(''),
   boot: () => Promise.resolve({} as BootPayload),
+  bootPayload: {} as BootPayload,
   configs: {},
 });
 
@@ -127,12 +129,14 @@ export function RunAppProvider({
   const formMethods = useForm();
   const [isRunning, setIsRunning] = useState(false);
   const [results, setResults] = useState<Record<string, string>>({});
-  const [configs, setConfigs] = useState<Zipper.BootPayload['configs']>({});
+  const [bootPayload, setBootPayload] = useState<BootPayload>();
   const utils = trpc.useContext();
   const { useUploadThing } = generateReactHelpers<OurFileRouter>();
   const { isUploading, startUpload } = useUploadThing('imageUploader');
   const logTimersToCleanUp = useRef<number[]>([]);
   const bootPromise = useRef<Promise<any>>(Promise.resolve());
+
+  const configs = bootPayload?.configs || {};
 
   const cleanUpLogTimers = () => {
     logTimersToCleanUp.current.forEach((id) => window.clearTimeout(id));
@@ -150,11 +154,18 @@ export function RunAppProvider({
   });
 
   const bootAppMutation = trpc.app.boot.useMutation({
-    async onSuccess() {
+    async onSuccess(data) {
+      if (!data.ok) {
+        console.error(data.error);
+        return;
+      }
       await utils.app.byResourceOwnerAndAppSlugs.invalidate({
         resourceOwnerSlug: app.resourceOwner.slug,
         appSlug: slug,
       });
+    },
+    onError(error) {
+      console.error(error);
     },
   });
 
@@ -253,18 +264,18 @@ export function RunAppProvider({
         const oneSecondAgo = Date.now() - 1 * 1000;
         startPollingUpdateLogs({ version, fromTimestamp: oneSecondAgo });
 
-        const bootPayload = await bootAppMutation.mutateAsync({
+        const bootPayloadResponse = await bootAppMutation.mutateAsync({
           appId: id,
         });
 
-        if (!bootPayload.ok) throw new Error('Boot failed');
+        if (!bootPayloadResponse.ok) throw new Error('Boot failed');
 
-        if (bootPayload.configs) setConfigs(bootPayload.configs);
-
+        const bootPayload = bootPayloadResponse as BootPayload;
+        setBootPayload(bootPayload);
         // stop any polling and do one last update
         cleanUpLogTimers();
         updateLogs({ version, fromTimestamp: oneSecondAgo });
-        resolve(bootPayload as any);
+        resolve(bootPayload);
       } catch (e) {
         reject(e);
       } finally {
@@ -416,6 +427,7 @@ export function RunAppProvider({
         run,
         boot,
         bootPromise,
+        bootPayload,
         configs,
         canUserEdit,
       }}

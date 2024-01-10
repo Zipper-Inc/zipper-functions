@@ -3,13 +3,15 @@ import { Script } from '@prisma/client';
 import { DehydratedState } from '@tanstack/react-query';
 import { getUriFromPath } from './model-uri';
 import type { Monaco } from '@monaco-editor/react';
+import { getFileExtension } from '@zipper/utils';
 
 export const isConnector = (script: Script) =>
-  script.filename.endsWith('-connector.ts');
+  script.filename.endsWith('-connector.ts') ||
+  script.filename.endsWith('-connector.tsx');
 export const isReadme = (script: Script) => script.filename === 'readme.md';
 export const isMain = (script: Script) => script.filename === 'main.ts';
 export const isLib = (script: Script) =>
-  script.filename.endsWith('.ts') &&
+  isTypescript(script) &&
   !script.isRunnable &&
   !isConnector(script) &&
   !isMain(script);
@@ -58,9 +60,11 @@ export const parsePlaygroundQuery = (
 };
 
 function parseScriptForModel(script: Script, { Uri }: Monaco) {
-  const extension = script.filename.split('.').pop();
+  const isMainScript = script.filename === 'main.ts';
+  const extension = isMainScript ? 'tsx' : getFileExtension(script.filename);
+
   const path = script.filename;
-  const uri = getUriFromPath(path, Uri.parse, 'tsx');
+  const uri = getUriFromPath(path, Uri.parse, extension || 'tsx');
   return { extension, path, uri };
 }
 
@@ -72,13 +76,14 @@ export function getModelFromScript(script: Script, m: Monaco) {
 export function getOrCreateScriptModel(script: Script, m: Monaco) {
   const existingModel = getModelFromScript(script, m);
   if (existingModel) return existingModel;
-  const { extension, uri } = parseScriptForModel(script, m);
+  const { uri } = parseScriptForModel(script, m);
 
   console.log('[EDITOR]', `Creating model for ${script.filename}`);
 
   return m.editor.createModel(
     script.code,
-    extension === 'md' ? 'markdown' : 'typescript',
+    // The language may be inferred from the `uri`
+    undefined,
     uri,
   );
 }

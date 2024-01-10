@@ -36,6 +36,7 @@ import {
   isLib,
   isConnector,
 } from '~/utils/playground.utils';
+import { getFileExtension } from '@zipper/utils';
 
 // Order should always be:
 // - README.md
@@ -89,11 +90,11 @@ export function PlaygroundSidebar({
     },
   });
 
-  const renameScript = (id: string, name: string) => {
+  const renameScript = (id: string, fileName: string) => {
     editScriptQuery.mutateAsync({
       id: id,
       data: {
-        name,
+        filename: fileName,
       },
     });
     endRenaming();
@@ -119,8 +120,10 @@ export function PlaygroundSidebar({
 
     if (!toDupe) return;
 
+    const extension = getFileExtension(toDupe.filename);
+
     addScript.mutateAsync({
-      name: `${toDupe.name}-copy`,
+      filename: `${toDupe.name}-copy.${extension}`,
       appId: app.id,
       code: toDupe.code,
       order: app.scripts.length + 1,
@@ -130,7 +133,8 @@ export function PlaygroundSidebar({
   const startRenaming: ScriptItemProps['onStartRenaming'] = (scriptId) => {
     setIsRenamingId(scriptId);
     renameForm.reset({
-      name: app.scripts.find((script: Script) => script.id === scriptId)?.name,
+      fileName: app.scripts.find((script: Script) => script.id === scriptId)
+        ?.filename,
     });
   };
 

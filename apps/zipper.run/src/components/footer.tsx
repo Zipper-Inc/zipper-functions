@@ -12,7 +12,9 @@ import {
   Text,
 } from '@chakra-ui/react';
 import { EntryPointInfo } from '@zipper/types';
+import { removeExtension } from '@zipper/utils';
 import router from 'next/router';
+import { useMemo } from 'react';
 import { FiChevronUp, FiChevronDown } from 'react-icons/fi';
 
 export default function Footer({
@@ -27,6 +29,11 @@ export default function Footer({
   if (!entryPoint) {
     return <></>;
   }
+
+  const entryPointName = useMemo(
+    () => removeExtension(entryPoint.filename),
+    [entryPoint],
+  );
 
   return (
     <Flex as="footer" position="fixed" w="full" bottom={0}>
@@ -43,7 +50,7 @@ export default function Footer({
                       fontWeight="semibold"
                       color="fg.800"
                     >
-                      {entryPoint.filename.slice(0, -3)}
+                      {entryPointName}
                     </Text>
                     {isOpen ? <FiChevronUp /> : <FiChevronDown />}
                   </HStack>
@@ -60,7 +67,7 @@ export default function Footer({
                       }}
                       _hover={{ background: 'none' }}
                     >
-                      {entryPoint.filename.slice(0, -3)}
+                      {entryPointName}
                     </Link>
                   </Box>
 
@@ -76,16 +83,16 @@ export default function Footer({
                     <Text>Other paths:</Text>
                   </Box>
                   {runnableScripts
-                    .filter((s) => s !== entryPoint.filename)
+                    .filter((filename) => filename !== entryPoint.filename)
                     .sort()
-                    .map((s, i) => {
+                    .map((filename, i) => {
                       return (
                         <MenuItem
-                          key={`${s}-${i}`}
+                          key={`${filename}-${i}`}
                           onClick={() => {
                             onClose();
                             setLoading(true);
-                            router.push(`/${s}`);
+                            router.push(`/${filename}`);
                           }}
                           backgroundColor="fg.50"
                           px="4"
@@ -96,7 +103,7 @@ export default function Footer({
                             pb: 4,
                           }}
                         >
-                          {s.slice(0, -3)}
+                          {removeExtension(filename)}
                         </MenuItem>
                       );
                     })}

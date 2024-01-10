@@ -24,25 +24,45 @@ import {
   Select,
   Code,
   StackDivider,
+  FormHelperText,
+  Input,
+  Modal,
+  ModalHeader,
+  ModalBody,
+  Icon,
+  ModalContent,
+  ModalOverlay,
+  IconButton,
 } from '@chakra-ui/react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { trpc } from '~/utils/trpc';
 import { VscGithubInverted } from 'react-icons/vsc';
 import { code, scopes, events } from './constants';
-import { MultiSelect, SelectOnChange, useMultiSelect } from '@zipper/ui';
+import {
+  Markdown,
+  MultiSelect,
+  SelectOnChange,
+  useMultiSelect,
+} from '@zipper/ui';
 import { HiOutlineTrash } from 'react-icons/hi';
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useRunAppContext } from '~/components/context/run-app-context';
 import { GithubAppConnectorInstallationMetadata } from '@zipper/types';
 import { getZipperDotDevUrl } from '@zipper/utils';
-import { HiOutlineCog } from 'react-icons/hi2';
+import { HiOutlineCog, HiOutlineInformationCircle } from 'react-icons/hi2';
 import { useEditorContext } from '~/components/context/editor-context';
 
 export const githubAppConnector = createConnector({
   id: 'github-app',
   name: 'GitHub App',
   description: 'Build a GitHub bot & receive webhooks.',
+  helperText: `This connector helps you create a GitHub App, using a manifest file, that can be installed on any repository. GitHub Apps can access GitHub's web API and receive webhooks.
+
+After filling in the connector form, you'll be redirected to GitHub where the app will be created on either your personal account or the organization you specify. After the GitHub App is created, you'll be redirected back to Zipper where you can install the app on any repository. The settings of the app can be managed on GitHub.
+
+The pre-filled code below will help you call GitHub's API on behalf of a specific installation as well as receive incoming webhooks.`,
+
   icon: <VscGithubInverted />,
   code,
   userScopes: scopes,
@@ -51,6 +71,7 @@ export const githubAppConnector = createConnector({
 
 function GitHubAppConnectorForm({ appId }: { appId: string }) {
   const { scripts } = useEditorContext();
+  const { isOpen, onClose, onOpen } = useDisclosure();
   const __scope_options = scopes.map((scope) => ({
     label: scope,
     value: scope,
@@ -84,6 +105,7 @@ function GitHubAppConnectorForm({ appId }: { appId: string }) {
   const connectorForm = useForm({
     defaultValues: {
       isUserAuthRequired: false,
+      organization: '',
     },
   });
 
@@ -99,7 +121,11 @@ function GitHubAppConnectorForm({ appId }: { appId: string }) {
 
   const utils = trpc.useContext();
 
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const {
+    isOpen: isOpenInfo,
+    onOpen: onOpenInfo,
+    onClose: onCloseInfo,
+  } = useDisclosure();
   const cancelRef = useRef() as React.MutableRefObject<HTMLButtonElement>;
 
   const stateValueQuery = trpc.githubAppConnector.getStateValue.useQuery({
@@ -120,9 +146,14 @@ function GitHubAppConnectorForm({ appId }: { appId: string }) {
   );
 
   const [isSaving, setIsSaving] = useState(false);
-  const [webhookPath, setWebhookPath] = useState<string>(
-    'github-app-connector.ts',
+  const [webhookName, setWebhookName] = useState<string>(
+    'github-app-connector',
   );
+
+  const selectedWebhookScript = useMemo(
+    () => scripts.find((s) => s.name === webhookName),
+    [webhookName],
+  )!;
 
   const toast = useToast();
 
@@ -165,7 +196,7 @@ function GitHubAppConnectorForm({ appId }: { appId: string }) {
         redirect_url: `${getZipperDotDevUrl()}/connectors/github-app/manifest-redirect`,
         callback_urls: [`${getZipperDotDevUrl()}/connectors/github-app/auth`],
         hook_attributes: {
-          url: `https://${appInfo.slug}.${process.env.NEXT_PUBLIC_ZIPPER_DOT_RUN_HOST}/${webhookPath}/raw`,
+          url: `https://${appInfo.slug}.${process.env.NEXT_PUBLIC_ZIPPER_DOT_RUN_HOST}/${selectedWebhookScript.filename}/raw`,
         },
         public: true,
         default_events: eventsValue,
@@ -195,216 +226,265 @@ function GitHubAppConnectorForm({ appId }: { appId: string }) {
     ?.metadata as GithubAppConnectorInstallationMetadata;
 
   return (
-    <Box px="6" w="full">
-      {githubAppConnector && (
-        <>
-          <Box mb="5">
-            <Heading size="md">{githubAppConnector.name} Connector</Heading>
-          </Box>
-          <VStack align="start">
-            {appInfo.canUserEdit ? (
-              <>
-                {existingInstallation ? (
-                  <>
+    <>
+      <Box px="6" w="full">
+        {githubAppConnector && (
+          <>
+            <HStack mb="5" alignItems="center" justifyContent="start" gap="0">
+              <Heading size="md">{githubAppConnector.name} Connector</Heading>
+              <IconButton
+                onClick={onOpenInfo}
+                aria-label="info"
+                variant="link"
+                p="0"
+              >
+                <Icon as={HiOutlineInformationCircle} />
+              </IconButton>
+            </HStack>
+            <VStack align="start">
+              {appInfo.canUserEdit ? (
+                <>
+                  {existingInstallation ? (
+                    <>
+                      <Card w="full">
+                        <CardBody color="fg.600">
+                          <VStack align="stretch">
+                            <Heading size="sm">{metadata.name}</Heading>
+                            <Text>
+                              Boom! You've got a GitHub App that's ready to use
+                              with this applet. You can install it on any of
+                              your repositories and use the stored secrets to
+                              access GitHub's API.
+                            </Text>
+                            <HStack w="full" pt="2" spacing="4">
+                              <Button
+                                as={Link}
+                                target="_blank"
+                                colorScheme="primary"
+                                href={`${metadata.html_url}/installations/select_target`}
+                                _hover={{ textDecoration: 'none' }}
+                              >
+                                Install
+                              </Button>
+                              <Spacer />
+                              <HStack>
+                                <HiOutlineCog />
+                                <Link
+                                  _hover={{ textDecoration: 'none' }}
+                                  target="_blank"
+                                  href={metadata.html_url.replace(
+                                    'apps',
+                                    metadata.owner.type === 'Organization'
+                                      ? `organizations/${metadata.owner.login}/settings/apps`
+                                      : 'settings/apps',
+                                  )}
+                                >
+                                  Manage Settings
+                                </Link>
+                              </HStack>
+                              <Button
+                                variant="unstyled"
+                                color="red.600"
+                                onClick={onOpen}
+                              >
+                                <HStack>
+                                  <HiOutlineTrash />
+                                  <Text>Remove</Text>
+                                </HStack>
+                              </Button>
+                            </HStack>
+                          </VStack>
+                        </CardBody>
+                      </Card>
+                      <AlertDialog
+                        isOpen={isOpen}
+                        leastDestructiveRef={cancelRef}
+                        onClose={onClose}
+                      >
+                        <AlertDialogOverlay>
+                          <AlertDialogContent>
+                            <AlertDialogHeader fontSize="lg" fontWeight="bold">
+                              Remove GitHub App
+                            </AlertDialogHeader>
+
+                            <AlertDialogBody>
+                              Are you sure? You can't undo this action
+                              afterwards.
+                            </AlertDialogBody>
+
+                            <AlertDialogFooter>
+                              <Button ref={cancelRef} onClick={onClose}>
+                                Cancel
+                              </Button>
+                              <Button
+                                colorScheme="red"
+                                isDisabled={isSaving}
+                                onClick={async () => {
+                                  setIsSaving(true);
+                                  await deleteConnectorMutation.mutateAsync({
+                                    appId,
+                                  });
+                                  setIsSaving(false);
+                                  onClose();
+                                }}
+                                ml={3}
+                              >
+                                Uninstall
+                              </Button>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialogOverlay>
+                      </AlertDialog>
+                    </>
+                  ) : (
                     <Card w="full">
                       <CardBody color="fg.600">
-                        <VStack align="stretch">
-                          <Heading size="sm">{metadata.name}</Heading>
-                          <Text>
-                            Boom! You've got a GitHub App that's ready to use
-                            with this applet. You can install it on any of your
-                            repositories and use the stored secrets to access
-                            GitHub's API.
-                          </Text>
-                          <HStack w="full" pt="2" spacing="4">
-                            <Button
-                              as={Link}
-                              target="_blank"
-                              colorScheme="primary"
-                              href={`${metadata.html_url}/installations/select_target`}
-                              _hover={{ textDecoration: 'none' }}
-                            >
-                              Install
-                            </Button>
-                            <Spacer />
-                            <HStack>
-                              <HiOutlineCog />
-                              <Link
-                                _hover={{ textDecoration: 'none' }}
-                                target="_blank"
-                                href={metadata.html_url.replace(
-                                  'apps',
-                                  'settings/apps',
-                                )}
+                        <FormProvider {...manifestForm}>
+                          <form
+                            ref={manifestFormRef}
+                            action={
+                              connectorForm.getValues('organization').length > 0
+                                ? `https://github.com/organizations/${connectorForm.getValues(
+                                    'organization',
+                                  )}/settings/apps/new?state=${
+                                    stateValueQuery?.data
+                                  }`
+                                : `https://github.com/settings/apps/new?state=${stateValueQuery?.data}`
+                            }
+                            method="post"
+                          >
+                            <input
+                              hidden={true}
+                              {...manifestForm.register('manifest')}
+                            />
+                          </form>
+                        </FormProvider>
+                        <FormProvider {...connectorForm}>
+                          <form
+                            onSubmit={connectorForm.handleSubmit(saveConnector)}
+                          >
+                            <VStack align="start" w="full">
+                              <FormControl>
+                                <FormLabel color={'fg.500'}>Scopes</FormLabel>
+                                <MultiSelect
+                                  options={scopesOptions}
+                                  value={scopesValue}
+                                  onChange={scopesOnChange as SelectOnChange}
+                                />
+                              </FormControl>
+                              <FormControl>
+                                <FormLabel color={'fg.500'}>Events</FormLabel>
+                                <MultiSelect
+                                  options={eventsOptions}
+                                  value={eventsValue}
+                                  onChange={eventsOnChange as SelectOnChange}
+                                />
+                              </FormControl>
+
+                              <FormControl>
+                                <FormLabel color={'fg.500'}>
+                                  Organization
+                                </FormLabel>
+                                <Input
+                                  {...connectorForm.register('organization')}
+                                />
+                                <FormHelperText pt="3" pb="4">
+                                  The organization that will own the GitHub App
+                                  on GitHub. If left blank, the app will be
+                                  created on your personal account.
+                                </FormHelperText>
+                              </FormControl>
+                              <FormControl pb="6">
+                                <FormLabel color={'fg.500'}>
+                                  Webhook Handler
+                                </FormLabel>
+                                <Select
+                                  defaultValue={'github-app-connector'}
+                                  onChange={(e) => {
+                                    setWebhookName(e.target.value);
+                                  }}
+                                >
+                                  {scripts
+                                    .filter((s) => s.isRunnable)
+                                    .map((s) => (
+                                      <option
+                                        value={s.name}
+                                        key={s.id}
+                                        selected={s.name === webhookName}
+                                      >
+                                        {s.filename}
+                                      </option>
+                                    ))}
+                                </Select>
+                              </FormControl>
+                              <Button
+                                mt="6"
+                                type="submit"
+                                colorScheme={'purple'}
+                                isDisabled={isSaving}
                               >
-                                Manage Settings
-                              </Link>
-                            </HStack>
-                            <Button
-                              variant="unstyled"
-                              color="red.600"
-                              onClick={onOpen}
-                            >
-                              <HStack>
-                                <HiOutlineTrash />
-                                <Text>Remove</Text>
-                              </HStack>
-                            </Button>
-                          </HStack>
-                        </VStack>
+                                Create GitHub App
+                              </Button>
+                            </VStack>
+                          </form>
+                        </FormProvider>
                       </CardBody>
                     </Card>
-                    <AlertDialog
-                      isOpen={isOpen}
-                      leastDestructiveRef={cancelRef}
-                      onClose={onClose}
-                    >
-                      <AlertDialogOverlay>
-                        <AlertDialogContent>
-                          <AlertDialogHeader fontSize="lg" fontWeight="bold">
-                            Remove GitHub App
-                          </AlertDialogHeader>
-
-                          <AlertDialogBody>
-                            Are you sure? You can't undo this action afterwards.
-                          </AlertDialogBody>
-
-                          <AlertDialogFooter>
-                            <Button ref={cancelRef} onClick={onClose}>
-                              Cancel
-                            </Button>
-                            <Button
-                              colorScheme="red"
-                              isDisabled={isSaving}
-                              onClick={async () => {
-                                setIsSaving(true);
-                                await deleteConnectorMutation.mutateAsync({
-                                  appId,
-                                });
-                                setIsSaving(false);
-                                onClose();
-                              }}
-                              ml={3}
-                            >
-                              Uninstall
-                            </Button>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialogOverlay>
-                    </AlertDialog>
-                  </>
-                ) : (
+                  )}
+                </>
+              ) : (
+                <VStack align="stretch" w="full">
                   <Card w="full">
-                    <CardBody color="fg.600">
-                      <FormProvider {...manifestForm}>
-                        <form
-                          ref={manifestFormRef}
-                          action={`https://github.com/settings/apps/new?state=${stateValueQuery?.data}`}
-                          method="post"
-                        >
-                          <input
-                            hidden={true}
-                            {...manifestForm.register('manifest')}
-                          />
-                        </form>
-                      </FormProvider>
-                      <FormProvider {...connectorForm}>
-                        <form
-                          onSubmit={connectorForm.handleSubmit(saveConnector)}
-                        >
-                          <VStack align="start" w="full">
-                            <FormControl>
-                              <FormLabel color={'fg.500'}>Scopes</FormLabel>
-                              <MultiSelect
-                                options={scopesOptions}
-                                value={scopesValue}
-                                onChange={scopesOnChange as SelectOnChange}
-                              />
-                            </FormControl>
-                            <FormControl>
-                              <FormLabel color={'fg.500'}>Events</FormLabel>
-                              <MultiSelect
-                                options={eventsOptions}
-                                value={eventsValue}
-                                onChange={eventsOnChange as SelectOnChange}
-                              />
-                            </FormControl>
-                            <FormControl pb="6">
-                              <FormLabel color={'fg.500'}>
-                                Webhook Handler
-                              </FormLabel>
-                              <Select
-                                defaultValue={'github-app-connector.ts'}
-                                onChange={(e) => {
-                                  setWebhookPath(e.target.value);
-                                }}
-                              >
-                                {scripts
-                                  .filter((s) => s.isRunnable)
-                                  .map((s) => (
-                                    <option
-                                      value={s.filename}
-                                      key={s.id}
-                                      selected={s.filename === webhookPath}
-                                    >
-                                      {s.filename}
-                                    </option>
-                                  ))}
-                              </Select>
-                            </FormControl>
-                            <Button
-                              mt="6"
-                              type="submit"
-                              colorScheme={'purple'}
-                              isDisabled={isSaving}
-                            >
-                              Create GitHub App
-                            </Button>
-                          </VStack>
-                        </form>
-                      </FormProvider>
+                    <CardBody>
+                      <Heading size="sm">Configuration</Heading>
+                      <VStack
+                        align="start"
+                        divider={<StackDivider />}
+                        fontSize="sm"
+                        py="2"
+                        mt="2"
+                      >
+                        <HStack>
+                          <Text>Scopes:</Text>
+                          <Box>
+                            {connector.data?.userScopes.map((scope: string) => (
+                              <Code key={scope}>{scope}</Code>
+                            ))}
+                          </Box>
+                        </HStack>
+
+                        <HStack>
+                          <Text>Events</Text>
+                          {connector.data?.events.map((event: string) => (
+                            <Code key={event}>{event}</Code>
+                          ))}
+                        </HStack>
+                      </VStack>
                     </CardBody>
                   </Card>
-                )}
-              </>
-            ) : (
-              <VStack align="stretch" w="full">
-                <Card w="full">
-                  <CardBody>
-                    <Heading size="sm">Configuration</Heading>
-                    <VStack
-                      align="start"
-                      divider={<StackDivider />}
-                      fontSize="sm"
-                      py="2"
-                      mt="2"
-                    >
-                      <HStack>
-                        <Text>Scopes:</Text>
-                        <Box>
-                          {connector.data?.userScopes.map((scope: string) => (
-                            <Code key={scope}>{scope}</Code>
-                          ))}
-                        </Box>
-                      </HStack>
+                </VStack>
+              )}
+            </VStack>
+            <Divider my={4} />
+            Connector code:
+          </>
+        )}
+      </Box>
 
-                      <HStack>
-                        <Text>Events</Text>
-                        {connector.data?.events.map((event: string) => (
-                          <Code key={event}>{event}</Code>
-                        ))}
-                      </HStack>
-                    </VStack>
-                  </CardBody>
-                </Card>
-              </VStack>
-            )}
-          </VStack>
-          <Divider my={4} />
-          Connector code:
-        </>
-      )}
-    </Box>
+      <Modal isOpen={isOpenInfo} onClose={onCloseInfo}>
+        <ModalOverlay />
+        <ModalContent maxW="2xl">
+          <ModalHeader>
+            <HStack>
+              <Text>GitHub Apps Connector</Text>
+            </HStack>
+          </ModalHeader>
+          <ModalBody px="6" pb="6">
+            <Markdown>{githubAppConnector.helperText || ''}</Markdown>
+          </ModalBody>
+        </ModalContent>
+      </Modal>
+    </>
   );
 }
 
