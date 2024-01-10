@@ -6,7 +6,12 @@ import {
   hasAppEditPermission,
   hasAppReadPermission,
 } from '../utils/authz.utils';
-import { decryptFromHex, encryptToBase64, encryptToHex } from '@zipper/utils';
+import {
+  decryptFromHex,
+  encryptToBase64,
+  encryptToHex,
+  safeJSONParse,
+} from '@zipper/utils';
 import { Prisma } from '@prisma/client';
 import { createTRPCRouter, publicProcedure } from '../root';
 import { Project, SyntaxKind } from 'ts-morph';
@@ -59,10 +64,17 @@ export const githubAppConnectorRouter = createTRPCRouter({
           return acc;
         }, {} as any);
 
+      const metadata = await prisma.appSetting.findFirst({
+        where: {
+          appId: input.appId,
+          settingName: 'github-app-connector-app-setting',
+        },
+      });
       return {
         scopes: extractedObject.scopes,
         organization: extractedObject.clientId,
         events: extractedObject.events,
+        metadata: safeJSONParse(metadata?.settingValue, undefined, null),
       };
     }),
   getStateValue: publicProcedure
@@ -259,30 +271,15 @@ export const githubAppConnectorRouter = createTRPCRouter({
         },
       });
 
-      const connector = await prisma.appConnector.update({
-        where: {
-          appId_type: {
-            appId,
-            type: 'github-app',
-          },
-        },
+      await prisma.appSetting.create({
         data: {
-          metadata: json,
-        },
-        include: {
-          app: true,
-        },
-      });
-
-      const resourceOwner = await prisma.resourceOwnerSlug.findFirstOrThrow({
-        where: {
-          resourceOwnerId:
-            connector.app.organizationId || connector.app.createdById,
+          appId: appId!,
+          settingName: 'github-app-connector-app-setting',
+          settingValue: JSON.stringify(json),
         },
       });
 
       return {
-        app: { ...connector.app, resourceOwner },
         redirectTo,
       };
     }),

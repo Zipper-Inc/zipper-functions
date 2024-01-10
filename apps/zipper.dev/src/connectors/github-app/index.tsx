@@ -98,8 +98,7 @@ export default function GitHubAppConnectorForm({ appId }: { appId: string }) {
 
   const [isSaving, setIsSaving] = useState(false);
 
-  // @TODO
-  const existingInstallation = false; // connector.data?.metadata;
+  const existingInstallation = connector.data?.metadata;
   return (
     <>
       <Box px="6" w="full">
