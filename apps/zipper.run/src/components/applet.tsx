@@ -695,7 +695,8 @@ export const getServerSideProps: GetServerSideProps = async ({
     [X_ZIPPER_TEMP_USER_ID]: tempUserId || '',
   };
 
-  const config = parsedAction?.config || handlerConfigs?.[filename] || {};
+  const config =
+    (actionFromUrl ? parsedAction?.config : handlerConfigs?.[filename]) || {};
 
   const urlValues = inputParams
     ? getInputValuesFromUrl({
