@@ -1,4 +1,4 @@
-const formatPath = (path = '') => path.replace(/\.tsx?$/, '') || 'main';
+const formatPath = (path = '') => path || 'main';
 
 const formatVersion = (version: string) =>
   version.startsWith('@') ? version : `@${version}`;
