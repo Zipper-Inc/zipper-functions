@@ -144,7 +144,7 @@
     "y-monaco": "^0.1.4",
     "y-protocols": "^1.0.6",
     "yjs": "^13.6.8",
-    "zod": "^3.22.4"
+    "zod": "^3.21.4"
   },
   "devDependencies": {
     "@next/eslint-plugin-next": "^12.3.1",
