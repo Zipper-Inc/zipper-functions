@@ -94,21 +94,12 @@ export default function GitHubAppConnectorForm({ appId }: { appId: string }) {
     onClose: onCloseInfo,
   } = useDisclosure();
 
-  const connector = trpc.githubAppConnector.get.useQuery(
-    { appId },
-    {
-      // onSuccess: (data) => {
-      //   if (data && setScopesValue && setEventsValue) {
-      //     setScopesValue(data?.userScopes || []);
-      //     setEventsValue(data?.events || []);
-      //   }
-      // },
-    },
-  );
+  const connector = trpc.githubAppConnector.get.useQuery({ appId });
 
   const [isSaving, setIsSaving] = useState(false);
 
-  const existingInstallation = connector.data?.metadata;
+  // @TODO
+  const existingInstallation = false; // connector.data?.metadata;
   return (
     <>
       <Box px="6" w="full">
@@ -268,6 +259,18 @@ function ThereAreNoInstallation(props: ThereAreNoInstallation) {
     value: [],
   });
 
+  trpc.githubAppConnector.get.useQuery(
+    { appId },
+    {
+      onSuccess: (data) => {
+        if (data && setScopesValue && setEventsValue) {
+          setScopesValue(data?.scopes || []);
+          setEventsValue(data?.events || []);
+        }
+      },
+    },
+  );
+
   const stateValueQuery = trpc.githubAppConnector.getStateValue.useQuery({
     appId,
     postInstallationRedirect: window.location.href,
@@ -286,6 +289,7 @@ function ThereAreNoInstallation(props: ThereAreNoInstallation) {
     boot,
     appId,
   });
+
   const saveConnector = async () => {
     if (stateValueQuery.data) {
       props.setIsSaving(true);
@@ -510,7 +514,9 @@ function ExistingInstallation(props: ExistingInstallation) {
   );
 }
 
-type UserCantEdit = { connectorData?: AppConnector | null };
+type UserCantEdit = {
+  connectorData?: { scopes: Array<any>; events: any[] } | null;
+};
 function UserCantEdit({ connectorData }: UserCantEdit) {
   if (!connectorData) return null;
   return (
@@ -528,7 +534,7 @@ function UserCantEdit({ connectorData }: UserCantEdit) {
             <HStack>
               <Text>Scopes:</Text>
               <Box>
-                {connectorData?.userScopes.map((scope: string) => (
+                {connectorData?.scopes.map((scope: string) => (
                   <Code key={scope}>{scope}</Code>
                 ))}
               </Box>

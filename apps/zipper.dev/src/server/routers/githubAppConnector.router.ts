@@ -9,6 +9,7 @@ import {
 import { decryptFromHex, encryptToBase64, encryptToHex } from '@zipper/utils';
 import { Prisma } from '@prisma/client';
 import { createTRPCRouter, publicProcedure } from '../root';
+import { Project, SyntaxKind } from 'ts-morph';
 
 export const githubAppConnectorRouter = createTRPCRouter({
   get: publicProcedure
@@ -19,13 +20,50 @@ export const githubAppConnectorRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       await hasAppReadPermission({ ctx, appId: input.appId });
-
-      return prisma.appConnector.findFirst({
+      const script = await prisma.script.findFirst({
         where: {
           appId: input.appId,
-          type: 'github-app',
+          name: 'github-app-connector',
         },
       });
+      if (!script) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Script not found',
+        });
+      }
+      const project = new Project();
+      const sourceFile = project.createSourceFile('tempFile.ts', script.code);
+      const variableDeclaration = sourceFile.getVariableDeclaration(
+        'githubAppConnectorConfig',
+      );
+      const extractedObject = variableDeclaration
+        ?.getInitializerIfKindOrThrow(SyntaxKind.ObjectLiteralExpression)
+        .getProperties()
+        .reduce((acc, p) => {
+          if (p.isKind(SyntaxKind.PropertyAssignment)) {
+            const name = p.getName();
+            const initializer = p.getInitializer();
+
+            if (
+              initializer?.isKind(SyntaxKind.StringLiteral) ||
+              initializer?.isKind(SyntaxKind.NumericLiteral)
+            ) {
+              acc[name] = initializer.getLiteralValue();
+            } else if (initializer?.isKind(SyntaxKind.ArrayLiteralExpression)) {
+              acc[name] = initializer
+                .getElements()
+                .map((a) => a.getText().replace(/"/g, ''));
+            }
+          }
+          return acc;
+        }, {} as any);
+
+      return {
+        scopes: extractedObject.scopes,
+        organization: extractedObject.clientId,
+        events: extractedObject.events,
+      };
     }),
   getStateValue: publicProcedure
     .input(
