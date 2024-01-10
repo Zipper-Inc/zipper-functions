@@ -103,15 +103,10 @@ export const githubAppConnectorRouter = createTRPCRouter({
     .mutation(async ({ ctx, input: { appId } }) => {
       await hasAppEditPermission({ ctx, appId });
 
-      await prisma.appConnector.update({
+      await prisma.appSetting.deleteMany({
         where: {
-          appId_type: {
-            appId,
-            type: 'github-app',
-          },
-        },
-        data: {
-          metadata: Prisma.DbNull,
+          appId,
+          settingName: 'github-app-connector-app-setting',
         },
       });
 
@@ -176,7 +171,7 @@ export const githubAppConnectorRouter = createTRPCRouter({
         state: z.string(),
       }),
     )
-    .mutation(async ({ ctx, input }) => {
+    .mutation(async ({ input }) => {
       let appId: string | undefined;
       let redirectTo: string | undefined;
       try {
@@ -270,6 +265,16 @@ export const githubAppConnectorRouter = createTRPCRouter({
           ),
         },
       });
+      const app = await prisma.app.findUnique({
+        where: {
+          id: appId!,
+        },
+      });
+      const resourceOwner = await prisma.resourceOwnerSlug.findFirstOrThrow({
+        where: {
+          resourceOwnerId: app!.organizationId || app!.createdById,
+        },
+      });
 
       await prisma.appSetting.create({
         data: {
@@ -280,6 +285,7 @@ export const githubAppConnectorRouter = createTRPCRouter({
       });
 
       return {
+        app: { ...app, resourceOwner: resourceOwner },
         redirectTo,
       };
     }),
