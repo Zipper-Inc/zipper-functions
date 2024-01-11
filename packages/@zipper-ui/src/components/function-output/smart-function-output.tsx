@@ -39,7 +39,7 @@ export function SmartFunctionOutput({
     window.location.href.includes('localhost')
   ) {
     const len = JSON.stringify(result || {}).length;
-    if (len > 6000) {
+    if (len > 20000) {
       return (
         <>
           <p>
