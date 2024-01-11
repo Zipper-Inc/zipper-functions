@@ -1,5 +1,5 @@
 import { Box, ChakraProps, Link, Text } from '@chakra-ui/react';
-import React, { useMemo } from 'react';
+import React, { ComponentProps, useMemo } from 'react';
 
 export const Links = ({
   mode = 'light',
@@ -9,7 +9,7 @@ export const Links = ({
   displayActiveLink?: boolean;
   color?: Record<'default' | 'hover', ChakraProps['color']>;
   mode?: 'dark' | 'light';
-  as?: keyof HTMLElementTagNameMap;
+  as?: ComponentProps<typeof Box>['as'];
   textDecor?: ChakraProps['textDecor'];
   component?: any;
 }) => {

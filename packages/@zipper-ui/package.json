@@ -15,13 +15,14 @@
     "nodemon": "^2.0.20"
   },
   "dependencies": {
-    "@chakra-ui/react": "^2.4.9",
+    "@chakra-ui/react": "^2.8.2",
     "@emotion/react": "^11.10.5",
     "@emotion/styled": "^11.10.5",
     "@uploadthing/react": "6.0.2",
     "@zipper-inc/client-js": "^0.1.6",
     "@zipper/types": "*",
     "@zipper/utils": "*",
+    "compute-scroll-into-view": "^3.1.0",
     "framer-motion": "^9.0.0",
     "javascript-color-gradient": "^2.4.4",
     "lodash.shuffle": "^4.2.0",
@@ -39,7 +40,7 @@
     "remark-gfm": "^1.0.0",
     "shiki": "^0.14.3",
     "strip-js": "^1.2.0",
-    "typescript": "^4.9.5"
+    "typescript": "^5.3.3"
   },
   "nodemonConfig": {
     "watch": [
