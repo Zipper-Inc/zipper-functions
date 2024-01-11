@@ -11,6 +11,7 @@ import { BLUE, Button, ZipperLogo, ZipperSymbol } from '@zipper/ui';
 import { UserProfileButton } from '~/components/auth/user-profile-button';
 import { FeedbackModal } from '~/components/auth/feedback-modal';
 import { MobileMenu } from '~/components/header-mobile-menu';
+import { ProfileButton } from '../auth/profile-button';
 
 type HeaderProps = {
   showNav?: boolean;
@@ -88,7 +89,7 @@ const Header: React.FC<HeaderProps> = ({
                     </div>
                   ) : (
                     <div className="flex space-x-5">
-                      <ZipperLogo className="fill-current text-blue-500 h-5 ml-1 w-36" />
+                      <ZipperLogo className="fill-primary dark:fill-secondary text-blue-500 h-5 ml-1 w-36" />
                       {showNav && (
                         <div className="hidden sm:flex space-x-1 items-center ">
                           <Icon as={PiHouseSimple} />
@@ -151,7 +152,7 @@ const Header: React.FC<HeaderProps> = ({
                   <FeedbackModal {...feedbackModal} />
                 </>
               )}
-              <UserProfileButton />
+              <ProfileButton />
             </div>
             {!isTablet && (
               <MobileMenu
