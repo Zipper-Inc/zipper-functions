@@ -12,7 +12,8 @@
     "@zipper-types": "typescript",
     "@zipper-utils": "Utils",
     "deno-types": "Lib",
-    "tsconfig": "Less"
+    "tsconfig": "Less",
+    "connectors": "Connection"
   },
   "material-icon-theme.files.associations": {
     ".ctirc": "verilog"

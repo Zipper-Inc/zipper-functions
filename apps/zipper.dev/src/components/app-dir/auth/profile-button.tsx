@@ -2,12 +2,11 @@
 import { Dropdown, Button, Avatar, Show } from '@zipper/ui';
 import React, { ReactNode, useCallback } from 'react';
 import { signIn, signOut } from 'next-auth/react';
-import SignedIn from './signed-in';
-import SignedOut from './signed-out';
-import UserProfile from './userProfile';
+import { SignedIn, SignedOut } from './user-status';
+import UserProfile from '../../auth/userProfile';
 import { useUser } from '~/hooks/use-user';
 import { useTheme } from 'next-themes';
-import { FeedbackModal as FeedbackDialog } from './feedback-modal';
+import { FeedbackModal as FeedbackDialog } from '../../auth/feedback-modal';
 import Link from 'next/link';
 import {
   useDisclosure,
@@ -82,7 +81,7 @@ const ProfileMenu = ({
     <React.Fragment>
       <Dropdown.Root>
         <Dropdown.Trigger>{trigger}</Dropdown.Trigger>
-        <Dropdown.Content>
+        <Dropdown.Content align="end">
           <Dropdown.Label>Settings</Dropdown.Label>
           <Dropdown.Separator />
           <Dropdown.Item

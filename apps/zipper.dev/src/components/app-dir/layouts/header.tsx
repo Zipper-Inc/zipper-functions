@@ -7,11 +7,13 @@ import { PiHouseSimple } from 'react-icons/pi';
 import { useUser } from '~/hooks/use-user';
 import SignedIn from '~/components/auth/signed-in';
 import SignedOut from '~/components/auth/signed-out';
-import { BLUE, Button, ZipperLogo, ZipperSymbol } from '@zipper/ui';
-import { UserProfileButton } from '~/components/auth/user-profile-button';
+import { BLUE, Button, Dropdown, ZipperLogo, ZipperSymbol } from '@zipper/ui';
 import { FeedbackModal } from '~/components/auth/feedback-modal';
 import { MobileMenu } from '~/components/header-mobile-menu';
 import { ProfileButton } from '../auth/profile-button';
+import OrganizationSwitcher from '~/components/auth/organizationSwitcher';
+import { useOrganization } from '~/hooks/use-organization';
+import { FiChevronDown } from 'react-icons/fi';
 
 type HeaderProps = {
   showNav?: boolean;
@@ -34,6 +36,7 @@ const Header: React.FC<HeaderProps> = ({
   const searchParams = useSearchParams();
   const feedbackModal = useDisclosure();
   const isTablet = useBreakpointValue({ base: false, md: true });
+  const { organization, role } = useOrganization();
 
   const isLanding = useMemo(
     () =>
@@ -64,38 +67,43 @@ const Header: React.FC<HeaderProps> = ({
 
   return (
     <>
-      <header className="flex gap-4 pt-5 w-full min-w-md px-4 justify-center items-center">
+      <header className="flex gap-4 pt-5 w-full min-w-md px-12 justify-center items-center">
         <div className="flex space-x-3 h-8 items-center">
           <div>
             {isLoaded && (
               <NextLink href="/">
                 <SignedIn>
                   {showNav && showOrgSwitcher ? (
-                    <div className="flex space-x-4">
-                      <div className="flex space-x-2">
+                    <div className="flex items-center space-x-4">
+                      <div className="flex items-center space-x-2">
                         {/* ZipperSymbol should be adapted or replaced with TailwindCSS styled component. Custom styles may be required */}
-                        <ZipperSymbol className="max-h-full w-5 ml-1 fill-current text-blue-500" />
+                        <ZipperSymbol className="max-h-full h-4 w-4 py-0 ml-1 fill-secondary text-blue-500" />
 
-                        <div className="bg-blue-50 flex items-center px-2 py-1">
-                          <p className="text-xs uppercase font-bold text-indigo-600 cursor-default">
-                            Beta
-                          </p>
-                        </div>
+                        <p className="text-xs uppercase flex items-center py-0 font-bold text-secondary bg-secondary/10 px-2 h-5">
+                          Beta
+                        </p>
                       </div>
 
-                      <h2 className="text-md leading-none whitespace-nowrap font-medium text-gray-400">
+                      <span className="text-2xl leading-none whitespace-nowrap font-medium text-muted">
                         /
-                      </h2>
+                      </span>
+
+                      <Dropdown.Root>
+                        <Dropdown.Trigger className="flex items-center gap-2 text-xl font-medium">
+                          {organization?.name}
+                          <FiChevronDown size={16} />
+                        </Dropdown.Trigger>
+                      </Dropdown.Root>
                     </div>
                   ) : (
                     <div className="flex space-x-5">
-                      <ZipperLogo className="fill-primary dark:fill-secondary text-blue-500 h-5 ml-1 w-36" />
-                      {showNav && (
-                        <div className="hidden sm:flex space-x-1 items-center ">
+                      <ZipperLogo className="fill-secondary dark:fill-secondary text-blue-500 h-5 w-36" />
+                      {/* {showNav && (
+                        <div className="hidden sm:flex space-x-1 items-center bg-green">
                           <Icon as={PiHouseSimple} />
                           <p className="text-sm">Dashboard</p>
                         </div>
-                      )}
+                      )} */}
                     </div>
                   )}
                 </SignedIn>

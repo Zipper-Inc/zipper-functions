@@ -17,5 +17,4 @@ const Show = (props: ShowProps) => {
 
   return null;
 };
-
 export { Show };
