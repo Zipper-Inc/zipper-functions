@@ -49,7 +49,7 @@ function getExportNamesFromFilename(filename: string) {
 }
 
 export function generateModTs({
-  subdomain: subdomain,
+  subdomain,
   filenames,
 }: {
   subdomain: string;

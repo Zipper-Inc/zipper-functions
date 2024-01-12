@@ -80,7 +80,7 @@ export const GitHubUserConnectorInput: React.FC<ConnectorInputProps> = ({
   return (
     <HStack>
       <HStack flexGrow={1}>
-        <Text>{`Authed to GitHub as `}</Text>
+        <Text>{'Authed to GitHub as '}</Text>
         <Text fontWeight={'medium'}>
           {(
             c.appConnectorUserAuths[0]

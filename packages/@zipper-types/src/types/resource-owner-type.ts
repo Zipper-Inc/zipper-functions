@@ -1,4 +1,4 @@
 export enum ResourceOwnerType {
-  Organization,
-  User,
+  Organization = 0,
+  User = 1,
 }

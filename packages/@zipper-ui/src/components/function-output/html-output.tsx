@@ -29,7 +29,7 @@ export function HtmlOutput({
 
   return (
     <Flex height={height} width="full" ref={ref}>
-      <iframe height="100%" width="100%`" srcDoc={srcDoc} />
+      <iframe height="100%" width="100%`" srcDoc={srcDoc} title="Html output" />
     </Flex>
   );
 }

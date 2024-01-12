@@ -316,11 +316,7 @@ function SlackConnectorForm({ appId }: { appId: string }) {
                                   textDecorationStyle="dotted"
                                   color={'fg.900'}
                                 >
-                                  {
-                                    (connector.data?.metadata as any)['team'][
-                                      'name'
-                                    ]
-                                  }
+                                  {(connector.data?.metadata as any).team.name}
                                 </FormLabel>
                               </PopoverTrigger>
                               <PopoverContent w="sm">
@@ -345,9 +341,8 @@ function SlackConnectorForm({ appId }: { appId: string }) {
                                       <Text>Bot User ID:</Text>
                                       <Code>
                                         {
-                                          (connector.data?.metadata as any)[
-                                            'bot_user_id'
-                                          ]
+                                          (connector.data?.metadata as any)
+                                            .bot_user_id
                                         }
                                       </Code>
                                     </HStack>
@@ -355,9 +350,8 @@ function SlackConnectorForm({ appId }: { appId: string }) {
                                       <Text>Bot Scopes:</Text>
                                       <Box>
                                         {(
-                                          (connector.data?.metadata as any)[
-                                            'scope'
-                                          ] || ''
+                                          (connector.data?.metadata as any)
+                                            .scope || ''
                                         )
                                           .split(',')
                                           .map((scope: string) => (
@@ -366,25 +360,21 @@ function SlackConnectorForm({ appId }: { appId: string }) {
                                       </Box>
                                     </HStack>
 
-                                    {(connector.data?.metadata as any)[
-                                      'authed_user'
-                                    ] &&
-                                      (connector.data?.metadata as any)[
-                                        'authed_user'
-                                      ]['scope'] && (
-                                        <HStack>
-                                          <Text>User Scopes:</Text>
-                                          <Box>
-                                            {(connector.data?.metadata as any)[
-                                              'authed_user'
-                                            ]['scope']
-                                              .split(',')
-                                              .map((scope: string) => (
-                                                <Code key={scope}>{scope}</Code>
-                                              ))}
-                                          </Box>
-                                        </HStack>
-                                      )}
+                                    {(connector.data?.metadata as any)
+                                      .authed_user?.scope && (
+                                      <HStack>
+                                        <Text>User Scopes:</Text>
+                                        <Box>
+                                          {(
+                                            connector.data?.metadata as any
+                                          ).authed_user.scope
+                                            .split(',')
+                                            .map((scope: string) => (
+                                              <Code key={scope}>{scope}</Code>
+                                            ))}
+                                        </Box>
+                                      </HStack>
+                                    )}
                                   </VStack>
                                 </PopoverBody>
                               </PopoverContent>

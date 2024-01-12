@@ -146,7 +146,7 @@ const SchedulesTab: React.FC<SchedulesTabProps> = ({ appId }) => {
                 <Th {...tableHeaderStyles}>Script</Th>
                 <Th {...tableHeaderStyles}>Run As</Th>
                 <Th {...tableHeaderStyles}>Last Run</Th>
-                <Th {...tableHeaderStyles} w={0} pr={0}></Th>
+                <Th {...tableHeaderStyles} w={0} pr={0} />
               </Tr>
             </Thead>
             <Tbody color="fg.900" fontSize="sm">
@@ -194,7 +194,7 @@ const SchedulesTab: React.FC<SchedulesTabProps> = ({ appId }) => {
                         <HStack spacing={0} justifyContent="end">
                           <Tooltip
                             label={
-                              !!s.fromConfig
+                              s.fromConfig
                                 ? 'Delete the schedule from your code'
                                 : ''
                             }

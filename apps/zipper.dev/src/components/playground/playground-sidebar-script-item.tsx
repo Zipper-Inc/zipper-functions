@@ -45,14 +45,14 @@ export type ScriptItemProps = {
   canUserEdit: boolean;
 };
 
-const ScriptIcon = ({ script, ...propsPassedIn }: { script: Script } & any) => {
+const ScriptIcon = ({ script, ...propsPassedIn }: { script: Script }) => {
   const props = { ...propsPassedIn, size: '14px' };
   if (isReadme(script)) return <PiNote {...props} />;
-  else if (isMain(script)) return <PiCode {...props} size="16px" />;
-  else if (isHandler(script)) return <PiCodeSimpleDuotone {...props} />;
-  else if (isConnector(script)) return <PiPlugsDuotone {...props} />;
-  else if (isLib(script)) return <PiCodeSimple {...props} />;
-  else return <PiQuestion {...props} />;
+  if (isMain(script)) return <PiCode {...props} size="16px" />;
+  if (isHandler(script)) return <PiCodeSimpleDuotone {...props} />;
+  if (isConnector(script)) return <PiPlugsDuotone {...props} />;
+  if (isLib(script)) return <PiCodeSimple {...props} />;
+  return <PiQuestion {...props} />;
 };
 
 export const ScriptItem: React.FC<ScriptItemProps> = ({

@@ -32,6 +32,7 @@ export type AwarenessList = [number, UserAwareness][];
 
 // Optionally, the type of custom events broadcast and listened to in this
 // room. Use a union for multiple events. Must be JSON-serializable.
+// biome-ignore lint/complexity/noBannedTypes: just an example that can be extended
 export type RoomEvent = {
   // type: "NOTIFICATION",
   // ...
@@ -41,7 +42,7 @@ export type TypedLiveblocksProvider = LiveblocksProvider<
   Presence,
   Storage,
   UserMeta,
-  RoomEvent
+  never
 >;
 
 export const {

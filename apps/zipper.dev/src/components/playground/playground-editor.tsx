@@ -440,7 +440,7 @@ export default function PlaygroundEditor(
   const getStuffForScriptOrModel = (
     scriptOrModel: Script | monaco.editor.ITextModel,
   ) => {
-    const script = !!(scriptOrModel as Script).filename
+    const script = (scriptOrModel as Script).filename
       ? (scriptOrModel as Script)
       : scripts.find(
           (s) =>
@@ -448,7 +448,7 @@ export default function PlaygroundEditor(
             getPathFromUri((scriptOrModel as monaco.editor.ITextModel).uri),
         );
 
-    const model = !!(scriptOrModel as monaco.editor.ITextModel).uri
+    const model = (scriptOrModel as monaco.editor.ITextModel).uri
       ? (scriptOrModel as monaco.editor.ITextModel)
       : getOrCreateScriptModel(scriptOrModel as Script, monaco);
 
@@ -597,7 +597,7 @@ export default function PlaygroundEditor(
         }}
         overrideServices={{
           openerService: {
-            open: function (url: string) {
+            open: (url: string) => {
               const ext =
                 isExternalResource(url) && url.endsWith('ts') ? 'ts' : 'tsx';
               const resource = getUriFromPath(url, monaco.Uri.parse, ext);

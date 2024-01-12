@@ -26,12 +26,12 @@ const getCacheKey = ([specifier, target = Target.Default]: CacheKeyPair) =>
 
 function getTtl(headers: Record<string, string>) {
   const maxAge = parseInt(
-    headers['maxAge'] ||
+    headers.maxAge ||
       headers['cache-control']?.match(/max-age=([0-9]+)[\s;,]/)?.[1] ||
       '',
     10,
   );
-  const age = parseInt(headers['age'] || '', 10);
+  const age = parseInt(headers.age || '', 10);
 
   if (maxAge && age) return maxAge - age;
 

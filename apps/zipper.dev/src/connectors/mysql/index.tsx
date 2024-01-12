@@ -13,7 +13,7 @@ import { useMemo } from 'react';
 export const mysqlConnector = createConnector({
   id: 'mysql',
   name: 'Mysql',
-  description: `Connect to a Mysql database and run queries.`,
+  description: 'Connect to a Mysql database and run queries.',
   icon: <FiDatabase />,
   code,
 });

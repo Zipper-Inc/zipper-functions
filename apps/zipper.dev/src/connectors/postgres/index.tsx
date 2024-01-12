@@ -13,7 +13,7 @@ import { useMemo } from 'react';
 export const postgresConnector = createConnector({
   id: 'postgres',
   name: 'Postgres',
-  description: `Connect to a Postgres database and run queries.`,
+  description: 'Connect to a Postgres database and run queries.',
   icon: <FiDatabase />,
   code,
 });

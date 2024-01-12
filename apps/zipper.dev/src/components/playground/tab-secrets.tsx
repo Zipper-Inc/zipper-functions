@@ -102,18 +102,17 @@ const SecretsTab: React.FC<SecretsTabProps> = ({ appId, editable }) => {
         spacing={4}
       >
         <VStack align="stretch" pt={4} spacing={4}>
-          {existingSecrets.data &&
-            existingSecrets.data.map((secret) => (
-              <EditSecret
-                key={secret.id}
-                existingSecret={secret}
-                remove={(toDelete) => {
-                  setSecretToDelete(toDelete);
-                  onOpen();
-                }}
-                editable={editable}
-              />
-            ))}
+          {existingSecrets.data?.map((secret) => (
+            <EditSecret
+              key={secret.id}
+              existingSecret={secret}
+              remove={(toDelete) => {
+                setSecretToDelete(toDelete);
+                onOpen();
+              }}
+              editable={editable}
+            />
+          ))}
           {editable &&
             fields.map((field, index) => (
               <EditSecret

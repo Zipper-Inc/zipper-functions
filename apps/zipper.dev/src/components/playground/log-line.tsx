@@ -68,7 +68,7 @@ export function LogLine({ log }: { log: any }) {
   useEffect(() => {
     if (!level || !msg) console.log('?', log);
     console.log(
-      '%c Z ' + `%c  ${appInfo.slug}  ` + `%c ${level} `,
+      `%c Z %c  ${appInfo.slug}  %c ${level} `,
       `fontWeight: 800; color: bgColor; background: ${brandColors.brandPurple};`,
       `fontWeight: 500; color: ${baseColors.gray[600]}; background: ${baseColors.gray[50]};`,
       `fontWeight: 200; font-size: smaller; height: 100%; color: ${brandColors.brandDarkPurple}; text-transform: uppercase;`,

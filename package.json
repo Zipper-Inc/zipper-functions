@@ -21,7 +21,7 @@
     "get-started": "yarn install; yarn env:update; yarn env:link; yarn migrate; yarn seed",
     "lint": "turbo run lint",
     "test": "turbo run test",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "format": "biome format --write ./",
     "db-nuke": "docker-compose down --volumes --remove-orphans",
     "swc-node": "node -r @swc-node/register",
     "migrate": "yarn workspace zipper.dev db-migrate-dev",
@@ -36,14 +36,9 @@
     "dotenv": "^16.0.3",
     "dotenv-cli": "^7.2.1",
     "get-port-please": "^3.0.1",
-    "prettier": "latest",
+    "@biomejs/biome": "1.5.1",
     "signale": "^1.4.0",
     "turbo": "^1.7.3"
-  },
-  "prettier": {
-    "printWidth": 80,
-    "trailingComma": "all",
-    "singleQuote": true
   },
   "packageManager": "yarn@1.22.19"
 }

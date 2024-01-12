@@ -12,7 +12,7 @@ import { notionConnectorMetadata } from './notion';
 
 export const connectors: Record<ConnectorId, Connector> = {
   github: githubConnector,
-  ['github-app']: githubAppConnector,
+  'github-app': githubAppConnector,
   slack: slackConnector,
   openai: openaiConnector,
   zendesk: zendeskConnector,

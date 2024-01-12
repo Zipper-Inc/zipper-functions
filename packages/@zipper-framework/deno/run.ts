@@ -198,7 +198,7 @@ async function runApplet({ request: relayRequest }: Deno.RequestEvent) {
 
   // Handle missing paths
   if (!handler) {
-    return new Response(`Zipper Error 404: Path not found`, {
+    return new Response('Zipper Error 404: Path not found', {
       status: 404,
       headers: RESPONSE_HEADERS,
     });
@@ -234,7 +234,7 @@ async function runApplet({ request: relayRequest }: Deno.RequestEvent) {
       let a;
       if (typeof value === 'string') {
         a = /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z)$/.exec(value);
-        if (a && a[1]) {
+        if (a?.[1]) {
           return new Date(a[1]);
         }
       }

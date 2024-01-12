@@ -24,7 +24,7 @@ async function buildHeaders(appId: string, teamId: string) {
   );
 
   return {
-    ['Content-Type']: 'application/json; charset=utf-8',
+    'Content-Type': 'application/json; charset=utf-8',
     Authorization: `Bearer ${token}`,
   };
 }

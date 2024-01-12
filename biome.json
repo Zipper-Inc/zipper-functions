@@ -1,0 +1,59 @@
+{
+  "$schema": "https://biomejs.dev/schemas/1.5.1/schema.json",
+  "organizeImports": { "enabled": true },
+  "formatter": {
+    "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.mdx"],
+    "ignore": ["*.js", "*.jsx", ".css"],
+    "enabled": true,
+    "indentStyle": "space",
+    "lineWidth": 80
+  },
+  "javascript": {
+    "formatter": {
+      "enabled": true,
+      "semicolons": "always",
+      "trailingComma": "all",
+      "quoteStyle": "single"
+    }
+  },
+  "linter": {
+    "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.mdx"],
+    "ignore": ["*.js", "*.jsx", ".css", ".json"],
+    "enabled": true,
+    "rules": {
+      "recommended": true,
+      "style": {
+        "noNonNullAssertion": "warn",
+        "noUselessElse": "warn",
+        "useDefaultParameterLast": "off"
+      },
+      "suspicious": {
+        "noArrayIndexKey": "warn",
+        "noExplicitAny": "warn",
+        "noImplicitAnyLet": "warn",
+        "noConfusingVoidType": "warn",
+        "noAsyncPromiseExecutor": "warn",
+        "noAssignInExpressions": "warn"
+      },
+      "a11y": {
+        "noSvgWithoutTitle": "warn",
+        "useAnchorContent": "warn",
+        "useValidAnchor": "warn"
+      },
+      "performance": {
+        "noAccumulatingSpread": "warn",
+        "noDelete": "warn"
+      },
+      "complexity": {
+        "noUselessSwitchCase": "warn",
+        "noForEach": "warn",
+        "useRegexLiterals": "off",
+        "noUselessFragments": "warn"
+      },
+      "correctness": {
+        "useExhaustiveDependencies": "warn",
+        "noEmptyPattern": "warn"
+      }
+    }
+  }
+}

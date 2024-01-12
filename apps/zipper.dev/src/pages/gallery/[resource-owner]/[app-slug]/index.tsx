@@ -102,10 +102,11 @@ const AppletLandingPage: NextPageWithLayout = () => {
       <iframe
         width="100%"
         height="500"
+        title={`Preview of ${appSlug}/${currentScriptState?.name}`}
         src={`${getAppRunUrl}/embed/run/${
           currentScriptState?.filename || 'main.ts'
         }`}
-      ></iframe>
+      />
     );
   };
 

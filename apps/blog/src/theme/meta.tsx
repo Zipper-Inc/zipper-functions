@@ -110,10 +110,9 @@ export default function Meta(): ReactElement {
     <VStack
       gap="3"
       align="start"
-      className={
-        'nx-mb-8 nx-flex nx-gap-3 ' +
-        (readingTime ? 'nx-items-start' : 'nx-items-center')
-      }
+      className={`nx-mb-8 nx-flex nx-gap-3 ${
+        readingTime ? 'nx-items-start' : 'nx-items-center'
+      }`}
       mb={8}
     >
       <VStack align="start" flexGrow={1} gap={8} color="fg:600">

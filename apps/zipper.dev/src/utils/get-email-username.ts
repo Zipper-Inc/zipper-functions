@@ -3,7 +3,6 @@ export function getEmailUsername(email: string) {
 
   if (match && match.length > 1) {
     return match[1];
-  } else {
-    return '';
   }
+  return '';
 }

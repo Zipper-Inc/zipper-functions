@@ -194,40 +194,36 @@ const ShareTab: React.FC<Props> = ({ isOpen, onClose, appId }) => {
                                     </HStack>
                                   </Box>
                                 )}
-                                {editorQuery.data &&
-                                  editorQuery.data.appEditors?.map(
-                                    (editor, i) => (
-                                      <Box
-                                        fontSize="sm"
-                                        key={editor.user?.id || i}
-                                        pb="2"
-                                      >
-                                        <HStack>
-                                          <Avatar
-                                            size="xs"
-                                            src={
-                                              editor.user?.image || undefined
-                                            }
-                                            name={
-                                              editor.user?.name ||
-                                              editor.user?.email
-                                            }
-                                          />
-                                          <Tooltip label={editor.user?.email}>
-                                            <Text>
-                                              {editor.user?.name ||
-                                                editor.user?.email}
-                                            </Text>
-                                          </Tooltip>
-                                        </HStack>
-                                      </Box>
-                                    ),
-                                  )}
+                                {editorQuery.data?.appEditors?.map(
+                                  (editor, i) => (
+                                    <Box
+                                      fontSize="sm"
+                                      key={editor.user?.id || i}
+                                      pb="2"
+                                    >
+                                      <HStack>
+                                        <Avatar
+                                          size="xs"
+                                          src={editor.user?.image || undefined}
+                                          name={
+                                            editor.user?.name ||
+                                            editor.user?.email
+                                          }
+                                        />
+                                        <Tooltip label={editor.user?.email}>
+                                          <Text>
+                                            {editor.user?.name ||
+                                              editor.user?.email}
+                                          </Text>
+                                        </Tooltip>
+                                      </HStack>
+                                    </Box>
+                                  ),
+                                )}
                               </>
                             </Box>
 
-                            {editorQuery.data &&
-                              editorQuery.data.pending &&
+                            {editorQuery.data?.pending &&
                               editorQuery.data.pending.length > 0 && (
                                 <VStack align="stretch" w="full">
                                   <Text

@@ -24,7 +24,7 @@ import { trpc } from '~/utils/trpc';
 /* Constants                                    */
 /* -------------------------------------------- */
 const CLIENT_ID_FORM = {
-  LABEL: `MongoDB database connection`,
+  LABEL: 'MongoDB database connection',
   DESCRIPTION: 'Add your MongoDB configuration.',
 };
 

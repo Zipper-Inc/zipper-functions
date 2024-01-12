@@ -74,7 +74,7 @@ const NotionConnectorForm = ({ appId }: { appId: string }) => {
       </Box>
       <VStack align="start">
         {existingInstallation &&
-        (connector.data?.metadata as any)?.['bot_id'] !== undefined ? (
+        (connector.data?.metadata as any)?.bot_id !== undefined ? (
           <NotionConnector.Disconnect
             appId={appId}
             metadata={connector.data?.metadata as Record<string, any>}

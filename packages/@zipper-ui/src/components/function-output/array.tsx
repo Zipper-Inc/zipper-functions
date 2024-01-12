@@ -34,7 +34,7 @@ type Props = {
   expandable?: boolean;
 };
 
-export default function Array(props: Props) {
+export default function ArrayOutput(props: Props) {
   // Define the state to keep track of the selected view
   const [view, setView] = useState<'table' | 'cards'>('table');
   const { setSearchQuery } = useSmartFunctionOutputContext();
@@ -197,7 +197,7 @@ function CardCollection(props: Props) {
     <SimpleGrid columns={4} spacing={10}>
       {data.map((item, index) => (
         <Card
-          key={index}
+          key={item.index}
           bgColor="neutral.50"
           overflow="hidden"
           px={8}
@@ -206,7 +206,7 @@ function CardCollection(props: Props) {
         >
           <CardBody px="0">
             <SimpleGrid spacing={2}>
-              <React.Fragment key={index}>
+              <React.Fragment key={item.index}>
                 <Text fontWeight={600} color="neutral.900">
                   {item.value as string}
                 </Text>

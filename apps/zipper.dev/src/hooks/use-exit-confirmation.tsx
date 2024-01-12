@@ -26,7 +26,8 @@ export function useExitConfirmation({
     const handleWindowClose = (e: BeforeUnloadEvent) => {
       if (shouldByPassconfimation()) return;
       e.preventDefault();
-      return (e.returnValue = message);
+      e.returnValue = message;
+      return e.returnValue;
     };
     const handleBrowseAway = (newPath: string) => {
       if (

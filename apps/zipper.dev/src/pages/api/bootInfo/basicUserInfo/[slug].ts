@@ -10,7 +10,7 @@ import { getUserInfoFromRequest } from '~/utils/boot-info-utils';
 const handler: NextApiHandler = async (req, res) => {
   try {
     const data = await getUserInfoFromRequest(req);
-    if (data && data.userId) return res.status(200).json({ ok: true, data });
+    if (data?.userId) return res.status(200).json({ ok: true, data });
   } catch (e: any) {
     return res
       .status(500)

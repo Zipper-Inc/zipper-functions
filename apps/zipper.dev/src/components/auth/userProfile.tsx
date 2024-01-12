@@ -287,25 +287,24 @@ export default function UserProfile() {
               </Text>
 
               <Divider mb="4" mt={2} />
-              {accounts &&
-                accounts.map((account) => (
-                  <Box key={account.provider} mt="4">
-                    <Text fontSize="sm" fontWeight="bold">
-                      {account.provider === 'github' && (
-                        <Stack direction="row" alignItems="center" gap={2}>
-                          <SiGithub size={24} color="currentColor" />
-                          <Text>GitHub</Text>
-                        </Stack>
-                      )}
-                      {account.provider === 'google' && (
-                        <Stack direction="row" alignItems="center" gap={2}>
-                          <FcGoogle size={24} color="currentColor" />
-                          <Text>Google</Text>
-                        </Stack>
-                      )}
-                    </Text>
-                  </Box>
-                ))}
+              {accounts?.map((account) => (
+                <Box key={account.provider} mt="4">
+                  <Text fontSize="sm" fontWeight="bold">
+                    {account.provider === 'github' && (
+                      <Stack direction="row" alignItems="center" gap={2}>
+                        <SiGithub size={24} color="currentColor" />
+                        <Text>GitHub</Text>
+                      </Stack>
+                    )}
+                    {account.provider === 'google' && (
+                      <Stack direction="row" alignItems="center" gap={2}>
+                        <FcGoogle size={24} color="currentColor" />
+                        <Text>Google</Text>
+                      </Stack>
+                    )}
+                  </Text>
+                </Box>
+              ))}
             </>
           )}
           {currentPage === 'profileImage' && (

@@ -5,14 +5,10 @@
   "scripts": {
     "dev": "next dev -p 3003",
     "build": "next build --no-lint",
-    "start": "next start"
+    "start": "next start",
+    "lint": "biome lint --max-diagnostics=5000 --log-kind=compact --diagnostic-level=error ./"
   },
   "license": "MIT",
-  "prettier": {
-    "printWidth": 80,
-    "trailingComma": "all",
-    "singleQuote": true
-  },
   "engines": {
     "node": "^18.14.0"
   },
@@ -35,6 +31,7 @@
     "sharp": "^0.32.4"
   },
   "devDependencies": {
+    "@biomejs/biome": "1.5.1",
     "@types/node": "^18.14.0",
     "typescript": "^4.5.3"
   }

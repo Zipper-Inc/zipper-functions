@@ -156,21 +156,24 @@ export const githubAppConnectorRouter = createTRPCRouter({
 
       const secretKeys = ['webhook_secret', 'pem', 'client_secret'];
 
-      const secrets = secretKeys.reduce((acc, key) => {
-        let valueToStore = json[key];
-        if (!valueToStore) return acc;
-        if (key === 'pem') {
-          valueToStore = json[key].toString('base64');
-        }
+      const secrets = secretKeys.reduce(
+        (acc, key) => {
+          let valueToStore = json[key];
+          if (!valueToStore) return acc;
+          if (key === 'pem') {
+            valueToStore = json[key].toString('base64');
+          }
 
-        const secretKey = `GITHUB_${key.toUpperCase()}`;
-        const secretValue = encryptToBase64(
-          valueToStore,
-          process.env.ENCRYPTION_KEY!,
-        );
-        acc.push({ key: secretKey, value: secretValue });
-        return acc;
-      }, [] as Record<'key' | 'value', string>[]);
+          const secretKey = `GITHUB_${key.toUpperCase()}`;
+          const secretValue = encryptToBase64(
+            valueToStore,
+            process.env.ENCRYPTION_KEY!,
+          );
+          acc.push({ key: secretKey, value: secretValue });
+          return acc;
+        },
+        [] as Record<'key' | 'value', string>[],
+      );
 
       await Promise.all(
         secrets.map((secret) =>

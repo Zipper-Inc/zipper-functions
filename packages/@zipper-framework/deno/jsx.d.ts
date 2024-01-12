@@ -22,7 +22,6 @@ type Booleanish = boolean | 'true' | 'false';
 type Numberish = number | string;
 type CrossOrigin = 'anonymous' | 'use-credentials' | '' | undefined;
 
-
 // All the WAI-ARIA 1.1 attributes from https://www.w3.org/TR/wai-aria-1.1/
 interface AriaAttributes {
   /** Identifies the currently active element when DOM focus is on a composite widget, textbox, group, or application. */
@@ -222,83 +221,80 @@ interface AriaAttributes {
   'aria-valuetext'?: string;
 }
 
+type StyleValue = string | Record<string, any>;
+// | CSSProperties
 
-type StyleValue = 
-  |string 
-  | Record<string, any>
-  // | CSSProperties
-
-type AriaRole = 
-    | 'alert'
-    | 'alertdialog'
-    | 'application'
-    | 'article'
-    | 'banner'
-    | 'button'
-    | 'cell'
-    | 'checkbox'
-    | 'columnheader'
-    | 'combobox'
-    | 'complementary'
-    | 'contentinfo'
-    | 'definition'
-    | 'dialog'
-    | 'directory'
-    | 'document'
-    | 'feed'
-    | 'figure'
-    | 'form'
-    | 'grid'
-    | 'gridcell'
-    | 'group'
-    | 'heading'
-    | 'img'
-    | 'link'
-    | 'list'
-    | 'listbox'
-    | 'listitem'
-    | 'log'
-    | 'main'
-    | 'marquee'
-    | 'math'
-    | 'menu'
-    | 'menubar'
-    | 'menuitem'
-    | 'menuitemcheckbox'
-    | 'menuitemradio'
-    | 'navigation'
-    | 'none'
-    | 'note'
-    | 'option'
-    | 'presentation'
-    | 'progressbar'
-    | 'radio'
-    | 'radiogroup'
-    | 'region'
-    | 'row'
-    | 'rowgroup'
-    | 'rowheader'
-    | 'scrollbar'
-    | 'search'
-    | 'searchbox'
-    | 'separator'
-    | 'slider'
-    | 'spinbutton'
-    | 'status'
-    | 'switch'
-    | 'tab'
-    | 'table'
-    | 'tablist'
-    | 'tabpanel'
-    | 'term'
-    | 'textbox'
-    | 'timer'
-    | 'toolbar'
-    | 'tooltip'
-    | 'tree'
-    | 'treegrid'
-    | 'treeitem'
-    | (string & {});
+type AriaRole =
+  | 'alert'
+  | 'alertdialog'
+  | 'application'
+  | 'article'
+  | 'banner'
+  | 'button'
+  | 'cell'
+  | 'checkbox'
+  | 'columnheader'
+  | 'combobox'
+  | 'complementary'
+  | 'contentinfo'
+  | 'definition'
+  | 'dialog'
+  | 'directory'
+  | 'document'
+  | 'feed'
+  | 'figure'
+  | 'form'
+  | 'grid'
+  | 'gridcell'
+  | 'group'
+  | 'heading'
+  | 'img'
+  | 'link'
+  | 'list'
+  | 'listbox'
+  | 'listitem'
+  | 'log'
+  | 'main'
+  | 'marquee'
+  | 'math'
+  | 'menu'
+  | 'menubar'
+  | 'menuitem'
+  | 'menuitemcheckbox'
+  | 'menuitemradio'
+  | 'navigation'
+  | 'none'
+  | 'note'
+  | 'option'
+  | 'presentation'
+  | 'progressbar'
+  | 'radio'
+  | 'radiogroup'
+  | 'region'
+  | 'row'
+  | 'rowgroup'
+  | 'rowheader'
+  | 'scrollbar'
+  | 'search'
+  | 'searchbox'
+  | 'separator'
+  | 'slider'
+  | 'spinbutton'
+  | 'status'
+  | 'switch'
+  | 'tab'
+  | 'table'
+  | 'tablist'
+  | 'tabpanel'
+  | 'term'
+  | 'textbox'
+  | 'timer'
+  | 'toolbar'
+  | 'tooltip'
+  | 'tree'
+  | 'treegrid'
+  | 'treeitem'
+  | (string & {});
 
 interface HTMLAttributes extends AriaAttributes {
   defaultChecked?: boolean | undefined;
@@ -380,7 +376,6 @@ interface HTMLAttributes extends AriaAttributes {
    */
   is?: string | undefined;
 }
-
 
 type HTMLAttributeReferrerPolicy =
   | ''

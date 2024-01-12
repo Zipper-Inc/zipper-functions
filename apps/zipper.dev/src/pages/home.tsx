@@ -57,7 +57,8 @@ import { AnalyticsHead } from '@zipper/utils';
 const HERO_CONTENT = {
   TITLE: 'Complexity-free\nWeb Development',
 
-  DESCRIPTION: `Zipper helps you turn Typescript functions into modern web applications. No local setup, boilerplate, or frontend code required. Perfect for rapidly building or prototyping internal tools, SaaS integrations, and micro-services.`,
+  DESCRIPTION:
+    'Zipper helps you turn Typescript functions into modern web applications. No local setup, boilerplate, or frontend code required. Perfect for rapidly building or prototyping internal tools, SaaS integrations, and micro-services.',
   LIST: [
     {
       description: 'Turn TypeScript functions into serverless web apps',
@@ -68,7 +69,8 @@ const HERO_CONTENT = {
       icon: <FiCheck size={24} />,
     },
     {
-      description: `Do everything in your browser - start immediately with no setup`,
+      description:
+        'Do everything in your browser - start immediately with no setup',
       icon: <FiCheck size={24} />,
     },
   ],
@@ -712,12 +714,12 @@ const WebFirst = () => {
             return (
               <GridItem
                 colSpan={isMiddleItem ? 1 : { base: 1, md: 2 }}
-                key={index}
+                key={item.TITLE}
                 position="relative"
                 overflow="hidden"
                 pt={{ base: 9, lg: 12 }}
                 px={{ base: 9, lg: 12 }}
-                bg={item.COLOR + '.700'}
+                bg={`${item.COLOR}.700`}
               >
                 <Box
                   position="absolute"
@@ -892,9 +894,9 @@ const Features = memo(() => {
           }}
           gap={4}
         >
-          {FEATURES_CONTENT.LIST.map((feat, index) => (
+          {FEATURES_CONTENT.LIST.map((feat) => (
             <GridItem
-              key={index}
+              key={feat.title}
               as="li"
               aria-label={feat.title}
               display="flex"
@@ -1003,10 +1005,18 @@ const AppletsGallery = () => {
               bottom="-48px"
               color="gray.500"
             >
-              <button aria-label="Previous slide" onClick={ctrl.previousSlide}>
+              <button
+                type="button"
+                aria-label="Previous slide"
+                onClick={ctrl.previousSlide}
+              >
                 <FiArrowLeft size="24px" />
               </button>
-              <button aria-label="Next slide" onClick={ctrl.nextSlide}>
+              <button
+                type="button"
+                aria-label="Next slide"
+                onClick={ctrl.nextSlide}
+              >
                 <FiArrowRight size="24px" />
               </button>
             </Flex>
@@ -1015,8 +1025,8 @@ const AppletsGallery = () => {
             isLargerThan600 && !isLargerThan880
               ? 580 + 16
               : isLargerThan880
-              ? 680 + 16
-              : 320 + 16
+                ? 680 + 16
+                : 320 + 16
           }
         >
           {APPLET_GALLERY_LIST.map((app) => (
@@ -1070,8 +1080,8 @@ const AppletsGallery = () => {
                   isLargerThan600 && !isLargerThan880
                     ? '92%'
                     : isLargerThan880
-                    ? '63.5%'
-                    : '100%'
+                      ? '63.5%'
+                      : '100%'
                 }
                 bg="brandGray.100"
                 // padding={{ base: 8, lg: 20 }}
@@ -1084,8 +1094,8 @@ const AppletsGallery = () => {
                     isLargerThan600 && !isLargerThan880
                       ? 'md'
                       : isLargerThan880
-                      ? 'lg'
-                      : 'sm'
+                        ? 'lg'
+                        : 'sm'
                   }.svg`}
                   alt={app.slug}
                   fill

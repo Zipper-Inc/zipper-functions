@@ -42,58 +42,57 @@ export async function getUserInfo(
         userId: auth.sub,
         organizations: auth.organizations,
       };
-    } else {
-      // Validate the Zipper access token
-      // The token should be in the format: zaat.{identifier}.{secret}
-      const [, identifier, secret] = token.split('.');
-      if (!identifier || !secret) throw new Error('Invalid Zipper token');
-
-      const appAccessToken = await prisma.appAccessToken.findFirstOrThrow({
-        where: {
-          identifier,
-          app: {
-            slug: appSlug,
-          },
-          deletedAt: null,
-        },
-      });
-
-      // compare the hashed secret with a hash of the secret portion of the token
-      const validSecret = await compare(secret, appAccessToken.hashedSecret);
-
-      if (!validSecret) throw new Error();
-
-      const user = await prisma.user.findUnique({
-        where: {
-          id: appAccessToken.userId,
-        },
-        include: {
-          organizationMemberships: {
-            include: {
-              organization: true,
-            },
-          },
-        },
-      });
-
-      if (!user) throw new Error('No user');
-
-      return {
-        email: user.email,
-        userId: user.id,
-        organizations: user.organizationMemberships.map((mem) => {
-          return {
-            organization: {
-              id: mem.organization.id,
-              name: mem.organization.name,
-              slug: mem.organization.slug,
-            },
-            role: mem.role,
-            pending: false,
-          };
-        }),
-      };
     }
+    // Validate the Zipper access token
+    // The token should be in the format: zaat.{identifier}.{secret}
+    const [, identifier, secret] = token.split('.');
+    if (!identifier || !secret) throw new Error('Invalid Zipper token');
+
+    const appAccessToken = await prisma.appAccessToken.findFirstOrThrow({
+      where: {
+        identifier,
+        app: {
+          slug: appSlug,
+        },
+        deletedAt: null,
+      },
+    });
+
+    // compare the hashed secret with a hash of the secret portion of the token
+    const validSecret = await compare(secret, appAccessToken.hashedSecret);
+
+    if (!validSecret) throw new Error();
+
+    const user = await prisma.user.findUnique({
+      where: {
+        id: appAccessToken.userId,
+      },
+      include: {
+        organizationMemberships: {
+          include: {
+            organization: true,
+          },
+        },
+      },
+    });
+
+    if (!user) throw new Error('No user');
+
+    return {
+      email: user.email,
+      userId: user.id,
+      organizations: user.organizationMemberships.map((mem) => {
+        return {
+          organization: {
+            id: mem.organization.id,
+            name: mem.organization.name,
+            slug: mem.organization.slug,
+          },
+          role: mem.role,
+          pending: false,
+        };
+      }),
+    };
   } catch (e) {
     console.log(e);
     Sentry.captureException(e);

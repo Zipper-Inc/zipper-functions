@@ -243,9 +243,11 @@ const AboutPage: NextPageWithLayout = () => {
                 platform to bring that creativity out.`}
                 <br />
                 <br />
-                {`We’re currently not actively hiring but interested to hear where you think you could fit in. Send a note to `}
+                {
+                  'We’re currently not actively hiring but interested to hear where you think you could fit in. Send a note to '
+                }
                 <a href="mailto:jobs@zipper.works">jobs@zipper.works</a>
-                {` along with a resume or portfolio.`}
+                {' along with a resume or portfolio.'}
               </Text>
 
               {/*

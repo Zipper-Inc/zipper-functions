@@ -196,10 +196,9 @@ const useComponents = (): Components => {
                       Notes
                     </Heading>
                   );
-                } else {
-                  if (child.type?.name === 'ol') {
-                    return <OrderedList {...child.props} />;
-                  }
+                }
+                if (child.type?.name === 'ol') {
+                  return <OrderedList {...child.props} />;
                 }
                 return null;
               })}

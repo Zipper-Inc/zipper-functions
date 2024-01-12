@@ -32,7 +32,7 @@ import { HiOutlineTrash } from 'react-icons/hi';
 export const openaiConnector = createConnector({
   id: 'openai',
   name: 'OpenAI',
-  description: `Summarize text, generate text, and more.`,
+  description: 'Summarize text, generate text, and more.',
   icon: <SiOpenai />,
   code,
   userScopes: [],
@@ -205,7 +205,7 @@ function OpenAIConnectorForm({ appId }: { appId: string }) {
                       fontSize="sm"
                       py="2"
                       mt="2"
-                    ></VStack>
+                    />
                   </CardBody>
                 </Card>
               </VStack>

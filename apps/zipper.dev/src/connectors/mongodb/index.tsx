@@ -13,7 +13,7 @@ import { useMemo } from 'react';
 export const mongodbConnector = createConnector({
   id: 'mongodb',
   name: 'MongoDB',
-  description: `Connect to a MongoDB database and run queries.`,
+  description: 'Connect to a MongoDB database and run queries.',
   icon: <FiDatabase />,
   code,
 });

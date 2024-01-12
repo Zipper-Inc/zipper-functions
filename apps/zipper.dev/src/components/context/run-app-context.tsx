@@ -341,7 +341,7 @@ export function RunAppProvider({
           subtopic: 'Pending',
           msg: hasInputs ? 'Running with inputs' : undefined,
         },
-        { badgeStyle: { background: PRETTY_LOG_TOKENS['purple']! } },
+        { badgeStyle: { background: PRETTY_LOG_TOKENS.purple! } },
       ),
       ...(hasInputs ? [inputs] : []),
     ]);
@@ -387,7 +387,7 @@ export function RunAppProvider({
           subtopic: 'Done',
           msg: `Got output in ${Math.round(runElapsed)}ms`,
         },
-        { badgeStyle: { background: PRETTY_LOG_TOKENS['purple']! } },
+        { badgeStyle: { background: PRETTY_LOG_TOKENS.purple! } },
       ),
       safeJSONParse(result.result, undefined, result.result) || undefined,
     ]);

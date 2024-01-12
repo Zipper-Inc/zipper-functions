@@ -175,7 +175,7 @@ export const OrganizationSwitcher: React.FC<ButtonProps> = (props) => {
                             ? 'visible'
                             : 'hidden'
                         }
-                      ></Icon>
+                      />
                     )}
                   </HStack>
                 </Box>
@@ -191,7 +191,7 @@ export const OrganizationSwitcher: React.FC<ButtonProps> = (props) => {
             onClick={onOpenCreateOrg}
           >
             <HStack>
-              <Icon as={HiPlus}></Icon>
+              <Icon as={HiPlus} />
               <Text>Create Organization</Text>
             </HStack>
           </MenuItem>

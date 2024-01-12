@@ -114,14 +114,14 @@ async function respondWithBundle({
       };
       if (mod?.content) bundle[bundlePath] = mod.content;
       return mod;
-    } else if (specifier === rootModule.specifier) {
+    }
+    if (specifier === rootModule.specifier) {
       bundle[bundlePath] = rootModule.content;
       return rootModule;
-    } else {
-      const mod = await getRemoteModule({ specifier, buildCache });
-      if (mod?.content) bundle[bundlePath] = mod.content;
-      return mod;
     }
+    const mod = await getRemoteModule({ specifier, buildCache });
+    if (mod?.content) bundle[bundlePath] = mod.content;
+    return mod;
   });
 
   buildCache.disconnect();
@@ -164,11 +164,10 @@ async function respondWithTypesBundle({
         });
         if (mod?.content) typesBundle[moduleUrl] = mod.content;
         return withPathRefs(mod);
-      } else {
-        const mod = await getRemoteModule({ specifier, buildCache });
-        if (mod?.content) typesBundle[specifier] = mod.content;
-        return withPathRefs(mod);
       }
+      const mod = await getRemoteModule({ specifier, buildCache });
+      if (mod?.content) typesBundle[specifier] = mod.content;
+      return withPathRefs(mod);
     });
   } catch (e) {
     // Just respond with a regular bundle if types fail
@@ -238,7 +237,6 @@ export default async function handler(
         typesLocation,
         res,
       });
-    case ModMode.Module:
     default:
       return respondWithRawModule({ rootModule, res });
   }

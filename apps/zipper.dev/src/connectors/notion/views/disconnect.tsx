@@ -57,7 +57,8 @@ const NotionDisconnect: React.FC<{
       appId,
     });
 
-    return setIsSaving(false), onClose();
+    setIsSaving(false);
+    onClose();
   }
 
   console.log(metadata);
@@ -79,7 +80,7 @@ const NotionDisconnect: React.FC<{
                     textDecorationStyle="dotted"
                     color={'fg.900'}
                   >
-                    {metadata['workspace_name']}
+                    {metadata.workspace_name}
                   </FormLabel>
                 </PopoverTrigger>
                 <PopoverContent w="sm">
@@ -94,7 +95,7 @@ const NotionDisconnect: React.FC<{
                     >
                       <HStack>
                         <Text>Bot User ID:</Text>
-                        <Code>{metadata['bot_id']}</Code>
+                        <Code>{metadata.bot_id}</Code>
                       </HStack>
                     </VStack>
                   </PopoverBody>

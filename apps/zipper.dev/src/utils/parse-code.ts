@@ -70,10 +70,7 @@ function parseTypeNode(type: TypeNode, src: SourceFile): ParsedNode {
           typeReferenceDeclaration.getTypeNode();
 
         // check if type is a string literal
-        if (
-          typeReferenceDeclarationType &&
-          typeReferenceDeclarationType.isKind(SyntaxKind.UnionType)
-        ) {
+        if (typeReferenceDeclarationType?.isKind(SyntaxKind.UnionType)) {
           const unionTypes = typeReferenceDeclarationType.getTypeNodes();
           const unionTypesDetails = unionTypes.map((unionType: TypeNode) => {
             return unionType.getText().replace(/['"]+/g, '').trim();
@@ -142,7 +139,7 @@ function parseTypeNode(type: TypeNode, src: SourceFile): ParsedNode {
   if (type.isKind(SyntaxKind.TypeOperator)) {
     const typeText = type.getText();
     const match = typeText.match(/keyof typeof (\w+)/);
-    if (match && match[1]) {
+    if (match?.[1]) {
       const enumName = match[1];
       const enumDeclaration = src.getEnum(enumName);
       if (enumDeclaration) {
@@ -208,7 +205,7 @@ function findHandlerFunction({
   src: SourceFile;
   name?: string;
   node?: any;
-}): void | HandlerFn {
+}): HandlerFn | undefined {
   if (!node) return;
 
   // ✅ function handler() {}
@@ -269,14 +266,17 @@ function parseHandlerInputs(
   const paramsWithDefaultValue = params
     .getFirstChildByKind(SyntaxKind.ObjectBindingPattern)
     ?.getElements()
-    .reduce((acc, curr) => {
-      const key = curr.getFirstChildByKind(SyntaxKind.Identifier)?.getText();
-      const value = curr.getInitializer();
-      if (key && value) {
-        return { ...acc, [key]: value.getText() };
-      }
-      return acc;
-    }, {} as Record<string, string>);
+    .reduce(
+      (acc, curr) => {
+        const key = curr.getFirstChildByKind(SyntaxKind.Identifier)?.getText();
+        const value = curr.getInitializer();
+        if (key && value) {
+          return { ...acc, [key]: value.getText() };
+        }
+        return acc;
+      },
+      {} as Record<string, string>,
+    );
 
   const typeNode = params.getTypeNode();
 
@@ -408,26 +408,29 @@ export function parseActions({
 
     const actionsProperties = actionsObject.getProperties();
 
-    const actions = actionsProperties.reduce((actionsSoFar, property) => {
-      const name = property
-        .getFirstChildIfKind(SyntaxKind.Identifier)
-        ?.getText();
+    const actions = actionsProperties.reduce(
+      (actionsSoFar, property) => {
+        const name = property
+          .getFirstChildIfKind(SyntaxKind.Identifier)
+          ?.getText();
 
-      const handlerFn =
-        property.getLastChildIfKind(SyntaxKind.ArrowFunction) ||
-        property.getLastChildIfKind(SyntaxKind.FunctionExpression) ||
-        property.getLastChildIfKind(SyntaxKind.FunctionDeclaration);
+        const handlerFn =
+          property.getLastChildIfKind(SyntaxKind.ArrowFunction) ||
+          property.getLastChildIfKind(SyntaxKind.FunctionExpression) ||
+          property.getLastChildIfKind(SyntaxKind.FunctionDeclaration);
 
-      if (!name || !handlerFn) return actionsSoFar;
+        if (!name || !handlerFn) return actionsSoFar;
 
-      return {
-        ...actionsSoFar,
-        [name]: {
-          name,
-          inputs: parseHandlerInputs(handlerFn, src, throwErrors),
-        },
-      };
-    }, {} as Record<string, { name: string; inputs: InputParam[] }>);
+        return {
+          ...actionsSoFar,
+          [name]: {
+            name,
+            inputs: parseHandlerInputs(handlerFn, src, throwErrors),
+          },
+        };
+      },
+      {} as Record<string, { name: string; inputs: InputParam[] }>,
+    );
 
     return Object.keys(actions).length ? actions : undefined;
   } catch (e) {
@@ -586,13 +589,13 @@ export function addParamToCode({
     .reduce((acc, curr) => {
       if (curr.trim().startsWith('/**') || curr.trim().startsWith('*')) {
         return [...acc, curr.trim()];
-      } else if (curr.trim().startsWith('export async function handler')) {
-        return acc; // Stop processing comments after reaching the function definition
-      } else {
-        return acc;
       }
+      if (curr.trim().startsWith('export async function handler')) {
+        return acc; // Stop processing comments after reaching the function definition
+      }
+      return acc;
     }, [] as string[])
-    .map((line) => (line.startsWith('*') ? ' ' + line : line));
+    .map((line) => (line.startsWith('*') ? ` ${line}` : line));
 
   if (!handler) {
     console.error('You must define a handler function');
@@ -607,9 +610,9 @@ export function addParamToCode({
     }`;
 
     handler.replaceWithText(
-      handlerComment?.join('\n') +
-        '\n' +
-        handler.getText().replace(/\(\)/, `(${newParamString})`),
+      `${handlerComment?.join('\n')}\n${handler
+        .getText()
+        .replace(/\(\)/, `(${newParamString})`)}`,
     );
 
     return src.getFullText();

@@ -93,6 +93,7 @@ async function maybeGetCustomResponse(
       });
     }
 
+    // biome-ignore lint/suspicious/noFallthroughSwitchClause: expeceted, only GET allowed
     case /^\/$/.test(appRoute): {
       if (request.method === 'GET') {
         const url = new URL('/main.ts', request.url);
@@ -151,9 +152,8 @@ export async function serveSource({ request }: { request: NextRequest }) {
   if (response.status === 200) {
     const result = await response.text();
     return new NextResponse(result, { headers: response.headers });
-  } else {
-    return new NextResponse(response.statusText, { status: 404 });
   }
+  return new NextResponse(response.statusText, { status: 404 });
 }
 
 const generateHMAC = async (input: string) => {
@@ -218,9 +218,8 @@ const checkAuthCookies = async (request: NextRequest) => {
           if (result.status === 200) {
             const json = await result.json();
             return { userId, accessToken: json.accessToken };
-          } else {
-            return { userId, accessToken: undefined };
           }
+          return { userId, accessToken: undefined };
         } catch (e) {
           console.log(e);
           return { userId, accessToken: undefined };
@@ -266,7 +265,9 @@ export const middleware = async (request: NextRequest) => {
   request.headers.set(
     'Content-Security-Policy',
     // Replace newline characters and spaces
-    cspHeader.replace(/\s{2,}/g, ' ').trim(),
+    cspHeader
+      .replace(/\s{2,}/g, ' ')
+      .trim(),
   );
 
   // Forward token as a header
@@ -278,7 +279,7 @@ export const middleware = async (request: NextRequest) => {
     request.headers,
   );
 
-  const response = !!customResponse
+  const response = customResponse
     ? customResponse
     : NextResponse.next({ request: { headers: new Headers(request.headers) } });
 

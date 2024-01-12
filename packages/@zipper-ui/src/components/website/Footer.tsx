@@ -161,7 +161,7 @@ const AppletDemo = () => {
                   const isActive = inputs.selectedColors.includes(color);
                   return (
                     <IconButton
-                      aria-label={'button-' + color}
+                      aria-label={`button-${color}`}
                       role="button"
                       size="md"
                       _active={{
@@ -225,7 +225,7 @@ const AppletDemo = () => {
               <HStack>
                 {Object.entries(LAYOUTS_ICONS).map(([key, icon]) => (
                   <IconButton
-                    aria-label={'button-' + key}
+                    aria-label={`button-${key}`}
                     role="button"
                     _active={{
                       bg: 'gray.600',

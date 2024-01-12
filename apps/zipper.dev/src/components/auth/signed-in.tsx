@@ -8,7 +8,7 @@ interface Props {
 export const SignedIn: FC<Props> = (props) => {
   const { isSignedIn } = useUser();
 
-  return <>{isSignedIn && <>{props.children}</>}</>;
+  return <>{isSignedIn && props.children}</>;
 };
 
 export default SignedIn;

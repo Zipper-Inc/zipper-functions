@@ -72,14 +72,17 @@ export default function AddScriptForm({
     } as Record<'databases' | 'appsOauth', Connector[]>;
 
     Object.values(defaultConnectors)
-      .reduce((acc, curr) => {
-        if (!connectors.find((c: any) => c.type === curr.id)) {
-          acc.unshift(curr);
-        } else {
-          acc.push(curr);
-        }
-        return acc;
-      }, [] as Array<Connector>)
+      .reduce(
+        (acc, curr) => {
+          if (!connectors.find((c: any) => c.type === curr.id)) {
+            acc.unshift(curr);
+          } else {
+            acc.push(curr);
+          }
+          return acc;
+        },
+        [] as Array<Connector>,
+      )
       .sort((a, b) => a.name.localeCompare(b.name))
       .forEach((connector) => {
         if (['mongodb', 'postgres', 'mysql'].includes(connector.id)) {
@@ -133,38 +136,37 @@ export default function AddScriptForm({
           </VStack>
         </Button>
       );
-    } else {
-      return (
-        <Button
-          key={connector.id}
-          variant="ghost"
-          justifyContent="start"
-          fontWeight="normal"
-          onClick={() => undefined}
-          color="fg.400"
-          _hover={{
-            bg: 'bg.50',
-            cursor: 'default',
-          }}
-        >
-          <HStack
-            key={connector.id}
-            w="full"
-            justifyContent="space-between"
-            spacing={4}
-          >
-            <HStack>
-              {connector.icon}
-              <Text>{connector.name}</Text>
-            </HStack>
-            <HStack color="fg.400" spacing={1} fontSize="xs">
-              <Text>CONNECTED</Text>
-              <HiCheck />
-            </HStack>
-          </HStack>
-        </Button>
-      );
     }
+    return (
+      <Button
+        key={connector.id}
+        variant="ghost"
+        justifyContent="start"
+        fontWeight="normal"
+        onClick={() => undefined}
+        color="fg.400"
+        _hover={{
+          bg: 'bg.50',
+          cursor: 'default',
+        }}
+      >
+        <HStack
+          key={connector.id}
+          w="full"
+          justifyContent="space-between"
+          spacing={4}
+        >
+          <HStack>
+            {connector.icon}
+            <Text>{connector.name}</Text>
+          </HStack>
+          <HStack color="fg.400" spacing={1} fontSize="xs">
+            <Text>CONNECTED</Text>
+            <HiCheck />
+          </HStack>
+        </HStack>
+      </Button>
+    );
   };
 
   return (

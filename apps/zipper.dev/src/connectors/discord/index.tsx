@@ -256,11 +256,7 @@ function DiscordConnectorForm({ appId }: { appId: string }) {
                                   textDecorationStyle="dotted"
                                   color={'fg.900'}
                                 >
-                                  {
-                                    (connector.data?.metadata as any)['guild'][
-                                      'name'
-                                    ]
-                                  }
+                                  {(connector.data?.metadata as any).guild.name}
                                 </FormLabel>
                               </PopoverTrigger>
                               <PopoverContent w="sm">
@@ -285,9 +281,8 @@ function DiscordConnectorForm({ appId }: { appId: string }) {
                                       <Text>Bot User ID:</Text>
                                       <Code>
                                         {
-                                          (connector.data?.metadata as any)[
-                                            'bot_user_id'
-                                          ]
+                                          (connector.data?.metadata as any)
+                                            .bot_user_id
                                         }
                                       </Code>
                                     </HStack>
@@ -295,9 +290,8 @@ function DiscordConnectorForm({ appId }: { appId: string }) {
                                       <Text>Bot Scopes:</Text>
                                       <Box>
                                         {(
-                                          (connector.data?.metadata as any)[
-                                            'scope'
-                                          ] || ''
+                                          (connector.data?.metadata as any)
+                                            .scope || ''
                                         )
                                           .split(',')
                                           .map((scope: string) => (

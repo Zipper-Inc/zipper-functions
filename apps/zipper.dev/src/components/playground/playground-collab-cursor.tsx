@@ -45,7 +45,7 @@ export class MonacoCursorWidget {
   }
 
   getDataAttr() {
-    return `data-cursor-id`;
+    return 'data-cursor-id';
   }
 
   getPosition() {

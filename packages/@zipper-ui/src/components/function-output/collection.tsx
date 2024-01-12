@@ -203,7 +203,7 @@ function TableCollection(props: Props) {
                     );
                   }
                   if (cell.value === null) {
-                    <Td {...cell.getCellProps()}></Td>;
+                    <Td {...cell.getCellProps()} />;
                   }
                   return (
                     <Td py={4} px={4} {...cell.getCellProps()}>

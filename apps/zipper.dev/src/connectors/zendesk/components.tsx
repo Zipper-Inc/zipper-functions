@@ -269,7 +269,7 @@ export function ConnectorInEditableForm({
             fontSize="sm"
             py="2"
             mt="2"
-          ></VStack>
+          />
           <HStack>
             <Text as="b">Zendesk Subdomain:</Text>
             <Text>{zendeskSubdomain}</Text>
@@ -312,8 +312,8 @@ export function ZendeskManifestFile({
     defaultLocale: 'en',
     private: true,
     location: {
-      ['ZENDESK_PRODUCT']: {
-        ['PRODUCT_SPECIFIC_LOCATION']: {
+      ZENDESK_PRODUCT: {
+        PRODUCT_SPECIFIC_LOCATION: {
           url: appEntryPoint,
         },
       },

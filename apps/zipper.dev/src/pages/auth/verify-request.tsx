@@ -91,7 +91,7 @@ export default function VerifyRequest() {
                       onReady();
                     }
                   }}
-                ></Input>
+                />
                 <Text fontSize="sm" color="fg.500">
                   Didn't receive it? Check your spam folder or{' '}
                   <Button

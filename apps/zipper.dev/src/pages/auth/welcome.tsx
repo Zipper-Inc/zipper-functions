@@ -11,7 +11,7 @@ const Welcome: NextPageWithLayout = () => {
   const { callbackUrl } = router.query;
   const cb = callbackUrl
     ? `${encodeURIComponent(String(callbackUrl))}`
-    : `/dashboard`;
+    : '/dashboard';
 
   const setSettingMutation = trpc.user.setSettingValue.useMutation({
     onSuccess: () => {

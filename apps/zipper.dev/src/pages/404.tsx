@@ -28,7 +28,7 @@ const NotFound: NextPageWithLayout = () => {
   );
 };
 
-NotFound.header = () => <Header showNav={false}></Header>;
+NotFound.header = () => <Header showNav={false} />;
 NotFound.skipAuth = true;
 
 export default NotFound;

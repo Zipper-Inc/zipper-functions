@@ -11,7 +11,7 @@ export const getParent = ({ opts }: LayoutProps) => {
     if (
       'route' in page &&
       route !== page.route &&
-      (route + '/').startsWith(page.route === '/' ? '/' : page.route + '/')
+      `${route}/`.startsWith(page.route === '/' ? '/' : `${page.route}/`)
     ) {
       parentPages.push(page);
     }

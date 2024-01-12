@@ -11,7 +11,7 @@ function generateHmac(
     hmac: _generateHmac(
       'sha256',
       Deno.env.get('HMAC_SIGNING_SECRET') || '',
-      method + '__' + path + '__' + JSON.stringify(body) + '__' + timestamp,
+      `${method}__${path}__${JSON.stringify(body)}__${timestamp}`,
       'utf8',
       'hex',
     ) as string,

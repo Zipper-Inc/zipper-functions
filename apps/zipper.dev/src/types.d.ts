@@ -1,13 +1,9 @@
 declare module 'monaco-jsx-highlighter' {
   import MonacoJsxHighlighter from 'monaco-jsx-highlighter';
 
+  // biome-ignore lint/suspicious/noRedeclare: <explanation>
   export default class MonacoJsxHighlighter {
-    constructor(
-      monaco: any,
-      parse: any,
-      traverse: any,
-      editor: any,
-    ): MonacoJsxHighlighter;
+    constructor(monaco: any, parse: any, traverse: any, editor: any);
 
     highlightOnDidChangeModelContent(debounceMs: number): void;
     addJSXCommentCommand(): void;

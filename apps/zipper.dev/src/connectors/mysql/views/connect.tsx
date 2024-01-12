@@ -24,7 +24,7 @@ import { trpc } from '~/utils/trpc';
 /* Constants                                    */
 /* -------------------------------------------- */
 const CLIENT_ID_FORM = {
-  LABEL: `Mysql database connection`,
+  LABEL: 'Mysql database connection',
   DESCRIPTION: 'Add your mysql database configuration.',
 };
 
