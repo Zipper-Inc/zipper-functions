@@ -214,6 +214,7 @@ declare namespace Zipper {
           | 'object'
           | 'any'
           | 'enum'
+          | 'union'
           | 'FileUrl'
           | 'unknown';
         optional: boolean;
