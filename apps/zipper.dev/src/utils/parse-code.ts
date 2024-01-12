@@ -34,19 +34,40 @@ function removeTsExtension(moduleName: string) {
   return moduleName;
 }
 
-function parsePrimitiveType(type: Type): ParsedNode {
+const isPrimitive = (type: Type) =>
+  type.getText().toLowerCase() === 'zipper.fileurl' ||
+  type.getText().toLowerCase() === 'date' ||
+  type.isBoolean() ||
+  type.isBooleanLiteral() ||
+  type.isNumber() ||
+  type.isNumberLiteral() ||
+  type.isString() ||
+  type.isStringLiteral() ||
+  type.isUnknown() ||
+  type.isAny() ||
+  type.isObject() ||
+  type.isReadonlyArray() ||
+  type.isUnion();
+
+function parsePrimitiveType(type: Type, node: TypeNode): ParsedNode {
+  if (!isPrimitive(type)) return parseTypeNode(node, node.getSourceFile());
+
+  if (type.getText().toLowerCase() === 'zipper.fileurl')
+    return { type: InputType.file };
+  if (type.getText().toLowerCase() === 'date') return { type: InputType.date };
+
   // Typescript default types
   if (type.isBoolean()) return { type: InputType.boolean };
   if (type.isBooleanLiteral())
     return {
       type: InputType.boolean,
-      details: { literal: type.getText() },
+      details: { literal: type.getText() === 'true' ? true : false },
     };
   if (type.isNumber()) return { type: InputType.number };
   if (type.isNumberLiteral())
     return {
       type: InputType.number,
-      details: { literal: String(type.getLiteralValue()) },
+      details: { literal: Number(type.getLiteralValue()) },
     };
   if (type.isString()) return { type: InputType.string };
   if (type.isStringLiteral())
@@ -56,18 +77,45 @@ function parsePrimitiveType(type: Type): ParsedNode {
     };
   if (type.isUnknown()) return { type: InputType.unknown };
   if (type.isAny()) return { type: InputType.any };
+  if (type.isUnion())
+    return {
+      type: InputType.union,
+      details: {
+        values: type.getUnionTypes().map((t) => parsePrimitiveType(t, node)),
+      },
+    };
 
-  // For Array and Object, I would like to wrap the inner type in a TypeNode and call parseTypeNode recursively
-  // How?
-  // if (type.isArray())
-  // return { type: InputType.array, details: { values: [] } };
-  // if (type.isObject())
-  // return { type: InputType.object, details: { properties: [] } };
+  // return { type: InputType.unknown };
 
-  if (type.getText().toLowerCase() === 'zipper.fileurl')
-    return { type: InputType.file };
+  // ❓ Is this right?
+  // Array<string>, { name: string, age: number }[]
+  if (type.isArray() || type.isReadonlyArray()) {
+    const insideArray = type.getArrayElementType();
+    if (insideArray?.isUnion()) {
+      const unionValues = insideArray
+        .getUnionTypes()
+        .map((t) => parsePrimitiveType(t, node));
+      return {
+        type: InputType.array,
+        details: {
+          isUnion: true,
+          values: unionValues,
+        },
+      };
+    }
+    return {
+      type: InputType.array,
+      details: {
+        isUnion: false,
+        values: insideArray
+          ? parsePrimitiveType(insideArray, node)
+          : { type: InputType.unknown },
+      },
+    };
+  }
 
-  if (type.getText().toLowerCase() === 'date') return { type: InputType.date };
+  if (type.isObject()) {
+  }
 
   return { type: InputType.unknown };
 }
@@ -76,16 +124,27 @@ function parsePrimitiveType(type: Type): ParsedNode {
 function parseTypeNode(typeNode: TypeNode, src: SourceFile): ParsedNode {
   // Lets add priority for Zipper defined types, since they can overlap with other types
   const type = typeNode.getType();
-  if (type.getText().toLowerCase() === 'zipper.fileurl')
-    return { type: InputType.file };
-  if (type.getText().toLowerCase() === 'date') return { type: InputType.date };
+  if (isPrimitive(type)) return parsePrimitiveType(type, typeNode);
+
+  // Need to deal w/ parenthesized type
+  if (typeNode.isKind(SyntaxKind.ParenthesizedType)) {
+    // map the types inside using parseTypeNode
+    return (
+      typeNode.forEachChild((n) => parseTypeNode(n as TypeNode, src)) || {
+        type: InputType.unknown,
+      }
+    );
+  }
 
   // Parses a union type: Foo | Bar
   if (typeNode.isKind(SyntaxKind.UnionType)) {
     return {
       type: InputType.union,
       details: {
-        values: typeNode.getType().getUnionTypes().map(parsePrimitiveType),
+        values: typeNode
+          .getType()
+          .getUnionTypes()
+          .map((t) => parsePrimitiveType(t, typeNode)),
       },
     };
   }
@@ -94,7 +153,7 @@ function parseTypeNode(typeNode: TypeNode, src: SourceFile): ParsedNode {
   if (typeNode.isKind(SyntaxKind.TypeLiteral)) {
     const typeLiteralProperties = typeNode.getProperties();
 
-    const propDetails = typeLiteralProperties.map((prop) => {
+    const properties = typeLiteralProperties.map((prop) => {
       const propTypeNode = prop.getTypeNode();
       return {
         key: prop.getName(),
@@ -107,16 +166,18 @@ function parseTypeNode(typeNode: TypeNode, src: SourceFile): ParsedNode {
     });
     return {
       type: InputType.object,
-      details: { properties: propDetails },
+      details: { properties },
     };
   }
 
-  if (type.isArray() || type.isReadonlyArray()) {
+  if (typeNode.isKind(SyntaxKind.ArrayType) || type.isReadonlyArray()) {
     const insideArray = type.getArrayElementType();
 
     // If the array is a union, we need to parse the union types
     if (insideArray?.isUnion()) {
-      const unionValues = insideArray.getUnionTypes().map(parsePrimitiveType);
+      const unionValues = insideArray
+        .getUnionTypes()
+        .map((t) => parsePrimitiveType(t, typeNode));
       return {
         type: InputType.array,
         details: {
@@ -131,7 +192,7 @@ function parseTypeNode(typeNode: TypeNode, src: SourceFile): ParsedNode {
       details: {
         isUnion: false,
         values: insideArray
-          ? parsePrimitiveType(insideArray)
+          ? parsePrimitiveType(insideArray, typeNode)
           : { type: InputType.unknown },
       },
     };
@@ -245,8 +306,7 @@ function parseTypeNode(typeNode: TypeNode, src: SourceFile): ParsedNode {
     }
   }
 
-  // If its not a type reference/structure node, we parse the primitive type
-  return parsePrimitiveType(typeNode.getType());
+  return { type: InputType.unknown };
 }
 
 export function getSourceFileFromCode(code = '', filename = 'main.ts') {
@@ -268,6 +328,8 @@ export function getSourceFileFromCode(code = '', filename = 'main.ts') {
             if (result.resolvedModule)
               // TODO -- check if Monaco remote Uri files are included here
               // if not, this may be the reason of why we cant solve input for imported files
+              // oh but this will cause perf issue -- we need to do a depedenency graph first
+              // -- but first lets try to trust in ts-morph
               resolvedModules.push(result.resolvedModule);
           }
 
@@ -349,7 +411,7 @@ function parseHandlerInputs(
   handlerFn: HandlerFn,
   src: SourceFile,
   throwErrors: boolean,
-) {
+): InputParam[] {
   const inputs = handlerFn.getParameters();
   const params = inputs[0] as ParameterDeclaration;
 
@@ -375,7 +437,7 @@ function parseHandlerInputs(
     return [
       {
         key: params.getName(),
-        type: InputType.any,
+        node: { type: InputType.any },
         optional: params.hasQuestionToken(),
       },
     ];
@@ -412,7 +474,7 @@ function parseHandlerInputs(
       // type Input = { foo } // foo is any
       return {
         key: prop.getName(),
-        type: InputType.any,
+        node: { type: InputType.any },
         optional: isOptional,
       };
     }
@@ -421,9 +483,8 @@ function parseHandlerInputs(
 
     const result = {
       key: prop.getName(),
-      type: typeDetails.type,
       optional: isOptional,
-      ...('details' in typeDetails && { details: typeDetails.details }),
+      node: typeDetails,
     };
     return result;
   });

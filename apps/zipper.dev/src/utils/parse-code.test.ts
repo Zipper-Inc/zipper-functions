@@ -263,6 +263,49 @@ test('parseInputForTypes should solve array<{ ok: true; data: string[] } |  { ok
 });
 
 // ✅ New Feature
+test('parseInputForTypes should solve { ok: true; data: string[] } |  { ok: false } ', () => {
+  const result = parseInputForTypes({
+    code: `export const handler = ({ type }: { type: { ok: true; data: string[] } | { ok: false } }) => type`,
+    throwErrors: true,
+  });
+  JSON.stringify(result, null, 2);
+  expect(result).toEqual([
+    {
+      key: 'type',
+      type: 'union',
+      optional: false,
+      details: {
+        values: [
+          {
+            type: 'object',
+            details: {
+              properties: {
+                ok: { type: 'boolean', details: { literal: 'true' } },
+                data: {
+                  type: 'array',
+                  details: {
+                    isUnion: false,
+                    values: { type: 'string' },
+                  },
+                },
+              },
+            },
+          },
+          {
+            type: 'object',
+            details: {
+              properties: {
+                ok: { type: 'boolean', details: { literal: 'false' } },
+              },
+            },
+          },
+        ],
+      },
+    },
+  ]);
+});
+
+// ✅ New Feature
 test('parseInputForTypes should solve Array of literal "view:history" OR "edit:bookmark"', () => {
   const result = parseInputForTypes({
     code: `export const handler = ({ type }: { type: ("view:history" | "edit:bookmark")[] }) => type`,
@@ -278,6 +321,34 @@ test('parseInputForTypes should solve Array of literal "view:history" OR "edit:b
         values: [
           { type: 'string', details: { literal: 'view:history' } },
           { type: 'string', details: { literal: 'edit:bookmark' } },
+        ],
+      },
+    },
+  ]);
+});
+
+// ✅ New Feature
+test('parseInputForTypes should solve Pick', () => {
+  const result = parseInputForTypes({
+    code: `export const handler = ({ type }: { type: Pick<{ a: 'foo', b: 'bar}, 'a'> }) => type`,
+    throwErrors: true,
+  });
+  expect(result).toEqual([
+    {
+      key: 'type',
+      optional: false,
+      type: 'object',
+      details: {
+        properties: [
+          {
+            key: 'a',
+            data: {
+              type: 'string',
+              details: {
+                literal: 'foo',
+              },
+            },
+          },
         ],
       },
     },

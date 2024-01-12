@@ -1,9 +1,12 @@
 import { InputType } from './input-type';
 
+export type LiteralNode =
+  | { type: InputType.boolean; details?: { literal: boolean } }
+  | { type: InputType.number; details?: { literal: number } }
+  | { type: InputType.string; details?: { literal: string } };
+
 export type ParsedNode =
-  | { type: InputType.boolean; details?: { literal: string } }
-  | { type: InputType.number; details?: { literal: string } }
-  | { type: InputType.string; details?: { literal: string } }
+  | LiteralNode
   | { type: InputType.date }
   | {
       type: InputType.array;

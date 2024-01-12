@@ -25,7 +25,7 @@ import { UploadButton } from './file-upload/uploadthing';
 import { useUploadContext } from './upload-button-context';
 import { VscAdd } from 'react-icons/vsc';
 import { FieldValues, UseFormReturn, RegisterOptions } from 'react-hook-form';
-import { InputType, InputParam } from '@zipper/types';
+import { InputType, InputParam, ParsedNode, LiteralNode } from '@zipper/types';
 import { getFieldName } from '@zipper/utils';
 import { ErrorBoundary } from './error-boundary';
 import { AutoResizeTextarea } from './auto-resize-text-area';
@@ -38,6 +38,28 @@ interface Props {
   isDisabled?: boolean;
   hasResult?: boolean;
 }
+
+const isLiteralNode = (node: ParsedNode): node is LiteralNode => {
+  if (
+    node.type === InputType.string &&
+    typeof node.details?.literal === 'string'
+  ) {
+    return true;
+  }
+  if (
+    node.type === InputType.number &&
+    typeof node.details?.literal === 'number'
+  ) {
+    return true;
+  }
+  if (
+    node.type === InputType.boolean &&
+    typeof node.details?.literal === 'boolean'
+  ) {
+    return true;
+  }
+  return false;
+};
 
 /*
 const withOptional =
@@ -55,43 +77,39 @@ const withOptional =
 
 function FunctionParamInput({
   inputKey,
-  type,
+  node,
   optional,
   formContext,
   placeholder,
   isDisabled,
-  details,
 }: {
   inputKey: string;
-  type: InputType;
+  node: ParsedNode;
   optional: boolean;
   value: any;
   formContext: Props['formContext'];
   placeholder?: string;
   isDisabled?: boolean;
-  details?: any;
 }) {
   const { register, watch, getValues } = formContext;
   const { setIsUploading } = useUploadContext();
-  const name = getFieldName(inputKey, type);
+  const name = getFieldName(inputKey, node.type);
   const formFieldOptions: RegisterOptions<FieldValues, string> = {
     required: !optional,
   };
 
-  if (type === InputType.number) {
+  if (node.type === InputType.number) {
     formFieldOptions.valueAsNumber = true;
-  } else if (type === InputType.date) {
+  } else if (node.type === InputType.date) {
     formFieldOptions.valueAsDate = true;
   }
 
-  const formProps = register(name, formFieldOptions);
-
-  switch (type) {
+  switch (node.type) {
     case InputType.boolean: {
       return (
         <Switch
           colorScheme="purple"
-          {...formProps}
+          {...register(name, formFieldOptions)}
           onChange={(e) => {
             console.log(e.target.checked);
             formContext.setValue(name, e.target.checked);
@@ -112,7 +130,7 @@ function FunctionParamInput({
           overflowY="scroll"
           isDisabled={isDisabled}
           _placeholder={{ color: 'fg.300' }}
-          {...formProps}
+          {...register(name, formFieldOptions)}
           placeholder={placeholder}
         />
       );
@@ -125,7 +143,7 @@ function FunctionParamInput({
             backgroundColor="bgColor"
             fontFamily="monospace"
             fontSize="smaller"
-            {...formProps}
+            {...register(name, formFieldOptions)}
           />
           <NumberInputStepper>
             <NumberIncrementStepper />
@@ -147,7 +165,7 @@ function FunctionParamInput({
         <Input
           backgroundColor="bgColor"
           type="date"
-          {...formProps}
+          {...register(name, formFieldOptions)}
           value={formattedDate}
           placeholder={placeholder}
         />
@@ -159,10 +177,10 @@ function FunctionParamInput({
         <Select
           backgroundColor="bgColor"
           isDisabled={isDisabled}
-          {...formProps}
+          {...register(name, formFieldOptions)}
           placeholder={placeholder}
         >
-          {details.values.map((value: any, index: number) => {
+          {node.details.values.map((value, index) => {
             const optionLabel = typeof value === 'object' ? value.key : value;
             const optionValue = typeof value === 'object' ? value.value : value;
             return (
@@ -185,7 +203,7 @@ function FunctionParamInput({
             fontSize="smaller"
             minHeight={14}
             defaultValue="[]"
-            {...formProps}
+            {...register(name, formFieldOptions)}
             isDisabled={isDisabled}
             placeholder={placeholder}
             onChange={(e) => {
@@ -217,7 +235,7 @@ function FunctionParamInput({
             fontSize="smaller"
             minHeight={90}
             defaultValue="{}"
-            {...formProps}
+            {...register(name, formFieldOptions)}
             isDisabled={isDisabled}
             placeholder={placeholder}
             onChange={(e) => {
@@ -238,6 +256,49 @@ function FunctionParamInput({
           )}
         </VStack>
       );
+    }
+    case InputType.union: {
+      const hasTemplateLiteral = false; // TODO
+      const allLiteralOrBoolean = node.details.values.every(
+        (x) => x.type === InputType.boolean || isLiteralNode(x),
+      );
+
+      if (allLiteralOrBoolean && !hasTemplateLiteral) {
+        return (
+          <Select
+            backgroundColor="bgColor"
+            isDisabled={isDisabled}
+            {...register(name, {
+              ...formFieldOptions,
+              setValueAs: (value: string) => {
+                // TODO: I could use the <option value={index} />,
+                // then I could search using the index
+                // but I would need to deal with the bug in defaultValue
+                const fixedTypeValue = node.details.values.find(
+                  (x) =>
+                    'details' in x &&
+                    x.details &&
+                    'literal' in x.details &&
+                    String(x.details.literal) === value,
+                );
+                if (!fixedTypeValue || !isLiteralNode(fixedTypeValue)) return;
+                return fixedTypeValue.details?.literal;
+              },
+            })}
+          >
+            {node.details.values.map((value) => {
+              if (!isLiteralNode(value)) return null; // type guard
+              const literal = String(value.details?.literal);
+              return (
+                <option key={literal} value={literal}>
+                  {literal}
+                </option>
+              );
+            })}
+          </Select>
+        );
+      }
+      return null;
     }
     case InputType.file: {
       return (
@@ -277,7 +338,7 @@ function FunctionParamInput({
             fontFamily="monospace"
             fontSize="smaller"
             minHeight={14}
-            {...formProps}
+            {...register(name, formFieldOptions)}
             isDisabled={isDisabled}
             placeholder=""
             onChange={(e) => {
@@ -295,7 +356,7 @@ function FunctionParamInput({
           fontSize="smaller"
           minHeight={14}
           isDisabled={isDisabled}
-          {...formProps}
+          {...register(name, formFieldOptions)}
           placeholder={placeholder}
         />
       );
@@ -308,23 +369,16 @@ function SingleInput({
   label,
   description,
   placeholder,
-  type,
+  node,
   optional,
   formContext,
   isDisabled,
-  details,
   hasResult = true,
-}: {
+}: InputParam & {
   name: string;
-  label?: string;
-  description?: string;
-  placeholder?: string;
-  type: InputType;
-  optional: boolean;
   formContext: UseFormReturn<FieldValues, any>;
   isDisabled?: boolean;
   hasResult?: boolean;
-  details?: any;
 }): JSX.Element {
   const open = () => {
     formContext.setValue(formName, lastValue.current);
@@ -337,7 +391,7 @@ function SingleInput({
     onClose();
   };
 
-  const formName = getFieldName(name, type);
+  const formName = getFieldName(name, node.type);
   const lastValue = useRef<any>(formContext.getValues()[formName]);
   const { isOpen, onOpen, onClose } = useDisclosure({
     defaultIsOpen: !optional,
@@ -372,7 +426,7 @@ function SingleInput({
                   py="0.5"
                   px={2}
                 >
-                  {type}
+                  {node.type}
                 </Badge>
               )}
             </Box>
@@ -399,13 +453,12 @@ function SingleInput({
                   <Suspense fallback={<Spinner />}>
                     <FunctionParamInput
                       inputKey={name}
-                      type={type}
+                      node={node}
                       value={null}
                       optional={optional}
                       formContext={formContext}
                       isDisabled={isDisabled}
                       placeholder={placeholder}
-                      details={details}
                     />
                   </Suspense>
                 </ErrorBoundary>
@@ -469,22 +522,18 @@ export function FunctionInputs({
     return null;
   }
   const inputs = params.map(
-    (
-      { key, name, label, description, type, optional, placeholder, details },
-      i,
-    ) => (
+    ({ key, name, label, description, node, optional, placeholder }, i) => (
       <SingleInput
         key={`${key}--${i}`}
         name={key}
         label={label || name}
         placeholder={placeholder}
         description={description}
-        type={type}
+        node={node}
         optional={optional}
         formContext={formContext}
         isDisabled={isDisabled}
         hasResult={hasResult}
-        details={details}
       />
     ),
   );
