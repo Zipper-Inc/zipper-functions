@@ -6,9 +6,14 @@ import {
   hasAppEditPermission,
   hasAppReadPermission,
 } from '../utils/authz.utils';
-import { decryptFromHex, encryptToBase64, encryptToHex } from '@zipper/utils';
-import { Prisma } from '@prisma/client';
+import {
+  decryptFromHex,
+  encryptToBase64,
+  encryptToHex,
+  safeJSONParse,
+} from '@zipper/utils';
 import { createTRPCRouter, publicProcedure } from '../root';
+import { Project, SyntaxKind } from 'ts-morph';
 
 export const githubAppConnectorRouter = createTRPCRouter({
   get: publicProcedure
@@ -19,13 +24,57 @@ export const githubAppConnectorRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       await hasAppReadPermission({ ctx, appId: input.appId });
-
-      return prisma.appConnector.findFirst({
+      const script = await prisma.script.findFirst({
         where: {
           appId: input.appId,
-          type: 'github-app',
+          name: 'github-app-connector',
         },
       });
+      if (!script) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Script not found',
+        });
+      }
+      const project = new Project();
+      const sourceFile = project.createSourceFile('tempFile.ts', script.code);
+      const variableDeclaration = sourceFile.getVariableDeclaration(
+        'githubAppConnectorConfig',
+      );
+      const extractedObject = variableDeclaration
+        ?.getInitializerIfKindOrThrow(SyntaxKind.ObjectLiteralExpression)
+        .getProperties()
+        .reduce((acc, p) => {
+          if (p.isKind(SyntaxKind.PropertyAssignment)) {
+            const name = p.getName();
+            const initializer = p.getInitializer();
+
+            if (
+              initializer?.isKind(SyntaxKind.StringLiteral) ||
+              initializer?.isKind(SyntaxKind.NumericLiteral)
+            ) {
+              acc[name] = initializer.getLiteralValue();
+            } else if (initializer?.isKind(SyntaxKind.ArrayLiteralExpression)) {
+              acc[name] = initializer
+                .getElements()
+                .map((a) => a.getText().replace(/"/g, ''));
+            }
+          }
+          return acc;
+        }, {} as any);
+
+      const metadata = await prisma.appSetting.findFirst({
+        where: {
+          appId: input.appId,
+          settingName: 'github-app-connector-app-setting',
+        },
+      });
+      return {
+        scopes: extractedObject.scopes,
+        organization: extractedObject.clientId,
+        events: extractedObject.events,
+        metadata: safeJSONParse(metadata?.settingValue, undefined, null),
+      };
     }),
   getStateValue: publicProcedure
     .input(
@@ -53,15 +102,10 @@ export const githubAppConnectorRouter = createTRPCRouter({
     .mutation(async ({ ctx, input: { appId } }) => {
       await hasAppEditPermission({ ctx, appId });
 
-      await prisma.appConnector.update({
+      await prisma.appSetting.deleteMany({
         where: {
-          appId_type: {
-            appId,
-            type: 'github-app',
-          },
-        },
-        data: {
-          metadata: Prisma.DbNull,
+          appId,
+          settingName: 'github-app-connector-app-setting',
         },
       });
 
@@ -126,7 +170,7 @@ export const githubAppConnectorRouter = createTRPCRouter({
         state: z.string(),
       }),
     )
-    .mutation(async ({ ctx, input }) => {
+    .mutation(async ({ input }) => {
       let appId: string | undefined;
       let redirectTo: string | undefined;
       try {
@@ -220,31 +264,27 @@ export const githubAppConnectorRouter = createTRPCRouter({
           ),
         },
       });
-
-      const connector = await prisma.appConnector.update({
+      const app = await prisma.app.findUnique({
         where: {
-          appId_type: {
-            appId,
-            type: 'github-app',
-          },
+          id: appId!,
         },
-        data: {
-          metadata: json,
-        },
-        include: {
-          app: true,
+      });
+      const resourceOwner = await prisma.resourceOwnerSlug.findFirstOrThrow({
+        where: {
+          resourceOwnerId: app!.organizationId || app!.createdById,
         },
       });
 
-      const resourceOwner = await prisma.resourceOwnerSlug.findFirstOrThrow({
-        where: {
-          resourceOwnerId:
-            connector.app.organizationId || connector.app.createdById,
+      await prisma.appSetting.create({
+        data: {
+          appId: appId!,
+          settingName: 'github-app-connector-app-setting',
+          settingValue: JSON.stringify(json),
         },
       });
 
       return {
-        app: { ...connector.app, resourceOwner },
+        app: { ...app, resourceOwner: resourceOwner },
         redirectTo,
       };
     }),
