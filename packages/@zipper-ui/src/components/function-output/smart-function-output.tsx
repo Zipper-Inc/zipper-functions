@@ -6,7 +6,6 @@ import dynamic from 'next/dynamic';
 
 import { defaults as defaultElements } from '../../utils/chakra-markdown-renderer';
 import { ActionComponent } from './action-component';
-import Array from './array';
 import Collection from './collection';
 import { HtmlOutput } from './html-output';
 import { Markdown } from './markdown';
@@ -15,6 +14,7 @@ import { RawFunctionOutput } from './raw-function-output';
 import { RouterComponent } from './router-component';
 import { useSmartFunctionOutputContext } from './smart-function-output-context';
 import { parseResult } from './utils';
+import ArrayOutput from './array';
 
 export function SmartFunctionOutput({
   result,
@@ -61,11 +61,11 @@ export function SmartFunctionOutput({
       // Pass through if its not the top level
       if (level > 0) return data.toString();
 
-      return <Markdown children={data.toString()} />;
+      return <Markdown>{data.toString()}</Markdown>;
 
     case OutputType.Array:
       return (
-        <Array
+        <ArrayOutput
           data={data}
           tableLevel={tableLevel}
           heading={data.length ? heading : undefined}
@@ -101,6 +101,7 @@ export function SmartFunctionOutput({
       return data.map(
         (d: Zipper.SpecialOutput<`Zipper.${string}`>, index: number) => (
           <SmartFunctionOutput
+            // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
             key={index}
             result={d}
             level={level}
@@ -110,6 +111,7 @@ export function SmartFunctionOutput({
       );
     }
 
+    // biome-ignore lint/suspicious/noFallthroughSwitchClause: <explanation>
     case OutputType.Component: {
       const component = data as Zipper.Component;
 
@@ -299,16 +301,16 @@ export function SmartFunctionOutput({
             ? data.children.join('\n')
             : data.children;
 
-          return <Markdown children={children} />;
+          return <Markdown>{children}</Markdown>;
         }
-        default:
+        default: {
           // Only handle defined 'html' components
           if (!component.type.startsWith('html.')) break;
 
           // Make HTML components React-friendly
           let element: any = component.type.replace(/^html\./, '');
           const props: Record<string, any> = {
-            ['data-generated-by-zipper']: true,
+            'data-generated-by-zipper': true,
             ...component.props,
           };
 
@@ -365,6 +367,7 @@ export function SmartFunctionOutput({
             props,
             children,
           );
+        }
       }
     }
 

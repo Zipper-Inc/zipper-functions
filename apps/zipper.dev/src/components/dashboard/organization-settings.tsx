@@ -59,12 +59,12 @@ function OrganizationSettings() {
             <Input
               value={orgName}
               onChange={(e) => setOrgName(e.target.value)}
-            ></Input>
+            />
             <FormHelperText>
               {`This is the display name for your organization. It does not change
             the url: ${getZipperDotDevUrl().origin}/${
-                organizationSlugQuery.data?.slug
-              }`}
+              organizationSlugQuery.data?.slug
+            }`}
             </FormHelperText>
           </FormControl>
           <HStack justifyContent={'end'} w="full">

@@ -21,7 +21,7 @@ export function EmptySlate({
         </Box>
         <Stack alignContent="center" gap={2} maxW={500} textAlign="center">
           <Text fontWeight="600" fontSize="2xl">
-            Create {organization ? organization.name + "'s" : 'your'} first
+            Create {organization ? `${organization.name}'s` : 'your'} first
             applet
           </Text>
           <Text

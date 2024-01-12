@@ -35,7 +35,7 @@ const renameTsImportsToTsx = async (code: string) => {
 
 export default createOmniApiHandler(async (req, res) => {
   switch (req.method) {
-    case HttpMethod.POST:
+    case HttpMethod.POST: {
       const { limit } = req.body as { limit: number };
 
       const errors = [];
@@ -237,6 +237,7 @@ export default createOmniApiHandler(async (req, res) => {
       } finally {
         if (errors.length > 0) {
           // well, thats a error response actually
+          // biome-ignore lint/correctness/noUnsafeFinally: already migrated
           return successResponse({
             res,
             status: 500,
@@ -252,6 +253,7 @@ export default createOmniApiHandler(async (req, res) => {
           });
         }
 
+        // biome-ignore lint/correctness/noUnsafeFinally: already migrated
         return successResponse({
           res,
           body: {
@@ -264,6 +266,7 @@ export default createOmniApiHandler(async (req, res) => {
           },
         });
       }
+    }
 
     default:
       return methodNotAllowed({ method: req.method, res });

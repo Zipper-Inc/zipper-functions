@@ -12,8 +12,8 @@ export default function Features({
 }) {
   return (
     <Grid templateColumns="repeat(3, 1fr)" gap={6} mt={6}>
-      {features.map((feature, index) => (
-        <Feature key={index} {...feature} />
+      {features.map((feature) => (
+        <Feature key={feature.name} {...feature} />
       ))}
     </Grid>
   );

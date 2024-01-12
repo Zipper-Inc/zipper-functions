@@ -107,7 +107,7 @@ export default async function handler(
                     },
                     {
                       badgeStyle: {
-                        background: PRETTY_LOG_TOKENS['purpleAlt']!,
+                        background: PRETTY_LOG_TOKENS.purpleAlt!,
                       },
                     },
                   ),
@@ -128,7 +128,7 @@ export default async function handler(
       return originReadTree(args.deployment_id);
     }
   }
-  return new Response(`¯\\_(ツ)_/¯`, { status: 500 });
+  return new Response('¯\\_(ツ)_/¯', { status: 500 });
 }
 
 async function decodeAuthHeader(req: NextApiRequest) {
@@ -142,7 +142,7 @@ async function decodeAuthHeader(req: NextApiRequest) {
   }
 
   if (!token) {
-    throw new Error(`No token provided`);
+    throw new Error('No token provided');
   }
 
   const encoder = new TextEncoder();
@@ -204,7 +204,7 @@ async function originBoot({
   });
 
   if (!app) {
-    return errorResponse(`Missing app ID`);
+    return errorResponse('Missing app ID');
   }
 
   const versionToRun =

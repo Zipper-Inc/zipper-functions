@@ -148,7 +148,7 @@ export const githubConnectorRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       const userIdOrTempId =
-        ctx.userId || (ctx.req?.cookies as any)['__zipper_user_id'];
+        ctx.userId || (ctx.req?.cookies as any).__zipper_user_id;
 
       const { appId } = input;
 
@@ -273,7 +273,7 @@ export const githubConnectorRouter = createTRPCRouter({
       let metadata: any = filterTokenFields(json);
 
       const userIdOrTempId: string =
-        userId || ctx.userId || (ctx.req?.cookies as any)['__zipper_user_id'];
+        userId || ctx.userId || (ctx.req?.cookies as any).__zipper_user_id;
       if (appId && json.access_token && userIdOrTempId) {
         const base64Credentials = getBase64Credentials({
           clientId,

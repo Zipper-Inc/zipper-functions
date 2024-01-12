@@ -99,7 +99,7 @@ export function HandlerDescription(
                       fontWeight="normal"
                       color="fg.600"
                     >
-                      {isExpanded ? subtitle : subtitle.slice(0, 80) + '...'}
+                      {isExpanded ? subtitle : `${subtitle.slice(0, 80)}...`}
                     </Heading>
                   )}
                 </Box>

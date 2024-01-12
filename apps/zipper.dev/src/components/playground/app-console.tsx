@@ -161,7 +161,7 @@ export function AppConsole({
                     id: 'PLACEHOLDER',
                     method: 'info',
                     data: [
-                      !!logFilter
+                      logFilter
                         ? '%c No matching logs found.'
                         : '%c No logs yet.',
                       'opacity: .5',

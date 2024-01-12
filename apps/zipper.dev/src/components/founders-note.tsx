@@ -3,16 +3,16 @@ import { ZipperLogo, ZipperSymbol } from '@zipper/ui';
 import Link from 'next/link';
 
 export default function FoundersNote({ callbackUrl }: { callbackUrl: string }) {
-  const link = callbackUrl ? decodeURIComponent(callbackUrl) : `/dashboard`;
+  const link = callbackUrl ? decodeURIComponent(callbackUrl) : '/dashboard';
 
   const BETA_SIGNAGE_CONTENT = {
     TITLE: `You're in.`,
-    SUBTITLE: `A quick note from the makers of Zipper:`,
+    SUBTITLE: 'A quick note from the makers of Zipper:',
     CONTENT: [
-      `First of all, we want to thank you for checking out our beta. We hope that using Zipper will be as fun, inspiring, and productive for you as it has been for us.`,
+      'First of all, we want to thank you for checking out our beta. We hope that using Zipper will be as fun, inspiring, and productive for you as it has been for us.',
       `As you know being fellow builders of software, user feedback is invaluable. Smash that feedback button and give us all your ideas, bugs, gripes, jokes, whatever. We're stoked to hear from you.`,
-      `Looking forward to seeing what you create!`,
-      `Sachin and Ibu`,
+      'Looking forward to seeing what you create!',
+      'Sachin and Ibu',
     ].join('\n\n'),
   };
 
@@ -82,6 +82,7 @@ const Signatures = () => {
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
+      <title>Founders Signatures</title>
       <path
         d="M1.396 44.8028C38.1787 39.2562 36.3383 4.37313 24.2106 7.90552C9.93207 12.0644 59.5103 36.931 55.5613 43.1362C49.614 52.4814 24.0181 48.211 22.7103 46.1115C22.1487 45.2099 38.8002 41.4333 40.0756 41.1787C45.4168 40.1127 50.9342 39.5282 56.0786 37.9825C56.7004 37.7956 57.32 37.5946 57.9238 37.3785C58.1691 37.2906 58.6825 36.9526 58.6825 37.152C58.6825 37.4203 57.656 37.8079 57.4409 38.0076C55.6846 39.6388 60.3705 38.7139 61.321 38.5613C67.7468 37.5297 74.929 37.6764 72.5472 40.7257C71.3918 42.2049 80.0041 41.1787 82.4111 41.1787"
         stroke="#0766B7"

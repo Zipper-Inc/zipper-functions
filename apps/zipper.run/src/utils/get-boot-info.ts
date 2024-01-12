@@ -113,7 +113,7 @@ export async function fetchDeploymentCachedOrThrow(
     );
   }
 
-  if (cached && cached.deploymentId) return cached;
+  if (cached?.deploymentId) return cached;
 
   const result = await fetch(
     `${getZipperApiUrl()}/bootInfo/deployment/${subdomain}`,

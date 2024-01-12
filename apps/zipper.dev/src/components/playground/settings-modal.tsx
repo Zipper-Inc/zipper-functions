@@ -117,8 +117,8 @@ const SettingsTab: React.FC<Props> = ({ isOpen, onClose, appId }) => {
                     <FormHelperText>
                       {`Your app will be available at
                             ${slugify(slug)}.${
-                        process.env.NEXT_PUBLIC_ZIPPER_DOT_RUN_HOST
-                      }`}
+                              process.env.NEXT_PUBLIC_ZIPPER_DOT_RUN_HOST
+                            }`}
                     </FormHelperText>
                   )}
                   <FormErrorMessage>

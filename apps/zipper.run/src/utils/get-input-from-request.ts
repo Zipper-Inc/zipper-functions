@@ -8,11 +8,12 @@ export default async function getInputFromRequest(
   if (request.method === 'GET') {
     const url = new URL(request.url);
     return Object.fromEntries(url.searchParams.entries());
-  } else if (body) {
-    return safeJSONParse(body);
-  } else if (request.body && !request.bodyUsed) {
-    return await request.json();
-  } else {
-    return {};
   }
+  if (body) {
+    return safeJSONParse(body);
+  }
+  if (request.body && !request.bodyUsed) {
+    return await request.json();
+  }
+  return {};
 }

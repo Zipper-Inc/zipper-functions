@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 // generated with `yarn generate`
 // 🛑 DO NOT MODIFY
 
@@ -377,7 +377,7 @@ declare namespace Deno {
     /** The network interface name. */
     name: string;
     /** The IP protocol version. */
-    family: "IPv4" | "IPv6";
+    family: 'IPv4' | 'IPv6';
     /** The IP address bound to the interface. */
     address: string;
     /** The netmask applied to the interface. */
@@ -498,10 +498,7 @@ declare namespace Deno {
    * set of permissions to the test context.
    *
    * @category Permissions */
-  export type PermissionOptions =
-    | "inherit"
-    | "none"
-    | PermissionOptionsObject;
+  export type PermissionOptions = 'inherit' | 'none' | PermissionOptionsObject;
 
   /**
    * A set of options which can define the permissions within a test or worker
@@ -516,7 +513,7 @@ declare namespace Deno {
      *
      * @default {false}
      */
-    env?: "inherit" | boolean | string[];
+    env?: 'inherit' | boolean | string[];
 
     /** Specifies if the `sys` permission should be requested or revoked.
      * If set to `"inherit"`, the current `sys` permission will be inherited.
@@ -525,7 +522,7 @@ declare namespace Deno {
      *
      * @default {false}
      */
-    sys?: "inherit" | boolean | string[];
+    sys?: 'inherit' | boolean | string[];
 
     /** Specifies if the `hrtime` permission should be requested or revoked.
      * If set to `"inherit"`, the current `hrtime` permission will be inherited.
@@ -534,7 +531,7 @@ declare namespace Deno {
      *
      * @default {false}
      */
-    hrtime?: "inherit" | boolean;
+    hrtime?: 'inherit' | boolean;
 
     /** Specifies if the `net` permission should be requested or revoked.
      * if set to `"inherit"`, the current `net` permission will be inherited.
@@ -607,7 +604,7 @@ declare namespace Deno {
      * });
      * ```
      */
-    net?: "inherit" | boolean | string[];
+    net?: 'inherit' | boolean | string[];
 
     /** Specifies if the `ffi` permission should be requested or revoked.
      * If set to `"inherit"`, the current `ffi` permission will be inherited.
@@ -616,7 +613,7 @@ declare namespace Deno {
      *
      * @default {false}
      */
-    ffi?: "inherit" | boolean | Array<string | URL>;
+    ffi?: 'inherit' | boolean | Array<string | URL>;
 
     /** Specifies if the `read` permission should be requested or revoked.
      * If set to `"inherit"`, the current `read` permission will be inherited.
@@ -627,7 +624,7 @@ declare namespace Deno {
      *
      * @default {false}
      */
-    read?: "inherit" | boolean | Array<string | URL>;
+    read?: 'inherit' | boolean | Array<string | URL>;
 
     /** Specifies if the `run` permission should be requested or revoked.
      * If set to `"inherit"`, the current `run` permission will be inherited.
@@ -636,7 +633,7 @@ declare namespace Deno {
      *
      * @default {false}
      */
-    run?: "inherit" | boolean | Array<string | URL>;
+    run?: 'inherit' | boolean | Array<string | URL>;
 
     /** Specifies if the `write` permission should be requested or revoked.
      * If set to `"inherit"`, the current `write` permission will be inherited.
@@ -647,7 +644,7 @@ declare namespace Deno {
      *
      * @default {false}
      */
-    write?: "inherit" | boolean | Array<string | URL>;
+    write?: 'inherit' | boolean | Array<string | URL>;
   }
 
   /**
@@ -915,10 +912,7 @@ declare namespace Deno {
      *
      * @category Testing
      */
-    (
-      name: string,
-      fn: (t: TestContext) => void | Promise<void>,
-    ): void;
+    (name: string, fn: (t: TestContext) => void | Promise<void>): void;
 
     /** Register a test which will be run when `deno test` is used on the command
      * line and the containing module looks like a test module.
@@ -966,7 +960,7 @@ declare namespace Deno {
      */
     (
       name: string,
-      options: Omit<TestDefinition, "fn" | "name">,
+      options: Omit<TestDefinition, 'fn' | 'name'>,
       fn: (t: TestContext) => void | Promise<void>,
     ): void;
 
@@ -1004,7 +998,7 @@ declare namespace Deno {
      * @category Testing
      */
     (
-      options: Omit<TestDefinition, "fn" | "name">,
+      options: Omit<TestDefinition, 'fn' | 'name'>,
       fn: (t: TestContext) => void | Promise<void>,
     ): void;
 
@@ -1036,7 +1030,7 @@ declare namespace Deno {
      * @category Testing
      */
     (
-      options: Omit<TestDefinition, "fn">,
+      options: Omit<TestDefinition, 'fn'>,
       fn: (t: TestContext) => void | Promise<void>,
     ): void;
 
@@ -1044,16 +1038,13 @@ declare namespace Deno {
      *
      * @category Testing
      */
-    ignore(t: Omit<TestDefinition, "ignore">): void;
+    ignore(t: Omit<TestDefinition, 'ignore'>): void;
 
     /** Shorthand property for ignoring a particular test case.
      *
      * @category Testing
      */
-    ignore(
-      name: string,
-      fn: (t: TestContext) => void | Promise<void>,
-    ): void;
+    ignore(name: string, fn: (t: TestContext) => void | Promise<void>): void;
 
     /** Shorthand property for ignoring a particular test case.
      *
@@ -1067,7 +1058,7 @@ declare namespace Deno {
      */
     ignore(
       name: string,
-      options: Omit<TestDefinition, "fn" | "name" | "ignore">,
+      options: Omit<TestDefinition, 'fn' | 'name' | 'ignore'>,
       fn: (t: TestContext) => void | Promise<void>,
     ): void;
 
@@ -1076,7 +1067,7 @@ declare namespace Deno {
      * @category Testing
      */
     ignore(
-      options: Omit<TestDefinition, "fn" | "name" | "ignore">,
+      options: Omit<TestDefinition, 'fn' | 'name' | 'ignore'>,
       fn: (t: TestContext) => void | Promise<void>,
     ): void;
 
@@ -1085,7 +1076,7 @@ declare namespace Deno {
      * @category Testing
      */
     ignore(
-      options: Omit<TestDefinition, "fn" | "ignore">,
+      options: Omit<TestDefinition, 'fn' | 'ignore'>,
       fn: (t: TestContext) => void | Promise<void>,
     ): void;
 
@@ -1093,16 +1084,13 @@ declare namespace Deno {
      *
      * @category Testing
      */
-    only(t: Omit<TestDefinition, "only">): void;
+    only(t: Omit<TestDefinition, 'only'>): void;
 
     /** Shorthand property for focusing a particular test case.
      *
      * @category Testing
      */
-    only(
-      name: string,
-      fn: (t: TestContext) => void | Promise<void>,
-    ): void;
+    only(name: string, fn: (t: TestContext) => void | Promise<void>): void;
 
     /** Shorthand property for focusing a particular test case.
      *
@@ -1116,7 +1104,7 @@ declare namespace Deno {
      */
     only(
       name: string,
-      options: Omit<TestDefinition, "fn" | "name" | "only">,
+      options: Omit<TestDefinition, 'fn' | 'name' | 'only'>,
       fn: (t: TestContext) => void | Promise<void>,
     ): void;
 
@@ -1125,7 +1113,7 @@ declare namespace Deno {
      * @category Testing
      */
     only(
-      options: Omit<TestDefinition, "fn" | "name" | "only">,
+      options: Omit<TestDefinition, 'fn' | 'name' | 'only'>,
       fn: (t: TestContext) => void | Promise<void>,
     ): void;
 
@@ -1134,7 +1122,7 @@ declare namespace Deno {
      * @category Testing
      */
     only(
-      options: Omit<TestDefinition, "fn" | "only">,
+      options: Omit<TestDefinition, 'fn' | 'only'>,
       fn: (t: TestContext) => void | Promise<void>,
     ): void;
   }
@@ -1355,7 +1343,7 @@ declare namespace Deno {
    */
   export function bench(
     name: string,
-    options: Omit<BenchDefinition, "fn" | "name">,
+    options: Omit<BenchDefinition, 'fn' | 'name'>,
     fn: (b: BenchContext) => void | Promise<void>,
   ): void;
 
@@ -1389,7 +1377,7 @@ declare namespace Deno {
    * @category Testing
    */
   export function bench(
-    options: Omit<BenchDefinition, "fn">,
+    options: Omit<BenchDefinition, 'fn'>,
     fn: (b: BenchContext) => void | Promise<void>,
   ): void;
 
@@ -1423,7 +1411,7 @@ declare namespace Deno {
    * @category Testing
    */
   export function bench(
-    options: Omit<BenchDefinition, "fn" | "name">,
+    options: Omit<BenchDefinition, 'fn' | 'name'>,
     fn: (b: BenchContext) => void | Promise<void>,
   ): void;
 
@@ -2212,7 +2200,8 @@ declare namespace Deno {
       Seeker,
       SeekerSync,
       Closer,
-      Disposable {
+      Disposable
+  {
     /** The resource ID associated with the file instance. The resource ID
      * should be considered an opaque reference to resource. */
     readonly rid: number;
@@ -2545,27 +2534,29 @@ declare namespace Deno {
    *
    * @category I/O
    */
-  export const stdin: Reader & ReaderSync & Closer & {
-    /** The resource ID assigned to `stdin`. This can be used with the discreet
-     * I/O functions in the `Deno` namespace. */
-    readonly rid: number;
-    /** A readable stream interface to `stdin`. */
-    readonly readable: ReadableStream<Uint8Array>;
-    /**
-     * Set TTY to be under raw mode or not. In raw mode, characters are read and
-     * returned as is, without being processed. All special processing of
-     * characters by the terminal is disabled, including echoing input
-     * characters. Reading from a TTY device in raw mode is faster than reading
-     * from a TTY device in canonical mode.
-     *
-     * ```ts
-     * Deno.stdin.setRaw(true, { cbreak: true });
-     * ```
-     *
-     * @category I/O
-     */
-    setRaw(mode: boolean, options?: SetRawOptions): void;
-  };
+  export const stdin: Reader &
+    ReaderSync &
+    Closer & {
+      /** The resource ID assigned to `stdin`. This can be used with the discreet
+       * I/O functions in the `Deno` namespace. */
+      readonly rid: number;
+      /** A readable stream interface to `stdin`. */
+      readonly readable: ReadableStream<Uint8Array>;
+      /**
+       * Set TTY to be under raw mode or not. In raw mode, characters are read and
+       * returned as is, without being processed. All special processing of
+       * characters by the terminal is disabled, including echoing input
+       * characters. Reading from a TTY device in raw mode is faster than reading
+       * from a TTY device in canonical mode.
+       *
+       * ```ts
+       * Deno.stdin.setRaw(true, { cbreak: true });
+       * ```
+       *
+       * @category I/O
+       */
+      setRaw(mode: boolean, options?: SetRawOptions): void;
+    };
   /** A reference to `stdout` which can be used to write directly to `stdout`.
    * It implements the Deno specific {@linkcode Writer}, {@linkcode WriterSync},
    * and {@linkcode Closer} interfaces as well as provides a
@@ -2576,13 +2567,15 @@ declare namespace Deno {
    *
    * @category I/O
    */
-  export const stdout: Writer & WriterSync & Closer & {
-    /** The resource ID assigned to `stdout`. This can be used with the discreet
-     * I/O functions in the `Deno` namespace. */
-    readonly rid: number;
-    /** A writable stream interface to `stdout`. */
-    readonly writable: WritableStream<Uint8Array>;
-  };
+  export const stdout: Writer &
+    WriterSync &
+    Closer & {
+      /** The resource ID assigned to `stdout`. This can be used with the discreet
+       * I/O functions in the `Deno` namespace. */
+      readonly rid: number;
+      /** A writable stream interface to `stdout`. */
+      readonly writable: WritableStream<Uint8Array>;
+    };
   /** A reference to `stderr` which can be used to write directly to `stderr`.
    * It implements the Deno specific {@linkcode Writer}, {@linkcode WriterSync},
    * and {@linkcode Closer} interfaces as well as provides a
@@ -2593,13 +2586,15 @@ declare namespace Deno {
    *
    * @category I/O
    */
-  export const stderr: Writer & WriterSync & Closer & {
-    /** The resource ID assigned to `stderr`. This can be used with the discreet
-     * I/O functions in the `Deno` namespace. */
-    readonly rid: number;
-    /** A writable stream interface to `stderr`. */
-    readonly writable: WritableStream<Uint8Array>;
-  };
+  export const stderr: Writer &
+    WriterSync &
+    Closer & {
+      /** The resource ID assigned to `stderr`. This can be used with the discreet
+       * I/O functions in the `Deno` namespace. */
+      readonly rid: number;
+      /** A writable stream interface to `stderr`. */
+      readonly writable: WritableStream<Uint8Array>;
+    };
 
   /**
    * Options which can be set when doing {@linkcode Deno.open} and
@@ -3844,7 +3839,7 @@ declare namespace Deno {
    *
    * @category File System
    */
-  export type FsEventFlag = "rescan";
+  export type FsEventFlag = 'rescan';
 
   /**
    * Represents a unique file system event yielded by a
@@ -3853,7 +3848,7 @@ declare namespace Deno {
    * @category File System */
   export interface FsEvent {
     /** The kind/type of the file system event. */
-    kind: "any" | "access" | "create" | "modify" | "remove" | "other";
+    kind: 'any' | 'access' | 'create' | 'modify' | 'remove' | 'other';
     /** An array of paths that are associated with the file system event. */
     paths: string[];
     /** Any additional flags associated with the event. */
@@ -3955,7 +3950,7 @@ declare namespace Deno {
      * - `"null"`: This stream will be ignored. This is the equivalent of attaching
      *   the stream to `/dev/null`.
      */
-    stdout?: "inherit" | "piped" | "null" | number;
+    stdout?: 'inherit' | 'piped' | 'null' | number;
     /** By default subprocess inherits `stderr` of parent process. To change
      * this this option can be set to a resource ID (_rid_) of an open file,
      * `"inherit"`, `"piped"`, or `"null"`:
@@ -3969,7 +3964,7 @@ declare namespace Deno {
      * - `"null"`: This stream will be ignored. This is the equivalent of attaching
      *   the stream to `/dev/null`.
      */
-    stderr?: "inherit" | "piped" | "null" | number;
+    stderr?: 'inherit' | 'piped' | 'null' | number;
     /** By default subprocess inherits `stdin` of parent process. To change
      * this this option can be set to a resource ID (_rid_) of an open file,
      * `"inherit"`, `"piped"`, or `"null"`:
@@ -3983,7 +3978,7 @@ declare namespace Deno {
      * - `"null"`: This stream will be ignored. This is the equivalent of attaching
      *   the stream to `/dev/null`.
      */
-    stdin?: "inherit" | "piped" | "null" | number;
+    stdin?: 'inherit' | 'piped' | 'null' | number;
   }
 
   /**
@@ -3998,15 +3993,15 @@ declare namespace Deno {
    * @category Sub Process */
   export type ProcessStatus =
     | {
-      success: true;
-      code: 0;
-      signal?: undefined;
-    }
+        success: true;
+        code: 0;
+        signal?: undefined;
+      }
     | {
-      success: false;
-      code: number;
-      signal?: number;
-    };
+        success: false;
+        code: number;
+        signal?: number;
+      };
 
   /**
    * * @deprecated Use {@linkcode Deno.Command} instead.
@@ -4022,21 +4017,27 @@ declare namespace Deno {
     readonly pid: number;
     /** A reference to the sub-processes `stdin`, which allows interacting with
      * the sub-process at a low level. */
-    readonly stdin: T["stdin"] extends "piped" ? Writer & Closer & {
-        writable: WritableStream<Uint8Array>;
-      }
+    readonly stdin: T['stdin'] extends 'piped'
+      ? Writer &
+          Closer & {
+            writable: WritableStream<Uint8Array>;
+          }
       : (Writer & Closer & { writable: WritableStream<Uint8Array> }) | null;
     /** A reference to the sub-processes `stdout`, which allows interacting with
      * the sub-process at a low level. */
-    readonly stdout: T["stdout"] extends "piped" ? Reader & Closer & {
-        readable: ReadableStream<Uint8Array>;
-      }
+    readonly stdout: T['stdout'] extends 'piped'
+      ? Reader &
+          Closer & {
+            readable: ReadableStream<Uint8Array>;
+          }
       : (Reader & Closer & { readable: ReadableStream<Uint8Array> }) | null;
     /** A reference to the sub-processes `stderr`, which allows interacting with
      * the sub-process at a low level. */
-    readonly stderr: T["stderr"] extends "piped" ? Reader & Closer & {
-        readable: ReadableStream<Uint8Array>;
-      }
+    readonly stderr: T['stderr'] extends 'piped'
+      ? Reader &
+          Closer & {
+            readable: ReadableStream<Uint8Array>;
+          }
       : (Reader & Closer & { readable: ReadableStream<Uint8Array> }) | null;
     /** Wait for the process to exit and return its exit status.
      *
@@ -4093,40 +4094,40 @@ declare namespace Deno {
    *
    * @category Runtime Environment */
   export type Signal =
-    | "SIGABRT"
-    | "SIGALRM"
-    | "SIGBREAK"
-    | "SIGBUS"
-    | "SIGCHLD"
-    | "SIGCONT"
-    | "SIGEMT"
-    | "SIGFPE"
-    | "SIGHUP"
-    | "SIGILL"
-    | "SIGINFO"
-    | "SIGINT"
-    | "SIGIO"
-    | "SIGKILL"
-    | "SIGPIPE"
-    | "SIGPROF"
-    | "SIGPWR"
-    | "SIGQUIT"
-    | "SIGSEGV"
-    | "SIGSTKFLT"
-    | "SIGSTOP"
-    | "SIGSYS"
-    | "SIGTERM"
-    | "SIGTRAP"
-    | "SIGTSTP"
-    | "SIGTTIN"
-    | "SIGTTOU"
-    | "SIGURG"
-    | "SIGUSR1"
-    | "SIGUSR2"
-    | "SIGVTALRM"
-    | "SIGWINCH"
-    | "SIGXCPU"
-    | "SIGXFSZ";
+    | 'SIGABRT'
+    | 'SIGALRM'
+    | 'SIGBREAK'
+    | 'SIGBUS'
+    | 'SIGCHLD'
+    | 'SIGCONT'
+    | 'SIGEMT'
+    | 'SIGFPE'
+    | 'SIGHUP'
+    | 'SIGILL'
+    | 'SIGINFO'
+    | 'SIGINT'
+    | 'SIGIO'
+    | 'SIGKILL'
+    | 'SIGPIPE'
+    | 'SIGPROF'
+    | 'SIGPWR'
+    | 'SIGQUIT'
+    | 'SIGSEGV'
+    | 'SIGSTKFLT'
+    | 'SIGSTOP'
+    | 'SIGSYS'
+    | 'SIGTERM'
+    | 'SIGTRAP'
+    | 'SIGTSTP'
+    | 'SIGTTIN'
+    | 'SIGTTOU'
+    | 'SIGURG'
+    | 'SIGUSR1'
+    | 'SIGUSR2'
+    | 'SIGVTALRM'
+    | 'SIGWINCH'
+    | 'SIGXCPU'
+    | 'SIGXFSZ';
 
   /** Registers the given function as a listener of the given signal event.
    *
@@ -4398,17 +4399,17 @@ declare namespace Deno {
      *
      * Defaults to `"inherit"` for `output` & `outputSync`,
      * and `"inherit"` for `spawn`. */
-    stdin?: "piped" | "inherit" | "null";
+    stdin?: 'piped' | 'inherit' | 'null';
     /** How `stdout` of the spawned process should be handled.
      *
      * Defaults to `"piped"` for `output` & `outputSync`,
      * and `"inherit"` for `spawn`. */
-    stdout?: "piped" | "inherit" | "null";
+    stdout?: 'piped' | 'inherit' | 'null';
     /** How `stderr` of the spawned process should be handled.
      *
      * Defaults to `"piped"` for `output` & `outputSync`,
      * and `"inherit"` for `spawn`. */
-    stderr?: "piped" | "inherit" | "null";
+    stderr?: 'piped' | 'inherit' | 'null';
 
     /** Skips quoting and escaping of the arguments on windows. This option
      * is ignored on non-windows platforms.
@@ -4541,14 +4542,14 @@ declare namespace Deno {
    * @category Permissions
    */
   export type PermissionName =
-    | "run"
-    | "read"
-    | "write"
-    | "net"
-    | "env"
-    | "sys"
-    | "ffi"
-    | "hrtime";
+    | 'run'
+    | 'read'
+    | 'write'
+    | 'net'
+    | 'env'
+    | 'sys'
+    | 'ffi'
+    | 'hrtime';
 
   /** The current status of the permission:
    *
@@ -4558,10 +4559,7 @@ declare namespace Deno {
    *
    * @category Permissions
    */
-  export type PermissionState =
-    | "granted"
-    | "denied"
-    | "prompt";
+  export type PermissionState = 'granted' | 'denied' | 'prompt';
 
   /** The permission descriptor for the `allow-run` and `deny-run` permissions, which controls
    * access to what sub-processes can be executed by Deno. The option `command`
@@ -4573,7 +4571,7 @@ declare namespace Deno {
    *
    * @category Permissions */
   export interface RunPermissionDescriptor {
-    name: "run";
+    name: 'run';
     /** An `allow-run` or `deny-run` permission can be scoped to a specific executable,
      * which would be relative to the start-up CWD of the Deno CLI. */
     command?: string | URL;
@@ -4589,7 +4587,7 @@ declare namespace Deno {
    *
    * @category Permissions */
   export interface ReadPermissionDescriptor {
-    name: "read";
+    name: 'read';
     /** An `allow-read` or `deny-read` permission can be scoped to a specific path (and if
      * the path is a directory, any sub paths). */
     path?: string | URL;
@@ -4605,7 +4603,7 @@ declare namespace Deno {
    *
    * @category Permissions */
   export interface WritePermissionDescriptor {
-    name: "write";
+    name: 'write';
     /** An `allow-write` or `deny-write` permission can be scoped to a specific path (and if
      * the path is a directory, any sub paths). */
     path?: string | URL;
@@ -4618,7 +4616,7 @@ declare namespace Deno {
    *
    * @category Permissions */
   export interface NetPermissionDescriptor {
-    name: "net";
+    name: 'net';
     /** Optional host string of the form `"<hostname>[:<port>]"`. Examples:
      *
      *      "github.com"
@@ -4635,7 +4633,7 @@ declare namespace Deno {
    *
    * @category Permissions */
   export interface EnvPermissionDescriptor {
-    name: "env";
+    name: 'env';
     /** Optional environment variable name (e.g. `PATH`). */
     variable?: string;
   }
@@ -4647,17 +4645,17 @@ declare namespace Deno {
    *
    * @category Permissions */
   export interface SysPermissionDescriptor {
-    name: "sys";
+    name: 'sys';
     /** The specific information to scope the permission to. */
     kind?:
-      | "loadavg"
-      | "hostname"
-      | "systemMemoryInfo"
-      | "networkInterfaces"
-      | "osRelease"
-      | "osUptime"
-      | "uid"
-      | "gid";
+      | 'loadavg'
+      | 'hostname'
+      | 'systemMemoryInfo'
+      | 'networkInterfaces'
+      | 'osRelease'
+      | 'osUptime'
+      | 'uid'
+      | 'gid';
   }
 
   /** The permission descriptor for the `allow-ffi` and `deny-ffi` permissions, which controls
@@ -4668,7 +4666,7 @@ declare namespace Deno {
    *
    * @category Permissions */
   export interface FfiPermissionDescriptor {
-    name: "ffi";
+    name: 'ffi';
     /** Optional path on the local host to scope the permission to. */
     path?: string | URL;
   }
@@ -4681,7 +4679,7 @@ declare namespace Deno {
    *
    * @category Permissions */
   export interface HrtimePermissionDescriptor {
-    name: "hrtime";
+    name: 'hrtime';
   }
 
   /** Permission descriptors which define a permission and can be queried,
@@ -4707,7 +4705,7 @@ declare namespace Deno {
    *
    * @category Permissions */
   export interface PermissionStatusEventMap {
-    "change": Event;
+    change: Event;
   }
 
   /** An {@linkcode EventTarget} returned from the {@linkcode Deno.permissions}
@@ -4949,18 +4947,18 @@ declare namespace Deno {
      * the current runtime was built for. */
     target: string;
     /** Instruction set architecture that the Deno CLI was built for. */
-    arch: "x86_64" | "aarch64";
+    arch: 'x86_64' | 'aarch64';
     /** The operating system that the Deno CLI was built for. `"darwin"` is
      * also known as OSX or MacOS. */
     os:
-      | "darwin"
-      | "linux"
-      | "windows"
-      | "freebsd"
-      | "netbsd"
-      | "aix"
-      | "solaris"
-      | "illumos";
+      | 'darwin'
+      | 'linux'
+      | 'windows'
+      | 'freebsd'
+      | 'netbsd'
+      | 'aix'
+      | 'solaris'
+      | 'illumos';
     /** The computer vendor that the Deno CLI was built for. */
     vendor: string;
     /** Optional environment flags that were set for this build of Deno CLI. */
@@ -5044,7 +5042,7 @@ declare namespace Deno {
   export interface SymlinkOptions {
     /** If the symbolic link should be either a file or directory. This option
      * only applies to Windows and is ignored on other operating systems. */
-    type: "file" | "dir";
+    type: 'file' | 'dir';
   }
 
   /**
@@ -5476,18 +5474,18 @@ declare namespace Deno {
    * @category Network
    */
   export type RecordType =
-    | "A"
-    | "AAAA"
-    | "ANAME"
-    | "CAA"
-    | "CNAME"
-    | "MX"
-    | "NAPTR"
-    | "NS"
-    | "PTR"
-    | "SOA"
-    | "SRV"
-    | "TXT";
+    | 'A'
+    | 'AAAA'
+    | 'ANAME'
+    | 'CAA'
+    | 'CNAME'
+    | 'MX'
+    | 'NAPTR'
+    | 'NS'
+    | 'PTR'
+    | 'SOA'
+    | 'SRV'
+    | 'TXT';
 
   /**
    * Options which can be set when using {@linkcode Deno.resolveDns}.
@@ -5612,7 +5610,7 @@ declare namespace Deno {
    */
   export function resolveDns(
     query: string,
-    recordType: "A" | "AAAA" | "ANAME" | "CNAME" | "NS" | "PTR",
+    recordType: 'A' | 'AAAA' | 'ANAME' | 'CNAME' | 'NS' | 'PTR',
     options?: ResolveDnsOptions,
   ): Promise<string[]>;
 
@@ -5642,7 +5640,7 @@ declare namespace Deno {
    */
   export function resolveDns(
     query: string,
-    recordType: "CAA",
+    recordType: 'CAA',
     options?: ResolveDnsOptions,
   ): Promise<CAARecord[]>;
 
@@ -5672,7 +5670,7 @@ declare namespace Deno {
    */
   export function resolveDns(
     query: string,
-    recordType: "MX",
+    recordType: 'MX',
     options?: ResolveDnsOptions,
   ): Promise<MXRecord[]>;
 
@@ -5702,7 +5700,7 @@ declare namespace Deno {
    */
   export function resolveDns(
     query: string,
-    recordType: "NAPTR",
+    recordType: 'NAPTR',
     options?: ResolveDnsOptions,
   ): Promise<NAPTRRecord[]>;
 
@@ -5732,7 +5730,7 @@ declare namespace Deno {
    */
   export function resolveDns(
     query: string,
-    recordType: "SOA",
+    recordType: 'SOA',
     options?: ResolveDnsOptions,
   ): Promise<SOARecord[]>;
 
@@ -5762,7 +5760,7 @@ declare namespace Deno {
    */
   export function resolveDns(
     query: string,
-    recordType: "SRV",
+    recordType: 'SRV',
     options?: ResolveDnsOptions,
   ): Promise<SRVRecord[]>;
 
@@ -5792,7 +5790,7 @@ declare namespace Deno {
    */
   export function resolveDns(
     query: string,
-    recordType: "TXT",
+    recordType: 'TXT',
     options?: ResolveDnsOptions,
   ): Promise<string[][]>;
 
@@ -6834,7 +6832,7 @@ declare interface TextEncoderEncodeIntoResult {
 /** @category Encoding API */
 declare interface TextEncoder {
   /** Returns "utf-8". */
-  readonly encoding: "utf-8";
+  readonly encoding: 'utf-8';
   /** Returns the result of running UTF-8's encoder. */
   encode(input?: string): Uint8Array;
   encodeInto(input: string, dest: Uint8Array): TextEncoderEncodeIntoResult;
@@ -6868,7 +6866,7 @@ declare var TextDecoderStream: {
 /** @category Encoding API */
 declare interface TextEncoderStream {
   /** Returns "utf-8". */
-  readonly encoding: "utf-8";
+  readonly encoding: 'utf-8';
   readonly readable: ReadableStream<Uint8Array>;
   readonly writable: WritableStream<string>;
   readonly [Symbol.toStringTag]: string;
@@ -6956,12 +6954,12 @@ declare var AbortSignal: {
 
 /** @category Web File API */
 declare interface FileReaderEventMap {
-  "abort": ProgressEvent<FileReader>;
-  "error": ProgressEvent<FileReader>;
-  "load": ProgressEvent<FileReader>;
-  "loadend": ProgressEvent<FileReader>;
-  "loadstart": ProgressEvent<FileReader>;
-  "progress": ProgressEvent<FileReader>;
+  abort: ProgressEvent<FileReader>;
+  error: ProgressEvent<FileReader>;
+  load: ProgressEvent<FileReader>;
+  loadend: ProgressEvent<FileReader>;
+  loadstart: ProgressEvent<FileReader>;
+  progress: ProgressEvent<FileReader>;
 }
 
 /** Lets web applications asynchronously read the contents of files (or raw data
@@ -7027,7 +7025,7 @@ declare type BlobPart = BufferSource | Blob | string;
 /** @category Web File API */
 declare interface BlobPropertyBag {
   type?: string;
-  endings?: "transparent" | "native";
+  endings?: 'transparent' | 'native';
 }
 
 /** A file-like object of immutable, raw data. Blobs represent data that isn't
@@ -7171,7 +7169,7 @@ declare interface UnderlyingByteSource {
   cancel?: ReadableStreamErrorCallback;
   pull?: ReadableByteStreamControllerCallback;
   start?: ReadableByteStreamControllerCallback;
-  type: "bytes";
+  type: 'bytes';
 }
 
 /** @category Streams API */
@@ -7287,12 +7285,15 @@ declare var ByteLengthQueuingStrategy: {
 declare interface ReadableStream<R = any> {
   readonly locked: boolean;
   cancel(reason?: any): Promise<void>;
-  getReader(options: { mode: "byob" }): ReadableStreamBYOBReader;
+  getReader(options: { mode: 'byob' }): ReadableStreamBYOBReader;
   getReader(options?: { mode?: undefined }): ReadableStreamDefaultReader<R>;
-  pipeThrough<T>(transform: {
-    writable: WritableStream<R>;
-    readable: ReadableStream<T>;
-  }, options?: PipeOptions): ReadableStream<T>;
+  pipeThrough<T>(
+    transform: {
+      writable: WritableStream<R>;
+      readable: ReadableStream<T>;
+    },
+    options?: PipeOptions,
+  ): ReadableStream<T>;
   pipeTo(dest: WritableStream<R>, options?: PipeOptions): Promise<void>;
   tee(): [ReadableStream<R>, ReadableStream<R>];
   values(options?: {
@@ -7331,11 +7332,10 @@ declare interface WritableStreamDefaultControllerStartCallback {
 
 /** @category Streams API */
 declare interface WritableStreamDefaultControllerWriteCallback<W> {
-  (chunk: W, controller: WritableStreamDefaultController):
-    | void
-    | PromiseLike<
-      void
-    >;
+  (
+    chunk: W,
+    controller: WritableStreamDefaultController,
+  ): void | PromiseLike<void>;
 }
 
 /** @category Streams API */
@@ -7534,8 +7534,8 @@ declare var MessageChannel: {
 
 /** @category DOM APIs */
 declare interface MessagePortEventMap {
-  "message": MessageEvent;
-  "messageerror": MessageEvent;
+  message: MessageEvent;
+  messageerror: MessageEvent;
 }
 
 /** The MessagePort interface of the Channel Messaging API represents one of the
@@ -7736,9 +7736,7 @@ declare var DecompressionStream: {
  *
  * @category Web APIs
  */
-declare function reportError(
-  error: any,
-): void;
+declare function reportError(error: any): void;
 
 // Copyright 2018-2023 the Deno authors. All rights reserved. MIT license.
 
@@ -7871,29 +7869,29 @@ declare var Headers: {
 declare type RequestInfo = Request | string;
 /** @category Fetch API */
 declare type RequestCache =
-  | "default"
-  | "force-cache"
-  | "no-cache"
-  | "no-store"
-  | "only-if-cached"
-  | "reload";
+  | 'default'
+  | 'force-cache'
+  | 'no-cache'
+  | 'no-store'
+  | 'only-if-cached'
+  | 'reload';
 /** @category Fetch API */
-declare type RequestCredentials = "include" | "omit" | "same-origin";
+declare type RequestCredentials = 'include' | 'omit' | 'same-origin';
 /** @category Fetch API */
-declare type RequestMode = "cors" | "navigate" | "no-cors" | "same-origin";
+declare type RequestMode = 'cors' | 'navigate' | 'no-cors' | 'same-origin';
 /** @category Fetch API */
-declare type RequestRedirect = "error" | "follow" | "manual";
+declare type RequestRedirect = 'error' | 'follow' | 'manual';
 /** @category Fetch API */
 declare type ReferrerPolicy =
-  | ""
-  | "no-referrer"
-  | "no-referrer-when-downgrade"
-  | "origin"
-  | "origin-when-cross-origin"
-  | "same-origin"
-  | "strict-origin"
-  | "strict-origin-when-cross-origin"
-  | "unsafe-url";
+  | ''
+  | 'no-referrer'
+  | 'no-referrer-when-downgrade'
+  | 'origin'
+  | 'origin-when-cross-origin'
+  | 'same-origin'
+  | 'strict-origin'
+  | 'strict-origin-when-cross-origin'
+  | 'unsafe-url';
 /** @category Fetch API */
 declare type BodyInit =
   | Blob
@@ -7904,24 +7902,24 @@ declare type BodyInit =
   | string;
 /** @category Fetch API */
 declare type RequestDestination =
-  | ""
-  | "audio"
-  | "audioworklet"
-  | "document"
-  | "embed"
-  | "font"
-  | "image"
-  | "manifest"
-  | "object"
-  | "paintworklet"
-  | "report"
-  | "script"
-  | "sharedworker"
-  | "style"
-  | "track"
-  | "video"
-  | "worker"
-  | "xslt";
+  | ''
+  | 'audio'
+  | 'audioworklet'
+  | 'document'
+  | 'embed'
+  | 'font'
+  | 'image'
+  | 'manifest'
+  | 'object'
+  | 'paintworklet'
+  | 'report'
+  | 'script'
+  | 'sharedworker'
+  | 'style'
+  | 'track'
+  | 'video'
+  | 'worker'
+  | 'xslt';
 
 /** @category Fetch API */
 declare interface RequestInit {
@@ -8096,12 +8094,12 @@ declare interface ResponseInit {
 
 /** @category Fetch API */
 declare type ResponseType =
-  | "basic"
-  | "cors"
-  | "default"
-  | "error"
-  | "opaque"
-  | "opaqueredirect";
+  | 'basic'
+  | 'cors'
+  | 'default'
+  | 'error'
+  | 'opaque'
+  | 'opaqueredirect';
 
 /** This Fetch API interface represents the response to a request.
  *
@@ -8279,7 +8277,7 @@ declare var WebSocket: {
 };
 
 /** @category Web Sockets */
-declare type BinaryType = "arraybuffer" | "blob";
+declare type BinaryType = 'arraybuffer' | 'blob';
 
 // Copyright 2018-2023 the Deno authors. All rights reserved. MIT license.
 
@@ -8355,19 +8353,19 @@ declare type AlgorithmIdentifier = string | Algorithm;
 /** @category Web Crypto API */
 declare type HashAlgorithmIdentifier = AlgorithmIdentifier;
 /** @category Web Crypto API */
-declare type KeyType = "private" | "public" | "secret";
+declare type KeyType = 'private' | 'public' | 'secret';
 /** @category Web Crypto API */
 declare type KeyUsage =
-  | "decrypt"
-  | "deriveBits"
-  | "deriveKey"
-  | "encrypt"
-  | "sign"
-  | "unwrapKey"
-  | "verify"
-  | "wrapKey";
+  | 'decrypt'
+  | 'deriveBits'
+  | 'deriveKey'
+  | 'encrypt'
+  | 'sign'
+  | 'unwrapKey'
+  | 'verify'
+  | 'wrapKey';
 /** @category Web Crypto API */
-declare type KeyFormat = "jwk" | "pkcs8" | "raw" | "spki";
+declare type KeyFormat = 'jwk' | 'pkcs8' | 'raw' | 'spki';
 /** @category Web Crypto API */
 declare type NamedCurve = string;
 
@@ -8584,7 +8582,7 @@ declare interface SubtleCrypto {
     keyUsages: KeyUsage[],
   ): Promise<CryptoKeyPair | CryptoKey>;
   importKey(
-    format: "jwk",
+    format: 'jwk',
     keyData: JsonWebKey,
     algorithm:
       | AlgorithmIdentifier
@@ -8595,7 +8593,7 @@ declare interface SubtleCrypto {
     keyUsages: KeyUsage[],
   ): Promise<CryptoKey>;
   importKey(
-    format: Exclude<KeyFormat, "jwk">,
+    format: Exclude<KeyFormat, 'jwk'>,
     keyData: BufferSource,
     algorithm:
       | AlgorithmIdentifier
@@ -8605,9 +8603,9 @@ declare interface SubtleCrypto {
     extractable: boolean,
     keyUsages: KeyUsage[],
   ): Promise<CryptoKey>;
-  exportKey(format: "jwk", key: CryptoKey): Promise<JsonWebKey>;
+  exportKey(format: 'jwk', key: CryptoKey): Promise<JsonWebKey>;
   exportKey(
-    format: Exclude<KeyFormat, "jwk">,
+    format: Exclude<KeyFormat, 'jwk'>,
     key: CryptoKey,
   ): Promise<ArrayBuffer>;
   sign(
@@ -8719,9 +8717,7 @@ declare interface Crypto {
       | Uint8ClampedArray
       | BigInt64Array
       | BigUint64Array,
-  >(
-    array: T,
-  ): T;
+  >(array: T): T;
   randomUUID(): string;
 }
 
@@ -8740,8 +8736,8 @@ declare var Crypto: {
 
 /** @category Broadcast Channel */
 declare interface BroadcastChannelEventMap {
-  "message": MessageEvent;
-  "messageerror": MessageEvent;
+  message: MessageEvent;
+  messageerror: MessageEvent;
 }
 
 /** @category Broadcast Channel */
@@ -8799,14 +8795,14 @@ declare var BroadcastChannel: {
 declare namespace Deno {
   /** @category Network */
   export interface NetAddr {
-    transport: "tcp" | "udp";
+    transport: 'tcp' | 'udp';
     hostname: string;
     port: number;
   }
 
   /** @category Network */
   export interface UnixAddr {
-    transport: "unix" | "unixpacket";
+    transport: 'unix' | 'unixpacket';
     path: string;
   }
 
@@ -8818,7 +8814,8 @@ declare namespace Deno {
    * @category Network
    */
   export interface Listener<T extends Conn = Conn>
-    extends AsyncIterable<T>, Disposable {
+    extends AsyncIterable<T>,
+      Disposable {
     /** Waits for and resolves to the next connection to the `Listener`. */
     accept(): Promise<T>;
     /** Close closes the listener. Any pending accept promises will be rejected
@@ -8909,8 +8906,7 @@ declare namespace Deno {
 
   /** @category Network */
   // deno-lint-ignore no-empty-interface
-  export interface TcpListenOptions extends ListenOptions {
-  }
+  export interface TcpListenOptions extends ListenOptions {}
 
   /** Listen announces on the local transport address.
    *
@@ -8927,7 +8923,7 @@ declare namespace Deno {
    * @category Network
    */
   export function listen(
-    options: TcpListenOptions & { transport?: "tcp" },
+    options: TcpListenOptions & { transport?: 'tcp' },
   ): Listener;
 
   /** @category Network */
@@ -8950,7 +8946,7 @@ declare namespace Deno {
      */
     keyFile?: string;
 
-    transport?: "tcp";
+    transport?: 'tcp';
 
     /** Application-Layer Protocol Negotiation (ALPN) protocols to announce to
      * the client. If not specified, no ALPN extension will be included in the
@@ -8982,7 +8978,7 @@ declare namespace Deno {
      *
      * @default {"127.0.0.1"} */
     hostname?: string;
-    transport?: "tcp";
+    transport?: 'tcp';
   }
 
   /**
@@ -9377,11 +9373,11 @@ declare namespace WebAssembly {
   }
 
   /** @category WebAssembly */
-  export type ImportExportKind = "function" | "global" | "memory" | "table";
+  export type ImportExportKind = 'function' | 'global' | 'memory' | 'table';
   /** @category WebAssembly */
-  export type TableKind = "anyfunc";
+  export type TableKind = 'anyfunc';
   /** @category WebAssembly */
-  export type ValueType = "f32" | "f64" | "i32" | "i64";
+  export type ValueType = 'f32' | 'f64' | 'i32' | 'i64';
   /** @category WebAssembly */
   export type ExportValue = Function | Global | Memory | Table;
   /** @category WebAssembly */
@@ -9637,18 +9633,18 @@ declare var PromiseRejectionEvent: {
 
 /** @category Web Workers */
 declare interface AbstractWorkerEventMap {
-  "error": ErrorEvent;
+  error: ErrorEvent;
 }
 
 /** @category Web Workers */
 declare interface WorkerEventMap extends AbstractWorkerEventMap {
-  "message": MessageEvent;
-  "messageerror": MessageEvent;
+  message: MessageEvent;
+  messageerror: MessageEvent;
 }
 
 /** @category Web Workers */
 declare interface WorkerOptions {
-  type?: "classic" | "module";
+  type?: 'classic' | 'module';
   name?: string;
 }
 
@@ -9809,7 +9805,7 @@ declare var PerformanceEntry: {
  */
 declare interface PerformanceMark extends PerformanceEntry {
   readonly detail: any;
-  readonly entryType: "mark";
+  readonly entryType: 'mark';
 }
 
 /** `PerformanceMark` is an abstract interface for `PerformanceEntry` objects
@@ -9833,7 +9829,7 @@ declare var PerformanceMark: {
  */
 declare interface PerformanceMeasure extends PerformanceEntry {
   readonly detail: any;
-  readonly entryType: "measure";
+  readonly entryType: 'measure';
 }
 
 /** `PerformanceMeasure` is an abstract interface for `PerformanceEntry` objects
@@ -9958,8 +9954,8 @@ declare interface CacheQueryOptions {
 
 /** @category Web APIs */
 declare interface WindowEventMap {
-  "error": ErrorEvent;
-  "unhandledrejection": PromiseRejectionEvent;
+  error: ErrorEvent;
+  unhandledrejection: PromiseRejectionEvent;
 }
 
 /** @category Web APIs */
@@ -9990,10 +9986,7 @@ declare interface Window extends EventTarget {
 
   addEventListener<K extends keyof WindowEventMap>(
     type: K,
-    listener: (
-      this: Window,
-      ev: WindowEventMap[K],
-    ) => any,
+    listener: (this: Window, ev: WindowEventMap[K]) => any,
     options?: boolean | AddEventListenerOptions,
   ): void;
   addEventListener(
@@ -10003,10 +9996,7 @@ declare interface Window extends EventTarget {
   ): void;
   removeEventListener<K extends keyof WindowEventMap>(
     type: K,
-    listener: (
-      this: Window,
-      ev: WindowEventMap[K],
-    ) => any,
+    listener: (this: Window, ev: WindowEventMap[K]) => any,
     options?: boolean | EventListenerOptions,
   ): void;
   removeEventListener(
@@ -10118,9 +10108,7 @@ declare function prompt(message?: string, defaultValue?: string): string | null;
  *
  * @category DOM Events
  */
-declare function addEventListener<
-  K extends keyof WindowEventMap,
->(
+declare function addEventListener<K extends keyof WindowEventMap>(
   type: K,
   listener: (this: Window, ev: WindowEventMap[K]) => any,
   options?: boolean | AddEventListenerOptions,
@@ -10142,9 +10130,7 @@ declare function addEventListener(
  *
  * @category DOM Events
  */
-declare function removeEventListener<
-  K extends keyof WindowEventMap,
->(
+declare function removeEventListener<K extends keyof WindowEventMap>(
   type: K,
   listener: (this: Window, ev: WindowEventMap[K]) => any,
   options?: boolean | EventListenerOptions,

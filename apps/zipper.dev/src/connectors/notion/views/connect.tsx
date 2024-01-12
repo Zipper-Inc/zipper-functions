@@ -24,7 +24,7 @@ import { trpc } from '~/utils/trpc';
 /* -------------------------------------------- */
 
 const CLIENT_ID_FORM = {
-  LABEL: `Custom client ID?`,
+  LABEL: 'Custom client ID?',
   DESCRIPTION:
     'When checked, you can specify your own Notion client ID and secret.',
   REDIRECT_URL:

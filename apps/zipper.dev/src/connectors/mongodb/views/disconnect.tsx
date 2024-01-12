@@ -49,7 +49,8 @@ const PostgresDisconect: React.FC<{
       appId,
     });
 
-    return setIsSaving(false), onClose();
+    setIsSaving(false);
+    onClose();
   }
 
   /* ------------------ Render ------------------ */

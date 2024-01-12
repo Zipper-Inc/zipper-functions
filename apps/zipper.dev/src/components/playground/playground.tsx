@@ -123,9 +123,8 @@ export function Playground({
   const saveAppBeforeRun = async () => {
     if (app.canUserEdit) {
       return save();
-    } else {
-      return app.playgroundVersionHash || app.publishedVersionHash || '';
     }
+    return app.playgroundVersionHash || app.publishedVersionHash || '';
   };
 
   const {

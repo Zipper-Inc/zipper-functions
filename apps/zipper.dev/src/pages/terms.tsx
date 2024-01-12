@@ -268,7 +268,7 @@ const TermsPage = () => (
             'copies or stores any significant portion of the Content; or',
             'decompiles, reverse engineers, or otherwise attempts to obtain the source code or underlying ideas or information of or relating to the Services.',
           ].map((item, index) => (
-            <ListItem key={index}>{item}</ListItem>
+            <ListItem key={item}>{item}</ListItem>
           ))}
         </OrderedList>
 
@@ -422,8 +422,8 @@ const TermsPage = () => (
             'Identification of the material that has been removed or to which access has been disabled and the location at which the material appeared before it was removed or disabled;',
             'A statement that the content provider has a good faith belief that the material was removed or disabled as a result of mistake or misidentification of the material; and',
             'Content provider’s name, address, telephone number, and, if available, email address, and a statement that such person or entity consents to the jurisdiction of the Federal Court for the judicial district in which the content provider’s address is located, or, if the content provider’s address is located outside the United States, for any judicial district in which Company is located, and that such person or entity will accept service of process from the person who provided notification of the alleged infringement.',
-          ].map((item, index) => (
-            <ListItem key={index}>{item}</ListItem>
+          ].map((item) => (
+            <ListItem key={item}>{item}</ListItem>
           ))}
         </OrderedList>
 
@@ -681,6 +681,7 @@ Attn: DMCA Designated Agent
               Service.
             </Text>,
           ].map((item, index) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
             <ListItem key={index}>{item}</ListItem>
           ))}
         </OrderedList>
@@ -895,6 +896,7 @@ Attn: DMCA Designated Agent
               relationship with Zipper.
             </Text>,
           ].map((item, index) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
             <ListItem key={index}>{item}</ListItem>
           ))}
         </OrderedList>

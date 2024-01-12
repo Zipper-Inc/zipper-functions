@@ -6,7 +6,8 @@
   "types": "./generated/index.gen.ts",
   "scripts": {
     "build": "yarn ctix single",
-    "dev": "yarn nodemon"
+    "dev": "yarn nodemon",
+    "lint": "biome lint --max-diagnostics=5000 --log-kind=compact --diagnostic-level=error ./"
   },
   "devDependencies": {
     "@types/lodash.shuffle": "^4.2.7",

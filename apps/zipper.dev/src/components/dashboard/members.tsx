@@ -188,7 +188,7 @@ function MemberList() {
                   <Td pl="2">User</Td>
                   <Td>Joined</Td>
                   <Td>Role</Td>
-                  <Td textAlign="end" w="1"></Td>
+                  <Td textAlign="end" w="1" />
                 </Tr>
               </Thead>
               <Tbody>

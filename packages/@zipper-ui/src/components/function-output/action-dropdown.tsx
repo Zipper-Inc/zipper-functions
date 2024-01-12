@@ -27,7 +27,7 @@ export function ActionDropdown({ action }: { action: Zipper.DropdownAction }) {
           if (optionKey) {
             setInputs({
               ...action.inputs,
-              [optionKey]: e.target.value || (action.inputs || {})[optionKey],
+              [optionKey]: e.target.value || action.inputs?.[optionKey],
             });
           }
         }}

@@ -82,7 +82,13 @@ const handler: NextApiHandler = async (req, res) => {
       return arr;
     },
     // prettier-ignore
-    [] as ({name: string | null, iconUrl: string, description: string | null, slug: string, resourceOwner: {slug: string}})[],
+    [] as {
+      name: string | null;
+      iconUrl: string;
+      description: string | null;
+      slug: string;
+      resourceOwner: { slug: string };
+    }[],
   );
 
   redis.set(

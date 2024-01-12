@@ -24,7 +24,7 @@ import { trpc } from '~/utils/trpc';
 /* Constants                                    */
 /* -------------------------------------------- */
 const CLIENT_ID_FORM = {
-  LABEL: `Postgres database connection`,
+  LABEL: 'Postgres database connection',
   DESCRIPTION: 'Add your postgres database configuration.',
 };
 

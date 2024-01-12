@@ -1,5 +1,5 @@
 export enum SiteType {
-  Home,
-  Docs,
-  Blog,
+  Home = 0,
+  Docs = 1,
+  Blog = 2,
 }

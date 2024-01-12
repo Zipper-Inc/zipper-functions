@@ -109,7 +109,7 @@ export const GalleryItem: React.FC<GalleryItemProps> = ({ app }) => {
         borderColor="fg.200"
         href={`/gallery/${app.resourceOwner.slug}/${app.slug}`}
       >
-        <InnerCard app={app}></InnerCard>
+        <InnerCard app={app} />
       </Card>
     </Box>
   );

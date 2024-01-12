@@ -10,6 +10,7 @@ const AnalyticsHead = ({ tagId }: { tagId?: string }) => {
         }`}
       />
       <script
+        // biome-ignore lint/security/noDangerouslySetInnerHtml: <explanation>
         dangerouslySetInnerHTML={{
           __html: `
         window.dataLayer = window.dataLayer || [];

@@ -4,8 +4,8 @@ import { getZipperDotDevUrlForServer } from '~/server/utils/server-url.utils';
 import { getSourceFileFromCode, isExternalImport } from './parse-code';
 
 export enum Target {
-  Default,
-  Deno,
+  Default = 0,
+  Deno = 1,
 }
 
 const NPM_NODE_REGEX = /^(npm|node):/;
@@ -33,10 +33,10 @@ export const LOCALHOST_URL_REGEX =
   /^(?:https?:\/\/)(?:localhost|127\.0\.0\.1|10\.(?:\d{1,3}\.){2}\d{1,3}|172\.(?:1[6-9]|2\d|3[01])\.(?:\d{1,3}\.){2}\d{1,3}|192\.168\.(?:\d{1,3}\.){1}\d{1,3}|::1)(?:\:\d+)?/;
 
 export enum RewriteTo {
-  None,
-  ZipperDotDev,
-  EsmSh,
-  External,
+  None = 0,
+  ZipperDotDev = 1,
+  EsmSh = 2,
+  External = 3,
 }
 
 /**
@@ -91,10 +91,10 @@ export function rewriteSpecifier(
         .replace(LOCALHOST_URL_REGEX, '')
         .replace(/^\//, '')}`;
 
-    case RewriteTo.EsmSh:
-    default:
+    default: {
       const esmShUrl = withEsmSh(specifier.replace(NPM_NODE_REGEX, ''));
       return target === Target.Deno ? withDenoTarget(esmShUrl) : esmShUrl;
+    }
   }
 }
 
@@ -104,7 +104,7 @@ export function rewriteImports(
 ) {
   if (!src) return src;
 
-  const sourceFile = typeof src == 'string' ? getSourceFileFromCode(src) : src;
+  const sourceFile = typeof src === 'string' ? getSourceFileFromCode(src) : src;
 
   sourceFile
     .getImportDeclarations()

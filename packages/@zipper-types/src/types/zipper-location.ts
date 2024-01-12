@@ -1,6 +1,6 @@
 export enum ZipperLocation {
-  ZipperDotRun,
-  ZipperDotDev,
+  ZipperDotRun = 0,
+  ZipperDotDev = 1,
 }
 
 declare global {

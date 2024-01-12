@@ -118,7 +118,7 @@ const exchangeCodeForToken = publicProcedure
         code: input.code,
         redirect_uri:
           process.env.NODE_ENV === 'development'
-            ? `https://redirectmeto.com/http://localhost:3000/connectors/notion/auth`
+            ? 'https://redirectmeto.com/http://localhost:3000/connectors/notion/auth'
             : 'https://zipper.dev/connectors/notion/auth',
       }),
     }).then((res) => res.json());

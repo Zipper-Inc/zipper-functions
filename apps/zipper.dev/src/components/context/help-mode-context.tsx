@@ -45,7 +45,8 @@ export const inspectableComponents: InspectableComponents = {
   },
   ConsoleTab: {
     name: 'Console',
-    description: `Anything that you send with console.* as well as save, deploy, and other messages and/or errors that come from Zipper will show up in your Console. `,
+    description:
+      'Anything that you send with console.* as well as save, deploy, and other messages and/or errors that come from Zipper will show up in your Console. ',
   },
   CodeTab: {
     name: 'Code',
@@ -67,11 +68,12 @@ export const inspectableComponents: InspectableComponents = {
   },
   VersionsTab: {
     name: 'Versions',
-    description: `Publish or rollback to any saved version of this applet..`,
+    description: 'Publish or rollback to any saved version of this applet..',
   },
   SettingsTab: {
     name: 'Settings',
-    description: `Change the name, description, and other settings of this applet.`,
+    description:
+      'Change the name, description, and other settings of this applet.',
   },
 };
 

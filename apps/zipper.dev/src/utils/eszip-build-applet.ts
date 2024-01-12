@@ -49,10 +49,11 @@ async function getFrameworkFileContent(
         code: await readFrameworkFile(filename),
         filenames: scripts.map((s) => s.filename),
       });
-    case BOOT_INFO_PATH:
+    case BOOT_INFO_PATH: {
       const bootInfo = await getBootInfoFromPrisma({ slugFromUrl: slug });
       if (bootInfo instanceof Error) throw bootInfo;
       return `export default ${JSON.stringify(bootInfo)};`;
+    }
     default:
       return readFrameworkFile(filename);
   }
@@ -83,11 +84,11 @@ export async function build({
         badge: 'Deploy',
         topic: appName,
         subtopic: 'Pending',
-        msg: `Starting build for deploy`,
+        msg: 'Starting build for deploy',
       },
       {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        badgeStyle: { background: PRETTY_LOG_TOKENS['fgText']! },
+        badgeStyle: { background: PRETTY_LOG_TOKENS.fgText! },
       },
     ),
   );
@@ -136,7 +137,8 @@ export async function build({
             name: filename.replace(/\.tsx?$/, ''),
             path: `/${filename}`,
           })}`;
-          const inputTypes = `export type __handlerInputs = Parameters<typeof handler>[0]`;
+          const inputTypes =
+            'export type __handlerInputs = Parameters<typeof handler>[0]';
           rewrittenCode = `${rewrittenCode}\n${handlerMeta};${inputTypes};`;
         }
 
@@ -230,7 +232,7 @@ export async function build({
       if (e instanceof Error) {
         // 🚨 Security Fix
         // Catch file not found errors and do not leak the file system
-        if (e.message.includes('ENOENT')) e.message = `File not found`;
+        if (e.message.includes('ENOENT')) e.message = 'File not found';
         e.message = `Error building ${specifier}: ${e.message}`;
       }
       throw e;
@@ -246,7 +248,7 @@ export async function build({
         subtopic: 'Done',
         msg: `Completed in ${Math.round(elapsedMs)}ms`,
       },
-      { badgeStyle: { background: PRETTY_LOG_TOKENS['fgText']! } },
+      { badgeStyle: { background: PRETTY_LOG_TOKENS.fgText! } },
     ),
   );
 

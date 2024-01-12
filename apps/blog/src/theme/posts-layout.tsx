@@ -49,7 +49,7 @@ export function PostsLayout(): ReactElement {
 
     const colorSet = getRandomColor()!;
 
-    const isEven = post.index % 2 == 0;
+    const isEven = post.index % 2 === 0;
 
     return (
       <GridItem
@@ -138,7 +138,7 @@ export function PostsLayout(): ReactElement {
   };
 
   const postList = otherPosts.map((post, index) => (
-    <Post key={index} {...post} index={index + 2} />
+    <Post key={post.name} {...post} index={index + 2} />
   ));
 
   return (

@@ -81,7 +81,7 @@ export const OrganizationSelector: React.FC<{
                     visibility={
                       hoverOrg === org.organization.id ? 'visible' : 'hidden'
                     }
-                  ></Icon>
+                  />
                 )}
               </HStack>
             </MenuItem>

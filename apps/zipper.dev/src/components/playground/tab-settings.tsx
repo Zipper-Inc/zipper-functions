@@ -547,7 +547,7 @@ const SettingsTab: React.FC<Props> = ({ app }) => {
                       flexGrow={1}
                       isDisabled={true}
                       value={showAppAccessToken}
-                    ></Input>
+                    />
                     <Tooltip label="Copy">
                       <IconButton
                         aria-label="copy"

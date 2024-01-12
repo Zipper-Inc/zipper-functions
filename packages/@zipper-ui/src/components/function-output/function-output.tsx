@@ -619,7 +619,7 @@ export function FunctionOutput({
                     {modalOutputComponent()}
                   </VStack>
                 </ModalBody>
-                <ModalFooter justifyContent="end"></ModalFooter>
+                <ModalFooter justifyContent="end" />
               </ModalContent>
             </Modal>
           )}

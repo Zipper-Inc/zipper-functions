@@ -11,25 +11,28 @@ export const getInputsFromFormData = (
     .filter((k) => {
       return formKeys.includes(k);
     })
-    .reduce((acc, cur) => {
-      const { name, type } = parseFieldName(cur);
+    .reduce(
+      (acc, cur) => {
+        const { name, type } = parseFieldName(cur);
 
-      let value = JSONEditorInputTypes.includes(type as InputType)
-        ? safeJSONParse(
-            formData[cur],
-            undefined,
-            type === InputType.array ? [] : {},
-          )
-        : formData[cur];
+        let value = JSONEditorInputTypes.includes(type as InputType)
+          ? safeJSONParse(
+              formData[cur],
+              undefined,
+              type === InputType.array ? [] : {},
+            )
+          : formData[cur];
 
-      if (type === InputType.boolean) {
-        value = !!value;
-      }
+        if (type === InputType.boolean) {
+          value = !!value;
+        }
 
-      if (name.startsWith('{')) {
-        return { ...acc, ...value };
-      }
+        if (name.startsWith('{')) {
+          return { ...acc, ...value };
+        }
 
-      return { ...acc, [name]: value };
-    }, {} as Record<string, any>);
+        return { ...acc, [name]: value };
+      },
+      {} as Record<string, any>,
+    );
 };

@@ -46,7 +46,7 @@ import {
 import { deleteCookie } from 'cookies-next';
 import { motion } from 'framer-motion';
 import { GetServerSideProps } from 'next';
-import Error from 'next/error';
+import NextError from 'next/error';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -348,9 +348,7 @@ export function AppPage({
 
   const canRunApp = useMemo(() => {
     return (userAuthConnectors || []).every((connector) => {
-      return (
-        connector.appConnectorUserAuths && connector.appConnectorUserAuths[0]
-      );
+      return connector.appConnectorUserAuths?.[0];
     });
   }, [userAuthConnectors]);
 
@@ -359,11 +357,11 @@ export function AppPage({
   }
 
   if (errorCode === 'INVALID_VERSION') {
-    return <Error statusCode={404} title={'App not published yet'} />;
+    return <NextError statusCode={404} title={'App not published yet'} />;
   }
 
   if (errorCode === NOT_FOUND || !app) {
-    return <Error statusCode={404} />;
+    return <NextError statusCode={404} />;
   }
   const initialContent = (
     <>

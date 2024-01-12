@@ -85,7 +85,7 @@ export const WebSiteNavbar = ({
 
             <DrawerBody>
               <VStack mt={6} gap={4}>
-                {typeof window !== undefined && (
+                {typeof window !== 'undefined' && (
                   <Links
                     data={linksObj}
                     displayActiveLink

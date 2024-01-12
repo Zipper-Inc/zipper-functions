@@ -28,10 +28,10 @@ type AppEditSidebarProps = {
 };
 
 enum AppEditSidebarMode {
-  Handler,
-  Library,
-  Markdown,
-  Empty,
+  Handler = 0,
+  Library = 1,
+  Markdown = 2,
+  Empty = 3,
 }
 
 const useAppEditSidebarMode = () => {

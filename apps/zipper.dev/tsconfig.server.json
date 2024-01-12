@@ -3,16 +3,10 @@
   "compilerOptions": {
     "module": "commonjs",
     "outDir": "dist",
-    "lib": [
-      "ES2021",
-      "DOM"
-    ],
+    "lib": ["ES2021", "DOM"],
     "target": "ES2021",
     "isolatedModules": false,
-    "noEmit": false,
+    "noEmit": false
   },
-  "include": [
-    "./src/server.ts",
-    "./src/server/**/*.ts"
-  ]
+  "include": ["./src/server.ts", "./src/server/**/*.ts"]
 }

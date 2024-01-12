@@ -79,7 +79,7 @@ export const SlackUserConnectorInput: React.FC<ConnectorInputProps> = ({
   return (
     <HStack>
       <HStack flexGrow={1}>
-        <Text>{`Authed to Slack as `}</Text>
+        <Text>{'Authed to Slack as '}</Text>
         <Text fontWeight={'medium'}>
           {c.appConnectorUserAuths[0].metadata.user ||
             c.appConnectorUserAuths[0].metadata.id}

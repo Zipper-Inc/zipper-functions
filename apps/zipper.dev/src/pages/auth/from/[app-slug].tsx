@@ -26,6 +26,6 @@ const AuthorizePage: NextPageWithLayout = () => {
   return <></>;
 };
 
-AuthorizePage.header = () => <Header showNav={false}></Header>;
+AuthorizePage.header = () => <Header showNav={false} />;
 
 export default AuthorizePage;

@@ -29,9 +29,9 @@ export async function getVersionCode({
   const promises: Promise<string | void>[] = [];
 
   // you now have every files contained in the loaded zip
-  versionZip.forEach(async function (relativePath, zipEntry) {
+  versionZip.forEach(async (relativePath, zipEntry) => {
     promises.push(
-      zipEntry.async('string').then(function (content) {
+      zipEntry.async('string').then((content) => {
         const jsonContent = JSON.parse(content);
 
         versionScripts.push({

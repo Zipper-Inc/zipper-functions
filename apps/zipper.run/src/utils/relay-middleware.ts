@@ -23,13 +23,13 @@ import {
 } from '@zipper/utils';
 import Zipper from '@zipper/framework';
 import { getZipperAuth } from './get-zipper-auth';
-import { BootPayload } from '@zipper/types';
+import { BootInfoWithUserInfo, BootPayload } from '@zipper/types';
 
 const { __DEBUG__, DENO_DEPLOY_SECRET, PUBLICLY_ACCESSIBLE_RPC_HOST } =
   process.env;
 
 const DEPLOY_KID = 'zipper';
-const DENO_ORIGIN = new URL(`https://subhosting-v1.deno-aws.net`);
+const DENO_ORIGIN = new URL('https://subhosting-v1.deno-aws.net');
 const RPC_ROOT = `https://${PUBLICLY_ACCESSIBLE_RPC_HOST}/api/deno/v0/`;
 
 const SENSITIVE_DATA_PLACEHOLDER = '********';
@@ -262,7 +262,7 @@ export async function relayRequest(
     return bootRelayRequest(bootArgs);
   }
 
-  let bootInfo;
+  let bootInfo: BootInfoWithUserInfo | undefined;
   try {
     bootInfo = await fetchBootInfoCachedWithUserOrThrow({
       subdomain,
@@ -275,7 +275,7 @@ export async function relayRequest(
         if (status !== 200) throw new Error(result);
         const bootPayload = JSON.parse(result);
         if (bootPayload.ok) return bootPayload;
-        else throw new Error(bootPayload.error);
+        throw new Error(bootPayload.error);
       },
     });
   } catch (e: any) {

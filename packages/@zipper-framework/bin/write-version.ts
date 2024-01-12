@@ -1,6 +1,6 @@
 const HASH_FILE_PATHS = [
-  `../../apps/zipper.dev/src/framework-version.gen.ts`,
-  `./deno/applet/generated/framework-version.gen.ts`,
+  '../../apps/zipper.dev/src/framework-version.gen.ts',
+  './deno/applet/generated/framework-version.gen.ts',
 ];
 
 export async function writeVersion() {

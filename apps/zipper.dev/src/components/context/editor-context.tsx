@@ -433,17 +433,20 @@ const EditorContextProvider = ({
 
   const resetDirtyState = () => {
     setModelsDirtyState(
-      (Object.keys(modelsDirtyState) as string[]).reduce((acc, elem) => {
-        return {
-          ...acc,
-          [elem]: false,
-        };
-      }, {} as Record<string, boolean>),
+      (Object.keys(modelsDirtyState) as string[]).reduce(
+        (acc, elem) => {
+          return {
+            ...acc,
+            [elem]: false,
+          };
+        },
+        {} as Record<string, boolean>,
+      ),
     );
   };
 
-  const onChange: EditorProps['onChange'] = async (value = '', event) => {
-    if (!monacoRef?.current || !currentScript) return;
+  const onChange: EditorProps['onChange'] = async (value, event) => {
+    if (!monacoRef?.current || !currentScript || !value) return;
     runEditorActionsDebounced({
       value,
       setInputParams,
@@ -547,8 +550,7 @@ const EditorContextProvider = ({
         ?.getEditors()
         .map((e) => e.getAction('editor.action.formatDocument')?.run());
 
-      if (formatPromises && formatPromises.length)
-        await Promise.all(formatPromises).catch();
+      if (formatPromises?.length) await Promise.all(formatPromises).catch();
     }
 
     return (

@@ -200,12 +200,16 @@ function GitHubAppConnectorForm({ appId }: { appId: string }) {
         },
         public: true,
         default_events: eventsValue,
-        default_permissions: (scopesValue as string[]).reduce((p, c) => {
-          const scopeParts = c.split(':');
-          if (scopeParts[0] && scopeParts[1]) p[scopeParts[0]] = scopeParts[1];
+        default_permissions: (scopesValue as string[]).reduce(
+          (p, c) => {
+            const scopeParts = c.split(':');
+            if (scopeParts[0] && scopeParts[1])
+              p[scopeParts[0]] = scopeParts[1];
 
-          return p;
-        }, {} as Record<string, string>),
+            return p;
+          },
+          {} as Record<string, string>,
+        ),
       });
 
       manifestForm.setValue('manifest', manifest);

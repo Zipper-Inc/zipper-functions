@@ -140,7 +140,7 @@ function FunctionParamInput({
 
       const formattedDate =
         JSON.stringify(value) !== 'null'
-          ? value && value.toISOString().split('T')[0]
+          ? value?.toISOString().split('T')[0]
           : new Date().toISOString().split('T')[0];
 
       return (

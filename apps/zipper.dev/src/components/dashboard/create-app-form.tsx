@@ -88,14 +88,15 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
   const { scripts } = useEditorContext();
 
   const templatesQuery = trpc.app.templates.useQuery();
-  const [templates, setTemplates] = useState<
-    {
-      id: string;
-      name: string | null;
-      description: string | null;
-      shouldFork: boolean;
-    }[]
-  >(defaultTemplates);
+  const [templates, setTemplates] =
+    useState<
+      {
+        id: string;
+        name: string | null;
+        description: string | null;
+        shouldFork: boolean;
+      }[]
+    >(defaultTemplates);
 
   const forkTemplate = trpc.app.fork.useMutation({
     async onSuccess() {
@@ -578,8 +579,8 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
 
                             router.push(
                               getEditAppletLink(
-                                applet!.resourceOwner!.slug,
-                                applet!.slug,
+                                applet?.resourceOwner?.slug,
+                                applet?.slug,
                               ),
                             );
                           },

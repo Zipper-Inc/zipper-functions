@@ -5,7 +5,7 @@ import { trpc } from '~/utils/trpc';
 
 export const MIN_SLUG_LENGTH = 5;
 
-export const useScriptFilename = (filename = '', appId: string) => {
+export const useScriptFilename = (filename: string, appId: string) => {
   const filenameWithoutExt = removeExtension(filename);
 
   const [debouncedFilename] = useDebounce(filenameWithoutExt, 500);

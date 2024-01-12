@@ -22,15 +22,15 @@ const AUTO_OPEN_MAX_ITEMS = 5;
 const ROW_PADDING = 6;
 
 export enum HeadingMode {
-  ObjectProperty,
-  ExpandableTableCell,
+  ObjectProperty = 0,
+  ExpandableTableCell = 1,
 }
 
 function getMaxKeys(obj: Record<string, any>): number {
   let maxKeys = Object.keys(obj || {}).length;
 
   for (const key in obj) {
-    if (obj.hasOwnProperty(key) && typeof obj[key] === 'object') {
+    if (Object.hasOwn(obj, key) && typeof obj[key] === 'object') {
       const childMaxKeys = getMaxKeys(obj[key]);
       maxKeys = Math.max(maxKeys, childMaxKeys);
     }
@@ -65,7 +65,7 @@ export function ObjectExplorerRow({
   const { isOpen, onToggle } = useDisclosure({
     defaultIsOpen: shouldAutoOpen || !collapse,
   });
-  const shouldCollapse = !isPrimitive(data) && data && !data['$zipperType'];
+  const shouldCollapse = !isPrimitive(data) && data && !data.$zipperType;
 
   return (
     <Tr
@@ -203,8 +203,8 @@ export function ObjectExplorer({
       <Table height="fit-content">
         <Thead display="none">
           <Tr>
-            <Th width="max-content"></Th>
-            <Th width="auto"></Th>
+            <Th width="max-content" />
+            <Th width="auto" />
           </Tr>
         </Thead>
         <Tbody>

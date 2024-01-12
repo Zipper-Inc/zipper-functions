@@ -97,7 +97,7 @@ export function ContactModal({
               >
                 <PiPaperclipDuotone />
                 <Text color="fg.600">Add an images, files or videos</Text>
-                {fileInputRef.current && fileInputRef.current.files?.length ? (
+                {fileInputRef.current?.files?.length ? (
                   <Text fontSize="sm" color="gray.500">
                     {fileInputRef.current?.files?.[0]?.name || 'No file chosen'}
                   </Text>

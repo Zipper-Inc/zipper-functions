@@ -18,7 +18,7 @@ import { getAppVersionFromHash } from '~/utils/hashing';
 export const zendeskConnector = createConnector({
   id: 'zendesk',
   name: 'Zendesk',
-  description: `Query data and build embeddable applets.`,
+  description: 'Query data and build embeddable applets.',
   icon: <SiZendesk />,
   code,
   userScopes,
@@ -83,8 +83,7 @@ function ZendeskConnectorForm({ appId }: { appId: string }) {
       { appId, key: secret },
       { enabled: !!user },
     );
-    if (existingSecrets[secret] && existingSecrets[secret]?.data)
-      existingInstalation = true;
+    if (existingSecrets[secret]?.data) existingInstalation = true;
   }
 
   const handleUninstall = async () => {

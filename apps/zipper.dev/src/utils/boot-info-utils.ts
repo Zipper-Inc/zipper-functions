@@ -420,6 +420,7 @@ export const processSchedulesInBootpayload = async (
   currentUserId?: string,
 ) => {
   const addTypeToInputs = (
+    // biome-ignore lint/style/useDefaultParameterLast: <explanation>
     scheduleInputs: Record<string, any> = {},
     parsedInputs: InputParam[],
   ) => {

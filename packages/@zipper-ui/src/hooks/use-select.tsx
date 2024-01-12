@@ -242,9 +242,11 @@ function useHoistedState(
   return [state, setState];
 }
 
-const useKeys = (userKeys: {
-  [K in EventKeys]: (opts: { shift: any; meta: any }, e?: any) => K | any;
-}) => {
+const useKeys = (
+  userKeys: {
+    [K in EventKeys]: (opts: { shift: any; meta: any }, e?: any) => K | any;
+  },
+) => {
   return ({ onKeyDown, ...rest } = {} as any) => {
     return {
       ...rest,
@@ -651,8 +653,8 @@ export function useSelect({
         defaultMeta || meta
           ? 1000000000000
           : defaultShift || shift
-          ? shiftAmount - 1
-          : 1;
+            ? shiftAmount - 1
+            : 1;
       Open();
       enableScrollRef.current = true;
       highlightIndex((old: number) => old - amount);
@@ -666,8 +668,8 @@ export function useSelect({
         defaultMeta || meta
           ? 1000000000000
           : defaultShift || shift
-          ? shiftAmount - 1
-          : 1;
+            ? shiftAmount - 1
+            : 1;
       Open();
       enableScrollRef.current = true;
       highlightIndex((old: number) => old + amount);
@@ -734,8 +736,8 @@ export function useSelect({
           (isOpen
             ? searchValue || selectedOption.label
             : selectedOption
-            ? selectedOption?.label
-            : '') || '',
+              ? selectedOption?.label
+              : '') || '',
         onChange: (e: any) => {
           handleSearchValueChange(e);
           if (onChange) {
@@ -1151,7 +1153,7 @@ export function useMultiSelect(
         case ChangeActions.SingleSelect:
           setValue(next as string);
           break;
-        case ChangeActions.MultiCreate:
+        case ChangeActions.MultiCreate: {
           const nextValue = next as string[];
           const created = (next as any)[nextValue.length - 1];
           setValue(nextValue);
@@ -1162,6 +1164,7 @@ export function useMultiSelect(
               : [{ ...opt, created: true }, ...o];
           });
           break;
+        }
         case ChangeActions.MultiClear:
         case ChangeActions.MultiRemove:
           setValue(next as string[]);

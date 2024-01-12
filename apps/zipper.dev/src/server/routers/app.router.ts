@@ -87,7 +87,7 @@ export const canUserEdit = (
   if (!ctx.userId) return false;
 
   // if the authed user is an editor of the app, return true
-  if (!!app.editors.find((e) => e.userId === ctx.userId)) return true;
+  if (app.editors.find((e) => e.userId === ctx.userId)) return true;
 
   // if the app is owned by an organization and the authed user is a member of that organization, return true
   if (app.organizationId && ctx.organizations) {
@@ -430,7 +430,7 @@ export const appRouter = createTRPCRouter({
           return arr;
         },
         // prettier-ignore
-        [] as (typeof apps[0] & { resourceOwner: ResourceOwnerSlug })[],
+        [] as ((typeof apps)[0] & { resourceOwner: ResourceOwnerSlug })[],
       );
     }),
   byId: publicProcedure

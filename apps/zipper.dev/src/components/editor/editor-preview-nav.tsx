@@ -36,7 +36,7 @@ export const EditorPreviewNav: React.FC<EditorNavProps> = ({ app }) => {
         {app.scripts
           .filter((script) => script.filename !== 'main.ts')
           .sort((a, b) => {
-            return ('' + a.filename).localeCompare(b.filename);
+            return `${a.filename}`.localeCompare(b.filename);
           })
           .map((script) => (
             <Tag

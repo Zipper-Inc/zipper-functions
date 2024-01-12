@@ -27,7 +27,7 @@ const IndexPage: NextPageWithLayout = (props) => {
     return <HomePage />;
   }
 
-  return <div></div>;
+  return <div />;
 };
 
 export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
