@@ -259,7 +259,7 @@ export const AddScheduleModal: React.FC<AddScheduleModalProps> = ({
                     ? [filename, `$${selectedAction}`].join('/')
                     : filename,
                   crontab,
-                  inputs,
+                  inputs: inputParams?.length ? inputs : {},
                 },
                 addModalForm.reset,
               );
