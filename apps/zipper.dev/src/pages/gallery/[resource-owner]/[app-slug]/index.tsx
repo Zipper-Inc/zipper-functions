@@ -33,6 +33,7 @@ import { isReadme } from '~/utils/playground.utils';
 import type { MonacoEditor } from '~/components/playground/playground-editor';
 import { AnalyticsHead } from '@zipper/utils';
 import { useUser } from '~/hooks/use-user';
+import NextLink from 'next/link';
 
 const EDITOR_OPTIONS = {
   fixedOverflowWidgets: true,
@@ -138,14 +139,14 @@ const AppletLandingPage: NextPageWithLayout = () => {
         <HStack spacing={8} pb={6} justifyContent="space-between" w="full">
           <Heading>{data.name ?? data.slug}</Heading>
           <Button
+            as={NextLink}
+            href={`/${data.resourceOwner.slug}/${data.slug}/src/main.ts`}
             variant="solid"
             colorScheme="purple"
             leftIcon={<HiOutlineTemplate size={20} />}
             fontSize="sm"
           >
-            <Link href={`/${data.resourceOwner.slug}/${data.slug}/src/main.ts`}>
-              Open in Playground
-            </Link>
+            Open in Playground
           </Button>
         </HStack>
 
