@@ -1,12 +1,9 @@
 import { User } from '@prisma/client';
 import { JwtPayload, sign, verify } from 'jsonwebtoken';
 import { Session } from 'next-auth';
-import {
-  SessionOrganizationMembership,
-  SessionUser,
-} from '~/pages/api/auth/[...nextauth]';
+import { SessionOrganizationMembership } from '~/pages/api/auth/[...nextauth]';
 
-const JWT_ACCESS_TOKEN_EXPIRY = '15m';
+const JWT_ACCESS_TOKEN_EXPIRY = '1h';
 const JWT_REFRESH_TOKEN_EXPIRY = '7d';
 
 export const generateAccessToken = (
