@@ -18,7 +18,7 @@ import traverse from '@babel/traverse';
 import { useColorModeValue } from '@chakra-ui/react';
 import { baseColors, prettierFormat, useCmdOrCtrl } from '@zipper/ui';
 import MonacoJSXHighlighter from 'monaco-jsx-highlighter';
-import { use, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { getPathFromUri, getUriFromPath } from '~/utils/model-uri';
 import { useEditorContext } from '../context/editor-context';
 import { useRunAppContext } from '../context/run-app-context';
@@ -92,7 +92,7 @@ export default function PlaygroundEditor(
   });
   const [isEditorReady, setIsEditorReady] = useState(false);
   const [isModelReady, setIsModelReady] = useState(false);
-  const [, setIsLiveblocksReady] = useState(false);
+  const [isLiveblocksReady, setIsLiveblocksReady] = useState(false);
   const monacoEditor = useMonaco();
   const [, updateMyPresence] = useMyPresence();
   const connectionIds = useOthersConnectionIds();
@@ -224,6 +224,7 @@ export default function PlaygroundEditor(
         isolatedModules: true,
         target: monaco.languages.typescript.ScriptTarget.ES2020,
         allowNonTsExtensions: true,
+        resolveJsonModule: true,
         moduleResolution:
           monaco.languages.typescript.ModuleResolutionKind.NodeJs,
         lib: ['esnext', 'dom', 'deno.ns'],
@@ -239,6 +240,7 @@ export default function PlaygroundEditor(
         isolatedModules: true,
         target: monaco.languages.typescript.ScriptTarget.ES2020,
         allowNonTsExtensions: true,
+        resolveJsonModule: true,
         moduleResolution:
           monaco.languages.typescript.ModuleResolutionKind.NodeJs,
         lib: ['esnext', 'dom', 'deno.ns'],
@@ -289,6 +291,7 @@ export default function PlaygroundEditor(
           now: true,
           value: script.code,
           currentScript: script,
+          shouldFetchImports: isLiveblocksReady,
         });
       });
 
@@ -395,10 +398,21 @@ export default function PlaygroundEditor(
       console.log('[EDITOR]', `Setting model to ${currentScript.filename}`);
 
       editorRef.current.setModel(model);
-      runEditorActions({ now: true, value: model.getValue(), currentScript });
+      runEditorActions({
+        now: true,
+        value: model.getValue(),
+        currentScript,
+        shouldFetchImports: isLiveblocksReady,
+      });
       maybeResyncScript(currentScript);
     }
-  }, [currentScript, editorRef.current, isEditorReady, isModelReady]);
+  }, [
+    currentScript,
+    editorRef.current,
+    isEditorReady,
+    isModelReady,
+    isLiveblocksReady,
+  ]);
 
   // A little love for `run: true`
   const lastAutoRunHash = useRef<Record<string, string>>({});
@@ -497,6 +511,7 @@ export default function PlaygroundEditor(
         now: true,
         value: model.getValue(),
         currentScript: script,
+        shouldFetchImports: true,
       });
     });
   };
@@ -584,7 +599,7 @@ export default function PlaygroundEditor(
           openerService: {
             open: function (url: string) {
               const ext =
-                isExternalResource(url) && !url.endsWith('tsx') ? 'ts' : 'tsx';
+                isExternalResource(url) && url.endsWith('ts') ? 'ts' : 'tsx';
               const resource = getUriFromPath(url, monaco.Uri.parse, ext);
               // Don't try to open URLs that have models
               // They will open from the defintion code

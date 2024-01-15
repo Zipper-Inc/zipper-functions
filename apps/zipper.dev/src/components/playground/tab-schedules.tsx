@@ -17,6 +17,7 @@ import {
   ChakraProps,
   useToast,
   Badge,
+  Tooltip,
 } from '@chakra-ui/react';
 
 import cronstrue from 'cronstrue';
@@ -158,7 +159,9 @@ const SchedulesTab: React.FC<SchedulesTabProps> = ({ appId }) => {
                   return (
                     <Tr key={s.id}>
                       <Td {...tableDataStyles}>
-                        {cronstrue.toString(s.crontab)}
+                        {`${s.name ? `${s.name}: ` : ''} ${cronstrue.toString(
+                          s.crontab,
+                        )}`}
                       </Td>
                       <Td {...tableDataStyles}>{s.crontab}</Td>
                       <Td {...tableDataStyles}>{s.filename}</Td>
@@ -180,30 +183,44 @@ const SchedulesTab: React.FC<SchedulesTabProps> = ({ appId }) => {
                             </Badge>
                           </HStack>
                         ) : (
-                          <Text color="fg.600" fontSize="xs">
+                          <Text color="fg.600" fontSize="sm">
                             Not run yet
                           </Text>
                         )}
                       </Td>
                       <Td {...tableDataStyles} py={0} pr={0}>
                         <HStack spacing={0} justifyContent="end">
-                          <IconButton
-                            size="xs"
-                            aria-label="delete"
-                            variant="ghost"
-                            color="fg.500"
-                            _hover={{ color: 'red.600', bgColor: 'red.100' }}
-                            onClick={() => {
-                              if (s.id) {
-                                deleteSchedule.mutate({
-                                  id: s.id,
-                                  appId: appId,
-                                });
-                              }
-                            }}
+                          <Tooltip
+                            label={
+                              !!s.fromConfig
+                                ? 'Delete the schedule from your code'
+                                : ''
+                            }
                           >
-                            <PiTrashSimpleBold />
-                          </IconButton>
+                            <span>
+                              <IconButton
+                                size="xs"
+                                aria-label="delete"
+                                variant="ghost"
+                                color="fg.500"
+                                isDisabled={!!s.fromConfig}
+                                _hover={{
+                                  color: 'red.600',
+                                  bgColor: 'red.100',
+                                }}
+                                onClick={() => {
+                                  if (s.id) {
+                                    deleteSchedule.mutate({
+                                      id: s.id,
+                                      appId: appId,
+                                    });
+                                  }
+                                }}
+                              >
+                                <PiTrashSimpleBold />
+                              </IconButton>
+                            </span>
+                          </Tooltip>
                         </HStack>
                       </Td>
                     </Tr>

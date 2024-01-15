@@ -25,6 +25,7 @@ import fetch from 'node-fetch';
 import { z } from 'zod';
 import { prisma } from '~/server/prisma';
 import { trackEvent } from '~/utils/api-analytics';
+import { processSchedulesInBootpayload } from '~/utils/boot-info-utils';
 import { buildAndStoreApplet } from '~/utils/eszip-build-applet';
 import { generateDefaultSlug } from '~/utils/generate-default';
 import getRunUrl, { getBootUrl } from '~/utils/get-run-url';
@@ -709,7 +710,12 @@ export const appRouter = createTRPCRouter({
               ...ZIPPER_PLAYGROUND_USER_AGENT_HEADER,
             },
           },
-        ).then((r) => r.json());
+        )
+          .then((r) => r.json())
+          .catch((e) => {
+            console.error(e);
+            throw new Error(e);
+          });
 
         if (!bootPayload.ok || bootPayload.version !== version) {
           throw new Error(
@@ -719,6 +725,8 @@ export const appRouter = createTRPCRouter({
           );
         }
 
+        await processSchedulesInBootpayload(bootPayload, app, ctx.userId);
+
         await cacheBootPayload.set(
           { deploymentId: bootPayload.deploymentId },
           bootPayload,
@@ -726,6 +734,7 @@ export const appRouter = createTRPCRouter({
 
         return bootPayload;
       } catch (e: any) {
+        console.error(e);
         return { ok: false, error: e.toString(), configs: {} };
       }
     }),
@@ -876,7 +885,7 @@ export const appRouter = createTRPCRouter({
               z.object({
                 id: z.string().uuid(),
                 data: z.object({
-                  name: z.string().min(3).max(255).optional(),
+                  name: z.string().min(1).max(255).optional(),
                   code: z.string().optional(),
                   filename: z.string(),
                 }),

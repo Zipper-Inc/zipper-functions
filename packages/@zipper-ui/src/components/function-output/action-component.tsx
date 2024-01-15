@@ -7,7 +7,9 @@ export function ActionComponent({
   action: Zipper.Action;
 }) {
   const action = _action;
+
   if (action.run === undefined || action.run === null) action.run = true;
+  action.path = action.handler?.__handlerMeta?.path || action.path;
 
   switch (action.actionType) {
     case 'dropdown':

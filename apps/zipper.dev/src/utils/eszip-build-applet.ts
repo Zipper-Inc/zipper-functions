@@ -1,6 +1,8 @@
 import * as eszip from '@deno/eszip';
 import { App, Script } from '@prisma/client';
 import { generateIndexForFramework } from '@zipper/utils';
+import { parse } from 'path';
+import { SourceFile, Statement } from 'ts-morph';
 import { prisma } from '~/server/prisma';
 import { storeVersionESZip } from '~/server/utils/r2.utils';
 import { getLogger } from './app-console';
@@ -13,6 +15,12 @@ import {
   TYPESCRIPT_CONTENT_HEADERS,
 } from './eszip-utils';
 import { getAppHashAndVersion } from './hashing';
+import {
+  getSourceFileFromCode,
+  isClientModule,
+  parseActions,
+  parseInputForTypes,
+} from './parse-code';
 import { prettyLog, PRETTY_LOG_TOKENS } from './pretty-log';
 import { readFrameworkFile } from './read-file';
 import { rewriteImports, Target } from './rewrite-imports';
@@ -86,7 +94,9 @@ export async function build({
   const appFilesBaseUrl = `${baseUrl}/applet/src`;
   const frameworkEntrypointUrl = `${baseUrl}/${FRAMEWORK_ENTRYPOINT}`;
 
-  const tsScripts = app.scripts.filter((s) => s.filename.endsWith('.ts'));
+  const tsScripts = app.scripts.filter(
+    (s) => s.filename.endsWith('.ts') || s.filename.endsWith('.tsx'),
+  );
 
   const appFileUrls = tsScripts.map(
     ({ filename }) => `${appFilesBaseUrl}/${filename}`,
@@ -107,8 +117,62 @@ export async function build({
 
         const script = tsScripts.find((s) => s.filename === filename);
 
+        const src = getSourceFileFromCode(script?.code || '');
+
+        let rewrittenCode = rewriteImports(src);
+
+        if (isClientModule({ src })) {
+          rewrittenCode = `/// <reference lib="dom" />\n${rewrittenCode}`;
+        }
+
+        const hasHandler = !!parseInputForTypes({
+          code: src.getText(),
+          src,
+          throwErrors: false,
+        });
+
+        if (hasHandler) {
+          const handlerMeta = `handler.__handlerMeta = ${JSON.stringify({
+            name: filename.replace(/\.tsx?$/, ''),
+            path: `/${filename}`,
+          })}`;
+          const inputTypes = `export type __handlerInputs = Parameters<typeof handler>[0]`;
+          rewrittenCode = `${rewrittenCode}\n${handlerMeta};${inputTypes};`;
+        }
+
+        const actions = parseActions({
+          code: src.getText(),
+          src,
+          throwErrors: false,
+        });
+        const actionNames = Object.keys(actions || {});
+
+        if (actionNames?.length) {
+          const actionsMeta = actionNames.map((name) => {
+            const meta = JSON.stringify({
+              name,
+              path: `/${filename}/$${name}`,
+            });
+
+            return `actions['${name}'].__handlerMeta = ${meta}`;
+          });
+
+          const actionInputTypes = actionNames.map(
+            (name) =>
+              `export type __$${name}Inputs = Parameters<typeof actions['${name}']>[0]`,
+          );
+
+          rewrittenCode = `${rewrittenCode}\n${actionsMeta
+            .concat(...actionInputTypes)
+            .join(';')};`;
+        }
+
         return {
-          ...applyTsxHack(specifier, rewriteImports(script?.code || '')),
+          ...applyTsxHack({
+            specifier,
+            code: rewrittenCode,
+            isMain: specifier.endsWith('main.ts'),
+          }),
           version,
         };
       }
@@ -150,7 +214,11 @@ export async function build({
         const mod = await getRemoteModule({ specifier, target });
         return {
           ...mod,
-          ...applyTsxHack(specifier, rewriteImports(mod?.content)),
+          ...applyTsxHack({
+            specifier,
+            code: rewriteImports(mod?.content),
+            isMain: specifier.endsWith('main.ts'),
+          }),
         };
       }
 
@@ -215,6 +283,8 @@ export async function buildAndStoreApplet({
     );
   };
 
+  const buildFile = await buildBuffer();
+
   const savedVersion = await prisma.version.upsert({
     where: {
       hash,
@@ -222,7 +292,7 @@ export async function buildAndStoreApplet({
     create: {
       app: { connect: { id: app.id } },
       hash,
-      buildFile: await buildBuffer(),
+      buildFile,
       isPublished: !!isPublished,
       userId,
     },

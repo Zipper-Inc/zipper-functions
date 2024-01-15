@@ -1,6 +1,6 @@
 import { InputParam, InputType, ParsedNode } from '@zipper/types';
 import { parse } from 'comment-parser';
-
+import stripComments from 'strip-comments';
 import {
   ParameterDeclaration,
   Project,
@@ -15,6 +15,12 @@ import {
   CallExpression,
   FunctionExpression,
 } from 'ts-morph';
+
+type ParseCodeParameters = {
+  code?: string;
+  throwErrors?: boolean;
+  src?: SourceFile;
+};
 
 export const isExternalImport = (specifier: string) =>
   /^https?:\/\//.test(specifier);
@@ -248,14 +254,96 @@ function findHandlerFunction({
   }
 }
 
+function parseHandlerInputs(
+  handlerFn: HandlerFn,
+  src: SourceFile,
+  throwErrors: boolean,
+) {
+  const inputs = handlerFn.getParameters();
+  const params = inputs[0] as ParameterDeclaration;
+
+  if (!params || params.getText().startsWith('_')) {
+    return [];
+  }
+
+  const paramsWithDefaultValue = params
+    .getFirstChildByKind(SyntaxKind.ObjectBindingPattern)
+    ?.getElements()
+    .reduce((acc, curr) => {
+      const key = curr.getFirstChildByKind(SyntaxKind.Identifier)?.getText();
+      const value = curr.getInitializer();
+      if (key && value) {
+        return { ...acc, [key]: value.getText() };
+      }
+      return acc;
+    }, {} as Record<string, string>);
+
+  const typeNode = params.getTypeNode();
+
+  if (!typeNode || typeNode?.isKind(SyntaxKind.AnyKeyword)) {
+    return [
+      {
+        key: params.getName(),
+        type: InputType.any,
+        optional: params.hasQuestionToken(),
+      },
+    ];
+  }
+
+  let props: PropertySignature[] = [];
+
+  try {
+    props = typeNode?.isKind(SyntaxKind.TypeLiteral)
+      ? // A type literal, like `params: { foo: string, bar: string }`
+        (typeNode as any)?.getProperties()
+      : // A type reference, like `params: Params`
+        // Finds the type alias by its name and grabs the node from there
+        (
+          src.getTypeAlias(typeNode?.getText() as string)?.getTypeNode() as any
+        )?.getProperties();
+  } catch (e) {
+    if (throwErrors) {
+      throw new Error('Cannot get the properties of the object parameter.');
+    }
+    return [];
+  }
+
+  if (!typeNode || !props) {
+    console.error('No types, treating input as any');
+  }
+
+  return props.map((prop) => {
+    const isOptional =
+      prop.hasQuestionToken() || !!paramsWithDefaultValue?.[prop.getName()];
+    const typeNode = prop.getTypeNode();
+    if (!typeNode) {
+      // Typescript defaults to any if it can't find the type
+      // type Input = { foo } // foo is any
+      return {
+        key: prop.getName(),
+        type: InputType.any,
+        optional: isOptional,
+      };
+    }
+
+    const typeDetails = parseTypeNode(typeNode, src);
+
+    const result = {
+      key: prop.getName(),
+      type: typeDetails.type,
+      optional: isOptional,
+      ...('details' in typeDetails && { details: typeDetails.details }),
+    };
+    return result;
+  });
+}
+
 // returns undefined if the file isn't runnable (no handler function)
 export function parseInputForTypes({
   code = '',
   throwErrors = false,
-  srcPassedIn,
-}: { code?: string; throwErrors?: boolean; srcPassedIn?: SourceFile } = {}):
-  | undefined
-  | InputParam[] {
+  src: srcPassedIn,
+}: ParseCodeParameters = {}): undefined | InputParam[] {
   if (!code) return undefined;
 
   try {
@@ -284,75 +372,68 @@ export function parseInputForTypes({
       throw new Error('The handler function cannot be the default export.');
     }
 
-    const inputs = handlerFn.getParameters();
-    const params = inputs[0] as ParameterDeclaration;
-
-    if (!params || params.getText().startsWith('_')) {
-      return [];
-    }
-
-    const typeNode = params.getTypeNode();
-
-    if (!typeNode || typeNode?.isKind(SyntaxKind.AnyKeyword)) {
-      return [
-        {
-          key: params.getName(),
-          type: InputType.any,
-          optional: params.hasQuestionToken(),
-        },
-      ];
-    }
-
-    let props: PropertySignature[] = [];
-
-    try {
-      props = typeNode?.isKind(SyntaxKind.TypeLiteral)
-        ? // A type literal, like `params: { foo: string, bar: string }`
-          (typeNode as any)?.getProperties()
-        : // A type reference, like `params: Params`
-          // Finds the type alias by its name and grabs the node from there
-          (
-            src
-              .getTypeAlias(typeNode?.getText() as string)
-              ?.getTypeNode() as any
-          )?.getProperties();
-    } catch (e) {
-      if (throwErrors) {
-        throw new Error('Cannot get the properties of the object parameter.');
-      }
-      return [];
-    }
-
-    if (!typeNode || !props) {
-      console.error('No types, treating input as any');
-    }
-
-    return props.map((prop) => {
-      const typeNode = prop.getTypeNode();
-      if (!typeNode) {
-        // Typescript defaults to any if it can't find the type
-        // type Input = { foo } // foo is any
-        return {
-          key: prop.getName(),
-          type: InputType.any,
-          optional: prop.hasQuestionToken(),
-        };
-      }
-
-      const typeDetails = parseTypeNode(typeNode, src);
-
-      return {
-        key: prop.getName(),
-        type: typeDetails.type,
-        optional: prop.hasQuestionToken(),
-        ...('details' in typeDetails && { details: typeDetails.details }),
-      };
-    });
+    return parseHandlerInputs(handlerFn, src, throwErrors);
   } catch (e) {
     if (throwErrors) throw e;
     console.error('caught during parseInputForTypes', e);
   }
   return [];
+}
+
+export function parseActions({
+  code = '',
+  throwErrors = false,
+  src: srcPassedIn,
+}: ParseCodeParameters = {}) {
+  if (!code || !srcPassedIn) return undefined;
+
+  try {
+    const src = srcPassedIn || getSourceFileFromCode(code);
+    const actionsDeclaration = src.getVariableDeclaration('actions');
+    if (!actionsDeclaration) return undefined;
+
+    const actionsObject = actionsDeclaration.getInitializerIfKind(
+      SyntaxKind.ObjectLiteralExpression,
+    );
+
+    if (!actionsObject) return undefined;
+
+    // Now make sure it gets exported and is not the default
+    if (!actionsDeclaration.hasExportKeyword() && throwErrors) {
+      throw new Error('The actions object must be exported.');
+    }
+    if (actionsDeclaration.hasDefaultKeyword() && throwErrors) {
+      throw new Error('The actions object cannot be the default export.');
+    }
+
+    const actionsProperties = actionsObject.getProperties();
+
+    const actions = actionsProperties.reduce((actionsSoFar, property) => {
+      const name = property
+        .getFirstChildIfKind(SyntaxKind.Identifier)
+        ?.getText();
+
+      const handlerFn =
+        property.getLastChildIfKind(SyntaxKind.ArrowFunction) ||
+        property.getLastChildIfKind(SyntaxKind.FunctionExpression) ||
+        property.getLastChildIfKind(SyntaxKind.FunctionDeclaration);
+
+      if (!name || !handlerFn) return actionsSoFar;
+
+      return {
+        ...actionsSoFar,
+        [name]: {
+          name,
+          inputs: parseHandlerInputs(handlerFn, src, throwErrors),
+        },
+      };
+    }, {} as Record<string, { name: string; inputs: InputParam[] }>);
+
+    return Object.keys(actions).length ? actions : undefined;
+  } catch (e) {
+    if (throwErrors) throw e;
+    console.error('caught during parseActions', e);
+  }
 }
 
 export function parseExternalImportUrls({
@@ -374,11 +455,8 @@ export function parseExternalImportUrls({
 
 export function parseImports({
   code = '',
-  srcPassedIn,
-}: {
-  code?: string;
-  srcPassedIn?: SourceFile;
-} = {}) {
+  src: srcPassedIn,
+}: ParseCodeParameters = {}) {
   if (!code) return [];
   const src = srcPassedIn || getSourceFileFromCode(code);
   return src.getImportDeclarations().map((i) => {
@@ -400,22 +478,66 @@ export function parseImports({
   });
 }
 
+export const USE_DIRECTIVE_REGEX = /^use\s/;
+export const USE_CLIENT_DIRECTIVE = 'use client';
+
+function getSourceWithoutComments(srcPassedIn: string | SourceFile = '') {
+  return getSourceFileFromCode(
+    stripComments(
+      typeof srcPassedIn === 'string' ? srcPassedIn : srcPassedIn.getText(),
+    ),
+  );
+}
+
+/**
+ * The "directive prologue" is the first line of a file that starts with "use ___"
+ * This is a special comment that tells the compiler to do something special
+ * @example
+ * "use client";
+ */
+export function parseDirectivePrologue({
+  code = '',
+  throwErrors = false,
+  src: srcPassedIn,
+}: ParseCodeParameters = {}) {
+  const src = getSourceWithoutComments(srcPassedIn || code);
+
+  const syntaxList = src?.getChildAtIndexIfKind(0, SyntaxKind.SyntaxList);
+
+  const rootNode = syntaxList || src;
+
+  const maybeDirective = rootNode
+    ?.getChildAtIndexIfKind(0, SyntaxKind.ExpressionStatement)
+    ?.getChildAtIndexIfKind(0, SyntaxKind.StringLiteral)
+    ?.getLiteralText();
+
+  return maybeDirective && USE_DIRECTIVE_REGEX.test(maybeDirective)
+    ? maybeDirective
+    : undefined;
+}
+
+export const isClientModule = (inputs: ParseCodeParameters) =>
+  parseDirectivePrologue(inputs) === USE_CLIENT_DIRECTIVE;
+
 export function parseCode({
   code = '',
   throwErrors = false,
-  srcPassedIn,
-}: { code?: string; throwErrors?: boolean; srcPassedIn?: SourceFile } = {}) {
+  src: srcPassedIn,
+}: ParseCodeParameters = {}) {
   const src: SourceFile | undefined =
     srcPassedIn || (code ? getSourceFileFromCode(code) : undefined);
-  let inputs = parseInputForTypes({ code, throwErrors, srcPassedIn: src });
+  let inputs = parseInputForTypes({ code, throwErrors, src });
+
+  const actions = parseActions({ code, throwErrors, src });
+
   const externalImportUrls = parseExternalImportUrls({
     code,
     srcPassedIn: src,
   });
 
-  const imports = parseImports({ code, srcPassedIn: src });
+  const imports = parseImports({ code, src });
 
-  const comments = parseComments({ code, srcPassedIn: src });
+  const comments = parseComments({ code, src });
   if (comments) {
     inputs = inputs?.map((i) => {
       const matchingTag = comments.tags.find(
@@ -428,14 +550,19 @@ export function parseCode({
       return { ...i, name, description };
     });
   }
+
+  const directivePrologue = parseDirectivePrologue({ code, throwErrors, src });
+
   return {
     inputs,
+    actions,
     externalImportUrls,
     comments,
     localImports: imports.filter(
       ({ specifier }) => !isExternalImport(specifier),
     ),
     imports,
+    directivePrologue,
     src,
   };
 }
@@ -539,13 +666,7 @@ export function addParamToCode({
   return newCode;
 }
 
-export function parseComments({
-  code,
-  srcPassedIn,
-}: {
-  code?: string;
-  srcPassedIn?: SourceFile;
-}) {
+export function parseComments({ code, src: srcPassedIn }: ParseCodeParameters) {
   if (!code) return;
 
   const src = srcPassedIn || getSourceFileFromCode(code);
@@ -561,9 +682,9 @@ export function parseComments({
   return;
 }
 
-export function parseCodeSerializable(...args: Parameters<typeof parseCode>) {
+export function parseCodeSerializable(params: ParseCodeParameters) {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { src: _ignore, ...rest } = parseCode(...args);
+  const { src: _ignore, ...rest } = parseCode(params);
   return {
     ...rest,
   };

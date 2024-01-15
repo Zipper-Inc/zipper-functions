@@ -1,12 +1,13 @@
-function genHslCollorPallet(var_name) {
-  return [50, 100, 200, 300, 400, 500, 600, 800, 900, 950].reduce(
-    (acc, curr) => ({
-      ...acc,
-      [curr]: `hsl(var(--${var_name}-${curr}))`,
-    }),
-    {},
-  );
-}
+import {
+  brand,
+  neutral,
+  primary,
+  secondary,
+  status,
+  layout,
+} from './src/tokens/colors';
+import { animation, keyframes } from './src/tokens/animation';
+import { fontFamily } from './src/tokens/fonts';
 
 /** @type {import('tailwindcss').Config} */
 const config = {
@@ -21,10 +22,18 @@ const config = {
   theme: {
     container: {
       center: true,
-      padding: '2rem',
+      padding: '1rem',
       screens: {
         '2xl': '1400px',
       },
+    },
+    colors: {
+      ...primary,
+      ...secondary,
+      ...neutral,
+      ...brand,
+      ...status,
+      ...layout,
     },
     extend: {
       colors: {
@@ -66,26 +75,20 @@ const config = {
           foreground: 'hsl(var(--card-foreground))',
         },
       },
-      keyframes: {
-        'accordion-down': {
-          from: { height: 0 },
-          to: { height: 'var(--radix-accordion-content-height)' },
-        },
-        'accordion-up': {
-          from: { height: 'var(--radix-accordion-content-height)' },
-          to: { height: 0 },
-        },
+
+      fontSize: {
+        /** 0.625rem /* 10px /* line-height: 0.75rem /* 12px */
+        xxs: [
+          '0.625rem',
+          {
+            lineHeight: '0.75rem',
+            letterSpacing: '-0.01em',
+          },
+        ],
       },
-      animation: {
-        'accordion-down': 'accordion-down 0.2s ease-out',
-        'accordion-up': 'accordion-up 0.2s ease-out',
-      },
-      fontFamily: {
-        body: ['var(--font-inter)'],
-        heading: ['var(--font-plaak)', 'sans-serif'],
-        mono: ['Monaco', 'Monaco', 'monospace'],
-        plak: ['"Plaak"', 'sans-serif'],
-      },
+      keyframes,
+      animation,
+      fontFamily,
     },
   },
   plugins: [require('tailwindcss-animate')],

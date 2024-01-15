@@ -1,4 +1,5 @@
 /// <reference lib="deno.ns" />
+/// <reference lib="dom" />
 
 import './zipper.d.ts';
 import { files } from './applet/generated/index.gen.ts';
@@ -59,12 +60,12 @@ async function runApplet({ request: relayRequest }: Deno.RequestEvent) {
     });
   }
 
-  let body;
+  let body: Zipper.Relay.RequestBody | undefined;
   let error;
 
   // Parse the body
   try {
-    body = (await relayRequest.json()) as Zipper.Relay.RequestBody;
+    body = await relayRequest.json();
   } catch (e) {
     error = e;
   }
@@ -98,19 +99,24 @@ async function runApplet({ request: relayRequest }: Deno.RequestEvent) {
       set: (key, value) =>
         envSet({ appId, key, value, userId: userInfo?.userId }),
     } as typeof Zipper.env,
+
     storage: new ZipperStorage(appId),
+
     Component: {
       create: (component) => ({
         $zipperType: 'Zipper.Component',
         ...component,
       }),
     },
+
     Action: {
       create: (action) => ({
         $zipperType: 'Zipper.Action',
         ...action,
+        path: action.handler?.__handlerMeta?.path || (action.path as string),
       }),
     },
+
     Router: {
       redirect: (url) => ({
         $zipperType: 'Zipper.Router',
@@ -131,8 +137,20 @@ async function runApplet({ request: relayRequest }: Deno.RequestEvent) {
           .join(' '),
       }),
     },
+
     JSX: {
       createElement: (tag, props, ...children) => {
+        // serialize action prop if it exists
+        if (
+          props?.handler &&
+          typeof props.handler === 'function' &&
+          typeof (props.handler as Zipper.Handler).__handlerMeta === 'object'
+        ) {
+          props.handler = {
+            __handlerMeta: (props.handler as Zipper.Handler).__handlerMeta,
+          };
+        }
+
         if (typeof tag === 'function') {
           return tag({ ...props, children });
         } else {
@@ -166,9 +184,18 @@ async function runApplet({ request: relayRequest }: Deno.RequestEvent) {
     };
   });
 
-  // Grab the handler
-  const path: string = (body.path || MAIN_PATH).replace(/\.(ts|tsx)$|$/, '.ts');
-  const { handler } = files[path];
+  // Grab the handler from either the exported handler or an action
+  const path: string = body.path || MAIN_PATH;
+  const { handler: exportedHandler, actions: exportedActions } = files[path];
+
+  let handler;
+
+  // Use the action handler if this is an action request
+  if (body.action && exportedActions?.[body.action]) {
+    handler = exportedActions[body.action] as Zipper.Handler;
+  } else {
+    handler = exportedHandler;
+  }
 
   // Handle missing paths
   if (!handler) {
@@ -192,6 +219,7 @@ async function runApplet({ request: relayRequest }: Deno.RequestEvent) {
       get: (key) => stash[key],
       set: (key, value) => (stash[key] = value),
     };
+
     const context: Zipper.HandlerContext = {
       userInfo,
       appInfo: body.appInfo,

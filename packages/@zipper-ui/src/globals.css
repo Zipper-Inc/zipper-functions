@@ -4,159 +4,62 @@
 
 @layer base {
   :root {
-    /* -------------------------------------------- */
-    /* Colors                                       */
-    /* -------------------------------------------- */
+    --background: 0 0% 100%;
+    --foreground: 223 15% 9%;
 
-    --primary-purple-50: 291, 64%, 98%;
-    --primary-purple-100: 289, 74%, 95%;
-    --primary-purple-200: 291, 71%, 91%;
-    --primary-purple-300: 294, 68%, 83%;
-    --primary-purple-400: 295, 66%, 73%;
-    --primary-purple-500: 295, 61%, 61%;
-    --primary-purple-600: 296, 50%, 52%;
-    --primary-purple-700: 297, 53%, 40%;
-    --primary-purple-800: 298, 51%, 33%;
-    --primary-purple-900: 300, 45%, 28%;
-    --primary-purple-950: 299, 66%, 16%;
-
-    --primary-red-50: 0, 100%, 97%;
-    --primary-red-100: 0, 100%, 94%;
-    --primary-red-200: 1, 100%, 89%;
-    --primary-red-300: 1, 100%, 82%;
-    --primary-red-400: 1, 99%, 71%;
-    --primary-red-500: 1, 92%, 61%;
-    --primary-red-600: 1, 79%, 51%;
-    --primary-red-700: 1, 80%, 42%;
-    --primary-red-800: 1, 77%, 35%;
-    --primary-red-900: 1, 68%, 31%;
-    --primary-red-950: 1, 82%, 15%;
-
-    --primary-blue-50: 212, 87%, 97%;
-    --primary-blue-100: 210, 81%, 94%;
-    --primary-blue-200: 207, 80%, 86%;
-    --primary-blue-300: 207, 82%, 74%;
-    --primary-blue-400: 206, 81%, 60%;
-    --primary-blue-500: 206, 77%, 48%;
-    --primary-blue-600: 208, 85%, 43%;
-    --primary-blue-700: 209, 83%, 32%;
-    --primary-blue-800: 209, 77%, 27%;
-    --primary-blue-900: 210, 69%, 24%;
-    --primary-blue-950: 212, 70%, 16%;
-
-    /* -------------------------------------------- */
-    /* Secondary                                    */
-    /* -------------------------------------------- */
-
-    --secondary-gray-50: 0, 0%, 97%;
-    --secondary-gray-100: 0, 0%, 94%;
-    --secondary-gray-200: 30, 4%, 89%;
-    --secondary-gray-300: 30, 2%, 83%;
-    --secondary-gray-400: 20, 2%, 71%;
-    --secondary-gray-500: 36, 2%, 60%;
-    --secondary-gray-600: 30, 2%, 51%;
-    --secondary-gray-700: 20, 1%, 42%;
-    --secondary-gray-800: 30, 2%, 35%;
-    --secondary-gray-900: 30, 1%, 31%;
-    --secondary-gray-950: 0, 1%, 15%;
-
-    --secondary-blue-50: 219, 100%, 97%;
-    --secondary-blue-100: 221, 100%, 94%;
-    --secondary-blue-200: 222, 100%, 89%;
-    --secondary-blue-300: 224, 96%, 82%;
-    --secondary-blue-400: 228, 92%, 74%;
-    --secondary-blue-500: 233, 86%, 67%;
-    --secondary-blue-600: 237, 77%, 59%;
-    --secondary-blue-700: 239, 60%, 51%;
-    --secondary-blue-800: 238, 56%, 41%;
-    --secondary-blue-900: 236, 49%, 34%;
-    --secondary-blue-950: 238, 49%, 20%;
-
-    --secondary-purple-50: 245, 100%, 98%;
-    --secondary-purple-100: 246, 91%, 95%;
-    --secondary-purple-200: 246, 100%, 92%;
-    --secondary-purple-300: 246, 97%, 85%;
-    --secondary-purple-400: 248, 93%, 76%;
-    --secondary-purple-500: 252, 92%, 66%;
-    --secondary-purple-600: 256, 85%, 58%;
-    --secondary-purple-700: 257, 72%, 50%;
-    --secondary-purple-800: 257, 71%, 42%;
-    --secondary-purple-900: 257, 70%, 35%;
-    --secondary-purple-950: 255, 74%, 23%;
-
-    --secondary-pink-50: 316, 73%, 97%;
-    --secondary-pink-100: 314, 78%, 95%;
-    --secondary-pink-200: 313, 88%, 90%;
-    --secondary-pink-300: 315, 89%, 82%;
-    --secondary-pink-400: 316, 88%, 70%;
-    --secondary-pink-500: 318, 83%, 60%;
-    --secondary-pink-600: 321, 73%, 51%;
-    --secondary-pink-700: 323, 79%, 42%;
-    --secondary-pink-800: 323, 77%, 35%;
-    --secondary-pink-900: 323, 70%, 30%;
-    --secondary-pink-950: 323, 86%, 17%;
-
-    --secondary-green-50: 153, 100%, 96%;
-    --secondary-green-100: 154, 100%, 92%;
-    --secondary-green-200: 154, 100%, 84%;
-    --secondary-green-300: 155, 100%, 72%;
-    --secondary-green-400: 154, 100%, 58%;
-    --secondary-green-500: 154, 100%, 46%;
-    --secondary-green-600: 152, 100%, 38%;
-    --secondary-green-700: 154, 100%, 30%;
-    --secondary-green-800: 155, 92%, 24%;
-    --secondary-green-900: 156, 88%, 16%;
-    --secondary-green-950: 154, 100%, 11%;
-
-    --secondary-yellow-50: 45, 100%, 96%;
-    --secondary-yellow-100: 43, 100%, 89%;
-    --secondary-yellow-200: 44, 98%, 77%;
-    --secondary-yellow-300: 42, 99%, 65%;
-    --secondary-yellow-400: 39, 98%, 56%;
-    --secondary-yellow-500: 34, 94%, 50%;
-    --secondary-yellow-600: 28, 96%, 44%;
-    --secondary-yellow-700: 22, 93%, 37%;
-    --secondary-yellow-800: 19, 85%, 31%;
-    --secondary-yellow-900: 18, 79%, 26%;
-    --secondary-yellow-950: 17, 94%, 14%;
-
-    /* -------------------------------------------- */
-    /* Layout & Components                          */
-    /* -------------------------------------------- */
-
-    --primary: 296, 50%, 52%;
-    --primary-foreground: 291, 64%, 98%;
-
-    --background: 0, 0%, 97%;
-    --foreground: 0, 1%, 15%;
-    --border: 20, 2%, 71%;
-
-    --success: 152, 100%, 38%;
-    --error: 1, 79%, 51%;
-    --warning: 34, 94%, 50%;
-    --destructive: 1, 79%, 51%
-
-    --accent: 296, 50%, 52%;
-    --accent-foreground: 291, 64%, 98%;
-
-    --popover: 0, 0%, 97%;
-    --popover-foreground: 30, 4%, 89%;
+    --muted: 222 18% 86%;
+    --muted-foreground: 221 18% 39%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 223 15% 9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 223 15% 9%;
+
+    --border: 222 18% 86%;
+    --input: 222 18% 86%;
+
+    --primary: 289 59% 45%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 208 85% 43%;
+    --secondary-foreground: 0 0% 100%;
+
+    --accent: 220 19% 94%;
+    --accent-foreground: 223 15% 9%;
+
+    --destructive: 1 79% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --ring: 284 79% 91%;
+
+    --disabled: 217 17% 60%;
+
+    --radius: 0rem;
   }
 
   .dark {
-    --background: 0, 1%, 15%;
-    --foreground: 0, 0%, 97%;
-    --border: 30, 2%, 51%;
+    --background: 223 15% 9%;
+    --foreground: 220 20% 97%;
 
-    --popover: 0, 1%, 15%;
-    --popover-foreground: 30, 1%, 31%;
+    --muted: 223 15% 24%;
+    --muted-foreground: 220 20% 97%;
 
-    --card: 0, 1%, 15%;
-    --card-foreground: 30, 1%, 31%;
-    ;
+    --card: 223 15% 9%;
+    --card-foreground: 220 20% 97%;
+
+    --popover: 223 15% 9%;
+    --popover-foreground: 220 20% 97%;
+
+    --primary: 288 77% 73%;
+    --secondary: 206 81% 60%;
+    --destructive: 1 99% 71%;
+
+    --border: 223 15% 24%;
+    --input: 223 15% 24%;
+
+    --accent: 223 15% 24%;
+    --accent-foreground: 220 20% 97%;
   }
 }
 

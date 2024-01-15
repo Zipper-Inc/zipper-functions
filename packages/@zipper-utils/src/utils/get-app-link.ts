@@ -19,8 +19,7 @@ export const normalizeAppPath = (appPath: string = DEFAULT_PATH) =>
     .replace(LEADING_DOT, '')
     .replace(LEADING_SLASH, '')
     .replace(TRAILING_SLASH, '')
-    .replace(EMPTY_STRING, DEFAULT_PATH)
-    .replace(/\.(ts|tsx)$|$/, '.ts');
+    .replace(EMPTY_STRING, DEFAULT_PATH);
 
 /**
  * Gets the zipper.run link for a given app slug

@@ -104,23 +104,22 @@ const Header: React.FC<HeaderProps> = ({
                           }}
                         />
 
-                        <Box
-                          bgColor={'blue.50'}
-                          alignItems={'center'}
-                          display={'flex'}
+                        <Flex
+                          bgColor="blue.50"
+                          alignItems="center"
                           px={2}
                           py={1}
                         >
                           <Text
-                            fontSize={'x-small'}
+                            fontSize="x-small"
                             textTransform="uppercase"
-                            fontWeight={'bold'}
-                            color={'indigo.600'}
+                            fontWeight="bold"
+                            color="indigo.600"
                             cursor="default"
                           >
                             Beta
                           </Text>
-                        </Box>
+                        </Flex>
                       </HStack>
 
                       <Heading

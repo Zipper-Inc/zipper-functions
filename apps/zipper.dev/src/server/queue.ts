@@ -95,6 +95,18 @@ const initializeQueues = () => {
   };
 };
 
+export const removeFromQueue = async (queueName: 'schedule', ids: string[]) => {
+  const repeatableJobs = await queues[queueName].getRepeatableJobs();
+  for (const id in ids) {
+    const job = repeatableJobs.find((job) => job.name === id);
+    console.log('deleting job: ', job);
+    if (job) {
+      const success = await queues[queueName].removeRepeatableByKey(job.key);
+      if (!success) throw new Error('something went wrong deleting the job');
+    }
+  }
+};
+
 export const queues: Record<'schedule', Queue> =
   queueWorkersGlobal.queues || initializeQueues();
 

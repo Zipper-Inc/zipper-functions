@@ -14,17 +14,21 @@ import {
   Divider,
   Container,
   useMediaQuery,
+  Flex,
 } from '@chakra-ui/react';
-import { getAppLink, getZipperDotDevUrl } from '@zipper/utils';
-import { useEffectOnce, ZipperSymbol } from '@zipper/ui';
-import { HiOutlineUpload, HiOutlinePencilAlt } from 'react-icons/hi';
+import NextLink from 'next/link';
+import { getAppLink, getZipperDotDevUrl, removeExtension } from '@zipper/utils';
+import { BLUE, useEffectOnce, ZipperSymbol } from '@zipper/ui';
+import { HiOutlinePencilAlt } from 'react-icons/hi';
+import { MdLogin } from 'react-icons/md';
 import { AppInfo, EntryPointInfo } from '@zipper/types';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/router';
-import { FiChevronDown, FiChevronUp } from 'react-icons/fi';
+import { FiChevronDown, FiChevronUp, FiLink } from 'react-icons/fi';
 import { readJWT } from '~/utils/get-zipper-auth';
 
 import Image from 'next/image';
+import { PiSignOutDuotone } from 'react-icons/pi';
 
 const duration = 1500;
 
@@ -84,6 +88,11 @@ const Header: React.FC<HeaderProps> = ({
     return <></>;
   }
 
+  const entryPointName = useMemo(
+    () => removeExtension(entryPoint.filename),
+    [entryPoint],
+  );
+
   /* -------------------------------------------- */
   /* Components                                   */
   /* -------------------------------------------- */
@@ -105,7 +114,7 @@ const Header: React.FC<HeaderProps> = ({
                     fontWeight="semibold"
                     color="fg.800"
                   >
-                    {entryPoint.filename.slice(0, -3)}
+                    {entryPointName}
                   </Text>
                   {isOpen ? <FiChevronUp /> : <FiChevronDown />}
                 </HStack>
@@ -113,16 +122,17 @@ const Header: React.FC<HeaderProps> = ({
               <MenuList pb={0}>
                 <Box pb="4" pt="2" px={4}>
                   <Link
+                    as={NextLink}
                     fontSize="sm"
                     fontWeight="medium"
+                    href={`/${entryPoint.filename}`}
                     onClick={() => {
                       onClose();
                       setLoading(true);
-                      router.push(`/${entryPoint.filename}`);
                     }}
                     _hover={{ background: 'none' }}
                   >
-                    {entryPoint.filename.slice(0, -3)}
+                    {entryPointName}
                   </Link>
                 </Box>
 
@@ -138,16 +148,17 @@ const Header: React.FC<HeaderProps> = ({
                   <Text>Other paths:</Text>
                 </Box>
                 {runnableScripts
-                  .filter((s) => s !== entryPoint.filename)
+                  .filter((filename) => filename !== entryPoint.filename)
                   .sort()
-                  .map((s, i) => {
+                  .map((filename, i) => {
                     return (
                       <MenuItem
-                        key={`${s}-${i}`}
+                        as={NextLink}
+                        href={`/${filename}`}
+                        key={`${filename}-${i}`}
                         onClick={() => {
                           onClose();
                           setLoading(true);
-                          router.push(`/${s}`);
                         }}
                         backgroundColor="fg.50"
                         px="4"
@@ -158,7 +169,7 @@ const Header: React.FC<HeaderProps> = ({
                           pb: 4,
                         }}
                       >
-                        {s.slice(0, -3)}
+                        {removeExtension(filename)}
                       </MenuItem>
                     );
                   })}
@@ -188,29 +199,28 @@ const Header: React.FC<HeaderProps> = ({
   const AppletActions = () => (
     <HStack gap={0}>
       <Button
-        colorScheme="purple"
         variant="ghost"
         display="flex"
+        size="sm"
         gap={2}
         fontWeight="medium"
         onClick={copyLink}
       >
-        <HiOutlineUpload />
-        <Text>Share</Text>
+        <FiLink />
+        <Text>Copy Link</Text>
       </Button>
 
       {canUserEdit && entryPoint.editUrl && (
         <Button
-          colorScheme="purple"
-          variant="ghost"
+          variant="outline"
           display="flex"
-          gap={2}
+          size="sm"
           fontWeight="medium"
           onClick={() => {
             window.location.href = entryPoint.editUrl;
           }}
+          leftIcon={<HiOutlinePencilAlt />}
         >
-          <HiOutlinePencilAlt />
           <Text>Edit App</Text>
         </Button>
       )}
@@ -223,18 +233,46 @@ const Header: React.FC<HeaderProps> = ({
 
   return (
     <>
-      <Container as="header" maxW="full">
+      <Container
+        as="header"
+        maxW="full"
+        pt="20px"
+        minW="md"
+        px={{ base: '4', md: '10' }}
+        justifyContent="center"
+      >
         <HStack
-          py={5}
           justify="space-between"
           spacing={3}
           alignItems="center"
           flex={1}
           minW={0}
         >
-          <HStack>
-            <Link height={4} href={getZipperDotDevUrl().origin}>
-              <ZipperSymbol style={{ maxHeight: '100%' }} />
+          <HStack spacing={4}>
+            <Link as={NextLink} href={getZipperDotDevUrl().origin}>
+              <HStack spacing={2}>
+                <ZipperSymbol
+                  fill={BLUE}
+                  middle={{ fill: BLUE }}
+                  style={{
+                    maxHeight: '100%',
+                    width: '20px',
+                    marginLeft: '5px',
+                  }}
+                />
+
+                <Flex bgColor="blue.50" alignItems="center" px={2} py={1}>
+                  <Text
+                    fontSize="x-small"
+                    textTransform="uppercase"
+                    fontWeight="bold"
+                    color="indigo.600"
+                    cursor="default"
+                  >
+                    Beta
+                  </Text>
+                </Flex>
+              </HStack>
             </Link>
             <Heading
               as="h1"
@@ -247,6 +285,7 @@ const Header: React.FC<HeaderProps> = ({
             </Heading>
             <Box>
               <Link
+                as={NextLink}
                 href="/"
                 _hover={{
                   textDecor: 'none',
@@ -292,25 +331,38 @@ const Header: React.FC<HeaderProps> = ({
                       <Image
                         src={user.image as string}
                         alt={user.username as string}
-                        height={40}
-                        width={40}
+                        height={32}
+                        width={32}
                         style={{ borderRadius: '100%' }}
                       />
                     </MenuButton>
-                    <MenuList pb={0}>
-                      <Box pb="4" pt="2" px={4}>
-                        <Link href="/logout">
-                          <Button variant="link">Sign out</Button>
-                        </Link>
-                      </Box>
+                    <MenuList>
+                      <MenuItem>
+                        <Button
+                          as={NextLink}
+                          href="/logout"
+                          variant="link"
+                          color="inherit"
+                          fontWeight="normal"
+                          leftIcon={<PiSignOutDuotone />}
+                        >
+                          Sign out
+                        </Button>
+                      </MenuItem>
                     </MenuList>
                   </>
                 )}
               </Menu>
             ) : (
-              <Link href={`${getZipperDotDevUrl().origin}/auth/from/${slug}`}>
-                Sign in
-              </Link>
+              <Button
+                as={NextLink}
+                href={`${getZipperDotDevUrl().origin}/auth/from/${slug}`}
+                variant="outline"
+                size="sm"
+                leftIcon={<MdLogin />}
+              >
+                Sign In
+              </Button>
             )}
           </HStack>
         </HStack>

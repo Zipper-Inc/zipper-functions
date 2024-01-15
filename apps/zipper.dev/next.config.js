@@ -146,7 +146,7 @@ module.exports = getConfig({
           process.env.NODE_ENV === 'production' ? 'https' : 'http'
         }://:slug.${
           process.env.NEXT_PUBLIC_ZIPPER_DOT_RUN_HOST
-        }/@:version/:filename/relay`,
+        }/@:version/:filename/:path*/relay`,
       },
       {
         source: '/boot/:slug/:version/:path*',
