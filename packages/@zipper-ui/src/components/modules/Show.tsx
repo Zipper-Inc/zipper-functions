@@ -6,7 +6,7 @@ interface ShowProps {
   children: ReactNode;
 }
 
-const Show = (props: ShowProps) => {
+export function Show(props: ShowProps) {
   if (!!props.fallback && props.when === false) {
     return <>{props.fallback}</>;
   }
@@ -16,5 +16,4 @@ const Show = (props: ShowProps) => {
   }
 
   return null;
-};
-export { Show };
+}
