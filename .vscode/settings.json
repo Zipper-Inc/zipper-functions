@@ -3,6 +3,21 @@
   "git.ignoreLimitWarning": true,
   "deno.enable": true,
   "deno.unstable": true,
+  "material-icon-theme.folders.associations": {
+    "zipper.dev": "Client",
+    "blog": "Public",
+    "zipper.run": "Container",
+    "@zipper-ui": "mjml",
+    "@zipper-framework": "core",
+    "@zipper-types": "typescript",
+    "@zipper-utils": "Utils",
+    "deno-types": "Lib",
+    "tsconfig": "Less",
+    "connectors": "Connection"
+  },
+  "material-icon-theme.files.associations": {
+    ".ctirc": "verilog"
+  },
   "deno.enablePaths": [
     "./packages/@zipper-framework/bin",
     "./packages/@zipper-framework/deno",
