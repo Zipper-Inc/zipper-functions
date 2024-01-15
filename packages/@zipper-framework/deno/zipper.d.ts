@@ -130,7 +130,7 @@ declare namespace Zipper {
    *   worldString,
    * }) => `Hello ${worldString}`;
    */
-  export type Handler<I = Inputs> = {
+  export type Handler<I = any> = {
     (inputs: I, context: HandlerContext): Output | Promise<Output>;
     __handlerMeta?: {
       name: string;
@@ -143,7 +143,7 @@ declare namespace Zipper {
    * The configuration for how each Handler is displayed or run
    * Can be exported at the page level
    */
-  export type HandlerConfig<I = Inputs> = Partial<{
+  export type HandlerConfig<I = any> = Partial<{
     run: boolean | I;
     description: Partial<{
       title: string;
@@ -320,16 +320,14 @@ declare namespace Zipper {
     handler?: Pick<Zipper.Handler<I>, '__handlerMeta'>;
   }
 
-  interface ButtonAction<I = Inputs>
-    extends ActionBase<I>,
-      ButtonComponentProps {
+  interface ButtonAction<I = any> extends ActionBase<I>, ButtonComponentProps {
     /**
      * The type of action this is
      */
     actionType: 'button';
   }
 
-  interface DropdownAction<I = Inputs> extends ActionBase<I> {
+  interface DropdownAction<I = any> extends ActionBase<I> {
     /**
      * The type of action this is
      */
@@ -346,7 +344,7 @@ declare namespace Zipper {
     }>;
   }
 
-  export type Action<I = Inputs> = SpecialOutput<'Zipper.Action'> &
+  export type Action<I = any> = SpecialOutput<'Zipper.Action'> &
     (ButtonAction<I> | DropdownAction<I>);
 
   export type Component = SpecialOutput<'Zipper.Component'> &
@@ -503,8 +501,22 @@ declare namespace Zipper {
     /**
      * Creates an action
      */
-    export function create<I = Inputs>(
+    export function create<I = any>(
       action: ButtonAction<I> | DropdownAction<I>,
+    ): Action<I>;
+
+    export function create<I = any>(
+      action: Omit<ButtonAction<I>, 'path'> & {
+        path?: string;
+        handler: Zipper.Handler<I>;
+      },
+    ): Action<I>;
+
+    export function create<I = any>(
+      action: Omit<DropdownAction<I>, 'path'> & {
+        path?: string;
+        handler: Zipper.Handler<I>;
+      },
     ): Action<I>;
   }
 
@@ -704,11 +716,11 @@ type ButtonPropsWithHandler<I> = Omit<ButtonProps<I>, 'path'> & {
   handler: Zipper.Handler<I>;
 };
 
-declare function Button<I = Zipper.Inputs>(
+declare function Button<I = any>(
   props: ButtonProps<I> & Zipper.ButtonComponentProps,
 ): Zipper.Action<I>;
 
-declare function Button<I = Zipper.Inputs>(
+declare function Button<I = any>(
   props: ButtonPropsWithHandler<I> & Zipper.ButtonComponentProps,
 ): Zipper.Action<I>;
 
@@ -717,11 +729,9 @@ type DropdownPropsWithHandler<I> = Omit<DropdownProps<I>, 'path'> & {
   handler: Zipper.Handler<I>;
 };
 
-declare function Dropdown<I = Zipper.Inputs>(
-  props: DropdownProps<I>,
-): Zipper.Action<I>;
+declare function Dropdown<I = any>(props: DropdownProps<I>): Zipper.Action<I>;
 
-declare function Dropdown<I = Zipper.Inputs>(
+declare function Dropdown<I = any>(
   props: DropdownPropsWithHandler<I>,
 ): Zipper.Action<I>;
 
