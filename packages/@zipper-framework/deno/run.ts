@@ -113,6 +113,7 @@ async function runApplet({ request: relayRequest }: Deno.RequestEvent) {
       create: (action) => ({
         $zipperType: 'Zipper.Action',
         ...action,
+        path: action.handler?.__handlerMeta?.path || (action.path as string),
       }),
     },
 

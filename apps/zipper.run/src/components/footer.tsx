@@ -16,6 +16,7 @@ import { removeExtension } from '@zipper/utils';
 import router from 'next/router';
 import { useMemo } from 'react';
 import { FiChevronUp, FiChevronDown } from 'react-icons/fi';
+import NextLink from 'next/link';
 
 export default function Footer({
   entryPoint,
@@ -58,12 +59,13 @@ export default function Footer({
                 <MenuList pb={0}>
                   <Box pb="4" pt="2" px={4}>
                     <Link
+                      as={NextLink}
                       fontSize="sm"
                       fontWeight="medium"
+                      href={`/${entryPoint.filename}`}
                       onClick={() => {
                         onClose();
                         setLoading(true);
-                        router.push(`/${entryPoint.filename}`);
                       }}
                       _hover={{ background: 'none' }}
                     >
