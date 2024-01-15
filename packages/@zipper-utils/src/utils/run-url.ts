@@ -1,3 +1,5 @@
+import { getZipperDotDevUrl } from './url';
+
 type RunUrlProps = {
   subdomain: string;
   version?: string;
@@ -10,6 +12,7 @@ type RunUrlProps = {
   isRelay?: boolean;
   isApi?: boolean;
   apiFormat?: string;
+  forPlayground?: boolean;
 };
 
 // This beast of a regex parses the path into the following groups:
@@ -94,23 +97,32 @@ export function getRunUrl({
   isRelay,
   isApi,
   apiFormat,
+  forPlayground = false,
 }: RunUrlProps): URL {
-  const url = getBaseUrl(subdomain);
-
+  const url = forPlayground ? getZipperDotDevUrl() : getBaseUrl(subdomain);
   const pathParts = [];
+
+  if (forPlayground) {
+    pathParts.push('run');
+    pathParts.push(subdomain);
+  }
 
   if (version && version !== 'latest') {
     pathParts.push(formatVersion(version));
   }
 
+  if (!version && forPlayground) {
+    pathParts.push('latest');
+  }
+
   if (isBoot) {
     pathParts.push('boot');
   } else {
-    if (isEmbed) {
+    if (!forPlayground && isEmbed) {
       pathParts.push('embed');
     }
 
-    if (isRun) {
+    if (!forPlayground && isRun) {
       pathParts.push('run');
     }
 
@@ -122,17 +134,18 @@ export function getRunUrl({
       pathParts.push(formatAction(action));
     }
 
-    if (responseModifier) {
-      pathParts.push(responseModifier);
-    } else if (isRelay) {
-      pathParts.push('relay');
-    } else if (isApi) {
-      pathParts.push('api');
+    if (!forPlayground)
+      if (responseModifier) {
+        pathParts.push(responseModifier);
+      } else if (isRelay) {
+        pathParts.push('relay');
+      } else if (isApi) {
+        pathParts.push('api');
 
-      if (apiFormat) {
-        pathParts.push(apiFormat);
+        if (apiFormat) {
+          pathParts.push(apiFormat);
+        }
       }
-    }
   }
 
   url.pathname = `/${pathParts.join('/')}`;

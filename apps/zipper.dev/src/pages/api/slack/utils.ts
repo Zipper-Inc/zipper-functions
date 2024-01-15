@@ -34,6 +34,7 @@ export async function fetchBootInfo(slug: string, filename?: string) {
   const bootInfoResponse = await fetch(bootInfoUrl, {
     method: 'POST',
     body: JSON.stringify({ filename }),
+    credentials: 'include',
   });
 
   return bootInfoResponse.json();
