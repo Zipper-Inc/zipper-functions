@@ -12,6 +12,7 @@ import {
 import AppAvatar from '../app-avatar';
 import { RouterOutputs } from '~/utils/trpc';
 import { useState } from 'react';
+import NextLink from 'next/link';
 
 type GalleryItemProps = {
   app: Unpack<GalleryAppQueryOutput>;
@@ -63,15 +64,23 @@ const InnerCard: React.FC<GalleryItemProps> = ({ app }) => {
           </HStack>
           {isHovering ? (
             <HStack spacing={2} pt="3">
-              <Button variant="outline" colorScheme="purple" size="sm">
-                <Link href={`/${app.resourceOwner.slug}/${app.slug}`}>
-                  Open Applet
-                </Link>
+              <Button
+                as={NextLink}
+                href={`/${app.resourceOwner.slug}/${app.slug}`}
+                variant="outline"
+                colorScheme="purple"
+                size="sm"
+              >
+                Open Applet
               </Button>
-              <Button variant="link" colorScheme="purple" size="sm">
-                <Link href={`/gallery/${app.resourceOwner.slug}/${app.slug}`}>
-                  Learn more
-                </Link>
+              <Button
+                as={NextLink}
+                href={`/gallery/${app.resourceOwner.slug}/${app.slug}`}
+                variant="link"
+                colorScheme="purple"
+                size="sm"
+              >
+                Learn More
               </Button>
             </HStack>
           ) : (
