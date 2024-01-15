@@ -15,7 +15,7 @@ import {
   useMemo,
   MutableRefObject,
 } from 'react';
-import computeScrollIntoView from 'compute-scroll-into-view';
+import { compute as computeScrollIntoView } from 'compute-scroll-into-view';
 
 export interface Option {
   label: string;

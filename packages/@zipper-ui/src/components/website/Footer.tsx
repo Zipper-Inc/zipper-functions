@@ -281,7 +281,7 @@ const AppletDemo = () => {
           isExternal
           display="flex"
           target="_blank"
-          align="center"
+          alignItems="center"
           gap={2}
           href="https://zipper.dev/zipper-inc/zipper-logo/src/main.ts"
           fontWeight={500}
