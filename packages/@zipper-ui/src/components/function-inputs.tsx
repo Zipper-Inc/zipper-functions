@@ -24,12 +24,19 @@ import {
 import { UploadButton } from './file-upload/uploadthing';
 import { useUploadContext } from './upload-button-context';
 import { VscAdd } from 'react-icons/vsc';
-import { FieldValues, UseFormReturn, RegisterOptions } from 'react-hook-form';
+import {
+  FieldValues,
+  UseFormReturn,
+  RegisterOptions,
+  Controller,
+} from 'react-hook-form';
 import { InputType, InputParam, ParsedNode, LiteralNode } from '@zipper/types';
 import { getFieldName } from '@zipper/utils';
 import { ErrorBoundary } from './error-boundary';
 import { AutoResizeTextarea } from './auto-resize-text-area';
 import React from 'react';
+import { MultiSelect } from './MultiSelect';
+import { useMultiSelect } from '../hooks/use-select';
 
 interface Props {
   params: InputParam[] | undefined;
@@ -91,7 +98,7 @@ function FunctionParamInput({
   placeholder?: string;
   isDisabled?: boolean;
 }) {
-  const { register, watch, getValues } = formContext;
+  const { register, watch, getValues, control } = formContext;
   const { setIsUploading } = useUploadContext();
   const name = getFieldName(inputKey, node.type);
   const formFieldOptions: RegisterOptions<FieldValues, string> = {
@@ -195,6 +202,43 @@ function FunctionParamInput({
 
     case InputType.array: {
       const [error, setError] = useState<string | undefined>();
+      if (node.details?.isUnion && node.details.values.every(isLiteralNode)) {
+        const form = register(name, formFieldOptions);
+        const options = node.details.values.flatMap((node) => {
+          if (node.type === InputType.boolean) return [];
+          const literal = String(node.details?.literal);
+          return [{ label: literal, value: literal }];
+        });
+
+        const { options: selectOptions } = useMultiSelect({
+          options,
+          value: [],
+        });
+
+        // TODO: All literals are being treated as strings. Add support for number
+        return (
+          <Controller
+            control={control}
+            name={name}
+            render={({ field: { onChange, value } }) => (
+              <MultiSelect
+                options={selectOptions}
+                value={value}
+                onChange={onChange}
+                placeholder={placeholder}
+                name={form.name}
+                controlProps={{
+                  backgroundColor: 'bgColor',
+                }}
+                selectedItemProps={{
+                  colorScheme: 'purple',
+                }}
+              />
+            )}
+          />
+        );
+      }
+
       return (
         <VStack align="start" w="full">
           <Textarea
