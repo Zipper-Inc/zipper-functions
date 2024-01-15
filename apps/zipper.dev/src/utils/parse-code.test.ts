@@ -19,12 +19,16 @@ test('parseInputForTypes should return as optional params that have default valu
     {
       key: 'worldString',
       optional: true,
-      type: 'string',
+      node: {
+        type: 'string',
+      },
     },
     {
       key: 'test',
       optional: true,
-      type: 'number',
+      node: {
+        type: 'number',
+      },
     },
   ]);
 });
@@ -38,7 +42,9 @@ test('parseInputForTypes string', () => {
     {
       key: 'param',
       optional: false,
-      type: 'string',
+      node: {
+        type: 'string',
+      },
     },
   ]);
 });
@@ -53,8 +59,10 @@ test('parseInputForTypes string literal', () => {
     {
       key: 'param',
       optional: false,
-      type: 'string',
-      details: { literal: 'hey' },
+      node: {
+        type: 'string',
+        details: { literal: 'hey' },
+      },
     },
   ]);
 });
@@ -68,7 +76,9 @@ test('parseInputForTypes number', () => {
     {
       key: 'param',
       optional: false,
-      type: 'number',
+      node: {
+        type: 'number',
+      },
     },
   ]);
 });
@@ -83,8 +93,10 @@ test('parseInputForTypes literal number', () => {
     {
       key: 'param',
       optional: false,
-      type: 'number',
-      details: { literal: '1' },
+      node: {
+        type: 'number',
+        details: { literal: 1 },
+      },
     },
   ]);
 });
@@ -98,7 +110,9 @@ test('parseInputForTypes boolean', () => {
     {
       key: 'param',
       optional: false,
-      type: 'boolean',
+      node: {
+        type: 'boolean',
+      },
     },
   ]);
 });
@@ -113,8 +127,10 @@ test('parseInputForTypes boolean literal true', () => {
     {
       key: 'param',
       optional: false,
-      type: 'boolean',
-      details: { literal: 'true' },
+      node: {
+        type: 'boolean',
+        details: { literal: true },
+      },
     },
   ]);
 });
@@ -129,8 +145,10 @@ test('parseInputForTypes boolean literal false', () => {
     {
       key: 'param',
       optional: false,
-      type: 'boolean',
-      details: { literal: 'false' },
+      node: {
+        type: 'boolean',
+        details: { literal: false },
+      },
     },
   ]);
 });
@@ -149,12 +167,14 @@ test('parseInputForTypes should solve string literals', () => {
     {
       key: 'type',
       optional: false,
-      type: 'union',
-      details: {
-        values: [
-          { type: 'string', details: { literal: 'get-config' } },
-          { type: 'string', details: { literal: 'get-auth-url' } },
-        ],
+      node: {
+        type: 'union',
+        details: {
+          values: [
+            { type: 'string', details: { literal: 'get-config' } },
+            { type: 'string', details: { literal: 'get-auth-url' } },
+          ],
+        },
       },
     },
   ]);
@@ -173,7 +193,9 @@ test('parseInputForTypes should solve Date', () => {
     {
       key: 'type',
       optional: false,
-      type: 'date',
+      node: {
+        type: 'date',
+      },
     },
   ]);
 });
@@ -191,8 +213,10 @@ test('parseInputForTypes should solve Object { foo: string } ', () => {
     {
       key: 'type',
       optional: false,
-      type: 'object',
-      details: { properties: [{ key: 'foo', details: { type: 'string' } }] },
+      node: {
+        type: 'object',
+        details: { properties: [{ key: 'foo', details: { type: 'string' } }] },
+      },
     },
   ]);
 });
@@ -210,10 +234,12 @@ test('parseInputForTypes should solve array<number> ', () => {
     {
       key: 'type',
       optional: false,
-      type: 'array',
-      details: {
-        isUnion: false,
-        values: { type: 'number' },
+      node: {
+        type: 'array',
+        details: {
+          isUnion: false,
+          values: { type: 'number' },
+        },
       },
     },
   ]);
@@ -229,34 +255,36 @@ test('parseInputForTypes should solve array<{ ok: true; data: string[] } |  { ok
     {
       key: 'type',
       optional: false,
-      type: 'array',
-      details: {
-        isUnion: true,
-        values: [
-          {
-            type: 'object',
-            details: {
-              properties: {
-                ok: { type: 'boolean', details: { literal: 'true' } },
-                data: {
-                  type: 'array',
-                  details: {
-                    isUnion: false,
-                    values: { type: 'string' },
+      node: {
+        type: 'array',
+        details: {
+          isUnion: true,
+          values: [
+            {
+              type: 'object',
+              details: {
+                properties: {
+                  ok: { type: 'boolean', details: { literal: true } },
+                  data: {
+                    type: 'array',
+                    details: {
+                      isUnion: false,
+                      values: { type: 'string' },
+                    },
                   },
                 },
               },
             },
-          },
-          {
-            type: 'object',
-            details: {
-              properties: {
-                ok: { type: 'boolean', details: { literal: 'false' } },
+            {
+              type: 'object',
+              details: {
+                properties: {
+                  ok: { type: 'boolean', details: { literal: false } },
+                },
               },
             },
-          },
-        ],
+          ],
+        },
       },
     },
   ]);
@@ -268,38 +296,39 @@ test('parseInputForTypes should solve { ok: true; data: string[] } |  { ok: fals
     code: `export const handler = ({ type }: { type: { ok: true; data: string[] } | { ok: false } }) => type`,
     throwErrors: true,
   });
-  JSON.stringify(result, null, 2);
   expect(result).toEqual([
     {
       key: 'type',
-      type: 'union',
       optional: false,
-      details: {
-        values: [
-          {
-            type: 'object',
-            details: {
-              properties: {
-                ok: { type: 'boolean', details: { literal: 'true' } },
-                data: {
-                  type: 'array',
-                  details: {
-                    isUnion: false,
-                    values: { type: 'string' },
+      node: {
+        type: 'union',
+        details: {
+          values: [
+            {
+              type: 'object',
+              details: {
+                properties: {
+                  ok: { type: 'boolean', details: { literal: true } },
+                  data: {
+                    type: 'array',
+                    details: {
+                      isUnion: false,
+                      values: { type: 'string' },
+                    },
                   },
                 },
               },
             },
-          },
-          {
-            type: 'object',
-            details: {
-              properties: {
-                ok: { type: 'boolean', details: { literal: 'false' } },
+            {
+              type: 'object',
+              details: {
+                properties: {
+                  ok: { type: 'boolean', details: { literal: false } },
+                },
               },
             },
-          },
-        ],
+          ],
+        },
       },
     },
   ]);
@@ -315,13 +344,15 @@ test('parseInputForTypes should solve Array of literal "view:history" OR "edit:b
     {
       key: 'type',
       optional: false,
-      type: 'array',
-      details: {
-        isUnion: true,
-        values: [
-          { type: 'string', details: { literal: 'view:history' } },
-          { type: 'string', details: { literal: 'edit:bookmark' } },
-        ],
+      node: {
+        type: 'array',
+        details: {
+          isUnion: true,
+          values: [
+            { type: 'string', details: { literal: 'view:history' } },
+            { type: 'string', details: { literal: 'edit:bookmark' } },
+          ],
+        },
       },
     },
   ]);
@@ -337,19 +368,21 @@ test('parseInputForTypes should solve Pick', () => {
     {
       key: 'type',
       optional: false,
-      type: 'object',
-      details: {
-        properties: [
-          {
-            key: 'a',
-            data: {
-              type: 'string',
-              details: {
-                literal: 'foo',
+      node: {
+        type: 'object',
+        details: {
+          properties: [
+            {
+              key: 'a',
+              data: {
+                type: 'string',
+                details: {
+                  literal: 'foo',
+                },
               },
             },
-          },
-        ],
+          ],
+        },
       },
     },
   ]);
