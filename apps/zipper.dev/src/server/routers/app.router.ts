@@ -550,6 +550,7 @@ export const appRouter = createTRPCRouter({
 
       const appAuthor: AppletAuthorReturnType = {
         name: '',
+        slug: '',
         organization: '',
         image: '',
         orgImage: '',
@@ -575,6 +576,7 @@ export const appRouter = createTRPCRouter({
 
       appAuthor.name = authorName?.name || '';
       appAuthor.image = authorName?.image || '';
+      appAuthor.slug = authorName?.slug || '';
 
       const canEdit = canUserEdit(app, ctx);
       if (app.isPrivate && !canEdit)
@@ -776,7 +778,7 @@ export const appRouter = createTRPCRouter({
       console.log('---FILENAME---', script.filename);
       const inputParams = parseInputForTypes({ code: script.code });
 
-      if (!inputParams) return { ok: false };
+      if (!inputParams) return { ok: false } as const;
 
       const inputs = getInputsFromFormData(input.formData, inputParams);
 
@@ -816,7 +818,7 @@ export const appRouter = createTRPCRouter({
         },
       });
 
-      return { ok: true, filename: script.filename, version, result };
+      return { ok: true, filename: script.filename, version, result } as const;
     }),
   fork: protectedProcedure
     .input(

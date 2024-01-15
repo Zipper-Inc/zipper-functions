@@ -25,17 +25,6 @@ const SlackAuth: NextPageWithLayout = () => {
     },
   );
 
-  if (error || errorMessage) {
-    return (
-      <Center w="100%" h="100vh">
-        <VStack spacing="12">
-          <ZipperLogo />
-          <Text>{error_description || errorMessage}</Text>
-        </VStack>
-      </Center>
-    );
-  }
-
   if (!state) return <>Missing state</>;
   if (!code) return <>Missing code</>;
 
@@ -67,7 +56,9 @@ const SlackAuth: NextPageWithLayout = () => {
       <VStack spacing="12">
         <ZipperLogo />
         <Text>
-          Exchanging one-time code from Slack for an API token. Hold tight...
+          {error || errorMessage
+            ? error_description || errorMessage
+            : 'Exchanging one-time code from Slack for an API token. Hold tight...'}
         </Text>
       </VStack>
     </Center>

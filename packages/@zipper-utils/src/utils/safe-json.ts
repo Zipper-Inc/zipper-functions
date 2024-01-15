@@ -1,9 +1,9 @@
-export function safeJSONParse(
+export function safeJSONParse<T = any>(
   json = '',
   reviver?: (key: string, value: any) => any,
   fallback?: any,
   verbose = false,
-): any {
+): T {
   // Handle trying to parse JSON that's already an object
   if (typeof json === 'object') {
     return JSON.parse(JSON.stringify(json), reviver);

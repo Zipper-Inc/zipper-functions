@@ -5,15 +5,8 @@ import { trpc } from '~/utils/trpc';
 
 const SlackStartAuth: NextPageWithLayout = () => {
   const router = useRouter();
-  console.log(router.query.appId as string);
   const slackAuthURL = trpc.slackConnector.getAuthUrl.useQuery({
     appId: router.query.appId as string,
-    scopes: {
-      bot: (router.query.botScopes as string).split(','),
-      user: (router.query.userScopes as string).split(','),
-    },
-    postInstallationRedirect: router.query.postInstallRedirect as string,
-    redirectUri: router.query.redirectUri as string,
   });
 
   useEffect(() => {

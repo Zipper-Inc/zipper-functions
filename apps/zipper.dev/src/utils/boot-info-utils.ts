@@ -266,6 +266,7 @@ export async function getAppAuthor({
     organization: '',
     image: '',
     orgImage: '',
+    slug: '',
   };
 
   const authorName = await prisma.user.findUnique({
@@ -288,6 +289,7 @@ export async function getAppAuthor({
 
   appAuthor.name = authorName?.name || '';
   appAuthor.image = authorName?.image || '';
+  appAuthor.slug = authorName?.slug || '';
 
   return appAuthor;
 }

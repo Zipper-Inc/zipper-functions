@@ -15,6 +15,7 @@ export type AppInfo = {
   editors: { userId: string; appId: string; isOwner: boolean }[];
   appAuthor?: {
     name: string;
+    slug: string;
     organization: string;
     image: string;
     orgImage: string;

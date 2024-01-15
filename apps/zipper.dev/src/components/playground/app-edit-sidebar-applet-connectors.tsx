@@ -22,13 +22,6 @@ export const AppEditSidebarAppletConnectors = () => {
   const [githubAuthRequired, setGitHubAuthRequired] = useState(false);
   // state to hold whether user needs to authenticate with github
 
-  // get the existing Slack connector data from the database
-  const slackConnector = trpc.slackConnector.get.useQuery(
-    { appId: appInfo.id },
-    {
-      enabled: slackAuthRequired,
-    },
-  );
   // get the existing GitHub connector data from the database
   const githubConnector = trpc.githubConnector.get.useQuery(
     { appId: appInfo.id },
@@ -87,16 +80,9 @@ export const AppEditSidebarAppletConnectors = () => {
   // get the Slack auth URL -- if required --from the backend
   // (it includes an encrypted state value that links the auth request to the app)
   const slackAuthURL = trpc.slackConnector.getAuthUrl.useQuery(
+    { appId },
     {
-      appId,
-      scopes: {
-        bot: slackConnector.data?.workspaceScopes || [],
-        user: slackConnector.data?.userScopes || [],
-      },
-      postInstallationRedirect: window.location.href,
-    },
-    {
-      enabled: slackConnector.isFetched,
+      enabled: slackAuthRequired,
     },
   );
 
