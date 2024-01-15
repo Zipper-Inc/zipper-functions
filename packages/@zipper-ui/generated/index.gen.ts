@@ -26,7 +26,7 @@ export * from '../src/components/function-output/types';
 export * from '../src/components/function-output/use-action-component';
 export * from '../src/components/function-output/utils';
 export * from '../src/components/modules/list';
-export * from '../src/components/modules/show';
+export * from '../src/components/modules/show-content';
 export * from '../src/components/ui/avatar';
 export * from '../src/components/ui/badge';
 export * from '../src/components/ui/button';
