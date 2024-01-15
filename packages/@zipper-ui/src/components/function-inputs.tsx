@@ -35,8 +35,7 @@ import { getFieldName } from '@zipper/utils';
 import { ErrorBoundary } from './error-boundary';
 import { AutoResizeTextarea } from './auto-resize-text-area';
 import React from 'react';
-import { MultiSelect } from './MultiSelect';
-import { useMultiSelect } from '../hooks/use-select';
+import { TailwindMultiSelect } from './ui/multi-select';
 
 interface Props {
   params: InputParam[] | undefined;
@@ -203,16 +202,10 @@ function FunctionParamInput({
     case InputType.array: {
       const [error, setError] = useState<string | undefined>();
       if (node.details?.isUnion && node.details.values.every(isLiteralNode)) {
-        const form = register(name, formFieldOptions);
         const options = node.details.values.flatMap((node) => {
           if (node.type === InputType.boolean) return [];
           const literal = String(node.details?.literal);
           return [{ label: literal, value: literal }];
-        });
-
-        const { options: selectOptions } = useMultiSelect({
-          options,
-          value: [],
         });
 
         // TODO: All literals are being treated as strings. Add support for number
@@ -220,19 +213,14 @@ function FunctionParamInput({
           <Controller
             control={control}
             name={name}
-            render={({ field: { onChange, value } }) => (
-              <MultiSelect
-                options={selectOptions}
-                value={value}
-                onChange={onChange}
+            render={({ field }) => (
+              <TailwindMultiSelect
+                className="bg-white dark:bg-gray-950"
+                defaultOptions={options}
+                value={field.value}
+                onChange={field.onChange}
                 placeholder={placeholder}
-                name={form.name}
-                controlProps={{
-                  backgroundColor: 'bgColor',
-                }}
-                selectedItemProps={{
-                  colorScheme: 'purple',
-                }}
+                emptyIndicator={<Text>No results</Text>}
               />
             )}
           />
