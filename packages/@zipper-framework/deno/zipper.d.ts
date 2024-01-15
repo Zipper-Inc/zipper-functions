@@ -181,8 +181,8 @@ declare namespace Zipper {
   }
 
   type LiteralNode =
-    | { type: InputType.boolean; details?: { literal: string } }
-    | { type: InputType.number; details?: { literal: string } }
+    | { type: InputType.boolean; details?: { literal: boolean } }
+    | { type: InputType.number; details?: { literal: number } }
     | { type: InputType.string; details?: { literal: string } };
 
   type ParsedNode =
