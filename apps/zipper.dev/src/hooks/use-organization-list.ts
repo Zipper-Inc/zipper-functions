@@ -22,7 +22,18 @@ export const useOrganizationList = () => {
   useEffect(() => {
     if (session.status === 'authenticated') {
       setIsAuthed(true);
-      setOrganizationList(session.data.organizationMemberships || []);
+      const allOrganizations = [
+        {
+          organization: {
+            id: null,
+            name: 'Personal Workspace',
+            slug: user?.username,
+          },
+          pending: false,
+        },
+        ...(session.data.organizationMemberships || []),
+      ];
+      setOrganizationList((allOrganizations as any[]) || []);
       setCurrentOrganizationId(session.data.currentOrganizationId);
     }
 

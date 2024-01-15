@@ -27,7 +27,7 @@ const NavLink: React.FC<(typeof links)[number] & { active: boolean }> = ({
       href={href}
       className={cn(
         'text-muted-foreground font-medium px-4 h-11 flex items-center relative py-3 rounded-sm transition-all hover:bg-muted-foreground/10',
-        active && 'text-primary dark bg-primary/10',
+        active && 'text-primary bg-primary/10',
       )}
     >
       {label}

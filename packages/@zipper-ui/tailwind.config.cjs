@@ -36,6 +36,16 @@ const config = {
       ...layout,
     },
     extend: {
+      fontSize: {
+        /** 0.625rem /* 10px /* line-height: 0.75rem /* 12px */
+        xxs: [
+          '0.625rem',
+          {
+            lineHeight: '0.75rem',
+            letterSpacing: '-0.01em',
+          },
+        ],
+      },
       keyframes,
       animation,
       fontFamily,

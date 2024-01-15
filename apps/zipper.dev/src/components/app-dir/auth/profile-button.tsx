@@ -1,6 +1,6 @@
 'use client';
 import { Dropdown, Button, Avatar, Show } from '@zipper/ui';
-import React, { ReactNode, useCallback } from 'react';
+import React, { ReactNode, useCallback, useState } from 'react';
 import { signIn, signOut } from 'next-auth/react';
 import { SignedIn, SignedOut } from './user-status';
 import UserProfile from '../../auth/userProfile';
@@ -26,13 +26,13 @@ import {
   PiSignOutDuotone,
 } from 'react-icons/pi';
 
-const SettingsDialog: React.FC<ReturnType<typeof useDisclosure>> = (
+const SettingsDialog: React.FC<{ isOpen: boolean; onClose: () => void }> = (
   settingsModal,
 ) => {
   return (
     <Modal
       isOpen={settingsModal.isOpen}
-      onClose={() => settingsModal.onClose}
+      onClose={settingsModal.onClose}
       size="xl"
     >
       <ModalOverlay />
@@ -69,7 +69,10 @@ const ProfileMenu = ({
   const { setTheme, theme } = useTheme();
 
   const feedbackDialog = useDisclosure();
-  const settingsDialog = useDisclosure();
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
+  const onChangeSettingsOpen = () => setIsSettingsOpen(!isSettingsOpen);
+  const onCloseSettings = () => setIsSettingsOpen(false);
 
   const toggleColorMode = useCallback(() => {
     const color = theme === 'dark' ? 'light' : 'dark';
@@ -85,7 +88,7 @@ const ProfileMenu = ({
           <Dropdown.Label>Settings</Dropdown.Label>
           <Dropdown.Separator />
           <Dropdown.Item
-            onClick={settingsDialog.onOpen}
+            onClick={onChangeSettingsOpen}
             className="flex items-center gap-3 cursor-pointer"
           >
             <PiGearDuotone />
@@ -138,7 +141,7 @@ const ProfileMenu = ({
 
       {/** TO-DO: refactor to shadcn dialgos */}
       <FeedbackDialog {...feedbackDialog} />
-      <SettingsDialog {...settingsDialog} />
+      <SettingsDialog isOpen={isSettingsOpen} onClose={onCloseSettings} />
     </React.Fragment>
   );
 };
@@ -159,7 +162,13 @@ export const ProfileButton: React.FC<ProfileButtonOptions> = ({
         />
       </SignedIn>
       <SignedOut>
-        <Button onClick={() => signIn}>Sign In</Button>
+        <Button
+          onClick={() => {
+            signIn();
+          }}
+        >
+          Sign In
+        </Button>
       </SignedOut>
     </React.Fragment>
   );

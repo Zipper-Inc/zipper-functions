@@ -165,4 +165,5 @@ export const layout = {
   'destructive-foreground': 'hsl(var(--destructive-foreground))',
   ring: 'hsl(var(--ring))',
   radius: 'hsl(var(--radius))',
+  disabled: 'hsl(var--disabled))',
 };
