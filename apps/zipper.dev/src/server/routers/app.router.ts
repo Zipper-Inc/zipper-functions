@@ -723,7 +723,7 @@ export const appRouter = createTRPCRouter({
         if (!bootPayload.ok || bootPayload.version !== version) {
           throw new Error(
             `Boot not ok${
-              bootPayload.version === version && ': version mismatch'
+              bootPayload.version !== version && ': version mismatch'
             }`,
           );
         }
