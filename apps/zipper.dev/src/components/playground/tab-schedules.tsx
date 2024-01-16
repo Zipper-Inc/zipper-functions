@@ -16,10 +16,9 @@ import {
   Tr,
   ChakraProps,
   useToast,
-  Badge,
   Tooltip,
 } from '@chakra-ui/react';
-
+import { Badge } from '@zipper/ui';
 import cronstrue from 'cronstrue';
 import { useState } from 'react';
 import { trpc } from '~/utils/trpc';
@@ -175,9 +174,9 @@ const SchedulesTab: React.FC<SchedulesTabProps> = ({ appId }) => {
                               {lastRunAt}
                             </Text>
                             <Badge
-                              variant="subtle"
-                              colorScheme={lastRunSuccessful ? 'green' : 'red'}
-                              fontSize="xs"
+                              variant={
+                                lastRunSuccessful ? 'success' : 'destructive'
+                              }
                             >
                               {lastRunSuccessful ? 'SUCCESSFUL' : 'FAILED'}
                             </Badge>

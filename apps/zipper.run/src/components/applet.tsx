@@ -335,7 +335,7 @@ export function AppPage({
             isRelay: true,
           }).pathname
         }
-        bootInfoUrl={`/_zipper/bootInfo/${app?.slug}`}
+        bootInfoUrl={`/boot`}
         currentContext={'main'}
         appSlug={app.slug}
         showTabs={false}

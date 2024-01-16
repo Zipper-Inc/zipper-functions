@@ -4,7 +4,12 @@ import {
   FunctionOutputContext,
   FunctionOutputContextType,
 } from './function-output-context';
-import { InputParam, BootInfo, BootInfoResult } from '@zipper/types';
+import {
+  InputParam,
+  BootInfo,
+  BootInfoResult,
+  ZipperLocation,
+} from '@zipper/types';
 import { SmartFunctionOutputContext } from './smart-function-output-context';
 
 export const findFileInParsedScripts = (
@@ -28,8 +33,13 @@ const getActionPath = (action: Zipper.ButtonAction | Zipper.DropdownAction) =>
 export const useActionComponent = (
   action: Zipper.ButtonAction | Zipper.DropdownAction,
 ) => {
-  const { showSecondaryOutput, applet, generateUserToken, bootInfoUrl } =
-    useContext(FunctionOutputContext) as FunctionOutputContextType;
+  const {
+    showSecondaryOutput,
+    applet,
+    generateUserToken,
+    bootInfoUrl,
+    appSlug,
+  } = useContext(FunctionOutputContext) as FunctionOutputContextType;
 
   const { outputSection } = useContext(SmartFunctionOutputContext);
   const inputsFromAction = action.inputs || {};
@@ -49,11 +59,11 @@ export const useActionComponent = (
 
   const getBootInfo = async () => {
     if (bootInfo) return bootInfo;
-
     const bootInfoResult: BootInfoResult = await fetch(bootInfoUrl, {
       method: 'POST',
       body: '{}',
       headers: await getHeaders(),
+      credentials: 'include',
     }).then((res) => res.json());
 
     if (bootInfoResult.ok) {
@@ -117,20 +127,20 @@ export const useActionComponent = (
       return input;
     });
 
-    const res = await fetch(
-      getRunUrl({
-        subdomain: '',
-        version,
-        filename,
-        action: actionFromPath,
-        isRelay: true,
-      }).pathname,
-      {
-        method: 'POST',
-        body: JSON.stringify(action.inputs),
-        headers: await getHeaders(),
-      },
-    );
+    const runUrl = getRunUrl({
+      subdomain: appSlug,
+      version,
+      filename,
+      action: actionFromPath,
+      isRelay: true,
+      forPlayground: window.ZipperLocation === ZipperLocation.ZipperDotDev,
+    });
+
+    const res = await fetch(runUrl, {
+      method: 'POST',
+      body: JSON.stringify(action.inputs),
+      headers: await getHeaders(),
+    });
 
     const text = await res.text();
 
@@ -152,8 +162,12 @@ export const useActionComponent = (
       refreshInputParams.forEach((i) => (originalInputs[i.key] = i.value));
 
       const refreshRes = await fetch(
-        getRunUrl({ ...refreshPathProps, subdomain: '', isRelay: true })
-          .pathname,
+        getRunUrl({
+          ...refreshPathProps,
+          subdomain: appSlug,
+          isRelay: true,
+          forPlayground: window.ZipperLocation === ZipperLocation.ZipperDotDev,
+        }),
         {
           method: 'POST',
           body: JSON.stringify(originalInputs),

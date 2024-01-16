@@ -6,7 +6,7 @@ import { getZipperDotDevUrlForServer } from '~/server/utils/server-url.utils';
 const SLACK_VIEW_UPDATE_URL = 'https://slack.com/api/views.update';
 const SLACK_VIEW_OPEN_URL = 'https://slack.com/api/views.open';
 const SLACK_POST_MESSAGE_URL = 'https://slack.com/api/chat.postMessage';
-const ZIPPER_APP_INFO_URL = `${getZipperDotDevUrlForServer()}/api/bootInfo`;
+const ZIPPER_BOOT_INFO_URL = `${getZipperDotDevUrlForServer()}/api/bootInfo`;
 
 async function buildHeaders(appId: string, teamId: string) {
   const installation = await prisma.slackZipperSlashCommandInstall.findFirst({
@@ -30,10 +30,11 @@ async function buildHeaders(appId: string, teamId: string) {
 }
 
 export async function fetchBootInfo(slug: string, filename?: string) {
-  const bootInfoUrl = `${ZIPPER_APP_INFO_URL}/${slug}`;
+  const bootInfoUrl = `${ZIPPER_BOOT_INFO_URL}/${slug}`;
   const bootInfoResponse = await fetch(bootInfoUrl, {
     method: 'POST',
     body: JSON.stringify({ filename }),
+    credentials: 'include',
   });
 
   return bootInfoResponse.json();
