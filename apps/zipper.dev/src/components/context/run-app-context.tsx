@@ -389,7 +389,7 @@ export function RunAppProvider({
         },
         { badgeStyle: { background: PRETTY_LOG_TOKENS['purple']! } },
       ),
-      safeJSONParse(result.result, undefined, result.result) || undefined,
+      // safeJSONParse(result.result, undefined, result.result) || undefined,
     ]);
 
     cleanUpLogTimers();

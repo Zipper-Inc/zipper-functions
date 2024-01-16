@@ -77,7 +77,7 @@ export const hasAppReadPermission = async ({
   }
 };
 
-export const hasOrgAdminPermission = async (ctx: Context) => {
+const hasOrgPermission = async (permissions: UserRole[], ctx: Context) => {
   try {
     if (!ctx.userId || !ctx.orgId) {
       return false;
@@ -92,11 +92,19 @@ export const hasOrgAdminPermission = async (ctx: Context) => {
       },
     });
 
-    if (orgMem.role === UserRole.Admin) {
+    if (permissions.includes(orgMem.role as UserRole)) {
       return true;
     }
     return false;
   } catch (error) {
     return false;
   }
+};
+
+export const hasOrgAdminPermission = async (ctx: Context) => {
+  return hasOrgPermission([UserRole.Admin], ctx);
+};
+
+export const hasOrgMemberPermission = async (ctx: Context) => {
+  return hasOrgPermission([UserRole.Member, UserRole.Admin], ctx);
 };
