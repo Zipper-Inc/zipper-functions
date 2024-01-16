@@ -2,6 +2,7 @@ import { TRPCError, initTRPC, inferAsyncReturnType } from '@trpc/server';
 import superjson from 'superjson';
 import { hasOrgAdminPermission } from './utils/authz.utils';
 import { getServerAuthSession } from '~/pages/api/auth/[...nextauth]';
+import { ZodError } from 'zod';
 
 export const createTRPCContext = async (opts: { headers: Headers }) => {
   const session = (await getServerAuthSession()) || undefined;
@@ -23,16 +24,16 @@ export type Context = inferAsyncReturnType<typeof createTRPCContext>;
 
 const t = initTRPC.context<typeof createTRPCContext>().create({
   transformer: superjson,
-  // Optional:
-  // errorFormatter(opts) {
-  //   const { shape } = opts;
-  //   return {
-  //     ...shape,
-  //     data: {
-  //       ...shape.data,
-  //     },
-  //   };
-  // },
+  errorFormatter({ shape, error }) {
+    return {
+      ...shape,
+      data: {
+        ...shape.data,
+        zodError:
+          error.cause instanceof ZodError ? error.cause.flatten() : null,
+      },
+    };
+  },
 });
 
 const enforceAuth = t.middleware(({ ctx, next }) => {
