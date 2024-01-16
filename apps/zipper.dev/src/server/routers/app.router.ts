@@ -37,7 +37,10 @@ import { endsWithTs, parseInputForTypes } from '~/utils/parse-code';
 import slugify from '~/utils/slugify';
 import { Context } from '../context';
 import { createTRPCRouter, protectedProcedure, publicProcedure } from '../root';
-import { hasAppEditPermission } from '../utils/authz.utils';
+import {
+  hasAppEditPermission,
+  hasAppReadPermission,
+} from '../utils/authz.utils';
 import { storeVersionCode } from '../utils/r2.utils';
 import denyList from '../utils/slugDenyList';
 import { DEFAULT_MD } from './script.router';
@@ -674,7 +677,7 @@ export const appRouter = createTRPCRouter({
         include: { scripts: true, scriptMain: true },
       });
 
-      await hasAppEditPermission({ ctx, appId: input.appId });
+      await hasAppReadPermission({ ctx, appId: input.appId });
 
       const token = ctx.userId
         ? generateAccessToken(
