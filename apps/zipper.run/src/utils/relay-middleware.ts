@@ -32,8 +32,7 @@ const DEPLOY_KID = 'zipper';
 const DENO_ORIGIN = new URL(`https://subhosting-v1.deno-aws.net`);
 const RPC_ROOT = `https://${PUBLICLY_ACCESSIBLE_RPC_HOST}/api/deno/v0/`;
 
-const SENSITIVE_DATA_PLACEHOLDER =
-  'The result of this run was redacted. This behavior can be changed in the app settings.';
+const SENSITIVE_DATA_PLACEHOLDER = 'Redacted';
 
 const X_FORWARDED_HOST = 'x-forwarded-host';
 const X_DENO_SUBHOST = 'x-deno-subhost';
