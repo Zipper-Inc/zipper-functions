@@ -36,7 +36,10 @@ const makeDeploymentId = ({
   });
 
 export const cacheDeployment = {
-  key: (subdomain: string) => `${DEPLOYMENT_FOR_SUBDOMAIN}[${subdomain}]`,
+  key: (subdomain: string) =>
+    process.env.NODE_ENV === 'production'
+      ? `${DEPLOYMENT_FOR_SUBDOMAIN}[${subdomain}]`
+      : `${DEPLOYMENT_FOR_SUBDOMAIN}[${subdomain}]--${process.env.PUBLICLY_ACCESSIBLE_RPC_HOST}`,
 
   get: async (subdomain: string): Promise<DeploymentParams | void> => {
     const kv = getClient();
