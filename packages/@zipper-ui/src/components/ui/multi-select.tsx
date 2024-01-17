@@ -18,6 +18,7 @@ import { cn } from '../../utils/cn';
 export interface Option {
   value: string;
   label: string;
+  extra?: any;
   disable?: boolean;
   /** fixed option that can't be removed. */
   fixed?: boolean;
@@ -128,7 +129,7 @@ function removePickedOption(groupOption: GroupOption, picked: Option[]) {
   return cloneOption;
 }
 
-const MultiSelect = React.forwardRef<MultiSelectRef, MultiSelectProps>(
+const TailwindMultiSelect = React.forwardRef<MultiSelectRef, MultiSelectProps>(
   (
     {
       value,
@@ -190,7 +191,8 @@ const MultiSelect = React.forwardRef<MultiSelectRef, MultiSelectProps>(
         if (input) {
           if (e.key === 'Delete' || e.key === 'Backspace') {
             if (input.value === '' && selected.length > 0) {
-              handleUnselect(selected[selected.length - 1]!);
+              const lastOption = selected[selected.length - 1];
+              if (lastOption) handleUnselect(lastOption);
             }
           }
           // This is not a default behaviour of the <input /> field
@@ -455,5 +457,5 @@ const MultiSelect = React.forwardRef<MultiSelectRef, MultiSelectProps>(
   },
 );
 
-MultiSelect.displayName = 'MultiSelect';
-export { MultiSelect as TailwindMultiSelect };
+TailwindMultiSelect.displayName = 'MultiSelect';
+export { TailwindMultiSelect };

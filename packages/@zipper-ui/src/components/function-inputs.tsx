@@ -29,13 +29,14 @@ import {
   UseFormReturn,
   RegisterOptions,
   Controller,
+  useFieldArray,
 } from 'react-hook-form';
 import { InputType, InputParam, ParsedNode, LiteralNode } from '@zipper/types';
 import { getFieldName } from '@zipper/utils';
 import { ErrorBoundary } from './error-boundary';
 import { AutoResizeTextarea } from './auto-resize-text-area';
 import React from 'react';
-import { TailwindMultiSelect } from './ui/multi-select';
+import { Option, TailwindMultiSelect } from './ui/multi-select';
 
 interface Props {
   params: InputParam[] | undefined;
@@ -200,15 +201,17 @@ function FunctionParamInput({
     }
 
     case InputType.array: {
+      console.log(watch(name));
       const [error, setError] = useState<string | undefined>();
       if (node.details?.isUnion && node.details.values.every(isLiteralNode)) {
         const options = node.details.values.flatMap((node) => {
           if (node.type === InputType.boolean) return [];
-          const literal = String(node.details?.literal);
-          return [{ label: literal, value: literal }];
+          if (node?.details?.literal === undefined) return [];
+          const literal = String(node.details.literal);
+          return [{ label: literal, value: literal, extra: node.type }];
         });
 
-        // TODO: All literals are being treated as strings. Add support for number
+        // TODO: All literals are being treated as strings.
         return (
           <Controller
             control={control}
@@ -216,9 +219,24 @@ function FunctionParamInput({
             render={({ field }) => (
               <TailwindMultiSelect
                 className="bg-white dark:bg-gray-950"
-                defaultOptions={options}
+                options={options}
                 value={field.value}
-                onChange={field.onChange}
+                onChange={(values) => {
+                  const valuesWithFixedTypes = values.map(
+                    ({ value, extra: type }) => {
+                      if (type === InputType.number) {
+                        return Number(value);
+                      }
+                      if (type === InputType.boolean) {
+                        return value === 'true';
+                      }
+                      if (type === InputType.string) {
+                        return value;
+                      }
+                    },
+                  );
+                  formContext.setValue(name, valuesWithFixedTypes);
+                }}
                 placeholder={placeholder}
                 emptyIndicator={<Text>No results</Text>}
               />
@@ -330,7 +348,24 @@ function FunctionParamInput({
           </Select>
         );
       }
-      return null;
+
+      // Same as any
+      return (
+        <VStack align="start" w="full">
+          <Textarea
+            backgroundColor="bgColor"
+            fontFamily="monospace"
+            fontSize="smaller"
+            minHeight={14}
+            {...register(name, formFieldOptions)}
+            isDisabled={isDisabled}
+            placeholder=""
+            onChange={(e) => {
+              formContext.setValue(name, e.target.value);
+            }}
+          />
+        </VStack>
+      );
     }
     case InputType.file: {
       return (
