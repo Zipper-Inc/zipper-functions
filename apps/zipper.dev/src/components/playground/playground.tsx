@@ -355,7 +355,9 @@ export function Playground({
                 </Tooltip>
 
                 <MenuList pt={0}>
-                  {!helpModeEnabled ? (
+                  {helpModeEnabled ? (
+                    <InspectUiHelpMode onClose={onClose} />
+                  ) : (
                     <>
                       <Box
                         display={'flex'}
@@ -437,55 +439,6 @@ export function Playground({
                         Contact support
                       </MenuItem>
                     </>
-                  ) : (
-                    <>
-                      <Box
-                        display={'flex'}
-                        flexDirection={'column'}
-                        pt={2}
-                        px={2}
-                        maxW={237}
-                        minH={'200px'}
-                      >
-                        <Flex
-                          alignItems={'center'}
-                          justifyContent={'space-between'}
-                          mb={4}
-                        >
-                          <FiChevronLeft
-                            size={20}
-                            color="gray"
-                            onClick={toggleHelpMode}
-                            cursor="pointer"
-                          />
-
-                          <Heading color="purple.600" size="sm" flex="1" ml={2}>
-                            Inspect UI
-                          </Heading>
-                          <FiX
-                            size={20}
-                            color="gray"
-                            onClick={onClose}
-                            cursor="pointer"
-                          />
-                        </Flex>
-                        <Text
-                          color={'fg.900'}
-                          fontSize="md"
-                          fontWeight="bold"
-                          mb={2}
-                        >
-                          {hoveredElement
-                            ? inspectableComponents[hoveredElement]?.name
-                            : ''}
-                        </Text>
-                        <Text color={'fg.600'} fontSize="sm">
-                          {elementDescription
-                            ? elementDescription
-                            : 'Hover over the interface to learn more about what it does.'}
-                        </Text>
-                      </Box>
-                    </>
                   )}
                 </MenuList>
               </>
@@ -518,5 +471,40 @@ export function Playground({
         <ContactModal {...contactModal} />
       </VStack>
     </RunAppProvider>
+  );
+}
+function InspectUiHelpMode(props: { onClose: () => void }) {
+  const { toggleHelpMode, elementDescription, hoveredElement } = useHelpMode();
+  return (
+    <Box
+      display={'flex'}
+      flexDirection={'column'}
+      pt={2}
+      px={2}
+      maxW={237}
+      minH={'200px'}
+    >
+      <Flex alignItems={'center'} justifyContent={'space-between'} mb={4}>
+        <FiChevronLeft
+          size={20}
+          color="gray"
+          onClick={toggleHelpMode}
+          cursor="pointer"
+        />
+
+        <Heading color="purple.600" size="sm" flex="1" ml={2}>
+          Inspect UI
+        </Heading>
+        <FiX size={20} color="gray" onClick={props.onClose} cursor="pointer" />
+      </Flex>
+      <Text color={'fg.900'} fontSize="md" fontWeight="bold" mb={2}>
+        {hoveredElement ? inspectableComponents[hoveredElement]?.name : ''}
+      </Text>
+      <Text color={'fg.600'} fontSize="sm">
+        {elementDescription
+          ? elementDescription
+          : 'Hover over the interface to learn more about what it does.'}
+      </Text>
+    </Box>
   );
 }
