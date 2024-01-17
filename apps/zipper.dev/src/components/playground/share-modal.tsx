@@ -162,7 +162,12 @@ const ShareTab: React.FC<Props> = ({ isOpen, onClose, appId }) => {
                                 type="email"
                                 placeholder="Email"
                               />
-                              <Button px={6} type="submit" fontSize="sm">
+                              <Button
+                                px={6}
+                                type="submit"
+                                fontSize="sm"
+                                colorScheme="purple"
+                              >
                                 Send invite
                               </Button>
                             </HStack>
@@ -176,7 +181,12 @@ const ShareTab: React.FC<Props> = ({ isOpen, onClose, appId }) => {
                               pt="4"
                               fontWeight="medium"
                             >
-                              Existing editors
+                              {resourceOwnerNameQuery.data ||
+                              editorQuery.data?.appEditors ? (
+                                <>Existing editors</>
+                              ) : (
+                                <>Only you have access right now</>
+                              )}
                             </Text>
                             <Box p="2" pb="0">
                               <>
@@ -188,8 +198,7 @@ const ShareTab: React.FC<Props> = ({ isOpen, onClose, appId }) => {
                                         name={resourceOwnerNameQuery.data}
                                       />
                                       <Text>
-                                        Everyone at{' '}
-                                        {resourceOwnerNameQuery.data}
+                                        {`Everyone at ${resourceOwnerNameQuery.data}`}
                                       </Text>
                                     </HStack>
                                   </Box>
@@ -347,7 +356,6 @@ const ShareTab: React.FC<Props> = ({ isOpen, onClose, appId }) => {
                   </Link>
                   <Button
                     type="submit"
-                    colorScheme="purple"
                     onClick={() => {
                       onClose();
                     }}

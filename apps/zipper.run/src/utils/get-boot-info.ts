@@ -12,6 +12,7 @@ import {
   getZipperApiUrl,
   noop,
   parseDeploymentId,
+  removeExtension,
   UNAUTHORIZED,
   X_ZIPPER_TEMP_USER_ID,
 } from '@zipper/utils';
@@ -235,16 +236,22 @@ export async function fetchBootPayloadCachedOrThrow({
 }
 
 export async function fetchBootPayloadCachedWithUserInfoOrThrow(
-  params: BootInfoParams & {
+  params: Omit<BootInfoParams, 'filename'> & {
+    path: string;
     bootInfo?: BootInfo;
     bootFetcher?: BootFetcher;
   },
 ): Promise<BootPayload<true>> {
   const bootPayload = await fetchBootPayloadCachedOrThrow(params);
+  const filename = getFilenameFromPath(
+    params.path,
+    bootPayload.bootInfo.runnableScripts,
+  );
 
   // This is the non-cachable part (user specific)
   const result = await fetchExtendedUserInfo({
     ...params,
+    filename,
     bootInfo: params.bootInfo || bootPayload.bootInfo,
   });
 
@@ -267,8 +274,17 @@ export async function fetchBootPayloadCachedWithUserInfoOrThrow(
   };
 }
 
+export const getPathFromFilename = (filename: string) =>
+  removeExtension(filename);
+
+export const getFilenameFromPath = (path: string, runnableScripts: string[]) =>
+  runnableScripts.find(
+    (scriptFilename) => path === removeExtension(scriptFilename),
+  );
+
 export async function fetchBootInfoCachedWithUserOrThrow(
-  params: BootInfoParams & {
+  params: Omit<BootInfoParams, 'filename'> & {
+    path: string;
     bootInfo?: BootInfo;
     bootFetcher?: BootFetcher;
   },
