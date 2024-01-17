@@ -373,7 +373,6 @@ export async function relayRequest(
   const mutableHeaders = new Headers(headers);
   const result = await response.text();
 
-  console.log('relay response', result, { status, headers });
   const appRunRes = await addAppRun({
     id: runId,
     appId: app.id,
