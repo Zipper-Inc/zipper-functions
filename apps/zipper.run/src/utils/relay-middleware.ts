@@ -6,6 +6,8 @@ import fetchBootInfo, {
   fetchBootInfoCachedWithUserOrThrow,
   fetchDeploymentCachedOrThrow,
   fetchBasicUserInfo,
+  getPathFromFilename,
+  getFilenameFromPath,
 } from './get-boot-info';
 import getValidSubdomain from './get-valid-subdomain';
 import { parseRunUrlPath } from '@zipper/utils';
@@ -243,11 +245,6 @@ export async function relayRequest(
   tempUserId =
     tempUserId || request.cookies.get(__ZIPPER_TEMP_USER_ID)?.value.toString();
 
-  let filename = filenamePassedIn || 'main.ts';
-  if (!filename.endsWith('.ts') && !filename.endsWith('.tsx')) {
-    filename = `${filename}.ts`;
-  }
-
   const bootArgs = {
     appId,
     version,
@@ -262,12 +259,16 @@ export async function relayRequest(
     return bootRelayRequest(bootArgs);
   }
 
+  const path = filenamePassedIn
+    ? getPathFromFilename(filenamePassedIn)
+    : 'main';
+
   let bootInfo;
   try {
     bootInfo = await fetchBootInfoCachedWithUserOrThrow({
       subdomain,
       tempUserId,
-      filename,
+      path,
       token,
       deploymentId,
       bootFetcher: async () => {
@@ -352,6 +353,8 @@ export async function relayRequest(
     displayName: '',
     canUserEdit: userInfo.canUserEdit,
   };
+
+  const filename = getFilenameFromPath(path, bootInfo.runnableScripts);
 
   relayBody.path = filename;
 
