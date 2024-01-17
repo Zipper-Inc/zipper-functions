@@ -32,7 +32,7 @@ import { Script } from '@prisma/client';
 import { AppQueryOutput } from '~/types/trpc';
 import { parsePlaygroundQuery, PlaygroundTab } from '~/utils/playground.utils';
 import { RunAppProvider } from '../context/run-app-context';
-import { PlaygroundAvatars } from './playground-avatars';
+import { PlaygroundAvatars as PlaygroundAvatarsComponent } from './playground-avatars';
 import { useAppEditors } from '~/hooks/use-app-editors';
 import { primaryColors, TabButton } from '@zipper/ui';
 import HistoryTab from './tab-runs';
@@ -49,7 +49,6 @@ import {
 
 import { FeedbackModal } from '~/components/auth/feedback-modal';
 import { ContactModal } from '~/components/playground/contact-modal';
-import { useTheme } from 'next-themes';
 import {
   PiBookDuotone,
   PiBookOpenDuotone,
@@ -58,6 +57,7 @@ import {
   PiMegaphoneSimpleDuotone,
   PiQuestionDuotone,
 } from 'react-icons/pi';
+import { getLiveblocksRoom, withLiveblocksRoom } from '~/hocs/with-liveblocks';
 
 const tabPanelStyles: ChakraProps = {
   p: 0,
@@ -65,6 +65,17 @@ const tabPanelStyles: ChakraProps = {
   display: 'flex',
   flexDirection: 'column',
   h: 'full',
+};
+
+const PlaygroundAvatars = () => {
+  const { editorIds, onlineEditorIds, selfId } = useAppEditors();
+  return editorIds.length > 1 ? (
+    <PlaygroundAvatarsComponent
+      editorIds={editorIds}
+      onlineEditorIds={onlineEditorIds}
+      selfId={selfId}
+    />
+  ) : null;
 };
 
 export function Playground({
@@ -76,8 +87,6 @@ export function Playground({
   tab: PlaygroundTab;
   filename?: string;
 }) {
-  const { editorIds, onlineEditorIds, selfId } = useAppEditors();
-
   const [tabIndex, setTabIndex] = useState(
     Object.values(PlaygroundTab).indexOf(tab),
   );
@@ -246,12 +255,13 @@ export function Playground({
                 />
               </div>
             </HStack>
-            {editorIds.length > 1 && (
-              <PlaygroundAvatars
-                editorIds={editorIds}
-                onlineEditorIds={onlineEditorIds}
-                selfId={selfId}
-              />
+            {withLiveblocksRoom(
+              () => (
+                <PlaygroundAvatars />
+              ),
+              {
+                room: getLiveblocksRoom(app, app.resourceOwner),
+              },
             )}
           </TabList>
           {/* TAB PANELS */}

@@ -7,10 +7,10 @@ import Editor, {
 import * as monaco from 'monaco-editor';
 import { buildWorkerDefinition } from 'monaco-editor-workers';
 import {
+  LiveblocksRoom,
   StoredScriptId,
-  useMyPresence,
   useOthersConnectionIds,
-  useRoom,
+  client,
 } from '~/liveblocks.config';
 
 import { parse } from '@babel/parser';
@@ -33,6 +33,7 @@ import {
 } from '~/utils/playground.utils';
 import { TypedLiveblocksProvider } from '~/liveblocks.config';
 import { Script } from '@prisma/client';
+import { getLiveblocksRoom, withLiveblocksRoom } from '~/hocs/with-liveblocks';
 
 export type MonacoEditor = monaco.editor.IStandaloneCodeEditor;
 
@@ -64,12 +65,29 @@ const TYPESCRIPT_ERRORS_TO_IGNORE = [
 const isExternalResource = (resource: string | monaco.Uri) =>
   /^https?/.test(resource.toString());
 
+export const CollabCursors = ({ editorRef }: { editorRef: any }) => {
+  const connectionIds = useOthersConnectionIds();
+  return (
+    <>
+      {connectionIds.map((id) => (
+        <PlaygroundCollabCursor
+          connectionId={id}
+          editorRef={editorRef}
+          key={id}
+        />
+      ))}
+    </>
+  );
+};
+
 export default function PlaygroundEditor(
   props: EditorProps & {
     appName: string;
   },
 ) {
   const {
+    appSlug,
+    resourceOwnerSlug,
     setCurrentScript,
     currentScript,
     scripts,
@@ -94,10 +112,10 @@ export default function PlaygroundEditor(
   const [isModelReady, setIsModelReady] = useState(false);
   const [isLiveblocksReady, setIsLiveblocksReady] = useState(false);
   const monacoEditor = useMonaco();
-  const [, updateMyPresence] = useMyPresence();
-  const connectionIds = useOthersConnectionIds();
   const [defaultLanguage] = useState<'typescript' | 'markdown'>('typescript');
   const theme = useColorModeValue('vs', 'vs-dark');
+  const roomRef = useRef<LiveblocksRoom>();
+  const leaveRoomRef = useRef<() => void>();
 
   const handleEditorDidMount = (editor: MonacoEditor, monaco: Monaco) => {
     console.log('[EDITOR]', 'Editor is mounted');
@@ -134,11 +152,21 @@ export default function PlaygroundEditor(
       true,
     );
 
+    const room = client.enterRoom(
+      getLiveblocksRoom({ slug: appSlug }, { slug: resourceOwnerSlug }),
+      {
+        initialPresence: {},
+      },
+    );
+
+    roomRef.current = room.room as any;
+    leaveRoomRef.current = room.leave;
+
     // set up cursor tracking
     // liveblocks here
     editor.onDidChangeCursorSelection(({ selection }) => {
       try {
-        updateMyPresence({ selection: { ...selection } });
+        roomRef.current?.updatePresence({ selection: { ...selection } });
       } catch (e) {
         console.error('Caught error in updateMyPresence', e);
       }
@@ -432,8 +460,6 @@ export default function PlaygroundEditor(
     });
   }, [currentScript?.hash, configs]);
 
-  const room = useRoom();
-
   /**
    * Generic helper to convert between the things we likely need
    */
@@ -529,16 +555,17 @@ export default function PlaygroundEditor(
   };
 
   useEffect(() => {
-    if (isEditorReady && room && isModelReady && !readOnly) {
+    if (roomRef.current && isEditorReady && isModelReady && !readOnly) {
       if (
         !yRefs.current.yDoc ||
         !yRefs.current.yProvider ||
         !Object.values(yRefs.current.bindings).length
       ) {
         console.log('[EDITOR]', '(liveblocks)', 'Syncing models');
+
         yRefs.current.yDoc = new Y.Doc();
         yRefs.current.yProvider = new LiveblocksProvider(
-          room,
+          roomRef.current,
           yRefs.current.yDoc,
         );
         yRefs.current.bindings = {};
@@ -557,12 +584,13 @@ export default function PlaygroundEditor(
         Object.values(yRefs.current).filter((truthy) => !!truthy).length === 3
       ) {
         console.log('[EDITOR]', '(liveblocks)', 'Cleaning up');
+        leaveRoomRef.current?.();
         yRefs.current.yDoc?.destroy();
         yRefs.current.yProvider?.destroy();
         Object.values(yRefs.current.bindings).forEach((b) => b?.destroy());
       }
     };
-  }, [isEditorReady, isModelReady, room, readOnly]);
+  }, [isEditorReady, isModelReady, readOnly, roomRef.current]);
 
   // Short cut to reset yDoc to database
   useCmdOrCtrl(
@@ -574,6 +602,7 @@ export default function PlaygroundEditor(
     [yRefs.current.yDoc, currentScript],
   );
 
+  console.log('plYGROUND EDITOR RERENDER');
   return (
     <>
       <Editor
@@ -617,13 +646,17 @@ export default function PlaygroundEditor(
         onMount={handleEditorDidMount}
         {...props}
       />
-      {connectionIds.map((id) => (
-        <PlaygroundCollabCursor
-          connectionId={id}
-          editorRef={editorRef}
-          key={id}
-        />
-      ))}
+      {withLiveblocksRoom(
+        () => (
+          <CollabCursors editorRef={editorRef} />
+        ),
+        {
+          room: getLiveblocksRoom(
+            { slug: appSlug },
+            { slug: resourceOwnerSlug },
+          ),
+        },
+      )}
     </>
   );
 }
