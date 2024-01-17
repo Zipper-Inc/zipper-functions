@@ -15,6 +15,7 @@ export const code = `import { create, getNumericDate } from "https://deno.land/x
  * to query GitHub's API.
  **/
 
+export const githubAppConnectorConfig: any = {};
 
 /* Get the JWT for the app. This JWT is used to get an installation token. */
 export function appJwt(): Promise<string> {

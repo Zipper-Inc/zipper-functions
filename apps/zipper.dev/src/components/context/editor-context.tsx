@@ -35,6 +35,7 @@ import {
 } from '~/utils/playground.utils';
 import { runZipperLinter } from '~/utils/zipper-editor-linter';
 import { rewriteSpecifier } from '~/utils/rewrite-imports';
+import { getFileExtension } from '~/utils/file-extension';
 
 type OnValidate = AddParameters<
   Required<EditorProps>['onValidate'],
@@ -56,6 +57,7 @@ export type EditorContextType = {
   setModelIsDirty: (path: string, isDirty: boolean) => void;
   isEditorDirty: () => boolean;
   modelHasErrors: (path: string) => boolean;
+  getModelByFilename: (filename: string) => monaco.editor.ITextModel | null;
   setModelHasErrors: (path: string, isErroring: boolean) => void;
   editorHasErrors: () => boolean;
   getErrorFiles: () => string[];
@@ -107,6 +109,7 @@ export const EditorContext = createContext<EditorContextType>({
   setModelIsDirty: noop,
   isEditorDirty: () => false,
   modelHasErrors: () => false,
+  getModelByFilename: () => null,
   setModelHasErrors: () => false,
   editorHasErrors: () => false,
   getErrorFiles: () => [],
@@ -698,6 +701,16 @@ const EditorContextProvider = ({
       .filter(([, value]) => value)
       .map(([filename]) => filename);
 
+  const getModelByFilename = (filename: string) => {
+    if (!monacoRef?.current || !editor) return null;
+    const uri = getUriFromPath(
+      `file:///${filename}`,
+      monacoRef.current.Uri.parse,
+      getFileExtension(filename) || 'tsx',
+    );
+    return editor.getModel(uri);
+  };
+
   return (
     <EditorContext.Provider
       value={{
@@ -713,6 +726,7 @@ const EditorContextProvider = ({
         setModelIsDirty,
         isEditorDirty,
         modelHasErrors,
+        getModelByFilename,
         setModelHasErrors,
         editorHasErrors,
         getErrorFiles,
