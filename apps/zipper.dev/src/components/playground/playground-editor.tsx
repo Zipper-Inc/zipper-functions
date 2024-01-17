@@ -602,7 +602,6 @@ export default function PlaygroundEditor(
     [yRefs.current.yDoc, currentScript],
   );
 
-  console.log('plYGROUND EDITOR RERENDER');
   return (
     <>
       <Editor
