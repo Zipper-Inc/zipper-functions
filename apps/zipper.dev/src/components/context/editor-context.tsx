@@ -8,10 +8,10 @@ import {
   useState,
   useRef,
   MutableRefObject,
-  useCallback,
-  useMemo,
 } from 'react';
 import noop from '~/utils/noop';
+
+import { useSelf } from '~/liveblocks.config';
 
 import { trpc } from '~/utils/trpc';
 import { useRouter } from 'next/router';
@@ -35,7 +35,6 @@ import {
 } from '~/utils/playground.utils';
 import { runZipperLinter } from '~/utils/zipper-editor-linter';
 import { rewriteSpecifier } from '~/utils/rewrite-imports';
-import isEqual from 'lodash.isequal';
 
 type OnValidate = AddParameters<
   Required<EditorProps>['onValidate'],
@@ -49,6 +48,7 @@ export type EditorContextType = {
   setCurrentScript: (script: Script) => void;
   onChange: EditorProps['onChange'];
   onValidate: OnValidate;
+  connectionId?: number;
   scripts: Script[];
   editor?: typeof monaco.editor;
   setEditor: (editor: typeof monaco.editor) => void;
@@ -64,6 +64,7 @@ export type EditorContextType = {
   save: () => Promise<string>;
   refetchApp: () => Promise<any>;
   inputParams?: InputParam[];
+  setInputParams: (inputParams?: InputParam[]) => void;
   inputError?: string;
   monacoRef?: MutableRefObject<Monaco | undefined>;
   logs: Zipper.Log.Message[];
@@ -98,6 +99,7 @@ export const EditorContext = createContext<EditorContextType>({
   setCurrentScript: noop,
   onChange: noop,
   onValidate: noop,
+  connectionId: undefined,
   scripts: [],
   editor: undefined,
   setEditor: noop,
@@ -117,6 +119,7 @@ export const EditorContext = createContext<EditorContextType>({
     return;
   },
   inputParams: undefined,
+  setInputParams: noop,
   inputError: undefined,
   monacoRef: undefined,
   logs: [],
@@ -321,7 +324,7 @@ async function runEditorActionsNow({
   shouldFetchImports,
 }: {
   value: string;
-  setInputParams: any;
+  setInputParams: EditorContextType['setInputParams'];
   setInputError: (error: string | undefined) => void;
   monacoRef: MutableRefObject<typeof monaco | undefined>;
   currentScript: Script;
@@ -354,11 +357,7 @@ async function runEditorActionsNow({
       throwErrors: true,
     });
 
-    setInputParams((prevInputParams: InputParam[] | undefined) => {
-      if (!isEqual(inputs, prevInputParams)) return prevInputParams;
-      return inputs;
-    });
-
+    setInputParams(inputs);
     setInputError(undefined);
 
     linter({
@@ -502,6 +501,8 @@ const EditorContextProvider = ({
       refetchApp();
     },
   });
+
+  const self = useSelf();
 
   // LOGS
   const [preserveLogs, setPreserveLogs] = useState(true);
@@ -658,101 +659,44 @@ const EditorContextProvider = ({
     }
   };
 
-  const isModelDirty = useCallback(
-    (path: string) => {
-      return modelsDirtyState[path] || false;
-    },
-    [modelsDirtyState],
-  );
+  const isModelDirty = (path: string) => {
+    return modelsDirtyState[path] || false;
+  };
 
-  const setModelIsDirty = useCallback(
-    (path: string, isDirty: boolean) => {
-      if (path.startsWith('types/')) return;
+  const setModelIsDirty = (path: string, isDirty: boolean) => {
+    if (path === 'types/zipper.d') return;
+    setModelsDirtyState((previousModelsDirtyState) => {
+      const newModelState = { ...previousModelsDirtyState };
+      newModelState[path] = isDirty;
+      return newModelState;
+    });
+  };
 
-      setModelsDirtyState((previousModelsDirtyState) => {
-        if (previousModelsDirtyState[path] === isDirty)
-          return previousModelsDirtyState;
+  const isEditorDirty = () => {
+    return !!Object.values(modelsDirtyState).find((state) => state);
+  };
 
-        const newModelState = { ...previousModelsDirtyState };
-        newModelState[path] = isDirty;
-        return newModelState;
-      });
-    },
-    [setModelsDirtyState],
-  );
+  const modelHasErrors = (path: string) => {
+    return modelsErrorState[path] || false;
+  };
 
-  /** @todo convert this to a memoized boolean isntead of a function */
-  const isEditorDirty = useMemo(
-    () => () => !!Object.values(modelsDirtyState).find((state) => state),
-    [modelsDirtyState],
-  );
+  const setModelHasErrors = (path: string, hasErrors: boolean) => {
+    if (path === 'types/zipper.d' || path === 'types/deno.d') return;
+    setModelsErrorState((previousModelErrorState) => {
+      const newModelState = { ...previousModelErrorState };
+      newModelState[path] = hasErrors;
+      return newModelState;
+    });
+  };
 
-  const modelHasErrors = useCallback(
-    (path: string) => modelsErrorState[path] || false,
-    [modelsErrorState],
-  );
+  const editorHasErrors = () => {
+    return !!Object.values(modelsErrorState).find((state) => state);
+  };
 
-  const setModelHasErrors = useCallback(
-    (path: string, hasErrors: boolean) => {
-      if (path.startsWith('types/')) return;
-
-      setModelsErrorState((previousModelErrorState) => {
-        // no updates if this is the same
-        if (previousModelErrorState[path] === hasErrors)
-          return previousModelErrorState;
-
-        const newModelState = { ...previousModelErrorState };
-        newModelState[path] = hasErrors;
-        return newModelState;
-      });
-    },
-    [setModelsErrorState],
-  );
-
-  const editorHasErrors = useMemo(
-    () => () => !!Object.values(modelsErrorState).find((state) => state),
-    [modelsErrorState],
-  );
-
-  const getErrorFiles = useMemo(
-    () => () =>
-      Object.entries(modelsErrorState)
-        .filter(([, value]) => value)
-        .map(([filename]) => filename),
-    [modelsErrorState],
-  );
-
-  const runEditorActions: EditorContextType['runEditorActions'] = useCallback(
-    async (
-      { now = false, currentScript, value, shouldFetchImports },
-      defaults = {
-        value: '',
-        currentScript: {} as any,
-        setInputParams,
-        setInputError,
-        monacoRef,
-        externalImportModelsRef,
-        invalidImportUrlsRef,
-        setModelIsDirty,
-        readOnly,
-        shouldFetchImports,
-      },
-    ) =>
-      (now ? runEditorActionsNow : runEditorActionsDebounced)({
-        ...defaults,
-        currentScript,
-        value,
-      }),
-    [
-      currentScript,
-      monacoRef.current,
-      inputParams,
-      externalImportModelsRef.current,
-      invalidImportUrlsRef.current,
-      setModelIsDirty,
-      readOnly,
-    ],
-  );
+  const getErrorFiles = () =>
+    Object.entries(modelsErrorState)
+      .filter(([, value]) => value)
+      .map(([filename]) => filename);
 
   return (
     <EditorContext.Provider
@@ -761,6 +705,7 @@ const EditorContextProvider = ({
         setCurrentScript,
         onChange,
         onValidate,
+        connectionId: self?.connectionId,
         scripts,
         editor,
         setEditor,
@@ -776,6 +721,7 @@ const EditorContextProvider = ({
         save: saveOpenModels,
         refetchApp,
         inputParams,
+        setInputParams,
         inputError,
         monacoRef,
         logs,
@@ -787,7 +733,26 @@ const EditorContextProvider = ({
         lastReadLogsTimestamp,
         resourceOwnerSlug: resourceOwnerSlug as string,
         appSlug: appSlug as string,
-        runEditorActions,
+        runEditorActions: async (
+          { now = false, currentScript, value, shouldFetchImports },
+          defaults = {
+            value: '',
+            currentScript: {} as any,
+            setInputParams,
+            setInputError,
+            monacoRef,
+            externalImportModelsRef,
+            invalidImportUrlsRef,
+            setModelIsDirty,
+            readOnly,
+            shouldFetchImports,
+          },
+        ) =>
+          (now ? runEditorActionsNow : runEditorActionsDebounced)({
+            ...defaults,
+            currentScript,
+            value,
+          }),
         readOnly,
       }}
     >
