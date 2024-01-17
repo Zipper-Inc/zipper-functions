@@ -33,6 +33,7 @@ import { VscCode } from 'react-icons/vsc';
 import { useRouter } from 'next/router';
 import { useUser } from '~/hooks/use-user';
 import { ResourceOwnerType } from '@zipper/types';
+import { getZipperDotDevUrl } from '@zipper/utils';
 
 type Props = {
   isOpen: boolean;
@@ -43,10 +44,12 @@ type Props = {
 const ShareTab: React.FC<Props> = ({ isOpen, onClose, appId }) => {
   const { user } = useUser();
   const router = useRouter();
+
   const appQuery = trpc.app.byResourceOwnerAndAppSlugs.useQuery({
     resourceOwnerSlug: router.query['resource-owner'] as string,
     appSlug: router.query['app-slug'] as string,
   });
+
   const resourceOwnerNameQuery = trpc.resourceOwnerSlug.getName.useQuery(
     { slug: router.query['resource-owner'] as string },
     {
@@ -55,6 +58,7 @@ const ShareTab: React.FC<Props> = ({ isOpen, onClose, appId }) => {
         ResourceOwnerType.Organization,
     },
   );
+
   const editorQuery = trpc.appEditor.all.useQuery(
     { appId, includeUsers: true },
     { enabled: !!user },
@@ -62,7 +66,9 @@ const ShareTab: React.FC<Props> = ({ isOpen, onClose, appId }) => {
 
   const invitationForm = useForm();
 
-  const playgroundUrl = `${window.location.origin}/${router.query['resource-owner']}/${router.query['app-slug']}`;
+  const playgroundUrl = `${getZipperDotDevUrl()}/${
+    router.query['resource-owner']
+  }/${router.query['app-slug']}`;
   const appletUrl = `https://${router.query['app-slug']}.zipper.run`;
   const { onCopy, hasCopied } = useClipboard(playgroundUrl);
   const { onCopy: onCopyApplet, hasCopied: hasCopiedApplet } =
