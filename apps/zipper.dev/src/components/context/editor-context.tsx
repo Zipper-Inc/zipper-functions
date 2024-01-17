@@ -355,7 +355,10 @@ async function runEditorActionsNow({
     });
 
     setInputParams((prevInputParams: InputParam[] | undefined) => {
-      if (!isEqual(inputs, prevInputParams)) return prevInputParams;
+      const prevLength = prevInputParams?.length || 0;
+      const newLength = inputs?.length || 0;
+      if (prevLength === newLength && isEqual(inputs, prevInputParams))
+        return prevInputParams;
       return inputs;
     });
 
