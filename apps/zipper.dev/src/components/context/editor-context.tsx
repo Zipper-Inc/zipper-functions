@@ -684,7 +684,7 @@ const EditorContextProvider = ({
   };
 
   const setModelHasErrors = (path: string, hasErrors: boolean) => {
-    if (path === 'types/zipper.d') return;
+    if (path === 'types/zipper.d' || path === 'types/deno.d') return;
     setModelsErrorState((previousModelErrorState) => {
       const newModelState = { ...previousModelErrorState };
       newModelState[path] = hasErrors;

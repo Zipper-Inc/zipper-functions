@@ -231,13 +231,7 @@ const HistoryTab: React.FC<HistoryTabProps> = ({ appId }) => {
           return (
             <>
               {success ? (
-                <Button
-                  size="xs"
-                  variant="outline"
-                  as={Link}
-                  Link
-                  href={getValue()}
-                >
+                <Button size="xs" variant="outline" as={Link} href={getValue()}>
                   <HStack p="2">
                     <Icon as={HiCheck} fill="green.600" />
                     <Text>View</Text>
