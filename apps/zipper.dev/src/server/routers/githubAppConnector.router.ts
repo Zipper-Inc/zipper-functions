@@ -15,6 +15,8 @@ import {
 import { createTRPCRouter, publicProcedure } from '../root';
 import { Project, SyntaxKind } from 'ts-morph';
 
+const GH_APP_SCRIPT_NAME = 'github-app-connector';
+const GH_APP_SETTING_NAME = 'github-app-connector-app-setting';
 export const githubAppConnectorRouter = createTRPCRouter({
   get: publicProcedure
     .input(
@@ -27,7 +29,7 @@ export const githubAppConnectorRouter = createTRPCRouter({
       const script = await prisma.script.findFirst({
         where: {
           appId: input.appId,
-          name: 'github-app-connector',
+          name: GH_APP_SCRIPT_NAME,
         },
       });
       if (!script) {
@@ -42,6 +44,13 @@ export const githubAppConnectorRouter = createTRPCRouter({
         'githubAppConnectorConfig',
       );
       const extractedObject = variableDeclaration
+        /**
+         * Extracts and transforms properties from an object literal in a variable declaration.
+         * It iterates over the properties of the object, focusing on PropertyAssignments.
+         * For string and numeric literals, it directly captures their values.
+         * For array literals, it converts each element to a string, removing quotes.
+         * The result is a new object with these transformed properties.
+         */
         ?.getInitializerIfKindOrThrow(SyntaxKind.ObjectLiteralExpression)
         .getProperties()
         .reduce((acc, p) => {
@@ -66,7 +75,7 @@ export const githubAppConnectorRouter = createTRPCRouter({
       const metadata = await prisma.appSetting.findFirst({
         where: {
           appId: input.appId,
-          settingName: 'github-app-connector-app-setting',
+          settingName: GH_APP_SETTING_NAME,
         },
       });
       return {
@@ -105,7 +114,7 @@ export const githubAppConnectorRouter = createTRPCRouter({
       await prisma.appSetting.deleteMany({
         where: {
           appId,
-          settingName: 'github-app-connector-app-setting',
+          settingName: GH_APP_SETTING_NAME,
         },
       });
 
@@ -278,13 +287,13 @@ export const githubAppConnectorRouter = createTRPCRouter({
       await prisma.appSetting.create({
         data: {
           appId: appId!,
-          settingName: 'github-app-connector-app-setting',
+          settingName: GH_APP_SETTING_NAME,
           settingValue: JSON.stringify(json),
         },
       });
 
       return {
-        app: { ...app, resourceOwner: resourceOwner },
+        app: { ...app, resourceOwner },
         redirectTo,
       };
     }),
