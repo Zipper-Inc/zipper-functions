@@ -52,6 +52,7 @@ const isPrimitive = (type: Type) =>
 function parsePrimitiveType(type: Type, node: TypeNode): ParsedNode {
   if (!isPrimitive(type)) return parseTypeNode(node, node.getSourceFile());
 
+  // Zipper types
   if (type.getText().toLowerCase() === 'zipper.fileurl')
     return { type: InputType.file };
   if (type.getText().toLowerCase() === 'date') return { type: InputType.date };
@@ -85,9 +86,6 @@ function parsePrimitiveType(type: Type, node: TypeNode): ParsedNode {
       },
     };
 
-  // return { type: InputType.unknown };
-
-  // ❓ Is this right?
   // Array<string>, { name: string, age: number }[]
   if (type.isArray() || type.isReadonlyArray()) {
     const insideArray = type.getArrayElementType();
@@ -103,6 +101,7 @@ function parsePrimitiveType(type: Type, node: TypeNode): ParsedNode {
         },
       };
     }
+
     return {
       type: InputType.array,
       details: {
@@ -126,7 +125,6 @@ function parseTypeNode(typeNode: TypeNode, src: SourceFile): ParsedNode {
   const type = typeNode.getType();
   if (isPrimitive(type)) return parsePrimitiveType(type, typeNode);
 
-  // Need to deal w/ parenthesized type
   if (typeNode.isKind(SyntaxKind.ParenthesizedType)) {
     // map the types inside using parseTypeNode
     return (
