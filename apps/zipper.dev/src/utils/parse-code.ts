@@ -149,13 +149,14 @@ function parseTypeNode(typeNode: TypeNode, src: SourceFile): ParsedNode {
 
     const properties = typeLiteralProperties.map((prop) => {
       const propTypeNode = prop.getTypeNode();
+      const details: ParsedNode = propTypeNode
+        ? parseTypeNode(propTypeNode, src)
+        : {
+            type: InputType.unknown,
+          };
       return {
         key: prop.getName(),
-        details: propTypeNode
-          ? parseTypeNode(propTypeNode, src)
-          : ({
-              type: InputType.unknown,
-            } satisfies ParsedNode),
+        details,
       };
     });
     return {
