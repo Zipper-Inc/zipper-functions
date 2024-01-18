@@ -96,7 +96,7 @@ export const useHelpBorder = () => {
       border:
         helpModeEnabled && hoveredElement === componentName
           ? '4px solid #E5BEEB'
-          : 'none',
+          : '4px solid transparent',
       boxSizing: 'border-box', // to prevent resizing of the elements when border is applied
     }),
     onMouseEnter: (componentName: string) => () => {
