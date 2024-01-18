@@ -113,9 +113,6 @@ function parsePrimitiveType(type: Type, node: TypeNode): ParsedNode {
     };
   }
 
-  if (type.isObject()) {
-  }
-
   return { type: InputType.unknown };
 }
 
@@ -126,7 +123,6 @@ function parseTypeNode(typeNode: TypeNode, src: SourceFile): ParsedNode {
   if (isPrimitive(type)) return parsePrimitiveType(type, typeNode);
 
   if (typeNode.isKind(SyntaxKind.ParenthesizedType)) {
-    // map the types inside using parseTypeNode
     return (
       typeNode.forEachChild((n) => parseTypeNode(n as TypeNode, src)) || {
         type: InputType.unknown,

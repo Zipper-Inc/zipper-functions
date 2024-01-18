@@ -29,14 +29,13 @@ import {
   UseFormReturn,
   RegisterOptions,
   Controller,
-  useFieldArray,
 } from 'react-hook-form';
 import { InputType, InputParam, ParsedNode, LiteralNode } from '@zipper/types';
 import { getFieldName } from '@zipper/utils';
 import { ErrorBoundary } from './error-boundary';
 import { AutoResizeTextarea } from './auto-resize-text-area';
 import React from 'react';
-import { Option, TailwindMultiSelect } from './ui/multi-select';
+import { TailwindMultiSelect } from './ui/multi-select';
 
 interface Props {
   params: InputParam[] | undefined;
@@ -201,8 +200,8 @@ function FunctionParamInput({
     }
 
     case InputType.array: {
-      console.log(watch(name));
       const [error, setError] = useState<string | undefined>();
+
       if (node.details?.isUnion && node.details.values.every(isLiteralNode)) {
         const options = node.details.values.flatMap((node) => {
           if (node.type === InputType.boolean) return [];
@@ -211,16 +210,17 @@ function FunctionParamInput({
           return [{ label: literal, value: literal, extra: node.type }];
         });
 
-        // TODO: All literals are being treated as strings.
         return (
           <Controller
             control={control}
             name={name}
             render={({ field }) => (
+              // TODO: UI Issue when selecting
+              // reproduce: ("bookmark:view" | "bookmark:delete" | 2)[]
+              // --> you wont be able to select the number 2
               <TailwindMultiSelect
-                className="bg-white dark:bg-gray-950"
                 options={options}
-                value={field.value}
+                placeholder={placeholder}
                 onChange={(values) => {
                   const valuesWithFixedTypes = values.map(
                     ({ value, extra: type }) => {
@@ -237,8 +237,9 @@ function FunctionParamInput({
                   );
                   formContext.setValue(name, valuesWithFixedTypes);
                 }}
-                placeholder={placeholder}
-                emptyIndicator={<Text>No results</Text>}
+                selected={options.filter(({ value }) =>
+                  field.value.includes(value),
+                )}
               />
             )}
           />
