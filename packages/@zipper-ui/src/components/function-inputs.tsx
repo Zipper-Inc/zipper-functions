@@ -309,49 +309,41 @@ function FunctionParamInput({
       );
     }
     case InputType.union: {
-      const hasTemplateLiteral = false; // TODO
       const allLiteralOrBoolean = node.details.values.every(
         (x) => x.type === InputType.boolean || isLiteralNode(x),
       );
 
-      if (allLiteralOrBoolean && !hasTemplateLiteral) {
-        return (
-          <Select
-            backgroundColor="bgColor"
-            isDisabled={isDisabled}
-            {...register(name, {
-              ...formFieldOptions,
-              setValueAs: (value: string) => {
-                // TODO: I could use the <option value={index} />,
-                // then I could search using the index
-                // but I would need to deal with the bug in defaultValue
-                const fixedTypeValue = node.details.values.find(
-                  (x) =>
-                    'details' in x &&
-                    x.details &&
-                    'literal' in x.details &&
-                    String(x.details.literal) === value,
-                );
-                if (!fixedTypeValue || !isLiteralNode(fixedTypeValue)) return;
-                return fixedTypeValue.details?.literal;
-              },
-            })}
-          >
-            {node.details.values.map((value) => {
-              if (!isLiteralNode(value)) return null; // type guard
-              const literal = String(value.details?.literal);
-              return (
-                <option key={literal} value={literal}>
-                  {literal}
-                </option>
+      return allLiteralOrBoolean ? (
+        <Select
+          backgroundColor="bgColor"
+          isDisabled={isDisabled}
+          {...register(name, {
+            ...formFieldOptions,
+            setValueAs: (value: string) => {
+              const fixedTypeValue = node.details.values.find(
+                (x) =>
+                  'details' in x &&
+                  x.details &&
+                  'literal' in x.details &&
+                  String(x.details.literal) === value,
               );
-            })}
-          </Select>
-        );
-      }
-
-      // Same as any
-      return (
+              if (!fixedTypeValue || !isLiteralNode(fixedTypeValue)) return;
+              return fixedTypeValue.details?.literal;
+            },
+          })}
+        >
+          {node.details.values.map((value) => {
+            if (!isLiteralNode(value)) return null; // type guard
+            const literal = String(value.details?.literal);
+            return (
+              <option key={literal} value={literal}>
+                {literal}
+              </option>
+            );
+          })}
+        </Select>
+      ) : (
+        // Fallback unions of non-literal types to textarea unknown input
         <VStack align="start" w="full">
           <Textarea
             backgroundColor="bgColor"
