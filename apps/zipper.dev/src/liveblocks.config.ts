@@ -1,9 +1,9 @@
-import { createClient, LiveObject } from '@liveblocks/client';
+import { createClient, LiveObject, Room } from '@liveblocks/client';
 import { createRoomContext } from '@liveblocks/react';
 import { type Selection as MonacoSelection } from 'monaco-editor';
 import type LiveblocksProvider from '@liveblocks/yjs';
 
-const client = createClient({
+export const client = createClient({
   authEndpoint: '/api/liveblocks/auth',
 });
 
@@ -43,6 +43,8 @@ export type TypedLiveblocksProvider = LiveblocksProvider<
   UserMeta,
   RoomEvent
 >;
+
+export type LiveblocksRoom = Room<Presence, Storage, UserMeta, RoomEvent>;
 
 export const {
   useStorage,
