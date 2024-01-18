@@ -214,6 +214,7 @@ function FunctionParamInput({
             control={control}
             name={name}
             rules={{ required: !optional }}
+            defaultValue="[]"
             render={({ field }) => (
               <TailwindMultiSelect
                 options={options}
@@ -309,6 +310,7 @@ function FunctionParamInput({
         <Select
           backgroundColor="bgColor"
           isDisabled={isDisabled}
+          defaultValue=""
           {...register(name, {
             ...formFieldOptions,
             setValueAs: (value: string) => {
@@ -324,6 +326,9 @@ function FunctionParamInput({
             },
           })}
         >
+          <option value="" disabled selected>
+            {placeholder}
+          </option>
           {node.details.values.map((value) => {
             if (!isLiteralNode(value)) return null; // type guard
             const literal = String(value.details?.literal);
@@ -392,7 +397,7 @@ function FunctionParamInput({
             minHeight={14}
             {...register(name, formFieldOptions)}
             isDisabled={isDisabled}
-            placeholder=""
+            placeholder={placeholder}
             onChange={(e) => {
               formContext.setValue(name, e.target.value);
             }}
