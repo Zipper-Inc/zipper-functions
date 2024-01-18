@@ -15,8 +15,10 @@ import { Badge } from './badge';
 import { Check, X } from 'lucide-react';
 import { CaretSortIcon } from '@radix-ui/react-icons';
 import { flushSync } from 'react-dom';
+import { uuid } from '@zipper/utils';
 
 export type Option = {
+  id: string;
   value: string;
   label: string;
   extra?: any;
@@ -27,18 +29,35 @@ type MultiSelectProps = {
   selected: Option[];
   onChange: (selected: Option[]) => void;
   placeholder?: string;
+  inputPlaceholder?: string;
   className?: string;
+  allowAddSameItem?: boolean;
 };
+
+const includeOption = (arr: Option[], item: Option) =>
+  arr.some((i) => i.id === item.id);
+
+const findOption = (arr: Option[], item: Option) =>
+  arr.find((i) => i.id === item.id);
 
 const MultiSelect = forwardRef<HTMLButtonElement, MultiSelectProps>(
   (
-    { options, selected, onChange, placeholder, className, ...props },
+    {
+      options,
+      selected,
+      onChange,
+      placeholder,
+      inputPlaceholder,
+      allowAddSameItem,
+      className,
+      ...props
+    },
     forwardedRef,
   ) => {
     const [open, setOpen] = useState(false);
 
     const handleUnselect = (item: Option) => {
-      onChange(selected.filter((i) => i.value !== item.value));
+      onChange(selected.filter((i) => i.id !== item.id));
     };
 
     return (
@@ -58,16 +77,9 @@ const MultiSelect = forwardRef<HTMLButtonElement, MultiSelectProps>(
             <div className="flex gap-1 flex-wrap">
               {selected.length > 0
                 ? selected.map((item) => (
-                    <Badge
-                      key={item.label + item.value}
-                      onClick={() => handleUnselect(item)}
-                    >
-                      {
-                        options.find((option) => item.value === option.value)
-                          ?.value
-                      }
-                      <button
-                        type="button"
+                    <Badge key={item.id} onClick={() => handleUnselect(item)}>
+                      {findOption(selected, item)?.value}
+                      <a
                         className="ml-1 ring-offset-background rounded-full outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                         onKeyDown={(e) => {
                           if (e.key === 'Enter') {
@@ -84,8 +96,8 @@ const MultiSelect = forwardRef<HTMLButtonElement, MultiSelectProps>(
                           handleUnselect(item);
                         }}
                       >
-                        <X className="h-3 w-3 text-muted-foreground hover:text-foreground" />
-                      </button>
+                        <X className="h-3 w-3 text-white-100 hover:text-white transition-colors" />
+                      </a>
                     </Badge>
                   ))
                 : placeholder}
@@ -113,25 +125,35 @@ const MultiSelect = forwardRef<HTMLButtonElement, MultiSelectProps>(
         </PopoverTrigger>
         <PopoverContent className="min-w-[var(--radix-popover-trigger-width)] p-0">
           <Command className={className}>
-            <CommandInput placeholder="Search ..." />
+            <CommandInput placeholder={inputPlaceholder || 'Search ...'} />
             <CommandEmpty>No item found.</CommandEmpty>
             <CommandGroup className="max-h-64 overflow-auto">
               {options.map((option) => (
                 <CommandItem
                   key={option.label}
                   onSelect={() => {
-                    onChange(
-                      selected.includes(option)
-                        ? selected.filter((item) => item.label !== option.label)
-                        : [...selected, option],
-                    );
-                    setOpen(true);
+                    flushSync(() => {
+                      if (allowAddSameItem) {
+                        onChange([...selected, { ...option, id: uuid() }]);
+                      } else {
+                        onChange(
+                          includeOption(selected, option)
+                            ? selected.filter(
+                                (item) => item.value !== option.value,
+                              )
+                            : [...selected, { ...option, id: uuid() }],
+                        );
+                      }
+                      setOpen(true);
+                    });
                   }}
                 >
                   <Check
                     className={cn(
                       'mr-2 h-4 w-4',
-                      selected.includes(option) ? 'opacity-100' : 'opacity-0',
+                      includeOption(selected, option)
+                        ? 'opacity-100'
+                        : 'opacity-0',
                     )}
                   />
                   {option.value}

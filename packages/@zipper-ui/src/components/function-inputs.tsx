@@ -31,11 +31,11 @@ import {
   Controller,
 } from 'react-hook-form';
 import { InputType, InputParam, ParsedNode, LiteralNode } from '@zipper/types';
-import { getFieldName } from '@zipper/utils';
+import { getFieldName, uuid } from '@zipper/utils';
 import { ErrorBoundary } from './error-boundary';
 import { AutoResizeTextarea } from './auto-resize-text-area';
 import React from 'react';
-import { TailwindMultiSelect } from './ui/multi-select';
+import { Option, TailwindMultiSelect } from './ui/multi-select';
 
 interface Props {
   params: InputParam[] | undefined;
@@ -116,10 +116,7 @@ function FunctionParamInput({
         <Switch
           colorScheme="purple"
           {...register(name, formFieldOptions)}
-          onChange={(e) => {
-            console.log(e.target.checked);
-            formContext.setValue(name, e.target.checked);
-          }}
+          onChange={(e) => formContext.setValue(name, e.target.checked)}
           isDisabled={isDisabled}
         />
       );
@@ -201,45 +198,40 @@ function FunctionParamInput({
 
     case InputType.array: {
       const [error, setError] = useState<string | undefined>();
+      const [selected, setSelected] = useState<Option[]>([]);
 
       if (node.details?.isUnion && node.details.values.every(isLiteralNode)) {
         const options = node.details.values.flatMap((node) => {
-          if (node.type === InputType.boolean) return [];
           if (node?.details?.literal === undefined) return [];
           const literal = String(node.details.literal);
-          return [{ label: literal, value: literal, extra: node.type }];
+          return [
+            { id: uuid(), label: literal, value: literal, extra: node.type },
+          ];
         });
 
         return (
           <Controller
             control={control}
             name={name}
+            rules={{ required: !optional }}
             render={({ field }) => (
-              // TODO: UI Issue when selecting
-              // reproduce: ("bookmark:view" | "bookmark:delete" | 2)[]
-              // --> you wont be able to select the number 2
               <TailwindMultiSelect
                 options={options}
                 placeholder={placeholder}
+                allowAddSameItem
+                {...field}
                 onChange={(values) => {
                   const valuesWithFixedTypes = values.map(
                     ({ value, extra: type }) => {
-                      if (type === InputType.number) {
-                        return Number(value);
-                      }
-                      if (type === InputType.boolean) {
-                        return value === 'true';
-                      }
-                      if (type === InputType.string) {
-                        return value;
-                      }
+                      if (type === InputType.number) return Number(value);
+                      if (type === InputType.boolean) return value === 'true';
+                      if (type === InputType.string) return value;
                     },
                   );
+                  setSelected(values);
                   formContext.setValue(name, valuesWithFixedTypes);
                 }}
-                selected={options.filter(({ value }) =>
-                  field.value.includes(value),
-                )}
+                selected={selected}
               />
             )}
           />
@@ -258,7 +250,7 @@ function FunctionParamInput({
             isDisabled={isDisabled}
             placeholder={placeholder}
             onChange={(e) => {
-              // TODO: validate obj with zod array schema got from `parseCode`
+              // TODO: validate obj using the type details
               try {
                 JSON.parse(e.target.value);
                 formContext.setValue(name, e.target.value);
@@ -290,7 +282,7 @@ function FunctionParamInput({
             isDisabled={isDisabled}
             placeholder={placeholder}
             onChange={(e) => {
-              // TODO: validate obj with zod object schema got from `parseCode`
+              // TODO: validate obj using the type details
               try {
                 JSON.parse(e.target.value);
                 formContext.setValue(name, e.target.value);
