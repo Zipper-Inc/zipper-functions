@@ -72,7 +72,6 @@ export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
   const [isMarkdownEditable, setIsMarkdownEditable] = useState(false);
   const toast = useToast();
 
-  const { hoveredElement } = useHelpMode();
   const { style, onMouseEnter, onMouseLeave } = useHelpBorder();
   const { user } = useUser();
 
@@ -223,11 +222,7 @@ export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
           spacing={0}
           onMouseEnter={onMouseEnter('PlaygroundCode')}
           onMouseLeave={onMouseLeave}
-          border={
-            hoveredElement === 'PlaygroundCode'
-              ? style('PlaygroundCode').border
-              : 'none'
-          }
+          border={style('PlaygroundCode').border}
         >
           {isMarkdown && !isMarkdownEditable && (
             <VStack
