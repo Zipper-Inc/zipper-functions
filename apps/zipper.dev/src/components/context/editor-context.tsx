@@ -333,8 +333,8 @@ async function runEditorActionsNow({
   setModelIsDirty: (path: string, isDirty: boolean) => void;
   readOnly: boolean;
   shouldFetchImports: boolean;
-}) {
-  if (!monacoRef.current || !isTypescript(currentScript)) return;
+}): Promise<void> {
+  if (!monacoRef.current || !isTypescript(currentScript) || !value) return;
 
   const currentModel = monacoRef.current.editor.getEditors()[0]?.getModel();
 
