@@ -320,10 +320,6 @@ export function getSourceFileFromCode(code = '', filename = 'main.ts') {
               moduleResolutionHost,
             );
             if (result.resolvedModule)
-              // TODO -- check if Monaco remote Uri files are included here
-              // if not, this may be the reason of why we cant solve input for imported files
-              // oh but this will cause perf issue -- we need to do a depedenency graph first
-              // -- but first lets try to trust in ts-morph
               resolvedModules.push(result.resolvedModule);
           }
 
