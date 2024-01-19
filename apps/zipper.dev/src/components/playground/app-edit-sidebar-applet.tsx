@@ -250,6 +250,7 @@ function MaybeRunButton(props: MaybeRunButtonP) {
     editorHasErrors,
     getErrorFiles,
     inputParams,
+    inputParamsIsLoading,
   } = useEditorContext();
   const isHandler = inputParams || inputError;
 
@@ -266,14 +267,7 @@ function MaybeRunButton(props: MaybeRunButtonP) {
       </>
     ));
 
-  React.useEffect(() => {
-    (async () => {
-      await run({
-        shouldSave: appInfo.canUserEdit,
-      });
-    })();
-  }, []);
-
+  if (inputParamsIsLoading) return null;
   if (!isHandler) return null;
 
   return (
