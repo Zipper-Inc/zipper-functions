@@ -334,6 +334,7 @@ function SingleInput({
   const close = () => {
     lastValue.current = formContext.getValues()[formName];
     formContext.setValue(formName, undefined);
+    formContext.unregister(formName);
     onClose();
   };
 
