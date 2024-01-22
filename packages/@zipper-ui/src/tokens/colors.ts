@@ -102,7 +102,6 @@ export const secondary = {
 
 export const neutral = {
   white: {
-    '50': 'hsl(0, 0%, 100%)',
     '100': 'hsl(0, 0%, 94%)',
     '200': 'hsl(0, 0%, 86%)',
     '300': 'hsl(0, 0%, 74%)',
@@ -113,6 +112,7 @@ export const neutral = {
     '800': 'hsl(0, 0%, 27%)',
     '900': 'hsl(0, 0%, 24%)',
     '950': 'hsl(0, 0%, 16%)',
+    DEFAULT: 'hsl(0, 0%, 100%)',
   },
   gray: {
     '50': 'hsl(220, 20%, 97%)',

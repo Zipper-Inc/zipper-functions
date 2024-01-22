@@ -14,6 +14,7 @@ import {
   TypeNode,
   CallExpression,
   FunctionExpression,
+  Type,
 } from 'ts-morph';
 
 type ParseCodeParameters = {
@@ -33,27 +34,169 @@ function removeTsExtension(moduleName: string) {
   return moduleName;
 }
 
+const isPrimitive = (type: Type) =>
+  type.getText().toLowerCase() === 'zipper.fileurl' ||
+  type.getText().toLowerCase() === 'date' ||
+  type.isBoolean() ||
+  type.isBooleanLiteral() ||
+  type.isNumber() ||
+  type.isNumberLiteral() ||
+  type.isString() ||
+  type.isStringLiteral() ||
+  type.isUnknown() ||
+  type.isAny() ||
+  type.isObject() ||
+  type.isReadonlyArray() ||
+  type.isUnion();
+
+function parsePrimitiveType(type: Type, node: TypeNode): ParsedNode {
+  if (!isPrimitive(type)) return parseTypeNode(node, node.getSourceFile());
+
+  // Zipper types
+  if (type.getText().toLowerCase() === 'zipper.fileurl')
+    return { type: InputType.file };
+  if (type.getText().toLowerCase() === 'date') return { type: InputType.date };
+
+  // Typescript default types
+  if (type.isBoolean()) return { type: InputType.boolean };
+  if (type.isBooleanLiteral())
+    return {
+      type: InputType.boolean,
+      details: { literal: type.getText() === 'true' ? true : false },
+    };
+  if (type.isNumber()) return { type: InputType.number };
+  if (type.isNumberLiteral())
+    return {
+      type: InputType.number,
+      details: { literal: Number(type.getLiteralValue()) },
+    };
+  if (type.isString()) return { type: InputType.string };
+  if (type.isStringLiteral())
+    return {
+      type: InputType.string,
+      details: { literal: String(type.getLiteralValue()) },
+    };
+  if (type.isUnknown()) return { type: InputType.unknown };
+  if (type.isAny()) return { type: InputType.any };
+  if (type.isUnion())
+    return {
+      type: InputType.union,
+      details: {
+        values: type.getUnionTypes().map((t) => parsePrimitiveType(t, node)),
+      },
+    };
+
+  // Array<string>, { name: string, age: number }[]
+  if (type.isArray() || type.isReadonlyArray()) {
+    const insideArray = type.getArrayElementType();
+    if (insideArray?.isUnion()) {
+      const unionValues = insideArray
+        .getUnionTypes()
+        .map((t) => parsePrimitiveType(t, node));
+      return {
+        type: InputType.array,
+        details: {
+          isUnion: true,
+          values: unionValues,
+        },
+      };
+    }
+
+    return {
+      type: InputType.array,
+      details: {
+        isUnion: false,
+        values: insideArray
+          ? parsePrimitiveType(insideArray, node)
+          : { type: InputType.unknown },
+      },
+    };
+  }
+
+  return { type: InputType.unknown };
+}
+
 // Determine the Zipper type from the Typescript type
-function parseTypeNode(type: TypeNode, src: SourceFile): ParsedNode {
-  const text = type.getText();
-  if (text.toLowerCase() === 'boolean') return { type: InputType.boolean };
-  if (text.toLowerCase() === 'number') return { type: InputType.number };
-  if (text.toLowerCase() === 'string') return { type: InputType.string };
-  if (text.toLowerCase() === 'date') return { type: InputType.date };
-  if (text.toLowerCase() === 'unknown') return { type: InputType.unknown };
-  if (text.toLowerCase() === 'any') return { type: InputType.any };
-  if (text.toLowerCase() === 'zipper.fileurl') return { type: InputType.file };
-  if (text.toLocaleLowerCase().match(/"\w+"(\s*\|\s*"\w+")*/g))
-    return { type: InputType.string };
-  if (text.toLocaleLowerCase().match(/\d+(\s*\|\s*\d+)*/g))
-    return { type: InputType.number };
+function parseTypeNode(typeNode: TypeNode, src: SourceFile): ParsedNode {
+  // Lets add priority for Zipper defined types, since they can overlap with other types
+  const type = typeNode.getType();
+  if (isPrimitive(type)) return parsePrimitiveType(type, typeNode);
 
-  if (type.isKind(SyntaxKind.ArrayType) || text.startsWith('Array'))
-    return { type: InputType.array };
+  if (typeNode.isKind(SyntaxKind.ParenthesizedType)) {
+    return (
+      typeNode.forEachChild((n) => parseTypeNode(n as TypeNode, src)) || {
+        type: InputType.unknown,
+      }
+    );
+  }
 
-  if (type.isKind(SyntaxKind.TypeReference)) {
+  // Parses a union type: Foo | Bar
+  if (typeNode.isKind(SyntaxKind.UnionType)) {
+    return {
+      type: InputType.union,
+      details: {
+        values: typeNode
+          .getType()
+          .getUnionTypes()
+          .map((t) => parsePrimitiveType(t, typeNode)),
+      },
+    };
+  }
+
+  // Parses an object like: { foo: string, bar: string }
+  if (typeNode.isKind(SyntaxKind.TypeLiteral)) {
+    const typeLiteralProperties = typeNode.getProperties();
+
+    const properties = typeLiteralProperties.map((prop) => {
+      const propTypeNode = prop.getTypeNode();
+      const details: ParsedNode = propTypeNode
+        ? parseTypeNode(propTypeNode, src)
+        : {
+            type: InputType.unknown,
+          };
+      return {
+        key: prop.getName(),
+        details,
+      };
+    });
+    return {
+      type: InputType.object,
+      details: { properties },
+    };
+  }
+
+  if (typeNode.isKind(SyntaxKind.ArrayType) || type.isReadonlyArray()) {
+    const insideArray = type.getArrayElementType();
+
+    // If the array is a union, we need to parse the union types
+    if (insideArray?.isUnion()) {
+      const unionValues = insideArray
+        .getUnionTypes()
+        .map((t) => parsePrimitiveType(t, typeNode));
+      return {
+        type: InputType.array,
+        details: {
+          isUnion: true,
+          values: unionValues,
+        },
+      };
+    }
+
+    return {
+      type: InputType.array,
+      details: {
+        isUnion: false,
+        values: insideArray
+          ? parsePrimitiveType(insideArray, typeNode)
+          : { type: InputType.unknown },
+      },
+    };
+  }
+
+  // Solves the case of a type reference, like: type Foo = { foo: string, bar: string } in { input : Foo }
+  if (typeNode.isKind(SyntaxKind.TypeReference)) {
     // we have a type reference
-    const typeReference = type.getTypeName();
+    const typeReference = typeNode.getTypeName();
     const typeReferenceText = typeReference.getText();
 
     // find in the code the declaration of the typeReferenceText, this can be a type, a interface, a enum, etc.
@@ -139,8 +282,8 @@ function parseTypeNode(type: TypeNode, src: SourceFile): ParsedNode {
   }
 
   // Handle keyof typeof Category type
-  if (type.isKind(SyntaxKind.TypeOperator)) {
-    const typeText = type.getText();
+  if (typeNode.isKind(SyntaxKind.TypeOperator)) {
+    const typeText = typeNode.getText();
     const match = typeText.match(/keyof typeof (\w+)/);
     if (match && match[1]) {
       const enumName = match[1];
@@ -157,6 +300,7 @@ function parseTypeNode(type: TypeNode, src: SourceFile): ParsedNode {
       }
     }
   }
+
   return { type: InputType.unknown };
 }
 
@@ -258,7 +402,7 @@ function parseHandlerInputs(
   handlerFn: HandlerFn,
   src: SourceFile,
   throwErrors: boolean,
-) {
+): InputParam[] {
   const inputs = handlerFn.getParameters();
   const params = inputs[0] as ParameterDeclaration;
 
@@ -284,7 +428,7 @@ function parseHandlerInputs(
     return [
       {
         key: params.getName(),
-        type: InputType.any,
+        node: { type: InputType.any },
         optional: params.hasQuestionToken(),
       },
     ];
@@ -321,7 +465,7 @@ function parseHandlerInputs(
       // type Input = { foo } // foo is any
       return {
         key: prop.getName(),
-        type: InputType.any,
+        node: { type: InputType.any },
         optional: isOptional,
       };
     }
@@ -330,9 +474,8 @@ function parseHandlerInputs(
 
     const result = {
       key: prop.getName(),
-      type: typeDetails.type,
       optional: isOptional,
-      ...('details' in typeDetails && { details: typeDetails.details }),
+      node: typeDetails,
     };
     return result;
   });
