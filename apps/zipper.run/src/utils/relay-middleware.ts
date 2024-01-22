@@ -6,6 +6,8 @@ import fetchBootInfo, {
   fetchBootInfoCachedWithUserOrThrow,
   fetchDeploymentCachedOrThrow,
   fetchBasicUserInfo,
+  getPathFromFilename,
+  getFilenameFromPath,
 } from './get-boot-info';
 import getValidSubdomain from './get-valid-subdomain';
 import { parseRunUrlPath } from '@zipper/utils';
@@ -32,7 +34,7 @@ const DEPLOY_KID = 'zipper';
 const DENO_ORIGIN = new URL(`https://subhosting-v1.deno-aws.net`);
 const RPC_ROOT = `https://${PUBLICLY_ACCESSIBLE_RPC_HOST}/api/deno/v0/`;
 
-const SENSITIVE_DATA_PLACEHOLDER = '********';
+const SENSITIVE_DATA_PLACEHOLDER = 'Redacted';
 
 const X_FORWARDED_HOST = 'x-forwarded-host';
 const X_DENO_SUBHOST = 'x-deno-subhost';
@@ -243,11 +245,6 @@ export async function relayRequest(
   tempUserId =
     tempUserId || request.cookies.get(__ZIPPER_TEMP_USER_ID)?.value.toString();
 
-  let filename = filenamePassedIn || 'main.ts';
-  if (!filename.endsWith('.ts') && !filename.endsWith('.tsx')) {
-    filename = `${filename}.ts`;
-  }
-
   const bootArgs = {
     appId,
     version,
@@ -262,12 +259,16 @@ export async function relayRequest(
     return bootRelayRequest(bootArgs);
   }
 
+  const path = filenamePassedIn
+    ? getPathFromFilename(filenamePassedIn)
+    : 'main';
+
   let bootInfo;
   try {
     bootInfo = await fetchBootInfoCachedWithUserOrThrow({
       subdomain,
       tempUserId,
-      filename,
+      path,
       token,
       deploymentId,
       bootFetcher: async () => {
@@ -353,6 +354,8 @@ export async function relayRequest(
     canUserEdit: userInfo.canUserEdit,
   };
 
+  const filename = getFilenameFromPath(path, bootInfo.runnableScripts);
+
   relayBody.path = filename;
 
   const response = await fetch(relayUrl, {
@@ -370,7 +373,6 @@ export async function relayRequest(
   const mutableHeaders = new Headers(headers);
   const result = await response.text();
 
-  console.log('relay response', result, { status, headers });
   const appRunRes = await addAppRun({
     id: runId,
     appId: app.id,

@@ -32,7 +32,7 @@ import { Script } from '@prisma/client';
 import { AppQueryOutput } from '~/types/trpc';
 import { parsePlaygroundQuery, PlaygroundTab } from '~/utils/playground.utils';
 import { RunAppProvider } from '../context/run-app-context';
-import { PlaygroundAvatars } from './playground-avatars';
+import { PlaygroundAvatars as PlaygroundAvatarsComponent } from './playground-avatars';
 import { useAppEditors } from '~/hooks/use-app-editors';
 import { primaryColors, TabButton } from '@zipper/ui';
 import HistoryTab from './tab-runs';
@@ -49,7 +49,6 @@ import {
 
 import { FeedbackModal } from '~/components/auth/feedback-modal';
 import { ContactModal } from '~/components/playground/contact-modal';
-import { useTheme } from 'next-themes';
 import {
   PiBookDuotone,
   PiBookOpenDuotone,
@@ -58,6 +57,7 @@ import {
   PiMegaphoneSimpleDuotone,
   PiQuestionDuotone,
 } from 'react-icons/pi';
+import { getLiveblocksRoom, withLiveblocksRoom } from '~/hocs/with-liveblocks';
 
 const tabPanelStyles: ChakraProps = {
   p: 0,
@@ -65,6 +65,17 @@ const tabPanelStyles: ChakraProps = {
   display: 'flex',
   flexDirection: 'column',
   h: 'full',
+};
+
+const PlaygroundAvatars = () => {
+  const { editorIds, onlineEditorIds, selfId } = useAppEditors();
+  return editorIds.length > 1 ? (
+    <PlaygroundAvatarsComponent
+      editorIds={editorIds}
+      onlineEditorIds={onlineEditorIds}
+      selfId={selfId}
+    />
+  ) : null;
 };
 
 export function Playground({
@@ -76,8 +87,6 @@ export function Playground({
   tab: PlaygroundTab;
   filename?: string;
 }) {
-  const { editorIds, onlineEditorIds, selfId } = useAppEditors();
-
   const [tabIndex, setTabIndex] = useState(
     Object.values(PlaygroundTab).indexOf(tab),
   );
@@ -246,12 +255,13 @@ export function Playground({
                 />
               </div>
             </HStack>
-            {editorIds.length > 1 && (
-              <PlaygroundAvatars
-                editorIds={editorIds}
-                onlineEditorIds={onlineEditorIds}
-                selfId={selfId}
-              />
+            {withLiveblocksRoom(
+              () => (
+                <PlaygroundAvatars />
+              ),
+              {
+                room: getLiveblocksRoom(app, app.resourceOwner),
+              },
             )}
           </TabList>
           {/* TAB PANELS */}
@@ -355,7 +365,9 @@ export function Playground({
                 </Tooltip>
 
                 <MenuList pt={0}>
-                  {!helpModeEnabled ? (
+                  {helpModeEnabled ? (
+                    <InspectUiHelpMode onClose={onClose} />
+                  ) : (
                     <>
                       <Box
                         display={'flex'}
@@ -437,55 +449,6 @@ export function Playground({
                         Contact support
                       </MenuItem>
                     </>
-                  ) : (
-                    <>
-                      <Box
-                        display={'flex'}
-                        flexDirection={'column'}
-                        pt={2}
-                        px={2}
-                        maxW={237}
-                        minH={'200px'}
-                      >
-                        <Flex
-                          alignItems={'center'}
-                          justifyContent={'space-between'}
-                          mb={4}
-                        >
-                          <FiChevronLeft
-                            size={20}
-                            color="gray"
-                            onClick={toggleHelpMode}
-                            cursor="pointer"
-                          />
-
-                          <Heading color="purple.600" size="sm" flex="1" ml={2}>
-                            Inspect UI
-                          </Heading>
-                          <FiX
-                            size={20}
-                            color="gray"
-                            onClick={onClose}
-                            cursor="pointer"
-                          />
-                        </Flex>
-                        <Text
-                          color={'fg.900'}
-                          fontSize="md"
-                          fontWeight="bold"
-                          mb={2}
-                        >
-                          {hoveredElement
-                            ? inspectableComponents[hoveredElement]?.name
-                            : ''}
-                        </Text>
-                        <Text color={'fg.600'} fontSize="sm">
-                          {elementDescription
-                            ? elementDescription
-                            : 'Hover over the interface to learn more about what it does.'}
-                        </Text>
-                      </Box>
-                    </>
                   )}
                 </MenuList>
               </>
@@ -518,5 +481,40 @@ export function Playground({
         <ContactModal {...contactModal} />
       </VStack>
     </RunAppProvider>
+  );
+}
+function InspectUiHelpMode(props: { onClose: () => void }) {
+  const { toggleHelpMode, elementDescription, hoveredElement } = useHelpMode();
+  return (
+    <Box
+      display={'flex'}
+      flexDirection={'column'}
+      pt={2}
+      px={2}
+      maxW={237}
+      minH={'200px'}
+    >
+      <Flex alignItems={'center'} justifyContent={'space-between'} mb={4}>
+        <FiChevronLeft
+          size={20}
+          color="gray"
+          onClick={toggleHelpMode}
+          cursor="pointer"
+        />
+
+        <Heading color="purple.600" size="sm" flex="1" ml={2}>
+          Inspect UI
+        </Heading>
+        <FiX size={20} color="gray" onClick={props.onClose} cursor="pointer" />
+      </Flex>
+      <Text color={'fg.900'} fontSize="md" fontWeight="bold" mb={2}>
+        {hoveredElement ? inspectableComponents[hoveredElement]?.name : ''}
+      </Text>
+      <Text color={'fg.600'} fontSize="sm">
+        {elementDescription
+          ? elementDescription
+          : 'Hover over the interface to learn more about what it does.'}
+      </Text>
+    </Box>
   );
 }

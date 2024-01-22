@@ -80,7 +80,6 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
   const mode = useAppEditSidebarMode();
 
   const { style, onMouseEnter, onMouseLeave } = useHelpBorder();
-  const { hoveredElement } = useHelpMode();
 
   return (
     <VStack
@@ -92,11 +91,7 @@ export const AppEditSidebar: React.FC<AppEditSidebarProps> = ({
       w="full"
       onMouseEnter={onMouseEnter('PreviewPanel')}
       onMouseLeave={onMouseLeave()}
-      border={
-        hoveredElement === 'PreviewPanel'
-          ? style('PreviewPanel').border
-          : '4px solid transparent'
-      }
+      border={style('PreviewPanel').border}
       data-app-edit-sidebar
     >
       {mode === AppEditSidebarMode.Markdown && canUserEdit && (
