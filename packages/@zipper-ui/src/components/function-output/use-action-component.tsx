@@ -89,12 +89,12 @@ export const useActionComponent = (
 
   const getScript = async () => {
     const inputs = await getInputsFromPath();
-    const defaultValues = inputs.reduce((defaultValuesSoFar, { key, node }) => {
+    const defaultValues = inputs.reduce((defaultValuesSoFar, { key, type }) => {
       const currentInput = inputs.find((i) => i.key === key);
       return currentInput
         ? {
             ...defaultValuesSoFar,
-            [`${key}:${node.type}`]: currentInput.value,
+            [`${key}:${type}`]: currentInput.value,
           }
         : defaultValuesSoFar;
     }, {});

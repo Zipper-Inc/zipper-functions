@@ -205,7 +205,7 @@ export function AppPage({
     mainApplet.reset();
     const inputParamsWithValues = inputs?.map((i) => {
       if (defaultValues) {
-        i.value = defaultValues[`${i.key}:${i.node.type}`];
+        i.value = defaultValues[`${i.key}:${i.type}`];
       }
       return i;
     });
