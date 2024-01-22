@@ -268,13 +268,7 @@ function MaybeRunButton(props: MaybeRunButtonP) {
       </>
     ));
 
-  if (inputParamsIsLoading)
-    return (
-      <Skeleton w="full" mt="4" py="8px">
-        LOADINGGGGGGGGGGGG
-      </Skeleton>
-    );
-
+  if (inputParamsIsLoading) return <Skeleton w="full" mt="4" py="8px" />;
   if (!isHandler) return null;
 
   return (
