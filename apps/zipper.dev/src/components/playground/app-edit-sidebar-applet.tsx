@@ -12,6 +12,7 @@ import {
   PopoverHeader,
   PopoverTrigger,
   Progress,
+  Skeleton,
   Text,
   Tooltip,
   UnorderedList,
@@ -267,7 +268,13 @@ function MaybeRunButton(props: MaybeRunButtonP) {
       </>
     ));
 
-  if (inputParamsIsLoading) return null;
+  if (inputParamsIsLoading)
+    return (
+      <Skeleton w="full" mt="4" py="8px">
+        LOADINGGGGGGGGGGGG
+      </Skeleton>
+    );
+
   if (!isHandler) return null;
 
   return (
