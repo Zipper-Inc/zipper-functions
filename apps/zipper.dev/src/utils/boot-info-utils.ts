@@ -361,6 +361,9 @@ export async function getBootInfoFromPrisma({
     return bootInfoError('MISSING_ENTRY_POINT', 500);
   }
 
+  // TODO: we need to get all dependencies from the entry point
+  // and then get all dependencies from those dependencies
+  // then, we can parse all scripts.
   const parsedScripts = scripts.reduce<
     Record<string, ReturnType<typeof parseCodeSerializable>>
   >(

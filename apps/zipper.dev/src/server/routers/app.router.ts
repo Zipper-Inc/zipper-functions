@@ -31,7 +31,7 @@ import { generateDefaultSlug } from '~/utils/generate-default';
 import getRunUrl, { getBootUrl } from '~/utils/get-run-url';
 import { AppletAuthorReturnType } from '~/utils/get-user-info';
 import { getAppVersionFromHash, getScriptHash } from '~/utils/hashing';
-import isCodeRunnable from '~/utils/is-code-runnable';
+import { isCodeRunnable } from '~/utils/is-code-runnable';
 import { generateAccessToken } from '~/utils/jwt-utils';
 import { endsWithTs, parseInputForTypes } from '~/utils/parse-code';
 import slugify from '~/utils/slugify';

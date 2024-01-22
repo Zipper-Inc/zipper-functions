@@ -1,5 +1,5 @@
 import { InputParam, InputType, ParsedNode } from '@zipper/types';
-import { parse } from 'comment-parser';
+import { parse as commentParse } from 'comment-parser';
 import stripComments from 'strip-comments';
 import {
   ParameterDeclaration,
@@ -16,11 +16,20 @@ import {
   FunctionExpression,
   Type,
 } from 'ts-morph';
+import { getRemoteModule } from './eszip-utils';
+import { LoadResponseModule } from '@deno/eszip/esm/loader';
+import { Script } from '@prisma/client';
 
-type ParseCodeParameters = {
-  code?: string;
+type ParseProject = {
+  handlerFile: string;
+  modules: Record<string, string>;
   throwErrors?: boolean;
-  src?: SourceFile;
+};
+
+type ParseCode = {
+  handlerFile: string;
+  project?: Project;
+  throwErrors?: boolean;
 };
 
 export const isExternalImport = (specifier: string) =>
@@ -304,7 +313,7 @@ function parseTypeNode(typeNode: TypeNode, src: SourceFile): ParsedNode {
   return { type: InputType.unknown };
 }
 
-export function getSourceFileFromCode(code = '', filename = 'main.ts') {
+function createProject(modules: Record<string, string>) {
   const project = new Project({
     useInMemoryFileSystem: true,
     resolutionHost: (moduleResolutionHost, getCompilerOptions) => {
@@ -313,9 +322,26 @@ export function getSourceFileFromCode(code = '', filename = 'main.ts') {
           const compilerOptions = getCompilerOptions();
           const resolvedModules: ts.ResolvedModule[] = [];
 
-          for (const moduleName of moduleNames.map(removeTsExtension)) {
+          console.log('containingFile', containingFile);
+
+          for (const moduleName of moduleNames) {
+            if (isExternalImport(moduleName)) {
+              getRemoteModule({ specifier: moduleName }).then((module) => {
+                if (!module) return;
+                const result = ts.resolveModuleName(
+                  module.specifier,
+                  containingFile,
+                  compilerOptions,
+                  moduleResolutionHost,
+                );
+                if (result.resolvedModule)
+                  resolvedModules.push(result.resolvedModule);
+              });
+            }
+
+            const localModuleName = removeTsExtension(moduleName);
             const result = ts.resolveModuleName(
-              moduleName,
+              localModuleName,
               containingFile,
               compilerOptions,
               moduleResolutionHost,
@@ -330,7 +356,11 @@ export function getSourceFileFromCode(code = '', filename = 'main.ts') {
     },
   });
 
-  return project.createSourceFile(filename, code);
+  for (const [filename, code] of Object.entries(modules)) {
+    project.createSourceFile(filename, code);
+  }
+
+  return project;
 }
 
 type HandlerFn = FunctionDeclaration | ArrowFunction | FunctionExpression;
@@ -483,22 +513,19 @@ function parseHandlerInputs(
 
 // returns undefined if the file isn't runnable (no handler function)
 export function parseInputForTypes({
-  code = '',
+  handlerFile,
+  project,
   throwErrors = false,
-  src: srcPassedIn,
-}: ParseCodeParameters = {}): undefined | InputParam[] {
-  if (!code) return undefined;
-
+}: ParseCode): undefined | InputParam[] {
   try {
-    const src = srcPassedIn || getSourceFileFromCode(code);
+    const src = project?.getSourceFile(handlerFile);
+    if (!src) return;
 
     const rootHandlerNode =
       src.getFunction('handler') || src.getVariableDeclaration('handler');
 
     // All good, this is a lib file!
-    if (!rootHandlerNode) {
-      return undefined;
-    }
+    if (!rootHandlerNode) return;
 
     const handlerFn = findHandlerFunction({ src, node: rootHandlerNode });
 
@@ -524,14 +551,14 @@ export function parseInputForTypes({
 }
 
 export function parseActions({
-  code = '',
+  handlerFile,
+  project,
   throwErrors = false,
-  src: srcPassedIn,
-}: ParseCodeParameters = {}) {
-  if (!code || !srcPassedIn) return undefined;
+}: ParseCode) {
+  const src = project?.getSourceFile(handlerFile);
+  if (!src) return;
 
   try {
-    const src = srcPassedIn || getSourceFileFromCode(code);
     const actionsDeclaration = src.getVariableDeclaration('actions');
     if (!actionsDeclaration) return undefined;
 
@@ -580,28 +607,23 @@ export function parseActions({
 }
 
 export function parseExternalImportUrls({
-  code = '',
-  srcPassedIn,
+  handlerFile,
+  project,
   externalOnly = true,
-}: {
-  code?: string;
-  srcPassedIn?: SourceFile;
+}: ParseCode & {
   externalOnly?: boolean;
-} = {}): string[] {
-  if (!code) return [];
-  const src = srcPassedIn || getSourceFileFromCode(code);
+}): string[] {
+  const src = project?.getSourceFile(handlerFile);
+  if (!src) return [];
   return src
     .getImportDeclarations()
     .map((i) => i.getModuleSpecifierValue())
     .filter((s) => (externalOnly ? isExternalImport(s) : true));
 }
 
-export function parseImports({
-  code = '',
-  src: srcPassedIn,
-}: ParseCodeParameters = {}) {
-  if (!code) return [];
-  const src = srcPassedIn || getSourceFileFromCode(code);
+export function parseImports({ handlerFile, project }: ParseCode) {
+  const src = project?.getSourceFile(handlerFile);
+  if (!src) return [];
   return src.getImportDeclarations().map((i) => {
     const startPos = i.getStart();
     const endPos = i.getEnd();
@@ -624,12 +646,13 @@ export function parseImports({
 export const USE_DIRECTIVE_REGEX = /^use\s/;
 export const USE_CLIENT_DIRECTIVE = 'use client';
 
-function getSourceWithoutComments(srcPassedIn: string | SourceFile = '') {
-  return getSourceFileFromCode(
-    stripComments(
-      typeof srcPassedIn === 'string' ? srcPassedIn : srcPassedIn.getText(),
-    ),
-  );
+function getSourceWithoutComments(handlerFile: string, project?: Project) {
+  const src = project?.getSourceFile(handlerFile);
+  // TODO: !!!
+  // stripComments(
+  //     typeof srcPassedIn === 'string' ? srcPassedIn : srcPassedIn.getText(),
+  //   ),
+  return src;
 }
 
 /**
@@ -639,12 +662,11 @@ function getSourceWithoutComments(srcPassedIn: string | SourceFile = '') {
  * "use client";
  */
 export function parseDirectivePrologue({
-  code = '',
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  handlerFile,
+  project,
   throwErrors = false,
-  src: srcPassedIn,
-}: ParseCodeParameters = {}) {
-  const src = getSourceWithoutComments(srcPassedIn || code);
+}: ParseCode) {
+  const src = getSourceWithoutComments(handlerFile, project);
 
   const syntaxList = src?.getChildAtIndexIfKind(0, SyntaxKind.SyntaxList);
 
@@ -660,28 +682,27 @@ export function parseDirectivePrologue({
     : undefined;
 }
 
-export const isClientModule = (inputs: ParseCodeParameters) =>
+export const isClientModule = (inputs: ParseCode) =>
   parseDirectivePrologue(inputs) === USE_CLIENT_DIRECTIVE;
 
-export function parseCode({
-  code = '',
-  throwErrors = false,
-  src: srcPassedIn,
-}: ParseCodeParameters = {}) {
-  const src: SourceFile | undefined =
-    srcPassedIn || (code ? getSourceFileFromCode(code) : undefined);
-  let inputs = parseInputForTypes({ code, throwErrors, src });
+export function parseApp({ handlerFile, modules, throwErrors }: ParseProject) {
+  const project = createProject(modules);
+  return parseCode({ handlerFile, project, throwErrors });
+}
 
-  const actions = parseActions({ code, throwErrors, src });
+function parseCode({ handlerFile, project, throwErrors = false }: ParseCode) {
+  let inputs = parseInputForTypes({ handlerFile, project, throwErrors });
+
+  const actions = parseActions({ handlerFile, throwErrors, project });
 
   const externalImportUrls = parseExternalImportUrls({
-    code,
-    srcPassedIn: src,
+    handlerFile,
+    project,
   });
 
-  const imports = parseImports({ code, src });
+  const imports = parseImports({ handlerFile, project });
 
-  const comments = parseComments({ code, src });
+  const comments = parseComments({ handlerFile, project });
   if (comments) {
     inputs = inputs?.map((i) => {
       const matchingTag = comments.tags.find(
@@ -695,7 +716,11 @@ export function parseCode({
     });
   }
 
-  const directivePrologue = parseDirectivePrologue({ code, throwErrors, src });
+  const directivePrologue = parseDirectivePrologue({
+    handlerFile,
+    project,
+    throwErrors,
+  });
 
   return {
     inputs,
@@ -707,8 +732,16 @@ export function parseCode({
     ),
     imports,
     directivePrologue,
-    src,
   };
+}
+
+export function createProjectFromCode(code: string) {
+  const project = new Project({
+    useInMemoryFileSystem: true,
+  });
+  const handlerFile = 'handler.ts';
+  const src = project.createSourceFile(handlerFile, code);
+  return { project, src, handlerFile };
 }
 
 export function addParamToCode({
@@ -720,14 +753,13 @@ export function addParamToCode({
   paramName?: string;
   paramType?: string;
 }): string {
-  const src = getSourceFileFromCode(code);
-  const handler = src.getFunction('handler');
+  const { src, handlerFile, project } = createProjectFromCode(code);
+
+  const handler = src?.getFunction('handler');
   const handlerComment = handler
     ?.getFullText()
     .split('\n')
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    //@ts-ignore
-    .reduce((acc, curr) => {
+    .reduce<string[]>((acc, curr) => {
       if (curr.trim().startsWith('/**') || curr.trim().startsWith('*')) {
         return [...acc, curr.trim()];
       } else if (curr.trim().startsWith('export async function handler')) {
@@ -735,7 +767,7 @@ export function addParamToCode({
       } else {
         return acc;
       }
-    }, [] as string[])
+    }, [])
     .map((line) => (line.startsWith('*') ? ' ' + line : line));
 
   if (!handler) {
@@ -771,7 +803,7 @@ export function addParamToCode({
     return code;
   }
 
-  const existingParams = parseInputForTypes({ code });
+  const existingParams = parseInputForTypes({ handlerFile, project });
   if (!existingParams) return code;
   // If there is an existing parameter, use its name instead of the default paramName
   if (existingParams.length && existingParams[0]) {
@@ -817,7 +849,7 @@ export function getTutorialJsDocs({
   code: string;
   jsdoc: string;
 }) {
-  const src = getSourceFileFromCode(code);
+  const { src } = createProjectFromCode(code);
   const jsDocText = jsdoc.replace(/\s+/g, ' ').trim();
 
   const foundVariable = src.getVariableStatements().find((variable) => {
@@ -851,25 +883,29 @@ export function getTutorialJsDocs({
   }
 }
 
-export function parseComments({ code, src: srcPassedIn }: ParseCodeParameters) {
-  if (!code) return;
+export function parseComments({ handlerFile, project }: ParseCode) {
+  const src = project?.getSourceFile(handlerFile);
+  if (!src) return;
 
-  const src = srcPassedIn || getSourceFileFromCode(code);
-  const handlerFn = src.getFunction('handler');
-
+  const handlerFn = findHandlerFunction({ src });
   if (!handlerFn) return;
 
   const jsDocComments = handlerFn.getJsDocs();
   if (jsDocComments.length > 0) {
-    return parse(jsDocComments.at(-1)?.getFullText() || '')[0];
+    return commentParse(jsDocComments.at(-1)?.getFullText() || '')[0];
   }
 
   return;
 }
 
-export function parseCodeSerializable(params: ParseCodeParameters) {
+export const hasHandler = ({ code }: { code: string }) => {
+  const { src } = createProjectFromCode(code);
+  return !!findHandlerFunction({ src });
+};
+
+export function parseCodeSerializable(params: ParseCode) {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { src: _ignore, ...rest } = parseCode(params);
+  const { ...rest } = parseCode(params);
   return {
     ...rest,
   };

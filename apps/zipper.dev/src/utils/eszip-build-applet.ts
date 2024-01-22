@@ -1,8 +1,6 @@
 import * as eszip from '@deno/eszip';
 import { App, Script } from '@prisma/client';
 import { generateIndexForFramework } from '@zipper/utils';
-import { parse } from 'path';
-import { SourceFile, Statement } from 'ts-morph';
 import { prisma } from '~/server/prisma';
 import { storeVersionESZip } from '~/server/utils/r2.utils';
 import { getLogger } from './app-console';
@@ -16,10 +14,10 @@ import {
 } from './eszip-utils';
 import { getAppHashAndVersion } from './hashing';
 import {
-  getSourceFileFromCode,
+  createProjectFromCode,
+  hasHandler,
   isClientModule,
   parseActions,
-  parseInputForTypes,
 } from './parse-code';
 import { prettyLog, PRETTY_LOG_TOKENS } from './pretty-log';
 import { readFrameworkFile } from './read-file';
@@ -117,21 +115,17 @@ export async function build({
 
         const script = tsScripts.find((s) => s.filename === filename);
 
-        const src = getSourceFileFromCode(script?.code || '');
+        const { src, handlerFile, project } = createProjectFromCode(
+          script?.code || '',
+        );
 
         let rewrittenCode = rewriteImports(src);
 
-        if (isClientModule({ src })) {
+        if (isClientModule({ handlerFile, project })) {
           rewrittenCode = `/// <reference lib="dom" />\n${rewrittenCode}`;
         }
 
-        const hasHandler = !!parseInputForTypes({
-          code: src.getText(),
-          src,
-          throwErrors: false,
-        });
-
-        if (hasHandler) {
+        if (hasHandler({ code: src.getFullText() })) {
           const handlerMeta = `handler.__handlerMeta = ${JSON.stringify({
             name: filename.replace(/\.tsx?$/, ''),
             path: `/${filename}`,
@@ -141,8 +135,8 @@ export async function build({
         }
 
         const actions = parseActions({
-          code: src.getText(),
-          src,
+          handlerFile,
+          project,
           throwErrors: false,
         });
         const actionNames = Object.keys(actions || {});

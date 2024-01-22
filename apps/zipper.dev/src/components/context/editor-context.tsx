@@ -22,7 +22,7 @@ import { InputParam } from '@zipper/types';
 import {
   getTutorialJsDocs,
   isExternalImport,
-  parseCode,
+  parseApp,
 } from '~/utils/parse-code';
 import debounce from 'lodash.debounce';
 import { uuid } from '@zipper/utils';
@@ -451,7 +451,7 @@ async function runEditorActionsNow({
 
     if (tutorials.length >= 1) setTutorials(tutorials);
 
-    const { inputs, imports } = parseCode({
+    const { inputs, imports } = parseApp({
       code: value,
       throwErrors: true,
     });

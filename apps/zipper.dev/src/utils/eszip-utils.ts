@@ -90,6 +90,7 @@ export async function getRemoteModule({
     if (cachedModule) return cachedModule;
   }
 
+  console.log('fetching', specifier);
   const response = await fetch(specifier, {
     headers: {
       ...X_ZIPPER_ESZIP_BUILD_HEADER,

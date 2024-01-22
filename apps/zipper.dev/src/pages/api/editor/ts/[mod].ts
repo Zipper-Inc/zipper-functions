@@ -9,7 +9,7 @@ import {
 } from '~/utils/eszip-utils';
 import { isSSRFSafeURL } from 'ssrfcheck';
 import { rewriteSpecifier } from '~/utils/rewrite-imports';
-import { parseCode } from '~/utils/parse-code';
+import { createProjectFromCode } from '~/utils/parse-code';
 
 enum ModMode {
   Module = 'module',
@@ -69,7 +69,7 @@ function respondWithRawModule({
 
 function withPathRefs(mod?: LoadResponseModule) {
   if (!mod?.content) return mod;
-  const { src } = parseCode({ code: mod.content });
+  const { src } = createProjectFromCode(mod.content);
   if (!src) return mod;
 
   // Gets any `/// <reference path="..." />` directives
