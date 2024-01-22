@@ -161,9 +161,7 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
 
   const setInputsAtTimeOfRun = () => {
     const formValues = formMethods.getValues();
-    const formKeys = inputParams?.map(
-      (param) => `${param.key}:${param.node.type}`,
-    );
+    const formKeys = inputParams?.map((param) => `${param.key}:${param.type}`);
     const inputs: Record<string, any> = {};
     formKeys?.map((k) => {
       const key = k.split(':')[0] as string;
