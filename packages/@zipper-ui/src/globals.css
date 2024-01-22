@@ -7,7 +7,7 @@
     --background: 0 0% 100%;
     --foreground: 223 15% 9%;
 
-    --muted: 222 18% 86%;
+    --muted: 0 0% 94%;
     --muted-foreground: 221 18% 39%;
 
     --card: 0 0% 100%;
@@ -33,7 +33,7 @@
 
     --ring: 284 79% 91%;
 
-    --disabled: 217 17% 60%;
+    --disabled: 0 0% 86%;
 
     --radius: 0rem;
   }
@@ -58,7 +58,7 @@
     --border: 223 15% 24%;
     --input: 223 15% 24%;
 
-    --accent: 223 15% 24%;
+    --disabled: 0 0% 86% --accent: 223 15% 24%;
     --accent-foreground: 220 20% 97%;
   }
 }

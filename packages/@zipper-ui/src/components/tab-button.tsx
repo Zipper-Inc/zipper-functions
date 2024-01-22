@@ -4,7 +4,7 @@ import {
   UseTabOptions,
   useColorModeValue,
 } from '@chakra-ui/react';
-import { Badge } from './ui/badge';
+import { Badge } from './ui/common/badge';
 import Link from 'next/link';
 
 type TabButtonProps = UseTabOptions &
