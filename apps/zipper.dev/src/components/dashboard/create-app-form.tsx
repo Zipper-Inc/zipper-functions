@@ -145,6 +145,8 @@ export const CreateAppForm: React.FC<{ onClose: () => void }> = ({
     setSelectedOrganizationId(organization?.id);
   }, [organization?.id]);
 
+  console.log(templateSelection);
+
   useEffect(() => {
     if (templatesQuery.data) {
       setTemplates([
