@@ -227,7 +227,7 @@ export function PlaygroundSidebar({
           ))}
         </VStack>
       </VStack>
-      <VStack mr={{ base: '0', xl: 2 }} paddingY={4}>
+      <VStack mr={{ base: '0', xl: 2 }} overflowY="auto" h="full" paddingY={4}>
         <Accordion defaultIndex={[0]} allowMultiple width="100%">
           <AccordionItem>
             <h2>
