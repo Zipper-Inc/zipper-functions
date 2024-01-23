@@ -18,7 +18,10 @@ import {
   TypeReferenceNode,
   TypeLiteralNode,
 } from 'ts-morph';
+import { rewriteSpecifier } from './rewrite-imports';
 import { getRemoteModule } from './eszip-utils';
+
+// const buildCache = new BuildCachxe();
 
 type ParseProject = {
   handlerFile: string;
@@ -120,6 +123,10 @@ function parsePrimitiveType(type: Type, node: TypeNode): ParsedNode {
           : { type: InputType.unknown },
       },
     };
+  }
+
+  if (type.isObject()) {
+    // TODO: handle object types
   }
 
   return { type: InputType.unknown };
@@ -412,53 +419,119 @@ function findHandlerFunction({
   }
 }
 
-function solveTypeReference<T>(
+function solveTypeReference(
   typeNode: TypeReferenceNode,
-  file: string,
+  fileName: string,
   project: Project | undefined,
-  cb: (node: TypeNode) => T,
-) {
-  const src = project?.getSourceFile(file);
-  if (!src) return;
+): TypeNode | undefined {
+  const src = project?.getSourceFile(fileName);
+  if (!src || !project) return;
 
-  const whatsBeingImported = typeNode.getTypeName().getText();
-  const imports = src.getImportDeclarations();
+  const typeReferenceName = typeNode.getTypeName().getText();
+  const declaration =
+    src.getTypeAlias(typeReferenceName) ||
+    src.getInterface(typeReferenceName) ||
+    src.getEnum(typeReferenceName);
 
-  const importDeclaration = imports.find((x) => {
-    const insideImport = x.getNamedImports().map((n) => n.getText());
-    return insideImport.includes(whatsBeingImported);
-  });
+  const isInSameFile = !!declaration;
+  if (isInSameFile && declaration) {
+    console.log('found in the SAME file');
+    if (declaration.isKind(SyntaxKind.TypeAliasDeclaration)) {
+      const node = declaration.getTypeNode();
+      return node;
+    }
+    if (declaration.isKind(SyntaxKind.InterfaceDeclaration)) {
+      // TODO
+    }
+    if (declaration.isKind(SyntaxKind.EnumDeclaration)) {
+      // TODO
+    }
+  } else {
+    const imports = src.getImportDeclarations();
+    const importDeclaration = imports.find((x) => {
+      const insideImport = x.getNamedImports().map((n) => n.getText());
+      return insideImport.includes(typeReferenceName);
+    });
 
-  if (!importDeclaration) {
-    console.error(
-      'Couldnt find whats being imported in any import import declaration',
-    );
-    return;
+    if (!importDeclaration) {
+      console.error(
+        'Couldnt find whats being imported in any import import declaration',
+      );
+      return;
+    }
+
+    const fileInProject = importDeclaration.getModuleSpecifierSourceFile();
+
+    // External import
+    if (!fileInProject) {
+      console.log(
+        'external import',
+        importDeclaration.getModuleSpecifierValue(),
+      );
+      // // solve external import
+      // const specifier = importDeclaration.getModuleSpecifierValue();
+      // // fetch external import
+      // const externalModule = await getRemoteModule({
+      //   specifier: rewriteSpecifier(specifier),
+      // });
+
+      // if (!externalModule) {
+      //   console.error('Couldnt fetch external module');
+      //   return;
+      // }
+      // // add in the project
+      // const externalModuleSourceFile = project.createSourceFile(
+      //   specifier,
+      //   externalModule.content,
+      // );
+      // // get the type node in the file
+      // const declaration =
+      //   externalModuleSourceFile.getTypeAlias(typeReferenceName) ||
+      //   externalModuleSourceFile.getInterface(typeReferenceName) ||
+      //   externalModuleSourceFile.getEnum(typeReferenceName);
+
+      // const isInSameFile = !!declaration;
+      // if (isInSameFile && declaration) {
+      //   console.log('found in the REMOTE file');
+
+      //   if (declaration.isKind(SyntaxKind.TypeAliasDeclaration)) {
+      //     const node = declaration.getTypeNode();
+      //     console.log('imported type node', node?.getFullText());
+      //     return node;
+      //   }
+      //   if (declaration.isKind(SyntaxKind.InterfaceDeclaration)) {
+      //     // TODO
+      //   }
+      //   if (declaration.isKind(SyntaxKind.EnumDeclaration)) {
+      //     // TODO
+      //   }
+      // }
+      return;
+    }
+
+    // Import from another file in the project
+    const declaration =
+      fileInProject.getTypeAlias(typeReferenceName) ||
+      fileInProject.getInterface(typeReferenceName) ||
+      fileInProject.getEnum(typeReferenceName);
+
+    const isInSameFile = !!declaration;
+    if (isInSameFile && declaration) {
+      console.log('found in OTHER file');
+
+      if (declaration.isKind(SyntaxKind.TypeAliasDeclaration)) {
+        const node = declaration.getTypeNode();
+        console.log('imported type node', node?.getFullText());
+        return node;
+      }
+      if (declaration.isKind(SyntaxKind.InterfaceDeclaration)) {
+        // TODO
+      }
+      if (declaration.isKind(SyntaxKind.EnumDeclaration)) {
+        // TODO
+      }
+    }
   }
-
-  const fileInProject = importDeclaration.getModuleSpecifierSourceFile();
-
-  // External import
-  if (!fileInProject) {
-    console.log('external import', importDeclaration.getModuleSpecifierValue());
-    // salve external import
-    // fetch external import
-    // add in the project
-    // get the file where the import is
-    // get the type node in the file
-    // apply cb in the type node
-    return;
-  }
-  // Local Import
-
-  const typeDeclaration = fileInProject.getTypeAlias(whatsBeingImported); // TODO: interface support
-  const importedTypeNode = typeDeclaration?.getTypeNode();
-  if (!importedTypeNode) {
-    console.error('Couldnt find the type declaration in the file');
-    return;
-  }
-
-  return cb(importedTypeNode);
 }
 
 function parseHandlerInputs(
@@ -468,7 +541,7 @@ function parseHandlerInputs(
   throwErrors: boolean,
 ): InputParam[] {
   const inputs = handlerFn.getParameters();
-  const params = inputs[0] as ParameterDeclaration;
+  const params = inputs[0];
 
   const src = project?.getSourceFile(handlerFile);
 
@@ -504,10 +577,12 @@ function parseHandlerInputs(
     typeNode?.isKind(SyntaxKind.TypeReference) &&
     !src.getTypeAlias(typeNode?.getText())?.getTypeNode()
   ) {
-    const node = solveTypeReference(typeNode, handlerFile, project, (node) => {
-      if (node.isKind(SyntaxKind.TypeLiteral)) return unwrapObject(node);
-    });
-    return node || [];
+    console.log('type reference', typeNode.getText());
+    const node = solveTypeReference(typeNode, handlerFile, project);
+    if (!node) return [];
+    if (node.isKind(SyntaxKind.TypeLiteral)) {
+      return unwrapObject(node);
+    }
   }
 
   let props: PropertySignature[] = [];
@@ -531,6 +606,8 @@ function parseHandlerInputs(
   if (!typeNode || !props) {
     console.error('No types, treating input as any');
   }
+  // TODO: If there's no (input : Type) annotation, we get the type from the function
+  // TODO: (input: Parameters<typeof someFunction>) or (input: Pick<SomeType, 'foo' | 'bar'>)
 
   return props.map((prop) => {
     const isOptional =
@@ -564,8 +641,6 @@ function unwrapObject(node: TypeLiteralNode): InputParam[] {
     const isOptional = prop.hasQuestionToken();
     const typeNode = prop.getTypeNode();
     if (!typeNode) {
-      // Typescript defaults to any if it can't find the type
-      // type Input = { foo } // foo is any
       return {
         key: prop.getName(),
         node: { type: InputType.any },
