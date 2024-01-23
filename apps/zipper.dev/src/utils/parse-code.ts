@@ -17,10 +17,8 @@ import {
   Type,
   TypeReferenceNode,
   TypeLiteralNode,
+  Node,
 } from 'ts-morph';
-import { rewriteSpecifier } from './rewrite-imports';
-import { getRemoteModule } from './eszip-utils';
-import { LoadResponseModule } from '@deno/eszip/esm/loader';
 
 // const buildCache = new BuildCachxe();
 
@@ -374,7 +372,7 @@ function findHandlerFunction({
   src: SourceFile;
   name?: string;
   node?: any;
-}): void | HandlerFn {
+}): HandlerFn | undefined {
   if (!node) return;
 
   // ✅ function handler() {}
@@ -420,131 +418,99 @@ function findHandlerFunction({
   }
 }
 
+const getDefinition = (typeNode: TypeReferenceNode) => {
+  const identifier = typeNode.getTypeName();
+  if ('getLeft' in identifier) return;
+
+  try {
+    const nodes = identifier.getDefinitionNodes();
+    console.log('getDefinition | nodes', {
+      len: nodes.length,
+      texts: nodes.map((n) => n.getFullText()),
+    });
+    const declaration = nodes[0];
+    return declaration;
+  } catch {
+    console.log('no definition');
+    return;
+  }
+};
+
+const solveDefinition = (definition: Node) => {
+  // Ideally, we want to call parseType(declaration.getType()) here
+  console.log('lets solve', definition.getKindName());
+  if (definition.isKind(SyntaxKind.TypeAliasDeclaration)) {
+    const node = definition.getTypeNode();
+    return node;
+  }
+  if (definition.isKind(SyntaxKind.InterfaceDeclaration)) {
+    console.log('interface', definition.getText());
+    // TODO
+  }
+  if (definition.isKind(SyntaxKind.EnumDeclaration)) {
+    console.log('enum', definition.getText());
+    // TODO
+  }
+};
+
 async function solveTypeReference(
   typeNode: TypeReferenceNode,
   fileName: string,
   project: Project | undefined,
 ) {
   const src = project?.getSourceFile(fileName);
+
   if (!src || !project) return;
 
-  const typeReferenceName = typeNode.getTypeName().getText();
-  const declaration =
-    src.getTypeAlias(typeReferenceName) ||
-    src.getInterface(typeReferenceName) ||
-    src.getEnum(typeReferenceName);
+  const localDefinition = getDefinition(typeNode);
+  if (localDefinition) {
+    return solveDefinition(localDefinition);
+  }
 
-  const isInSameFile = !!declaration;
-  if (isInSameFile && declaration) {
-    console.log('found in the SAME file');
-    if (declaration.isKind(SyntaxKind.TypeAliasDeclaration)) {
-      const node = declaration.getTypeNode();
-      return node;
-    }
-    if (declaration.isKind(SyntaxKind.InterfaceDeclaration)) {
-      // TODO
-    }
-    if (declaration.isKind(SyntaxKind.EnumDeclaration)) {
-      // TODO
-    }
-  } else {
-    console.log('not found in the SAME file');
-    const imports = src.getImportDeclarations();
-    const importDeclaration = imports.find((x) => {
-      const insideImport = x.getNamedImports().map((n) => n.getText());
-      return insideImport.includes(typeReferenceName);
-    });
+  console.log(
+    'current project',
+    project.getSourceFiles().map((s) => s.getFilePath()),
+  );
+  console.log('Not found in local files -- Searching in a remote file');
 
-    if (!importDeclaration) {
-      console.error(
-        'Couldnt find whats being imported in any import import declaration',
-      );
-      return;
-    }
+  const imports = src.getImportDeclarations();
+  const importDeclaration = imports.find((x) => {
+    const insideImport = x.getNamedImports().map((n) => n.getText());
+    return insideImport.includes(typeNode.getTypeName().getText());
+  });
 
-    const fileInProject = project.getSourceFile(
-      importDeclaration.getModuleSpecifierValue(),
+  if (!importDeclaration) {
+    console.error(
+      'Couldnt find whats being imported in any import import declaration',
     );
+    return;
+  }
 
-    // External import
-    if (!fileInProject) {
-      console.log('IS EXTERNAL');
-      console.log(
-        'external import',
-        importDeclaration.getModuleSpecifierValue(),
-      );
-      // solve external import
-      const specifier = importDeclaration.getModuleSpecifierValue();
-      // fetch external import
-      // TODO: Call /x/bundle?specifier=specifier
-      console.log(`/api/editor/ts/bundle?x=${specifier}`);
-      const externalModule = await fetch(`/api/editor/ts/bundle?x=${specifier}`)
-        .then((res) => res.json() as Promise<{ [filename: string]: string }>)
-        .catch(() => null);
+  const specifier = importDeclaration.getModuleSpecifierValue();
+  console.log('will import from', specifier);
+  const externalModule = await fetch(`/api/editor/ts/bundle?x=${specifier}`)
+    .then((res) => res.json() as Promise<{ [filename: string]: string }>)
+    .catch(() => null);
 
-      if (!externalModule) {
-        console.error('Couldnt fetch external module');
-        return;
-      }
-      // add in the project
-      for (const [filename, code] of Object.entries(externalModule)) {
-        project.createSourceFile(filename, code);
-      }
+  console.log('external module', externalModule);
 
-      const fixed = rewriteSpecifier(specifier);
-      const importedFile = project.getSourceFile(fixed);
-      // Recursive step -- looking for the type in the imported file, it can be imported, declared, or exported from other file
-      // im pretty much redoing the compiler rn lol
+  if (!externalModule) {
+    console.error('Couldnt fetch external module');
+    return;
+  }
+  // add in the project
+  for (const [filename, code] of Object.entries(externalModule)) {
+    console.log('adding file');
+    project.createSourceFile(filename, code);
+  }
+  console.log(
+    'project with new modules',
+    project.getSourceFiles().map((s) => s.getFilePath()),
+  );
 
-      console.log('imported file', importedFile?.getFullText());
-
-      // get the type node in the file
-      const declaration =
-        importedFile?.getTypeAlias(typeReferenceName) ||
-        importedFile?.getInterface(typeReferenceName) ||
-        importedFile?.getEnum(typeReferenceName);
-
-      const isInSameFile = !!declaration;
-      if (isInSameFile && declaration) {
-        console.log('found in the REMOTE file');
-
-        if (declaration.isKind(SyntaxKind.TypeAliasDeclaration)) {
-          const node = declaration.getTypeNode();
-          console.log('imported type node', node?.getFullText());
-          return node;
-        }
-        if (declaration.isKind(SyntaxKind.InterfaceDeclaration)) {
-          // TODO
-        }
-        if (declaration.isKind(SyntaxKind.EnumDeclaration)) {
-          // TODO
-        }
-      }
-      return;
-    }
-
-    // Import from another file in the project
-    const declaration =
-      fileInProject.getTypeAlias(typeReferenceName) ||
-      fileInProject.getInterface(typeReferenceName) ||
-      fileInProject.getEnum(typeReferenceName);
-
-    const isInSameFile = !!declaration;
-    if (isInSameFile && declaration) {
-      console.log('found in OTHER file');
-
-      if (declaration.isKind(SyntaxKind.TypeAliasDeclaration)) {
-        const node = declaration.getTypeNode();
-        console.log('imported type node', node?.getFullText());
-        return node;
-      }
-      if (declaration.isKind(SyntaxKind.InterfaceDeclaration)) {
-        // TODO
-      }
-      if (declaration.isKind(SyntaxKind.EnumDeclaration)) {
-        // TODO
-      }
-    }
+  const externalDefinition = getDefinition(typeNode);
+  if (externalDefinition) {
+    return solveDefinition(externalDefinition);
   }
 }
 
@@ -587,15 +553,8 @@ async function parseHandlerInputs(
     ];
   }
 
-  if (
-    typeNode?.isKind(SyntaxKind.TypeReference) &&
-    !src.getTypeAlias(typeNode?.getText())?.getTypeNode()
-  ) {
-    console.log('type reference', typeNode.getText());
-    const node = await solveTypeReference(typeNode, handlerFile, project).catch(
-      (e) => console.error('Error', e),
-    );
-    console.log('node', node?.getFullText());
+  if (typeNode?.isKind(SyntaxKind.TypeReference)) {
+    const node = await solveTypeReference(typeNode, handlerFile, project);
     if (node?.isKind(SyntaxKind.TypeLiteral)) {
       return unwrapObject(node);
     }
