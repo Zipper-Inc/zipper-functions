@@ -438,7 +438,7 @@ export default function PlaygroundEditor(
       console.log('[EDITOR]', `Setting model to ${currentScript.filename}`);
 
       editorRef.current.setModel(model);
-      editorRef.current?.getAction('editor.foldAllBlockComments').run();
+      editorRef.current?.getAction('editor.foldAllBlockComments')?.run();
       editorRef.current.addAction({
         id: 'custom-action',
         label: 'Custom Action',
