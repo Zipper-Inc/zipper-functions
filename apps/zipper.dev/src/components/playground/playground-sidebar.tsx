@@ -227,8 +227,8 @@ export function PlaygroundSidebar({
           ))}
         </VStack>
       </VStack>
-      <VStack mr={{ base: '0', xl: 2 }} paddingRight={2} paddingY={4}>
-        <Accordion allowMultiple width="100%">
+      <VStack mr={{ base: '0', xl: 2 }} paddingY={4}>
+        <Accordion defaultIndex={[0]} allowMultiple width="100%">
           <AccordionItem>
             <h2>
               <AccordionButton bg="fg.100" _hover={{ bg: 'fg.200' }} h={6}>
