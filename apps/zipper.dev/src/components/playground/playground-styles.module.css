@@ -1,0 +1,27 @@
+.tutorial-line-enable {
+  background-color: #FEF0C7;
+}
+
+.dark-tutorial-line-enable {
+  background-color: #413C26;
+}
+
+.tutorial-line-unable {
+  background-color: transparent;
+}
+
+.tutorial-line-margin-enable {
+  background-color: #FEF0C7;
+  color: #DC6803;
+}
+
+.dark-tutorial-line-margin-enable {
+  background-color: #413C26;
+  color: #DC6803;
+}
+
+.tutorial-line-margin-unable {
+  background-color: transparent;
+  color: default;
+}
+

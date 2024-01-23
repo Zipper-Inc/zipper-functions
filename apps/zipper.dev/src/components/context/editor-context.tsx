@@ -35,6 +35,7 @@ import {
 } from '~/utils/playground.utils';
 import { runZipperLinter } from '~/utils/zipper-editor-linter';
 import { rewriteSpecifier } from '~/utils/rewrite-imports';
+import { TutorialBlock, useTutorial } from '~/hooks/use-playground-docs';
 import isEqual from 'lodash.isequal';
 
 type OnValidate = AddParameters<
@@ -49,7 +50,11 @@ export type EditorContextType = {
   setCurrentScript: (script: Script) => void;
   onChange: EditorProps['onChange'];
   onValidate: OnValidate;
+  onChangeSelectedDoc: (docIndex: number) => void;
+  connectionId?: number;
   scripts: Script[];
+  selectedDoc: TutorialBlock;
+  docs: TutorialBlock[];
   editor?: typeof monaco.editor;
   setEditor: (editor: typeof monaco.editor) => void;
   isModelDirty: (path: string) => boolean;
@@ -101,12 +106,15 @@ export const EditorContext = createContext<EditorContextType>({
   scripts: [],
   editor: undefined,
   setEditor: noop,
+  docs: [],
+  selectedDoc: {} as TutorialBlock,
   isModelDirty: () => false,
   setModelIsDirty: noop,
   isEditorDirty: () => false,
   modelHasErrors: () => false,
   setModelHasErrors: () => false,
   editorHasErrors: () => false,
+  onChangeSelectedDoc: () => false,
   getErrorFiles: () => [],
   isSaving: false,
   setIsSaving: noop,
@@ -435,6 +443,10 @@ const EditorContextProvider = ({
   const currentScript = scripts.find((s) => s.id === currentScriptId);
   const setCurrentScript = (s: Script) => setCurrentScriptId(s.id);
 
+  const { docs, onChangeSelectedDoc, selectedDoc } = useTutorial(
+    currentScript?.code ?? '',
+  );
+
   const resetDirtyState = () => {
     setModelsDirtyState(
       (Object.keys(modelsDirtyState) as string[]).reduce((acc, elem) => {
@@ -446,7 +458,7 @@ const EditorContextProvider = ({
     );
   };
 
-  const onChange: EditorProps['onChange'] = async (value = '', event) => {
+  const onChange: EditorProps['onChange'] = async (value = '') => {
     if (!monacoRef?.current || !currentScript) return;
     runEditorActionsDebounced({
       value,
@@ -762,6 +774,8 @@ const EditorContextProvider = ({
       value={{
         currentScript,
         setCurrentScript,
+        selectedDoc,
+        docs,
         onChange,
         onValidate,
         scripts,
@@ -785,6 +799,7 @@ const EditorContextProvider = ({
         addLog,
         setLogStore,
         markLogsAsRead,
+        onChangeSelectedDoc,
         preserveLogs,
         setPreserveLogs,
         lastReadLogsTimestamp,

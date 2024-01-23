@@ -497,6 +497,7 @@ function getSourceWithoutComments(srcPassedIn: string | SourceFile = '') {
  */
 export function parseDirectivePrologue({
   code = '',
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   throwErrors = false,
   src: srcPassedIn,
 }: ParseCodeParameters = {}) {
@@ -664,6 +665,47 @@ export function addParamToCode({
   );
 
   return newCode;
+}
+
+export function getTutorialJsDocs({
+  code,
+  jsdoc,
+}: {
+  code: string;
+  jsdoc: string;
+}) {
+  const src = getSourceFileFromCode(code);
+  const jsDocText = jsdoc.replace(/\s+/g, ' ').trim();
+
+  const foundVariable = src.getVariableStatements().find((variable) => {
+    const variableJSDoc = variable
+      .getJsDocs()[0]
+      ?.getFullText()
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    return variableJSDoc === jsDocText;
+  });
+
+  const foundFn = src.getFunctions().find((fn) => {
+    const fnText = fn.getJsDocs()[0]?.getFullText().replace(/\s+/g, ' ').trim();
+
+    return fnText === jsDocText;
+  });
+
+  if (foundVariable) {
+    return {
+      startLine: foundVariable?.getStartLineNumber(),
+      endLine: foundVariable?.getEndLineNumber(),
+    };
+  }
+
+  if (foundFn) {
+    return {
+      startLine: foundFn?.getStartLineNumber(),
+      endLine: foundFn?.getEndLineNumber(),
+    };
+  }
 }
 
 export function parseComments({ code, src: srcPassedIn }: ParseCodeParameters) {
