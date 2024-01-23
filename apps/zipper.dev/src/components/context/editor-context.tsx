@@ -10,6 +10,8 @@ import {
   MutableRefObject,
   useCallback,
   useMemo,
+  Dispatch,
+  SetStateAction,
 } from 'react';
 import noop from '~/utils/noop';
 
@@ -69,6 +71,7 @@ export type EditorContextType = {
   save: () => Promise<string>;
   refetchApp: () => Promise<any>;
   inputParams?: InputParam[];
+  inputParamsIsLoading: boolean;
   inputError?: string;
   monacoRef?: MutableRefObject<Monaco | undefined>;
   logs: Zipper.Log.Message[];
@@ -102,6 +105,7 @@ export const EditorContext = createContext<EditorContextType>({
   currentScript: undefined,
   setCurrentScript: noop,
   onChange: noop,
+  inputParamsIsLoading: true,
   onValidate: noop,
   scripts: [],
   editor: undefined,
@@ -419,8 +423,16 @@ const EditorContextProvider = ({
 }) => {
   const [currentScriptId, setCurrentScriptId] = useState<string>();
 
-  const [inputParams, setInputParams] = useState<InputParam[] | undefined>([]);
+  const [inputParams, _setInputParams] = useState<InputParam[] | undefined>([]);
   const [inputError, setInputError] = useState<string | undefined>();
+  const [inputParamsIsLoading, setInputParamsIsLoading] = useState(true);
+
+  const setInputParams: Dispatch<SetStateAction<InputParam[] | undefined>> = (
+    params,
+  ) => {
+    setInputParamsIsLoading(false);
+    return _setInputParams(params);
+  };
 
   const [isSaving, setIsSaving] = useState(false);
 
@@ -778,6 +790,7 @@ const EditorContextProvider = ({
         docs,
         onChange,
         onValidate,
+        inputParamsIsLoading,
         scripts,
         editor,
         setEditor,
