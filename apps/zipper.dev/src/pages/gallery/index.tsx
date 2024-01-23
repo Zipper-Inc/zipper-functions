@@ -9,6 +9,7 @@ import { createServerSideHelpers } from '@trpc/react-query/server';
 import { trpcRouter } from '~/server/routers/_app';
 import SuperJSON from 'superjson';
 import { createContext } from '~/server/context';
+import { AnalyticsHead } from '@zipper/utils';
 
 const GalleryPage: NextPageWithLayout = () => {
   const galleryApps = trpc.app.allApproved.useQuery();
@@ -19,14 +20,17 @@ const GalleryPage: NextPageWithLayout = () => {
 
   if (galleryApps.isSuccess) {
     return (
-      <Gallery
-        apps={galleryApps.data}
-        isPublicGallery
-        heading={'Applet Gallery'}
-        subheading={`Wander through some of the applets we've built to show you what's possible with Zipper.
+      <>
+        <AnalyticsHead />
+        <Gallery
+          apps={galleryApps.data}
+          isPublicGallery
+          heading={'Applet Gallery'}
+          subheading={`Wander through some of the applets we've built to show you what's possible with Zipper.
 
         If something sparks your interest, you can fork it or just browse through the code to see how it works.`}
-      />
+        />
+      </>
     );
   }
 

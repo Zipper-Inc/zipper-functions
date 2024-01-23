@@ -12,7 +12,6 @@ import { HelpModeProvider } from '~/components/context/help-mode-context';
 import { DefaultLayout } from '~/components/default-layout';
 import Header from '~/components/header';
 import { Playground } from '~/components/playground/playground';
-import { withLiveblocksRoom } from '~/hocs/with-liveblocks';
 import { NextPageWithLayout } from '~/pages/_app';
 import { createContext } from '~/server/context';
 import { trpcRouter } from '~/server/routers/_app';
@@ -67,26 +66,19 @@ const PlaygroundPage: NextPageWithLayout<Props> = ({
     return appQuery.refetch(options);
   };
 
-  const playground = withLiveblocksRoom(
-    () => (
-      <EditorContextProvider
-        app={appQuery.data}
-        appId={appQuery.data?.id}
-        appSlug={appQuery.data.slug}
-        resourceOwnerSlug={appQuery.data.resourceOwner.slug}
-        refetchApp={refetchApp}
-        readOnly={appQuery.data.canUserEdit === false}
-      >
-        <HelpModeProvider>
-          <Playground app={appQuery.data} filename={filename} tab={tab} />
-        </HelpModeProvider>
-      </EditorContextProvider>
-    ),
-    {
-      room: `${resourceOwnerSlug}/${appSlug}`,
-      initialStorage: {},
-      initialPresence: {},
-    },
+  const playground = (
+    <EditorContextProvider
+      app={appQuery.data}
+      appId={appQuery.data?.id}
+      appSlug={appQuery.data.slug}
+      resourceOwnerSlug={appQuery.data.resourceOwner.slug}
+      refetchApp={refetchApp}
+      readOnly={appQuery.data.canUserEdit === false}
+    >
+      <HelpModeProvider>
+        <Playground app={appQuery.data} filename={filename} tab={tab} />
+      </HelpModeProvider>
+    </EditorContextProvider>
   );
 
   return (

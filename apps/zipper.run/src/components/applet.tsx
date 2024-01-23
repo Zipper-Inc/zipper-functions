@@ -42,6 +42,7 @@ import {
   __ZIPPER_TEMP_USER_ID,
   X_ZIPPER_TEMP_USER_ID,
   X_ZIPPER_ACCESS_TOKEN,
+  removeExtension,
 } from '@zipper/utils';
 import { deleteCookie } from 'cookies-next';
 import { motion } from 'framer-motion';
@@ -53,7 +54,11 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { HiChevronDoubleLeft, HiChevronDoubleRight } from 'react-icons/hi2';
 import TimeAgo from 'react-timeago';
-import { fetchBootPayloadCachedWithUserInfoOrThrow } from '~/utils/get-boot-info';
+import {
+  fetchBootPayloadCachedWithUserInfoOrThrow,
+  getFilenameFromPath,
+  getPathFromFilename,
+} from '~/utils/get-boot-info';
 import { getConnectorsAuthUrl } from '~/utils/get-connectors-auth-url';
 import { getAppletUrl, getRelayUrl } from '~/utils/get-relay-url';
 import getValidSubdomain from '~/utils/get-valid-subdomain';
@@ -69,6 +74,7 @@ import ConnectorsAuthInputsSection from './connectors-auth-inputs-section';
 import Header from './header';
 import InputSummary from './input-summary';
 import Unauthorized from './unauthorized';
+import { get } from 'http';
 
 const { __DEBUG__ } = process.env;
 
@@ -640,6 +646,8 @@ export const getServerSideProps: GetServerSideProps = async ({
       resolvedUrl,
     });
 
+  const path = filenameFromUrl ? getPathFromFilename(filenameFromUrl) : 'main';
+
   const { token, userId } = await getZipperAuth(req);
   const tempUserId = req.cookies[__ZIPPER_TEMP_USER_ID];
 
@@ -649,7 +657,7 @@ export const getServerSideProps: GetServerSideProps = async ({
       subdomain,
       tempUserId,
       version: versionFromUrl,
-      filename: filenameFromUrl,
+      path,
       token,
     });
   } catch (e: any) {
@@ -671,17 +679,9 @@ export const getServerSideProps: GetServerSideProps = async ({
   const { app, entryPoint, parsedScripts, runnableScripts } = bootInfo;
 
   const version = (versionFromUrl || 'latest').replace(/^@/, '');
-  const filename = filenameFromUrl || 'main';
-  // if (!filename.endsWith('.ts')) filename = `${filename}.ts}`;
+  const filename = getFilenameFromPath(path, runnableScripts);
 
-  if (
-    !runnableScripts.find((f) => {
-      return (
-        f === filename || f === `${filename}.ts` || f === `${filename}.tsx`
-      );
-    })
-  )
-    return { notFound: true };
+  if (!filename) return { notFound: true };
 
   const parsedFile = findFileInParsedScripts(filename, parsedScripts);
   const parsedAction = actionFromUrl && parsedFile?.actions?.[actionFromUrl];

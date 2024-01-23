@@ -7,15 +7,16 @@ import Editor, {
 import * as monaco from 'monaco-editor';
 import { buildWorkerDefinition } from 'monaco-editor-workers';
 import {
+  LiveblocksRoom,
   StoredScriptId,
-  useMyPresence,
   useOthersConnectionIds,
-  useRoom,
+  client,
 } from '~/liveblocks.config';
+import styles from './playground-styles.module.css';
 
 import { parse } from '@babel/parser';
 import traverse from '@babel/traverse';
-import { useColorModeValue } from '@chakra-ui/react';
+import { useColorMode, useColorModeValue } from '@chakra-ui/react';
 import { baseColors, prettierFormat, useCmdOrCtrl } from '@zipper/ui';
 import MonacoJSXHighlighter from 'monaco-jsx-highlighter';
 import { useEffect, useRef, useState } from 'react';
@@ -33,6 +34,7 @@ import {
 } from '~/utils/playground.utils';
 import { TypedLiveblocksProvider } from '~/liveblocks.config';
 import { Script } from '@prisma/client';
+import { getLiveblocksRoom, withLiveblocksRoom } from '~/hocs/with-liveblocks';
 
 export type MonacoEditor = monaco.editor.IStandaloneCodeEditor;
 
@@ -64,12 +66,29 @@ const TYPESCRIPT_ERRORS_TO_IGNORE = [
 const isExternalResource = (resource: string | monaco.Uri) =>
   /^https?/.test(resource.toString());
 
+export const CollabCursors = ({ editorRef }: { editorRef: any }) => {
+  const connectionIds = useOthersConnectionIds();
+  return (
+    <>
+      {connectionIds.map((id) => (
+        <PlaygroundCollabCursor
+          connectionId={id}
+          editorRef={editorRef}
+          key={id}
+        />
+      ))}
+    </>
+  );
+};
+
 export default function PlaygroundEditor(
   props: EditorProps & {
     appName: string;
   },
 ) {
   const {
+    appSlug,
+    resourceOwnerSlug,
     setCurrentScript,
     currentScript,
     scripts,
@@ -78,6 +97,8 @@ export default function PlaygroundEditor(
     runEditorActions,
     readOnly,
     onValidate,
+    selectedDoc,
+    docs,
   } = useEditorContext();
   const { boot, bootPromise, run, configs } = useRunAppContext();
   const editorRef = useRef<MonacoEditor>();
@@ -94,10 +115,11 @@ export default function PlaygroundEditor(
   const [isModelReady, setIsModelReady] = useState(false);
   const [isLiveblocksReady, setIsLiveblocksReady] = useState(false);
   const monacoEditor = useMonaco();
-  const [, updateMyPresence] = useMyPresence();
-  const connectionIds = useOthersConnectionIds();
   const [defaultLanguage] = useState<'typescript' | 'markdown'>('typescript');
   const theme = useColorModeValue('vs', 'vs-dark');
+  const { colorMode } = useColorMode();
+  const roomRef = useRef<LiveblocksRoom>();
+  const leaveRoomRef = useRef<() => void>();
 
   const handleEditorDidMount = (editor: MonacoEditor, monaco: Monaco) => {
     console.log('[EDITOR]', 'Editor is mounted');
@@ -111,6 +133,15 @@ export default function PlaygroundEditor(
         'dropdown.background': baseColors.gray[800],
         'editorWidget.background': baseColors.gray[800],
         'input.background': baseColors.gray[800],
+      },
+    });
+
+    monacoRef?.current?.editor.addEditorAction({
+      id: 'create-documentation-block',
+      label: 'Create Documentation Block',
+      contextMenuGroupId: '9_cutcopypaste',
+      run: () => {
+        return;
       },
     });
 
@@ -134,11 +165,21 @@ export default function PlaygroundEditor(
       true,
     );
 
+    const room = client.enterRoom(
+      getLiveblocksRoom({ slug: appSlug }, { slug: resourceOwnerSlug }),
+      {
+        initialPresence: {},
+      },
+    );
+
+    roomRef.current = room.room as any;
+    leaveRoomRef.current = room.leave;
+
     // set up cursor tracking
     // liveblocks here
     editor.onDidChangeCursorSelection(({ selection }) => {
       try {
-        updateMyPresence({ selection: { ...selection } });
+        roomRef.current?.updatePresence({ selection: { ...selection } });
       } catch (e) {
         console.error('Caught error in updateMyPresence', e);
       }
@@ -176,7 +217,6 @@ export default function PlaygroundEditor(
       return result;
     };
   };
-
   useEffect(() => {
     if (monacoEditor) {
       monacoEditor.languages.register({
@@ -331,7 +371,7 @@ export default function PlaygroundEditor(
         changeMarkersListener?.dispose();
       };
     }
-  }, [isEditorReady]);
+  }, [isEditorReady, editorRef]);
 
   // Load new scripts
   // Purges old scripts and reconnects to liveblocks
@@ -361,7 +401,7 @@ export default function PlaygroundEditor(
         .map((m) => ({
           model: m,
           bindingEntry: Object.entries(yRefs.current.bindings).find(
-            ([k, b]) => b.monacoModel === m,
+            ([, b]) => b.monacoModel === m,
           ),
         }));
 
@@ -398,6 +438,18 @@ export default function PlaygroundEditor(
       console.log('[EDITOR]', `Setting model to ${currentScript.filename}`);
 
       editorRef.current.setModel(model);
+      editorRef.current?.getAction('editor.foldAllBlockComments')?.run();
+      editorRef.current.addAction({
+        id: 'custom-action',
+        label: 'Custom Action',
+        keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyK],
+        contextMenuGroupId: 'navigation',
+        contextMenuOrder: 1.5,
+        run: function () {
+          // Your custom action logic here
+          alert('Custom Action Clicked!');
+        },
+      });
       runEditorActions({
         now: true,
         value: model.getValue(),
@@ -431,8 +483,6 @@ export default function PlaygroundEditor(
       }
     });
   }, [currentScript?.hash, configs]);
-
-  const room = useRoom();
 
   /**
    * Generic helper to convert between the things we likely need
@@ -497,6 +547,7 @@ export default function PlaygroundEditor(
     );
 
     return new Promise<void>((resolve) =>
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       yProvider.once('synced', (_args: true | [string, any][]) => {
         // If the sync event is empty then we need to reset the script
         if (yText.length === 0 && script.code.trim().length > 0) {
@@ -529,16 +580,17 @@ export default function PlaygroundEditor(
   };
 
   useEffect(() => {
-    if (isEditorReady && room && isModelReady && !readOnly) {
+    if (roomRef.current && isEditorReady && isModelReady && !readOnly) {
       if (
         !yRefs.current.yDoc ||
         !yRefs.current.yProvider ||
         !Object.values(yRefs.current.bindings).length
       ) {
         console.log('[EDITOR]', '(liveblocks)', 'Syncing models');
+
         yRefs.current.yDoc = new Y.Doc();
         yRefs.current.yProvider = new LiveblocksProvider(
-          room,
+          roomRef.current,
           yRefs.current.yDoc,
         );
         yRefs.current.bindings = {};
@@ -557,12 +609,13 @@ export default function PlaygroundEditor(
         Object.values(yRefs.current).filter((truthy) => !!truthy).length === 3
       ) {
         console.log('[EDITOR]', '(liveblocks)', 'Cleaning up');
+        leaveRoomRef.current?.();
         yRefs.current.yDoc?.destroy();
         yRefs.current.yProvider?.destroy();
         Object.values(yRefs.current.bindings).forEach((b) => b?.destroy());
       }
     };
-  }, [isEditorReady, isModelReady, room, readOnly]);
+  }, [isEditorReady, isModelReady, readOnly, roomRef.current]);
 
   // Short cut to reset yDoc to database
   useCmdOrCtrl(
@@ -573,6 +626,75 @@ export default function PlaygroundEditor(
     },
     [yRefs.current.yDoc, currentScript],
   );
+
+  useEffect(() => {
+    if (isLiveblocksReady && docs.length >= 1 && !selectedDoc.startLine) {
+      const editor = editorRef.current!;
+      const highLightDecorations = editor
+        .getModel()
+        ?.getAllDecorations()
+        .filter(
+          (deco) =>
+            docs
+              .map((line) => line.startLine)
+              .includes(deco.range.startLineNumber) &&
+            docs.map((line) => line.endLine).includes(deco.range.endLineNumber),
+        );
+
+      editor.removeDecorations(
+        highLightDecorations?.map((deco) => deco.id) as string[],
+      );
+    }
+
+    if (isLiveblocksReady && docs.length >= 1 && !!selectedDoc.startLine) {
+      const editor = editorRef.current!;
+
+      console.log(`${colorMode === 'dark' ? 'dark-' : ''}tutorial-line-enable`);
+
+      const decorations: monaco.editor.IModelDeltaDecoration[] = docs.map(
+        (script) => ({
+          range: {
+            startLineNumber: script.startLine!,
+            startColumn: 1,
+            endLineNumber: script.endLine!,
+            endColumn: Number.MAX_SAFE_INTEGER,
+          },
+          options: {
+            isWholeLine: true,
+            className: script.isSelected
+              ? styles[
+                  `${colorMode === 'dark' ? 'dark-' : ''}tutorial-line-enable`
+                ]
+              : styles['tutorial-line-unable'],
+            marginClassName: script.isSelected
+              ? styles[
+                  `${
+                    colorMode === 'dark' ? 'dark-' : ''
+                  }tutorial-line-margin-enable`
+                ]
+              : styles['tutorial-line-margin-unable'],
+          },
+        }),
+      );
+
+      const highLightDecorations = editor
+        .getModel()
+        ?.getAllDecorations()
+        .filter(
+          (deco) =>
+            docs
+              .map((line) => line.startLine)
+              .includes(deco.range.startLineNumber) &&
+            docs.map((line) => line.endLine).includes(deco.range.endLineNumber),
+        );
+
+      editor.removeDecorations(
+        highLightDecorations?.map((deco) => deco.id) as string[],
+      );
+
+      editor.createDecorationsCollection().set(decorations);
+    }
+  }, [isLiveblocksReady, editorRef, docs, selectedDoc, colorMode]);
 
   return (
     <>
@@ -617,13 +739,17 @@ export default function PlaygroundEditor(
         onMount={handleEditorDidMount}
         {...props}
       />
-      {connectionIds.map((id) => (
-        <PlaygroundCollabCursor
-          connectionId={id}
-          editorRef={editorRef}
-          key={id}
-        />
-      ))}
+      {withLiveblocksRoom(
+        () => (
+          <CollabCursors editorRef={editorRef} />
+        ),
+        {
+          room: getLiveblocksRoom(
+            { slug: appSlug },
+            { slug: resourceOwnerSlug },
+          ),
+        },
+      )}
     </>
   );
 }

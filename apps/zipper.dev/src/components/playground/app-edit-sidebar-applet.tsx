@@ -12,12 +12,13 @@ import {
   PopoverHeader,
   PopoverTrigger,
   Progress,
+  Skeleton,
   Text,
   Tooltip,
   UnorderedList,
   VStack,
 } from '@chakra-ui/react';
-import { ZipperLocation } from '@zipper/types';
+import { AppInfo, InputParam, ZipperLocation } from '@zipper/types';
 import {
   FunctionInputs,
   FunctionOutput,
@@ -26,7 +27,7 @@ import {
   useAppletContent,
 } from '@zipper/ui';
 import { getRunUrl, parseRunUrlPath } from '@zipper/utils';
-import { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { HiExclamationCircle, HiOutlineLightBulb } from 'react-icons/hi2';
 import { PiPlayBold, PiPlayDuotone } from 'react-icons/pi';
 import { useUser } from '~/hooks/use-user';
@@ -59,14 +60,8 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
 
   const { user } = useUser();
 
-  const {
-    currentScript,
-    inputParams,
-    inputError,
-    editorHasErrors,
-    getErrorFiles,
-    monacoRef,
-  } = useEditorContext();
+  const { currentScript, inputParams, inputError, monacoRef } =
+    useEditorContext();
 
   const mainApplet = useAppletContent();
 
@@ -146,19 +141,6 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
     }
   };
 
-  const errorTooltip =
-    inputError ||
-    (editorHasErrors() && (
-      <>
-        Fix errors in the following files before running:
-        <UnorderedList>
-          {getErrorFiles().map((f, i) => (
-            <ListItem key={`[${i}] ${f}`}>{f}</ListItem>
-          ))}
-        </UnorderedList>
-      </>
-    ));
-
   const setInputsAtTimeOfRun = () => {
     const formValues = formMethods.getValues();
     const formKeys = inputParams?.map((param) => `${param.key}:${param.type}`);
@@ -179,14 +161,7 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
 
   return (
     <>
-      {description && (
-        <Box mb="6">
-          <HandlerDescription
-            description={description}
-            location={ZipperLocation.ZipperDotDev}
-          />
-        </Box>
-      )}
+      <MaybeHandlerDescription description={description} />
       <Box
         p={4}
         backgroundColor="fg.100"
@@ -229,38 +204,17 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
           )}{' '}
         </>
 
-        {isHandler && (
-          <HStack w="full" mb="2">
-            <Tooltip label={errorTooltip || inputError}>
-              <span style={{ width: '100%' }}>
-                <Button
-                  w="full"
-                  mt="4"
-                  colorScheme="purple"
-                  onClick={async () => {
-                    setInputsAtTimeOfRun();
-                    setRunId(
-                      await run({
-                        shouldSave: appInfo.canUserEdit,
-                      }),
-                    );
-                  }}
-                  display="flex"
-                  gap={2}
-                  fontWeight="medium"
-                  isDisabled={isRunning || !inputParams || editorHasErrors()}
-                >
-                  {currentScript?.filename === 'main.ts' ? (
-                    <PiPlayBold />
-                  ) : (
-                    <PiPlayDuotone />
-                  )}
-                  <Text>Run</Text>
-                </Button>
-              </span>
-            </Tooltip>
-          </HStack>
-        )}
+        <MaybeRunButton
+          {...{
+            // isHandler
+            setInputsAtTimeOfRun,
+            setRunId,
+            run,
+            appInfo,
+            isRunning,
+            // inputParams,
+          }}
+        />
 
         {isRunning && (
           <Progress
@@ -284,6 +238,90 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
     </>
   );
 };
+
+type MaybeRunButtonP = {
+  setInputsAtTimeOfRun: () => void;
+  setRunId: any;
+};
+function MaybeRunButton(props: MaybeRunButtonP) {
+  const { run, isRunning, appInfo } = useRunAppContext();
+  const {
+    currentScript,
+    inputError,
+    editorHasErrors,
+    getErrorFiles,
+    inputParams,
+    inputParamsIsLoading,
+  } = useEditorContext();
+  const isHandler = inputParams || inputError;
+
+  const errorTooltip =
+    inputError ||
+    (editorHasErrors() && (
+      <>
+        Fix errors in the following files before running:
+        <UnorderedList>
+          {getErrorFiles().map((f, i) => (
+            <ListItem key={`[${i}] ${f}`}>{f}</ListItem>
+          ))}
+        </UnorderedList>
+      </>
+    ));
+
+  if (inputParamsIsLoading) return <Skeleton w="full" mt="4" py="8px" />;
+  if (!isHandler) return null;
+
+  return (
+    <HStack w="full" mb="2">
+      <Tooltip label={errorTooltip || inputError}>
+        <span style={{ width: '100%' }}>
+          <Button
+            w="full"
+            mt="4"
+            colorScheme="purple"
+            onClick={async () => {
+              props.setInputsAtTimeOfRun();
+              props.setRunId(
+                await run({
+                  shouldSave: appInfo.canUserEdit,
+                }),
+              );
+            }}
+            display="flex"
+            gap={2}
+            fontWeight="medium"
+            isDisabled={isRunning || !inputParams || editorHasErrors()}
+          >
+            {currentScript?.filename === 'main.ts' ? (
+              <PiPlayBold />
+            ) : (
+              <PiPlayDuotone />
+            )}
+            <Text>Run</Text>
+          </Button>
+        </span>
+      </Tooltip>
+    </HStack>
+  );
+}
+
+function MaybeHandlerDescription(props: {
+  description?: {
+    title?: string | undefined;
+    subtitle?: string | undefined;
+    body?: string | undefined;
+  };
+}) {
+  if (!props.description) return null;
+  return (
+    <Box mb="6">
+      <HandlerDescription
+        description={props.description}
+        location={ZipperLocation.ZipperDotDev}
+      />
+    </Box>
+  );
+}
 
 function MaybeErrorWhileParsingHandlerFunction(props: {
   inputError: string | undefined;
