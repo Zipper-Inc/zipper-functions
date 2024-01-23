@@ -30,10 +30,10 @@ import { CreateOrganizationModal } from '~/components/auth/createOrganizationMod
 /* -------------------------------------------- */
 
 const DASHBOARD_ROUTES = [
+  { href: '/dashboard', text: 'Dashboard' },
   { href: '/gallery', text: 'Gallery' },
   { href: '/changelog', text: 'Changelog' },
   { href: '/docs', text: 'Docs' },
-  { href: '/dashboard', text: 'Dashboard' },
   { href: '/blog', text: 'Blog' },
 ];
 
@@ -76,7 +76,7 @@ const OrganizationSwitcher: React.FC = () => {
           <HiOutlineChevronUpDown size={16} />
         </Dropdown.Trigger>
         <Dropdown.Content align="start" className="w-72">
-          <header className="flex px-2 py-4 items-center justify-between text-sm">
+          <header className="flex px-2 py-2 items-center justify-between text-sm">
             <article>
               <h3 className="text-md font-bold">
                 {organization?.name || 'Personal Workspace'}
@@ -95,10 +95,8 @@ const OrganizationSwitcher: React.FC = () => {
             </Button>
           </header>
           <Dropdown.Separator />
-          <main className="py-4 flex flex-col gap-2">
-            <h3 className="px-2 uppercase font-bold text-xs text-gray-400">
-              switch workspace
-            </h3>
+          <main className="py-2 flex flex-col gap-2">
+            <h3 className="text-xs px-2 text-disabled">Switch workspace:</h3>
             <List data={OTHER_ORGANIZATIONS}>
               {(org) => (
                 <Dropdown.Item
@@ -109,9 +107,9 @@ const OrganizationSwitcher: React.FC = () => {
                         )
                       : await setActive?.(org.organization.id)
                   }
-                  className="group cursor-pointer flex items-center justify-between hover:bg-brand-red"
+                  className="group cursor-pointer flex items-center justify-between"
                 >
-                  <h3>{org.organization.name}</h3>
+                  <h3 className="font-medium">{org.organization.name}</h3>
                   <Show
                     when={org.pending}
                     fallback={
