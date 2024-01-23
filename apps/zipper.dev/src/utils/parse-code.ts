@@ -20,6 +20,7 @@ import {
 } from 'ts-morph';
 import { rewriteSpecifier } from './rewrite-imports';
 import { getRemoteModule } from './eszip-utils';
+import { LoadResponseModule } from '@deno/eszip/esm/loader';
 
 // const buildCache = new BuildCachxe();
 
@@ -419,11 +420,11 @@ function findHandlerFunction({
   }
 }
 
-function solveTypeReference(
+async function solveTypeReference(
   typeNode: TypeReferenceNode,
   fileName: string,
   project: Project | undefined,
-): TypeNode | undefined {
+) {
   const src = project?.getSourceFile(fileName);
   if (!src || !project) return;
 
@@ -447,6 +448,7 @@ function solveTypeReference(
       // TODO
     }
   } else {
+    console.log('not found in the SAME file');
     const imports = src.getImportDeclarations();
     const importDeclaration = imports.find((x) => {
       const insideImport = x.getNamedImports().map((n) => n.getText());
@@ -460,52 +462,64 @@ function solveTypeReference(
       return;
     }
 
-    const fileInProject = importDeclaration.getModuleSpecifierSourceFile();
+    const fileInProject = project.getSourceFile(
+      importDeclaration.getModuleSpecifierValue(),
+    );
 
     // External import
     if (!fileInProject) {
+      console.log('IS EXTERNAL');
       console.log(
         'external import',
         importDeclaration.getModuleSpecifierValue(),
       );
-      // // solve external import
-      // const specifier = importDeclaration.getModuleSpecifierValue();
-      // // fetch external import
-      // const externalModule = await getRemoteModule({
-      //   specifier: rewriteSpecifier(specifier),
-      // });
+      // solve external import
+      const specifier = importDeclaration.getModuleSpecifierValue();
+      // fetch external import
+      // TODO: Call /x/bundle?specifier=specifier
+      console.log(`/api/editor/ts/bundle?x=${specifier}`);
+      const externalModule = await fetch(`/api/editor/ts/bundle?x=${specifier}`)
+        .then((res) => res.json() as Promise<{ [filename: string]: string }>)
+        .catch(() => null);
 
-      // if (!externalModule) {
-      //   console.error('Couldnt fetch external module');
-      //   return;
-      // }
-      // // add in the project
-      // const externalModuleSourceFile = project.createSourceFile(
-      //   specifier,
-      //   externalModule.content,
-      // );
-      // // get the type node in the file
-      // const declaration =
-      //   externalModuleSourceFile.getTypeAlias(typeReferenceName) ||
-      //   externalModuleSourceFile.getInterface(typeReferenceName) ||
-      //   externalModuleSourceFile.getEnum(typeReferenceName);
+      if (!externalModule) {
+        console.error('Couldnt fetch external module');
+        return;
+      }
+      // add in the project
+      for (const [filename, code] of Object.entries(externalModule)) {
+        project.createSourceFile(filename, code);
+      }
 
-      // const isInSameFile = !!declaration;
-      // if (isInSameFile && declaration) {
-      //   console.log('found in the REMOTE file');
+      const fixed = rewriteSpecifier(specifier);
+      const importedFile = project.getSourceFile(fixed);
+      // Recursive step -- looking for the type in the imported file, it can be imported, declared, or exported from other file
+      // im pretty much redoing the compiler rn lol
 
-      //   if (declaration.isKind(SyntaxKind.TypeAliasDeclaration)) {
-      //     const node = declaration.getTypeNode();
-      //     console.log('imported type node', node?.getFullText());
-      //     return node;
-      //   }
-      //   if (declaration.isKind(SyntaxKind.InterfaceDeclaration)) {
-      //     // TODO
-      //   }
-      //   if (declaration.isKind(SyntaxKind.EnumDeclaration)) {
-      //     // TODO
-      //   }
-      // }
+      console.log('imported file', importedFile?.getFullText());
+
+      // get the type node in the file
+      const declaration =
+        importedFile?.getTypeAlias(typeReferenceName) ||
+        importedFile?.getInterface(typeReferenceName) ||
+        importedFile?.getEnum(typeReferenceName);
+
+      const isInSameFile = !!declaration;
+      if (isInSameFile && declaration) {
+        console.log('found in the REMOTE file');
+
+        if (declaration.isKind(SyntaxKind.TypeAliasDeclaration)) {
+          const node = declaration.getTypeNode();
+          console.log('imported type node', node?.getFullText());
+          return node;
+        }
+        if (declaration.isKind(SyntaxKind.InterfaceDeclaration)) {
+          // TODO
+        }
+        if (declaration.isKind(SyntaxKind.EnumDeclaration)) {
+          // TODO
+        }
+      }
       return;
     }
 
@@ -534,12 +548,12 @@ function solveTypeReference(
   }
 }
 
-function parseHandlerInputs(
+async function parseHandlerInputs(
   handlerFn: HandlerFn,
   handlerFile: string,
   project: Project | undefined,
   throwErrors: boolean,
-): InputParam[] {
+) {
   const inputs = handlerFn.getParameters();
   const params = inputs[0];
 
@@ -578,9 +592,11 @@ function parseHandlerInputs(
     !src.getTypeAlias(typeNode?.getText())?.getTypeNode()
   ) {
     console.log('type reference', typeNode.getText());
-    const node = solveTypeReference(typeNode, handlerFile, project);
-    if (!node) return [];
-    if (node.isKind(SyntaxKind.TypeLiteral)) {
+    const node = await solveTypeReference(typeNode, handlerFile, project).catch(
+      (e) => console.error('Error', e),
+    );
+    console.log('node', node?.getFullText());
+    if (node?.isKind(SyntaxKind.TypeLiteral)) {
       return unwrapObject(node);
     }
   }
@@ -660,11 +676,11 @@ function unwrapObject(node: TypeLiteralNode): InputParam[] {
 }
 
 // returns undefined if the file isn't runnable (no handler function)
-export function parseInputForTypes({
+export async function parseInputForTypes({
   handlerFile,
   project,
   throwErrors = false,
-}: ParseCode): undefined | InputParam[] {
+}: ParseCode) {
   try {
     const src = project?.getSourceFile(handlerFile);
     if (!src) return;
@@ -726,33 +742,33 @@ export function parseActions({
 
     const actionsProperties = actionsObject.getProperties();
 
-    const actions = actionsProperties.reduce((actionsSoFar, property) => {
-      const name = property
-        .getFirstChildIfKind(SyntaxKind.Identifier)
-        ?.getText();
+    // const actions = actionsProperties.reduce((actionsSoFar, property) => {
+    //   const name = property
+    //     .getFirstChildIfKind(SyntaxKind.Identifier)
+    //     ?.getText();
 
-      const handlerFn =
-        property.getLastChildIfKind(SyntaxKind.ArrowFunction) ||
-        property.getLastChildIfKind(SyntaxKind.FunctionExpression) ||
-        property.getLastChildIfKind(SyntaxKind.FunctionDeclaration);
+    //   const handlerFn =
+    //     property.getLastChildIfKind(SyntaxKind.ArrowFunction) ||
+    //     property.getLastChildIfKind(SyntaxKind.FunctionExpression) ||
+    //     property.getLastChildIfKind(SyntaxKind.FunctionDeclaration);
 
-      if (!name || !handlerFn) return actionsSoFar;
+    //   if (!name || !handlerFn) return actionsSoFar;
 
-      return {
-        ...actionsSoFar,
-        [name]: {
-          name,
-          inputs: parseHandlerInputs(
-            handlerFn,
-            handlerFile,
-            project,
-            throwErrors,
-          ),
-        },
-      };
-    }, {} as Record<string, { name: string; inputs: InputParam[] }>);
-
-    return Object.keys(actions).length ? actions : undefined;
+    //   return {
+    //     ...actionsSoFar,
+    //     [name]: {
+    //       name,
+    //       inputs: parseHandlerInputs(
+    //         handlerFn,
+    //         handlerFile,
+    //         project,
+    //         throwErrors,
+    //       ),
+    //     },
+    //   };
+    // }, {} as Record<string, { name: string; inputs: InputParam[] }>);
+    // return Object.keys(actions).length ? actions : undefined;
+    return undefined;
   } catch (e) {
     if (throwErrors) throw e;
     console.error('caught during parseActions', e);
@@ -843,8 +859,12 @@ export function parseApp({ handlerFile, modules, throwErrors }: ParseProject) {
   return parseCode({ handlerFile, project, throwErrors });
 }
 
-function parseCode({ handlerFile, project, throwErrors = false }: ParseCode) {
-  let inputs = parseInputForTypes({ handlerFile, project, throwErrors });
+async function parseCode({
+  handlerFile,
+  project,
+  throwErrors = false,
+}: ParseCode) {
+  let inputs = await parseInputForTypes({ handlerFile, project, throwErrors });
 
   const actions = parseActions({ handlerFile, throwErrors, project });
 
@@ -897,7 +917,7 @@ export function createProjectFromCode(code: string) {
   return { project, src, handlerFile };
 }
 
-export function addParamToCode({
+export async function addParamToCode({
   code,
   paramName = 'newInput',
   paramType = 'string',
@@ -905,7 +925,7 @@ export function addParamToCode({
   code: string;
   paramName?: string;
   paramType?: string;
-}): string {
+}): Promise<string> {
   const { src, handlerFile, project } = createProjectFromCode(code);
 
   const handler = src?.getFunction('handler');
@@ -956,7 +976,7 @@ export function addParamToCode({
     return code;
   }
 
-  const existingParams = parseInputForTypes({ handlerFile, project });
+  const existingParams = await parseInputForTypes({ handlerFile, project });
   if (!existingParams) return code;
   // If there is an existing parameter, use its name instead of the default paramName
   if (existingParams.length && existingParams[0]) {

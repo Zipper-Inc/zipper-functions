@@ -465,7 +465,7 @@ async function runEditorActionsNow({
 
     if (tutorials.length >= 1) setTutorials(tutorials);
 
-    const { inputs, imports } = parseApp({
+    const { inputs, imports } = await parseApp({
       modules: { [currentScript.filename]: value, ...otherModules },
       handlerFile: currentScript.filename,
       throwErrors: true,
