@@ -24,7 +24,7 @@ import parser from 'cron-parser';
 import { useEffect, useState } from 'react';
 import { FieldValues, useForm } from 'react-hook-form';
 import { useUser } from '~/hooks/use-user';
-import { parseInputForTypes } from '~/utils/parse-code';
+import { parseCode } from '~/utils/parse-code';
 import { useEditorContext } from '../context/editor-context';
 import { initApplet } from '@zipper-inc/client-js';
 
@@ -56,7 +56,9 @@ export const AddScheduleModal: React.FC<AddScheduleModalProps> = ({
   const [crontab, setCrontab] = useState<string>('');
   const [isCronError, setIsCronError] = useState<boolean>(false);
   const [cronErrorString, setCronErrorString] = useState<string>();
-  const [inputParams, setInputParams] = useState<InputParam[] | undefined>();
+  const [parsedCode, setParsedCode] = useState<ReturnType<typeof parseCode>>();
+  const [selectedScript, setSelectedScript] = useState<string>('main.ts');
+  const [selectedAction, setSelectedAction] = useState<string>();
   const currentCronDescription: string = addModalForm.watch('cronDesc');
   const [debouncedCronDesc] = useDebounce(currentCronDescription, 400);
 
@@ -91,8 +93,8 @@ export const AddScheduleModal: React.FC<AddScheduleModalProps> = ({
 
   useEffect(() => {
     if (isOpen) {
-      setInputParams(
-        parseInputForTypes({
+      setParsedCode(
+        parseCode({
           code: scripts.find((s) => s.filename === 'main.ts')?.code,
         }),
       );
@@ -100,6 +102,11 @@ export const AddScheduleModal: React.FC<AddScheduleModalProps> = ({
   }, [isOpen]);
 
   const user = useUser();
+
+  const { inputs: handlerInputs, actions } = parsedCode || {};
+  const inputParams: InputParam[] | undefined = selectedAction
+    ? parsedCode?.actions?.[selectedAction]?.inputs
+    : handlerInputs;
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
@@ -124,15 +131,18 @@ export const AddScheduleModal: React.FC<AddScheduleModalProps> = ({
               {...addModalForm.register('filename', {
                 onChange: (e) => {
                   addModalForm.setValue('filename', e.target.value);
+                  addModalForm.setValue('action', undefined);
+                  setSelectedScript(e.target.value);
+                  setSelectedAction(undefined);
                   try {
-                    const inputs = parseInputForTypes({
-                      code: scripts.find((s) => s.filename === e.target.value)
-                        ?.code,
-                      throwErrors: true,
-                    });
-                    setInputParams(inputs);
+                    setParsedCode(
+                      parseCode({
+                        code: scripts.find((s) => s.filename === e.target.value)
+                          ?.code,
+                      }),
+                    );
                   } catch (e) {
-                    setInputParams(undefined);
+                    setParsedCode(undefined);
                   }
                 },
               })}
@@ -144,6 +154,29 @@ export const AddScheduleModal: React.FC<AddScheduleModalProps> = ({
                 ))}
             </Select>
           </FormControl>
+          {actions && (
+            <FormControl flex={1} display="flex" flexDirection="column">
+              <FormLabel>Action to run</FormLabel>
+              <Select
+                size="md"
+                color="fg.900"
+                bgColor="bgColor"
+                {...addModalForm.register('action', {
+                  onChange: (e) => {
+                    addModalForm.setValue('action', e.target.value);
+                    setSelectedAction(e.target.value);
+                  },
+                })}
+              >
+                {[
+                  <option key={undefined}>none</option>,
+                  ...Object.keys(actions).map((actionName) => (
+                    <option key={actionName}>{actionName}</option>
+                  )),
+                ]}
+              </Select>
+            </FormControl>
+          )}
           <FormControl
             flex={1}
             display="flex"
@@ -195,9 +228,7 @@ export const AddScheduleModal: React.FC<AddScheduleModalProps> = ({
             </VStack>
           )}
           {inputParams === undefined && (
-            <Text size="sm">
-              This script does not have a main or handler function defined
-            </Text>
+            <Text size="sm">This handler does not have inputs defined</Text>
           )}
           <HStack border="1px solid" borderColor={'fg.100'} p="2">
             <Text>This job will be run as </Text>
@@ -222,7 +253,16 @@ export const AddScheduleModal: React.FC<AddScheduleModalProps> = ({
             onClick={() => {
               const { filename, cronDesc, ...inputs } =
                 addModalForm.getValues();
-              onCreate({ filename, crontab, inputs }, addModalForm.reset);
+              onCreate(
+                {
+                  filename: selectedAction
+                    ? [filename, `$${selectedAction}`].join('/')
+                    : filename,
+                  crontab,
+                  inputs: inputParams?.length ? inputs : {},
+                },
+                addModalForm.reset,
+              );
             }}
           >
             Save

@@ -15,7 +15,6 @@ import {
   AppInfo,
   BootInfoWithUserInfo,
   EntryPointInfo,
-  InputParam,
   InputParams,
   UserAuthConnector,
   ZipperLocation,
@@ -27,6 +26,7 @@ import {
   useCmdOrCtrl,
   withDefaultTheme,
   useUploadContext,
+  findFileInParsedScripts,
 } from '@zipper/ui';
 import {
   getDescription,
@@ -34,12 +34,15 @@ import {
 } from '@zipper/ui/src/components/function-output/handler-description';
 import {
   getInputsFromFormData,
+  getRunUrl,
+  parseRunUrlPath,
   getScreenshotUrl,
   NOT_FOUND,
   UNAUTHORIZED,
   __ZIPPER_TEMP_USER_ID,
   X_ZIPPER_TEMP_USER_ID,
   X_ZIPPER_ACCESS_TOKEN,
+  removeExtension,
 } from '@zipper/utils';
 import { deleteCookie } from 'cookies-next';
 import { motion } from 'framer-motion';
@@ -51,11 +54,14 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { HiChevronDoubleLeft, HiChevronDoubleRight } from 'react-icons/hi2';
 import TimeAgo from 'react-timeago';
-import { fetchBootPayloadCachedWithUserInfoOrThrow } from '~/utils/get-boot-info';
+import {
+  fetchBootPayloadCachedWithUserInfoOrThrow,
+  getFilenameFromPath,
+  getPathFromFilename,
+} from '~/utils/get-boot-info';
 import { getConnectorsAuthUrl } from '~/utils/get-connectors-auth-url';
-import { getRelayUrl } from '~/utils/get-relay-url';
+import { getAppletUrl, getRelayUrl } from '~/utils/get-relay-url';
 import getValidSubdomain from '~/utils/get-valid-subdomain';
-import { getFilenameAndVersionFromPath } from '~/utils/get-values-from-url';
 import { getZipperAuth } from '~/utils/get-zipper-auth';
 import removeAppConnectorUserAuth from '~/utils/remove-app-connector-user-auth';
 import { getShortRunId } from '~/utils/run-id';
@@ -68,6 +74,7 @@ import ConnectorsAuthInputsSection from './connectors-auth-inputs-section';
 import Header from './header';
 import InputSummary from './input-summary';
 import Unauthorized from './unauthorized';
+import { get } from 'http';
 
 const { __DEBUG__ } = process.env;
 
@@ -96,6 +103,7 @@ export type AppPageProps = {
   runUrl?: string;
   softRedirect?: string | null;
   resultOnly?: boolean;
+  action?: string;
 };
 
 export function AppPage({
@@ -119,6 +127,7 @@ export function AppPage({
   runUrl,
   softRedirect,
   resultOnly,
+  action,
 }: AppPageProps) {
   const router = useRouter();
   const { asPath } = router;
@@ -230,32 +239,33 @@ export function AppPage({
       setIsWaitingForUpload(true);
       return;
     }
-    const embedPath = isEmbedded ? 'embed/' : '';
+
     if (!loading) {
       setLoading(true);
       const rawValues = formContext.getValues();
       const values = getInputsFromFormData(rawValues, inputs);
-      if (version !== 'latest') {
-        router.push({
-          pathname: `/run/${embedPath}${filename}/@${version}`,
-          query: JSON.parse(JSON.stringify(values)),
-        });
-      } else {
-        const stringifiedValuesIfObject = Object.entries(values).reduce(
-          (acc, [key, value]) => {
-            acc[key] =
-              typeof value === 'object'
-                ? JSON.stringify(value)
-                : (value as string | number | boolean);
-            return acc;
-          },
-          {} as Record<string, string | number | boolean>,
-        );
-        router.push({
-          pathname: `/run/${embedPath}${filename}`,
-          query: stringifiedValuesIfObject,
-        });
-      }
+      const stringifiedValuesIfObject = Object.entries(values).reduce(
+        (acc, [key, value]) => {
+          acc[key] =
+            typeof value === 'object'
+              ? JSON.stringify(value)
+              : (value as string | number | boolean);
+          return acc;
+        },
+        {} as Record<string, string | number | boolean>,
+      );
+
+      router.push({
+        pathname: getAppletUrl({
+          name: app?.slug || '',
+          version,
+          isEmbed: isEmbedded,
+          isRun: true,
+          filename,
+          action,
+        }).pathname,
+        query: stringifiedValuesIfObject,
+      });
     }
   };
 
@@ -267,10 +277,6 @@ export function AppPage({
     },
     [],
   );
-
-  function getRunUrl(scriptName: string) {
-    return `/${scriptName}/relay`;
-  }
 
   const connectorActions = (appId: string) => {
     return {
@@ -328,10 +334,14 @@ export function AppPage({
       <FunctionOutput
         applet={mainApplet}
         config={currentFileConfig}
-        getRunUrl={(scriptName: string) => {
-          return getRunUrl(scriptName);
-        }}
-        appInfoUrl={`/_zipper/bootInfo/${app?.slug}`}
+        getRunUrl={(path: string) =>
+          getRunUrl({
+            ...parseRunUrlPath(path),
+            subdomain: app.slug,
+            isRelay: true,
+          }).pathname
+        }
+        bootInfoUrl={`/boot`}
         currentContext={'main'}
         appSlug={app.slug}
         showTabs={false}
@@ -622,11 +632,11 @@ export const getServerSideProps: GetServerSideProps = async ({
     });
   if (!subdomain) return { notFound: true };
 
-  const { version: versionFromUrl, filename: filenameFromUrl } =
-    getFilenameAndVersionFromPath(
-      ((query.versionAndFilename as string[]) || []).join('/'),
-      [],
-    );
+  const {
+    version: versionFromUrl,
+    filename: filenameFromUrl,
+    action: actionFromUrl,
+  } = parseRunUrlPath(((query.versionAndFilename as string[]) || []).join('/'));
   if (__DEBUG__)
     console.log('applet.tsx | getServerSideProps', {
       versionFromUrl,
@@ -635,6 +645,8 @@ export const getServerSideProps: GetServerSideProps = async ({
       reqUrl: req.url,
       resolvedUrl,
     });
+
+  const path = filenameFromUrl ? getPathFromFilename(filenameFromUrl) : 'main';
 
   const { token, userId } = await getZipperAuth(req);
   const tempUserId = req.cookies[__ZIPPER_TEMP_USER_ID];
@@ -645,7 +657,7 @@ export const getServerSideProps: GetServerSideProps = async ({
       subdomain,
       tempUserId,
       version: versionFromUrl,
-      filename: filenameFromUrl,
+      path,
       token,
     });
   } catch (e: any) {
@@ -663,16 +675,19 @@ export const getServerSideProps: GetServerSideProps = async ({
       bootPayload,
     );
 
-  const { bootInfo } = bootPayload;
+  const { bootInfo, configs: handlerConfigs } = bootPayload;
   const { app, entryPoint, parsedScripts, runnableScripts } = bootInfo;
 
   const version = (versionFromUrl || 'latest').replace(/^@/, '');
-  let filename = filenameFromUrl || 'main.ts';
-  if (!filename.endsWith('.ts')) filename = `${filename}.ts}`;
+  const filename = getFilenameFromPath(path, runnableScripts);
 
-  if (!runnableScripts.includes(filename)) return { notFound: true };
+  if (!filename) return { notFound: true };
 
-  const inputParams: InputParams = parsedScripts[filename]?.inputs || {};
+  const parsedFile = findFileInParsedScripts(filename, parsedScripts);
+  const parsedAction = actionFromUrl && parsedFile?.actions?.[actionFromUrl];
+  const inputParams: InputParams =
+    parsedAction?.inputs || parsedFile?.inputs || [];
+
   const metadata = bootInfo.metadata || {};
 
   const headers: Record<string, string> = {
@@ -680,9 +695,8 @@ export const getServerSideProps: GetServerSideProps = async ({
     [X_ZIPPER_TEMP_USER_ID]: tempUserId || '',
   };
 
-  const { configs: handlerConfigs } = bootPayload;
-
-  const config = handlerConfigs && handlerConfigs[filename];
+  const config =
+    (actionFromUrl ? parsedAction?.config : handlerConfigs?.[filename]) || {};
 
   const urlValues = inputParams
     ? getInputValuesFromUrl({
@@ -702,10 +716,14 @@ export const getServerSideProps: GetServerSideProps = async ({
     if (__DEBUG__)
       console.log('shouldRedirect', { isAutoRun, isRunPathMissing });
 
-    const runUrl = new URL(resolvedUrl || '', getRelayUrl({ slug: subdomain }));
-    runUrl.pathname = isEmbedUrl
-      ? `/run/embed/${filename}`
-      : `/run/${filename}`;
+    const runUrl = getAppletUrl({
+      name: subdomain,
+      version,
+      isEmbed: isEmbedUrl,
+      isRun: true,
+      filename,
+      action: actionFromUrl,
+    });
 
     if (isAutoRun) {
       const runValues = getRunValues({ inputParams, url: req.url, config });
@@ -746,7 +764,9 @@ export const getServerSideProps: GetServerSideProps = async ({
     result = await fetch(
       getRelayUrl({
         slug: app.slug,
-        path: [version, filename].join('/'),
+        action: actionFromUrl,
+        version,
+        path: filename,
       }),
       {
         method: 'POST',
@@ -828,6 +848,7 @@ export const getServerSideProps: GetServerSideProps = async ({
       softRedirect,
       token: req.headers[X_ZIPPER_ACCESS_TOKEN] || null,
       key: resolvedUrl,
+      action: actionFromUrl || null,
     },
   };
 

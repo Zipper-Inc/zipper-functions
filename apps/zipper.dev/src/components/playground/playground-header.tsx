@@ -80,7 +80,6 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
   const [isShareModalOpen, setShareModalOpen] = useState(false);
   const { currentScript } = useEditorContext();
 
-  const { editorIds, onlineEditorIds } = useAppEditors();
   const router = useRouter();
 
   useEffect(() => {
@@ -134,12 +133,6 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
   const isSlugValid =
     appSlugQuery.isFetched && slug && slug.length >= MIN_SLUG_LENGTH;
   const isDisabled = slugExists || slug.length < MIN_SLUG_LENGTH;
-
-  app.editors.map((editor: any) => {
-    const superTokenId = editor?.user?.superTokenId;
-    if (superTokenId && !onlineEditorIds.includes(superTokenId))
-      editorIds.push(superTokenId);
-  });
 
   const getViewLink = () =>
     `${

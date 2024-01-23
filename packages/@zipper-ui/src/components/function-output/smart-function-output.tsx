@@ -1,4 +1,13 @@
-import { Box, Link, Stack, StackDivider } from '@chakra-ui/react';
+import {
+  Box,
+  Button,
+  Center,
+  Link,
+  Stack,
+  StackDivider,
+  Text,
+  VStack,
+} from '@chakra-ui/react';
 import { OutputType } from '@zipper/types';
 
 import React from 'react';
@@ -30,6 +39,7 @@ export function SmartFunctionOutput({
   parsedResult?: ReturnType<typeof parseResult>;
 }) {
   const { config, runHistoryUrl } = useSmartFunctionOutputContext();
+  const [showBigResult, setShowBigResult] = React.useState(false);
 
   // if result === 0, it'll be evaluated as falsey by !result
   if (result === undefined || result === null) return null;
@@ -39,17 +49,23 @@ export function SmartFunctionOutput({
     window.location.href.includes('localhost')
   ) {
     const len = JSON.stringify(result || {}).length;
-    if (len > 6000) {
+    if (len > 20000 && !showBigResult) {
       return (
-        <>
-          <p>
-            Too large to preview inline. Open in a{' '}
-            <Link target="_new" href={runHistoryUrl} textDecor="underline">
-              new tab
-            </Link>
-            .
-          </p>
-        </>
+        <Center>
+          <VStack py="10">
+            <Button
+              onClick={() => setShowBigResult(true)}
+              colorScheme="purple"
+              variant="ghost"
+            >
+              View Preview
+            </Button>{' '}
+            <Text fontSize="sm">
+              This result is large and may not render correctly in the preview
+              pane.
+            </Text>
+          </VStack>
+        </Center>
       );
     }
   }

@@ -25,12 +25,11 @@ import {
   HandlerDescription,
   useAppletContent,
 } from '@zipper/ui';
+import { getRunUrl, parseRunUrlPath } from '@zipper/utils';
 import { useEffect, useMemo, useState } from 'react';
 import { HiExclamationCircle, HiOutlineLightBulb } from 'react-icons/hi2';
 import { PiPlayBold, PiPlayDuotone } from 'react-icons/pi';
 import { useUser } from '~/hooks/use-user';
-import getRunUrl from '~/utils/get-run-url';
-import { getAppVersionFromHash } from '~/utils/hashing';
 import { addParamToCode } from '~/utils/parse-code';
 import { getOrCreateScriptModel } from '~/utils/playground.utils';
 import { trpc } from '~/utils/trpc';
@@ -114,14 +113,11 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
         key={runId}
         applet={mainApplet}
         config={configs?.[currentScript?.filename || '']}
-        getRunUrl={(scriptName: string) => {
-          return getRunUrl(
-            appSlug,
-            getAppVersionFromHash(appInfo.playgroundVersionHash),
-            scriptName,
-          );
-        }}
-        appInfoUrl={`/api/bootInfo/${appSlug}`}
+        getRunUrl={(path: string) =>
+          getRunUrl({ ...parseRunUrlPath(path), subdomain: '', isRelay: true })
+            .pathname
+        }
+        bootInfoUrl={`/api/bootInfo/${appSlug}`}
         currentContext={'main'}
         appSlug={appInfo.slug}
         generateUserToken={async () => {

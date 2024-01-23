@@ -39,6 +39,7 @@ import { ReactNode } from 'react';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 
 import { theme } from '@zipper/ui';
+import { ThemeProvider } from './theme-provider';
 
 const _theme = extendTheme({
   ...theme,
@@ -67,21 +68,23 @@ export const DefaultLayout = ({
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <ChakraProvider theme={_theme}>
-        {/* <Fonts /> */}
-        <>
-          {header}
-          <Flex
-            as="main"
-            flex={1}
-            flexDirection="column"
-            justifyContent="start"
-            {...chakraProps}
-          >
-            {children}
-          </Flex>
-        </>
-      </ChakraProvider>
+      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <ChakraProvider theme={_theme}>
+          {/* <Fonts /> */}
+          <>
+            {header}
+            <Flex
+              as="main"
+              flex={1}
+              flexDirection="column"
+              justifyContent="start"
+              {...chakraProps}
+            >
+              {children}
+            </Flex>
+          </>
+        </ChakraProvider>
+      </ThemeProvider>
 
       {process.env.NODE_ENV !== 'production' && (
         <ReactQueryDevtools initialIsOpen={false} />

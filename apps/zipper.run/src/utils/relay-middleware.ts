@@ -6,9 +6,11 @@ import fetchBootInfo, {
   fetchBootInfoCachedWithUserOrThrow,
   fetchDeploymentCachedOrThrow,
   fetchBasicUserInfo,
+  getPathFromFilename,
+  getFilenameFromPath,
 } from './get-boot-info';
 import getValidSubdomain from './get-valid-subdomain';
-import { getFilenameAndVersionFromPath } from './get-values-from-url';
+import { parseRunUrlPath } from '@zipper/utils';
 import {
   formatDeploymentId,
   getAppLink,
@@ -32,7 +34,7 @@ const DEPLOY_KID = 'zipper';
 const DENO_ORIGIN = new URL(`https://subhosting-v1.deno-aws.net`);
 const RPC_ROOT = `https://${PUBLICLY_ACCESSIBLE_RPC_HOST}/api/deno/v0/`;
 
-const SENSITIVE_DATA_PLACEHOLDER = '********';
+const SENSITIVE_DATA_PLACEHOLDER = 'Redacted';
 
 const X_FORWARDED_HOST = 'x-forwarded-host';
 const X_DENO_SUBHOST = 'x-deno-subhost';
@@ -186,10 +188,12 @@ export async function relayRequest(
     request,
     version: versionPassedIn,
     filename: filenamePassedIn,
+    action,
   }: {
     request: NextRequest;
     version?: string;
     filename?: string;
+    action?: string;
   },
   bootOnly = false,
 ): Promise<{ status: number; headers?: Headers; result: string }> {
@@ -241,11 +245,6 @@ export async function relayRequest(
   tempUserId =
     tempUserId || request.cookies.get(__ZIPPER_TEMP_USER_ID)?.value.toString();
 
-  let filename = filenamePassedIn || 'main.ts';
-  if (!filename.endsWith('.ts') && !filename.endsWith('.tsx')) {
-    filename = `${filename}.ts`;
-  }
-
   const bootArgs = {
     appId,
     version,
@@ -260,12 +259,16 @@ export async function relayRequest(
     return bootRelayRequest(bootArgs);
   }
 
+  const path = filenamePassedIn
+    ? getPathFromFilename(filenamePassedIn)
+    : 'main';
+
   let bootInfo;
   try {
     bootInfo = await fetchBootInfoCachedWithUserOrThrow({
       subdomain,
       tempUserId,
-      filename,
+      path,
       token,
       deploymentId,
       bootFetcher: async () => {
@@ -331,6 +334,7 @@ export async function relayRequest(
       connectorsWithUserAuth: Object.keys(userConnectorTokens),
     },
     inputs: request.method === 'GET' ? queryParameters : body,
+    action,
     originalRequest: {
       url: request.nextUrl.toString(),
       method: request.method,
@@ -349,6 +353,8 @@ export async function relayRequest(
     displayName: '',
     canUserEdit: userInfo.canUserEdit,
   };
+
+  const filename = getFilenameFromPath(path, bootInfo.runnableScripts);
 
   relayBody.path = filename;
 
@@ -390,19 +396,20 @@ export default async function serveRelay({
   request: NextRequest;
   bootOnly: boolean;
 }) {
-  const { version, filename } = getFilenameAndVersionFromPath(
+  const { version, filename, action } = parseRunUrlPath(
     request.nextUrl.pathname,
-    bootOnly ? ['boot'] : ['relay', 'raw'],
   );
 
   console.log('version: ', version || 'latest');
   if (!bootOnly) console.log('filename: ', filename);
+  if (action) console.log('action: ', action);
 
   const { result, status, headers } = await relayRequest(
     {
       request,
       version,
       filename,
+      action,
     },
     bootOnly,
   );
@@ -478,19 +485,20 @@ export async function serveNonBrowserRelay({
 }: {
   request: NextRequest;
 }) {
-  const { version, filename } = getFilenameAndVersionFromPath(
+  const { version, filename, action } = parseRunUrlPath(
     request.nextUrl.pathname,
-    ['relay', 'raw'],
   );
 
   console.log('version: ', version);
   console.log('filename: ', filename);
+  if (action) console.log('action: ', action);
 
   const { result, status, headers } = await relayRequest(
     {
       request,
       version,
       filename,
+      action,
     },
     false,
   );

@@ -3,6 +3,7 @@ import { prisma } from '~/server/prisma';
 import { getAppVersionFromHash } from '~/utils/hashing';
 import { getVersionCode } from '~/server/utils/r2.utils';
 import { Script } from '@prisma/client';
+import { removeExtension } from '@zipper/utils';
 
 export default async function handler(
   req: NextApiRequest,
@@ -45,7 +46,10 @@ export default async function handler(
       const loweredScriptFilename = script.filename.toLowerCase();
       return (
         loweredScriptFilename === loweredQueryFilename ||
-        loweredScriptFilename === `${loweredQueryFilename}.ts`
+        loweredScriptFilename === `${loweredQueryFilename}.ts` ||
+        loweredScriptFilename === `${loweredQueryFilename}.tsx` ||
+        removeExtension(loweredScriptFilename) ===
+          removeExtension(loweredQueryFilename)
       );
     });
 

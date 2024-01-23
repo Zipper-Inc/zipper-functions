@@ -17,12 +17,10 @@ import {
   AlertDialogFooter,
   Button,
   useColorModeValue,
-  Heading,
   Box,
   Accordion,
   AccordionIcon,
   AccordionItem,
-  // AccordionHeader,
   AccordionPanel,
   AccordionButton,
   useColorMode,
@@ -46,7 +44,7 @@ import {
   isConnector,
 } from '~/utils/playground.utils';
 import { Markdown } from '@zipper/ui';
-import { getFileExtension } from '~/utils/file-extension';
+import { getFileExtension } from '@zipper/utils';
 
 // Order should always be:
 // - README.md
