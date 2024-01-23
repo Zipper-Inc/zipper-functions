@@ -1,11 +1,11 @@
 import { useMemo, useState } from 'react';
-import { getJSDocEndStarLine } from '~/utils/parse-code';
+import { getTutorialJsDocs } from '~/utils/parse-code';
 
 /* -------------------------------------------- */
 /* Types                                        */
 /* -------------------------------------------- */
 
-export type Doc = {
+export type TutorialBlock = {
   isSelected: boolean;
   startLine: number;
   endLine: number;
@@ -13,9 +13,11 @@ export type Doc = {
   index: number;
 };
 
-const usePlaygroundDocs = (code: string) => {
+const useTutorial = (code: string) => {
   /* ------------------ States ------------------ */
-  const [selectedDoc, setSelectedDoc] = useState<Doc>({} as Doc);
+  const [selectedDoc, setSelectedDoc] = useState<TutorialBlock>(
+    {} as TutorialBlock,
+  );
 
   /* ------------------- Memos ------------------ */
   const docs = useMemo(() => {
@@ -55,14 +57,14 @@ const usePlaygroundDocs = (code: string) => {
            * gets start-line and end-line from each function that
            * jsdocs from block comment refers.
            */
-          const range = getJSDocEndStarLine({ code, jsdoc });
+          const range = getTutorialJsDocs({ code, jsdoc });
 
           return {
             ...range,
             content,
             index,
             isSelected: index === selectedDoc.index,
-          } as Doc;
+          } as TutorialBlock;
         })
         .filter((doc) => !!doc.startLine);
 
@@ -75,7 +77,7 @@ const usePlaygroundDocs = (code: string) => {
   /* ----------------- Callbacks ---------------- */
   const onChangeSelectedDoc = (docIndex: number) => {
     if (docIndex === selectedDoc.index) {
-      return setSelectedDoc({} as Doc);
+      return setSelectedDoc({} as TutorialBlock);
     }
 
     return setSelectedDoc({ ...docs.docs[docIndex]! });
@@ -89,4 +91,4 @@ const usePlaygroundDocs = (code: string) => {
   };
 };
 
-export { usePlaygroundDocs };
+export { useTutorial };

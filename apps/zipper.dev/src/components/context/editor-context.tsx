@@ -35,7 +35,7 @@ import {
 } from '~/utils/playground.utils';
 import { runZipperLinter } from '~/utils/zipper-editor-linter';
 import { rewriteSpecifier } from '~/utils/rewrite-imports';
-import { Doc, usePlaygroundDocs } from '~/hooks/use-playground-docs';
+import { TutorialBlock, useTutorial } from '~/hooks/use-playground-docs';
 
 type OnValidate = AddParameters<
   Required<EditorProps>['onValidate'],
@@ -52,8 +52,8 @@ export type EditorContextType = {
   onChangeSelectedDoc: (docIndex: number) => void;
   connectionId?: number;
   scripts: Script[];
-  selectedDoc: Doc;
-  docs: Doc[];
+  selectedDoc: TutorialBlock;
+  docs: TutorialBlock[];
   editor?: typeof monaco.editor;
   setEditor: (editor: typeof monaco.editor) => void;
   isModelDirty: (path: string) => boolean;
@@ -108,14 +108,13 @@ export const EditorContext = createContext<EditorContextType>({
   editor: undefined,
   setEditor: noop,
   docs: [],
-  selectedDoc: {} as Doc,
+  selectedDoc: {} as TutorialBlock,
   isModelDirty: () => false,
   setModelIsDirty: noop,
   isEditorDirty: () => false,
   modelHasErrors: () => false,
   setModelHasErrors: () => false,
   editorHasErrors: () => false,
-  // scriptDocs: [],
   onChangeSelectedDoc: () => false,
   getErrorFiles: () => [],
   isSaving: false,
@@ -360,7 +359,7 @@ async function runEditorActionsNow({
     const newHash = getScriptHash({ ...currentScript, code: value });
     setModelIsDirty(currentScript.filename, newHash !== oldHash);
 
-    const { inputs, imports, comments } = parseCode({
+    const { inputs, imports } = parseCode({
       code: value,
       throwErrors: true,
     });
@@ -439,7 +438,7 @@ const EditorContextProvider = ({
   const currentScript = scripts.find((s) => s.id === currentScriptId);
   const setCurrentScript = (s: Script) => setCurrentScriptId(s.id);
 
-  const { docs, onChangeSelectedDoc, selectedDoc } = usePlaygroundDocs(
+  const { docs, onChangeSelectedDoc, selectedDoc } = useTutorial(
     currentScript?.code ?? '',
   );
 
@@ -454,7 +453,7 @@ const EditorContextProvider = ({
     );
   };
 
-  const onChange: EditorProps['onChange'] = async (value = '', event) => {
+  const onChange: EditorProps['onChange'] = async (value = '') => {
     if (!monacoRef?.current || !currentScript) return;
     runEditorActionsDebounced({
       value,
@@ -716,7 +715,6 @@ const EditorContextProvider = ({
         currentScript,
         setCurrentScript,
         selectedDoc,
-        // jsdocs,
         docs,
         onChange,
         onValidate,
@@ -727,7 +725,6 @@ const EditorContextProvider = ({
         isModelDirty,
         setModelIsDirty,
         isEditorDirty,
-        // scriptDocs,
         modelHasErrors,
         setModelHasErrors,
         editorHasErrors,

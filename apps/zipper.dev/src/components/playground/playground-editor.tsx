@@ -16,27 +16,7 @@ import styles from './playground-styles.module.css';
 
 import { parse } from '@babel/parser';
 import traverse from '@babel/traverse';
-import {
-  baseTheme,
-  Box,
-  Button,
-  Flex,
-  HStack,
-  IconButton,
-  Input,
-  Popover,
-  PopoverArrow,
-  PopoverBody,
-  PopoverCloseButton,
-  PopoverContent,
-  PopoverHeader,
-  PopoverTrigger,
-  Select,
-  Stack,
-  Tooltip,
-  useColorMode,
-  useColorModeValue,
-} from '@chakra-ui/react';
+import { useColorMode, useColorModeValue } from '@chakra-ui/react';
 import { baseColors, prettierFormat, useCmdOrCtrl } from '@zipper/ui';
 import MonacoJSXHighlighter from 'monaco-jsx-highlighter';
 import { useEffect, useRef, useState } from 'react';
@@ -54,8 +34,6 @@ import {
 } from '~/utils/playground.utils';
 import { TypedLiveblocksProvider } from '~/liveblocks.config';
 import { Script } from '@prisma/client';
-import { ChatIcon } from '@chakra-ui/icons';
-import { usePlaygroundDocs } from '~/hooks/use-playground-docs';
 
 export type MonacoEditor = monaco.editor.IStandaloneCodeEditor;
 
@@ -124,17 +102,6 @@ export default function PlaygroundEditor(
   const [defaultLanguage] = useState<'typescript' | 'markdown'>('typescript');
   const theme = useColorModeValue('vs', 'vs-dark');
   const { colorMode } = useColorMode();
-  // const { docs } = usePlaygroundDocs(currentScript!.code, editorRef);
-
-  type Comment = {
-    line_start: number;
-    line_end: number;
-    content: string;
-  };
-
-  const [comments, setComments] = useState<Comment[]>([]);
-
-  const [isShowingCommentButton, setIsShowingCommentButton] = useState(false);
 
   const handleEditorDidMount = (editor: MonacoEditor, monaco: Monaco) => {
     console.log('[EDITOR]', 'Editor is mounted');
@@ -406,7 +373,7 @@ export default function PlaygroundEditor(
         .map((m) => ({
           model: m,
           bindingEntry: Object.entries(yRefs.current.bindings).find(
-            ([k, b]) => b.monacoModel === m,
+            ([, b]) => b.monacoModel === m,
           ),
         }));
 
@@ -450,7 +417,7 @@ export default function PlaygroundEditor(
         keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyK],
         contextMenuGroupId: 'navigation',
         contextMenuOrder: 1.5,
-        run: function (ed) {
+        run: function () {
           // Your custom action logic here
           alert('Custom Action Clicked!');
         },
@@ -554,6 +521,7 @@ export default function PlaygroundEditor(
     );
 
     return new Promise<void>((resolve) =>
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       yProvider.once('synced', (_args: true | [string, any][]) => {
         // If the sync event is empty then we need to reset the script
         if (yText.length === 0 && script.code.trim().length > 0) {
@@ -699,109 +667,6 @@ export default function PlaygroundEditor(
       editor.createDecorationsCollection().set(decorations);
     }
   }, [isLiveblocksReady, editorRef, docs, selectedDoc, colorMode]);
-
-  const selection = editorRef?.current?.getSelection();
-
-  const selectionText = editorRef.current
-    ?.getModel()
-    ?.getValueInRange(selection!);
-
-  const addCommentBlock = (name: string, type: string) => {
-    const currCode = editorRef.current!.getValue();
-
-    const separator = currCode.split('\n')[selection!.startLineNumber - 1];
-
-    const [start, rest] = currCode.split(separator!);
-
-    const docComment = `// #region ${name}
-      /**
-       * ----
-       * name: ${name}
-       * type: ${type}
-       * highlight: ${selection!.startLineNumber + 10}-${
-      selection!.endLineNumber + 10
-    } 
-       * ----
-       * This is your documentation block description.
-       */
-      // #endregion
-    `;
-
-    const newCode = [start, docComment, separator, rest].join('');
-
-    editorRef.current?.setValue(prettierFormat(newCode));
-  };
-
-  const CommentButton = (props: { line_start: number }) => {
-    const [selectValue, setSelectValue] = useState('');
-    const [nameValue, setNameValue] = useState('');
-    return (
-      <Popover>
-        <PopoverTrigger>
-          {/* <Tooltip label="Add a doc comment"> */}
-          <IconButton
-            colorScheme="brandOrange"
-            aria-label="Add a doc"
-            borderRadius="full"
-            size="xs"
-            icon={<ChatIcon />}
-            position="absolute"
-            zIndex={100}
-            left={10}
-            top={`calc(${props.line_start} * 20px - 30px)`}
-          />
-          {/* </Tooltip> */}
-        </PopoverTrigger>
-        <PopoverContent zIndex={100} width="fit-content">
-          <PopoverArrow />
-          {/* <PopoverCloseButton /> */}
-          <PopoverBody as={Flex} alignItems="center" gap={2}>
-            <HStack>
-              <Input
-                placeholder="Name"
-                size="sm"
-                onChange={(e) => setNameValue(e.target.value)}
-              />
-              <Select
-                placeholder="Type"
-                size="sm"
-                onChange={(e) => setSelectValue(e.target.value)}
-              >
-                <option value="title">Title</option>
-                <option value="heading_1">Heading 1</option>
-                <option value="heding_2">Heading 2</option>
-              </Select>
-            </HStack>
-
-            <Button
-              size="sm"
-              px={2}
-              colorScheme="brandOrange"
-              isDisabled={nameValue === '' || selectValue === ''}
-              onClick={() => addCommentBlock(nameValue, selectValue)}
-            >
-              Create
-            </Button>
-          </PopoverBody>
-        </PopoverContent>
-      </Popover>
-    );
-  };
-
-  const toggleComments = () => {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-non-null-asserted-optional-chain
-    const editor = editorRef?.current!;
-
-    // Define a range for the comment block
-    const commentRange = new monaco.Range(1, 1, 5, 1);
-
-    editor.removeDecorations(editor.getModel()?.getAllDecorations() as any[]);
-    const lineNumber = 5;
-    editor.trigger('fold', 'editor.fold', {
-      lineNumber: lineNumber,
-      levels: 1,
-    });
-  };
 
   return (
     <>

@@ -434,6 +434,7 @@ function getSourceWithoutComments(srcPassedIn: string | SourceFile = '') {
  */
 export function parseDirectivePrologue({
   code = '',
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   throwErrors = false,
   src: srcPassedIn,
 }: ParseCodeParameters = {}) {
@@ -599,7 +600,7 @@ export function addParamToCode({
   return newCode;
 }
 
-export function getJSDocEndStarLine({
+export function getTutorialJsDocs({
   code,
   jsdoc,
 }: {
@@ -609,7 +610,7 @@ export function getJSDocEndStarLine({
   const src = getSourceFileFromCode(code);
   const jsDocText = jsdoc.replace(/\s+/g, ' ').trim();
 
-  const findedVariable = src.getVariableStatements().find((variable) => {
+  const foundVariable = src.getVariableStatements().find((variable) => {
     const variableJSDoc = variable
       .getJsDocs()[0]
       ?.getFullText()
@@ -619,23 +620,23 @@ export function getJSDocEndStarLine({
     return variableJSDoc === jsDocText;
   });
 
-  const findedFn = src.getFunctions().find((fn) => {
+  const foundFn = src.getFunctions().find((fn) => {
     const fnText = fn.getJsDocs()[0]?.getFullText().replace(/\s+/g, ' ').trim();
 
     return fnText === jsDocText;
   });
 
-  if (findedVariable) {
+  if (foundVariable) {
     return {
-      startLine: findedVariable?.getStartLineNumber(),
-      endLine: findedVariable?.getEndLineNumber(),
+      startLine: foundVariable?.getStartLineNumber(),
+      endLine: foundVariable?.getEndLineNumber(),
     };
   }
 
-  if (findedFn) {
+  if (foundFn) {
     return {
-      startLine: findedFn?.getStartLineNumber(),
-      endLine: findedFn?.getEndLineNumber(),
+      startLine: foundFn?.getStartLineNumber(),
+      endLine: foundFn?.getEndLineNumber(),
     };
   }
 }
