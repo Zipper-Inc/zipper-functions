@@ -25,7 +25,7 @@ import {
   parseApp,
 } from '~/utils/parse-code';
 import debounce from 'lodash.debounce';
-import { uuid } from '@zipper/utils';
+import { removeExtension, uuid } from '@zipper/utils';
 import { prettyLog } from '~/utils/pretty-log';
 import { AppQueryOutput } from '~/types/trpc';
 import {
@@ -432,6 +432,20 @@ async function runEditorActionsNow({
   if (!monacoRef.current || !isTypescript(currentScript) || !value) return;
 
   const currentModel = monacoRef.current.editor.getEditors()[0]?.getModel();
+  const otherModels = monacoRef.current.editor
+    .getModels()
+    .filter(
+      (model) =>
+        currentModel &&
+        model.uri.scheme === 'file' &&
+        model.uri !== currentModel.uri,
+    );
+  const otherModules = Object.fromEntries(
+    otherModels.map((model) => [
+      removeExtension(model.uri.path),
+      model.getValue(),
+    ]),
+  );
 
   const isVisible =
     currentModel &&
@@ -452,7 +466,8 @@ async function runEditorActionsNow({
     if (tutorials.length >= 1) setTutorials(tutorials);
 
     const { inputs, imports } = parseApp({
-      code: value,
+      modules: { [currentScript.filename]: value, ...otherModules },
+      handlerFile: currentScript.filename,
       throwErrors: true,
     });
 

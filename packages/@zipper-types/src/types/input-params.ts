@@ -1,4 +1,3 @@
-import { InputType } from './input-type';
 import { ParsedNode } from './parsed-types';
 
 export type InputParam = {
@@ -24,13 +23,3 @@ export interface ParseInputError {
   code: string;
   error: any;
 }
-
-export type InputParamDetail = {
-  properties: {
-    key: string;
-    details: {
-      type: InputType;
-      // any additional details...
-    };
-  }[];
-};

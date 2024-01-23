@@ -15,10 +15,10 @@ import {
   CallExpression,
   FunctionExpression,
   Type,
+  TypeReferenceNode,
+  TypeLiteralNode,
 } from 'ts-morph';
 import { getRemoteModule } from './eszip-utils';
-import { LoadResponseModule } from '@deno/eszip/esm/loader';
-import { Script } from '@prisma/client';
 
 type ParseProject = {
   handlerFile: string;
@@ -322,23 +322,7 @@ function createProject(modules: Record<string, string>) {
           const compilerOptions = getCompilerOptions();
           const resolvedModules: ts.ResolvedModule[] = [];
 
-          console.log('containingFile', containingFile);
-
           for (const moduleName of moduleNames) {
-            if (isExternalImport(moduleName)) {
-              getRemoteModule({ specifier: moduleName }).then((module) => {
-                if (!module) return;
-                const result = ts.resolveModuleName(
-                  module.specifier,
-                  containingFile,
-                  compilerOptions,
-                  moduleResolutionHost,
-                );
-                if (result.resolvedModule)
-                  resolvedModules.push(result.resolvedModule);
-              });
-            }
-
             const localModuleName = removeTsExtension(moduleName);
             const result = ts.resolveModuleName(
               localModuleName,
@@ -428,15 +412,67 @@ function findHandlerFunction({
   }
 }
 
+function solveTypeReference<T>(
+  typeNode: TypeReferenceNode,
+  file: string,
+  project: Project | undefined,
+  cb: (node: TypeNode) => T,
+) {
+  const src = project?.getSourceFile(file);
+  if (!src) return;
+
+  const whatsBeingImported = typeNode.getTypeName().getText();
+  const imports = src.getImportDeclarations();
+
+  const importDeclaration = imports.find((x) => {
+    const insideImport = x.getNamedImports().map((n) => n.getText());
+    return insideImport.includes(whatsBeingImported);
+  });
+
+  if (!importDeclaration) {
+    console.error(
+      'Couldnt find whats being imported in any import import declaration',
+    );
+    return;
+  }
+
+  const fileInProject = importDeclaration.getModuleSpecifierSourceFile();
+
+  // External import
+  if (!fileInProject) {
+    console.log('external import', importDeclaration.getModuleSpecifierValue());
+    // salve external import
+    // fetch external import
+    // add in the project
+    // get the file where the import is
+    // get the type node in the file
+    // apply cb in the type node
+    return;
+  }
+  // Local Import
+
+  const typeDeclaration = fileInProject.getTypeAlias(whatsBeingImported); // TODO: interface support
+  const importedTypeNode = typeDeclaration?.getTypeNode();
+  if (!importedTypeNode) {
+    console.error('Couldnt find the type declaration in the file');
+    return;
+  }
+
+  return cb(importedTypeNode);
+}
+
 function parseHandlerInputs(
   handlerFn: HandlerFn,
-  src: SourceFile,
+  handlerFile: string,
+  project: Project | undefined,
   throwErrors: boolean,
 ): InputParam[] {
   const inputs = handlerFn.getParameters();
   const params = inputs[0] as ParameterDeclaration;
 
-  if (!params || params.getText().startsWith('_')) {
+  const src = project?.getSourceFile(handlerFile);
+
+  if (!params || params.getText().startsWith('_') || !src) {
     return [];
   }
 
@@ -462,6 +498,16 @@ function parseHandlerInputs(
         optional: params.hasQuestionToken(),
       },
     ];
+  }
+
+  if (
+    typeNode?.isKind(SyntaxKind.TypeReference) &&
+    !src.getTypeAlias(typeNode?.getText())?.getTypeNode()
+  ) {
+    const node = solveTypeReference(typeNode, handlerFile, project, (node) => {
+      if (node.isKind(SyntaxKind.TypeLiteral)) return unwrapObject(node);
+    });
+    return node || [];
   }
 
   let props: PropertySignature[] = [];
@@ -511,6 +557,33 @@ function parseHandlerInputs(
   });
 }
 
+function unwrapObject(node: TypeLiteralNode): InputParam[] {
+  const props = node.getProperties();
+
+  return props.map((prop) => {
+    const isOptional = prop.hasQuestionToken();
+    const typeNode = prop.getTypeNode();
+    if (!typeNode) {
+      // Typescript defaults to any if it can't find the type
+      // type Input = { foo } // foo is any
+      return {
+        key: prop.getName(),
+        node: { type: InputType.any },
+        optional: isOptional,
+      };
+    }
+
+    const typeDetails = parseTypeNode(typeNode, node.getSourceFile());
+
+    const result = {
+      key: prop.getName(),
+      optional: isOptional,
+      node: typeDetails,
+    };
+    return result;
+  });
+}
+
 // returns undefined if the file isn't runnable (no handler function)
 export function parseInputForTypes({
   handlerFile,
@@ -542,7 +615,7 @@ export function parseInputForTypes({
       throw new Error('The handler function cannot be the default export.');
     }
 
-    return parseHandlerInputs(handlerFn, src, throwErrors);
+    return parseHandlerInputs(handlerFn, handlerFile, project, throwErrors);
   } catch (e) {
     if (throwErrors) throw e;
     console.error('caught during parseInputForTypes', e);
@@ -594,7 +667,12 @@ export function parseActions({
         ...actionsSoFar,
         [name]: {
           name,
-          inputs: parseHandlerInputs(handlerFn, src, throwErrors),
+          inputs: parseHandlerInputs(
+            handlerFn,
+            handlerFile,
+            project,
+            throwErrors,
+          ),
         },
       };
     }, {} as Record<string, { name: string; inputs: InputParam[] }>);
