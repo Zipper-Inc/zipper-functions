@@ -17,8 +17,8 @@ import { createContext } from '~/server/context';
 import { AnalyticsHead } from '@zipper/utils';
 
 const LINKS = [
-  { label: 'Ziplets', href: '/gallery-test' },
-  { label: 'Saved Ziplets', href: '/gallery-test/saved', disabled: true },
+  { label: 'Applets', href: '/gallery-test' },
+  { label: 'Saved Applets', href: '/gallery-test/saved', disabled: true },
 ];
 
 const GalleryPage: NextPageWithLayout = () => {
@@ -32,7 +32,7 @@ const GalleryPage: NextPageWithLayout = () => {
     <React.Fragment>
       <AnalyticsHead />
       <main className="px-12 mt-6 flex flex-col gap-6">
-        <h1 className="text-4xl font-bold">Ziplets Gallery</h1>
+        <h1 className="text-4xl font-bold">Applets Gallery</h1>
         <Navbar links={LINKS} />
 
         <div className="grid grid-cols-4 gap-9">

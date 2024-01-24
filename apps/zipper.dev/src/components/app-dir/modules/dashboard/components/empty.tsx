@@ -26,7 +26,7 @@ function EmptySlate({ organization }: EmptySlateProps) {
       </article>
 
       <Button asChild>
-        <Link href={CREATE_ZIPLET_ROUTE}>Create Zipplet</Link>
+        <Link href={CREATE_ZIPLET_ROUTE}>Create Applet</Link>
       </Button>
     </section>
   );

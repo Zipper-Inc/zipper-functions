@@ -103,7 +103,7 @@ const AppletOwnerColumn: ColumnComponentType<'createdByInfo'> = (props) => (
 /* Render                                       */
 /* -------------------------------------------- */
 
-export const ZIPLETS_TABLE_COLUMNS = [
+export const APPLETS_TABLE_COLUMNS = [
   columnHelper.accessor('name', {
     cell: (info) => (
       <AppletNameColumn getValue={info.getValue} {...info.cell.row.original} />
