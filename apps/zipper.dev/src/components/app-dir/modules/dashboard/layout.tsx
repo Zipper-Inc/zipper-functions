@@ -3,7 +3,7 @@ import React, { ReactNode } from 'react';
 import { Show, Toaster } from '@zipper/ui';
 
 const NAVBAR_LINKS: Link[] = [
-  { label: 'Ziplets', href: `/dashboard-tw` },
+  { label: 'Applets', href: `/dashboard-tw` },
   { label: 'People', href: `/dashboard-tw/people` },
   { label: 'Settings', href: `/dashboard-tw/settings` },
 ];

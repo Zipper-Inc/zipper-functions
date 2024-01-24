@@ -12,8 +12,8 @@ import {
   getFilteredRowModel,
   getSortedRowModel,
 } from '@tanstack/react-table';
-import { ZipletsTable } from './components/ziplets-table';
-import { ZIPLETS_TABLE_COLUMNS } from './components/ziplets-table/columns';
+import { AppletsTable } from './components/applets-table';
+import { APPLETS_TABLE_COLUMNS } from './components/applets-table/columns';
 import { Button, Input, List, Show } from '@zipper/ui';
 import { FiTool, FiRadio } from 'react-icons/fi';
 import { PiPlusBold, PiRocket } from 'react-icons/pi';
@@ -135,7 +135,7 @@ const Dashboard: NextPageWithLayout = () => {
       <div className="grid grid-cols-4 gap-9">
         <section className="col-span-1 flex flex-col gap-6">
           <article className="flex flex-col gap-2">
-            <h1 className="text-3xl font-medium">Ziplets</h1>
+            <h1 className="text-3xl font-medium">Applets</h1>
             <p>
               Applets that you and other organization members have created
               within this workspace.
@@ -184,12 +184,12 @@ const Dashboard: NextPageWithLayout = () => {
             when={apps.length >= 1}
             fallback={<EmptySlate organization={organization} />}
           >
-            <ZipletsTable
+            <AppletsTable
               getSortedRowModel={getSortedRowModel()}
               getFilteredRowModel={getFilteredRowModel()}
               globalFilterFn="includesString"
               data={apps}
-              columns={ZIPLETS_TABLE_COLUMNS}
+              columns={APPLETS_TABLE_COLUMNS}
               state={states}
             />
           </Show>

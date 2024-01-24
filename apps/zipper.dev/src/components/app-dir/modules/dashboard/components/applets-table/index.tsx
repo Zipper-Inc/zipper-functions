@@ -104,7 +104,7 @@ function TableRow<T extends App>(row: Row<T>) {
   );
 }
 
-export function ZipletsTable<T extends App>(props: ZipletTableProps<T>) {
+export function AppletsTable<T extends App>(props: ZipletTableProps<T>) {
   /* ------------------- Hooks ------------------ */
   const table = useReactTable({
     getCoreRowModel: getCoreRowModel(),
