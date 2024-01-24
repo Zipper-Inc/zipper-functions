@@ -17,6 +17,13 @@ import {
   AlertDialogFooter,
   Button,
   useColorModeValue,
+  Box,
+  Accordion,
+  AccordionIcon,
+  AccordionItem,
+  AccordionPanel,
+  AccordionButton,
+  useColorMode,
 } from '@chakra-ui/react';
 import React, { useEffect, useRef, useState } from 'react';
 import AddScriptForm from '~/components/playground/add-script-form';
@@ -36,6 +43,7 @@ import {
   isLib,
   isConnector,
 } from '~/utils/playground.utils';
+import { Markdown, Show } from '@zipper/ui';
 import { getFileExtension } from '@zipper/utils';
 
 // Order should always be:
@@ -66,7 +74,13 @@ export function PlaygroundSidebar({
   app: AppQueryOutput;
   mainScript: Script;
 }) {
-  const { currentScript, setCurrentScript, refetchApp } = useEditorContext();
+  const {
+    currentScript,
+    setCurrentScript,
+    refetchApp,
+    docs,
+    onChangeSelectedDoc,
+  } = useEditorContext();
 
   const renameForm: ScriptItemProps['renameForm'] = useForm();
 
@@ -144,6 +158,7 @@ export function PlaygroundSidebar({
   };
 
   const { style, onMouseEnter, onMouseLeave } = useHelpBorder();
+  const { colorMode } = useColorMode();
 
   return (
     <>
@@ -211,6 +226,74 @@ export function PlaygroundSidebar({
             />
           ))}
         </VStack>
+      </VStack>
+      <VStack mr={{ base: '0', xl: 2 }} overflowY="auto" h="full" paddingY={4}>
+        <Show when={!!docs[0]?.startLine}>
+          <Accordion defaultIndex={[0]} allowMultiple width="100%">
+            <AccordionItem>
+              <h2>
+                <AccordionButton bg="fg.100" _hover={{ bg: 'fg.200' }} h={6}>
+                  <Box
+                    as="span"
+                    flex="1"
+                    textAlign="left"
+                    fontSize="sm"
+                    color="fg.600"
+                    fontWeight="bold"
+                    textTransform="uppercase"
+                  >
+                    Guide
+                  </Box>
+                  <AccordionIcon />
+                </AccordionButton>
+              </h2>
+              <AccordionPanel px={0} py={0}>
+                {docs.map((doc) => (
+                  <HStack
+                    align="start"
+                    p={3}
+                    gap={3}
+                    color="fg.400"
+                    bg={
+                      doc.isSelected
+                        ? colorMode === 'dark'
+                          ? '#413C26'
+                          : 'yellow.100'
+                        : 'bg.50'
+                    }
+                    _hover={{
+                      bg: doc.isSelected
+                        ? colorMode === 'dark'
+                          ? '#413C26'
+                          : 'yellow.100'
+                        : colorMode === 'dark'
+                        ? '#413C26'
+                        : 'yellow.100',
+                    }}
+                    position="relative"
+                    onClick={() => onChangeSelectedDoc(doc.index)}
+                    cursor="pointer"
+                  >
+                    <Box fontSize="sm" flex={1}>
+                      <Markdown>{doc.content}</Markdown>
+                    </Box>
+                    <Box
+                      as="span"
+                      w={5}
+                      h={5}
+                      fontSize="sm"
+                      fontWeight="medium"
+                      fontFamily="mono"
+                      color="yellow.600"
+                    >
+                      {doc.startLine}
+                    </Box>
+                  </HStack>
+                ))}
+              </AccordionPanel>
+            </AccordionItem>
+          </Accordion>
+        </Show>
       </VStack>
       <AlertDialog
         isOpen={isOpen}

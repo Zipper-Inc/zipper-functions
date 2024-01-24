@@ -39,6 +39,7 @@ export const Markdown = ({
     <ReactMarkdown
       components={ChakraUIRenderer()}
       children={content}
+      className="-mt-2"
       remarkPlugins={[remarkGfm as any, remarkGemoji as any]}
       rehypePlugins={[rehypeSanitize(), rehypeRaw as any]}
     />

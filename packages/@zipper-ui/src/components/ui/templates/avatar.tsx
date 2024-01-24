@@ -7,12 +7,17 @@ import { cn } from '../../../utils/cn';
 
 const AvatarRoot = React.forwardRef<
   React.ElementRef<typeof AvatarPrimitive.Root>,
-  React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Root>
->(({ className, ...props }, ref) => (
+  React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Root> & {
+    size?: 'xs' | 'sm' | 'md';
+  }
+>(({ className, size = 'md', ...props }, ref) => (
   <AvatarPrimitive.Root
     ref={ref}
     className={cn(
-      'relative flex h-10 w-10 shrink-0 overflow-hidden rounded-full',
+      'relative flex shrink-0 overflow-hidden rounded-full',
+      size === 'md' && 'h-9 w-9',
+      size === 'sm' && 'h-6 w-6',
+      size === 'xs' && 'h-4 w-4',
       className,
     )}
     {...props}
@@ -47,12 +52,34 @@ const AvatarFallback = React.forwardRef<
 ));
 AvatarFallback.displayName = AvatarPrimitive.Fallback.displayName;
 
+const AvatarBadge = ({
+  className,
+  status = 'online',
+  ...props
+}: React.HTMLAttributes<HTMLSpanElement> & {
+  status: 'online' | 'idle' | 'offline';
+}) => {
+  return (
+    <span
+      className={cn(
+        'absolute -bottom-2 -right-2 h-4 w-4 rounded-full border-2 border-background',
+        status === 'online' && 'bg-success',
+        status === 'offline' && 'bg-primary-red-400',
+        status === 'idle' && 'bg-muted',
+      )}
+      {...props}
+    />
+  );
+};
+
 type AvatarComponent = typeof AvatarRoot & {
   Image: typeof AvatarImage;
   Fallback: typeof AvatarFallback;
+  Badge: typeof AvatarBadge;
 };
 
 export const Avatar = AvatarRoot as AvatarComponent;
 
 Avatar.Fallback = AvatarFallback;
 Avatar.Image = AvatarImage;
+Avatar.Badge = AvatarBadge;

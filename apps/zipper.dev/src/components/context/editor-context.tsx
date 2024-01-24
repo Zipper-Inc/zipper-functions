@@ -10,6 +10,8 @@ import {
   MutableRefObject,
   useCallback,
   useMemo,
+  Dispatch,
+  SetStateAction,
 } from 'react';
 import noop from '~/utils/noop';
 
@@ -35,6 +37,7 @@ import {
 } from '~/utils/playground.utils';
 import { runZipperLinter } from '~/utils/zipper-editor-linter';
 import { rewriteSpecifier } from '~/utils/rewrite-imports';
+import { TutorialBlock, useTutorial } from '~/hooks/use-playground-docs';
 import isEqual from 'lodash.isequal';
 
 type OnValidate = AddParameters<
@@ -49,7 +52,11 @@ export type EditorContextType = {
   setCurrentScript: (script: Script) => void;
   onChange: EditorProps['onChange'];
   onValidate: OnValidate;
+  onChangeSelectedDoc: (docIndex: number) => void;
+  connectionId?: number;
   scripts: Script[];
+  selectedDoc: TutorialBlock;
+  docs: TutorialBlock[];
   editor?: typeof monaco.editor;
   setEditor: (editor: typeof monaco.editor) => void;
   isModelDirty: (path: string) => boolean;
@@ -64,6 +71,7 @@ export type EditorContextType = {
   save: () => Promise<string>;
   refetchApp: () => Promise<any>;
   inputParams?: InputParam[];
+  inputParamsIsLoading: boolean;
   inputError?: string;
   monacoRef?: MutableRefObject<Monaco | undefined>;
   logs: Zipper.Log.Message[];
@@ -97,16 +105,20 @@ export const EditorContext = createContext<EditorContextType>({
   currentScript: undefined,
   setCurrentScript: noop,
   onChange: noop,
+  inputParamsIsLoading: true,
   onValidate: noop,
   scripts: [],
   editor: undefined,
   setEditor: noop,
+  docs: [],
+  selectedDoc: {} as TutorialBlock,
   isModelDirty: () => false,
   setModelIsDirty: noop,
   isEditorDirty: () => false,
   modelHasErrors: () => false,
   setModelHasErrors: () => false,
   editorHasErrors: () => false,
+  onChangeSelectedDoc: () => false,
   getErrorFiles: () => [],
   isSaving: false,
   setIsSaving: noop,
@@ -411,8 +423,16 @@ const EditorContextProvider = ({
 }) => {
   const [currentScriptId, setCurrentScriptId] = useState<string>();
 
-  const [inputParams, setInputParams] = useState<InputParam[] | undefined>([]);
+  const [inputParams, _setInputParams] = useState<InputParam[] | undefined>([]);
   const [inputError, setInputError] = useState<string | undefined>();
+  const [inputParamsIsLoading, setInputParamsIsLoading] = useState(true);
+
+  const setInputParams: Dispatch<SetStateAction<InputParam[] | undefined>> = (
+    params,
+  ) => {
+    setInputParamsIsLoading(false);
+    return _setInputParams(params);
+  };
 
   const [isSaving, setIsSaving] = useState(false);
 
@@ -435,6 +455,10 @@ const EditorContextProvider = ({
   const currentScript = scripts.find((s) => s.id === currentScriptId);
   const setCurrentScript = (s: Script) => setCurrentScriptId(s.id);
 
+  const { docs, onChangeSelectedDoc, selectedDoc } = useTutorial(
+    currentScript?.code ?? '',
+  );
+
   const resetDirtyState = () => {
     setModelsDirtyState(
       (Object.keys(modelsDirtyState) as string[]).reduce((acc, elem) => {
@@ -446,7 +470,7 @@ const EditorContextProvider = ({
     );
   };
 
-  const onChange: EditorProps['onChange'] = async (value = '', event) => {
+  const onChange: EditorProps['onChange'] = async (value = '') => {
     if (!monacoRef?.current || !currentScript) return;
     runEditorActionsDebounced({
       value,
@@ -762,8 +786,11 @@ const EditorContextProvider = ({
       value={{
         currentScript,
         setCurrentScript,
+        selectedDoc,
+        docs,
         onChange,
         onValidate,
+        inputParamsIsLoading,
         scripts,
         editor,
         setEditor,
@@ -785,6 +812,7 @@ const EditorContextProvider = ({
         addLog,
         setLogStore,
         markLogsAsRead,
+        onChangeSelectedDoc,
         preserveLogs,
         setPreserveLogs,
         lastReadLogsTimestamp,
