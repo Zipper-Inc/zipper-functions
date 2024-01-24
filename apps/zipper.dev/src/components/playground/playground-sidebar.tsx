@@ -43,7 +43,7 @@ import {
   isLib,
   isConnector,
 } from '~/utils/playground.utils';
-import { Markdown } from '@zipper/ui';
+import { Markdown, Show } from '@zipper/ui';
 import { getFileExtension } from '@zipper/utils';
 
 // Order should always be:
@@ -228,29 +228,31 @@ export function PlaygroundSidebar({
         </VStack>
       </VStack>
       <VStack mr={{ base: '0', xl: 2 }} overflowY="auto" h="full" paddingY={4}>
-        <Accordion defaultIndex={[0]} allowMultiple width="100%">
-          <AccordionItem>
-            <h2>
-              <AccordionButton bg="fg.100" _hover={{ bg: 'fg.200' }} h={6}>
-                <Box
-                  as="span"
-                  flex="1"
-                  textAlign="left"
-                  fontSize="sm"
-                  color="fg.600"
-                  fontWeight="bold"
-                  textTransform="uppercase"
-                >
-                  Guide
-                </Box>
-                <AccordionIcon />
-              </AccordionButton>
-            </h2>
-            <AccordionPanel px={0} py={0}>
-              {!!docs[0]?.startLine &&
-                docs.map((doc) => (
+        <Show when={!!docs[0]?.startLine}>
+          <Accordion defaultIndex={[0]} allowMultiple width="100%">
+            <AccordionItem>
+              <h2>
+                <AccordionButton bg="fg.100" _hover={{ bg: 'fg.200' }} h={6}>
+                  <Box
+                    as="span"
+                    flex="1"
+                    textAlign="left"
+                    fontSize="sm"
+                    color="fg.600"
+                    fontWeight="bold"
+                    textTransform="uppercase"
+                  >
+                    Guide
+                  </Box>
+                  <AccordionIcon />
+                </AccordionButton>
+              </h2>
+              <AccordionPanel px={0} py={0}>
+                {docs.map((doc) => (
                   <HStack
+                    align="start"
                     p={3}
+                    gap={3}
                     color="fg.400"
                     bg={
                       doc.isSelected
@@ -272,11 +274,13 @@ export function PlaygroundSidebar({
                     onClick={() => onChangeSelectedDoc(doc.index)}
                     cursor="pointer"
                   >
+                    <Box fontSize="sm" flex={1}>
+                      <Markdown>{doc.content}</Markdown>
+                    </Box>
                     <Box
                       as="span"
-                      position="absolute"
-                      top={4}
-                      right={3}
+                      w={5}
+                      h={5}
                       fontSize="sm"
                       fontWeight="medium"
                       fontFamily="mono"
@@ -284,16 +288,12 @@ export function PlaygroundSidebar({
                     >
                       {doc.startLine}
                     </Box>
-                    <Box>
-                      <Box fontSize="sm">
-                        <Markdown>{doc.content}</Markdown>
-                      </Box>
-                    </Box>
                   </HStack>
                 ))}
-            </AccordionPanel>
-          </AccordionItem>
-        </Accordion>
+              </AccordionPanel>
+            </AccordionItem>
+          </Accordion>
+        </Show>
       </VStack>
       <AlertDialog
         isOpen={isOpen}

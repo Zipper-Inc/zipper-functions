@@ -62,11 +62,14 @@ const useTutorial = (code: string) => {
           return {
             ...range,
             content,
-            index,
-            isSelected: index === selectedDoc.index,
           } as TutorialBlock;
         })
-        .filter((doc) => !!doc.startLine);
+        .filter((doc) => !!doc.startLine)
+        .map((doc, index) => ({
+          ...doc,
+          index,
+          isSelected: index === selectedDoc.index,
+        }));
 
       return { jsdocs, docs };
     }
@@ -79,6 +82,7 @@ const useTutorial = (code: string) => {
     if (docIndex === selectedDoc.index) {
       return setSelectedDoc({} as TutorialBlock);
     }
+    console.log('docs', docs.docs[docIndex]!);
 
     return setSelectedDoc({ ...docs.docs[docIndex]! });
   };
