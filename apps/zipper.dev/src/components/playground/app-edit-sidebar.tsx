@@ -16,7 +16,7 @@ import { TabButton } from '@zipper/ui';
 import { useMemo, useState } from 'react';
 import { HiEye, HiPencil } from 'react-icons/hi2';
 import { useEditorContext } from '../context/editor-context';
-import { useHelpBorder, useHelpMode } from '../context/help-mode-context';
+import { useHelpBorder } from 'use-helper-inspector';
 import { AppConsole } from './app-console';
 import AppEditSidebarApplet from './app-edit-sidebar-applet';
 
