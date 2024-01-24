@@ -1,3 +1,4 @@
+'use client';
 import { Inter } from 'next/font/google';
 import localFont from 'next/font/local';
 
@@ -33,6 +34,7 @@ import {
   ChakraProvider,
   extendTheme,
   Flex,
+  useColorMode,
 } from '@chakra-ui/react';
 import Head from 'next/head';
 import { ReactNode } from 'react';
@@ -61,6 +63,8 @@ export const DefaultLayout = ({
   title,
   ...chakraProps
 }: DefaultLayoutProps) => {
+  const { colorMode } = useColorMode();
+
   return (
     <>
       <Head>
@@ -68,7 +72,7 @@ export const DefaultLayout = ({
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+      <ThemeProvider attribute="class" defaultTheme={colorMode} enableSystem>
         <ChakraProvider theme={_theme}>
           {/* <Fonts /> */}
           <>

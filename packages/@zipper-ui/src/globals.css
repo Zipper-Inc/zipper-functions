@@ -58,7 +58,8 @@
     --border: 223 15% 24%;
     --input: 223 15% 24%;
 
-    --disabled: 0 0% 86% --accent: 223 15% 24%;
+    --disabled: 0 0% 86%;
+    --accent: 223 15% 24%;
     --accent-foreground: 220 20% 97%;
   }
 }
