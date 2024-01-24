@@ -519,7 +519,7 @@ function InspectUiHelpMode(props: { onClose: () => void }) {
   );
 }
 
-const inspectableComponents: InspectableComponents = {
+export const inspectableComponents: InspectableComponents = {
   PlaygroundSidebar: {
     name: 'Sidebar',
     description:
