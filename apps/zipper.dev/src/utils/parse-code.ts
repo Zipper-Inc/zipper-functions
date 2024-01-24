@@ -4,7 +4,6 @@ import stripComments from 'strip-comments';
 import {
   ParameterDeclaration,
   Project,
-  PropertySignature,
   SyntaxKind,
   ts,
   SourceFile,
@@ -216,17 +215,17 @@ function parseTypeNode(typeNode: TypeNode, src: SourceFile): ParsedNode {
     const typeReferenceText = typeReference.getText();
 
     // find in the code the declaration of the typeReferenceText, this can be a type, a interface, a enum, etc.
-    const typeReferenceDeclaration =
-      src.getTypeAlias(typeReferenceText) ||
-      src.getInterface(typeReferenceText) ||
-      src.getEnum(typeReferenceText);
+    const declaration = searchDeclarationNaive(
+      src,
+      typeReferenceText,
+      src.getProject(),
+    );
 
     //we have the declaration, we need to know if it's a type, interface or enum
-    if (typeReferenceDeclaration) {
-      if (typeReferenceDeclaration.isKind(SyntaxKind.TypeAliasDeclaration)) {
+    if (declaration) {
+      if (declaration.isKind(SyntaxKind.TypeAliasDeclaration)) {
         // we have a type
-        const typeReferenceDeclarationType =
-          typeReferenceDeclaration.getTypeNode();
+        const typeReferenceDeclarationType = declaration.getTypeNode();
 
         // check if type is a string literal
         if (
@@ -248,10 +247,9 @@ function parseTypeNode(typeNode: TypeNode, src: SourceFile): ParsedNode {
         if (typeReferenceDeclarationType)
           return parseTypeNode(typeReferenceDeclarationType, src);
       }
-      if (typeReferenceDeclaration.isKind(SyntaxKind.InterfaceDeclaration)) {
+      if (declaration.isKind(SyntaxKind.InterfaceDeclaration)) {
         // we have a interface
-        const typeReferenceDeclarationProperties =
-          typeReferenceDeclaration.getProperties();
+        const typeReferenceDeclarationProperties = declaration.getProperties();
         const propDetails = typeReferenceDeclarationProperties.map(
           (prop: any) => {
             return {
@@ -265,32 +263,30 @@ function parseTypeNode(typeNode: TypeNode, src: SourceFile): ParsedNode {
           details: { properties: propDetails },
         };
       }
-      if (typeReferenceDeclaration.isKind(SyntaxKind.EnumDeclaration)) {
+      if (declaration.isKind(SyntaxKind.EnumDeclaration)) {
         // we have a enum
         return {
           type: InputType.enum,
           details: {
-            values: typeReferenceDeclaration
-              .getMembers()
-              .map((member: EnumMember) => {
-                const memberText = member.getFullText().trim();
+            values: declaration.getMembers().map((member: EnumMember) => {
+              const memberText = member.getFullText().trim();
 
-                // check if the memberText has a value by checking if it has a '='
-                const hasValue = memberText.includes('=');
-                if (!hasValue) {
-                  return memberText.trim();
-                }
+              // check if the memberText has a value by checking if it has a '='
+              const hasValue = memberText.includes('=');
+              if (!hasValue) {
+                return memberText.trim();
+              }
 
-                // if it has a value, we need to extract it
-                const memberValue = memberText
-                  .split('=')[1]
-                  ?.replace(/['"]+/g, '')
-                  .trim();
-                return {
-                  key: memberText.split('=')[0]?.trim(),
-                  value: memberValue,
-                };
-              }),
+              // if it has a value, we need to extract it
+              const memberValue = memberText
+                .split('=')[1]
+                ?.replace(/['"]+/g, '')
+                .trim();
+              return {
+                key: memberText.split('=')[0]?.trim(),
+                value: memberValue,
+              };
+            }),
           },
         };
       }
@@ -320,7 +316,8 @@ function parseTypeNode(typeNode: TypeNode, src: SourceFile): ParsedNode {
   return { type: InputType.unknown };
 }
 
-function createProject(modules: Record<string, string>) {
+export function createProject(initialModules?: Record<string, string>) {
+  console.log('[PROJECT] - new project');
   const project = new Project({
     useInMemoryFileSystem: true,
     resolutionHost: (moduleResolutionHost, getCompilerOptions) => {
@@ -329,6 +326,8 @@ function createProject(modules: Record<string, string>) {
           const compilerOptions = getCompilerOptions();
           const resolvedModules: ts.ResolvedModule[] = [];
 
+          // TODO: I know that we can add support for http modules here
+          // This would remove the need for a custom resolver (searchDefinitionNaive)
           for (const moduleName of moduleNames) {
             const localModuleName = removeTsExtension(moduleName);
             const result = ts.resolveModuleName(
@@ -347,10 +346,11 @@ function createProject(modules: Record<string, string>) {
     },
   });
 
-  for (const [filename, code] of Object.entries(modules)) {
-    project.createSourceFile(filename, code);
-  }
+  if (!initialModules) return project;
 
+  for (const [filename, code] of Object.entries(initialModules)) {
+    project.createSourceFile(filename, code, { overwrite: true });
+  }
   return project;
 }
 
@@ -419,27 +419,26 @@ function findHandlerFunction({
   }
 }
 
-const getDefinition = (typeNode: TypeReferenceNode) => {
-  const identifier = typeNode.getTypeName();
-  if ('getLeft' in identifier) return;
-
+const getDeclarationUsingCompiler = (typeReference: TypeReferenceNode) => {
   try {
+    const identifier = typeReference.getTypeName();
+    console.log('identifier', identifier.getText());
+    if ('getLeft' in identifier) return;
+
     const nodes = identifier.getDefinitionNodes();
-    console.log('getDefinition | nodes', {
-      len: nodes.length,
-      texts: nodes.map((n) => n.getFullText()),
-    });
     const declaration = nodes[0];
     return declaration;
   } catch {
-    console.log('no definition');
+    console.log(
+      'compiler couldnt find the declaration for',
+      typeReference.getText(),
+    );
     return;
   }
 };
 
-const solveDefinition = (definition: Node) => {
+const getTypeNodeFromDeclaration = (definition: Node) => {
   // Ideally, we want to call parseType(declaration.getType()) here
-  console.log('lets solve', definition.getKindName());
   if (definition.isKind(SyntaxKind.TypeAliasDeclaration)) {
     const node = definition.getTypeNode();
     return node;
@@ -454,30 +453,67 @@ const solveDefinition = (definition: Node) => {
   }
 };
 
-async function solveTypeReference(
-  typeNode: TypeReferenceNode,
-  fileName: string,
-  project: Project | undefined,
+function searchDeclarationNaive(
+  file: SourceFile | undefined,
+  target: string,
+  project: Project,
 ) {
-  const src = project?.getSourceFile(fileName);
+  try {
+    // This can be a recursive function to search
+    if (!file) return;
+
+    const typeDeclaration = file.getTypeAlias(target);
+    if (typeDeclaration) return typeDeclaration;
+
+    const interfaceDeclaration = file.getInterface(target);
+    if (interfaceDeclaration) return interfaceDeclaration;
+    const enumDeclaration = file.getEnum(target);
+    if (enumDeclaration) return enumDeclaration;
+
+    // look for exports
+    const exportDecl = file.getExportDeclaration((exportDecl) =>
+      exportDecl
+        .getNamedExports()
+        .map((n) => n.getText())
+        .includes(target),
+    );
+    if (exportDecl) {
+      return searchDeclarationNaive(
+        exportDecl.getModuleSpecifierSourceFile(),
+        target,
+        project,
+      );
+    }
+  } catch (e) {
+    console.error('error searching', e);
+  }
+}
+
+async function solveTypeReference({
+  typeReference,
+  filename,
+  project,
+  shouldFetch = true,
+}: {
+  typeReference: TypeReferenceNode;
+  filename: string;
+  project: Project;
+  shouldFetch?: boolean;
+}) {
+  const src = project?.getSourceFile(filename);
+  const target = typeReference.getTypeName().getText();
 
   if (!src || !project) return;
 
-  const localDefinition = getDefinition(typeNode);
+  const localDefinition = getDeclarationUsingCompiler(typeReference);
   if (localDefinition) {
-    return solveDefinition(localDefinition);
+    return getTypeNodeFromDeclaration(localDefinition);
   }
-
-  console.log(
-    'current project',
-    project.getSourceFiles().map((s) => s.getFilePath()),
-  );
-  console.log('Not found in local files -- Searching in a remote file');
 
   const imports = src.getImportDeclarations();
   const importDeclaration = imports.find((x) => {
     const insideImport = x.getNamedImports().map((n) => n.getText());
-    return insideImport.includes(typeNode.getTypeName().getText());
+    return insideImport.includes(target);
   });
 
   if (!importDeclaration) {
@@ -487,13 +523,29 @@ async function solveTypeReference(
     return;
   }
 
+  try {
+    const importFile = project.getSourceFile(
+      importDeclaration.getModuleSpecifierValue(),
+    );
+    console.log(
+      'trying to import from',
+      importDeclaration.getModuleSpecifierValue(),
+    );
+    if (importFile) {
+      console.log('found in project but couldnt get definition');
+      const declaration = searchDeclarationNaive(importFile, target, project);
+      return declaration ? getTypeNodeFromDeclaration(declaration) : undefined;
+    }
+  } catch {
+    console.log('its not in the project');
+  }
+
+  if (!shouldFetch) return;
+  console.log('Not found in local files -- Searching in a remote file');
   const specifier = importDeclaration.getModuleSpecifierValue();
-  console.log('will import from', specifier);
   const externalModule = await fetch(`/api/editor/ts/bundle?x=${specifier}`)
     .then((res) => res.json() as Promise<{ [filename: string]: string }>)
     .catch(() => null);
-
-  console.log('external module', externalModule);
 
   if (!externalModule) {
     console.error('Couldnt fetch external module');
@@ -501,17 +553,20 @@ async function solveTypeReference(
   }
   // add in the project
   for (const [filename, code] of Object.entries(externalModule)) {
-    console.log('adding file');
-    project.createSourceFile(filename, code);
+    project.createSourceFile(filename, code, { overwrite: true });
   }
-  console.log(
-    'project with new modules',
-    project.getSourceFiles().map((s) => s.getFilePath()),
-  );
 
-  const externalDefinition = getDefinition(typeNode);
+  const externalDefinition = getDeclarationUsingCompiler(typeReference);
   if (externalDefinition) {
-    return solveDefinition(externalDefinition);
+    return getTypeNodeFromDeclaration(externalDefinition);
+  } else {
+    // Try to solve it again, now with the external module
+    return solveTypeReference({
+      typeReference,
+      filename,
+      project,
+      shouldFetch: false,
+    });
   }
 }
 
@@ -526,7 +581,7 @@ async function parseHandlerInputs(
 
   const src = project?.getSourceFile(handlerFile);
 
-  if (!params || params.getText().startsWith('_') || !src) {
+  if (!params || params.getText().startsWith('_') || !src || !project) {
     return [];
   }
 
@@ -554,84 +609,86 @@ async function parseHandlerInputs(
     ];
   }
 
-  if (typeNode?.isKind(SyntaxKind.TypeReference)) {
-    const node = await solveTypeReference(typeNode, handlerFile, project);
+  console.log({ text: typeNode.getFullText(), kind: typeNode.getKindName() });
+  if (typeNode.isKind(SyntaxKind.TypeReference)) {
+    const node = await solveTypeReference({
+      typeReference: typeNode,
+      filename: handlerFile,
+      project,
+    }).catch(() => null);
+
     if (node?.isKind(SyntaxKind.TypeLiteral)) {
+      console.log('✅ LESGOOOOOOO', {
+        text: node?.getText(),
+        kind: node?.getKindName(),
+      });
       return unwrapObject(node);
     }
   }
 
-  let props: PropertySignature[] = [];
-
-  try {
-    props = typeNode?.isKind(SyntaxKind.TypeLiteral)
-      ? // A type literal, like `params: { foo: string, bar: string }`
-        (typeNode as any)?.getProperties()
-      : // A type reference, like `params: Params`
-        // Finds the type alias by its name and grabs the node from there
-        (
-          src.getTypeAlias(typeNode?.getText() as string)?.getTypeNode() as any
-        )?.getProperties();
-  } catch (e) {
-    if (throwErrors) {
-      throw new Error('Cannot get the properties of the object parameter.');
-    }
-    return [];
-  }
-
-  if (!typeNode || !props) {
-    console.error('No types, treating input as any');
-  }
   // TODO: If there's no (input : Type) annotation, we get the type from the function
   // TODO: (input: Parameters<typeof someFunction>) or (input: Pick<SomeType, 'foo' | 'bar'>)
 
-  return props.map((prop) => {
-    const isOptional =
-      prop.hasQuestionToken() || !!paramsWithDefaultValue?.[prop.getName()];
-    const typeNode = prop.getTypeNode();
-    if (!typeNode) {
-      // Typescript defaults to any if it can't find the type
-      // type Input = { foo } // foo is any
-      return {
+  if (typeNode?.isKind(SyntaxKind.TypeLiteral)) {
+    const props = typeNode.getProperties();
+    return props.map((prop) => {
+      const isOptional =
+        prop.hasQuestionToken() || !!paramsWithDefaultValue?.[prop.getName()];
+      const typeNode = prop.getTypeNode();
+      if (!typeNode) {
+        // Typescript defaults to any if it can't find the type
+        // type Input = { foo } // foo is any
+        return {
+          key: prop.getName(),
+          node: { type: InputType.any },
+          optional: isOptional,
+        };
+      }
+
+      const typeDetails = parseTypeNode(typeNode, src);
+
+      const result = {
         key: prop.getName(),
-        node: { type: InputType.any },
         optional: isOptional,
+        node: typeDetails,
       };
-    }
-
-    const typeDetails = parseTypeNode(typeNode, src);
-
-    const result = {
-      key: prop.getName(),
-      optional: isOptional,
-      node: typeDetails,
-    };
-    return result;
-  });
+      return result;
+    });
+  }
+  return [];
 }
 
 function unwrapObject(node: TypeLiteralNode): InputParam[] {
   const props = node.getProperties();
 
   return props.map((prop) => {
+    console.log('prop', prop.getText());
     const isOptional = prop.hasQuestionToken();
-    const typeNode = prop.getTypeNode();
-    if (!typeNode) {
+    try {
+      const typeNode = prop.getTypeNode();
+      if (!typeNode) {
+        return {
+          key: prop.getName(),
+          node: { type: InputType.any },
+          optional: isOptional,
+        };
+      }
+
+      const typeDetails = parseTypeNode(typeNode, node.getSourceFile());
+
+      return {
+        key: prop.getName(),
+        optional: isOptional,
+        node: typeDetails,
+      };
+    } catch (e) {
+      console.error('error unwrapping object');
       return {
         key: prop.getName(),
         node: { type: InputType.any },
         optional: isOptional,
       };
     }
-
-    const typeDetails = parseTypeNode(typeNode, node.getSourceFile());
-
-    const result = {
-      key: prop.getName(),
-      optional: isOptional,
-      node: typeDetails,
-    };
-    return result;
   });
 }
 
@@ -702,6 +759,7 @@ export function parseActions({
 
     const actionsProperties = actionsObject.getProperties();
 
+    // TODO: fix actions :D
     // const actions = actionsProperties.reduce((actionsSoFar, property) => {
     //   const name = property
     //     .getFirstChildIfKind(SyntaxKind.Identifier)
