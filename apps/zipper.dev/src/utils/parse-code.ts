@@ -24,6 +24,7 @@ import {
 
 type ParseProject = {
   handlerFile: string;
+  project?: Project;
   modules: Record<string, string>;
   throwErrors?: boolean;
 };
@@ -813,8 +814,16 @@ export function parseDirectivePrologue({
 export const isClientModule = (inputs: ParseCode) =>
   parseDirectivePrologue(inputs) === USE_CLIENT_DIRECTIVE;
 
-export function parseApp({ handlerFile, modules, throwErrors }: ParseProject) {
-  const project = createProject(modules);
+export function parseApp({
+  handlerFile,
+  project,
+  modules,
+  throwErrors,
+}: ParseProject) {
+  project = project || createProject();
+  for (const [filename, code] of Object.entries(modules)) {
+    project.createSourceFile(filename, code, { overwrite: true });
+  }
   return parseCode({ handlerFile, project, throwErrors });
 }
 

@@ -43,6 +43,8 @@ import { runZipperLinter } from '~/utils/zipper-editor-linter';
 import { rewriteSpecifier } from '~/utils/rewrite-imports';
 import isEqual from 'lodash.isequal';
 
+const project = createProject();
+
 type OnValidate = AddParameters<
   Required<EditorProps>['onValidate'],
   [filename?: string]
@@ -468,6 +470,7 @@ async function runEditorActionsNow({
     const { inputs, imports } = await parseApp({
       modules: { [currentScript.filename]: value, ...otherModules },
       handlerFile: currentScript.filename,
+      project,
       throwErrors: true,
     });
 
