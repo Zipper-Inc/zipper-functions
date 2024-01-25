@@ -66,6 +66,7 @@ module.exports = getConfig({
     '@zipper/types',
     '@zipper/ui',
     '@zipper/utils',
+    '@zipper/tw',
     'monaco-languageclient',
     '@nivo/line',
   ],
