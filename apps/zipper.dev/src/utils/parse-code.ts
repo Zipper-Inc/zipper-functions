@@ -38,6 +38,15 @@ export const isExternalImport = (specifier: string) =>
   /^https?:\/\//.test(specifier);
 export const endsWithTs = (specifier: string) => /\.(ts|tsx)$/.test(specifier);
 
+const hackModuleResolutionForExternalImport = (specifier: string) => {
+  const extension = getFileExtension(specifier);
+  return (
+    removeExtension(
+      specifier.replace('https://', 'https_').replaceAll('/', '-'),
+    ).replaceAll('.', '_') + `.${extension}`
+  );
+};
+
 // Strip the Deno-style file extension since TS-Morph can't handle it
 function removeTsExtension(moduleName: string) {
   if (moduleName.slice(-3).toLowerCase() === '.ts')
@@ -326,12 +335,12 @@ export function createProject(initialModules?: Record<string, string>) {
           const compilerOptions = getCompilerOptions();
           const resolvedModules: ts.ResolvedModule[] = [];
 
-          // TODO: I know that we can add support for http modules here
-          // This would remove the need for a custom resolver (searchDefinitionNaive)
-          for (const moduleName of moduleNames) {
-            const localModuleName = removeTsExtension(moduleName);
+          for (const rawModuleName of moduleNames) {
+            const moduleName = isExternalImport(rawModuleName)
+              ? './' + hackModuleResolutionForExternalImport(rawModuleName)
+              : removeTsExtension(rawModuleName);
             const result = ts.resolveModuleName(
-              localModuleName,
+              moduleName,
               containingFile,
               compilerOptions,
               moduleResolutionHost,
@@ -551,23 +560,14 @@ async function solveTypeReference({
     console.error('Couldnt fetch external module');
     return;
   }
-  // add in the project
-  for (const [filename, code] of Object.entries(externalModule)) {
+  for (const [rawFilename, code] of Object.entries(externalModule)) {
+    const filename = isExternalImport(rawFilename)
+      ? hackModuleResolutionForExternalImport(rawFilename)
+      : rawFilename;
     project.createSourceFile(filename, code, { overwrite: true });
   }
 
-  const externalDefinition = getDeclarationUsingCompiler(typeReference);
-  if (externalDefinition) {
-    return getTypeNodeFromDeclaration(externalDefinition);
-  } else {
-    // Try to solve it again, now with the external module
-    return solveTypeReference({
-      typeReference,
-      filename,
-      project,
-      shouldFetch: false,
-    });
-  }
+  return solveTypeReference({
 }
 
 async function parseHandlerInputs(
