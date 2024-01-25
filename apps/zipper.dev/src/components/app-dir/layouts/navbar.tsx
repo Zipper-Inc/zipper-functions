@@ -1,6 +1,10 @@
 'use client';
-import { cn, List, Show } from '@zipper/ui';
+import { cn } from '@zipper/tw/cn';
+import { Show } from '@zipper/tw/ui/modules/show-content';
+import { List } from '@zipper/tw/ui/modules/list';
+
 import Link from 'next/link';
+
 import { usePathname } from 'next/navigation';
 import React from 'react';
 
