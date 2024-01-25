@@ -10,7 +10,7 @@ export * from '../src/components/ui/common/switch';
 export * from '../src/components/ui/common/text-area';
 export * from '../src/components/ui/modules/group';
 export * from '../src/components/ui/modules/list';
-export * from '../src/components/ui/modules/show-content';
+export * from '../src/components/ui/modules/show';
 export * from '../src/components/ui/templates/avatar';
 export * from '../src/components/ui/templates/dialog';
 export * from '../src/components/ui/templates/dropdown';
