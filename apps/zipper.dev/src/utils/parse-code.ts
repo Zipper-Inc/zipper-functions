@@ -1,4 +1,5 @@
 import { InputParam, InputType, ParsedNode } from '@zipper/types';
+import { getFileExtension, removeExtension } from '@zipper/utils';
 import { parse as commentParse } from 'comment-parser';
 import stripComments from 'strip-comments';
 import {
@@ -18,8 +19,6 @@ import {
   TypeLiteralNode,
   Node,
 } from 'ts-morph';
-
-// const buildCache = new BuildCachxe();
 
 type ParseProject = {
   handlerFile: string;
@@ -224,11 +223,9 @@ function parseTypeNode(typeNode: TypeNode, src: SourceFile): ParsedNode {
     const typeReferenceText = typeReference.getText();
 
     // find in the code the declaration of the typeReferenceText, this can be a type, a interface, a enum, etc.
-    const declaration = searchDeclarationNaive(
-      src,
-      typeReferenceText,
-      src.getProject(),
-    );
+    const declaration =
+      getDeclarationUsingCompiler(typeNode) ||
+      getDeclaration(typeReferenceText, src.getProject());
 
     //we have the declaration, we need to know if it's a type, interface or enum
     if (declaration) {
@@ -326,7 +323,6 @@ function parseTypeNode(typeNode: TypeNode, src: SourceFile): ParsedNode {
 }
 
 export function createProject(initialModules?: Record<string, string>) {
-  console.log('[PROJECT] - new project');
   const project = new Project({
     useInMemoryFileSystem: true,
     resolutionHost: (moduleResolutionHost, getCompilerOptions) => {
@@ -462,13 +458,13 @@ const getTypeNodeFromDeclaration = (definition: Node) => {
   }
 };
 
-function searchDeclarationNaive(
-  file: SourceFile | undefined,
-  target: string,
-  project: Project,
-) {
+function getDeclaration(target: string, project: Project) {
   try {
-    // This can be a recursive function to search
+    const file = project.getSourceFile((f) =>
+      [f.getTypeAlias(target), f.getInterface(target), f.getEnum(target)].some(
+        (declaration) => !!declaration,
+      ),
+    );
     if (!file) return;
 
     const typeDeclaration = file.getTypeAlias(target);
@@ -478,21 +474,6 @@ function searchDeclarationNaive(
     if (interfaceDeclaration) return interfaceDeclaration;
     const enumDeclaration = file.getEnum(target);
     if (enumDeclaration) return enumDeclaration;
-
-    // look for exports
-    const exportDecl = file.getExportDeclaration((exportDecl) =>
-      exportDecl
-        .getNamedExports()
-        .map((n) => n.getText())
-        .includes(target),
-    );
-    if (exportDecl) {
-      return searchDeclarationNaive(
-        exportDecl.getModuleSpecifierSourceFile(),
-        target,
-        project,
-      );
-    }
   } catch (e) {
     console.error('error searching', e);
   }
@@ -514,10 +495,12 @@ async function solveTypeReference({
 
   if (!src || !project) return;
 
-  const localDefinition = getDeclarationUsingCompiler(typeReference);
-  if (localDefinition) {
-    return getTypeNodeFromDeclaration(localDefinition);
-  }
+  const localDefinition =
+    getDeclarationUsingCompiler(typeReference) ||
+    getDeclaration(target, project);
+  if (localDefinition) return getTypeNodeFromDeclaration(localDefinition);
+
+  if (!shouldFetch) return;
 
   const imports = src.getImportDeclarations();
   const importDeclaration = imports.find((x) => {
@@ -532,25 +515,6 @@ async function solveTypeReference({
     return;
   }
 
-  try {
-    const importFile = project.getSourceFile(
-      importDeclaration.getModuleSpecifierValue(),
-    );
-    console.log(
-      'trying to import from',
-      importDeclaration.getModuleSpecifierValue(),
-    );
-    if (importFile) {
-      console.log('found in project but couldnt get definition');
-      const declaration = searchDeclarationNaive(importFile, target, project);
-      return declaration ? getTypeNodeFromDeclaration(declaration) : undefined;
-    }
-  } catch {
-    console.log('its not in the project');
-  }
-
-  if (!shouldFetch) return;
-  console.log('Not found in local files -- Searching in a remote file');
   const specifier = importDeclaration.getModuleSpecifierValue();
   const externalModule = await fetch(`/api/editor/ts/bundle?x=${specifier}`)
     .then((res) => res.json() as Promise<{ [filename: string]: string }>)
@@ -560,6 +524,7 @@ async function solveTypeReference({
     console.error('Couldnt fetch external module');
     return;
   }
+
   for (const [rawFilename, code] of Object.entries(externalModule)) {
     const filename = isExternalImport(rawFilename)
       ? hackModuleResolutionForExternalImport(rawFilename)
@@ -568,6 +533,11 @@ async function solveTypeReference({
   }
 
   return solveTypeReference({
+    typeReference,
+    filename,
+    project,
+    shouldFetch: false,
+  });
 }
 
 async function parseHandlerInputs(
@@ -609,7 +579,6 @@ async function parseHandlerInputs(
     ];
   }
 
-  console.log({ text: typeNode.getFullText(), kind: typeNode.getKindName() });
   if (typeNode.isKind(SyntaxKind.TypeReference)) {
     const node = await solveTypeReference({
       typeReference: typeNode,
@@ -624,6 +593,7 @@ async function parseHandlerInputs(
       });
       return unwrapObject(node);
     }
+    return [];
   }
 
   // TODO: If there's no (input : Type) annotation, we get the type from the function
@@ -662,30 +632,27 @@ function unwrapObject(node: TypeLiteralNode): InputParam[] {
   const props = node.getProperties();
 
   return props.map((prop) => {
-    console.log('prop', prop.getText());
     const isOptional = prop.hasQuestionToken();
+    const typeNode = prop.getTypeNode();
+    if (!typeNode) {
+      return {
+        key: prop.getName(),
+        node: { type: InputType.any },
+        optional: isOptional,
+      };
+    }
     try {
-      const typeNode = prop.getTypeNode();
-      if (!typeNode) {
-        return {
-          key: prop.getName(),
-          node: { type: InputType.any },
-          optional: isOptional,
-        };
-      }
-
-      const typeDetails = parseTypeNode(typeNode, node.getSourceFile());
-
+      const typeDetails = parseTypeNode(typeNode, typeNode.getSourceFile());
       return {
         key: prop.getName(),
         optional: isOptional,
         node: typeDetails,
       };
     } catch (e) {
-      console.error('error unwrapping object');
+      console.error('unwrapObject', e);
       return {
         key: prop.getName(),
-        node: { type: InputType.any },
+        node: { type: InputType.unknown },
         optional: isOptional,
       };
     }
@@ -833,15 +800,6 @@ export function parseImports({ handlerFile, project }: ParseCode) {
 export const USE_DIRECTIVE_REGEX = /^use\s/;
 export const USE_CLIENT_DIRECTIVE = 'use client';
 
-function getSourceWithoutComments(handlerFile: string, project?: Project) {
-  const src = project?.getSourceFile(handlerFile);
-  // TODO: !!!
-  // stripComments(
-  //     typeof srcPassedIn === 'string' ? srcPassedIn : srcPassedIn.getText(),
-  //   ),
-  return src;
-}
-
 /**
  * The "directive prologue" is the first line of a file that starts with "use ___"
  * This is a special comment that tells the compiler to do something special
@@ -853,7 +811,12 @@ export function parseDirectivePrologue({
   project,
   throwErrors = false,
 }: ParseCode) {
-  const src = getSourceWithoutComments(handlerFile, project);
+  const src = project?.getSourceFile(handlerFile);
+  if (!project || !src) return;
+  const srcWithoutComments = project.createSourceFile(
+    `zipper__without_comments_${handlerFile}`,
+    stripComments(src.getText()),
+  );
 
   const syntaxList = src?.getChildAtIndexIfKind(0, SyntaxKind.SyntaxList);
 
@@ -863,6 +826,8 @@ export function parseDirectivePrologue({
     ?.getChildAtIndexIfKind(0, SyntaxKind.ExpressionStatement)
     ?.getChildAtIndexIfKind(0, SyntaxKind.StringLiteral)
     ?.getLiteralText();
+
+  project.removeSourceFile(srcWithoutComments);
 
   return maybeDirective && USE_DIRECTIVE_REGEX.test(maybeDirective)
     ? maybeDirective
@@ -935,9 +900,7 @@ async function parseCode({
 }
 
 export function createProjectFromCode(code: string) {
-  const project = new Project({
-    useInMemoryFileSystem: true,
-  });
+  const project = createProject();
   const handlerFile = 'handler.ts';
   const src = project.createSourceFile(handlerFile, code);
   return { project, src, handlerFile };
