@@ -4,12 +4,13 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React from 'react';
 
-const links = [
-  { label: 'Ziplets', href: '/gallery-test' },
-  { label: 'Saved Ziplets', href: '/gallery-test/saved', disabled: true },
-];
+export type Link = {
+  label: string;
+  href: string;
+  disabled?: boolean;
+};
 
-const NavLink: React.FC<(typeof links)[number] & { active: boolean }> = ({
+const NavLink: React.FC<Link & { active: boolean }> = ({
   label,
   active = false,
   disabled = false,
@@ -38,15 +39,19 @@ const NavLink: React.FC<(typeof links)[number] & { active: boolean }> = ({
   );
 };
 
-export const Navbar: React.FC = () => {
-  const { pathname } = useRouter();
+interface NavbarProps {
+  links: Link[];
+}
+
+export const Navbar: React.FC<NavbarProps> = ({ links }) => {
+  const { asPath } = useRouter();
 
   return (
-    <React.Fragment>
+    <section className="flex flex-col gap-6">
       <List as="nav" className="flex items-center gap-2" data={links}>
-        {(props) => <NavLink {...props} active={pathname === props.href} />}
+        {(props) => <NavLink {...props} active={asPath === props.href} />}
       </List>
       <span id="divider" className="w-full h-px bg-border -mt-1" />
-    </React.Fragment>
+    </section>
   );
 };

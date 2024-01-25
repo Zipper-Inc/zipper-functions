@@ -19,7 +19,7 @@ function SlackInstallButton() {
   );
 
   return (
-    <Link href={slackAppInstallUrl.toString()}>
+    <Link href={slackAppInstallUrl.toString()} className="mt-2">
       <img
         alt="Add to Slack"
         height="40"

@@ -12,7 +12,7 @@ export type GalleryAppQueryOutput =
   | RouterOutputs['app']['allApproved']
   | RouterOutputs['app']['byResourceOwner'];
 
-export const GalleryCard: React.FC<GalleryItemProps> = ({ app }) => {
+export const AppletCard: React.FC<GalleryItemProps> = ({ app }) => {
   const [isShowingActions, setIsShowingActions] = useState(false);
 
   return (
