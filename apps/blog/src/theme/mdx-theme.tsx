@@ -24,9 +24,9 @@ import {
   OrderedList,
   TextProps,
   ListProps,
-  List,
-  ListItemProps,
-  ListItem,
+  UnorderedList,
+  Image,
+  ImageProps,
 } from '@chakra-ui/react';
 import { ChakraUIRenderer } from '@zipper/ui';
 
@@ -131,6 +131,7 @@ const useComponents = (): Components => {
     p: (props: TextProps) => <Text {...props} color="gray.900" mb="8" />,
     a: A,
     h1: H1,
+    img: (props: ImageProps) => <Image {...props} borderRadius="lg" mb={8} />,
     h2: (props: HeadingProps) => (
       <HeadingLink
         as="h2"
@@ -152,6 +153,24 @@ const useComponents = (): Components => {
         {...props}
       />
     ),
+    ul: (props: ListProps) => (
+      <UnorderedList marginBottom={8} spacing={2} {...props} />
+    ),
+    ol: (props: ListProps) => {
+      return (
+        <OrderedList
+          marginBottom={
+            ['li', 'code', 'ul'].includes(
+              (props.children as any)[1].type().props.as,
+            )
+              ? 2
+              : 8
+          }
+          spacing={2}
+          {...props}
+        />
+      );
+    },
     h4: (props: HeadingProps) => (
       <HeadingLink
         as="h4"
@@ -220,8 +239,11 @@ const useComponents = (): Components => {
           background="white"
           border="1px solid"
           borderColor="gray.200"
+          ml="-1rem"
+          mr="-1rem"
+          mb="1.5rem"
+          overflowX="auto"
           fontFamily="monospace"
-          my="1rem"
         >
           {React.Children.map(props.children, (child) => (
             <span>{child}</span>

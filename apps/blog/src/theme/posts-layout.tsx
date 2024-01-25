@@ -156,6 +156,7 @@ export function PostsLayout(): ReactElement {
             gridTemplateColumns={{ base: '1fr', lg: 'repeat(2, 1fr)' }}
             as="ul"
             gap={3}
+            columnGap={4}
             flex={1}
           >
             <Post {...(firstPost as any)} index={1} />
