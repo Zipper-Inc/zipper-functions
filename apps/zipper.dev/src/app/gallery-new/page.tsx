@@ -1,4 +1,4 @@
-import { Show } from '@zipper/tw/ui/modules/show-content';
+import { Show } from '@zipper/tw/ui/modules/show';
 import { List } from '@zipper/tw/ui/modules/list';
 
 import { AnalyticsHead } from '@zipper/utils';
