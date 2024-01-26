@@ -49,7 +49,7 @@ export function SmartFunctionOutput({
     window.location.href.includes('localhost')
   ) {
     const len = JSON.stringify(result || {}).length;
-    if (len > 20000 && !showBigResult) {
+    if (len > 2000000 && !showBigResult) {
       return (
         <Center>
           <VStack py="10">
