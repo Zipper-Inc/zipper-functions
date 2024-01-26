@@ -136,7 +136,7 @@ export async function POST(req: NextRequest) {
     const transformStream = new ReadableStream({
       async start(controller) {
         for await (const chunk of logStream) {
-          if (chunk.ops?.length > 0 && chunk.ops[0].op === 'add') {
+          if (chunk.ops?.length > 0 && chunk.ops[0]?.op === 'add') {
             const addOp = chunk.ops[0];
             if (
               addOp.path.startsWith('/logs/ChatOpenAI') &&
