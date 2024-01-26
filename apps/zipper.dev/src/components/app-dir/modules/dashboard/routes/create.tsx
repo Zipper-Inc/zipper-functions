@@ -68,7 +68,7 @@ const CreateFormSchema = z.object({
 const DashboardCreateZiplet: NextPageWithLayout = () => {
   /* ------------------- Hooks ------------------ */
   const createAppForm = useForm<z.infer<typeof CreateFormSchema>>({
-    resolver: zodResolver(CreateFormSchema),
+    resolver: zodResolver(CreateFormSchema as any),
     defaultValues: getDefaultCreateAppFormValues(),
   });
 

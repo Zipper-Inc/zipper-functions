@@ -30,7 +30,7 @@ function DashboardSettingsNav<T extends NavItem>(
 
         return (
           <Link
-            href={index === 0 ? pathname : fullPath}
+            href={index === 0 ? (pathname as string) : fullPath}
             className={cn(
               isActive && 'bg-primary/10 text-primary',
               'px-3 py-2 rounded-sm transition-all hover:bg-foreground/10 cursor-pointer',

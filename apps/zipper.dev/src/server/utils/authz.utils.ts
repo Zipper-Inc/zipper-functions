@@ -1,5 +1,5 @@
 import { TRPCError } from '@trpc/server';
-import { Context } from '../root';
+import { Context } from '../context';
 import { prisma } from '../prisma';
 import { UserRole } from '@zipper/types';
 
