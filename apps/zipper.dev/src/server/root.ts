@@ -3,6 +3,8 @@ import superjson from 'superjson';
 import { Context } from './context';
 import { hasOrgAdminPermission } from './utils/authz.utils';
 import { ZodError } from 'zod';
+import { getSession } from 'next-auth/react';
+import { CreateNextContextOptions } from '@trpc/server/adapters/next';
 
 const t = initTRPC.context<Context>().create({
   transformer: superjson,
@@ -17,6 +19,14 @@ const t = initTRPC.context<Context>().create({
     };
   },
 });
+
+export const createTRPCContext = async (opts: CreateNextContextOptions) => {
+  const session = await getSession({ req: opts.req });
+
+  return {
+    session,
+  };
+};
 
 const enforceAuth = t.middleware(({ ctx, next }) => {
   if (!ctx.userId) {
