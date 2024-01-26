@@ -11,7 +11,6 @@ import {
   Button,
   Dropdown,
   List,
-  Show,
   ZipperLogo,
   ZipperSymbol,
 } from '@zipper/ui';
@@ -24,6 +23,7 @@ import { useOrganizationList } from '~/hooks/use-organization-list';
 import { HiOutlineChevronUpDown } from 'react-icons/hi2';
 import { ChevronRightIcon } from '@radix-ui/react-icons';
 import { CreateOrganizationModal } from '~/components/auth/createOrganizationModal';
+import { Show } from '@zipper/tw/ui/modules/show';
 
 /* -------------------------------------------- */
 /* Constants                                    */

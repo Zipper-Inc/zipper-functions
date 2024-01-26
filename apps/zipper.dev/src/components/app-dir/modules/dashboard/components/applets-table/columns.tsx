@@ -3,7 +3,7 @@ import { App } from '../../page';
 import Link from 'next/link';
 import { getEditAppletLink } from '@zipper/utils';
 import { createColumnHelper } from '@tanstack/react-table';
-import { Button, Show, Tooltip } from '@zipper/ui';
+import { Button, Tooltip } from '@zipper/ui';
 import {
   PiBuildings,
   PiLockSimple,
@@ -13,6 +13,7 @@ import {
 import React from 'react';
 import { ResourceOwnerType } from '@zipper/types';
 import { CaretSortIcon } from '@radix-ui/react-icons';
+import { Show } from '@zipper/tw/ui/modules/show';
 
 const columnHelper = createColumnHelper<App>();
 

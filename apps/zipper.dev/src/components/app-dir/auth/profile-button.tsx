@@ -1,5 +1,5 @@
 'use client';
-import { Dropdown, Button, Avatar, Show } from '@zipper/ui';
+import { Dropdown, Button, Avatar } from '@zipper/ui';
 import React, { ReactNode, useCallback, useState } from 'react';
 import { signIn, signOut } from 'next-auth/react';
 import { SignedIn, SignedOut } from './user-status';
@@ -25,6 +25,7 @@ import {
   PiLifebuoyDuotone,
   PiSignOutDuotone,
 } from 'react-icons/pi';
+import { Show } from '@zipper/tw/ui/modules/show';
 
 const SettingsDialog: React.FC<{ isOpen: boolean; onClose: () => void }> = (
   settingsModal,

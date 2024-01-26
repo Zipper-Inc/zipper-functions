@@ -1,5 +1,5 @@
 'use client';
-import { List, Show } from '@zipper/ui';
+import { List } from '@zipper/ui';
 import Header from '~/components/app-dir/layouts/header';
 import { AppletCard } from '~/components/app-dir/modules/applet/card';
 import { GalleryCategories } from '~/components/app-dir/modules/gallery/components/categories';
@@ -15,6 +15,7 @@ import { trpcRouter } from '~/server/routers/_app';
 import SuperJSON from 'superjson';
 import { createContext } from '~/server/context';
 import { AnalyticsHead } from '@zipper/utils';
+import { Show } from '@zipper/tw/ui/modules/show';
 
 const LINKS = [
   { label: 'Applets', href: '/gallery-test' },
