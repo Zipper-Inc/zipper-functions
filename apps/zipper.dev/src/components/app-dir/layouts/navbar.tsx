@@ -1,6 +1,6 @@
 'use client';
 import { cn } from '@zipper/tw/cn';
-import { Show } from '@zipper/tw/ui/modules/show-content';
+import { Show } from '@zipper/tw/ui/modules/show';
 import { List } from '@zipper/tw/ui/modules/list';
 
 import Link from 'next/link';
