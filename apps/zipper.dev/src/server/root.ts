@@ -1,28 +1,10 @@
-import { TRPCError, initTRPC, inferAsyncReturnType } from '@trpc/server';
+import { TRPCError, initTRPC } from '@trpc/server';
 import superjson from 'superjson';
+import { Context } from './context';
 import { hasOrgAdminPermission } from './utils/authz.utils';
-import { getServerAuthSession } from '~/pages/api/auth/[...nextauth]';
 import { ZodError } from 'zod';
 
-export const createTRPCContext = async (opts: { headers: Headers }) => {
-  const session = (await getServerAuthSession()) || undefined;
-  const orgMems: Record<string, string> = {};
-  session?.organizationMemberships?.forEach((m) => {
-    orgMems[m.organization.id] = m.role;
-  });
-
-  return {
-    orgId: session?.currentOrganizationId || undefined,
-    userId: session?.user?.id || undefined,
-    organizations: orgMems,
-    session,
-    ...opts,
-  };
-};
-
-export type Context = inferAsyncReturnType<typeof createTRPCContext>;
-
-const t = initTRPC.context<typeof createTRPCContext>().create({
+const t = initTRPC.context<Context>().create({
   transformer: superjson,
   errorFormatter({ shape, error }) {
     return {
