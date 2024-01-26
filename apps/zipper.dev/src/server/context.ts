@@ -64,6 +64,7 @@ export async function createContext(opts: {
       orgId: session?.currentOrganizationId || undefined,
       userId: session?.user?.id || undefined,
       organizations: orgMems,
+      req: opts.req,
       session,
     });
   };
