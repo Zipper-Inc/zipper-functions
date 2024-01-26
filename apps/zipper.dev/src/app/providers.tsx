@@ -4,6 +4,7 @@ import { ChakraProvider } from '@chakra-ui/react';
 import { theme } from '@zipper/ui';
 import { extendTheme } from '@chakra-ui/react';
 import localFont from 'next/font/local';
+import { ThemeProvider } from '~/components/theme-provider';
 
 const plaak = localFont({
   src: [
@@ -38,5 +39,9 @@ const _theme = extendTheme({
 });
 
 export function Providers({ children }: { children: React.ReactNode }) {
-  return <ChakraProvider theme={_theme}>{children}</ChakraProvider>;
+  return (
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+      <ChakraProvider theme={_theme}>{children}</ChakraProvider>
+    </ThemeProvider>
+  );
 }
