@@ -5,6 +5,7 @@ import { hasOrgAdminPermission } from './utils/authz.utils';
 import { ZodError } from 'zod';
 import { getSession } from 'next-auth/react';
 import { CreateNextContextOptions } from '@trpc/server/adapters/next';
+import { Session } from 'next-auth';
 
 const t = initTRPC.context<Context>().create({
   transformer: superjson,
@@ -20,7 +21,9 @@ const t = initTRPC.context<Context>().create({
   },
 });
 
-export const createTRPCContext = async (opts: CreateNextContextOptions) => {
+export const createTRPCContext = async (
+  opts: Partial<CreateNextContextOptions>,
+) => {
   const session = await getSession({ req: opts.req });
 
   return {

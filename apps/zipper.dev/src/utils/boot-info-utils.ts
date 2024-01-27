@@ -113,7 +113,7 @@ export async function getCanUserEdit({
       };
     },
     {},
-  );
+  ) as Record<string, string>;
 
   return canUserEditFn(appInfo, {
     req,
@@ -121,6 +121,7 @@ export async function getCanUserEdit({
     orgId: undefined,
     organizations: organizations,
     session: undefined,
+    headers: undefined as any,
   });
 }
 

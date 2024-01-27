@@ -177,7 +177,8 @@ export const createOmniApiHandler =
 export const getOmniContext = (req: NextApiRequest): Context => ({
   userId: OMNI_USER_ID,
   orgId: undefined,
-  organizations: undefined,
+  organizations: undefined as any,
   req,
   session: undefined,
+  headers: undefined as any,
 });
