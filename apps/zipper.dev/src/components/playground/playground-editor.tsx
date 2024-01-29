@@ -97,9 +97,10 @@ export default function PlaygroundEditor(
     runEditorActions,
     readOnly,
     onValidate,
-    selectedDoc,
-    docs,
+    selectedTutorial,
+    tutorials,
   } = useEditorContext();
+
   const { boot, bootPromise, run, configs } = useRunAppContext();
   const editorRef = useRef<MonacoEditor>();
   const yRefs = useRef<{
@@ -628,17 +629,23 @@ export default function PlaygroundEditor(
   );
 
   useEffect(() => {
-    if (isLiveblocksReady && docs.length >= 1 && !selectedDoc.startLine) {
+    if (
+      isLiveblocksReady &&
+      tutorials.length >= 1 &&
+      !selectedTutorial.startLine
+    ) {
       const editor = editorRef.current!;
       const highLightDecorations = editor
         .getModel()
         ?.getAllDecorations()
         .filter(
           (deco) =>
-            docs
+            tutorials
               .map((line) => line.startLine)
               .includes(deco.range.startLineNumber) &&
-            docs.map((line) => line.endLine).includes(deco.range.endLineNumber),
+            tutorials
+              .map((line) => line.endLine)
+              .includes(deco.range.endLineNumber),
         );
 
       editor.removeDecorations(
@@ -646,12 +653,16 @@ export default function PlaygroundEditor(
       );
     }
 
-    if (isLiveblocksReady && docs.length >= 1 && !!selectedDoc.startLine) {
+    if (
+      isLiveblocksReady &&
+      tutorials.length >= 1 &&
+      !!selectedTutorial.startLine
+    ) {
       const editor = editorRef.current!;
 
       console.log(`${colorMode === 'dark' ? 'dark-' : ''}tutorial-line-enable`);
 
-      const decorations: monaco.editor.IModelDeltaDecoration[] = docs.map(
+      const decorations: monaco.editor.IModelDeltaDecoration[] = tutorials.map(
         (script) => ({
           range: {
             startLineNumber: script.startLine!,
@@ -661,18 +672,20 @@ export default function PlaygroundEditor(
           },
           options: {
             isWholeLine: true,
-            className: script.isSelected
-              ? styles[
-                  `${colorMode === 'dark' ? 'dark-' : ''}tutorial-line-enable`
-                ]
-              : styles['tutorial-line-unable'],
-            marginClassName: script.isSelected
-              ? styles[
-                  `${
-                    colorMode === 'dark' ? 'dark-' : ''
-                  }tutorial-line-margin-enable`
-                ]
-              : styles['tutorial-line-margin-unable'],
+            className:
+              script.index === selectedTutorial.index
+                ? styles[
+                    `${colorMode === 'dark' ? 'dark-' : ''}tutorial-line-enable`
+                  ]
+                : styles['tutorial-line-unable'],
+            marginClassName:
+              script.index === selectedTutorial.index
+                ? styles[
+                    `${
+                      colorMode === 'dark' ? 'dark-' : ''
+                    }tutorial-line-margin-enable`
+                  ]
+                : styles['tutorial-line-margin-unable'],
           },
         }),
       );
@@ -682,10 +695,12 @@ export default function PlaygroundEditor(
         ?.getAllDecorations()
         .filter(
           (deco) =>
-            docs
+            tutorials
               .map((line) => line.startLine)
               .includes(deco.range.startLineNumber) &&
-            docs.map((line) => line.endLine).includes(deco.range.endLineNumber),
+            tutorials
+              .map((line) => line.endLine)
+              .includes(deco.range.endLineNumber),
         );
 
       editor.removeDecorations(
@@ -694,7 +709,7 @@ export default function PlaygroundEditor(
 
       editor.createDecorationsCollection().set(decorations);
     }
-  }, [isLiveblocksReady, editorRef, docs, selectedDoc, colorMode]);
+  }, [isLiveblocksReady, editorRef, tutorials, selectedTutorial, colorMode]);
 
   return (
     <>
