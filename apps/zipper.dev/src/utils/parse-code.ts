@@ -1,6 +1,6 @@
 import { InputParam, InputType, ParsedNode } from '@zipper/types';
-import { getFileExtension, removeExtension } from '@zipper/utils';
 import { parse as commentParse } from 'comment-parser';
+
 import stripComments from 'strip-comments';
 import {
   ParameterDeclaration,
@@ -19,11 +19,12 @@ import {
   TypeLiteralNode,
   Node,
 } from 'ts-morph';
+import { rewriteSpecifier } from './rewrite-imports';
 
 type ParseProject = {
   handlerFile: string;
   project?: Project;
-  modules: Record<string, string>;
+  modules?: Record<string, string>;
   throwErrors?: boolean;
 };
 
@@ -37,21 +38,41 @@ export const isExternalImport = (specifier: string) =>
   /^https?:\/\//.test(specifier);
 export const endsWithTs = (specifier: string) => /\.(ts|tsx)$/.test(specifier);
 
-const hackModuleResolutionForExternalImport = (specifier: string) => {
-  const extension = getFileExtension(specifier);
-  return (
-    removeExtension(
-      specifier.replace('https://', 'https_').replaceAll('/', '-'),
-    ).replaceAll('.', '_') + `.${extension}`
-  );
-};
+const ZIPPER_DEPENDENCIES = '/zipper_dependencies';
 
-// Strip the Deno-style file extension since TS-Morph can't handle it
-function removeTsExtension(moduleName: string) {
-  if (moduleName.slice(-3).toLowerCase() === '.ts')
-    return moduleName.slice(0, -3);
-  return moduleName;
-}
+/**
+ * This function adds the external module to the project, creating a folder structure like this:
+ * @param specifier The specifier of the external module
+ * @param code The code of the external module
+ * @param project The project where the external module will be added
+ * @example With the specifier
+ * ```
+ * https://zipper.dev/zipper-inc/slack-install-link/src/main.ts
+ * - /zipper_dependencies
+ *    |- zipper-inc
+ *      |- slack-install-link
+ *         |- main.ts
+ *         |- types.ts
+ * ```
+ */
+const addExternalInProject = (
+  specifier: string,
+  code: string,
+  project: Project,
+) => {
+  const { hostname: packageOrigin, pathname } = new URL(specifier);
+  const parts = pathname.split('/');
+  const filename = parts.pop();
+  if (!filename) return;
+
+  const folders = parts.slice(0, -1);
+
+  let dir = project.createDirectory(`${ZIPPER_DEPENDENCIES}/${packageOrigin}`);
+  for (const folder of folders) {
+    dir = dir.createDirectory(folder);
+  }
+  dir.createSourceFile(filename, code);
+};
 
 const isPrimitive = (type: Type) =>
   type.getText().toLowerCase() === 'zipper.fileurl' ||
@@ -218,14 +239,8 @@ function parseTypeNode(typeNode: TypeNode, src: SourceFile): ParsedNode {
 
   // Solves the case of a type reference, like: type Foo = { foo: string, bar: string } in { input : Foo }
   if (typeNode.isKind(SyntaxKind.TypeReference)) {
-    // we have a type reference
-    const typeReference = typeNode.getTypeName();
-    const typeReferenceText = typeReference.getText();
-
     // find in the code the declaration of the typeReferenceText, this can be a type, a interface, a enum, etc.
-    const declaration =
-      getDeclarationUsingCompiler(typeNode) ||
-      getDeclaration(typeReferenceText, src.getProject());
+    const declaration = getDeclarationUsingCompiler(typeNode);
 
     //we have the declaration, we need to know if it's a type, interface or enum
     if (declaration) {
@@ -329,22 +344,50 @@ export function createProject(initialModules?: Record<string, string>) {
       return {
         resolveModuleNames: (moduleNames, containingFile) => {
           const compilerOptions = getCompilerOptions();
-          const resolvedModules: ts.ResolvedModule[] = [];
+          const resolvedModules: (ts.ResolvedModule | undefined)[] = [];
 
           for (const rawModuleName of moduleNames) {
-            const moduleName = isExternalImport(rawModuleName)
-              ? './' + hackModuleResolutionForExternalImport(rawModuleName)
-              : removeTsExtension(rawModuleName);
+            let rewrittenModuleName;
+            const rewritten = rewriteSpecifier(rawModuleName);
+
+            if (isExternalImport(rewritten)) {
+              const url = new URL(rewritten);
+              const { hostname: packageOrigin, pathname } = url;
+              // TODO: The 'src' filter is a hack, since the specifier contains 'src' in the path, but the /x/bundle endpoint doesn't return it
+              // issue [2](https://github.com/Zipper-Inc/zipper-functions/pull/744#issue-2105526771)
+              const parts = pathname.split('/').filter((p) => p !== 'src');
+              rewrittenModuleName = `${ZIPPER_DEPENDENCIES}/${packageOrigin}${parts.join(
+                '/',
+              )}`;
+              console.log(
+                '[project] rewritten external module name',
+                rawModuleName,
+                '->',
+                rewrittenModuleName,
+              );
+            } else {
+              rewrittenModuleName = rawModuleName;
+            }
+
             const result = ts.resolveModuleName(
-              moduleName,
+              rewrittenModuleName,
               containingFile,
               compilerOptions,
               moduleResolutionHost,
             );
             if (result.resolvedModule)
               resolvedModules.push(result.resolvedModule);
+            else resolvedModules.push(undefined);
           }
 
+          console.log(
+            '[project] resolved modules in',
+            containingFile,
+            resolvedModules,
+            project
+              .getSourceFiles()
+              .map((f) => ({ filename: f.getFilePath(), code: f.getText() })),
+          );
           return resolvedModules;
         },
       };
@@ -356,6 +399,7 @@ export function createProject(initialModules?: Record<string, string>) {
   for (const [filename, code] of Object.entries(initialModules)) {
     project.createSourceFile(filename, code, { overwrite: true });
   }
+  project.createDirectory(ZIPPER_DEPENDENCIES);
   return project;
 }
 
@@ -427,17 +471,10 @@ function findHandlerFunction({
 const getDeclarationUsingCompiler = (typeReference: TypeReferenceNode) => {
   try {
     const identifier = typeReference.getTypeName();
-    console.log('identifier', identifier.getText());
     if ('getLeft' in identifier) return;
-
     const nodes = identifier.getDefinitionNodes();
-    const declaration = nodes[0];
-    return declaration;
+    return nodes[0];
   } catch {
-    console.log(
-      'compiler couldnt find the declaration for',
-      typeReference.getText(),
-    );
     return;
   }
 };
@@ -458,27 +495,6 @@ const getTypeNodeFromDeclaration = (definition: Node) => {
   }
 };
 
-function getDeclaration(target: string, project: Project) {
-  try {
-    const file = project.getSourceFile((f) =>
-      [f.getTypeAlias(target), f.getInterface(target), f.getEnum(target)].some(
-        (declaration) => !!declaration,
-      ),
-    );
-    if (!file) return;
-
-    const typeDeclaration = file.getTypeAlias(target);
-    if (typeDeclaration) return typeDeclaration;
-
-    const interfaceDeclaration = file.getInterface(target);
-    if (interfaceDeclaration) return interfaceDeclaration;
-    const enumDeclaration = file.getEnum(target);
-    if (enumDeclaration) return enumDeclaration;
-  } catch (e) {
-    console.error('error searching', e);
-  }
-}
-
 async function solveTypeReference({
   typeReference,
   filename,
@@ -495,12 +511,12 @@ async function solveTypeReference({
 
   if (!src || !project) return;
 
-  const localDefinition =
-    getDeclarationUsingCompiler(typeReference) ||
-    getDeclaration(target, project);
-  if (localDefinition) return getTypeNodeFromDeclaration(localDefinition);
+  const localDefinition = getDeclarationUsingCompiler(typeReference);
 
-  if (!shouldFetch) return;
+  if (localDefinition && !localDefinition.isKind(SyntaxKind.ImportSpecifier))
+    return getTypeNodeFromDeclaration(localDefinition);
+
+  if (!shouldFetch || !localDefinition) return;
 
   const imports = src.getImportDeclarations();
   const importDeclaration = imports.find((x) => {
@@ -516,6 +532,8 @@ async function solveTypeReference({
   }
 
   const specifier = importDeclaration.getModuleSpecifierValue();
+  // TODO: get the external module without using the bundle endpoint
+  // since this is client side only
   const externalModule = await fetch(`/api/editor/ts/bundle?x=${specifier}`)
     .then((res) => res.json() as Promise<{ [filename: string]: string }>)
     .catch(() => null);
@@ -525,11 +543,13 @@ async function solveTypeReference({
     return;
   }
 
+  console.log('[project]', 'external fetch', externalModule);
+  // TODO: Possible issue: the specifier from the `externalModule` here can be different from the one in the import declaration
+  // due to the rewriteSpecifier rules or even the version in the resolved external module url. issue [2](https://github.com/Zipper-Inc/zipper-functions/pull/744#issue-2105526771)
   for (const [rawFilename, code] of Object.entries(externalModule)) {
-    const filename = isExternalImport(rawFilename)
-      ? hackModuleResolutionForExternalImport(rawFilename)
-      : rawFilename;
-    project.createSourceFile(filename, code, { overwrite: true });
+    if (isExternalImport(rawFilename)) {
+      addExternalInProject(rawFilename, code, project);
+    }
   }
 
   return solveTypeReference({
@@ -569,6 +589,7 @@ async function parseHandlerInputs(
 
   const typeNode = params.getTypeNode();
 
+  // TODO: If there's no (input : Type) annotation, we should get the type from the function
   if (!typeNode || typeNode?.isKind(SyntaxKind.AnyKeyword)) {
     return [
       {
@@ -587,16 +608,11 @@ async function parseHandlerInputs(
     }).catch(() => null);
 
     if (node?.isKind(SyntaxKind.TypeLiteral)) {
-      console.log('✅ LESGOOOOOOO', {
-        text: node?.getText(),
-        kind: node?.getKindName(),
-      });
       return unwrapObject(node);
     }
     return [];
   }
 
-  // TODO: If there's no (input : Type) annotation, we get the type from the function
   // TODO: (input: Parameters<typeof someFunction>) or (input: Pick<SomeType, 'foo' | 'bar'>)
 
   if (typeNode?.isKind(SyntaxKind.TypeLiteral)) {
@@ -637,7 +653,7 @@ function unwrapObject(node: TypeLiteralNode): InputParam[] {
     if (!typeNode) {
       return {
         key: prop.getName(),
-        node: { type: InputType.any },
+        node: { type: InputType.any } satisfies ParsedNode,
         optional: isOptional,
       };
     }
@@ -649,10 +665,9 @@ function unwrapObject(node: TypeLiteralNode): InputParam[] {
         node: typeDetails,
       };
     } catch (e) {
-      console.error('unwrapObject', e);
       return {
         key: prop.getName(),
-        node: { type: InputType.unknown },
+        node: { type: InputType.unknown } satisfies ParsedNode,
         optional: isOptional,
       };
     }
@@ -698,7 +713,8 @@ export async function parseInputForTypes({
   return [];
 }
 
-export function parseActions({
+// TODO: parseAction could accept all parsed inputs already, so we don't have to parse them again
+export async function parseActions({
   handlerFile,
   project,
   throwErrors = false,
@@ -844,8 +860,10 @@ export function parseApp({
   throwErrors,
 }: ParseProject) {
   project = project || createProject();
-  for (const [filename, code] of Object.entries(modules)) {
-    project.createSourceFile(filename, code, { overwrite: true });
+  if (modules) {
+    for (const [filename, code] of Object.entries(modules)) {
+      project.createSourceFile(filename, code, { overwrite: true });
+    }
   }
   return parseCode({ handlerFile, project, throwErrors });
 }
@@ -855,9 +873,13 @@ async function parseCode({
   project,
   throwErrors = false,
 }: ParseCode) {
-  let inputs = await parseInputForTypes({ handlerFile, project, throwErrors });
+  let inputs = await parseInputForTypes({
+    handlerFile,
+    project,
+    throwErrors,
+  });
 
-  const actions = parseActions({ handlerFile, throwErrors, project });
+  const actions = await parseActions({ handlerFile, throwErrors, project });
 
   const externalImportUrls = parseExternalImportUrls({
     handlerFile,
@@ -867,8 +889,8 @@ async function parseCode({
   const imports = parseImports({ handlerFile, project });
 
   const comments = parseComments({ handlerFile, project });
-  if (comments) {
-    inputs = inputs?.map((i) => {
+  if (comments && inputs) {
+    inputs = inputs.map((i) => {
       const matchingTag = comments.tags.find(
         (t) => t.tag === 'param' && t.name === i.key,
       );

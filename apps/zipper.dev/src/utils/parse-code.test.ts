@@ -1,4 +1,4 @@
-import { createProject, parseInputForTypes } from './parse-code';
+import { createProject, parseApp, parseInputForTypes } from './parse-code';
 
 const parseInputTypeUsingCode = (code: string) => {
   const project = createProject();
@@ -302,3 +302,84 @@ test('parseInputForTypes should solve Array of literal "view:history" OR "edit:b
 //     },
 //   ]);
 // });
+
+test('Solve simple type imports', async () => {
+  const project = createProject();
+  project.createSourceFile(
+    'main.ts',
+    `
+    import { LocalSimpleInput } from './types.ts';
+    export const handler = (input: LocalSimpleInput) => input;
+  `,
+  );
+  project.createSourceFile(
+    'types.ts',
+    `export type LocalSimpleInput = { foo: string }`,
+  );
+
+  const result = await parseApp({
+    handlerFile: 'main.ts',
+    project,
+  });
+  expect(result.inputs).toEqual([
+    {
+      key: 'foo',
+      optional: false,
+      node: {
+        type: 'string',
+      },
+    },
+  ]);
+});
+test('Solve complex type imports even with uneeded imports', async () => {
+  const project = createProject();
+  project.createSourceFile(
+    'main.ts',
+    `
+    import { LocalComplexInput } from './types.ts';
+    import { SlackUserAuth } from "https://zipper.dev/zipper-inc/slack-install-link/src/main.ts"
+    export const handler = (input: LocalComplexInput) => input;
+  `,
+  );
+  project.createSourceFile(
+    'types.ts',
+    `
+    import { Complex } from './type-complex.ts';
+    export type LocalComplexInput = { complex: Complex };
+  `,
+  );
+  project.createSourceFile(
+    'type-complex.ts',
+    `export type Complex = 'yeah' | 'complex';`,
+  );
+
+  const result = await parseApp({
+    handlerFile: 'main.ts',
+    project,
+  });
+  expect(result.inputs).toEqual([
+    {
+      key: 'complex',
+      optional: false,
+      node: {
+        type: 'union',
+        details: {
+          values: [
+            {
+              type: 'string',
+              details: {
+                literal: 'yeah',
+              },
+            },
+            {
+              type: 'string',
+              details: {
+                literal: 'complex',
+              },
+            },
+          ],
+        },
+      },
+    },
+  ]);
+});
