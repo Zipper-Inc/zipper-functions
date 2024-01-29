@@ -78,8 +78,9 @@ export function PlaygroundSidebar({
     currentScript,
     setCurrentScript,
     refetchApp,
-    docs,
+    tutorials,
     onChangeSelectedDoc,
+    selectedTutorial,
   } = useEditorContext();
 
   const renameForm: ScriptItemProps['renameForm'] = useForm();
@@ -228,7 +229,7 @@ export function PlaygroundSidebar({
         </VStack>
       </VStack>
       <VStack mr={{ base: '0', xl: 2 }} overflowY="auto" h="full" paddingY={4}>
-        <Show when={!!docs[0]?.startLine}>
+        <Show when={!!tutorials[0]?.startLine}>
           <Accordion defaultIndex={[0]} allowMultiple width="100%">
             <AccordionItem>
               <h2>
@@ -248,38 +249,40 @@ export function PlaygroundSidebar({
                 </AccordionButton>
               </h2>
               <AccordionPanel px={0} py={0}>
-                {docs.map((doc) => (
+                {tutorials.map((doc) => (
                   <HStack
                     align="start"
                     p={3}
                     gap={3}
                     color="fg.400"
                     bg={
-                      doc.isSelected
+                      doc.index === selectedTutorial.index
                         ? colorMode === 'dark'
                           ? '#413C26'
                           : 'yellow.100'
                         : 'bg.50'
                     }
                     _hover={{
-                      bg: doc.isSelected
-                        ? colorMode === 'dark'
+                      bg:
+                        doc.index === selectedTutorial.index
+                          ? colorMode === 'dark'
+                            ? '#413C26'
+                            : 'yellow.100'
+                          : colorMode === 'dark'
                           ? '#413C26'
-                          : 'yellow.100'
-                        : colorMode === 'dark'
-                        ? '#413C26'
-                        : 'yellow.100',
+                          : 'yellow.100',
                     }}
                     position="relative"
                     onClick={() => onChangeSelectedDoc(doc.index)}
                     cursor="pointer"
                   >
                     <Box fontSize="sm" flex={1}>
-                      <Markdown>{doc.content}</Markdown>
+                      <Markdown>{doc.content.replace('@guide', '')}</Markdown>
                     </Box>
                     <Box
                       as="span"
-                      w={5}
+                      maxW={12}
+                      minW={5}
                       h={5}
                       fontSize="sm"
                       fontWeight="medium"
