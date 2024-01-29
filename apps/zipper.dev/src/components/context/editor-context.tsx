@@ -20,6 +20,7 @@ import { useRouter } from 'next/router';
 import { getPathFromUri, getUriFromPath } from '~/utils/model-uri';
 import { InputParam } from '@zipper/types';
 import {
+  createProject,
   getTutorialJsDocs,
   isExternalImport,
   parseApp,
@@ -42,8 +43,7 @@ import {
 import { runZipperLinter } from '~/utils/zipper-editor-linter';
 import { rewriteSpecifier } from '~/utils/rewrite-imports';
 import isEqual from 'lodash.isequal';
-
-const project = createProject();
+import { Project } from 'ts-morph';
 
 type OnValidate = AddParameters<
   Required<EditorProps>['onValidate'],
@@ -410,6 +410,7 @@ async function runEditorActionsNow({
   setInputError: setInputErrorPassedIn,
   monacoRef,
   currentScript,
+  project,
   externalImportModelsRef,
   invalidImportUrlsRef,
   setModelIsDirty: setModelIsDirtyPassedIn,
@@ -425,6 +426,7 @@ async function runEditorActionsNow({
   currentScript: Script;
   setTutorials: (tutorials: TutorialBlock[]) => void;
   selectedTutorial: TutorialBlock;
+  project: Project;
   externalImportModelsRef: MutableRefObject<Record<string, string[]>>;
   invalidImportUrlsRef: MutableRefObject<{ [url: string]: number }>;
   setModelIsDirty: (path: string, isDirty: boolean) => void;
@@ -562,6 +564,8 @@ const EditorContextProvider = ({
     Record<string, boolean>
   >({});
 
+  const project = useMemo(createProject, []);
+
   const { scripts } = app;
 
   const currentScript = scripts.find((s) => s.id === currentScriptId);
@@ -600,6 +604,7 @@ const EditorContextProvider = ({
       selectedTutorial,
       setTutorials,
       currentScript,
+      project,
       externalImportModelsRef,
       invalidImportUrlsRef,
       setModelIsDirty,
@@ -877,6 +882,7 @@ const EditorContextProvider = ({
       defaults = {
         value: '',
         currentScript: {} as any,
+        project,
         setInputParams,
         setInputError,
         setTutorials,
