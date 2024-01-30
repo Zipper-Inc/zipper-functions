@@ -781,13 +781,12 @@ export const appRouter = createTRPCRouter({
       }
 
       console.log('---FILENAME---', script.filename);
-      const project = createProject({
-        [script.filename]: script.code,
-        ...app.scripts.reduce<Record<string, string>>((modules, script) => {
+      const project = createProject(
+        app.scripts.reduce<Record<string, string>>((modules, script) => {
           modules[script.filename] = script.code;
           return modules;
         }, {}),
-      });
+      );
       const inputParams = await parseInputForTypes({
         handlerFile: script.filename,
         project,
