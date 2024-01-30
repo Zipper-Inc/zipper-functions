@@ -199,11 +199,11 @@ async function parseTypeNode(
     const properties = await Promise.all(
       typeLiteralProperties.map(async (prop) => {
         const propTypeNode = prop.getTypeNode();
-        const details = propTypeNode
+        const details: ParsedNode = propTypeNode
           ? await parseTypeNode(propTypeNode, src)
-          : ({
+          : {
               type: InputType.unknown,
-            } satisfies ParsedNode);
+            };
         return {
           key: prop.getName(),
           details,
@@ -282,21 +282,22 @@ async function parseTypeNode(
       if (declaration.isKind(SyntaxKind.InterfaceDeclaration)) {
         // we have a interface
         const typeReferenceDeclarationProperties = declaration.getProperties();
-        const propDetails = await Promise.all(
-          typeReferenceDeclarationProperties.map(async (prop) => {
-            const typeNode = prop.getTypeNode();
-            if (!typeNode) {
+        const propDetails: { key: string; details: ParsedNode }[] =
+          await Promise.all(
+            typeReferenceDeclarationProperties.map(async (prop) => {
+              const typeNode = prop.getTypeNode();
+              if (!typeNode) {
+                return {
+                  key: prop.getName(),
+                  details: { type: InputType.any },
+                };
+              }
               return {
                 key: prop.getName(),
-                details: { type: InputType.any } satisfies ParsedNode,
+                details: await parseTypeNode(typeNode, src),
               };
-            }
-            return {
-              key: prop.getName(),
-              details: await parseTypeNode(typeNode, src),
-            };
-          }),
-        );
+            }),
+          );
         return {
           type: InputType.object,
           details: { properties: propDetails },
@@ -637,7 +638,7 @@ async function parseHandlerInputs(
 
   if (typeNode?.isKind(SyntaxKind.TypeLiteral)) {
     const props = typeNode.getProperties();
-    const result = await Promise.all(
+    const result: InputParam[] = await Promise.all(
       props.map(async (prop) => {
         const isOptional =
           prop.hasQuestionToken() || !!paramsWithDefaultValue?.[prop.getName()];
@@ -647,7 +648,7 @@ async function parseHandlerInputs(
           // type Input = { foo } // foo is any
           return {
             key: prop.getName(),
-            node: { type: InputType.any } satisfies ParsedNode,
+            node: { type: InputType.any },
             optional: isOptional,
           };
         }
@@ -670,14 +671,14 @@ async function unwrapObject(
 ): Promise<InputParam[]> {
   const props = node.getProperties();
 
-  const result = await Promise.all(
+  const result: InputParam[] = await Promise.all(
     props.map(async (prop) => {
       const isOptional = prop.hasQuestionToken();
       const typeNode = prop.getTypeNode();
       if (!typeNode) {
         return {
           key: prop.getName(),
-          node: { type: InputType.any } satisfies ParsedNode,
+          node: { type: InputType.any },
           optional: isOptional,
         };
       }
@@ -694,7 +695,7 @@ async function unwrapObject(
       } catch (e) {
         return {
           key: prop.getName(),
-          node: { type: InputType.unknown } satisfies ParsedNode,
+          node: { type: InputType.unknown },
           optional: isOptional,
         };
       }
