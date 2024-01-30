@@ -565,7 +565,7 @@ async function parseHandlerInputs(
   handlerFile: string,
   project: Project | undefined,
   throwErrors: boolean,
-) {
+): Promise<InputParam[]> {
   const inputs = handlerFn.getParameters();
   const params = inputs[0];
 
@@ -713,12 +713,12 @@ export async function parseInputForTypes({
   return [];
 }
 
-// TODO: parseAction could accept all parsed inputs already, so we don't have to parse them again
 export async function parseActions({
   handlerFile,
   project,
   throwErrors = false,
-}: ParseCode) {
+  handlerFileInputs,
+}: ParseCode & { handlerFileInputs?: InputParam[] }) {
   const src = project?.getSourceFile(handlerFile);
   if (!src) return;
 
@@ -742,34 +742,38 @@ export async function parseActions({
 
     const actionsProperties = actionsObject.getProperties();
 
-    // TODO: fix actions :D
-    // const actions = actionsProperties.reduce((actionsSoFar, property) => {
-    //   const name = property
-    //     .getFirstChildIfKind(SyntaxKind.Identifier)
-    //     ?.getText();
+    const actions: Record<string, { name: string; inputs: InputParam[] }> = {};
+    for (const property of actionsProperties) {
+      const name = property
+        .getFirstChildIfKind(SyntaxKind.Identifier)
+        ?.getText();
+      const handlerFn =
+        property.getLastChildIfKind(SyntaxKind.ArrowFunction) ||
+        property.getLastChildIfKind(SyntaxKind.FunctionExpression) ||
+        property.getLastChildIfKind(SyntaxKind.FunctionDeclaration);
+      if (!name || !handlerFn) continue;
 
-    //   const handlerFn =
-    //     property.getLastChildIfKind(SyntaxKind.ArrowFunction) ||
-    //     property.getLastChildIfKind(SyntaxKind.FunctionExpression) ||
-    //     property.getLastChildIfKind(SyntaxKind.FunctionDeclaration);
+      // Reuse the inputs already parsed for the handler function if possible
+      if (handlerFileInputs) {
+        actions[name] = {
+          name,
+          inputs: handlerFileInputs,
+        };
+      } else {
+        const inputs = await parseHandlerInputs(
+          handlerFn,
+          handlerFile,
+          project,
+          throwErrors,
+        );
+        actions[name] = {
+          name,
+          inputs,
+        };
+      }
+    }
 
-    //   if (!name || !handlerFn) return actionsSoFar;
-
-    //   return {
-    //     ...actionsSoFar,
-    //     [name]: {
-    //       name,
-    //       inputs: parseHandlerInputs(
-    //         handlerFn,
-    //         handlerFile,
-    //         project,
-    //         throwErrors,
-    //       ),
-    //     },
-    //   };
-    // }, {} as Record<string, { name: string; inputs: InputParam[] }>);
-    // return Object.keys(actions).length ? actions : undefined;
-    return undefined;
+    return Object.keys(actions).length ? actions : undefined;
   } catch (e) {
     if (throwErrors) throw e;
     console.error('caught during parseActions', e);
@@ -879,7 +883,12 @@ async function parseCode({
     throwErrors,
   });
 
-  const actions = await parseActions({ handlerFile, throwErrors, project });
+  const actions = await parseActions({
+    handlerFile,
+    handlerFileInputs: inputs,
+    throwErrors,
+    project,
+  });
 
   const externalImportUrls = parseExternalImportUrls({
     handlerFile,
