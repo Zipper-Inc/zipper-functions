@@ -55,11 +55,15 @@ const ZIPPER_DEPENDENCIES = '/zipper_dependencies';
  *         |- types.ts
  * ```
  */
-const addExternalInProject = (
-  specifier: string,
-  code: string,
-  project: Project,
-) => {
+const addExternalInProject = ({
+  specifier,
+  code,
+  project,
+}: {
+  specifier: string;
+  code: string;
+  project: Project;
+}) => {
   const { hostname: packageOrigin, pathname } = new URL(specifier);
   const parts = pathname.split('/');
   const filename = parts.pop();
@@ -532,12 +536,17 @@ async function solveTypeReference({
   }
 
   const specifier = importDeclaration.getModuleSpecifierValue();
-  // TODO: get the external module without using the bundle endpoint
-  // since this is client side only
-  const externalModule = await fetch(`/api/editor/ts/bundle?x=${specifier}`)
+
+  const isLocalhost =
+    process.env.NEXT_PUBLIC_ZIPPER_DOT_DEV_HOST?.startsWith('localhost');
+  const fetchOrigin = isLocalhost
+    ? `http://${process.env.NEXT_PUBLIC_ZIPPER_DOT_DEV_HOST}`
+    : `https://${process.env.NEXT_PUBLIC_ZIPPER_DOT_DEV_HOST}`;
+  const externalModule = await fetch(
+    `${fetchOrigin}/api/editor/ts/bundle?x=${specifier}`,
+  )
     .then((res) => res.json() as Promise<{ [filename: string]: string }>)
     .catch(() => null);
-
   if (!externalModule) {
     console.error('Couldnt fetch external module');
     return;
@@ -546,9 +555,13 @@ async function solveTypeReference({
   console.log('[project]', 'external fetch', externalModule);
   // TODO: Possible issue: the specifier from the `externalModule` here can be different from the one in the import declaration
   // due to the rewriteSpecifier rules or even the version in the resolved external module url. issue [2](https://github.com/Zipper-Inc/zipper-functions/pull/744#issue-2105526771)
-  for (const [rawFilename, code] of Object.entries(externalModule)) {
-    if (isExternalImport(rawFilename)) {
-      addExternalInProject(rawFilename, code, project);
+  for (const [externalSpecifier, code] of Object.entries(externalModule)) {
+    if (isExternalImport(externalSpecifier)) {
+      addExternalInProject({
+        specifier: externalSpecifier,
+        code,
+        project,
+      });
     }
   }
 
