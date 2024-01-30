@@ -869,10 +869,10 @@ export function parseApp({
       project.createSourceFile(filename, code, { overwrite: true });
     }
   }
-  return parseCode({ handlerFile, project, throwErrors });
+  return parseFile({ handlerFile, project, throwErrors });
 }
 
-async function parseCode({
+export async function parseFile({
   handlerFile,
   project,
   throwErrors = false,
@@ -1096,10 +1096,4 @@ export const hasHandler = ({ code }: { code: string }) => {
   return !!findHandlerFunction({ src });
 };
 
-export function parseCodeSerializable(params: ParseCode) {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { ...rest } = parseCode(params);
-  return {
-    ...rest,
-  };
-}
+export const parseFileSerializable = parseFile;
