@@ -208,7 +208,7 @@ export const CodeTab: React.FC<CodeTabProps> = ({ app, mainScript }) => {
           alignItems="stretch"
           minWidth="250px"
           display={{ base: 'none', xl: 'flex' }}
-          maxH="420px"
+          h="full"
           minH="fit-content"
         >
           <PlaygroundSidebar app={app} mainScript={mainScript} />

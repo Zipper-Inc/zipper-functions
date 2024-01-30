@@ -12,10 +12,11 @@ import {
   useOthersConnectionIds,
   client,
 } from '~/liveblocks.config';
+import styles from './playground-styles.module.css';
 
 import { parse } from '@babel/parser';
 import traverse from '@babel/traverse';
-import { useColorModeValue } from '@chakra-ui/react';
+import { useColorMode, useColorModeValue } from '@chakra-ui/react';
 import { baseColors, prettierFormat, useCmdOrCtrl } from '@zipper/ui';
 import MonacoJSXHighlighter from 'monaco-jsx-highlighter';
 import { useEffect, useRef, useState } from 'react';
@@ -96,7 +97,10 @@ export default function PlaygroundEditor(
     runEditorActions,
     readOnly,
     onValidate,
+    selectedTutorial,
+    tutorials,
   } = useEditorContext();
+
   const { boot, bootPromise, run, configs } = useRunAppContext();
   const editorRef = useRef<MonacoEditor>();
   const yRefs = useRef<{
@@ -114,6 +118,7 @@ export default function PlaygroundEditor(
   const monacoEditor = useMonaco();
   const [defaultLanguage] = useState<'typescript' | 'markdown'>('typescript');
   const theme = useColorModeValue('vs', 'vs-dark');
+  const { colorMode } = useColorMode();
   const roomRef = useRef<LiveblocksRoom>();
   const leaveRoomRef = useRef<() => void>();
 
@@ -129,6 +134,15 @@ export default function PlaygroundEditor(
         'dropdown.background': baseColors.gray[800],
         'editorWidget.background': baseColors.gray[800],
         'input.background': baseColors.gray[800],
+      },
+    });
+
+    monacoRef?.current?.editor.addEditorAction({
+      id: 'create-documentation-block',
+      label: 'Create Documentation Block',
+      contextMenuGroupId: '9_cutcopypaste',
+      run: () => {
+        return;
       },
     });
 
@@ -204,7 +218,6 @@ export default function PlaygroundEditor(
       return result;
     };
   };
-
   useEffect(() => {
     if (monacoEditor) {
       monacoEditor.languages.register({
@@ -359,7 +372,7 @@ export default function PlaygroundEditor(
         changeMarkersListener?.dispose();
       };
     }
-  }, [isEditorReady]);
+  }, [isEditorReady, editorRef]);
 
   // Load new scripts
   // Purges old scripts and reconnects to liveblocks
@@ -389,7 +402,7 @@ export default function PlaygroundEditor(
         .map((m) => ({
           model: m,
           bindingEntry: Object.entries(yRefs.current.bindings).find(
-            ([k, b]) => b.monacoModel === m,
+            ([, b]) => b.monacoModel === m,
           ),
         }));
 
@@ -426,6 +439,18 @@ export default function PlaygroundEditor(
       console.log('[EDITOR]', `Setting model to ${currentScript.filename}`);
 
       editorRef.current.setModel(model);
+      editorRef.current?.getAction('editor.foldAllBlockComments')?.run();
+      editorRef.current.addAction({
+        id: 'custom-action',
+        label: 'Custom Action',
+        keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyK],
+        contextMenuGroupId: 'navigation',
+        contextMenuOrder: 1.5,
+        run: function () {
+          // Your custom action logic here
+          alert('Custom Action Clicked!');
+        },
+      });
       runEditorActions({
         now: true,
         value: model.getValue(),
@@ -523,6 +548,7 @@ export default function PlaygroundEditor(
     );
 
     return new Promise<void>((resolve) =>
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       yProvider.once('synced', (_args: true | [string, any][]) => {
         // If the sync event is empty then we need to reset the script
         if (yText.length === 0 && script.code.trim().length > 0) {
@@ -601,6 +627,89 @@ export default function PlaygroundEditor(
     },
     [yRefs.current.yDoc, currentScript],
   );
+
+  useEffect(() => {
+    if (
+      isLiveblocksReady &&
+      tutorials.length >= 1 &&
+      !selectedTutorial.startLine
+    ) {
+      const editor = editorRef.current!;
+      const highLightDecorations = editor
+        .getModel()
+        ?.getAllDecorations()
+        .filter(
+          (deco) =>
+            tutorials
+              .map((line) => line.startLine)
+              .includes(deco.range.startLineNumber) &&
+            tutorials
+              .map((line) => line.endLine)
+              .includes(deco.range.endLineNumber),
+        );
+
+      editor.removeDecorations(
+        highLightDecorations?.map((deco) => deco.id) as string[],
+      );
+    }
+
+    if (
+      isLiveblocksReady &&
+      tutorials.length >= 1 &&
+      !!selectedTutorial.startLine
+    ) {
+      const editor = editorRef.current!;
+
+      console.log(`${colorMode === 'dark' ? 'dark-' : ''}tutorial-line-enable`);
+
+      const decorations: monaco.editor.IModelDeltaDecoration[] = tutorials.map(
+        (script) => ({
+          range: {
+            startLineNumber: script.startLine!,
+            startColumn: 1,
+            endLineNumber: script.endLine!,
+            endColumn: Number.MAX_SAFE_INTEGER,
+          },
+          options: {
+            isWholeLine: true,
+            className:
+              script.index === selectedTutorial.index
+                ? styles[
+                    `${colorMode === 'dark' ? 'dark-' : ''}tutorial-line-enable`
+                  ]
+                : styles['tutorial-line-unable'],
+            marginClassName:
+              script.index === selectedTutorial.index
+                ? styles[
+                    `${
+                      colorMode === 'dark' ? 'dark-' : ''
+                    }tutorial-line-margin-enable`
+                  ]
+                : styles['tutorial-line-margin-unable'],
+          },
+        }),
+      );
+
+      const highLightDecorations = editor
+        .getModel()
+        ?.getAllDecorations()
+        .filter(
+          (deco) =>
+            tutorials
+              .map((line) => line.startLine)
+              .includes(deco.range.startLineNumber) &&
+            tutorials
+              .map((line) => line.endLine)
+              .includes(deco.range.endLineNumber),
+        );
+
+      editor.removeDecorations(
+        highLightDecorations?.map((deco) => deco.id) as string[],
+      );
+
+      editor.createDecorationsCollection().set(decorations);
+    }
+  }, [isLiveblocksReady, editorRef, tutorials, selectedTutorial, colorMode]);
 
   return (
     <>

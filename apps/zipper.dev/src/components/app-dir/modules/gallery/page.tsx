@@ -1,10 +1,10 @@
 'use client';
 import { List, Show } from '@zipper/ui';
 import Header from '~/components/app-dir/layouts/header';
-import { GalleryCard } from '~/components/app-dir/modules/gallery/card';
-import { GalleryCategories } from '~/components/app-dir/modules/gallery/categories';
-import { GalleryFAQ } from '~/components/app-dir/modules/gallery/faq';
-import { Navbar } from '~/components/app-dir/modules/gallery/navbar';
+import { AppletCard } from '~/components/app-dir/modules/applet/card';
+import { GalleryCategories } from '~/components/app-dir/modules/gallery/components/categories';
+import { GalleryFAQ } from '~/components/app-dir/modules/gallery/components/faq';
+import { Navbar } from '~/components/app-dir/layouts/navbar';
 import { NextPageWithLayout } from '../../../../pages/_app';
 import React from 'react';
 import { trpc } from '~/utils/trpc';
@@ -15,6 +15,11 @@ import { trpcRouter } from '~/server/routers/_app';
 import SuperJSON from 'superjson';
 import { createContext } from '~/server/context';
 import { AnalyticsHead } from '@zipper/utils';
+
+const LINKS = [
+  { label: 'Applets', href: '/gallery-test' },
+  { label: 'Saved Applets', href: '/gallery-test/saved', disabled: true },
+];
 
 const GalleryPage: NextPageWithLayout = () => {
   const galleryApps = trpc.app.allApproved.useQuery();
@@ -27,8 +32,8 @@ const GalleryPage: NextPageWithLayout = () => {
     <React.Fragment>
       <AnalyticsHead />
       <main className="px-12 mt-6 flex flex-col gap-6">
-        <h1 className="text-4xl font-bold">Ziplets Gallery</h1>
-        <Navbar />
+        <h1 className="text-4xl font-bold">Applets Gallery</h1>
+        <Navbar links={LINKS} />
 
         <div className="grid grid-cols-4 gap-9">
           <section className="col-span-1 flex flex-col gap-6">
@@ -55,7 +60,7 @@ const GalleryPage: NextPageWithLayout = () => {
               fallback="loading..."
             >
               <List data={galleryApps.data}>
-                {(props) => <GalleryCard app={props} />}
+                {(props) => <AppletCard app={props} />}
               </List>
             </Show>
           </section>
