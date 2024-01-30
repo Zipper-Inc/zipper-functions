@@ -497,7 +497,6 @@ const getDeclarationUsingCompiler = (typeReference: TypeReferenceNode) => {
     const identifier = typeReference.getTypeName();
     if ('getLeft' in identifier) return;
     const nodes = identifier.getDefinitionNodes();
-    console.log(nodes);
     return nodes[0];
   } catch {
     return;
@@ -625,6 +624,12 @@ async function parseHandlerInputs(
       project,
     }).catch(() => null);
 
+    if (node?.isKind(SyntaxKind.TypeAliasDeclaration)) {
+      const typeNode = node.getTypeNode();
+      if (typeNode?.isKind(SyntaxKind.TypeLiteral)) {
+        return unwrapObject(typeNode);
+      }
+    }
     if (
       node?.isKind(SyntaxKind.TypeLiteral) ||
       node?.isKind(SyntaxKind.InterfaceDeclaration)
