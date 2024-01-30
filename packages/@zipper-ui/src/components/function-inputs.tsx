@@ -35,7 +35,7 @@ import { getFieldName, uuid } from '@zipper/utils';
 import { ErrorBoundary } from './error-boundary';
 import { AutoResizeTextarea } from './auto-resize-text-area';
 import React from 'react';
-import { Option, TailwindMultiSelect } from './ui/multi-select';
+import { TailwindMultiSelect, Option } from './ui/common/multi-select';
 
 interface Props {
   params: InputParam[] | undefined;

@@ -1,7 +1,7 @@
 'use client';
 
 import { forwardRef, useState } from 'react';
-import { cn } from '../../utils/cn';
+import { cn } from '../../../utils/cn';
 import { Button } from './button';
 import {
   Command,
@@ -9,8 +9,8 @@ import {
   CommandGroup,
   CommandInput,
   CommandItem,
-} from './command';
-import { Popover, PopoverContent, PopoverTrigger } from './popover';
+} from '../templates/command';
+import { Popover, PopoverContent, PopoverTrigger } from '../templates/popover';
 import { Badge } from './badge';
 import { Check, X } from 'lucide-react';
 import { CaretSortIcon } from '@radix-ui/react-icons';
