@@ -18,6 +18,7 @@ import {
   TypeReferenceNode,
   TypeLiteralNode,
   Node,
+  InterfaceDeclaration,
 } from 'ts-morph';
 import { rewriteSpecifier } from './rewrite-imports';
 
@@ -495,25 +496,10 @@ const getDeclarationUsingCompiler = (typeReference: TypeReferenceNode) => {
     const identifier = typeReference.getTypeName();
     if ('getLeft' in identifier) return;
     const nodes = identifier.getDefinitionNodes();
+    console.log(nodes);
     return nodes[0];
   } catch {
     return;
-  }
-};
-
-const getTypeNodeFromDeclaration = (definition: Node) => {
-  // Ideally, we want to call parseType(declaration.getType()) here
-  if (definition.isKind(SyntaxKind.TypeAliasDeclaration)) {
-    const node = definition.getTypeNode();
-    return node;
-  }
-  if (definition.isKind(SyntaxKind.InterfaceDeclaration)) {
-    console.warn('[typenode] Unhandled interface', definition.getText());
-    // TODO
-  }
-  if (definition.isKind(SyntaxKind.EnumDeclaration)) {
-    console.warn('[typenode] Unhandled enum', definition.getText());
-    // TODO
   }
 };
 
@@ -536,9 +522,9 @@ async function solveTypeReference({
   const localDefinition = getDeclarationUsingCompiler(typeReference);
 
   if (localDefinition && !localDefinition.isKind(SyntaxKind.ImportSpecifier))
-    return getTypeNodeFromDeclaration(localDefinition);
+    return localDefinition;
 
-  if (!shouldFetch || !localDefinition) return;
+  if (!shouldFetch) return;
 
   const imports = src.getImportDeclarations();
   const importDeclaration = imports.find((x) => {
@@ -638,7 +624,10 @@ async function parseHandlerInputs(
       project,
     }).catch(() => null);
 
-    if (node?.isKind(SyntaxKind.TypeLiteral)) {
+    if (
+      node?.isKind(SyntaxKind.TypeLiteral) ||
+      node?.isKind(SyntaxKind.InterfaceDeclaration)
+    ) {
       return unwrapObject(node);
     }
     return [];
@@ -676,7 +665,9 @@ async function parseHandlerInputs(
   return [];
 }
 
-async function unwrapObject(node: TypeLiteralNode): Promise<InputParam[]> {
+async function unwrapObject(
+  node: TypeLiteralNode | InterfaceDeclaration,
+): Promise<InputParam[]> {
   const props = node.getProperties();
 
   const result = await Promise.all(
