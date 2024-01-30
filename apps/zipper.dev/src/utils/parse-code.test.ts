@@ -303,7 +303,7 @@ test('parseInputForTypes should solve Array of literal "view:history" OR "edit:b
 //   ]);
 // });
 
-test('Solve simple type imports', async () => {
+test('Solve simple handler type imports', async () => {
   const project = createProject();
   project.createSourceFile(
     'main.ts',
@@ -331,7 +331,7 @@ test('Solve simple type imports', async () => {
     },
   ]);
 });
-test('Solve complex type imports even with uneeded imports', async () => {
+test('Solve complex handler type imports even with uneeded imports', async () => {
   const project = createProject();
   project.createSourceFile(
     'main.ts',
@@ -375,6 +375,47 @@ test('Solve complex type imports even with uneeded imports', async () => {
               type: 'string',
               details: {
                 literal: 'complex',
+              },
+            },
+          ],
+        },
+      },
+    },
+  ]);
+});
+test('Use the imported type anyhere in the handler type definition', async () => {
+  const project = createProject();
+  project.createSourceFile(
+    'main.ts',
+    `
+    import { Union } from './types.ts';
+    export const handler = (input: { union: Union }) => input;
+  `,
+  );
+  project.createSourceFile('types.ts', `export type Union = 'bar' | 'baz';`);
+
+  const result = await parseApp({
+    handlerFile: 'main.ts',
+    project,
+  });
+  expect(result.inputs).toEqual([
+    {
+      key: 'union',
+      optional: false,
+      node: {
+        type: 'union',
+        details: {
+          values: [
+            {
+              type: 'string',
+              details: {
+                literal: 'bar',
+              },
+            },
+            {
+              type: 'string',
+              details: {
+                literal: 'baz',
               },
             },
           ],

@@ -75,10 +75,11 @@ const addExternalInProject = ({
   for (const folder of folders) {
     dir = dir.createDirectory(folder);
   }
-  dir.createSourceFile(filename, code);
+  dir.createSourceFile(filename, code, { overwrite: true });
 };
 
 const isPrimitive = (type: Type) =>
+  // ❗ `any` is not a primitive since its Typescript fallback type!
   type.getText().toLowerCase() === 'zipper.fileurl' ||
   type.getText().toLowerCase() === 'date' ||
   type.isBoolean() ||
@@ -88,14 +89,11 @@ const isPrimitive = (type: Type) =>
   type.isString() ||
   type.isStringLiteral() ||
   type.isUnknown() ||
-  type.isAny() ||
   type.isObject() ||
   type.isReadonlyArray() ||
   type.isUnion();
 
 function parsePrimitiveType(type: Type, node: TypeNode): ParsedNode {
-  if (!isPrimitive(type)) return parseTypeNode(node, node.getSourceFile());
-
   // Zipper types
   if (type.getText().toLowerCase() === 'zipper.fileurl')
     return { type: InputType.file };
@@ -165,17 +163,19 @@ function parsePrimitiveType(type: Type, node: TypeNode): ParsedNode {
 }
 
 // Determine the Zipper type from the Typescript type
-function parseTypeNode(typeNode: TypeNode, src: SourceFile): ParsedNode {
+async function parseTypeNode(
+  typeNode: TypeNode,
+  src: SourceFile,
+): Promise<ParsedNode> {
   // Lets add priority for Zipper defined types, since they can overlap with other types
   const type = typeNode.getType();
   if (isPrimitive(type)) return parsePrimitiveType(type, typeNode);
 
   if (typeNode.isKind(SyntaxKind.ParenthesizedType)) {
-    return (
-      typeNode.forEachChild((n) => parseTypeNode(n as TypeNode, src)) || {
-        type: InputType.unknown,
-      }
+    const parsedChild = await typeNode.forEachChild(
+      async (n) => await parseTypeNode(n as TypeNode, src),
     );
+    return parsedChild || { type: InputType.unknown };
   }
 
   // Parses a union type: Foo | Bar
@@ -195,18 +195,20 @@ function parseTypeNode(typeNode: TypeNode, src: SourceFile): ParsedNode {
   if (typeNode.isKind(SyntaxKind.TypeLiteral)) {
     const typeLiteralProperties = typeNode.getProperties();
 
-    const properties = typeLiteralProperties.map((prop) => {
-      const propTypeNode = prop.getTypeNode();
-      const details: ParsedNode = propTypeNode
-        ? parseTypeNode(propTypeNode, src)
-        : {
-            type: InputType.unknown,
-          };
-      return {
-        key: prop.getName(),
-        details,
-      };
-    });
+    const properties = await Promise.all(
+      typeLiteralProperties.map(async (prop) => {
+        const propTypeNode = prop.getTypeNode();
+        const details = propTypeNode
+          ? await parseTypeNode(propTypeNode, src)
+          : ({
+              type: InputType.unknown,
+            } satisfies ParsedNode);
+        return {
+          key: prop.getName(),
+          details,
+        };
+      }),
+    );
     return {
       type: InputType.object,
       details: { properties },
@@ -244,7 +246,11 @@ function parseTypeNode(typeNode: TypeNode, src: SourceFile): ParsedNode {
   // Solves the case of a type reference, like: type Foo = { foo: string, bar: string } in { input : Foo }
   if (typeNode.isKind(SyntaxKind.TypeReference)) {
     // find in the code the declaration of the typeReferenceText, this can be a type, a interface, a enum, etc.
-    const declaration = getDeclarationUsingCompiler(typeNode);
+    const declaration = await solveTypeReference({
+      typeReference: typeNode,
+      filename: src.getFilePath(),
+      project: src.getProject(),
+    });
 
     //we have the declaration, we need to know if it's a type, interface or enum
     if (declaration) {
@@ -275,13 +281,20 @@ function parseTypeNode(typeNode: TypeNode, src: SourceFile): ParsedNode {
       if (declaration.isKind(SyntaxKind.InterfaceDeclaration)) {
         // we have a interface
         const typeReferenceDeclarationProperties = declaration.getProperties();
-        const propDetails = typeReferenceDeclarationProperties.map(
-          (prop: any) => {
+        const propDetails = await Promise.all(
+          typeReferenceDeclarationProperties.map(async (prop) => {
+            const typeNode = prop.getTypeNode();
+            if (!typeNode) {
+              return {
+                key: prop.getName(),
+                details: { type: InputType.any } satisfies ParsedNode,
+              };
+            }
             return {
               key: prop.getName(),
-              details: parseTypeNode(prop.getTypeNode(), src),
+              details: await parseTypeNode(typeNode, src),
             };
-          },
+          }),
         );
         return {
           type: InputType.object,
@@ -357,10 +370,15 @@ export function createProject(initialModules?: Record<string, string>) {
             if (isExternalImport(rewritten)) {
               const url = new URL(rewritten);
               const { hostname: packageOrigin, pathname } = url;
-              // TODO: The 'src' filter is a hack, since the specifier contains 'src' in the path, but the /x/bundle endpoint doesn't return it
-              // issue [2](https://github.com/Zipper-Inc/zipper-functions/pull/744#issue-2105526771)
-              const parts = pathname.split('/').filter((p) => p !== 'src');
-              rewrittenModuleName = `${ZIPPER_DEPENDENCIES}/${packageOrigin}${parts.join(
+              const parts = pathname.split('/');
+              // TODO: The 'src' filter is a hack, since the specifier contains 'src' in the path
+              // but the /api/editor/ts/bundle endpoint doesn't return it.
+              // Issue [1](https://github.com/Zipper-Inc/zipper-functions/pull/744#issue-2105526771)
+              const zipperHack =
+                packageOrigin === 'zipper.dev'
+                  ? parts.filter((p) => p !== 'src')
+                  : parts;
+              rewrittenModuleName = `${ZIPPER_DEPENDENCIES}/${packageOrigin}${zipperHack.join(
                 '/',
               )}`;
               console.log(
@@ -490,11 +508,11 @@ const getTypeNodeFromDeclaration = (definition: Node) => {
     return node;
   }
   if (definition.isKind(SyntaxKind.InterfaceDeclaration)) {
-    console.log('interface', definition.getText());
+    console.warn('[typenode] Unhandled interface', definition.getText());
     // TODO
   }
   if (definition.isKind(SyntaxKind.EnumDeclaration)) {
-    console.log('enum', definition.getText());
+    console.warn('[typenode] Unhandled enum', definition.getText());
     // TODO
   }
 };
@@ -542,8 +560,9 @@ async function solveTypeReference({
   const fetchOrigin = isLocalhost
     ? `http://${process.env.NEXT_PUBLIC_ZIPPER_DOT_DEV_HOST}`
     : `https://${process.env.NEXT_PUBLIC_ZIPPER_DOT_DEV_HOST}`;
+
   const externalModule = await fetch(
-    `${fetchOrigin}/api/editor/ts/bundle?x=${specifier}`,
+    `${fetchOrigin}/api/editor/ts/bundle?x=${rewriteSpecifier(specifier)}`,
   )
     .then((res) => res.json() as Promise<{ [filename: string]: string }>)
     .catch(() => null);
@@ -552,10 +571,10 @@ async function solveTypeReference({
     return;
   }
 
-  console.log('[project]', 'external fetch', externalModule);
+  const externalModuleEntries = Object.entries(externalModule);
   // TODO: Possible issue: the specifier from the `externalModule` here can be different from the one in the import declaration
-  // due to the rewriteSpecifier rules or even the version in the resolved external module url. issue [2](https://github.com/Zipper-Inc/zipper-functions/pull/744#issue-2105526771)
-  for (const [externalSpecifier, code] of Object.entries(externalModule)) {
+  // due to the rewriteSpecifier rules or even the version in the resolved external module url. issue [1](https://github.com/Zipper-Inc/zipper-functions/pull/744#issue-2105526771)
+  for (const [externalSpecifier, code] of externalModuleEntries) {
     if (isExternalImport(externalSpecifier)) {
       addExternalInProject({
         specifier: externalSpecifier,
@@ -577,7 +596,6 @@ async function parseHandlerInputs(
   handlerFn: HandlerFn,
   handlerFile: string,
   project: Project | undefined,
-  throwErrors: boolean,
 ): Promise<InputParam[]> {
   const inputs = handlerFn.getParameters();
   const params = inputs[0];
@@ -630,61 +648,68 @@ async function parseHandlerInputs(
 
   if (typeNode?.isKind(SyntaxKind.TypeLiteral)) {
     const props = typeNode.getProperties();
-    return props.map((prop) => {
-      const isOptional =
-        prop.hasQuestionToken() || !!paramsWithDefaultValue?.[prop.getName()];
-      const typeNode = prop.getTypeNode();
-      if (!typeNode) {
-        // Typescript defaults to any if it can't find the type
-        // type Input = { foo } // foo is any
+    const result = await Promise.all(
+      props.map(async (prop) => {
+        const isOptional =
+          prop.hasQuestionToken() || !!paramsWithDefaultValue?.[prop.getName()];
+        const typeNode = prop.getTypeNode();
+        if (!typeNode) {
+          // Typescript defaults to any if it can't find the type
+          // type Input = { foo } // foo is any
+          return {
+            key: prop.getName(),
+            node: { type: InputType.any } satisfies ParsedNode,
+            optional: isOptional,
+          };
+        }
+
+        const typeDetails = await parseTypeNode(typeNode, src);
         return {
           key: prop.getName(),
-          node: { type: InputType.any },
           optional: isOptional,
+          node: typeDetails,
         };
-      }
-
-      const typeDetails = parseTypeNode(typeNode, src);
-
-      const result = {
-        key: prop.getName(),
-        optional: isOptional,
-        node: typeDetails,
-      };
-      return result;
-    });
+      }),
+    );
+    return result;
   }
   return [];
 }
 
-function unwrapObject(node: TypeLiteralNode): InputParam[] {
+async function unwrapObject(node: TypeLiteralNode): Promise<InputParam[]> {
   const props = node.getProperties();
 
-  return props.map((prop) => {
-    const isOptional = prop.hasQuestionToken();
-    const typeNode = prop.getTypeNode();
-    if (!typeNode) {
-      return {
-        key: prop.getName(),
-        node: { type: InputType.any } satisfies ParsedNode,
-        optional: isOptional,
-      };
-    }
-    try {
-      const typeDetails = parseTypeNode(typeNode, typeNode.getSourceFile());
-      return {
-        key: prop.getName(),
-        optional: isOptional,
-        node: typeDetails,
-      };
-    } catch (e) {
-      return {
-        key: prop.getName(),
-        node: { type: InputType.unknown } satisfies ParsedNode,
-        optional: isOptional,
-      };
-    }
-  });
+  const result = await Promise.all(
+    props.map(async (prop) => {
+      const isOptional = prop.hasQuestionToken();
+      const typeNode = prop.getTypeNode();
+      if (!typeNode) {
+        return {
+          key: prop.getName(),
+          node: { type: InputType.any } satisfies ParsedNode,
+          optional: isOptional,
+        };
+      }
+      try {
+        const typeDetails = await parseTypeNode(
+          typeNode,
+          typeNode.getSourceFile(),
+        );
+        return {
+          key: prop.getName(),
+          optional: isOptional,
+          node: typeDetails,
+        };
+      } catch (e) {
+        return {
+          key: prop.getName(),
+          node: { type: InputType.unknown } satisfies ParsedNode,
+          optional: isOptional,
+        };
+      }
+    }),
+  );
+  return result;
 }
 
 // returns undefined if the file isn't runnable (no handler function)
@@ -718,7 +743,7 @@ export async function parseInputForTypes({
       throw new Error('The handler function cannot be the default export.');
     }
 
-    return parseHandlerInputs(handlerFn, handlerFile, project, throwErrors);
+    return parseHandlerInputs(handlerFn, handlerFile, project);
   } catch (e) {
     if (throwErrors) throw e;
     console.error('caught during parseInputForTypes', e);
@@ -777,7 +802,6 @@ export async function parseActions({
           handlerFn,
           handlerFile,
           project,
-          throwErrors,
         );
         actions[name] = {
           name,
