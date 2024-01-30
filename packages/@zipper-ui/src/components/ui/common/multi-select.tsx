@@ -71,6 +71,7 @@ const MultiSelect = forwardRef<HTMLButtonElement, MultiSelectProps>(
             className={cn(
               'w-full justify-between',
               selected.length > 1 ? 'h-full p-2' : 'h-9 p-4',
+              'bg-background',
             )}
             onClick={() => setOpen((prev) => !prev)}
           >
@@ -96,7 +97,7 @@ const MultiSelect = forwardRef<HTMLButtonElement, MultiSelectProps>(
                           handleUnselect(item);
                         }}
                       >
-                        <X className="h-3 w-3 text-white-100 hover:text-white transition-colors" />
+                        <X className="h-3 w-3 text-primary/60 hover:text-primary/30 transition-colors" />
                       </a>
                     </Badge>
                   ))
