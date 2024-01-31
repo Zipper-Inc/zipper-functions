@@ -31,9 +31,13 @@ import { generateDefaultSlug } from '~/utils/generate-default';
 import getRunUrl, { getBootUrl } from '~/utils/get-run-url';
 import { AppletAuthorReturnType } from '~/utils/get-user-info';
 import { getAppVersionFromHash, getScriptHash } from '~/utils/hashing';
-import isCodeRunnable from '~/utils/is-code-runnable';
+import { isCodeRunnable } from '~/utils/is-code-runnable';
 import { generateAccessToken } from '~/utils/jwt-utils';
-import { endsWithTs, parseInputForTypes } from '~/utils/parse-code';
+import {
+  createProject,
+  endsWithTs,
+  parseInputForTypes,
+} from '~/utils/parse-code';
 import slugify from '~/utils/slugify';
 import { Context } from '../context';
 import { createTRPCRouter, protectedProcedure, publicProcedure } from '../root';
@@ -777,7 +781,16 @@ export const appRouter = createTRPCRouter({
       }
 
       console.log('---FILENAME---', script.filename);
-      const inputParams = parseInputForTypes({ code: script.code });
+      const project = createProject(
+        app.scripts.reduce<Record<string, string>>((modules, script) => {
+          modules[script.filename] = script.code;
+          return modules;
+        }, {}),
+      );
+      const inputParams = await parseInputForTypes({
+        handlerFile: script.filename,
+        project,
+      });
 
       if (!inputParams) return { ok: false };
 

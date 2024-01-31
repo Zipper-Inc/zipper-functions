@@ -18,7 +18,7 @@ import {
   UnorderedList,
   VStack,
 } from '@chakra-ui/react';
-import { AppInfo, InputParam, ZipperLocation } from '@zipper/types';
+import { ZipperLocation } from '@zipper/types';
 import {
   FunctionInputs,
   FunctionOutput,
@@ -125,10 +125,10 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
     );
   }, [mainApplet.updatedAt]);
 
-  const handleAddInput = () => {
+  const handleAddInput = async () => {
     if (currentScript && monacoRef?.current) {
       const model = getOrCreateScriptModel(currentScript, monacoRef.current);
-      const codeWithInputAdded = addParamToCode({
+      const codeWithInputAdded = await addParamToCode({
         code: model.getValue() || currentScript.code || '',
       });
 
@@ -143,7 +143,9 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
 
   const setInputsAtTimeOfRun = () => {
     const formValues = formMethods.getValues();
-    const formKeys = inputParams?.map((param) => `${param.key}:${param.type}`);
+    const formKeys = inputParams?.map(
+      (param) => `${param.key}:${param.node.type}`,
+    );
     const inputs: Record<string, any> = {};
     formKeys?.map((k) => {
       const key = k.split(':')[0] as string;

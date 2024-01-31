@@ -30,12 +30,12 @@ export const getInputSummary = (
     inputs
       .map((i) => ({
         ...i,
-        fieldName: getFieldName(i.key, i.type),
+        fieldName: getFieldName(i.key, i.node.type),
       }))
       // push objects and arrays at the end
       .sort((a, b) => {
-        const aComplex = complexTypes.includes(a.type);
-        const bComplex = complexTypes.includes(b.type);
+        const aComplex = complexTypes.includes(a.node.type);
+        const bComplex = complexTypes.includes(b.node.type);
         if (aComplex && bComplex) {
           return 0;
         }
@@ -47,25 +47,25 @@ export const getInputSummary = (
         }
         return 0;
       })
-      .map(({ key, fieldName, type, optional, value: inputValue }) => {
+      .map(({ key, fieldName, node, optional, value: inputValue }) => {
         let value = inputValue || inputValues[fieldName];
         // make filtering optional null and undefined values possible
         if ((value === undefined || value === null) && optional) {
           return undefined;
         }
         if (
-          type === InputType.date &&
+          node.type === InputType.date &&
           Boolean(value) &&
           value.toString() !== 'Invalid Date' &&
           value.toString() !== 'null'
         ) {
           value = parseDate(value).toLocaleDateString().split('T')[0] || value;
-        } else if (type === InputType.boolean) {
+        } else if (node.type === InputType.boolean) {
           value = Boolean(value);
         } else if (
           value === null ||
           value === undefined ||
-          (type === InputType.string && !value)
+          (node.type === InputType.string && !value)
         ) {
           value = "'blank'";
         }

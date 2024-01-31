@@ -166,6 +166,73 @@ declare namespace Zipper {
     };
   }>;
 
+  enum InputType {
+    string = 'string',
+    number = 'number',
+    boolean = 'boolean',
+    date = 'date',
+    array = 'array',
+    object = 'object',
+    any = 'any',
+    enum = 'enum',
+    file = 'FileUrl',
+    unknown = 'unknown',
+    union = 'union',
+  }
+
+  type LiteralNode =
+    | { type: InputType.boolean; details?: { literal: boolean } }
+    | { type: InputType.number; details?: { literal: number } }
+    | { type: InputType.string; details?: { literal: string } };
+
+  type ParsedNode =
+    | LiteralNode
+    | { type: InputType.date }
+    | {
+        type: InputType.array;
+        details?:
+          | { isUnion: true; values: ParsedNode[] }
+          | { isUnion: false; values: ParsedNode };
+      }
+    | { type: InputType.any }
+    | { type: InputType.file }
+    | { type: InputType.unknown }
+    | { type: InputType.union; details: { values: ParsedNode[] } }
+    | {
+        type: InputType.enum;
+        details: {
+          values: Array<
+            | string // enum Foo { Bar, Baz }
+            | {
+                // enum Foo { Bar = 'bar', Baz = 'baz' }
+                key: string | undefined;
+                value: string | undefined;
+              }
+          >;
+        };
+      }
+    | {
+        type: InputType.object;
+        details: {
+          properties: {
+            key: string;
+            details: ParsedNode;
+          }[];
+        };
+      };
+
+  type InputParam = {
+    key: string;
+    node: ParsedNode;
+    optional: boolean;
+    name?: string;
+    label?: string;
+    placeholder?: string;
+    description?: string;
+    defaultValue?: Zipper.Serializable;
+    value?: Zipper.Serializable;
+  };
+
   export type BootPayload = {
     ok: true;
     slug: string;
@@ -203,28 +270,7 @@ declare namespace Zipper {
         userScopes: string[];
         workspaceScopes: string[];
       }[];
-      inputs: {
-        key: string;
-        type:
-          | 'string'
-          | 'number'
-          | 'boolean'
-          | 'date'
-          | 'array'
-          | 'object'
-          | 'any'
-          | 'enum'
-          | 'FileUrl'
-          | 'unknown';
-        optional: boolean;
-        name?: string;
-        label?: string;
-        placeholder?: string;
-        description?: string;
-        defaultValue?: Zipper.Serializable;
-        value?: Zipper.Serializable;
-        details?: Zipper.Serializable;
-      }[];
+      inputs: InputParam[];
       parsedScripts: Record<string, Record<string, any>>;
       runnableScripts: string[];
       metadata?: Record<string, string | undefined>;

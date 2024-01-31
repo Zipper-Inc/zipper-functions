@@ -8,7 +8,7 @@
     "dev": "yarn nodemon"
   },
   "devDependencies": {
-    "ctix": "^1.8.2",
+    "ctix": "^2.3.0",
     "nodemon": "^2.0.20"
   },
   "dependencies": {
