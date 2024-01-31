@@ -9,7 +9,6 @@ export enum InputType {
   enum = 'enum',
   file = 'FileUrl',
   unknown = 'unknown',
-  union = 'union',
 }
 
 export const JSONEditorInputTypes = [

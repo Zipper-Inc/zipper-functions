@@ -1,4 +1,3 @@
-import '@zipper/ui/src/globals.css';
 import type { AppProps } from 'next/app';
 import '@fontsource/inter';
 import '@fontsource/inter/variable.css';

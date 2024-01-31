@@ -428,7 +428,7 @@ export const processSchedulesInBootpayload = async (
     if (scheduleInputs) {
       Object.keys(scheduleInputs).forEach((inputKey) => {
         const type =
-          parsedInputs.find((i) => i.key === inputKey)?.node.type || 'unknown';
+          parsedInputs.find((i) => i.key === inputKey)?.type || 'unknown';
 
         inputsWithTypes[`${inputKey}:${type}`] = scheduleInputs?.[inputKey];
       });

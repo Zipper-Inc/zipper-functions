@@ -11,7 +11,7 @@ import { ParsedUrlQuery } from 'querystring';
 export function formatValueFromUrl(input: InputParam, value: string | null) {
   if (!value) return null;
 
-  switch (input.node.type) {
+  switch (input.type) {
     case InputType.boolean:
       return value === '0' || value === 'false' ? null : true;
 
@@ -44,7 +44,7 @@ export function getInputValuesFromUrl({
   const defaultValues = inputs.reduce<
     Record<string, Zipper.Primitive | undefined>
   >((values, input) => {
-    const name = getFieldName(input.key, input.node.type);
+    const name = getFieldName(input.key, input.type);
     const value = searchParams.get(input.key) || (query[input.key] as string);
     return value === null || typeof value === 'undefined'
       ? values
@@ -61,7 +61,7 @@ export function getDefaultInputValuesFromConfig(
   const defaultValues = inputParams.reduce<{
     [inputName: string]: Zipper.InputValue;
   }>((values, input) => {
-    const name = getFieldName(input.key, input.node.type);
+    const name = getFieldName(input.key, input.type);
     const value = config?.inputs?.[input.key]?.defaultValue;
     return value === null || typeof value === 'undefined'
       ? values
@@ -103,7 +103,7 @@ export function getInputValuesFromAppRun(
   const defaultValues = inputParams.reduce<
     Record<string, Zipper.Primitive | undefined>
   >((values, input) => {
-    const name = getFieldName(input.key, input.node.type);
+    const name = getFieldName(input.key, input.type);
     let value = appRunInputs[input.key] || null;
     if (value !== null && typeof value !== 'string') {
       value = safeJSONStringify(value) || null;

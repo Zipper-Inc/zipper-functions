@@ -24,18 +24,12 @@ import {
 import { UploadButton } from './file-upload/uploadthing';
 import { useUploadContext } from './upload-button-context';
 import { VscAdd } from 'react-icons/vsc';
-import {
-  FieldValues,
-  UseFormReturn,
-  RegisterOptions,
-  Controller,
-} from 'react-hook-form';
-import { InputType, InputParam, ParsedNode, LiteralNode } from '@zipper/types';
-import { getFieldName, uuid } from '@zipper/utils';
+import { FieldValues, UseFormReturn, RegisterOptions } from 'react-hook-form';
+import { InputType, InputParam } from '@zipper/types';
+import { getFieldName } from '@zipper/utils';
 import { ErrorBoundary } from './error-boundary';
 import { AutoResizeTextarea } from './auto-resize-text-area';
 import React from 'react';
-import { TailwindMultiSelect, Option } from './ui/common/multi-select';
 
 interface Props {
   params: InputParam[] | undefined;
@@ -44,28 +38,6 @@ interface Props {
   isDisabled?: boolean;
   hasResult?: boolean;
 }
-
-const isLiteralNode = (node: ParsedNode): node is LiteralNode => {
-  if (
-    node.type === InputType.string &&
-    typeof node.details?.literal === 'string'
-  ) {
-    return true;
-  }
-  if (
-    node.type === InputType.number &&
-    typeof node.details?.literal === 'number'
-  ) {
-    return true;
-  }
-  if (
-    node.type === InputType.boolean &&
-    typeof node.details?.literal === 'boolean'
-  ) {
-    return true;
-  }
-  return false;
-};
 
 /*
 const withOptional =
@@ -83,40 +55,47 @@ const withOptional =
 
 function FunctionParamInput({
   inputKey,
-  node,
+  type,
   optional,
   formContext,
   placeholder,
   isDisabled,
+  details,
 }: {
   inputKey: string;
-  node: ParsedNode;
+  type: InputType;
   optional: boolean;
   value: any;
   formContext: Props['formContext'];
   placeholder?: string;
   isDisabled?: boolean;
+  details?: any;
 }) {
-  const { register, watch, getValues, control } = formContext;
+  const { register, watch, getValues } = formContext;
   const { setIsUploading } = useUploadContext();
-  const name = getFieldName(inputKey, node.type);
+  const name = getFieldName(inputKey, type);
   const formFieldOptions: RegisterOptions<FieldValues, string> = {
     required: !optional,
   };
 
-  if (node.type === InputType.number) {
+  if (type === InputType.number) {
     formFieldOptions.valueAsNumber = true;
-  } else if (node.type === InputType.date) {
+  } else if (type === InputType.date) {
     formFieldOptions.valueAsDate = true;
   }
 
-  switch (node.type) {
+  const formProps = register(name, formFieldOptions);
+
+  switch (type) {
     case InputType.boolean: {
       return (
         <Switch
           colorScheme="purple"
-          {...register(name, formFieldOptions)}
-          onChange={(e) => formContext.setValue(name, e.target.checked)}
+          {...formProps}
+          onChange={(e) => {
+            console.log(e.target.checked);
+            formContext.setValue(name, e.target.checked);
+          }}
           isDisabled={isDisabled}
         />
       );
@@ -133,7 +112,7 @@ function FunctionParamInput({
           overflowY="scroll"
           isDisabled={isDisabled}
           _placeholder={{ color: 'fg.300' }}
-          {...register(name, formFieldOptions)}
+          {...formProps}
           placeholder={placeholder}
         />
       );
@@ -146,7 +125,7 @@ function FunctionParamInput({
             backgroundColor="bgColor"
             fontFamily="monospace"
             fontSize="smaller"
-            {...register(name, formFieldOptions)}
+            {...formProps}
           />
           <NumberInputStepper>
             <NumberIncrementStepper />
@@ -168,7 +147,7 @@ function FunctionParamInput({
         <Input
           backgroundColor="bgColor"
           type="date"
-          {...register(name, formFieldOptions)}
+          {...formProps}
           value={formattedDate}
           placeholder={placeholder}
         />
@@ -180,10 +159,10 @@ function FunctionParamInput({
         <Select
           backgroundColor="bgColor"
           isDisabled={isDisabled}
-          {...register(name, formFieldOptions)}
+          {...formProps}
           placeholder={placeholder}
         >
-          {node.details.values.map((value, index) => {
+          {details.values.map((value: any, index: number) => {
             const optionLabel = typeof value === 'object' ? value.key : value;
             const optionValue = typeof value === 'object' ? value.value : value;
             return (
@@ -198,47 +177,6 @@ function FunctionParamInput({
 
     case InputType.array: {
       const [error, setError] = useState<string | undefined>();
-      const [selected, setSelected] = useState<Option[]>([]);
-
-      if (node.details?.isUnion && node.details.values.every(isLiteralNode)) {
-        const options = node.details.values.flatMap((node) => {
-          if (node?.details?.literal === undefined) return [];
-          const literal = String(node.details.literal);
-          return [
-            { id: uuid(), label: literal, value: literal, extra: node.type },
-          ];
-        });
-
-        return (
-          <Controller
-            control={control}
-            name={name}
-            rules={{ required: !optional }}
-            defaultValue="[]"
-            render={({ field }) => (
-              <TailwindMultiSelect
-                options={options}
-                placeholder={placeholder}
-                allowAddSameItem
-                {...field}
-                onChange={(values) => {
-                  const valuesWithFixedTypes = values.map(
-                    ({ value, extra: type }) => {
-                      if (type === InputType.number) return Number(value);
-                      if (type === InputType.boolean) return value === 'true';
-                      if (type === InputType.string) return value;
-                    },
-                  );
-                  setSelected(values);
-                  formContext.setValue(name, valuesWithFixedTypes);
-                }}
-                selected={selected}
-              />
-            )}
-          />
-        );
-      }
-
       return (
         <VStack align="start" w="full">
           <Textarea
@@ -247,11 +185,11 @@ function FunctionParamInput({
             fontSize="smaller"
             minHeight={14}
             defaultValue="[]"
-            {...register(name, formFieldOptions)}
+            {...formProps}
             isDisabled={isDisabled}
             placeholder={placeholder}
             onChange={(e) => {
-              // TODO: validate obj using the type details
+              // TODO: validate obj with zod array schema got from `parseCode`
               try {
                 JSON.parse(e.target.value);
                 formContext.setValue(name, e.target.value);
@@ -279,11 +217,11 @@ function FunctionParamInput({
             fontSize="smaller"
             minHeight={90}
             defaultValue="{}"
-            {...register(name, formFieldOptions)}
+            {...formProps}
             isDisabled={isDisabled}
             placeholder={placeholder}
             onChange={(e) => {
-              // TODO: validate obj using the type details
+              // TODO: validate obj with zod object schema got from `parseCode`
               try {
                 JSON.parse(e.target.value);
                 formContext.setValue(name, e.target.value);
@@ -298,62 +236,6 @@ function FunctionParamInput({
               {error}
             </Text>
           )}
-        </VStack>
-      );
-    }
-    case InputType.union: {
-      const allLiteralOrBoolean = node.details.values.every(
-        (x) => x.type === InputType.boolean || isLiteralNode(x),
-      );
-
-      return allLiteralOrBoolean ? (
-        <Select
-          backgroundColor="bgColor"
-          isDisabled={isDisabled}
-          defaultValue=""
-          {...register(name, {
-            ...formFieldOptions,
-            setValueAs: (value: string) => {
-              const fixedTypeValue = node.details.values.find(
-                (x) =>
-                  'details' in x &&
-                  x.details &&
-                  'literal' in x.details &&
-                  String(x.details.literal) === value,
-              );
-              if (!fixedTypeValue || !isLiteralNode(fixedTypeValue)) return;
-              return fixedTypeValue.details?.literal;
-            },
-          })}
-        >
-          <option value="" disabled selected>
-            {placeholder}
-          </option>
-          {node.details.values.map((value) => {
-            if (!isLiteralNode(value)) return null; // type guard
-            const literal = String(value.details?.literal);
-            return (
-              <option key={literal} value={literal}>
-                {literal}
-              </option>
-            );
-          })}
-        </Select>
-      ) : (
-        // Fallback unions of non-literal types to textarea unknown input
-        <VStack align="start" w="full">
-          <Textarea
-            backgroundColor="bgColor"
-            fontFamily="monospace"
-            fontSize="smaller"
-            minHeight={14}
-            {...register(name, formFieldOptions)}
-            isDisabled={isDisabled}
-            placeholder=""
-            onChange={(e) => {
-              formContext.setValue(name, e.target.value);
-            }}
-          />
         </VStack>
       );
     }
@@ -395,9 +277,9 @@ function FunctionParamInput({
             fontFamily="monospace"
             fontSize="smaller"
             minHeight={14}
-            {...register(name, formFieldOptions)}
+            {...formProps}
             isDisabled={isDisabled}
-            placeholder={placeholder}
+            placeholder=""
             onChange={(e) => {
               formContext.setValue(name, e.target.value);
             }}
@@ -413,7 +295,7 @@ function FunctionParamInput({
           fontSize="smaller"
           minHeight={14}
           isDisabled={isDisabled}
-          {...register(name, formFieldOptions)}
+          {...formProps}
           placeholder={placeholder}
         />
       );
@@ -426,16 +308,23 @@ function SingleInput({
   label,
   description,
   placeholder,
-  node,
+  type,
   optional,
   formContext,
   isDisabled,
+  details,
   hasResult = true,
-}: InputParam & {
+}: {
   name: string;
+  label?: string;
+  description?: string;
+  placeholder?: string;
+  type: InputType;
+  optional: boolean;
   formContext: UseFormReturn<FieldValues, any>;
   isDisabled?: boolean;
   hasResult?: boolean;
+  details?: any;
 }): JSX.Element {
   const open = () => {
     formContext.setValue(formName, lastValue.current);
@@ -449,7 +338,7 @@ function SingleInput({
     onClose();
   };
 
-  const formName = getFieldName(name, node.type);
+  const formName = getFieldName(name, type);
   const lastValue = useRef<any>(formContext.getValues()[formName]);
   const { isOpen, onOpen, onClose } = useDisclosure({
     defaultIsOpen: !optional,
@@ -484,7 +373,7 @@ function SingleInput({
                   py="0.5"
                   px={2}
                 >
-                  {node.type}
+                  {type}
                 </Badge>
               )}
             </Box>
@@ -511,12 +400,13 @@ function SingleInput({
                   <Suspense fallback={<Spinner />}>
                     <FunctionParamInput
                       inputKey={name}
-                      node={node}
+                      type={type}
                       value={null}
                       optional={optional}
                       formContext={formContext}
                       isDisabled={isDisabled}
                       placeholder={placeholder}
+                      details={details}
                     />
                   </Suspense>
                 </ErrorBoundary>
@@ -580,18 +470,22 @@ export function FunctionInputs({
     return null;
   }
   const inputs = params.map(
-    ({ key, name, label, description, node, optional, placeholder }, i) => (
+    (
+      { key, name, label, description, type, optional, placeholder, details },
+      i,
+    ) => (
       <SingleInput
         key={`${key}--${i}`}
         name={key}
         label={label || name}
         placeholder={placeholder}
         description={description}
-        node={node}
+        type={type}
         optional={optional}
         formContext={formContext}
         isDisabled={isDisabled}
         hasResult={hasResult}
+        details={details}
       />
     ),
   );
