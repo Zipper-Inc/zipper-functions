@@ -134,7 +134,7 @@ export async function build({
           rewrittenCode = `${rewrittenCode}\n${handlerMeta};${inputTypes};`;
         }
 
-        const actions = parseActions({
+        const actions = await parseActions({
           handlerFile,
           project,
           throwErrors: false,
