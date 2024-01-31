@@ -733,8 +733,7 @@ export async function parseActions({
   handlerFile,
   project,
   throwErrors = false,
-  handlerFileInputs,
-}: ParseCode & { handlerFileInputs?: InputParam[] }) {
+}: ParseCode) {
   const src = project?.getSourceFile(handlerFile);
   if (!src) return;
 
@@ -769,23 +768,11 @@ export async function parseActions({
         property.getLastChildIfKind(SyntaxKind.FunctionDeclaration);
       if (!name || !handlerFn) continue;
 
-      // Reuse the inputs already parsed for the handler function if possible
-      if (handlerFileInputs) {
-        actions[name] = {
-          name,
-          inputs: handlerFileInputs,
-        };
-      } else {
-        const inputs = await parseHandlerInputs(
-          handlerFn,
-          handlerFile,
-          project,
-        );
-        actions[name] = {
-          name,
-          inputs,
-        };
-      }
+      const inputs = await parseHandlerInputs(handlerFn, handlerFile, project);
+      actions[name] = {
+        name,
+        inputs,
+      };
     }
 
     return Object.keys(actions).length ? actions : undefined;
@@ -900,7 +887,6 @@ export async function parseFile({
 
   const actions = await parseActions({
     handlerFile,
-    handlerFileInputs: inputs,
     throwErrors,
     project,
   });
