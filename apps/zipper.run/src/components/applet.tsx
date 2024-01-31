@@ -42,7 +42,6 @@ import {
   __ZIPPER_TEMP_USER_ID,
   X_ZIPPER_TEMP_USER_ID,
   X_ZIPPER_ACCESS_TOKEN,
-  removeExtension,
 } from '@zipper/utils';
 import { deleteCookie } from 'cookies-next';
 import { motion } from 'framer-motion';
@@ -74,7 +73,6 @@ import ConnectorsAuthInputsSection from './connectors-auth-inputs-section';
 import Header from './header';
 import InputSummary from './input-summary';
 import Unauthorized from './unauthorized';
-import { get } from 'http';
 
 const { __DEBUG__ } = process.env;
 

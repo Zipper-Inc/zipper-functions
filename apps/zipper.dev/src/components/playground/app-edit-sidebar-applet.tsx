@@ -101,7 +101,7 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
   const isHandler = inputParams || inputError;
 
   // There are dragons here 👇
-  // It's easy to break things 🙈
+  // It's really easy to break things 🙈
   const output = useMemo(() => {
     return (
       <FunctionOutput
@@ -109,8 +109,12 @@ export const AppEditSidebarApplet = ({ appSlug }: { appSlug: string }) => {
         applet={mainApplet}
         config={configs?.[currentScript?.filename || '']}
         getRunUrl={(path: string) =>
-          getRunUrl({ ...parseRunUrlPath(path), subdomain: '', isRelay: true })
-            .pathname
+          getRunUrl({
+            ...parseRunUrlPath(path),
+            subdomain: appSlug,
+            isRelay: true,
+            forPlayground: true,
+          }).pathname
         }
         bootInfoUrl={`/api/bootInfo/${appSlug}`}
         currentContext={'main'}
