@@ -87,26 +87,6 @@ type Inputs = {
 
 ![enum input](public/images/input-enum.png)
 
-### `union of literal types`
-
-```typescript
-type Inputs = {
-  fruit: 'apple' | 'orange';
-};
-```
-
-![union of literal types input](public/images/input-literal-types.png)
-
-### `array of literal types`
-
-```typescript
-type Inputs = {
-  directions: ('up' | 'down' | 'left' | 'right')[];
-};
-```
-
-![union of literal types input](public/images/input-array-literal-types.png)
-
 ### `array`, `object`, or `any`
 
 If you use a more generic type like `array`, `object`, or `any` (or a type Zipper doesn’t know yet), then Zipper will default to a generic text input that can take JSON.

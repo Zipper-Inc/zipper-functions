@@ -1,9 +1,8 @@
 import { InputType } from './input-type';
-import { ParsedNode } from './parsed-types';
 
-export type InputParam = {
+export interface InputParam {
   key: string;
-  node: ParsedNode;
+  type: InputType;
   optional: boolean;
   name?: string;
   label?: string;
@@ -11,7 +10,8 @@ export type InputParam = {
   description?: string;
   defaultValue?: Zipper.Serializable;
   value?: Zipper.Serializable;
-};
+  details?: Zipper.Serializable;
+}
 
 export interface ParseInputResponse {
   ok: true;
