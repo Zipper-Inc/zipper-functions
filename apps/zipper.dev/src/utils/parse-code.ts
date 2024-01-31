@@ -383,12 +383,6 @@ export function createProject(initialModules?: Record<string, string>) {
               rewrittenModuleName = `${ZIPPER_DEPENDENCIES}/${packageOrigin}${zipperHack.join(
                 '/',
               )}`;
-              console.log(
-                '[project] rewritten external module name',
-                rawModuleName,
-                '->',
-                rewrittenModuleName,
-              );
             } else {
               rewrittenModuleName = rawModuleName;
             }
@@ -404,14 +398,6 @@ export function createProject(initialModules?: Record<string, string>) {
             else resolvedModules.push(undefined);
           }
 
-          console.log(
-            '[project] resolved modules in',
-            containingFile,
-            resolvedModules,
-            project
-              .getSourceFiles()
-              .map((f) => ({ filename: f.getFilePath(), code: f.getText() })),
-          );
           return resolvedModules;
         },
       };
@@ -533,9 +519,6 @@ async function solveTypeReference({
   });
 
   if (!importDeclaration) {
-    console.error(
-      'Couldnt find whats being imported in any import import declaration',
-    );
     return;
   }
 
