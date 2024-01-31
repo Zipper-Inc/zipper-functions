@@ -21,6 +21,7 @@ import {
   InterfaceDeclaration,
 } from 'ts-morph';
 import { rewriteSpecifier } from './rewrite-imports';
+import { getZipperDotDevUrl } from '@zipper/utils';
 
 type ParseProject = {
   handlerFile: string;
@@ -524,14 +525,10 @@ async function solveTypeReference({
 
   const specifier = importDeclaration.getModuleSpecifierValue();
 
-  const isLocalhost =
-    process.env.NEXT_PUBLIC_ZIPPER_DOT_DEV_HOST?.startsWith('localhost');
-  const fetchOrigin = isLocalhost
-    ? `http://${process.env.NEXT_PUBLIC_ZIPPER_DOT_DEV_HOST}`
-    : `https://${process.env.NEXT_PUBLIC_ZIPPER_DOT_DEV_HOST}`;
-
   const externalModule = await fetch(
-    `${fetchOrigin}/api/editor/ts/bundle?x=${rewriteSpecifier(specifier)}`,
+    `${getZipperDotDevUrl()}/api/editor/ts/bundle?x=${rewriteSpecifier(
+      specifier,
+    )}`,
   )
     .then((res) => res.json() as Promise<{ [filename: string]: string }>)
     .catch(() => null);
