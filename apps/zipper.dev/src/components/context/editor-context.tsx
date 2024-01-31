@@ -20,12 +20,13 @@ import { useRouter } from 'next/router';
 import { getPathFromUri, getUriFromPath } from '~/utils/model-uri';
 import { InputParam } from '@zipper/types';
 import {
+  createProject,
   getTutorialJsDocs,
   isExternalImport,
-  parseCode,
+  parseApp,
 } from '~/utils/parse-code';
 import debounce from 'lodash.debounce';
-import { uuid } from '@zipper/utils';
+import { removeExtension, uuid } from '@zipper/utils';
 import { prettyLog } from '~/utils/pretty-log';
 import { AppQueryOutput } from '~/types/trpc';
 import {
@@ -42,6 +43,7 @@ import {
 import { runZipperLinter } from '~/utils/zipper-editor-linter';
 import { rewriteSpecifier } from '~/utils/rewrite-imports';
 import isEqual from 'lodash.isequal';
+import { Project } from 'ts-morph';
 
 type OnValidate = AddParameters<
   Required<EditorProps>['onValidate'],
@@ -408,6 +410,7 @@ async function runEditorActionsNow({
   setInputError: setInputErrorPassedIn,
   monacoRef,
   currentScript,
+  project,
   externalImportModelsRef,
   invalidImportUrlsRef,
   setModelIsDirty: setModelIsDirtyPassedIn,
@@ -423,6 +426,7 @@ async function runEditorActionsNow({
   currentScript: Script;
   setTutorials: (tutorials: TutorialBlock[]) => void;
   selectedTutorial: TutorialBlock;
+  project: Project;
   externalImportModelsRef: MutableRefObject<Record<string, string[]>>;
   invalidImportUrlsRef: MutableRefObject<{ [url: string]: number }>;
   setModelIsDirty: (path: string, isDirty: boolean) => void;
@@ -432,6 +436,20 @@ async function runEditorActionsNow({
   if (!monacoRef.current || !isTypescript(currentScript) || !value) return;
 
   const currentModel = monacoRef.current.editor.getEditors()[0]?.getModel();
+  const otherModels = monacoRef.current.editor
+    .getModels()
+    .filter(
+      (model) =>
+        currentModel &&
+        model.uri.scheme === 'file' &&
+        model.uri !== currentModel.uri,
+    );
+  const otherModules = Object.fromEntries(
+    otherModels.map((model) => [
+      removeExtension(model.uri.path),
+      model.getValue(),
+    ]),
+  );
 
   const isVisible =
     currentModel &&
@@ -451,8 +469,10 @@ async function runEditorActionsNow({
 
     if (tutorials.length >= 1) setTutorials(tutorials);
 
-    const { inputs, imports } = parseCode({
-      code: value,
+    const { inputs, imports } = await parseApp({
+      modules: { [currentScript.filename]: value, ...otherModules },
+      handlerFile: currentScript.filename,
+      project,
       throwErrors: true,
     });
 
@@ -544,6 +564,8 @@ const EditorContextProvider = ({
     Record<string, boolean>
   >({});
 
+  const project = useMemo(createProject, []);
+
   const { scripts } = app;
 
   const currentScript = scripts.find((s) => s.id === currentScriptId);
@@ -558,8 +580,6 @@ const EditorContextProvider = ({
 
     return setSelectedTutorial({ ...tutorials[tutorialIndex]! });
   };
-
-  console.log('selected', selectedTutorial);
 
   const resetDirtyState = () => {
     setModelsDirtyState(
@@ -582,6 +602,7 @@ const EditorContextProvider = ({
       selectedTutorial,
       setTutorials,
       currentScript,
+      project,
       externalImportModelsRef,
       invalidImportUrlsRef,
       setModelIsDirty,
@@ -859,6 +880,7 @@ const EditorContextProvider = ({
       defaults = {
         value: '',
         currentScript: {} as any,
+        project,
         setInputParams,
         setInputError,
         setTutorials,

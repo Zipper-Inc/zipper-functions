@@ -1,7 +1,7 @@
 import type { SourceFile } from 'ts-morph';
 /** This has to use the server version or build may break */
 import { getZipperDotDevUrlForServer } from '~/server/utils/server-url.utils';
-import { getSourceFileFromCode, isExternalImport } from './parse-code';
+import { createProjectFromCode, isExternalImport } from './parse-code';
 
 export enum Target {
   Default,
@@ -99,12 +99,14 @@ export function rewriteSpecifier(
 }
 
 export function rewriteImports(
-  src?: string | SourceFile,
+  srcOrCode?: string | SourceFile,
   target = Target.Default,
 ) {
-  if (!src) return src;
-
-  const sourceFile = typeof src == 'string' ? getSourceFileFromCode(src) : src;
+  if (!srcOrCode) return '';
+  const sourceFile =
+    typeof srcOrCode == 'string'
+      ? createProjectFromCode(srcOrCode).src
+      : srcOrCode;
 
   sourceFile
     .getImportDeclarations()

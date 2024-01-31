@@ -24,7 +24,7 @@ import {
   getUserInfo,
   UserInfoReturnType,
 } from '~/utils/get-user-info';
-import { parseCodeSerializable } from '~/utils/parse-code';
+import { createProject, parseFileSerializable } from '~/utils/parse-code';
 import {
   createScheduleAndAddToQueue,
   deleteSchedulesAndRemoveFromQueue,
@@ -361,15 +361,26 @@ export async function getBootInfoFromPrisma({
     return bootInfoError('MISSING_ENTRY_POINT', 500);
   }
 
-  const parsedScripts = scripts.reduce<
-    Record<string, ReturnType<typeof parseCodeSerializable>>
-  >(
-    (parsed, script) => ({
-      ...parsed,
-      [script.filename]: parseCodeSerializable({ code: script.code }),
-    }),
-    {},
+  const project = createProject(
+    scripts.reduce(
+      (acc, s) => ({
+        ...acc,
+        [s.filename]: s.code,
+      }),
+      {},
+    ),
   );
+
+  const parsedScripts: Record<
+    string,
+    Awaited<ReturnType<typeof parseFileSerializable>>
+  > = {};
+  for (const script of scripts) {
+    parsedScripts[script.filename] = await parseFileSerializable({
+      handlerFile: script.filename,
+      project,
+    });
+  }
 
   const parsedEntryPoint = parsedScripts[entryPoint.filename];
 

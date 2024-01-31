@@ -1,10 +1,10 @@
 import { InputParam, InputType, ParsedNode } from '@zipper/types';
-import { parse } from 'comment-parser';
+import { parse as commentParse } from 'comment-parser';
+
 import stripComments from 'strip-comments';
 import {
   ParameterDeclaration,
   Project,
-  PropertySignature,
   SyntaxKind,
   ts,
   SourceFile,
@@ -15,26 +15,73 @@ import {
   CallExpression,
   FunctionExpression,
   Type,
+  TypeReferenceNode,
+  TypeLiteralNode,
+  Node,
+  InterfaceDeclaration,
 } from 'ts-morph';
+import { rewriteSpecifier } from './rewrite-imports';
+import { getZipperDotDevUrl } from '@zipper/utils';
 
-type ParseCodeParameters = {
-  code?: string;
+type ParseProject = {
+  handlerFile: string;
+  project?: Project;
+  modules?: Record<string, string>;
   throwErrors?: boolean;
-  src?: SourceFile;
+};
+
+type ParseCode = {
+  handlerFile: string;
+  project?: Project;
+  throwErrors?: boolean;
 };
 
 export const isExternalImport = (specifier: string) =>
   /^https?:\/\//.test(specifier);
 export const endsWithTs = (specifier: string) => /\.(ts|tsx)$/.test(specifier);
 
-// Strip the Deno-style file extension since TS-Morph can't handle it
-function removeTsExtension(moduleName: string) {
-  if (moduleName.slice(-3).toLowerCase() === '.ts')
-    return moduleName.slice(0, -3);
-  return moduleName;
-}
+const ZIPPER_DEPENDENCIES = '/zipper_dependencies';
+
+/**
+ * This function adds the external module to the project, creating a folder structure like this:
+ * @param specifier The specifier of the external module
+ * @param code The code of the external module
+ * @param project The project where the external module will be added
+ * @example With the specifier
+ * ```
+ * https://zipper.dev/zipper-inc/slack-install-link/src/main.ts
+ * - /zipper_dependencies
+ *    |- zipper-inc
+ *      |- slack-install-link
+ *         |- main.ts
+ *         |- types.ts
+ * ```
+ */
+const addExternalInProject = ({
+  specifier,
+  code,
+  project,
+}: {
+  specifier: string;
+  code: string;
+  project: Project;
+}) => {
+  const { hostname: packageOrigin, pathname } = new URL(specifier);
+  const parts = pathname.split('/');
+  const filename = parts.pop();
+  if (!filename) return;
+
+  const folders = parts.slice(0, -1);
+
+  let dir = project.createDirectory(`${ZIPPER_DEPENDENCIES}/${packageOrigin}`);
+  for (const folder of folders) {
+    dir = dir.createDirectory(folder);
+  }
+  dir.createSourceFile(filename, code, { overwrite: true });
+};
 
 const isPrimitive = (type: Type) =>
+  // ❗ `any` is not a primitive since its Typescript fallback type!
   type.getText().toLowerCase() === 'zipper.fileurl' ||
   type.getText().toLowerCase() === 'date' ||
   type.isBoolean() ||
@@ -44,14 +91,11 @@ const isPrimitive = (type: Type) =>
   type.isString() ||
   type.isStringLiteral() ||
   type.isUnknown() ||
-  type.isAny() ||
   type.isObject() ||
   type.isReadonlyArray() ||
   type.isUnion();
 
 function parsePrimitiveType(type: Type, node: TypeNode): ParsedNode {
-  if (!isPrimitive(type)) return parseTypeNode(node, node.getSourceFile());
-
   // Zipper types
   if (type.getText().toLowerCase() === 'zipper.fileurl')
     return { type: InputType.file };
@@ -113,21 +157,27 @@ function parsePrimitiveType(type: Type, node: TypeNode): ParsedNode {
     };
   }
 
+  if (type.isObject()) {
+    // TODO: handle object types
+  }
+
   return { type: InputType.unknown };
 }
 
 // Determine the Zipper type from the Typescript type
-function parseTypeNode(typeNode: TypeNode, src: SourceFile): ParsedNode {
+async function parseTypeNode(
+  typeNode: TypeNode,
+  src: SourceFile,
+): Promise<ParsedNode> {
   // Lets add priority for Zipper defined types, since they can overlap with other types
   const type = typeNode.getType();
   if (isPrimitive(type)) return parsePrimitiveType(type, typeNode);
 
   if (typeNode.isKind(SyntaxKind.ParenthesizedType)) {
-    return (
-      typeNode.forEachChild((n) => parseTypeNode(n as TypeNode, src)) || {
-        type: InputType.unknown,
-      }
+    const parsedChild = await typeNode.forEachChild(
+      async (n) => await parseTypeNode(n as TypeNode, src),
     );
+    return parsedChild || { type: InputType.unknown };
   }
 
   // Parses a union type: Foo | Bar
@@ -147,18 +197,20 @@ function parseTypeNode(typeNode: TypeNode, src: SourceFile): ParsedNode {
   if (typeNode.isKind(SyntaxKind.TypeLiteral)) {
     const typeLiteralProperties = typeNode.getProperties();
 
-    const properties = typeLiteralProperties.map((prop) => {
-      const propTypeNode = prop.getTypeNode();
-      const details: ParsedNode = propTypeNode
-        ? parseTypeNode(propTypeNode, src)
-        : {
-            type: InputType.unknown,
-          };
-      return {
-        key: prop.getName(),
-        details,
-      };
-    });
+    const properties = await Promise.all(
+      typeLiteralProperties.map(async (prop) => {
+        const propTypeNode = prop.getTypeNode();
+        const details: ParsedNode = propTypeNode
+          ? await parseTypeNode(propTypeNode, src)
+          : {
+              type: InputType.unknown,
+            };
+        return {
+          key: prop.getName(),
+          details,
+        };
+      }),
+    );
     return {
       type: InputType.object,
       details: { properties },
@@ -195,22 +247,18 @@ function parseTypeNode(typeNode: TypeNode, src: SourceFile): ParsedNode {
 
   // Solves the case of a type reference, like: type Foo = { foo: string, bar: string } in { input : Foo }
   if (typeNode.isKind(SyntaxKind.TypeReference)) {
-    // we have a type reference
-    const typeReference = typeNode.getTypeName();
-    const typeReferenceText = typeReference.getText();
-
     // find in the code the declaration of the typeReferenceText, this can be a type, a interface, a enum, etc.
-    const typeReferenceDeclaration =
-      src.getTypeAlias(typeReferenceText) ||
-      src.getInterface(typeReferenceText) ||
-      src.getEnum(typeReferenceText);
+    const declaration = await solveTypeReference({
+      typeReference: typeNode,
+      filename: src.getFilePath(),
+      project: src.getProject(),
+    });
 
     //we have the declaration, we need to know if it's a type, interface or enum
-    if (typeReferenceDeclaration) {
-      if (typeReferenceDeclaration.isKind(SyntaxKind.TypeAliasDeclaration)) {
+    if (declaration) {
+      if (declaration.isKind(SyntaxKind.TypeAliasDeclaration)) {
         // we have a type
-        const typeReferenceDeclarationType =
-          typeReferenceDeclaration.getTypeNode();
+        const typeReferenceDeclarationType = declaration.getTypeNode();
 
         // check if type is a string literal
         if (
@@ -232,49 +280,54 @@ function parseTypeNode(typeNode: TypeNode, src: SourceFile): ParsedNode {
         if (typeReferenceDeclarationType)
           return parseTypeNode(typeReferenceDeclarationType, src);
       }
-      if (typeReferenceDeclaration.isKind(SyntaxKind.InterfaceDeclaration)) {
+      if (declaration.isKind(SyntaxKind.InterfaceDeclaration)) {
         // we have a interface
-        const typeReferenceDeclarationProperties =
-          typeReferenceDeclaration.getProperties();
-        const propDetails = typeReferenceDeclarationProperties.map(
-          (prop: any) => {
-            return {
-              key: prop.getName(),
-              details: parseTypeNode(prop.getTypeNode(), src),
-            };
-          },
-        );
+        const typeReferenceDeclarationProperties = declaration.getProperties();
+        const propDetails: { key: string; details: ParsedNode }[] =
+          await Promise.all(
+            typeReferenceDeclarationProperties.map(async (prop) => {
+              const typeNode = prop.getTypeNode();
+              if (!typeNode) {
+                return {
+                  key: prop.getName(),
+                  details: { type: InputType.any },
+                };
+              }
+              return {
+                key: prop.getName(),
+                details: await parseTypeNode(typeNode, src),
+              };
+            }),
+          );
         return {
           type: InputType.object,
           details: { properties: propDetails },
         };
       }
-      if (typeReferenceDeclaration.isKind(SyntaxKind.EnumDeclaration)) {
+      if (declaration.isKind(SyntaxKind.EnumDeclaration)) {
         // we have a enum
         return {
           type: InputType.enum,
           details: {
-            values: typeReferenceDeclaration
-              .getMembers()
-              .map((member: EnumMember) => {
-                const memberText = member.getFullText().trim();
+            values: declaration.getMembers().map((member: EnumMember) => {
+              const memberText = member.getFullText().trim();
 
-                // check if the memberText has a value by checking if it has a '='
-                const hasValue = memberText.includes('=');
-                if (!hasValue) {
-                  return memberText.trim();
-                }
+              // check if the memberText has a value by checking if it has a '='
+              const hasValue = memberText.includes('=');
+              if (!hasValue) {
+                return memberText.trim();
+              }
 
-                // if it has a value, we need to extract it
-                const memberValue = memberText
-                  .split('=')[1]
-                  ?.replace(/['"]+/g, '')
-                  .trim();
-                return {
-                  key: memberText.split('=')[0]?.trim(),
-                  value: memberValue,
-                };
-              }),
+              // if it has a value, we need to extract it
+              const memberValue = memberText
+                .split('=')[1]
+                ?.replace(/['"]+/g, '')
+                .trim();
+              return {
+                key: memberText.split('=')[0]?.trim(),
+                value: memberValue,
+              };
+            }),
           },
         };
       }
@@ -304,24 +357,46 @@ function parseTypeNode(typeNode: TypeNode, src: SourceFile): ParsedNode {
   return { type: InputType.unknown };
 }
 
-export function getSourceFileFromCode(code = '', filename = 'main.ts') {
+export function createProject(initialModules?: Record<string, string>) {
   const project = new Project({
     useInMemoryFileSystem: true,
     resolutionHost: (moduleResolutionHost, getCompilerOptions) => {
       return {
         resolveModuleNames: (moduleNames, containingFile) => {
           const compilerOptions = getCompilerOptions();
-          const resolvedModules: ts.ResolvedModule[] = [];
+          const resolvedModules: (ts.ResolvedModule | undefined)[] = [];
 
-          for (const moduleName of moduleNames.map(removeTsExtension)) {
+          for (const rawModuleName of moduleNames) {
+            let rewrittenModuleName;
+            const rewritten = rewriteSpecifier(rawModuleName);
+
+            if (isExternalImport(rewritten)) {
+              const url = new URL(rewritten);
+              const { hostname: packageOrigin, pathname } = url;
+              const parts = pathname.split('/');
+              // TODO: The 'src' filter is a hack, since the specifier contains 'src' in the path
+              // but the /api/editor/ts/bundle endpoint doesn't return it.
+              // Issue [1](https://github.com/Zipper-Inc/zipper-functions/pull/744#issue-2105526771)
+              const zipperHack =
+                packageOrigin === 'zipper.dev'
+                  ? parts.filter((p) => p !== 'src')
+                  : parts;
+              rewrittenModuleName = `${ZIPPER_DEPENDENCIES}/${packageOrigin}${zipperHack.join(
+                '/',
+              )}`;
+            } else {
+              rewrittenModuleName = rawModuleName;
+            }
+
             const result = ts.resolveModuleName(
-              moduleName,
+              rewrittenModuleName,
               containingFile,
               compilerOptions,
               moduleResolutionHost,
             );
             if (result.resolvedModule)
               resolvedModules.push(result.resolvedModule);
+            else resolvedModules.push(undefined);
           }
 
           return resolvedModules;
@@ -330,7 +405,13 @@ export function getSourceFileFromCode(code = '', filename = 'main.ts') {
     },
   });
 
-  return project.createSourceFile(filename, code);
+  if (!initialModules) return project;
+
+  for (const [filename, code] of Object.entries(initialModules)) {
+    project.createSourceFile(filename, code, { overwrite: true });
+  }
+  project.createDirectory(ZIPPER_DEPENDENCIES);
+  return project;
 }
 
 type HandlerFn = FunctionDeclaration | ArrowFunction | FunctionExpression;
@@ -352,7 +433,7 @@ function findHandlerFunction({
   src: SourceFile;
   name?: string;
   node?: any;
-}): void | HandlerFn {
+}): HandlerFn | undefined {
   if (!node) return;
 
   // ✅ function handler() {}
@@ -398,15 +479,96 @@ function findHandlerFunction({
   }
 }
 
-function parseHandlerInputs(
-  handlerFn: HandlerFn,
-  src: SourceFile,
-  throwErrors: boolean,
-): InputParam[] {
-  const inputs = handlerFn.getParameters();
-  const params = inputs[0] as ParameterDeclaration;
+const getDeclarationUsingCompiler = (typeReference: TypeReferenceNode) => {
+  try {
+    const identifier = typeReference.getTypeName();
+    if ('getLeft' in identifier) return;
+    const nodes = identifier.getDefinitionNodes();
+    return nodes[0];
+  } catch {
+    return;
+  }
+};
 
-  if (!params || params.getText().startsWith('_')) {
+async function solveTypeReference({
+  typeReference,
+  filename,
+  project,
+  shouldFetch = true,
+}: {
+  typeReference: TypeReferenceNode;
+  filename: string;
+  project: Project;
+  shouldFetch?: boolean;
+}) {
+  const src = project?.getSourceFile(filename);
+  const target = typeReference.getTypeName().getText();
+
+  if (!src || !project) return;
+
+  const localDefinition = getDeclarationUsingCompiler(typeReference);
+
+  if (localDefinition && !localDefinition.isKind(SyntaxKind.ImportSpecifier))
+    return localDefinition;
+
+  if (!shouldFetch) return;
+
+  const imports = src.getImportDeclarations();
+  const importDeclaration = imports.find((x) => {
+    const insideImport = x.getNamedImports().map((n) => n.getText());
+    return insideImport.includes(target);
+  });
+
+  if (!importDeclaration) {
+    return;
+  }
+
+  const specifier = importDeclaration.getModuleSpecifierValue();
+
+  const externalModule = await fetch(
+    `${getZipperDotDevUrl()}/api/editor/ts/bundle?x=${rewriteSpecifier(
+      specifier,
+    )}`,
+  )
+    .then((res) => res.json() as Promise<{ [filename: string]: string }>)
+    .catch(() => null);
+  if (!externalModule) {
+    console.error('Couldnt fetch external module');
+    return;
+  }
+
+  const externalModuleEntries = Object.entries(externalModule);
+  // TODO: Possible issue: the specifier from the `externalModule` here can be different from the one in the import declaration
+  // due to the rewriteSpecifier rules or even the version in the resolved external module url. issue [1](https://github.com/Zipper-Inc/zipper-functions/pull/744#issue-2105526771)
+  for (const [externalSpecifier, code] of externalModuleEntries) {
+    if (isExternalImport(externalSpecifier)) {
+      addExternalInProject({
+        specifier: externalSpecifier,
+        code,
+        project,
+      });
+    }
+  }
+
+  return solveTypeReference({
+    typeReference,
+    filename,
+    project,
+    shouldFetch: false,
+  });
+}
+
+async function parseHandlerInputs(
+  handlerFn: HandlerFn,
+  handlerFile: string,
+  project: Project | undefined,
+): Promise<InputParam[]> {
+  const inputs = handlerFn.getParameters();
+  const params = inputs[0];
+
+  const src = project?.getSourceFile(handlerFile);
+
+  if (!params || params.getText().startsWith('_') || !src || !project) {
     return [];
   }
 
@@ -424,6 +586,7 @@ function parseHandlerInputs(
 
   const typeNode = params.getTypeNode();
 
+  // TODO: If there's no (input : Type) annotation, we should get the type from the function
   if (!typeNode || typeNode?.isKind(SyntaxKind.AnyKeyword)) {
     return [
       {
@@ -434,71 +597,114 @@ function parseHandlerInputs(
     ];
   }
 
-  let props: PropertySignature[] = [];
+  // TODO: (input: Parameters<typeof someFunction>) or (input: Pick<SomeType, 'foo' | 'bar'>)
 
-  try {
-    props = typeNode?.isKind(SyntaxKind.TypeLiteral)
-      ? // A type literal, like `params: { foo: string, bar: string }`
-        (typeNode as any)?.getProperties()
-      : // A type reference, like `params: Params`
-        // Finds the type alias by its name and grabs the node from there
-        (
-          src.getTypeAlias(typeNode?.getText() as string)?.getTypeNode() as any
-        )?.getProperties();
-  } catch (e) {
-    if (throwErrors) {
-      throw new Error('Cannot get the properties of the object parameter.');
+  if (typeNode?.isKind(SyntaxKind.TypeLiteral)) {
+    const props = typeNode.getProperties();
+    const result: InputParam[] = await Promise.all(
+      props.map(async (prop) => {
+        const isOptional =
+          prop.hasQuestionToken() || !!paramsWithDefaultValue?.[prop.getName()];
+        const typeNode = prop.getTypeNode();
+        if (!typeNode) {
+          // Typescript defaults to any if it can't find the type
+          // type Input = { foo } // foo is any
+          return {
+            key: prop.getName(),
+            node: { type: InputType.any },
+            optional: isOptional,
+          };
+        }
+
+        const typeDetails = await parseTypeNode(typeNode, src);
+        return {
+          key: prop.getName(),
+          optional: isOptional,
+          node: typeDetails,
+        };
+      }),
+    );
+    return result;
+  }
+
+  if (typeNode.isKind(SyntaxKind.TypeReference)) {
+    const node = await solveTypeReference({
+      typeReference: typeNode,
+      filename: handlerFile,
+      project,
+    }).catch(() => null);
+
+    if (node?.isKind(SyntaxKind.TypeAliasDeclaration)) {
+      const typeNode = node.getTypeNode();
+      if (typeNode?.isKind(SyntaxKind.TypeLiteral)) {
+        return unwrapObject(typeNode);
+      }
+    }
+    if (
+      node?.isKind(SyntaxKind.TypeLiteral) ||
+      node?.isKind(SyntaxKind.InterfaceDeclaration)
+    ) {
+      return unwrapObject(node);
     }
     return [];
   }
 
-  if (!typeNode || !props) {
-    console.error('No types, treating input as any');
-  }
+  return [];
+}
 
-  return props.map((prop) => {
-    const isOptional =
-      prop.hasQuestionToken() || !!paramsWithDefaultValue?.[prop.getName()];
-    const typeNode = prop.getTypeNode();
-    if (!typeNode) {
-      // Typescript defaults to any if it can't find the type
-      // type Input = { foo } // foo is any
-      return {
-        key: prop.getName(),
-        node: { type: InputType.any },
-        optional: isOptional,
-      };
-    }
+async function unwrapObject(
+  node: TypeLiteralNode | InterfaceDeclaration,
+): Promise<InputParam[]> {
+  const props = node.getProperties();
 
-    const typeDetails = parseTypeNode(typeNode, src);
-
-    const result = {
-      key: prop.getName(),
-      optional: isOptional,
-      node: typeDetails,
-    };
-    return result;
-  });
+  const result: InputParam[] = await Promise.all(
+    props.map(async (prop) => {
+      const isOptional = prop.hasQuestionToken();
+      const typeNode = prop.getTypeNode();
+      if (!typeNode) {
+        return {
+          key: prop.getName(),
+          node: { type: InputType.any },
+          optional: isOptional,
+        };
+      }
+      try {
+        const typeDetails = await parseTypeNode(
+          typeNode,
+          typeNode.getSourceFile(),
+        );
+        return {
+          key: prop.getName(),
+          optional: isOptional,
+          node: typeDetails,
+        };
+      } catch (e) {
+        return {
+          key: prop.getName(),
+          node: { type: InputType.unknown },
+          optional: isOptional,
+        };
+      }
+    }),
+  );
+  return result;
 }
 
 // returns undefined if the file isn't runnable (no handler function)
-export function parseInputForTypes({
-  code = '',
+export async function parseInputForTypes({
+  handlerFile,
+  project,
   throwErrors = false,
-  src: srcPassedIn,
-}: ParseCodeParameters = {}): undefined | InputParam[] {
-  if (!code) return undefined;
-
+}: ParseCode) {
   try {
-    const src = srcPassedIn || getSourceFileFromCode(code);
+    const src = project?.getSourceFile(handlerFile);
+    if (!src) return;
 
     const rootHandlerNode =
       src.getFunction('handler') || src.getVariableDeclaration('handler');
 
     // All good, this is a lib file!
-    if (!rootHandlerNode) {
-      return undefined;
-    }
+    if (!rootHandlerNode) return;
 
     const handlerFn = findHandlerFunction({ src, node: rootHandlerNode });
 
@@ -515,7 +721,7 @@ export function parseInputForTypes({
       throw new Error('The handler function cannot be the default export.');
     }
 
-    return parseHandlerInputs(handlerFn, src, throwErrors);
+    return parseHandlerInputs(handlerFn, handlerFile, project);
   } catch (e) {
     if (throwErrors) throw e;
     console.error('caught during parseInputForTypes', e);
@@ -523,15 +729,16 @@ export function parseInputForTypes({
   return [];
 }
 
-export function parseActions({
-  code = '',
+export async function parseActions({
+  handlerFile,
+  project,
   throwErrors = false,
-  src: srcPassedIn,
-}: ParseCodeParameters = {}) {
-  if (!code || !srcPassedIn) return undefined;
+  handlerFileInputs,
+}: ParseCode & { handlerFileInputs?: InputParam[] }) {
+  const src = project?.getSourceFile(handlerFile);
+  if (!src) return;
 
   try {
-    const src = srcPassedIn || getSourceFileFromCode(code);
     const actionsDeclaration = src.getVariableDeclaration('actions');
     if (!actionsDeclaration) return undefined;
 
@@ -551,26 +758,35 @@ export function parseActions({
 
     const actionsProperties = actionsObject.getProperties();
 
-    const actions = actionsProperties.reduce((actionsSoFar, property) => {
+    const actions: Record<string, { name: string; inputs: InputParam[] }> = {};
+    for (const property of actionsProperties) {
       const name = property
         .getFirstChildIfKind(SyntaxKind.Identifier)
         ?.getText();
-
       const handlerFn =
         property.getLastChildIfKind(SyntaxKind.ArrowFunction) ||
         property.getLastChildIfKind(SyntaxKind.FunctionExpression) ||
         property.getLastChildIfKind(SyntaxKind.FunctionDeclaration);
+      if (!name || !handlerFn) continue;
 
-      if (!name || !handlerFn) return actionsSoFar;
-
-      return {
-        ...actionsSoFar,
-        [name]: {
+      // Reuse the inputs already parsed for the handler function if possible
+      if (handlerFileInputs) {
+        actions[name] = {
           name,
-          inputs: parseHandlerInputs(handlerFn, src, throwErrors),
-        },
-      };
-    }, {} as Record<string, { name: string; inputs: InputParam[] }>);
+          inputs: handlerFileInputs,
+        };
+      } else {
+        const inputs = await parseHandlerInputs(
+          handlerFn,
+          handlerFile,
+          project,
+        );
+        actions[name] = {
+          name,
+          inputs,
+        };
+      }
+    }
 
     return Object.keys(actions).length ? actions : undefined;
   } catch (e) {
@@ -580,28 +796,23 @@ export function parseActions({
 }
 
 export function parseExternalImportUrls({
-  code = '',
-  srcPassedIn,
+  handlerFile,
+  project,
   externalOnly = true,
-}: {
-  code?: string;
-  srcPassedIn?: SourceFile;
+}: ParseCode & {
   externalOnly?: boolean;
-} = {}): string[] {
-  if (!code) return [];
-  const src = srcPassedIn || getSourceFileFromCode(code);
+}): string[] {
+  const src = project?.getSourceFile(handlerFile);
+  if (!src) return [];
   return src
     .getImportDeclarations()
     .map((i) => i.getModuleSpecifierValue())
     .filter((s) => (externalOnly ? isExternalImport(s) : true));
 }
 
-export function parseImports({
-  code = '',
-  src: srcPassedIn,
-}: ParseCodeParameters = {}) {
-  if (!code) return [];
-  const src = srcPassedIn || getSourceFileFromCode(code);
+export function parseImports({ handlerFile, project }: ParseCode) {
+  const src = project?.getSourceFile(handlerFile);
+  if (!src) return [];
   return src.getImportDeclarations().map((i) => {
     const startPos = i.getStart();
     const endPos = i.getEnd();
@@ -624,14 +835,6 @@ export function parseImports({
 export const USE_DIRECTIVE_REGEX = /^use\s/;
 export const USE_CLIENT_DIRECTIVE = 'use client';
 
-function getSourceWithoutComments(srcPassedIn: string | SourceFile = '') {
-  return getSourceFileFromCode(
-    stripComments(
-      typeof srcPassedIn === 'string' ? srcPassedIn : srcPassedIn.getText(),
-    ),
-  );
-}
-
 /**
  * The "directive prologue" is the first line of a file that starts with "use ___"
  * This is a special comment that tells the compiler to do something special
@@ -639,12 +842,16 @@ function getSourceWithoutComments(srcPassedIn: string | SourceFile = '') {
  * "use client";
  */
 export function parseDirectivePrologue({
-  code = '',
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  handlerFile,
+  project,
   throwErrors = false,
-  src: srcPassedIn,
-}: ParseCodeParameters = {}) {
-  const src = getSourceWithoutComments(srcPassedIn || code);
+}: ParseCode) {
+  const src = project?.getSourceFile(handlerFile);
+  if (!project || !src) return;
+  const srcWithoutComments = project.createSourceFile(
+    `zipper__without_comments_${handlerFile}`,
+    stripComments(src.getText()),
+  );
 
   const syntaxList = src?.getChildAtIndexIfKind(0, SyntaxKind.SyntaxList);
 
@@ -655,35 +862,59 @@ export function parseDirectivePrologue({
     ?.getChildAtIndexIfKind(0, SyntaxKind.StringLiteral)
     ?.getLiteralText();
 
+  project.removeSourceFile(srcWithoutComments);
+
   return maybeDirective && USE_DIRECTIVE_REGEX.test(maybeDirective)
     ? maybeDirective
     : undefined;
 }
 
-export const isClientModule = (inputs: ParseCodeParameters) =>
+export const isClientModule = (inputs: ParseCode) =>
   parseDirectivePrologue(inputs) === USE_CLIENT_DIRECTIVE;
 
-export function parseCode({
-  code = '',
+export function parseApp({
+  handlerFile,
+  project,
+  modules,
+  throwErrors,
+}: ParseProject) {
+  project = project || createProject();
+  if (modules) {
+    for (const [filename, code] of Object.entries(modules)) {
+      project.createSourceFile(filename, code, { overwrite: true });
+    }
+  }
+  return parseFile({ handlerFile, project, throwErrors });
+}
+
+export async function parseFile({
+  handlerFile,
+  project,
   throwErrors = false,
-  src: srcPassedIn,
-}: ParseCodeParameters = {}) {
-  const src: SourceFile | undefined =
-    srcPassedIn || (code ? getSourceFileFromCode(code) : undefined);
-  let inputs = parseInputForTypes({ code, throwErrors, src });
-
-  const actions = parseActions({ code, throwErrors, src });
-
-  const externalImportUrls = parseExternalImportUrls({
-    code,
-    srcPassedIn: src,
+}: ParseCode) {
+  let inputs = await parseInputForTypes({
+    handlerFile,
+    project,
+    throwErrors,
   });
 
-  const imports = parseImports({ code, src });
+  const actions = await parseActions({
+    handlerFile,
+    handlerFileInputs: inputs,
+    throwErrors,
+    project,
+  });
 
-  const comments = parseComments({ code, src });
-  if (comments) {
-    inputs = inputs?.map((i) => {
+  const externalImportUrls = parseExternalImportUrls({
+    handlerFile,
+    project,
+  });
+
+  const imports = parseImports({ handlerFile, project });
+
+  const comments = parseComments({ handlerFile, project });
+  if (comments && inputs) {
+    inputs = inputs.map((i) => {
       const matchingTag = comments.tags.find(
         (t) => t.tag === 'param' && t.name === i.key,
       );
@@ -695,7 +926,11 @@ export function parseCode({
     });
   }
 
-  const directivePrologue = parseDirectivePrologue({ code, throwErrors, src });
+  const directivePrologue = parseDirectivePrologue({
+    handlerFile,
+    project,
+    throwErrors,
+  });
 
   return {
     inputs,
@@ -707,11 +942,17 @@ export function parseCode({
     ),
     imports,
     directivePrologue,
-    src,
   };
 }
 
-export function addParamToCode({
+export function createProjectFromCode(code: string) {
+  const project = createProject();
+  const handlerFile = 'handler.ts';
+  const src = project.createSourceFile(handlerFile, code);
+  return { project, src, handlerFile };
+}
+
+export async function addParamToCode({
   code,
   paramName = 'newInput',
   paramType = 'string',
@@ -719,15 +960,14 @@ export function addParamToCode({
   code: string;
   paramName?: string;
   paramType?: string;
-}): string {
-  const src = getSourceFileFromCode(code);
-  const handler = src.getFunction('handler');
+}): Promise<string> {
+  const { src, handlerFile, project } = createProjectFromCode(code);
+
+  const handler = src?.getFunction('handler');
   const handlerComment = handler
     ?.getFullText()
     .split('\n')
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    //@ts-ignore
-    .reduce((acc, curr) => {
+    .reduce<string[]>((acc, curr) => {
       if (curr.trim().startsWith('/**') || curr.trim().startsWith('*')) {
         return [...acc, curr.trim()];
       } else if (curr.trim().startsWith('export async function handler')) {
@@ -735,7 +975,7 @@ export function addParamToCode({
       } else {
         return acc;
       }
-    }, [] as string[])
+    }, [])
     .map((line) => (line.startsWith('*') ? ' ' + line : line));
 
   if (!handler) {
@@ -771,7 +1011,7 @@ export function addParamToCode({
     return code;
   }
 
-  const existingParams = parseInputForTypes({ code });
+  const existingParams = await parseInputForTypes({ handlerFile, project });
   if (!existingParams) return code;
   // If there is an existing parameter, use its name instead of the default paramName
   if (existingParams.length && existingParams[0]) {
@@ -817,7 +1057,7 @@ export function getTutorialJsDocs({
   code: string;
   jsdoc: string;
 }) {
-  const src = getSourceFileFromCode(code);
+  const { src } = createProjectFromCode(code);
   const jsDocText = jsdoc.replace(/\s+/g, ' ').trim();
 
   const foundVariable = src.getVariableStatements().find((variable) => {
@@ -851,26 +1091,24 @@ export function getTutorialJsDocs({
   }
 }
 
-export function parseComments({ code, src: srcPassedIn }: ParseCodeParameters) {
-  if (!code) return;
+export function parseComments({ handlerFile, project }: ParseCode) {
+  const src = project?.getSourceFile(handlerFile);
+  if (!src) return;
 
-  const src = srcPassedIn || getSourceFileFromCode(code);
-  const handlerFn = src.getFunction('handler');
-
+  const handlerFn = findHandlerFunction({ src });
   if (!handlerFn) return;
 
   const jsDocComments = handlerFn.getJsDocs();
   if (jsDocComments.length > 0) {
-    return parse(jsDocComments.at(-1)?.getFullText() || '')[0];
+    return commentParse(jsDocComments.at(-1)?.getFullText() || '')[0];
   }
 
   return;
 }
 
-export function parseCodeSerializable(params: ParseCodeParameters) {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { src: _ignore, ...rest } = parseCode(params);
-  return {
-    ...rest,
-  };
-}
+export const hasHandler = ({ code }: { code: string }) => {
+  const { src } = createProjectFromCode(code);
+  return !!findHandlerFunction({ src });
+};
+
+export const parseFileSerializable = parseFile;

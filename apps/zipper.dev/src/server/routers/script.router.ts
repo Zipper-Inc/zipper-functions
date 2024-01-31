@@ -2,7 +2,7 @@ import { Prisma } from '@prisma/client';
 import { z } from 'zod';
 import { prisma } from '~/server/prisma';
 import { getScriptHash } from '~/utils/hashing';
-import isCodeRunnable from '~/utils/is-code-runnable';
+import { isCodeRunnable } from '~/utils/is-code-runnable';
 import { slugifyAllowDot } from '~/utils/slugify';
 import { hasAppEditPermission } from '../utils/authz.utils';
 import { kebabCase } from '~/utils/kebab-case';

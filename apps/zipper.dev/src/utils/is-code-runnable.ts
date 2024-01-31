@@ -1,9 +1,5 @@
-import { parseInputForTypes } from './parse-code';
+import { hasHandler } from './parse-code';
 
-export default function isCodeRunnable(code: string) {
-  try {
-    return !!parseInputForTypes({ code: code, throwErrors: true });
-  } catch (e) {
-    return false;
-  }
+export function isCodeRunnable(code: string) {
+  return hasHandler({ code });
 }

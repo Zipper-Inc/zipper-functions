@@ -326,7 +326,7 @@ function FunctionParamInput({
             },
           })}
         >
-          <option value="" disabled selected>
+          <option value="" disabled>
             {placeholder}
           </option>
           {node.details.values.map((value) => {
