@@ -116,7 +116,7 @@ export function FunctionOutput({
       const defaultValues: Record<string, any> = {};
       modalApplet.mainContent.inputs?.forEach(
         (i: InputParam) =>
-          (defaultValues[`${i.key}:${i.type}`] = i.defaultValue),
+          (defaultValues[`${i.key}:${i.node.type}`] = i.defaultValue),
       );
       modalFormContext.reset(defaultValues);
     }
@@ -134,7 +134,7 @@ export function FunctionOutput({
     if (applet.expandedContent.inputs) {
       const defaultValues: Record<string, any> = {};
       applet.expandedContent.inputs?.forEach(
-        (i) => (defaultValues[`${i.key}:${i.type}`] = i.defaultValue),
+        (i) => (defaultValues[`${i.key}:${i.node.type}`] = i.defaultValue),
       );
       expandedFormContext.reset(defaultValues);
     }
@@ -253,7 +253,7 @@ export function FunctionOutput({
                 );
                 const inputsWithValues = applet.expandedContent.inputs?.map(
                   (i) => {
-                    i.value = values[i.key];
+                    if ('value' in i) i.value = values[i.key];
                     return i;
                   },
                 );
