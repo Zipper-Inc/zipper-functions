@@ -597,28 +597,6 @@ async function parseHandlerInputs(
     ];
   }
 
-  if (typeNode.isKind(SyntaxKind.TypeReference)) {
-    const node = await solveTypeReference({
-      typeReference: typeNode,
-      filename: handlerFile,
-      project,
-    }).catch(() => null);
-
-    if (node?.isKind(SyntaxKind.TypeAliasDeclaration)) {
-      const typeNode = node.getTypeNode();
-      if (typeNode?.isKind(SyntaxKind.TypeLiteral)) {
-        return unwrapObject(typeNode);
-      }
-    }
-    if (
-      node?.isKind(SyntaxKind.TypeLiteral) ||
-      node?.isKind(SyntaxKind.InterfaceDeclaration)
-    ) {
-      return unwrapObject(node);
-    }
-    return [];
-  }
-
   // TODO: (input: Parameters<typeof someFunction>) or (input: Pick<SomeType, 'foo' | 'bar'>)
 
   if (typeNode?.isKind(SyntaxKind.TypeLiteral)) {
@@ -648,6 +626,29 @@ async function parseHandlerInputs(
     );
     return result;
   }
+
+  if (typeNode.isKind(SyntaxKind.TypeReference)) {
+    const node = await solveTypeReference({
+      typeReference: typeNode,
+      filename: handlerFile,
+      project,
+    }).catch(() => null);
+
+    if (node?.isKind(SyntaxKind.TypeAliasDeclaration)) {
+      const typeNode = node.getTypeNode();
+      if (typeNode?.isKind(SyntaxKind.TypeLiteral)) {
+        return unwrapObject(typeNode);
+      }
+    }
+    if (
+      node?.isKind(SyntaxKind.TypeLiteral) ||
+      node?.isKind(SyntaxKind.InterfaceDeclaration)
+    ) {
+      return unwrapObject(node);
+    }
+    return [];
+  }
+
   return [];
 }
 

@@ -581,8 +581,6 @@ const EditorContextProvider = ({
     return setSelectedTutorial({ ...tutorials[tutorialIndex]! });
   };
 
-  console.log('selected', selectedTutorial);
-
   const resetDirtyState = () => {
     setModelsDirtyState(
       (Object.keys(modelsDirtyState) as string[]).reduce((acc, elem) => {

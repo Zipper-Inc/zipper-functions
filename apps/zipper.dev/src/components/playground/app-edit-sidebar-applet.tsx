@@ -18,7 +18,7 @@ import {
   UnorderedList,
   VStack,
 } from '@chakra-ui/react';
-import { AppInfo, InputParam, ZipperLocation } from '@zipper/types';
+import { ZipperLocation } from '@zipper/types';
 import {
   FunctionInputs,
   FunctionOutput,
