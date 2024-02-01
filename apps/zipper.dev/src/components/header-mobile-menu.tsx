@@ -11,7 +11,7 @@ import { useRouter } from 'next/navigation';
 import { FiMinimize2, FiMenu } from 'react-icons/fi';
 import { FeedbackModal } from './auth/feedback-modal';
 
-export type NavRoutes = { href: string; text: string };
+export type NavRoutes = { path: string; label: string };
 
 type MobileMenuProps = {
   navRoutes: NavRoutes[];
@@ -43,8 +43,8 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
             <MenuList>
               {navRoutes.map((r) => {
                 return (
-                  <MenuItem key={r.text} onClick={() => router.push(r.href)}>
-                    {r.text}
+                  <MenuItem key={r.label} onClick={() => router.push(r.path)}>
+                    {r.label}
                   </MenuItem>
                 );
               })}

@@ -37,6 +37,21 @@ const DASHBOARD_ROUTES = [
   { href: '/blog', text: 'Blog' },
 ];
 
+const ROUTES = {
+  DASHBOARD: [
+    { label: 'Gallery', path: '/gallery-new' },
+    { label: 'Changelog', path: '/changelog' },
+    { label: 'Docs', path: '/docs' },
+  ],
+  LANDING: [
+    { label: 'Gallery', path: '/gallery-new' },
+    { label: 'About', path: '/about' },
+    { label: 'Changelog', path: '/changelog' },
+    { label: 'Docs', path: '/docs' },
+    { label: 'Blog', path: '/blog' },
+  ],
+};
+
 /* -------------------------------------------- */
 /* Components                                   */
 /* -------------------------------------------- */
@@ -276,7 +291,7 @@ const Header: React.FC<HeaderProps> = ({
             </div>
             {!isTablet && (
               <MobileMenu
-                navRoutes={DASHBOARD_ROUTES}
+                navRoutes={ROUTES.DASHBOARD}
                 feedbackModal={user ? feedbackModal : null}
               />
             )}

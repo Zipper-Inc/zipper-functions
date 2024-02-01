@@ -7,6 +7,7 @@
     "./ui/modules/*": "./src/ui/modules/*",
     "./ui/common/*": "./src/ui/common/*",
     "./ui/templates/*": "./src/ui/templates/*",
+    "./ui": "./src/ui/index.ts",
     "./cn": "./src/utils/cn.ts"
   },
   "typesVersions": {
@@ -14,7 +15,11 @@
       "cn": [
         "./src/utils/cn.ts"
       ],
+      "ui": [
+        "./src/ui/index.ts"
+      ],
       "ui/*": [
+        "./src/ui/*",
         "./src/ui/*",
         "./src/ui/modules*",
         "./src/ui/common/*",

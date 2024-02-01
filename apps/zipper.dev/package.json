@@ -121,7 +121,7 @@
     "mongodb": "^6.3.0",
     "mysql2": "^3.6.5",
     "ndjson": "^2.0.0",
-    "next": "^14.0.4",
+    "next": "^13.2.0",
     "next-absolute-url": "^1.2.2",
     "next-auth": "^4.23.2",
     "node-fetch": "2.6.7",

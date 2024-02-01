@@ -1,3 +1,4 @@
+'use client';
 import { Script } from '@prisma/client';
 import * as monaco from 'monaco-editor';
 import { EditorProps, Monaco } from '@monaco-editor/react';
@@ -828,4 +829,5 @@ const EditorContextProvider = ({
 };
 
 export const useEditorContext = () => useContext(EditorContext);
+
 export default EditorContextProvider;

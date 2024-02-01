@@ -69,6 +69,7 @@ module.exports = getConfig({
     '@zipper/tw',
     'monaco-languageclient',
     '@nivo/line',
+    'ts-morph',
   ],
   images: {
     dangerouslyAllowSVG: true,

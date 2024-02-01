@@ -28,8 +28,7 @@ export default async function RootLayout({
         <Providers>
           <TRPCReactProvider cookies={cookies().toString()}>
             <SessionProvider session={session}>
-              <main className="flex flex-1 flex-col">
-                <Header showDivider={false} />
+              <main className="h-[calc(100%_-_64px)] w-full flex flex-col">
                 {children}
               </main>
             </SessionProvider>

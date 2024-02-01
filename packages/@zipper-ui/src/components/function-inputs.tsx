@@ -1,3 +1,4 @@
+'use client';
 import './file-upload/uploadthing.css';
 import { Select, Spinner } from '@chakra-ui/react';
 import { Suspense, useRef, useState } from 'react';

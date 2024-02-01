@@ -1,3 +1,4 @@
+'use client';
 import {
   Modal,
   ModalOverlay,
@@ -37,8 +38,6 @@ export const CreateOrganizationModal = ({
   isOpen: boolean;
   onClose: () => void;
 }) => {
-  const router = useRouter();
-
   const { setActive, createOrganization } = useOrganizationList();
 
   const [organizationName, setOrganizationName] = useState('');

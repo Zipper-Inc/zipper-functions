@@ -10,8 +10,8 @@ import { GalleryFAQ } from '~/components/app-dir/modules/gallery/components/faq'
 import { api } from '~/trpc/server';
 
 const LINKS = [
-  { label: 'Ziplets', href: '/gallery-test' },
-  { label: 'Saved Ziplets', href: '/gallery-test/saved', disabled: true },
+  { label: 'Applets', href: '/gallery-new' },
+  { label: 'Saved Applets', href: '/gallery-new/saved', disabled: true },
 ];
 
 export default async function GalleryPage() {
