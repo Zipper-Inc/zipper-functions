@@ -415,7 +415,7 @@ async function runEditorActionsNow({
   invalidImportUrlsRef,
   setModelIsDirty: setModelIsDirtyPassedIn,
   readOnly,
-  setTutorials,
+  setTutorials: setInputTutorials,
   shouldFetchImports,
   selectedTutorial,
 }: {
@@ -457,6 +457,7 @@ async function runEditorActionsNow({
 
   const setInputParams = !isVisible ? noop : setInputParamsPassedIn;
   const setInputError = !isVisible || readOnly ? noop : setInputErrorPassedIn;
+  const setTutorials = !isVisible ? noop : setInputTutorials;
   const setModelIsDirty = readOnly ? noop : setModelIsDirtyPassedIn;
   const linter = readOnly ? noop : runZipperLinter;
 
@@ -468,6 +469,7 @@ async function runEditorActionsNow({
     const { tutorials } = handleJSDocTutorials(value, selectedTutorial);
 
     if (tutorials.length >= 1) setTutorials(tutorials);
+    else setTutorials([]);
 
     const { inputs, imports } = await parseApp({
       modules: { [currentScript.filename]: value, ...otherModules },
