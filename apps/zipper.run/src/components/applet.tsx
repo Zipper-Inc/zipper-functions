@@ -42,7 +42,6 @@ import {
   __ZIPPER_TEMP_USER_ID,
   X_ZIPPER_TEMP_USER_ID,
   X_ZIPPER_ACCESS_TOKEN,
-  removeExtension,
 } from '@zipper/utils';
 import { deleteCookie } from 'cookies-next';
 import { motion } from 'framer-motion';
@@ -74,7 +73,6 @@ import ConnectorsAuthInputsSection from './connectors-auth-inputs-section';
 import Header from './header';
 import InputSummary from './input-summary';
 import Unauthorized from './unauthorized';
-import { get } from 'http';
 
 const { __DEBUG__ } = process.env;
 
@@ -205,7 +203,7 @@ export function AppPage({
     mainApplet.reset();
     const inputParamsWithValues = inputs?.map((i) => {
       if (defaultValues) {
-        i.value = defaultValues[`${i.key}:${i.type}`];
+        i.value = defaultValues[`${i.key}:${i.node.type}`];
       }
       return i;
     });

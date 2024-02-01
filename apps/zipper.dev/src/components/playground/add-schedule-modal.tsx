@@ -17,16 +17,16 @@ import {
   Select,
   HStack,
 } from '@chakra-ui/react';
-import { InputParam } from '@zipper/types';
 import { FunctionInputs } from '@zipper/ui';
 import { useDebounce } from 'use-debounce';
 import parser from 'cron-parser';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { FieldValues, useForm } from 'react-hook-form';
 import { useUser } from '~/hooks/use-user';
-import { parseCode } from '~/utils/parse-code';
+import { createProject, parseFile } from '~/utils/parse-code';
 import { useEditorContext } from '../context/editor-context';
 import { initApplet } from '@zipper-inc/client-js';
+import { useQuery } from '@tanstack/react-query';
 
 export type NewSchedule = {
   filename: string;
@@ -56,7 +56,6 @@ export const AddScheduleModal: React.FC<AddScheduleModalProps> = ({
   const [crontab, setCrontab] = useState<string>('');
   const [isCronError, setIsCronError] = useState<boolean>(false);
   const [cronErrorString, setCronErrorString] = useState<string>();
-  const [parsedCode, setParsedCode] = useState<ReturnType<typeof parseCode>>();
   const [selectedScript, setSelectedScript] = useState<string>('main.ts');
   const [selectedAction, setSelectedAction] = useState<string>();
   const currentCronDescription: string = addModalForm.watch('cronDesc');
@@ -91,22 +90,34 @@ export const AddScheduleModal: React.FC<AddScheduleModalProps> = ({
     })();
   }, [debouncedCronDesc]);
 
-  useEffect(() => {
-    if (isOpen) {
-      setParsedCode(
-        parseCode({
-          code: scripts.find((s) => s.filename === 'main.ts')?.code,
-        }),
-      );
-    }
-  }, [isOpen]);
+  const project = useMemo(
+    () =>
+      createProject(
+        scripts.reduce(
+          (acc, s) => ({
+            ...acc,
+            [s.filename]: s.code,
+          }),
+          {},
+        ),
+      ),
+    [scripts],
+  );
+
+  const { data: parsedFile, refetch: parseFileAgain } = useQuery({
+    queryKey: ['parseFile', selectedScript, project],
+    queryFn: () => parseFile({ handlerFile: selectedScript, project }),
+    enabled: isOpen,
+  });
+
+  const inputParams = useMemo(() => {
+    if (!parsedFile) return;
+    return selectedAction
+      ? parsedFile.actions?.[selectedAction]?.inputs
+      : parsedFile.inputs;
+  }, [parsedFile]);
 
   const user = useUser();
-
-  const { inputs: handlerInputs, actions } = parsedCode || {};
-  const inputParams: InputParam[] | undefined = selectedAction
-    ? parsedCode?.actions?.[selectedAction]?.inputs
-    : handlerInputs;
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
@@ -129,21 +140,12 @@ export const AddScheduleModal: React.FC<AddScheduleModalProps> = ({
               color="fg.900"
               bgColor="bgColor"
               {...addModalForm.register('filename', {
-                onChange: (e) => {
+                onChange: async (e) => {
                   addModalForm.setValue('filename', e.target.value);
                   addModalForm.setValue('action', undefined);
                   setSelectedScript(e.target.value);
                   setSelectedAction(undefined);
-                  try {
-                    setParsedCode(
-                      parseCode({
-                        code: scripts.find((s) => s.filename === e.target.value)
-                          ?.code,
-                      }),
-                    );
-                  } catch (e) {
-                    setParsedCode(undefined);
-                  }
+                  await parseFileAgain().catch(() => {});
                 },
               })}
             >
@@ -154,7 +156,7 @@ export const AddScheduleModal: React.FC<AddScheduleModalProps> = ({
                 ))}
             </Select>
           </FormControl>
-          {actions && (
+          {parsedFile?.actions && (
             <FormControl flex={1} display="flex" flexDirection="column">
               <FormLabel>Action to run</FormLabel>
               <Select
@@ -170,7 +172,7 @@ export const AddScheduleModal: React.FC<AddScheduleModalProps> = ({
               >
                 {[
                   <option key={undefined}>none</option>,
-                  ...Object.keys(actions).map((actionName) => (
+                  ...Object.keys(parsedFile.actions).map((actionName) => (
                     <option key={actionName}>{actionName}</option>
                   )),
                 ]}

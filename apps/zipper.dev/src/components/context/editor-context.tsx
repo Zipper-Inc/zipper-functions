@@ -20,9 +20,14 @@ import { trpc } from '~/utils/trpc';
 import { useRouter } from 'next/router';
 import { getPathFromUri, getUriFromPath } from '~/utils/model-uri';
 import { InputParam } from '@zipper/types';
-import { isExternalImport, parseCode } from '~/utils/parse-code';
+import {
+  createProject,
+  getTutorialJsDocs,
+  isExternalImport,
+  parseApp,
+} from '~/utils/parse-code';
 import debounce from 'lodash.debounce';
-import { uuid } from '@zipper/utils';
+import { removeExtension, uuid } from '@zipper/utils';
 import { prettyLog } from '~/utils/pretty-log';
 import { AppQueryOutput } from '~/types/trpc';
 import {
@@ -38,13 +43,21 @@ import {
 } from '~/utils/playground.utils';
 import { runZipperLinter } from '~/utils/zipper-editor-linter';
 import { rewriteSpecifier } from '~/utils/rewrite-imports';
-import { TutorialBlock, useTutorial } from '~/hooks/use-playground-docs';
 import isEqual from 'lodash.isequal';
+import { Project } from 'ts-morph';
 
 type OnValidate = AddParameters<
   Required<EditorProps>['onValidate'],
   [filename?: string]
 >;
+
+type TutorialBlock = {
+  isSelected: boolean;
+  startLine: number;
+  endLine: number;
+  content: string;
+  index: number;
+};
 
 type RunEditorActionsInputs = Parameters<typeof runEditorActionsNow>[0];
 
@@ -56,8 +69,8 @@ export type EditorContextType = {
   onChangeSelectedDoc: (docIndex: number) => void;
   connectionId?: number;
   scripts: Script[];
-  selectedDoc: TutorialBlock;
-  docs: TutorialBlock[];
+  selectedTutorial: TutorialBlock;
+  tutorials: TutorialBlock[];
   editor?: typeof monaco.editor;
   setEditor: (editor: typeof monaco.editor) => void;
   isModelDirty: (path: string) => boolean;
@@ -111,8 +124,8 @@ export const EditorContext = createContext<EditorContextType>({
   scripts: [],
   editor: undefined,
   setEditor: noop,
-  docs: [],
-  selectedDoc: {} as TutorialBlock,
+  tutorials: [],
+  selectedTutorial: {} as TutorialBlock,
   isModelDirty: () => false,
   setModelIsDirty: noop,
   isEditorDirty: () => false,
@@ -147,6 +160,77 @@ export const EditorContext = createContext<EditorContextType>({
 
 const MAX_RETRIES_FOR_EXTERNAL_IMPORT = 3;
 const DEBOUNCE_DELAY_MS = 100;
+
+/**
+ * It handles all JSDocs in the current script code and returns then
+ * in the tutorial block format
+ * @param code current code being written
+ * @param selectedTutorial current tutorial block selected in the side bar
+ * @returns full jsdocs and all tutorials blocks
+ */
+const handleJSDocTutorials = (
+  code: string,
+  selectedTutorial: TutorialBlock,
+) => {
+  if (code?.length > 1) {
+    const jsdocs = code
+      .split('\n')
+      .reduce((acc, curr) => {
+        const line = curr.trim();
+
+        /** get only block comments lines */
+        if (line.startsWith('/**') || line.startsWith('*')) {
+          return [...acc, line];
+        }
+
+        return [...acc];
+      }, [] as string[])
+      .join('\n')
+      .split('/**')
+      .filter((line) => line !== '')
+      .map((line) => '/**' + line)
+      .filter((block) => block.includes('@guide'));
+
+    const tutorials = jsdocs
+      .map((jsdoc) => {
+        const content = jsdoc
+          .split('\n')
+          .filter((line) => !line.includes('/**'))
+          /**
+           * formating text from block comment to
+           * markdown string
+           * */
+          .map((splitedLine) =>
+            splitedLine
+              .replace(/\/\*\*|\* | \*\//g, '')
+              .replace('*/', '')
+              .replace('*', '\n'),
+          )
+          .join('\n');
+
+        /**
+         * gets start-line and end-line from each function that
+         * jsdocs from block comment refers.
+         */
+        const range = getTutorialJsDocs({ code, jsdoc });
+
+        return {
+          ...range,
+          content,
+        } as TutorialBlock;
+      })
+      .filter((doc) => !!doc.startLine)
+      .map((doc, index) => ({
+        ...doc,
+        index,
+        isSelected: index === selectedTutorial.index,
+      }));
+
+    return { jsdocs, tutorials };
+  }
+
+  return { jsdocs: [], tutorials: [] };
+};
 
 /**
  * Fetches an import and modifies refs as needed
@@ -327,17 +411,23 @@ async function runEditorActionsNow({
   setInputError: setInputErrorPassedIn,
   monacoRef,
   currentScript,
+  project,
   externalImportModelsRef,
   invalidImportUrlsRef,
   setModelIsDirty: setModelIsDirtyPassedIn,
   readOnly,
+  setTutorials: setInputTutorials,
   shouldFetchImports,
+  selectedTutorial,
 }: {
   value: string;
   setInputParams: any;
   setInputError: (error: string | undefined) => void;
   monacoRef: MutableRefObject<typeof monaco | undefined>;
   currentScript: Script;
+  setTutorials: (tutorials: TutorialBlock[]) => void;
+  selectedTutorial: TutorialBlock;
+  project: Project;
   externalImportModelsRef: MutableRefObject<Record<string, string[]>>;
   invalidImportUrlsRef: MutableRefObject<{ [url: string]: number }>;
   setModelIsDirty: (path: string, isDirty: boolean) => void;
@@ -347,6 +437,20 @@ async function runEditorActionsNow({
   if (!monacoRef.current || !isTypescript(currentScript) || !value) return;
 
   const currentModel = monacoRef.current.editor.getEditors()[0]?.getModel();
+  const otherModels = monacoRef.current.editor
+    .getModels()
+    .filter(
+      (model) =>
+        currentModel &&
+        model.uri.scheme === 'file' &&
+        model.uri !== currentModel.uri,
+    );
+  const otherModules = Object.fromEntries(
+    otherModels.map((model) => [
+      removeExtension(model.uri.path),
+      model.getValue(),
+    ]),
+  );
 
   const isVisible =
     currentModel &&
@@ -354,6 +458,7 @@ async function runEditorActionsNow({
 
   const setInputParams = !isVisible ? noop : setInputParamsPassedIn;
   const setInputError = !isVisible || readOnly ? noop : setInputErrorPassedIn;
+  const setTutorials = !isVisible ? noop : setInputTutorials;
   const setModelIsDirty = readOnly ? noop : setModelIsDirtyPassedIn;
   const linter = readOnly ? noop : runZipperLinter;
 
@@ -362,8 +467,15 @@ async function runEditorActionsNow({
     const newHash = getScriptHash({ ...currentScript, code: value });
     setModelIsDirty(currentScript.filename, newHash !== oldHash);
 
-    const { inputs, imports } = parseCode({
-      code: value,
+    const { tutorials } = handleJSDocTutorials(value, selectedTutorial);
+
+    if (tutorials.length >= 1) setTutorials(tutorials);
+    else setTutorials([]);
+
+    const { inputs, imports } = await parseApp({
+      modules: { [currentScript.filename]: value, ...otherModules },
+      handlerFile: currentScript.filename,
+      project,
       throwErrors: true,
     });
 
@@ -426,6 +538,10 @@ const EditorContextProvider = ({
 
   const [inputParams, _setInputParams] = useState<InputParam[] | undefined>([]);
   const [inputError, setInputError] = useState<string | undefined>();
+  const [tutorials, setTutorials] = useState<TutorialBlock[]>([]);
+  const [selectedTutorial, setSelectedTutorial] = useState<TutorialBlock>(
+    {} as TutorialBlock,
+  );
   const [inputParamsIsLoading, setInputParamsIsLoading] = useState(true);
 
   const setInputParams: Dispatch<SetStateAction<InputParam[] | undefined>> = (
@@ -451,14 +567,22 @@ const EditorContextProvider = ({
     Record<string, boolean>
   >({});
 
+  const project = useMemo(createProject, []);
+
   const { scripts } = app;
 
   const currentScript = scripts.find((s) => s.id === currentScriptId);
   const setCurrentScript = (s: Script) => setCurrentScriptId(s.id);
 
-  const { docs, onChangeSelectedDoc, selectedDoc } = useTutorial(
-    currentScript?.code ?? '',
-  );
+  const onChangeSelectedDoc = (tutorialIndex: number) => {
+    if (tutorialIndex === selectedTutorial.index) {
+      return setSelectedTutorial({} as TutorialBlock);
+    }
+
+    console.log(tutorials[tutorialIndex]);
+
+    return setSelectedTutorial({ ...tutorials[tutorialIndex]! });
+  };
 
   const resetDirtyState = () => {
     setModelsDirtyState(
@@ -478,7 +602,10 @@ const EditorContextProvider = ({
       setInputParams,
       setInputError,
       monacoRef,
+      selectedTutorial,
+      setTutorials,
       currentScript,
+      project,
       externalImportModelsRef,
       invalidImportUrlsRef,
       setModelIsDirty,
@@ -756,8 +883,11 @@ const EditorContextProvider = ({
       defaults = {
         value: '',
         currentScript: {} as any,
+        project,
         setInputParams,
         setInputError,
+        setTutorials,
+        selectedTutorial,
         monacoRef,
         externalImportModelsRef,
         invalidImportUrlsRef,
@@ -787,8 +917,8 @@ const EditorContextProvider = ({
       value={{
         currentScript,
         setCurrentScript,
-        selectedDoc,
-        docs,
+        selectedTutorial,
+        tutorials,
         onChange,
         onValidate,
         inputParamsIsLoading,

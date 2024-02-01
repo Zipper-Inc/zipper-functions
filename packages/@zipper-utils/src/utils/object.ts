@@ -4,9 +4,11 @@ import { safeJSONParse } from './safe-json';
 
 export const getInputsFromFormData = (
   formData: Record<string, any>,
-  inputParams: Array<Pick<InputParam, 'key' | 'type'>>,
+  inputParams: Array<Pick<InputParam, 'key'> & Pick<InputParam, 'node'>>,
 ) => {
-  const formKeys = inputParams.map(({ key, type }) => getFieldName(key, type));
+  const formKeys = inputParams.map(({ key, node }) =>
+    getFieldName(key, node.type),
+  );
   return Object.keys(formData)
     .filter((k) => {
       return formKeys.includes(k);

@@ -71,7 +71,9 @@ export interface SelectControlProps
 }
 
 export type SelectListProps = HTMLChakraProps<'ul'>;
-export type SelectedListProps = BoxProps;
+export type SelectedListProps = BoxProps & {
+  selectedItemProps?: TagProps;
+};
 export type SelectLabelProps = HTMLChakraProps<'label'>;
 export interface SelectActionGroupProps extends StackProps {
   clearButtonProps?: IconButtonProps;
@@ -95,6 +97,7 @@ export interface MultiSelectProps extends Omit<SelectProps, 'children'> {
   listProps?: SelectListProps;
   selectedListProps?: SelectedListProps;
   actionGroupProps?: SelectActionGroupProps;
+  selectedItemProps?: TagProps;
 }
 
 export const ChakraSvg = chakra('svg');
@@ -200,6 +203,7 @@ export const SelectOptionItem = memo<SelectOptionItemProps>(
       <chakra.li
         ref={highlightedRef && highlightedRef}
         role="option"
+        onClick={itemProps.onClick}
         {...((selected || multi) && { 'aria-selected': !!selected })}
         {...props}
         {...itemProps}
@@ -255,6 +259,7 @@ export const SelectList = memo<SelectListProps>((props) => {
           position: 'absolute',
           ...(!dropdownVisible && { display: 'none' }),
           ...__css,
+          zIndex: 10,
         }),
         [dropdownVisible, __css],
       )}
@@ -343,7 +348,7 @@ export const SelectedItem = memo<SelectedItemProps>(({ value, ...props }) => {
   });
 
   return (
-    <Tag {...(__css as any)} {...itemProps} role="listitem">
+    <Tag {...(__css as any)} {...itemProps} {...props} role="listitem">
       <TagLabel>{value}</TagLabel>
       <TagCloseButton onClick={onClick} />
     </Tag>
@@ -408,7 +413,7 @@ export const SelectClearButton = memo<IconButtonProps>((props) => {
 SelectClearButton.displayName = 'SelectClearButton';
 
 export const SelectedList = memo<SelectedListProps>(
-  ({ children, ...props }) => {
+  ({ children, selectedItemProps, ...props }) => {
     const {
       __css,
       textList,
@@ -434,6 +439,7 @@ export const SelectedList = memo<SelectedListProps>(
             <SelectedItem
               key={`selected-item-${selectedItem}`}
               value={selectedItem}
+              {...selectedItemProps}
             />
           ))}
         {shownAsText && !!selectedItems?.length && (
@@ -487,6 +493,7 @@ export const MultiSelect: FC<MultiSelectProps> = ({
   controlProps,
   listProps,
   selectedListProps,
+  selectedItemProps,
   actionGroupProps,
   ...props
 }) => {
@@ -494,7 +501,10 @@ export const MultiSelect: FC<MultiSelectProps> = ({
     <Select {...props}>
       {label && <SelectLabel {...labelProps}>{label}</SelectLabel>}
       <SelectControl {...controlProps}>
-        <SelectedList {...selectedListProps}>
+        <SelectedList
+          {...selectedListProps}
+          selectedItemProps={selectedItemProps}
+        >
           <SelectInput />
         </SelectedList>
         <SelectActionGroup {...actionGroupProps} />

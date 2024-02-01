@@ -4,12 +4,7 @@ import {
   FunctionOutputContext,
   FunctionOutputContextType,
 } from './function-output-context';
-import {
-  InputParam,
-  BootInfo,
-  BootInfoResult,
-  ZipperLocation,
-} from '@zipper/types';
+import { InputParam, BootInfo, ZipperLocation } from '@zipper/types';
 import { SmartFunctionOutputContext } from './smart-function-output-context';
 
 export const findFileInParsedScripts = (
@@ -59,7 +54,7 @@ export const useActionComponent = (
 
   const getBootInfo = async () => {
     if (bootInfo) return bootInfo;
-    const bootInfoResult: BootInfoResult = await fetch(bootInfoUrl, {
+    const bootInfoResult = await fetch(bootInfoUrl, {
       method: 'POST',
       body: '{}',
       headers: await getHeaders(),
@@ -67,8 +62,8 @@ export const useActionComponent = (
     }).then((res) => res.json());
 
     if (bootInfoResult.ok) {
-      setBootInfo(bootInfoResult.data);
-      return bootInfoResult.data;
+      setBootInfo(bootInfoResult.bootInfo);
+      return bootInfoResult;
     }
   };
 
@@ -89,12 +84,12 @@ export const useActionComponent = (
 
   const getScript = async () => {
     const inputs = await getInputsFromPath();
-    const defaultValues = inputs.reduce((defaultValuesSoFar, { key, type }) => {
+    const defaultValues = inputs.reduce((defaultValuesSoFar, { key, node }) => {
       const currentInput = inputs.find((i) => i.key === key);
       return currentInput
         ? {
             ...defaultValuesSoFar,
-            [`${key}:${type}`]: currentInput.value,
+            [`${key}:${node.type}`]: currentInput.value,
           }
         : defaultValuesSoFar;
     }, {});
