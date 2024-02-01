@@ -37,10 +37,10 @@ export function hasZipperEszipHeader(req: NextRequest) {
   return req.headers.get(X_ZIPPER_ESZIP_BUILD) === 'true';
 }
 
-export function addJsxPragma(code: string) {
+export function addJsxPragma(code: string, jsxFactory = 'Zipper.JSX') {
   return code.replace(
     /^/,
-    '/** @jsx Zipper.JSX.createElement @jsxFrag Zipper.JSX.Fragment */',
+    `/** @jsx ${jsxFactory}.createElement @jsxFrag ${jsxFactory}.Fragment */`,
   );
 }
 
@@ -62,14 +62,14 @@ export function applyTsxHack({
   isMain?: boolean;
 }): LoadResponseModule {
   const requiresJsxPragma =
-    shouldAddJsxPragma &&
-    !codeHasReact(code) &&
-    (isMain || specifier.endsWith('.tsx'));
+    shouldAddJsxPragma && (isMain || specifier.endsWith('.tsx'));
+
+  const jsxRoot = codeHasReact(code) ? 'React' : 'Zipper.JSX';
 
   return {
     specifier: isMain ? specifier.replace(/\.(ts|tsx)$|$/, '.tsx') : specifier,
     headers: TYPESCRIPT_CONTENT_HEADERS,
-    content: requiresJsxPragma ? addJsxPragma(code) : code,
+    content: requiresJsxPragma ? addJsxPragma(code, jsxRoot) : code,
     kind: 'module',
   };
 }

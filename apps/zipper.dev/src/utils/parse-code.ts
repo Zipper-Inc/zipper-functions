@@ -819,6 +819,36 @@ export function parseImports({ handlerFile, project }: ParseCode) {
   });
 }
 
+export function parseExports({ handlerFile, project }: ParseCode) {
+  const src = project?.getSourceFile(handlerFile);
+  if (!src) return [];
+  try {
+    return Array.from(src.getExportedDeclarations()).map(
+      ([name, [declartion]]) => {
+        if (!declartion) return;
+        const startPos = declartion.getStart();
+        const endPos = declartion.getEnd();
+        const { column: startColumn, line: startLine } =
+          src.getLineAndColumnAtPos(startPos);
+        const { column: endColumn, line: endLine } =
+          src.getLineAndColumnAtPos(endPos);
+        return {
+          specifier: name,
+          startLine,
+          startColumn,
+          startPos,
+          endLine,
+          endColumn,
+          endPos,
+        };
+      },
+    );
+  } catch (e) {
+    console.error('caught during parseExports', e);
+    return [];
+  }
+}
+
 export const USE_DIRECTIVE_REGEX = /^use\s/;
 export const USE_CLIENT_DIRECTIVE = 'use client';
 
@@ -840,9 +870,12 @@ export function parseDirectivePrologue({
     stripComments(src.getText()),
   );
 
-  const syntaxList = src?.getChildAtIndexIfKind(0, SyntaxKind.SyntaxList);
+  const syntaxList = srcWithoutComments?.getChildAtIndexIfKind(
+    0,
+    SyntaxKind.SyntaxList,
+  );
 
-  const rootNode = syntaxList || src;
+  const rootNode = syntaxList || srcWithoutComments;
 
   const maybeDirective = rootNode
     ?.getChildAtIndexIfKind(0, SyntaxKind.ExpressionStatement)
@@ -897,6 +930,7 @@ export async function parseFile({
   });
 
   const imports = parseImports({ handlerFile, project });
+  const exports = parseExports({ handlerFile, project });
 
   const comments = parseComments({ handlerFile, project });
   if (comments && inputs) {
@@ -927,6 +961,7 @@ export async function parseFile({
       ({ specifier }) => !isExternalImport(specifier),
     ),
     imports,
+    exports,
     directivePrologue,
   };
 }

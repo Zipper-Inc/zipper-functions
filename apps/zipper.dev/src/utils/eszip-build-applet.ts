@@ -14,10 +14,13 @@ import {
 } from './eszip-utils';
 import { getAppHashAndVersion } from './hashing';
 import {
+  USE_CLIENT_DIRECTIVE,
   createProjectFromCode,
   hasHandler,
   isClientModule,
   parseActions,
+  parseFile,
+  parseInputForTypes,
 } from './parse-code';
 import { prettyLog, PRETTY_LOG_TOKENS } from './pretty-log';
 import { readFrameworkFile } from './read-file';
@@ -102,6 +105,23 @@ export async function build({
 
   const fileUrlsToBundle = [frameworkEntrypointUrl, ...appFileUrls];
 
+  const parsedFilePromises = tsScripts.map((script) => {
+    const projectProps = createProjectFromCode(script?.code || '');
+    const promise = parseFile(projectProps).then((fileProps) => ({
+      filename: script.filename,
+      ...projectProps,
+      ...fileProps,
+    }));
+    return promise;
+  });
+
+  const parsedFiles = await Promise.all(parsedFilePromises).then((parsed) => {
+    return parsed.reduce((acc, curr) => {
+      if (curr) acc[curr.filename] = curr;
+      return acc;
+    }, {} as Record<string, Awaited<ReturnType<typeof parseFile>> & ReturnType<typeof createProjectFromCode> & { filename: string }>);
+  });
+
   const bundle = await eszip.build(fileUrlsToBundle, async (specifier) => {
     // if (__DEBUG__) console.debug(specifier);
     try {
@@ -113,16 +133,27 @@ export async function build({
           .replace(`${appFilesBaseUrl}/`, '')
           .replace(FILENAME_FORBIDDEN_CHARS_REGEX, '');
 
-        const script = tsScripts.find((s) => s.filename === filename);
+        const { exports, src, handlerFile, project, directivePrologue } =
+          parsedFiles[filename] || {};
 
-        const { src, handlerFile, project } = createProjectFromCode(
-          script?.code || '',
-        );
+        if (!src || !handlerFile)
+          throw new Error(`Could not find source for ${filename}`);
 
         let rewrittenCode = rewriteImports(src);
 
-        if (isClientModule({ handlerFile, project })) {
-          rewrittenCode = `/// <reference lib="dom" />\n${rewrittenCode}`;
+        if (directivePrologue === USE_CLIENT_DIRECTIVE) {
+          const injectUseClientPropertyIntoExports = exports
+            ?.map(
+              (exportName) =>
+                exportName && `${exportName.specifier}.__use_client = true;`,
+            )
+            .join('');
+
+          rewrittenCode = [
+            '/// <reference lib="dom" />',
+            rewrittenCode,
+            injectUseClientPropertyIntoExports,
+          ].join('\n');
         }
 
         if (hasHandler({ code: src.getFullText() })) {
@@ -139,6 +170,7 @@ export async function build({
           project,
           throwErrors: false,
         });
+
         const actionNames = Object.keys(actions || {});
 
         if (actionNames?.length) {
@@ -168,36 +200,6 @@ export async function build({
             isMain: specifier.endsWith('main.ts'),
           }),
           version,
-        };
-      }
-
-      /**
-       * Handle Zipper Framework Files
-       */
-      if (specifier.startsWith(baseUrl)) {
-        const filename = specifier.replace(`${baseUrl}/`, '');
-
-        let content = await getFrameworkFileContent(
-          app.slug,
-          filename,
-          tsScripts,
-        );
-
-        // Inject Env vars
-        ['PUBLICLY_ACCESSIBLE_RPC_HOST', 'HMAC_SIGNING_SECRET'].forEach(
-          (key) => {
-            content = content.replaceAll(
-              `Deno.env.get('${key}')`,
-              `'${process.env[key]}'`,
-            );
-          },
-        );
-
-        return {
-          kind: 'module',
-          specifier,
-          headers: TYPESCRIPT_CONTENT_HEADERS,
-          content,
         };
       }
 

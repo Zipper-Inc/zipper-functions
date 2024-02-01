@@ -643,7 +643,7 @@ declare namespace Zipper {
   }
 
   export namespace JSX {
-    export type Props = Record<string, Serializable>;
+    export type Props = Record<string, any>;
     export type Children = Component['children'][];
     export function createElement(
       component: (props?: Props) => Component,
