@@ -39,7 +39,6 @@ import HistoryTab from './tab-runs';
 import VersionsTab from './tab-versions';
 import { useRouter } from 'next/router';
 import { IconButton } from '@chakra-ui/react';
-
 import { FiChevronLeft, FiX } from 'react-icons/fi';
 import {
   useHelpMode,
