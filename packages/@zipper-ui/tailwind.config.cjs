@@ -11,7 +11,7 @@ import { fontFamily } from './src/tokens/fonts';
 
 /** @type {import('tailwindcss').Config} */
 const config = {
-  darkMode: ['class'],
+  darkMode: 'class',
   content: [
     './pages/**/*.{ts,tsx}',
     './components/**/*.{ts,tsx}',

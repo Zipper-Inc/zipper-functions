@@ -186,6 +186,9 @@ export function PlaygroundHeader({ app }: { app: AppQueryOutput }) {
 
           <Box
             bgColor={'blue.50'}
+            _dark={{
+              bgColor: 'blue.900',
+            }}
             alignItems={'center'}
             display={{ base: 'none', md: 'flex' }}
             px={2}
