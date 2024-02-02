@@ -25,6 +25,7 @@ import {
 import { prettyLog, PRETTY_LOG_TOKENS } from './pretty-log';
 import { readFrameworkFile } from './read-file';
 import { rewriteImports, Target } from './rewrite-imports';
+import { getZipperDotDevUrlForServer } from '~/server/utils/server-url.utils';
 
 const FILENAME_FORBIDDEN_CHARS_REGEX = /[^a-zA-Z0-9_.\-@$)]/;
 
@@ -145,7 +146,12 @@ export async function build({
           const injectUseClientPropertyIntoExports = exports
             ?.map(
               (exportName) =>
-                exportName && `${exportName.specifier}.__use_client = true;`,
+                exportName &&
+                `${exportName.specifier}.__use_client = true; ${
+                  exportName.specifier
+                }.__client_path = '${getZipperDotDevUrlForServer().origin}/${
+                  app.resourceOwner.slug
+                }/${app.slug}/src/${filename}';`,
             )
             .join('');
 
