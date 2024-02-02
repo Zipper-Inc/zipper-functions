@@ -107,6 +107,9 @@ const Header: React.FC<HeaderProps> = ({
                         <Flex
                           bgColor="blue.50"
                           alignItems="center"
+                          _dark={{
+                            bgColor: 'blue.900',
+                          }}
                           px={2}
                           py={1}
                         >
