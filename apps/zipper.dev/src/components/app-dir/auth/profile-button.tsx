@@ -78,7 +78,8 @@ const ProfileMenu = ({
   const toggleColorMode = useCallback(() => {
     const color = theme === 'dark' ? 'light' : 'dark';
     /** TO-DO: remove it when chakra's gone. */
-    return setTheme(color), setChakraColorMode(color);
+    setTheme(color);
+    setChakraColorMode(color);
   }, [setChakraColorMode, setTheme, theme]);
 
   return (

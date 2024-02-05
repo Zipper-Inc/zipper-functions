@@ -62,8 +62,8 @@ export const useActionComponent = (
     }).then((res) => res.json());
 
     if (bootInfoResult.ok) {
-      setBootInfo(bootInfoResult.bootInfo);
-      return bootInfoResult;
+      setBootInfo(bootInfoResult.bootInfo || bootInfoResult.data);
+      return bootInfoResult.bootInfo || bootInfoResult.data;
     }
   };
 

@@ -34,7 +34,6 @@ import {
   ChakraProvider,
   extendTheme,
   Flex,
-  useColorMode,
 } from '@chakra-ui/react';
 import Head from 'next/head';
 import { ReactNode } from 'react';
@@ -63,8 +62,6 @@ export const DefaultLayout = ({
   title,
   ...chakraProps
 }: DefaultLayoutProps) => {
-  const { colorMode } = useColorMode();
-
   return (
     <>
       <Head>
@@ -72,8 +69,8 @@ export const DefaultLayout = ({
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <ThemeProvider attribute="class" defaultTheme={colorMode} enableSystem>
-        <ChakraProvider theme={_theme}>
+      <ChakraProvider theme={_theme}>
+        <ThemeProvider>
           {/* <Fonts /> */}
           <>
             {header}
@@ -87,8 +84,8 @@ export const DefaultLayout = ({
               {children}
             </Flex>
           </>
-        </ChakraProvider>
-      </ThemeProvider>
+        </ThemeProvider>
+      </ChakraProvider>
 
       {process.env.NODE_ENV !== 'production' && (
         <ReactQueryDevtools initialIsOpen={false} />

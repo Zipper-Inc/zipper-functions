@@ -33,17 +33,24 @@ import SignedIn from './signed-in';
 import SignedOut from './signed-out';
 import SignInButton from './signInButton';
 import UserProfile from './userProfile';
+import { useCallback } from 'react';
+import { useTheme } from 'next-themes';
 
 export function UserProfileButton(props: { showAdditionalOptions?: boolean }) {
+  const { setTheme, theme } = useTheme();
+
   const userSettingsModal = useDisclosure();
   const feedbackModal = useDisclosure();
-  const { colorMode, setColorMode } = useColorMode();
-  const toggleColorMode = () => {
-    const newColor = colorMode === 'dark' ? 'light' : 'dark';
+  const { setColorMode: setChakraTheme } = useColorMode();
+
+  const toggleColorMode = useCallback(() => {
+    const newTheme = theme === 'dark' ? 'light' : 'dark';
     // also set it so that the docs site follows
-    localStorage.setItem('theme', newColor);
-    setColorMode(newColor);
-  };
+    localStorage.setItem('theme', newTheme);
+    setTheme(newTheme);
+    setChakraTheme(newTheme);
+  }, [setChakraTheme, setTheme, theme]);
+
   return (
     <>
       <SignedIn>
@@ -76,13 +83,13 @@ export function UserProfileButton(props: { showAdditionalOptions?: boolean }) {
               </MenuItem>
               <MenuItem onClick={toggleColorMode}>
                 <Stack gap={1} direction="row" alignItems="center">
-                  {colorMode === 'dark' ? (
+                  {theme === 'dark' ? (
                     <PiSunDuotone color="DarkGoldenRod" />
                   ) : (
                     <PiMoonDuotone color="DarkGoldenRod" />
                   )}
                   <Text>
-                    Switch to {colorMode === 'dark' ? 'light' : 'dark'} mode
+                    Switch to {theme === 'dark' ? 'light' : 'dark'} mode
                   </Text>
                 </Stack>
               </MenuItem>
