@@ -7,10 +7,13 @@ import Head from 'next/head';
 import SuperJSON from 'superjson';
 import SignedIn from '~/components/auth/signed-in';
 import EditorContextProvider from '~/components/context/editor-context';
-import { HelpModeProvider } from '~/components/context/help-mode-context';
+import { HelpModeProvider } from 'use-helper-inspector';
 import { DefaultLayout } from '~/components/default-layout';
 import Header from '~/components/header';
-import { Playground } from '~/components/playground/playground';
+import {
+  Playground,
+  inspectableComponents,
+} from '~/components/playground/playground';
 import { NextPageWithLayout } from '~/pages/_app';
 import { createContext } from '~/server/context';
 import { trpcRouter } from '~/server/routers/_app';
@@ -73,7 +76,7 @@ const PlaygroundPage: NextPageWithLayout<Props> = ({
       refetchApp={refetchApp}
       readOnly={appQuery.data.canUserEdit === false}
     >
-      <HelpModeProvider>
+      <HelpModeProvider inspectableComponents={inspectableComponents}>
         <Playground app={appQuery.data} filename={filename} tab={tab} />
       </HelpModeProvider>
     </EditorContextProvider>

@@ -27,7 +27,7 @@ import {
 } from '@chakra-ui/react';
 import React, { useEffect, useRef, useState } from 'react';
 import AddScriptForm from '~/components/playground/add-script-form';
-import { useHelpBorder } from '~/components/context/help-mode-context';
+import { useHelpBorder } from 'use-helper-inspector';
 
 import { Script } from '@prisma/client';
 import { trpc } from '~/utils/trpc';

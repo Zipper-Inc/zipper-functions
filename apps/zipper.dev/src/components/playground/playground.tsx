@@ -42,9 +42,9 @@ import { IconButton } from '@chakra-ui/react';
 import { FiChevronLeft, FiX } from 'react-icons/fi';
 import {
   useHelpMode,
-  inspectableComponents,
   useHelpBorder,
-} from '../context/help-mode-context';
+  type InspectableComponents,
+} from 'use-helper-inspector';
 
 import { FeedbackModal } from '~/components/auth/feedback-modal';
 import { ContactModal } from '~/components/playground/contact-modal';
@@ -517,3 +517,50 @@ function InspectUiHelpMode(props: { onClose: () => void }) {
     </Box>
   );
 }
+
+export const inspectableComponents: InspectableComponents = {
+  PlaygroundSidebar: {
+    name: 'Sidebar',
+    description:
+      'The Playground Sidebar is where you can find the code editor and the console.',
+  },
+  PlaygroundCode: {
+    name: 'Editor',
+    description: 'The Playground Code Editor is where you can write your code.',
+  },
+  PreviewPanel: {
+    name: 'Preview',
+    description: `(if lib file) Since you are not exporting a handler function, there's nothing important here.
+    (if handler) You can preview the generated form for your hander function's input and actually run it here to test it out.`,
+  },
+  ConsoleTab: {
+    name: 'Console',
+    description: `Anything that you send with console.* as well as save, deploy, and other messages and/or errors that come from Zipper will show up in your Console. `,
+  },
+  CodeTab: {
+    name: 'Code',
+    description: `Edit, run, and play with this applet's code in this section.`,
+  },
+  ScheduleTab: {
+    name: 'Schedule',
+    description:
+      'Use cron syntax or natural language to schedule a run for any handler in this applet.',
+  },
+  SecretsTab: {
+    name: 'Secrets',
+    description: `Secrets
+      Create and manage environment secrets of this applet. Access them with Deno.env.get('YOUR_SECRET').`,
+  },
+  RunsTab: {
+    name: 'Runs',
+    description: `View this applet's run history including inputs, outputs, and who ran it.`,
+  },
+  VersionsTab: {
+    name: 'Versions',
+    description: `Publish or rollback to any saved version of this applet..`,
+  },
+  SettingsTab: {
+    name: 'Settings',
+    description: `Change the name, description, and other settings of this applet.`,
+  },
+};

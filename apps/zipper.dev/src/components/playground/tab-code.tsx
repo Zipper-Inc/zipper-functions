@@ -14,7 +14,6 @@ import {
 } from '@chakra-ui/react';
 import { Script } from '@prisma/client';
 import { Markdown, useCmdOrCtrl } from '@zipper/ui';
-import { useSession } from 'next-auth/react';
 import dynamic from 'next/dynamic';
 import { useEffect, useRef, useState } from 'react';
 import { FiEye } from 'react-icons/fi';
@@ -22,10 +21,7 @@ import {
   AppEditSidebarContextType,
   AppEditSidebarProvider,
 } from '~/components/context/app-edit-sidebar-context';
-import {
-  useHelpBorder,
-  useHelpMode,
-} from '~/components/context/help-mode-context';
+import { useHelpBorder } from 'use-helper-inspector';
 import { AppEditSidebar } from '~/components/playground/app-edit-sidebar';
 import { ConnectorId } from '~/connectors/createConnector';
 import { useUser } from '~/hooks/use-user';
