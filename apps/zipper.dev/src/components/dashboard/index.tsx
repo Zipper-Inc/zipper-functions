@@ -294,7 +294,7 @@ export function Dashboard() {
                 alignItems="start"
                 gap={{ base: 10, xl: 16 }}
               >
-                <VStack flex={1} minW={320} alignItems="stretch">
+                <VStack flex={1} maxW={320} alignItems="stretch">
                   <HStack pb="4">
                     <Heading as="h6" fontWeight={400}>
                       Applets
