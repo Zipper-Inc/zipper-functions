@@ -21,8 +21,6 @@ import { useRouter } from 'next/router';
 import { useOrganizationList } from '~/hooks/use-organization-list';
 import { useUser } from '~/hooks/use-user';
 import { useOrganization } from '~/hooks/use-organization';
-import { trpc } from '~/utils/trpc';
-import { useSession } from 'next-auth/react';
 
 export const OrganizationSwitcher: React.FC<ButtonProps> = (props) => {
   // get the authed user's organizations from Clerk
@@ -30,25 +28,25 @@ export const OrganizationSwitcher: React.FC<ButtonProps> = (props) => {
     useOrganizationList();
   const { organization, role } = useOrganization();
 
-  const session = useSession();
-
-  const acceptInvitation = trpc.organization.acceptInvitation.useMutation();
-
   const { user } = useUser();
 
   const [hoverOrg, setHoverOrg] = useState<string | undefined | null>(
     undefined,
   );
 
-  const allWorkspaces = [
-    {
-      organization: {
-        id: null,
-        name: 'Personal Workspace',
-        slug: user?.username,
-      },
-      pending: false,
+  const personalWorkspace = {
+    organization: {
+      id: null,
+      name: 'Personal Workspace',
+      slug: user?.username,
     },
+    pending: false,
+  };
+
+  const allWorkspaces = [
+    ...(organizationList?.some((o) => o.organization.id === null)
+      ? []
+      : [personalWorkspace]),
     ...(organizationList || []),
   ];
 
