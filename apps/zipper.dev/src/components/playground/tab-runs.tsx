@@ -128,7 +128,12 @@ const HistoryTab: React.FC<HistoryTabProps> = ({ appId }) => {
     //run by
     columnHelper.accessor(
       (row) => {
-        return `${row.user?.name || 'Anonymous user'}`;
+        return `${
+          row.user.name ||
+          row.user.slug ||
+          row.user.displayName ||
+          'Anonymous user'
+        }`;
       },
       {
         id: 'user',
