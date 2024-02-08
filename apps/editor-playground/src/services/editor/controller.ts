@@ -76,6 +76,10 @@ const editorController = () => {
         id: crypto.randomUUID(),
       } satisfies Editor['File']
 
+      const existingFile = files.get().find(_file => _file.filename === fileData.filename)
+
+      if (existingFile) throw new Error('Invalid file name: this file already exists.')
+
       setStorageFiles([...files.get(), fileData])
   
       files.set(prev => [...prev, fileData])

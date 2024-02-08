@@ -14,7 +14,9 @@ export default function Home(props: { searchParams: { file: string } }) {
         <Tabs />
         <Editor filename={props.searchParams.file} />
       </div>
-      <div className="col-span-2 bg-purple-900 h-full"></div>
+      <div className="col-span-2 bg-purple-900 h-full">
+        preview goes here
+      </div>
     </main>
   );
 }
