@@ -1,10 +1,12 @@
 import { editor, Uri } from 'monaco-editor';
-import { Editor as ReactMonacoEditor } from '@monaco-editor/react';
+import { Editor as ReactMonacoEditor, useMonaco } from '@monaco-editor/react';
+import { useHotkeys } from 'react-hotkeys-hook';
 
 type EditorOptions = editor.IStandaloneEditorConstructionOptions;
 
 export type EditorProps = {
   currentFile?: { filename: string; code: string };
+  onSave?: (model: editor.IModel) => void;
   monaco?: {
     defaultOptions?: EditorOptions;
   };
@@ -22,6 +24,40 @@ type MonacoStore = {
 };
 
 export const Editor = (props: EditorProps) => {
+  const monaco = useMonaco();
+
+  useHotkeys(
+    'ctrl+s',
+    (e) => {
+      e.preventDefault();
+      const model = monaco?.editor.getModels()[0];
+      if (props.onSave && model) {
+        props.onSave(model);
+      }
+    },
+    {
+      enableOnContentEditable: true,
+      enableOnFormTags: true,
+    },
+    [monaco],
+  );
+
+  useHotkeys(
+    'meta+s', // cmd+s
+    (e) => {
+      e.preventDefault();
+      const model = monaco?.editor.getModels()[0];
+      if (props.onSave && model) {
+        props.onSave(model);
+      }
+    },
+    {
+      enableOnContentEditable: true,
+      enableOnFormTags: true,
+    },
+    [monaco],
+  );
+
   return (
     <ReactMonacoEditor
       beforeMount={(monaco) => {

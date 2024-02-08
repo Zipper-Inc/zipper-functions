@@ -130,6 +130,19 @@ const editorController = () => {
       if (isOpenedFile && activeFilename === isOpenedFile.filename) {
         router.replace(`?file=${new_file_name}`)
       }
+    },
+
+    onSaveFile : (file_id: string, code: string) => {
+      const updatedFiles = files.get().map(file => {
+        if (file.id === file_id) {
+          return {...file, code}
+        }
+
+        return file
+      })
+
+      files.set(updatedFiles)
+      setStorageFiles(updatedFiles)
     }
   }
   
