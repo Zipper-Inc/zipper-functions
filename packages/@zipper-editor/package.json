@@ -1,6 +1,12 @@
 {
   "name": "@zipper/editor",
   "version": "1.0.0",
-  "main": "./src/main.ts",
-  "dependencies": {}
+  "main": "./src/index.ts",
+  "dependencies": {
+    "@monaco-editor/react": "^4.6.0"
+  },
+  "devDependencies": {
+    "@shikijs/monaco": "^1.0.0-beta.6",
+    "shiki": "^1.0.0-beta.6"
+  }
 }
