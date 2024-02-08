@@ -47,7 +47,7 @@ export const Editor = (props: EditorProps) => {
       }}
       defaultLanguage="typescript"
       path={props.currentFile?.filename}
-      value={props.currentFile?.code}
+      defaultValue={props.currentFile?.code}
       options={{
         minimap: { enabled: false },
         scrollbar: { vertical: 'auto', horizontal: 'hidden' },

@@ -12,9 +12,9 @@ export const Editor = ({ filename }: { filename: string }) => {
   );
 
   // Missing pieces:
-  // - Save buffer after 1 second of inactivity or on blur?
   // - Save buffer to local storage on ctrl+s
   // - Format on save
+  // - Mark tab as dirty on change
   // - Fix editor height to fit the screen
   //   - Context: we dont want scrollbar on the page, currenly hacking using overflow-none
   return <ZipperEditor currentFile={currentFile} />;
