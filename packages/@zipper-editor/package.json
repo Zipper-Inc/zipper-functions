@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "main": "./src/index.ts",
   "dependencies": {
-    "@monaco-editor/react": "^4.6.0"
+    "@monaco-editor/react": "^4.6.0",
+    "prettier": "^3.2.5",
+    "react-hotkeys-hook": "^4.5.0",
+    "react-use-hotkeys": "^1.1.2"
   },
-  "devDependencies": {
-    "@shikijs/monaco": "^1.0.0-beta.6",
-    "shiki": "^1.0.0-beta.6"
-  }
+  "devDependencies": {}
 }
