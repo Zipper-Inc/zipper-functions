@@ -6,7 +6,6 @@ import { enableReactComponents } from '@legendapp/state/config/enableReactCompon
 import { Edit, Trash } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { useMemo } from 'react';
 
 const formState = observable({
   filename: '',

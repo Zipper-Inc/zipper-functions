@@ -3063,10 +3063,10 @@
   dependencies:
     "@segment/analytics-node" "^1.1.0"
 
-"@legendapp/state@^2.1.5":
-  version "2.1.5"
-  resolved "https://registry.npmjs.org/@legendapp/state/-/state-2.1.5.tgz"
-  integrity sha512-J/jlqsvqp4u1mTP/VR5aMJAW6yYJlj6Dttd9weGrbVQiMj1s3oKWdhXLeqVXYH8HCibzdv0glKo4VGc6YetF5Q==
+"@legendapp/state@^2.1.6":
+  version "2.1.6"
+  resolved "https://registry.yarnpkg.com/@legendapp/state/-/state-2.1.6.tgz#73ed3e9775c10a306346d3df2beb556476823d14"
+  integrity sha512-SX32smwBEyrXH05pepPEiYyluNHR0Gz4wDzIV726phBcvTxEtPN6RP1OOek3TP//vyP7jNY0uEsM3w8X5b43Fw==
   dependencies:
     use-sync-external-store "^1.2.0"
 

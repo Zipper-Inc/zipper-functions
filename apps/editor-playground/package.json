@@ -9,12 +9,12 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@legendapp/state": "^2.1.5",
+    "@legendapp/state": "^2.1.6",
+    "@zipper/editor": "*",
     "lucide-react": "^0.323.0",
     "next": "14.1.0",
     "react": "^18",
-    "react-dom": "^18",
-    "@zipper/editor": "*"
+    "react-dom": "^18"
   },
   "devDependencies": {
     "@types/node": "^20",
