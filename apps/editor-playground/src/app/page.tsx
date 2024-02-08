@@ -1,18 +1,20 @@
+import { Editor } from '@/components/components/modules/files/editor';
 import { FilesForm } from '@/components/components/modules/files/form';
 import { List } from '@/components/components/modules/files/list';
 import { Tabs } from '@/components/components/modules/files/tabs';
-import { editorController } from '@/services/editor/controller';
-import { useObserve, useObservable, Reactive } from '@legendapp/state/react';
-import Image from 'next/image';
 
-export default function Home() {
+export default function Home(props: { searchParams: { file: string } }) {
   return (
-    <main className='flex items-start'>
-      <div className="max-w-lg">
+    <main className="grid grid-cols-6 h-screen">
+      <div className="col-span-1 h-full p-2">
         <FilesForm />
         <List />
       </div>
-      <Tabs />
+      <div className="col-span-3 h-full bg-red-500 p-2">
+        <Tabs />
+        <Editor filename={props.searchParams.file} />
+      </div>
+      <div className="col-span-2 bg-purple-900 h-full"></div>
     </main>
   );
 }

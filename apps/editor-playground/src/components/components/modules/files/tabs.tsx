@@ -1,7 +1,9 @@
 'use client';
 import { editorController } from '@/services/editor/controller';
+import { X } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
+
 
 export const Tabs = () => {
   const { get, onCloseFileTab } = editorController();
@@ -10,7 +12,7 @@ export const Tabs = () => {
   const currentOpenedFile = params.get('file');
 
   return (
-    <nav className="flex items-center gap-2">
+    <nav className="flex items-center gap-2 bg-green-500 h-10">
       {get('tabs').data.map((tab) => (
         <div key={tab.file_id} className='flex items-center gap-2'>
         <Link
@@ -28,7 +30,7 @@ export const Tabs = () => {
               onCloseFileTab(tab.file_id);
             }}
           >
-            X
+            <X />
           </button>
         </div>
       ))}
