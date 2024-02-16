@@ -198,7 +198,7 @@ const emptyApps: App[] = [];
 
 export function Dashboard() {
   const [tabIndex, setTabIndex] = useState(0);
-  const { organization } = useOrganization();
+  const { organization, role } = useOrganization();
   const [appSearchTerm, setAppSearchTerm] = useState('');
 
   const appQuery = trpc.app.byAuthedUser.useQuery({
@@ -276,9 +276,15 @@ export function Dashboard() {
             overflowX="auto"
           >
             <HStack spacing={2} w="full">
-              {tabs.map((tab) => {
-                return <TabButton key={tab} title={tab} />;
-              })}
+              {tabs
+                .filter(
+                  (tab) =>
+                    !(tab === 'People' && role !== 'admin') &&
+                    !(organization && tab === 'Settings' && role !== 'admin'),
+                )
+                .map((tab) => (
+                  <TabButton key={tab} title={tab} />
+                ))}
             </HStack>
           </TabList>
           <TabPanels>
@@ -289,7 +295,7 @@ export function Dashboard() {
                 alignItems="start"
                 gap={{ base: 10, xl: 16 }}
               >
-                <VStack flex={1} minW={320} alignItems="stretch">
+                <VStack flex={1} maxW={320} alignItems="stretch">
                   <HStack pb="4">
                     <Heading as="h6" fontWeight={400}>
                       Applets
