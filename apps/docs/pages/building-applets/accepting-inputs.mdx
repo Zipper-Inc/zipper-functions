@@ -131,3 +131,34 @@ export async function handler({ file }: { file: Zipper.FileUrl }) {
   return <img src={file} />;
 }
 ```
+
+# Importing Inputs
+
+You can also import inputs from other applets. This is useful when you want to reuse inputs from another applet.
+
+```typescript
+// zipper.dev/john-doe/greeting/main.ts
+export type Input = {
+  name: string;
+  day:
+    | 'monday'
+    | 'tuesday'
+    | 'wednesday'
+    | 'thursday'
+    | 'friday'
+    | 'saturday'
+    | 'sunday';
+};
+
+export async function handler(input: Input) {
+  return `Hello, ${input.name}, have a good ${input.day}!`;
+}
+
+// zipper.dev/jane-doe/greeting/goodbye.ts
+// The URL is the path to the applet file that you want to import from.
+import { Input as GreetingInput } from 'https://zipper.dev/john-doe/greeting/main.ts';
+
+export async function handler(input: Input) {
+  return `Goodbye, ${input.name} have a good ${input.day}!`;
+}
+```
