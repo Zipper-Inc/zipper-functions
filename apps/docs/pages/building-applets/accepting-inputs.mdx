@@ -118,3 +118,16 @@ type Inputs = {
 ```
 
 ![any input](public/images/input-any.png)
+
+### Zipper.FileUrl
+
+With `Zipper.FileUrl` you can upload a file to Zipper and use the uploaded file url in your applet.
+
+For example, you can create a applet which accepts image files and show it.
+
+```typescript
+export async function handler({ file }: { file: Zipper.FileUrl }) {
+  // file is: https://utfs.io/f/<file-id>.<file-extension>
+  return <img src={file} />;
+}
+```
