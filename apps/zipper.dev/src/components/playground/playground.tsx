@@ -264,7 +264,7 @@ export function Playground({
             )}
           </TabList>
           {/* TAB PANELS */}
-          <TabPanels as={VStack} alignItems="stretch" h="full" spacing={0}>
+          <TabPanels as={VStack} alignItems="stretch" spacing={0}>
             {/* CODE */}
             <TabPanel
               position="relative"
