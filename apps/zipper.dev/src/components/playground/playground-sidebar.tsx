@@ -165,20 +165,23 @@ export function PlaygroundSidebar({
     <>
       <VStack
         alignItems="stretch"
-        background={bgGradient}
-        color="bgColor"
         flex={1}
-        paddingX={2}
-        paddingY={4}
+        // paddingX={2}
         spacing={4}
-        boxShadow="lg"
         mr={{ base: '0', xl: 2 }}
         onMouseEnter={onMouseEnter('PlaygroundSidebar')}
         onMouseLeave={onMouseLeave()}
         outline={style('PlaygroundSidebar').border}
       >
-        <HStack px={3}>
-          <Text size="sm" flexGrow={1} fontWeight="medium">
+        <HStack
+          px={3}
+          color="fg.600"
+          bg="fg.100"
+          h={9}
+          width="full"
+          rounded="2px"
+        >
+          <Text fontSize="14px" flexGrow={1} fontWeight="medium">
             Files
           </Text>
           {app.canUserEdit && (
@@ -230,21 +233,31 @@ export function PlaygroundSidebar({
       </VStack>
       <VStack mr={{ base: '0', xl: 2 }} overflowY="auto" h="full" paddingY={4}>
         <Show when={!!tutorials[0]?.startLine}>
-          <Accordion defaultIndex={[0]} allowMultiple width="100%">
+          <Accordion
+            defaultIndex={[0]}
+            allowMultiple
+            border="transparent"
+            width="100%"
+          >
             <AccordionItem>
               <h2>
-                <AccordionButton bg="fg.100" _hover={{ bg: 'fg.200' }} h={6}>
+                <AccordionButton
+                  color="fg.600"
+                  px={3}
+                  bg="fg.100"
+                  h={9}
+                  rounded="2px"
+                >
                   <Box
                     as="span"
                     flex="1"
                     textAlign="left"
-                    fontSize="sm"
-                    color="fg.600"
-                    fontWeight="bold"
-                    textTransform="uppercase"
+                    fontWeight="medium"
+                    fontSize="14px"
                   >
                     Guide
                   </Box>
+
                   <AccordionIcon />
                 </AccordionButton>
               </h2>
@@ -255,6 +268,8 @@ export function PlaygroundSidebar({
                     p={3}
                     gap={3}
                     color="fg.400"
+                    borderBottom="1px solid"
+                    borderColor="fg.200"
                     bg={
                       doc.index === selectedTutorial.index
                         ? colorMode === 'dark'
