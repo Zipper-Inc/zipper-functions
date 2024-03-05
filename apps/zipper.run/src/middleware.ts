@@ -1,4 +1,3 @@
-// middleware.ts
 import { NextRequest, NextResponse } from 'next/server';
 import serveRelay, { serveNonBrowserRelay } from './utils/relay-middleware';
 import jsonHandler from './api-handlers/json.handler';
