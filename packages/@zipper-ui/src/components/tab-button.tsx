@@ -33,10 +33,22 @@ export const TabButton: React.FC<TabButtonProps> = ({
     <Tab
       px={4}
       py={2}
+      fontWeight="medium"
+      position="relative"
+      rounded="2px"
       _selected={{
         backgroundColor,
-        fontWeight: 'bold',
         textColor,
+        _after: {
+          position: 'absolute',
+          height: '1px',
+          content: "''",
+          width: '100%',
+          bottom: '-1rem',
+          left: 0,
+          background: 'primary',
+          zIndex: 20,
+        },
       }}
       _hover={{
         backgroundColor,

@@ -10,6 +10,8 @@ import {
   Link,
   Icon,
   useColorModeValue,
+  Box,
+  IconButton,
 } from '@chakra-ui/react';
 import NextLink from 'next/link';
 import { Script } from '@prisma/client';
@@ -31,6 +33,7 @@ import {
   isReadme,
 } from '~/utils/playground.utils';
 import { useEditorContext } from '../context/editor-context';
+import { brandColors, theme } from '@zipper/ui';
 
 export type ScriptItemProps = {
   script: Script;
@@ -46,7 +49,10 @@ export type ScriptItemProps = {
 };
 
 const ScriptIcon = ({ script, ...propsPassedIn }: { script: Script } & any) => {
-  const props = { ...propsPassedIn, size: '14px' };
+  const props = {
+    ...propsPassedIn,
+    size: '14px',
+  };
   if (isReadme(script)) return <PiNote {...props} />;
   else if (isMain(script)) return <PiCode {...props} size="16px" />;
   else if (isHandler(script)) return <PiCodeSimpleDuotone {...props} />;
@@ -79,18 +85,19 @@ export const ScriptItem: React.FC<ScriptItemProps> = ({
   const isDirty = isModelDirty(script.filename);
   const hasErrors = modelHasErrors(script.filename);
 
-  const highlightColor = useColorModeValue('blackAlpha.400', 'whiteAlpha.400');
+  const highlightColor = useColorModeValue('primary.50', 'purple.900');
   const errorColor = useColorModeValue('red.400', 'red.600');
+
+  const isSelected = currentScript?.id === script.id;
 
   return (
     <HStack
       px={3}
       py={isRenaming ? 0 : 1}
-      background={
-        currentScript?.id === script.id ? highlightColor : 'transparent'
-      }
+      rounded="2px"
+      background={isSelected ? highlightColor : 'transparent'}
       _hover={{
-        background: highlightColor,
+        background: isSelected ? highlightColor : 'fg.50',
       }}
       role="group"
     >
@@ -132,21 +139,17 @@ export const ScriptItem: React.FC<ScriptItemProps> = ({
             setCurrentScript(script);
           }}
         >
-          <Flex
-            cursor="pointer"
-            gap={2}
-            alignItems="center"
-            alignContent="center"
-            align="center"
-          >
-            <Flex justify="center" align="center" w="4">
-              <ScriptIcon script={script} />
-            </Flex>
+          <Flex cursor="pointer" gap={2} alignItems="center">
+            <Box as="figure" color={isSelected ? 'primary.600' : undefined}>
+              <ScriptIcon isSelected={isSelected} script={script} />
+            </Box>
             <Text
               fontWeight={isDirty || hasErrors ? 900 : 'normal'}
-              fontSize="xs"
-              fontFamily="mono"
-              color={hasErrors ? errorColor : 'inherit'}
+              fontSize="sm"
+              // fontFamily="mono"
+              color={
+                hasErrors ? errorColor : isSelected ? 'primary.600' : 'inherit'
+              }
             >
               {script.filename === 'readme.md' ? 'README.md' : script.filename}
             </Text>
@@ -155,7 +158,12 @@ export const ScriptItem: React.FC<ScriptItemProps> = ({
       )}
       {canUserEdit && (
         <Menu>
-          <MenuButton as={Text}>
+          <MenuButton
+            as={IconButton}
+            size="xs"
+            colorScheme={isSelected ? 'purple' : 'fg'}
+            variant="link"
+          >
             <Icon
               as={PiDotsThreeVerticalBold}
               fontSize="xs"
@@ -168,7 +176,7 @@ export const ScriptItem: React.FC<ScriptItemProps> = ({
               }}
             />
           </MenuButton>
-          <MenuList color="chakra-body-text">
+          <MenuList color="chakra-body-text" fontSize="14px" rounded="2px">
             <MenuItem onClick={() => onDuplicate(script.id)}>
               Duplicate
             </MenuItem>
