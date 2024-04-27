@@ -11,7 +11,6 @@ import {
   Button,
   Dropdown,
   List,
-  Show,
   ZipperLogo,
   ZipperSymbol,
 } from '@zipper/ui';
@@ -24,6 +23,7 @@ import { useOrganizationList } from '~/hooks/use-organization-list';
 import { HiOutlineChevronUpDown } from 'react-icons/hi2';
 import { ChevronRightIcon } from '@radix-ui/react-icons';
 import { CreateOrganizationModal } from '~/components/auth/createOrganizationModal';
+import { Show } from '@zipper/tw/ui/modules/show';
 
 /* -------------------------------------------- */
 /* Constants                                    */
@@ -36,6 +36,21 @@ const DASHBOARD_ROUTES = [
   { href: '/docs', text: 'Docs' },
   { href: '/blog', text: 'Blog' },
 ];
+
+const ROUTES = {
+  DASHBOARD: [
+    { label: 'Gallery', path: '/gallery-new' },
+    { label: 'Changelog', path: '/changelog' },
+    { label: 'Docs', path: '/docs' },
+  ],
+  LANDING: [
+    { label: 'Gallery', path: '/gallery-new' },
+    { label: 'About', path: '/about' },
+    { label: 'Changelog', path: '/changelog' },
+    { label: 'Docs', path: '/docs' },
+    { label: 'Blog', path: '/blog' },
+  ],
+};
 
 /* -------------------------------------------- */
 /* Components                                   */
@@ -276,7 +291,7 @@ const Header: React.FC<HeaderProps> = ({
             </div>
             {!isTablet && (
               <MobileMenu
-                navRoutes={DASHBOARD_ROUTES}
+                navRoutes={ROUTES.DASHBOARD}
                 feedbackModal={user ? feedbackModal : null}
               />
             )}

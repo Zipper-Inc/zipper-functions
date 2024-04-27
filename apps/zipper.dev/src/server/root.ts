@@ -2,20 +2,34 @@ import { TRPCError, initTRPC } from '@trpc/server';
 import superjson from 'superjson';
 import { Context } from './context';
 import { hasOrgAdminPermission } from './utils/authz.utils';
+import { ZodError } from 'zod';
+import { getSession } from 'next-auth/react';
+import { CreateNextContextOptions } from '@trpc/server/adapters/next';
+import { Session } from 'next-auth';
 
 const t = initTRPC.context<Context>().create({
   transformer: superjson,
-  // Optional:
-  // errorFormatter(opts) {
-  //   const { shape } = opts;
-  //   return {
-  //     ...shape,
-  //     data: {
-  //       ...shape.data,
-  //     },
-  //   };
-  // },
+  errorFormatter({ shape, error }) {
+    return {
+      ...shape,
+      data: {
+        ...shape.data,
+        zodError:
+          error.cause instanceof ZodError ? error.cause.flatten() : null,
+      },
+    };
+  },
 });
+
+export const createTRPCContext = async (
+  opts: Partial<CreateNextContextOptions>,
+) => {
+  const session = await getSession({ req: opts.req });
+
+  return {
+    session,
+  };
+};
 
 const enforceAuth = t.middleware(({ ctx, next }) => {
   if (!ctx.userId) {

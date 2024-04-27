@@ -1,0 +1,242 @@
+
+{
+    "applet_id": "roundest-pokemon",
+    "applet_name": "Roundest Pokemon",
+    "description": "An applet to determine the roundest Pokemon by allowing users to vote between two randomly selected Pokemon.",
+    "scripts": [
+        {
+            "script_id": "main",
+            "script_name": "Main Handler",
+            "language": "TypeScript",
+            "purpose": "Displays two Pokemon and allows users to vote for the roundest one.",
+            "code": `import { getPokemons, getPokemonPair } from "./utils.ts";
+
+export async function handler() {
+  let pokemonsList;
+  const pokemonsStorage = (await Zipper.storage.get<[]>("pokemons")) || [];
+  if (!pokemonsStorage.length) {
+    pokemonsList = await getPokemons();
+    Zipper.storage.set("pokemons", pokemonsList);
+  } else {
+    pokemonsList = pokemonsStorage;
+  }
+
+  const [firstPokemon, secondPokemon] = await getPokemonPair();
+
+  return (
+    <Stack>
+      <h1>Which pokemon is the roundest?</h1>
+      <Stack direction="row" align="center" gap="20px">
+        <Stack width="200px" align="center">
+          <h3>{firstPokemon.name}</h3>
+          <img src={firstPokemon.spriteUrl} width="200" height="200" />
+          <Button
+            path="vote"
+            showAs="refresh"
+            inputs={{ pokemonId: firstPokemon.id }}
+          >
+            vote
+          </Button>
+        </Stack>
+        vs
+        <Stack width="200px" align="center">
+          <h3>{secondPokemon.name}</h3>
+          <img src={secondPokemon.spriteUrl} width="200" height="200" />
+          <Button
+            path="vote"
+            showAs="refresh"
+            inputs={{ pokemonId: secondPokemon.id }}
+          >
+            vote
+          </Button>
+        </Stack>
+      </Stack>
+      <Button path="results" showAs="modal">
+        See results
+      </Button>
+    </Stack>
+  );
+}
+
+export const config: Zipper.HandlerConfig = {
+  run: true,
+};
+`
+        },
+        {
+            "script_id": "results",
+            "script_name": "Results Handler",
+            "language": "TypeScript",
+            "purpose": "Displays the results of the votes for the roundest Pokemon.",
+            "code": `export async function handler() {
+  const pokemons = await Zipper.storage.get<any>("pokemons");
+
+  // Sort all pokemon by descending vote count
+  pokemons.sort((a, b) => b.votes - a.votes);
+
+  return pokemons.map((p) => {
+    return {
+      id: p.id,
+      name: p.name,
+      votes: p.votes,
+    };
+  });
+}
+`
+        },
+        {
+            "script_id": "vote",
+            "script_name": "Vote Handler",
+            "language": "TypeScript",
+            "purpose": "Handles the voting logic for the roundest Pokemon.",
+            "code": `export async function handler({ pokemonId }: { pokemonId: number }) {
+  return voteForPokemon(pokemonId);
+}
+
+export async function voteForPokemon(pokemonId: number) {
+  // Get the current list of pokemon
+  const pokemons = await Zipper.storage.get<any>("pokemons");
+
+  // Find the pokemon object the user is voting for
+  const pokemonVotedFor = pokemons.find((p) => p.id === pokemonId);
+
+  // Increment vote count
+  const previousVotes = pokemonVotedFor.votes || 0;
+  pokemonVotedFor.votes = previousVotes + 1;
+
+  // update the list with the voted pokemon
+  // Update pokemon list
+  const index = pokemons.findIndex((p) => p.id === pokemonId);
+  pokemons[index] = pokemonVotedFor;
+
+  // Save updated list
+  await Zipper.storage.set("pokemons", pokemons);
+
+  return pokemons;
+}
+`
+        },
+        {
+            "script_id": "utils",
+            "script_name": "Utility Functions",
+            "language": "TypeScript",
+            "purpose": "Provides utility functions for fetching and managing Pokemon data.",
+            "code": `
+            export const MAX_DEX_ID = 493;
+
+export const getPokemons = async (): Promise<[]> => {
+  const pokemonsRequest = await fetch(
+    " https://pokeapi.co/api/v2/pokemon?limit=493&offset=0"
+  );
+  const allPokemons = await pokemonsRequest.json();
+
+  const formattedPokemon = allPokemons.results.map((p, index) => ({
+    id: index + 1,
+    name: (p as { name: string }).name,
+    spriteUrl: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${
+      index + 1
+    }.png`,
+    votes: 0,
+  }));
+
+  return formattedPokemon;
+};
+
+export const getRandomPokemon: (notThisOne?: number) => number = (
+  notThisOne
+) => {
+  const pokedexNumber = Math.floor(Math.random() * MAX_DEX_ID) + 1;
+
+  if (pokedexNumber !== notThisOne) return pokedexNumber;
+  return getRandomPokemon(notThisOne);
+};
+
+export const getOptionsForVote = () => {
+  const firstId = getRandomPokemon();
+  const secondId = getRandomPokemon(firstId);
+
+  return [firstId, secondId];
+};
+
+export const getPokemonPair = async () => {
+  const [firstId, secondId] = getOptionsForVote();
+
+  // find them in storage
+  const pokemons = await Zipper.storage.get<any>("pokemons");
+
+  const firstPokemon = pokemons.find((p) => p.id === firstId);
+  const secondPokemon = pokemons.find((p) => p.id === secondId);
+
+  return [firstPokemon, secondPokemon];
+};
+`
+        }
+    ],
+    "zipper_uses": [
+        {
+            "component": "Zipper.storage",
+            "description": "Used for storing and retrieving Pokemon data and votes."
+        },
+        {
+            "component": "Zipper.button",
+            "description": "Used for creating voting buttons and a button to view results."
+        }
+    ],
+    "user_interactions": [
+        {
+            "action": "vote",
+            "description": "Users vote for one of two Pokemon to decide which is rounder."
+        },
+        {
+            "action": "view_results",
+            "description": "Users can view the results of the voting."
+        }
+    ]
+},
+{
+    "applet_id": "screenshot-applet",
+    "applet_name": "Screenshot",
+    "description": "An applet that generates a screenshot of a given URL. It supports multiple formats and handles requests with browser-like user agents.",
+    "scripts": [
+        {
+            "script_id": "main",
+            "script_name": "Main Handler",
+            "language": "TypeScript",
+            "purpose": "Generates a render link for a given URL and redirects the user to the screenshot.",
+            "code": "/* main.ts code here */"
+        },
+        {
+            "script_id": "test",
+            "script_name": "Test Handler",
+            "language": "TypeScript",
+            "purpose": "Tests the screenshot generation by creating a sample output image.",
+            "code": "/* test.ts code here */"
+        }
+    ],
+    "zipper_uses": [
+        {
+            "component": "Zipper.Router.redirect",
+            "description": "Redirects the user to the generated screenshot link."
+        },
+        {
+            "component": "Zipper.Router.notFound",
+            "description": "Returns a not-found response in case of an error or invalid URL."
+        }
+    ],
+    "user_interactions": [
+        {
+            "action": "generate_screenshot",
+            "description": "Users can generate screenshots of specified URLs in various formats."
+        }
+    ],
+    "external_libraries": [
+        {
+            "library": "Urlbox",
+            "purpose": "Used for generating the actual screenshot of the URL."
+        },
+        {
+            "library": "Bowser",
+            "purpose": "Used for parsing the user agent to check for browser-like properties."
+        }
+    ]
+}

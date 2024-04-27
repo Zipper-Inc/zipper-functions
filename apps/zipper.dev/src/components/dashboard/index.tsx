@@ -1,4 +1,5 @@
-import { RouterOutputs, trpc } from '~/utils/trpc';
+import { RouterOutputs } from '~/utils/trpc';
+import { api as trpc } from '~/server/react';
 import {
   TableContainer,
   Text,

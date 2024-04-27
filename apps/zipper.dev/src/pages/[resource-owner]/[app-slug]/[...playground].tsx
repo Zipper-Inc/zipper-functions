@@ -4,6 +4,7 @@ import { TRPCError } from '@trpc/server';
 import { NOT_FOUND, UNAUTHORIZED } from '@zipper/utils';
 import { GetServerSideProps, GetServerSidePropsContext } from 'next';
 import Head from 'next/head';
+
 import SuperJSON from 'superjson';
 import SignedIn from '~/components/auth/signed-in';
 import EditorContextProvider from '~/components/context/editor-context';
@@ -15,7 +16,8 @@ import { NextPageWithLayout } from '~/pages/_app';
 import { createContext } from '~/server/context';
 import { trpcRouter } from '~/server/routers/_app';
 import { parsePlaygroundQuery, Props } from '~/utils/playground.utils';
-import { trpc } from '~/utils/trpc';
+
+import { api as trpc } from '~/server/react';
 
 const PlaygroundPage: NextPageWithLayout<Props> = ({
   resourceOwnerSlug,
@@ -99,11 +101,12 @@ export const getServerSideProps: GetServerSideProps = async ({
   res,
   query,
 }: GetServerSidePropsContext) => {
+  const ctx = await createContext({ req, res });
   const props = parsePlaygroundQuery(query);
   const ssg = createServerSideHelpers({
     router: trpcRouter,
     transformer: SuperJSON,
-    ctx: await createContext({ req, res }),
+    ctx,
   });
 
   try {
@@ -128,7 +131,6 @@ export const getServerSideProps: GetServerSideProps = async ({
   return { props: { ...props, trpcState: ssg.dehydrate() } };
 };
 
-PlaygroundPage.skipAuth = true;
 PlaygroundPage.header = () => <></>;
 PlaygroundPage.getLayout = (page) => (
   <DefaultLayout header={<></>} p="0" h="full" w="full">

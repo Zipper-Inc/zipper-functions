@@ -17,7 +17,6 @@ import {
   List,
   cn,
   Textarea,
-  Show,
 } from '@zipper/ui';
 import { generateDefaultSlug } from '~/utils/generate-default';
 import { useForm } from 'react-hook-form';
@@ -33,6 +32,7 @@ import { useOrganizationList } from '~/hooks/use-organization-list';
 import { useRouter } from 'next/router';
 import { getEditAppletLink } from '@zipper/utils';
 import { toast } from 'sonner';
+import { Show } from '@zipper/tw/ui/modules/show';
 
 const getDefaultCreateAppFormValues = () => ({
   name: generateDefaultSlug(),
@@ -68,7 +68,7 @@ const CreateFormSchema = z.object({
 const DashboardCreateZiplet: NextPageWithLayout = () => {
   /* ------------------- Hooks ------------------ */
   const createAppForm = useForm<z.infer<typeof CreateFormSchema>>({
-    resolver: zodResolver(CreateFormSchema),
+    resolver: zodResolver(CreateFormSchema as any),
     defaultValues: getDefaultCreateAppFormValues(),
   });
 

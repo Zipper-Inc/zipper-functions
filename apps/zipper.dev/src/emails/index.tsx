@@ -37,13 +37,7 @@ export const MagicLinkEmail = ({ loginUrl, token }: MagicLinkEmailProps) => (
         <Logo />
         <Heading style={h1}>Your login link for Zipper</Heading>
         <Section style={buttonContainer}>
-          <Button
-            href={loginUrl}
-            target="_blank"
-            style={button}
-            pY={11}
-            pX={23}
-          >
+          <Button href={loginUrl} target="_blank" style={button} tw="px-6 py-3">
             Login to Zipper
           </Button>
         </Section>
@@ -87,13 +81,7 @@ export const InvitationEmail = ({
         </Text>
 
         <Section style={buttonContainer}>
-          <Button
-            href={loginUrl}
-            target="_blank"
-            style={button}
-            pY={11}
-            pX={23}
-          >
+          <Button href={loginUrl} target="_blank" style={button} tw="px-6 py-3">
             Accept invitation
           </Button>
         </Section>

@@ -35,6 +35,7 @@
     "@sentry/nextjs": "^7.51.0",
     "@vercel/kv": "^1.0.0",
     "@zipper/types": "*",
+    "@zipper/tw": "*",
     "@zipper/ui": "*",
     "@zipper/utils": "*",
     "chrono-node": "^2.5.0",

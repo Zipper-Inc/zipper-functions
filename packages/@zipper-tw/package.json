@@ -1,0 +1,65 @@
+{
+  "name": "@zipper/tw",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    "./ui/*": "./src/ui/*",
+    "./ui/modules/*": "./src/ui/modules/*",
+    "./ui/common/*": "./src/ui/common/*",
+    "./ui/templates/*": "./src/ui/templates/*",
+    "./ui": "./src/ui/index.ts",
+    "./cn": "./src/utils/cn.ts"
+  },
+  "typesVersions": {
+    "*": {
+      "cn": [
+        "./src/utils/cn.ts"
+      ],
+      "ui": [
+        "./src/ui/index.ts"
+      ],
+      "ui/*": [
+        "./src/ui/*",
+        "./src/ui/*",
+        "./src/ui/modules*",
+        "./src/ui/common/*",
+        "./src/ui/templates/*"
+      ]
+    }
+  },
+  "scripts": {
+    "format": "prettier . --check --cache --cache-location=\"node_modules/.cache/prettiercache\"",
+    "format:fix": "prettier . --write --cache --cache-location=\"node_modules/.cache/prettiercache\" --log-level=warn",
+    "lint": "eslint . --cache --cache-location \"node_modules/.cache/.eslintcache\" --max-warnings 0",
+    "lint:fix": "eslint . --fix --cache --cache-location \"node_modules/.cache/.eslintcache\" --max-warnings 0",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@radix-ui/react-accordion": "^1.1.2",
+    "@radix-ui/react-avatar": "^1.0.4",
+    "@radix-ui/react-dialog": "^1.0.5",
+    "@radix-ui/react-dropdown-menu": "^2.0.6",
+    "@radix-ui/react-icons": "^1.3.0",
+    "@radix-ui/react-label": "^2.0.2",
+    "@radix-ui/react-select": "^2.0.0",
+    "@radix-ui/react-slot": "^1.0.2",
+    "@radix-ui/react-switch": "^1.0.3",
+    "@radix-ui/react-tabs": "^1.0.4",
+    "@radix-ui/react-tooltip": "^1.0.7",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.0.0",
+    "javascript-color-gradient": "^2.4.4",
+    "react-hook-form": "^7.49.3",
+    "lucide-react": "^0.297.0",
+    "react": "^18.2.0",
+    "rehype-sanitize": "^6.0.0",
+    "remark-gemoji": "^8.0.0",
+    "remark-gfm": "^1.0.0",
+    "sonner": "^1.3.1",
+    "tailwind-merge": "^2.1.0",
+    "tailwindcss": "^3.3.6",
+    "tailwindcss-animate": "^1.0.7",
+    "typescript": "^5.3.3"
+  },
+  "devDependencies": {}
+}

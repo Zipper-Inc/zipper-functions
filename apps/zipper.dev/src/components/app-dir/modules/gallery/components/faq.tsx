@@ -5,7 +5,7 @@ const GalleryFAQ: React.FC = () => {
   return (
     <Accordion type="single" collapsible className="w-full">
       <Accordion.Item value="item-1" className="border-t border-border">
-        <Accordion.Trigger className="font-semibold">
+        <Accordion.Trigger className="font-semibold font-sans">
           What are Applets?
         </Accordion.Trigger>
         <Accordion.Content>
@@ -14,7 +14,7 @@ const GalleryFAQ: React.FC = () => {
         </Accordion.Content>
       </Accordion.Item>
       <Accordion.Item value="item-2">
-        <Accordion.Trigger className="font-semibold">
+        <Accordion.Trigger className="font-semibold font-sans">
           What is Zipper?
         </Accordion.Trigger>
         <Accordion.Content>

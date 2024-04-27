@@ -1,3 +1,5 @@
+'use client';
+
 import { Button, cn, Show } from '@zipper/ui';
 import Link from 'next/link';
 import React, { useState } from 'react';

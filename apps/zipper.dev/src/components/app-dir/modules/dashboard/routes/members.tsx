@@ -10,7 +10,6 @@ import {
   Label,
   List,
   ShadSelect,
-  Show,
   Table,
 } from '@zipper/ui';
 import { useOrganization } from '~/hooks/use-organization';
@@ -21,6 +20,7 @@ import { useUser } from '~/hooks/use-user';
 import { trpc } from '~/utils/trpc';
 import { toast } from 'sonner';
 import { ReloadIcon } from '@radix-ui/react-icons';
+import { Show } from '@zipper/tw/ui/modules/show';
 
 /* -------------------------------------------- */
 /* Types                                        */

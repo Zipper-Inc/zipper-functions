@@ -21,12 +21,16 @@ const GalleryCategories: React.FC = () => {
   return (
     <List as="nav" className="flex flex-col gap-2" data={CATEGORIES}>
       {(props, index) => {
-        const cateogory = searchParams.get('category');
+        const cateogory = searchParams?.get('category');
         const isActive = cateogory === props.type;
 
         return (
           <Link
-            href={index === 0 ? pathname : `${pathname}?category=${props.type}`}
+            href={
+              index === 0
+                ? (pathname as string)
+                : `${pathname}?category=${props.type}`
+            }
             className={cn(
               isActive && 'bg-primary/10 text-primary',
               'px-3 py-2 rounded-sm transition-all hover:bg-foreground/10 cursor-pointer',

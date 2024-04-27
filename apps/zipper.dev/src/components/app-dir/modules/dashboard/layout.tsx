@@ -1,6 +1,7 @@
 import { Link, Navbar } from '../../layouts/navbar';
 import React, { ReactNode } from 'react';
-import { Show, Toaster } from '@zipper/ui';
+import { Toaster } from '@zipper/ui';
+import { Show } from '@zipper/tw/ui/modules/show';
 
 const NAVBAR_LINKS: Link[] = [
   { label: 'Applets', href: `/dashboard-tw` },

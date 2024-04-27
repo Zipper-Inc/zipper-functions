@@ -1,7 +1,8 @@
 import { NextPageWithLayout } from '~/pages/_app';
 import React from 'react';
 import { Gallery } from '~/components/gallery';
-import { trpc } from '~/utils/trpc';
+import { api as trpc } from '~/trpc/react';
+
 import NextError from 'next/error';
 import { GetServerSideProps } from 'next';
 import { createServerSideHelpers } from '@trpc/react-query/server';

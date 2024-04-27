@@ -1,7 +1,11 @@
 'use client';
-import { cn, List, Show } from '@zipper/ui';
+import { cn } from '@zipper/tw/cn';
+import { Show } from '@zipper/tw/ui/modules/show';
+import { List } from '@zipper/tw/ui/modules/list';
+
 import Link from 'next/link';
-import { useRouter } from 'next/router';
+
+import { usePathname } from 'next/navigation';
 import React from 'react';
 
 export type Link = {
@@ -44,12 +48,12 @@ interface NavbarProps {
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ links }) => {
-  const { asPath } = useRouter();
+  const pathname = usePathname();
 
   return (
     <section className="flex flex-col gap-6">
       <List as="nav" className="flex items-center gap-2" data={links}>
-        {(props) => <NavLink {...props} active={asPath === props.href} />}
+        {(props) => <NavLink {...props} active={pathname === props.href} />}
       </List>
       <span id="divider" className="w-full h-px bg-border -mt-1" />
     </section>

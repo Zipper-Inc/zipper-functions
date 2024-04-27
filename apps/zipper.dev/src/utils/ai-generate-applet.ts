@@ -719,7 +719,7 @@ export const codeOutputParser = StructuredOutputParser.fromZodSchema(
         .describe('The filename of the typescript code in kebab-case'),
       code: z.string().describe('The code that got generated'),
     }),
-  ),
+  ) as any,
 );
 
 const createBasicCode = new LLMChain({

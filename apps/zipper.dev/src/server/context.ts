@@ -10,6 +10,7 @@ import {
 } from 'next';
 
 import { getServerSession, Session } from 'next-auth';
+
 import { authOptions } from '../pages/api/auth/[...nextauth]';
 
 type RequestLike = GetServerSidePropsContext['req'] | NextApiRequest;
@@ -22,7 +23,7 @@ type ResponseLike = NextApiResponse | ServerResponse;
 export const createContextInner = ({
   userId,
   orgId,
-  organizations,
+  organizations = {},
   req,
   session,
 }: {
@@ -32,7 +33,14 @@ export const createContextInner = ({
   req?: RequestLike;
   session?: Session;
 }) => {
-  return { userId, orgId, organizations, req, session };
+  return {
+    userId,
+    orgId,
+    organizations,
+    req,
+    session,
+    headers: new Headers(),
+  };
 };
 
 /**
@@ -46,6 +54,7 @@ export async function createContext(opts: {
   const getAuthAndCreateContext = async () => {
     const session =
       (await getServerSession(opts.req, opts.res, authOptions)) || undefined;
+    // Initialize orgMems as an empty record if organizationMemberships is not defined
     const orgMems: Record<string, string> = {};
     session?.organizationMemberships?.forEach((m) => {
       orgMems[m.organization.id] = m.role;

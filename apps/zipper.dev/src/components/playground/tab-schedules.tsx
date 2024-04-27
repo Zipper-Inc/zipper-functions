@@ -3,7 +3,6 @@ import {
   VStack,
   useDisclosure,
   HStack,
-  Icon,
   IconButton,
   Text,
   Heading,
@@ -31,8 +30,6 @@ import {
 } from './add-schedule-modal';
 import { Avatar } from '../avatar';
 import { TITLE_COLUMN_MIN_WIDTH } from './constants';
-import { HiPencil } from 'react-icons/hi';
-import Link from 'next/link';
 
 const tableHeaderStyles: ChakraProps = {
   fontWeight: 'normal',

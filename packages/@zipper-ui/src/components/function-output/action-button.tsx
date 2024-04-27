@@ -1,3 +1,4 @@
+'flex';
 import { Button, Flex, Spinner } from '@chakra-ui/react';
 import { useState } from 'react';
 import { normalizeAppPath } from '@zipper/utils';

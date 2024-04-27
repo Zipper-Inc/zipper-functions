@@ -1,3 +1,5 @@
+'use client';
+
 import {
   Heading,
   VStack,
@@ -145,6 +147,7 @@ export function Gallery({
               Accept Invitation
             </Button>
           )}
+
           {isPublicGallery && (
             <>
               <Accordion type="single" collapsible className="w-full">
@@ -165,45 +168,6 @@ export function Gallery({
                   </Accordion.Content>
                 </Accordion.Item>
               </Accordion>
-              {/* <Accordion.>
-                <Accordion.Item>
-                  <Accordion.Button>
-                    <Box
-                      fontWeight="semibold"
-                      as="span"
-                      flex="1"
-                      textAlign="left"
-                    >
-                      What are Applets?
-                    </Box>
-                    <Accordion.Icon />
-                  </Accordion.Button>
-                  <Accordion.Panel pb={4}>
-                    Applets are web-services that have been built and deployed
-                    on Zipper. Applets can be forked and customized to your
-                    needs.
-                  </Accordion.Panel>
-                </Accordion.Item>
-
-                <Accordion.Item>
-                  <Accordion.Button>
-                    <Box
-                      fontWeight="semibold"
-                      as="span"
-                      flex="1"
-                      textAlign="left"
-                    >
-                      What is Zipper?
-                    </Box>
-                    <Accordion.Icon />
-                  </Accordion.Button>
-                  <Accordion.Panel pb={4}>
-                    Zipper is a platform for building web services using simple
-                    Typescript functions. We take care of UI, APIs, and auth for
-                    you.
-                  </Accordion.Panel>
-                </Accordion.Item>
-              </Accordion.> */}
             </>
           )}
         </VStack>

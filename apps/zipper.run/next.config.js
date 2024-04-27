@@ -62,6 +62,7 @@ module.exports = getConfig({
     '@zipper/framework',
     '@zipper/types',
     '@zipper/ui',
+    '@zipper/tw',
     '@zipper/utils',
   ],
 
