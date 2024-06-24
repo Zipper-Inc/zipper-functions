@@ -1,0 +1,215 @@
+---
+title: Effortless User Tracking with Zipper Analytics
+date: 2023/09/18
+description: Integrate Zipper Analytics seamlessly for user identification, activity tracking, and personalized Slack alerts.
+tag: api, productivity, slack
+author: Matheus Littig
+summary: |
+  Learn to effortlessly integrate Zipper Analytics for precise user tracking and actionable insights in your product.
+---
+
+Analytics is one of the most crucial integrations you can establish to ensure that your product reaches its intended audience and is utilized as planned. However, there are instances where a simple solution is needed to track and provide valuable insights into user interactions with our product.
+
+With this in mind, we are excited to introduce our [Analytics Applet](https://zipper-analytics.zipper.run), featuring key functions:
+
+- User identification
+- Tracking user activities through events
+- Company identification
+- Sending Slack alerts for events executed by identified users
+
+Zipper seamlessly manages this solution with end-to-end resources, incorporating connectors for various API providers (Slack, Discord, OpenAI, Notion, etc.) and a comprehensive internal storage system for applets, based on key/value attributes.
+
+For this specific applet, we leverage Zipper Storage to handle user, company, and event storage, and utilize the Slack Connector to send personalized alerts to our dedicated Slack workspace.
+
+Before we start to integrate Zipper Analytics into our product's codebase, we need first follow some steps.
+
+### Setting Up Slack Bot
+
+1. Fork the Zipper Analytics to your desired workspace
+2. Create a new Slack app: 
+    1. Visit [Slack API apps](https://api.slack.com/apps)
+    2. Choose "Create New App" and select "From an App Manifest.”
+    3. Paste the provided JSON object: 
+    
+    ```json
+    {
+        "display_information": {
+            "name": "Zipper Analytics"
+        },
+        "features": {
+            "bot_user": {
+                "display_name": "Zipper Analytics",
+                "always_online": false
+            }
+        },
+        "oauth_config": {
+            "redirect_urls": [
+                "https://zipper.dev/connectors/slack/auth"
+            ],
+            "scopes": {
+                "bot": [
+                    "channels:history",
+                    "channels:join",
+                    "chat:write",
+                    "chat:write.public",
+                    "channels:read"
+                ]
+            }
+        },
+        "settings": {
+            "org_deploy_enabled": false,
+            "socket_mode_enabled": false,
+            "token_rotation_enabled": false
+        }
+    }
+    ```
+    
+3. Obtain app credentials
+    1. In the Slack app, go to the *Basic Information* menu.
+    2. Retrieve the **Client ID** and **Client Secret.**
+4. Configure Slack Connector:
+    1. Paste the **Client ID** and **Client Secret** into `slack-connector.ts`.
+    2. Configure bot-scopes as specified in the app manifest.
+    3. Click on **Save and Install.**
+
+Once the bot is installed in the desired Slack channel, we're all set to start to integrate analytics to our codebase.
+
+### Idetifying and Tracking
+
+To showcase how easily you can integrate Zipper's applet API calls into your Codespace, we've developed a straightforward React project on [CodeSandbox](https://codesandbox.io/s/zipper-analytics-93423k). This project includes the following objects:
+
+
+```jsx
+/**
+* The `identify` and `tracking` keys are analogs 
+* to it files in analytics applets and their inputs.
+*/
+const ANALYTICS_URL = (route) =>
+  `https://zipper-analytics.zipper.run/${route}.ts/relay`;
+
+const analytics = {
+  identify: async (email, company_name) => {
+    await fetch(ANALYTICS_URL("identify"), {
+      method: "POST",
+      body: JSON.stringify({
+        email,
+        company_name
+      })
+    });
+  },
+
+  track: async (event_name, props) => {
+    await fetch(ANALYTICS_URL("track"), {
+      method: "POST",
+      body: JSON.stringify({
+        event_name,
+        props
+      })
+    });
+  }
+};
+```
+
+With this setup, our application can invoke these methods in the callback action as follows:
+
+```jsx
+export default function App() {
+  const [loading, setLoading] = useState("");
+
+  const authenticatedUser = {
+    name: "Ibu Madha",
+    email: "ibu@zipper.works",
+    company: "Zipper"
+  };
+
+  const onCreateApplet = async () => {
+    try {
+      setLoading("Loading...");
+
+      await analytics.identify(authedUser.email, authedUser.company);
+      await analytics.track("Created an Applet", {
+        email: authedUser.email
+      });
+
+      setLoading("Finished!");
+
+      setTimeout(() => {
+        setLoading("");
+      }, 1000);
+
+      return console.log("Action tracked");
+    } catch (err) {
+      return console.error(err);
+    }
+  };
+
+  return (
+    <div>
+      <button onClick={onCreateApplet}>Create Applet</button>
+      <p>{loading}</p>
+    </div>
+  );
+}
+```
+
+```jsx
+export default function App() {
+  const [loading, setLoading] = useState("");
+
+  const authenticatedUser = {
+    name: "Sachin Ranchod",
+    email: "sachin@zipper.works",
+    company: "Zipper"
+  };
+
+  const onCreateApplet = async () => {
+    try {
+      setLoading("Loading...");
+
+      await analytics.identify(authenticatedUser.email, authenticatedUser.company);
+      await analytics.track("Created an Applet", {
+        email: authenticatedUser.email
+      });
+
+      setLoading("Finished!");
+
+      return console.log("Action tracked");
+    } catch (err) {
+      return console.error(err);
+    }
+  };
+
+  return (
+    <div>
+      <button onClick={onCreateApplet}>Create Applet</button>
+      <p>{loading}</p>
+    </div>
+  );
+}
+```
+
+In this code, we've mocked and authenticated the user so that every time the `onCreateApplet` method is called, it triggers the `track` and `identify` routes in the applet through a POST request.
+
+Upon clicking the **Create Applet** button, the application will send a Slack message to the pre-defined Slack channel, as illustrated in the following image:
+
+<img
+  src="https://imagedelivery.net/mehHBP8u01yKLn8uDjx8Yw/e37811b7-237e-4a83-51a8-4d3220bf9a00/public"
+  style={{ borderRadius: '8px', marginBottom: '32px' }}
+  width="600px"
+  alt="incident-create"
+/>
+
+And finally, if we click the Go to Dashbo`ard button in this message, we will be redirected to main.ts of our applet, where we can access the following information:
+
+<img
+  src="https://imagedelivery.net/mehHBP8u01yKLn8uDjx8Yw/bf3a4d2e-c570-4fcc-b51c-25ce9b4b9a00/public"
+  style={{ borderRadius: '8px', marginBottom: '32px' }}
+  width="600px"
+  alt="incident-create"
+/>
+
+### Your own solution
+
+Similar to any other applets in the gallery, you have the flexibility to fully customize the code and tailor it to meet your specific needs. [Access our playground](https://zipper.dev/zipper-inc/zipper-analytics/src/main.ts) and fork it now into your company or personal Zipper workspace!
+
+Explore our [gallery](https://zipper.dev/gallery) now and delve into a series of examples showcasing how Zipper can be beneficial for your product and company. Should you have any inquiries or wish to share your valuable feedback, reach out to our responsive team at hello@zipper.works. Let's collaborate to enhance web development with Zipper's streamlined solutions.
